@@ -1,7 +1,8 @@
 import {
+  championNameToDisplayName,
   formatInteger,
   formatParlayNumericValue,
-  getChampionByKey,
+  type BucksDareHorizonKind,
   type BucksDareState,
 } from "@scout-for-lol/data";
 import { withRulesHint } from "#src/betting/copy.ts";
@@ -15,11 +16,11 @@ import type {
   DareTargetPayout,
 } from "#src/betting/dare-ledger.ts";
 import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
-import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
 import {
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_CATALOG,
 } from "#src/betting/parlay-catalog.ts";
+import { countLabel } from "#src/betting/weekly-parlay-discord-copy.ts";
 
 /**
  * Pure copy builders for every dare Discord surface.
@@ -43,14 +44,14 @@ function bb(amount: number): string {
   return `**${formatInteger(amount)} BB**`;
 }
 
-export function dareHorizonPhrase(
-  horizonKind: "next_game" | "window",
+function dareHorizonPhrase(
+  horizonKind: BucksDareHorizonKind,
   windowDays: number | null,
 ): string {
   if (horizonKind === "next_game") {
     return "their next eligible game";
   }
-  return `**${formatInteger(windowDays ?? 0)} ${windowDays === 1 ? "day" : "days"}** from the moment every target accepts`;
+  return `**${formatInteger(windowDays ?? 0)} ${countLabel(windowDays ?? 0, "day")}** from the moment every target accepts`;
 }
 
 /** The ephemeral confirmation the challenger approves — description text for
@@ -59,7 +60,7 @@ export function dareConfirmationContent(input: {
   amount: number;
   targetAliases: readonly string[];
   conditionSummary: string;
-  horizonKind: "next_game" | "window";
+  horizonKind: BucksDareHorizonKind;
   windowDays: number | null;
   proposalExpiresAt: Date;
 }): string {
@@ -70,10 +71,8 @@ export function dareConfirmationContent(input: {
     `**Horizon:** ${dareHorizonPhrase(input.horizonKind, input.windowDays)}`,
     `**Opening pot:** ${bb(input.amount)} — debited from your wallet when you confirm.`,
     `**Targets:** ${input.targetAliases.join(", ")} — they risk nothing and must all accept before it goes live.`,
-    `Confirm before ${relative(input.proposalExpiresAt)}.`,
-    withRulesHint(
-      `House cut: **${HOUSE_CUT_PERCENT.toString()}%** on either resolution.`,
-    ),
+    // Numbers only; the cut, windows, and refund policy live in /bb rules.
+    withRulesHint(`Confirm before ${relative(input.proposalExpiresAt)}.`),
   ].join("\n");
 }
 
@@ -85,14 +84,28 @@ export function dareConfirmedPostedContent(input: {
   return `✅ Dare confirmed — ${bb(input.potTotal)} in the pot. Callout posted; every target must accept ${relative(input.acceptDeadline)}.`;
 }
 
-/** Ephemeral acknowledgement after a target accepts. */
+/**
+ * Ephemeral acknowledgement after a target accepts.
+ *
+ * A next-game dare settles win-or-lose on the FIRST eligible game; its stored
+ * clock is only the no-game backstop, so the copy must not present it as when
+ * the dare "ends".
+ */
 export function dareAcceptAckContent(input: {
   activated: boolean;
   acceptedCount: number;
   targetCount: number;
+  horizonKind: BucksDareHorizonKind;
   windowEndsAt: Date | undefined;
 }): string {
   if (input.activated) {
+    if (input.horizonKind === "next_game") {
+      const backstop =
+        input.windowEndsAt === undefined
+          ? ""
+          : ` (expires ${relative(input.windowEndsAt)} if no game is played)`;
+      return `🔥 You're all in. The dare is LIVE — it settles on your next eligible game${backstop}.`;
+    }
     const until =
       input.windowEndsAt === undefined
         ? ""
@@ -129,6 +142,7 @@ export type DareCalloutView = {
   challengerDiscordId: string;
   potTotal: number;
   conditionSummary: string;
+  horizonKind: BucksDareHorizonKind;
   targets: readonly DareCalloutTarget[];
   acceptDeadline: Date | null;
   windowEndsAt: Date | null;
@@ -143,7 +157,7 @@ function comparisonSymbol(operator: "gte" | "lte" | "eq"): string {
 
 function championSuffix(champion: string | null): string {
   if (champion === null) return "";
-  return ` on ${getChampionByKey(champion)?.name ?? champion}`;
+  return ` on ${championNameToDisplayName(champion)}`;
 }
 
 /** Compact per-leaf progress label, e.g. "Wins" or "Games with ≥ 10 kills". */
@@ -221,8 +235,14 @@ export function dareCalloutContent(view: DareCalloutView): string {
     ].join("\n");
   }
   if (view.dareState === "active") {
+    // A next-game dare settles on the FIRST eligible game; its stored clock
+    // is only the no-game backstop and must not read as an "ends" date.
     const ends =
-      view.windowEndsAt === null ? "" : `, ends ${relative(view.windowEndsAt)}`;
+      view.windowEndsAt === null
+        ? ""
+        : view.horizonKind === "next_game"
+          ? `, settles on the next eligible game (expires ${relative(view.windowEndsAt)} if none is played)`
+          : `, ends ${relative(view.windowEndsAt)}`;
     return [
       `🔴 **Bryan Bucks dare: LIVE** — ${bb(view.potTotal)} on the line${ends}`,
       ...dare,
@@ -307,7 +327,9 @@ export function dareVoidedContent(input: {
   const reason =
     input.voidReason === "unknown_evaluator"
       ? "Scout can no longer evaluate this dare's stored conditions."
-      : "This dare was voided.";
+      : input.voidReason === "storage_overflow"
+        ? "A payout would not fit in a target's wallet."
+        : "This dare was voided.";
   return [
     "↩️ **Bryan Bucks dare: VOIDED**",
     reason,

@@ -1,4 +1,6 @@
 import {
+  BucksDareHorizonKindSchema,
+  type BucksDareHorizonKind,
   type BucksDareState,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -10,11 +12,12 @@ import {
   daresFeatureEnabled,
   defaultDareDependencies,
   loadTargetDare,
-  summarizeDare,
+  summarizeDareBestEffort,
   type DareDomainDependencies,
   type LoadedDare,
 } from "#src/betting/dare-common.ts";
 import {
+  dareMoneyFactsInTransaction,
   refundDareContributionsInTransaction,
   type DareContributorRefund,
 } from "#src/betting/dare-ledger.ts";
@@ -40,6 +43,7 @@ export type AcceptDareResult =
       activated: boolean;
       acceptedCount: number;
       targetCount: number;
+      horizonKind: BucksDareHorizonKind;
       windowEndsAt: Date | undefined;
     }
   | { kind: "feature_disabled" }
@@ -169,6 +173,7 @@ export async function acceptDare(
     activated: result.activated,
     acceptedCount: result.acceptedCount,
     targetCount: dare.targets.length,
+    horizonKind: BucksDareHorizonKindSchema.parse(dare.horizonKind),
     windowEndsAt: result.windowEndsAt,
   };
 }
@@ -213,7 +218,9 @@ export async function declineDare(
     return lookup;
   }
   const { dare, target } = lookup;
-  const conditionSummary = summarizeDare(dare);
+  // Best-effort: declining is a refund path and must never be blocked by a
+  // stored conditions blob the current schema cannot parse (display-only).
+  const conditionSummary = summarizeDareBestEffort(dare);
 
   try {
     const result = await dependencies.prismaClient.$transaction(async (tx) => {
@@ -239,18 +246,22 @@ export async function declineDare(
       if (stamp.count !== 1) {
         throw new DareDeclineRaceError();
       }
+      // Money facts re-read AFTER the claim: a contribution can commit
+      // between the lookup above and this transaction, and the stale
+      // potTotal would fail conservation against the fresh contribution rows.
+      const facts = await dareMoneyFactsInTransaction(tx, {
+        dareId: dare.id,
+        serverId: dare.serverId,
+        potTotal: dare.potTotal,
+        targetAliases: dare.targets.map((row) => row.alias),
+        conditionSummary,
+      });
       const refunds = await refundDareContributionsInTransaction(tx, {
-        facts: {
-          dareId: dare.id,
-          serverId: dare.serverId,
-          potTotal: dare.potTotal,
-          targetAliases: dare.targets.map((row) => row.alias),
-          conditionSummary,
-        },
+        facts,
         resolution: "declined",
         withCut: false,
       });
-      return { kind: "declined", refunds } as const;
+      return { kind: "declined", refunds, potTotal: facts.potTotal } as const;
     });
     if (result.kind !== "declined") {
       return result;
@@ -262,7 +273,7 @@ export async function declineDare(
       serverId: input.serverId,
       dareId: dare.id,
       actorDiscordId: input.targetDiscordId,
-      payout: dare.potTotal,
+      payout: result.potTotal,
       fromState: "pending_accept",
       toState: "declined",
       surface: "button",
@@ -270,7 +281,7 @@ export async function declineDare(
     return {
       kind: "declined",
       dareId: dare.id,
-      potTotal: dare.potTotal,
+      potTotal: result.potTotal,
       refunds: result.refunds,
     };
   } catch (error) {

@@ -67,6 +67,29 @@ function assertDareConservation(condition: boolean, detail: string): void {
 }
 
 /**
+ * Re-derive the money facts INSIDE the caller's transaction, strictly after
+ * its guarded dare-row claim.
+ *
+ * The pre-transaction dare row may drive eligibility and discovery, never
+ * money: a contribution can commit between that read and the claim, and a
+ * stale `potTotal` would then fail the conservation asserts against the fresh
+ * contribution rows the helpers below read — rolling back a legitimate
+ * settlement. The claim serializes against `contributeToDare`'s own claim on
+ * the same row, so this post-claim read (and the contribution rows) are
+ * stable for the rest of the transaction.
+ */
+export async function dareMoneyFactsInTransaction(
+  tx: Db,
+  facts: DareLedgerFacts,
+): Promise<DareLedgerFacts> {
+  const fresh = await tx.bucksDare.findUniqueOrThrow({
+    where: { id: facts.dareId },
+    select: { potTotal: true },
+  });
+  return { ...facts, potTotal: fresh.potTotal };
+}
+
+/**
  * Debit one contributor and append their contribution row.
  *
  * Runs strictly after the caller's guarded dare-row claim (which is what

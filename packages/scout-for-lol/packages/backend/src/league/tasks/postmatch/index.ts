@@ -9,6 +9,7 @@ import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
 import { voidStaleParlayMarkets } from "#src/betting/parlay-sweep.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 
@@ -98,7 +99,47 @@ export async function runPostMatchMaintenance(): Promise<{
     return { dareSummaries: [] };
   }
 
-  await retryPendingBucksEarnings();
+  let dareSummaries: DareSettlementSummary[] = [];
+  // Isolated per step, then re-thrown: the dare window settle is LAST, and
+  // without isolation a persistently failing earnings retry or stale-pool
+  // announce would starve those refunds while the money stayed escrowed.
+  await runMaintenanceSteps("post-match maintenance", [
+    {
+      name: "pending earnings retry",
+      run: async () => {
+        await retryPendingBucksEarnings();
+      },
+    },
+    { name: "stale betting pool void", run: voidStaleAndAnnounce },
+    {
+      name: "stale parlay market void",
+      run: async () => {
+        await voidStaleParlayMarkets();
+      },
+    },
+    {
+      // Ended dare windows settle unachieved here, beside the other post-match
+      // clocks.
+      name: "dare window settle",
+      run: async () => {
+        dareSummaries = await settleEndedDareWindows();
+      },
+    },
+    {
+      // Delivery runs after the refunds committed and swallows per-summary, so
+      // a dead channel never blocks or re-runs a settlement.
+      name: "dare summary delivery",
+      run: async () => {
+        await deliverDareSummaries(dareSummaries);
+      },
+    },
+  ]);
+  return { dareSummaries };
+}
+
+/** Void pools whose match never resolved, then refresh and announce them —
+ * one step because the announce consumes the void's own result. */
+async function voidStaleAndAnnounce(): Promise<void> {
   const staleBucks = await voidStaleBettingPools();
   const staleMatchIds = new Set([
     ...staleBucks.closures.map((closure) => closure.matchId),
@@ -126,11 +167,4 @@ export async function runPostMatchMaintenance(): Promise<{
       postmatchMessageIds,
     });
   }
-  await voidStaleParlayMarkets();
-  // Ended dare windows settle unachieved here, beside the other post-match
-  // clocks. Delivery runs after the refunds committed and swallows
-  // per-summary, so a dead channel never blocks or re-runs a settlement.
-  const dareSummaries = await settleEndedDareWindows();
-  await deliverDareSummaries(dareSummaries);
-  return { dareSummaries };
 }

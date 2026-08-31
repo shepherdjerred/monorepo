@@ -174,6 +174,18 @@ export const BucksDareStateSchema = z.enum([
 ]);
 
 /**
+ * The dare states whose escrowed contributions are still open: the pot can
+ * still grow, and every contribution is still owed back until the dare
+ * reaches a terminal state. The ONE definition shared by the contribution
+ * claim and the refundable-headroom query, so the two can never disagree
+ * about which dares hold live money.
+ */
+export const OPEN_BUCKS_DARE_STATES = [
+  "pending_accept",
+  "active",
+] as const satisfies readonly BucksDareState[];
+
+/**
  * How a dare's clock is bounded: the targets' very next qualifying game, or a
  * window of days measured from activation.
  */

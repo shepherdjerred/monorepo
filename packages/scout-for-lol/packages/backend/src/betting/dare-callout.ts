@@ -7,6 +7,7 @@ import {
   type MessageEditOptions,
 } from "discord.js";
 import {
+  BucksDareHorizonKindSchema,
   BucksDareStateSchema,
   BucksMessageRefSchema,
   DiscordChannelIdSchema,
@@ -14,7 +15,6 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { z } from "zod";
 import { DARE_CONTRIBUTION_STAKES } from "#src/betting/constants.ts";
 import {
   dareCalloutContent,
@@ -25,6 +25,7 @@ import {
   DareConditionsSchema,
   dareLeavesInCanonicalOrder,
   evaluateDareTree,
+  parseLeafHits,
   renderDareConditions,
 } from "#src/betting/dare-criteria.ts";
 import { abandonDare, confirmDare } from "#src/betting/dare-create.ts";
@@ -48,6 +49,44 @@ const logger = createLogger("betting-dare-callout");
  * interaction state — through `runSerialized("dare:<id>")`, so an older
  * refresh can never land after a newer one.
  */
+
+/**
+ * Store the callout's message reference, retrying once. Returns false — and
+ * reports to Sentry — when both attempts fail; never throws, because by the
+ * time it runs the callout message already exists and the stake is already
+ * committed, so the caller owes the challenger an accurate degraded message
+ * rather than a rollback. Without the stored ref `refreshDareCallout` skips
+ * this dare forever, which is why one retry is worth paying for.
+ */
+export async function persistDareCalloutRef(
+  prismaClient: ExtendedPrismaClient,
+  dareId: number,
+  ref: { channelId: string; messageId: string },
+): Promise<boolean> {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await prismaClient.bucksDare.update({
+        where: { id: dareId },
+        data: { messageRef: JSON.stringify(ref) },
+      });
+      return true;
+    } catch (error) {
+      logger.error(
+        `❌ Could not persist the callout ref for dare ${dareId.toString()} (attempt ${(attempt + 1).toString()}):`,
+        error,
+      );
+      if (attempt === 1) {
+        Sentry.captureException(error, {
+          tags: {
+            source: "betting-dare-callout-ref",
+            dareId: dareId.toString(),
+          },
+        });
+      }
+    }
+  }
+  return false;
+}
 
 export type DareMessageSender = (
   options: MessageCreateOptions,
@@ -152,8 +191,6 @@ export function dareCalloutComponents(
   return [];
 }
 
-const LeafHitsSchema = z.array(z.boolean());
-
 export type DareCalloutState = {
   serverId: string;
   messageRef: string | null;
@@ -178,9 +215,7 @@ export async function loadDareCalloutState(
   const dareState = BucksDareStateSchema.parse(dare.dareState);
   const leafCounts = evaluateDareTree(
     conditions,
-    dare.games.map((game) => ({
-      leafHits: LeafHitsSchema.parse(JSON.parse(game.leafHits)),
-    })),
+    dare.games.map((game) => ({ leafHits: parseLeafHits(game.leafHits) })),
   ).leafCounts;
   return {
     serverId: dare.serverId,
@@ -190,6 +225,7 @@ export async function loadDareCalloutState(
       dareState,
       challengerDiscordId: dare.challengerDiscordId,
       potTotal: dare.potTotal,
+      horizonKind: BucksDareHorizonKindSchema.parse(dare.horizonKind),
       conditionSummary: renderDareConditions(
         conditions,
         dare.targets.map((target) => target.alias),

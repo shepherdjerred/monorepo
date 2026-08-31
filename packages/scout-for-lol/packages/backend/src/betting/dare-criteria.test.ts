@@ -579,6 +579,29 @@ describe("dareSemanticIssues", () => {
     ).toBeGreaterThan(0);
   });
 
+  // A leaf hits only when EVERY target played the pinned champion, and the
+  // eligible queues are all draft modes where a champion appears at most once
+  // per match — so a group dare on a champion is unachievable from creation.
+  const championBound = tree("all", [
+    { kind: "all", children: [leaf(winsLeaf.predicate, { champion: "Ahri" })] },
+  ]);
+
+  test("rejects a champion-bound leaf on a multi-target dare", () => {
+    const issues = dareSemanticIssues(
+      [targetFor(puuidA, "one"), targetFor(puuidB, "two")],
+      championBound,
+      "window",
+    );
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues.join(" ")).toContain("cannot pin a champion");
+  });
+
+  test("accepts the same champion-bound leaf on a single-target dare", () => {
+    expect(
+      dareSemanticIssues([targetFor(puuidA, "one")], championBound, "window"),
+    ).toEqual([]);
+  });
+
   test("rejects next_game with any multi-game leaf", () => {
     expect(
       dareSemanticIssues([targetFor(puuidA, "one")], multiGame, "next_game")

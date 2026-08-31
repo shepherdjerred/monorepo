@@ -6,7 +6,9 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import type { Prisma } from "#generated/prisma/client/index.js";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
+import { summarizeDareBestEffort } from "#src/betting/dare-common.ts";
 import {
   DARE_ELIGIBLE_QUEUES,
   DARE_EVALUATOR_VERSION,
@@ -14,17 +16,20 @@ import {
   DareTargetAccountsSchema,
   evaluateDareGame,
   evaluateDareTree,
+  parseLeafHits,
   renderDareConditions,
   type DareConditions,
   type DareTargetIdentity,
 } from "#src/betting/dare-criteria.ts";
 import {
+  dareMoneyFactsInTransaction,
   payDareTargetsInTransaction,
   refundDareContributionsInTransaction,
   type DareContributorRefund,
   type DareLedgerFacts,
   type DareTargetPayout,
 } from "#src/betting/dare-ledger.ts";
+import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import {
   prisma,
@@ -48,6 +53,11 @@ const logger = createLogger("betting-dare-settle");
  * early settlement cannot be lost to a crash, and contributions, sweeps, and
  * settles all serialize on the same row. The `(dareId, matchId)` unique key
  * makes ingest replays no-ops.
+ *
+ * The pre-transaction dare row drives eligibility and discovery only — every
+ * money fact (the pot and the contribution set) is re-derived inside the
+ * transaction after the claim, because a contribution can commit between the
+ * discovery read and the claim.
  */
 
 export type DareResolution =
@@ -82,38 +92,59 @@ export type DareSettlementSummary = {
 };
 
 const DareQueueSchema = z.enum(DARE_ELIGIBLE_QUEUES);
-const LeafHitsSchema = z.array(z.boolean());
 
-export type ActiveDareRow = {
-  id: number;
-  serverId: string;
-  channelId: string;
-  challengerDiscordId: string;
-  horizonKind: string;
-  windowEndsAt: Date | null;
-  activatedAt: Date | null;
-  conditions: string;
-  evaluatorVersion: string;
-  potTotal: number;
-  messageRef: string | null;
-  targets: {
-    id: number;
-    discordId: string;
-    alias: string;
-    accounts: string;
-    bucksAccountId: number | null;
-    acceptedAt: Date | null;
-  }[];
-};
+/** One dare row plus its frozen target rows, exactly as Prisma loads them —
+ * the include shape every settle/sweep read shares. */
+export type ActiveDareRow = Prisma.BucksDareGetPayload<{
+  include: { targets: true };
+}>;
 
-export type ParsedDare = {
+/**
+ * The row facts every refund, void, abandon, and expire path needs. The
+ * condition summary is BEST-EFFORT (display-only placeholder when the stored
+ * blob no longer parses), because money movement on those paths must never
+ * depend on a parse — the documented refunds-are-never-blocked invariant.
+ */
+export type DareRefundView = {
   row: ActiveDareRow;
-  conditions: DareConditions;
-  targets: DareTargetIdentity[];
   horizonKind: BucksDareHorizonKind;
   facts: DareLedgerFacts;
 };
 
+export type ParsedDare = DareRefundView & {
+  conditions: DareConditions;
+  targets: DareTargetIdentity[];
+};
+
+function baseFacts(
+  row: ActiveDareRow,
+  conditionSummary: string,
+  matchId?: string,
+): DareLedgerFacts {
+  return {
+    dareId: row.id,
+    serverId: row.serverId,
+    potTotal: row.potTotal,
+    targetAliases: row.targets.map((target) => target.alias),
+    conditionSummary,
+    matchId,
+  };
+}
+
+/** Refund-path view of a dare row: no strict conditions parse anywhere. */
+export function dareRefundView(
+  row: ActiveDareRow,
+  matchId?: string,
+): DareRefundView {
+  return {
+    row,
+    horizonKind: BucksDareHorizonKindSchema.parse(row.horizonKind),
+    facts: baseFacts(row, summarizeDareBestEffort(row), matchId),
+  };
+}
+
+/** Strict settlement-path parse: an unreadable conditions blob fails loudly
+ * here, because evaluation cannot be best-effort. */
 export function parseDare(row: ActiveDareRow, matchId?: string): ParsedDare {
   const conditions = DareConditionsSchema.parse(JSON.parse(row.conditions));
   const targets: DareTargetIdentity[] = row.targets.map((target) => ({
@@ -127,19 +158,16 @@ export function parseDare(row: ActiveDareRow, matchId?: string): ParsedDare {
     conditions,
     targets,
     horizonKind: BucksDareHorizonKindSchema.parse(row.horizonKind),
-    facts: {
-      dareId: row.id,
-      serverId: row.serverId,
-      potTotal: row.potTotal,
-      targetAliases,
-      conditionSummary: renderDareConditions(conditions, targetAliases),
+    facts: baseFacts(
+      row,
+      renderDareConditions(conditions, targetAliases),
       matchId,
-    },
+    ),
   };
 }
 
 export function baseSummary(
-  dare: ParsedDare,
+  dare: DareRefundView,
   resolution: DareResolution,
   matchId?: string,
 ): DareSettlementSummary {
@@ -162,37 +190,46 @@ export function baseSummary(
   };
 }
 
+export type DareVoidReason = "unknown_evaluator" | "storage_overflow";
+
 /**
- * Void a dare whose stored evaluator version this code no longer implements:
- * full refunds, no cut. Shared by capture and the window sweep. Runs its own
- * transaction; returns undefined when another resolution won the claim.
+ * Void an active dare with FULL refunds and no cut, in its own transaction.
+ *
+ * Two callers: a stored evaluator version this code no longer implements
+ * (capture and the window sweep), and a payout that cannot be persisted
+ * without overflowing Int32 wallet storage (the weekly-parlay
+ * `storage_overflow` precedent). Returns undefined when another resolution
+ * won the claim. Deliberately takes a `DareRefundView`, never a `ParsedDare`:
+ * voiding must not require the conditions blob to parse.
  */
-export async function voidDareForEvaluatorMismatch(
-  dare: ParsedDare,
+export async function voidDareWithFullRefund(
+  dare: DareRefundView,
   prismaClient: ExtendedPrismaClient,
   now: Date,
-  surface: "postmatch" | "sweep" = "postmatch",
+  input: { voidReason: DareVoidReason; surface: "postmatch" | "sweep" },
 ): Promise<DareSettlementSummary | undefined> {
-  const refunds = await prismaClient.$transaction(async (tx) => {
+  const outcome = await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksDare.updateMany({
       where: { id: dare.row.id, dareState: "active" },
       data: {
         dareState: "voided",
-        voidReason: "unknown_evaluator",
+        voidReason: input.voidReason,
         settledAt: now,
       },
     });
     if (claim.count !== 1) {
       return;
     }
-    return await refundDareContributionsInTransaction(tx, {
-      facts: dare.facts,
+    const facts = await dareMoneyFactsInTransaction(tx, dare.facts);
+    const refunds = await refundDareContributionsInTransaction(tx, {
+      facts,
       resolution: "voided",
       withCut: false,
-      voidReason: "unknown_evaluator",
+      voidReason: input.voidReason,
     });
+    return { refunds, potTotal: facts.potTotal };
   });
-  if (refunds === undefined) return undefined;
+  if (outcome === undefined) return undefined;
   bettingDaresTotal.inc({ result: "voided" });
   bettingDareSettlementsTotal.inc({ outcome: "voided" });
   logBucksTransition({
@@ -201,12 +238,13 @@ export async function voidDareForEvaluatorMismatch(
     dareId: dare.row.id,
     fromState: "active",
     toState: "voided",
-    reason: "unknown_evaluator",
-    surface,
+    reason: input.voidReason,
+    surface: input.surface,
   });
   const summary = baseSummary(dare, "voided");
-  summary.refunds = refunds;
-  summary.voidReason = "unknown_evaluator";
+  summary.potTotal = outcome.potTotal;
+  summary.refunds = outcome.refunds;
+  summary.voidReason = input.voidReason;
   return summary;
 }
 
@@ -230,6 +268,13 @@ async function captureAndSettleDare(
     data: { updatedAt: now },
   });
   if (claim.count !== 1) return undefined;
+  // Money facts re-read AFTER the claim — the discovery row is stale the
+  // moment a contribution commits behind it, and the conservation asserts
+  // compare against the fresh contribution rows.
+  const facts = await dareMoneyFactsInTransaction(tx, {
+    ...dare.facts,
+    matchId,
+  });
 
   // Idempotent capture: an ingest replay hits the (dareId, matchId) unique
   // key, inserts nothing, and must not re-run settlement.
@@ -256,9 +301,7 @@ async function captureAndSettleDare(
   });
   const tree = evaluateDareTree(
     dare.conditions,
-    rows.map((row) => ({
-      leafHits: LeafHitsSchema.parse(JSON.parse(row.leafHits)),
-    })),
+    rows.map((row) => ({ leafHits: parseLeafHits(row.leafHits) })),
   );
 
   if (tree.achieved) {
@@ -280,10 +323,11 @@ async function captureAndSettleDare(
       };
     });
     const { payouts } = await payDareTargetsInTransaction(tx, {
-      facts: { ...dare.facts, matchId },
+      facts,
       targets: payees,
     });
     const summary = baseSummary(dare, "achieved", matchId);
+    summary.potTotal = facts.potTotal;
     summary.payouts = payouts;
     summary.leafCounts = tree.leafCounts;
     return summary;
@@ -292,29 +336,38 @@ async function captureAndSettleDare(
   if (dare.horizonKind === "next_game") {
     // The one bound game evaluated false, so the dare is settled unachieved
     // in the same transaction — a next-game dare never waits for its clock.
+    //
+    // "Next game" means the first eligible game INGESTED, not the first one
+    // played: when two eligible games finish close together and the
+    // later-started one ingests first, that one binds the dare. Documented
+    // accepted tradeoff from the plan — ingest order tracks play order
+    // closely at these stakes, and re-presenting matches in play order would
+    // need a per-dare match queue the feature deliberately does not have.
     await tx.bucksDare.updateMany({
       where: { id: dare.row.id, dareState: "active" },
       data: { dareState: "unachieved", settledAt: now },
     });
     const refunds = await refundDareContributionsInTransaction(tx, {
-      facts: { ...dare.facts, matchId },
+      facts,
       resolution: "unachieved",
       withCut: true,
     });
     const summary = baseSummary(dare, "unachieved", matchId);
+    summary.potTotal = facts.potTotal;
     summary.refunds = refunds;
     summary.leafCounts = tree.leafCounts;
     return summary;
   }
 
   const summary = baseSummary(dare, "captured", matchId);
+  summary.potTotal = facts.potTotal;
   summary.leafCounts = tree.leafCounts;
   return summary;
 }
 
 function observeDareSettlement(summary: DareSettlementSummary): void {
-  // A voided dare was already fully observed inside
-  // voidDareForEvaluatorMismatch, and no game was captured for it.
+  // A voided dare was already fully observed inside voidDareWithFullRefund,
+  // and no game was captured for it.
   if (summary.resolution === "voided") {
     return;
   }
@@ -366,10 +419,30 @@ export async function settleDaresForMatch(
   // next-game bind — the same classification gate every other market uses.
   if (classifyMatchForBetting(matchData).kind !== "decided") return [];
 
+  const gameStartAt = new Date(matchData.info.gameStartTimestamp);
+  const gameEndAt = new Date(matchData.info.gameEndTimestamp);
   const dares = await (async () => {
     try {
       return await prismaClient.bucksDare.findMany({
-        where: { dareState: "active" },
+        where: {
+          dareState: "active",
+          OR: [
+            // The SQL image of the per-dare clock gates in
+            // settleOneDareForMatch: activated before the game started, and
+            // the game ended by the stored deadline (a next_game dare stores
+            // its timeout in windowEndsAt, so one predicate serves both
+            // horizons).
+            {
+              activatedAt: { lt: gameStartAt },
+              windowEndsAt: { gte: gameEndAt },
+            },
+            // An active dare with a missing clock is a broken contract.
+            // Kept in the batch so the loud per-dare throw below surfaces
+            // it — a bare SQL filter would hide the bug silently.
+            { activatedAt: null },
+            { windowEndsAt: null },
+          ],
+        },
         include: { targets: { orderBy: { id: "asc" } } },
       });
     } catch (error) {
@@ -421,9 +494,19 @@ async function settleOneDareForMatch(
   },
 ): Promise<DareSettlementSummary | undefined> {
   const { matchData, prismaClient, now } = input;
-  const dare = parseDare(row, matchData.metadata.matchId);
+  const matchId = matchData.metadata.matchId;
+  // Evaluator gate FIRST, before any strict conditions parse: voiding is a
+  // refund path and must work even when the stored blob no longer parses.
   if (row.evaluatorVersion !== DARE_EVALUATOR_VERSION) {
-    return await voidDareForEvaluatorMismatch(dare, prismaClient, now);
+    return await voidDareWithFullRefund(
+      dareRefundView(row),
+      prismaClient,
+      now,
+      {
+        voidReason: "unknown_evaluator",
+        surface: "postmatch",
+      },
+    );
   }
   if (row.activatedAt === null || row.windowEndsAt === null) {
     throw new Error(
@@ -434,7 +517,9 @@ async function settleOneDareForMatch(
   const gameEndAt = new Date(matchData.info.gameEndTimestamp);
   // Eligibility is "played inside the window": started after activation and
   // ended by the deadline. Ingestion time is irrelevant — the sweep's grace
-  // period exists precisely so a late ingest still lands here.
+  // period exists precisely so a late ingest still lands here. (Discovery
+  // already filtered on these clocks in SQL; re-checked cheaply here so a
+  // direct caller gets identical behavior.)
   if (gameStartAt.getTime() <= row.activatedAt.getTime()) {
     return undefined;
   }
@@ -442,19 +527,36 @@ async function settleOneDareForMatch(
     return undefined;
   }
 
+  const dare = parseDare(row, matchId);
   const evaluation = evaluateDareGame(dare.conditions, dare.targets, matchData);
   if (evaluation === undefined) {
     return undefined;
   }
 
-  return await prismaClient.$transaction((tx) =>
-    captureAndSettleDare(tx, {
-      dare,
-      matchData,
-      queueType: input.queueType,
-      leafHits: evaluation.leafHits,
-      snapshot: evaluation.snapshot,
-      now,
-    }),
-  );
+  try {
+    return await prismaClient.$transaction((tx) =>
+      captureAndSettleDare(tx, {
+        dare,
+        matchData,
+        queueType: input.queueType,
+        leafHits: evaluation.leafHits,
+        snapshot: evaluation.snapshot,
+        now,
+      }),
+    );
+  } catch (error) {
+    if (error instanceof BucksStorageOverflowError) {
+      // A payout the wallet cannot hold rolled the capture back. Stranding
+      // the dare would mis-settle it later as unachieved WITH a cut, so it
+      // is voided instead: full refunds, no cut, fresh transaction
+      // (weekly-parlay "storage_overflow" precedent).
+      return await voidDareWithFullRefund(
+        dareRefundView(row, matchId),
+        prismaClient,
+        now,
+        { voidReason: "storage_overflow", surface: "postmatch" },
+      );
+    }
+    throw error;
+  }
 }

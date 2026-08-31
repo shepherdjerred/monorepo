@@ -1,11 +1,16 @@
 import * as Sentry from "@sentry/bun";
 import { DARE_WINDOW_INGESTION_GRACE_MS } from "#src/betting/constants.ts";
 import { DARE_EVALUATOR_VERSION } from "#src/betting/dare-criteria.ts";
-import { refundDareContributionsInTransaction } from "#src/betting/dare-ledger.ts";
+import {
+  dareMoneyFactsInTransaction,
+  refundDareContributionsInTransaction,
+} from "#src/betting/dare-ledger.ts";
 import {
   baseSummary,
-  parseDare,
-  voidDareForEvaluatorMismatch,
+  dareRefundView,
+  voidDareWithFullRefund,
+  type ActiveDareRow,
+  type DareRefundView,
   type DareSettlementSummary,
 } from "#src/betting/dare-settle.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
@@ -34,11 +39,13 @@ const DARE_SWEEP_INCLUDE = {
 /**
  * Claim one dare row into a terminal state and refund its contributors in
  * the same transaction. Returns undefined when another resolution won the
- * claim (a racing accept, decline, or capture-settle).
+ * claim (a racing accept, decline, or capture-settle). The money facts are
+ * re-derived after the claim — the discovery row is stale the moment a
+ * contribution commits behind it.
  */
 async function claimAndRefundDare(
   prismaClient: ExtendedPrismaClient,
-  dare: ReturnType<typeof parseDare>,
+  dare: DareRefundView,
   input: {
     fromState: "pending_accept" | "active";
     toState: "expired" | "unachieved";
@@ -56,11 +63,13 @@ async function claimAndRefundDare(
     if (claim.count !== 1) {
       return;
     }
-    return await refundDareContributionsInTransaction(tx, {
-      facts: dare.facts,
+    const facts = await dareMoneyFactsInTransaction(tx, dare.facts);
+    const refunds = await refundDareContributionsInTransaction(tx, {
+      facts,
       resolution: input.toState,
       withCut: input.withCut,
     });
+    return { refunds, potTotal: facts.potTotal };
   });
 }
 
@@ -94,7 +103,7 @@ export async function abandonExpiredDareProposals(
           toState: "abandoned",
           surface: "sweep",
         });
-        summaries.push(baseSummary(parseDare(row), "abandoned"));
+        summaries.push(baseSummary(dareRefundView(row), "abandoned"));
       } catch (error) {
         logger.error(
           `Could not abandon stale dare proposal ${row.id.toString()}:`,
@@ -133,27 +142,28 @@ export async function expireDareAcceptWindows(
     });
     for (const row of lapsed) {
       try {
-        const dare = parseDare(row);
-        const refunds = await claimAndRefundDare(prismaClient, dare, {
+        const dare = dareRefundView(row);
+        const outcome = await claimAndRefundDare(prismaClient, dare, {
           fromState: "pending_accept",
           toState: "expired",
           withCut: false,
           now,
         });
-        if (refunds === undefined) continue;
+        if (outcome === undefined) continue;
         bettingDaresTotal.inc({ result: "expired" });
         bettingDareSettlementsTotal.inc({ outcome: "expired" });
         logBucksTransition({
           event: "bucks.dare.expired",
           serverId: row.serverId,
           dareId: row.id,
-          payout: row.potTotal,
+          payout: outcome.potTotal,
           fromState: "pending_accept",
           toState: "expired",
           surface: "sweep",
         });
         const summary = baseSummary(dare, "expired");
-        summary.refunds = refunds;
+        summary.potTotal = outcome.potTotal;
+        summary.refunds = outcome.refunds;
         summaries.push(summary);
       } catch (error) {
         logger.error(
@@ -178,21 +188,29 @@ export async function expireDareAcceptWindows(
 }
 
 async function settleOneEndedWindow(
-  row: Parameters<typeof parseDare>[0],
+  row: ActiveDareRow,
   prismaClient: ExtendedPrismaClient,
   now: Date,
 ): Promise<DareSettlementSummary | undefined> {
-  const dare = parseDare(row);
+  // No strict conditions parse anywhere on this path: both the void and the
+  // unachieved refund must run even when the stored blob no longer parses
+  // (refunds are never blocked; the summary text is best-effort display).
+  const dare = dareRefundView(row);
+  // Evaluator gate FIRST — an unimplemented stored version is voided with a
+  // full refund and needs nothing but the row.
   if (row.evaluatorVersion !== DARE_EVALUATOR_VERSION) {
-    return await voidDareForEvaluatorMismatch(dare, prismaClient, now, "sweep");
+    return await voidDareWithFullRefund(dare, prismaClient, now, {
+      voidReason: "unknown_evaluator",
+      surface: "sweep",
+    });
   }
-  const refunds = await claimAndRefundDare(prismaClient, dare, {
+  const outcome = await claimAndRefundDare(prismaClient, dare, {
     fromState: "active",
     toState: "unachieved",
     withCut: true,
     now,
   });
-  if (refunds === undefined) {
+  if (outcome === undefined) {
     return undefined;
   }
   bettingDaresTotal.inc({ result: "unachieved" });
@@ -201,13 +219,14 @@ async function settleOneEndedWindow(
     event: "bucks.dare.unachieved",
     serverId: dare.row.serverId,
     dareId: dare.row.id,
-    payout: dare.row.potTotal,
+    payout: outcome.potTotal,
     fromState: "active",
     toState: "unachieved",
     surface: "sweep",
   });
   const summary = baseSummary(dare, "unachieved");
-  summary.refunds = refunds;
+  summary.potTotal = outcome.potTotal;
+  summary.refunds = outcome.refunds;
   return summary;
 }
 

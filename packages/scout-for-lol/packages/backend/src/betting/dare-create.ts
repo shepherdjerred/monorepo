@@ -185,10 +185,8 @@ export type ConfirmDareResult =
   | {
       kind: "confirmed";
       dareId: number;
-      amount: number;
       potTotal: number;
       acceptDeadline: Date;
-      balanceAfter: number;
     }
   | { kind: "feature_disabled" }
   | { kind: "not_found" }
@@ -285,10 +283,8 @@ export async function confirmDare(
     return {
       kind: "confirmed",
       dareId: dare.id,
-      amount,
       potTotal: amount,
       acceptDeadline,
-      balanceAfter: txResult.balance,
     };
   } catch (error) {
     if (error instanceof InsufficientBucksError) {

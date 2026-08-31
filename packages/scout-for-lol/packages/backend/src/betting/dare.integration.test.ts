@@ -1,5 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
+  BUCKS_INT32_MAX,
+  BucksLedgerContextSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
@@ -14,6 +16,7 @@ import {
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { acceptDare, declineDare } from "#src/betting/dare-accept.ts";
+import { DARE_CONDITIONS_UNREADABLE } from "#src/betting/dare-common.ts";
 import { contributeToDare } from "#src/betting/dare-contribute.ts";
 import {
   abandonDare,
@@ -25,14 +28,21 @@ import {
   DareConditionsSchema,
   type DareConditions,
 } from "#src/betting/dare-criteria.ts";
+import {
+  dareMoneyFactsInTransaction,
+  payDareTargetsInTransaction,
+  refundDareContributionsInTransaction,
+  type DareLedgerFacts,
+} from "#src/betting/dare-ledger.ts";
 import { settleDaresForMatch } from "#src/betting/dare-settle.ts";
 import {
   abandonExpiredDareProposals,
   expireDareAcceptWindows,
   settleEndedDareWindows,
 } from "#src/betting/dare-sweep.ts";
+import { ensureBucksAccount } from "#src/betting/accounts.ts";
 import { cancellationHouseCut } from "#src/betting/house-cut.ts";
-import { refundableBucksHeld } from "#src/betting/ledger.ts";
+import { applyBucksDelta, refundableBucksHeld } from "#src/betting/ledger.ts";
 import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
 import {
   addFlagOverride,
@@ -938,6 +948,399 @@ describe("feature flag revocation", () => {
     // Staked 5 on the achieved dare (paid to the target), refunded 4 whole
     // from the declined one.
     expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT - 5);
+    await expectNoDrift();
+  });
+});
+
+/** A frozen copy of the row's money facts, captured before the extra
+ * contribution commits — i.e. what a pre-transaction read would hold. */
+async function staleFactsFor(dareId: number): Promise<DareLedgerFacts> {
+  const row = await db.bucksDare.findUniqueOrThrow({
+    where: { id: dareId },
+    include: { targets: { orderBy: { id: "asc" } } },
+  });
+  return {
+    dareId,
+    serverId: row.serverId,
+    potTotal: row.potTotal,
+    targetAliases: row.targets.map((target) => target.alias),
+    conditionSummary: "alpha wins at least 1 game",
+  };
+}
+
+async function payeesOf(dareId: number) {
+  const targets = await db.bucksDareTarget.findMany({
+    where: { dareId },
+    orderBy: { id: "asc" },
+  });
+  return targets.map((target) => {
+    if (target.bucksAccountId === null) {
+      throw new Error(`target ${target.id.toString()} has no wallet`);
+    }
+    return {
+      id: target.id,
+      discordId: target.discordId,
+      alias: target.alias,
+      bucksAccountId: target.bucksAccountId,
+    };
+  });
+}
+
+async function contributeFive(dareId: number): Promise<void> {
+  const contribution = await contributeToDare(
+    {
+      dareId,
+      serverId: SERVER_ID,
+      contributorDiscordId: CONTRIBUTOR,
+      amount: 5,
+    },
+    deps,
+    T0,
+  );
+  expect(contribution.kind).toBe("contributed");
+}
+
+/**
+ * The dare row read before a transaction opens may drive eligibility and
+ * discovery, never money: a contribution can commit between that read and
+ * the guarded claim. These tests simulate exactly that window with a stale
+ * row copy, and assert both halves of the invariant — the stale copy is
+ * caught by a conservation assert that THROWS, and the post-claim re-read
+ * settles the enlarged pot exactly.
+ */
+describe("intra-transaction money facts", () => {
+  test("an achieved payout pays the enlarged pot, and the stale copy throws", async () => {
+    const dareId = await makeActive({ amount: 5 });
+    const stale = await staleFactsFor(dareId);
+    expect(stale.potTotal).toBe(5);
+    await contributeFive(dareId);
+    const targets = await payeesOf(dareId);
+
+    await expect(
+      db.$transaction((tx) =>
+        payDareTargetsInTransaction(tx, { facts: stale, targets }),
+      ),
+    ).rejects.toThrow(/sum to 10 but potTotal is 5/);
+
+    const houseBefore = await houseBalance();
+    const paid = await db.$transaction(async (tx) => {
+      const facts = await dareMoneyFactsInTransaction(tx, stale);
+      expect(facts.potTotal).toBe(10);
+      return await payDareTargetsInTransaction(tx, { facts, targets });
+    });
+    // pot 10 to one target: share 10, fee floor(10 * 20%) = 2, net 8.
+    expect(paid.payouts.map((payout) => payout.net)).toEqual([8]);
+    expect(paid.remainder).toBe(0);
+    const distributed =
+      paid.payouts.reduce((total, p) => total + p.net + p.fee, 0) +
+      paid.remainder;
+    expect(distributed).toBe(10);
+    expect(await balanceOf(TARGET_A)).toBe(SEED_GRANT + 8);
+    expect(await houseBalance()).toBe(houseBefore + 2);
+    await expectNoDrift();
+  });
+
+  test("a decline refunds the enlarged pot in full, and the stale copy throws", async () => {
+    const dareId = await makePendingAccept({ amount: 5 });
+    const stale = await staleFactsFor(dareId);
+    await contributeFive(dareId);
+
+    await expect(
+      db.$transaction((tx) =>
+        refundDareContributionsInTransaction(tx, {
+          facts: stale,
+          resolution: "declined",
+          withCut: false,
+        }),
+      ),
+    ).rejects.toThrow(/sum to 10 but potTotal is 5/);
+
+    const houseBefore = await houseBalance();
+    const refunds = await db.$transaction(async (tx) => {
+      const facts = await dareMoneyFactsInTransaction(tx, stale);
+      expect(facts.potTotal).toBe(10);
+      return await refundDareContributionsInTransaction(tx, {
+        facts,
+        resolution: "declined",
+        withCut: false,
+      });
+    });
+    const returned = refunds.reduce(
+      (total, refund) => total + refund.refunded + refund.fee,
+      0,
+    );
+    expect(returned).toBe(10);
+    expect(refunds.map((refund) => refund.fee)).toEqual([0, 0]);
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
+    expect(await balanceOf(CONTRIBUTOR)).toBe(SEED_GRANT);
+    expect(await houseBalance()).toBe(houseBefore);
+    await expectNoDrift();
+  });
+
+  test("a window-end refund cuts the enlarged pot, and the stale copy throws", async () => {
+    const dareId = await makeActive({ amount: 5, windowDays: 1 });
+    const stale = await staleFactsFor(dareId);
+    await contributeFive(dareId);
+
+    await expect(
+      db.$transaction((tx) =>
+        refundDareContributionsInTransaction(tx, {
+          facts: stale,
+          resolution: "unachieved",
+          withCut: true,
+        }),
+      ),
+    ).rejects.toThrow(/sum to 10 but potTotal is 5/);
+
+    const houseBefore = await houseBalance();
+    const refunds = await db.$transaction(async (tx) => {
+      const facts = await dareMoneyFactsInTransaction(tx, stale);
+      return await refundDareContributionsInTransaction(tx, {
+        facts,
+        resolution: "unachieved",
+        withCut: true,
+      });
+    });
+    // Two contributors of 5 each: cut round(5 * 20%) = 1, refund 4.
+    expect(refunds.map((refund) => refund.refunded)).toEqual([4, 4]);
+    const returned = refunds.reduce(
+      (total, refund) => total + refund.refunded + refund.fee,
+      0,
+    );
+    expect(returned).toBe(10);
+    expect(await houseBalance()).toBe(houseBefore + 2);
+    await expectNoDrift();
+  });
+});
+
+/**
+ * The same window, exercised end to end: whichever interleaving commits, the
+ * settled pot and the contribution rows agree and the money conserves.
+ */
+describe("resolutions racing a contribution", () => {
+  test("a decline racing a contribution conserves whichever pot committed", async () => {
+    const dareId = await makePendingAccept({ amount: 5 });
+    // Seed the contributor's wallet first: a first-time seed grant moves BB
+    // out of the house and would be mistaken for a cut below.
+    await ensureBucksAccount(
+      { serverId: SERVER_ID, discordId: CONTRIBUTOR },
+      db,
+    );
+    const houseBefore = await houseBalance();
+    const [contribution, declined] = await Promise.all([
+      contributeToDare(
+        {
+          dareId,
+          serverId: SERVER_ID,
+          contributorDiscordId: CONTRIBUTOR,
+          amount: 3,
+        },
+        deps,
+        T0,
+      ),
+      declineDare(
+        { dareId, serverId: SERVER_ID, targetDiscordId: TARGET_A },
+        deps,
+        T0,
+      ),
+    ]);
+    expect(declined.kind).toBe("declined");
+    expect(await dareState(dareId)).toBe("declined");
+    const landed = contribution.kind === "contributed";
+    // Declines are a full refund with no cut, whichever pot committed.
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
+    expect(await balanceOf(CONTRIBUTOR)).toBe(SEED_GRANT);
+    expect(await houseBalance()).toBe(houseBefore);
+    if (declined.kind === "declined") {
+      expect(declined.potTotal).toBe(landed ? 8 : 5);
+    }
+    await expectNoDrift();
+  });
+
+  test("a window sweep racing a contribution conserves whichever pot committed", async () => {
+    const dareId = await makeActive({ amount: 5, windowDays: 1 });
+    await ensureBucksAccount(
+      { serverId: SERVER_ID, discordId: CONTRIBUTOR },
+      db,
+    );
+    const sweepAt = new Date(
+      T0.getTime() +
+        24 * 60 * 60 * 1000 +
+        DARE_WINDOW_INGESTION_GRACE_MS +
+        1000,
+    );
+    const [contribution, summaries] = await Promise.all([
+      contributeToDare(
+        {
+          dareId,
+          serverId: SERVER_ID,
+          contributorDiscordId: CONTRIBUTOR,
+          amount: 5,
+        },
+        deps,
+        sweepAt,
+      ),
+      settleEndedDareWindows(db, sweepAt),
+    ]);
+    expect(summaries.map((summary) => summary.resolution)).toEqual([
+      "unachieved",
+    ]);
+    const settled = await db.bucksDare.findUniqueOrThrow({
+      where: { id: dareId },
+      select: { potTotal: true },
+    });
+    const contributed = await db.bucksDareContribution.aggregate({
+      where: { dareId },
+      _sum: { amount: true },
+    });
+    expect(contributed._sum.amount).toBe(settled.potTotal);
+    expect(settled.potTotal).toBe(contribution.kind === "contributed" ? 10 : 5);
+    const summary = summaries[0];
+    const returned =
+      summary?.refunds.reduce(
+        (total, refund) => total + refund.refunded + refund.fee,
+        0,
+      ) ?? 0;
+    expect(returned).toBe(settled.potTotal);
+    await expectNoDrift();
+  });
+});
+
+describe("storage overflow", () => {
+  test("a payout that cannot fit voids the dare and refunds contributors in full", async () => {
+    const dareId = await makeActive({ amount: 5 });
+    await contributeToDare(
+      {
+        dareId,
+        serverId: SERVER_ID,
+        contributorDiscordId: CONTRIBUTOR,
+        amount: 5,
+      },
+      deps,
+      T0,
+    );
+    const target = await db.bucksDareTarget.findFirstOrThrow({
+      where: { dareId },
+      select: { bucksAccountId: true },
+    });
+    if (target.bucksAccountId === null) {
+      throw new Error("the accepted target should hold a wallet");
+    }
+    // Fill the payee's wallet to the Int32 ceiling through the only legal
+    // mutator, so the ledger stays reconcilable and the credit below is the
+    // single thing that overflows.
+    await db.$transaction((tx) =>
+      applyBucksDelta(tx, {
+        bucksAccountId: target.bucksAccountId ?? 0,
+        delta: BUCKS_INT32_MAX - SEED_GRANT,
+        kind: "adjustment",
+        context: {
+          type: "adjustment",
+          note: "fill to the Int32 ceiling",
+          actorDiscordId: CHALLENGER,
+        },
+      }),
+    );
+    const houseBefore = await houseBalance();
+
+    const summaries = await settleDaresForMatch(
+      winningMatch(ONE_TARGET),
+      db,
+      new Date(GAME_END + 1000),
+    );
+    expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
+    expect(summaries[0]?.voidReason).toBe("storage_overflow");
+    expect(await dareState(dareId)).toBe("voided");
+    const stored = await db.bucksDare.findUniqueOrThrow({
+      where: { id: dareId },
+      select: { voidReason: true },
+    });
+    expect(stored.voidReason).toBe("storage_overflow");
+    // Full refunds, no cut, and the rolled-back capture left no game row.
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
+    expect(await balanceOf(CONTRIBUTOR)).toBe(SEED_GRANT);
+    expect(await houseBalance()).toBe(houseBefore);
+    expect(summaries[0]?.refunds.map((refund) => refund.fee)).toEqual([0, 0]);
+    expect(await db.bucksDareGame.count({ where: { dareId } })).toBe(0);
+    await expectNoDrift();
+  });
+});
+
+async function dareContextSummaries(dareId: number): Promise<string[]> {
+  const entries = await db.bucksLedgerEntry.findMany({
+    where: { kind: { in: ["dare_refund", "dare_fee"] } },
+    orderBy: { id: "asc" },
+    select: { context: true },
+  });
+  return entries.flatMap((entry) => {
+    const context = BucksLedgerContextSchema.parse(JSON.parse(entry.context));
+    return context.type === "dare" && context.dareId === dareId
+      ? [context.conditionSummary]
+      : [];
+  });
+}
+
+/**
+ * Refunds are never blocked by a stored conditions blob the current schema
+ * cannot read: the evaluator gate is checked before any parse, and the
+ * condition summary degrades to a display placeholder.
+ */
+describe("unreadable stored conditions", () => {
+  const CORRUPT = '{"version":1,"root":{"clauses":"not a list"}}';
+
+  test("a window-end sweep still refunds, with the cut, on an unparseable blob", async () => {
+    const dareId = await makeActive({ amount: 5, windowDays: 1 });
+    await db.bucksDare.update({
+      where: { id: dareId },
+      data: { conditions: CORRUPT },
+    });
+    const houseBefore = await houseBalance();
+    const summaries = await settleEndedDareWindows(
+      db,
+      new Date(
+        T0.getTime() +
+          24 * 60 * 60 * 1000 +
+          DARE_WINDOW_INGESTION_GRACE_MS +
+          1000,
+      ),
+    );
+    expect(summaries.map((summary) => summary.resolution)).toEqual([
+      "unachieved",
+    ]);
+    // Contributed 5: cut round(5 * 20%) = 1, refund 4 — the ordinary
+    // unachieved arithmetic, unaffected by the unreadable blob.
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT - 1);
+    expect(await houseBalance()).toBe(houseBefore + 1);
+    const summaries2 = await dareContextSummaries(dareId);
+    expect(summaries2.length).toBeGreaterThan(0);
+    expect(new Set(summaries2)).toEqual(new Set([DARE_CONDITIONS_UNREADABLE]));
+    await expectNoDrift();
+  });
+
+  test("an unimplemented evaluator version voids in full without ever parsing", async () => {
+    const dareId = await makeActive({ amount: 5, windowDays: 1 });
+    await db.bucksDare.update({
+      where: { id: dareId },
+      data: { conditions: CORRUPT, evaluatorVersion: "0" },
+    });
+    const houseBefore = await houseBalance();
+    const summaries = await settleEndedDareWindows(
+      db,
+      new Date(
+        T0.getTime() +
+          24 * 60 * 60 * 1000 +
+          DARE_WINDOW_INGESTION_GRACE_MS +
+          1000,
+      ),
+    );
+    expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
+    expect(summaries[0]?.voidReason).toBe("unknown_evaluator");
+    // Voids are a FULL refund with no cut.
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
+    expect(await houseBalance()).toBe(houseBefore);
+    expect(await dareContextSummaries(dareId)).toEqual([
+      DARE_CONDITIONS_UNREADABLE,
+    ]);
     await expectNoDrift();
   });
 });

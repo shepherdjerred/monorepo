@@ -1,6 +1,5 @@
 import * as Sentry from "@sentry/bun";
 import {
-  StructuredOutputExhaustionError,
   StructuredOutputUsageError,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
@@ -26,6 +25,7 @@ import {
   thresholdsMatchProposal,
 } from "#src/betting/parlay-model-schema.ts";
 import { fetchParlayHistory } from "#src/betting/parlay-history.ts";
+import { sharedLlmFailureKind } from "#src/betting/llm-failure.ts";
 import {
   numericThresholdDiagnostics,
   priceParlay,
@@ -49,7 +49,6 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
-  LlmBudgetExceeded,
   recordTokenUsage,
 } from "#src/league/review/openai-budget.ts";
 import {
@@ -98,14 +97,6 @@ function chargeUsage(
   bettingParlayTokensTotal.inc({ model, kind: "prompt" }, tokens.input);
   bettingParlayTokensTotal.inc({ model, kind: "completion" }, tokens.output);
   recordTokenUsage(tokens.input, tokens.output, model);
-}
-
-function timedOut(signal: AbortSignal, error: unknown): boolean {
-  return (
-    signal.aborted ||
-    (error instanceof Error &&
-      (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
 }
 
 type GenerationReady = {
@@ -372,9 +363,8 @@ function generationStatusForError(
   deadline: AbortSignal,
   error: unknown,
 ): GenerationStatus {
-  if (error instanceof LlmBudgetExceeded) return "budget_refused";
-  if (timedOut(deadline, error)) return "timeout";
-  if (error instanceof StructuredOutputExhaustionError) return "invalid_output";
+  const shared = sharedLlmFailureKind(deadline, error);
+  if (shared !== undefined) return shared;
   if (error instanceof ParlayPersistenceError) return "persistence_error";
   if (error instanceof ParlayUnpriceableError) return "unpriceable";
   return "provider_error";

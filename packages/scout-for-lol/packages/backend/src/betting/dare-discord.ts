@@ -22,6 +22,7 @@ import {
   dareCalloutComponents,
   defaultDareDiscordDependencies,
   loadDareCalloutState,
+  persistDareCalloutRef,
   refreshDareCallout,
   type DareDiscordDependencies,
 } from "#src/betting/dare-callout.ts";
@@ -182,6 +183,7 @@ async function handleConfirm(
   // roll it back. The confirm button lives on the EPHEMERAL confirmation, so
   // a followUp would inherit that ephemerality — the public callout goes
   // through a plain channel send to the dare's stored channel instead.
+  let message: { channelId: string; id: string };
   try {
     const state = await loadDareCalloutState(deps.prismaClient, dareId);
     if (state === undefined) {
@@ -189,7 +191,7 @@ async function handleConfirm(
         `Dare ${dareId.toString()} disappeared after its confirm committed`,
       );
     }
-    const message = await observeBucksDelivery(
+    message = await observeBucksDelivery(
       {
         surface: "dare_callout",
         operation: "send",
@@ -210,23 +212,6 @@ async function handleConfirm(
           context.serverId,
         ),
     );
-    await deps.prismaClient.bucksDare.update({
-      where: { id: dareId },
-      data: {
-        messageRef: JSON.stringify({
-          channelId: message.channelId,
-          messageId: message.id,
-        }),
-      },
-    });
-    await interaction.editReply({
-      content: dareConfirmedPostedContent({
-        potTotal: result.potTotal,
-        acceptDeadline: result.acceptDeadline,
-      }),
-      components: [],
-      embeds: [],
-    });
   } catch (error) {
     logger.error(
       `❌ Could not post the callout for confirmed dare ${dareId.toString()}:`,
@@ -241,7 +226,27 @@ async function handleConfirm(
       components: [],
       embeds: [],
     });
+    return;
   }
+  // The callout EXISTS from here on — a failure below is a persistence
+  // problem, not a send problem, and the challenger must not be told the
+  // callout was never posted. Without the stored ref the serialized refresh
+  // skips this dare forever, so the persist gets one retry and an accurate
+  // degraded message when it still fails.
+  const persisted = await persistDareCalloutRef(deps.prismaClient, dareId, {
+    channelId: message.channelId,
+    messageId: message.id,
+  });
+  await interaction.editReply({
+    content: persisted
+      ? dareConfirmedPostedContent({
+          potTotal: result.potTotal,
+          acceptDeadline: result.acceptDeadline,
+        })
+      : "✅ Dare confirmed and the callout was posted, but live pot/progress updates on it may lag. Nothing was reversed.",
+    components: [],
+    embeds: [],
+  });
 }
 
 async function handleCancel(
@@ -347,6 +352,7 @@ async function handleAccept(
         activated: result.activated,
         acceptedCount: result.acceptedCount,
         targetCount: result.targetCount,
+        horizonKind: result.horizonKind,
         windowEndsAt: result.windowEndsAt,
       }),
     );

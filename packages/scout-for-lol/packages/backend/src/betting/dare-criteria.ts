@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
+  championNameToDisplayName,
   formatParlayNumericValue,
-  getChampionByKey,
   normalizeChampionName,
   type BucksDareHorizonKind,
   type RawMatch,
@@ -15,6 +15,7 @@ import {
   participantBooleanValue,
   participantNumericValue,
 } from "#src/betting/parlay-catalog.ts";
+import { countLabel } from "#src/betting/weekly-parlay-discord-copy.ts";
 
 /**
  * The closed condition language for `/bb dare` bounties.
@@ -202,6 +203,17 @@ export function dareLeavesInCanonicalOrder(
   return conditions.root.clauses.flatMap((clause) => clause.children);
 }
 
+const LeafHitsSchema = z.array(z.boolean());
+
+/**
+ * Decode one stored `BucksDareGame.leafHits` JSON blob. Lives beside
+ * `dareLeavesInCanonicalOrder` because the two are one contract: each decoded
+ * boolean is positional against THAT leaf order, forever.
+ */
+export function parseLeafHits(leafHitsJson: string): boolean[] {
+  return LeafHitsSchema.parse(JSON.parse(leafHitsJson));
+}
+
 export const DARE_RATE_LABELS: Record<DareRateField, string> = {
   cs_per_minute: "CS per minute",
   damage_per_minute: "damage per minute",
@@ -277,7 +289,7 @@ export function evaluateDarePredicate(
 
 /** Frozen per-target facts recorded with each captured game, for audit only —
  * settlement re-reads `leafHits`, never this. */
-export const DareGameSnapshotSchema = z.strictObject({
+const DareGameSnapshotSchema = z.strictObject({
   teamId: z.number().int(),
   targets: z
     .array(
@@ -295,7 +307,7 @@ export const DareGameSnapshotSchema = z.strictObject({
     )
     .min(1),
 });
-export type DareGameSnapshot = z.infer<typeof DareGameSnapshotSchema>;
+type DareGameSnapshot = z.infer<typeof DareGameSnapshotSchema>;
 
 export type DareGameEvaluation = {
   /** Aligned to `dareLeavesInCanonicalOrder` — index-stable forever. */
@@ -434,17 +446,12 @@ function renderDarePredicate(predicate: DarePredicate, who: string): string {
   return `${who} averages ${comparisonWord(predicate.operator)} ${formatDareRateThreshold(predicate.thresholdScaled)} ${DARE_RATE_LABELS[predicate.field]}`;
 }
 
-function championDisplay(championKey: string): string {
-  return getChampionByKey(championKey)?.name ?? championKey;
-}
-
 function renderDareLeaf(leaf: DareLeaf, who: string): string {
   const suffix =
-    leaf.champion === null ? "" : ` on ${championDisplay(leaf.champion)}`;
-  const games =
-    leaf.requiredGames === 1
-      ? "1 game"
-      : `${leaf.requiredGames.toString()} games`;
+    leaf.champion === null
+      ? ""
+      : ` on ${championNameToDisplayName(leaf.champion)}`;
+  const games = `${leaf.requiredGames.toString()} ${countLabel(leaf.requiredGames, "game")}`;
   return `at least ${games} where ${renderDarePredicate(leaf.predicate, who)}${suffix}`;
 }
 
@@ -518,13 +525,37 @@ export function renderDareConditions(
  * Cross-field checks the schemas cannot express. Empty means valid.
  *
  * Two targets sharing a frozen PUUID would trivialize same-match candidacy,
- * and a `next_game` horizon binds exactly one game, so no leaf may require
- * more than one.
+ * a `next_game` horizon binds exactly one game, so no leaf may require more
+ * than one, and a champion-bound leaf on a group dare is unachievable from
+ * creation: a leaf hits only when EVERY target played that champion, and the
+ * eligible queues are all draft modes where a champion appears at most once
+ * per match.
  */
 export function dareSemanticIssues(
   targets: readonly DareTargetIdentity[],
   conditions: DareConditions,
   horizonKind: BucksDareHorizonKind,
+): string[] {
+  const leaves = dareLeavesInCanonicalOrder(conditions);
+  const groupIssue =
+    targets.length > 1 && leaves.some((leaf) => leaf.champion !== null)
+      ? "A dare on multiple targets cannot pin a champion — only one player can play a champion per draft game, so the condition could never be met"
+      : undefined;
+  const horizonIssue =
+    horizonKind === "next_game" &&
+    leaves.some((leaf) => leaf.requiredGames !== 1)
+      ? "A next-game dare binds exactly one game, so every condition must be achievable in it"
+      : undefined;
+  return [
+    ...duplicateTargetIssues(targets),
+    ...sharedAccountIssues(targets),
+    ...(groupIssue === undefined ? [] : [groupIssue]),
+    ...(horizonIssue === undefined ? [] : [horizonIssue]),
+  ];
+}
+
+function duplicateTargetIssues(
+  targets: readonly DareTargetIdentity[],
 ): string[] {
   const issues: string[] = [];
   const seenDiscordIds = new Set<string>();
@@ -534,6 +565,12 @@ export function dareSemanticIssues(
     }
     seenDiscordIds.add(target.discordId);
   }
+  return issues;
+}
+
+/** Two targets sharing a frozen PUUID would trivialize same-match candidacy. */
+function sharedAccountIssues(targets: readonly DareTargetIdentity[]): string[] {
+  const issues: string[] = [];
   const puuidOwners = new Map<string, string>();
   for (const target of targets) {
     for (const account of target.accounts) {
@@ -544,16 +581,6 @@ export function dareSemanticIssues(
         );
       }
       puuidOwners.set(account.puuid, target.discordId);
-    }
-  }
-  if (horizonKind === "next_game") {
-    const overOneGame = dareLeavesInCanonicalOrder(conditions).some(
-      (leaf) => leaf.requiredGames !== 1,
-    );
-    if (overOneGame) {
-      issues.push(
-        "A next-game dare binds exactly one game, so every condition must be achievable in it",
-      );
     }
   }
   return issues;

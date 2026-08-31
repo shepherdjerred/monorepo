@@ -120,6 +120,11 @@ function contextAliasLabel(context: LedgerContext): string | undefined {
       ...context.opposingAliases,
     ]);
   }
+  // Dare contexts carry their frozen target aliases; dares have no pool, so
+  // a dare_payout's match ID must never fall through to the roster lookup.
+  if (context?.type === "dare") {
+    return formatGameLabel(context.targetAliases);
+  }
   return;
 }
 

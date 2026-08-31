@@ -69,7 +69,12 @@ export async function deliverDareSummaries(
       }
       // Progress for a capture; final content with components removed for a
       // resolution — both read back from the database, never from the summary.
-      await refreshDareCallout(summary.dareId, deps);
+      // A summary with no recorded callout ref skips the refresh outright:
+      // refreshDareCallout would reload full state only to early-return, and
+      // the ref is written once at confirm time so it cannot appear later.
+      if (summary.messageRef !== null) {
+        await refreshDareCallout(summary.dareId, deps);
+      }
     } catch (error) {
       logger.error(
         `❌ Could not deliver the result of dare ${summary.dareId.toString()}:`,

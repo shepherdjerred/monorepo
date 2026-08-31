@@ -1,5 +1,6 @@
 import {
   BucksStakeSchema,
+  OPEN_BUCKS_DARE_STATES,
   type BucksDareState,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -90,24 +91,23 @@ export async function contributeToDare(
       // Guarded first statement: claiming the dare row in a contributable
       // state both proves the pot is still open and serializes this append
       // against settlement — a losing racer matches 0 rows and reads the
-      // fresh state for precise copy.
-      const claim = await tx.bucksDare.updateMany({
+      // fresh state for precise copy. `updateManyAndReturn` keeps the claim
+      // and the post-increment pot read one statement.
+      const claimed = await tx.bucksDare.updateManyAndReturn({
         where: {
           id: dare.id,
-          dareState: { in: ["pending_accept", "active"] },
+          dareState: { in: [...OPEN_BUCKS_DARE_STATES] },
         },
         data: { potTotal: { increment: amount }, updatedAt: now },
+        select: { potTotal: true },
       });
-      if (claim.count !== 1) {
+      const updated = claimed[0];
+      if (updated === undefined || claimed.length !== 1) {
         return {
           kind: "too_late",
           dareState: await currentDareState(tx, dare.id),
         } as const;
       }
-      const updated = await tx.bucksDare.findUniqueOrThrow({
-        where: { id: dare.id },
-        select: { potTotal: true },
-      });
       const balance = await stakeDareContributionInTransaction(tx, {
         facts: {
           dareId: dare.id,

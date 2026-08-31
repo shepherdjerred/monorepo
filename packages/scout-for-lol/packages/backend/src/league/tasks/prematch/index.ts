@@ -10,6 +10,10 @@ import { closeExpiredParlayWindows } from "#src/betting/parlay-sweep.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlay-publish.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+import {
+  runMaintenanceSteps,
+  type MaintenanceStep,
+} from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 
@@ -23,30 +27,74 @@ export async function checkPreMatch(): Promise<{
   const dareSummaries: DareSettlementSummary[] = [];
 
   try {
-    await checkActiveGames();
-
+    // Every step runs even when an earlier one throws, and the collected
+    // failures are re-thrown at the end. The dare clocks are LAST, so without
+    // this a persistently failing Riot poll or parlay refresh would starve
+    // dare refunds indefinitely while the money stayed escrowed.
+    const steps: MaintenanceStep[] = [
+      {
+        name: "active-game detection",
+        run: async () => {
+          await checkActiveGames();
+        },
+      },
+    ];
     if (!isFeatureHardDisabled("betting_enabled")) {
-      // Durable publishing rows are a small outbox: retry Discord activation
-      // before processing clocks, including after a restart between persistence
-      // and the message edit that exposes buttons.
-      await activatePendingParlayMarkets();
-
-      // Grey out the buttons on windows that have just expired. Purely cosmetic:
-      // a click on a live-looking button is still refused by placeBet, which
-      // re-checks closesAt inside its transaction.
-      const closed = await closeExpiredBettingWindows();
-      await refreshClosedBucksMessages(closed);
-      const closedParlays = await closeExpiredParlayWindows();
-      await refreshClosedParlayMessages(closedParlays);
-
-      // Dare clocks: unconfirmed proposals past their TTL and accept windows
-      // nobody answered. Both swallow per-record errors. Delivery runs after
-      // the refunds committed and swallows per-summary, so a dead channel can
-      // never re-run or block a refund.
-      dareSummaries.push(...(await abandonExpiredDareProposals()));
-      dareSummaries.push(...(await expireDareAcceptWindows()));
-      await deliverDareSummaries(dareSummaries);
+      steps.push(
+        {
+          // Durable publishing rows are a small outbox: retry Discord
+          // activation before processing clocks, including after a restart
+          // between persistence and the message edit that exposes buttons.
+          name: "parlay market activation",
+          run: async () => {
+            await activatePendingParlayMarkets();
+          },
+        },
+        {
+          // Grey out the buttons on windows that have just expired. Purely
+          // cosmetic: a click on a live-looking button is still refused by
+          // placeBet, which re-checks closesAt inside its transaction.
+          name: "betting window close",
+          run: async () => {
+            await refreshClosedBucksMessages(
+              await closeExpiredBettingWindows(),
+            );
+          },
+        },
+        {
+          name: "parlay window close",
+          run: async () => {
+            await refreshClosedParlayMessages(
+              await closeExpiredParlayWindows(),
+            );
+          },
+        },
+        {
+          // Unconfirmed proposals past their TTL. Swallows per-record errors.
+          name: "dare proposal TTL",
+          run: async () => {
+            dareSummaries.push(...(await abandonExpiredDareProposals()));
+          },
+        },
+        {
+          // Accept windows nobody answered — a refund path, kept in its own
+          // step so the proposal sweep above can never starve it.
+          name: "dare accept-window expiry",
+          run: async () => {
+            dareSummaries.push(...(await expireDareAcceptWindows()));
+          },
+        },
+        {
+          // Delivery runs after the refunds committed and swallows
+          // per-summary, so a dead channel can never re-run or block a refund.
+          name: "dare summary delivery",
+          run: async () => {
+            await deliverDareSummaries(dareSummaries);
+          },
+        },
+      );
     }
+    await runMaintenanceSteps("pre-match check", steps);
 
     const executionTime = Date.now() - startTime;
     logger.info(

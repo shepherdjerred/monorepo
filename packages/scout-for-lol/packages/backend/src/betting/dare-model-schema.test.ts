@@ -158,6 +158,41 @@ describe("dareTranslationSchemaFor", () => {
     ).toBe(true);
   });
 
+  // Regression: normalizeChampionName percent-decodes, so a champion string
+  // containing a bare "%" throws a URIError. Escaping the superRefine would
+  // be classified as a provider error and lose the model's retry; it has to
+  // come back as an ordinary validation issue instead.
+  test("reports a '%' champion as a validation issue, never a thrown error", () => {
+    const candidate = output({
+      leaves: [booleanLeaf({ champion: "100% crit Yasuo" })],
+    });
+    expect(() => schema.safeParse(candidate)).not.toThrow();
+    expect(messagesOf(candidate)).toContain(
+      'Unknown champion "100% crit Yasuo"',
+    );
+  });
+
+  test("rejects a champion-bound leaf on a multi-target dare", () => {
+    const messages = messagesOf(
+      output({
+        targets: ["T1", "T2"],
+        leaves: [booleanLeaf({ champion: "Ahri" })],
+      }),
+    );
+    expect(messages.join(" ")).toContain("cannot pin a champion");
+  });
+
+  test("accepts the same champion-bound leaf on a single-target dare", () => {
+    expect(
+      schema.safeParse(
+        output({
+          targets: ["T1"],
+          leaves: [booleanLeaf({ champion: "Ahri" })],
+        }),
+      ).success,
+    ).toBe(true);
+  });
+
   test("rejects eq on a rate leaf", () => {
     const candidate = output({
       horizonKind: "window",
@@ -285,7 +320,10 @@ describe("canonicalizeDareTranslation", () => {
         clauseCombinators: ["all", "any"],
         windowDays: DARE_MAX_WINDOW_DAYS,
         leaves: [
-          booleanLeaf({ clauseIndex: 0, champion: "Wukong" }),
+          // No champion here: a champion-bound leaf is rejected on a
+          // multi-target dare, and champion normalization is covered on its
+          // own single-target case below.
+          booleanLeaf({ clauseIndex: 0 }),
           numericLeaf({ clauseIndex: 1 }),
           rateLeaf({ clauseIndex: 1, requiredGames: 3 }),
         ],
@@ -315,8 +353,7 @@ describe("canonicalizeDareTranslation", () => {
                 field: "win",
                 expected: true,
               },
-              // Aliases are stored as the normalized Data Dragon key.
-              champion: "MonkeyKing",
+              champion: null,
             },
           ],
         },
@@ -349,6 +386,20 @@ describe("canonicalizeDareTranslation", () => {
         },
       ],
     });
+  });
+
+  test("stores a champion alias as its normalized Data Dragon key", () => {
+    const canonical = canonicalizeDareTranslation(
+      schema.parse(
+        output({
+          targets: ["T1"],
+          leaves: [booleanLeaf({ champion: "Wukong" })],
+        }),
+      ),
+      SHORTLIST,
+    );
+    const clause = canonical.conditions.root.clauses[0];
+    expect(clause?.children[0]?.champion).toBe("MonkeyKing");
   });
 
   test("defaults an unstated window length", () => {

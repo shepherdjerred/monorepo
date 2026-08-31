@@ -184,10 +184,11 @@ export const DARE_MAX_REQUIRED_GAMES = 50;
 
 /**
  * Pot-contribution denominations offered as buttons on the dare callout.
- * Mirrors `BUTTON_STAKES`: contributions are append-only, so larger amounts
- * are built by clicking again.
+ * Deliberately THE SAME denominations as the prematch buttons: contributions
+ * are append-only, so larger amounts are built by clicking again, and deriving
+ * the alias keeps the two button sets in lockstep structurally.
  */
-export const DARE_CONTRIBUTION_STAKES = [1, 5] as const;
+export const DARE_CONTRIBUTION_STAKES = BUTTON_STAKES;
 
 /**
  * Deadline for the dare translation call. Shorter than the parlay's 60s

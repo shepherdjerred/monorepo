@@ -169,11 +169,26 @@ function leafSlotIssues(leaf: ModelDareLeaf, index: number): SemanticIssue[] {
   return messages.map((message) => ({ path: ["leaves", index], message }));
 }
 
+/** Resolve a model-supplied champion string, treating a URIError from the
+ * percent-decode exactly like an unresolvable name. */
+function resolveChampionOrUndefined(champion: string) {
+  try {
+    return getChampionByKey(normalizeChampionName(champion));
+  } catch {
+    return;
+  }
+}
+
 function championIssues(leaf: ModelDareLeaf, index: number): SemanticIssue[] {
   if (leaf.champion === null) {
     return [];
   }
-  const resolved = getChampionByKey(normalizeChampionName(leaf.champion));
+  // `normalizeChampionName` percent-decodes and THROWS a URIError on a
+  // malformed escape (a model champion like "100% crit Yasuo"). A throw here
+  // would escape the superRefine and be classified as a provider error, so
+  // any resolution failure — thrown or returned — becomes the same semantic
+  // issue and earns the model a bounded retry instead.
+  const resolved = resolveChampionOrUndefined(leaf.champion);
   return resolved === undefined
     ? [
         {
@@ -182,6 +197,30 @@ function championIssues(leaf: ModelDareLeaf, index: number): SemanticIssue[] {
         },
       ]
     : [];
+}
+
+/**
+ * A champion-bound leaf on a multi-target dare is unachievable from creation:
+ * a leaf hits only when EVERY target played that champion, and the eligible
+ * queues are all draft modes where a champion appears at most once per match.
+ * Rejected here so the model gets a semantic retry, and re-checked by
+ * `dareSemanticIssues` at creation.
+ */
+function groupChampionIssues(output: DareModelTranslation): SemanticIssue[] {
+  if (output.targets.length <= 1) {
+    return [];
+  }
+  return output.leaves.flatMap((leaf, index) =>
+    leaf.champion === null
+      ? []
+      : [
+          {
+            path: ["leaves", index],
+            message:
+              "A dare with multiple targets cannot pin a champion — only one player can play it per game. Use champion: null or a single target",
+          },
+        ],
+  );
 }
 
 function targetIssues(
@@ -297,6 +336,7 @@ function semanticIssues(
       ...leafSlotIssues(leaf, index),
       ...championIssues(leaf, index),
     ]),
+    ...groupChampionIssues(output),
     ...clauseShapeIssues(output),
     ...horizonIssues(output),
   ];

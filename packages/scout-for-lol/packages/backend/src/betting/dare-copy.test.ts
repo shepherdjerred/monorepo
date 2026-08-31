@@ -75,8 +75,7 @@ describe("dare confirmation copy", () => {
         "**Horizon:** **7 days** from the moment every target accepts",
         "**Opening pot:** **1,000 BB** — debited from your wallet when you confirm.",
         "**Targets:** Virmel, Bryan — they risk nothing and must all accept before it goes live.",
-        `Confirm before ${rel(DEADLINE)}.`,
-        "House cut: **20%** on either resolution. `/bb rules`",
+        `Confirm before ${rel(DEADLINE)}. \`/bb rules\``,
       ].join("\n"),
     );
   });
@@ -109,6 +108,7 @@ describe("dare callout copy", () => {
     challengerDiscordId: "100",
     potTotal: 25,
     conditionSummary: SUMMARY_TEXT,
+    horizonKind: "window",
     targets: [
       { discordId: "200", alias: "Virmel", accepted: true, declined: false },
       { discordId: "300", alias: "Bryan", accepted: false, declined: false },
@@ -149,6 +149,43 @@ describe("dare callout copy", () => {
         "Pile onto the pot below — contributions are final. `/bb rules`",
       ].join("\n"),
     );
+  });
+
+  test("renders the next-game LIVE callout as a backstop, not a deadline", () => {
+    const view: DareCalloutView = {
+      ...baseView,
+      dareState: "active",
+      horizonKind: "next_game",
+      windowEndsAt: WINDOW_END,
+      progress: dareLeafProgress([WIN_LEAF], [0]),
+    };
+    expect(dareCalloutContent(view)).toBe(
+      [
+        `🔴 **Bryan Bucks dare: LIVE** — **25 BB** on the line, settles on the next eligible game (expires ${rel(WINDOW_END)} if none is played)`,
+        "**The dare:**",
+        SUMMARY_TEXT,
+        "**Progress:**",
+        "• Wins: 0/7",
+        "Pile onto the pot below — contributions are final. `/bb rules`",
+      ].join("\n"),
+    );
+  });
+
+  test("next-game and window LIVE callouts differ on the same clock", () => {
+    const base: DareCalloutView = {
+      ...baseView,
+      dareState: "active",
+      windowEndsAt: WINDOW_END,
+      progress: dareLeafProgress([WIN_LEAF], [0]),
+    };
+    const nextGame = dareCalloutContent({ ...base, horizonKind: "next_game" });
+    const window = dareCalloutContent({ ...base, horizonKind: "window" });
+    expect(nextGame).not.toBe(window);
+    // The backstop must never be phrased as the dare simply "ending".
+    expect(nextGame).not.toContain(`, ends ${rel(WINDOW_END)}`);
+    expect(nextGame).toContain("settles on the next eligible game");
+    expect(window).toContain(`, ends ${rel(WINDOW_END)}`);
+    expect(window).not.toContain("settles on the next eligible game");
   });
 
   test("renders the declined final state naming the decliner", () => {
@@ -337,6 +374,7 @@ describe("dare result copy", () => {
         activated: true,
         acceptedCount: 2,
         targetCount: 2,
+        horizonKind: "window",
         windowEndsAt: WINDOW_END,
       }),
     ).toBe(`🔥 You're all in. The dare is LIVE — it ends ${rel(WINDOW_END)}.`);
@@ -345,12 +383,52 @@ describe("dare result copy", () => {
         activated: false,
         acceptedCount: 1,
         targetCount: 2,
+        horizonKind: "window",
         windowEndsAt: undefined,
       }),
     ).toBe("✅ Accepted (1/2). Waiting on the rest.");
     expect(
       dareContributionAckContent({ amount: 5, potTotal: 30, balanceAfter: 95 }),
     ).toBe("💰 +**5 BB** onto the pot — now **30 BB**. Balance **95 BB**.");
+  });
+
+  test("the next-game accept ack settles on the next game, not the backstop", () => {
+    const nextGame = dareAcceptAckContent({
+      activated: true,
+      acceptedCount: 2,
+      targetCount: 2,
+      horizonKind: "next_game",
+      windowEndsAt: WINDOW_END,
+    });
+    expect(nextGame).toBe(
+      `🔥 You're all in. The dare is LIVE — it settles on your next eligible game (expires ${rel(WINDOW_END)} if no game is played).`,
+    );
+    // Same clock, different horizon ⇒ different copy; the backstop is never
+    // presented as the dare's ordinary end date.
+    expect(nextGame).not.toBe(
+      dareAcceptAckContent({
+        activated: true,
+        acceptedCount: 2,
+        targetCount: 2,
+        horizonKind: "window",
+        windowEndsAt: WINDOW_END,
+      }),
+    );
+    expect(nextGame).not.toContain(`it ends ${rel(WINDOW_END)}`);
+  });
+
+  test("a next-game ack with no backstop omits the expiry clause", () => {
+    expect(
+      dareAcceptAckContent({
+        activated: true,
+        acceptedCount: 1,
+        targetCount: 1,
+        horizonKind: "next_game",
+        windowEndsAt: undefined,
+      }),
+    ).toBe(
+      "🔥 You're all in. The dare is LIVE — it settles on your next eligible game.",
+    );
   });
 });
 

@@ -335,3 +335,65 @@ describe("resolveLedgerGameLabels", () => {
     expect(label.endsWith("…")).toBe(true);
   });
 });
+
+function dareContext(input: {
+  role: "contributor" | "target";
+  payoutComponent: "contribution" | "share";
+  resolution?: "achieved";
+}): string {
+  return JSON.stringify({
+    type: "dare",
+    dareId: 7,
+    role: input.role,
+    targetAliases: ["alpha", "bravo"],
+    conditionSummary: "alpha and bravo each win at least 1 game",
+    potTotal: 10,
+    amount: 5,
+    payoutComponent: input.payoutComponent,
+    ...(input.resolution === undefined ? {} : { resolution: input.resolution }),
+  });
+}
+
+// Regression: a dare_payout row carries a matchId but no BucksMatchPool, so
+// before dare contexts were handled it fell through to the roster lookup,
+// found nothing, and rendered the raw Riot match ID. Dares freeze their
+// target aliases precisely so history never has to look anything up.
+describe("resolveLedgerGameLabels for dares", () => {
+  test("renders frozen target aliases with or without a match ID", async () => {
+    const entries = [
+      {
+        id: 1,
+        delta: 4,
+        balanceAfter: 39,
+        kind: BucksLedgerKindSchema.parse("dare_payout"),
+        // A settled dare stamps the binding match, and there is no pool for it.
+        matchId: "NA1_dare_settlement",
+        context: dareContext({
+          role: "target",
+          payoutComponent: "share",
+          resolution: "achieved",
+        }),
+        createdAt: new Date(0),
+      },
+      {
+        id: 2,
+        delta: -5,
+        balanceAfter: 35,
+        kind: BucksLedgerKindSchema.parse("dare_stake"),
+        // A contribution predates any match.
+        matchId: null,
+        context: dareContext({
+          role: "contributor",
+          payoutComponent: "contribution",
+        }),
+        createdAt: new Date(0),
+      },
+    ];
+
+    const labels = await resolveLedgerGameLabels(SERVER_ID, entries, db);
+    expect(labels.get(1)).toBe("alpha, bravo");
+    expect(labels.get(2)).toBe("alpha, bravo");
+    // Never the raw match ID, and never a pool lookup that has no pool.
+    expect(labels.get(1)).not.toContain("NA1_dare_settlement");
+  });
+});

@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import type { z } from "zod";
 import {
-  StructuredOutputExhaustionError,
   StructuredOutputUsageError,
   generateValidatedObject,
   type AggregateOpenRouterUsage,
@@ -36,9 +35,9 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
-  LlmBudgetExceeded,
   recordTokenUsage,
 } from "#src/league/review/openai-budget.ts";
+import { sharedLlmFailureKind } from "#src/betting/llm-failure.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-dare-translate");
@@ -124,33 +123,28 @@ export type TranslateDareInput = {
   text: string;
 };
 
-function timedOut(signal: AbortSignal, error: unknown): boolean {
-  return (
-    signal.aborted ||
-    (error instanceof Error &&
-      (error.name === "AbortError" || error.name === "TimeoutError"))
-  );
-}
+const SHARED_FAILURE_MESSAGES = {
+  budget_refused: "refused by the LLM budget",
+  timeout: "timed out",
+  invalid_output: "produced no valid object",
+} as const;
 
 function failureResult(
   input: TranslateDareInput,
   deadline: AbortSignal,
   error: unknown,
 ): DareTranslationResult {
-  if (error instanceof LlmBudgetExceeded) {
-    logger.info(`Dare translation refused by LLM budget for ${input.serverId}`);
-    return { kind: "budget_refused" };
-  }
-  if (timedOut(deadline, error)) {
-    logger.info(`Dare translation timed out for ${input.serverId}`);
-    return { kind: "timeout" };
-  }
-  if (error instanceof StructuredOutputExhaustionError) {
+  // Budget refusal, deadline expiry, and structured-output exhaustion are
+  // classified by the shared model-boundary helper so this module cannot
+  // drift from the parlay boundary. Only the provider-error fallback below
+  // is specific to dare translation.
+  const shared = sharedLlmFailureKind(deadline, error);
+  if (shared !== undefined) {
     logger.info(
-      `Dare translation produced no valid object for ${input.serverId}:`,
+      `Dare translation ${SHARED_FAILURE_MESSAGES[shared]} for ${input.serverId}:`,
       error,
     );
-    return { kind: "invalid_output" };
+    return { kind: shared };
   }
   logger.error(`Dare translation failed for ${input.serverId}:`, error);
   Sentry.captureException(error, {

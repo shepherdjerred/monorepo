@@ -1,7 +1,7 @@
 import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,
-  type BucksDareState,
+  OPEN_BUCKS_DARE_STATES,
   type BucksLedgerContext,
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
@@ -72,16 +72,10 @@ export type RefundableBucksAccount = {
   isHouse: boolean;
 };
 
-/**
- * Dare states whose escrowed contributions are still owed back: a decline,
- * accept-window lapse, or void refunds every contribution in full, so the
- * whole amount counts against the contributor's credit headroom until the
- * dare reaches a terminal state.
- */
-const OPEN_DARE_STATES: readonly BucksDareState[] = [
-  "pending_accept",
-  "active",
-];
+// Escrowed dare contributions in an open state (`OPEN_BUCKS_DARE_STATES`) are
+// still owed back — a decline, accept-window lapse, or void refunds every
+// contribution in full — so the whole amount counts against the contributor's
+// credit headroom until the dare reaches a terminal state.
 
 /**
  * Lock credit targets before loading their refundable headroom.
@@ -186,7 +180,7 @@ export async function refundableBucksHeldForAccounts(
       by: ["bucksAccountId"],
       where: {
         bucksAccountId: { in: humanAccountIds },
-        dare: { dareState: { in: [...OPEN_DARE_STATES] } },
+        dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } },
       },
       _sum: { amount: true },
     }),
@@ -298,7 +292,7 @@ export async function refundableBucksHeld(
     tx.bucksDareContribution.aggregate({
       where: {
         bucksAccountId,
-        dare: { dareState: { in: [...OPEN_DARE_STATES] } },
+        dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } },
       },
       _sum: { amount: true },
     }),

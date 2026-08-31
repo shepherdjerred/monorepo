@@ -9,6 +9,9 @@ import {
 } from "#src/betting/dare-criteria.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("betting-dare-common");
 
 /**
  * Plumbing shared by the dare command-surface domain modules (create,
@@ -136,6 +139,35 @@ export function summarizeDare(dare: {
     DareConditionsSchema.parse(JSON.parse(dare.conditions)),
     dare.targets.map((target) => target.alias),
   );
+}
+
+/** Display placeholder when a stored conditions blob cannot be parsed on a
+ * refund path. See `summarizeDareBestEffort`. */
+export const DARE_CONDITIONS_UNREADABLE = "(dare conditions unreadable)";
+
+/**
+ * Best-effort condition summary for refund, void, abandon, and expire paths.
+ *
+ * Those paths run REGARDLESS of whether the stored conditions blob still
+ * parses — that is the documented refunds-are-never-blocked invariant: money
+ * movement must not depend on a display string, so a blob the current schema
+ * cannot read gets a fixed placeholder instead of an exception. This is
+ * display-only, NOT a data-quality fallback — the achieved/settlement path
+ * still parses strictly through `parseDare` and fails loudly.
+ */
+export function summarizeDareBestEffort(dare: {
+  conditions: string;
+  targets: readonly { alias: string }[];
+}): string {
+  try {
+    return summarizeDare(dare);
+  } catch (error) {
+    logger.warn(
+      "⚠️ Dare conditions could not be rendered for a refund-path summary:",
+      error,
+    );
+    return DARE_CONDITIONS_UNREADABLE;
+  }
 }
 
 /** Fresh state read for a miss-path answer — the pre-transaction row is
