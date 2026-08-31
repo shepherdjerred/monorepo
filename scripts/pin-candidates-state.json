@@ -7,9 +7,9 @@
       "buildNumber": 13290
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 13347,
       "version": "2.0.0-13347",
-      "digest": "sha256:a3b1643da714e709e982703f8f80a309b2a0f5692764bd7be200e9dd99fa6376"
+      "digest": "sha256:a3b1643da714e709e982703f8f80a309b2a0f5692764bd7be200e9dd99fa6376",
+      "buildNumber": 13347
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -72,9 +72,9 @@
       "buildNumber": 13290
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 13348,
-      "version": "2.0.0-13348",
-      "digest": "sha256:06fb382f328c9eeae71c77f96116de75d0c2e85378d9fd56c79c4f35a1c3bf7e"
+      "buildNumber": 13351,
+      "version": "2.0.0-13351",
+      "digest": "sha256:3a24eb45293c2ddea6dc822d1938e840d39c3daa6de7d16df106c3b5c76fe32c"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13290",
