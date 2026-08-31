@@ -24,7 +24,54 @@ Find the execution in the UI. `temporal-failure-watch` sends one Alerts
 occurrence for any execution that failed or timed out in the last 24 hours, so
 an occurrence usually means there is a real execution to read.
 
-## 3. Classify a timeout
+The UI summary names the workflow's purpose. Its details show only bounded
+operational metadata: environment, domain, trigger, release commit, and current
+phase. They never contain Activity arguments, prompts, report bodies, player
+data, credentials, or task tokens. Treat a UI field containing any of those as
+a data-handling defect.
+
+Use the native CLI when you need an exact state or history. Start with bounded
+descriptions and open a full history only for the one execution under
+investigation:
+
+```bash
+toolkit temporal workflow list \
+  --query "ExecutionStatus='Running' AND Environment='beta'"
+toolkit temporal workflow list \
+  --query "ExecutionStatus='Failed' AND Domain='scout'"
+toolkit temporal workflow describe --workflow-id <WORKFLOW_ID>
+toolkit temporal workflow show --workflow-id <WORKFLOW_ID>
+```
+
+Do not paste or print a history during routine diagnosis. Histories can contain
+payloads even though the enriched UI fields and logs do not.
+
+## 3. Follow one execution through traces and logs
+
+When call-graph tracing is enabled for the deployed Worker, look for one trace
+containing the client or Schedule start, Workflow, child or Continue-As-New
+edge, Activity, and nested `gen_ai.*` spans:
+
+```bash
+toolkit tempo query \
+  '{ resource.deployment.environment.name = "beta" && resource.temporal.domain = "scout" }' \
+  --since 1h --limit 20
+```
+
+Use the trace ID from that result to retrieve correlated structured logs:
+
+```bash
+toolkit loki query \
+  '{service_name=~"temporal-worker|scout-backend"} | trace_id="<TRACE_ID>"' \
+  --since 1h --limit 50
+```
+
+The Temporal dashboard exposes the same environment/domain filters and links
+between Temporal UI, Tempo, and Loki. An absent client-to-Activity edge means
+the instrumentation or propagation path is incomplete; an absent log link
+means the logger ran outside the active span or OTLP delivery failed.
+
+## 4. Classify a timeout
 
 `temporal-failure-watch` fetches the failed execution's history and classifies
 the timeout as workflow-task, activity, execution, or unknown.
@@ -36,13 +83,13 @@ infrastructure problem, not a bug in the workflow.
 SDK metrics alert after five minutes on missing agent-task workflow pollers,
 high schedule-to-start latency, or worker scrape loss.
 
-## 4. Check it was not auto-paused
+## 5. Check it was not auto-paused
 
 A schedule whose required environment variables are missing is auto-paused at
 boot with a note. This looks identical to "it never ran" until you read the
 schedule.
 
-## 5. Check the catchup window
+## 6. Check the catchup window
 
 After a server outage, most schedules replay up to an hour. Time-of-day home
 automation gets five minutes only, deliberately — a 09:00 vacuum run should not
@@ -50,7 +97,7 @@ fire at noon.
 
 A missed run outside the window is gone and will not replay.
 
-## 6. Check for overlap
+## 7. Check for overlap
 
 Overlap policy is normally `SKIP`. A slow run does not stack a second one; the
 next tick is skipped instead. A job that appears to have "missed" a run may have

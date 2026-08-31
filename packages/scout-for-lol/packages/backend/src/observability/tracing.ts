@@ -79,7 +79,12 @@ export function initializeTracing(
   const otlpEndpoint = Bun.env["OTLP_ENDPOINT"] ?? DEFAULT_OTLP_ENDPOINT;
   const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
   const serviceVersion = Bun.env["GIT_SHA"] ?? Bun.env["VERSION"] ?? "dev";
-  const resource = buildTracingResource(serviceName, serviceVersion, options);
+  const resource = buildTracingResource(
+    serviceName,
+    serviceVersion,
+    "scout",
+    options,
+  );
 
   // AsyncLocalStorage-backed context manager so OTel active span propagates
   // across awaits — required for the LLM wrappers to see the current span.
@@ -123,6 +128,7 @@ export function initializeTracing(
     serviceVersion,
     otlpEndpoint,
     environment: options.environment ?? "dev",
+    domain: options.domain ?? "scout",
     namespace: options.namespace ?? "default",
     taskQueue: options.taskQueue ?? "unknown",
     workerRole: options.workerRole ?? "unknown",

@@ -23,6 +23,7 @@ import {
   createTemporalWorkerTracing,
 } from "@shepherdjerred/temporal-observability/interceptors";
 import { createValidatedWorkflowSpanSink } from "@shepherdjerred/temporal-observability/workflow-span-sink";
+import { sanitizeTemporalLogFields } from "@shepherdjerred/temporal-observability/log-fields";
 import { getTracingRuntime } from "#src/observability/tracing.ts";
 
 const logger = createLogger("temporal-supervisor");
@@ -36,7 +37,7 @@ function installTemporalRuntime(): void {
       const fields = {
         sdk: "temporal",
         sdkLevel: entry.level,
-        metadata: entry.meta,
+        ...sanitizeTemporalLogFields(entry.meta),
       };
       if (entry.level === "ERROR") logger.error(entry.message, fields);
       else if (entry.level === "WARN") logger.warn(entry.message, fields);

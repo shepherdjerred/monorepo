@@ -27,21 +27,30 @@ export type TracingRuntime = {
 };
 
 export type TracingResourceOptions = {
+  readonly domain?: string;
   readonly environment?: string;
   readonly namespace?: string;
   readonly taskQueue?: string;
   readonly workerRole?: string;
 };
 
+/**
+ * `defaultDomain` is caller-specific (packages/temporal's shared
+ * central-workflows process falls back to "platform"; Scout backend falls
+ * back to "scout") so it's a required argument here rather than baked into
+ * one shared default.
+ */
 export function buildTracingResource(
   serviceName: string,
   serviceVersion: string,
+  defaultDomain: string,
   options: TracingResourceOptions,
 ): Resource {
   return resourceFromAttributes({
     [ATTR_SERVICE_NAME]: serviceName,
     [ATTR_SERVICE_VERSION]: serviceVersion,
     "deployment.environment.name": options.environment ?? "dev",
+    "temporal.domain": options.domain ?? defaultDomain,
     "temporal.namespace": options.namespace ?? "default",
     "temporal.task_queue": options.taskQueue ?? "unknown",
     "temporal.worker.role": options.workerRole ?? "unknown",

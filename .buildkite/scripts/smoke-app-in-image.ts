@@ -302,6 +302,12 @@ const commands: Record<
       TEMPORAL_METRICS_ADDRESS: "127.0.0.1:0",
       APP_METRICS_PORT: "0",
       SENTRY_DSN: "",
+      // main() calls initializeCallGraphTracing() -> initFeatureFlags()
+      // before it ever gets to "Connecting to Temporal server", and that has
+      // no default mode on purpose (see FEATURE_FLAGS_MODE's own error
+      // message). Matches the "disabled" value every other smoke target
+      // that reaches feature-flag init already sets.
+      FEATURE_FLAGS_MODE: "disabled",
     },
   },
   "trmnl-dashboard": {

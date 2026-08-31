@@ -83,6 +83,7 @@ await initializeDynamicConfig({
 });
 
 initializeTracing({
+  domain: "scout",
   environment: configuration.environment,
   namespace: configuration.temporalNamespace,
   taskQueue: `scout-${configuration.environment}-workflows`,

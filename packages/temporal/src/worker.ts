@@ -18,7 +18,16 @@ import {
   startMetricsServer,
   stopMetricsServer,
 } from "./observability/metrics.ts";
-import { createStructuredLogger } from "./observability/logging.ts";
+// log() writes the same stdout JSON line the old createStructuredLogger()
+// jsonLog always has, then also emits an OTLP LogRecord through the
+// LoggerProvider initializeTracing() installs below. That's what lets the
+// platform dashboard's log panel filter SDK/worker-boot logs by
+// deployment_environment_name/temporal_domain (Resource attributes shared
+// with tracing) instead of only ever seeing them on stdout. Before tracing
+// initializes (or when TELEMETRY_ENABLED=false), the OTel logs API's default
+// no-op provider makes the emit() call a harmless no-op, same as the trace
+// API before NodeSDK.start().
+import { log as jsonLog } from "./observability/log.ts";
 import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
 import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
@@ -34,13 +43,17 @@ import {
   getWorkerRoleContract,
   type QueueWorkerDefinition,
 } from "./worker-config.ts";
-import { parseTemporalBootstrapMetadata } from "./shared/execution-metadata.ts";
+import {
+  executionDomainForTaskQueue,
+  parseTemporalBootstrapMetadata,
+} from "./shared/execution-metadata.ts";
 import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-client-interceptor.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,
 } from "@shepherdjerred/temporal-observability/interceptors";
 import { createValidatedWorkflowSpanSink } from "@shepherdjerred/temporal-observability/workflow-span-sink";
+import { sanitizeTemporalLogFields } from "@shepherdjerred/temporal-observability/log-fields";
 import {
   initializeCallGraphTracing,
   shutdownCallGraphTracing,
@@ -48,8 +61,6 @@ import {
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
-
-const jsonLog = createStructuredLogger();
 
 function installRuntime(role: WorkerRole, bootstrap: TemporalBootstrap): void {
   const metricsAddress =
@@ -66,7 +77,7 @@ function installRuntime(role: WorkerRole, bootstrap: TemporalBootstrap): void {
       jsonLog(level, entry.message, {
         sdk: "temporal",
         sdkLevel: entry.level,
-        metadata: entry.meta,
+        ...sanitizeTemporalLogFields(entry.meta),
       });
     }),
     telemetryOptions: {
@@ -133,6 +144,7 @@ type CreateQueueWorkerOptions = {
   readonly connection: NativeConnection;
   readonly workflowsPath: string;
   readonly workflowUiInterceptorPath: string;
+  readonly domainTaggingInterceptorPath: string;
   readonly bootstrap: TemporalBootstrap;
   readonly temporalTracing: TemporalWorkerTracing | undefined;
 };
@@ -145,6 +157,7 @@ async function createQueueWorker(
     connection,
     workflowsPath,
     workflowUiInterceptorPath,
+    domainTaggingInterceptorPath,
     bootstrap,
     temporalTracing,
   } = options;
@@ -155,9 +168,14 @@ async function createQueueWorker(
       namespace: bootstrap.namespace,
       workflowsPath,
       interceptors: {
+        // domainTaggingInterceptorPath must stay after every tracing module:
+        // it tags the RunWorkflow span the official OpenTelemetry interceptor
+        // just opened (see workflow-domain-interceptor.ts), so it needs that
+        // span to already be active in context when its execute() runs.
         workflowModules: [
           workflowUiInterceptorPath,
           ...(temporalTracing?.workflowModules ?? []),
+          domainTaggingInterceptorPath,
         ],
       },
       ...(temporalTracing === undefined
@@ -245,11 +263,19 @@ async function initializeTemporalTracing(
   bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>,
 ) {
   const taskQueues = roleContract.workers.map((worker) => worker.taskQueue);
+  const soleWorker = roleContract.workers.at(0);
+  if (soleWorker === undefined && roleContract.workers.length === 1) {
+    throw new Error("Single-worker Temporal role has no Worker configuration");
+  }
   const callGraphTracing = await initializeCallGraphTracing({
     environment: bootstrapMetadata.environment,
     workerRole: role,
   });
   const tracingRuntime = initializeTracing({
+    domain:
+      soleWorker !== undefined && roleContract.workers.length === 1
+        ? executionDomainForTaskQueue(soleWorker.taskQueue)
+        : "platform",
     environment: bootstrapMetadata.environment,
     namespace,
     taskQueue: taskQueues.join(","),
@@ -358,6 +384,12 @@ async function main(): Promise<void> {
     bootstrap.namespace,
     bootstrapMetadata,
   );
+  // Boot-time-only, resolved once here rather than re-queried per call:
+  // client.ts's createTemporalClient() (used by Activities that start other
+  // workflows, e.g. deliverAgentTaskReport) reads this so its client carries
+  // the same tracing interceptor decision as this process's own Worker,
+  // instead of silently never tracing the workflows it starts.
+  Bun.env["TEMPORAL_CALL_GRAPH_TRACING"] = callGraphTracing ? "true" : "false";
 
   const address = Bun.env["TEMPORAL_ADDRESS"] ?? DEFAULT_ADDRESS;
   jsonLog("info", "Connecting to Temporal server", { address, role });
@@ -368,12 +400,17 @@ async function main(): Promise<void> {
   const workflowUiInterceptorPath = new URL(
     import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
   ).pathname;
+  const domainTaggingInterceptorPath = new URL(
+    "lib/workflow-domain-interceptor.ts",
+    import.meta.url,
+  ).pathname;
   const workers: Worker[] = [];
   for (const definition of roleContract.workers) {
     const worker = await createQueueWorker(definition, {
       connection,
       workflowsPath,
       workflowUiInterceptorPath,
+      domainTaggingInterceptorPath,
       bootstrap,
       temporalTracing,
     });

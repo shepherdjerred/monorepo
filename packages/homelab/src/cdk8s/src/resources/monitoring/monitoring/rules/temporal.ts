@@ -1,6 +1,7 @@
 import type { PrometheusRuleSpecGroups } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
 import { escapePrometheusTemplate } from "./shared.ts";
+import { getTemporalPlatformHealthRuleGroup } from "./temporal-platform-health.ts";
 import { buildTemporalDomainWorkerHealthRules } from "./temporal-worker-health.ts";
 
 type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
@@ -195,6 +196,7 @@ const SCOUT_DATA_DRAGON_FAILURE_RULES: PrometheusRule[] = [
 
 export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
+    getTemporalPlatformHealthRuleGroup(),
     {
       name: "temporal-workflow-failures",
       rules: [
