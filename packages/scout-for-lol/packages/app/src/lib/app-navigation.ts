@@ -20,9 +20,16 @@ export type GuildNavigationItem = {
   to: string;
   label: string;
   permission: Permission;
+  betaFeature?: "customs";
 };
 
 export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
+  {
+    to: "customs",
+    label: "Customs",
+    permission: { resource: "customs", action: "read" },
+    betaFeature: "customs",
+  },
   {
     to: "subscriptions",
     label: "Subscriptions",
@@ -57,8 +64,13 @@ export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
 
 export function visibleGuildNavigationItems(
   canRead: (permission: Permission) => boolean,
+  customNightsEnabled = false,
 ): readonly GuildNavigationItem[] {
-  return GUILD_NAVIGATION_ITEMS.filter((item) => canRead(item.permission));
+  return GUILD_NAVIGATION_ITEMS.filter(
+    (item) =>
+      canRead(item.permission) &&
+      (item.betaFeature !== "customs" || customNightsEnabled),
+  );
 }
 
 export function guildWorkspacePath(guildId: string): string {
