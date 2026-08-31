@@ -226,13 +226,14 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // No TEMPORAL_LEGACY_NAMESPACE: the `default` drain is retired for Scout.
     // The legacy namespace holds no Scout execution this backend can finish,
     // and building its workers is what put the beta supervisor into a
-    // reconnect loop. Reconciliation stays pinned off rather than `auto`
-    // because `scheduleReconciliationEnabled()` treats an absent legacy
-    // namespace as "drained" — under `auto` this would switch on while the
-    // `default` schedules are still live and double-fire every report
-    // schedule. Restore `auto` once `migrate:namespaces cutover` has moved
-    // them into `prod`/`beta`.
-    TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("disabled"),
+    // reconnect loop.
+    //
+    // `auto` is the settled state now that the schedules live in `prod`/`beta`
+    // (cutover 2026-08-31T22:15:04Z). With no legacy namespace configured,
+    // `scheduleReconciliationEnabled()` resolves `auto` to enabled, which is
+    // what Scout needs to keep its report schedules reconciled. Pinning it off
+    // only mattered while the `default` schedules were still live and firing.
+    TEMPORAL_SCHEDULE_RECONCILIATION: EnvValue.fromValue("auto"),
     FLIPT_URL: EnvValue.fromValue(
       "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
     ),

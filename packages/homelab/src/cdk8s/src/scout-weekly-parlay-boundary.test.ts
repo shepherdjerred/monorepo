@@ -49,7 +49,7 @@ describe("Scout weekly parlay deployment boundary", () => {
           }),
           expect.objectContaining({
             name: "TEMPORAL_SCHEDULE_RECONCILIATION",
-            value: "disabled",
+            value: "auto",
           }),
         ]),
       );
