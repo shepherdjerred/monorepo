@@ -485,6 +485,33 @@ Artifacts are cached by request digest rather than by run, so this re-reads
 whatever a production run already paid for instead of re-billing it — which is
 also why pinning a snapshot reuses more cache than reading the latest one.
 
+**Glitter context cache audit (Temporal, zero inference)** — use the operator
+workflow before a manual refresh when you need exact current cache coverage:
+
+```bash
+cd packages/temporal
+bun run glitter:operate context-audit \
+  --snapshot-id=<snapshot-id> --snapshot-sha256=<snapshot-sha256> --wait=true
+```
+
+The audit runs on `glitter-context`, constructs the same production request
+objects, fully validates current v3 artifacts, and reports exact hits, misses,
+blocked synthesis stages, artifact keys, and worst-case uncached cost. It must
+never call OpenRouter or write an artifact or spend receipt. The weekly refresh
+is capped at $1; budget exhaustion leaves exact-key artifacts for later weekly
+runs and opens no PR until a run completes. Do not add legacy-key reuse.
+The shared synthesis request builder limits serialized input to 600,000 UTF-8
+bytes, keeps the newest monthly summaries, and reports coverage only for the
+summaries included. Its full Luna semantic-retry reservation must remain below
+the weekly cap; generation and audit must both use that builder.
+
+After deploying corpus-finalization memory changes, accept them with one fresh
+daily run: attempt 1, no restart or probe failure, zero integrity failures, and
+`memory.peak <= 3 GiB`. If it exceeds that threshold, split verification into
+per-channel activities instead of increasing the 4 GiB limit. Follow with a
+pinned cache audit and verify no new OpenRouter spans/cost or artifact/receipt
+writes, then verify the next weekly run spends at most $1.
+
 **Cluster RBAC** — the infra and agent worker SAs get the cluster-wide read-only
 `temporal-worker-audit-reader` ClusterRole (see
 `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate

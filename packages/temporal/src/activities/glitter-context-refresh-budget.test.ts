@@ -13,13 +13,13 @@ import {
   SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
 } from "./glitter-context-refresh-style-generation-cost.ts";
 import { SYNTHESIS_INPUT_BYTE_LIMIT } from "./glitter-context-refresh-synthesis-limit.ts";
+import { estimateRelationshipGenerationCost } from "./glitter-context-refresh-generate.ts";
 import {
   buildBoundedRelationshipInput,
-  estimateRelationshipGenerationCost,
   RELATIONSHIP_INPUT_BYTE_LIMIT,
   RELATIONSHIP_MAX_OUTPUT_TOKENS,
   RELATIONSHIP_MODEL,
-} from "./glitter-context-refresh-generate.ts";
+} from "./glitter-context-refresh-requests.ts";
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
 
 describe("Glitter generation budget", () => {

@@ -20,22 +20,20 @@ import {
 import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 import {
   generateGlitterObject,
-  glitterObjectArtifactSchema,
-  glitterPrompt,
   readGlitterObjectArtifact,
   useGlitterObjectArtifact,
 } from "./glitter-context-refresh-llm.ts";
+import {
+  buildStyleChunkGenerationRequest,
+  buildStyleSynthesisGenerationRequest,
+  styleChunkPrompt,
+  type ChunkExtractionRepair,
+} from "./glitter-context-refresh-requests.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
 import {
   estimateStyleGenerationCost as estimateStyleGenerationCostInternal,
-  EXTRACTION_MAX_OUTPUT_TOKENS,
-  EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-  EXTRACTION_MODEL,
   MAX_EXTRACTION_REPAIR_ATTEMPTS,
   MAX_SYNTHESIS_REPAIR_ATTEMPTS,
-  SYNTHESIS_MAX_OUTPUT_TOKENS,
-  SYNTHESIS_MODEL,
-  SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
   type SummarizedChunk,
 } from "./glitter-context-refresh-style-generation-cost.ts";
 import {
@@ -49,7 +47,6 @@ import {
   type StyleChunkSummary,
   type StyleSynthesis,
 } from "./glitter-context-refresh-style-schemas.ts";
-import { buildBoundedSynthesisInput } from "./glitter-context-refresh-synthesis-limit.ts";
 import { synthesisPrompt } from "./glitter-context-refresh-synthesis-prompt.ts";
 
 // Names the chunk, like the exhaustion error beside it at the same call site.
@@ -71,12 +68,6 @@ const EMPTY_CHUNK_SUMMARY: StyleChunkSummary = {
   representativeMessages: [],
 };
 
-type ChunkExtractionRepair = {
-  previous: StyleChunkSummary;
-  error: string;
-  rawContent: string | null;
-};
-
 function nextParseFailureRepair(
   prior: ChunkExtractionRepair | null,
   error: string,
@@ -95,8 +86,6 @@ function nextParseFailureRepair(
     rawContent: null,
   };
 }
-const DETERMINISTIC_SEED = 0;
-
 // Completions are cached before validation, so repairs use distinct seeds
 // (`DETERMINISTIC_SEED + attempt`) and cache keys. Attempt 0 is the initial call;
 // attempts 1..N are repairs, and a rerun reuses the first passing attempt.
@@ -104,46 +93,6 @@ const DETERMINISTIC_SEED = 0;
 // Sanitization is the convergence guarantee when a model repeatedly cites an ID
 // found inside content but not in the top-level chunk: unverifiable evidence is
 // dropped at the boundary instead of failing the run.
-function messageEvidence(message: CurrentMessage): {
-  messageId: string;
-  timestamp: string;
-  content: string;
-} {
-  return {
-    messageId: message.messageId,
-    timestamp: message.timestamp,
-    content: message.content,
-  };
-}
-
-function chunkPrompt(input: {
-  candidate: StyleRefreshCandidate;
-  chunk: StyleEvidenceChunk;
-}): string {
-  return [
-    "Extract evidence-grounded writing-style observations from this one UTC-month chunk.",
-    "Cite exact supplied message IDs for every observation.",
-    "Representative messages must copy both messageId and content byte-for-byte.",
-    "Focus on voice, phrasing, topics, relationships, behavior, personality,",
-    "humor/tone, likes/dislikes, games, mimic guidance, and review concerns.",
-    "Do not infer sensitive traits, diagnoses, identity, or private facts.",
-    "",
-    JSON.stringify({
-      person: {
-        id: input.candidate.person.id,
-        displayName: input.candidate.person.displayName,
-      },
-      chunk: {
-        key: input.chunk.key,
-        month: input.chunk.month,
-        messages: input.chunk.messages.map((message) =>
-          messageEvidence(message),
-        ),
-      },
-    }),
-  ].join("\n");
-}
-
 async function runChunkExtraction(input: {
   candidate: StyleRefreshCandidate;
   chunk: StyleEvidenceChunk;
@@ -152,65 +101,36 @@ async function runChunkExtraction(input: {
   attempt: number;
   repair: ChunkExtractionRepair | null;
 }) {
-  const basePrompt = chunkPrompt(input);
-  const prompt =
-    input.repair === null
-      ? basePrompt
-      : [
-          basePrompt,
-          "",
-          "Repair the prior structured output so it satisfies the evidence contract.",
-          JSON.stringify(input.repair),
-        ].join("\n");
-  const callSite =
-    input.repair === null
-      ? "glitter-style-chunk"
-      : "glitter-style-chunk-repair";
-  const messages = glitterPrompt(
-    "You extract compact, cited style evidence for later synthesis.",
-    prompt,
-  );
-  const seed = DETERMINISTIC_SEED + input.attempt;
-  const CompletionArtifactSchema = glitterObjectArtifactSchema(
-    StyleChunkSummarySchema,
-  );
+  const generationRequest = buildStyleChunkGenerationRequest(input);
   const artifact = await readOrCreateGenerationArtifact({
     store: input.artifactStore,
-    model: EXTRACTION_MODEL,
-    callSite,
-    request: {
-      schemaVersion: 3,
-      model: EXTRACTION_MODEL,
-      messages,
-      maxCompletionTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
-      semanticRetryMaxCompletionTokens:
-        EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-      reasoningEffort: "none",
-      seed,
-      responseSchema: "style-chunk-summary-v2",
-    },
-    responseSchema: CompletionArtifactSchema,
+    model: generationRequest.model,
+    callSite: generationRequest.callSite,
+    request: generationRequest.request,
+    responseSchema: generationRequest.responseSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
         worstCaseGenerationCostUsd({
-          model: EXTRACTION_MODEL,
-          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
-          outputTokenUpperBound: EXTRACTION_MAX_OUTPUT_TOKENS,
+          model: generationRequest.model,
+          inputTokenUpperBound: inputTokenUpperBound(
+            JSON.stringify(generationRequest.messages),
+          ),
+          outputTokenUpperBound: generationRequest.maxOutputTokens,
           semanticRetryOutputTokenUpperBound:
-            EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+            generationRequest.semanticRetryMaxOutputTokens,
         }),
       );
       return await generateGlitterObject({
-        model: EXTRACTION_MODEL,
+        model: generationRequest.model,
         schema: StyleChunkSummarySchema,
         schemaName: "style_chunk_summary",
-        ...messages,
-        workload: callSite,
-        maxOutputTokens: EXTRACTION_MAX_OUTPUT_TOKENS,
+        ...generationRequest.messages,
+        workload: generationRequest.callSite,
+        maxOutputTokens: generationRequest.maxOutputTokens,
         semanticRetryMaxOutputTokens:
-          EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-        reasoningEffort: "none",
-        seed,
+          generationRequest.semanticRetryMaxOutputTokens,
+        reasoningEffort: generationRequest.reasoningEffort,
+        seed: generationRequest.seed,
         truncationError: extractionTruncationError(input.chunk.key),
         exhaustionError: `GPT-5.6 Luna did not return a parsed summary for ${input.chunk.key}`,
       });
@@ -322,67 +242,36 @@ async function runSynthesis(input: {
   chunks: readonly SummarizedChunk[];
   directRecentMessages: readonly CurrentMessage[];
 }> {
-  const bounded = buildBoundedSynthesisInput({
-    chunks: input.chunks,
-    directRecentMessages: input.candidate.directRecentMessages,
-    hasRepairPrevious: input.repair !== null,
-    buildMessages: ({ chunks, directRecentMessages, includeRepairPrevious }) =>
-      glitterPrompt(
-        "You synthesize evidence-grounded writing-style patches for human review.",
-        synthesisPrompt({
-          ...input,
-          chunks,
-          directRecentMessages,
-          includeRepairPrevious,
-        }),
-      ),
-    serializeMessages: JSON.stringify,
-  });
-  const callSite =
-    input.repair === null
-      ? "glitter-style-synthesis"
-      : "glitter-style-synthesis-repair";
-  const messages = bounded.messages;
-  const seed = DETERMINISTIC_SEED + input.attempt;
-  const CompletionArtifactSchema =
-    glitterObjectArtifactSchema(StyleSynthesisSchema);
+  const generationRequest = buildStyleSynthesisGenerationRequest(input);
   const artifact = await readOrCreateGenerationArtifact({
     store: input.artifactStore,
-    model: SYNTHESIS_MODEL,
-    callSite,
-    request: {
-      schemaVersion: 4,
-      model: SYNTHESIS_MODEL,
-      messages,
-      maxCompletionTokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
-      semanticRetryMaxCompletionTokens:
-        SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-      reasoningEffort: "medium",
-      seed,
-      responseSchema: "style-card-synthesis-v2",
-    },
-    responseSchema: CompletionArtifactSchema,
+    model: generationRequest.model,
+    callSite: generationRequest.callSite,
+    request: generationRequest.request,
+    responseSchema: generationRequest.responseSchema,
     generate: async () => {
       input.budget.authorizeUncachedCall(
         worstCaseGenerationCostUsd({
-          model: SYNTHESIS_MODEL,
-          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
-          outputTokenUpperBound: SYNTHESIS_MAX_OUTPUT_TOKENS,
+          model: generationRequest.model,
+          inputTokenUpperBound: inputTokenUpperBound(
+            JSON.stringify(generationRequest.messages),
+          ),
+          outputTokenUpperBound: generationRequest.maxOutputTokens,
           semanticRetryOutputTokenUpperBound:
-            SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+            generationRequest.semanticRetryMaxOutputTokens,
         }),
       );
       return await generateGlitterObject({
-        model: SYNTHESIS_MODEL,
+        model: generationRequest.model,
         schema: StyleSynthesisSchema,
         schemaName: "style_card_synthesis",
-        ...messages,
-        workload: callSite,
-        maxOutputTokens: SYNTHESIS_MAX_OUTPUT_TOKENS,
+        ...generationRequest.messages,
+        workload: generationRequest.callSite,
+        maxOutputTokens: generationRequest.maxOutputTokens,
         semanticRetryMaxOutputTokens:
-          SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
-        reasoningEffort: "medium",
-        seed,
+          generationRequest.semanticRetryMaxOutputTokens,
+        reasoningEffort: generationRequest.reasoningEffort,
+        seed: generationRequest.seed,
         truncationError: SYNTHESIS_TRUNCATION_ERROR,
         exhaustionError: `GPT-5.6 Luna did not return a parsed synthesis for ${input.candidate.person.id}`,
       });
@@ -390,8 +279,8 @@ async function runSynthesis(input: {
   });
   return {
     synthesis: useGlitterObjectArtifact({ artifact, budget: input.budget }),
-    chunks: bounded.chunks,
-    directRecentMessages: bounded.directRecentMessages,
+    chunks: generationRequest.chunks,
+    directRecentMessages: generationRequest.directRecentMessages,
   };
 }
 
@@ -400,7 +289,7 @@ export function estimateStyleGenerationCost(input: {
   existingCard: StyleCard;
 }): number {
   return estimateStyleGenerationCostInternal(input, {
-    chunkPrompt,
+    chunkPrompt: styleChunkPrompt,
     synthesisPrompt,
   });
 }

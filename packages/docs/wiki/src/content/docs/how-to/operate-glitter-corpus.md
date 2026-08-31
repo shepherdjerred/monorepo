@@ -133,6 +133,40 @@ preflight estimate, per-call authorization, and post-call ceiling enforce
 the cap. A completion that returns without usage data fails non-retryably
 rather than risk re-charging.
 
+### Audit the generation cache without inference
+
+Run the audit against a pinned snapshot before deciding whether to start a
+manual refresh. It computes the same request hashes as production, validates
+every current v3 hit, and reports misses plus synthesis stages blocked by
+missing upstream outputs. It does not call OpenRouter and does not write
+generation artifacts or spend receipts.
+
+```bash
+cd packages/temporal
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true \
+  bun run glitter:operate context-audit \
+  --snapshot-id=<snapshot-id> \
+  --snapshot-sha256=<snapshot-sha256> \
+  --wait=true
+```
+
+Confirm the result names the intended snapshot, eligible people, exact hit and
+miss counts, blocked stages, artifact keys, and worst-case uncached cost.
+
+### Accept the corpus memory change after deployment
+
+Trigger one daily corpus run and inspect the fresh corpus-worker container.
+Acceptance requires completion on attempt 1, no pod restart or probe failure,
+zero integrity failures, and `memory.peak` at or below 3 GiB. If peak memory is
+higher, split graph verification into per-channel activities; do not raise the
+4 GiB limit again.
+
+Then run the pinned cache audit and confirm there are no new OpenRouter spans or
+cost metrics and no artifact or spend-receipt writes. On the next weekly
+refresh, confirm actual uncached spend is at most $1. Budget exhaustion is an
+acceptable bounded-progress result; a completed run must produce a reviewable
+PR and valid generation summary.
+
 ## Related
 
 - [Temporal workflow inventory](/reference/temporal-workflows/) — the Glitter workflows
