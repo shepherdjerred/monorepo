@@ -206,19 +206,12 @@ export function createTemporalOperationsWorkers(
     memoryRequest: Size.mebibytes(512),
     memoryLimit: Size.gibibytes(2),
     envVariables: {
-      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
-      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
-      TEMPORAL_WORKER_ROLE: EnvValue.fromValue("backup"),
-      ENVIRONMENT: EnvValue.fromValue("production"),
-      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(
-        "http://tempo.tempo.svc.cluster.local:4318",
+      ...temporalRuntimeEnv(
+        props.serverServiceName,
+        props.secret,
+        "backup",
+        "temporal-backup-worker",
       ),
-      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-backup-worker"),
-      SENTRY_DSN: EnvValue.fromSecretValue({
-        secret: props.secret,
-        key: "SENTRY_DSN",
-      }),
       SEAWEEDFS_BACKUP_SOURCE_ENDPOINT: EnvValue.fromValue(
         "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
       ),

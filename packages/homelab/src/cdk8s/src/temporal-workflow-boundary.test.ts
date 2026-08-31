@@ -79,14 +79,22 @@ describe("central Temporal Workflow boundary", () => {
         "TELEMETRY_ENABLED",
         "TELEMETRY_SERVICE_NAME",
         "TEMPORAL_ADDRESS",
+        "TEMPORAL_LEGACY_NAMESPACE",
         "TEMPORAL_METRICS_ADDRESS",
         "TEMPORAL_NAMESPACE",
         "TEMPORAL_WORKER_DEPLOYMENT_NAME",
         "TEMPORAL_WORKER_ROLE",
         "TZ",
       ]);
+      // Namespace isolation: this role polls the active prod namespace and
+      // keeps draining the pre-cutover default namespace until every chain
+      // started there has closed.
       expect(container.env).toContainEqual({
         name: "TEMPORAL_NAMESPACE",
+        value: "prod",
+      });
+      expect(container.env).toContainEqual({
+        name: "TEMPORAL_LEGACY_NAMESPACE",
         value: "default",
       });
       expect(container.env).toContainEqual({

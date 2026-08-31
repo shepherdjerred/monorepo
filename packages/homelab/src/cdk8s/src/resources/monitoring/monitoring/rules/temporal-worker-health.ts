@@ -140,6 +140,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-backup-worker",
       servicePattern: ".*temporal-backup-worker.*metrics.*",
       activityPoller: true,
+      servedNamespaces: ["prod", "default"],
     },
     {
       queue: "maintenance",
@@ -154,8 +155,12 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
 export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
   return TEMPORAL_DOMAIN_QUEUES.flatMap((definition) => {
     const servedNamespaces = definition.servedNamespaces.join("|");
-    const workflowSelector = `namespace="temporal",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
-    const activitySelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
+    // `namespace` is the Kubernetes namespace Prometheus scraped the pod in,
+    // so both poller types share it: the maintenance worker runs in
+    // `buildkite` and the Scout workflow workers in their stage namespaces,
+    // and hardcoding `temporal` here selected no series at all for them —
+    // an alert that can never fire.
+    const pollerSelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
     const labels = { severity: "warning", task_queue: definition.queue };
     const candidateDeploymentPattern = definition.candidateDeploymentPattern;
     const candidateServicePattern = definition.candidateServicePattern;
@@ -169,7 +174,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
                 "The domain queue has had no activity-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
             },
             expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-              `count(sum by (exported_namespace) (temporal_worker_num_pollers{${activitySelector},poller_type="activity_task"})) < ${String(definition.servedNamespaces.length)}`,
+              `count(sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="activity_task"})) < ${String(definition.servedNamespaces.length)}`,
             ),
             for: "5m",
             labels,
@@ -177,8 +182,8 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
         ]
       : [];
     const latencyExpression = definition.activityPoller
-      ? `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${workflowSelector}}[5m]))) > 5 or histogram_quantile(0.95, sum by (le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${activitySelector}}[5m]))) > 5`
-      : `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${workflowSelector}}[5m]))) > 5`;
+      ? `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5 or histogram_quantile(0.95, sum by (le) (rate(temporal_worker_activity_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5`
+      : `histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{${pollerSelector}}[5m]))) > 5`;
     return [
       {
         alert: "TemporalDomainWorkflowPollerUnavailable",
@@ -188,7 +193,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "The domain queue has had no workflow-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `count(sum by (exported_namespace) (temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"})) < ${String(definition.servedNamespaces.length)}`,
+          `count(sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="workflow_task"})) < ${String(definition.servedNamespaces.length)}`,
         ),
         for: "5m",
         labels,
@@ -256,7 +261,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
                   "The candidate Workflow Worker has no available replica or scrape. Check the candidate Deployment before advancing the ramp.",
               },
               expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-                `absent(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment="${candidateDeploymentPattern}"}) or max(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment="${candidateDeploymentPattern}"}) < 1 or absent(up{namespace="${definition.metricsNamespace}",service=~"${candidateServicePattern}"}) or max(up{namespace="${definition.metricsNamespace}",service=~"${candidateServicePattern}"}) < 1 or count(temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"}) < 2 or min(temporal_worker_num_pollers{${workflowSelector},poller_type="workflow_task"}) < 1`,
+                `absent(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment="${candidateDeploymentPattern}"}) or max(kube_deployment_status_replicas_available{namespace="${definition.metricsNamespace}",deployment="${candidateDeploymentPattern}"}) < 1 or absent(up{namespace="${definition.metricsNamespace}",service=~"${candidateServicePattern}"}) or max(up{namespace="${definition.metricsNamespace}",service=~"${candidateServicePattern}"}) < 1 or count(temporal_worker_num_pollers{${pollerSelector},poller_type="workflow_task"}) < 2 or min(temporal_worker_num_pollers{${pollerSelector},poller_type="workflow_task"}) < 1`,
               ),
               for: "5m",
               labels: { ...labels, track: "candidate" },

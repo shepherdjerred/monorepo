@@ -181,7 +181,9 @@ describe("Scout competition Temporal boundary", () => {
     expect(serialized).toContain('"worker-family":"scout-prod-workflows"');
     expect(serialized).toContain('"port":7233');
   });
+});
 
+describe("Scout beta workflow candidate", () => {
   test("bootstraps a credentialless beta candidate without cutting over", () => {
     const synthesized = betaResourcesWithWorkflowCandidate();
     const deployment = synthesized.find(

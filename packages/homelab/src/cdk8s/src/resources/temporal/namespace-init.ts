@@ -19,12 +19,22 @@ export function createTemporalNamespaceInitJob(
     metadata: {
       name: "temporal-namespace-init",
       annotations: {
-        // Run after the server's wave has become healthy and before the
-        // namespace-scoped client deployments in wave 2.
+        // A "Sync" hook (not PostSync) runs during the normal sync phase,
+        // ordered by sync-wave alongside regular resources -- unlike
+        // PreSync/PostSync, which run strictly before/after every wave. That
+        // lets this job sit between temporal-server (implicit wave 0) and the
+        // namespace-scoped clients in wave 2: it creates the prod and beta
+        // namespaces and registers the Environment/Domain/Trigger/
+        // ReleaseCommit typed Search Attributes registerSchedules() needs, so
+        // temporal-gateway (syncWave: 2 in ingress-workers.ts) cannot start
+        // before they exist. PostSync would run only after every
+        // wave-resource is Healthy -- including that gateway, which cannot
+        // become healthy until this job has run -- deadlocking the release.
+        // The job's own retry loop (`until temporal operator cluster health`)
+        // tolerates starting before the server is fully up.
         "argocd.argoproj.io/hook": "Sync",
-        "argocd.argoproj.io/sync-wave": "1",
         "argocd.argoproj.io/hook-delete-policy": "BeforeHookCreation",
-        "argocd.argoproj.io/sync-wave": "-2",
+        "argocd.argoproj.io/sync-wave": "1",
       },
     },
     securityContext: {
@@ -54,7 +64,7 @@ export function createTemporalNamespaceInitJob(
           // The built-in default namespace is retained only as a migration
           // drain. Production creates the two active control-plane namespaces
           // and registers the search attributes required by schedule actions.
-          'for namespace in prod beta; do if temporal operator namespace describe --namespace "$namespace"; then echo "Temporal $namespace namespace already exists"; else temporal operator namespace create --namespace "$namespace" --retention 720h; fi; temporal operator namespace update --namespace "$namespace" --retention 720h; SEARCH_ATTRIBUTES="$(temporal operator search-attribute list --namespace "$namespace" --output json)"; for ATTRIBUTE in Environment Domain Trigger ReleaseCommit; do if printf "%s" "$SEARCH_ATTRIBUTES" | grep -q "\"$ATTRIBUTE\": \"INDEXED_VALUE_TYPE_KEYWORD\""; then echo "Temporal Search Attribute $ATTRIBUTE already exists in $namespace"; else temporal operator search-attribute create --namespace "$namespace" --name "$ATTRIBUTE" --type Keyword; fi; done; done',
+          String.raw`for namespace in prod beta; do if temporal operator namespace describe --namespace "$namespace"; then echo "Temporal $namespace namespace already exists"; else temporal operator namespace create --namespace "$namespace" --retention 720h; fi; temporal operator namespace update --namespace "$namespace" --retention 720h; SEARCH_ATTRIBUTES="$(temporal operator search-attribute list --namespace "$namespace" --output json)"; for ATTRIBUTE in Environment Domain Trigger ReleaseCommit; do if printf "%s" "$SEARCH_ATTRIBUTES" | grep -q "\"$ATTRIBUTE\": \"INDEXED_VALUE_TYPE_KEYWORD\""; then echo "Temporal Search Attribute $ATTRIBUTE already exists in $namespace"; else temporal operator search-attribute create --namespace "$namespace" --name "$ATTRIBUTE" --type Keyword; fi; done; done`,
           'echo "Namespace init complete"',
         ].join(" && "),
       ],

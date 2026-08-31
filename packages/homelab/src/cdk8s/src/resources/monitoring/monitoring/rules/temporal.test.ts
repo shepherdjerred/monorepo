@@ -163,9 +163,12 @@ describe("Temporal workflow outcome rules", () => {
         typeof expression === "string" &&
         expression.includes('task_queue="scout-beta"'),
     );
+    // Scout's workflow workers run in their own stage namespace, so the
+    // scraped `namespace` label is scout-beta rather than temporal. These
+    // rules only render once the pinned Scout workflow images are capable.
     if (scoutBetaExpression !== undefined) {
       expect(scoutBetaExpression).toBe(
-        'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="temporal",exported_namespace=~"beta",task_queue="scout-beta",poller_type="workflow_task"})) < 1',
+        'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="scout-beta",exported_namespace=~"beta",task_queue="scout-beta",poller_type="workflow_task"})) < 1',
       );
     }
 
