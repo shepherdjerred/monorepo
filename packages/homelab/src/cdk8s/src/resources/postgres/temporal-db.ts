@@ -26,6 +26,10 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
       annotations: {
         // Prevent ArgoCD from deleting this resource during sync - data loss protection
         "argocd.argoproj.io/sync-options": "Delete=false",
+        // Ahead of the schema migration at wave -1, which cannot create a
+        // schema in a database that does not exist yet, and behind the
+        // server certificate at wave -3 that this cluster serves TLS with.
+        "argocd.argoproj.io/sync-wave": "-2",
       },
     },
     spec: {

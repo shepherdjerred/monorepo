@@ -87,7 +87,19 @@ export function createTemporalSchemaMigrationJob(chart: Chart) {
     metadata: {
       name: "temporal-schema-migration",
       annotations: {
-        "argocd.argoproj.io/hook": "PreSync",
+        // A "Sync" hook, not PreSync. PreSync runs as its own phase that
+        // completes before the Sync phase applies ANY ordinary resource, and
+        // three things this job needs are ordinary resources: the
+        // `temporal-postgresql-tls` secret cert-manager issues from the
+        // Certificate at wave -3, the database at wave -2, and this job's own
+        // egress policy at wave -2. As a PreSync hook it therefore waited on a
+        // secret that could not exist yet and sat in ContainerCreating with
+        // `MountVolume.SetUp failed ... secret "temporal-postgresql-tls" not
+        // found` until its deadline, failing every temporal sync. A Sync hook
+        // at wave -1 is still blocking and still ahead of the server at wave
+        // 0, but now runs after everything it depends on. The backup-preflight
+        // PreSync gate still precedes the whole phase.
+        "argocd.argoproj.io/hook": "Sync",
         "argocd.argoproj.io/sync-wave": "-1",
         "argocd.argoproj.io/hook-delete-policy":
           "BeforeHookCreation,HookSucceeded",

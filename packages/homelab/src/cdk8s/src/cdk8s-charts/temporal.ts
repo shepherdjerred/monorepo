@@ -388,7 +388,12 @@ export function createTemporalChart(app: App) {
   });
 
   new KubeNetworkPolicy(chart, "temporal-schema-migration-netpol", {
-    metadata: { name: "temporal-schema-migration-netpol" },
+    metadata: {
+      name: "temporal-schema-migration-netpol",
+      // The egress policy for the migration pod, so it must exist before that
+      // pod runs at wave -1 rather than with the rest of the netpols at 0.
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
+    },
     spec: {
       podSelector: {
         matchLabels: { app: "temporal-schema-migration" },

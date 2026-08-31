@@ -145,10 +145,14 @@ describe("Temporal server lifecycle", () => {
     expect(rbacWave).toBeLessThan(jobWave);
   });
 
-  test("migrates both schemas in a blocking PreSync hook", () => {
+  test("migrates both schemas in a blocking Sync hook", () => {
     const job = findResource("Job", "temporal-schema-migration");
+    // Sync, not PreSync: PreSync completes as its own phase before any
+    // ordinary resource is applied, and this job mounts a secret cert-manager
+    // only issues from a Certificate in the Sync phase. See the phase-ordering
+    // test below, which is the guard that this cannot regress.
     expect(job.metadata.annotations).toMatchObject({
-      "argocd.argoproj.io/hook": "PreSync",
+      "argocd.argoproj.io/hook": "Sync",
       "argocd.argoproj.io/hook-delete-policy":
         "BeforeHookCreation,HookSucceeded",
     });
@@ -176,22 +180,67 @@ describe("Temporal server lifecycle", () => {
     expect(caFileEnv?.value).toBe("/etc/temporal/postgres-tls/ca.crt");
   });
 
-  test("stages the PostgreSQL ingress netpol as an earlier PreSync hook than the schema migration Job", () => {
+  // The invariant nothing asserted, and which a PreSync migration violated:
+  // ArgoCD runs PreSync as a whole phase before the Sync phase applies any
+  // ordinary resource, so a hook may only depend on ordinary resources that
+  // share its phase and sort earlier by wave. The migration mounts
+  // `temporal-postgresql-tls`, talks to the database, and is covered by its own
+  // egress policy — all three are ordinary Sync-phase resources.
+  test("orders the schema migration after everything it needs and before the server", () => {
+    const phase = (kind: string, name: string) =>
+      findResource(kind, name).metadata.annotations?.[
+        "argocd.argoproj.io/hook"
+      ] ?? "Sync";
+    const wave = (kind: string, name: string) =>
+      Number(
+        findResource(kind, name).metadata.annotations?.[
+          "argocd.argoproj.io/sync-wave"
+        ] ?? "0",
+      );
+
+    const migrationWave = wave("Job", "temporal-schema-migration");
+    expect(phase("Job", "temporal-schema-migration")).toBe("Sync");
+
+    // Each prerequisite is an ordinary Sync-phase resource, so it must both
+    // share the phase and sort strictly earlier.
+    for (const [kind, name] of [
+      ["Certificate", "temporal-postgresql"],
+      ["postgresql", "temporal-postgresql"],
+      ["NetworkPolicy", "temporal-schema-migration-netpol"],
+    ] as const) {
+      expect(phase(kind, name)).toBe("Sync");
+      expect(wave(kind, name)).toBeLessThan(migrationWave);
+    }
+
+    // The secret the migration mounts is the one that Certificate issues.
+    const certificate = z
+      .object({ spec: z.object({ secretName: z.string() }).loose() })
+      .parse(findResource("Certificate", "temporal-postgresql"));
+    expect(certificate.spec.secretName).toBe("temporal-postgresql-tls");
+    expect(
+      JSON.stringify(findResource("Job", "temporal-schema-migration")),
+    ).toContain("temporal-postgresql-tls");
+
+    // And the server must not boot against an unmigrated schema.
+    expect(phase("Deployment", "temporal-temporal-server")).toBe("Sync");
+    expect(migrationWave).toBeLessThan(
+      wave("Deployment", "temporal-temporal-server"),
+    );
+  });
+
+  test("stages the PostgreSQL ingress netpol ahead of the schema migration Job", () => {
     const netpol = findResource("NetworkPolicy", "temporal-postgresql-netpol");
     expect(netpol.metadata.annotations).toMatchObject({
       "argocd.argoproj.io/hook": "PreSync",
       "argocd.argoproj.io/sync-wave": "-3",
     });
 
-    const netpolWave = Number(
-      netpol.metadata.annotations?.["argocd.argoproj.io/sync-wave"],
+    // The netpol is a PreSync hook and the migration a Sync hook, so the whole
+    // PreSync phase — not a wave comparison — is what orders them.
+    const schemaJob = findResource("Job", "temporal-schema-migration");
+    expect(schemaJob.metadata.annotations?.["argocd.argoproj.io/hook"]).toBe(
+      "Sync",
     );
-    const schemaJobWave = Number(
-      findResource("Job", "temporal-schema-migration").metadata.annotations?.[
-        "argocd.argoproj.io/sync-wave"
-      ],
-    );
-    expect(netpolWave).toBeLessThan(schemaJobWave);
 
     const serialized = JSON.stringify(netpol.spec);
     expect(serialized).toContain('"app":"temporal-server"');
