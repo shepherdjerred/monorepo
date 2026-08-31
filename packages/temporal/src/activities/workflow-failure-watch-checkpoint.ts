@@ -1,5 +1,6 @@
 import { z } from "zod/v4";
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
+import type { WorkflowFailureOverflowSummary } from "./workflow-failure-watch-overflow.ts";
 
 const WorkflowFailureWatchCursorSchema = z.object({
   closeTime: z.iso.datetime({ offset: true }),
@@ -20,6 +21,13 @@ const WorkflowFailureWatchCursorSchema = z.object({
 const WorkflowFailureWatchCheckpointSchema = z.object({
   detailedAlertsConsumed: z.number().int().nonnegative(),
   cursor: WorkflowFailureWatchCursorSchema.optional(),
+  overflow: z
+    .object({
+      omitted: z.number().int().positive(),
+      counts: z.record(z.string(), z.number().int().positive()),
+      newestOmittedCloseTime: z.iso.datetime({ offset: true }),
+    })
+    .optional(),
 });
 
 export type WorkflowFailureWatchCursor = {
@@ -34,6 +42,7 @@ export type WorkflowFailureWatchCursor = {
 export type WorkflowFailureWatchCheckpoint = {
   detailedAlertsConsumed: number;
   cursor?: WorkflowFailureWatchCursor;
+  overflow?: WorkflowFailureOverflowSummary;
 };
 
 export function workflowExecutionKey(
@@ -67,6 +76,16 @@ export function parseWorkflowFailureWatchCheckpoint(
       ...(parsed.data.cursor === undefined
         ? {}
         : { cursor: parsedCursor(parsed.data.cursor) }),
+      ...(parsed.data.overflow === undefined
+        ? {}
+        : {
+            overflow: {
+              ...parsed.data.overflow,
+              newestOmittedCloseTime: new Date(
+                parsed.data.overflow.newestOmittedCloseTime,
+              ),
+            },
+          }),
     };
   }
   // Heartbeats written before the fanout budget used the cursor fields at the
@@ -117,6 +136,15 @@ export function serializedCheckpoint(
     ? null
     : {
         detailedAlertsConsumed: checkpoint.detailedAlertsConsumed,
+        ...(checkpoint.overflow === undefined
+          ? {}
+          : {
+              overflow: {
+                ...checkpoint.overflow,
+                newestOmittedCloseTime:
+                  checkpoint.overflow.newestOmittedCloseTime.toISOString(),
+              },
+            }),
         ...(checkpoint.cursor === undefined
           ? {}
           : {
