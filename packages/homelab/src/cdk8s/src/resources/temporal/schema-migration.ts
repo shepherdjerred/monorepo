@@ -115,7 +115,13 @@ export function createTemporalSchemaMigrationJob(chart: Chart) {
     withCommonProps({
       name: "schema-migration",
       image: `temporalio/admin-tools:${versions["temporalio/admin-tools"]}`,
-      command: ["/bin/bash", "-c"],
+      // admin-tools is Alpine and ships no bash — only BusyBox `sh`/`ash`.
+      // /bin/bash made the container fail before its first instruction with
+      // `exec: "/bin/bash": stat /bin/bash: no such file or directory`, which
+      // surfaces as a StartError carrying no logs at all. BusyBox sh does
+      // support the `set -eu -o pipefail` prelude above, so nothing else in
+      // the script changes. namespace-init already invokes /bin/sh.
+      command: ["/bin/sh", "-c"],
       args: [SCHEMA_MIGRATION_SCRIPT],
       envVariables: {
         POSTGRES_USER: EnvValue.fromSecretValue({
