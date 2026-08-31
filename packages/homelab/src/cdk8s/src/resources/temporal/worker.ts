@@ -91,7 +91,7 @@ export function createTemporalWorkerDeployment(
     "temporal-seaweedfs-backup-1p",
     {
       metadata: { name: "temporal-seaweedfs-backup" },
-      spec: { itemPath: vaultItemPath("seaweedfs-backup") },
+      spec: { itemPath: vaultItemPath("fkp3hqhl3wze3bxddhhaq3ykzq") },
     },
   );
   const backupSecret = Secret.fromSecretName(

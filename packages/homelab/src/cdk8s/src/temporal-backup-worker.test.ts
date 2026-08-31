@@ -79,7 +79,7 @@ describe("Temporal SeaweedFS backup boundary", () => {
     );
     expect(
       z.object({ itemPath: z.string() }).parse(item.spec).itemPath,
-    ).toMatch(/\/items\/seaweedfs-backup$/u);
+    ).toMatch(/\/items\/fkp3hqhl3wze3bxddhhaq3ykzq$/u);
   });
 
   test("limits network access to metrics, DNS, Temporal, tracing, HTTPS, and SeaweedFS", () => {

@@ -28,12 +28,7 @@ import {
 // no-op provider makes the emit() call a harmless no-op, same as the trace
 // API before NodeSDK.start().
 import { log as jsonLog } from "./observability/log.ts";
-import { restoreGlitterCorpusSnapshotMetrics } from "./activities/glitter-corpus-snapshot.ts";
-import { restoreSeaweedFsBackupMetrics } from "./activities/seaweedfs-backup.ts";
-import { isTransientCorpusStorageError } from "./activities/glitter-corpus-store.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
-import { retryUntilReady } from "./shared/startup-retry.ts";
-import { formatError } from "./shared/format-error.ts";
 import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
 import {
   parseTemporalBootstrap,
@@ -59,6 +54,10 @@ import {
   initializeCallGraphTracing,
   shutdownCallGraphTracing,
 } from "./config/call-graph-tracing.ts";
+import {
+  restoreGlitterCorpusMetricsAfterWorkerStart,
+  restoreSeaweedFsMetricsAfterWorkerStart,
+} from "./observability/restore-startup-metrics.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -216,78 +215,6 @@ async function createQueueWorker(
             definition.maxConcurrentActivityTaskExecutions,
         }),
   });
-}
-
-async function restoreGlitterCorpusMetricsAfterWorkerStart(
-  isClosed: () => boolean,
-): Promise<void> {
-  try {
-    const result = await retryUntilReady({
-      operation: restoreGlitterCorpusSnapshotMetrics,
-      shouldRetry: isTransientCorpusStorageError,
-      isClosed,
-      onRetry: ({ attempt, delayMs, error }) => {
-        jsonLog(
-          "error",
-          "Glitter corpus snapshot metric restoration failed; retrying",
-          {
-            attempt,
-            delayMs,
-            error: formatError(error),
-          },
-        );
-      },
-      onEscalate: ({ attempt, error }) => {
-        Sentry.captureMessage(
-          `Glitter corpus snapshot metric restoration has failed ${String(attempt)} consecutive times (latest error: ${formatError(error)}); still retrying`,
-          "warning",
-        );
-      },
-    });
-    if (result === "succeeded") {
-      jsonLog("info", "Glitter corpus snapshot metric restoration completed");
-    }
-  } catch (error: unknown) {
-    Sentry.captureException(error);
-    jsonLog(
-      "error",
-      "Glitter corpus snapshot metric restoration failed; corpus operations fail closed while other queues continue",
-      { error: formatError(error) },
-    );
-  }
-}
-
-async function restoreSeaweedFsMetricsAfterWorkerStart(
-  isClosed: () => boolean,
-): Promise<void> {
-  try {
-    const result = await retryUntilReady({
-      operation: restoreSeaweedFsBackupMetrics,
-      shouldRetry: () => true,
-      isClosed,
-      onRetry: ({ attempt, delayMs, error }) => {
-        jsonLog(
-          "error",
-          "SeaweedFS backup metric restoration failed; retrying",
-          { attempt, delayMs, error: formatError(error) },
-        );
-      },
-      onEscalate: ({ attempt, error }) => {
-        Sentry.captureMessage(
-          `SeaweedFS backup metric restoration has failed ${String(attempt)} consecutive times (latest error: ${formatError(error)}); still retrying`,
-          "warning",
-        );
-      },
-    });
-    if (result === "succeeded") {
-      jsonLog("info", "SeaweedFS backup metric restoration completed");
-    }
-  } catch (error: unknown) {
-    Sentry.captureException(error);
-    jsonLog("error", "SeaweedFS backup metric restoration stopped", {
-      error: formatError(error),
-    });
-  }
 }
 
 async function initializeTemporalTracing(

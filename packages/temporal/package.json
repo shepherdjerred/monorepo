@@ -46,7 +46,6 @@
   },
   "dependencies": {
     "@shepherdjerred/seaweedfs-backup": "workspace:*",
-    "@anthropic-ai/claude-agent-sdk": "^0.3.241",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@kubernetes/client-node": "^2.0.0",
     "@octokit/webhooks-methods": "^6.0.0",

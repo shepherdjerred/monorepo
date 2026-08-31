@@ -56,7 +56,7 @@ describe("SeaweedFS backup policy", () => {
     expect(cloudflareResources).toContain("max_age_seconds = 2592000");
     expect(cloudflareResources).toContain("max_age = 604800");
     expect(cloudflareResources).not.toContain("InfrequentAccess");
-    expect(providers).toContain('version = "~> 5.24"');
+    expect(providers).toContain('version = "~> 5.24.0"');
   });
 
   test("requires explicit reasons and unique bucket names", () => {
