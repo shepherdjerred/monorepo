@@ -217,6 +217,11 @@ export function createTemporalBackupPreflightJob(chart: Chart) {
       },
     },
     serviceAccount,
+    // The whole script is `kubectl`, and the ServiceAccount above carries the
+    // Role/ClusterRole it needs. cdk8s-plus defaults this to false, so without
+    // it no token is projected: kubectl finds no in-cluster config, falls back
+    // to localhost:8080, and the hook fails the entire temporal sync.
+    automountServiceAccountToken: true,
     backoffLimit: 1,
     activeDeadline: Duration.minutes(2),
     podMetadata: { labels: { app: "temporal-backup-preflight" } },
