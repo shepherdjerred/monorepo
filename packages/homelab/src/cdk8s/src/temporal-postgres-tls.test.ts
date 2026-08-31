@@ -80,18 +80,49 @@ describe("Temporal PostgreSQL TLS", () => {
     );
     const spec = z
       .object({
-        tls: z.object({
-          secretName: z.literal("temporal-postgresql-tls"),
-          certificateFile: z.literal("tls.crt"),
-          privateKeyFile: z.literal("tls.key"),
-          caSecretName: z.literal("temporal-postgresql-tls"),
-          // Clients must trust cert-manager's injected ca.crt (the stable
-          // CA), never the leaf's own tls.crt, which rotates.
-          caFile: z.literal("ca.crt"),
-        }),
+        // Strict: the CA ships inside secretName, so caSecretName must stay
+        // absent (see the duplicate-volume guard below).
+        tls: z
+          .object({
+            secretName: z.literal("temporal-postgresql-tls"),
+            certificateFile: z.literal("tls.crt"),
+            privateKeyFile: z.literal("tls.key"),
+            // Clients must trust cert-manager's injected ca.crt (the stable
+            // CA), never the leaf's own tls.crt, which rotates.
+            caFile: z.literal("ca.crt"),
+          })
+          .strict(),
       })
       .parse(postgres.spec);
 
-    expect(spec.tls).toBeDefined();
+    expect(spec.tls.caFile).toBe("ca.crt");
+  });
+
+  // Regression guard for a defect that left the Temporal database with no
+  // controller. The operator's generateTlsMounts appends one volume named
+  // after tls.secretName and, when tls.caSecretName is set, a second named
+  // after tls.caSecretName. Naming the same secret in both fields emits two
+  // volumes with one name, the API server rejects the StatefulSet as invalid,
+  // and because the operator deletes before it re-creates, the running pod is
+  // orphaned with nothing left to recreate it.
+  test("never names one secret in both TLS fields, which would emit duplicate volumes", () => {
+    const postgres = findTemporalResource(
+      resources(),
+      "postgresql",
+      "temporal-postgresql",
+    );
+    const tls = z
+      .object({
+        secretName: z.string(),
+        caSecretName: z.string().optional(),
+      })
+      .parse(z.object({ tls: z.unknown() }).parse(postgres.spec).tls);
+
+    // The operator derives a volume name from each field it is given, so the
+    // set of names it would generate must have no duplicates.
+    const volumeNames = [tls.secretName, tls.caSecretName].filter(
+      (name) => name !== undefined,
+    );
+    expect(volumeNames).toStrictEqual([...new Set(volumeNames)]);
   });
 });

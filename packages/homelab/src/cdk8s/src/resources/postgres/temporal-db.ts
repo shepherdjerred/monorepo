@@ -41,8 +41,20 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
         privateKeyFile: TEMPORAL_POSTGRES_TLS_PRIVATE_KEY_FILE,
         // ca.crt in this same secret is cert-manager's copy of the stable CA
         // certificate (see temporal-db-tls.ts) — not this leaf's own
-        // certificate, which rotates on every renewal.
-        caSecretName: TEMPORAL_POSTGRES_TLS_SECRET,
+        // certificate, which rotates on every renewal. Because it already
+        // ships inside `secretName`, it is mounted at /tls with the leaf and
+        // a relative caFile resolves against that same mount.
+        //
+        // Deliberately NO caSecretName. The operator's generateTlsMounts
+        // supports that field only for the "ca.crt resides in a DIFFERENT
+        // secret" case: it appends a second volume named after caSecretName
+        // and mounts it at /tlsca. Naming the same secret twice therefore
+        // emits two volumes both called temporal-postgresql-tls, and the API
+        // server rejects the StatefulSet with `spec.template.spec.volumes[3]
+        // .name: Duplicate value`. The operator replaces a StatefulSet by
+        // deleting it first, so it had already orphaned the running pod
+        // before the create failed — leaving the Temporal database with no
+        // controller at all until this was corrected.
         caFile: TEMPORAL_POSTGRES_TLS_CA_FILE,
       },
       postgresql: {
