@@ -34,19 +34,7 @@ homekit:
       # tiles); bridging the domain here only produced duplicate crude on/off switch
       # tiles (HAP has no robot-vacuum service). It also un-bridges the Litter-Robot
       # vacuum entity, which is intentionally not wanted in HomeKit.
-      # device_tracker is whitelisted per-entity instead of by domain: the domain also
-      # covers non-person network devices (NAS, printer, TVs, speakers, game consoles)
-      # picked up by router/nmap-style tracking, and HomeKit presence only makes sense
-      # for people. Add new phones/tablets here as they're set up.
       include_entities:
-        - device_tracker.iphone
-        - device_tracker.iphone_2
-        - device_tracker.iphone_3
-        - device_tracker.jerred_iphone
-        - device_tracker.ipad
-        - device_tracker.shuxin
-        - device_tracker.shuxin_2
-        - device_tracker.9a_18_f1_91_6a_33
         # Front door lock: whitelisted rather than including the whole lock domain.
         # Driven by the Temporal reconcile-lock workflow in HA; exposing it gives
         # Apple Home / Siri / Watch lock control with HomeKit's secure-unlock UX.
@@ -62,6 +50,10 @@ homekit:
         - switch.guest_room_lock
         - switch.master_bathroom_lock
         - switch.office_lock
+        # Renamed Sonoff controls used only for power tracking in HA. Their telemetry
+        # remains enabled and recorded; only HomeKit exposure is suppressed.
+        - switch.jobs
+        - switch.office_left_blinds
         # Sonos playback codec metadata, not actionable state
         - sensor.living_room_audio_input_format
         # Feeder device config/metadata, not live status
@@ -92,6 +84,8 @@ homekit:
         - switch.thor_neutered_spayed
       exclude_entity_globs:
         - binary_sensor.*_focus
+        - binary_sensor.*_camera_motion
+        - binary_sensor.*_kiosk_mode
         - binary_sensor.*entertainment_configuration
         - binary_sensor.granary_smart_camera_feeder_*
         - binary_sensor.heat_pump_water_heater_*
@@ -140,6 +134,11 @@ homekit:
         - sensor.*_average_active_pace
         - sensor.*_distance
         - sensor.*_steps
+        # Sonoff plugs are power monitors, not Apple Home controls. Exclude every
+        # standard Sonoff entity while retaining the entities and history in HA.
+        - binary_sensor.sonoff_*
+        - sensor.sonoff_*
+        - switch.sonoff_*
         # Network/mesh diagnostics — router, node health, connectivity, IPs
         - sensor.192_168_1_1_*
         - sensor.rt_ax88u_pro_74c0_*
