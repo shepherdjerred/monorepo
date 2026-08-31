@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import type { z } from "zod/v4";
 import {
   GuildInventorySchema,
@@ -37,6 +38,8 @@ const SNAPSHOT_METRICS_ENVIRONMENT = [
   "GLITTER_CORPUS_S3_ACCESS_KEY_ID",
   "GLITTER_CORPUS_S3_SECRET_ACCESS_KEY",
 ] as const;
+
+const FINALIZATION_HEARTBEAT_INTERVAL_MS = 10_000;
 
 export async function restoreGlitterCorpusSnapshotMetrics(): Promise<void> {
   const configured = SNAPSHOT_METRICS_ENVIRONMENT.every((name) => {
@@ -101,45 +104,71 @@ export async function finalizeGlitterCorpusSnapshot(
     complete: true,
   });
   const store = createCorpusStoreFromEnv();
-  const inventoryBytes = await readVerifiedObject({
-    store,
-    key: snapshot.inventoryObject.key,
-    expectedSha256: snapshot.inventoryObject.sha256,
-  });
-  const inventory = GuildInventorySchema.parse(
-    JSON.parse(new TextDecoder().decode(inventoryBytes)),
-  );
-  if (inventory.guildId !== snapshot.guildId) {
-    throw new Error("snapshot inventory belongs to a different guild");
+  const activityContext = Context.current();
+  let progress: {
+    phase: string;
+    manifestKey: string | null;
+    verifiedChannels: number;
+    totalChannels: number;
+    lineageStateCount?: number;
+  } = {
+    phase: "verify-snapshot",
+    manifestKey: null,
+    verifiedChannels: 0,
+    totalChannels: snapshot.channelManifestObjects.length,
+  };
+  activityContext.heartbeat(progress);
+  const heartbeatTimer = setInterval(() => {
+    activityContext.heartbeat(progress);
+  }, FINALIZATION_HEARTBEAT_INTERVAL_MS);
+  try {
+    const inventoryBytes = await readVerifiedObject({
+      store,
+      key: snapshot.inventoryObject.key,
+      expectedSha256: snapshot.inventoryObject.sha256,
+    });
+    const inventory = GuildInventorySchema.parse(
+      JSON.parse(new TextDecoder().decode(inventoryBytes)),
+    );
+    if (inventory.guildId !== snapshot.guildId) {
+      throw new Error("snapshot inventory belongs to a different guild");
+    }
+    await verifyGlitterCorpusSnapshotGraph({
+      snapshot,
+      guildSlug: inventory.guildSlug,
+      store,
+      onProgress: (verificationProgress) => {
+        progress = { phase: "verify-snapshot", ...verificationProgress };
+        activityContext.heartbeat(progress);
+      },
+    });
+    const snapshotKey = `guilds/${input.guildId}/snapshots/${input.snapshotId}.json`;
+    const snapshotObject = await putImmutableObject({
+      store,
+      key: snapshotKey,
+      body: jsonBytes(snapshot),
+      contentType: "application/json",
+      writtenAt: input.createdAt,
+    });
+    await publishLatestSnapshotPointer({
+      store,
+      pointer: {
+        schemaVersion: 1,
+        guildId: input.guildId,
+        snapshotId: input.snapshotId,
+        snapshotKey,
+        snapshotSha256: snapshotObject.sha256,
+        publishedAt: input.createdAt,
+      },
+    });
+    glitterCorpusSnapshotMessages.set(snapshot.uniqueMessageCount);
+    glitterCorpusLastSnapshotTimestampSeconds.set(
+      Date.parse(input.createdAt) / 1000,
+    );
+    return { snapshot, snapshotKey, snapshotObject };
+  } finally {
+    clearInterval(heartbeatTimer);
   }
-  await verifyGlitterCorpusSnapshotGraph({
-    snapshot,
-    guildSlug: inventory.guildSlug,
-  });
-  const snapshotKey = `guilds/${input.guildId}/snapshots/${input.snapshotId}.json`;
-  const snapshotObject = await putImmutableObject({
-    store,
-    key: snapshotKey,
-    body: jsonBytes(snapshot),
-    contentType: "application/json",
-    writtenAt: input.createdAt,
-  });
-  await publishLatestSnapshotPointer({
-    store,
-    pointer: {
-      schemaVersion: 1,
-      guildId: input.guildId,
-      snapshotId: input.snapshotId,
-      snapshotKey,
-      snapshotSha256: snapshotObject.sha256,
-      publishedAt: input.createdAt,
-    },
-  });
-  glitterCorpusSnapshotMessages.set(snapshot.uniqueMessageCount);
-  glitterCorpusLastSnapshotTimestampSeconds.set(
-    Date.parse(input.createdAt) / 1000,
-  );
-  return { snapshot, snapshotKey, snapshotObject };
 }
 
 export async function loadGlitterCorpusDailyBaseline(): Promise<DailyBaseline> {
@@ -168,7 +197,7 @@ export async function loadGlitterCorpusDailyBaseline(): Promise<DailyBaseline> {
   );
   const states: DailyBaseline["states"] = {};
   for (const object of snapshot.channelManifestObjects) {
-    const manifest = await loadStateManifest(object.key);
+    const manifest = await loadStateManifest(store, object.key);
     states[manifest.channelId] = {
       manifestKey: object.key,
       manifestObject: object,

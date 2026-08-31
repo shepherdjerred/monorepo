@@ -138,8 +138,8 @@ export function createTemporalGlitterWorkers(
       envVariables: props.corpusEnvVariables,
       cpuRequest: Cpu.millis(250),
       cpuLimit: Cpu.units(1),
-      memoryRequest: Size.mebibytes(512),
-      memoryLimit: Size.gibibytes(3),
+      memoryRequest: Size.gibibytes(2),
+      memoryLimit: Size.gibibytes(4),
     }),
     contextDeployment: createGlitterWorker(chart, {
       name: "temporal-glitter-context-worker",

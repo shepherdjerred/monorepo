@@ -388,8 +388,8 @@ describe("Temporal domain worker isolation", () => {
       "glitter-context-worker",
     );
     expect(corpus.spec.template.spec.containers[0]?.resources).toEqual({
-      limits: { cpu: "1", memory: "3072Mi" },
-      requests: { cpu: "250m", memory: "512Mi" },
+      limits: { cpu: "1", memory: "4096Mi" },
+      requests: { cpu: "250m", memory: "2048Mi" },
     });
     expect(context.spec.template.spec.containers[0]?.resources).toEqual({
       limits: { cpu: "2", memory: "6144Mi" },

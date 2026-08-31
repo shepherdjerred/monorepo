@@ -17,7 +17,10 @@ import {
   readSeedChannelObservations,
   readTraversal,
 } from "./glitter-corpus-io.ts";
-import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
+import {
+  createCorpusStoreFromEnv,
+  type CorpusStore,
+} from "./glitter-corpus-store.ts";
 import {
   LatestSnapshotPointerSchema,
   readRequiredObject,
@@ -26,8 +29,16 @@ import {
 
 type RebuildContext = {
   guildSlug: string;
+  store: CorpusStore;
   cache: Map<string, CurrentMessage[]>;
   active: Set<string>;
+};
+
+export type GlitterCorpusVerificationProgress = {
+  manifestKey: string;
+  verifiedChannels: number;
+  totalChannels: number;
+  lineageStateCount: number;
 };
 
 function immediatelyBefore(messageId: string): string {
@@ -57,11 +68,12 @@ function assertProjectionMatchesManifest(
 }
 
 async function readRetainedBaselineProjection(input: {
+  store: CorpusStore;
   manifestKey: string;
   guildId: string;
   channelId: string;
 }): Promise<CurrentMessage[]> {
-  const manifest = await loadStateManifest(input.manifestKey);
+  const manifest = await loadStateManifest(input.store, input.manifestKey);
   if (
     manifest.guildId !== input.guildId ||
     manifest.channelId !== input.channelId
@@ -71,7 +83,7 @@ async function readRetainedBaselineProjection(input: {
     );
   }
   const bytes = await readVerifiedObject({
-    store: createCorpusStoreFromEnv(),
+    store: input.store,
     key: manifest.projectionObjectKey,
     expectedSha256: manifest.projectionSha256,
   });
@@ -89,6 +101,7 @@ async function rebuildCompleteState(
   context: RebuildContext,
 ): Promise<CurrentMessage[]> {
   const backward = await readTraversal({
+    store: context.store,
     guildId: manifest.guildId,
     guildSlug: context.guildSlug,
     channelId: manifest.channelId,
@@ -97,6 +110,7 @@ async function rebuildCompleteState(
   });
   const oldestMessageId = backward.messageIds.toSorted(compareSnowflakes)[0];
   const forward = await readTraversal({
+    store: context.store,
     guildId: manifest.guildId,
     guildSlug: context.guildSlug,
     channelId: manifest.channelId,
@@ -137,6 +151,7 @@ async function rebuildCompleteState(
     );
   }
   const seed = await readSeedChannelObservations({
+    store: context.store,
     seedPrefix: manifest.seedPrefix ?? undefined,
     channelId: manifest.channelId,
   });
@@ -158,6 +173,7 @@ async function rebuildCompleteState(
     manifest.retainedBaselineManifestKey === null
       ? []
       : await readRetainedBaselineProjection({
+          store: context.store,
           manifestKey: manifest.retainedBaselineManifestKey,
           guildId: manifest.guildId,
           channelId: manifest.channelId,
@@ -183,22 +199,33 @@ async function rebuildCompleteState(
 export async function verifyGlitterCorpusSnapshotGraph(input: {
   snapshot: GuildSnapshot;
   guildSlug: string;
+  store: CorpusStore;
+  onProgress?: (progress: GlitterCorpusVerificationProgress) => void;
 }): Promise<number> {
-  const store = createCorpusStoreFromEnv();
-  const context: RebuildContext = {
-    guildSlug: input.guildSlug,
-    cache: new Map(),
-    active: new Set(),
-  };
   let uniqueMessageCount = 0;
-  for (const manifestObject of input.snapshot.channelManifestObjects) {
+  for (const [
+    index,
+    manifestObject,
+  ] of input.snapshot.channelManifestObjects.entries()) {
     await readVerifiedObject({
-      store,
+      store: input.store,
       key: manifestObject.key,
       expectedSha256: manifestObject.sha256,
     });
+    const context: RebuildContext = {
+      guildSlug: input.guildSlug,
+      store: input.store,
+      cache: new Map(),
+      active: new Set(),
+    };
     const projection = await rebuildState(manifestObject.key, context);
     uniqueMessageCount += projection.length;
+    input.onProgress?.({
+      manifestKey: manifestObject.key,
+      verifiedChannels: index + 1,
+      totalChannels: input.snapshot.channelManifestObjects.length,
+      lineageStateCount: context.cache.size,
+    });
   }
   if (uniqueMessageCount !== input.snapshot.uniqueMessageCount) {
     throw new Error(
@@ -215,6 +242,7 @@ async function rebuildOverlapState(
   const baseline = await rebuildState(manifest.baselineManifestKey, context);
   const { observations, messageIds, timestamps, terminal } =
     await readOverlapTraversal({
+      store: context.store,
       guildId: manifest.guildId,
       guildSlug: context.guildSlug,
       channelId: manifest.channelId,
@@ -259,14 +287,14 @@ async function rebuildState(
     throw new Error(`cycle in corpus state chain at ${manifestKey}`);
   }
   context.active.add(manifestKey);
-  const manifest = await loadStateManifest(manifestKey);
+  const manifest = await loadStateManifest(context.store, manifestKey);
   const projection =
     "backwardProof" in manifest
       ? await rebuildCompleteState(manifest, context)
       : await rebuildOverlapState(manifest, context);
   assertProjectionMatchesManifest(manifest, projection);
   await readVerifiedObject({
-    store: createCorpusStoreFromEnv(),
+    store: context.store,
     key: manifest.projectionObjectKey,
     expectedSha256: manifest.projectionSha256,
   });
@@ -314,6 +342,7 @@ export async function verifyLatestGlitterCorpusSnapshot(): Promise<{
   const uniqueMessageCount = await verifyGlitterCorpusSnapshotGraph({
     snapshot,
     guildSlug: inventory.guildSlug,
+    store,
   });
   return {
     guildId,

@@ -93,6 +93,7 @@ async function inventoryGlitterGuild(input: {
   baselineInventory?: z.input<typeof GuildInventorySchema>;
 }): Promise<InventoryResult> {
   const config = glitterCorpusRuntimeConfig();
+  const store = createCorpusStoreFromEnv();
   const baselineInventory =
     input.baselineInventory === undefined
       ? undefined
@@ -138,7 +139,7 @@ async function inventoryGlitterGuild(input: {
   }
   const inventoryKey = `guilds/${config.guildId}/inventory/${inventory.sha256}.json`;
   const inventoryObject = await putImmutableObject({
-    store: createCorpusStoreFromEnv(),
+    store,
     key: inventoryKey,
     body: jsonBytes(inventory),
     contentType: "application/json",
@@ -155,7 +156,9 @@ async function loadApprovedGlitterInventory(input: {
   inventoryKey: string;
   expectedSha256: string;
 }): Promise<InventoryResult> {
+  const store = createCorpusStoreFromEnv();
   const inventory = await readCorpusJson(
+    store,
     input.inventoryKey,
     GuildInventorySchema,
   );
@@ -179,11 +182,11 @@ async function loadApprovedGlitterInventory(input: {
     );
   }
   const bytes = await readRequiredObject({
-    store: createCorpusStoreFromEnv(),
+    store,
     key: input.inventoryKey,
   });
   const inventoryObject = await putImmutableObject({
-    store: createCorpusStoreFromEnv(),
+    store,
     key: input.inventoryKey,
     body: bytes,
     contentType: "application/json",
@@ -202,7 +205,10 @@ async function validateApprovedGlitterSeed(input: {
   guildSlug: string;
   approvedChannelIds: string[];
 }): Promise<void> {
-  await validateSeedForApprovedInventory(input);
+  await validateSeedForApprovedInventory({
+    store: createCorpusStoreFromEnv(),
+    ...input,
+  });
 }
 
 async function captureGlitterCorpusPage(
@@ -288,7 +294,9 @@ async function verifyGlitterCorpusChannel(
   rawInput: z.input<typeof VerifyChannelInputSchema>,
 ): Promise<ChannelStateResult> {
   const input = VerifyChannelInputSchema.parse(rawInput);
+  const store = createCorpusStoreFromEnv();
   const backward = await readTraversal({
+    store,
     guildId: input.guildId,
     guildSlug: input.guildSlug,
     channelId: input.channelId,
@@ -311,6 +319,7 @@ async function verifyGlitterCorpusChannel(
     throw new Error("Discord snowflake cannot be zero");
   }
   const forward = await readTraversal({
+    store,
     guildId: input.guildId,
     guildSlug: input.guildSlug,
     channelId: input.channelId,
@@ -340,6 +349,7 @@ async function verifyGlitterCorpusChannel(
     ...backward.observations,
     ...forward.observations,
     ...(await readSeedChannelObservations({
+      store,
       seedPrefix: input.seedPrefix,
       channelId: input.channelId,
     })),
@@ -347,6 +357,7 @@ async function verifyGlitterCorpusChannel(
   let retainedBaseline: CurrentMessage[] = [];
   if (input.retainedBaselineManifestKey !== undefined) {
     const retainedState = await readBaselineProjection({
+      store,
       manifestKey: input.retainedBaselineManifestKey,
       guildId: input.guildId,
       channelId: input.channelId,
@@ -355,6 +366,7 @@ async function verifyGlitterCorpusChannel(
   }
   const projection = mergeCurrentProjection(retainedBaseline, observations);
   const projectionObject = await writeChannelProjection({
+    store,
     guildId: input.guildId,
     channelId: input.channelId,
     snapshotId: input.snapshotId,
@@ -400,6 +412,7 @@ async function verifyGlitterCorpusChannel(
     }),
   });
   return await persistProjectionState({
+    store,
     identity: input,
     manifest,
     projection,
@@ -410,7 +423,9 @@ async function applyGlitterCorpusOverlap(
   rawInput: z.input<typeof ApplyOverlapInputSchema>,
 ): Promise<ChannelStateResult> {
   const input = ApplyOverlapInputSchema.parse(rawInput);
+  const store = createCorpusStoreFromEnv();
   const { baseline, messages: existing } = await readBaselineProjection({
+    store,
     manifestKey: input.baselineManifestKey,
     guildId: input.guildId,
     channelId: input.channelId,
@@ -422,6 +437,7 @@ async function applyGlitterCorpusOverlap(
   }
   const { observations, messageIds, timestamps, terminal } =
     await readOverlapTraversal({
+      store,
       guildId: input.guildId,
       guildSlug: input.guildSlug,
       channelId: input.channelId,
@@ -439,6 +455,7 @@ async function applyGlitterCorpusOverlap(
     messageIds.toSorted(compareSnowflakes)[0] ?? null;
   const projection = mergeCurrentProjection(existing, observations);
   const projectionObject = await writeChannelProjection({
+    store,
     guildId: input.guildId,
     channelId: input.channelId,
     snapshotId: input.snapshotId,
@@ -467,6 +484,7 @@ async function applyGlitterCorpusOverlap(
     }),
   });
   return await persistProjectionState({
+    store,
     identity: input,
     manifest,
     projection,

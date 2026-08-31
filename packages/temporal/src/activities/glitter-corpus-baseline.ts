@@ -1,14 +1,15 @@
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
 import { loadStateManifest } from "./glitter-corpus-io.ts";
-import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
+import type { CorpusStore } from "./glitter-corpus-store.ts";
 import { readVerifiedObject } from "./glitter-corpus-storage.ts";
 
 export async function readBaselineProjection(input: {
+  store: CorpusStore;
   manifestKey: string;
   guildId: string;
   channelId: string;
 }) {
-  const baseline = await loadStateManifest(input.manifestKey);
+  const baseline = await loadStateManifest(input.store, input.manifestKey);
   if (
     baseline.guildId !== input.guildId ||
     baseline.channelId !== input.channelId
@@ -16,7 +17,7 @@ export async function readBaselineProjection(input: {
     throw new Error(`baseline state identity mismatch for ${input.channelId}`);
   }
   const bytes = await readVerifiedObject({
-    store: createCorpusStoreFromEnv(),
+    store: input.store,
     key: baseline.projectionObjectKey,
     expectedSha256: baseline.projectionSha256,
   });

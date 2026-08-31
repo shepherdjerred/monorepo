@@ -325,8 +325,8 @@ describe("Container resource requests backstop", () => {
       [
         "temporal-temporal-glitter-corpus-worker/temporal-glitter-corpus-worker",
         {
-          requests: { cpu: "250m", memory: "512Mi" },
-          limits: { cpu: "1", memory: "3072Mi" },
+          requests: { cpu: "250m", memory: "2048Mi" },
+          limits: { cpu: "1", memory: "4096Mi" },
         },
       ],
       [
