@@ -4,6 +4,7 @@ import type { ConfigMap } from "cdk8s-plus-31";
 import {
   Cpu,
   Deployment,
+  EnvValue,
   DeploymentStrategy,
   Probe,
   Secret,
@@ -19,6 +20,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { TEMPORAL_POSTGRES_TLS_SECRET } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import {
   TEMPORAL_SERVER_CONFIG_DIRECTORY,
+  TEMPORAL_SERVER_CONFIG_PATH,
   TEMPORAL_SERVER_DYNAMIC_CONFIG_DIRECTORY,
   TEMPORAL_SERVER_POSTGRES_TLS_DIRECTORY,
   addConfigRenderInitContainer,
@@ -106,14 +108,23 @@ export function createTemporalServerDeployment(
         { name: "grpc", number: 7233 },
         { name: "metrics", number: 9090 },
       ],
-      // No environment configuration. Every one of the DB_*, POSTGRES_*,
-      // SQL_*, SERVICES, NUM_HISTORY_SHARDS and PROMETHEUS_ENDPOINT variables
-      // that used to live here was a dockerize template input consumed by the
-      // auto-setup image. temporalio/server neither renders a template nor
-      // expands environment variables in its config, so they configured
-      // nothing at all -- the values now live in the rendered config itself.
-      // The password deliberately does not appear here either: only the init
-      // container needs it.
+      envVariables: {
+        // `temporal-server start` does NOT look for config files by default.
+        // Absent an explicit path it logs "Loading configuration from
+        // environment variables only", renders its own embedded template, and
+        // dies on Cassandra defaults -- with the rendered config sitting
+        // unread beside it. Note `render-config` DOES default to discovering
+        // files, so validating with that subcommand hides this entirely.
+        //
+        // Everything else that used to be here (DB_*, POSTGRES_*, SQL_*,
+        // SERVICES, NUM_HISTORY_SHARDS, PROMETHEUS_ENDPOINT) was a dockerize
+        // template input consumed by the auto-setup image and configured
+        // nothing once the template was gone. The password is deliberately
+        // absent too: only the init container needs it.
+        TEMPORAL_SERVER_CONFIG_FILE_PATH: EnvValue.fromValue(
+          TEMPORAL_SERVER_CONFIG_PATH,
+        ),
+      },
       securityContext: {
         user: UID,
         group: GID,

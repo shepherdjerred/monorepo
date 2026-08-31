@@ -20,6 +20,7 @@ import {
 // <cwd>/config/<env>.yaml, and the default env is "development".
 export const TEMPORAL_SERVER_CONFIG_DIRECTORY = "/etc/temporal/config";
 export const TEMPORAL_SERVER_CONFIG_FILE = "development.yaml";
+export const TEMPORAL_SERVER_CONFIG_PATH = `${TEMPORAL_SERVER_CONFIG_DIRECTORY}/${TEMPORAL_SERVER_CONFIG_FILE}`;
 
 const TEMPORAL_SERVER_POSTGRES_TLS_DIRECTORY = "/etc/temporal/postgres-tls";
 export const TEMPORAL_SERVER_POSTGRES_CA_PATH = `${TEMPORAL_SERVER_POSTGRES_TLS_DIRECTORY}/${TEMPORAL_POSTGRES_TLS_CA_FILE}`;

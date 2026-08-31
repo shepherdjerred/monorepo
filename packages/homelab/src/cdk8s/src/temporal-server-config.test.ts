@@ -119,6 +119,27 @@ describe("Temporal server configuration", () => {
     );
   });
 
+  test("tells the server where its config is, which start does not infer", () => {
+    const spec = serverDeployment();
+    const env = new Map(
+      (spec.containers[0]?.env ?? []).map((entry) => [
+        entry.name,
+        entry["value"],
+      ]),
+    );
+
+    // Without this, `temporal-server start` logs "Loading configuration from
+    // environment variables only", renders its own embedded template and dies
+    // on Cassandra defaults, with the rendered config unread beside it. It is
+    // a silent fallback, not an error about a missing file.
+    //
+    // `render-config` defaults the other way and DOES discover config files,
+    // so validating the config with that subcommand cannot catch this.
+    expect(env.get("TEMPORAL_SERVER_CONFIG_FILE_PATH")).toBe(
+      "/etc/temporal/config/development.yaml",
+    );
+  });
+
   test("keeps the database credential out of the server container", () => {
     const spec = serverDeployment();
     const names = new Set(
