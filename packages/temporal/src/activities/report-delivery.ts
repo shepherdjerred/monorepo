@@ -21,11 +21,10 @@ import {
   ReportSendClaimV1Schema,
   type ReportSendClaimBackend,
 } from "./report-delivery-lease.ts";
+import { reportSubject } from "#shared/report-presentation.ts";
+import { renderReportHtml, renderReportText } from "#shared/report-renderer.ts";
 import {
-  renderReportHtml,
-  renderReportText,
   ReportEnvelopeV1Schema,
-  reportSubject,
   type ReportEnvelopeV1,
 } from "#shared/report.ts";
 import { temporalUiExecutionUrl } from "#shared/workflow-failure-alert.ts";

@@ -188,8 +188,9 @@ stays at 0 and is indistinguishable from a clean "no orphans" result.
 bun run start        # Start worker (connects to Temporal server)
 bun run typecheck    # Type check (runs ensure-ha-schema first)
 bun run lint         # ESLint
-bun run test             # Run tests (incl. workflow-bundle smoke test)
+bun run test         # Run tests (incl. workflow-bundle smoke test)
 bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs HA_URL + HA_TOKEN)
+bun run preview:report-emails # Write the deterministic report-email gallery under /tmp
 ```
 
 The `bun run test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
@@ -529,6 +530,24 @@ determinism; that credential-free compatibility activity delegates a fixed
 credentials therefore remain in the reports worker in both paths. The outer email
 activity budget must exceed the complete delegated delivery retry window; both
 durations are defined in `src/shared/report-delivery-policy.ts`.
+
+### Human email presentation contract
+
+`ReportEnvelopeV1` is the persisted and replay-safe source of truth. Keep
+subject selection and the human projection in
+`src/shared/report-presentation.ts`, and keep HTML/plain-text formatting in
+`src/shared/report-renderer.ts`; do not add presentation fields to Workflow or
+Activity inputs. Both formats lead with outcome, summary, and action, then show
+findings, optional context, plain-language checks, and a quiet technical footer.
+The email omits internal report/workflow/run IDs, command text, coverage markers,
+and evidence-receipt IDs while the archived envelope and delivery state retain
+them. Evidence URLs attach to the relevant item as `View source`.
+
+Every current report type must have a tailored subject policy. A new report type
+may use the generic fallback only while its producer and tests are being built;
+do not ship it without adding the exact subject matrix. Run `bun run
+preview:report-emails` to inspect every current family and representative status
+without Temporal, Postal, or an LLM.
 
 ### Report delivery is exclusive, not merely deduplicated
 
