@@ -405,6 +405,8 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
+  "runSeaweedFsBackupWorkflow",
+  "runSeaweedFsBackupRetentionAndGcWorkflow",
   "syncGolinks",
   "runGlitterCorpusDaily",
   "runGlitterContextRefresh",

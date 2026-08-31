@@ -15,6 +15,7 @@ import { exportStreambotVoiceDashboardJson } from "@shepherdjerred/homelab/cdk8s
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 import { exportDiscordPlaysDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/discord-plays-dashboard.ts";
 import { exportAlertDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/alert-dashboard.ts";
+import { exportSeaweedFsBackupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/seaweedfs-backup-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps
@@ -168,6 +169,12 @@ export const ALL_DASHBOARDS: DashboardConfig[] = [
   DISCORD_PLAYS_DASHBOARD,
   GITCKUP_DASHBOARD,
   SCOUT_DASHBOARD,
+  {
+    id: "seaweedfs-backup-dashboard-configmap",
+    name: "seaweedfs-backup-dashboard",
+    jsonFilename: "seaweedfs-backup.json",
+    exportFn: exportSeaweedFsBackupDashboardJson,
+  },
   SMARTCTL_DASHBOARD,
   STATIC_SITE_PROBES_DASHBOARD,
   STREAMBOT_DASHBOARD,

@@ -180,6 +180,13 @@ hand-maintained Prometheus rules, so **every** workflow type pages on failure â€
 not only those with a bespoke threshold. It is stateless, and a 15-minute
 lookback over a 5-minute cadence means a missed tick cannot open a gap.
 
+SeaweedFS off-site backups run on a separate single-concurrency `backup`
+activity queue. Six-hourly, daily, and weekly retention/GC schedules are created
+paused so coverage inventory, bootstrap verification, and acceptance restores
+can complete before automation starts. Garbage collection is the only
+destructive phase and revalidates every candidate against all retained
+manifests before deletion.
+
 ## Home automation and PR workflows
 
 Both are covered in more depth elsewhere:

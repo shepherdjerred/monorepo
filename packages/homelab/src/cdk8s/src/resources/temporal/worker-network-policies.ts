@@ -79,6 +79,7 @@ const FLIPT_CONSUMER_COMPONENTS = [
   "glitter-corpus-worker",
   "glitter-context-worker",
   "agent-worker",
+  "backup-worker",
 ] as const;
 
 function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
@@ -136,6 +137,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     "scout-worker",
     "glitter-corpus-worker",
     "glitter-context-worker",
+    "backup-worker",
   ]) {
     new KubeNetworkPolicy(chart, `${component}-network-policy`, {
       metadata: { name: `temporal-${component}-netpol` },
@@ -152,6 +154,28 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       },
     });
   }
+
+  new KubeNetworkPolicy(chart, "temporal-backup-seaweedfs-netpol", {
+    metadata: { name: "temporal-backup-seaweedfs-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "backup-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "seaweedfs",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
 
   new KubeNetworkPolicy(chart, "temporal-gateway-ingress-netpol", {
     metadata: { name: "temporal-gateway-ingress-netpol" },

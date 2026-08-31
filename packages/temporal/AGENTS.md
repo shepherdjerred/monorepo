@@ -238,13 +238,16 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `workflows`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
+- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `workflows`, `agent`, `backup`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
 - `FRESHRSS_API_URL`, `FRESHRSS_USER`, `FRESHRSS_CATEGORY` — FreshRSS Repo Stack reconciliation settings
 - `FRESHRSS_MANIFEST_PATH`, `FRESHRSS_API_PASSWORD_FILE` — mounted FreshRSS manifest and password paths
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_ENDPOINT` — S3/SeaweedFS credentials
+- `SEAWEEDFS_BACKUP_SOURCE_ENDPOINT`, `SEAWEEDFS_BACKUP_SOURCE_ACCESS_KEY_ID`, `SEAWEEDFS_BACKUP_SOURCE_SECRET_ACCESS_KEY` — read-only source identity for the dedicated backup worker
+- `R2_BACKUP_ENDPOINT`, `R2_BACKUP_ACCESS_KEY_ID`, `R2_BACKUP_SECRET_ACCESS_KEY`, `R2_BACKUP_BUCKET` — destination identity scoped to the immutable backup bucket
+- `REVIEW_SIGNAL_ARCHIVE_BUCKET` — S3/SeaweedFS bucket the review-signal collector writes NDJSON archives to (`review-signals/<temporal-run-id>.ndjson` — the object is keyed by the Temporal workflow run id, with no wall-clock component, so an activity retry overwrites idempotently rather than forking a second object; each NDJSON event carries its own `ts`). Optional — defaults to the existing `llm-archive` bucket (namespaced by the key prefix), so no new bucket/env is needed to start collecting
 - `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, `GITHUB_APP_PRIVATE_KEY` — GitHub App credentials used to mint short-lived installation tokens for GitHub automation so GitHub attributes those actions to the app bot.
 - `OPENROUTER_API_KEY` — service-scoped OpenRouter key for every ordinary text, tool, embedding, image, and structured-output call.
 - Agent environments are built by `src/activities/agent-task-env.ts`. The

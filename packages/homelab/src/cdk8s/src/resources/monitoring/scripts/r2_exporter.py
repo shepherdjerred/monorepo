@@ -16,23 +16,28 @@ from urllib.request import Request, urlopen
 # Configuration from environment variables
 API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
 ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "")
-BUCKET_NAME = os.environ.get("R2_BUCKET_NAME", "homelab")
+BUCKET_NAMES = [bucket.strip() for bucket in os.environ.get("R2_BUCKET_NAMES", "homelab").split(",") if bucket.strip()]
 SCRAPE_INTERVAL = int(os.environ.get("SCRAPE_INTERVAL_SECONDS", "300"))
 PORT = int(os.environ.get("EXPORTER_PORT", "9199"))
 
 # Cached metrics
-metrics_cache: dict[str, Any] = {
-    "storage_bytes": 0,
-    "object_count": 0,
-    "last_scrape_time": 0,
-    "last_scrape_success": False,
-    "last_error": "",
+metrics_cache: dict[str, dict[str, Any]] = {
+    bucket: {
+        "storage_bytes": 0,
+        "object_count": 0,
+        "last_scrape_time": 0,
+        "last_scrape_success": False,
+        "last_error": "",
+        "lock_prefix_seconds": {},
+    }
+    for bucket in BUCKET_NAMES
 }
 
 
-def fetch_r2_usage():
+def fetch_r2_usage(bucket_name: str):
     """Fetch R2 bucket usage from Cloudflare API."""
-    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/r2/buckets/{BUCKET_NAME}/usage"
+    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/r2/buckets/{bucket_name}/usage"
+    cache = metrics_cache[bucket_name]
 
     headers = {
         "Authorization": f"Bearer {API_TOKEN}",
@@ -46,41 +51,85 @@ def fetch_r2_usage():
 
             if data.get("success"):
                 result = data.get("result", {})
-                metrics_cache["storage_bytes"] = result.get("payloadSize", 0)
-                metrics_cache["object_count"] = result.get("objectCount", 0)
-                metrics_cache["last_scrape_success"] = True
-                metrics_cache["last_error"] = ""
+                cache["storage_bytes"] = result.get("payloadSize", 0)
+                cache["object_count"] = result.get("objectCount", 0)
+                cache["last_scrape_success"] = True
+                cache["last_error"] = ""
                 print(
-                    f"Successfully fetched R2 metrics: {metrics_cache['storage_bytes']} bytes, "
-                    f"{metrics_cache['object_count']} objects"
+                    f"Successfully fetched R2 metrics for {bucket_name}: "
+                    f"{cache['storage_bytes']} bytes, {cache['object_count']} objects"
                 )
             else:
                 errors = data.get("errors", [])
                 error_msg = "; ".join(e.get("message", "Unknown error") for e in errors)
-                metrics_cache["last_scrape_success"] = False
-                metrics_cache["last_error"] = error_msg
+                cache["last_scrape_success"] = False
+                cache["last_error"] = error_msg
                 print(f"API returned errors: {error_msg}")
 
     except HTTPError as e:
-        metrics_cache["last_scrape_success"] = False
-        metrics_cache["last_error"] = f"HTTP {e.code}: {e.reason}"
+        cache["last_scrape_success"] = False
+        cache["last_error"] = f"HTTP {e.code}: {e.reason}"
         print(f"HTTP error fetching R2 usage: {e}")
     except URLError as e:
-        metrics_cache["last_scrape_success"] = False
-        metrics_cache["last_error"] = str(e.reason)
+        cache["last_scrape_success"] = False
+        cache["last_error"] = str(e.reason)
         print(f"URL error fetching R2 usage: {e}")
     except Exception as e:
-        metrics_cache["last_scrape_success"] = False
-        metrics_cache["last_error"] = str(e)
+        cache["last_scrape_success"] = False
+        cache["last_error"] = str(e)
         print(f"Error fetching R2 usage: {e}")
 
-    metrics_cache["last_scrape_time"] = time.time()
+    cache["last_scrape_time"] = time.time()
+
+
+def fetch_r2_lock(bucket_name: str):
+    """Fetch effective age locks for a bucket."""
+    cache = metrics_cache[bucket_name]
+    url = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/r2/buckets/{bucket_name}/lock"
+    headers = {
+        "Authorization": f"Bearer {API_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    try:
+        request = Request(url, headers=headers)
+        with urlopen(request, timeout=30) as response:
+            data = json.loads(response.read().decode("utf-8"))
+            if not data.get("success"):
+                raise RuntimeError(f"Lock API returned errors for {bucket_name}")
+            prefix_seconds: dict[str, int] = {}
+            for rule in data.get("result", {}).get("rules", []):
+                if not rule.get("enabled"):
+                    continue
+                condition = rule.get("condition", {})
+                if condition.get("type") != "Age":
+                    continue
+                prefix = rule.get("prefix", "")
+                prefix_seconds[prefix] = max(
+                    prefix_seconds.get(prefix, 0),
+                    condition.get("maxAgeSeconds", 0),
+                )
+            cache["lock_prefix_seconds"] = prefix_seconds
+    except HTTPError as error:
+        cache["last_scrape_success"] = False
+        cache["last_error"] = f"Lock HTTP {error.code}: {error.reason}"
+        print(f"HTTP error fetching R2 lock for {bucket_name}: {error}")
+    except URLError as error:
+        cache["last_scrape_success"] = False
+        cache["last_error"] = f"Lock URL error: {error.reason}"
+        print(f"URL error fetching R2 lock for {bucket_name}: {error}")
+    except Exception as error:
+        cache["last_scrape_success"] = False
+        cache["last_error"] = f"Lock error: {error}"
+        print(f"Error fetching R2 lock for {bucket_name}: {error}")
 
 
 def scrape_loop():
     """Background thread that periodically fetches R2 metrics."""
     while True:
-        fetch_r2_usage()
+        for bucket_name in BUCKET_NAMES:
+            fetch_r2_usage(bucket_name)
+            if bucket_name == "seaweedfs-backups":
+                fetch_r2_lock(bucket_name)
         time.sleep(SCRAPE_INTERVAL)
 
 
@@ -91,24 +140,39 @@ def generate_metrics():
     # Storage bytes metric
     lines.append("# HELP cloudflare_r2_storage_bytes Total storage used by R2 bucket in bytes")
     lines.append("# TYPE cloudflare_r2_storage_bytes gauge")
-    lines.append(f'cloudflare_r2_storage_bytes{{bucket="{BUCKET_NAME}"}} {metrics_cache["storage_bytes"]}')
+    for bucket_name, cache in metrics_cache.items():
+        lines.append(f'cloudflare_r2_storage_bytes{{bucket="{bucket_name}"}} {cache["storage_bytes"]}')
 
     # Object count metric
     lines.append("# HELP cloudflare_r2_object_count Number of objects in R2 bucket")
     lines.append("# TYPE cloudflare_r2_object_count gauge")
-    lines.append(f'cloudflare_r2_object_count{{bucket="{BUCKET_NAME}"}} {metrics_cache["object_count"]}')
+    for bucket_name, cache in metrics_cache.items():
+        lines.append(f'cloudflare_r2_object_count{{bucket="{bucket_name}"}} {cache["object_count"]}')
 
     # Exporter status metrics
     lines.append("# HELP cloudflare_r2_exporter_last_scrape_timestamp_seconds Unix timestamp of last scrape")
     lines.append("# TYPE cloudflare_r2_exporter_last_scrape_timestamp_seconds gauge")
-    lines.append(f"cloudflare_r2_exporter_last_scrape_timestamp_seconds {metrics_cache['last_scrape_time']}")
+    for bucket_name, cache in metrics_cache.items():
+        lines.append(
+            f'cloudflare_r2_exporter_last_scrape_timestamp_seconds{{bucket="{bucket_name}"}} '
+            f"{cache['last_scrape_time']}"
+        )
 
     lines.append(
-        "# HELP cloudflare_r2_exporter_scrape_success "
-        "Whether the last scrape was successful (1=success, 0=failure)"
+        "# HELP cloudflare_r2_exporter_scrape_success Whether the last scrape was successful (1=success, 0=failure)"
     )
     lines.append("# TYPE cloudflare_r2_exporter_scrape_success gauge")
-    lines.append(f"cloudflare_r2_exporter_scrape_success {1 if metrics_cache['last_scrape_success'] else 0}")
+    for bucket_name, cache in metrics_cache.items():
+        lines.append(
+            f'cloudflare_r2_exporter_scrape_success{{bucket="{bucket_name}"}} '
+            f"{1 if cache['last_scrape_success'] else 0}"
+        )
+
+    lines.append("# HELP cloudflare_r2_bucket_lock_age_seconds Effective age lock by bucket prefix")
+    lines.append("# TYPE cloudflare_r2_bucket_lock_age_seconds gauge")
+    for bucket_name, cache in metrics_cache.items():
+        for prefix, seconds in cache["lock_prefix_seconds"].items():
+            lines.append(f'cloudflare_r2_bucket_lock_age_seconds{{bucket="{bucket_name}",prefix="{prefix}"}} {seconds}')
 
     return "\n".join(lines) + "\n"
 
@@ -146,7 +210,7 @@ def main():
         print("ERROR: CLOUDFLARE_ACCOUNT_ID environment variable is required")
         exit(1)
 
-    print(f"Starting R2 exporter for bucket '{BUCKET_NAME}'")
+    print(f"Starting R2 exporter for buckets {','.join(BUCKET_NAMES)}")
     print(f"Scrape interval: {SCRAPE_INTERVAL}s")
     print(f"Listening on port {PORT}")
 
@@ -155,7 +219,10 @@ def main():
     scrape_thread.start()
 
     # Perform initial scrape
-    fetch_r2_usage()
+    for bucket_name in BUCKET_NAMES:
+        fetch_r2_usage(bucket_name)
+        if bucket_name == "seaweedfs-backups":
+            fetch_r2_lock(bucket_name)
 
     # Start HTTP server
     server = HTTPServer(("", PORT), MetricsHandler)

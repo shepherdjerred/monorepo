@@ -15,6 +15,7 @@ bun run src/index.ts bugsink issues        # Bugsink issues
 bun run src/index.ts prom query 'up == 0'  # GCX-backed Prometheus query
 bun run src/index.ts bk build list         # Native Buildkite CLI with repo defaults
 bun run src/index.ts screenshot stocks-sjer-red /   # Visually verify a frontend change
+bun run src/index.ts backup seaweedfs snapshots      # List completed recovery points
 
 # Build
 bun run build                              # Compile to dist/toolkit
@@ -69,6 +70,11 @@ src/
 | `AWS_PROFILE`         | AWS profile for `pr asset` (or pass `--profile`)                 |
 | `DISCORD_BOT_TOKEN`   | Discord bot token for `discord daemon start` (optional)          |
 | `DISCORD_USER_TOKEN`  | Discord user/selfbot token for `discord daemon start` (optional) |
+
+SeaweedFS backup inspection and verification use
+`SEAWEEDFS_BACKUP_SOURCE_*` and `R2_BACKUP_*`. Restore additionally requires
+the separate `SEAWEEDFS_RESTORE_*` identity; those credentials are deliberately
+not mounted into the scheduled worker.
 
 ## Platform passthrough invariants
 

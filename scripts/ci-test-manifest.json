@@ -600,6 +600,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/seaweedfs-backup",
+      "directory": "packages/seaweedfs-backup",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/temporal",
       "directory": "packages/temporal",
       "steps": [

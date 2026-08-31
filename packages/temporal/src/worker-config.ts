@@ -8,12 +8,14 @@ import {
   reportActivities,
   scoutActivities,
   maintenanceWorkerActivities,
+  backupWorkerActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
 import type { WorkerRole } from "./shared/worker-role.ts";
 
 export type QueueWorkerRole =
   | "agent"
+  | "backup"
   | "glitter-context"
   | "glitter-corpus"
   | "home"
@@ -43,6 +45,13 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "backup",
+    taskQueue: TASK_QUEUES.BACKUP,
+    activities: backupWorkerActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
   {
     kind: "activity",
     role: "home",
@@ -123,6 +132,7 @@ export const LEGACY_WORKFLOW_TASK_QUEUES = [
   TASK_QUEUES.GLITTER_CORPUS,
   TASK_QUEUES.GLITTER_CONTEXT,
   TASK_QUEUES.MAINTENANCE,
+  TASK_QUEUES.BACKUP,
 ] as const;
 
 export const RETAINED_WORKFLOW_TASK_QUEUES = [
@@ -182,6 +192,7 @@ export type WorkerRoleContract = {
   validatesScheduleEnvironmentLocally: boolean;
   runsEventBridge: boolean;
   restoresGlitterCorpusMetrics: boolean;
+  restoresSeaweedFsBackupMetrics: boolean;
 };
 
 export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
@@ -194,5 +205,6 @@ export function getWorkerRoleContract(role: WorkerRole): WorkerRoleContract {
     runsEventBridge: role === "all" || role === "home",
     restoresGlitterCorpusMetrics:
       role === "all" || role === "glitter" || role === "glitter-corpus",
+    restoresSeaweedFsBackupMetrics: role === "all" || role === "backup",
   };
 }

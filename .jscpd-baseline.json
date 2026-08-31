@@ -1,8 +1,16 @@
 {
   "pairs": {
+    "packages/alert-dashboard/integration/sqlite.integration.test.ts|packages/alert-dashboard/integration/sqlite.integration.test.ts": {
+      "clones": 2,
+      "tokens": 181
+    },
     "packages/alert-dashboard/integration/sqlite.integration.test.ts|packages/alert-dashboard/integration/webhook-authority-cases.ts": {
       "clones": 1,
       "tokens": 134
+    },
+    "packages/alert-dashboard/scripts/cancel-pending-incident-email.ts|packages/scout-for-lol/packages/backend/scripts/requeue-temporal-work.ts": {
+      "clones": 1,
+      "tokens": 74
     },
     "packages/alert-dashboard/src/client/dashboard-page.tsx|packages/alert-dashboard/src/client/history-page.tsx": {
       "clones": 1,
@@ -504,6 +512,10 @@
       "clones": 1,
       "tokens": 141
     },
+    "packages/homelab/src/cdk8s/grafana/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/seaweedfs-backup-dashboard.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
     "packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
       "clones": 3,
       "tokens": 264
@@ -764,12 +776,9 @@
       "clones": 1,
       "tokens": 90
     },
-    "packages/homelab/src/cdk8s/src/resources/postgres/bugsink-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
-      "clones": 1,
-      "tokens": 117
     "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/temporal-db.ts": {
       "clones": 1,
-      "tokens": 93
+      "tokens": 82
     },
     "packages/homelab/src/cdk8s/src/resources/relay/index.ts|packages/homelab/src/cdk8s/src/resources/temporal/ui.ts": {
       "clones": 1,
@@ -786,6 +795,10 @@
     "packages/homelab/src/cdk8s/src/resources/torrents/radarr.ts|packages/homelab/src/cdk8s/src/resources/torrents/sonarr.ts": {
       "clones": 2,
       "tokens": 146
+    },
+    "packages/homelab/src/cdk8s/src/temporal-backup-worker.test.ts|packages/homelab/src/cdk8s/src/temporal-workflow-boundary.test.ts": {
+      "clones": 1,
+      "tokens": 73
     },
     "packages/homelab/src/helm-types/src/cli.test.ts|packages/homelab/src/helm-types/src/cli.test.ts": {
       "clones": 3,
@@ -1269,7 +1282,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/report-lake/schema.test.ts|packages/scout-for-lol/packages/backend/src/report-lake/schema.ts": {
       "clones": 1,
-      "tokens": 102
+      "tokens": 98
     },
     "packages/scout-for-lol/packages/backend/src/reports/ai/http-route.e2e.test.ts|packages/scout-for-lol/packages/backend/src/trpc/image-routes.e2e.test.ts": {
       "clones": 1,
@@ -1482,6 +1495,14 @@
     "packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/rule-editor.tsx|packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/sound-pool-editor.tsx": {
       "clones": 1,
       "tokens": 75
+    },
+    "packages/seaweedfs-backup/test/backup-restore.test.ts|packages/seaweedfs-backup/test/gc.test.ts": {
+      "clones": 1,
+      "tokens": 74
+    },
+    "packages/seaweedfs-backup/test/gc.test.ts|packages/seaweedfs-backup/test/s3-endpoints.integration.test.ts": {
+      "clones": 1,
+      "tokens": 80
     },
     "packages/streambot/e2e/run.ts|packages/streambot/e2e/voice-recovery.ts": {
       "clones": 1,
@@ -1776,8 +1797,8 @@
       "tokens": 100
     },
     "packages/temporal/src/activities/workflow-failure-watch.test.ts|packages/temporal/src/activities/workflow-failure-watch.test.ts": {
-      "clones": 8,
-      "tokens": 784
+      "clones": 9,
+      "tokens": 865
     },
     "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
       "clones": 1,

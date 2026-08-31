@@ -105,6 +105,7 @@ describe("Temporal worker role contracts", () => {
     expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);
     expect(contract.restoresGlitterCorpusMetrics).toBe(true);
+    expect(contract.restoresSeaweedFsBackupMetrics).toBe(true);
   });
 
   it("applies the planned activity concurrency by domain", () => {
@@ -120,6 +121,7 @@ describe("Temporal worker role contracts", () => {
     expect(concurrency.get("reports")).toBe(4);
     const serialRoles: Exclude<QueueWorkerRole, "workflows">[] = [
       "agent",
+      "backup",
       "glitter-context",
       "glitter-corpus",
       "infra",
