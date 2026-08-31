@@ -128,7 +128,7 @@ export async function startScoutDetachedWork(
   input: ScoutDetachedWorkInput,
 ): Promise<WorkflowHandle> {
   return await client.workflow.start(SCOUT_WORKFLOW_NAMES.detachedWork, {
-    ...RESTART_FAILED_START_POLICIES,
+    ...IDEMPOTENT_START_POLICIES,
     workflowId: scoutDetachedWorkWorkflowId(
       input.stage,
       input.kind,

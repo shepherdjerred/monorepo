@@ -1,7 +1,7 @@
 import { z } from "zod/v4";
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
 
-const WorkflowFailureWatchCheckpointSchema = z.object({
+const WorkflowFailureWatchCursorSchema = z.object({
   closeTime: z.iso.datetime({ offset: true }),
   // Optional for heartbeats written before the stable visibility cursor was
   // introduced. New checkpoints always include it.
@@ -17,13 +17,23 @@ const WorkflowFailureWatchCheckpointSchema = z.object({
   processedExecutionKeys: z.array(z.string().min(1)).optional(),
 });
 
-export type WorkflowFailureWatchCheckpoint = {
+const WorkflowFailureWatchCheckpointSchema = z.object({
+  detailedAlertsConsumed: z.number().int().nonnegative(),
+  cursor: WorkflowFailureWatchCursorSchema.optional(),
+});
+
+export type WorkflowFailureWatchCursor = {
   closeTime: Date;
   startTime: Date | undefined;
   lookbackSince?: Date;
   workflowId: string;
   runId: string;
   processedExecutionKeys?: string[];
+};
+
+export type WorkflowFailureWatchCheckpoint = {
+  detailedAlertsConsumed: number;
+  cursor?: WorkflowFailureWatchCursor;
 };
 
 export function workflowExecutionKey(
@@ -50,7 +60,27 @@ export function parseWorkflowFailureWatchCheckpoint(
   if (checkpoint === undefined || checkpoint === null) {
     return undefined;
   }
-  const parsed = WorkflowFailureWatchCheckpointSchema.parse(checkpoint);
+  const parsed = WorkflowFailureWatchCheckpointSchema.safeParse(checkpoint);
+  if (parsed.success) {
+    return {
+      detailedAlertsConsumed: parsed.data.detailedAlertsConsumed,
+      ...(parsed.data.cursor === undefined
+        ? {}
+        : { cursor: parsedCursor(parsed.data.cursor) }),
+    };
+  }
+  // Heartbeats written before the fanout budget used the cursor fields at the
+  // checkpoint root. They consumed no persisted detail budget.
+  const legacyCursor = WorkflowFailureWatchCursorSchema.parse(checkpoint);
+  return {
+    detailedAlertsConsumed: 0,
+    cursor: parsedCursor(legacyCursor),
+  };
+}
+
+function parsedCursor(
+  parsed: z.infer<typeof WorkflowFailureWatchCursorSchema>,
+): WorkflowFailureWatchCursor {
   return {
     closeTime: new Date(parsed.closeTime),
     startTime:
@@ -86,33 +116,50 @@ export function serializedCheckpoint(
   return checkpoint === undefined
     ? null
     : {
-        closeTime: checkpoint.closeTime.toISOString(),
-        ...(checkpoint.startTime === undefined
+        detailedAlertsConsumed: checkpoint.detailedAlertsConsumed,
+        ...(checkpoint.cursor === undefined
           ? {}
-          : { startTime: checkpoint.startTime.toISOString() }),
-        ...(checkpoint.lookbackSince === undefined
-          ? {}
-          : { lookbackSince: checkpoint.lookbackSince.toISOString() }),
-        workflowId: checkpoint.workflowId,
-        runId: checkpoint.runId,
-        ...(checkpoint.processedExecutionKeys === undefined
-          ? {}
-          : { processedExecutionKeys: checkpoint.processedExecutionKeys }),
+          : {
+              cursor: {
+                closeTime: checkpoint.cursor.closeTime.toISOString(),
+                ...(checkpoint.cursor.startTime === undefined
+                  ? {}
+                  : { startTime: checkpoint.cursor.startTime.toISOString() }),
+                ...(checkpoint.cursor.lookbackSince === undefined
+                  ? {}
+                  : {
+                      lookbackSince:
+                        checkpoint.cursor.lookbackSince.toISOString(),
+                    }),
+                workflowId: checkpoint.cursor.workflowId,
+                runId: checkpoint.cursor.runId,
+                ...(checkpoint.cursor.processedExecutionKeys === undefined
+                  ? {}
+                  : {
+                      processedExecutionKeys:
+                        checkpoint.cursor.processedExecutionKeys,
+                    }),
+              },
+            }),
       };
 }
 
 export function checkpointForExecution(
   execution: FailedWorkflowExecution,
   lookbackSince?: Date,
+  detailedAlertsConsumed = 0,
 ): WorkflowFailureWatchCheckpoint {
   return {
-    closeTime: execution.closeTime,
-    startTime: execution.startTime,
-    ...(lookbackSince === undefined ? {} : { lookbackSince }),
-    workflowId: execution.workflowId,
-    runId: execution.runId,
-    processedExecutionKeys: [
-      workflowExecutionKey(execution.workflowId, execution.runId),
-    ],
+    detailedAlertsConsumed,
+    cursor: {
+      closeTime: execution.closeTime,
+      startTime: execution.startTime,
+      ...(lookbackSince === undefined ? {} : { lookbackSince }),
+      workflowId: execution.workflowId,
+      runId: execution.runId,
+      processedExecutionKeys: [
+        workflowExecutionKey(execution.workflowId, execution.runId),
+      ],
+    },
   };
 }

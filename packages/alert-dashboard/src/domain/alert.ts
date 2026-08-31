@@ -110,16 +110,21 @@ export function normalizeGeneratorUrl(
     : z.url().parse(value);
 }
 
-export function openingEmail(alerts: readonly AlertOccurrenceRecord[]): {
+export function openingEmail(
+  alerts: readonly AlertOccurrenceRecord[],
+  alertmanagerTruncatedAlerts = 0,
+): {
   subject: string;
   htmlBody: string;
 } {
+  const renderedAlerts = alerts.slice(0, 25);
+  const locallyOmittedAlerts = alerts.length - renderedAlerts.length;
   const critical = alerts.filter(
     (alert) => alert.severity === "critical",
   ).length;
   const prefix = critical > 0 ? "critical" : "warning";
   const subject = `[Alerts] ${alerts.length.toString()} ${prefix} alert${alerts.length === 1 ? "" : "s"} opened`;
-  const rows = alerts
+  const rows = renderedAlerts
     .map((alert) => {
       const namespace =
         alert.namespace === null
@@ -128,9 +133,25 @@ export function openingEmail(alerts: readonly AlertOccurrenceRecord[]): {
       return `<li><strong>${escapeHtml(alert.summary)}</strong>${namespace}<br><code>${escapeHtml(alert.alertname)}</code></li>`;
     })
     .join("");
+  const omissionParts = [
+    ...(locallyOmittedAlerts === 0
+      ? []
+      : [
+          `${locallyOmittedAlerts.toString()} additional accepted alert${locallyOmittedAlerts === 1 ? " was" : "s were"} omitted from this email.`,
+        ]),
+    ...(alertmanagerTruncatedAlerts === 0
+      ? []
+      : [
+          `Alertmanager omitted ${alertmanagerTruncatedAlerts.toString()} additional alert${alertmanagerTruncatedAlerts === 1 ? "" : "s"} from this webhook delivery.`,
+        ]),
+  ];
+  const omission =
+    omissionParts.length === 0
+      ? ""
+      : `<p><strong>Omitted:</strong> ${omissionParts.join(" ")}</p>`;
   return {
     subject,
-    htmlBody: `<h1>Alerts opened</h1><ul>${rows}</ul><p><a href="https://alerts.tailnet-1a49.ts.net/">Open Alerts</a></p>`,
+    htmlBody: `<h1>Alerts opened</h1><ul>${rows}</ul>${omission}<p><a href="https://alerts.tailnet-1a49.ts.net/">Open Alerts</a></p>`,
   };
 }
 

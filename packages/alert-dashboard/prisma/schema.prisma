@@ -8,29 +8,29 @@ datasource db {
 }
 
 model AlertOccurrence {
-  id                 String   @id
-  source             String
-  fingerprint        String
-  startedAtNs        BigInt
-  openedAtNs         BigInt
-  resolvedAtNs       BigInt?
-  lastSeenAtNs       BigInt
-  missingSinceNs     BigInt?
-  absentSnapshots    Int      @default(0)
-  firstNotifiedAtNs  BigInt?
-  lifecycleState     String
-  suppressionState   String
-  resolutionSource   String?
-  alertname          String
-  namespace          String?
-  severity           String
-  summary             String
-  generatorUrl       String?
-  labels             Json
-  annotations        Json
-  events             AlertEvent[]
-  labelEntries       AlertOccurrenceLabel[]
-  occurrenceLinks    WebhookDeliveryOccurrence[]
+  id                String                      @id
+  source            String
+  fingerprint       String
+  startedAtNs       BigInt
+  openedAtNs        BigInt
+  resolvedAtNs      BigInt?
+  lastSeenAtNs      BigInt
+  missingSinceNs    BigInt?
+  absentSnapshots   Int                         @default(0)
+  firstNotifiedAtNs BigInt?
+  lifecycleState    String
+  suppressionState  String
+  resolutionSource  String?
+  alertname         String
+  namespace         String?
+  severity          String
+  summary           String
+  generatorUrl      String?
+  labels            Json
+  annotations       Json
+  events            AlertEvent[]
+  labelEntries      AlertOccurrenceLabel[]
+  occurrenceLinks   WebhookDeliveryOccurrence[]
 
   @@unique([source, fingerprint, startedAtNs])
   @@index([lifecycleState, openedAtNs])
@@ -42,24 +42,25 @@ model AlertOccurrence {
 }
 
 model AlertEvent {
-  id            String          @id
-  occurrenceId  String
-  occurrence    AlertOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
-  type          String
-  occurredAtNs  BigInt
-  source        String
-  detail        Json?
+  id           String          @id
+  occurrenceId String
+  occurrence   AlertOccurrence @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  type         String
+  occurredAtNs BigInt
+  source       String
+  detail       Json?
 
   @@index([occurredAtNs, type])
   @@index([occurrenceId, occurredAtNs])
 }
 
 model WebhookDelivery {
-  id                 String @id
+  id                 String                      @id
   receivedAtNs       BigInt
   groupKey           String
   status             String
   receiver           String
+  truncatedAlerts    Int                         @default(0)
   notificationReason String?
   payloadHash        String
   occurrenceIds      Json
@@ -93,30 +94,35 @@ model WebhookDeliveryOccurrence {
 }
 
 model SnapshotRun {
-  id             String @id
-  startedAtNs    BigInt
-  completedAtNs  BigInt
-  status         String
-  activeCount    Int
-  openedCount    Int
-  resolvedCount  Int
-  error          String?
+  id            String  @id
+  startedAtNs   BigInt
+  completedAtNs BigInt
+  status        String
+  activeCount   Int
+  openedCount   Int
+  resolvedCount Int
+  error         String?
 
   @@index([completedAtNs])
 }
 
 model EmailOutbox {
-  id             String @id
-  createdAtNs    BigInt
-  nextAttemptAtNs BigInt
-  sentAtNs       BigInt?
-  attemptCount   Int    @default(0)
-  messageId      String @unique
-  deliveryId     String
-  occurrenceIds  Json
-  subject        String
-  htmlBody       String
-  lastError      String?
+  id                 String  @id
+  createdAtNs        BigInt
+  nextAttemptAtNs    BigInt
+  sentAtNs           BigInt?
+  sendingAtNs        BigInt?
+  sendClaimId        String?
+  canceledAtNs       BigInt?
+  canceledBy         String?
+  cancellationReason String?
+  attemptCount       Int     @default(0)
+  messageId          String  @unique
+  deliveryId         String
+  occurrenceIds      Json
+  subject            String
+  htmlBody           String
+  lastError          String?
 
-  @@index([sentAtNs, nextAttemptAtNs])
+  @@index([sentAtNs, canceledAtNs, sendingAtNs, nextAttemptAtNs])
 }

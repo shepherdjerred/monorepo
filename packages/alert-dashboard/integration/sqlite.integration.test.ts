@@ -1,6 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { AlertmanagerSnapshotAlertSchema } from "#shared/schema";
+import {
+  AlertmanagerSnapshotAlertSchema,
+  AlertmanagerWebhookSchema,
+} from "#shared/schema";
 import { epochNanosecondsToInstantText, InstantTextSchema } from "#shared/time";
 import {
   disconnectDatabase,
@@ -42,6 +45,150 @@ beforeAll(waitForDatabase);
 beforeEach(resetDatabase);
 afterAll(disconnectDatabase);
 
+describe("SQLite email cancellation", () => {
+  it("dry-runs and audits cancellation of only pending incident email", async () => {
+    const base = webhook("fingerprint-temporal", "firing");
+    const incident = AlertmanagerWebhookSchema.parse({
+      ...base,
+      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+      groupLabels: { alertname: "TemporalWorkflowFailed" },
+      commonLabels: {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      },
+      alerts: base.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+      })),
+    });
+    await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
+    await repository.ingestWebhook(
+      input(webhook("fingerprint-unrelated", "firing"), "2026-08-08T18:00:02Z"),
+    );
+    const cancellation = {
+      alertname: "TemporalWorkflowFailed",
+      fromNs: nanoseconds("2026-08-08T18:00:00Z"),
+      toNs: nanoseconds("2026-08-08T18:01:00Z"),
+      canceledAtNs: nanoseconds("2026-08-08T18:02:00Z"),
+      canceledBy: "incident-operator",
+      reason: "Scout retry amplification incident",
+    };
+
+    expect(
+      await repository.cancelPendingEmails({
+        ...cancellation,
+        confirm: false,
+      }),
+    ).toMatchObject({ matched: 1, canceled: 0 });
+    expect(
+      await repository.pendingEmails(nanoseconds("2026-08-08T18:03:00Z"), 10),
+    ).toHaveLength(2);
+
+    expect(
+      await repository.cancelPendingEmails({
+        ...cancellation,
+        confirm: true,
+      }),
+    ).toMatchObject({ matched: 1, canceled: 1 });
+    expect(
+      await repository.pendingEmails(nanoseconds("2026-08-08T18:03:00Z"), 10),
+    ).toHaveLength(1);
+    const canceled = await prisma.emailOutbox.findFirstOrThrow({
+      where: { canceledAtNs: { not: null } },
+    });
+    expect(canceled.canceledBy).toBe("incident-operator");
+    expect(canceled.cancellationReason).toBe(
+      "Scout retry amplification incident",
+    );
+  });
+
+  it("does not cancel an email after the sender claims it", async () => {
+    const base = webhook("fingerprint-claimed", "firing");
+    const incident = AlertmanagerWebhookSchema.parse({
+      ...base,
+      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+      groupLabels: { alertname: "TemporalWorkflowFailed" },
+      commonLabels: {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      },
+      alerts: base.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+      })),
+    });
+    await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
+    const claimed = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T18:01:00Z"),
+      10,
+      nanoseconds("2026-08-08T18:01:00Z"),
+    );
+    expect(claimed).toHaveLength(1);
+
+    await expect(
+      repository.cancelPendingEmails({
+        alertname: "TemporalWorkflowFailed",
+        fromNs: nanoseconds("2026-08-08T18:00:00Z"),
+        toNs: nanoseconds("2026-08-08T18:01:00Z"),
+        canceledAtNs: nanoseconds("2026-08-08T18:02:00Z"),
+        canceledBy: "incident-operator",
+        reason: "sender claim wins",
+        confirm: true,
+      }),
+    ).resolves.toMatchObject({ matched: 0, canceled: 0 });
+  });
+
+  it("reclaims expired claims and rejects the stale sender", async () => {
+    const base = webhook("fingerprint-reclaim", "firing");
+    const incident = AlertmanagerWebhookSchema.parse({
+      ...base,
+      groupKey: '{}:{alertname="TemporalWorkflowFailed"}',
+      groupLabels: { alertname: "TemporalWorkflowFailed" },
+      commonLabels: {
+        alertname: "TemporalWorkflowFailed",
+        severity: "warning",
+      },
+      alerts: base.alerts.map((alert) => ({
+        ...alert,
+        labels: { ...alert.labels, alertname: "TemporalWorkflowFailed" },
+      })),
+    });
+    await repository.ingestWebhook(input(incident, "2026-08-08T18:00:01Z"));
+    const first = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T18:01:00Z"),
+      10,
+      nanoseconds("2026-08-08T18:01:00Z"),
+    );
+    const firstClaim = first[0];
+    if (firstClaim === undefined) throw new Error("expected initial claim");
+    await prisma.emailOutbox.update({
+      where: { id: firstClaim.id },
+      data: { sendingAtNs: nanoseconds("2026-08-08T17:54:00Z") },
+    });
+
+    const reclaimed = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T18:06:00Z"),
+      10,
+      nanoseconds("2026-08-08T18:06:00Z"),
+    );
+    const reclaimedClaim = reclaimed[0];
+    if (reclaimedClaim === undefined) throw new Error("expected reclaim");
+    expect(reclaimedClaim.sendClaimId).not.toBe(firstClaim.sendClaimId);
+    await expect(
+      repository.markEmailSent({
+        id: firstClaim.id,
+        sendClaimId: firstClaim.sendClaimId,
+        sentAtNs: nanoseconds("2026-08-08T18:00:01Z"),
+      }),
+    ).rejects.toThrow("Email send claim changed before success");
+    await repository.markEmailSent({
+      id: reclaimedClaim.id,
+      sendClaimId: reclaimedClaim.sendClaimId,
+      sentAtNs: nanoseconds("2026-08-08T18:00:02Z"),
+    });
+  });
+});
+
 describe("SQLite alert ledger", () => {
   it("serializes concurrent webhook retries into one lifecycle and one email", async () => {
     const delivery = input(
@@ -62,6 +209,7 @@ describe("SQLite alert ledger", () => {
     const detail = await repository.getAlert({ id, limit: 1 });
     expect(detail?.events.map((event) => event.type)).toEqual(["opened"]);
     expect(detail?.deliveries).toHaveLength(1);
+    expect(detail?.deliveries[0]?.truncatedAlerts).toBe(0);
     expect(detail?.deliveriesNextCursor).not.toBeNull();
     if (detail === null) throw new Error("expected alert detail");
     if (detail.deliveriesNextCursor === null)
@@ -77,6 +225,23 @@ describe("SQLite alert ledger", () => {
     expect(
       await repository.pendingEmails(nanoseconds("2026-08-08T18:01:00Z"), 10),
     ).toHaveLength(1);
+  });
+
+  it("persists Alertmanager truncation evidence on webhook deliveries", async () => {
+    const payload = AlertmanagerWebhookSchema.parse({
+      ...webhook("fingerprint-truncated", "firing"),
+      truncatedAlerts: 37,
+    });
+    await repository.ingestWebhook(
+      input(payload, "2026-08-08T18:00:01Z", false),
+    );
+    const alerts = await repository.listAlerts({ limit: 10 });
+    const id = alerts.items[0]?.id;
+    if (id === undefined) throw new Error("expected a truncated occurrence");
+
+    const detail = await repository.getAlert({ id, limit: 10 });
+
+    expect(detail?.deliveries[0]?.truncatedAlerts).toBe(37);
   });
 
   it("serializes concurrent snapshot and webhook discovery", async () => {
@@ -397,8 +562,15 @@ describe("SQLite queries and outbox", () => {
       nanoseconds("2026-08-08T20:00:00Z"),
       10,
     );
-    const pendingId = pending[0]?.id;
-    if (pendingId === undefined) throw new Error("expected pending email");
+    expect(pending).toHaveLength(2);
+    const claimed = await repository.claimPendingEmails(
+      nanoseconds("2026-08-08T20:00:00Z"),
+      1,
+      nanoseconds("2026-08-08T20:00:01Z"),
+    );
+    expect(claimed).toHaveLength(1);
+    const claimedEmail = claimed[0];
+    if (claimedEmail === undefined) throw new Error("expected pending email");
     const pendingStatus = await repository.systemStatus(
       true,
       nanoseconds("2026-08-08T20:00:00Z"),
@@ -406,10 +578,11 @@ describe("SQLite queries and outbox", () => {
     expect(pendingStatus.oldestPendingEmailAt).toBe(
       InstantTextSchema.parse("2026-08-08T18:00:01Z"),
     );
-    await repository.markEmailSent(
-      pendingId,
-      nanoseconds("2026-08-08T20:01:00Z"),
-    );
+    await repository.markEmailSent({
+      id: claimedEmail.id,
+      sendClaimId: claimedEmail.sendClaimId,
+      sentAtNs: nanoseconds("2026-08-08T20:01:00Z"),
+    });
     expect(
       await repository.pendingEmails(nanoseconds("2026-08-08T20:02:00Z"), 10),
     ).toHaveLength(1);

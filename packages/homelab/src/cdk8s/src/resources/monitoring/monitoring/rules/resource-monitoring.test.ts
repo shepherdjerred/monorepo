@@ -216,3 +216,26 @@ describe("predictive PVC capacity alerts", () => {
     expect(critical?.labels?.["severity"]).toBe("critical");
   });
 });
+
+describe("snapshot-aware ZFS PVC capacity alerts", () => {
+  it("joins ZFS dataset quota usage to namespace and PVC labels", () => {
+    const rules = getResourceMonitoringRuleGroups().find(
+      (group) => group.name === "resource-zfs-pvc-monitoring",
+    )?.rules;
+    const warning = rules?.find((rule) => rule.alert === "ZfsPVCStorageHigh");
+    const critical = rules?.find(
+      (rule) => rule.alert === "ZfsPVCStorageCritical",
+    );
+
+    expect(warning?.expr.value).toContain("zfs_dataset_used_bytes");
+    expect(warning?.expr.value).toContain("zfs_dataset_available_bytes");
+    expect(warning?.expr.value).toContain("kube_persistentvolumeclaim_info");
+    expect(warning?.expr.value).toContain(
+      "group_left(namespace, persistentvolumeclaim)",
+    );
+    expect(warning?.expr.value).toContain("> 0.75");
+    expect(warning?.for).toBe("15m");
+    expect(critical?.expr.value).toContain("> 0.90");
+    expect(critical?.for).toBe("5m");
+  });
+});

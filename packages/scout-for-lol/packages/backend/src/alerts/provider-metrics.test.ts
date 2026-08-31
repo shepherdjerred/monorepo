@@ -21,6 +21,15 @@ describe("classifyLlmProviderIssue", () => {
     ).toBe("quota");
   });
 
+  test("classifies OpenRouter weekly-limit 403s as quota issues", () => {
+    expect(
+      classifyLlmProviderIssue({
+        status: 403,
+        message: "Key limit exceeded: weekly limit reached for this key",
+      }),
+    ).toBe("quota");
+  });
+
   test("classifies generic 429s as rate-limit issues", () => {
     const issue = classifyLlmProviderIssue(
       new Error("429 Rate limit reached for gpt-5.1"),

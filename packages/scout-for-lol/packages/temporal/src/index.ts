@@ -1,4 +1,5 @@
 export {
+  DETACHED_WORK_MAX_ATTEMPTS,
   InitialHistoryPageResultSchema,
   InteractiveOutcomeSchema,
   PostMatchDiscoveryResultSchema,

@@ -51,6 +51,24 @@ export type PendingEmail = {
   attemptCount: number;
 };
 
+export type ClaimedPendingEmail = PendingEmail & {
+  sendClaimId: string;
+};
+
+export type EmailSendSuccessInput = {
+  id: string;
+  sendClaimId: string;
+  sentAtNs: bigint;
+};
+
+export type EmailSendFailureInput = {
+  id: string;
+  sendClaimId: string;
+  failedAtNs: bigint;
+  nextAttemptAtNs: bigint;
+  error: string;
+};
+
 export type AlertLedgerRepository = {
   ingestWebhook: (input: IngestWebhookInput) => Promise<IngestWebhookResult>;
   reconcileSnapshot: (
@@ -71,13 +89,13 @@ export type AlertLedgerRepository = {
     nowNs: bigint,
     limit: number,
   ) => Promise<readonly PendingEmail[]>;
-  markEmailSent: (id: string, sentAtNs: bigint) => Promise<void>;
-  markEmailFailed: (
-    id: string,
-    failedAtNs: bigint,
-    nextAttemptAtNs: bigint,
-    error: string,
-  ) => Promise<void>;
+  claimPendingEmails: (
+    nowNs: bigint,
+    limit: number,
+    sendingAtNs: bigint,
+  ) => Promise<readonly ClaimedPendingEmail[]>;
+  markEmailSent: (input: EmailSendSuccessInput) => Promise<void>;
+  markEmailFailed: (input: EmailSendFailureInput) => Promise<void>;
   purgeExpiredRawPayloads: (nowNs: bigint) => Promise<number>;
   disconnect: () => Promise<void>;
 };

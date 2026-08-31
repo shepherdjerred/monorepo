@@ -56,6 +56,26 @@ describe("alert domain", () => {
     expect(result.htmlBody).toContain("alerts.tailnet-1a49.ts.net");
   });
 
+  test("opening email caps rows and reports local and upstream omissions", () => {
+    const alerts = Array.from({ length: 30 }, (_, index) =>
+      occurrence({
+        id: occurrenceId(`fingerprint-${index.toString()}`, BigInt(index + 1)),
+        summary: `Alert ${index.toString()}`,
+      }),
+    );
+
+    const result = openingEmail(alerts, 7);
+
+    expect(result.htmlBody.match(/<li>/gu)).toHaveLength(25);
+    expect(result.htmlBody).toContain(
+      "5 additional accepted alerts were omitted from this email.",
+    );
+    expect(result.htmlBody).toContain(
+      "Alertmanager omitted 7 additional alerts from this webhook delivery.",
+    );
+    expect(result.htmlBody).not.toContain("Alert 29");
+  });
+
   test("unknown severities stay explicit", () => {
     expect(severityFromLabels({ severity: "page-me" })).toBe("unknown");
   });

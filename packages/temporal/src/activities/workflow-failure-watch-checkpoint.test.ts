@@ -27,23 +27,44 @@ describe("workflow failure watch heartbeat checkpoints", () => {
 
   it("serializes and parses a checkpoint with an ISO close time", () => {
     const serialized = serializedCheckpoint({
-      closeTime: new Date("2026-07-30T17:40:00.000Z"),
-      startTime: new Date("2026-07-30T17:35:00.000Z"),
-      lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
-      workflowId: "wf-new",
-      runId: "run-new",
-      processedExecutionKeys: [workflowExecutionKey("wf-new", "run-new")],
+      detailedAlertsConsumed: 16,
+      cursor: {
+        closeTime: new Date("2026-07-30T17:40:00.000Z"),
+        startTime: new Date("2026-07-30T17:35:00.000Z"),
+        lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
+        workflowId: "wf-new",
+        runId: "run-new",
+        processedExecutionKeys: [workflowExecutionKey("wf-new", "run-new")],
+      },
     });
 
     expect(
       parseWorkflowFailureWatchCheckpoint({ checkpoint: serialized }),
     ).toEqual({
-      closeTime: new Date("2026-07-30T17:40:00.000Z"),
-      startTime: new Date("2026-07-30T17:35:00.000Z"),
-      lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
-      workflowId: "wf-new",
-      runId: "run-new",
-      processedExecutionKeys: [workflowExecutionKey("wf-new", "run-new")],
+      detailedAlertsConsumed: 16,
+      cursor: {
+        closeTime: new Date("2026-07-30T17:40:00.000Z"),
+        startTime: new Date("2026-07-30T17:35:00.000Z"),
+        lookbackSince: new Date("2026-07-29T18:00:00.000Z"),
+        workflowId: "wf-new",
+        runId: "run-new",
+        processedExecutionKeys: [workflowExecutionKey("wf-new", "run-new")],
+      },
+    });
+  });
+
+  it("upgrades a legacy cursor with an empty consumed budget", () => {
+    expect(
+      parseWorkflowFailureWatchCheckpoint({
+        checkpoint: {
+          closeTime: "2026-07-30T17:40:00.000Z",
+          workflowId: "wf-legacy",
+          runId: "run-legacy",
+        },
+      }),
+    ).toMatchObject({
+      detailedAlertsConsumed: 0,
+      cursor: { workflowId: "wf-legacy", runId: "run-legacy" },
     });
   });
 
