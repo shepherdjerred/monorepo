@@ -233,7 +233,7 @@ describe("SQLite alert ledger", () => {
       truncatedAlerts: 37,
     });
     await repository.ingestWebhook(
-      input(payload, "2026-08-08T18:00:01Z", false),
+      input(payload, "2026-08-08T18:00:01Z", true),
     );
     const alerts = await repository.listAlerts({ limit: 10 });
     const id = alerts.items[0]?.id;
@@ -242,6 +242,15 @@ describe("SQLite alert ledger", () => {
     const detail = await repository.getAlert({ id, limit: 10 });
 
     expect(detail?.deliveries[0]?.truncatedAlerts).toBe(37);
+    await repository.ingestWebhook(
+      input(payload, "2026-08-08T18:00:02Z", true),
+    );
+    const outbox = await prisma.emailOutbox.findMany({
+      orderBy: { createdAtNs: "asc" },
+      select: { occurrenceIds: true },
+    });
+    expect(outbox).toHaveLength(2);
+    expect(outbox[1]?.occurrenceIds).toEqual([]);
   });
 
   it("serializes concurrent snapshot and webhook discovery", async () => {

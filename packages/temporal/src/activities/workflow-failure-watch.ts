@@ -8,8 +8,10 @@ import {
 } from "./workflow-failure-watch-checkpoint.ts";
 import { buildFailureAlertForExecution } from "./workflow-failure-watch-detail.ts";
 import {
+  addWorkflowFailureOverflowBatch,
   buildWorkflowFailureOverflowAlert,
   MAX_DETAILED_FAILURE_ALERTS,
+  type WorkflowFailureOverflowSummary,
 } from "./workflow-failure-watch-overflow.ts";
 import { scanWorkflowFailureVisibility } from "./workflow-failure-watch-scan.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
@@ -290,6 +292,7 @@ type AdvanceRecoveryCheckpointInput = {
     ((checkpoint: WorkflowFailureWatchCheckpoint) => void) | undefined;
   lookbackSince: Date;
   detailedAlertsConsumed: number;
+  overflow?: WorkflowFailureOverflowSummary;
 };
 
 function advanceRecoveryCheckpoint(
@@ -297,6 +300,11 @@ function advanceRecoveryCheckpoint(
 ): RecoveryCheckpointProgress {
   const budgetCheckpoint = {
     detailedAlertsConsumed: input.detailedAlertsConsumed,
+    ...(input.overflow === undefined
+      ? input.checkpoint?.overflow === undefined
+        ? {}
+        : { overflow: input.checkpoint.overflow }
+      : { overflow: input.overflow }),
     ...(input.checkpoint?.cursor === undefined
       ? {}
       : { cursor: input.checkpoint.cursor }),
@@ -348,6 +356,7 @@ function advanceRecoveryCheckpoint(
     throw new Error("execution checkpoint cursor was not created");
   }
   const nextCheckpoint = {
+    ...budgetCheckpoint,
     ...baseCheckpoint,
     cursor: {
       ...baseCursor,
@@ -383,6 +392,8 @@ export async function pollWorkflowFailuresOnce(
   let alerted = 0;
   let checkpointBlocked = false;
   let recoveryCheckpoint = checkpoint;
+  let overflowSummary: WorkflowFailureOverflowSummary | undefined =
+    checkpoint?.overflow;
   const postDetails = async (
     executions: readonly FailedWorkflowExecution[],
   ): Promise<void> => {
@@ -405,9 +416,13 @@ export async function pollWorkflowFailuresOnce(
   const postOverflowBatch = async (
     executions: readonly FailedWorkflowExecution[],
   ): Promise<void> => {
+    overflowSummary = addWorkflowFailureOverflowBatch(
+      overflowSummary,
+      executions,
+    );
     await poster([
       buildWorkflowFailureOverflowAlert(
-        executions,
+        overflowSummary,
         since,
         options.now,
         options.ttlMs,
@@ -419,6 +434,7 @@ export async function pollWorkflowFailuresOnce(
       executions,
       checkpointBlocked,
       checkpoint: recoveryCheckpoint,
+      overflow: overflowSummary,
       onCheckpoint: options.onCheckpoint,
       lookbackSince: since,
       detailedAlertsConsumed:
