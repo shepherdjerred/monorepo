@@ -6,6 +6,13 @@ import {
   visibleGuildNavigationItems,
 } from "#src/lib/app-navigation.ts";
 
+function canReadCustoms(permission: {
+  resource: string;
+  action: string;
+}): boolean {
+  return permission.resource === "customs";
+}
+
 describe("consumer navigation", () => {
   test.each([
     {
@@ -68,13 +75,13 @@ describe("guild navigation", () => {
   });
 
   test("shows beta customs only when the guild policy is enabled", () => {
-    const canRead = (permission: { resource: string; action: string }) =>
-      permission.resource === "customs";
     expect(
-      visibleGuildNavigationItems(canRead).map((item) => item.label),
+      visibleGuildNavigationItems(canReadCustoms).map((item) => item.label),
     ).toEqual([]);
     expect(
-      visibleGuildNavigationItems(canRead, true).map((item) => item.label),
+      visibleGuildNavigationItems(canReadCustoms, true).map(
+        (item) => item.label,
+      ),
     ).toEqual(["Customs"]);
   });
 
