@@ -98,6 +98,27 @@ describe("Temporal PostgreSQL TLS", () => {
     expect(spec.tls.caFile).toBe("ca.crt");
   });
 
+  // Without an fsGroup the operator's 0640 TLS mount stays root:root and
+  // Postgres dies with "could not load server certificate file: Permission
+  // denied", so Patroni never leaves "start failed". Enabling TLS and setting
+  // spiloFSGroup are one change, not two.
+  test("grants the postgres user read access to its own TLS material", () => {
+    const postgres = findTemporalResource(
+      resources(),
+      "postgresql",
+      "temporal-postgresql",
+    );
+    const spec = z
+      .object({
+        spiloFSGroup: z.number(),
+        tls: z.object({ secretName: z.string() }),
+      })
+      .parse(postgres.spec);
+
+    // uid=101(postgres) gid=103(postgres) in the Spilo image.
+    expect(spec.spiloFSGroup).toBe(103);
+  });
+
   // Regression guard for a defect that left the Temporal database with no
   // controller. The operator's generateTlsMounts appends one volume named
   // after tls.secretName and, when tls.caSecretName is set, a second named

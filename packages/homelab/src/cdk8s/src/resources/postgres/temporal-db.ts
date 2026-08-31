@@ -11,6 +11,21 @@ import {
   TEMPORAL_POSTGRES_TLS_SECRET,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 
+// The gid of the `postgres` user inside the Spilo image, confirmed against the
+// running container (`id postgres` -> uid=101(postgres) gid=103(postgres)).
+// The operator mounts the TLS secret with defaultMode 0640 and the projected
+// files are owned root:root, so without an fsGroup the server cannot read its
+// own certificate and Patroni never leaves "start failed":
+//
+//   FATAL: could not load server certificate file "/tls/tls.crt": Permission denied
+//
+// `spiloFSGroup` is the operator's only route to the pod securityContext's
+// fsGroup, which is what regroups those files to 103. generateTlsMounts says
+// as much: its 0640 "is combined with the FSGroup in the section above to give
+// read access to the postgres user" — but the operator never infers one, so a
+// TLS-enabled cluster that omits this simply cannot start.
+const SPILO_POSTGRES_GID = 103;
+
 export function createTemporalPostgreSQLDatabase(chart: Chart) {
   // The postgres-operator will automatically generate passwords and store them
   // in Kubernetes secrets with the naming pattern:
@@ -35,6 +50,7 @@ export function createTemporalPostgreSQLDatabase(chart: Chart) {
     spec: {
       numberOfInstances: 1,
       teamId: "homelab",
+      spiloFsGroup: SPILO_POSTGRES_GID,
       tls: {
         secretName: TEMPORAL_POSTGRES_TLS_SECRET,
         certificateFile: TEMPORAL_POSTGRES_TLS_CERTIFICATE_FILE,
