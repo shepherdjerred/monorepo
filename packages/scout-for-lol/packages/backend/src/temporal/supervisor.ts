@@ -114,6 +114,8 @@ type ConnectedRuntime = {
   readonly client: Client;
 };
 
+type ScoutTemporalTracing = ReturnType<typeof createTemporalWorkerTracing>;
+
 function workflowsPath(): string {
   return new URL(import.meta.resolve("@scout-for-lol/temporal/workflows"))
     .pathname;
@@ -123,6 +125,25 @@ function workflowUiInterceptorPath(): string {
   return new URL(
     import.meta.resolve("@scout-for-lol/temporal/workflow-ui-interceptor"),
   ).pathname;
+}
+
+function createScoutTemporalTracing(
+  callGraphTracing: boolean,
+): ScoutTemporalTracing | undefined {
+  const tracingRuntime = getTracingRuntime();
+  if (tracingRuntime === undefined && callGraphTracing) {
+    throw new Error(
+      "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
+    );
+  }
+  return tracingRuntime !== undefined && callGraphTracing
+    ? createTemporalWorkerTracing({
+        exporter: createValidatedWorkflowSpanSink(
+          tracingRuntime.processor,
+          tracingRuntime.resource,
+        ),
+      })
+    : undefined;
 }
 
 async function createConnectedRuntime(
@@ -141,21 +162,7 @@ async function createConnectedRuntime(
         ? await Connection.connect()
         : await Connection.connect({ address: options.address });
     const queues = scoutTaskQueues(options.stage);
-    const tracingRuntime = getTracingRuntime();
-    if (tracingRuntime === undefined && options.callGraphTracing) {
-      throw new Error(
-        "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
-      );
-    }
-    const tracing =
-      tracingRuntime !== undefined && options.callGraphTracing
-        ? createTemporalWorkerTracing({
-            exporter: createValidatedWorkflowSpanSink(
-              tracingRuntime.processor,
-              tracingRuntime.resource,
-            ),
-          })
-        : undefined;
+    const tracing = createScoutTemporalTracing(options.callGraphTracing);
     const commonOptions = {
       connection: nativeConnection,
       namespace: options.namespace,

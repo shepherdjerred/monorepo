@@ -1,9 +1,9 @@
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
+import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import type {
   LegacyTemporalNamespace,
   TemporalNamespace,
 } from "#shared/temporal-namespace.ts";
-import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import {
   workflowExecutionKey,
   type WorkflowFailureWatchCheckpoint,
@@ -28,22 +28,22 @@ type ScanWorkflowFailureVisibilityOptions = {
   ) => Promise<void>;
 };
 
-type WorkflowVisibilityInfo = {
-  workflowId: string;
-  runId: string;
-  type: string;
-  taskQueue: string;
-  startTime: Date;
-  closeTime?: Date;
-  status: { name: string };
-};
-
 export type WorkflowFailureVisibilityScan = {
   pendingDetails: FailedWorkflowExecution[];
   overflowed: boolean;
   scanned: number;
   detailedAlertsSelected: number;
   listingError: Error | undefined;
+};
+
+type ScanState = {
+  readonly pendingDetails: FailedWorkflowExecution[];
+  readonly overflowBatch: FailedWorkflowExecution[];
+  detailedAlertsSelected: number;
+  scanned: number;
+  listingError: Error | undefined;
+  processingBatch: boolean;
+  overflowed: boolean;
 };
 
 function toFailureStatusName(name: string): FailureStatusName | undefined {
@@ -68,131 +68,87 @@ function isAfterVisibilityCursor(
   );
 }
 
-function failureExecutionFromVisibilityInfo(
-  info: WorkflowVisibilityInfo,
-): FailedWorkflowExecution | undefined {
-  const status = toFailureStatusName(info.status.name);
-  if (status === undefined || info.closeTime === undefined) return undefined;
-  return {
-    temporalNamespace: options.namespace,
-    workflowId: info.workflowId,
-    runId: info.runId,
-    workflowType: info.type,
-    taskQueue: info.taskQueue,
-    startTime: info.startTime,
-    closeTime: info.closeTime,
-    status,
-  } satisfies FailedWorkflowExecution;
-}
-
-async function flushBatch(
-  batch: FailedWorkflowExecution[],
-  callback: (executions: readonly FailedWorkflowExecution[]) => Promise<void>,
-  setProcessing: (processing: boolean) => void,
+async function processExecution(
+  execution: FailedWorkflowExecution,
+  options: ScanWorkflowFailureVisibilityOptions,
+  state: ScanState,
 ): Promise<void> {
-  if (batch.length === 0) return;
-  setProcessing(true);
-  await callback(batch);
-  setProcessing(false);
-  batch.length = 0;
-}
-
-type QueueExecutionResult = {
-  detailedAlertsSelected: number;
-  overflowed: boolean;
-};
-
-type QueueExecutionInput = {
-  execution: FailedWorkflowExecution;
-  detailedAlertsSelected: number;
-  pendingDetails: FailedWorkflowExecution[];
-  overflowBatch: FailedWorkflowExecution[];
-  options: ScanWorkflowFailureVisibilityOptions;
-  setProcessing: (processing: boolean) => void;
-};
-
-async function queueExecution(
-  input: QueueExecutionInput,
-): Promise<QueueExecutionResult> {
-  const {
-    execution,
-    detailedAlertsSelected,
-    pendingDetails,
-    overflowBatch,
-    options,
-    setProcessing,
-  } = input;
-  if (detailedAlertsSelected >= MAX_DETAILED_FAILURE_ALERTS) {
-    overflowBatch.push(execution);
-    if (overflowBatch.length === ALERT_BATCH_SIZE) {
-      await flushBatch(overflowBatch, options.onOverflowBatch, setProcessing);
-      return { detailedAlertsSelected, overflowed: true };
+  state.scanned += 1;
+  if (state.detailedAlertsSelected >= MAX_DETAILED_FAILURE_ALERTS) {
+    state.overflowBatch.push(execution);
+    if (state.overflowBatch.length === ALERT_BATCH_SIZE) {
+      state.processingBatch = true;
+      await options.onOverflowBatch(state.overflowBatch);
+      state.processingBatch = false;
+      state.overflowed = true;
+      state.overflowBatch.length = 0;
     }
-    return { detailedAlertsSelected, overflowed: false };
+    return;
   }
-  pendingDetails.push(execution);
-  const nextDetailedAlertsSelected = detailedAlertsSelected + 1;
-  if (pendingDetails.length === ALERT_BATCH_SIZE) {
-    await flushBatch(pendingDetails, options.onDetailBatch, setProcessing);
+  state.pendingDetails.push(execution);
+  state.detailedAlertsSelected += 1;
+  if (state.pendingDetails.length === ALERT_BATCH_SIZE) {
+    state.processingBatch = true;
+    await options.onDetailBatch(state.pendingDetails);
+    state.processingBatch = false;
+    state.pendingDetails.length = 0;
   }
-  return {
-    detailedAlertsSelected: nextDetailedAlertsSelected,
-    overflowed: false,
-  };
 }
 
 export async function scanWorkflowFailureVisibility(
   client: WorkflowVisibilityClient,
   options: ScanWorkflowFailureVisibilityOptions,
 ): Promise<WorkflowFailureVisibilityScan> {
-  const pendingDetails: FailedWorkflowExecution[] = [];
-  const overflowBatch: FailedWorkflowExecution[] = [];
-  let scanned = 0;
-  let detailedAlertsSelected = options.detailedAlertsConsumed;
-  let listingError: Error | undefined;
-  const processingState = { active: false };
-  let overflowed = false;
+  const state: ScanState = {
+    pendingDetails: [],
+    overflowBatch: [],
+    scanned: 0,
+    detailedAlertsSelected: options.detailedAlertsConsumed,
+    listingError: undefined,
+    processingBatch: false,
+    overflowed: false,
+  };
   try {
     for await (const info of client.workflow.list({
       query: options.query,
       pageSize: VISIBILITY_PAGE_SIZE,
     })) {
-      const execution = failureExecutionFromVisibilityInfo(info);
-      if (execution === undefined) continue;
+      const status = toFailureStatusName(info.status.name);
+      if (status === undefined || info.closeTime === undefined) continue;
+      const execution = {
+        temporalNamespace: options.namespace,
+        workflowId: info.workflowId,
+        runId: info.runId,
+        workflowType: info.type,
+        taskQueue: info.taskQueue,
+        startTime: info.startTime,
+        closeTime: info.closeTime,
+        status,
+      } satisfies FailedWorkflowExecution;
       if (
         options.checkpoint !== undefined &&
         !isAfterVisibilityCursor(execution, options.checkpoint)
-      )
+      ) {
         continue;
-      scanned += 1;
-      const queueResult = await queueExecution({
-        execution,
-        detailedAlertsSelected,
-        pendingDetails,
-        overflowBatch,
-        options,
-        setProcessing: (processing) => {
-          processingState.active = processing;
-        },
-      });
-      detailedAlertsSelected = queueResult.detailedAlertsSelected;
-      overflowed ||= queueResult.overflowed;
+      }
+      await processExecution(execution, options, state);
     }
-    if (overflowBatch.length > 0) {
-      await flushBatch(overflowBatch, options.onOverflowBatch, (processing) => {
-        processingState.active = processing;
-      });
-      overflowed = true;
+    if (state.overflowBatch.length > 0) {
+      state.processingBatch = true;
+      await options.onOverflowBatch(state.overflowBatch);
+      state.processingBatch = false;
+      state.overflowed = true;
     }
   } catch (error) {
-    if (processingState.active) throw error;
-    listingError = error instanceof Error ? error : new Error(String(error));
+    if (state.processingBatch) throw error;
+    state.listingError =
+      error instanceof Error ? error : new Error(String(error));
   }
   return {
-    pendingDetails,
-    overflowed,
-    scanned,
-    detailedAlertsSelected,
-    listingError,
+    pendingDetails: state.pendingDetails,
+    overflowed: state.overflowed,
+    scanned: state.scanned,
+    detailedAlertsSelected: state.detailedAlertsSelected,
+    listingError: state.listingError,
   };
 }

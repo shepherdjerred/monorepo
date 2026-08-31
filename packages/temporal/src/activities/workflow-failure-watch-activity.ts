@@ -58,6 +58,7 @@ async function runPollWorkflowFailuresImpl(
     scanned: 0,
     alerted: 0,
     errored: 0,
+    overflowed: false,
   };
   for (const namespace of namespaces) {
     const client = await createTemporalVisibilityClient(namespace);
@@ -76,6 +77,7 @@ async function runPollWorkflowFailuresImpl(
     aggregate.scanned += result.scanned;
     aggregate.alerted += result.alerted;
     aggregate.errored += result.errored;
+    aggregate.overflowed ||= result.overflowed;
   }
   return aggregate;
 }
@@ -114,7 +116,7 @@ export const workflowFailureWatchActivities = {
         lookbackSince,
         (namespace, nextCheckpoint) => {
           checkpoints[namespace] = nextCheckpoint;
-          lookbackSince = nextCheckpoint.lookbackSince ?? lookbackSince;
+          lookbackSince = nextCheckpoint.cursor?.lookbackSince ?? lookbackSince;
           sendHeartbeat();
         },
       );
