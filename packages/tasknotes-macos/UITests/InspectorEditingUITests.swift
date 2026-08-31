@@ -3,6 +3,13 @@ internal import TaskNotesKit
 internal import XCTest
 
 /// The inspector defects exercised against an isolated real server and vault.
+///
+/// XCUIElement and XCUIApplication are main-actor-isolated, so the whole case
+/// is too — the same annotation the other UI test cases carry. Without it
+/// every `app[...]`, `typeText`, `typeKey` and `descendants(matching:)` call
+/// is a main-actor access from a nonisolated context, which Swift 6 rejects
+/// at compile time and which fails the target rather than a single test.
+@MainActor
 final class InspectorEditingUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
