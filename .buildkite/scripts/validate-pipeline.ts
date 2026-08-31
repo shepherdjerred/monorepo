@@ -48,6 +48,7 @@ const GLOBAL_IF_CHANGED = [
 ];
 const PATH_GATED_PR_KEYS = new Set([
   "macos-native-dispatch",
+  "hkctl-native-pr",
   "quotabar-macos-pr",
   "tasknotes-native-pr",
   "playwright-e2e-pr",
@@ -59,6 +60,8 @@ const PATH_GATED_PR_KEYS = new Set([
   "pr-dryrun",
 ]);
 const NATIVE_STEP_KEYS = new Set([
+  "hkctl-native-pr",
+  "hkctl-native-main",
   "quotabar-macos-pr",
   "quotabar-macos-main",
   "tasknotes-native-pr",

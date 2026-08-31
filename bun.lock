@@ -786,6 +786,10 @@
         "vitest": "4.1.10",
       },
     },
+    "packages/hkctl": {
+      "name": "@shepherdjerred/hkctl",
+      "version": "0.1.0",
+    },
     "packages/home-assistant": {
       "name": "@shepherdjerred/home-assistant",
       "version": "0.1.0",
@@ -3859,6 +3863,8 @@
     "@shepherdjerred/glitter-context": ["@shepherdjerred/glitter-context@workspace:packages/glitter-context"],
 
     "@shepherdjerred/helm-types": ["@shepherdjerred/helm-types@workspace:packages/homelab/src/helm-types"],
+
+    "@shepherdjerred/hkctl": ["@shepherdjerred/hkctl@workspace:packages/hkctl"],
 
     "@shepherdjerred/home-assistant": ["@shepherdjerred/home-assistant@workspace:packages/home-assistant"],
 

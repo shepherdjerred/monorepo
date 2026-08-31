@@ -26,6 +26,7 @@ packages/
 ├── dotfiles/                   # Dotfiles & shell config (chezmoi source)
 ├── eslint-config/              # Shared ESLint flat config (workspace-internal)
 ├── fonts/                      # Custom fonts
+├── hkctl/                      # Apple HomeKit command-line app (Mac Catalyst)
 ├── home-assistant/             # Type-safe Home Assistant client + codegen
 ├── homelab/                    # Homelab infrastructure (K8s, cdk8s, Tofu)
 ├── leetcode/                   # LeetCode practice

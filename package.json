@@ -108,6 +108,7 @@
     "packages/feature-flags",
     "packages/glitter",
     "packages/glitter-context",
+    "packages/hkctl",
     "packages/home-assistant",
     "packages/homelab",
     "packages/homelab/src/cdk8s",

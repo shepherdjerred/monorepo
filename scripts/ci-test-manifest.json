@@ -794,6 +794,11 @@
   ],
   "separateTests": [
     {
+      "package": "@shepherdjerred/hkctl",
+      "directory": "packages/hkctl",
+      "reason": "The Foundation-only Swift suite runs in the affected-only hkctl native macOS lane; signed Catalyst build and HomeKit launch smoke verification remain local because they require a development team and HomeKit entitlement."
+    },
+    {
       "package": "@shepherdjerred/quotabar",
       "directory": "packages/macos-ai-subscription-tracker",
       "reason": "The Swift build/test/coverage suite requires macOS and has no Buildkite lane today - the homelab macOS agent (packages/homelab/mac-ci/) is dormant, so verify:macos is a local-only developer/release gate, not a CI gate. Linux CI runs only the portable lint:swift (SwiftLint) task."

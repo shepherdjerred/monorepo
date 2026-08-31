@@ -22,38 +22,58 @@ function job(
   };
 }
 
+function expectNativeJobsAreParsed(): void {
+  expect(
+    parseNativeJobs({
+      jobs: [
+        {
+          id: "quota",
+          name: "QuotaBar",
+          retried: false,
+          state: "scheduled",
+          started_at: null,
+          step_key: "quotabar-macos-pr",
+        },
+        {
+          id: "hkctl",
+          name: "hkctl",
+          retried: false,
+          state: "passed",
+          started_at: "2026-08-24T00:00:00Z",
+          step_key: "hkctl-native-pr",
+        },
+        {
+          id: "verify",
+          name: "verify",
+          state: "passed",
+          started_at: "2026-08-24T00:00:00Z",
+          step_key: "verify",
+        },
+      ],
+    }),
+  ).toEqual([
+    {
+      id: "quota",
+      name: "QuotaBar",
+      retried: false,
+      state: "scheduled",
+      startedAt: null,
+      stepKey: "quotabar-macos-pr",
+    },
+    {
+      id: "hkctl",
+      name: "hkctl",
+      retried: false,
+      state: "passed",
+      startedAt: "2026-08-24T00:00:00Z",
+      stepKey: "hkctl-native-pr",
+    },
+  ]);
+}
+
 describe("native macOS dispatch watch", () => {
   test("parses only native PR jobs", () => {
-    expect(
-      parseNativeJobs({
-        jobs: [
-          {
-            id: "quota",
-            name: "QuotaBar",
-            retried: false,
-            state: "scheduled",
-            started_at: null,
-            step_key: "quotabar-macos-pr",
-          },
-          {
-            id: "verify",
-            name: "verify",
-            state: "passed",
-            started_at: "2026-08-24T00:00:00Z",
-            step_key: "verify",
-          },
-        ],
-      }),
-    ).toEqual([
-      {
-        id: "quota",
-        name: "QuotaBar",
-        retried: false,
-        state: "scheduled",
-        startedAt: null,
-        stepKey: "quotabar-macos-pr",
-      },
-    ]);
+    expectNativeJobsAreParsed();
   });
 
   test("rejects malformed matching jobs", () => {

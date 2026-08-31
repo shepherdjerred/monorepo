@@ -44,6 +44,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "alert-dashboard-sqlite": [],
   "release-please": [],
   "build-summary": [],
+  "hkctl-native-main": ["hkctl-native"],
   "quotabar-macos-main": ["quotabar-macos"],
   "tasknotes-native-main": ["tasknotes-native"],
   "homelab-release-admission": [],

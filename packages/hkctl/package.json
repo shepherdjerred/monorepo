@@ -1,0 +1,17 @@
+{
+  "name": "@shepherdjerred/hkctl",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Development-signed Mac Catalyst CLI for inspecting and organizing Apple HomeKit homes.",
+  "scripts": {
+    "lint": "swiftlint lint --strict --quiet --config .swiftlint.yml App Sources Tests Package.swift",
+    "mac:format": "swift format format --in-place --recursive --parallel --configuration .swift-format Package.swift App Sources Tests",
+    "mac:format:check": "swift format lint --recursive --parallel --strict --configuration .swift-format Package.swift App Sources Tests",
+    "mac:generate": "xcodegen generate --spec project.yml",
+    "mac:build": "swift build -Xswiftc -warnings-as-errors",
+    "mac:test": "swift test -Xswiftc -warnings-as-errors",
+    "mac:app": "bun run mac:generate && xcodebuild -project hkctl.xcodeproj -scheme hkctl -configuration Debug -destination 'platform=macOS,variant=Mac Catalyst,arch=arm64' -derivedDataPath .build/xcode CODE_SIGNING_ALLOWED=NO -quiet build",
+    "mac:smoke": "./ci/verify-launch.sh",
+    "mac:verify": "bun run mac:format:check && bun run lint && bun run mac:build && bun run mac:test && bun run mac:app && bun run mac:smoke"
+  }
+}
