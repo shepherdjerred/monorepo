@@ -9,7 +9,7 @@ import {
   type DareDiscordDependencies,
 } from "#src/betting/dare-callout.ts";
 import { dareResultMessage } from "#src/betting/dare-copy.ts";
-import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";

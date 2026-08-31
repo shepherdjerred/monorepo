@@ -148,6 +148,8 @@ function describeConfirmFailure(
       return `This dare is ${describeDareState(result.dareState)}.`;
     case "insufficient":
       return bucksInsufficient(result.balance, result.needed);
+    case "callout_too_long":
+      return "This dare has too many targets or conditions to fit in one Discord message — try fewer targets or a simpler condition, then run `/bb dare` again.";
   }
 }
 

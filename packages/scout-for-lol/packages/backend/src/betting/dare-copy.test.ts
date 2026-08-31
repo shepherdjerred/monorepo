@@ -17,7 +17,7 @@ import {
   type DareCalloutView,
 } from "#src/betting/dare-copy.ts";
 import type { DareLeaf } from "#src/betting/dare-criteria.ts";
-import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
 
 const DEADLINE = new Date("2026-09-01T12:00:00.000Z");
 const WINDOW_END = new Date("2026-09-08T12:00:00.000Z");
@@ -277,9 +277,10 @@ describe("dare result copy", () => {
     );
   });
 
-  test("pins the achieved message and hides zero fees", () => {
+  test("pins the achieved message, mentions the challenger, and hides zero fees", () => {
     expect(
       dareAchievedContent({
+        challengerDiscordId: "100",
         conditionSummary: SUMMARY_TEXT,
         potTotal: 2001,
         payouts: [
@@ -305,7 +306,7 @@ describe("dare result copy", () => {
       [
         "✅ **Bryan Bucks dare: ACHIEVED**",
         SUMMARY_TEXT,
-        "The **2,001 BB** pot pays out:",
+        "Funded by <@100>. The **2,001 BB** pot pays out:",
         "• **Virmel** <@200> — +**800 BB** · **200 BB** fee",
         "• **Bryan** <@300> — +**1 BB**",
       ].join("\n"),

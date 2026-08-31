@@ -4,7 +4,7 @@ import {
   expireDareAcceptWindows,
 } from "#src/betting/dare-sweep.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
-import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
 import { closeExpiredBettingWindows } from "#src/betting/sweep.ts";
 import { closeExpiredParlayWindows } from "#src/betting/parlay-sweep.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlay-publish.ts";

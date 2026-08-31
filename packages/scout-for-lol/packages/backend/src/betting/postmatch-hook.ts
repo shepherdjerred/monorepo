@@ -8,10 +8,12 @@ import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
 } from "#src/betting/parlay-settle.ts";
+import { settleDaresForMatch } from "#src/betting/dare-settle.ts";
 import {
-  settleDaresForMatch,
+  DarePartialSettlementError,
   type DareSettlementSummary,
-} from "#src/betting/dare-settle.ts";
+} from "#src/betting/dare-settle-shared.ts";
+import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
@@ -111,7 +113,19 @@ export async function settleAndAwardBucks(
   // one-shot" note), and computing it earlier would risk losing that return
   // value to a later throw, leaving an already-terminal dare with no
   // summary to announce, ever.
-  const dareSettlements = await settleDaresForMatch(matchData, prismaClient);
+  let dareSettlements: DareSettlementSummary[];
+  try {
+    dareSettlements = await settleDaresForMatch(matchData, prismaClient);
+  } catch (error) {
+    if (error instanceof DarePartialSettlementError) {
+      // Deliver what DID commit before propagating: those summaries are
+      // one-shot and cannot be reproduced on a retry (see
+      // settleDaresForMatch's doc comment). The retry that follows this
+      // throw only needs to re-attempt whichever dare actually failed.
+      await deliverDareSummaries(error.summaries, prismaClient);
+    }
+    throw error;
+  }
   return {
     closures,
     settlements: retry.settlements,

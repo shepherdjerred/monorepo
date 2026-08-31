@@ -15,7 +15,7 @@ import type {
   DareContributorRefund,
   DareTargetPayout,
 } from "#src/betting/dare-ledger.ts";
-import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
 import {
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_CATALOG,
@@ -212,6 +212,17 @@ const FINAL_HEADERS: Partial<Record<BucksDareState, string>> = {
 };
 
 /**
+ * Discord's hard message content limit.
+ * @see https://discord.com/developers/docs/resources/channel#create-message
+ *
+ * A local constant rather than an import from `discord/utils/message.ts` —
+ * `prematch-line.ts` establishes the same precedent in this package: the
+ * betting layer's copy modules declare their own budget rather than reaching
+ * into `discord/` for one number.
+ */
+export const DARE_CALLOUT_MAX_LENGTH = 2000;
+
+/**
  * The single public callout message, rendered from current database state.
  * The same message is edited in place through every transition, so this
  * covers the whole lifecycle: awaiting consent, LIVE with progress, and the
@@ -290,6 +301,7 @@ function payoutLine(payout: DareTargetPayout): string {
 }
 
 export function dareAchievedContent(input: {
+  challengerDiscordId: string;
   conditionSummary: string;
   potTotal: number;
   payouts: readonly DareTargetPayout[];
@@ -297,7 +309,12 @@ export function dareAchievedContent(input: {
   return [
     "✅ **Bryan Bucks dare: ACHIEVED**",
     input.conditionSummary,
-    `The ${bb(input.potTotal)} pot pays out:`,
+    // The challenger funded this pot but — unlike every unachieved/voided
+    // refund, and unlike every winning target's payout line — never
+    // appears in the achieved message's own text. `mentionUserIds`
+    // ALLOWS a ping; it does not create one, so without this line the
+    // person whose contribution just paid out gets no notification at all.
+    `Funded by <@${input.challengerDiscordId}>. The ${bb(input.potTotal)} pot pays out:`,
     ...input.payouts.map((payout) => payoutLine(payout)),
   ].join("\n");
 }
@@ -353,6 +370,7 @@ export function dareResultMessage(
   if (summary.resolution === "achieved") {
     return {
       content: dareAchievedContent({
+        challengerDiscordId: summary.challengerDiscordId,
         conditionSummary: summary.conditionSummary,
         potTotal: summary.potTotal,
         payouts: summary.payouts,

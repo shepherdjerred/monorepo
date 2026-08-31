@@ -1,4 +1,5 @@
 import {
+  BucksDareHorizonKindSchema,
   BucksStakeSchema,
   type BucksDareHorizonKind,
   type BucksDareState,
@@ -34,6 +35,10 @@ import {
   type DareConditions,
   type DareTargetIdentity,
 } from "#src/betting/dare-criteria.ts";
+import {
+  DARE_CALLOUT_MAX_LENGTH,
+  dareCalloutContent,
+} from "#src/betting/dare-copy.ts";
 import { stakeDareContributionInTransaction } from "#src/betting/dare-ledger.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
@@ -193,7 +198,8 @@ export type ConfirmDareResult =
   | { kind: "not_challenger" }
   | { kind: "proposal_expired" }
   | { kind: "already_resolved"; dareState: BucksDareState }
-  | { kind: "insufficient"; balance: number; needed: number };
+  | { kind: "insufficient"; balance: number; needed: number }
+  | { kind: "callout_too_long"; length: number };
 
 /**
  * The challenger approves the code-rendered interpretation: debit the pledged
@@ -218,6 +224,35 @@ export async function confirmDare(
     return lookup;
   }
   const dare = lookup.dare;
+  const amount = dare.potTotal;
+  const conditionSummary = summarizeDare(dare);
+  const acceptDeadline = new Date(now.getTime() + DARE_ACCEPT_WINDOW_MS);
+
+  // Bound the callout BEFORE any money moves: the public message is
+  // rendered from this same conditionSummary/target list, and a valid
+  // multi-target, multi-leaf dare can push it past Discord's hard content
+  // limit. Rendering the exact post-confirm state here — the same function
+  // the real callout uses — means this check can never drift from what
+  // would actually be sent.
+  const calloutPreview = dareCalloutContent({
+    dareState: "pending_accept",
+    challengerDiscordId: input.challengerDiscordId,
+    potTotal: amount,
+    conditionSummary,
+    horizonKind: BucksDareHorizonKindSchema.parse(dare.horizonKind),
+    targets: dare.targets.map((target) => ({
+      discordId: target.discordId,
+      alias: target.alias,
+      accepted: false,
+      declined: false,
+    })),
+    acceptDeadline,
+    windowEndsAt: null,
+    progress: [],
+  });
+  if (calloutPreview.length > DARE_CALLOUT_MAX_LENGTH) {
+    return { kind: "callout_too_long", length: calloutPreview.length };
+  }
 
   // Wallet creation (and its house-funded seed grant) cannot nest inside the
   // confirm transaction, so it is ensured first — transfer precedent.
@@ -225,9 +260,6 @@ export async function confirmDare(
     { serverId: input.serverId, discordId: input.challengerDiscordId },
     dependencies.prismaClient,
   );
-  const amount = dare.potTotal;
-  const conditionSummary = summarizeDare(dare);
-  const acceptDeadline = new Date(now.getTime() + DARE_ACCEPT_WINDOW_MS);
 
   try {
     const txResult = await dependencies.prismaClient.$transaction(

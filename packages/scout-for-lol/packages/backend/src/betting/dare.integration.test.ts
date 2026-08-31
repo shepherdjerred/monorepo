@@ -1,13 +1,7 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
-  BucksLedgerContextSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
-  PlayerIdSchema,
   RawMatchSchema,
-  RawParticipantSchema,
-  type DiscordAccountId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import {
@@ -16,25 +10,43 @@ import {
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import { acceptDare, declineDare } from "#src/betting/dare-accept.ts";
-import { DARE_CONDITIONS_UNREADABLE } from "#src/betting/dare-common.ts";
 import { contributeToDare } from "#src/betting/dare-contribute.ts";
 import {
   abandonDare,
   confirmDare,
   createProposedDare,
-  type CreateProposedDareInput,
 } from "#src/betting/dare-create.ts";
-import {
-  DareConditionsSchema,
-  type DareConditions,
-} from "#src/betting/dare-criteria.ts";
+import { DareConditionsSchema } from "#src/betting/dare-criteria.ts";
 import {
   dareMoneyFactsInTransaction,
   payDareTargetsInTransaction,
   refundDareContributionsInTransaction,
   type DareLedgerFacts,
 } from "#src/betting/dare-ledger.ts";
+import {
+  CHALLENGER,
+  CHANNEL_ID,
+  CONTRIBUTOR,
+  PUUID_A,
+  PUUID_B,
+  PUUID_C,
+  SERVER_ID,
+  TARGET_A,
+  TARGET_B,
+  TARGET_C,
+  createDareTestHelpers,
+  loadFixtureMatch,
+  losingMatch as sharedLosingMatch,
+  matchFor as sharedMatchFor,
+  pastWindowGrace as sharedPastWindowGrace,
+  registerDareLifecycleHooks,
+  targetsInput,
+  winConditions,
+  winningMatch as sharedWinningMatch,
+  type TargetSpec,
+} from "#src/betting/dare-integration-fixtures.ts";
 import { settleDaresForMatch } from "#src/betting/dare-settle.ts";
+import { DarePartialSettlementError } from "#src/betting/dare-settle-shared.ts";
 import {
   abandonExpiredDareProposals,
   expireDareAcceptWindows,
@@ -42,13 +54,10 @@ import {
 } from "#src/betting/dare-sweep.ts";
 import { ensureBucksAccount } from "#src/betting/accounts.ts";
 import { cancellationHouseCut } from "#src/betting/house-cut.ts";
-import { applyBucksDelta, refundableBucksHeld } from "#src/betting/ledger.ts";
-import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
+import { refundableBucksHeld } from "#src/betting/ledger.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
-  isPolicyEnabled,
-  resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import {
   bucksTestDiscordId,
@@ -58,58 +67,13 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 
 const { prisma: db } = createTestDatabase("bucks-dare");
 
-const deps = { prismaClient: db, isPolicyEnabled };
-
-const fixture = RawMatchSchema.parse(
-  await Bun.file(
-    new URL("../../../../testdata/rift.json", import.meta.url),
-  ).json(),
-);
-
-const SERVER_ID = DiscordGuildIdSchema.parse("1337623164146155593");
-const CHANNEL_ID = DiscordChannelIdSchema.parse("133762316414615777");
-const CHALLENGER = bucksTestDiscordId(1);
-const TARGET_A = bucksTestDiscordId(2);
-const TARGET_B = bucksTestDiscordId(3);
-const TARGET_C = bucksTestDiscordId(4);
-const CONTRIBUTOR = bucksTestDiscordId(5);
-const PUUID_A = bucksTestPuuid(30);
-const PUUID_B = bucksTestPuuid(31);
-const PUUID_C = bucksTestPuuid(32);
+const fixture = await loadFixtureMatch();
 
 const GAME_START = fixture.info.gameStartTimestamp;
 const GAME_END = fixture.info.gameEndTimestamp;
 /** All creation/consent flows run at a fixed instant before the fixture
  * game begins, so the game falls inside every activated window. */
 const T0 = new Date(GAME_START - 60_000);
-
-function winConditions(requiredGames = 1): DareConditions {
-  return DareConditionsSchema.parse({
-    version: 1,
-    root: {
-      kind: "all",
-      clauses: [
-        {
-          kind: "all",
-          children: [
-            {
-              kind: "condition",
-              requiredGames,
-              predicate: {
-                kind: "participant_boolean",
-                field: "win",
-                expected: true,
-              },
-              champion: null,
-            },
-          ],
-        },
-      ],
-    },
-  });
-}
-
-type TargetSpec = { discordId: DiscordAccountId; alias: string; puuid: string };
 
 const ONE_TARGET: TargetSpec[] = [
   { discordId: TARGET_A, alias: "alpha", puuid: PUUID_A },
@@ -120,81 +84,18 @@ const THREE_TARGETS: TargetSpec[] = [
   { discordId: TARGET_C, alias: "charlie", puuid: PUUID_C },
 ];
 
-function targetsInput(
-  specs: readonly TargetSpec[],
-): CreateProposedDareInput["targets"] {
-  return specs.map((spec, index) => ({
-    discordId: spec.discordId,
-    playerId: PlayerIdSchema.parse(1000 + index),
-    alias: spec.alias,
-    accounts: [
-      { puuid: spec.puuid, trackingStartedAt: new Date(0).toISOString() },
-    ],
-  }));
-}
-
-async function makeProposed(input?: {
-  amount?: number;
-  targets?: readonly TargetSpec[];
-  horizonKind?: "next_game" | "window";
-  windowDays?: number;
-  conditions?: DareConditions;
-}): Promise<number> {
-  const created = await createProposedDare(
-    {
-      serverId: SERVER_ID,
-      channelId: CHANNEL_ID,
-      challengerDiscordId: CHALLENGER,
-      originalText: "I bet alpha can't win a game",
-      translation: null,
-      conditions: input?.conditions ?? winConditions(),
-      horizonKind: input?.horizonKind ?? "window",
-      ...(input?.horizonKind === "next_game"
-        ? {}
-        : { windowDays: input?.windowDays ?? 7 }),
-      amount: input?.amount ?? 5,
-      targets: targetsInput(input?.targets ?? ONE_TARGET),
-    },
-    deps,
-    T0,
-  );
-  if (created.kind !== "created") {
-    throw new Error(`expected a created dare, got ${created.kind}`);
-  }
-  return created.dareId;
-}
-
-async function makePendingAccept(
-  input?: Parameters<typeof makeProposed>[0],
-): Promise<number> {
-  const dareId = await makeProposed(input);
-  const confirmed = await confirmDare(
-    { dareId, serverId: SERVER_ID, challengerDiscordId: CHALLENGER },
-    deps,
-    T0,
-  );
-  if (confirmed.kind !== "confirmed") {
-    throw new Error(`expected a confirmed dare, got ${confirmed.kind}`);
-  }
-  return dareId;
-}
-
-async function makeActive(
-  input?: Parameters<typeof makeProposed>[0] & { activateAt?: Date },
-): Promise<number> {
-  const dareId = await makePendingAccept(input);
-  for (const spec of input?.targets ?? ONE_TARGET) {
-    const accepted = await acceptDare(
-      { dareId, serverId: SERVER_ID, targetDiscordId: spec.discordId },
-      deps,
-      input?.activateAt ?? T0,
-    );
-    if (accepted.kind !== "accepted") {
-      throw new Error(`expected an accepted dare, got ${accepted.kind}`);
-    }
-  }
-  return dareId;
-}
+const {
+  deps,
+  makeProposed,
+  makePendingAccept,
+  makeActive,
+  balanceOf,
+  houseBalance,
+  dareState,
+  expectNoDrift,
+  settleExpecting,
+  clearAll,
+} = createDareTestHelpers(db, T0);
 
 /**
  * The fixture match with chosen participants re-identified as dare targets.
@@ -204,121 +105,24 @@ function matchFor(input: {
   assignments: Record<number, { puuid: string; win?: boolean }>;
   infoOverrides?: Record<string, unknown>;
 }): RawMatch {
-  const reparsed = RawMatchSchema.parse(structuredClone(fixture));
-  const participants = reparsed.info.participants.map((participant, index) => {
-    const assignment = input.assignments[index];
-    if (assignment === undefined) return participant;
-    return RawParticipantSchema.parse({
-      ...participant,
-      puuid: assignment.puuid,
-      ...(assignment.win === undefined ? {} : { win: assignment.win }),
-    });
-  });
-  return RawMatchSchema.parse({
-    ...reparsed,
-    info: {
-      ...reparsed.info,
-      ...input.infoOverrides,
-      participants,
-    },
-  });
+  return sharedMatchFor(fixture, input);
 }
 
 function winningMatch(specs: readonly TargetSpec[]): RawMatch {
-  const assignments: Record<number, { puuid: string; win?: boolean }> = {};
-  specs.forEach((spec, index) => {
-    assignments[index] = { puuid: spec.puuid, win: true };
-  });
-  return matchFor({ assignments });
+  return sharedWinningMatch(fixture, specs);
 }
 
 function losingMatch(specs: readonly TargetSpec[]): RawMatch {
-  const assignments: Record<number, { puuid: string; win?: boolean }> = {};
-  specs.forEach((spec, index) => {
-    assignments[index] = { puuid: spec.puuid, win: false };
-  });
-  return matchFor({ assignments });
-}
-
-async function balanceOf(discordId: DiscordAccountId): Promise<number> {
-  const account = await db.bucksAccount.findUniqueOrThrow({
-    where: { serverId_discordId: { serverId: SERVER_ID, discordId } },
-    select: { balance: true },
-  });
-  return account.balance;
-}
-
-async function houseBalance(): Promise<number> {
-  const house = await db.bucksAccount.findFirstOrThrow({
-    where: { serverId: SERVER_ID, isHouse: true },
-    select: { balance: true },
-  });
-  return house.balance;
-}
-
-async function dareState(dareId: number): Promise<string> {
-  const dare = await db.bucksDare.findUniqueOrThrow({
-    where: { id: dareId },
-    select: { dareState: true },
-  });
-  return dare.dareState;
+  return sharedLosingMatch(fixture, specs);
 }
 
 /** A moment safely past a window-dare's `windowEndsAt` plus the ingestion
  * grace period, for exercising `settleEndedDareWindows`. */
 function pastWindowGrace(windowDays = 1): Date {
-  return new Date(
-    T0.getTime() +
-      windowDays * 24 * 60 * 60 * 1000 +
-      DARE_WINDOW_INGESTION_GRACE_MS +
-      1000,
-  );
+  return sharedPastWindowGrace(T0, windowDays);
 }
 
-async function expectNoDrift(): Promise<void> {
-  expect(await reconcileBucksBalances(db)).toEqual([]);
-}
-
-/** Settle the match, assert the single expected resolution, and check the
- * dare row landed in the matching state. */
-async function settleExpecting(
-  dareId: number,
-  match: RawMatch,
-  at: Date,
-  resolution: "achieved" | "unachieved" | "captured" | "voided",
-): Promise<Awaited<ReturnType<typeof settleDaresForMatch>>> {
-  const summaries = await settleDaresForMatch(match, db, at);
-  expect(summaries.map((summary) => summary.resolution)).toEqual([resolution]);
-  expect(await dareState(dareId)).toBe(
-    resolution === "captured" ? "active" : resolution,
-  );
-  return summaries;
-}
-
-async function clearAll(): Promise<void> {
-  await db.bucksLedgerEntry.deleteMany();
-  await db.bucksDareGame.deleteMany();
-  await db.bucksDareContribution.deleteMany();
-  await db.bucksDareTarget.deleteMany();
-  await db.bucksDare.deleteMany();
-  await db.bucksAccount.deleteMany();
-  await db.player.deleteMany();
-}
-
-beforeEach(async () => {
-  await clearAll();
-  clearFlagOverrides("betting_enabled");
-  clearFlagOverrides("bucks_dares_enabled");
-  addFlagOverride("betting_enabled", true, { server: SERVER_ID });
-  addFlagOverride("bucks_dares_enabled", true, { server: SERVER_ID });
-});
-
-afterAll(async () => {
-  resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("bucks_dares_enabled");
-  await clearAll();
-  await db.$disconnect();
-});
+registerDareLifecycleHooks(db, clearAll);
 
 describe("dare proposal and confirmation", () => {
   test("a concurrent double-confirm debits the pledge exactly once", async () => {
@@ -354,6 +158,103 @@ describe("dare proposal and confirmation", () => {
     expect(await dareState(dareId)).toBe("proposed");
     expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
     expect(await db.bucksDareContribution.count({ where: { dareId } })).toBe(0);
+    await expectNoDrift();
+  });
+
+  test("a callout too long for Discord is refused before any money moves", async () => {
+    const longAliasTargets: TargetSpec[] = Array.from(
+      { length: 5 },
+      (_unused, index) => ({
+        discordId: bucksTestDiscordId(50 + index),
+        alias: `${"x".repeat(119)}${index.toString()}`,
+        puuid: bucksTestPuuid(900 + index),
+      }),
+    );
+    // One clause, four leaves — renderDareConditions repeats the full
+    // "A, B, C, D, and E" alias phrase once per leaf line, so five ~120-char
+    // aliases times four leaves alone is comfortably past Discord's 2000
+    // character message limit before the checklist or header text is added.
+    const manyLeaves = DareConditionsSchema.parse({
+      version: 1,
+      root: {
+        kind: "all",
+        clauses: [
+          {
+            kind: "all",
+            children: [
+              {
+                kind: "condition",
+                requiredGames: 1,
+                predicate: {
+                  kind: "participant_boolean",
+                  field: "win",
+                  expected: true,
+                },
+                champion: null,
+              },
+              {
+                kind: "condition",
+                requiredGames: 1,
+                predicate: {
+                  kind: "participant_numeric",
+                  field: "kills",
+                  operator: "gte",
+                  threshold: 5,
+                },
+                champion: null,
+              },
+              {
+                kind: "condition",
+                requiredGames: 1,
+                predicate: {
+                  kind: "participant_numeric",
+                  field: "deaths",
+                  operator: "lte",
+                  threshold: 3,
+                },
+                champion: null,
+              },
+              {
+                kind: "condition",
+                requiredGames: 1,
+                predicate: {
+                  kind: "participant_numeric",
+                  field: "assists",
+                  operator: "gte",
+                  threshold: 5,
+                },
+                champion: null,
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const dareId = await makeProposed({
+      targets: longAliasTargets,
+      conditions: manyLeaves,
+      amount: 5,
+    });
+    const result = await confirmDare(
+      { dareId, serverId: SERVER_ID, challengerDiscordId: CHALLENGER },
+      deps,
+      T0,
+    );
+    if (result.kind !== "callout_too_long") {
+      throw new Error(`expected callout_too_long, got ${result.kind}`);
+    }
+    expect(result.length).toBeGreaterThan(2000);
+    // Refused before any money moved: the dare stays proposed, no stake
+    // debited, no wallet even created for the challenger yet.
+    expect(await dareState(dareId)).toBe("proposed");
+    expect(await db.bucksDareContribution.count({ where: { dareId } })).toBe(0);
+    expect(
+      await db.bucksAccount.findUnique({
+        where: {
+          serverId_discordId: { serverId: SERVER_ID, discordId: CHALLENGER },
+        },
+      }),
+    ).toBeNull();
     await expectNoDrift();
   });
 
@@ -750,6 +651,13 @@ describe("capture and settlement", () => {
     expect(target).toEqual({ payout: 4, fee: 1 });
     await expectNoDrift();
   });
+});
+
+// A separate describe block purely to stay under the per-function line cap —
+// these two tests are still "capture and settlement", just the retry/
+// partial-failure corner of it rather than the payout math above.
+describe("capture and settlement: retry and partial failure", () => {
+  const settleTime = new Date(GAME_END + 1000);
 
   test("a persistently failing capture propagates instead of being silently lost", async () => {
     const dareId = await makeActive({ amount: 5 });
@@ -768,15 +676,88 @@ describe("capture and settlement", () => {
         return Reflect.get(target, prop, target);
       },
     });
-    await expect(
-      settleDaresForMatch(winningMatch(ONE_TARGET), failingClient, settleTime),
-    ).rejects.toThrow("simulated persistent database failure");
+    let caught: unknown;
+    try {
+      await settleDaresForMatch(
+        winningMatch(ONE_TARGET),
+        failingClient,
+        settleTime,
+      );
+    } catch (error) {
+      caught = error;
+    }
+    if (!(caught instanceof DarePartialSettlementError)) {
+      throw new Error(
+        `expected a DarePartialSettlementError, got ${String(caught)}`,
+      );
+    }
+    if (!(caught.cause instanceof Error)) {
+      throw new Error(`expected an Error cause, got ${String(caught.cause)}`);
+    }
+    expect(caught.cause.message).toBe("simulated persistent database failure");
+    // No dare committed before the failure, so there is nothing to preserve.
+    expect(caught.summaries).toEqual([]);
     // Nothing committed: the dare is exactly where it was, ready to be
     // captured again when the match-history cursor retries it.
     expect(await dareState(dareId)).toBe("active");
     expect(await db.bucksDareGame.count({ where: { dareId } })).toBe(0);
     await expectNoDrift();
   });
+
+  test("an earlier dare's committed summary survives a later dare's exhausted retry in the same batch", async () => {
+    const firstDareId = await makeActive({ amount: 5 });
+    const secondDareId = await makeActive({ amount: 5 });
+    let transactionCalls = 0;
+    // The FIRST $transaction call is this match's first dare — let it hit
+    // the real database and actually commit. Every call after that (the
+    // second dare's own three bounded-retry attempts) fails, standing in
+    // for a persistent outage that starts partway through the batch.
+    const partiallyFailingClient = new Proxy(db, {
+      get(target, prop) {
+        if (prop === "$transaction") {
+          return (...args: Parameters<typeof db.$transaction>) => {
+            transactionCalls += 1;
+            if (transactionCalls === 1) {
+              return Reflect.apply(target.$transaction, target, args);
+            }
+            return Promise.reject(new Error("simulated outage, dare two"));
+          };
+        }
+        return Reflect.get(target, prop, target);
+      },
+    });
+    let caught: unknown;
+    try {
+      await settleDaresForMatch(
+        winningMatch(ONE_TARGET),
+        partiallyFailingClient,
+        settleTime,
+      );
+    } catch (error) {
+      caught = error;
+    }
+    if (!(caught instanceof DarePartialSettlementError)) {
+      throw new Error(
+        `expected a DarePartialSettlementError, got ${String(caught)}`,
+      );
+    }
+    // The first dare's summary is NOT lost, even though the batch as a
+    // whole failed and threw.
+    expect(caught.summaries).toHaveLength(1);
+    expect(caught.summaries[0]?.dareId).toBe(firstDareId);
+    expect(caught.summaries[0]?.resolution).toBe("achieved");
+    expect(await dareState(firstDareId)).toBe("achieved");
+    // The second dare never captured — it stays active, ready for retry.
+    expect(await dareState(secondDareId)).toBe("active");
+    expect(
+      await db.bucksDareGame.count({ where: { dareId: secondDareId } }),
+    ).toBe(0);
+    await expectNoDrift();
+  });
+});
+
+describe("capture and settlement: payouts", () => {
+  const settleTime = new Date(GAME_END + 1000);
 
   test("a three-target split sends the indivisible remainder to the house", async () => {
     const dareId = await makeActive({ targets: THREE_TARGETS, amount: 5 });
@@ -1329,129 +1310,6 @@ describe("resolutions racing a contribution", () => {
         0,
       ) ?? 0;
     expect(returned).toBe(settled.potTotal);
-    await expectNoDrift();
-  });
-});
-
-describe("storage overflow", () => {
-  test("a payout that cannot fit voids the dare and refunds contributors in full", async () => {
-    const dareId = await makeActive({ amount: 5 });
-    await contributeToDare(
-      {
-        dareId,
-        serverId: SERVER_ID,
-        contributorDiscordId: CONTRIBUTOR,
-        amount: 5,
-      },
-      deps,
-      T0,
-    );
-    const target = await db.bucksDareTarget.findFirstOrThrow({
-      where: { dareId },
-      select: { bucksAccountId: true },
-    });
-    if (target.bucksAccountId === null) {
-      throw new Error("the accepted target should hold a wallet");
-    }
-    // Fill the payee's wallet to the Int32 ceiling through the only legal
-    // mutator, so the ledger stays reconcilable and the credit below is the
-    // single thing that overflows.
-    await db.$transaction((tx) =>
-      applyBucksDelta(tx, {
-        bucksAccountId: target.bucksAccountId ?? 0,
-        delta: BUCKS_INT32_MAX - SEED_GRANT,
-        kind: "adjustment",
-        context: {
-          type: "adjustment",
-          note: "fill to the Int32 ceiling",
-          actorDiscordId: CHALLENGER,
-        },
-      }),
-    );
-    const houseBefore = await houseBalance();
-
-    const summaries = await settleDaresForMatch(
-      winningMatch(ONE_TARGET),
-      db,
-      new Date(GAME_END + 1000),
-    );
-    expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
-    expect(summaries[0]?.voidReason).toBe("storage_overflow");
-    expect(await dareState(dareId)).toBe("voided");
-    const stored = await db.bucksDare.findUniqueOrThrow({
-      where: { id: dareId },
-      select: { voidReason: true },
-    });
-    expect(stored.voidReason).toBe("storage_overflow");
-    // Full refunds, no cut, and the rolled-back capture left no game row.
-    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
-    expect(await balanceOf(CONTRIBUTOR)).toBe(SEED_GRANT);
-    expect(await houseBalance()).toBe(houseBefore);
-    expect(summaries[0]?.refunds.map((refund) => refund.fee)).toEqual([0, 0]);
-    expect(await db.bucksDareGame.count({ where: { dareId } })).toBe(0);
-    await expectNoDrift();
-  });
-});
-
-async function dareContextSummaries(dareId: number): Promise<string[]> {
-  const entries = await db.bucksLedgerEntry.findMany({
-    where: { kind: { in: ["dare_refund", "dare_fee"] } },
-    orderBy: { id: "asc" },
-    select: { context: true },
-  });
-  return entries.flatMap((entry) => {
-    const context = BucksLedgerContextSchema.parse(JSON.parse(entry.context));
-    return context.type === "dare" && context.dareId === dareId
-      ? [context.conditionSummary]
-      : [];
-  });
-}
-
-/**
- * Refunds are never blocked by a stored conditions blob the current schema
- * cannot read: the evaluator gate is checked before any parse, and the
- * condition summary degrades to a display placeholder.
- */
-describe("unreadable stored conditions", () => {
-  const CORRUPT = '{"version":1,"root":{"clauses":"not a list"}}';
-
-  test("a window-end sweep still refunds, with the cut, on an unparseable blob", async () => {
-    const dareId = await makeActive({ amount: 5, windowDays: 1 });
-    await db.bucksDare.update({
-      where: { id: dareId },
-      data: { conditions: CORRUPT },
-    });
-    const houseBefore = await houseBalance();
-    const summaries = await settleEndedDareWindows(db, pastWindowGrace());
-    expect(summaries.map((summary) => summary.resolution)).toEqual([
-      "unachieved",
-    ]);
-    // Contributed 5: cut round(5 * 20%) = 1, refund 4 — the ordinary
-    // unachieved arithmetic, unaffected by the unreadable blob.
-    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT - 1);
-    expect(await houseBalance()).toBe(houseBefore + 1);
-    const summaries2 = await dareContextSummaries(dareId);
-    expect(summaries2.length).toBeGreaterThan(0);
-    expect(new Set(summaries2)).toEqual(new Set([DARE_CONDITIONS_UNREADABLE]));
-    await expectNoDrift();
-  });
-
-  test("an unimplemented evaluator version voids in full without ever parsing", async () => {
-    const dareId = await makeActive({ amount: 5, windowDays: 1 });
-    await db.bucksDare.update({
-      where: { id: dareId },
-      data: { conditions: CORRUPT, evaluatorVersion: "0" },
-    });
-    const houseBefore = await houseBalance();
-    const summaries = await settleEndedDareWindows(db, pastWindowGrace());
-    expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
-    expect(summaries[0]?.voidReason).toBe("unknown_evaluator");
-    // Voids are a FULL refund with no cut.
-    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
-    expect(await houseBalance()).toBe(houseBefore);
-    expect(await dareContextSummaries(dareId)).toEqual([
-      DARE_CONDITIONS_UNREADABLE,
-    ]);
     await expectNoDrift();
   });
 });

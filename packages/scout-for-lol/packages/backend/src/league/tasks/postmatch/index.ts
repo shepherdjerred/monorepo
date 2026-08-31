@@ -1,7 +1,7 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { settleEndedDareWindows } from "#src/betting/dare-sweep.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
-import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
