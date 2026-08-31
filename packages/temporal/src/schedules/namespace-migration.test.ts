@@ -4,6 +4,7 @@ import {
   classifyScheduleNamespace,
   isRootWorkflowExecution,
 } from "./namespace-migration.ts";
+import { canonicalize } from "./schedule-comparison.ts";
 import {
   cutoverTimestampForRetry,
   decodeMigrationState,
@@ -222,5 +223,70 @@ describe("Temporal namespace migration ownership", () => {
         rootExecution: { runId: "root-run" },
       }),
     ).toBe(false);
+  });
+});
+
+/**
+ * `canonicalize` is what makes a prepared target comparable to the source it
+ * was copied from. Both rules below exist because a byte-identical copy read
+ * as drifted without them, which blocks the cutover outright.
+ */
+const compare = (value: unknown) => JSON.stringify(canonicalize(value));
+
+describe("schedule comparison canonicalization", () => {
+  test("treats a server-defaulted priority as no priority at all", () => {
+    // The server materializes these zero values on a schedule it creates;
+    // schedules created before it did report the field as an empty object.
+    expect(
+      compare({
+        action: {
+          taskQueue: "monorepo-workflows",
+          priority: { priorityKey: 0, fairnessKey: "", fairnessWeight: 0 },
+        },
+      }),
+    ).toBe(
+      compare({ action: { taskQueue: "monorepo-workflows", priority: {} } }),
+    );
+  });
+
+  test("drops a defaulted priority however deeply it is nested", () => {
+    expect(compare({ a: { b: { priority: { priorityKey: 0 } } } })).toBe(
+      compare({ a: { b: {} } }),
+    );
+  });
+
+  test("still reports a schedule that genuinely sets a priority", () => {
+    expect(compare({ action: { priority: { priorityKey: 3 } } })).not.toBe(
+      compare({ action: { priority: {} } }),
+    );
+    expect(
+      compare({ action: { priority: { fairnessKey: "scout" } } }),
+    ).not.toBe(compare({ action: { priority: {} } }));
+  });
+
+  test("ignores object key order, which carries no meaning", () => {
+    expect(compare({ memo: { stage: "beta", reportId: "7" } })).toBe(
+      compare({ memo: { reportId: "7", stage: "beta" } }),
+    );
+  });
+
+  test("still reports values that differ", () => {
+    expect(compare({ memo: { stage: "beta" } })).not.toBe(
+      compare({ memo: { stage: "prod" } }),
+    );
+  });
+
+  test("preserves array order, which does carry meaning", () => {
+    expect(
+      compare({ spec: { intervals: [{ every: 60 }, { every: 30 }] } }),
+    ).not.toBe(
+      compare({ spec: { intervals: [{ every: 30 }, { every: 60 }] } }),
+    );
+  });
+
+  test("leaves primitives and null alone", () => {
+    expect(canonicalize(null)).toBe(null);
+    expect(canonicalize(7)).toBe(7);
+    expect(canonicalize("scout")).toBe("scout");
   });
 });
