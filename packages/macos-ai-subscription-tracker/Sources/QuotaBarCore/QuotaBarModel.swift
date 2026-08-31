@@ -34,8 +34,8 @@ public final class QuotaBarModel {
   public init(
     providers: [any UsageProvider],
     settings: AppSettings,
-    store: any SnapshotPersisting = JSONSnapshotStore(),
-    historyStore: any UsageHistoryPersisting = JSONUsageHistoryStore(),
+    store: any SnapshotPersisting,
+    historyStore: any UsageHistoryPersisting,
     providerFactory: ((Set<ProviderID>) throws -> [any UsageProvider])? = nil,
     providerTimeout: Duration = .seconds(25)
   ) {
@@ -46,7 +46,7 @@ public final class QuotaBarModel {
     self.providerFactory = providerFactory
     self.providerTimeout = providerTimeout
     do {
-      lastSuccessful = try store.load()
+      lastSuccessful = try store.load().mapValues(Self.migrateCachedSnapshot)
       for (provider, snapshot) in lastSuccessful {
         states[provider] = .available(
           snapshot.markedStale(reason: "Cached data; waiting for a provider refresh.")
@@ -76,6 +76,27 @@ public final class QuotaBarModel {
       settings.enabledProviders.contains(provider)
     else { return .disabled }
     return states[provider] ?? .loading
+  }
+
+  private static func migrateCachedSnapshot(_ snapshot: UsageSnapshot) -> UsageSnapshot {
+    guard snapshot.provider == .claudeCode else { return snapshot }
+    let removedWindowIDs = Set([
+      "provider-nimbus-quill",
+      "weekly-nimbus-quil",
+      "weekly-nimbus-quill",
+    ])
+    let windows = snapshot.windows.filter { !removedWindowIDs.contains($0.id) }
+    guard windows != snapshot.windows else { return snapshot }
+    return UsageSnapshot(
+      provider: snapshot.provider,
+      accountLabel: snapshot.accountLabel,
+      windows: windows,
+      resets: snapshot.resets,
+      resetErrorMessage: snapshot.resetErrorMessage,
+      notes: snapshot.notes,
+      sourceTimestamp: snapshot.sourceTimestamp,
+      freshness: snapshot.freshness
+    )
   }
 
   public var overallStatus: QuotaStatus {

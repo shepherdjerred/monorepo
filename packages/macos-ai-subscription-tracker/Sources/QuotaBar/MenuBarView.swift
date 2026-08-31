@@ -6,18 +6,18 @@ struct MenuBarView: View {
   @Bindable var model: QuotaBarModel
   @Bindable var apiModel: APIPlatformModel
   let startupError: String?
-  @State private var measuredProviderHeight: CGFloat = 220
   @State private var selectedSegment: DashboardSegment = .subscriptions
   // MenuBarExtra centers short window-style content vertically. Keep both
   // segments in the same top-anchored menu-bar surface.
-  private let menuBarWindowMinimumHeight: CGFloat = 500
+  private let menuBarWindowHeight: CGFloat = 500
+  private let providerListHeight: CGFloat = 320
 
   var body: some View {
     TimelineView(.periodic(from: .now, by: 1)) { timeline in
       content(at: timeline.date)
     }
     .frame(width: 372)
-    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
+    .frame(height: menuBarWindowHeight, alignment: .top)
     .background(Color(nsColor: .windowBackgroundColor))
   }
 
@@ -48,11 +48,10 @@ struct MenuBarView: View {
       providerList(overview: overview, date: date)
       Divider()
       spendRow
-      Spacer(minLength: 0)
       Divider()
       footer
     }
-    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
+    .frame(height: menuBarWindowHeight, alignment: .top)
   }
 
   private func apiContent(at date: Date) -> some View {
@@ -62,7 +61,7 @@ struct MenuBarView: View {
       }
       navigationSegments
       Divider()
-      APIPlatformSummaryView(state: apiModel.state, date: date).frame(minHeight: 220)
+      APIPlatformSummaryView(state: apiModel.state, date: date)
       if let cacheError = apiModel.cacheErrorMessage {
         Divider()
         StatusMessage(symbol: "externaldrive.badge.exclamationmark", text: cacheError)
@@ -72,7 +71,7 @@ struct MenuBarView: View {
       Divider()
       footer
     }
-    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
+    .frame(height: menuBarWindowHeight, alignment: .top)
   }
 
   private func historyContent(at date: Date) -> some View {
@@ -98,7 +97,7 @@ struct MenuBarView: View {
       Divider()
       footer
     }
-    .frame(minHeight: menuBarWindowMinimumHeight, alignment: .top)
+    .frame(height: menuBarWindowHeight, alignment: .top)
   }
 
   private var providerStates: [ProviderID: ProviderDisplayState] {
@@ -189,21 +188,10 @@ struct MenuBarView: View {
       }
       .padding(.horizontal, 12)
       .padding(.vertical, 2)
-      .background {
-        GeometryReader { geometry in
-          Color.clear.preference(
-            key: ProviderListHeightPreference.self,
-            value: geometry.size.height
-          )
-        }
-      }
     }
     .scrollBounceBehavior(.basedOnSize)
-    .frame(height: min(max(measuredProviderHeight, 220), 460))
-    .onPreferenceChange(ProviderListHeightPreference.self) { height in
-      guard height > 0 else { return }
-      measuredProviderHeight = height
-    }
+    .scrollIndicators(.visible)
+    .frame(height: providerListHeight)
   }
 
   private var spendRow: some View {
@@ -221,8 +209,8 @@ struct MenuBarView: View {
     .padding(.vertical, 7)
     .help(
       model.settings.showsLegacyProviders
-        ? "Claude Code $200, Codex $200, Kimi Code $40, Grok $30"
-        : "Claude Code $200, Codex $200"
+        ? "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20, Kimi Code $40, Grok $30"
+        : "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20"
     )
   }
 
@@ -256,14 +244,6 @@ private enum DashboardSegment {
   case subscriptions
   case api
   case history
-}
-
-private struct ProviderListHeightPreference: PreferenceKey {
-  static let defaultValue: CGFloat = 0
-
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-    value = max(value, nextValue())
-  }
 }
 
 private struct StatusMessage: View {

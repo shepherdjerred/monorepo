@@ -149,17 +149,25 @@ final class DomainTests: XCTestCase {
   }
 
   func testSubscriptionPlansAndProviderMetadata() {
-    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 400)
-    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: true), 470)
-    XCTAssertEqual(SubscriptionPlan.standard.count, 2)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 440)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: true), 510)
+    XCTAssertEqual(SubscriptionPlan.standard.count, 4)
     XCTAssertEqual(SubscriptionPlan.plan(for: .claudeCode).monthlyCostUSD, 200)
     XCTAssertEqual(SubscriptionPlan.plan(for: .codex).monthlyCostUSD, 200)
+    XCTAssertEqual(SubscriptionPlan.plan(for: .antigravity).monthlyCostUSD, 20)
+    XCTAssertEqual(SubscriptionPlan.plan(for: .cursor).monthlyCostUSD, 20)
     XCTAssertEqual(SubscriptionPlan.plan(for: .kimi).monthlyCostUSD, 40)
     XCTAssertEqual(SubscriptionPlan.plan(for: .grok).monthlyCostUSD, 30)
     XCTAssertEqual(
       ProviderID.grok.usageURL?.absoluteString,
       "https://grok.com/settings/usage?_s=usage"
     )
+    XCTAssertEqual(
+      ProviderID.allCases,
+      [.claudeCode, .codex, .antigravity, .cursor, .kimi, .grok]
+    )
+    XCTAssertFalse(ProviderID.antigravity.supportsManualCredentialOverride)
+    XCTAssertFalse(ProviderID.cursor.supportsManualCredentialOverride)
     for provider in ProviderID.allCases {
       XCTAssertFalse(provider.displayName.isEmpty)
       XCTAssertNotNil(provider.usageURL)

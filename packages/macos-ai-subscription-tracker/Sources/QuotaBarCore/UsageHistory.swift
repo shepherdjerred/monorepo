@@ -65,6 +65,39 @@ public struct UsageHistorySample: Identifiable, Equatable, Codable, Sendable {
       recordedAt: container.decode(Date.self, forKey: .recordedAt)
     )
   }
+
+  fileprivate var migratedForCurrentSchema: UsageHistorySample? {
+    let removedClaudeNimbusWindowIDs = Set([
+      "provider-nimbus-quill",
+      "weekly-nimbus-quil",
+      "weekly-nimbus-quill",
+    ])
+    if provider == .claudeCode, removedClaudeNimbusWindowIDs.contains(windowID) {
+      return nil
+    }
+    guard provider == .codex, windowID == "codex-primary-window" else { return self }
+    return UsageHistorySample(
+      copying: self,
+      windowID: "weekly",
+      label: "Weekly",
+      kind: .weekly
+    )
+  }
+
+  private init(
+    copying sample: UsageHistorySample,
+    windowID: String,
+    label: String,
+    kind: WindowKind
+  ) {
+    self.provider = sample.provider
+    self.windowID = windowID
+    self.label = label
+    self.kind = kind
+    self.usedPercent = sample.usedPercent
+    self.resetAt = sample.resetAt
+    self.recordedAt = sample.recordedAt
+  }
 }
 
 public protocol UsageHistoryPersisting: Sendable {
@@ -122,7 +155,8 @@ public enum UsageHistory {
   ) -> [UsageHistorySample] {
     let cutoff = date.addingTimeInterval(-retention)
     var unique: [String: UsageHistorySample] = [:]
-    for sample in samples where sample.recordedAt >= cutoff {
+    for original in samples where original.recordedAt >= cutoff {
+      guard let sample = original.migratedForCurrentSchema else { continue }
       unique[sample.id] = sample
     }
     return unique.values.sorted { $0.recordedAt < $1.recordedAt }

@@ -1,0 +1,46 @@
+{
+  "status": "SUCCESS",
+  "command": {
+    "name": "usage",
+    "data": {
+      "groups": [
+        {
+          "name": "Gemini Models",
+          "buckets": [
+            {
+              "name": "Weekly Limit Remaining",
+              "window": "weekly",
+              "remaining_fraction": 0.75,
+              "reset_time": "2026-09-05T20:00:00Z"
+            },
+            {
+              "name": "Five Hour Limit Remaining",
+              "window": "5h",
+              "remaining_fraction": 0.4,
+              "reset_time": "2026-08-30T22:00:00Z"
+            }
+          ]
+        },
+        {
+          "name": "Claude and GPT models",
+          "buckets": [
+            {
+              "name": "Weekly Limit Remaining",
+              "window": "weekly",
+              "remaining_fraction": 0.9,
+              "reset_time": "2026-09-06T20:00:00Z"
+            },
+            {
+              "name": "Five Hour Limit Remaining",
+              "window": "5h",
+              "remaining_fraction": 0.65,
+              "reset_time": "2026-08-30T23:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "num_turns": 0,
+  "turns": []
+}

@@ -70,6 +70,24 @@ final class PersistenceSettingsTests: XCTestCase {
   }
 
   @MainActor
+  func testNewStandardProvidersAreMigratedOnceAndLaterDisablementIsPreserved() throws {
+    let suiteName = "QuotaBarTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      XCTFail("Expected isolated defaults")
+      return
+    }
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set([ProviderID.codex.rawValue], forKey: "enabledProviders")
+
+    let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .cursor])
+    migrated.setProvider(.cursor, enabled: false)
+
+    let reloaded = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+    XCTAssertEqual(reloaded.enabledProviders, [.codex, .antigravity])
+  }
+
+  @MainActor
   func testUnknownPersistedProviderIsRejectedAndPreserved() throws {
     let suiteName = "QuotaBarTests.\(UUID().uuidString)"
     guard let defaults = UserDefaults(suiteName: suiteName) else {

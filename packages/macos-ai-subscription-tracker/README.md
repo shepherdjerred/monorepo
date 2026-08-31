@@ -1,17 +1,18 @@
 # Brim
 
 Brim is a personal macOS menu-bar app for monitoring AI subscription
-quotas. It targets Claude Code and Codex by default. Kimi Code and Grok remain
-available only through the Advanced legacy-provider setting.
+quotas. It targets Claude Code, Codex, Google Antigravity, and Cursor by default.
+Kimi Code and Grok remain available only through the Advanced legacy-provider
+setting.
 
 Brim is the product name; QuotaBar is the Xcode target, bundle id
 (`com.sjerred.QuotaBar`), and workspace package id
 (`@shepherdjerred/quotabar`).
 
 The menu bar also shows the configured personal subscription spend: $200/month
-for Claude Code and $200/month for Codex ($400/month total). Enabling legacy
-providers adds Kimi Code ($40/month) and Grok ($30/month). This is a reminder,
-not provider billing data.
+each for Claude Code and Codex, plus $20/month each for Google AI Pro and Cursor
+Pro ($440/month total). Enabling legacy providers adds Kimi Code ($40/month) and
+Grok ($30/month). This is a reminder, not provider billing data.
 
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
@@ -111,8 +112,10 @@ release remain explicit operator-only workflows.
 ## Credentials
 
 Brim reads existing local OAuth credentials or accepts an optional token
-override in Settings. Overrides are stored in the macOS login Keychain, take
-precedence over local discovery, and can be removed from the same screen.
+override in Settings for Claude, Codex, Kimi, and Grok. Overrides are stored in
+the macOS login Keychain, take precedence over local discovery, and can be
+removed from the same screen. Antigravity and Cursor deliberately do not accept
+manual overrides: they reuse their respective local application sign-ins.
 Brim does not log tokens or include them in its JSON usage cache. It stores only
 local historical quota samples (provider/window metadata, percentages, reset
 times, and timestamps) for up to 30 days so it can render the History graph.
@@ -133,6 +136,27 @@ subscription surface, not a Kimi Open Platform API key; Grok uses subscription
 usage and credits, not xAI developer API rate limits. Non-OpenRouter API billing
 cards and developer API rate limits remain outside the v1 scope.
 
+Antigravity is invoked through the signed-in `agy` executable found on the
+current process `PATH` or in standard Homebrew, local, and mise locations. Brim
+runs `agy --print /usage --output-format json --print-timeout 20s`, requires a
+successful zero-turn usage response, and displays the returned Gemini and
+Claude/GPT five-hour and weekly buckets. It never reads, copies, refreshes,
+logs, or persists Google's token. Gemini CLI and Code Assist quotas are outside
+this integration. See the
+[Antigravity usage command](https://antigravity.google/docs/cli/commands/usage).
+
+Cursor reads only `cursorAuth/accessToken` from Cursor's local `state.vscdb`
+and sends an empty Connect JSON request to Cursor's current-period usage
+surface. It displays the monthly Cursor Models and Other Models pools with the
+returned billing-cycle reset. This is intentionally an unsupported private
+client contract because the documented
+[Cursor Admin API](https://cursor.com/docs/account/teams/admin-api) is
+team-oriented and does not expose the personal subscription view. Schema drift,
+missing sign-in state, timeouts, and authentication failures remain explicit;
+Brim never substitutes zero usage. Cursor team analytics and on-demand spend
+reporting are outside this integration. Cursor documents the two pools in its
+[usage-limit guide](https://prod.cursor.com/help/models-and-usage/usage-limits).
+
 Codex also reads the authenticated reset-credit surface read-only. Available
 banked resets are shown individually with their expiration dates; Brim does
 not redeem or consume them.
@@ -152,11 +176,11 @@ calendar pace against OpenRouter's authoritative monthly usage period. Chatroom
 and Fusion activity is outside this first API-key reporting slice.
 
 Provider contracts are isolated in focused files under `Sources/QuotaBarCore`.
-Claude and Codex endpoints are authenticated subscription web surfaces. Legacy
-Kimi and Grok support uses private subscription quota surfaces and is disabled
-by default because those contracts may change without notice. When enabled,
-provider response changes produce an explicit unavailable, partial, or stale
-state rather than a fabricated zero.
+Claude and Codex endpoints are authenticated subscription web surfaces;
+Antigravity uses its CLI contract; Cursor uses the unsupported personal-client
+contract described above. Legacy Kimi and Grok support uses private subscription
+quota surfaces and is disabled by default. Provider response changes produce an
+explicit unavailable, partial, or stale state rather than a fabricated zero.
 
 ## Development
 

@@ -32,6 +32,35 @@ final class UsageHistoryTests: XCTestCase {
     )
   }
 
+  func testHistoryMigratesLegacyCodexWeeklyIDAndRemovesClaudeNimbus() throws {
+    let now = date("2026-08-31T12:00:00Z")
+    let oldCodex = try UsageHistorySample(
+      provider: .codex,
+      windowID: "codex-primary-window",
+      label: "Weekly",
+      kind: .weekly,
+      usedPercent: 25,
+      resetAt: nil,
+      recordedAt: date("2026-08-31T10:00:00Z")
+    )
+    let currentCodex = try makeSample(usedPercent: 30, at: "2026-08-31T11:00:00Z")
+    let claudeNimbus = try UsageHistorySample(
+      provider: .claudeCode,
+      windowID: "provider-nimbus-quill",
+      label: "Provider quota · Nimbus Quill",
+      kind: .providerDefined,
+      usedPercent: 0,
+      resetAt: nil,
+      recordedAt: date("2026-08-31T11:00:00Z")
+    )
+
+    let migrated = UsageHistory.compact([oldCodex, currentCodex, claudeNimbus], at: now)
+
+    XCTAssertEqual(migrated.count, 2)
+    XCTAssertEqual(Set(migrated.map(\.windowID)), ["weekly"])
+    XCTAssertEqual(migrated.map(\.usedPercent), [25, 30])
+  }
+
   func testTodayUsageSumsIncreasesAndIgnoresResetDrops() throws {
     let calendar = utcCalendar()
     let current = date("2026-08-09T12:00:00Z")
@@ -114,6 +143,25 @@ final class UsageHistoryTests: XCTestCase {
       sourceTimestamp: .now
     )
     XCTAssertTrue(modelWeekly.isWeekly)
+  }
+
+  func testNewProviderWindowsProduceIndependentHistorySamples() throws {
+    let antigravity = try AntigravityProvider.parse(
+      data: fixture("antigravity-success"),
+      now: date("2026-08-30T20:00:00Z")
+    )
+    let cursor = try CursorProvider.parse(
+      data: fixture("cursor-success"),
+      now: date("2026-08-30T20:00:00Z")
+    )
+
+    XCTAssertEqual(UsageHistorySample.samples(from: antigravity).count, 4)
+    XCTAssertEqual(UsageHistorySample.samples(from: cursor).count, 2)
+    XCTAssertEqual(
+      Set(UsageHistorySample.samples(from: antigravity).map(\.provider)),
+      [.antigravity]
+    )
+    XCTAssertEqual(Set(UsageHistorySample.samples(from: cursor).map(\.provider)), [.cursor])
   }
 
   private func makeSample(

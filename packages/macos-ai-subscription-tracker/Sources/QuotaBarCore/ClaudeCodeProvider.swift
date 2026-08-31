@@ -36,7 +36,7 @@ public struct ClaudeCodeProvider: UsageProvider {
       )
       try insert(window, into: &windowsByID)
     }
-    for limit in response.limits {
+    for limit in response.limits where !limit.isNimbusQuill {
       let descriptor = try descriptor(for: limit)
       let window = try UsageWindow.validated(
         id: descriptor.id,
@@ -164,6 +164,7 @@ private struct ClaudeUsageResponse: Decodable {
       "extra_usage",
       "limits",
       "member_dashboard_available",
+      "nimbus_quill",
       "spend",
     ])
     var windows: [String: ClaudeWindow] = [:]
@@ -212,6 +213,12 @@ private struct ClaudeLimit: Decodable {
   let usedPercent: Double?
   let resetAt: Date?
   let modelName: String?
+
+  var isNimbusQuill: Bool {
+    guard kind == "weekly_scoped", let modelName else { return false }
+    let normalized = modelName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return normalized == "nimbus quil" || normalized == "nimbus quill"
+  }
 
   enum CodingKeys: String, CodingKey {
     case kind

@@ -1,8 +1,12 @@
+public import Foundation
+
 public enum Providers {
   public static func live(
     credentials: any CredentialStore,
     transport: any HTTPTransport = URLSessionTransport(),
     endpoints: ProviderEndpoints? = nil,
+    commandRunner: any CommandRunning = FoundationCommandRunner(),
+    antigravityExecutableURL: URL? = nil,
     providerIDs: Set<ProviderID> = ProviderID.standard
   ) throws -> [any UsageProvider] {
     let endpoints = try endpoints ?? ProviderEndpoints.live()
@@ -18,6 +22,13 @@ public enum Providers {
           usageEndpoint: endpoints.codexUsage,
           resetEndpoint: endpoints.codexResets
         )
+      case .antigravity:
+        return AntigravityProvider(
+          commandRunner: commandRunner,
+          executableURL: antigravityExecutableURL
+        )
+      case .cursor:
+        return CursorProvider(client: client, endpoint: endpoints.cursorUsage)
       case .kimi:
         return KimiProvider(client: client, endpoint: endpoints.kimiUsage)
       case .grok:

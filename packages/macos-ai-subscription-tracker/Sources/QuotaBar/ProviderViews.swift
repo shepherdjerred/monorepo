@@ -401,6 +401,8 @@ extension ProviderID {
     switch self {
     case .claudeCode: "claude"
     case .codex: "codex"
+    case .antigravity: "antigravity"
+    case .cursor: "cursor"
     case .kimi: "kimi"
     case .grok: "grok"
     }

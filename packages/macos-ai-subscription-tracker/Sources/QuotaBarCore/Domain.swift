@@ -3,10 +3,12 @@ public import Foundation
 public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
   case claudeCode = "claude-code"
   case codex
+  case antigravity
+  case cursor
   case kimi
   case grok
 
-  public static let standard: Set<ProviderID> = [.claudeCode, .codex]
+  public static let standard: Set<ProviderID> = [.claudeCode, .codex, .antigravity, .cursor]
   public static let legacy: Set<ProviderID> = [.kimi, .grok]
 
   public var id: String { rawValue }
@@ -15,6 +17,8 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
     switch self {
     case .claudeCode: "Claude Code"
     case .codex: "Codex"
+    case .antigravity: "Google Antigravity"
+    case .cursor: "Cursor"
     case .kimi: "Kimi Code"
     case .grok: "Grok"
     }
@@ -24,8 +28,17 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
     switch self {
     case .claudeCode: URL(string: "https://claude.ai/settings/usage")
     case .codex: URL(string: "https://chatgpt.com/codex/settings/usage")
+    case .antigravity: URL(string: "https://antigravity.google/docs/cli/commands/usage")
+    case .cursor: URL(string: "https://prod.cursor.com/help/models-and-usage/usage-limits")
     case .kimi: URL(string: "https://www.kimi.com/code/console")
     case .grok: URL(string: "https://grok.com/settings/usage?_s=usage")
+    }
+  }
+
+  public var supportsManualCredentialOverride: Bool {
+    switch self {
+    case .claudeCode, .codex, .kimi, .grok: true
+    case .antigravity, .cursor: false
     }
   }
 }
@@ -38,6 +51,8 @@ public struct SubscriptionPlan: Identifiable, Equatable, Sendable {
   public static let standard: [SubscriptionPlan] = [
     SubscriptionPlan(provider: .claudeCode, monthlyCostUSD: 200),
     SubscriptionPlan(provider: .codex, monthlyCostUSD: 200),
+    SubscriptionPlan(provider: .antigravity, monthlyCostUSD: 20),
+    SubscriptionPlan(provider: .cursor, monthlyCostUSD: 20),
   ]
 
   public static let legacy: [SubscriptionPlan] = [

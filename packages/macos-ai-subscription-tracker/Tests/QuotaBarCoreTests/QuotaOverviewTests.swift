@@ -16,7 +16,10 @@ final class QuotaOverviewTests: XCTestCase {
 
     let overview = QuotaOverview(states: states, at: referenceDate)
 
-    XCTAssertEqual(overview.providers.map(\.provider), [.kimi, .claudeCode, .grok, .codex])
+    XCTAssertEqual(
+      overview.providers.map(\.provider),
+      [.kimi, .claudeCode, .grok, .codex, .antigravity, .cursor]
+    )
     XCTAssertEqual(overview.providers[0].tightestWindow?.remainingPercent, 10)
     XCTAssertNil(overview.providers[2].tightestWindow)
     XCTAssertNil(overview.providers[3].tightestWindow)
@@ -39,7 +42,10 @@ final class QuotaOverviewTests: XCTestCase {
       at: referenceDate
     )
 
-    XCTAssertEqual(overview.providers.map(\.provider), [.codex, .claudeCode, .grok, .kimi])
+    XCTAssertEqual(
+      overview.providers.map(\.provider),
+      [.codex, .claudeCode, .grok, .antigravity, .cursor, .kimi]
+    )
     XCTAssertEqual(overview.providers[2].badges.map(\.kind), [.partial])
   }
 
