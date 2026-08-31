@@ -37,8 +37,6 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
  *   cancelled bets are excluded.
  * - Weekly parlays expose aggregate bettor count and total staked only,
  *   matching the weekly publication.
- * - `predictionJson` is never selected: pregame estimates are never public
- *   while a market is open, and no field for one exists in these types.
  * - No fee, window, cap, or rounding copy appears in any payload — rule
  *   numbers are stated only by `/bb rules` and the docs. The caller-scoped
  *   `cancellationFee` is a computed amount for the caller's own position, not
@@ -333,7 +331,7 @@ async function loadWeeklyParlayMarkets(
   });
 }
 
-/** Every open market in one guild, shaped for the web and never selecting an estimate. */
+/** Every open market in one guild, shaped for the web. */
 export async function getOpenMarketsView(
   input: {
     serverId: DiscordGuildId;

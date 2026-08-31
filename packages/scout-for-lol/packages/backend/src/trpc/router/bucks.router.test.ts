@@ -82,10 +82,7 @@ async function seedTrackedPlayer(input?: {
   return player.id;
 }
 
-async function seedPool(input?: {
-  closesAt?: Date;
-  predictionJson?: string;
-}): Promise<number> {
+async function seedPool(input?: { closesAt?: Date }): Promise<number> {
   const pool = await db.bucksMatchPool.create({
     data: {
       matchId: MATCH_ID,
@@ -95,9 +92,6 @@ async function seedPool(input?: {
       closesAt: input?.closesAt ?? new Date(Date.now() + 5 * 60_000),
       queueType: "solo",
       roster: JSON.stringify({ participants: bucksTestRoster() }),
-      ...(input?.predictionJson === undefined
-        ? {}
-        : { predictionJson: input.predictionJson }),
     },
   });
   return pool.id;
@@ -486,20 +480,13 @@ describe("bucks reads", () => {
 });
 
 describe("bucks.openMarkets", () => {
-  test("exposes public positions but never the pregame estimate", async () => {
+  test("exposes public positions", async () => {
     await seedTrackedPlayer();
     const playerId = await seedTrackedPlayer({
       discordId: rival,
       alias: "bryan",
     });
-    const estimateMarker = "estimate-marker-0.6180339887";
-    const poolId = await seedPool({
-      predictionJson: JSON.stringify({
-        version: 2,
-        blueWinProbability: 0.62,
-        marker: estimateMarker,
-      }),
-    });
+    const poolId = await seedPool();
     await seedParlayMarket(poolId);
     await seedWeeklyMarket(playerId);
 
@@ -560,9 +547,6 @@ describe("bucks.openMarkets", () => {
     expect(weekly?.totalStaked).toBe(2);
     expect(weekly?.yourPosition).toBeNull();
     expect(JSON.stringify(markets.weeklyParlays)).not.toContain(rival);
-
-    // The estimate is populated on the pool and absent from the payload.
-    expect(JSON.stringify(markets)).not.toContain(estimateMarker);
   });
 
   test("excludes publishing parlay markets", async () => {

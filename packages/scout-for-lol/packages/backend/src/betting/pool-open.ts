@@ -1,10 +1,8 @@
 import * as Sentry from "@sentry/bun";
 import {
   BucksPoolRosterSchema,
-  BucksPredictionSchema,
   LeaguePuuidSchema,
   type BucksPoolParticipant,
-  type BucksPrediction,
   type DiscordGuildId,
   type QueueType,
   type RawCurrentGameInfo,
@@ -121,10 +119,8 @@ function buildRoster(input: {
 /**
  * The subset of guilds a game would open a market in.
  *
- * Prediction capture is intentionally independent of this flag so every
- * eligible detected game can contribute a match-scoped v2 observation. This
- * helper remains the authoritative gate for the guild-scoped wallet, pool,
- * and button surfaces.
+ * This helper remains the authoritative gate for the guild-scoped wallet,
+ * pool, and button surfaces.
  */
 export async function bettingEnabledGuilds(
   guildIds: readonly DiscordGuildId[],
@@ -146,7 +142,6 @@ export type OpenPoolsInput = {
   detectedAt: Date;
   /** puuid -> alias, for the tracked players in this game. */
   trackedAliasByPuuid: ReadonlyMap<string, string>;
-  prediction?: BucksPrediction | undefined;
 };
 
 /**
@@ -191,11 +186,6 @@ export async function openBettingPoolsForPrematch(
       gameStartTime: input.gameInfo.gameStartTime,
       gameLength: input.gameInfo.gameLength,
     });
-    const predictionJson =
-      input.prediction === undefined
-        ? null
-        : JSON.stringify(BucksPredictionSchema.parse(input.prediction));
-
     for (const serverId of enabledGuilds) {
       // Create rather than upsert: the prematch poll can re-detect the same
       // game before the notification lands, and a re-detection must neither
@@ -216,7 +206,6 @@ export async function openBettingPoolsForPrematch(
             peekAvailableAt: legacyPeekAvailableAt,
             queueType: input.queueType ?? null,
             roster: JSON.stringify(roster),
-            predictionJson,
           },
         });
       } catch (error) {

@@ -1,9 +1,5 @@
 import { formatInteger } from "@scout-for-lol/data";
-import type {
-  BucksPoolState,
-  BucksPrediction,
-  RiotTeamId,
-} from "@scout-for-lol/data";
+import type { BucksPoolState, RiotTeamId } from "@scout-for-lol/data";
 import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
 
@@ -179,12 +175,8 @@ function closesClause(closesAt: Date | undefined): string {
  * Positions are already sorted by the database query that reads them. Keeping
  * that order here means repeated refreshes do not make rows jump around.
  *
- * `prediction` is accepted and deliberately unused: pregame estimates are never
- * public, and keeping the parameter documents that this is a decision rather
- * than an omission.
  */
 export function bucksPrematchSummary(input: {
-  prediction: BucksPrediction | undefined;
   poolState: BucksPoolState;
   positions: readonly BucksPrematchPosition[];
   houseMatches?: readonly BucksPrematchHouseMatch[] | undefined;

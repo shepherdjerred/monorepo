@@ -3,7 +3,6 @@ import type {
   RawMatch,
   RawTimeline,
   RawCurrentGameInfo,
-  BucksPredictionObservation,
 } from "@scout-for-lol/data/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { saveToS3 } from "#src/storage/s3-helpers.ts";
@@ -192,31 +191,6 @@ export async function savePrematchDataToS3(
     prematchSpectatorPayloadSavesTotal.inc({ status: "error" });
     throw error;
   }
-}
-
-/** Persist the point-in-time v2 feature/output snapshot next to the raw
- * spectator payload. A report-lake rebuild reads this object directly. */
-export async function savePredictionObservationToS3(
-  observation: BucksPredictionObservation,
-): Promise<void> {
-  await savePrematchToS3({
-    gameId: Number(observation.gameId),
-    resourceId: observation.matchId,
-    assetType: "prediction-observation",
-    extension: "json",
-    body: JSON.stringify(observation, null, 2),
-    contentType: "application/json",
-    metadata: {
-      matchId: observation.matchId,
-      queueType: observation.queueType,
-      predictionVersion: observation.prediction.version.toString(),
-      dataQuality: observation.prediction.dataQuality,
-    },
-    logEmoji: "🔮",
-    logMessage: "Saving prediction observation to S3",
-    errorContext: "prediction-observation",
-    keyDate: new Date(observation.observedAt),
-  });
 }
 
 /**

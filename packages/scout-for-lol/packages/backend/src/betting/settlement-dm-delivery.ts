@@ -265,8 +265,6 @@ export async function deliverSettlementDms(
     queueType?: string | null;
     /** This game's earnings, folded into each earner's own DM. */
     earnings?: readonly EarnedAward[];
-    /** Scout's revealed estimate + verdict, exactly as the channel shows it. */
-    predictionLine?: string | undefined;
     prismaClient?: ExtendedPrismaClient;
   },
   dependencies: SettlementDmDeliveryDependencies = defaultSettlementDmDeliveryDependencies,
@@ -344,7 +342,6 @@ export async function deliverSettlementDms(
   const matchContext: SettlementDmMatchContext = {
     gameLine: buildGameLine(input.roster, input.queueType ?? null),
     resultLine: buildResultLine(input.summary, input.roster),
-    predictionLine: input.predictionLine,
   };
   const messages = buildSettlementDmMessages({
     summary: input.summary,

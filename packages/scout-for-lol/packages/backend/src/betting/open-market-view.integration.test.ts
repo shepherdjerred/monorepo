@@ -49,7 +49,6 @@ async function seedPool(input?: {
       roster: JSON.stringify({
         participants: input?.roster ?? bucksTestRoster(),
       }),
-      predictionJson: JSON.stringify({ marker: "never-shown" }),
     },
   });
   return pool.id;

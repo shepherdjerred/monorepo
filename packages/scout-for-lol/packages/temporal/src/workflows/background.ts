@@ -223,7 +223,7 @@ type InteractiveRun = {
 };
 
 type DetachedWork = {
-  readonly kind: "prediction-ingest" | "parlay-generation";
+  readonly kind: "parlay-generation";
   readonly workId: string;
 };
 
@@ -241,10 +241,6 @@ export async function scoutDetachedWorkWorkflow(
 ): Promise<ScoutWorkflowStatus> {
   const input = ScoutDetachedWorkInputSchema.parse(rawInput);
   setWorkflowPhase("**Phase:** running detached work");
-  if (input.kind === "prediction-ingest") {
-    await lakeActivities(input.stage).runDetachedLakeWork(input);
-  } else {
-    await backgroundActivities(input.stage).runDetachedBackgroundWork(input);
-  }
+  await backgroundActivities(input.stage).runDetachedBackgroundWork(input);
   return "completed";
 }

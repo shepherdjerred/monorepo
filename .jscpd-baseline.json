@@ -1039,14 +1039,6 @@
       "clones": 1,
       "tokens": 86
     },
-    "packages/scout-for-lol/packages/backend/src/betting/pool-open.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/prediction-capture.test.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/prediction.test.ts|packages/scout-for-lol/packages/backend/src/betting/prediction.test.ts": {
-      "clones": 1,
-      "tokens": 121
-    },
     "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
       "clones": 3,
       "tokens": 226

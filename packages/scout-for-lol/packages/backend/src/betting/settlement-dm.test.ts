@@ -318,7 +318,7 @@ describe("Bryan Bucks settlement DMs", () => {
 });
 
 describe("Bryan Bucks settlement DM embeds", () => {
-  test("carries the game, result, prediction, and earnings context", () => {
+  test("carries the game, result, and earnings context", () => {
     const messages = buildSettlementDmMessages({
       summary: summary(
         [bet({ id: 1, discordId: blueBettor, teamId: 100, won: true })],
@@ -334,8 +334,6 @@ describe("Bryan Bucks settlement DM embeds", () => {
       matchContext: {
         gameLine: "ranked solo — jerred (Ahri), bryan (Lee Sin)",
         resultLine: "jerred won (Blue).",
-        predictionLine:
-          "🔮 Scout's experimental estimate was Blue 62% / Red 38% · high data quality. Scout called it.",
       },
       subjectAliasByPuuid: new Map([[bucksTestPuuid(1), "jerred"]]),
       earningLines: [
@@ -352,7 +350,6 @@ describe("Bryan Bucks settlement DM embeds", () => {
       "ranked solo — jerred (Ahri), bryan (Lee Sin)",
     );
     expect(embed?.description).toContain("jerred won (Blue).");
-    expect(embed?.description).toContain("Scout called it.");
     const fields = embed?.fields ?? [];
     expect(fields.map((field) => field.name)).toEqual([
       "Your bets",

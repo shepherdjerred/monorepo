@@ -1,6 +1,6 @@
 ---
-title: Why balances and estimates stay private
-description: Why there is no leaderboard command, why the pre-game estimate is never posted publicly, and what the market message does show.
+title: Why balances stay private
+description: Why there is no leaderboard command and what the market message does show.
 sidebar:
   order: 6
 ---
@@ -8,24 +8,6 @@ sidebar:
 Almost every Bryan Bucks reply is private. That is a design position, not an
 oversight, and it comes from two different concerns that happen to point the
 same way.
-
-## Estimates: because publishing one prices the market
-
-Scout forms an estimate of who will win before every eligible game. If that
-number were posted alongside the betting buttons, there would be no market —
-everyone would take the favoured side, nobody would take the other, and every
-game would resolve as a house fill.
-
-So the pre-match message carries controls and totals, and nothing else. The
-estimate exists, but it is never shown while the market is open — the only
-place it can appear is the settlement recap, after the result is known.
-
-One smaller rule follows from the same reasoning:
-
-- **Near-even calls stay hidden even after settlement.** Settlement may reveal
-  what Scout thought — but not for a call close to a coin flip. Scoring a
-  50.4% call as "right" would claim a direction the estimate never took, and
-  publishing it would make Scout look more decisive than it was.
 
 ## Balances: because a running scoreboard changes how people bet
 

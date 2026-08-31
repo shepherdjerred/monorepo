@@ -16,7 +16,6 @@ import configuration from "#src/configuration.ts";
  *     manifest.json
  *   matches-recent/<matchId>.jsonl
  *   prematch-recent/<platformId>_<gameId>.jsonl
- *   prediction-observations-recent/<matchId>.jsonl
  *   competition-rank-history-recent/<competitionId>_<date>.jsonl
  * ```
  *
@@ -31,8 +30,6 @@ const CURRENT_POINTER = "CURRENT";
 const BUILDS_DIR = "builds";
 export const MATCHES_STAGING_DIR = "matches-recent";
 export const PREMATCH_STAGING_DIR = "prematch-recent";
-export const PREDICTION_OBSERVATIONS_STAGING_DIR =
-  "prediction-observations-recent";
 export const COMPETITION_RANK_HISTORY_STAGING_DIR =
   "competition-rank-history-recent";
 
@@ -68,10 +65,6 @@ export function prematchStagingDir(lakeDir: string): string {
   return path.join(lakeDir, PREMATCH_STAGING_DIR);
 }
 
-export function predictionObservationsStagingDir(lakeDir: string): string {
-  return path.join(lakeDir, PREDICTION_OBSERVATIONS_STAGING_DIR);
-}
-
 export function competitionRankHistoryStagingDir(lakeDir: string): string {
   return path.join(lakeDir, COMPETITION_RANK_HISTORY_STAGING_DIR);
 }
@@ -81,7 +74,6 @@ export async function ensureLakeScaffold(lakeDir: string): Promise<void> {
   await mkdir(path.join(lakeDir, BUILDS_DIR), { recursive: true });
   await mkdir(matchesStagingDir(lakeDir), { recursive: true });
   await mkdir(prematchStagingDir(lakeDir), { recursive: true });
-  await mkdir(predictionObservationsStagingDir(lakeDir), { recursive: true });
   await mkdir(competitionRankHistoryStagingDir(lakeDir), { recursive: true });
 }
 

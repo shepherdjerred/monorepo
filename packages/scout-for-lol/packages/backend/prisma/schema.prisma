@@ -1079,8 +1079,6 @@ model BucksMatchPool {
   // Non-null iff poolState == "voided".
   voidReason String?
 
-  // Serialized Prediction, for the postmatch recap and later calibration.
-  predictionJson String?
 
   settledAt DateTime?
 

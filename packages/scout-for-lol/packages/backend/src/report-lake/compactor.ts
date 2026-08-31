@@ -17,7 +17,6 @@ import { createS3Client } from "#src/storage/s3-client.ts";
 import {
   populateMatchesFromS3,
   populatePrematchFromS3,
-  populatePredictionObservationsFromS3,
 } from "#src/report-lake/rebuild-sources.ts";
 import { writeCompetitionRankHistoryParquet } from "#src/report-lake/rank-history-compaction.ts";
 import {
@@ -35,8 +34,6 @@ import {
   MatchLakeRowSchema,
   PREMATCH_LAKE_COLUMNS,
   PrematchLakeRowSchema,
-  PREDICTION_OBSERVATION_LAKE_COLUMNS,
-  PredictionObservationLakeRowSchema,
 } from "@scout-for-lol/data";
 import {
   duckDbColumnsSpec,
@@ -91,9 +88,7 @@ async function readStagingRows(
       ? MatchLakeRowSchema
       : table === "prematch"
         ? PrematchLakeRowSchema
-        : table === "prediction_observations"
-          ? PredictionObservationLakeRowSchema
-          : CompetitionRankHistoryLakeRowSchema;
+        : CompetitionRankHistoryLakeRowSchema;
   const rowsByMonth = new Map<string, object[]>();
   const foldedIds = new Set<string>();
   let rows = 0;
@@ -220,11 +215,6 @@ export async function runReportLakeFold(
       "prematch",
       options.onProgress,
     );
-    const stagedPredictionObservations = await readStagingRows(
-      lakeDir,
-      "prediction_observations",
-      options.onProgress,
-    );
     const stagedRankHistory = await readStagingRows(
       lakeDir,
       "competition_rank_history",
@@ -232,12 +222,6 @@ export async function runReportLakeFold(
     );
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
-    await writeFoldParquet(
-      buildDir,
-      buildId,
-      "prediction_observations",
-      stagedPredictionObservations,
-    );
     await writeFoldParquet(
       buildDir,
       buildId,
@@ -252,12 +236,10 @@ export async function runReportLakeFold(
       tier: "fold" as const,
       matchRows: stagedMatches.rows,
       prematchRows: stagedPrematches.rows,
-      predictionObservationRows: stagedPredictionObservations.rows,
       accountRows,
       competitionRankHistoryRows: stagedRankHistory.rows,
       skippedMatches: stagedMatches.skipped,
       skippedPrematches: stagedPrematches.skipped,
-      skippedPredictionObservations: stagedPredictionObservations.skipped,
       skippedCompetitionRankHistory: stagedRankHistory.skipped,
     };
     await writeCompactionManifest(buildDir, summary);
@@ -271,11 +253,6 @@ export async function runReportLakeFold(
     );
     await removeFoldedStagingFiles(
       lakeDir,
-      "prediction_observations",
-      stagedPredictionObservations.foldedIds,
-    );
-    await removeFoldedStagingFiles(
-      lakeDir,
       "competition_rank_history",
       stagedRankHistory.foldedIds,
     );
@@ -283,7 +260,7 @@ export async function runReportLakeFold(
 
     const durationMs = Date.now() - startedAt;
     logger.info(
-      `Fold published build ${buildId} (+${stagedMatches.rows.toString()} match rows, +${stagedPrematches.rows.toString()} prematch rows, +${stagedPredictionObservations.rows.toString()} prediction rows, +${stagedRankHistory.rows.toString()} rank-history rows) in ${durationMs.toString()}ms`,
+      `Fold published build ${buildId} (+${stagedMatches.rows.toString()} match rows, +${stagedPrematches.rows.toString()} prematch rows, +${stagedRankHistory.rows.toString()} rank-history rows) in ${durationMs.toString()}ms`,
     );
     return { ...summary, durationMs };
   });
@@ -325,12 +302,6 @@ async function rebuildLocked(
   const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
   const prematchWriter = new NdjsonFileWriter(prematchTmp);
   const foldedPrematchIds = new Set<string>();
-  const predictionsTmp = path.join(
-    buildDir,
-    "prediction-observations.ndjson.tmp",
-  );
-  const predictionWriter = new NdjsonFileWriter(predictionsTmp);
-  const foldedPredictionIds = new Set<string>();
   const foldedRankHistoryIds = new Set<string>();
 
   const bucket = configuration.s3BucketName;
@@ -360,31 +331,14 @@ async function rebuildLocked(
       onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
     },
   });
-  const skippedPredictionObservations =
-    await populatePredictionObservationsFromS3({
-      client,
-      bucket,
-      writer: predictionWriter,
-      foldedIds: foldedPredictionIds,
-      abortSignal: deadline,
-      onProgress: (progress) => {
-        onProgress?.({
-          phase: "reading-s3",
-          table: "prediction_observations",
-          ...progress,
-        });
-      },
-    });
   deadline.throwIfAborted();
   await matchWriter.close();
   await prematchWriter.close();
-  await predictionWriter.close();
   onProgress?.({
     phase: "writing-parquet",
-    files:
-      foldedMatchIds.size + foldedPrematchIds.size + foldedPredictionIds.size,
-    rows: matchWriter.rows + prematchWriter.rows + predictionWriter.rows,
-    skipped: skippedMatches + skippedPrematches + skippedPredictionObservations,
+    files: foldedMatchIds.size + foldedPrematchIds.size,
+    rows: matchWriter.rows + prematchWriter.rows,
+    skipped: skippedMatches + skippedPrematches,
   });
 
   // --- NDJSON -> partitioned parquet ---
@@ -403,19 +357,12 @@ async function rebuildLocked(
             [prematchTmp],
           );
         }
-        if (predictionWriter.rows > 0) {
-          await session.run(
-            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREDICTION_OBSERVATION_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prediction_observations")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
-            [predictionsTmp],
-          );
-        }
       },
       { timeoutMs: remainingTimeoutMs() },
     );
   } finally {
     await unlink(matchesTmp);
     await unlink(prematchTmp);
-    await unlink(predictionsTmp);
   }
 
   deadline.throwIfAborted();
@@ -442,12 +389,10 @@ async function rebuildLocked(
     tier: "rebuild" as const,
     matchRows: matchWriter.rows,
     prematchRows: prematchWriter.rows,
-    predictionObservationRows: predictionWriter.rows,
     accountRows,
     competitionRankHistoryRows: rankHistory.rows,
     skippedMatches,
     skippedPrematches,
-    skippedPredictionObservations,
     skippedCompetitionRankHistory: rankHistory.skipped,
   };
   await writeCompactionManifest(buildDir, summary);
@@ -457,11 +402,6 @@ async function rebuildLocked(
   await removeFoldedStagingFiles(lakeDir, "prematch", foldedPrematchIds);
   await removeFoldedStagingFiles(
     lakeDir,
-    "prediction_observations",
-    foldedPredictionIds,
-  );
-  await removeFoldedStagingFiles(
-    lakeDir,
     "competition_rank_history",
     foldedRankHistoryIds,
   );
@@ -469,7 +409,7 @@ async function rebuildLocked(
 
   const durationMs = Date.now() - startedAt;
   logger.info(
-    `Rebuild (s3) published build ${buildId} (${matchWriter.rows.toString()} match rows, ${prematchWriter.rows.toString()} prematch rows, ${predictionWriter.rows.toString()} prediction rows, ${skippedMatches.toString()} skipped) in ${durationMs.toString()}ms`,
+    `Rebuild (s3) published build ${buildId} (${matchWriter.rows.toString()} match rows, ${prematchWriter.rows.toString()} prematch rows, ${skippedMatches.toString()} skipped) in ${durationMs.toString()}ms`,
   );
   return { ...summary, durationMs };
 }

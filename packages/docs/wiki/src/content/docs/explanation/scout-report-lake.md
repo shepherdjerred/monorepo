@@ -29,14 +29,12 @@ lake is the wrong place to look.
 ```mermaid
 flowchart LR
   accTitle: Scout report lake read and write flow
-  accDescr: Live ingest crons write raw JSON to S3 and stage lake rows as best effort. A quiet first-run import snapshots twenty Match-V5 IDs and requires both writes before checkpointing. Prematch prediction capture writes frozen observations to S3 and staging as best effort. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
+  accDescr: Live ingest crons write raw JSON to S3 and stage lake rows as best effort. A quiet first-run import snapshots twenty Match-V5 IDs and requires both writes before checkpointing. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
 
   I[Ingest crons] -->|must succeed| S3[(S3 durable objects)]
   I -->|best effort| ST[NDJSON staging]
   H[Quiet first-run import] -->|must succeed| S3
   H -->|must succeed before checkpoint| ST
-  P[Prematch prediction capture] -->|best effort| S3
-  P -->|best effort| ST
   ST --> F[Fold, every 15 min]
   S3 --> R[Rebuild, nightly]
   F --> B[Immutable Parquet build]
@@ -49,14 +47,14 @@ flowchart LR
 
 ## The record and the cache
 
-Raw match, timeline, prematch, prediction-observation, and leaderboard JSON lands in S3
+Raw match, timeline, prematch, and leaderboard JSON lands in S3
 (in-cluster SeaweedFS) under date-partitioned keys, defined in
 [s3-raw-source.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-store/s3-raw-source.ts).
 That store is append-only and authoritative.
 
 The lake is a directory on the pod's own volume: Hive-partitioned Parquet
-(`month=YYYY-MM/`) for five tables — matches, prematch, prediction
-observations, accounts, and competition rank history — laid out per
+(`month=YYYY-MM/`) for four tables — matches, prematch, accounts, and
+competition rank history — laid out per
 [paths.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/paths.ts).
 It is derived data. Losing the volume costs one nightly rebuild, not any
 history.
@@ -117,19 +115,6 @@ the nightly rebuild re-derives the row from S3 regardless.
 
 Timelines go to S3 only. No query surface reads them, so flattening them into
 the lake would be pure cost.
-
-Prediction observations have a narrower purpose than prematch participant
-rows. Scout freezes one v2 feature snapshot and canonical Blue-team probability
-per eligible match before the result exists. Prediction and presentation share
-one point-in-time rank snapshot, but prediction derives its other inputs from
-the raw lobby, so a loading-screen asset or schema failure does not remove the
-observation. The S3 object and staging filename use the match's natural
-identity, so a retry overwrites the same observation instead of creating one
-copy per guild. Persistence is best effort and runs outside pool creation and
-Discord delivery. When Match-V5 arrives later, evaluation joins the outcome by
-`match_id`; no settlement process rewrites the frozen observation. This
-separation prevents result leakage and lets the same dataset measure
-calibration across queues and data-quality tiers.
 
 All row shapes come from one place:
 [flatten.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/flatten.ts)

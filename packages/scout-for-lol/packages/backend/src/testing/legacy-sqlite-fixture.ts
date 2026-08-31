@@ -413,7 +413,6 @@ export const LEGACY_TABLE_COLUMNS: Record<string, string[]> = {
     "matchingJson",
     "winningTeamId",
     "voidReason",
-    "predictionJson",
     "settledAt",
     "createdAt",
     "updatedAt",

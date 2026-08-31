@@ -5,7 +5,6 @@ import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
-  PREDICTION_OBSERVATION_LAKE_COLUMNS,
   duckDbColumnsSpec,
 } from "#src/report-lake/schema.ts";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
@@ -31,9 +30,7 @@ export async function writeFoldParquet(
       ? MATCH_LAKE_COLUMNS
       : table === "prematch"
         ? PREMATCH_LAKE_COLUMNS
-        : table === "prediction_observations"
-          ? PREDICTION_OBSERVATION_LAKE_COLUMNS
-          : COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
+        : COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });

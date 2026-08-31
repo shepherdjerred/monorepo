@@ -84,7 +84,6 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       matchingJson: toStrOrNullIfMissing(row, "matchingJson"),
       winningTeamId: toIntOrNull(row, "winningTeamId"),
       voidReason: toStrOrNull(row, "voidReason"),
-      predictionJson: toStrOrNull(row, "predictionJson"),
       settledAt: toDateOrNull(row, "settledAt"),
       createdAt: toDate(row, "createdAt"),
       updatedAt: toDate(row, "updatedAt"),

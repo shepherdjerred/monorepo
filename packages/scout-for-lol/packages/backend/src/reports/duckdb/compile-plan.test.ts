@@ -92,8 +92,6 @@ const EMPTY_LAKE: LakeFiles = {
   matchesStaging: [],
   prematchParquet: [],
   prematchStaging: [],
-  predictionObservationsParquet: [],
-  predictionObservationsStaging: [],
   accountsParquet: undefined,
   competitionRankHistoryParquet: [],
   competitionRankHistoryStaging: [],

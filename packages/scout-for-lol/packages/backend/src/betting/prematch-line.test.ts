@@ -39,7 +39,6 @@ describe("withBucksDigest", () => {
 describe("bucksPrematchSummary", () => {
   test("states no rules, only numbers and a pointer to /bb rules", () => {
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "open",
       positions: [],
       closesAt: CLOSES_AT,
@@ -56,7 +55,6 @@ describe("bucksPrematchSummary", () => {
 
   test("omits the close clause when the caller has no authoritative time", () => {
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "open",
       positions: [],
     });
@@ -64,28 +62,8 @@ describe("bucksPrematchSummary", () => {
     expect(summary).not.toContain("closes <t:");
   });
 
-  test("never leaks the pregame estimate", () => {
-    const summary = bucksPrematchSummary({
-      prediction: {
-        version: 2,
-        blueWinProbability: 0.73,
-        dataQuality: "high",
-        coverage: { covered: 10, applicable: 10 },
-        drivers: ["Blue rank edge"],
-      },
-      poolState: "open",
-      positions: [],
-      framing: BLUE_ANCHOR,
-    });
-
-    expect(summary).not.toContain("73");
-    expect(summary).not.toContain("estimate");
-    expect(summary).not.toContain("Scout's call");
-  });
-
   test("names sides WIN and LOSE and inlines offers per side", () => {
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "open",
       framing: BLUE_ANCHOR,
       positions: [
@@ -125,7 +103,6 @@ describe("bucksPrematchSummary", () => {
 
   test("falls back to Blue and Red when both teams are tracked", () => {
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "open",
       framing: MIXED,
       positions: [
@@ -145,7 +122,6 @@ describe("bucksPrematchSummary", () => {
 
   test("becomes a receipt at close with the full allocation arithmetic", () => {
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "closed",
       framing: BLUE_ANCHOR,
       positions: [
@@ -184,7 +160,6 @@ describe("bucksPrematchSummary", () => {
   test("reports an empty close plainly", () => {
     expect(
       bucksPrematchSummary({
-        prediction: undefined,
         poolState: "closed",
         positions: [],
       }),
@@ -200,7 +175,6 @@ describe("bucksPrematchSummary", () => {
       unmatchedStake: 0,
     }));
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "closed",
       framing: BLUE_ANCHOR,
       positions,
@@ -225,7 +199,6 @@ describe("bucksPrematchSummary", () => {
     // which the old house-cut footer could not.
     const base = "x".repeat(1000);
     const summary = bucksPrematchSummary({
-      prediction: undefined,
       poolState: "closed",
       framing: BLUE_ANCHOR,
       positions,
@@ -244,7 +217,6 @@ describe("bucksPrematchSummary", () => {
   test("refuses a house match on an open pool", () => {
     expect(() =>
       bucksPrematchSummary({
-        prediction: undefined,
         poolState: "open",
         positions: [],
         houseMatches: [{ teamId: 200, matchedStake: 5 }],

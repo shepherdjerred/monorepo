@@ -3,7 +3,6 @@ import type { MessageCreateOptions } from "discord.js";
 import {
   BucksMessageRefsSchema,
   BucksPoolRosterSchema,
-  BucksPredictionSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   RiotTeamIdSchema,
@@ -13,10 +12,7 @@ import {
 } from "@scout-for-lol/data";
 import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
 import type { EarnedAward } from "#src/betting/earnings.ts";
-import {
-  buildSettlementMessage,
-  predictionVerdict,
-} from "#src/betting/outcome-message.ts";
+import { buildSettlementMessage } from "#src/betting/outcome-message.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { deliverSettlementDms } from "#src/betting/settlement-dm-delivery.ts";
@@ -24,7 +20,6 @@ import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep-types.ts";
-import { formatStoredPrediction } from "#src/betting/prediction.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   ChannelSendError,
@@ -422,7 +417,6 @@ export async function announceSettlements(
         },
         select: {
           messageRefs: true,
-          predictionJson: true,
           roster: true,
           queueType: true,
           bets: {
@@ -456,21 +450,10 @@ export async function announceSettlements(
             .map((bet) => storedUnmatchedPosition(bet))
         : [];
 
-      const predictionSentence = formatStoredPrediction(pool.predictionJson);
-      const prediction =
-        pool.predictionJson === null
-          ? undefined
-          : BucksPredictionSchema.safeParse(JSON.parse(pool.predictionJson))
-              .data;
-
       const roster = BucksPoolRosterSchema.parse(
         JSON.parse(pool.roster),
       ).participants;
       const anchor = bettingAnchor(roster);
-      const predictionVerdictLine = predictionVerdict(
-        prediction,
-        summary.winningTeamId,
-      );
       const message = buildSettlementMessage({
         summary,
         includeOutcome,
@@ -478,8 +461,6 @@ export async function announceSettlements(
         framing: anchor === undefined ? undefined : subjectFraming(anchor),
         earnings: input.earnings,
         unmatchedPositions,
-        predictionSentence,
-        predictionVerdictLine,
       });
       const poolRefs = BucksMessageRefsSchema.parse(
         JSON.parse(pool.messageRefs),
@@ -534,11 +515,6 @@ export async function announceSettlements(
           roster,
           queueType: pool.queueType,
           earnings: input.earnings,
-          // The exact sentence the channel recap shows, verdict included.
-          predictionLine:
-            predictionSentence === undefined
-              ? undefined
-              : `${predictionSentence}${predictionVerdictLine === undefined ? "" : ` ${predictionVerdictLine}`}`,
           prismaClient,
         });
       } catch (error) {

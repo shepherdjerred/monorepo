@@ -43,11 +43,6 @@
       "count": 1
     }
   },
-  "scripts/evaluate-predictions.ts": {
-    "custom-rules/prefer-structured-logging": {
-      "count": 1
-    }
-  },
   "scripts/generate-lane-priors.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 1
@@ -142,11 +137,6 @@
     }
   },
   "src/betting/announce.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/ask-publish.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -332,11 +322,6 @@
     }
   },
   "src/league/tasks/prematch/loading-screen-builder.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/league/tasks/prematch/prematch-notification.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
