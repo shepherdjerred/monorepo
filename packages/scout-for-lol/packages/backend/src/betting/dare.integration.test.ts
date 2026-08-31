@@ -542,6 +542,56 @@ describe("contributions", () => {
     expect(await balanceOf(CONTRIBUTOR)).toBe(SEED_GRANT - 2);
     await expectNoDrift();
   });
+
+  test("two contributions racing the pot ceiling: exactly one fits, the loser gets pot_full, never a thrown DB error", async () => {
+    const SECOND_CONTRIBUTOR = bucksTestDiscordId(6);
+    const dareId = await makePendingAccept({ amount: 5 });
+    await db.bucksDare.update({
+      where: { id: dareId },
+      data: { potTotal: BUCKS_INT32_MAX - 3 },
+    });
+    // Each individually passes the pre-transaction fast-path check (both
+    // read the same stale potTotal), but only one can actually fit: the
+    // guarded claim's WHERE clause is what has to decide the race.
+    const [first, second] = await Promise.all([
+      contributeToDare(
+        {
+          dareId,
+          serverId: SERVER_ID,
+          contributorDiscordId: CONTRIBUTOR,
+          amount: 2,
+        },
+        deps,
+        T0,
+      ),
+      contributeToDare(
+        {
+          dareId,
+          serverId: SERVER_ID,
+          contributorDiscordId: SECOND_CONTRIBUTOR,
+          amount: 2,
+        },
+        deps,
+        T0,
+      ),
+    ]);
+    const kinds = [first.kind, second.kind].sort();
+    expect(kinds).toEqual(["contributed", "pot_full"]);
+    const winner = first.kind === "contributed" ? first : second;
+    const loser = first.kind === "pot_full" ? first : second;
+    expect(winner.kind === "contributed" && winner.potTotal).toBe(
+      BUCKS_INT32_MAX - 1,
+    );
+    expect(loser.kind === "pot_full" && loser.potTotal).toBe(
+      BUCKS_INT32_MAX - 1,
+    );
+    const settled = await db.bucksDare.findUniqueOrThrow({
+      where: { id: dareId },
+      select: { potTotal: true },
+    });
+    expect(settled.potTotal).toBe(BUCKS_INT32_MAX - 1);
+    await expectNoDrift();
+  });
 });
 
 describe("consent", () => {
@@ -698,6 +748,33 @@ describe("capture and settlement", () => {
       select: { payout: true, fee: true },
     });
     expect(target).toEqual({ payout: 4, fee: 1 });
+    await expectNoDrift();
+  });
+
+  test("a persistently failing capture propagates instead of being silently lost", async () => {
+    const dareId = await makeActive({ amount: 5 });
+    // Every $transaction call fails, simulating an outage the bounded retry
+    // cannot outlast; every other property (model delegates used by
+    // discovery) forwards untouched to the real client. `Reflect.get`'s
+    // third argument is deliberately `target`, not the proxy itself, so
+    // Prisma's own internal `this` usage is unaffected — only code that
+    // reads `.$transaction` off the object THIS TEST passed in is fooled.
+    const failingClient = new Proxy(db, {
+      get(target, prop) {
+        if (prop === "$transaction") {
+          return () =>
+            Promise.reject(new Error("simulated persistent database failure"));
+        }
+        return Reflect.get(target, prop, target);
+      },
+    });
+    await expect(
+      settleDaresForMatch(winningMatch(ONE_TARGET), failingClient, settleTime),
+    ).rejects.toThrow("simulated persistent database failure");
+    // Nothing committed: the dare is exactly where it was, ready to be
+    // captured again when the match-history cursor retries it.
+    expect(await dareState(dareId)).toBe("active");
+    expect(await db.bucksDareGame.count({ where: { dareId } })).toBe(0);
     await expectNoDrift();
   });
 

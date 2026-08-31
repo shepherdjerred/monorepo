@@ -400,10 +400,25 @@ function observeDareSettlement(summary: DareSettlementSummary): void {
 }
 
 /**
- * The one call the post-match pipeline makes into dares. Never throws: the
- * discovery read swallows into an empty batch and each dare is isolated in
- * its own try/catch, so one bad dare cannot block the ingest cursor or its
- * neighbours.
+ * The one call the post-match pipeline makes into dares.
+ *
+ * Deliberately NOT "never throws" the way its sibling markets are — a dare's
+ * capture is bound to this one specific match, and the postmatch cursor
+ * never re-presents a match once it advances past it. Swallowing a genuine
+ * (non-transient-recovered) failure here would silently and permanently
+ * lose that dare's one chance to capture this game, which can later
+ * mis-settle an actually-achieved dare as unachieved with a house cut.
+ *
+ * So: discovery and each dare get a short bounded retry
+ * ({@link DARE_SETTLE_ATTEMPTS}) to absorb a transient blip, and if that is
+ * exhausted, the error is logged, paged to Sentry, and RETHROWN. The caller
+ * (`processMatchAndUpdatePlayers`) does not advance the match-history cursor
+ * on a thrown error — this is the same "NOT advancing cursor; will retry
+ * next poll" pattern already used for the S3 ingest gate. Every sibling
+ * write this function's caller already ran (outcome/parlay settlement,
+ * weekly capture, earnings) is independently idempotent on state, so
+ * retrying the whole match is safe: they simply no-op on the replay, and
+ * only the dares still `active` get evaluated again.
  */
 export async function settleDaresForMatch(
   matchData: RawMatch,
@@ -427,34 +442,42 @@ export async function settleDaresForMatch(
   const gameEndAt = new Date(matchData.info.gameEndTimestamp);
   const dares = await (async () => {
     try {
-      return await prismaClient.bucksDare.findMany({
-        where: {
-          dareState: "active",
-          OR: [
-            // The SQL image of the per-dare clock gates in
-            // settleOneDareForMatch: activated before the game started, and
-            // the game ended by the stored deadline (a next_game dare stores
-            // its timeout in windowEndsAt, so one predicate serves both
-            // horizons).
-            {
-              activatedAt: { lt: gameStartAt },
-              windowEndsAt: { gte: gameEndAt },
+      return await withBoundedRetry(
+        () =>
+          prismaClient.bucksDare.findMany({
+            where: {
+              dareState: "active",
+              OR: [
+                // The SQL image of the per-dare clock gates in
+                // settleOneDareForMatch: activated before the game started,
+                // and the game ended by the stored deadline (a next_game
+                // dare stores its timeout in windowEndsAt, so one predicate
+                // serves both horizons).
+                {
+                  activatedAt: { lt: gameStartAt },
+                  windowEndsAt: { gte: gameEndAt },
+                },
+                // An active dare with a missing clock is a broken contract.
+                // Kept in the batch so the loud per-dare throw below
+                // surfaces it — a bare SQL filter would hide the bug
+                // silently.
+                { activatedAt: null },
+                { windowEndsAt: null },
+              ],
             },
-            // An active dare with a missing clock is a broken contract.
-            // Kept in the batch so the loud per-dare throw below surfaces
-            // it — a bare SQL filter would hide the bug silently.
-            { activatedAt: null },
-            { windowEndsAt: null },
-          ],
-        },
-        include: { targets: { orderBy: { id: "asc" } } },
-      });
+            include: { targets: { orderBy: { id: "asc" } } },
+          }),
+        DARE_SETTLE_ATTEMPTS,
+      );
     } catch (error) {
-      logger.error(`Could not load active dares for ${matchId}:`, error);
+      logger.error(
+        `Could not load active dares for ${matchId} after ${DARE_SETTLE_ATTEMPTS.toString()} attempts:`,
+        error,
+      );
       Sentry.captureException(error, {
         tags: { source: "betting-dare-settle-load", matchId },
       });
-      return [];
+      throw error;
     }
   })();
 
@@ -472,13 +495,10 @@ export async function settleDaresForMatch(
         observeDareSettlement(summary);
       }
     } catch (error) {
-      // Every retry attempt is exhausted: this specific dare permanently
-      // misses this match (the postmatch cursor will not re-present it), so
-      // the failure is logged and paged rather than silently swallowed —
-      // the closest this loop can get to "propagate transient failures"
-      // without itself blocking the cursor for every OTHER dare and every
-      // other Bucks operation on the match, which the rest of this file's
-      // "never throws" doctrine deliberately forbids.
+      // Every retry attempt is exhausted. Logged and paged for visibility,
+      // then rethrown — see this function's doc comment for why losing this
+      // specific dare's one chance at this match is worse than delaying the
+      // whole match's report/announcements by one retried poll.
       logger.error(
         `Could not settle dare ${row.id.toString()} for ${matchId} after ${DARE_SETTLE_ATTEMPTS.toString()} attempts:`,
         error,
@@ -490,6 +510,7 @@ export async function settleDaresForMatch(
           dareId: row.id.toString(),
         },
       });
+      throw error;
     }
   }
   return summaries;

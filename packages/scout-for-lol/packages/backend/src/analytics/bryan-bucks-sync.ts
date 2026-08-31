@@ -1,4 +1,7 @@
-import { BucksLedgerKindSchema } from "@scout-for-lol/data";
+import {
+  BucksLedgerKindSchema,
+  OPEN_BUCKS_DARE_STATES,
+} from "@scout-for-lol/data";
 import {
   captureBucksEconomy,
   captureBucksEconomySnapshot,
@@ -83,36 +86,53 @@ export async function syncBucksAnalytics(options?: {
     });
   }
 
-  const [accounts, pendingOutcome, pendingParlay, pendingWeekly, openPools] =
-    await Promise.all([
-      database.bucksAccount.findMany({
-        select: { serverId: true, isHouse: true, balance: true },
-      }),
-      database.bucksBet.findMany({
-        where: { betOutcome: "pending" },
-        select: {
-          stake: true,
-          matchedStake: true,
-          bucksAccount: { select: { serverId: true } },
-        },
-      }),
-      database.bucksParlayBet.findMany({
-        where: { betOutcome: "pending" },
-        select: { stake: true, bucksAccount: { select: { serverId: true } } },
-      }),
-      database.bucksWeeklyParlayBet.findMany({
-        where: { betOutcome: "pending" },
-        select: { stake: true, bucksAccount: { select: { serverId: true } } },
-      }),
-      database.bucksMatchPool.findMany({
-        where: { poolState: { in: ["open", "closed"] } },
-        select: { serverId: true },
-      }),
-    ]);
+  const [
+    accounts,
+    pendingOutcome,
+    pendingParlay,
+    pendingWeekly,
+    pendingDareContributions,
+    openPools,
+  ] = await Promise.all([
+    database.bucksAccount.findMany({
+      select: { serverId: true, isHouse: true, balance: true },
+    }),
+    database.bucksBet.findMany({
+      where: { betOutcome: "pending" },
+      select: {
+        stake: true,
+        matchedStake: true,
+        bucksAccount: { select: { serverId: true } },
+      },
+    }),
+    database.bucksParlayBet.findMany({
+      where: { betOutcome: "pending" },
+      select: { stake: true, bucksAccount: { select: { serverId: true } } },
+    }),
+    database.bucksWeeklyParlayBet.findMany({
+      where: { betOutcome: "pending" },
+      select: { stake: true, bucksAccount: { select: { serverId: true } } },
+    }),
+    // A dare's pot is contributor money at risk until the dare resolves —
+    // the same "pending stake" the outcome/parlay/weekly sources measure.
+    database.bucksDareContribution.findMany({
+      where: { dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } } },
+      select: { amount: true, bucksAccount: { select: { serverId: true } } },
+    }),
+    database.bucksMatchPool.findMany({
+      where: { poolState: { in: ["open", "closed"] } },
+      select: { serverId: true },
+    }),
+  ]);
+  const pendingDare = pendingDareContributions.map((contribution) => ({
+    stake: contribution.amount,
+    bucksAccount: contribution.bucksAccount,
+  }));
   const pendingByServer = aggregateBucksPendingStakes(
     pendingOutcome,
     pendingParlay,
     pendingWeekly,
+    pendingDare,
   );
   const openMarketsByServer = countBucksOpenMarkets(openPools);
   const bucket = Math.floor(now.getTime() / SNAPSHOT_INTERVAL_MS).toString();

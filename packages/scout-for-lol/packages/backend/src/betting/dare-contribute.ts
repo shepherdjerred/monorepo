@@ -1,6 +1,7 @@
 import {
   BUCKS_INT32_MAX,
   BucksStakeSchema,
+  BucksDareStateSchema,
   OPEN_BUCKS_DARE_STATES,
   type BucksDareState,
   type DiscordAccountId,
@@ -8,7 +9,6 @@ import {
 } from "@scout-for-lol/data";
 import { ensureBucksAccount } from "#src/betting/accounts.ts";
 import {
-  currentDareState,
   daresFeatureEnabled,
   defaultDareDependencies,
   insufficientDareFunds,
@@ -81,13 +81,12 @@ export async function contributeToDare(
   ) {
     return { kind: "target_cannot_contribute" };
   }
-  // The persistence ceiling, checked before we ever attempt the increment:
-  // `BucksDare.potTotal` is a plain Int column with no headroom guard of its
-  // own (unlike `applyBucksDelta`'s credit path), so an unguarded increment
-  // past BUCKS_INT32_MAX would surface as a raw Postgres out-of-range error
-  // instead of a domain refusal. A dare's pot growing anywhere near that
-  // ceiling is not realistic at this beta's scale, but the check is still
-  // the correct boundary: refuse in the domain, not in the database.
+  // A cheap fast-path rejection using the pre-transaction read — refuses the
+  // common case (a pot already visibly near the ceiling) before even
+  // provisioning the contributor's wallet. This is advisory only: the WHERE
+  // clause below is what actually enforces the ceiling atomically against a
+  // racing contribution, since two contributions can both pass this check
+  // against the same stale `dare.potTotal` and only one may actually fit.
   if (dare.potTotal + amount > BUCKS_INT32_MAX) {
     return { kind: "pot_full", potTotal: dare.potTotal };
   }
@@ -102,24 +101,42 @@ export async function contributeToDare(
   try {
     const result = await dependencies.prismaClient.$transaction(async (tx) => {
       // Guarded first statement: claiming the dare row in a contributable
-      // state both proves the pot is still open and serializes this append
-      // against settlement — a losing racer matches 0 rows and reads the
-      // fresh state for precise copy. `updateManyAndReturn` keeps the claim
-      // and the post-increment pot read one statement.
+      // state, WITH the pot ceiling folded into the same WHERE, both proves
+      // the pot is still open and serializes this append against settlement
+      // AND every other racing contribution — a losing racer (wrong state
+      // or a pot that would overflow) matches 0 rows and reads the fresh
+      // state for precise copy. `updateManyAndReturn` keeps the claim and
+      // the post-increment pot read one statement, so the increment itself
+      // can never be attempted against a pot it would overflow: Postgres
+      // evaluates the WHERE against the current row before applying the
+      // increment, and a second racing contribution reading the same
+      // pre-transaction potTotal cannot both win this claim.
       const claimed = await tx.bucksDare.updateManyAndReturn({
         where: {
           id: dare.id,
           dareState: { in: [...OPEN_BUCKS_DARE_STATES] },
+          potTotal: { lte: BUCKS_INT32_MAX - amount },
         },
         data: { potTotal: { increment: amount }, updatedAt: now },
         select: { potTotal: true },
       });
       const updated = claimed[0];
       if (updated === undefined || claimed.length !== 1) {
-        return {
-          kind: "too_late",
-          dareState: await currentDareState(tx, dare.id),
-        } as const;
+        // One read settles both possible misses: the fresh state tells us
+        // whether the pot is still open at all, and — only when it is —
+        // whether this miss was the ceiling rather than a state change.
+        const fresh = await tx.bucksDare.findUniqueOrThrow({
+          where: { id: dare.id },
+          select: { dareState: true, potTotal: true },
+        });
+        const freshState = BucksDareStateSchema.parse(fresh.dareState);
+        if (
+          OPEN_BUCKS_DARE_STATES.includes(freshState) &&
+          fresh.potTotal + amount > BUCKS_INT32_MAX
+        ) {
+          return { kind: "pot_full", potTotal: fresh.potTotal } as const;
+        }
+        return { kind: "too_late", dareState: freshState } as const;
       }
       const balance = await stakeDareContributionInTransaction(tx, {
         facts: {

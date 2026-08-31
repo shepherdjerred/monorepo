@@ -40,8 +40,12 @@ export async function refreshSettledPoolMessages(
 /**
  * The one call the post-match poller makes into Bryan Bucks.
  *
- * Each operation swallows its own errors, so this never throws and never
- * blocks the match-history cursor from advancing.
+ * Every operation except dares swallows its own errors, so this never
+ * throws for their sake and never blocks the match-history cursor from
+ * advancing on their account. Dares are the deliberate exception — see the
+ * comment at that call site and `settleDaresForMatch`'s doc comment for why
+ * a dare capture failure, after its own short bounded retry, propagates out
+ * of this function instead of being swallowed.
  *
  * Order matters: settlement reads `betOutcome: "pending"` bets and earning
  * writes only ledger rows, so they do not contend — but settling first means a
@@ -94,17 +98,19 @@ export async function settleAndAwardBucks(
       await refreshClosedBucksMessages(pools, prismaClient);
     },
   );
-  // Dares run LAST and deliberately: settleDaresForMatch swallows its own
-  // per-dare errors and never throws, so it is the one call in this function
-  // guaranteed to return. Everything above it (parlay settlement, weekly
-  // capture, earnings) is not — and a dare's summary is one-shot the same way
-  // an outcome settlement's is (see AGENTS.md's "settlement summary is
-  // one-shot" note). Running it last means a throw anywhere above simply
-  // means dare settlement has not happened yet for this attempt: the dare
-  // stays `active`, nothing is lost, and the retried match settles it
-  // cleanly next time. Computing it earlier and losing the return value to a
-  // later throw would instead leave an already-committed, already-terminal
-  // dare with no summary to announce, ever.
+  // Dares run LAST, and unlike everything above, settleDaresForMatch CAN
+  // throw (after its own short bounded retry exhausts — see its doc
+  // comment). Everything above it (parlay settlement, weekly capture,
+  // earnings) already committed its own idempotent, state-gated writes, so
+  // a throw here — and the caller not advancing the cursor — simply retries
+  // the whole match later; those writes safely no-op on replay. Running
+  // dares last also means an ordinary (non-retry-exhausting) throw anywhere
+  // ABOVE this line can never discard an already-committed dare summary
+  // before it reaches delivery: a dare's summary is one-shot the same way an
+  // outcome settlement's is (see AGENTS.md's "settlement summary is
+  // one-shot" note), and computing it earlier would risk losing that return
+  // value to a later throw, leaving an already-terminal dare with no
+  // summary to announce, ever.
   const dareSettlements = await settleDaresForMatch(matchData, prismaClient);
   return {
     closures,

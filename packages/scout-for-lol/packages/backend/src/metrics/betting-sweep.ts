@@ -1,3 +1,4 @@
+import { OPEN_BUCKS_DARE_STATES } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import {
@@ -31,6 +32,7 @@ export async function updateBettingMetrics(
       pendingStake,
       pendingParlayStake,
       pendingWeeklyStake,
+      pendingDareStake,
       houseAccounts,
     ] = await Promise.all([
       prisma.bucksMatchPool.groupBy({
@@ -53,6 +55,12 @@ export async function updateBettingMetrics(
       prisma.bucksWeeklyParlayBet.aggregate({
         where: { betOutcome: "pending" },
         _sum: { stake: true },
+      }),
+      // A dare's pot is contributor money at risk until the dare resolves —
+      // the same "pending stake" the outcome/parlay/weekly sources measure.
+      prisma.bucksDareContribution.aggregate({
+        where: { dare: { dareState: { in: [...OPEN_BUCKS_DARE_STATES] } } },
+        _sum: { amount: true },
       }),
       prisma.bucksAccount.findMany({
         where: { isHouse: true },
@@ -84,7 +92,8 @@ export async function updateBettingMetrics(
         0,
       ) +
       (pendingParlayStake._sum.stake ?? 0) +
-      (pendingWeeklyStake._sum.stake ?? 0);
+      (pendingWeeklyStake._sum.stake ?? 0) +
+      (pendingDareStake._sum.amount ?? 0);
     bettingPendingStakeBucks.set(pendingStakeBucks);
 
     bettingHouseBalanceBucks.set(
