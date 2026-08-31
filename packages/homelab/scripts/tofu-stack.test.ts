@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   addValidationOnlySecrets,
+  assertPlatformSecretCoverage,
   buildTofuEnvironment,
   validationInitArguments,
 } from "./tofu-stack.ts";
@@ -112,6 +113,73 @@ describe("Buildkite OpenTofu credential contracts", () => {
     expect(STACK_MANIFEST.posthog.validationPassphraseVariable).toBe(
       "state_passphrase",
     );
+  });
+
+  // A BYOK credential declared without a provider key used to abort inside
+  // `tofu plan` with a bare `Invalid index` on `each.key`, naming neither the
+  // secret nor where it belongs. These cover the fail-fast replacement.
+  describe("OpenRouter BYOK provider-key coverage", () => {
+    const declared = {
+      openrouter_byok_credentials: { anthropic: {}, openai: {} },
+    };
+
+    test("names every credential whose provider key is absent", () => {
+      expect(() => {
+        assertPlatformSecretCoverage("openrouter", declared, {
+          TF_VAR_openrouter_byok_keys: "{}",
+        });
+      }).toThrow(/missing a provider key for anthropic, openai/);
+    });
+
+    test("treats a blank provider key as absent rather than supplied", () => {
+      expect(() => {
+        assertPlatformSecretCoverage("openrouter", declared, {
+          TF_VAR_openrouter_byok_keys: JSON.stringify({
+            anthropic: "sk-real",
+            openai: "",
+          }),
+        });
+      }).toThrow(/missing a provider key for openai/);
+    });
+
+    test("points the operator at the 1Password field and the opt-out", () => {
+      expect(() => {
+        assertPlatformSecretCoverage("openrouter", declared, {
+          TF_VAR_openrouter_byok_keys: "{}",
+        });
+      }).toThrow(
+        /OPENROUTER_BYOK_KEYS_JSON field of the\s+openrouter-tofu-credentials 1Password item/,
+      );
+    });
+
+    test("accepts a fully covered set", () => {
+      expect(() => {
+        assertPlatformSecretCoverage("openrouter", declared, {
+          TF_VAR_openrouter_byok_keys: JSON.stringify({
+            anthropic: "sk-real",
+            openai: "sk-real",
+          }),
+        });
+      }).not.toThrow();
+    });
+
+    test("requires nothing when no BYOK credential is declared", () => {
+      expect(() => {
+        assertPlatformSecretCoverage(
+          "openrouter",
+          { openrouter_byok_credentials: {} },
+          {},
+        );
+      }).not.toThrow();
+    });
+
+    test("rejects a non-object payload instead of silently covering nothing", () => {
+      expect(() => {
+        assertPlatformSecretCoverage("openrouter", declared, {
+          TF_VAR_openrouter_byok_keys: '["anthropic"]',
+        });
+      }).toThrow(/must hold a JSON object/);
+    });
   });
 
   test("synthesizes one dummy value per OpenRouter BYOK credential", () => {
