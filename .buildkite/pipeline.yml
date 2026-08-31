@@ -1035,6 +1035,18 @@ steps:
       bun --no-install run --cwd packages/tasknotes-macos mac:analyze
       bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
     retry: *retry
+    # Temporarily non-blocking: the macOS agent cannot start a UI test runner
+    # ("Failed to initialize for UI testing: Timed out while enabling
+    # automation mode"), which is a TCC grant on that machine rather than
+    # anything a commit can fix. The step still runs and still reports red, so
+    # the signal stays visible; it just does not gate main.
+    #
+    # Exemption is registered in SOFT_FAIL_EXEMPT_NATIVE_STEPS in
+    # validate-pipeline-step-structure.ts, which fails if this line is removed
+    # without also removing the entry. Restore the gate by approving
+    # TaskNotesUITests-Runner under System Settings > Privacy & Security >
+    # Accessibility on the agent, then deleting both.
+    soft_fail: true
     agents:
       queue: macos
 
