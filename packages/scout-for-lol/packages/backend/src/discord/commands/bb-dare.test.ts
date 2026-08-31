@@ -16,6 +16,7 @@ import {
   replyBbDare,
 } from "#src/discord/commands/bb-dare.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
+import { bbInteractionAckMocks } from "#src/testing/bb-interaction-mocks.ts";
 
 const SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 const CHALLENGER = DiscordAccountIdSchema.parse("160509172704739328");
@@ -136,11 +137,7 @@ function fakeInteraction(input?: {
       getInteger: () => input?.amount ?? 10,
       getUser: () => ({ id: TARGET, bot: false }),
     },
-    replied: false,
-    deferred: true,
-    reply: vi.fn(() => Promise.resolve(undefined)),
-    deferReply: vi.fn(() => Promise.resolve(undefined)),
-    editReply: vi.fn(() => Promise.resolve(undefined)),
+    ...bbInteractionAckMocks(true),
     followUp: vi.fn(() => Promise.resolve(undefined)),
   };
 }

@@ -1,4 +1,5 @@
 import {
+  BUCKS_INT32_MAX,
   BucksStakeSchema,
   OPEN_BUCKS_DARE_STATES,
   type BucksDareState,
@@ -43,7 +44,8 @@ export type ContributeToDareResult =
   | { kind: "not_found" }
   | { kind: "target_cannot_contribute" }
   | { kind: "too_late"; dareState: BucksDareState }
-  | { kind: "insufficient"; balance: number; needed: number };
+  | { kind: "insufficient"; balance: number; needed: number }
+  | { kind: "pot_full"; potTotal: number };
 
 export async function contributeToDare(
   input: {
@@ -79,6 +81,17 @@ export async function contributeToDare(
   ) {
     return { kind: "target_cannot_contribute" };
   }
+  // The persistence ceiling, checked before we ever attempt the increment:
+  // `BucksDare.potTotal` is a plain Int column with no headroom guard of its
+  // own (unlike `applyBucksDelta`'s credit path), so an unguarded increment
+  // past BUCKS_INT32_MAX would surface as a raw Postgres out-of-range error
+  // instead of a domain refusal. A dare's pot growing anywhere near that
+  // ceiling is not realistic at this beta's scale, but the check is still
+  // the correct boundary: refuse in the domain, not in the database.
+  if (dare.potTotal + amount > BUCKS_INT32_MAX) {
+    return { kind: "pot_full", potTotal: dare.potTotal };
+  }
+
   const conditionSummary = summarizeDare(dare);
 
   const account = await ensureBucksAccount(

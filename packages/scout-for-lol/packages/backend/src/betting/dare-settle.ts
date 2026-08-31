@@ -38,6 +38,10 @@ import {
 } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import {
+  DARE_SETTLE_ATTEMPTS,
+  withBoundedRetry,
+} from "#src/betting/dare-settle-retry.ts";
+import {
   bettingDareGamesCapturedTotal,
   bettingDareSettlementsTotal,
   bettingDaresTotal,
@@ -457,7 +461,7 @@ export async function settleDaresForMatch(
   const summaries: DareSettlementSummary[] = [];
   for (const row of dares) {
     try {
-      const summary = await settleOneDareForMatch(row, {
+      const summary = await settleOneDareForMatchWithRetry(row, {
         matchData,
         queueType: queue.data,
         prismaClient,
@@ -468,8 +472,15 @@ export async function settleDaresForMatch(
         observeDareSettlement(summary);
       }
     } catch (error) {
+      // Every retry attempt is exhausted: this specific dare permanently
+      // misses this match (the postmatch cursor will not re-present it), so
+      // the failure is logged and paged rather than silently swallowed —
+      // the closest this loop can get to "propagate transient failures"
+      // without itself blocking the cursor for every OTHER dare and every
+      // other Bucks operation on the match, which the rest of this file's
+      // "never throws" doctrine deliberately forbids.
       logger.error(
-        `Could not settle dare ${row.id.toString()} for ${matchId}:`,
+        `Could not settle dare ${row.id.toString()} for ${matchId} after ${DARE_SETTLE_ATTEMPTS.toString()} attempts:`,
         error,
       );
       Sentry.captureException(error, {
@@ -482,6 +493,34 @@ export async function settleDaresForMatch(
     }
   }
   return summaries;
+}
+
+/**
+ * Wraps {@link settleOneDareForMatch} with a short bounded retry.
+ *
+ * `captureAndSettleDare`'s transaction is atomic — Postgres either commits
+ * the whole thing or none of it — so a retry after a genuine rollback (a
+ * momentary connection blip, a serialization conflict) simply re-runs the
+ * same guarded claim and is safe. The one theoretical exception is a commit
+ * that succeeded but whose acknowledgement was lost before this function saw
+ * it; a retry there would hit `BucksDareGame`'s unique `(dareId, matchId)`
+ * constraint and fail like any other error, which is no worse than today's
+ * un-retried behavior and is astronomically rarer than the transient
+ * failures this guards against.
+ */
+async function settleOneDareForMatchWithRetry(
+  row: ActiveDareRow,
+  input: {
+    matchData: RawMatch;
+    queueType: string;
+    prismaClient: ExtendedPrismaClient;
+    now: Date;
+  },
+): Promise<DareSettlementSummary | undefined> {
+  return withBoundedRetry(
+    () => settleOneDareForMatch(row, input),
+    DARE_SETTLE_ATTEMPTS,
+  );
 }
 
 async function settleOneDareForMatch(

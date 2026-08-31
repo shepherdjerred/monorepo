@@ -9,6 +9,7 @@ import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  formatInteger,
   type BucksDareState,
   type DiscordChannelId,
   type DiscordGuildId,
@@ -328,6 +329,8 @@ function describeContributeFailure(
       return `⏰ Too late — this dare is ${describeDareState(result.dareState)}.`;
     case "insufficient":
       return bucksInsufficient(result.balance, result.needed);
+    case "pot_full":
+      return `This dare's pot is already at ${formatInteger(result.potTotal)} BB — it can't hold any more.`;
     case "not_found":
       return DARE_NOT_FOUND;
   }

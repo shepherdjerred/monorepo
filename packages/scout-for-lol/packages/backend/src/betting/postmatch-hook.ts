@@ -46,7 +46,8 @@ export async function refreshSettledPoolMessages(
  * Order matters: settlement reads `betOutcome: "pending"` bets and earning
  * writes only ledger rows, so they do not contend — but settling first means a
  * an outcome or parlay settlement failure cannot be masked by an earning
- * failure in the logs.
+ * failure in the logs. Dares run last for a different reason — see the
+ * comment at that call site.
  */
 export async function settleAndAwardBucks(
   matchData: RawMatch,
@@ -77,10 +78,6 @@ export async function settleAndAwardBucks(
     matchData,
     prismaClient,
   );
-  // Dare capture rides the same ingest: settleDaresForMatch swallows its own
-  // errors per dare, so it can never throw past this point, and its summaries
-  // travel with the return value for the delivery layer to announce.
-  const dareSettlements = await settleDaresForMatch(matchData, prismaClient);
   // The canonical match has already been persisted by the caller. Weekly
   // progress is append-only and may settle only an irreversible YES here;
   // Sunday finalization remains the only path to an early-false result.
@@ -97,6 +94,18 @@ export async function settleAndAwardBucks(
       await refreshClosedBucksMessages(pools, prismaClient);
     },
   );
+  // Dares run LAST and deliberately: settleDaresForMatch swallows its own
+  // per-dare errors and never throws, so it is the one call in this function
+  // guaranteed to return. Everything above it (parlay settlement, weekly
+  // capture, earnings) is not — and a dare's summary is one-shot the same way
+  // an outcome settlement's is (see AGENTS.md's "settlement summary is
+  // one-shot" note). Running it last means a throw anywhere above simply
+  // means dare settlement has not happened yet for this attempt: the dare
+  // stays `active`, nothing is lost, and the retried match settles it
+  // cleanly next time. Computing it earlier and losing the return value to a
+  // later throw would instead leave an already-committed, already-terminal
+  // dare with no summary to announce, ever.
+  const dareSettlements = await settleDaresForMatch(matchData, prismaClient);
   return {
     closures,
     settlements: retry.settlements,

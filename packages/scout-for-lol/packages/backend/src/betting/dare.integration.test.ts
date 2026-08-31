@@ -264,6 +264,17 @@ async function dareState(dareId: number): Promise<string> {
   return dare.dareState;
 }
 
+/** A moment safely past a window-dare's `windowEndsAt` plus the ingestion
+ * grace period, for exercising `settleEndedDareWindows`. */
+function pastWindowGrace(windowDays = 1): Date {
+  return new Date(
+    T0.getTime() +
+      windowDays * 24 * 60 * 60 * 1000 +
+      DARE_WINDOW_INGESTION_GRACE_MS +
+      1000,
+  );
+}
+
 async function expectNoDrift(): Promise<void> {
   expect(await reconcileBucksBalances(db)).toEqual([]);
 }
@@ -477,6 +488,58 @@ describe("contributions", () => {
     expect(summaries.map((summary) => summary.resolution)).toEqual([
       "achieved",
     ]);
+    await expectNoDrift();
+  });
+
+  test("a contribution that would overflow the pot is refused in the domain, not the database", async () => {
+    const dareId = await makePendingAccept({ amount: 5 });
+    await db.bucksDare.update({
+      where: { id: dareId },
+      data: { potTotal: BUCKS_INT32_MAX - 2 },
+    });
+    const refused = await contributeToDare(
+      {
+        dareId,
+        serverId: SERVER_ID,
+        contributorDiscordId: CONTRIBUTOR,
+        amount: 5,
+      },
+      deps,
+      T0,
+    );
+    expect(refused).toEqual({
+      kind: "pot_full",
+      potTotal: BUCKS_INT32_MAX - 2,
+    });
+    // Refused before any money moved and before the contributor even gets a
+    // wallet: no ledger row, no balance change, no change to the pot the
+    // domain already reported back.
+    const unchanged = await db.bucksDare.findUniqueOrThrow({
+      where: { id: dareId },
+      select: { potTotal: true },
+    });
+    expect(unchanged.potTotal).toBe(BUCKS_INT32_MAX - 2);
+    expect(
+      await db.bucksAccount.findUnique({
+        where: {
+          serverId_discordId: { serverId: SERVER_ID, discordId: CONTRIBUTOR },
+        },
+      }),
+    ).toBeNull();
+
+    // A contribution that fits under the ceiling still works.
+    const fits = await contributeToDare(
+      {
+        dareId,
+        serverId: SERVER_ID,
+        contributorDiscordId: CONTRIBUTOR,
+        amount: 2,
+      },
+      deps,
+      T0,
+    );
+    expect(fits.kind === "contributed" && fits.potTotal).toBe(BUCKS_INT32_MAX);
+    expect(await balanceOf(CONTRIBUTOR)).toBe(SEED_GRANT - 2);
     await expectNoDrift();
   });
 });
@@ -864,15 +927,7 @@ describe("window sweep", () => {
     expect(cancellationHouseCut(1)).toBe(0);
     const dareId = await makeActive({ amount: 1, windowDays: 1 });
     const houseBefore = await houseBalance();
-    const summaries = await settleEndedDareWindows(
-      db,
-      new Date(
-        T0.getTime() +
-          24 * 60 * 60 * 1000 +
-          DARE_WINDOW_INGESTION_GRACE_MS +
-          1000,
-      ),
-    );
+    const summaries = await settleEndedDareWindows(db, pastWindowGrace());
     expect(summaries.map((summary) => summary.resolution)).toEqual([
       "unachieved",
     ]);
@@ -1163,12 +1218,7 @@ describe("resolutions racing a contribution", () => {
       { serverId: SERVER_ID, discordId: CONTRIBUTOR },
       db,
     );
-    const sweepAt = new Date(
-      T0.getTime() +
-        24 * 60 * 60 * 1000 +
-        DARE_WINDOW_INGESTION_GRACE_MS +
-        1000,
-    );
+    const sweepAt = pastWindowGrace();
     const [contribution, summaries] = await Promise.all([
       contributeToDare(
         {
@@ -1295,15 +1345,7 @@ describe("unreadable stored conditions", () => {
       data: { conditions: CORRUPT },
     });
     const houseBefore = await houseBalance();
-    const summaries = await settleEndedDareWindows(
-      db,
-      new Date(
-        T0.getTime() +
-          24 * 60 * 60 * 1000 +
-          DARE_WINDOW_INGESTION_GRACE_MS +
-          1000,
-      ),
-    );
+    const summaries = await settleEndedDareWindows(db, pastWindowGrace());
     expect(summaries.map((summary) => summary.resolution)).toEqual([
       "unachieved",
     ]);
@@ -1324,15 +1366,7 @@ describe("unreadable stored conditions", () => {
       data: { conditions: CORRUPT, evaluatorVersion: "0" },
     });
     const houseBefore = await houseBalance();
-    const summaries = await settleEndedDareWindows(
-      db,
-      new Date(
-        T0.getTime() +
-          24 * 60 * 60 * 1000 +
-          DARE_WINDOW_INGESTION_GRACE_MS +
-          1000,
-      ),
-    );
+    const summaries = await settleEndedDareWindows(db, pastWindowGrace());
     expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
     expect(summaries[0]?.voidReason).toBe("unknown_evaluator");
     // Voids are a FULL refund with no cut.

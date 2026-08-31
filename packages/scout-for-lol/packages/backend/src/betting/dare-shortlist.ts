@@ -6,6 +6,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { DareTargetAccountsSchema } from "#src/betting/dare-criteria.ts";
+import { findTrackedPlayersWithAccounts } from "#src/betting/tracked-players.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 /**
@@ -65,19 +66,7 @@ export async function buildDareShortlist(
   challengerDiscordId: DiscordAccountId,
   prismaClient: ExtendedPrismaClient,
 ): Promise<DareShortlistEntry[]> {
-  const players = await prismaClient.player.findMany({
-    where: { serverId, discordId: { not: null }, accounts: { some: {} } },
-    select: {
-      id: true,
-      alias: true,
-      discordId: true,
-      accounts: {
-        select: { puuid: true, createdTime: true },
-        orderBy: { id: "asc" },
-      },
-    },
-    orderBy: { id: "asc" },
-  });
+  const players = await findTrackedPlayersWithAccounts(serverId, prismaClient);
 
   const byDiscordId = new Map<string, GroupedTarget>();
   for (const player of players) {
