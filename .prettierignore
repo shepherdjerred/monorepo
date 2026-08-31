@@ -43,6 +43,12 @@ packages/clauderon/mobile/src/types/generated/
 packages/clauderon/web/shared/src/generated/
 packages/scout-for-lol/packages/backend/generated/
 
+# trmnlp rewrites these on every `trmnlp push`, and the trmnl-publish step
+# diffs them afterwards to prove the published plugin matches the committed
+# source. trmnlp emits single-quoted scalars and prettier rewrites them to
+# double quotes, so formatting them makes the two gates contradict each other.
+packages/trmnl-dashboard/trmnl/*/src/settings.yml
+
 # Codegen output (Prisma etc.) — `generate` turbo-task outputs, never hand-formatted
 **/generated/**
 **/src-tauri/gen/**

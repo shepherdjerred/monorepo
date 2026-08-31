@@ -33,6 +33,14 @@ fi
 phase=$(kubectl get backup.velero.io "$backup_name" --namespace velero --output jsonpath='{.status.phase}')
 completed_at=$(kubectl get backup.velero.io "$backup_name" --namespace velero --output jsonpath='{.status.completionTimestamp}')
 errors=$(kubectl get backup.velero.io "$backup_name" --namespace velero --output jsonpath='{.status.errors}')
+# Velero's status.errors is omitempty, so a backup with NO errors omits the
+# field entirely and jsonpath yields "". Absent means zero here; without this
+# the numeric guard below reads ":48:48" and rejects precisely the clean
+# backups this hook exists to accept. Spelled without braces because this
+# script is a template literal: String.raw suppresses escapes, not \${}.
+if [ -z "$errors" ]; then
+  errors=0
+fi
 snapshots_attempted=$(kubectl get backup.velero.io "$backup_name" --namespace velero --output jsonpath='{.status.volumeSnapshotsAttempted}')
 snapshots_completed=$(kubectl get backup.velero.io "$backup_name" --namespace velero --output jsonpath='{.status.volumeSnapshotsCompleted}')
 selector=$(kubectl get backup.velero.io "$backup_name" --namespace velero --output jsonpath='{.spec.labelSelector.matchLabels.velero\.io/backup}')

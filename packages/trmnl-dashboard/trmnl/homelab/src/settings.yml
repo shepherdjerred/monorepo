@@ -1,21 +1,40 @@
-#
-# Changes to this file will be overwritten by `trmnlp pull`.
-#
 ---
 strategy: polling
-no_screen_padding: "no"
-dark_mode: "no"
-static_data: ""
+no_screen_padding: 'no'
+dark_mode: 'no'
+static_data: ''
 polling_verb: get
 framework_version: 3.1.1
+serverless_language: ''
 polling_url: https://trmnl.sjer.red/api/homelab
 polling_headers: x-api-key={{ api_key | url_encode }}
+polling_body: ''
+id: 303047
+oauth_enabled: 'false'
+oauth_pkce_enabled: 'no'
+oauth_authorize_url: ''
+oauth_token_url: ''
+oauth_scopes: ''
+oauth_scope_separator: ''
+oauth_refresh_url: ''
+oauth_auth_params: ''
+oauth_token_headers: ''
+oauth_token_site: ''
+oauth_token_params: ''
+oauth_token_request_auth_method: ''
+oauth_body_format: ''
+oauth_token_response_metadata: ''
+oauth_authorization_method: ''
+oauth_refresh_params: ''
+oauth_token_field_name: ''
+oauth_expiry_field_name: ''
+oauth_expiry_strategy: ''
+oauth_fixed_expiry_ms: ''
+custom_fields:
+- keyname: api_key
+  field_type: password
+  name: API Key
+  description: Dashboard polling key stored only in TRMNL.
 name: Homelab Status
 description: Homelab infrastructure health.
 refresh_interval: 15
-id: 303047
-custom_fields:
-  - keyname: api_key
-    field_type: password
-    name: API Key
-    description: Dashboard polling key stored only in TRMNL.
