@@ -46,6 +46,11 @@ The API server listens on port 7341 and the Vite dev server on 7342 (proxying
 REST routes live under `/api/v1`; the UI and tRPC transport share the same
 process in production (`bun run start`).
 
+Webhook deliveries retain Alertmanager's `truncatedAlerts` count in their API
+evidence. Opening email lists at most 25 accepted occurrences and states both
+the remaining accepted count and any upstream Alertmanager truncation; every
+accepted occurrence remains in the SQLite ledger.
+
 ## Scripts
 
 | Command                      | What it does                                                        |

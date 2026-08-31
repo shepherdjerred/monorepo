@@ -103,6 +103,7 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
             groupKey: input.payload.groupKey,
             status: input.payload.status,
             receiver: input.payload.receiver,
+            truncatedAlerts: input.payload.truncatedAlerts,
             ...(input.payload.notification_reason === undefined
               ? {}
               : { notificationReason: input.payload.notification_reason }),
@@ -120,7 +121,10 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
 
         let emailQueued = false;
         if (input.emailEnabled && newlyNotified.length > 0) {
-          const message = openingEmail(newlyNotified);
+          const message = openingEmail(
+            newlyNotified,
+            input.payload.truncatedAlerts,
+          );
           await transaction.emailOutbox.create({
             data: {
               id: OutboxIdSchema.parse(crypto.randomUUID()),

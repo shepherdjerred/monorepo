@@ -27,6 +27,7 @@
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/scout-for-lol:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t scout-for-lol:dev -f Dockerfile ../../../..",
     "smoke": "bun scripts/smoke.ts",
     "generate": "bun run db:generate",
+    "temporal:requeue-work": "bun run scripts/requeue-temporal-work.ts",
     "compact:report-lake": "bun run scripts/compact-report-lake.ts",
     "generate-lane-priors": "bun run scripts/generate-lane-priors.ts",
     "evaluate-lane-priors": "bun run scripts/evaluate-lane-priors.ts",

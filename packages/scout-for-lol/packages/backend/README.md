@@ -34,6 +34,23 @@ bun run smoke            # Smoke-test the built image
 bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 ```
 
+### Durable Temporal work
+
+Detached prediction and parlay work is inserted once before its Temporal
+workflow starts. Reconciliation starts only never-accepted `queued` rows.
+After Temporal exhausts the activity's four-attempt budget, the row remains
+terminal `failed`; normal producers cannot restart the same work ID.
+
+An operator may explicitly requeue one reviewed failed row. The command is a
+dry run unless `--confirm` is supplied, requires a reason, and atomically
+records the reason and increments the row's requeue count:
+
+```bash
+bun run temporal:requeue-work -- \
+  --work-id parlay:<match-id> \
+  --reason "OpenRouter capacity restored and this match was reviewed"
+```
+
 `db:generate` must run after schema changes and before typecheck/test; from the
 Scout root, `mise run generate` does the same thing.
 

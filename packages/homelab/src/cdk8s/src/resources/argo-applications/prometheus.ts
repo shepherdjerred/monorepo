@@ -23,16 +23,6 @@ import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
-import type { KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement } from "@shepherdjerred/homelab/cdk8s/generated/helm/kube-prometheus-stack.types";
-
-// The generated nested-route element type only models `receiver`/`matchers`,
-// but Alertmanager child routes also accept `group_by` (the parent route type
-// has it). Intersect it in so the per-execution grouping route below is typed
-// honestly without a cast or a hand-edit to the generated types.
-type AlertmanagerChildRoute =
-  KubeprometheusstackHelmValuesAlertmanagerConfigRouteRoutesElement & {
-    group_by: string[];
-  };
 
 function createPrometheusIngresses(chart: Chart): void {
   createIngress(chart, "alertmanager-ingress", {
@@ -76,19 +66,7 @@ function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
 }
 
 export async function createPrometheusApp(chart: Chart) {
-  // Temporal workflow-failure alerts (from the temporal-failure-watch schedule
-  // in packages/temporal) all share alertname "TemporalWorkflowFailed" and carry
-  // no `namespace` label, so under the parent route's group_by [namespace,
-  // alertname] every failed execution would collapse into ONE notification
-  // group / dedup key. Group by the per-execution identity labels so each failed
-  // workflow execution remains distinct. Must precede the severity catch-all
-  // route (these alerts are severity=warning).
-  const temporalWorkflowFailureRoute: AlertmanagerChildRoute = {
-    receiver: "alerts",
-    matchers: ['alertname = "TemporalWorkflowFailed"'],
-    group_by: ["alertname", "workflowId", "runId"],
-  };
-  const removedAgentTaskAggregateRoute: AlertmanagerChildRoute = {
+  const removedAgentTaskAggregateRoute = {
     receiver: "null",
     // These alert names belonged to the removed hourly aggregate timeout
     // watcher. Keep stale rules/metrics from notifying while the new per-run
@@ -302,6 +280,7 @@ export async function createPrometheusApp(chart: Chart) {
             webhook_configs: [
               {
                 send_resolved: true,
+                max_alerts: 100,
                 url: `${ALERT_DASHBOARD_SERVICE_URL}/internal/v1/alertmanager/events`,
                 http_config: {
                   authorization: {
@@ -417,10 +396,6 @@ export async function createPrometheusApp(chart: Chart) {
                 'namespace = "buildkite"',
               ],
             },
-            // Per-execution grouping for Temporal workflow failures —
-            // see temporalWorkflowFailureRoute's definition above. Precedes the
-            // severity catch-all (these alerts are severity=warning).
-            temporalWorkflowFailureRoute,
             removedAgentTaskAggregateRoute,
             {
               // Route critical and warning alerts to the Alerts ledger.

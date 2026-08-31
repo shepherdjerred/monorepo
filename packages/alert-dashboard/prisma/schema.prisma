@@ -60,6 +60,7 @@ model WebhookDelivery {
   groupKey           String
   status             String
   receiver           String
+  truncatedAlerts    Int                         @default(0)
   notificationReason String?
   payloadHash        String
   occurrenceIds      Json

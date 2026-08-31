@@ -7,8 +7,12 @@ import {
   RawCurrentGameInfoSchema,
   type BucksPredictionObservation,
 } from "@scout-for-lol/data";
-import type { ScoutDetachedWorkInput } from "@scout-for-lol/temporal";
-import { prisma } from "#src/database/index.ts";
+import {
+  DETACHED_WORK_MAX_ATTEMPTS,
+  type ScoutDetachedWorkInput,
+} from "@scout-for-lol/temporal";
+import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
@@ -34,15 +38,20 @@ export function parlayTemporalWorkId(matchId: string): string {
   return `parlay:${matchId}`;
 }
 
-async function persistWork(input: {
-  id: string;
-  kind: ScoutDetachedWorkInput["kind"];
-  payload: string;
-}): Promise<void> {
+export async function persistScoutTemporalWork(
+  input: {
+    id: string;
+    kind: ScoutDetachedWorkInput["kind"];
+    payload: string;
+  },
+  database: ExtendedPrismaClient = prisma,
+): Promise<boolean> {
   try {
-    await prisma.scoutTemporalWork.create({ data: input });
+    await database.scoutTemporalWork.create({ data: input });
+    return true;
   } catch (error) {
     if (!UniqueViolationSchema.safeParse(error).success) throw error;
+    return false;
   }
 }
 
@@ -74,16 +83,18 @@ export async function enqueuePredictionObservation(
 ): Promise<void> {
   const parsed = BucksPredictionObservationSchema.parse(observation);
   const workId = predictionTemporalWorkId(parsed.matchId);
-  await persistWork({
+  const created = await persistScoutTemporalWork({
     id: workId,
     kind: "prediction-ingest",
     payload: JSON.stringify(parsed),
   });
-  void requestStart({
-    stage: configuration.environment,
-    kind: "prediction-ingest",
-    workId,
-  });
+  if (created) {
+    void requestStart({
+      stage: configuration.environment,
+      kind: "prediction-ingest",
+      workId,
+    });
+  }
 }
 
 export async function enqueueParlayGeneration(
@@ -92,20 +103,56 @@ export async function enqueueParlayGeneration(
   const parsed = ParlayWorkPayloadSchema.parse(input);
   const matchId = `${parsed.gameInfo.platformId}_${parsed.gameInfo.gameId.toString()}`;
   const workId = parlayTemporalWorkId(matchId);
-  await persistWork({
+  const created = await persistScoutTemporalWork({
     id: workId,
     kind: "parlay-generation",
     payload: JSON.stringify(parsed),
   });
-  await requestStart({
-    stage: configuration.environment,
-    kind: "parlay-generation",
-    workId,
+  if (created) {
+    await requestStart({
+      stage: configuration.environment,
+      kind: "parlay-generation",
+      workId,
+    });
+  }
+}
+
+export async function requeueFailedScoutTemporalWork(
+  workId: string,
+  reason: string,
+  database: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  const parsedReason = z.string().trim().min(10).parse(reason);
+  const result = await database.scoutTemporalWork.updateMany({
+    where: { id: workId, state: "failed" },
+    data: {
+      state: "queued",
+      requeueCount: { increment: 1 },
+      lastRequeueReason: parsedReason,
+      lastRequeuedAt: new Date(),
+    },
+  });
+  if (result.count !== 1) {
+    throw new Error(
+      `Scout Temporal work ${workId} is missing or is not in failed state`,
+    );
+  }
+}
+
+export async function findQueuedScoutTemporalWork(
+  database: ExtendedPrismaClient = prisma,
+) {
+  return await database.scoutTemporalWork.findMany({
+    where: { state: "queued" },
+    select: { id: true, kind: true },
+    orderBy: { createdAt: "asc" },
+    take: 100,
   });
 }
 
 export async function executeScoutTemporalWork(
   input: ScoutDetachedWorkInput,
+  attempt = 1,
 ): Promise<void> {
   const work = await prisma.scoutTemporalWork.findUniqueOrThrow({
     where: { id: input.workId },
@@ -120,7 +167,13 @@ export async function executeScoutTemporalWork(
 
   await prisma.scoutTemporalWork.update({
     where: { id: input.workId },
-    data: { state: "running", startedAt: new Date(), lastError: null },
+    data: {
+      state: "running",
+      startedAt: new Date(),
+      failedAt: null,
+      lastError: null,
+      attemptCount: { increment: 1 },
+    },
   });
   try {
     const raw = JSON.parse(work.payload);
@@ -149,14 +202,15 @@ export async function executeScoutTemporalWork(
       data: { state: "completed", completedAt: new Date() },
     });
   } catch (error) {
+    const terminalFailure =
+      attempt >= DETACHED_WORK_MAX_ATTEMPTS ||
+      (input.kind === "parlay-generation" &&
+        classifyLlmProviderIssue(error) === "quota");
     await prisma.scoutTemporalWork.update({
       where: { id: input.workId },
       data: {
-        // Keep the durable handoff eligible for the reconciliation workflow.
-        // Temporal retries the current execution first; if its retry budget is
-        // exhausted, the next reconciliation starts a new failed-only
-        // workflow execution with the same stable work ID.
-        state: "queued",
+        state: terminalFailure ? "failed" : "queued",
+        failedAt: terminalFailure ? new Date() : null,
         lastError: error instanceof Error ? error.message : String(error),
       },
     });
