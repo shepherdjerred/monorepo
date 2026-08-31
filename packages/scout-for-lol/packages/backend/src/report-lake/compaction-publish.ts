@@ -10,12 +10,10 @@ export type CompactionSummary = {
   tier: "fold" | "rebuild";
   matchRows: number;
   prematchRows: number;
-  predictionObservationRows: number;
   accountRows: number;
   competitionRankHistoryRows: number;
   skippedMatches: number;
   skippedPrematches: number;
-  skippedPredictionObservations: number;
   skippedCompetitionRankHistory: number;
   durationMs: number;
 };
@@ -44,7 +42,6 @@ export function publishCompactionMetrics(
   for (const [table, rows] of [
     ["matches", summary.matchRows],
     ["prematch", summary.prematchRows],
-    ["prediction_observations", summary.predictionObservationRows],
     ["accounts", summary.accountRows],
     ["competition_rank_history", summary.competitionRankHistoryRows],
   ] as const) {

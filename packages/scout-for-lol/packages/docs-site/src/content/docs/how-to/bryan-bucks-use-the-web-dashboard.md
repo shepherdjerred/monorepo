@@ -51,4 +51,4 @@ games settle.
 ## What stays on Discord
 
 Peek passes (`/bb pass`, `/bb peek`) and the analyst (`/bb ask`) are
-Discord-only. The web never shows pre-game estimates.
+Discord-only.

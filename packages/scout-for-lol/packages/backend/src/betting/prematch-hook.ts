@@ -4,7 +4,6 @@ import type {
   PlayerConfigEntry,
   QueueType,
   RawCurrentGameInfo,
-  BucksPrediction,
 } from "@scout-for-lol/data";
 import {
   bettingAnchor,
@@ -52,7 +51,6 @@ export async function prepareBucksPrematch(
     queueType: QueueType | undefined;
     targetGuildIds: readonly DiscordGuildId[];
     detectedAt: Date;
-    prediction: BucksPrediction | undefined;
   },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<BucksPrematchAttachment> {
@@ -108,7 +106,6 @@ export async function prepareBucksPrematch(
       guildIds: enabledGuilds,
       detectedAt: input.detectedAt,
       trackedAliasByPuuid,
-      prediction: input.prediction,
     },
     prismaClient,
   );
@@ -123,7 +120,6 @@ export async function prepareBucksPrematch(
   // `computeClosesAt` on the hot path to save one edit.
   const anchor = bettingAnchor(roster);
   const footer = bucksPrematchSummary({
-    prediction: input.prediction,
     poolState: "open",
     positions: [],
     framing: anchor === undefined ? undefined : subjectFraming(anchor),

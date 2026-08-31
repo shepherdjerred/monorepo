@@ -20,14 +20,12 @@ import { getErrorMessage } from "#src/utils/errors.ts";
  *   games/{yyyy}/{MM}/{dd}/{matchId}/match.json
  *   games/{yyyy}/{MM}/{dd}/{matchId}/timeline.json
  *   prematch/{yyyy}/{MM}/{dd}/{gameId}/spectator-data.json
- *   prematch/{yyyy}/{MM}/{dd}/{matchId}/prediction-observation.json
  */
 
 export const MATCH_PREFIX = "games/";
 export const PREMATCH_PREFIX = "prematch/";
 
-export type RawObjectKind =
-  "match" | "timeline" | "prematch" | "prediction_observation" | "ignored";
+export type RawObjectKind = "match" | "timeline" | "prematch" | "ignored";
 
 export function classifyRawObjectKey(key: string): RawObjectKind {
   if (key.startsWith(MATCH_PREFIX) && key.endsWith("/match.json")) {
@@ -38,12 +36,6 @@ export function classifyRawObjectKey(key: string): RawObjectKind {
   }
   if (key.startsWith(PREMATCH_PREFIX) && key.endsWith("/spectator-data.json")) {
     return "prematch";
-  }
-  if (
-    key.startsWith(PREMATCH_PREFIX) &&
-    key.endsWith("/prediction-observation.json")
-  ) {
-    return "prediction_observation";
   }
   return "ignored";
 }
@@ -66,13 +58,6 @@ export function timelineObjectKey(matchId: string, keyDate: Date): string {
 
 export function prematchObjectKey(gameId: string, keyDate: Date): string {
   return `${PREMATCH_PREFIX}${datePath(keyDate)}/${gameId}/spectator-data.json`;
-}
-
-export function predictionObservationObjectKey(
-  matchId: string,
-  keyDate: Date,
-): string {
-  return `${PREMATCH_PREFIX}${datePath(keyDate)}/${matchId}/prediction-observation.json`;
 }
 
 export type RawObjectRef = {

@@ -248,7 +248,6 @@ describe("openBettingPoolsForPrematch metrics", () => {
         trackedAliasByPuuid: new Map([[bucksTestPuuid(0), "jerred"]]),
         queueType: "solo",
         detectedAt,
-        prediction: undefined,
       },
       db,
     );
@@ -260,7 +259,6 @@ describe("openBettingPoolsForPrematch metrics", () => {
         trackedAliasByPuuid: new Map([[bucksTestPuuid(0), "jerred"]]),
         queueType: "solo",
         detectedAt,
-        prediction: undefined,
       },
       db,
     );

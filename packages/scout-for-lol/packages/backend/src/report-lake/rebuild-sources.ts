@@ -1,7 +1,6 @@
 import { ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
 import {
   CachedLeaderboardSchema,
-  BucksPredictionObservationSchema,
   RawCurrentGameInfoSchema,
   RawMatchSchema,
 } from "@scout-for-lol/data";
@@ -11,14 +10,12 @@ import {
   flattenCompetitionRankHistory,
   flattenMatch,
   flattenPrematch,
-  flattenPredictionObservation,
 } from "#src/report-lake/flatten.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   stagingIdForCompetitionRankHistory,
   stagingIdForMatch,
   stagingIdForPrematch,
-  stagingIdForPredictionObservation,
 } from "#src/report-lake/staging.ts";
 import {
   MATCH_PREFIX,
@@ -169,68 +166,6 @@ export async function populatePrematchFromS3(
       continue;
     }
     batch.push({ key: ref.key, observedAt: ref.lastModified ?? new Date() });
-    if (batch.length >= REBUILD_S3_CONCURRENCY) {
-      await flush();
-    }
-  }
-  if (batch.length > 0) {
-    await flush();
-  }
-  return skipped;
-}
-
-export async function populatePredictionObservationsFromS3(
-  options: RebuildSourceOptions,
-): Promise<number> {
-  const { client, bucket, writer, foldedIds } = options;
-  let skipped = 0;
-  const batch: string[] = [];
-  const flush = async (): Promise<void> => {
-    const observations = await Promise.all(
-      batch.map(async (key) => {
-        const rawParsed: unknown = JSON.parse(
-          await readRawObjectText(client, bucket, key, options),
-        );
-        const parsed = BucksPredictionObservationSchema.safeParse(rawParsed);
-        if (!parsed.success) {
-          logger.warn(
-            `Skipping S3 prediction observation ${key}: JSON failed validation`,
-            { issue: parsed.error.issues[0] },
-          );
-          return null;
-        }
-        return parsed.data;
-      }),
-    );
-    batch.length = 0;
-    for (const observation of observations) {
-      if (observation === null) {
-        skipped += 1;
-        reportLakeCompactionSkippedTotal.inc({
-          table: "prediction_observations",
-        });
-        continue;
-      }
-      writer.write(flattenPredictionObservation(observation));
-      foldedIds.add(stagingIdForPredictionObservation(observation.matchId));
-    }
-    options.onProgress?.({
-      files: foldedIds.size + skipped,
-      rows: writer.rows,
-      skipped,
-    });
-  };
-
-  for await (const ref of enumerateRawObjects(
-    client,
-    bucket,
-    PREMATCH_PREFIX,
-    options,
-  )) {
-    if (classifyRawObjectKey(ref.key) !== "prediction_observation") {
-      continue;
-    }
-    batch.push(ref.key);
     if (batch.length >= REBUILD_S3_CONCURRENCY) {
       await flush();
     }

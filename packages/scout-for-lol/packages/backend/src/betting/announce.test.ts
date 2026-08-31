@@ -1,17 +1,12 @@
 import { describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
-  BucksPredictionSchema,
-  type BucksPrediction,
-} from "@scout-for-lol/data/index.ts";
-import {
   buildAnnouncements,
   sendSettlementMessage,
 } from "#src/betting/announce.ts";
 import {
   buildSettlementMessage,
   formatSettlementBody,
-  predictionVerdict,
 } from "#src/betting/outcome-message.ts";
 import { HOUSE_ACCOUNT_DISCORD_ID } from "#src/betting/constants.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
@@ -31,70 +26,6 @@ function firstEmbedJson(message: MessageCreateOptions) {
   }
   return "toJSON" in embed ? embed.toJSON() : embed;
 }
-
-function prediction(
-  winProbability: number,
-  subjectTeamId = 100,
-): BucksPrediction {
-  return BucksPredictionSchema.parse({
-    winProbability,
-    subjectTeamId,
-    confidence: "low",
-    sentence: "Coin flip.",
-    drivers: [],
-  });
-}
-
-describe("predictionVerdict", () => {
-  test("scores canonical v2 Blue probability against either result", () => {
-    const v2 = BucksPredictionSchema.parse({
-      version: 2,
-      blueWinProbability: 0.72,
-      dataQuality: "high",
-      coverage: { covered: 50, applicable: 50 },
-      drivers: ["Blue rank edge"],
-    });
-    expect(predictionVerdict(v2, 100)).toBe("Scout called it.");
-    expect(predictionVerdict(v2, 200)).toBe("Scout was wrong.");
-  });
-
-  test("scores a confident call that landed", () => {
-    expect(predictionVerdict(prediction(0.72, 100), 100)).toBe(
-      "Scout called it.",
-    );
-    expect(predictionVerdict(prediction(0.28, 100), 200)).toBe(
-      "Scout called it.",
-    );
-  });
-
-  test("scores a confident call that missed", () => {
-    expect(predictionVerdict(prediction(0.72, 100), 200)).toBe(
-      "Scout was wrong.",
-    );
-    expect(predictionVerdict(prediction(0.28, 100), 100)).toBe(
-      "Scout was wrong.",
-    );
-  });
-
-  // The formula has no intercept, so a symmetric lobby returns exactly 0.500 —
-  // a supported result, and a declined call rather than a call that the subject
-  // loses. Scoring it either way makes the recap claim a direction the stored
-  // sentence never took.
-  test("declines to score an exact coin flip, whichever side won", () => {
-    expect(predictionVerdict(prediction(0.5, 100), 100)).toBeUndefined();
-    expect(predictionVerdict(prediction(0.5, 100), 200)).toBeUndefined();
-  });
-
-  test("declines to score a near-even call", () => {
-    expect(predictionVerdict(prediction(0.51, 100), 100)).toBeUndefined();
-    expect(predictionVerdict(prediction(0.49, 100), 100)).toBeUndefined();
-  });
-
-  test("has no verdict without a prediction or a decided result", () => {
-    expect(predictionVerdict(undefined, 100)).toBeUndefined();
-    expect(predictionVerdict(prediction(0.72, 100), undefined)).toBeUndefined();
-  });
-});
 
 describe("formatSettlementBody", () => {
   test("lists every bettor and the in-game player's earned Bucks", () => {
@@ -158,8 +89,6 @@ describe("formatSettlementBody", () => {
           total: 11,
         },
       ],
-      predictionSentence: undefined,
-      predictionVerdictLine: undefined,
     });
 
     expect(body).toContain("**BET WINNERS:**");
@@ -209,8 +138,6 @@ describe("formatSettlementBody", () => {
       framing: undefined,
       summary,
       earnings: [],
-      predictionSentence: undefined,
-      predictionVerdictLine: undefined,
       unmatchedPositions: [
         {
           betId: 3,
@@ -266,8 +193,6 @@ describe("formatSettlementBody", () => {
       framing: undefined,
       summary,
       earnings: [],
-      predictionSentence: undefined,
-      predictionVerdictLine: undefined,
     });
 
     expect(body).toContain(
@@ -333,8 +258,6 @@ describe("formatSettlementBody house cuts", () => {
       framing: undefined,
       summary,
       earnings: [],
-      predictionSentence: undefined,
-      predictionVerdictLine: undefined,
     });
 
     expect(body).toContain(`• <@${WINNER_DISCORD_ID}> bet 1BB, won 1BB`);
@@ -394,8 +317,6 @@ describe("formatSettlementBody house cuts", () => {
       framing: undefined,
       summary,
       earnings: [],
-      predictionSentence: undefined,
-      predictionVerdictLine: undefined,
     });
 
     expect(body).not.toContain("Bryan Bucks house matched");
@@ -466,9 +387,6 @@ describe("settlement outcome message", () => {
           total: 9,
         },
       ],
-      predictionSentence:
-        "Scout gave this roster a decisive edge before the match started.",
-      predictionVerdictLine: "Scout called it.",
       includeOutcome: true,
       parlay: undefined,
       framing: undefined,
@@ -531,8 +449,6 @@ describe("settlement outcome bounds", () => {
           total: 1,
         },
       ],
-      predictionSentence: undefined,
-      predictionVerdictLine: undefined,
     });
 
     const fields = firstEmbedJson(message).fields ?? [];

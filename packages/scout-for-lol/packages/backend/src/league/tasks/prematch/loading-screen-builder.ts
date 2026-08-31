@@ -69,13 +69,13 @@ type BaseBuiltParticipant = Omit<
 type RankedBuiltParticipant = NonStandardLoadingScreenParticipant;
 export type ParticipantRanks = ReadonlyMap<string, RankLookupResult>;
 
-/** Fetch the lobby rank snapshot once so prediction and presentation share it. */
+/** Fetch the lobby rank snapshot used by the loading-screen presentation. */
 export async function fetchParticipantRanks(
   gameInfo: RawCurrentGameInfo,
   region: Region,
 ): Promise<ParticipantRanks> {
-  // Classic assets do not display modern ranked data and prediction treats
-  // rank/season as inapplicable there. Preserve the existing zero-request path.
+  // Classic assets do not display modern ranked data. Preserve the existing
+  // zero-request path.
   if (isClassicAssetMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
     return new Map();
   }

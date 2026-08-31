@@ -86,8 +86,6 @@ function parlayEmbed(
     parlay,
     framing: undefined,
     earnings: [],
-    predictionSentence: undefined,
-    predictionVerdictLine: undefined,
   });
   const embed = message.embeds?.[0];
   if (embed === undefined) {

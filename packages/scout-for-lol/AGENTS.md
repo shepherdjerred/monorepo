@@ -788,8 +788,8 @@ rows, `WITH (mentions = all)` to mention every eligible row, or
 produce mentions, even when their labels match a player alias.
 
 - Lake layout & compaction: `backend/src/report-lake/` (two-tier: 15-min
-  staging fold + nightly full rebuild enumerating the canonical raw match,
-  prematch, and prediction-observation JSON from **S3** (SeaweedFS); atomic
+  staging fold + nightly full rebuild enumerating the canonical raw match and
+  prematch JSON from **S3** (SeaweedFS); atomic
   `CURRENT`-pointer publish; the lake is disposable derived data). Manual run:
   `bun run compact:report-lake` (`--fold` for fold-only).
 - Engine: `backend/src/reports/duckdb/` — the ScoutQL `ScoutQlPlan` compiles to
@@ -988,8 +988,7 @@ caller. History uses caller-bound `bbnav:` component IDs and a frozen maximum
 ledger ID so new entries cannot reshuffle pages. Market digests show anonymous
 side totals, never bettor identities or inferred odds. Betting itself is
 button-only: there is no slash command to place, top up, or cancel a position,
-and the retired peek feature (`/bb pass`/`/bb peek`) no longer exists — the
-pregame estimate is visible only in the settlement recap. `/bb balance`
+and the retired peek feature (`/bb pass`/`/bb peek`) no longer exists. `/bb balance`
 attaches a best-effort balance-over-time PNG (ledger `balanceAfter` per day,
 rendered with the report package's ECharts line chart) — a chart failure
 degrades to the numbers-only embed, never an error. `/bb history` rows show
@@ -1004,9 +1003,9 @@ guild posts; more than one enabled guild is a hard failure until an explicit
 channel mapping exists.
 
 Settlement DMs are rich embeds sent through `sendDM`'s embeds support: a game
-line (queue, tracked players, champions), the result, the revealed prediction
-when displayable, "WIN on <alias>" receipt lines, and the recipient's own
-earnings. The plain-text rendering remains the `DmAuditLog` record, and
+line (queue, tracked players, champions), the result, "WIN on <alias>" receipt
+lines, and the recipient's own earnings. The plain-text rendering remains the
+`DmAuditLog` record, and
 budgeted DMs refuse embeds because the budget footer is a content mutation.
 The `/bb notifications` hint is shown on a recipient's first eligible DM and
 then once every `SETTLEMENT_DM_HINT_EVERY` delivered settlement DMs, derived
@@ -1348,30 +1347,6 @@ and the BB-specific model config (`BB_ASK_MODEL`) is gone — turns run on
   produces a post-match result silently destroys every stake in its pool. Six
   hours is chosen against the `ActiveGame` TTL and `MAX_DISCORD_ALERT_AGE_MS`,
   both three.
-- **V2 is one frozen, symmetric Blue-team estimate per match.**
-  Prematch fetches one point-in-time rank snapshot for all ten players and
-  shares it with prediction and loading-screen presentation; prediction never
-  calls Riot again and presentation failures cannot remove an eligible
-  observation. An ineligible game with no delivery destination exits before
-  rank acquisition. One DuckDB query reads each
-  identifiable player's last 30 strictly earlier same-queue matches. The
-  estimator compares team rank, Beta-shrunk season record, recent form, lane
-  form, and champion form with no intercept; missing history is neutral 50%,
-  and swapping the teams produces the complementary probability. The canonical
-  v2 JSON stores Blue probability, coverage, data quality, and at most two
-  drivers. Legacy unversioned pool predictions remain parseable for old
-  settlement rows.
-- **Prediction capture is match-scoped, not guild-scoped.** Every detected
-  Bryan-Bucks-eligible standard game writes one versioned feature/output
-  observation to S3 and the report lake, even when presentation construction
-  fails or no destination guild has betting enabled. The best-effort write is
-  started after the estimate freezes but is not awaited by pool creation or
-  Discord delivery: losing an evaluation observation cannot suppress the
-  notification or the pool's in-memory estimate. Outcomes join later by
-  `match_id`; run
-  `bun run evaluate-predictions` in the backend to report Brier score, log loss,
-  ten-bin calibration error, and directional accuracy overall and by queue and
-  quality, with a computed 50/50 reference.
 - **MVP is role-aware and lives in the backend**, because `toMatch()` drops
   objective damage, heals/shields on teammates, CC, self-mitigated damage, and
   `teamPosition`. Scores normalize as per-team share, so they need no
@@ -1391,11 +1366,6 @@ and the BB-specific model config (`BB_ASK_MODEL`) is gone — turns run on
   failed". An ID that is claimed by namespace and then fails to parse is closed
   out with a silent `deferUpdate()` and counted as `bb/malformed`, never as
   `bb/success`.
-- **Pregame estimates are never public.** Prematch messages contain only market
-  controls. Settlement may reveal the estimate after the result, except that
-  calls displaying as 45–55% remain suppressed. `predictionVerdict` also
-  returns nothing for those near-even rows because scoring them would claim a
-  direction the stored estimate did not take.
 - **Every state transition is counted and logged, post-commit only.**
   `src/metrics/betting.ts` holds the counters and gauges;
   `src/betting/transition-log.ts` holds `logBucksTransition`. Both fire

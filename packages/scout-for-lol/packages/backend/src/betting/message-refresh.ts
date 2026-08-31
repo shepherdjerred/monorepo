@@ -4,7 +4,6 @@ import {
   BucksMessageRefsSchema,
   BucksPoolRosterSchema,
   BucksPoolStateSchema,
-  BucksPredictionSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   RiotTeamIdSchema,
@@ -69,7 +68,6 @@ async function refreshOnce(
       messageRefs: true,
       prematchContentBase: true,
       poolState: true,
-      predictionJson: true,
       roster: true,
       closesAt: true,
       bets: {
@@ -123,10 +121,6 @@ async function refreshOnce(
     });
     return;
   }
-  const prediction =
-    pool.predictionJson === null
-      ? undefined
-      : BucksPredictionSchema.parse(JSON.parse(pool.predictionJson));
   const poolState = BucksPoolStateSchema.parse(pool.poolState);
   const currentBets = pool.bets.filter((bet) => bet.betOutcome !== "cancelled");
   const positions: BucksPrematchPosition[] = pool.bets
@@ -161,7 +155,6 @@ async function refreshOnce(
   const content = withBucksDigest(
     pool.prematchContentBase,
     bucksPrematchSummary({
-      prediction,
       poolState,
       positions,
       houseMatches,

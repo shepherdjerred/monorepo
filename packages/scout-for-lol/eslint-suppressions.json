@@ -53,11 +53,6 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/evaluate-predictions.ts": {
-    "custom-rules/prefer-structured-logging": {
-      "count": 1
-    }
-  },
   "packages/backend/scripts/generate-lane-priors.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 1

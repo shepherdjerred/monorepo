@@ -57,7 +57,7 @@ would be both wrong and alarming.
 
 When the game settles, Scout sends one private summary for that game when DMs
 are enabled in your server — an embed naming the game, the tracked players and
-their champions, the result, and (when Scout reveals it) the pregame estimate.
+their champions, and the result.
 If you placed an outcome or parlay bet, it includes your receipt. If Scout tracked you in that game, it also lists other people's
 outcome bets as **for your team** or **against your team**.
 

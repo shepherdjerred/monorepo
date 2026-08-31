@@ -211,16 +211,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             take: 100,
           });
           const parsedDetachedWorks = detachedWorks.map((work) => {
-            if (
-              work.kind !== "prediction-ingest" &&
-              work.kind !== "parlay-generation"
-            ) {
+            if (work.kind !== "parlay-generation") {
               throw ApplicationFailure.nonRetryable(
                 `Unknown Scout Temporal work kind ${work.kind}`,
                 "InvalidTemporalWorkKind",
               );
             }
-            const kind: "prediction-ingest" | "parlay-generation" = work.kind;
+            const kind: "parlay-generation" = work.kind;
             return { kind, workId: work.id };
           });
           const parsedInteractiveRuns = interactiveRuns.map((run) => {
@@ -312,7 +309,6 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await backfillFromExisting();
             break;
           }
-          case "prediction-ingest":
           case "legacy-backfill":
             unavailable(input.kind);
         }

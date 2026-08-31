@@ -50,7 +50,7 @@ export function scoutInitialHistoryWorkflowId(
 
 export function scoutDetachedWorkWorkflowId(
   stage: ScoutStage,
-  kind: "prediction-ingest" | "parlay-generation",
+  kind: "parlay-generation",
   workId: string,
 ): string {
   return `scout-${stage}-${kind}-${workId}`;

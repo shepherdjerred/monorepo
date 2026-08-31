@@ -1,12 +1,10 @@
 import { EmbedBuilder, type MessageCreateOptions } from "discord.js";
 import {
-  type BucksPrediction,
   type BucksVoidReason,
   formatInteger,
   formatParlayNumericValue,
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/earnings.ts";
-import { shouldDisplayPrediction } from "#src/betting/prediction.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { SettlementBet } from "#src/betting/settlement-types.ts";
@@ -18,7 +16,6 @@ const MAX_BET_ROWS = 15;
 const MAX_EARNING_ALIAS_LENGTH = 100;
 const EMBED_FIELD_VALUE_LIMIT = 1024;
 const EMBED_TOTAL_TEXT_LIMIT = 6000;
-const COIN_FLIP = 0.5;
 
 export type SettlementMessageInput = {
   summary: SettlementSummary;
@@ -32,8 +29,6 @@ export type SettlementMessageInput = {
   framing: OutcomeFraming | undefined;
   earnings: readonly EarnedAward[];
   unmatchedPositions?: readonly ClosedPosition[];
-  predictionSentence: string | undefined;
-  predictionVerdictLine: string | undefined;
 };
 
 type SettlementDisplay = {
@@ -106,13 +101,6 @@ function parlayRefundSummary(
 
 function settlementSummaryLines(input: SettlementMessageInput): string[] {
   const lines: string[] = [];
-  if (input.predictionSentence !== undefined) {
-    const verdict =
-      input.predictionVerdictLine === undefined
-        ? ""
-        : ` ${input.predictionVerdictLine}`;
-    lines.push(`${input.predictionSentence}${verdict}`);
-  }
   const betRefund = input.includeOutcome
     ? outcomeRefundSummary(input)
     : undefined;
@@ -284,32 +272,6 @@ function formatSettlementDisplay(
     parlayLoserLines: parlays.losers,
     earningLines: settlementEarningLines(input),
   };
-}
-
-/** Score the stored prediction against the result, or return nothing. */
-export function predictionVerdict(
-  prediction: BucksPrediction | undefined,
-  winningTeamId: number | undefined,
-): string | undefined {
-  if (winningTeamId === undefined || prediction === undefined) {
-    return undefined;
-  }
-  if ("version" in prediction) {
-    if (!shouldDisplayPrediction(prediction.blueWinProbability)) {
-      return undefined;
-    }
-    const predictedBlueWin = prediction.blueWinProbability > COIN_FLIP;
-    const blueWon = winningTeamId === 100;
-    return predictedBlueWin === blueWon
-      ? "Scout called it."
-      : "Scout was wrong.";
-  }
-  if (!shouldDisplayPrediction(prediction.winProbability)) {
-    return undefined;
-  }
-  const predictedWin = prediction.winProbability > COIN_FLIP;
-  const subjectWon = prediction.subjectTeamId === winningTeamId;
-  return predictedWin === subjectWon ? "Scout called it." : "Scout was wrong.";
 }
 
 export function formatSettlementBody(input: SettlementMessageInput): string {

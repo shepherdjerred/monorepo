@@ -4,7 +4,6 @@ import type {
   CachedLeaderboard,
   RawCurrentGameInfo,
   RawMatch,
-  BucksPredictionObservation,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeStagingWritesTotal } from "#src/metrics/report-lake.ts";
@@ -12,14 +11,12 @@ import {
   flattenCompetitionRankHistory,
   flattenMatch,
   flattenPrematch,
-  flattenPredictionObservation,
 } from "#src/report-lake/flatten.ts";
 import {
   competitionRankHistoryStagingDir,
   ensureLakeScaffold,
   matchesStagingDir,
   prematchStagingDir,
-  predictionObservationsStagingDir,
 } from "#src/report-lake/paths.ts";
 
 const logger = createLogger("report-lake-staging");
@@ -43,10 +40,7 @@ function sanitizeFileStem(stem: string): string {
 }
 
 export type ReportLakeStagingTable =
-  | "matches"
-  | "prematch"
-  | "prediction_observations"
-  | "competition_rank_history";
+  "matches" | "prematch" | "competition_rank_history";
 
 export function matchStagingFilePath(lakeDir: string, matchId: string): string {
   return path.join(
@@ -62,16 +56,6 @@ export function prematchStagingFilePath(
   return path.join(
     prematchStagingDir(lakeDir),
     `${sanitizeFileStem(dedupeKey)}.jsonl`,
-  );
-}
-
-export function predictionObservationStagingFilePath(
-  lakeDir: string,
-  matchId: string,
-): string {
-  return path.join(
-    predictionObservationsStagingDir(lakeDir),
-    `${sanitizeFileStem(matchId)}.jsonl`,
   );
 }
 
@@ -141,34 +125,6 @@ export async function writePrematchStagingFile(
   }
 }
 
-export async function writePredictionObservationStagingFile(
-  lakeDir: string,
-  observation: BucksPredictionObservation,
-): Promise<boolean> {
-  try {
-    await ensureLakeScaffold(lakeDir);
-    await Bun.write(
-      predictionObservationStagingFilePath(lakeDir, observation.matchId),
-      toNdjson([flattenPredictionObservation(observation)]),
-    );
-    reportLakeStagingWritesTotal.inc({
-      table: "prediction_observations",
-      status: "success",
-    });
-    return true;
-  } catch (error) {
-    logger.warn(
-      `Failed to write prediction-observation staging file for ${observation.matchId}`,
-      { error },
-    );
-    reportLakeStagingWritesTotal.inc({
-      table: "prediction_observations",
-      status: "failed",
-    });
-    return false;
-  }
-}
-
 export async function writeCompetitionRankHistoryStagingFile(
   lakeDir: string,
   leaderboard: CachedLeaderboard,
@@ -207,9 +163,7 @@ export async function listStagingFiles(
       ? matchesStagingDir(lakeDir)
       : table === "prematch"
         ? prematchStagingDir(lakeDir)
-        : table === "prediction_observations"
-          ? predictionObservationsStagingDir(lakeDir)
-          : competitionRankHistoryStagingDir(lakeDir);
+        : competitionRankHistoryStagingDir(lakeDir);
   let names: string[];
   try {
     names = await readdir(dir);
@@ -256,10 +210,6 @@ export function stagingIdForMatch(matchId: string): string {
 
 export function stagingIdForPrematch(dedupeKey: string): string {
   return sanitizeFileStem(dedupeKey);
-}
-
-export function stagingIdForPredictionObservation(matchId: string): string {
-  return sanitizeFileStem(matchId);
 }
 
 export function stagingIdForCompetitionRankHistory(

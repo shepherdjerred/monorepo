@@ -18,9 +18,8 @@ import {
  * Which side of the map the subject is on.
  *
  * Defaults to blue when the subject cannot be found, which only happens for a
- * privacy-scrubbed lobby. The prediction is symmetric, so the worst case is a
- * call stated from the wrong side rather than a wrong number — and pool
- * creation independently refuses lobbies it cannot read.
+ * privacy-scrubbed lobby. Pool creation independently refuses lobbies it
+ * cannot read.
  */
 export function resolveSubjectTeam(
   loadingScreenData: LoadingScreenData,

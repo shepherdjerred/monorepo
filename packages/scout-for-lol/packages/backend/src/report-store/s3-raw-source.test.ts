@@ -4,7 +4,6 @@ import {
   classifyRawObjectKey,
   matchObjectKey,
   prematchObjectKey,
-  predictionObservationObjectKey,
   timelineObjectKey,
 } from "#src/report-store/s3-raw-source.ts";
 
@@ -13,10 +12,6 @@ describe("classifyRawObjectKey", () => {
     ["games/2026/07/12/NA1_1/match.json", "match"],
     ["games/2026/07/12/NA1_1/timeline.json", "timeline"],
     ["prematch/2026/07/12/123/spectator-data.json", "prematch"],
-    [
-      "prematch/2026/07/12/NA1_123/prediction-observation.json",
-      "prediction_observation",
-    ],
     ["games/2026/07/12/NA1_1/report.png", "ignored"],
     ["games/2026/07/12/NA1_1/report.svg", "ignored"],
     ["failed-validations/2026/07/12/NA1_1/match.json", "ignored"],
@@ -49,12 +44,6 @@ describe("deterministic key builders (must mirror the live write paths)", () => 
   test("prematch key mirrors storage/s3-prematch generatePrematchS3Key", () => {
     expect(prematchObjectKey("456", keyDate)).toBe(
       "prematch/2026/07/12/456/spectator-data.json",
-    );
-  });
-
-  test("prediction key uses the globally unique match ID", () => {
-    expect(predictionObservationObjectKey("NA1_456", keyDate)).toBe(
-      "prematch/2026/07/12/NA1_456/prediction-observation.json",
     );
   });
 });

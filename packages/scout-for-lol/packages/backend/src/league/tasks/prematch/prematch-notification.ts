@@ -5,7 +5,6 @@ import type {
   LeaguePuuid,
   DiscordGuildId,
   QueueType,
-  BucksPrediction,
 } from "@scout-for-lol/data/index.ts";
 import {
   resolveQueueTypeFromGame,
@@ -34,8 +33,7 @@ import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
-import { capturePredictionForPrematch } from "#src/betting/prediction-capture.ts";
-import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
+import { isStandardLobby } from "#src/betting/eligibility.ts";
 import { withBucksDigest } from "#src/betting/prematch-line.ts";
 import {
   prepareBucksPrematch,
@@ -167,8 +165,7 @@ function buildPrematchPayload(input: {
   }
 
   // The fallback path still carries buttons: a market's validity depends on the
-  // game, not on whether the image rendered. The prediction is absent here
-  // because no ranks were fetched, so there is no extra message content.
+  // game, not on whether the image rendered.
   return {
     ...(input.betsOpen && input.bucks.footer.length > 0
       ? { content: input.bucks.footer }
@@ -275,11 +272,6 @@ export async function sendPrematchNotification(
   // Hoisted: this appears in five log lines, metric labels, and S3 keys, and
   // each inline `??` counted against the function's complexity budget.
   const queueLabel = queueType ?? "unknown";
-  const predictionEligible = isBettableGame({
-    queueType,
-    participants: gameInfo.participants,
-  });
-
   // Classic participation is a wallet operation, not a delivery operation.
   // Run it before subscription lookup so muted, filtered, or missing channels
   // cannot suppress the one supported Classic reward.
@@ -291,28 +283,6 @@ export async function sendPrematchNotification(
       queueType,
       targetGuildIds: [],
       detectedAt,
-      prediction: undefined,
-    });
-  }
-
-  // Capture an eligible match before resolving delivery destinations. A
-  // subscription lookup is unrelated to the match-scoped observation and may
-  // fail independently; prediction capture must not be lost in that case.
-  let predictionPromise: Promise<BucksPrediction | undefined> =
-    Promise.resolve(undefined);
-  let ranksByPuuid: ParticipantRanks | undefined;
-  if (predictionEligible) {
-    const firstPlayer = trackedPlayers[0];
-    if (firstPlayer === undefined) {
-      throw new Error(`No tracked players provided for game ${gameId}`);
-    }
-    const region = firstPlayer.league.leagueAccount.region;
-    ranksByPuuid = await fetchParticipantRanks(gameInfo, region);
-    predictionPromise = capturePredictionForPrematch({
-      gameInfo,
-      queueType,
-      ranksByPuuid,
-      observedAt: detectedAt,
     });
   }
 
@@ -320,7 +290,6 @@ export async function sendPrematchNotification(
   try {
     channels = await getChannelsSubscribedToPlayers(puuids);
   } catch (error) {
-    await predictionPromise;
     logger.error(
       `[sendPrematchNotification] ❌ Failed to resolve channels for game ${gameId}:`,
       error,
@@ -333,14 +302,12 @@ export async function sendPrematchNotification(
   const deliverChannels = channelsPassingQueueFilter(channels, queueType);
 
   if (channels.length === 0) {
-    await predictionPromise;
     logger.info(
       `[sendPrematchNotification] ⚠️  No channels subscribed for game ${gameId}`,
     );
     return new Map();
   }
   if (deliverChannels.length === 0) {
-    await predictionPromise;
     logger.info(
       `[sendPrematchNotification] 🔕 Game ${gameId} filtered out for all channels (queue ${queueLabel})`,
     );
@@ -352,7 +319,10 @@ export async function sendPrematchNotification(
     throw new Error(`No tracked players provided for game ${gameId}`);
   }
   const region = firstPlayer.league.leagueAccount.region;
-  ranksByPuuid ??= await fetchParticipantRanks(gameInfo, region);
+  const ranksByPuuid: ParticipantRanks = await fetchParticipantRanks(
+    gameInfo,
+    region,
+  );
 
   const loadingScreenStartTime = Date.now();
   let loadingScreenData: LoadingScreenData | undefined;
@@ -390,7 +360,7 @@ export async function sendPrematchNotification(
   );
 
   // Generate presentation assets only when at least one channel will receive
-  // them. Prediction capture is already running from the same frozen data.
+  // them.
   let loadingScreenAttachment: AttachmentBuilder | undefined;
   let loadingScreenEmbed: EmbedBuilder | undefined;
   if (loadingScreenData !== undefined) {
@@ -450,8 +420,6 @@ export async function sendPrematchNotification(
       });
     }
   }
-  const prediction = await predictionPromise;
-
   // Bryan Bucks: open the markets and build the buttons. Entirely
   // best-effort — on any failure this yields no guilds, no rows, and the
   // notification below is exactly what it was before the feature existed.
@@ -463,7 +431,6 @@ export async function sendPrematchNotification(
       queueType,
       targetGuildIds,
       detectedAt,
-      prediction,
     }));
   const prematchContentBase =
     loadingScreenAttachment !== undefined && loadingScreenEmbed !== undefined

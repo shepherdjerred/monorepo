@@ -5,18 +5,13 @@ describe("shouldAcquirePrematchRanks", () => {
   test("skips ineligible games without a delivery destination", () => {
     expect(
       shouldAcquirePrematchRanks({
-        predictionEligible: false,
         deliveryChannelCount: 0,
       }),
     ).toBe(false);
   });
 
-  test("acquires once for either prediction or presentation", () => {
-    for (const input of [
-      { predictionEligible: true, deliveryChannelCount: 0 },
-      { predictionEligible: false, deliveryChannelCount: 1 },
-      { predictionEligible: true, deliveryChannelCount: 1 },
-    ]) {
+  test("acquires when presentation has a delivery destination", () => {
+    for (const input of [{ deliveryChannelCount: 1 }]) {
       expect(shouldAcquirePrematchRanks(input)).toBe(true);
     }
   });

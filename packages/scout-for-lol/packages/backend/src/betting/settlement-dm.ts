@@ -25,7 +25,7 @@ export type SettlementDmKind =
 /**
  * What the settled game looked like, for the DM's header. Every field is
  * prepared prose: the builder stays pure and the delivery layer owns queue
- * labels, champion names, and prediction phrasing. All optional — the stale
+ * labels and champion names. All optional — the stale
  * void path has no match payload and legacy pools may lack a queue.
  */
 export type SettlementDmMatchContext = {
@@ -33,8 +33,6 @@ export type SettlementDmMatchContext = {
   gameLine?: string | undefined;
   /** e.g. "jerred's team won." or "Voided — remake." */
   resultLine?: string | undefined;
-  /** Scout's revealed estimate + verdict, when displayable. */
-  predictionLine?: string | undefined;
 };
 
 export type SettlementDmMessage = {
@@ -207,7 +205,6 @@ function buildEmbed(
   const descriptionLines = [
     matchContext?.gameLine,
     matchContext?.resultLine,
-    matchContext?.predictionLine,
   ].flatMap((line) => (line === undefined || line === "" ? [] : [line]));
   const embed = new EmbedBuilder()
     .setTitle("💰 Bryan Bucks — game settled")
@@ -320,7 +317,6 @@ export function buildSettlementDmMessages(input: {
     const contextLines = [
       input.matchContext?.gameLine,
       input.matchContext?.resultLine,
-      input.matchContext?.predictionLine,
     ].flatMap((line) => (line === undefined || line === "" ? [] : [line]));
     const sections: string[] = ["💰 **Bryan Bucks — game settled**"];
     if (contextLines.length > 0) {

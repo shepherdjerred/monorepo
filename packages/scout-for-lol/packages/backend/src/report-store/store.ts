@@ -2,18 +2,15 @@ import type {
   RawCurrentGameInfo,
   RawMatch,
   RawTimeline,
-  BucksPredictionObservation,
 } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   writeMatchStagingFile,
   writePrematchStagingFile,
-  writePredictionObservationStagingFile,
 } from "#src/report-lake/staging.ts";
 import {
   saveMatchToS3,
   savePrematchDataToS3,
-  savePredictionObservationToS3,
   saveTimelineToS3,
 } from "#src/storage/s3.ts";
 
@@ -57,11 +54,4 @@ export async function ingestPrematch(
   await savePrematchDataToS3(gameInfo.gameId, gameInfo, trackedPlayerAliases);
   // Best-effort lake staging; never throws.
   await writePrematchStagingFile(resolveLakeDir(), gameInfo, observedAt);
-}
-
-export async function ingestPredictionObservation(
-  observation: BucksPredictionObservation,
-): Promise<void> {
-  await savePredictionObservationToS3(observation);
-  await writePredictionObservationStagingFile(resolveLakeDir(), observation);
 }

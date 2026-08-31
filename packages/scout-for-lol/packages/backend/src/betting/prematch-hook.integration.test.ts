@@ -8,7 +8,6 @@ import {
 } from "vitest";
 import {
   BucksPoolRosterSchema,
-  BucksPredictionSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
@@ -71,14 +70,6 @@ function trackedPlayer(): PlayerConfigEntry {
   };
 }
 
-const prediction = BucksPredictionSchema.parse({
-  version: 2,
-  blueWinProbability: 0.58,
-  dataQuality: "medium",
-  coverage: { covered: 25, applicable: 50 },
-  drivers: ["Blue rank edge"],
-});
-
 beforeEach(async () => {
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksMatchEarning.deleteMany();
@@ -129,7 +120,6 @@ describe("prepareBucksPrematch", () => {
       queueType: "classic" as const,
       targetGuildIds: [],
       detectedAt: new Date(),
-      prediction,
     };
     const first = await prepareBucksPrematch(input, db);
     const second = await prepareBucksPrematch(input, db);
@@ -157,7 +147,6 @@ describe("prepareBucksPrematch", () => {
         queueType: "solo",
         targetGuildIds: [DISABLED],
         detectedAt: new Date(),
-        prediction,
       },
       db,
     );
@@ -174,7 +163,6 @@ describe("prepareBucksPrematch", () => {
         queueType: "aram",
         targetGuildIds: [ENABLED],
         detectedAt: new Date(),
-        prediction,
       },
       db,
     );
@@ -189,7 +177,6 @@ describe("prepareBucksPrematch", () => {
         queueType: "solo",
         targetGuildIds: [ENABLED],
         detectedAt: new Date(),
-        prediction,
       },
       db,
     );
@@ -205,7 +192,6 @@ describe("prepareBucksPrematch", () => {
         queueType: "classic aram mayhem",
         targetGuildIds: [ENABLED],
         detectedAt: new Date(),
-        prediction,
       },
       db,
     );
@@ -215,7 +201,7 @@ describe("prepareBucksPrematch", () => {
     expect(await db.bucksLedgerEntry.count()).toBe(0);
   });
 
-  test("opens a market with the frozen v2 estimate but keeps it private", async () => {
+  test("opens a market with the frozen roster", async () => {
     const result = await prepareBucksPrematch(
       {
         gameInfo: gameInfo(),
@@ -223,7 +209,6 @@ describe("prepareBucksPrematch", () => {
         queueType: "solo",
         targetGuildIds: [ENABLED, DISABLED],
         detectedAt: new Date(),
-        prediction,
       },
       db,
     );
@@ -231,15 +216,6 @@ describe("prepareBucksPrematch", () => {
     expect(result.footer).toContain("no offers yet");
     // The market message states numbers, never rules.
     expect(result.footer).not.toContain("20%");
-    expect(result.footer).not.toContain("58%");
-    const pool = await db.bucksMatchPool.findUniqueOrThrow({
-      where: {
-        matchId_serverId: { matchId: result.matchId, serverId: ENABLED },
-      },
-    });
-    expect(
-      BucksPredictionSchema.parse(JSON.parse(pool.predictionJson ?? "")),
-    ).toEqual(prediction);
   });
 
   for (const queue of [
@@ -256,7 +232,6 @@ describe("prepareBucksPrematch", () => {
           guildIds: [ENABLED],
           detectedAt: new Date(),
           trackedAliasByPuuid: new Map([[puuidFor(0), "jerred"]]),
-          prediction,
         },
         db,
       );
@@ -314,7 +289,6 @@ describe("Classic prematch recovery", () => {
         queueType: "classic",
         targetGuildIds: [],
         detectedAt: now,
-        prediction,
       },
       db,
     );

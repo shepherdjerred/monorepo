@@ -328,7 +328,6 @@ function buildLegacySqlite(
       matchingJson: null,
       winningTeamId: null,
       voidReason: null,
-      predictionJson: null,
       settledAt: null,
       createdAt: NOW,
       updatedAt: NOW,
