@@ -54,6 +54,7 @@ import {
 } from "./shared/schedule-reconciliation.ts";
 import { createQueueWorker } from "./worker-factory.ts";
 import { restoreGlitterCorpusMetricsAfterWorkerStart } from "./worker-glitter.ts";
+import { restoreSeaweedFsMetricsAfterWorkerStart } from "./observability/restore-startup-metrics.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -469,6 +470,9 @@ async function main(): Promise<void> {
   const workerRuns = workers.map((roleWorker) => roleWorker.run());
   if (roleContract.restoresGlitterCorpusMetrics) {
     void restoreGlitterCorpusMetricsAfterWorkerStart(() => shutdownStarted);
+  }
+  if (roleContract.restoresSeaweedFsBackupMetrics) {
+    void restoreSeaweedFsMetricsAfterWorkerStart(() => shutdownStarted);
   }
   if (workerRuns.length === 0) {
     await controlLifecycle;
