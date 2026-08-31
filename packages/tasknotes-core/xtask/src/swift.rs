@@ -755,9 +755,17 @@ final class SmokeServer: HttpClient {
         state.withLock { $0.cancels += 1 }
     }
 
-    /// Route on the method alone: the engine only ever sends one shape of each.
+    /// Route GETs on the path, because the engine sends two shapes of them.
+    ///
+    /// `/api/tasks?...` is the collection; `/api/tasks/<escaped path>` is one
+    /// task. A pull hydrates any listed row that carries no `details` with a
+    /// single-task GET, and `taskJSON` is deliberately such a legacy row — so
+    /// answering every GET with the page made that hydration parse a task
+    /// list as a task and fail on the missing `path`.
     private static func answer(_ request: HttpRequest) -> HttpResponse {
         switch request.method {
+        case .get where request.url.contains("/api/tasks/"):
+            return response(status: 200, json: taskJSON)
         case .get:
             // Envelope-wrapped, so the core's `unwrap_envelope` is exercised.
             return response(
@@ -1141,8 +1149,11 @@ func smokeSync() throws -> TaskStoreSnapshot {
     }
 
     // 9. What the transport actually saw. Every one of these was built in Rust.
-    let served = Array(server.state.withLock { $0.requests }.suffix(3))
-    guard served.count == 3 else { throw Failure("expected three served requests, got \(served.count)") }
+    // Four, not three: a pull is a list GET plus one hydrating single-task GET
+    // for every listed row that carries no `details`, and `taskJSON` is
+    // deliberately such a legacy row.
+    let served = Array(server.state.withLock { $0.requests }.suffix(4))
+    guard served.count == 4 else { throw Failure("expected four served requests, got \(served.count)") }
 
     guard served[0].method == .delete,
         served[0].url == "http://vault.test:8080/api/tasks/TaskNotes%2Fb%20c.md"
@@ -1172,6 +1183,15 @@ func smokeSync() throws -> TaskStoreSnapshot {
         served[2].url == "http://vault.test:8080/api/tasks?limit=200&offset=0"
     else {
         throw Failure("wrong pull request: \(served[2].method) \(served[2].url)")
+    }
+
+    // The hydrating fetch, addressed by the same one-component escaping the
+    // delete above proves. Without it a pull would replace the store's base
+    // with rows whose bodies the list endpoint omitted.
+    guard served[3].method == .get,
+        served[3].url == "http://vault.test:8080/api/tasks/TaskNotes%2Fpulled.md"
+    else {
+        throw Failure("wrong hydrate request: \(served[3].method) \(served[3].url)")
     }
 
     // 10. The argument that settled the refactor. The server answered with
