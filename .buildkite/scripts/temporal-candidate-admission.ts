@@ -114,10 +114,34 @@ function willPublishTemporalWorkflowCandidate(
   );
 }
 
+/**
+ * A pending version bump only matters when this build is about to publish a new
+ * Temporal Workflow candidate: that decision reads the stable/candidate pin pair
+ * off live main, and an unmerged bump means the pair it reads is not the pair
+ * that will exist once the bump lands.
+ *
+ * The check used to run unconditionally, before the catalog was even read, which
+ * made every image build wait on a branch it had no stake in. Because
+ * `version commit-back` opens that branch after *every* main build, and the
+ * bump's own CI takes longer than the exit-34 retry budget, an ordinary build
+ * could only pass in the narrow window between one bump merging and the next
+ * being opened — so main went red on a scheduling race rather than on a defect.
+ *
+ * Narrowing it keeps the invariant that motivated it (never decide candidate
+ * admission from a catalog a pending bump is about to change) and drops the
+ * blocking that never protected anything.
+ */
 export async function assertNoPendingVersionBump(
   executor: CandidateAdmissionExecutor,
   enforceTemporalCandidateAdmission = true,
 ): Promise<string> {
+  const catalog = await readLiveVersionCatalog(executor);
+  if (
+    !enforceTemporalCandidateAdmission ||
+    !willPublishTemporalWorkflowCandidate(catalog)
+  ) {
+    return catalog.source;
+  }
   const result = await executor([
     "git",
     "ls-remote",
@@ -134,12 +158,5 @@ export async function assertNoPendingVersionBump(
       `${VERSION_BUMP_BRANCH} is still pending; retry after its catalog update merges`,
     );
   }
-  const catalog = await readLiveVersionCatalog(executor);
-  if (
-    enforceTemporalCandidateAdmission &&
-    willPublishTemporalWorkflowCandidate(catalog)
-  ) {
-    return assertTemporalCandidatePinsConverged(executor);
-  }
-  return catalog.source;
+  return assertTemporalCandidatePinsConverged(executor);
 }

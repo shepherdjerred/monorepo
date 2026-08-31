@@ -47,17 +47,92 @@ function commandResult(
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
 }
+// A catalog whose Temporal tracks are converged, so this build would publish a
+// new Workflow candidate and therefore does care about a pending bump.
+const PUBLISHING_CANDIDATE_CATALOG = JSON.stringify({
+  entries: [
+    {
+      name: "shepherdjerred/temporal-worker/workflows/stable",
+      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
+    },
+    {
+      name: "shepherdjerred/temporal-worker/workflows/candidate",
+      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
+    },
+  ],
+});
+
+// Tracks diverged and neither is legacy: no candidate publication is pending, so
+// a bump branch on main has no bearing on this build.
+const SETTLED_CATALOG = JSON.stringify({
+  entries: [
+    {
+      name: "shepherdjerred/temporal-worker/workflows/stable",
+      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
+    },
+    {
+      name: "shepherdjerred/temporal-worker/workflows/candidate",
+      value: `2.0.0-501@sha256:${"b".repeat(64)}`,
+    },
+  ],
+});
+
+function admissionExecutor(
+  catalog: string,
+  lsRemote: () => BuildxCommandResult,
+): CommandExecutor {
+  return async (command) => {
+    if (command[1] === "ls-remote") return lsRemote();
+    if (command[1] === "fetch") return commandResult();
+    return commandResult(0, catalog);
+  };
+}
+
 test("blocks candidate admission while the durable version branch exists", async () => {
   await expect(
-    assertNoPendingVersionBump(async () =>
-      commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+    assertNoPendingVersionBump(
+      admissionExecutor(PUBLISHING_CANDIDATE_CATALOG, () =>
+        commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+      ),
     ),
   ).rejects.toThrow(TransientError);
 });
 test("fails transiently when the durable version branch cannot be checked", async () => {
   await expect(
-    assertNoPendingVersionBump(async () => commandResult(1, "", "network")),
+    assertNoPendingVersionBump(
+      admissionExecutor(PUBLISHING_CANDIDATE_CATALOG, () =>
+        commandResult(1, "", "network"),
+      ),
+    ),
   ).rejects.toThrow(TransientError);
+});
+// Regression: version commit-back opens the bump branch after every main build,
+// so gating unrelated builds on it made main red on a scheduling race. A pending
+// bump must not block a build that is not publishing a Workflow candidate.
+test("ignores a pending version bump when no candidate publication is due", async () => {
+  let lsRemoteCalls = 0;
+  await expect(
+    assertNoPendingVersionBump(
+      admissionExecutor(SETTLED_CATALOG, () => {
+        lsRemoteCalls += 1;
+        return commandResult(
+          0,
+          "abc123\trefs/heads/chore/version-bump-pending\n",
+        );
+      }),
+    ),
+  ).resolves.toBe(SETTLED_CATALOG);
+  expect(lsRemoteCalls).toBe(0);
+});
+test("ignores a pending version bump when Temporal admission is not enforced", async () => {
+  await expect(
+    assertNoPendingVersionBump(
+      admissionExecutor(PUBLISHING_CANDIDATE_CATALOG, () =>
+        commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+      ),
+      false,
+    ),
+  ).resolves.toBe(PUBLISHING_CANDIDATE_CATALOG);
 });
 test("blocks admission when live main has a divergent Temporal candidate", async () => {
   const catalog = JSON.stringify({
