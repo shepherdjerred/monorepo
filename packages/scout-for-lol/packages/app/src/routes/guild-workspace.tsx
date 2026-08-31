@@ -1,14 +1,6 @@
-import {
-  Link,
-  Navigate,
-  NavLink,
-  Outlet,
-  useLocation,
-  useParams,
-} from "react-router";
+import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, type ReactNode } from "react";
-import { ProductSubnavigation } from "@scout-for-lol/design-system/layout";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
 import {
@@ -17,7 +9,6 @@ import {
   resolveGuildContext,
 } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { cn } from "#src/lib/cn.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
   ForbiddenPanel,
@@ -26,43 +17,7 @@ import {
 import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
 import type { QueryError } from "#src/lib/permission-query-state.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-
-const NAV_ITEMS: {
-  to: string;
-  label: string;
-  permission: Permission;
-}[] = [
-  {
-    to: "subscriptions",
-    label: "Subscriptions",
-    permission: { resource: "subscriptions", action: "read" },
-  },
-  {
-    to: "players",
-    label: "Players",
-    permission: { resource: "players", action: "read" },
-  },
-  {
-    to: "competitions",
-    label: "Competitions",
-    permission: { resource: "competitions", action: "read" },
-  },
-  {
-    to: "reports",
-    label: "Reports",
-    permission: { resource: "reports", action: "read" },
-  },
-  {
-    to: "audit",
-    label: "Audit",
-    permission: { resource: "audit", action: "read" },
-  },
-  {
-    to: "access",
-    label: "Access",
-    permission: { resource: "roles", action: "read" },
-  },
-];
+import { GUILD_NAVIGATION_ITEMS } from "#src/lib/app-navigation.ts";
 
 export function GuildWorkspace() {
   const { guildId } = useParams();
@@ -113,17 +68,15 @@ export function GuildWorkspace() {
     );
   }
 
-  const visibleNav = NAV_ITEMS.filter((item) =>
-    perms.can(item.permission.resource, item.permission.action),
-  );
-
   // The active section is the first path segment after `/g/:guildId/`. Gate the
   // rendered child on that section's read permission so a member holding only,
   // say, `reports:read` can't deep-link `/subscriptions` or `/access` (any grant
   // used to open every route). Form routes bypass this broad section gate and
   // reach their exact create-only or update-plus-read gate below.
   const activeSection = /^\/g\/[^/]+\/([^/]+)/.exec(location.pathname)?.[1];
-  const activeNav = NAV_ITEMS.find((item) => item.to === activeSection);
+  const activeNav = GUILD_NAVIGATION_ITEMS.find(
+    (item) => item.to === activeSection,
+  );
   const actionRoutePermissions = permissionsForGuildActionRoute(
     location.pathname,
   );
@@ -136,73 +89,43 @@ export function GuildWorkspace() {
   const accessDenied = !isLoading && !hasAccess;
 
   return (
-    <>
-      {visibleNav.length > 0 && (
-        <ProductSubnavigation>
-          {visibleNav.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "rounded-md px-3 py-2 text-sm font-medium",
-                  isActive
-                    ? "bg-scout-brand text-scout-brand-ink"
-                    : "text-scout-subtle hover:bg-scout-accent hover:text-scout-accent-ink",
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </ProductSubnavigation>
-      )}
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium uppercase text-scout-subtle">
-              Guild
-            </p>
-            <h1 className="text-lg font-semibold tracking-tight">
-              {guild?.name ?? "…"}
-            </h1>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/welcome"
-              className="text-sm font-medium text-scout-subtle hover:text-scout-ink"
-            >
-              Setup guide
-            </Link>
-            <NavLink
-              to="/manage"
-              className="text-sm font-medium text-scout-subtle hover:text-scout-ink"
-            >
-              Change guild
-            </NavLink>
-          </div>
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-medium uppercase text-scout-subtle">
+            Guild
+          </p>
+          <h1 className="text-lg font-semibold tracking-tight">
+            {guild?.name ?? "…"}
+          </h1>
         </div>
-        {error === null ? (
-          accessDenied ? (
-            <ForbiddenPanel
-              title="No access to this server"
-              message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
-            />
-          ) : sectionForbidden ? (
-            <ForbiddenPanel
-              title={`No access to ${activeNav.label}`}
-              message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
-            />
-          ) : (
-            <Suspense fallback={<SectionSkeleton />}>
-              <Outlet />
-            </Suspense>
-          )
-        ) : (
-          <PermissionLoadError error={error} />
-        )}
+        <Link
+          to="/welcome"
+          className="text-sm font-medium text-scout-subtle hover:text-scout-ink"
+        >
+          Setup guide
+        </Link>
       </div>
-    </>
+      {error === null ? (
+        accessDenied ? (
+          <ForbiddenPanel
+            title="No access to this server"
+            message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
+          />
+        ) : sectionForbidden ? (
+          <ForbiddenPanel
+            title={`No access to ${activeNav.label}`}
+            message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
+          />
+        ) : (
+          <Suspense fallback={<SectionSkeleton />}>
+            <Outlet />
+          </Suspense>
+        )
+      ) : (
+        <PermissionLoadError error={error} />
+      )}
+    </div>
   );
 }
 
@@ -219,7 +142,7 @@ export function GuildSectionIndex() {
 
   if (isLoading) return null;
   if (error !== null) return <PermissionLoadError error={error} />;
-  const first = NAV_ITEMS.find((item) =>
+  const first = GUILD_NAVIGATION_ITEMS.find((item) =>
     perms.can(item.permission.resource, item.permission.action),
   );
   if (first === undefined) {
