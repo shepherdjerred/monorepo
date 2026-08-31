@@ -42,6 +42,7 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
+import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
 import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { uniqueBy } from "remeda";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
@@ -314,6 +315,13 @@ export async function processMatchAndUpdatePlayers(
       postmatchMessageIds,
     });
   }
+
+  // Dare results are one-shot like the settlement summary: a later pass
+  // returns nothing for an already-settled dare, so this delivery must not
+  // share an error boundary with anything else. It swallows per-summary and
+  // never blocks the cursor; a silent match still announces, because a dare
+  // resolution moved real balances regardless of report suppression.
+  await deliverDareSummaries(bucks.dareSettlements);
 
   // This is the last transactional extension point before player cursors move
   // past the match. Tournament lobbies — and linked Customs games — finalize

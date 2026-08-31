@@ -1,6 +1,9 @@
 import { SlashCommandBuilder } from "discord.js";
 import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
-import { MINIMUM_BUCKS_TRANSFER } from "#src/betting/constants.ts";
+import {
+  DARE_MAX_TEXT_LENGTH,
+  MINIMUM_BUCKS_TRANSFER,
+} from "#src/betting/constants.ts";
 
 // AI analysis of Bryan Bucks data lives in `/scout ask`, which carries the
 // betting tools in this guild; `/bb` keeps the fixed read-only surfaces.
@@ -37,6 +40,26 @@ export const bbCommand = new SlashCommandBuilder()
           .setDescription("Your total whole-BB spend")
           .setRequired(true)
           .setMinValue(MINIMUM_BUCKS_TRANSFER)
+          .setMaxValue(BUCKS_INT32_MAX),
+      ),
+  )
+  .addSubcommand((sub) =>
+    sub
+      .setName("dare")
+      .setDescription("Put a Bryan Bucks bounty on tracked players")
+      .addStringOption((option) =>
+        option
+          .setName("dare")
+          .setDescription("What you dare them to do, in your own words")
+          .setRequired(true)
+          .setMaxLength(DARE_MAX_TEXT_LENGTH),
+      )
+      .addIntegerOption((option) =>
+        option
+          .setName("amount")
+          .setDescription("Your opening whole-BB contribution to the pot")
+          .setRequired(true)
+          .setMinValue(1)
           .setMaxValue(BUCKS_INT32_MAX),
       ),
   )

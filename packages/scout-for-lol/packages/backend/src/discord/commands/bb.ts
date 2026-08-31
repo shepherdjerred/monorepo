@@ -31,6 +31,10 @@ import {
   replyBbRules,
 } from "#src/discord/commands/bb-overview.ts";
 import {
+  replyBbDare,
+  type BbDareCommandDependencies,
+} from "#src/discord/commands/bb-dare.ts";
+import {
   replyBbTransfer,
   type BbTransferCommandDependencies,
 } from "#src/discord/commands/bb-transfer.ts";
@@ -68,7 +72,8 @@ const BUCKS_COLOR = 0x2e_cc_71;
 type BbCommandDependencies = {
   isPolicyEnabled?: typeof isPolicyEnabled;
 } & BbNotificationCommandDependencies &
-  BbTransferCommandDependencies;
+  BbTransferCommandDependencies &
+  BbDareCommandDependencies;
 
 export function isPublicBbSubcommand(subcommand: string): boolean {
   return subcommand === "rules" || subcommand === "prizes";
@@ -200,6 +205,11 @@ export async function executeBb(
         break;
       case "transfer":
         await replyBbTransfer(interaction, serverId, discordId, dependencies);
+        break;
+      case "dare":
+        // Stays ephemeral: the public callout is posted only after the
+        // challenger confirms the code-rendered interpretation.
+        await replyBbDare(interaction, serverId, discordId, dependencies);
         break;
       case "notifications":
         await replyBbNotifications(

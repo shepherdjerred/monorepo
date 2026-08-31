@@ -1,4 +1,7 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
+import { settleEndedDareWindows } from "#src/betting/dare-sweep.ts";
+import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
@@ -18,7 +21,9 @@ function asError(error: unknown, message: string): Error {
   return new Error(message, { cause: error });
 }
 
-export async function checkPostMatch() {
+export async function checkPostMatch(): Promise<{
+  dareSummaries: DareSettlementSummary[];
+}> {
   logger.info("🏁 Starting post-match check task");
   const startTime = Date.now();
   const bettingHardDisabled = isFeatureHardDisabled("betting_enabled");
@@ -44,12 +49,13 @@ export async function checkPostMatch() {
       logger.info(
         `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
       );
-      return;
+      return { dareSummaries: [] };
     }
 
     let earningsRecoveryError: unknown;
+    let dareSummaries: DareSettlementSummary[] = [];
     try {
-      await runPostMatchMaintenance();
+      ({ dareSummaries } = await runPostMatchMaintenance());
     } catch (error) {
       earningsRecoveryError = error;
     }
@@ -74,6 +80,7 @@ export async function checkPostMatch() {
     logger.info(
       `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
     );
+    return { dareSummaries };
   } catch (error) {
     const executionTime = Date.now() - startTime;
     logger.error(
@@ -84,8 +91,12 @@ export async function checkPostMatch() {
   }
 }
 
-export async function runPostMatchMaintenance(): Promise<void> {
-  if (isFeatureHardDisabled("betting_enabled")) return;
+export async function runPostMatchMaintenance(): Promise<{
+  dareSummaries: DareSettlementSummary[];
+}> {
+  if (isFeatureHardDisabled("betting_enabled")) {
+    return { dareSummaries: [] };
+  }
 
   await retryPendingBucksEarnings();
   const staleBucks = await voidStaleBettingPools();
@@ -116,4 +127,10 @@ export async function runPostMatchMaintenance(): Promise<void> {
     });
   }
   await voidStaleParlayMarkets();
+  // Ended dare windows settle unachieved here, beside the other post-match
+  // clocks. Delivery runs after the refunds committed and swallows
+  // per-summary, so a dead channel never blocks or re-runs a settlement.
+  const dareSummaries = await settleEndedDareWindows();
+  await deliverDareSummaries(dareSummaries);
+  return { dareSummaries };
 }

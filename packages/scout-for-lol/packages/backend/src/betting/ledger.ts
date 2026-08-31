@@ -1,6 +1,7 @@
 import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,
+  type BucksDareState,
   type BucksLedgerContext,
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
@@ -72,6 +73,17 @@ export type RefundableBucksAccount = {
 };
 
 /**
+ * Dare states whose escrowed contributions are still owed back: a decline,
+ * accept-window lapse, or void refunds every contribution in full, so the
+ * whole amount counts against the contributor's credit headroom until the
+ * dare reaches a terminal state.
+ */
+const OPEN_DARE_STATES: readonly BucksDareState[] = [
+  "pending_accept",
+  "active",
+];
+
+/**
  * Lock credit targets before loading their refundable headroom.
  *
  * Callers must perform their guarded first mutation before using this helper.
@@ -123,6 +135,7 @@ export async function refundableBucksHeldForAccounts(
     houseParlayRows,
     humanWeeklyRows,
     houseWeeklyRows,
+    humanDareRows,
   ] = await Promise.all([
     tx.bucksBet.findMany({
       where: {
@@ -167,6 +180,16 @@ export async function refundableBucksHeldForAccounts(
         market: { select: { serverId: true } },
       },
     }),
+    // Open dare escrow. Only human accounts hold it: contributors fund the
+    // pot from their own wallets and the house reserves nothing for a dare.
+    tx.bucksDareContribution.groupBy({
+      by: ["bucksAccountId"],
+      where: {
+        bucksAccountId: { in: humanAccountIds },
+        dare: { dareState: { in: [...OPEN_DARE_STATES] } },
+      },
+      _sum: { amount: true },
+    }),
   ]);
 
   const outcomeByAccount = new Map<number, bigint>();
@@ -182,6 +205,9 @@ export async function refundableBucksHeldForAccounts(
   );
   const weeklyByAccount = new Map(
     humanWeeklyRows.map((row) => [row.bucksAccountId, row._sum.stake ?? 0]),
+  );
+  const dareByAccount = new Map(
+    humanDareRows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
   );
   const reserveByServer = new Map<string, bigint>();
   for (const row of houseParlayRows) {
@@ -206,7 +232,8 @@ export async function refundableBucksHeldForAccounts(
         (account.isHouse
           ? (reserveByServer.get(account.serverId) ?? 0n)
           : BigInt(parlayByAccount.get(account.id) ?? 0) +
-            BigInt(weeklyByAccount.get(account.id) ?? 0)),
+            BigInt(weeklyByAccount.get(account.id) ?? 0) +
+            BigInt(dareByAccount.get(account.id) ?? 0)),
     ]),
   );
 }
@@ -256,7 +283,7 @@ export async function refundableBucksHeld(
       BigInt(weekly._sum.houseReserve ?? 0)
     );
   }
-  const [parlay, weekly] = await Promise.all([
+  const [parlay, weekly, dare] = await Promise.all([
     tx.bucksParlayBet.aggregate({
       where: { bucksAccountId, betOutcome: "pending" },
       _sum: { stake: true },
@@ -265,11 +292,22 @@ export async function refundableBucksHeld(
       where: { bucksAccountId, betOutcome: "pending" },
       _sum: { stake: true },
     }),
+    // Open dare escrow counts in full: the void, decline, and expiry paths
+    // refund every contribution whole, so the entire amount must remain
+    // representable as a credit.
+    tx.bucksDareContribution.aggregate({
+      where: {
+        bucksAccountId,
+        dare: { dareState: { in: [...OPEN_DARE_STATES] } },
+      },
+      _sum: { amount: true },
+    }),
   ]);
   return (
     outcomeHeld +
     BigInt(parlay._sum.stake ?? 0) +
-    BigInt(weekly._sum.stake ?? 0)
+    BigInt(weekly._sum.stake ?? 0) +
+    BigInt(dare._sum.amount ?? 0)
   );
 }
 

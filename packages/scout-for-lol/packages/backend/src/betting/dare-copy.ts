@@ -1,0 +1,371 @@
+import {
+  formatInteger,
+  formatParlayNumericValue,
+  getChampionByKey,
+  type BucksDareState,
+} from "@scout-for-lol/data";
+import { withRulesHint } from "#src/betting/copy.ts";
+import {
+  DARE_RATE_LABELS,
+  formatDareRateThreshold,
+  type DareLeaf,
+} from "#src/betting/dare-criteria.ts";
+import type {
+  DareContributorRefund,
+  DareTargetPayout,
+} from "#src/betting/dare-ledger.ts";
+import type { DareSettlementSummary } from "#src/betting/dare-settle.ts";
+import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
+import {
+  PARTICIPANT_BOOLEAN_CATALOG,
+  PARTICIPANT_NUMERIC_CATALOG,
+} from "#src/betting/parlay-catalog.ts";
+
+/**
+ * Pure copy builders for every dare Discord surface.
+ *
+ * No Discord imports and no I/O (weekly-parlay-discord-copy precedent): every
+ * function turns frozen facts into a string, so the exact user-visible text is
+ * pinned by plain unit tests. The condition text is ALWAYS the code-rendered
+ * `conditionSummary` — model prose never reaches a message. Numbers, not
+ * rules: only `/bb rules` explains the cut, the windows, and the refund
+ * policy; these surfaces show amounts and deadlines and point there.
+ */
+
+export const DARES_NOT_ENABLED =
+  "🚫 Bryan Bucks dares aren't enabled in this server.";
+
+function relative(date: Date): string {
+  return `<t:${Math.floor(date.getTime() / 1000).toString()}:R>`;
+}
+
+function bb(amount: number): string {
+  return `**${formatInteger(amount)} BB**`;
+}
+
+export function dareHorizonPhrase(
+  horizonKind: "next_game" | "window",
+  windowDays: number | null,
+): string {
+  if (horizonKind === "next_game") {
+    return "their next eligible game";
+  }
+  return `**${formatInteger(windowDays ?? 0)} ${windowDays === 1 ? "day" : "days"}** from the moment every target accepts`;
+}
+
+/** The ephemeral confirmation the challenger approves — description text for
+ * the embed `/bb dare` shows above its Confirm / Cancel buttons. */
+export function dareConfirmationContent(input: {
+  amount: number;
+  targetAliases: readonly string[];
+  conditionSummary: string;
+  horizonKind: "next_game" | "window";
+  windowDays: number | null;
+  proposalExpiresAt: Date;
+}): string {
+  return [
+    "**The dare:**",
+    input.conditionSummary,
+    "",
+    `**Horizon:** ${dareHorizonPhrase(input.horizonKind, input.windowDays)}`,
+    `**Opening pot:** ${bb(input.amount)} — debited from your wallet when you confirm.`,
+    `**Targets:** ${input.targetAliases.join(", ")} — they risk nothing and must all accept before it goes live.`,
+    `Confirm before ${relative(input.proposalExpiresAt)}.`,
+    withRulesHint(
+      `House cut: **${HOUSE_CUT_PERCENT.toString()}%** on either resolution.`,
+    ),
+  ].join("\n");
+}
+
+/** The ephemeral confirm message after the callout was posted. */
+export function dareConfirmedPostedContent(input: {
+  potTotal: number;
+  acceptDeadline: Date;
+}): string {
+  return `✅ Dare confirmed — ${bb(input.potTotal)} in the pot. Callout posted; every target must accept ${relative(input.acceptDeadline)}.`;
+}
+
+/** Ephemeral acknowledgement after a target accepts. */
+export function dareAcceptAckContent(input: {
+  activated: boolean;
+  acceptedCount: number;
+  targetCount: number;
+  windowEndsAt: Date | undefined;
+}): string {
+  if (input.activated) {
+    const until =
+      input.windowEndsAt === undefined
+        ? ""
+        : ` — it ends ${relative(input.windowEndsAt)}`;
+    return `🔥 You're all in. The dare is LIVE${until}.`;
+  }
+  return `✅ Accepted (${formatInteger(input.acceptedCount)}/${formatInteger(input.targetCount)}). Waiting on the rest.`;
+}
+
+/** Ephemeral acknowledgement after a pot contribution. */
+export function dareContributionAckContent(input: {
+  amount: number;
+  potTotal: number;
+  balanceAfter: number;
+}): string {
+  return `💰 +${bb(input.amount)} onto the pot — now ${bb(input.potTotal)}. Balance ${bb(input.balanceAfter)}.`;
+}
+
+export type DareCalloutTarget = {
+  discordId: string;
+  alias: string;
+  accepted: boolean;
+  declined: boolean;
+};
+
+export type DareLeafProgress = {
+  label: string;
+  count: number;
+  requiredGames: number;
+};
+
+export type DareCalloutView = {
+  dareState: BucksDareState;
+  challengerDiscordId: string;
+  potTotal: number;
+  conditionSummary: string;
+  targets: readonly DareCalloutTarget[];
+  acceptDeadline: Date | null;
+  windowEndsAt: Date | null;
+  progress: readonly DareLeafProgress[];
+};
+
+function comparisonSymbol(operator: "gte" | "lte" | "eq"): string {
+  if (operator === "gte") return "≥";
+  if (operator === "lte") return "≤";
+  return "exactly";
+}
+
+function championSuffix(champion: string | null): string {
+  if (champion === null) return "";
+  return ` on ${getChampionByKey(champion)?.name ?? champion}`;
+}
+
+/** Compact per-leaf progress label, e.g. "Wins" or "Games with ≥ 10 kills". */
+export function dareLeafProgressLabel(leaf: DareLeaf): string {
+  const suffix = championSuffix(leaf.champion);
+  const predicate = leaf.predicate;
+  if (predicate.kind === "participant_boolean") {
+    if (predicate.field === "win") {
+      return `${predicate.expected ? "Wins" : "Winless games"}${suffix}`;
+    }
+    const label = PARTICIPANT_BOOLEAN_CATALOG[predicate.field].label;
+    return predicate.expected
+      ? `Games with ${label}${suffix}`
+      : `Games without ${label}${suffix}`;
+  }
+  if (predicate.kind === "participant_numeric") {
+    return `Games with ${comparisonSymbol(predicate.operator)} ${formatParlayNumericValue(predicate.field, predicate.threshold)} ${PARTICIPANT_NUMERIC_CATALOG[predicate.field].label}${suffix}`;
+  }
+  return `Games with ${comparisonSymbol(predicate.operator)} ${formatDareRateThreshold(predicate.thresholdScaled)} ${DARE_RATE_LABELS[predicate.field]}${suffix}`;
+}
+
+/** Pair the canonical leaves with their qualifying-game counts. */
+export function dareLeafProgress(
+  leaves: readonly DareLeaf[],
+  leafCounts: readonly number[],
+): DareLeafProgress[] {
+  return leaves.map((leaf, index) => ({
+    label: dareLeafProgressLabel(leaf),
+    count: leafCounts[index] ?? 0,
+    requiredGames: leaf.requiredGames,
+  }));
+}
+
+export function dareProgressLine(progress: DareLeafProgress): string {
+  return `• ${progress.label}: ${formatInteger(progress.count)}/${formatInteger(progress.requiredGames)}`;
+}
+
+function checklistLine(target: DareCalloutTarget): string {
+  if (target.declined) return `• 🐔 <@${target.discordId}> — declined`;
+  if (target.accepted) return `• ✅ <@${target.discordId}> — accepted`;
+  return `• ⏳ <@${target.discordId}>`;
+}
+
+const FINAL_HEADERS: Partial<Record<BucksDareState, string>> = {
+  achieved: "✅ **Bryan Bucks dare: ACHIEVED**",
+  unachieved: "🛡️ **Bryan Bucks dare: THE DARE SURVIVED**",
+  declined: "🐔 **Bryan Bucks dare: CHICKENED OUT**",
+  expired: "⌛ **Bryan Bucks dare: EXPIRED**",
+  voided: "↩️ **Bryan Bucks dare: VOIDED**",
+  abandoned: "🗑️ **Bryan Bucks dare: WITHDRAWN**",
+  proposed: "🗑️ **Bryan Bucks dare: WITHDRAWN**",
+};
+
+/**
+ * The single public callout message, rendered from current database state.
+ * The same message is edited in place through every transition, so this
+ * covers the whole lifecycle: awaiting consent, LIVE with progress, and the
+ * terminal states (which the result message announces in detail).
+ */
+export function dareCalloutContent(view: DareCalloutView): string {
+  const dare = ["**The dare:**", view.conditionSummary];
+  if (view.dareState === "pending_accept") {
+    const deadline =
+      view.acceptDeadline === null
+        ? ":"
+        : ` — every target must accept ${relative(view.acceptDeadline)}:`;
+    return [
+      `🎯 **Bryan Bucks dare** — <@${view.challengerDiscordId}> put ${bb(view.potTotal)} on it`,
+      ...dare,
+      `**Accept checklist**${deadline}`,
+      ...view.targets.map((target) => checklistLine(target)),
+      withRulesHint(
+        "Targets risk nothing. Anyone else can pile onto the pot below — contributions are final.",
+      ),
+    ].join("\n");
+  }
+  if (view.dareState === "active") {
+    const ends =
+      view.windowEndsAt === null ? "" : `, ends ${relative(view.windowEndsAt)}`;
+    return [
+      `🔴 **Bryan Bucks dare: LIVE** — ${bb(view.potTotal)} on the line${ends}`,
+      ...dare,
+      "**Progress:**",
+      ...view.progress.map((progress) => dareProgressLine(progress)),
+      withRulesHint("Pile onto the pot below — contributions are final."),
+    ].join("\n");
+  }
+  const decliner =
+    view.dareState === "declined"
+      ? view.targets.find((target) => target.declined)
+      : undefined;
+  const declineNote =
+    decliner === undefined ? "" : ` — <@${decliner.discordId}> declined.`;
+  return [
+    FINAL_HEADERS[view.dareState] ?? "🎯 **Bryan Bucks dare**",
+    "**The dare was:**",
+    view.conditionSummary,
+    `Pot: ${bb(view.potTotal)}${declineNote}`,
+  ].join("\n");
+}
+
+/** Public chicken message, sent when a target declines via the button. */
+export function dareChickenContent(input: {
+  declinerDiscordId: string;
+  potTotal: number;
+}): string {
+  return [
+    "🐔 **Bryan Bucks dare: CHICKENED OUT**",
+    `<@${input.declinerDiscordId}> declined the dare. The pot's ${bb(input.potTotal)} went back to the contributors in full.`,
+  ].join("\n");
+}
+
+export function dareExpiredContent(input: { potTotal: number }): string {
+  return [
+    "⌛ **Bryan Bucks dare: EXPIRED**",
+    `Not every target accepted in time. The pot's ${bb(input.potTotal)} went back to the contributors in full.`,
+  ].join("\n");
+}
+
+function payoutLine(payout: DareTargetPayout): string {
+  const fee =
+    payout.fee > 0 ? ` · **${formatInteger(payout.fee)} BB** fee` : "";
+  return `• **${payout.alias}** <@${payout.discordId}> — +${bb(payout.net)}${fee}`;
+}
+
+export function dareAchievedContent(input: {
+  conditionSummary: string;
+  potTotal: number;
+  payouts: readonly DareTargetPayout[];
+}): string {
+  return [
+    "✅ **Bryan Bucks dare: ACHIEVED**",
+    input.conditionSummary,
+    `The ${bb(input.potTotal)} pot pays out:`,
+    ...input.payouts.map((payout) => payoutLine(payout)),
+  ].join("\n");
+}
+
+function refundLine(refund: DareContributorRefund): string {
+  const fee =
+    refund.fee > 0 ? ` · **${formatInteger(refund.fee)} BB** fee` : "";
+  return `• <@${refund.discordId}> — ${bb(refund.refunded)} back${fee}`;
+}
+
+export function dareUnachievedContent(input: {
+  conditionSummary: string;
+  refunds: readonly DareContributorRefund[];
+}): string {
+  return [
+    "🛡️ **Bryan Bucks dare: THE DARE SURVIVED**",
+    input.conditionSummary,
+    "Contributors got their BB back:",
+    ...input.refunds.map((refund) => refundLine(refund)),
+  ].join("\n");
+}
+
+export function dareVoidedContent(input: {
+  refunds: readonly DareContributorRefund[];
+  voidReason: string | undefined;
+}): string {
+  const reason =
+    input.voidReason === "unknown_evaluator"
+      ? "Scout can no longer evaluate this dare's stored conditions."
+      : "This dare was voided.";
+  return [
+    "↩️ **Bryan Bucks dare: VOIDED**",
+    reason,
+    "Contributions returned in full:",
+    ...input.refunds.map((refund) => refundLine(refund)),
+  ].join("\n");
+}
+
+/**
+ * One result message per resolved settlement summary, with its restricted
+ * mention allowlist. `captured` and `abandoned` produce no result message —
+ * capture only refreshes the callout, and an abandoned proposal held no money
+ * and was never public.
+ */
+export function dareResultMessage(
+  summary: DareSettlementSummary,
+): { content: string; mentionUserIds: string[] } | undefined {
+  if (summary.resolution === "captured" || summary.resolution === "abandoned") {
+    return undefined;
+  }
+  if (summary.resolution === "achieved") {
+    return {
+      content: dareAchievedContent({
+        conditionSummary: summary.conditionSummary,
+        potTotal: summary.potTotal,
+        payouts: summary.payouts,
+      }),
+      mentionUserIds: [
+        ...new Set([
+          ...summary.payouts.map((payout) => payout.discordId),
+          summary.challengerDiscordId,
+        ]),
+      ],
+    };
+  }
+  const contributorIds = [
+    ...new Set(summary.refunds.map((refund) => refund.discordId)),
+  ];
+  if (summary.resolution === "unachieved") {
+    return {
+      content: dareUnachievedContent({
+        conditionSummary: summary.conditionSummary,
+        refunds: summary.refunds,
+      }),
+      mentionUserIds: contributorIds,
+    };
+  }
+  if (summary.resolution === "expired") {
+    return {
+      content: dareExpiredContent({ potTotal: summary.potTotal }),
+      mentionUserIds: contributorIds,
+    };
+  }
+  return {
+    content: dareVoidedContent({
+      refunds: summary.refunds,
+      voidReason: summary.voidReason,
+    }),
+    mentionUserIds: contributorIds,
+  };
+}

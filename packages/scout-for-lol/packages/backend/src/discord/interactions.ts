@@ -22,6 +22,14 @@ import {
   parseWeeklyParlayCustomId,
 } from "#src/betting/weekly-parlay-custom-id.ts";
 import { handleWeeklyParlayBetButton } from "#src/betting/weekly-parlay-bet-button.ts";
+import {
+  isDareCustomId,
+  parseDareCustomId,
+} from "#src/betting/dare-custom-id.ts";
+import {
+  handleDareButton,
+  type DareButtonInteraction,
+} from "#src/betting/dare-discord.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
@@ -38,7 +46,7 @@ const logger = createLogger("discord-interactions");
 async function captureButtonActivity(
   interaction: RoutableButtonInteraction,
   activityKind:
-    "outcome_bet" | "parlay_bet" | "weekly_parlay_bet" | "navigation",
+    "outcome_bet" | "parlay_bet" | "weekly_parlay_bet" | "navigation" | "dare",
   status: "success" | "error",
 ): Promise<void> {
   await captureBucksMemberActivity({
@@ -91,7 +99,8 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
  */
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
-  ScoutPublishButtonInteraction & {
+  ScoutPublishButtonInteraction &
+  DareButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;
@@ -122,9 +131,47 @@ async function routeWeeklyParlayButton(
   }
 }
 
+async function routeDareButton(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parseDareCustomId(interaction.customId) === undefined) {
+      discordComponentsTotal.inc({ namespace: "bbd", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleDareButton(interaction);
+    await captureButtonActivity(interaction, "dare", "success");
+    discordComponentsTotal.inc({ namespace: "bbd", status: "success" });
+  } catch (error) {
+    await captureButtonActivity(interaction, "dare", "error");
+    logger.error("❌ Error handling a Bryan Bucks dare button:", error);
+    discordComponentsTotal.inc({ namespace: "bbd", status: "error" });
+    // The authorized path acknowledged with deferUpdate on the message the
+    // button lives on, so editReply would clobber the public callout; a fresh
+    // ephemeral message is the only safe apology.
+    if (interaction.deferred || interaction.replied) {
+      await interaction.followUp({
+        content: "😵 Something went wrong with that dare. Try again shortly.",
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] },
+      });
+      return;
+    }
+    await interaction.deferReply({ ephemeral: true });
+    await interaction.editReply({
+      content: "😵 Something went wrong with that dare. Try again shortly.",
+    });
+  }
+}
+
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (isDareCustomId(interaction.customId)) {
+    await routeDareButton(interaction);
+    return;
+  }
   if (isParlayCustomId(interaction.customId)) {
     try {
       if (parseParlayCustomId(interaction.customId) === undefined) {

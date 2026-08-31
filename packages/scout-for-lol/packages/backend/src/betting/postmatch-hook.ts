@@ -8,6 +8,10 @@ import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
 } from "#src/betting/parlay-settle.ts";
+import {
+  settleDaresForMatch,
+  type DareSettlementSummary,
+} from "#src/betting/dare-settle.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
@@ -51,6 +55,7 @@ export async function settleAndAwardBucks(
   closures: ClosedPool[];
   settlements: SettlementSummary[];
   parlaySettlements: ParlaySettlementSummary[];
+  dareSettlements: DareSettlementSummary[];
   earnings: EarnedAward[];
 }> {
   if (isFeatureHardDisabled("betting_enabled")) {
@@ -58,6 +63,7 @@ export async function settleAndAwardBucks(
       closures: [],
       settlements: [],
       parlaySettlements: [],
+      dareSettlements: [],
       earnings: [],
     };
   }
@@ -71,6 +77,10 @@ export async function settleAndAwardBucks(
     matchData,
     prismaClient,
   );
+  // Dare capture rides the same ingest: settleDaresForMatch swallows its own
+  // errors per dare, so it can never throw past this point, and its summaries
+  // travel with the return value for the delivery layer to announce.
+  const dareSettlements = await settleDaresForMatch(matchData, prismaClient);
   // The canonical match has already been persisted by the caller. Weekly
   // progress is append-only and may settle only an irreversible YES here;
   // Sunday finalization remains the only path to an early-false result.
@@ -91,6 +101,7 @@ export async function settleAndAwardBucks(
     closures,
     settlements: retry.settlements,
     parlaySettlements,
+    dareSettlements,
     earnings,
   };
 }

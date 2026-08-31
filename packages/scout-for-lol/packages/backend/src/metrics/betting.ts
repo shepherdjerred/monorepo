@@ -122,6 +122,34 @@ export const bettingEarningsBucksTotal = new Counter({
   registers: [registry],
 });
 
+/* --------------------------------------------------------------- dares -- */
+
+export const bettingDaresTotal = new Counter({
+  name: "betting_dares_total",
+  help: "Bryan Bucks dare lifecycle transitions, by result.",
+  labelNames: ["result"] as const,
+  registers: [registry],
+});
+
+export const bettingDareContributionsTotal = new Counter({
+  name: "betting_dare_contributions_total",
+  help: "Bryan Bucks dare pot contributions recorded.",
+  registers: [registry],
+});
+
+export const bettingDareGamesCapturedTotal = new Counter({
+  name: "betting_dare_games_captured_total",
+  help: "Qualifying games captured against active Bryan Bucks dares.",
+  registers: [registry],
+});
+
+export const bettingDareSettlementsTotal = new Counter({
+  name: "betting_dare_settlements_total",
+  help: "Bryan Bucks dares reaching a resolved terminal state, by outcome.",
+  labelNames: ["outcome"] as const,
+  registers: [registry],
+});
+
 /* ----------------------------------------------------------- transfers -- */
 
 export const bettingTransfersTotal = new Counter({

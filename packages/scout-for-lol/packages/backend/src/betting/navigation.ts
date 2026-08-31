@@ -56,6 +56,10 @@ const LEDGER_KIND_LABELS = {
   transfer_sent: "transfer sent",
   transfer_received: "transfer received",
   transfer_fee: "transfer fee",
+  dare_stake: "dare pot contribution",
+  dare_payout: "dare bounty payout",
+  dare_refund: "dare refund",
+  dare_fee: "dare fee",
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;
 
