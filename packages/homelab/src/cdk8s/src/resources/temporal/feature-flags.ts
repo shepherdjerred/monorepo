@@ -7,6 +7,6 @@ export function temporalFeatureFlagEnvironment(): Record<string, EnvValue> {
       "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
     ),
     FLIPT_NAMESPACE: EnvValue.fromValue("default"),
-    FLIPT_ENVIRONMENT: EnvValue.fromValue("default"),
+    FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
   };
 }

@@ -27,9 +27,8 @@ Run the repository command from the monorepo root:
 bun run check-flipt-flag-inventory
 ```
 
-The command checks every environment declared in the managed inventory. During
-the migration, that means `default`, `beta`, and `prod` in the `default`
-namespace.
+The command checks every environment declared in the managed inventory. That
+means `beta` and `prod` in the `default` namespace.
 
 To check one exact environment, pass a filter:
 
