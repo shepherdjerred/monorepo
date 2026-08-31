@@ -3,7 +3,7 @@ import { ApplicationFailure } from "@temporalio/common";
 import { Client, Connection } from "@temporalio/client";
 import { client } from "#src/discord/client.ts";
 import configuration from "#src/configuration.ts";
-import type { ScoutTemporalActivityGroups } from "./supervisor.ts";
+import type { ScoutTemporalActivityGroups } from "./connected-runtime.ts";
 import { PermanentImportError } from "#src/league/initial-history/errors.ts";
 import {
   classifyLlmProviderIssue,
