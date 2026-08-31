@@ -122,7 +122,7 @@ struct OpenCodeAuthFile: Decodable {
     switch provider {
     case .kimi: [kimiForCodingOAuth, kimi].compactMap { $0?.value }
     case .grok: [xai, grok].compactMap { $0?.value }
-    case .claudeCode, .codex: []
+    case .claudeCode, .codex, .antigravity, .cursor: []
     }
   }
 
@@ -130,7 +130,7 @@ struct OpenCodeAuthFile: Decodable {
     switch provider {
     case .kimi: ["kimi-for-coding-oauth", "kimi"]
     case .grok: ["xai", "grok"]
-    case .claudeCode, .codex: []
+    case .claudeCode, .codex, .antigravity, .cursor: []
     }
   }
 }

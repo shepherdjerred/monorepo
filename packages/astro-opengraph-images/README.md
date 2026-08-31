@@ -249,9 +249,9 @@ Use `pathFilter` when excluded pages may not have the required Open Graph metada
 
 ## Custom Renderers
 
-You can create your own custom images with a render function. Take a look at how [a preset](https://github.com/shepherdjerred/monorepo/blob/main/packages/astro-opengraph-images/src/presets/blackAndWhite.tsx) works.
+You can create your own custom images with a render function. Take a look at how [a preset](https://github.com/shepherdjerred/monorepo/blob/main/packages/astro-opengraph-images/src/presets/black-and-white.tsx) works.
 
-Renderers have access to the page's DOM using [jsdom](https://github.com/jsdom/jsdom). You can use this to render your Open Graph image using any of the content from the associated HTML page. An example of this is shown in the [custom property preset](https://github.com/shepherdjerred/monorepo/blob/main/packages/astro-opengraph-images/src/presets/customProperty.tsx) which shows a preview of the page's body text in the Open Graph image.
+Renderers have access to the page's DOM using [jsdom](https://github.com/jsdom/jsdom). You can use this to render your Open Graph image using any of the content from the associated HTML page. An example of this is shown in the [custom property preset](https://github.com/shepherdjerred/monorepo/blob/main/packages/astro-opengraph-images/src/presets/custom-property.tsx) which shows a preview of the page's body text in the Open Graph image.
 
 This library uses [Satori](https://github.com/vercel/satori) to convert React components to SVG. The SVG is then converted to a PNG using [resvg-js](https://github.com/yisibl/resvg-js).
 

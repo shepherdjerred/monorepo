@@ -16,15 +16,26 @@
 #   BUILDKITE_AGENT_TOKEN="$(op read 'op://<vault>/Buildkite Agent Token/<field>')" \
 #     ./bootstrap.sh
 #
-# Tailscale enrollment and headless auto-login are documented manual steps in
-# README.md (they need interactive auth / a GUI toggle and aren't scripted).
+# Tailscale enrollment, FileVault, Xcode installation, signing, and the GUI
+# privacy grants are documented manual steps in README.md. They require either
+# interactive authentication or a deliberate security decision. This script
+# does configure the accepted always-unlocked CI session after prompting for
+# the local account password; otherwise signing and UI tests can deadlock
+# behind the lock screen after an unattended display timeout.
 
 set -euo pipefail
 
 POWER_BACKUP_FILE="/var/db/buildkite-mac-ci-pmset-before"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 if [[ "$(uname -s)" != "Darwin" ]]; then
   echo "error: this provisions a macOS host, but uname -s is $(uname -s)" >&2
+  exit 1
+fi
+
+if [[ "$(uname -m)" != "arm64" ]]; then
+  echo "error: native CI requires Apple Silicon, but uname -m is $(uname -m)" >&2
   exit 1
 fi
 
@@ -53,15 +64,47 @@ fi
 
 # --- 2. Packages -----------------------------------------------------------
 # buildkite-agent : the CI agent daemon
-# swiftlint       : first native macOS job (tasks-for-obsidian/ios)
-# tailscale       : tailnet membership (CLI daemon — enrolled manually, see README)
-echo "==> Installing packages (buildkite-agent, swiftlint, tailscale)"
-brew install buildkite/buildkite/buildkite-agent swiftlint tailscale
+# mise            : installs the repository-pinned Bun and Rust versions
+# xcodes          : installs and selects the repository-pinned Xcode
+# xcodegen        : generates QuotaBar and TaskNotes Xcode projects
+# swiftlint       : strict Swift lint and analyzer checks
+# tailscale       : tailnet membership (enrolled manually, see README)
+BUILDKITE_FORMULA="buildkite/buildkite/buildkite-agent@3"
+BUILDKITE_SERVICE="buildkite-agent@3"
+echo "==> Trusting the Buildkite Homebrew tap"
+brew tap buildkite/buildkite
+brew trust --formula "$BUILDKITE_FORMULA"
+
+echo "==> Installing native CI packages"
+brew install "$BUILDKITE_FORMULA" mise xcodes xcodegen swiftlint tailscale
+
+AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"
+
+echo "==> Installing the repository-pinned Bun and Rust toolchains"
+mise install --cd "$REPO_ROOT" --yes bun rust
+mise reshim
+
+# TaskNotes packages a universal macOS XCFramework. rustup installs only the
+# host architecture's standard library with a new toolchain, so provision both
+# slices against the repository-pinned Rust version.
+echo "==> Installing TaskNotes Rust targets"
+mise exec --cd "$REPO_ROOT" -- rustup target add \
+  aarch64-apple-darwin \
+  x86_64-apple-darwin
+
+# Buildkite checks jobs out below the configured build path, not below this
+# bootstrap checkout. Trust that path so mise can load the job checkout's
+# repository-pinned tools when the native preflight runs through its shims.
+echo "==> Trusting Buildkite checkout configs"
+mise settings set trusted_config_paths "$AGENT_BUILD_PATH"
 
 # --- 3. Agent configuration ------------------------------------------------
 # Write the agent config with the macos-queue tag. chmod 600 — it holds the
 # token. `git-clean-flags="-ffxdq"` forces a clean working tree on every build
 # (macOS jobs run natively on a persistent host, so we scrub between builds).
+# `shell` is pinned because the native steps source macos-native-env.sh, which
+# needs bash; Kubernetes steps get the same guarantee from BUILDKITE_SHELL in
+# their pod spec, and this queue has no pod spec to carry it.
 CFG_DIR="$(brew --prefix)/etc/buildkite-agent"
 CFG_FILE="$CFG_DIR/buildkite-agent.cfg"
 mkdir -p "$CFG_DIR"
@@ -73,8 +116,9 @@ token="$BUILDKITE_AGENT_TOKEN"
 name="%hostname-%spawn"
 tags="queue=macos,os=darwin,arch=$(uname -m)"
 tags-from-host=false
-build-path="$HOME/.buildkite-agent/builds"
+build-path="$AGENT_BUILD_PATH"
 git-clean-flags="-ffxdq"
+shell="/bin/bash -e -c"
 EOF
 chmod 600 "$CFG_FILE"
 umask 022
@@ -89,7 +133,7 @@ umask 022
 # (will prompt).
 #   sleep 0         never idle-sleep the system
 #   disksleep 0     never spin the disk down
-#   displaysleep 0  don't sleep the (headless) display
+#   displaysleep 0  keep the GUI available for signing and UI automation
 #   powernap 0      no Power Nap wake/maintenance cycles
 #   womp 1          wake on network access (magic packet)
 #   autorestart 1   power back on automatically after a power loss
@@ -111,19 +155,41 @@ fi
 sudo pmset -c sleep 0 disksleep 0 displaysleep 0 powernap 0 womp 1 autorestart 1
 echo "    Full profile (verify sleep=0): pmset -g custom"
 
-# --- 5. Start the agent as a login service ---------------------------------
-# brew services installs a per-user LaunchAgent (runs on login). For a headless
-# box, enable auto-login (README) so the agent comes up after a reboot. A
-# LaunchAgent (user context) — not a LaunchDaemon — is chosen so keychain/Xcode
-# codesigning works if this host later does real Xcode builds.
+# --- 5. Keep the CI login session available --------------------------------
+# The native trust boundary already requires an unlocked GUI user. Disabling
+# only system sleep is insufficient: macOS can still lock the display, lock the
+# login keychain, and leave codesign waiting for a prompt that no unattended
+# job can answer. Disable both idle screen saver activation and password lock.
+# `sysadminctl` asks for the local account password without placing it in this
+# script, an environment variable, or shell history.
+echo "==> Configuring the always-unlocked CI login session"
+defaults -currentHost write com.apple.screensaver idleTime -int 0
+screen_lock_status="$(sysadminctl -screenLock status 2>&1)"
+if [[ "$screen_lock_status" != *"screenLock is off"* ]]; then
+  echo "    Enter the jerred account password when prompted."
+  sysadminctl -screenLock off -password -
+fi
+screen_lock_status="$(sysadminctl -screenLock status 2>&1)"
+if [[ "$screen_lock_status" != *"screenLock is off"* ]]; then
+  echo "error: macOS screen lock is still enabled: $screen_lock_status" >&2
+  exit 1
+fi
+
+# --- 6. Start the agent as a login service ---------------------------------
+# brew services installs a per-user LaunchAgent (runs on login). FileVault and
+# auto-login are intentionally incompatible here: after a cold boot, a human
+# unlocks the disk and logs in before the agent can reconnect. A LaunchAgent
+# (user context) — not a LaunchDaemon — is required for keychain signing and
+# the Accessibility-approved TaskNotes UI test runner.
 echo "==> Starting buildkite-agent service"
-brew services restart buildkite/buildkite/buildkite-agent
+brew services restart "$BUILDKITE_SERVICE"
 
 echo
-echo "==> Done. Agent registered on the 'macos' queue."
+echo "==> Done. Agent service configured for the 'macos' queue."
 echo "    Verify it's connected: https://buildkite.com/organizations/sjerred/agents"
 echo
 echo "    Remaining MANUAL steps (see README.md):"
 echo "      1. Join the tailnet:  sudo tailscaled install-system-daemon && sudo tailscale up"
-echo "      2. Enable auto-login  (System Settings > Users & Groups) for headless reboots"
-echo "      3. Wire a macOS CI step onto the 'macos' queue (see README follow-up)"
+echo "      2. Install/select .xcode-version with xcodes, then remove its credentials"
+echo "      3. Enable FileVault and escrow its recovery key in 1Password"
+echo "      4. Provision one Apple Development identity and Accessibility trust"

@@ -115,6 +115,29 @@ struct InspectorSnapshotTests {
         )
     }
 
+    /// The common-pattern sheet, including its multi-field hierarchy.
+    @Test("the recurrence editor sheet", arguments: SnapshotAppearance.allCases)
+    func recurrenceEditor(appearance: SnapshotAppearance) throws {
+        let draft = CommonRecurrenceDraft(
+            interval: 2,
+            pattern: .weekly(weekdays: [.monday, .wednesday, .friday]),
+            ending: .onDate("2026-12-31")
+        )
+        try record(
+            RecurrenceEditorSheet(
+                existingRule: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE,FR;UNTIL=20261231",
+                editableDraft: draft,
+                storedScheduled: "2026-07-20",
+                start: "2026-07-20",
+                anchor: .completion,
+                onApply: { _ in }
+            ),
+            named: "inspector-recurrence-sheet",
+            size: CGSize(width: 480, height: 610),
+            appearance: appearance
+        )
+    }
+
     /// A form for a task, built the way the panel builds one.
     private func form(for task: CoreTask) throws -> some View {
         let row = try TaskRowState(
@@ -133,6 +156,7 @@ struct InspectorSnapshotTests {
             detail: detail,
             vocabulary: TaskVocabulary.of(tasks: InspectorFixtures.vault),
             apply: { _ in },
+            applyRecurrence: { _ in },
             attempt: { _ in true },
             dispatch: { _ in }
         )

@@ -353,8 +353,11 @@ bindings are absent and that each canonical worker has a healthy metrics target.
 
 The `temporal-failure-watch` schedule is the sole per-execution workflow-failure
 Alerts source.
-It emits one `TemporalWorkflowFailed` alert per `workflowId`/`runId` and fetches
-history for every failed or timed-out execution. For a timeout, inspect the
+It emits at most 100 detailed `TemporalWorkflowFailed` alerts per watcher
+workflow across all activity retries. Remaining visibility rows are counted
+without history fetches and represented by one critical
+`TemporalWorkflowFailureOverflow` alert with omitted totals by workflow
+type/status. For a detailed timeout, inspect the
 alert annotations `timeoutClassification` and, when present,
 `workerTaskQueueUnavailableReason`:
 

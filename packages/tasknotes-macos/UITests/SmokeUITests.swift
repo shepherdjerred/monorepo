@@ -8,6 +8,7 @@ import XCTest
 /// target can launch a **sandboxed, ad-hoc-signed** app at all, and whether the
 /// identifiers in `TaskNotesKit` are visible from here. Both have to be true
 /// before a single flow is worth writing.
+@MainActor
 final class SmokeUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false

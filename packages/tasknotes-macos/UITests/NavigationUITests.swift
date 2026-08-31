@@ -17,6 +17,7 @@ import XCTest
 /// remainder passes is the same move as narrowing an assertion until it holds,
 /// which this project has refused twice. It stays a diagnostic that is run and
 /// read, not a green light that means nothing.
+@MainActor
 final class NavigationUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false

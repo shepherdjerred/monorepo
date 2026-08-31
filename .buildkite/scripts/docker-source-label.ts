@@ -1,4 +1,4 @@
-import { fail } from "./validate-pipeline-lib.ts";
+import { fail } from "./validate-pipeline-parse.ts";
 
 const monorepoSource = "https://github.com/shepherdjerred/monorepo";
 const sourceLabel = "org.opencontainers.image.source";

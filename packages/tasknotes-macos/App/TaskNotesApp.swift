@@ -14,6 +14,11 @@ import TaskNotesMac
 /// Xcode.
 @main
 struct TaskNotesApp: App {
+    /// AppKit's termination handshake, implemented in the library target so it
+    /// is compiled and tested by both build systems.
+    @NSApplicationDelegateAdaptor(TaskNotesApplicationDelegate.self)
+    private var applicationDelegate
+
     /// The task store and the rest of the app-scoped state, assembled in
     /// `TaskNotesMac`.
     ///
@@ -31,6 +36,10 @@ struct TaskNotesApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(environment: environment)
+                // AppKit invokes the adapted delegate indirectly. This explicit
+                // read keeps that application-lifetime ownership visible to
+                // whole-module static analysis as well.
+                .onAppear { _ = applicationDelegate }
                 // `tasknotes://…` is handled inside `RootView`, on the window's
                 // own `NavigationState`. A handler here could only reach an
                 // app-scoped one, which is the per-window selection given away.

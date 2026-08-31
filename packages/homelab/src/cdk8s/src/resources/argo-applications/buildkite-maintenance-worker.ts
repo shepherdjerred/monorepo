@@ -28,6 +28,7 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
+import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 
 const NAMESPACE = "buildkite";
 const WORKER_NAME = "temporal-maintenance-worker";
@@ -294,6 +295,11 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
       liveness: Probe.fromHttpGet("/healthz", { port: 9465 }),
       readiness: Probe.fromHttpGet("/healthz", { port: 9465 }),
       envVariables: {
+        // This role's worker.ts main() calls initializeCallGraphTracing()
+        // unconditionally on every boot, which loads feature-flag config
+        // before anything else; without FEATURE_FLAGS_MODE that throws
+        // immediately, crash-looping this worker.
+        ...temporalFeatureFlagEnvironment(),
         TEMPORAL_ADDRESS: EnvValue.fromValue(
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
         ),

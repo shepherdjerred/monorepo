@@ -58,6 +58,14 @@ const DeploymentSchema = z.object({
   }),
 });
 
+const PersistentVolumeClaimSchema = z.object({
+  kind: z.literal("PersistentVolumeClaim"),
+  metadata: z.object({ name: z.literal("alert-dashboard-data") }).loose(),
+  spec: z.object({
+    resources: z.object({ requests: z.object({ storage: z.string() }) }),
+  }),
+});
+
 const DATA_PATH = "/data";
 const DATABASE_URL = "file:/data/alert-dashboard.db";
 const POSTAL_HOST =
@@ -76,7 +84,28 @@ function synthesizeDeployment(): z.infer<typeof DeploymentSchema> {
   return deployment;
 }
 
+function synthesizePersistentVolumeClaim(): z.infer<
+  typeof PersistentVolumeClaimSchema
+> {
+  const app = new App();
+  createAlertDashboardChart(app);
+  const manifests = z.array(z.unknown()).parse(app.charts.at(0)?.toJson());
+  const claim = manifests
+    .map((manifest) => PersistentVolumeClaimSchema.safeParse(manifest))
+    .find((result) => result.success)?.data;
+  if (claim === undefined) {
+    throw new Error("Missing alert-dashboard data claim");
+  }
+  return claim;
+}
+
 describe("Alert Dashboard deployment", () => {
+  test("reserves enough ZFS quota for the ledger and retained snapshots", () => {
+    expect(
+      synthesizePersistentVolumeClaim().spec.resources.requests.storage,
+    ).toBe("16Gi");
+  });
+
   test("opens the SQLite ledger on the persistent data volume in every container that touches it", () => {
     const podSpec = synthesizeDeployment().spec.template.spec;
     const dataVolume = podSpec.volumes.find(

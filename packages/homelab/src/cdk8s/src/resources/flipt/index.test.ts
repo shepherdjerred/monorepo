@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flipt.ts";
-import { createEnvironmentMigrationScript } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import { createEnvironmentValidationScript } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 const ManifestSchema = z
   .object({
@@ -140,11 +140,12 @@ describe("Flipt chart", () => {
     const yaml = config.data["config.yml"] ?? "";
     expect(yaml).toContain('version: "2.0"');
     expect(yaml).toContain("type: local");
-    expect(yaml).toContain("path: /var/opt/flipt/data");
+    expect(yaml).not.toContain("path: /var/opt/flipt/data\n");
     expect(yaml).toContain("path: /var/opt/flipt/data-beta");
     expect(yaml).toContain("path: /var/opt/flipt/data-prod");
     expect(yaml).toContain("name: beta");
     expect(yaml).toContain("name: prod");
+    expect(yaml).toMatch(/prod:\n {4}name: prod\n {4}default: true/);
     // Both default to true and would fail continuously against DNS-only egress.
     expect(yaml).toContain("check_for_updates: false");
     expect(yaml).toContain("telemetry_enabled: false");
@@ -159,62 +160,51 @@ describe("Flipt chart", () => {
     ).toMatch(/^[a-f\d]{12}$/);
   });
 
-  it("copies only absent environment repositories and rejects partial state", () => {
+  it("validates beta and prod without referencing the legacy repository", () => {
     const deployment = DeploymentSchema.parse(
       findManifest(synthesize(), "Deployment", "flipt"),
     );
-    const migration = deployment.spec.template.spec.initContainers.find(
-      (container) => container.name === "migrate-environments",
+    const validator = deployment.spec.template.spec.initContainers.find(
+      (container) => container.name === "validate-environments",
     );
-    expect(migration?.command).toEqual(["/bin/sh", "-c"]);
-    const script = migration?.args?.[0] ?? "";
-    expect(script).toContain('validate_repo "$source_repo"');
-    expect(script).toContain('if [ -e "$destination" ]');
-    expect(script).toContain('temporary="${destination}.migrating"');
-    expect(script).toContain('cp -a "$source_repo" "$temporary"');
-    expect(script).toContain('diff -qr "$source_repo" "$temporary"');
-    expect(script).toContain('mv "$temporary" "$destination"');
-    expect(script).toContain('copy_environment "/var/opt/flipt/data-beta"');
-    expect(script).toContain('copy_environment "/var/opt/flipt/data-prod"');
-    expect(migration?.volumeMounts?.map((mount) => mount.mountPath)).toContain(
+    expect(validator?.command).toEqual(["/bin/sh", "-c"]);
+    const script = validator?.args?.[0] ?? "";
+    expect(script).toContain('validate_repo "/var/opt/flipt/data-beta"');
+    expect(script).toContain('validate_repo "/var/opt/flipt/data-prod"');
+    expect(script).not.toContain("cp -a");
+    expect(script).not.toContain('validate_repo "/var/opt/flipt/data"');
+    expect(validator?.volumeMounts?.map((mount) => mount.mountPath)).toContain(
       "/var/opt/flipt",
     );
   });
 
-  it("fails fast for an invalid source or partial destination repository", async () => {
-    const root = `/tmp/flipt-migration-test-${crypto.randomUUID()}`;
-    expect(await run(["mkdir", "-p", `${root}/data/objects`])).toBe(0);
+  it("fails fast for missing or partial managed repositories", async () => {
+    const root = `/tmp/flipt-validation-test-${crypto.randomUUID()}`;
+    expect(await run(["mkdir", "-p", root])).toBe(0);
     expect(
-      await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
+      await run(["/bin/sh", "-c", createEnvironmentValidationScript(root)]),
     ).not.toBe(0);
 
-    await Bun.write(`${root}/data/HEAD`, "ref: refs/heads/main\n");
-    await Bun.write(`${root}/data/config`, "[core]\n\tbare = true\n");
-    expect(await run(["mkdir", "-p", `${root}/data-beta`])).toBe(0);
     expect(
-      await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
-    ).not.toBe(0);
-    expect(await run(["rm", "-rf", root])).toBe(0);
-  });
-
-  it("preserves an already initialized environment with different content", async () => {
-    const root = `/tmp/flipt-migration-test-${crypto.randomUUID()}`;
-    expect(await run(["mkdir", "-p", `${root}/data/objects`])).toBe(0);
-    await Bun.write(`${root}/data/HEAD`, "ref: refs/heads/main\n");
-    await Bun.write(`${root}/data/config`, "[core]\n\tbare = true\n");
-    expect(await run(["mkdir", "-p", `${root}/data-beta/objects`])).toBe(0);
-    await Bun.write(`${root}/data-beta/HEAD`, "ref: refs/heads/luna\n");
-    await Bun.write(`${root}/data-beta/config`, "[core]\n\tbare = false\n");
-
-    expect(
-      await run(["/bin/sh", "-c", createEnvironmentMigrationScript(root)]),
+      await run([
+        "mkdir",
+        "-p",
+        `${root}/data-beta/objects`,
+        `${root}/data-prod`,
+      ]),
     ).toBe(0);
-    expect(await Bun.file(`${root}/data-prod/HEAD`).text()).toBe(
-      "ref: refs/heads/main\n",
-    );
-    expect(await Bun.file(`${root}/data-beta/HEAD`).text()).toBe(
-      "ref: refs/heads/luna\n",
-    );
+    await Bun.write(`${root}/data-beta/HEAD`, "ref: refs/heads/main\n");
+    await Bun.write(`${root}/data-beta/config`, "[core]\n\tbare = true\n");
+    expect(
+      await run(["/bin/sh", "-c", createEnvironmentValidationScript(root)]),
+    ).not.toBe(0);
+
+    expect(await run(["mkdir", "-p", `${root}/data-prod/objects`])).toBe(0);
+    await Bun.write(`${root}/data-prod/HEAD`, "ref: refs/heads/main\n");
+    await Bun.write(`${root}/data-prod/config`, "[core]\n\tbare = true\n");
+    expect(
+      await run(["/bin/sh", "-c", createEnvironmentValidationScript(root)]),
+    ).toBe(0);
     expect(await run(["rm", "-rf", root])).toBe(0);
   });
 

@@ -42,6 +42,21 @@ Build ID, and declare `AUTO_UPGRADE` as the default Workflow behavior. Activity
 Workers remain unversioned because Workflow code, not effect execution, is the
 determinism boundary.
 
+| Target       | Workflow queue       | Worker Deployment            | Image pin prefix                               |
+| ------------ | -------------------- | ---------------------------- | ---------------------------------------------- |
+| `central`    | `monorepo-workflows` | `monorepo-central-workflows` | `shepherdjerred/temporal-worker/workflows/`    |
+| `scout-beta` | `scout-beta`         | `scout-beta-workflows`       | `shepherdjerred/scout-for-lol/beta/workflows/` |
+| `scout-prod` | `scout-prod`         | `scout-prod-workflows`       | `shepherdjerred/scout-for-lol/prod/workflows/` |
+
+Scout beta requires two workflow-capable image releases. Pins at or before build
+12197 create no workflow-only pods. Copying the first capable candidate pin to
+stable creates only the stable pod; a later distinct candidate pin creates the
+ramp target. Both pods have only Temporal and DNS egress, expose SDK metrics to
+Prometheus, and carry no Discord, PostgreSQL, Riot, S3, or report-lake access.
+The embedded backend poller drains old unversioned histories but is not a
+Worker Deployment rollback version. Scout production repeats the sequence only
+after beta acceptance.
+
 Bootstrap configuration:
 
 | Name                              | Contract                                   |
@@ -56,7 +71,8 @@ immutable SHA. Non-image runtimes can set `TEMPORAL_WORKER_BUILD_ID` directly.
 A partial or non-SHA identity fails before the Workflow Worker starts.
 
 The operator interface is `bun run worker-deployment
-<status|start|advance|promote|rollback> --build-id <image-git-sha>` from
+<status|start|advance|promote|rollback> [--target
+<central|scout-beta|scout-prod>] --build-id <image-git-sha>` from
 `packages/temporal`. `TEMPORAL_ADDRESS` is required. The initial start also
 accepts `--stable-build-id <image-git-sha>` to establish current routing before
 opening the candidate ramp. It calls the native Temporal CLI through the

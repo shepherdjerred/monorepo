@@ -179,4 +179,5 @@ that means.
 
 - [How to schedule an agent task](/how-to/schedule-an-agent-task/)
 - [How to run the production canary](/how-to/run-the-agent-task-canary/)
+- [Temporal report emails](/reference/temporal-report-emails/)
 - [Why agent tasks are report-only by policy](/explanation/temporal/agent-task-boundary/)

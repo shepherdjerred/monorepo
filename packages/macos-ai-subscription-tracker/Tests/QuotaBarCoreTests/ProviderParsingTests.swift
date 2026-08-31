@@ -8,20 +8,16 @@ final class ProviderParsingTests: XCTestCase {
 
   func testClaudeDynamicAndFableWindows() throws {
     let snapshot = try ClaudeCodeProvider.parse(data: fixture("claude-success"), now: now)
-    XCTAssertEqual(snapshot.windows.count, 4)
+    XCTAssertEqual(snapshot.windows.count, 3)
     XCTAssertEqual(snapshot.windows.first(where: { $0.id == "five-hour" })?.remainingPercent, 72)
     XCTAssertNotNil(snapshot.windows.first(where: { $0.id == "weekly-fable" }))
-    XCTAssertEqual(
-      snapshot.windows.first(where: { $0.id == "provider-nimbus-quill" })?.kind,
-      .providerDefined
-    )
+    XCTAssertNil(snapshot.windows.first(where: { $0.id == "provider-nimbus-quill" }))
     XCTAssertTrue(snapshot.notes.isEmpty)
   }
 
   func testClaudeLimitsPreserveModelAndPolicy() throws {
     let snapshot = try ClaudeCodeProvider.parse(data: fixture("claude-limits"), now: now)
-    let scoped = snapshot.windows.first { $0.label.contains("Nimbus Quil") }
-    XCTAssertEqual(scoped?.kind, .modelScoped(model: "Nimbus Quil"))
+    XCTAssertFalse(snapshot.windows.contains { $0.label.contains("Nimbus Quil") })
     XCTAssertNotNil(snapshot.windows.first(where: { $0.id == "fable-policy" }))
     XCTAssertFalse(snapshot.notes.isEmpty)
   }

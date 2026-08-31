@@ -1,4 +1,4 @@
-import { proxyActivities } from "@temporalio/workflow";
+import { log, proxyActivities } from "@temporalio/workflow";
 import type { BugsinkHousekeepingActivities } from "#activities/bugsink.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
@@ -21,5 +21,5 @@ const { runBugsinkHousekeeping } =
 
 export async function runBugsinkHousekeepingWorkflow(): Promise<void> {
   const result = await runBugsinkHousekeeping();
-  console.warn("Bugsink housekeeping complete:\n", result);
+  log.info("Bugsink housekeeping complete", { result });
 }

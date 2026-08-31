@@ -23,7 +23,7 @@ function metricsIngress(ports: readonly number[]) {
   ];
 }
 
-function dnsEgress() {
+export function createDnsEgressRule() {
   return {
     to: [
       {
@@ -45,7 +45,64 @@ function temporalServerEgress() {
   };
 }
 
+function fliptEgress() {
+  return {
+    to: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "flipt" },
+        },
+        podSelector: { matchLabels: { app: "flipt" } },
+      },
+    ],
+    ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
+  };
+}
+
+// Every domain worker built on createTemporalDomainWorker() with
+// featureFlagsEnabled left at its default (i.e. every one of these
+// components) boots with temporalFeatureFlagEnvironment() so it can read the
+// temporal-call-graph-tracing flag. Flipt has no auth of its own —
+// reachability IS the authorization model — so this single, explicitly
+// named policy is what actually scopes which workers may query it. The
+// credentialless central-workflows track resolves the same flag itself (it
+// is the only role that actually hosts workflow code) but keeps its own,
+// narrower NetworkPolicy — see temporal-central-workflows-netpol below —
+// rather than joining this component-label selector.
+const FLIPT_CONSUMER_COMPONENTS = [
+  "gateway",
+  "home-worker",
+  "reports-worker",
+  "infra-worker",
+  "repo-worker",
+  "scout-worker",
+  "glitter-corpus-worker",
+  "glitter-context-worker",
+  "agent-worker",
+] as const;
+
+function createTemporalWorkersFliptEgressPolicy(chart: Chart): void {
+  new KubeNetworkPolicy(chart, "temporal-workers-flipt-egress", {
+    metadata: { name: "temporal-workers-flipt-egress" },
+    spec: {
+      podSelector: {
+        matchExpressions: [
+          {
+            key: "component",
+            operator: "In",
+            values: [...FLIPT_CONSUMER_COMPONENTS],
+          },
+        ],
+      },
+      policyTypes: ["Egress"],
+      egress: [fliptEgress()],
+    },
+  });
+}
+
 export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
+  createTemporalWorkersFliptEgressPolicy(chart);
+
   new KubeNetworkPolicy(chart, "temporal-central-workflows-netpol", {
     metadata: { name: "temporal-central-workflows-netpol" },
     spec: {
@@ -53,8 +110,9 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Ingress", "Egress"],
       ingress: metricsIngress([9464, 9465]),
       egress: [
-        dnsEgress(),
+        createDnsEgressRule(),
         temporalServerEgress(),
+        fliptEgress(),
         {
           to: [
             {
@@ -86,7 +144,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         policyTypes: ["Ingress", "Egress"],
         ingress: metricsIngress([9464, 9465]),
         egress: [
-          dnsEgress(),
+          createDnsEgressRule(),
           temporalServerEgress(),
           { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
           { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },

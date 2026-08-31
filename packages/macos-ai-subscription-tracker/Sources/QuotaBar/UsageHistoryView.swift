@@ -68,41 +68,149 @@ struct UsageHistoryView: View {
   }
 
   private var chart: some View {
-    Chart(selectedSamples) { sample in
-      LineMark(
-        x: .value("Time", sample.recordedAt),
-        y: .value("Used", sample.usedPercent)
-      )
-      .interpolationMethod(.catmullRom)
-      .foregroundStyle(Color.accentColor)
-      PointMark(
-        x: .value("Time", sample.recordedAt),
-        y: .value("Used", sample.usedPercent)
-      )
-      .foregroundStyle(Color.accentColor)
+    Chart {
+      ForEach(chartPoints) { point in
+        AreaMark(
+          x: .value("Time", point.sample.recordedAt),
+          yStart: .value("Used", 0),
+          yEnd: .value("Used", point.sample.usedPercent),
+          series: .value("Quota cycle", point.cycle)
+        )
+        .interpolationMethod(.linear)
+        .foregroundStyle(
+          LinearGradient(
+            colors: [Color.accentColor.opacity(0.18), Color.accentColor.opacity(0.015)],
+            startPoint: .top,
+            endPoint: .bottom
+          )
+        )
+
+        LineMark(
+          x: .value("Time", point.sample.recordedAt),
+          y: .value("Used", point.sample.usedPercent),
+          series: .value("Quota cycle", point.cycle)
+        )
+        .interpolationMethod(.linear)
+        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+        .foregroundStyle(Color.accentColor)
+      }
+
+      ForEach(resetMarkers) { marker in
+        RuleMark(x: .value("Reset", marker.recordedAt))
+          .lineStyle(StrokeStyle(lineWidth: 1, dash: [3, 3]))
+          .foregroundStyle(Color.secondary.opacity(0.42))
+      }
+
+      if let current = selectedSamples.last {
+        PointMark(
+          x: .value("Current time", current.recordedAt),
+          y: .value("Current usage", current.usedPercent)
+        )
+        .symbolSize(42)
+        .foregroundStyle(Color.accentColor)
+      }
     }
+    .chartXScale(
+      domain: date.addingTimeInterval(-range.duration)...date,
+      range: .plotDimension(startPadding: 5, endPadding: 5)
+    )
     .chartYScale(domain: 0...100)
-    .chartYAxisLabel("Used %")
     .chartXAxis {
-      AxisMarks(values: .automatic(desiredCount: 4))
+      AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+          .foregroundStyle(Color.secondary.opacity(0.16))
+        AxisTick(stroke: StrokeStyle(lineWidth: 0.5))
+          .foregroundStyle(Color.secondary.opacity(0.35))
+        AxisValueLabel(format: range.axisFormat)
+          .foregroundStyle(Color.secondary)
+      }
+    }
+    .chartYAxis {
+      AxisMarks(position: .trailing, values: [0, 25, 50, 75, 100]) { value in
+        AxisGridLine(stroke: StrokeStyle(lineWidth: 0.5))
+          .foregroundStyle(Color.secondary.opacity(0.16))
+        AxisValueLabel {
+          if let percentage = value.as(Int.self) {
+            Text("\(percentage)%")
+          }
+        }
+        .foregroundStyle(Color.secondary)
+      }
+    }
+    .chartPlotStyle { plotArea in
+      plotArea
+        .background(Color.secondary.opacity(0.045))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
     .frame(height: 220)
-    .accessibilityLabel("Subscription usage history graph")
+    .accessibilityLabel("Subscription usage history")
+    .accessibilityValue(chartAccessibilityValue)
   }
 
   private var context: some View {
-    HStack {
+    HStack(spacing: 12) {
       if let current = selectedSamples.last {
-        Text("Current: \(Int(current.usedPercent.rounded()))% used")
+        Label(
+          "\(Int(current.usedPercent.rounded()))% used",
+          systemImage: "gauge.with.dots.needle.50percent"
+        )
+        if !resetMarkers.isEmpty {
+          Label(
+            "\(resetMarkers.count) reset\(resetMarkers.count == 1 ? "" : "s")",
+            systemImage: "arrow.counterclockwise"
+          )
+        }
+        Spacer(minLength: 0)
         if let resetAt = current.resetAt {
-          Spacer()
           Text("Resets \(QuotaTimeFormatter.compactCountdown(to: resetAt, from: date))")
         }
       }
     }
-    .font(.caption)
+    .font(.caption2)
     .foregroundStyle(.secondary)
     .monospacedDigit()
+  }
+
+  private var chartPoints: [HistoryChartPoint] {
+    var cycle = 0
+    var previous: UsageHistorySample?
+    return selectedSamples.map { sample in
+      let beginsCycle = previous.map { startsNewCycle(after: $0, current: sample) } ?? false
+      if beginsCycle { cycle += 1 }
+      previous = sample
+      return HistoryChartPoint(sample: sample, cycle: cycle, beginsCycle: beginsCycle)
+    }
+  }
+
+  private var resetMarkers: [HistoryResetMarker] {
+    chartPoints.compactMap { point in
+      guard point.beginsCycle else { return nil }
+      return HistoryResetMarker(id: point.id, recordedAt: point.sample.recordedAt)
+    }
+  }
+
+  private var chartAccessibilityValue: String {
+    guard let first = selectedSamples.first, let current = selectedSamples.last else {
+      return "No history"
+    }
+    let resetDescription =
+      resetMarkers.isEmpty
+      ? "no resets"
+      : "\(resetMarkers.count) reset\(resetMarkers.count == 1 ? "" : "s")"
+    return
+      "Used percentage from \(Int(first.usedPercent.rounded())) to "
+      + "\(Int(current.usedPercent.rounded())), \(resetDescription), over \(range.accessibilityLabel)."
+  }
+
+  private func startsNewCycle(
+    after previous: UsageHistorySample,
+    current: UsageHistorySample
+  ) -> Bool {
+    guard current.usedPercent < previous.usedPercent,
+      let previousResetAt = previous.resetAt,
+      let currentResetAt = current.resetAt
+    else { return false }
+    return currentResetAt.timeIntervalSince(previousResetAt) > 60
   }
 
   private var emptyState: some View {
@@ -145,6 +253,34 @@ private enum HistoryRange: CaseIterable, Identifiable {
     case .month: "30d"
     }
   }
+
+  var axisFormat: Date.FormatStyle {
+    switch self {
+    case .day: .dateTime.hour(.twoDigits(amPM: .abbreviated)).minute(.twoDigits)
+    case .week, .month: .dateTime.month(.abbreviated).day()
+    }
+  }
+
+  var accessibilityLabel: String {
+    switch self {
+    case .day: "24 hours"
+    case .week: "7 days"
+    case .month: "30 days"
+    }
+  }
+}
+
+private struct HistoryChartPoint: Identifiable {
+  let sample: UsageHistorySample
+  let cycle: Int
+  let beginsCycle: Bool
+
+  var id: String { sample.id }
+}
+
+private struct HistoryResetMarker: Identifiable {
+  let id: String
+  let recordedAt: Date
 }
 
 private struct HistoryWindow: Identifiable {

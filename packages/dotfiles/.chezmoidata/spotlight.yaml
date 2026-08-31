@@ -1,0 +1,82 @@
+# Directories excluded from macOS Spotlight indexing.
+#
+# Spotlight indexes all of $HOME by default. On a machine that runs agent
+# worktrees and polyglot toolchains that is millions of files — most of them
+# rewritten continuously by installs, builds, and worktree churn — so mds never
+# reaches a converged state. The visible symptom is Spotlight showing
+# "Indexing..." indefinitely while fseventsd and mds_stores burn CPU around the
+# clock.
+#
+# A `.metadata_never_index` file in a directory excludes that entire subtree.
+# `run_after_configure-spotlight-exclusions.sh.tmpl` places the markers.
+#
+# Paths are relative to $HOME. A directory that does not exist is skipped, so
+# listing a tool you have not installed yet is free — the marker appears on the
+# first apply after the directory shows up.
+#
+# Do NOT add directories whose contents you want to find via Spotlight or
+# Finder search. Code search here goes through ripgrep/fd, which ignore
+# Spotlight entirely, so excluding source trees costs nothing in practice.
+spotlight:
+  excludedHomeDirs:
+    # Agent worktrees and repo checkouts. The two largest contributors by far:
+    # ~2.8M and ~2.1M files respectively, both under constant rewrite.
+    - conductor
+    - git
+    - .conductor
+
+    # Package manager and toolchain caches. These are pure derived state, and
+    # several of them (.bun, .cargo, .cache) get deleted and recreated wholesale
+    # by their own tooling — which is why the markers must be re-placed on every
+    # apply rather than once.
+    - .bun
+    - .npm
+    - .cache
+    - .local
+    - .cargo
+    - .rustup
+    - go
+    - .nuget
+    - .dotnet
+    - .gradle
+    - .cocoapods
+    - .swiftpm
+    - .android
+    - .aspnet
+    - .templateengine
+
+    # Agent and dev-tool state directories. .paseo alone is ~850k files.
+    - .paseo
+    - .codex
+    - .cursor
+    - .gemini
+    - .copilot
+    - .kimi-code
+    - .voltagent
+    - .agents
+    - .claude-extra
+    - .pinchtab
+    - .maestro
+    - .devframe
+    - .herdr
+    - .buildkite-agent
+
+    # Infrastructure CLI state: caches, vendored providers, and cluster creds.
+    - .docker
+    - .orbstack
+    - .terraform.d
+    - .talos
+    - .kube
+    - .toolkit
+
+    # Library subtrees. Caches and Xcode DerivedData are derived state;
+    # com.conductor.app holds multi-gigabyte SQLite databases that are written
+    # continuously, and Spotlight re-imports the whole file on every change.
+    - Library/Caches
+    - Library/Developer
+    - Library/Application Support/com.conductor.app
+
+  # Root-owned paths needing sudo. Kept separate because an unattended apply
+  # cannot escalate and must skip these rather than block on a password prompt.
+  excludedSystemDirs:
+    - /private/var/tmp

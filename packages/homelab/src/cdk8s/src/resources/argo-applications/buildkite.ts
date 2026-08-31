@@ -81,6 +81,10 @@ const BUILDKITE_CREDENTIAL_ITEMS = [
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
   },
   {
+    secretName: "buildkite-trmnl-credentials",
+    itemId: "p7th6tqeel7k2sm47mrrto7oca",
+  },
+  {
     secretName: "buildkite-chartmuseum-credentials",
     itemId: "cnutkdwa7uka5hk3wx5gimyfom",
   },

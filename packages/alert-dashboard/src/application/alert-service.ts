@@ -163,14 +163,19 @@ export class AlertService {
   async drainEmailOutbox(limit = 10): Promise<number> {
     if (!this.#emailEnabled) return 0;
     const nowNs = this.#clock.now().epochNanoseconds;
-    const messages = await this.#repository.pendingEmails(nowNs, limit);
+    const messages = await this.#repository.claimPendingEmails(
+      nowNs,
+      limit,
+      nowNs,
+    );
     for (const message of messages) {
       try {
         await this.#postal.send(message);
-        await this.#repository.markEmailSent(
-          message.id,
-          this.#clock.now().epochNanoseconds,
-        );
+        await this.#repository.markEmailSent({
+          id: message.id,
+          sendClaimId: message.sendClaimId,
+          sentAtNs: this.#clock.now().epochNanoseconds,
+        });
       } catch (error) {
         const failedAtNs = this.#clock.now().epochNanoseconds;
         const exponent = Math.min(message.attemptCount, 16);
@@ -178,12 +183,15 @@ export class AlertService {
           30 * 2 ** exponent,
           OUTBOX_MAX_BACKOFF_SECONDS,
         );
-        await this.#repository.markEmailFailed(
-          message.id,
+        await this.#repository.markEmailFailed({
+          id: message.id,
+          sendClaimId: message.sendClaimId,
           failedAtNs,
-          addDuration(failedAtNs, { seconds: delaySeconds }),
-          error instanceof Error ? error.message : String(error),
-        );
+          nextAttemptAtNs: addDuration(failedAtNs, {
+            seconds: delaySeconds,
+          }),
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
     return messages.length;

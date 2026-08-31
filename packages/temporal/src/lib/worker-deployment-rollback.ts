@@ -3,6 +3,7 @@ import {
   prepareCandidatePinReset,
   prepareCandidatePinStateReset,
 } from "./worker-deployment-catalog.ts";
+import { verifyCandidateImageBuildId } from "./worker-deployment-proofs.ts";
 
 type RollbackOptions = {
   address: string;
@@ -14,6 +15,7 @@ type RollbackOptions = {
   candidateStatePath: string;
   candidatePinName?: string;
   stablePinName?: string;
+  imageRepository: string;
 };
 
 type RollbackStatus = {
@@ -122,6 +124,11 @@ export async function executeWorkerDeploymentRollback(
     if (status.currentBuildId === options.buildId) {
       throw new Error("Cannot reset the pin while the candidate is current");
     }
+    await verifyCandidateImageBuildId(
+      `${options.imageRepository}:${resetCatalog.candidateValue}`,
+      options.buildId,
+      run,
+    );
     if (resetCatalog.changed) {
       await Bun.write(options.catalogPath, resetCatalog.contents);
     }

@@ -11,6 +11,7 @@ import type {
 } from "#activities/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
+import { setWorkflowPhase } from "@scout-for-lol/temporal/workflow-ui-interceptor";
 
 const RETRY = {
   maximumAttempts: 3,
@@ -64,10 +65,13 @@ async function runLegacyHomelabAudit(
 ): Promise<void> {
   const agentInput: HomelabAuditAgentInput = {};
   if (input.date !== undefined) agentInput.date = input.date;
+  setWorkflowPhase("**Phase:** checking homelab audit prerequisites");
   const preflight = await runHomelabAuditPreflight();
   agentInput.toolingPreflightMarkdown = preflight.markdown;
+  setWorkflowPhase("**Phase:** analyzing homelab evidence");
   const agent = await runHomelabAuditAgent(agentInput);
   const date = input.date ?? new Date().toISOString().slice(0, 10);
+  setWorkflowPhase("**Phase:** archiving and delivering the audit report");
   const bodyArchive = await archiveHomelabAuditBody({
     date,
     markdown: agent.markdown,
@@ -130,8 +134,11 @@ export async function runHomelabAuditWorkflow(
   }
   const startedAt = new Date().toISOString();
   try {
+    setWorkflowPhase("**Phase:** collecting homelab evidence");
     const collection = await collectHomelabAuditEvidence();
+    setWorkflowPhase("**Phase:** synthesizing homelab findings");
     const synthesis = await synthesizeHomelabAuditEvidence(collection);
+    setWorkflowPhase("**Phase:** delivering the homelab audit report");
     await deliverActivityReport(buildHomelabAuditReport(collection, synthesis));
   } catch (error) {
     await deliverActivityReport(failureReport(startedAt, error));

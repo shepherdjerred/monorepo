@@ -115,7 +115,8 @@ beta and production separate local git backends on a ZFS PVC backed up by
 Velero. Environment isolation prevents a beta model or rollout change from
 altering production. Regression tests assert the storage and client selectors,
 because either omission produces a service that looks healthy while reading the
-wrong contract.
+wrong contract. The retired single-environment repository remains unreferenced
+on the PVC as a rollback artifact; removing it is a separate lifecycle decision.
 
 ## Analytics has a different ownership boundary
 

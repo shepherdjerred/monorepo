@@ -1,7 +1,11 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
+import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
-import { prepareStablePinPromotion } from "./worker-deployment-catalog.ts";
+import {
+  prepareStablePinPromotion,
+  prepareStablePinStatePromotion,
+} from "./worker-deployment-catalog.ts";
 import {
   DeploymentDescriptionSchema,
   DeploymentNameSchema,
@@ -15,10 +19,11 @@ import {
   queryRolloutMetric,
   requireHealthyWorkflowPoller,
   requireCleanCandidate,
+  requireAcceptancePrerequisite,
   requireCleanAlertWindow,
   rolloutPoller,
   rolloutAdvanceTransition,
-  runWorkerDeploymentPreflightProofs,
+  runWorkerDeploymentPreflight,
   type RolloutCommandRunner,
   verifyCandidateImageBuildId,
 } from "./worker-deployment-proofs.ts";
@@ -27,6 +32,12 @@ import {
   inspectWorkerDeploymentRollout,
   type WorkerDeploymentRolloutInspection,
 } from "./worker-deployment-inspect.ts";
+import {
+  setCurrentVersion,
+  parseTemporalJson,
+  setRampingVersion,
+  temporalPrefix,
+} from "./worker-deployment-commands.ts";
 export type WorkerDeploymentRolloutOptions = {
   action: "inspect" | "status" | "start" | "advance" | "promote" | "rollback";
   address: string;
@@ -35,10 +46,19 @@ export type WorkerDeploymentRolloutOptions = {
   deploymentName: string;
   rolloutLockName?: string;
   buildId: string;
-  taskQueue: string;
   stableBuildId?: string;
   catalogPath: string;
   candidateStatePath: string;
+  taskQueue: string;
+  candidatePinName: string;
+  stablePinName: string;
+  imageRepository: string;
+  replayCommands: readonly (readonly string[])[];
+  canaryCommand: readonly string[];
+  acceptancePrerequisite?: {
+    deploymentName: string;
+    taskQueue: string;
+  };
   now?: Date;
 };
 export type WorkerDeploymentRolloutStatus = {
@@ -52,25 +72,6 @@ export type WorkerDeploymentRolloutStatus = {
   activeTemporalAlerts: number | undefined;
   lastRampChange: string;
 };
-function parseJson(raw: string, label: string): unknown {
-  try {
-    return JSON.parse(raw);
-  } catch (error) {
-    throw new Error(`${label} returned invalid JSON`, { cause: error });
-  }
-}
-function temporalPrefix(options: WorkerDeploymentRolloutOptions): string[] {
-  return [
-    "toolkit",
-    "temporal",
-    "--address",
-    options.address,
-    "--namespace",
-    options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
-  ];
-}
-
 async function describeDeployment(
   options: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
@@ -86,7 +87,7 @@ async function describeDeployment(
     "json",
   ]);
   return DeploymentDescriptionSchema.parse(
-    parseJson(result.stdout, "worker deployment describe"),
+    parseTemporalJson(result.stdout, "worker deployment describe"),
   );
 }
 async function describeVersion(
@@ -108,8 +109,18 @@ async function describeVersion(
     "json",
   ]);
   return VersionDescriptionSchema.parse(
-    parseJson(result.stdout, "worker deployment describe-version"),
+    parseTemporalJson(result.stdout, "worker deployment describe-version"),
   );
+}
+function optionalNonEmpty(value: string): string | undefined {
+  return value === "" ? undefined : value;
+}
+function requiredWorkflowQueues(
+  options: WorkerDeploymentRolloutOptions,
+): readonly string[] {
+  return options.taskQueue === TASK_QUEUES.WORKFLOWS
+    ? RETAINED_WORKFLOW_TASK_QUEUES
+    : [options.taskQueue];
 }
 export async function readWorkerDeploymentRolloutStatus(
   rawOptions: WorkerDeploymentRolloutOptions,
@@ -127,7 +138,7 @@ export async function readWorkerDeploymentRolloutStatus(
   if (includeMetrics) {
     const [workflowPollerCounts, temporalAlerts] = await Promise.all([
       Promise.all(
-        RETAINED_WORKFLOW_TASK_QUEUES.map((taskQueue) =>
+        requiredWorkflowQueues(options).map((taskQueue) =>
           queryRolloutMetric(
             `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type="workflow_task"}) or vector(0)`,
             `${taskQueue} workflow poller query`,
@@ -143,7 +154,7 @@ export async function readWorkerDeploymentRolloutStatus(
     ]);
     workflowPollers = workflowPollerCounts[0];
     activeTemporalAlerts = temporalAlerts;
-    const unhealthyQueue = RETAINED_WORKFLOW_TASK_QUEUES.find(
+    const unhealthyQueue = requiredWorkflowQueues(options).find(
       (_, index) => (workflowPollerCounts[index] ?? 0) < 1,
     );
     if (unhealthyQueue !== undefined) {
@@ -155,20 +166,21 @@ export async function readWorkerDeploymentRolloutStatus(
   const candidate = deployment.versionSummaries.find(
     (versionSummary) => versionSummary.BuildID === options.buildId,
   );
+  if (deployment.name !== options.deploymentName) {
+    throw new Error("Worker Deployment description does not match the target");
+  }
   if (candidate === undefined) {
     throw new Error(`Candidate build ${options.buildId} is not registered`);
   }
   const newest = deployment.versionSummaries.toSorted((left, right) =>
     right.createTime.localeCompare(left.createTime),
   )[0];
-  const currentBuildId =
-    deployment.routingConfig.currentVersionBuildID === ""
-      ? undefined
-      : deployment.routingConfig.currentVersionBuildID;
-  const rampingBuildId =
-    deployment.routingConfig.rampingVersionBuildID === ""
-      ? undefined
-      : deployment.routingConfig.rampingVersionBuildID;
+  const currentBuildId = optionalNonEmpty(
+    deployment.routingConfig.currentVersionBuildID,
+  );
+  const rampingBuildId = optionalNonEmpty(
+    deployment.routingConfig.rampingVersionBuildID,
+  );
   if (
     !allowStaleCandidate &&
     options.action !== "rollback" &&
@@ -185,7 +197,7 @@ export async function readWorkerDeploymentRolloutStatus(
     .filter((queue) => queue.type === "workflow")
     .map((queue) => queue.name)
     .toSorted();
-  const missingQueues = RETAINED_WORKFLOW_TASK_QUEUES.filter(
+  const missingQueues = requiredWorkflowQueues(options).filter(
     (taskQueue) => !workflowQueues.includes(taskQueue),
   );
   if (missingQueues.length > 0) {
@@ -224,50 +236,31 @@ function validateOptions(
     namespace: z.string().min(1).parse(options.namespace),
     address: z.string().min(1).parse(options.address),
     taskQueue: z.string().min(1).parse(options.taskQueue),
+    candidatePinName: z.string().min(1).parse(options.candidatePinName),
+    stablePinName: z.string().min(1).parse(options.stablePinName),
+    imageRepository: z.string().min(1).parse(options.imageRepository),
+    replayCommands: z
+      .array(z.array(z.string().min(1)).min(1))
+      .parse(options.replayCommands),
+    canaryCommand: z
+      .array(z.string().min(1))
+      .min(1)
+      .parse(options.canaryCommand),
+    ...(options.acceptancePrerequisite === undefined
+      ? {}
+      : {
+          acceptancePrerequisite: z
+            .object({
+              deploymentName: DeploymentNameSchema,
+              taskQueue: z.string().min(1),
+            })
+            .strict()
+            .parse(options.acceptancePrerequisite),
+        }),
   };
 }
 function elapsedMilliseconds(timestamp: string, now: Date): number {
   return now.getTime() - new Date(timestamp).getTime();
-}
-async function setRampingVersion(
-  options: WorkerDeploymentRolloutOptions,
-  percentage: number,
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-ramping-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    options.buildId,
-    "--percentage",
-    String(percentage),
-    "--yes",
-    "--output",
-    "json",
-  ]);
-}
-async function setCurrentVersion(
-  options: WorkerDeploymentRolloutOptions,
-  buildId: string,
-  run: RolloutCommandRunner,
-): Promise<void> {
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-current-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    buildId,
-    "--yes",
-    "--output",
-    "json",
-  ]);
 }
 async function requireRegisteredWorkflowVersion(
   options: WorkerDeploymentRolloutOptions,
@@ -280,8 +273,7 @@ async function requireRegisteredWorkflowVersion(
       .filter((queue) => queue.type === "workflow")
       .map((queue) => queue.name),
   );
-  const requiredQueues = RETAINED_WORKFLOW_TASK_QUEUES;
-  const missingQueues = requiredQueues.filter(
+  const missingQueues = requiredWorkflowQueues(options).filter(
     (taskQueue) => !workflowQueues.has(taskQueue),
   );
   if (missingQueues.length > 0) {
@@ -290,7 +282,7 @@ async function requireRegisteredWorkflowVersion(
     );
   }
   await Promise.all(
-    requiredQueues.map((taskQueue) =>
+    requiredWorkflowQueues(options).map((taskQueue) =>
       requireHealthyWorkflowPoller(
         {
           namespace: options.namespace,
@@ -315,7 +307,7 @@ async function executeStart(
   if (status.currentBuildId === options.buildId) {
     throw new Error("Candidate is already the current version");
   }
-  await runWorkerDeploymentPreflightProofs(options, run);
+  await runWorkerDeploymentPreflight(options, run);
   if (status.currentBuildId === undefined) {
     if (
       options.stableBuildId === undefined ||
@@ -326,6 +318,7 @@ async function executeStart(
       );
     }
     await requireRegisteredWorkflowVersion(options, options.stableBuildId, run);
+    await requireAcceptancePrerequisite(options, run);
     await setCurrentVersion(options, options.stableBuildId, run);
   }
   const latestStatus = await readWorkerDeploymentRolloutStatus(options, run);
@@ -341,7 +334,7 @@ async function executeStart(
   if (latestStatus.currentBuildId !== undefined) {
     const currentBuildId = latestStatus.currentBuildId;
     await Promise.all(
-      RETAINED_WORKFLOW_TASK_QUEUES.map((taskQueue) =>
+      requiredWorkflowQueues(options).map((taskQueue) =>
         requireHealthyWorkflowPoller(
           {
             namespace: options.namespace,
@@ -355,6 +348,7 @@ async function executeStart(
       ),
     );
   }
+  await requireAcceptancePrerequisite(options, run);
   await setRampingVersion(options, 10, run);
 }
 function requireCandidateRamp(
@@ -362,9 +356,7 @@ function requireCandidateRamp(
   status: WorkerDeploymentRolloutStatus,
 ): void {
   if (status.rampingBuildId !== options.buildId) {
-    throw new Error(
-      "Transition requires the candidate to be the ramping version",
-    );
+    throw new Error("Candidate is not the ramping version");
   }
 }
 async function executeAdvance(
@@ -394,6 +386,7 @@ async function executeAdvance(
     throw new Error("Deployment ramp changed during advance preflight");
   }
   requireCleanCandidate(latestStatus);
+  await requireAcceptancePrerequisite(options, run);
   await setRampingVersion(options, transition.targetPercentage, run);
 }
 async function executePromotion(
@@ -403,13 +396,23 @@ async function executePromotion(
 ): Promise<void> {
   const promotedCatalog = await prepareStablePinPromotion(
     options.catalogPath,
+    options.candidatePinName,
+    options.stablePinName,
+    options.imageRepository,
+  );
+  const promotedState = await prepareStablePinStatePromotion(
     options.candidateStatePath,
+    options.candidatePinName,
+    options.stablePinName,
   );
   if (
     status.currentBuildId === options.buildId &&
     status.rampingBuildId === undefined &&
     promotedCatalog.alreadyPromoted
   ) {
+    if (promotedState.changed) {
+      await Bun.write(options.candidateStatePath, promotedState.contents);
+    }
     return;
   }
   requireCandidateRamp(options, status);
@@ -435,13 +438,14 @@ async function executePromotion(
     latestStatus.rampingBuildId !== options.buildId ||
     latestStatus.rampPercentage !== 100
   ) {
-    throw new Error(
-      "Promotion requires the candidate to still be ramping at 100%",
-    );
+    throw new Error("Candidate is not still ramping at 100%");
   }
   requireCleanCandidate(latestStatus);
+  await requireAcceptancePrerequisite(options, run);
   await Bun.write(options.catalogPath, promotedCatalog.contents);
-  await Bun.write(options.candidateStatePath, promotedCatalog.stateContents);
+  if (promotedState.changed) {
+    await Bun.write(options.candidateStatePath, promotedState.contents);
+  }
   await setCurrentVersion(options, options.buildId, run);
   await removeWorkerDeploymentRampingVersion(options, run);
 }
@@ -459,7 +463,7 @@ export async function executeWorkerDeploymentRollout(
   }
   const releaseLock = await acquireWorkerDeploymentLock(
     options.catalogPath,
-    options.deploymentName,
+    options.rolloutLockName ?? options.deploymentName,
     run,
   );
   try {

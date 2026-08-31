@@ -57,6 +57,19 @@ final class CompositeCredentialStoreTests: XCTestCase {
     XCTAssertEqual(freshCredential.accessToken, "manual-token")
   }
 
+  func testCursorCannotUseManualCredentialOverride() async throws {
+    let manual = ManualCredentialStore(keychain: FakeKeychain())
+    try await manual.save("manual-cursor-token", for: .cursor)
+    let composite = CompositeCredentialStore(
+      manual: manual,
+      local: FixedCredentialStore(token: "local-cursor-token")
+    )
+
+    let credential = try await composite.credential(for: .cursor, rejecting: nil)
+
+    XCTAssertEqual(credential.accessToken, "local-cursor-token")
+  }
+
   private func makeStores() async throws -> (
     root: URL,
     composite: CompositeCredentialStore
@@ -78,5 +91,21 @@ final class CompositeCredentialStoreTests: XCTestCase {
         local: LocalCredentialStore(homeDirectory: root, claudeKeychain: FakeKeychain())
       )
     )
+  }
+}
+
+private actor FixedCredentialStore: CredentialStore {
+  let token: String
+
+  init(token: String) {
+    self.token = token
+  }
+
+  func credential(
+    for provider: ProviderID,
+    rejecting rejectedCredential: ProviderCredential?
+  ) throws -> ProviderCredential {
+    if rejectedCredential?.accessToken == token { throw QuotaError.credentialsMissing(provider) }
+    return try ProviderCredential(accessToken: token, source: "test local session")
   }
 }

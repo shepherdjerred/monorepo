@@ -1,8 +1,5 @@
-import {
-  fail,
-  hasTrimmedLine,
-  requireIncludes,
-} from "./validate-pipeline-lib.ts";
+import { fail, hasTrimmedLine } from "./validate-pipeline-parse.ts";
+import { requireIncludes } from "./validate-pipeline-lib.ts";
 import {
   parsePlaywrightVersionFile,
   playwrightPackageVersion,

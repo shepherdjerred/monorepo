@@ -1,5 +1,5 @@
+import { fail } from "./validate-pipeline-parse.ts";
 import {
-  fail,
   requireAllPresent,
   requireNonePresent,
 } from "./validate-pipeline-lib.ts";

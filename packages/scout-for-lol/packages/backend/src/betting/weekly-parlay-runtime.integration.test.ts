@@ -700,13 +700,20 @@ describe("weekly parlay operator cancellation", () => {
     expect(sent[0]?.allowedMentions).toEqual({
       users: [featuredDiscordId, BETTOR, ...otherBettors],
     });
-    expect(sent[0]?.content).toContain("cancelled and refunded");
-    expect(sent[0]?.content).toContain("every pending wager was refunded");
+    expect(sent[0]?.content).toContain(
+      "Weekly Bryan Bucks parlay: CANCELLED — BETS REFUNDED",
+    );
+    expect(sent[0]?.content).toContain("**Returned:** 3 bettors · 3 BB");
     expect(sent[0]?.components).toEqual([]);
     expect(edits).toHaveLength(2);
     expect(edits[0]?.[0]).toBe(originalRefs[0]?.channelId);
     expect(edits[0]?.[1]).toBe(originalRefs[0]?.messageId);
-    expect(edits[0]?.[2].content).toContain("cancelled and refunded");
+    expect(edits[0]?.[2].content).toContain(
+      "Weekly Bryan Bucks parlay: CANCELLED — BETS REFUNDED",
+    );
+    expect(edits[0]?.[2].content).toContain("**Conditions**");
+    expect(edits[0]?.[2].content).toContain("• **jerred**");
+    expect(edits[0]?.[2].content).not.toContain("❌ **jerred**");
     expect(edits[0]?.[2].components).toEqual([]);
   });
 });
@@ -878,7 +885,7 @@ describe("weekly parlay version-two settlement", () => {
       },
     );
     expect(sent[0]?.content).toContain(
-      "Fewer than three eligible games were played",
+      "Not every featured player completed 3 eligible games",
     );
     expect(sent[0]?.components).toEqual([]);
   });
@@ -1343,13 +1350,17 @@ describe("weekly parlay Discord delivery", () => {
     expect(sent[0]?.content).toContain(
       `kills in one game as ${PARTICIPANT.championName}`,
     );
-    expect(sent[0]?.content).toContain("3 eligible games required per player");
+    expect(sent[0]?.content).toContain(
+      "Settlement requires **3 eligible games**",
+    );
     expect(sent[0]?.components).not.toEqual([]);
-    expect(sent[1]?.content).toContain("Qualification: **jerred 1/3 games**");
+    expect(sent[1]?.content).toContain(
+      "**Activity qualification:**\n• ⏳ **jerred** — 1/3 eligible games",
+    );
     expect(sent[1]?.components).toEqual([]);
   });
 
-  test("labels catch-up messages and renders their frozen betting and scoring clocks", async () => {
+  test("renders standard status and frozen betting and scoring clocks", async () => {
     const period = weeklyParlayPeriod(PERIOD_KEY);
     const market = await makeMarket({
       marketState: "publishing",
@@ -1378,11 +1389,14 @@ describe("weekly parlay Discord delivery", () => {
       ),
     ).resolves.toBe("sent");
     expect(sent[0]?.content).toContain(
-      "Catch-up weekly Bryan Bucks parlay is open",
+      "Weekly Bryan Bucks parlay: OPEN FOR BETTING",
     );
-    expect(sent[0]?.content).toContain("Betting closes <t:1787641200:F>");
-    expect(sent[0]?.content).toContain("Scoring runs <t:1787641200:F>");
-    expect(sent[0]?.content).toContain("through <t:1788112800:F>");
+    expect(sent[0]?.content).not.toContain("Catch-up");
+    expect(sent[0]?.content).toContain("**Betting closes:** <t:1787641200:F>");
+    expect(sent[0]?.content).toContain(
+      "**Scoring window:** <t:1787641200:F> → <t:1788112800:F>",
+    );
+    expect(sent[0]?.content).not.toContain("Settlement timing");
   });
 
   test("chunks and deduplicates private mention delivery with a stable nonce", async () => {
@@ -1430,7 +1444,7 @@ describe("weekly parlay Discord delivery", () => {
     ).resolves.toBe("sent");
     expect(sent).toHaveLength(2);
     expect(sent[0]?.content).toContain("at least **1 game**");
-    expect(sent[0]?.content).toContain("**25 bettors · 25 BB staked**");
+    expect(sent[0]?.content).toContain("**Bets:** 25 bettors · 25 BB staked");
     const mentioned = new Set(
       sent.flatMap((options) => options.allowedMentions?.users ?? []),
     );

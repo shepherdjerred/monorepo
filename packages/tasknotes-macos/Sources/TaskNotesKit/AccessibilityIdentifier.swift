@@ -273,14 +273,42 @@ public enum AccessibilityIdentifier {
             "\(field).suggestion.\(value)"
         }
 
-        /// The recurrence row. Read-only until the core can summarise a rule.
+        /// The recurrence row.
         public static let recurrence = "\(namespace).inspector.recurrence"
+
+        /// The control that opens recurrence editing.
+        public static let recurrenceEdit = "\(namespace).inspector.recurrence.edit"
+
+        /// The recurrence editor sheet.
+        public static let recurrenceSheet = "\(namespace).inspector.recurrence.sheet"
+
+        /// Explicit consent to replace an unsupported stored rule.
+        public static let recurrenceReplace = "\(namespace).inspector.recurrence.replace"
+
+        /// The common recurrence editor's weekday controls.
+        public static let recurrenceWeekdays = "\(namespace).inspector.recurrence.weekdays"
+
+        /// The common recurrence editor's cadence picker.
+        public static let recurrenceFrequency = "\(namespace).inspector.recurrence.frequency"
+
+        /// One visible cadence choice in the common recurrence editor.
+        public static func recurrenceFrequencyOption(_ value: String) -> String {
+            "\(recurrenceFrequency).\(value)"
+        }
+
+        /// The recurrence sheet's Apply control.
+        public static let recurrenceApply = "\(namespace).inspector.recurrence.apply"
 
         /// The control that stops a task repeating.
         public static let stopRepeating = "\(namespace).inspector.recurrence.stop"
 
         /// The recurrence-anchor picker.
         public static let recurrenceAnchor = "\(namespace).inspector.recurrence.anchor"
+
+        /// One visible anchor choice in the common recurrence editor.
+        public static func recurrenceAnchorOption(_ value: String) -> String {
+            "\(recurrenceAnchor).\(value)"
+        }
 
         /// The time-estimate field.
         public static let timeEstimate = "\(namespace).inspector.timeEstimate"

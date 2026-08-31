@@ -152,9 +152,10 @@ Three rules hold it in place:
 a static Linux binary — the CI image already installs it for the iOS app — so
 the semantic gate runs on every PR. Everything else needs a Swift toolchain or
 Xcode, which the Linux image does not have and should not grow. This follows the
-existing iOS precedent: Buildkite owns what runs on Linux, Xcode Cloud owns
-release builds, and anything needing a Mac is a local pre-merge gate, exactly
-like `bun run e2e` in `packages/tasks-for-obsidian`.
+existing iOS precedent: Buildkite owns what runs on Linux, the macOS queue owns
+the hard native verification gates, Xcode Cloud owns release builds, and local
+macOS verification remains a useful pre-push check, exactly like `bun run e2e`
+in `packages/tasks-for-obsidian`.
 
 Consequence to design around: **push correctness below the SwiftUI line.** The
 `TaskNotesKit`-has-no-UI-imports rule is load-bearing rather than tidy, and
@@ -228,8 +229,8 @@ bun run mac:e2e
 ```
 
 The four navigation flows need nothing special. **The two quick-add hotkey flows
-need Accessibility trust, once**, and will otherwise report themselves as
-skipped with the reason rather than failing:
+need Accessibility trust, once**, and missing trust is a hard test failure with
+the remediation message below:
 
 ```bash
 # The identity is per-operator and deliberately not committed. Only the UI test
@@ -257,7 +258,7 @@ Then approve **TaskNotesUITests-Runner** in System Settings ▸ Privacy & Securi
 ⚠️ **Signing the runner is what makes that grant worth giving.** TCC keys the
 grant on the code signature, and an ad-hoc runner is re-hashed on every build —
 so an approval evaporates at the next rebuild and the flows go back to failing.
-With a stable Developer ID signature the grant is genuinely one-time. Approving
+With a stable Apple Development signature the grant is genuinely one-time. Approving
 an ad-hoc runner repeatedly is not a workflow; it is the thing this setting
 exists to avoid.
 

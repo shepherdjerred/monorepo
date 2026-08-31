@@ -625,6 +625,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/temporal-observability",
+      "directory": "packages/temporal-observability",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/terraform-provider-asuswrt",
       "directory": "packages/terraform-provider-asuswrt",
       "steps": [

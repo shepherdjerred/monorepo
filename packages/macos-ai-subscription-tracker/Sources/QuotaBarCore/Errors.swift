@@ -22,10 +22,19 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
   public var errorDescription: String? {
     switch self {
     case let .credentialsMissing(provider):
-      "No local credentials found for \(provider.displayName)."
+      switch provider {
+      case .antigravity:
+        "No signed-in Antigravity CLI was found. Install and sign in to agy."
+      case .cursor:
+        "No local Cursor sign-in was found. Sign in through Cursor."
+      default:
+        "No local credentials found for \(provider.displayName)."
+      }
     case let .credentialsExpired(provider):
       if provider == .kimi || provider == .grok {
         "\(provider.displayName) credentials expired. Refresh them through OpenCode."
+      } else if provider == .cursor {
+        "Cursor credentials expired. Sign in again through Cursor."
       } else {
         "\(provider.displayName) credentials expired. Sign in again with its CLI."
       }
@@ -39,6 +48,8 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
       if provider == .kimi || provider == .grok {
         "\(provider.displayName) rejected the local credential. "
           + "Refresh it through OpenCode or update the Brim override."
+      } else if provider == .cursor {
+        "Cursor rejected its local session. Sign in again through Cursor."
       } else {
         "\(provider.displayName) rejected the local credential. Sign in again."
       }

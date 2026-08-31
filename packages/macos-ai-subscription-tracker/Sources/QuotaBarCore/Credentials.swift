@@ -110,6 +110,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let fileManager: FileManager
   private let homeDirectory: URL
   private let kimiCodeHome: URL?
+  private let cursorStateDatabase: URL?
   private let claudeKeychain: any KeychainClient
   private let selectionLock = NSLock()
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
@@ -118,6 +119,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     fileManager: FileManager = .default,
     homeDirectory: URL? = nil,
     kimiCodeHome: URL? = nil,
+    cursorStateDatabase: URL? = nil,
     claudeKeychain: any KeychainClient = SystemKeychainClient()
   ) {
     self.fileManager = fileManager
@@ -131,6 +133,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     } else {
       self.kimiCodeHome = nil
     }
+    self.cursorStateDatabase = cursorStateDatabase
     self.claudeKeychain = claudeKeychain
   }
 
@@ -146,6 +149,8 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     switch provider {
     case .claudeCode: credential = try readClaude(excluding: excludedTokens)
     case .codex: credential = try readCodex(excluding: excludedTokens)
+    case .antigravity: credential = nil
+    case .cursor: credential = try readCursor(excluding: excludedTokens)
     case .kimi: credential = try readCurrentKimiCredential(excluding: excludedTokens)
     case .grok: credential = try readOpenCode(provider: provider, excluding: excludedTokens)
     }
@@ -321,6 +326,51 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     ]
   }
 
+  private var resolvedCursorStateDatabase: URL {
+    cursorStateDatabase
+      ?? homeDirectory.appendingPathComponent(
+        "Library/Application Support/Cursor/User/globalStorage/state.vscdb")
+  }
+
+  private func readCursor(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
+    let database = resolvedCursorStateDatabase
+    guard fileManager.fileExists(atPath: database.path) else { return nil }
+    var connection: OpaquePointer?
+    guard
+      sqlite3_open_v2(database.path, &connection, SQLITE_OPEN_READONLY, nil) == SQLITE_OK,
+      let connection
+    else {
+      if let connection { sqlite3_close(connection) }
+      throw QuotaError.commandFailed("SQLite")
+    }
+    defer { sqlite3_close(connection) }
+    guard sqlite3_busy_timeout(connection, 1_000) == SQLITE_OK else {
+      throw QuotaError.commandFailed("SQLite")
+    }
+    let query = "SELECT value FROM ItemTable WHERE key = 'cursorAuth/accessToken';"
+    var statement: OpaquePointer?
+    guard sqlite3_prepare_v2(connection, query, -1, &statement, nil) == SQLITE_OK,
+      let statement
+    else {
+      if let statement { sqlite3_finalize(statement) }
+      throw QuotaError.commandFailed("SQLite")
+    }
+    defer { sqlite3_finalize(statement) }
+    switch sqlite3_step(statement) {
+    case SQLITE_ROW:
+      let token = try sqliteString(statement: statement, column: 0)
+      guard sqlite3_step(statement) == SQLITE_DONE else {
+        throw QuotaError.commandFailed("SQLite")
+      }
+      let credential = try ProviderCredential(accessToken: token, source: database.path)
+      return excludedTokens.contains(credential.accessToken) ? nil : credential
+    case SQLITE_DONE:
+      return nil
+    default:
+      throw QuotaError.commandFailed("SQLite")
+    }
+  }
+
   private func decodeFile<Value: Decodable>(
     _ type: Value.Type,
     at url: URL,
@@ -419,6 +469,9 @@ public actor CompositeCredentialStore: CredentialStore {
     for provider: ProviderID,
     rejecting rejectedCredential: ProviderCredential?
   ) async throws -> ProviderCredential {
+    guard provider.supportsManualCredentialOverride else {
+      return try await local.credential(for: provider, rejecting: rejectedCredential)
+    }
     // Remember every manual token rejected during the current replacement sequence, not just
     // the one passed to this call — a caller (e.g. GrokProvider/CodexProvider) that restarts a
     // whole fetch across several 401s only ever excludes its most recent credential, so without

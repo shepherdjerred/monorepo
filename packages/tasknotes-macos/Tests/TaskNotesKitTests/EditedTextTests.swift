@@ -55,7 +55,9 @@ struct EditedTextTests {
     func committingRetiresTheEdit() {
         var buffer = EditedText(stored: "Renew passport")
         buffer.text = "Renew passport before June"
-        buffer.commit("Renew passport before June")
+        let offered = buffer.offer()
+        #expect(offered == "Renew passport before June")
+        buffer.accept("Renew passport before June")
         #expect(!buffer.isEdited)
 
         // What the core stored is what the field should now show — here the
@@ -73,8 +75,9 @@ struct EditedTextTests {
         var buffer = EditedText(stored: "Renew passport")
         let offered = "Renew passport before June"
         buffer.text = offered
+        #expect(buffer.offer() == offered)
         buffer.text = "Renew passport before June 3rd"
-        buffer.commit(offered)
+        buffer.accept(offered)
         #expect(buffer.isEdited, "the later keystrokes were never recorded")
 
         // And a refresh carrying what the core did take must not replace them.
@@ -91,6 +94,8 @@ struct EditedTextTests {
     func aRefusedValueStaysAnEdit() {
         var buffer = EditedText(stored: "Renew passport")
         buffer.text = ""
+        #expect(buffer.offer() == "")
+        buffer.reject("")
         buffer.refresh(stored: "Renew passport (urgent)")
         #expect(buffer.text.isEmpty)
         #expect(buffer.isEdited)
@@ -103,5 +108,29 @@ struct EditedTextTests {
         buffer.revert(to: "Renew passport")
         #expect(buffer.text == "Renew passport")
         #expect(!buffer.isEdited)
+    }
+
+    @Test("blur and disappearance cannot offer the same edit twice")
+    func anInFlightOfferIsDeduplicated() {
+        var buffer = EditedText(stored: "Renew passport")
+        buffer.text = "Renew passport before June"
+
+        #expect(buffer.offer() == "Renew passport before June")
+        #expect(buffer.offer() == nil)
+
+        buffer.accept("Renew passport before June")
+        #expect(!buffer.isEdited)
+    }
+
+    @Test("an offered value remains independent after its view state changes")
+    func anOfferIsACapturedValue() {
+        var buffer = EditedText(stored: "Old body")
+        buffer.text = "Saved body"
+        let offered = buffer.offer()
+        buffer.text = "A later view value"
+
+        #expect(offered == "Saved body")
+        buffer.accept("Saved body")
+        #expect(buffer.isEdited)
     }
 }

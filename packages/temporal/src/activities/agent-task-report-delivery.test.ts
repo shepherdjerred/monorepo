@@ -68,7 +68,7 @@ const DELIVERY_RESULT: ReportDeliveryResult = {
   schemaVersion: 1,
   reportRunId: REPORT.reportRunId,
   reportType: REPORT.reportType,
-  subject: "[OK] Agent task: compatibility",
+  subject: "compatibility: report ready",
   messageId: "postal-message-1",
   recipientId: 42,
   acceptedAt: "2026-08-10T12:01:01.000Z",

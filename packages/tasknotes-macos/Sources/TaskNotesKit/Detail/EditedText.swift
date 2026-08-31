@@ -27,10 +27,14 @@ public struct EditedText: Equatable, Sendable {
     /// The stored value ``text`` was last seeded from or committed against.
     private var baseline: String
 
+    /// The value currently being offered to the core, if any.
+    private var inFlight: String?
+
     /// A buffer showing what is stored, with nothing typed into it yet.
     public init(stored: String) {
         text = stored
         baseline = stored
+        inFlight = nil
     }
 
     /// Whether the field holds an edit the core has not been offered.
@@ -43,7 +47,7 @@ public struct EditedText: Equatable, Sendable {
     /// direction. What arrives while they type is theirs to overwrite when they
     /// commit.
     public mutating func refresh(stored: String) {
-        guard !isEdited else { return }
+        guard !isEdited, inFlight == nil else { return }
         text = stored
         baseline = stored
     }
@@ -52,6 +56,17 @@ public struct EditedText: Equatable, Sendable {
     public mutating func revert(to stored: String) {
         text = stored
         baseline = stored
+    }
+
+    /// Capture an edited value synchronously and mark it in flight.
+    ///
+    /// Blur and disappearance can arrive in the same event turn. `nil` means
+    /// unchanged or already offered, preventing duplicate commands before the
+    /// first asynchronous result returns.
+    public mutating func offer() -> String? {
+        guard isEdited, inFlight == nil else { return nil }
+        inFlight = text
+        return text
     }
 
     /// Record that `dispatched` reached the core.
@@ -64,7 +79,15 @@ public struct EditedText: Equatable, Sendable {
     /// ⚠️ The **offered** text, not ``text``. Recording is asynchronous, and the
     /// user can type during that round trip; taking the buffer's current
     /// contents as the baseline would adopt keystrokes the core never saw.
-    public mutating func commit(_ dispatched: String) {
+    public mutating func accept(_ dispatched: String) {
+        guard inFlight == dispatched else { return }
         baseline = dispatched
+        inFlight = nil
+    }
+
+    /// Clear an offer the core refused without adopting it as stored.
+    public mutating func reject(_ dispatched: String) {
+        guard inFlight == dispatched else { return }
+        inFlight = nil
     }
 }

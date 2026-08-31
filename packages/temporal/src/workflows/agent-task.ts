@@ -5,6 +5,7 @@ import type { AgentTaskInput } from "#shared/agent-task.ts";
 import { collectErrorMessages } from "#shared/error-cause.ts";
 import { AGENT_REPORT_DELIVERY_START_TO_CLOSE_MS } from "#shared/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import { setWorkflowPhase } from "@scout-for-lol/temporal/workflow-ui-interceptor";
 
 const RETRY = {
   maximumAttempts: 2,
@@ -97,6 +98,7 @@ async function waitUntilRunAt(runAt: string | undefined): Promise<void> {
   }
   const delayMs = Date.parse(runAt) - Date.now();
   if (delayMs > 0) {
+    setWorkflowPhase("**Phase:** waiting for the requested start time");
     await sleep(delayMs);
   }
 }
@@ -140,6 +142,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   );
   const emailActivities = reportEmailActivities;
   await waitUntilRunAt(input.runAt);
+  setWorkflowPhase("**Phase:** preparing an isolated work directory");
   const startedAt = new Date().toISOString();
   let workdir:
     | Awaited<ReturnType<AgentTaskActivities["prepareAgentTaskWorkdir"]>>
@@ -156,7 +159,9 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
       );
     }
     workdir = await workdirActivities.prepareAgentTaskWorkdir({ input });
+    setWorkflowPhase("**Phase:** running the agent task");
     const result = await executeAgentTask(input, workdir.workdir, twoPhaseV2);
+    setWorkflowPhase("**Phase:** delivering the agent task report");
     reportAttempted = true;
     await emailActivities.sendAgentTaskEmail({ input, result });
     reportDelivered = true;
@@ -170,6 +175,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
       postDeliveryFailureReporting,
     });
     if (failureStage !== undefined) {
+      setWorkflowPhase("**Phase:** reporting an agent task failure");
       failureReportAttempted = true;
       try {
         await emailActivities.sendAgentTaskFailureReport({
@@ -188,6 +194,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   }
 
   if (workdir !== undefined) {
+    setWorkflowPhase("**Phase:** cleaning up the agent task work directory");
     try {
       await workdirActivities.cleanupAgentTaskWorkdir(workdir);
     } catch (error: unknown) {

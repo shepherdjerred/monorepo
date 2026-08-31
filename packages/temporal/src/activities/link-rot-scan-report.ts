@@ -51,7 +51,12 @@ export function buildLinkRotReport(
 ): ActivityReportInput {
   const dead = result.deadLinks.length;
   const timedOut = result.timedOutLinks.length;
+  const ignoredRootRelative = result.ignoredRootRelativeLinks;
   const clean = dead === 0 && timedOut === 0;
+  const internalLinkSummary =
+    ignoredRootRelative === 0
+      ? ""
+      : ` ${String(ignoredRootRelative)} site-root-relative ${ignoredRootRelative === 1 ? "link was" : "links were"} delegated to their owning site checks.`;
   return {
     reportType: LINK_ROT_REPORT_TYPE,
     title: LINK_ROT_TITLE,
@@ -68,7 +73,7 @@ export function buildLinkRotReport(
         label: "lychee link scan of main completed",
         required: true,
         status: "passed",
-        summary: `Checked ${String(result.totalLinks)} links (${String(result.successfulLinks)} alive, ${String(result.excludedLinks)} excluded) on main@${result.repoSha.slice(0, 12)}.`,
+        summary: `Checked ${String(result.totalLinks)} links (${String(result.successfulLinks)} alive, ${String(result.excludedLinks)} excluded) on main@${result.repoSha.slice(0, 12)}.${internalLinkSummary}`,
         evidenceReceiptIds: [SCAN_RECEIPT_ID],
       },
     ],
@@ -102,7 +107,7 @@ export function buildLinkRotReport(
       })),
     ],
     limitations: [
-      "Scope: tracked Markdown, web links only, verbatim/code-block URLs skipped; 403/429 responses count as alive (bot-hostile hosts). See root lychee.toml.",
+      "Scope: tracked Markdown, web links only, verbatim/code-block URLs skipped; 403/429 responses count as alive (bot-hostile hosts). Site-root-relative links are validated by the owning site's build checks. See root lychee.toml.",
     ],
     actions: [
       ...(dead === 0

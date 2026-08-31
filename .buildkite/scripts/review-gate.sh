@@ -61,7 +61,7 @@ git worktree prune
 git worktree add --detach "$GATE_DIR" FETCH_HEAD
 
 cd "$GATE_DIR"
-"$GATE_DIR/.buildkite/scripts/bun-install.sh" --frozen-lockfile \
+BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/.buildkite/scripts/bun-install.sh" --frozen-lockfile \
   --filter '@shepherdjerred/root-scripts' --production
 
 WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"

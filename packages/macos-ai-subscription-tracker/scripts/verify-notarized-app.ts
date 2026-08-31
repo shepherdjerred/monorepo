@@ -34,7 +34,14 @@ assertPlistValue(
 assertPlistValue("LSMinimumSystemVersion", "15.0");
 assertPlistValue("LSUIElement", "true");
 
-for (const logo of ["claude.svg", "codex.svg", "kimi.svg", "grok.svg"]) {
+for (const logo of [
+  "claude.svg",
+  "codex.svg",
+  "antigravity.svg",
+  "cursor.svg",
+  "kimi.svg",
+  "grok.svg",
+]) {
   await access(join(resources, logo));
 }
 for (const asset of [

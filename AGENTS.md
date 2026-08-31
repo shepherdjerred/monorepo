@@ -791,12 +791,14 @@ Local and CI verification deliberately have different scopes:
    schemas over the network), and
    the remaining repository gates. The excluded site packages run in their
    dedicated Buildkite lanes, so the overall pipeline remains the
-   full-repository backstop. **Exception:** `packages/macos-ai-subscription-tracker`
-   has no Buildkite lane at all for `swift build`/`swift test`/coverage — only
-   `lint:swift` (SwiftLint) runs in CI. The homelab's macOS Buildkite agent
-   (`packages/homelab/mac-ci/`) is dormant, so
-   `cd packages/macos-ai-subscription-tracker && bun run verify:macos` stays a
-   local-only developer/release gate until that capacity is reactivated.
+   full-repository backstop. Changed QuotaBar and TaskNotes paths also run hard,
+   serial native gates on the `macos` queue after Linux `verify`: QuotaBar runs
+   its complete `verify:macos` suite, while TaskNotes verifies the Swift
+   bindings, macOS build/tests/analyzer, and all signed UI flows. Native jobs
+   validate the pinned host toolchain and never install or upgrade it. A
+   PR-side watchdog fails after five minutes in which no selected native job
+   can dispatch, pauses that clock while the serial host runs native work from
+   any build, and remains active through automatic-retry attempts.
 
 Run `bun run verify` locally only when explicitly reproducing CI or modifying
 the verification machinery itself. There is no `pre-push` hook.

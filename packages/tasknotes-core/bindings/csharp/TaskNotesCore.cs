@@ -1208,6 +1208,12 @@ static class _UniFFILib {
     
     
     
+    
+    
+    
+    
+    
+    
 
     static _UniFFILib() {
         _UniFFILib.uniffiCheckContractApiVersion();
@@ -2792,6 +2798,17 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_build_common(RustBuffer @draft,RustBuffer @start,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
      RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_completion_target_date(RustBuffer @scheduled,RustBuffer @due,RustBuffer @anchor,RustBuffer @today,ref UniffiRustCallStatus _uniffi_out_err
     );
 
@@ -2859,6 +2876,28 @@ static class _UniFFILib {
     public static extern
 #endif
      sbyte uniffi_tasknotes_core_ffi_fn_func_recurrence_occurs_on(RustBuffer @text,RustBuffer @scheduled,RustBuffer @dateCreated,RustBuffer @date,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_parse_common(RustBuffer @text,RustBuffer @start,ref UniffiRustCallStatus _uniffi_out_err
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     RustBuffer uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(RustBuffer @text,RustBuffer @scheduled,RustBuffer @dateCreated,ref UniffiRustCallStatus _uniffi_out_err
     );
 
     #if NET8_0_OR_GREATER
@@ -4156,6 +4195,17 @@ static class _UniFFILib {
     [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
     public static extern
 #endif
+     ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
      ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date(
     );
 
@@ -4223,6 +4273,28 @@ static class _UniFFILib {
     public static extern
 #endif
      ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common(
+    );
+
+    #if NET8_0_OR_GREATER
+    [LibraryImport("tasknotes_core_ffi")]
+    [UnmanagedCallConv(CallConvs = new[] { typeof(CallConvCdecl) })]
+    public static partial
+#else
+    [DllImport("tasknotes_core_ffi", CallingConvention = CallingConvention.Cdecl)]
+    public static extern
+#endif
+     ushort uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start(
     );
 
     #if NET8_0_OR_GREATER
@@ -5224,6 +5296,12 @@ static class _UniFFILib {
             }
         }
         {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common();
+            if (checksum != 53313) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_build_common` checksum `53313`, library returned `{checksum}`");
+            }
+        }
+        {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date();
             if (checksum != 846) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_completion_target_date` checksum `846`, library returned `{checksum}`");
@@ -5263,6 +5341,18 @@ static class _UniFFILib {
             var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on();
             if (checksum != 64285) {
                 throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_occurs_on` checksum `64285`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common();
+            if (checksum != 4270) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_parse_common` checksum `4270`, library returned `{checksum}`");
+            }
+        }
+        {
+            var checksum = _UniFFILib.uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start();
+            if (checksum != 30042) {
+                throw new UniffiContractChecksumException($"uniffi.TaskNotesCore: uniffi bindings expected function `uniffi_tasknotes_core_ffi_checksum_func_recurrence_resolved_start` checksum `30042`, library returned `{checksum}`");
             }
         }
         {
@@ -10011,6 +10101,61 @@ class FfiConverterTypeCalendarWeek: FfiConverterRustBuffer<CalendarWeek> {
 
 
 /// <summary>
+/// See [`tasknotes_core::recurrence::CommonRecurrenceDraft`].
+/// </summary>
+/// <param name="Interval">
+/// A strictly positive interval.
+/// </param>
+/// <param name="Pattern">
+/// The calendar pattern.
+/// </param>
+/// <param name="Ending">
+/// The stopping condition.
+/// </param>
+internal record CommonRecurrenceDraft (
+    /// <summary>
+    /// A strictly positive interval.
+    /// </summary>
+    uint Interval, 
+    /// <summary>
+    /// The calendar pattern.
+    /// </summary>
+    CommonRecurrencePattern Pattern, 
+    /// <summary>
+    /// The stopping condition.
+    /// </summary>
+    CommonRecurrenceEnd Ending
+) {
+}
+
+class FfiConverterTypeCommonRecurrenceDraft: FfiConverterRustBuffer<CommonRecurrenceDraft> {
+    public static FfiConverterTypeCommonRecurrenceDraft INSTANCE = new FfiConverterTypeCommonRecurrenceDraft();
+
+    public override CommonRecurrenceDraft Read(BigEndianStream stream) {
+        return new CommonRecurrenceDraft(
+            Interval: FfiConverterUInt32.INSTANCE.Read(stream),
+            Pattern: FfiConverterTypeCommonRecurrencePattern.INSTANCE.Read(stream),
+            Ending: FfiConverterTypeCommonRecurrenceEnd.INSTANCE.Read(stream)
+        );
+    }
+
+    public override int AllocationSize(CommonRecurrenceDraft value) {
+        return 0
+            + FfiConverterUInt32.INSTANCE.AllocationSize(value.Interval)
+            + FfiConverterTypeCommonRecurrencePattern.INSTANCE.AllocationSize(value.Pattern)
+            + FfiConverterTypeCommonRecurrenceEnd.INSTANCE.AllocationSize(value.Ending);
+    }
+
+    public override void Write(CommonRecurrenceDraft value, BigEndianStream stream) {
+            FfiConverterUInt32.INSTANCE.Write(value.Interval, stream);
+            FfiConverterTypeCommonRecurrencePattern.INSTANCE.Write(value.Pattern, stream);
+            FfiConverterTypeCommonRecurrenceEnd.INSTANCE.Write(value.Ending, stream);
+    }
+}
+
+
+
+/// <summary>
 /// See [`tasknotes_core::domain::CreateTaskRequest`].
 ///
 /// A create has nothing to clear, so every field is a plain optional rather
@@ -12879,6 +13024,307 @@ class FfiConverterTypeCommandInput : FfiConverterRustBuffer<CommandInput>{
 
 
 /// <summary>
+/// See [`tasknotes_core::recurrence::CommonRecurrenceEnd`].
+/// </summary>
+internal record CommonRecurrenceEnd {
+    
+    /// <summary>
+    /// It has no declared end.
+    /// </summary>
+    public record Never: CommonRecurrenceEnd {}
+    
+    
+    /// <summary>
+    /// It ends on an inclusive ISO date.
+    /// </summary>
+    public record OnDate (
+        string V1
+    ) : CommonRecurrenceEnd {}
+    
+    /// <summary>
+    /// It ends after a number of total occurrences.
+    /// </summary>
+    public record AfterOccurrences (
+        uint V1
+    ) : CommonRecurrenceEnd {}
+    
+
+    
+}
+
+class FfiConverterTypeCommonRecurrenceEnd : FfiConverterRustBuffer<CommonRecurrenceEnd>{
+    public static FfiConverterRustBuffer<CommonRecurrenceEnd> INSTANCE = new FfiConverterTypeCommonRecurrenceEnd();
+
+    public override CommonRecurrenceEnd Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new CommonRecurrenceEnd.Never(
+                );
+            case 2:
+                return new CommonRecurrenceEnd.OnDate(
+                    FfiConverterString.INSTANCE.Read(stream)
+                );
+            case 3:
+                return new CommonRecurrenceEnd.AfterOccurrences(
+                    FfiConverterUInt32.INSTANCE.Read(stream)
+                );
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonRecurrenceEnd.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(CommonRecurrenceEnd value) {
+        switch (value) {
+            case CommonRecurrenceEnd.Never variant_value:
+                return 4;
+            case CommonRecurrenceEnd.OnDate variant_value:
+                return 4
+                    + FfiConverterString.INSTANCE.AllocationSize(variant_value.V1);
+            case CommonRecurrenceEnd.AfterOccurrences variant_value:
+                return 4
+                    + FfiConverterUInt32.INSTANCE.AllocationSize(variant_value.V1);
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonRecurrenceEnd.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(CommonRecurrenceEnd value, BigEndianStream stream) {
+        switch (value) {
+            case CommonRecurrenceEnd.Never variant_value:
+                stream.WriteInt(1);
+                break;
+            case CommonRecurrenceEnd.OnDate variant_value:
+                stream.WriteInt(2);
+                FfiConverterString.INSTANCE.Write(variant_value.V1, stream);
+                break;
+            case CommonRecurrenceEnd.AfterOccurrences variant_value:
+                stream.WriteInt(3);
+                FfiConverterUInt32.INSTANCE.Write(variant_value.V1, stream);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonRecurrenceEnd.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+
+
+/// <summary>
+/// See [`tasknotes_core::recurrence::CommonRecurrencePattern`].
+/// </summary>
+internal record CommonRecurrencePattern {
+    
+    /// <summary>
+    /// Every N days.
+    /// </summary>
+    public record Daily: CommonRecurrencePattern {}
+    
+    
+    /// <summary>
+    /// Every N weeks on selected weekdays.
+    /// </summary>
+    public record Weekly (
+        CommonWeekday[] Weekdays
+    ) : CommonRecurrencePattern {}
+    
+    /// <summary>
+    /// Every N months on a numbered day.
+    /// </summary>
+    public record MonthlyDayOfMonth (
+        byte Day
+    ) : CommonRecurrencePattern {}
+    
+    /// <summary>
+    /// Every N months on an ordinal weekday.
+    /// </summary>
+    public record MonthlyOrdinalWeekday (
+        MonthlyOrdinal Ordinal,
+        CommonWeekday Weekday
+    ) : CommonRecurrencePattern {}
+    
+    /// <summary>
+    /// Every N years on a month and day.
+    /// </summary>
+    public record YearlyMonthDay (
+        byte Month,
+        byte Day
+    ) : CommonRecurrencePattern {}
+    
+
+    
+}
+
+class FfiConverterTypeCommonRecurrencePattern : FfiConverterRustBuffer<CommonRecurrencePattern>{
+    public static FfiConverterRustBuffer<CommonRecurrencePattern> INSTANCE = new FfiConverterTypeCommonRecurrencePattern();
+
+    public override CommonRecurrencePattern Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1:
+                return new CommonRecurrencePattern.Daily(
+                );
+            case 2:
+                return new CommonRecurrencePattern.Weekly(
+                    FfiConverterSequenceTypeCommonWeekday.INSTANCE.Read(stream)
+                );
+            case 3:
+                return new CommonRecurrencePattern.MonthlyDayOfMonth(
+                    FfiConverterUInt8.INSTANCE.Read(stream)
+                );
+            case 4:
+                return new CommonRecurrencePattern.MonthlyOrdinalWeekday(
+                    FfiConverterTypeMonthlyOrdinal.INSTANCE.Read(stream),
+                    FfiConverterTypeCommonWeekday.INSTANCE.Read(stream)
+                );
+            case 5:
+                return new CommonRecurrencePattern.YearlyMonthDay(
+                    FfiConverterUInt8.INSTANCE.Read(stream),
+                    FfiConverterUInt8.INSTANCE.Read(stream)
+                );
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonRecurrencePattern.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(CommonRecurrencePattern value) {
+        switch (value) {
+            case CommonRecurrencePattern.Daily variant_value:
+                return 4;
+            case CommonRecurrencePattern.Weekly variant_value:
+                return 4
+                    + FfiConverterSequenceTypeCommonWeekday.INSTANCE.AllocationSize(variant_value.Weekdays);
+            case CommonRecurrencePattern.MonthlyDayOfMonth variant_value:
+                return 4
+                    + FfiConverterUInt8.INSTANCE.AllocationSize(variant_value.Day);
+            case CommonRecurrencePattern.MonthlyOrdinalWeekday variant_value:
+                return 4
+                    + FfiConverterTypeMonthlyOrdinal.INSTANCE.AllocationSize(variant_value.Ordinal)
+                    + FfiConverterTypeCommonWeekday.INSTANCE.AllocationSize(variant_value.Weekday);
+            case CommonRecurrencePattern.YearlyMonthDay variant_value:
+                return 4
+                    + FfiConverterUInt8.INSTANCE.AllocationSize(variant_value.Month)
+                    + FfiConverterUInt8.INSTANCE.AllocationSize(variant_value.Day);
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonRecurrencePattern.AllocationSize()", value));
+        }
+    }
+
+    public override void Write(CommonRecurrencePattern value, BigEndianStream stream) {
+        switch (value) {
+            case CommonRecurrencePattern.Daily variant_value:
+                stream.WriteInt(1);
+                break;
+            case CommonRecurrencePattern.Weekly variant_value:
+                stream.WriteInt(2);
+                FfiConverterSequenceTypeCommonWeekday.INSTANCE.Write(variant_value.Weekdays, stream);
+                break;
+            case CommonRecurrencePattern.MonthlyDayOfMonth variant_value:
+                stream.WriteInt(3);
+                FfiConverterUInt8.INSTANCE.Write(variant_value.Day, stream);
+                break;
+            case CommonRecurrencePattern.MonthlyOrdinalWeekday variant_value:
+                stream.WriteInt(4);
+                FfiConverterTypeMonthlyOrdinal.INSTANCE.Write(variant_value.Ordinal, stream);
+                FfiConverterTypeCommonWeekday.INSTANCE.Write(variant_value.Weekday, stream);
+                break;
+            case CommonRecurrencePattern.YearlyMonthDay variant_value:
+                stream.WriteInt(5);
+                FfiConverterUInt8.INSTANCE.Write(variant_value.Month, stream);
+                FfiConverterUInt8.INSTANCE.Write(variant_value.Day, stream);
+                break;
+            default:
+                throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonRecurrencePattern.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+
+
+/// <summary>
+/// See [`tasknotes_core::recurrence::CommonWeekday`].
+/// </summary>
+internal enum CommonWeekday: int {
+    /// <summary>
+    /// Monday.
+    /// </summary>
+    Monday,
+    /// <summary>
+    /// Tuesday.
+    /// </summary>
+    Tuesday,
+    /// <summary>
+    /// Wednesday.
+    /// </summary>
+    Wednesday,
+    /// <summary>
+    /// Thursday.
+    /// </summary>
+    Thursday,
+    /// <summary>
+    /// Friday.
+    /// </summary>
+    Friday,
+    /// <summary>
+    /// Saturday.
+    /// </summary>
+    Saturday,
+    /// <summary>
+    /// Sunday.
+    /// </summary>
+    Sunday
+}
+
+class FfiConverterTypeCommonWeekday: FfiConverterRustBuffer<CommonWeekday> {
+    public static FfiConverterTypeCommonWeekday INSTANCE = new FfiConverterTypeCommonWeekday();
+
+    public override CommonWeekday Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1: return CommonWeekday.Monday;
+            case 2: return CommonWeekday.Tuesday;
+            case 3: return CommonWeekday.Wednesday;
+            case 4: return CommonWeekday.Thursday;
+            case 5: return CommonWeekday.Friday;
+            case 6: return CommonWeekday.Saturday;
+            case 7: return CommonWeekday.Sunday;
+            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonWeekday.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(CommonWeekday value) {
+        return 4;
+    }
+
+    public override void Write(CommonWeekday value, BigEndianStream stream) {
+        switch (value) {
+            case CommonWeekday.Monday: stream.WriteInt(1); break;
+            case CommonWeekday.Tuesday: stream.WriteInt(2); break;
+            case CommonWeekday.Wednesday: stream.WriteInt(3); break;
+            case CommonWeekday.Thursday: stream.WriteInt(4); break;
+            case CommonWeekday.Friday: stream.WriteInt(5); break;
+            case CommonWeekday.Saturday: stream.WriteInt(6); break;
+            case CommonWeekday.Sunday: stream.WriteInt(7); break;
+            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeCommonWeekday.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+
+
+/// <summary>
 /// Everything the core can fail with, as the host sees it.
 ///
 /// The variant order is the FFI discriminant — see the crate docs. Adding,
@@ -13426,6 +13872,75 @@ class FfiConverterTypeMinutesUpdate : FfiConverterRustBuffer<MinutesUpdate>{
                 break;
             default:
                 throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMinutesUpdate.Write()", value));
+        }
+    }
+}
+
+
+
+
+
+
+
+/// <summary>
+/// See [`tasknotes_core::recurrence::MonthlyOrdinal`].
+/// </summary>
+internal enum MonthlyOrdinal: int {
+    /// <summary>
+    /// The first occurrence.
+    /// </summary>
+    First,
+    /// <summary>
+    /// The second occurrence.
+    /// </summary>
+    Second,
+    /// <summary>
+    /// The third occurrence.
+    /// </summary>
+    Third,
+    /// <summary>
+    /// The fourth occurrence.
+    /// </summary>
+    Fourth,
+    /// <summary>
+    /// The fifth occurrence.
+    /// </summary>
+    Fifth,
+    /// <summary>
+    /// The final occurrence.
+    /// </summary>
+    Last
+}
+
+class FfiConverterTypeMonthlyOrdinal: FfiConverterRustBuffer<MonthlyOrdinal> {
+    public static FfiConverterTypeMonthlyOrdinal INSTANCE = new FfiConverterTypeMonthlyOrdinal();
+
+    public override MonthlyOrdinal Read(BigEndianStream stream) {
+        var value = stream.ReadInt();
+        switch (value) {
+            case 1: return MonthlyOrdinal.First;
+            case 2: return MonthlyOrdinal.Second;
+            case 3: return MonthlyOrdinal.Third;
+            case 4: return MonthlyOrdinal.Fourth;
+            case 5: return MonthlyOrdinal.Fifth;
+            case 6: return MonthlyOrdinal.Last;
+            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMonthlyOrdinal.Read()", value));
+        }
+    }
+
+    public override int AllocationSize(MonthlyOrdinal value) {
+        return 4;
+    }
+
+    public override void Write(MonthlyOrdinal value, BigEndianStream stream) {
+        switch (value) {
+            case MonthlyOrdinal.First: stream.WriteInt(1); break;
+            case MonthlyOrdinal.Second: stream.WriteInt(2); break;
+            case MonthlyOrdinal.Third: stream.WriteInt(3); break;
+            case MonthlyOrdinal.Fourth: stream.WriteInt(4); break;
+            case MonthlyOrdinal.Fifth: stream.WriteInt(5); break;
+            case MonthlyOrdinal.Last: stream.WriteInt(6); break;
+            default: throw new InternalException(String.Format("invalid enum value '{0}' in FfiConverterTypeMonthlyOrdinal.Write()", value));
         }
     }
 }
@@ -14619,6 +15134,37 @@ class FfiConverterOptionalTypeTaskNotesApi: FfiConverterRustBuffer<TaskNotesApi?
 
 
 
+class FfiConverterOptionalTypeCommonRecurrenceDraft: FfiConverterRustBuffer<CommonRecurrenceDraft?> {
+    public static FfiConverterOptionalTypeCommonRecurrenceDraft INSTANCE = new FfiConverterOptionalTypeCommonRecurrenceDraft();
+
+    public override CommonRecurrenceDraft? Read(BigEndianStream stream) {
+        if (stream.ReadByte() == 0) {
+            return null;
+        }
+        return FfiConverterTypeCommonRecurrenceDraft.INSTANCE.Read(stream);
+    }
+
+    public override int AllocationSize(CommonRecurrenceDraft? value) {
+        if (value == null) {
+            return 1;
+        } else {
+            return 1 + FfiConverterTypeCommonRecurrenceDraft.INSTANCE.AllocationSize((CommonRecurrenceDraft)value);
+        }
+    }
+
+    public override void Write(CommonRecurrenceDraft? value, BigEndianStream stream) {
+        if (value == null) {
+            stream.WriteByte(0);
+        } else {
+            stream.WriteByte(1);
+            FfiConverterTypeCommonRecurrenceDraft.INSTANCE.Write((CommonRecurrenceDraft)value, stream);
+        }
+    }
+}
+
+
+
+
 class FfiConverterOptionalTypeInstanceRestore: FfiConverterRustBuffer<InstanceRestore?> {
     public static FfiConverterOptionalTypeInstanceRestore INSTANCE = new FfiConverterOptionalTypeInstanceRestore();
 
@@ -15722,6 +16268,52 @@ class FfiConverterSequenceTypeWeekdayHeader: FfiConverterRustBuffer<WeekdayHeade
 
         stream.WriteInt(value.Length);
         var writerFn = FfiConverterTypeWeekdayHeader.INSTANCE.Write;
+        value.ForEach(item => writerFn(item, stream));
+    }
+}
+
+
+
+
+class FfiConverterSequenceTypeCommonWeekday: FfiConverterRustBuffer<CommonWeekday[]> {
+    public static FfiConverterSequenceTypeCommonWeekday INSTANCE = new FfiConverterSequenceTypeCommonWeekday();
+
+    public override CommonWeekday[]  Read(BigEndianStream stream) {
+        var length = stream.ReadInt();
+        if (length == 0) {
+            return [];
+        }
+
+        var result = new CommonWeekday[length];
+        var readFn = FfiConverterTypeCommonWeekday.INSTANCE.Read;
+        for (int i = 0; i < length; i++) {
+            result[i] = readFn(stream);
+        }
+        return result;
+    }
+
+    public override int AllocationSize(CommonWeekday[]  value) {
+        var sizeForLength = 4;
+
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            return sizeForLength;
+        }
+
+        var allocationSizeFn = FfiConverterTypeCommonWeekday.INSTANCE.AllocationSize;
+        var sizeForItems = value.Sum(item => allocationSizeFn(item));
+        return sizeForLength + sizeForItems;
+    }
+
+    public override void Write(CommonWeekday[] value, BigEndianStream stream) {
+        // details/1-empty-list-as-default-method-parameter.md
+        if (value == null) {
+            stream.WriteInt(0);
+            return;
+        }
+
+        stream.WriteInt(value.Length);
+        var writerFn = FfiConverterTypeCommonWeekday.INSTANCE.Write;
         value.ForEach(item => writerFn(item, stream));
     }
 }
@@ -17166,6 +17758,23 @@ internal static class TaskNotesCoreMethods {
 
 
     /// <summary>
+    /// Validate and canonically serialize the common-pattern editor model.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`CoreError::Validation`] when any date or numeric constraint is
+    /// invalid.
+    /// </summary>
+    /// <exception cref="CoreException"></exception>
+    public static string RecurrenceBuildCommon(CommonRecurrenceDraft @draft, string @start) {
+        return FfiConverterString.INSTANCE.Lift(
+    _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_recurrence_build_common(FfiConverterTypeCommonRecurrenceDraft.INSTANCE.Lower(@draft), FfiConverterString.INSTANCE.Lower(@start), ref _status)
+));
+    }
+
+
+    /// <summary>
     /// The occurrence date a completion gesture on a **recurring** task targets.
     ///
     /// The single most consequential thing a task list can get wrong: a recurring
@@ -17342,6 +17951,35 @@ internal static class TaskNotesCoreMethods {
         return FfiConverterBoolean.INSTANCE.Lift(
     _UniffiHelpers.RustCallWithError(FfiConverterTypeCoreError.INSTANCE, (ref UniffiRustCallStatus _status) =>
     _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_recurrence_occurs_on(FfiConverterString.INSTANCE.Lower(@text), FfiConverterOptionalString.INSTANCE.Lower(@scheduled), FfiConverterOptionalString.INSTANCE.Lower(@dateCreated), FfiConverterString.INSTANCE.Lower(@date), ref _status)
+));
+    }
+
+
+    /// <summary>
+    /// Parse a rule into the closed common-pattern editor model.
+    ///
+    /// `None` means the rule cannot be represented losslessly. The host must keep
+    /// the raw rule authoritative until the user explicitly replaces it.
+    /// </summary>
+    public static CommonRecurrenceDraft? RecurrenceParseCommon(string @text, string @start) {
+        return FfiConverterOptionalTypeCommonRecurrenceDraft.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_recurrence_parse_common(FfiConverterString.INSTANCE.Lower(@text), FfiConverterString.INSTANCE.Lower(@start), ref _status)
+));
+    }
+
+
+    /// <summary>
+    /// Return the effective Gregorian start date used to interpret a task rule.
+    ///
+    /// Native editors use this for implicit calendar selectors. It follows the
+    /// same embedded `DTSTART`, `scheduled`, and `dateCreated` precedence as every
+    /// other recurrence operation in the core.
+    /// </summary>
+    public static string? RecurrenceResolvedStart(string @text, string? @scheduled, string? @dateCreated) {
+        return FfiConverterOptionalString.INSTANCE.Lift(
+    _UniffiHelpers.RustCall( (ref UniffiRustCallStatus _status) =>
+    _UniFFILib.uniffi_tasknotes_core_ffi_fn_func_recurrence_resolved_start(FfiConverterString.INSTANCE.Lower(@text), FfiConverterOptionalString.INSTANCE.Lower(@scheduled), FfiConverterOptionalString.INSTANCE.Lower(@dateCreated), ref _status)
 ));
     }
 

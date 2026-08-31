@@ -7,6 +7,7 @@ import {
   type NetworkPolicyIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
+import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
@@ -25,6 +26,22 @@ function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
         matchLabels: { "kubernetes.io/metadata.name": namespace },
       },
       podSelector: { matchLabels: { app: "scout-backend" } },
+    })),
+    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  };
+}
+
+function scoutWorkflowWorkerIngress(): NetworkPolicyIngressRule {
+  return {
+    from: ["scout-beta", "scout-prod"].map((namespace) => ({
+      namespaceSelector: {
+        matchLabels: { "kubernetes.io/metadata.name": namespace },
+      },
+      podSelector: {
+        matchLabels: {
+          "worker-family": `${namespace}-workflows`,
+        },
+      },
     })),
     ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
   };
@@ -54,6 +71,7 @@ export function createTemporalChart(app: App) {
     },
   });
 
+  createTemporalPostgreSQLCertificate(chart);
   createTemporalPostgreSQLDatabase(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
@@ -178,6 +196,7 @@ export function createTemporalChart(app: App) {
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
         scoutCompetitionActivityIngress(),
+        scoutWorkflowWorkerIngress(),
         {
           // Scout embeds its Workflow and Activity Workers in the sole
           // stage backend pod so activities can use the live Discord gateway,

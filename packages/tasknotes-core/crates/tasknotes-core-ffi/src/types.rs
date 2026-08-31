@@ -35,7 +35,10 @@ use tasknotes_core::{
         TimeEntry, TimeSummary, TopTask, VaultInfo,
     },
     net::{InstanceCompletion, InstanceRestore},
-    recurrence::Frequency,
+    recurrence::{
+        CommonRecurrenceDraft, CommonRecurrenceEnd, CommonRecurrencePattern, CommonWeekday,
+        Frequency, MonthlyOrdinal,
+    },
     sync::{DeadLetterError, SyncState},
 };
 
@@ -612,6 +615,82 @@ pub enum Frequency {
     Minutely,
     /// Once a second.
     Secondly,
+}
+
+/// See [`tasknotes_core::recurrence::CommonWeekday`].
+#[uniffi::remote(Enum)]
+pub enum CommonWeekday {
+    /// Monday.
+    Monday,
+    /// Tuesday.
+    Tuesday,
+    /// Wednesday.
+    Wednesday,
+    /// Thursday.
+    Thursday,
+    /// Friday.
+    Friday,
+    /// Saturday.
+    Saturday,
+    /// Sunday.
+    Sunday,
+}
+
+/// See [`tasknotes_core::recurrence::MonthlyOrdinal`].
+#[uniffi::remote(Enum)]
+pub enum MonthlyOrdinal {
+    /// The first occurrence.
+    First,
+    /// The second occurrence.
+    Second,
+    /// The third occurrence.
+    Third,
+    /// The fourth occurrence.
+    Fourth,
+    /// The fifth occurrence.
+    Fifth,
+    /// The final occurrence.
+    Last,
+}
+
+/// See [`tasknotes_core::recurrence::CommonRecurrencePattern`].
+#[uniffi::remote(Enum)]
+pub enum CommonRecurrencePattern {
+    /// Every N days.
+    Daily,
+    /// Every N weeks on selected weekdays.
+    Weekly { weekdays: Vec<CommonWeekday> },
+    /// Every N months on a numbered day.
+    MonthlyDayOfMonth { day: u8 },
+    /// Every N months on an ordinal weekday.
+    MonthlyOrdinalWeekday {
+        ordinal: MonthlyOrdinal,
+        weekday: CommonWeekday,
+    },
+    /// Every N years on a month and day.
+    YearlyMonthDay { month: u8, day: u8 },
+}
+
+/// See [`tasknotes_core::recurrence::CommonRecurrenceEnd`].
+#[uniffi::remote(Enum)]
+pub enum CommonRecurrenceEnd {
+    /// It has no declared end.
+    Never,
+    /// It ends on an inclusive ISO date.
+    OnDate(String),
+    /// It ends after a number of total occurrences.
+    AfterOccurrences(u32),
+}
+
+/// See [`tasknotes_core::recurrence::CommonRecurrenceDraft`].
+#[uniffi::remote(Record)]
+pub struct CommonRecurrenceDraft {
+    /// A strictly positive interval.
+    pub interval: u32,
+    /// The calendar pattern.
+    pub pattern: CommonRecurrencePattern,
+    /// The stopping condition.
+    pub ending: CommonRecurrenceEnd,
 }
 
 // ── Date helpers ───────────────────────────────────────────────────────────

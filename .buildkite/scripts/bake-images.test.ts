@@ -47,17 +47,92 @@ function commandResult(
 ): BuildxCommandResult {
   return { exitCode, stdout, stderr };
 }
+// A catalog whose Temporal tracks are converged, so this build would publish a
+// new Workflow candidate and therefore does care about a pending bump.
+const PUBLISHING_CANDIDATE_CATALOG = JSON.stringify({
+  entries: [
+    {
+      name: "shepherdjerred/temporal-worker/workflows/stable",
+      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
+    },
+    {
+      name: "shepherdjerred/temporal-worker/workflows/candidate",
+      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
+    },
+  ],
+});
+
+// Tracks diverged and neither is legacy: no candidate publication is pending, so
+// a bump branch on main has no bearing on this build.
+const SETTLED_CATALOG = JSON.stringify({
+  entries: [
+    {
+      name: "shepherdjerred/temporal-worker/workflows/stable",
+      value: `2.0.0-500@sha256:${"a".repeat(64)}`,
+    },
+    {
+      name: "shepherdjerred/temporal-worker/workflows/candidate",
+      value: `2.0.0-501@sha256:${"b".repeat(64)}`,
+    },
+  ],
+});
+
+function admissionExecutor(
+  catalog: string,
+  lsRemote: () => BuildxCommandResult,
+): CommandExecutor {
+  return async (command) => {
+    if (command[1] === "ls-remote") return lsRemote();
+    if (command[1] === "fetch") return commandResult();
+    return commandResult(0, catalog);
+  };
+}
+
 test("blocks candidate admission while the durable version branch exists", async () => {
   await expect(
-    assertNoPendingVersionBump(async () =>
-      commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+    assertNoPendingVersionBump(
+      admissionExecutor(PUBLISHING_CANDIDATE_CATALOG, () =>
+        commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+      ),
     ),
   ).rejects.toThrow(TransientError);
 });
 test("fails transiently when the durable version branch cannot be checked", async () => {
   await expect(
-    assertNoPendingVersionBump(async () => commandResult(1, "", "network")),
+    assertNoPendingVersionBump(
+      admissionExecutor(PUBLISHING_CANDIDATE_CATALOG, () =>
+        commandResult(1, "", "network"),
+      ),
+    ),
   ).rejects.toThrow(TransientError);
+});
+// Regression: version commit-back opens the bump branch after every main build,
+// so gating unrelated builds on it made main red on a scheduling race. A pending
+// bump must not block a build that is not publishing a Workflow candidate.
+test("ignores a pending version bump when no candidate publication is due", async () => {
+  let lsRemoteCalls = 0;
+  await expect(
+    assertNoPendingVersionBump(
+      admissionExecutor(SETTLED_CATALOG, () => {
+        lsRemoteCalls += 1;
+        return commandResult(
+          0,
+          "abc123\trefs/heads/chore/version-bump-pending\n",
+        );
+      }),
+    ),
+  ).resolves.toBe(SETTLED_CATALOG);
+  expect(lsRemoteCalls).toBe(0);
+});
+test("ignores a pending version bump when Temporal admission is not enforced", async () => {
+  await expect(
+    assertNoPendingVersionBump(
+      admissionExecutor(PUBLISHING_CANDIDATE_CATALOG, () =>
+        commandResult(0, "abc123\trefs/heads/chore/version-bump-pending\n"),
+      ),
+      false,
+    ),
+  ).resolves.toBe(PUBLISHING_CANDIDATE_CATALOG);
 });
 test("blocks admission when live main has a divergent Temporal candidate", async () => {
   const catalog = JSON.stringify({
@@ -224,32 +299,35 @@ test("retains a central Workflow candidate until its pin converges with stable",
     },
   });
 });
-test("does not publish nonexistent Scout Workflow catalog pins", () => {
+test("bootstraps the legacy Scout beta stable and candidate pins", () => {
   const digest = `sha256:${"b".repeat(64)}`;
+  const legacy = `2.0.0-12197@sha256:${"c".repeat(64)}`;
   expect(
     pinCandidatesForDigests(
       { "shepherdjerred/scout-for-lol/beta": digest },
       "43",
-      versionCatalogSource([]),
+      versionCatalogSource([
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/candidate",
+          value: legacy,
+        },
+        {
+          name: "shepherdjerred/scout-for-lol/beta/workflows/stable",
+          value: legacy,
+        },
+      ]),
     ),
   ).toEqual({
     "shepherdjerred/scout-for-lol/beta": {
       version: "2.0.0-43",
       digest,
     },
-  });
-});
-test("does not synthesize a Scout Workflow candidate while its pins are absent", () => {
-  const digest = `sha256:${"b".repeat(64)}`;
-  expect(
-    pinCandidatesForDigests(
-      { "shepherdjerred/scout-for-lol/beta": digest },
-      "44",
-      versionCatalogSource([]),
-    ),
-  ).toEqual({
-    "shepherdjerred/scout-for-lol/beta": {
-      version: "2.0.0-44",
+    "shepherdjerred/scout-for-lol/beta/workflows/stable": {
+      version: "2.0.0-43",
+      digest,
+    },
+    "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
+      version: "2.0.0-43",
       digest,
     },
   });
@@ -318,6 +396,7 @@ async function httpNotFoundInspectExecutor(): Promise<BuildxCommandResult> {
 async function rateLimitedInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(1, "", "429 Too Many Requests");
 }
+
 async function credentialErrorInspectExecutor(): Promise<BuildxCommandResult> {
   return commandResult(
     1,
@@ -737,7 +816,6 @@ test("validates external JSON arrays", () => {
     "contain a commit",
   );
 });
-
 test("fails open when image selection output is malformed", () => {
   for (const output of ["not-json", "{}", '["birmel", 42]']) {
     const result = parseImageSelection(output);
@@ -745,13 +823,11 @@ test("fails open when image selection output is malformed", () => {
     expect(result.fallbackReason).toContain("malformed output");
   }
 });
-
 test("fails open when image selection names an unknown target", () => {
   const result = parseImageSelection('["unknown-image"]');
   expect(result.targets).toEqual(knownImageTargets);
   expect(result.fallbackReason).toBe("image selector returned invalid targets");
 });
-
 test("executes commands and preserves stdout, stderr, and exit status", async () => {
   const result = await execute([
     "bun",
@@ -764,16 +840,13 @@ test("executes commands and preserves stdout, stderr, and exit status", async ()
     stderr: "command-error\n",
   });
 });
-
 test("annotates with the expected report arguments", async () => {
   const commands: string[][] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
     return commandResult();
   };
-
   await annotate(["--report", "selection.json"], executor);
-
   expect(commands).toEqual([
     [
       "bun",
@@ -784,7 +857,6 @@ test("annotates with the expected report arguments", async () => {
     ],
   ]);
 });
-
 test("resolves the newest main commit whose image release jobs passed", async () => {
   const fetcher = Object.assign(
     async () =>
@@ -1177,7 +1249,6 @@ test("runs smoke targets with contract and Caddyfile inputs", async () => {
     PUSH_CACHE: "false",
   });
 });
-
 test("runs application smoke against the exact candidate digest", async () => {
   const commands: string[][] = [];
   const executor: CommandExecutor = async (command) => {

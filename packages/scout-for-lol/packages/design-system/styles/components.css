@@ -731,9 +731,6 @@ button.scout-control > span:first-child {
   flex: none;
   white-space: nowrap;
 }
-.scout-navbar__member-links {
-  display: contents;
-}
 .scout-navbar a:not(.scout-button) {
   color: inherit;
   text-decoration: none;
@@ -754,18 +751,138 @@ button.scout-control > span:first-child {
 .scout-mobile-nav {
   display: none;
 }
-.scout-product-nav {
+.scout-navigation-sheet {
+  overflow-y: auto;
+}
+.scout-docs-header__brand,
+.scout-docs-header__brand > a {
+  display: flex;
+  align-items: center;
+}
+.scout-docs-header__brand {
+  flex: none;
+  gap: 0.75rem;
+}
+.scout-docs-header__divider {
+  width: 1px;
+  height: 1.75rem;
+  background: var(--scout-color-border);
+}
+.scout-docs-header__label {
+  color: var(--scout-color-text);
+  font: 600 0.95rem/1 var(--scout-font-body);
+}
+.scout-docs-header__search {
+  width: min(100%, 38rem);
+  min-width: 0;
+  margin-inline: auto;
+}
+.scout-docs-header__search > * {
+  width: 100%;
+}
+.scout-app-header .scout-container {
+  max-width: none;
+}
+.scout-app-stage,
+.scout-app-content {
+  min-width: 0;
+}
+.scout-app-stage {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.scout-app-layout {
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+  min-width: 0;
+}
+.scout-app-layout--focused {
+  grid-template-columns: minmax(0, 1fr);
+}
+.scout-app-sidebar {
+  position: sticky;
+  top: 4rem;
+  align-self: start;
+  height: calc(100vh - 4rem);
+  padding: 1.25rem 1rem;
+  overflow-y: auto;
   color: var(--scout-color-text);
   background: var(--scout-color-surface);
-  border-bottom: 1px solid var(--scout-color-border);
-}
-.scout-product-nav .scout-container {
-  min-height: 3.25rem;
-  flex-wrap: nowrap;
-  gap: 0.25rem;
-  padding-block: 0.45rem;
-  overflow-x: auto;
+  border-inline-end: var(--scout-border-width) solid var(--scout-color-border);
   scrollbar-width: thin;
+}
+.scout-app-sidebar-nav {
+  display: grid;
+  gap: 1.5rem;
+}
+.scout-app-sidebar-section {
+  display: grid;
+  gap: 0.35rem;
+}
+.scout-app-sidebar-heading {
+  margin: 0 0 0.25rem;
+  padding-inline: 0.65rem;
+  color: var(--scout-color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.scout-app-sidebar-link {
+  display: block;
+  padding: 0.6rem 0.65rem;
+  color: var(--scout-color-text);
+  border-radius: var(--scout-radius-small);
+  font-size: 0.9rem;
+  font-weight: 550;
+  line-height: 1.25;
+  text-decoration: none;
+}
+.scout-app-sidebar-link:hover,
+.scout-app-sidebar-link[aria-current="page"] {
+  background: var(--scout-color-interactive-hover);
+}
+.scout-app-sidebar-link[aria-current="page"] {
+  color: var(--scout-color-primary);
+  box-shadow: inset 3px 0 0 var(--scout-color-primary);
+}
+.scout-app-sidebar-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+  padding-inline: 0.65rem;
+  color: var(--scout-color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.scout-app-sidebar-select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 2.5rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 2rem 0.55rem 0.65rem;
+  color: var(--scout-color-text);
+  background: var(--scout-color-canvas);
+  border: var(--scout-border-width) solid var(--scout-color-border);
+  border-radius: var(--scout-radius-small);
+  font: inherit;
+}
+.scout-app-sidebar-server {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.65rem;
+  padding-top: 1rem;
+  border-top: var(--scout-border-width) solid var(--scout-color-border);
+}
+.scout-app-sidebar-server-name {
+  margin: 0 0 0.25rem;
+  padding-inline: 0.65rem;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .scout-footer {
   padding-block: 2rem;
@@ -1014,11 +1131,19 @@ button.scout-control > span:first-child {
 }
 
 @media (max-width: 60rem) {
-  .scout-navbar__links,
-  .scout-navbar__member-links {
+  .scout-navbar__links {
     display: none;
   }
   .scout-mobile-nav {
     display: block;
+  }
+  .scout-app-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .scout-app-sidebar {
+    display: none;
+  }
+  .scout-navigation-sheet .scout-app-sidebar-nav {
+    margin-top: 1.5rem;
   }
 }

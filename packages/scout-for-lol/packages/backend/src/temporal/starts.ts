@@ -24,6 +24,12 @@ import {
 } from "@scout-for-lol/temporal";
 import { reconcileReportSchedulesSignal } from "@scout-for-lol/temporal/signals";
 import { requestInitialHistoryRunSignal } from "@scout-for-lol/temporal/signals";
+import {
+  buildTemporalExecutionStartMetadata,
+  ExecutionMetadataSchema,
+  type ExecutionTrigger,
+} from "@scout-for-lol/temporal/execution-metadata";
+import configuration from "#src/configuration.ts";
 
 const IDEMPOTENT_START_POLICIES = {
   workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
@@ -40,6 +46,24 @@ const RESTART_CLOSED_START_POLICIES = {
   workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
 } as const;
 
+function startMetadata(
+  stage: ScoutStage,
+  trigger: ExecutionTrigger,
+  summary: string,
+  description: string,
+) {
+  return buildTemporalExecutionStartMetadata({
+    metadata: ExecutionMetadataSchema.parse({
+      Environment: stage,
+      Domain: "scout",
+      Trigger: trigger,
+      ReleaseCommit: configuration.gitSha,
+    }),
+    summary,
+    description,
+  });
+}
+
 export async function startScoutMatchIngestion(
   client: Client,
   input: ScoutMatchIngestionInput,
@@ -49,6 +73,12 @@ export async function startScoutMatchIngestion(
     workflowId: scoutMatchWorkflowId(input.stage, input.matchId),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [input],
+    ...startMetadata(
+      input.stage,
+      "workflow",
+      "Ingest Scout match",
+      "Coordinates durable ingestion for one completed match.",
+    ),
   });
 }
 
@@ -61,6 +91,12 @@ export async function startScoutQueueCanary(
     workflowId: scoutQueueCanaryWorkflowId(input.stage, input.canaryId),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [input],
+    ...startMetadata(
+      input.stage,
+      "operator",
+      "Probe Scout task queues",
+      "Checks that every Scout workflow and Activity queue is available.",
+    ),
   });
 }
 
@@ -77,6 +113,12 @@ export async function startScoutInitialHistory(
       args: [input],
       signal: requestInitialHistoryRunSignal,
       signalArgs: [],
+      ...startMetadata(
+        input.stage,
+        "workflow",
+        "Import initial Scout history",
+        "Coordinates the durable initial match-history import for one linked account.",
+      ),
     },
   );
 }
@@ -86,7 +128,7 @@ export async function startScoutDetachedWork(
   input: ScoutDetachedWorkInput,
 ): Promise<WorkflowHandle> {
   return await client.workflow.start(SCOUT_WORKFLOW_NAMES.detachedWork, {
-    ...RESTART_FAILED_START_POLICIES,
+    ...IDEMPOTENT_START_POLICIES,
     workflowId: scoutDetachedWorkWorkflowId(
       input.stage,
       input.kind,
@@ -94,6 +136,12 @@ export async function startScoutDetachedWork(
     ),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [input],
+    ...startMetadata(
+      input.stage,
+      "workflow",
+      "Run detached Scout work",
+      "Runs one durable Scout background or report-lake operation.",
+    ),
   });
 }
 
@@ -119,6 +167,12 @@ export async function startScoutInteractiveRun(
     ),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [input],
+    ...startMetadata(
+      input.stage,
+      "api",
+      "Run interactive Scout analysis",
+      "Coordinates one user-requested durable Scout analysis.",
+    ),
   });
 }
 
@@ -135,6 +189,12 @@ export async function startScoutManualReport(
     ),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [input],
+    ...startMetadata(
+      input.stage,
+      "operator",
+      "Run Scout report",
+      "Generates one manually requested Scout report.",
+    ),
   });
 }
 
@@ -151,6 +211,12 @@ export async function signalScoutReportReconciliation(
       args: [{ stage }],
       signal: reconcileReportSchedulesSignal,
       signalArgs: [],
+      ...startMetadata(
+        stage,
+        "workflow",
+        "Reconcile Scout report schedules",
+        "Reconciles database-owned Scout report schedules with Temporal.",
+      ),
     },
   );
 }

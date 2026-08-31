@@ -193,7 +193,7 @@ describe("agent task post-report failure delivery", () => {
       sendAgentTaskEmail: () => {
         events.push("success-report");
         return {
-          subject: "[OK] Agent Task: Inspect production evidence",
+          subject: "Inspect production evidence: report ready",
           messageId: "success-message",
           recipientId: 1,
           reportRunId: "agent-task:run-1",
@@ -209,7 +209,7 @@ describe("agent task post-report failure delivery", () => {
         failureReports.push(input);
         events.push("failure-report");
         return {
-          subject: "[FAILED] Agent Task: Inspect production evidence",
+          subject: "Inspect production evidence failed",
           messageId: "failure-message",
           recipientId: 1,
           reportRunId: "agent-task:run-1:failed",
@@ -254,7 +254,7 @@ describe("agent task post-report failure delivery", () => {
       sendAgentTaskEmail: () => {
         events.push("success-report");
         return {
-          subject: "[OK] Agent Task: Inspect production evidence",
+          subject: "Inspect production evidence: report ready",
           messageId: "success-message",
           recipientId: 1,
           reportRunId: "agent-task:run-2",
@@ -268,7 +268,7 @@ describe("agent task post-report failure delivery", () => {
         failureReports.push(input);
         events.push("failure-report");
         return {
-          subject: "[FAILED] Agent Task: Inspect production evidence",
+          subject: "Inspect production evidence failed",
           messageId: "failure-message",
           recipientId: 1,
           reportRunId: "agent-task:run-2:failed",

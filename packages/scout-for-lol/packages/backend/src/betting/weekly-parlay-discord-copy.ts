@@ -1,7 +1,8 @@
 import { formatInteger } from "@scout-for-lol/data";
-import type {
-  WeeklyParlayDefinitionCriteria,
-  WeeklyParlayLeg,
+import {
+  WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
+  type WeeklyParlayDefinitionCriteria,
+  type WeeklyParlayLeg,
 } from "#src/betting/weekly-parlay-criteria.ts";
 import type { WeeklyParlayEvaluation } from "#src/betting/weekly-parlay-evaluator.ts";
 
@@ -89,16 +90,31 @@ function metricValue(leg: WeeklyParlayLeg, value: number): string {
   return value.toLocaleString("en-US");
 }
 
-export function legLine(
-  leg: WeeklyParlayLeg,
-  current: number | undefined,
-  subjectAlias: string,
-): string {
+export function legLine(input: {
+  leg: WeeklyParlayLeg;
+  current: number | undefined;
+  subjectAlias: string;
+  kind?: WeeklyParlayDiscordKind;
+  passed?: boolean;
+  irreversiblyPassed?: boolean;
+}): string {
+  const kind = input.kind ?? "open";
+  const progressPassed = input.irreversiblyPassed === true;
+  const status =
+    input.current === undefined
+      ? "•"
+      : kind === "settlement"
+        ? input.passed === true
+          ? "✅"
+          : "❌"
+        : progressPassed
+          ? "✅"
+          : "⏳";
   const progress =
-    current === undefined
+    input.current === undefined
       ? ""
-      : ` — **${metricValue(leg, current)} / ${metricValue(leg, leg.threshold)}**`;
-  return `• **${subjectAlias}** ${operatorCopy(leg)} **${metricValue(leg, leg.threshold)} ${metricCopy(leg)}**${progress}`;
+      : ` (${metricValue(input.leg, input.current)} / ${metricValue(input.leg, input.leg.threshold)})`;
+  return `${status} **${input.subjectAlias}** — ${operatorCopy(input.leg)} **${metricValue(input.leg, input.leg.threshold)} ${metricCopy(input.leg)}**${progress}`;
 }
 
 export function weeklyParlayQualificationCopy(
@@ -107,19 +123,19 @@ export function weeklyParlayQualificationCopy(
   if (criteria.version === 1) {
     return;
   }
-  return `Settlement qualification: **${criteria.qualification.minimumGamesPerSubject.toString()} eligible games required per player**; otherwise all bets are refunded.`;
+  return `Settlement requires **${criteria.qualification.minimumGamesPerSubject.toString()} eligible games** from every featured player.`;
 }
 
-function weeklyParlayVoidCopy(reason: string | null): string {
+function weeklyParlayVoidReasonCopy(reason: string | null): string {
   switch (reason) {
     case "insufficient_activity":
-      return "Fewer than three eligible games were played, so every wager was refunded.";
+      return `Not every featured player completed ${WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES.toString()} eligible games.`;
     case "operator_cancelled":
-      return "Cancelled by an operator; every pending wager was refunded.";
+      return "An operator cancelled this market.";
     case null:
-      return "The market was voided and every pending wager was refunded.";
+      return "The market was voided without a recorded result.";
     default:
-      return `The market was voided (${reason}) and every pending wager was refunded.`;
+      return `The market was voided because of ${reason}.`;
   }
 }
 
@@ -127,27 +143,25 @@ export function deliveryTitle(input: {
   kind: WeeklyParlayDiscordKind;
   marketState: string;
   yesResult: boolean | null;
-  catchup?: boolean;
   voidReason?: string | null;
 }): string {
-  const prefix = input.catchup === true ? "Catch-up weekly" : "Weekly";
   switch (input.kind) {
     case "open":
-      return `📅 **${prefix} Bryan Bucks parlay is open**`;
+      return "📅 **Weekly Bryan Bucks parlay: OPEN FOR BETTING**";
     case "reminder":
-      return `⏰ **${prefix} parlay betting reminder**`;
+      return "⏰ **Weekly Bryan Bucks parlay: BETTING REMINDER**";
     case "progress":
-      return `📈 **${prefix} parlay progress**`;
+      return "📈 **Weekly Bryan Bucks parlay: IN PROGRESS**";
     case "settlement":
       if (input.marketState === "voided") {
         if (input.voidReason === "operator_cancelled") {
-          return `🛑 **${prefix} parlay cancelled and refunded**`;
+          return "🛑 **Weekly Bryan Bucks parlay: CANCELLED — BETS REFUNDED**";
         }
-        return `↩️ **${prefix} parlay refunded**`;
+        return "↩️ **Weekly Bryan Bucks parlay: VOIDED — BETS REFUNDED**";
       }
       return input.yesResult === true
-        ? `✅ **${prefix} parlay settled YES**`
-        : `❌ **${prefix} parlay settled NO**`;
+        ? "✅ **Weekly Bryan Bucks parlay: RESOLVED YES**"
+        : "❌ **Weekly Bryan Bucks parlay: RESOLVED NO**";
   }
 }
 
@@ -156,18 +170,81 @@ export function deliveryTimeCopy(input: {
   bettingClosesAt: Date;
   scoringEndsAt: Date;
   scoringStartsAt?: Date;
-  catchup?: boolean;
 }): string {
-  if (input.catchup === true) {
-    if (input.scoringStartsAt === undefined) {
-      throw new Error("Catch-up weekly parlay copy requires scoringStartsAt.");
-    }
-    return `Betting closes <t:${Math.floor(input.bettingClosesAt.getTime() / 1000).toString()}:F>. Scoring runs <t:${Math.floor(input.scoringStartsAt.getTime() / 1000).toString()}:F> through <t:${Math.floor(input.scoringEndsAt.getTime() / 1000).toString()}:F>.`;
-  }
+  const timestamp = (date: Date, style: "F" | "R"): string =>
+    `<t:${Math.floor(date.getTime() / 1000).toString()}:${style}>`;
   if (input.kind === "open" || input.kind === "reminder") {
-    return `Betting closes <t:${Math.floor(input.bettingClosesAt.getTime() / 1000).toString()}:R>. Use this message's buttons so your market is unambiguous.`;
+    return [
+      `**Betting closes:** ${timestamp(input.bettingClosesAt, "F")} (${timestamp(input.bettingClosesAt, "R")})`,
+      `**Scoring window:** ${timestamp(input.scoringStartsAt ?? input.bettingClosesAt, "F")} → ${timestamp(input.scoringEndsAt, "F")}`,
+    ].join("\n");
   }
-  return `Final cutoff <t:${Math.floor(input.scoringEndsAt.getTime() / 1000).toString()}:F>.`;
+  return `**Scoring cutoff:** ${timestamp(input.scoringEndsAt, "F")}`;
+}
+
+function qualificationLines(input: {
+  kind: WeeklyParlayDiscordKind;
+  criteria: WeeklyParlayDefinitionCriteria | undefined;
+  evaluation: WeeklyParlayEvaluation | undefined;
+  aliases: ReadonlyMap<string, string>;
+}): string[] {
+  if (input.criteria?.version !== 2) {
+    return [];
+  }
+  if (
+    input.evaluation === undefined ||
+    input.kind === "open" ||
+    input.kind === "reminder"
+  ) {
+    const requirement = weeklyParlayQualificationCopy(input.criteria);
+    if (requirement === undefined) {
+      throw new Error("Version-two weekly parlay requires qualification copy.");
+    }
+    return [`**Activity requirement:** ${requirement}`];
+  }
+  const minimumGames = input.evaluation.qualification.minimumGamesPerSubject;
+  return [
+    "**Activity qualification:**",
+    ...input.evaluation.qualification.subjects.map((subject) => {
+      const status = subject.passed
+        ? "✅"
+        : input.kind === "settlement"
+          ? "❌"
+          : "⏳";
+      const qualification = subject.passed ? " (qualified)" : "";
+      const alias = input.aliases.get(subject.subject) ?? subject.subject;
+      return `• ${status} **${alias}** — ${subject.games.toString()}/${minimumGames.toString()} eligible games${qualification}`;
+    }),
+  ];
+}
+
+function settlementLines(input: {
+  kind: WeeklyParlayDiscordKind;
+  marketState: string;
+  yesResult: boolean | null;
+  voidReason: string | null;
+  evaluation: WeeklyParlayEvaluation | undefined;
+  bettorCount: number;
+  totalStaked: number;
+}): string[] {
+  if (input.kind !== "settlement") {
+    return [];
+  }
+  if (input.marketState === "voided") {
+    return [
+      `**Why:** ${weeklyParlayVoidReasonCopy(input.voidReason)}`,
+      `**Returned:** ${formatInteger(input.bettorCount)} ${countLabel(input.bettorCount, "bettor")} · ${formatInteger(input.totalStaked)} BB`,
+    ];
+  }
+  if (input.evaluation === undefined) {
+    throw new Error("Settled weekly parlay delivery requires evaluation.");
+  }
+  const failedLegs = input.evaluation.legs.filter((leg) => !leg.passed).length;
+  const result =
+    input.yesResult === true
+      ? "All conditions passed."
+      : `${failedLegs.toString()} of ${input.evaluation.legs.length.toString()} conditions failed.`;
+  return [`**${result}**`];
 }
 
 export function weeklyParlayDeliveryContent(input: {
@@ -175,9 +252,6 @@ export function weeklyParlayDeliveryContent(input: {
   marketState: string;
   yesResult: boolean | null;
   voidReason: string | null;
-  catchup: boolean;
-  periodKey: string;
-  yesProbabilityBps: number;
   bettingClosesAt: Date;
   scoringStartsAt: Date;
   scoringEndsAt: Date;
@@ -187,64 +261,64 @@ export function weeklyParlayDeliveryContent(input: {
   bettorCount: number;
   totalStaked: number;
 }): string {
-  const isVoidedSettlement =
-    input.kind === "settlement" && input.marketState === "voided";
+  if (input.kind !== "settlement" && input.criteria === undefined) {
+    throw new Error("Weekly parlay delivery requires criteria.");
+  }
   if (
-    !isVoidedSettlement &&
+    input.kind === "settlement" &&
+    input.marketState !== "voided" &&
     (input.criteria === undefined || input.evaluation === undefined)
   ) {
-    throw new Error("Non-void weekly parlay delivery requires evaluation.");
+    throw new Error("Settled weekly parlay delivery requires evaluation.");
   }
   const legs =
-    input.evaluation?.legs.map((result) =>
-      legLine(
-        result.leg,
-        input.kind === "open" || input.kind === "reminder"
-          ? undefined
-          : result.current,
-        input.aliases.get(result.leg.subject) ?? result.leg.subject,
-      ),
-    ) ?? [];
-  const qualification =
-    input.criteria === undefined
-      ? undefined
-      : weeklyParlayQualificationCopy(input.criteria);
-  const minimumGames =
-    input.evaluation?.qualification.minimumGamesPerSubject ?? 0;
-  const qualificationProgress =
-    minimumGames === 0 ||
-    input.kind === "open" ||
-    input.kind === "reminder" ||
     input.evaluation === undefined
-      ? undefined
-      : `Qualification: ${input.evaluation.qualification.subjects
-          .map((subject) => {
-            const alias = input.aliases.get(subject.subject) ?? subject.subject;
-            return `**${alias} ${subject.games.toString()}/${minimumGames.toString()} games**`;
-          })
-          .join(" · ")}`;
-  return [
+      ? (input.criteria?.legs.map((leg) =>
+          legLine({
+            leg,
+            current: undefined,
+            subjectAlias: input.aliases.get(leg.subject) ?? leg.subject,
+            kind: input.kind,
+          }),
+        ) ?? [])
+      : input.evaluation.legs.map((result) =>
+          legLine({
+            leg: result.leg,
+            current:
+              input.kind === "open" || input.kind === "reminder"
+                ? undefined
+                : result.current,
+            subjectAlias:
+              input.aliases.get(result.leg.subject) ?? result.leg.subject,
+            kind: input.kind,
+            passed: result.passed,
+            irreversiblyPassed: result.irreversiblyPassed,
+          }),
+        );
+  const sections = [
     deliveryTitle({
       kind: input.kind,
       marketState: input.marketState,
       yesResult: input.yesResult,
-      catchup: input.catchup,
       voidReason: input.voidReason,
     }),
-    ...(isVoidedSettlement ? [weeklyParlayVoidCopy(input.voidReason)] : []),
-    `Period: **${input.periodKey}** · ${(input.yesProbabilityBps / 100).toFixed(1)}% YES`,
-    ...legs,
-    qualification ?? "",
-    qualificationProgress ?? "",
-    `**${formatInteger(input.bettorCount)} ${countLabel(input.bettorCount, "bettor")} · ${formatInteger(input.totalStaked)} BB staked**`,
+    settlementLines(input).join("\n"),
+    legs.length === 0 ? "" : ["**Conditions**", ...legs].join("\n"),
+    qualificationLines({
+      kind: input.kind,
+      criteria: input.criteria,
+      evaluation: input.evaluation,
+      aliases: input.aliases,
+    }).join("\n"),
+    input.marketState === "voided" && input.kind === "settlement"
+      ? ""
+      : `**Bets:** ${formatInteger(input.bettorCount)} ${countLabel(input.bettorCount, "bettor")} · ${formatInteger(input.totalStaked)} BB staked`,
     deliveryTimeCopy({
       kind: input.kind,
       bettingClosesAt: input.bettingClosesAt,
       scoringEndsAt: input.scoringEndsAt,
       scoringStartsAt: input.scoringStartsAt,
-      catchup: input.catchup,
     }),
-  ]
-    .filter((line) => line.length > 0)
-    .join("\n");
+  ];
+  return sections.filter((section) => section.length > 0).join("\n\n");
 }

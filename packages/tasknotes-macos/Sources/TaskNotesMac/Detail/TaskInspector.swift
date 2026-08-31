@@ -95,6 +95,7 @@ struct TaskInspector: View {
                     // an edit that re-read the selection would write the text
                     // somebody typed into one task onto a different one.
                     apply: { apply($0, to: detail.id) },
+                    applyRecurrence: { apply($0, to: detail.id) },
                     attempt: { await attempt($0, to: detail.id) },
                     dispatch: dispatch
                 )
@@ -160,6 +161,10 @@ struct TaskInspector: View {
         dispatch(edit.command(for: taskId))
     }
 
+    private func apply(_ edit: TaskRecurrenceEdit, to taskId: TaskId) {
+        dispatch(edit.command(for: taskId))
+    }
+
     /// Record a field change and answer whether the core took it.
     ///
     /// ``TaskNotesStore/dispatch(_:publishing:)`` answers `nil` for a delete,
@@ -203,7 +208,7 @@ struct TaskInspector: View {
     /// main actor, so an edit made while a sync is draining cannot freeze the
     /// panel it was typed into.
     private func dispatch(_ command: CommandInput) {
-        _Concurrency.Task {
+        InspectorCommitCoordinator.shared.perform {
             await store.dispatch(command)
             await store.settle()
         }

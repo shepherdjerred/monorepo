@@ -134,9 +134,10 @@ export function v2Routes(deps: V2Dependencies): Hono {
   const vault = { name: path.basename(vaultPath), path: vaultPath };
   const app = new Hono();
 
-  // Mutation responses carry `details` (the note body) like GET does — the
-  // app's offline store merges acked tasks into its base, and a detail-less
-  // ack would clobber the visible note text.
+  // Every task response carries `details` (the note body). The app replaces
+  // its local base with each paginated list pull, so omitting bodies from the
+  // collection response would erase a note immediately after its successful
+  // update response had put it into the base.
   const withDetails = (task: { path: string }): Record<string, unknown> => {
     const entry = repo.get(task.path);
     return { ...task, details: entry === undefined ? "" : entry.body.trim() };
@@ -154,7 +155,7 @@ export function v2Routes(deps: V2Dependencies): Hono {
     );
     const all = repo.list();
     return c.json({
-      tasks: all.slice(offset, offset + limit),
+      tasks: all.slice(offset, offset + limit).map((task) => withDetails(task)),
       pagination: {
         total: all.length,
         offset,
@@ -180,7 +181,7 @@ export function v2Routes(deps: V2Dependencies): Hono {
       if (entry === undefined) {
         return c.json({ success: false, error: "Task not found" }, 404);
       }
-      return c.json({ ...entry.task, details: entry.body.trim() });
+      return c.json(withDetails(entry.task));
     }),
   );
 
@@ -228,7 +229,7 @@ export function v2Routes(deps: V2Dependencies): Hono {
       const all = repo.list();
       const tasks = evaluateQuery(query, all, config);
       return c.json({
-        tasks,
+        tasks: tasks.map((task) => withDetails(task)),
         total: all.length,
         filtered: tasks.length,
         vault,

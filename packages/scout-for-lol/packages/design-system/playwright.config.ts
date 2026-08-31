@@ -25,10 +25,10 @@ export default defineConfig({
   snapshotPathTemplate:
     "{snapshotDir}/{testFilePath}-snapshots/{arg}-{projectName}{ext}",
   webServer: {
-    // Keep the Playwright-owned server on a deterministic port. Reusing Vite's
-    // persisted optimizer avoids a dependency scan competing with the other
-    // browser suites in the shared CI pod before the server binds.
-    command: "bun run dev --host 127.0.0.1 --port 5190 --strictPort",
+    // Vite's persisted dependency optimizer can stall before binding when a
+    // prior build populated this package's cache. The workbench is a test-only
+    // server, so rebuild its optimizer state on every Playwright-owned start.
+    command: "bun run dev --host 127.0.0.1 --port 5190 --force --strictPort",
     url: "http://127.0.0.1:5190",
     timeout: 120_000,
     reuseExistingServer: true,

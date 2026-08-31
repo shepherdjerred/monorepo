@@ -1,11 +1,6 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-http";
-import { resourceFromAttributes } from "@opentelemetry/resources";
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from "@opentelemetry/semantic-conventions";
 import {
   diag,
   DiagLogLevel,
@@ -19,16 +14,19 @@ import {
 import { logs as logsAPI } from "@opentelemetry/api-logs";
 import {
   BatchSpanProcessor,
-  type ReadableSpan,
-  type SpanExporter,
   type SpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 import {
   BatchLogRecordProcessor,
   LoggerProvider,
 } from "@opentelemetry/sdk-logs";
-import { ExportResultCode, type ExportResult } from "@opentelemetry/core";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
+import {
+  buildTracingResource,
+  LoggingSpanExporter,
+  type TracingResourceOptions,
+  type TracingRuntime,
+} from "@shepherdjerred/temporal-observability/tracing-resource";
 import { createStructuredLogger } from "./logging.ts";
 
 const DEFAULT_OTLP_ENDPOINT = "http://tempo.tempo.svc.cluster.local:4318";
@@ -40,6 +38,7 @@ let tracer: Tracer | undefined;
 let batchProcessor: BatchSpanProcessor | undefined;
 let loggerProvider: LoggerProvider | undefined;
 let logRecordProcessor: BatchLogRecordProcessor | undefined;
+let tracingRuntime: TracingRuntime | undefined;
 
 const jsonLog = createStructuredLogger("observability.tracing");
 
@@ -62,65 +61,27 @@ const diagLogger: DiagLogger = {
   },
 };
 
-class LoggingSpanExporter implements SpanExporter {
-  private readonly inner: SpanExporter;
-  private firstSuccessLogged = false;
-
-  constructor(inner: SpanExporter) {
-    this.inner = inner;
-  }
-
-  export(
-    spans: ReadableSpan[],
-    resultCallback: (result: ExportResult) => void,
-  ): void {
-    this.inner.export(spans, (result) => {
-      if (result.code === ExportResultCode.SUCCESS) {
-        if (!this.firstSuccessLogged) {
-          this.firstSuccessLogged = true;
-          jsonLog("info", "OTLP trace export succeeded (first batch)", {
-            spanCount: spans.length,
-          });
-        }
-      } else {
-        jsonLog("error", "OTLP trace export failed", {
-          spanCount: spans.length,
-          error:
-            result.error instanceof Error
-              ? result.error.message
-              : "unknown export error",
-        });
-      }
-      resultCallback(result);
-    });
-  }
-
-  shutdown(): Promise<void> {
-    return this.inner.shutdown();
-  }
-
-  forceFlush(): Promise<void> {
-    return this.inner.forceFlush?.() ?? Promise.resolve();
-  }
-}
-
-export function initializeTracing(): void {
+export function initializeTracing(
+  options: TracingResourceOptions = {},
+): TracingRuntime | undefined {
   const enabled = Bun.env["TELEMETRY_ENABLED"] === "true";
   if (!enabled) {
     jsonLog("info", "OpenTelemetry tracing disabled");
-    return;
+    return undefined;
   }
 
   diag.setLogger(diagLogger, DiagLogLevel.WARN);
 
   const otlpEndpoint = Bun.env["OTLP_ENDPOINT"] ?? DEFAULT_OTLP_ENDPOINT;
   const serviceName = Bun.env["TELEMETRY_SERVICE_NAME"] ?? DEFAULT_SERVICE_NAME;
-  const serviceVersion = Bun.env["VERSION"] ?? "dev";
+  const serviceVersion = Bun.env["GIT_SHA"] ?? Bun.env["VERSION"] ?? "dev";
+  const resource = buildTracingResource(serviceName, serviceVersion, options);
 
   const exporter = new LoggingSpanExporter(
     new OTLPTraceExporter({
       url: `${otlpEndpoint}/v1/traces`,
     }),
+    jsonLog,
   );
 
   // Explicit BatchSpanProcessor so we have a handle to forceFlush() before
@@ -168,19 +129,13 @@ export function initializeTracing(): void {
     exportTimeoutMillis: 30_000,
   });
   loggerProvider = new LoggerProvider({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: serviceName,
-      [ATTR_SERVICE_VERSION]: serviceVersion,
-    }),
+    resource,
     processors: [logRecordProcessor],
   });
   logsAPI.setGlobalLoggerProvider(loggerProvider);
 
   sdk = new NodeSDK({
-    resource: resourceFromAttributes({
-      [ATTR_SERVICE_NAME]: serviceName,
-      [ATTR_SERVICE_VERSION]: serviceVersion,
-    }),
+    resource,
     spanProcessors: [rootProcessor],
   });
 
@@ -192,7 +147,17 @@ export function initializeTracing(): void {
     serviceVersion,
     otlpEndpoint,
     lokiOtlpLogsEndpoint,
+    environment: options.environment ?? "dev",
+    namespace: options.namespace ?? "default",
+    taskQueue: options.taskQueue ?? "unknown",
+    workerRole: options.workerRole ?? "unknown",
   });
+  tracingRuntime = { processor: rootProcessor, resource };
+  return tracingRuntime;
+}
+
+export function getTracingRuntime(): TracingRuntime | undefined {
+  return tracingRuntime;
 }
 
 export function getTracer(): Tracer | undefined {
@@ -232,6 +197,7 @@ export async function shutdownTracing(): Promise<void> {
   if (sdk !== undefined) {
     await sdk.shutdown();
   }
+  tracingRuntime = undefined;
 }
 
 /**

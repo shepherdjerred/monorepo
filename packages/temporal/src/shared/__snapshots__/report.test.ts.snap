@@ -1,20 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ReportEnvelopeV1 > keeps compact HTML and plain-text snapshots stable 1`] = `"<!doctype html><html><body><h1>[OK] Dependency summary</h1><p><strong>No dependency changes were found in the verified window.</strong></p><h2>Checks</h2><table><thead><tr><th>Coverage</th><th>Check</th><th>Status</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td>required</td><td>Catalog diff</td><td>passed</td><td>Both catalog endpoints were read successfully.</td><td><code>git-diff</code></td></tr></tbody></table><h2>Provenance</h2><ul><li>Report run: dependency-summary:run-1</li><li>Workflow: deps-summary-weekly-2026-08-10</li><li>Run: run-1</li><li>Repository SHA: abc123</li><li>Window start: 2026-08-03T16:00:00.000Z</li><li>Window end: 2026-08-10T16:00:00.000Z</li></ul></body></html>"`;
+exports[`Human report email rendering > keeps compact HTML and plain-text snapshots stable 1`] = `"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f3f4f6;color:#111827;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;line-height:1.5;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;background:#f3f4f6;"><tr><td align="center" style="padding:24px 12px;"><table role="presentation" width="640" cellpadding="0" cellspacing="0" style="width:100%;max-width:640px;border-collapse:collapse;background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;"><tr><td style="padding:28px;"><div style="display:inline-block;margin-bottom:14px;padding:5px 10px;border:1px solid #16a34a;border-radius:999px;background:#ecfdf3;color:#166534;font-size:12px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;">No action needed</div><h1 style="margin:0 0 10px;font-size:26px;line-height:1.2;color:#111827;">Dependencies are up to date</h1><p style="margin:0;font-size:17px;line-height:1.55;color:#374151;">No dependency changes were found in the verified window.</p><div style="margin:24px 0;padding:16px 18px;border-radius:10px;background:#f3f4f6;"><strong style="color:#111827;">No action is needed.</strong></div><section style="margin-top:30px;"><h2 style="margin:0 0 12px;font-size:19px;color:#111827;">What was checked</h2><ul style="margin:0;padding:0;list-style:none;"><li style="margin:0 0 12px;padding-bottom:12px;border-bottom:1px solid #e5e7eb;"><div><strong style="color:#166534;">Passed</strong> &middot; <strong>Catalog diff</strong></div><div style="margin-top:4px;color:#4b5563;">Both catalog endpoints were read successfully.</div></li></ul></section><footer style="margin-top:30px;padding-top:18px;border-top:1px solid #e5e7eb;"><table role="presentation" style="border-collapse:collapse;"><tr><th scope="row" style="padding:3px 14px 3px 0;text-align:left;vertical-align:top;font-size:12px;color:#6b7280;">Completed</th><td style="padding:3px 0;font-size:12px;color:#6b7280;">Aug 10, 2026 at 9:01 AM PDT</td></tr><tr><th scope="row" style="padding:3px 14px 3px 0;text-align:left;vertical-align:top;font-size:12px;color:#6b7280;">Window</th><td style="padding:3px 0;font-size:12px;color:#6b7280;">Aug 3, 2026 at 9:00 AM PDT to Aug 10, 2026 at 9:00 AM PDT</td></tr><tr><th scope="row" style="padding:3px 14px 3px 0;text-align:left;vertical-align:top;font-size:12px;color:#6b7280;">Repository</th><td style="padding:3px 0;font-size:12px;color:#6b7280;">abc123</td></tr></table></footer></td></tr></table></td></tr></table></body></html>"`;
 
-exports[`ReportEnvelopeV1 > keeps compact HTML and plain-text snapshots stable 2`] = `
-"[OK] Dependency summary
+exports[`Human report email rendering > keeps compact HTML and plain-text snapshots stable 2`] = `
+"Dependencies are up to date
+No action needed
 No dependency changes were found in the verified window.
 
-Checks
-- [passed] Catalog diff (required): Both catalog endpoints were read successfully. [evidence: git-diff]
+No action is needed.
 
-Provenance
-- Report run: dependency-summary:run-1
-- Workflow: deps-summary-weekly-2026-08-10
-- Run: run-1
-- Repository SHA: abc123
-- Window start: 2026-08-03T16:00:00.000Z
-- Window end: 2026-08-10T16:00:00.000Z
+What was checked
+- Passed · Catalog diff: Both catalog endpoints were read successfully.
+
+Details
+- Completed: Aug 10, 2026 at 9:01 AM PDT
+- Window: Aug 3, 2026 at 9:00 AM PDT to Aug 10, 2026 at 9:00 AM PDT
+- Repository: abc123
 "
 `;

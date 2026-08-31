@@ -16,7 +16,7 @@ files sequentially: each file owns a native time-skipping server and authentic
 Node worker threads, and concurrent environments exhaust the bounded CI agent.
 `bun run test` runs both phases through the stable package interface.
 
-Production uses the same Bun image in thirteen single-replica Kubernetes
+Production uses the same Bun image in twelve single-replica Kubernetes
 Deployments selected by `TEMPORAL_WORKER_ROLE`. `control` owns schedule
 reconciliation and public HTTP/event surfaces without a task queue. The
 credentialless `workflows` role runs as stable and candidate Deployments on
@@ -28,7 +28,8 @@ the two pins are equal, retaining the deployed candidate throughout a rollout.
 The package-local rollout command advances stable only after the 24-hour soak.
 After rollback and candidate-history drain, rerun `rollback` with no active ramp
 to copy stable back to candidate before the next CI image release may advance
-it; review and commit that catalog change through the normal PR flow.
+it; review and commit both the catalog and pin-state changes through the normal
+PR flow.
 Domain roles are Activity-only and own their registries in the typed contract
 in `src/worker-config.ts`. The default `all` role preserves the single-process local development
 behavior. Keep new queue ownership and capabilities in that contract so a
@@ -50,8 +51,10 @@ configured. Activity-only roles do not opt
 into Worker Deployments. A Workflow role without the paired identity fails at
 startup.
 
-Operate the central rollout from this package with `bun run worker-deployment`.
-Do not add a toolkit subcommand. `TEMPORAL_ADDRESS` must identify an
+Operate rollouts from this package with `bun run worker-deployment`; the target
+defaults to `central`, while `--target scout-beta` and `--target scout-prod`
+select Scout's stage-local deployment, queue, replay bundle, canary, image
+repository, and pins. Do not add a toolkit subcommand. `TEMPORAL_ADDRESS` must identify an
 operator-reachable endpoint; native calls use the existing `toolkit temporal`
 passthrough. `start` requires a clean candidate-build checkout, synthetic
 bundle tests, operator-selected retained-history replay via
@@ -74,6 +77,17 @@ the inspected object as a compare-and-swap expectation:
 `git push --force-with-lease=refs/temporal-worker-deployment-locks/<lock-name>:<rolloutLockObject> origin :refs/temporal-worker-deployment-locks/<lock-name>`.
 If that push is rejected, inspect again; never force-delete a lease while a
 rollout is running.
+
+Roll out Scout beta before Scout production. Mutating Scout production actions
+verify that the same Build ID is already the current, unramped beta version with
+a healthy beta Workflow poller; rollback remains available independently.
+Scout bootstrap requires two capable image releases because the unversioned
+embedded poller cannot be a Worker Deployment rollback version. A pin at or
+before build 12197 creates no workflow-only pod. Copy the first capable
+candidate pin to stable to create only the stable poller; a later distinct
+candidate pin creates the ramp target. Never remove the embedded poller before
+candidate replay, canary, soak, stable-pin promotion, and a healthy stable
+poller. Repeat the sequence for production only after beta runtime acceptance.
 
 ## Structure
 
@@ -174,8 +188,9 @@ stays at 0 and is indistinguishable from a clean "no orphans" result.
 bun run start        # Start worker (connects to Temporal server)
 bun run typecheck    # Type check (runs ensure-ha-schema first)
 bun run lint         # ESLint
-bun run test             # Run tests (incl. workflow-bundle smoke test)
+bun run test         # Run tests (incl. workflow-bundle smoke test)
 bun run generate     # Regenerate src/generated/ha-schema.ts from live HA (needs HA_URL + HA_TOKEN)
+bun run preview:report-emails # Write the deterministic report-email gallery under /tmp
 ```
 
 The `bun run test` run includes a workflow-bundle smoke test (`src/workflows/bundle.test.ts`) that runs the same webpack pass `Worker.create()` performs at startup. If you import an activity helper into a workflow file and this test starts failing, move the helper to `src/shared/` (a pure module with no Sentry/observability imports).
@@ -223,9 +238,7 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_NAMESPACE` — namespace used by Workers, clients, schedules, and gateway/control clients (default: `default`).
 - `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `workflows`, `agent`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
-- `TEMPORAL_WORKER_DEPLOYMENT_NAME`, `TEMPORAL_WORKER_BUILD_ID` — paired Worker Deployment identity for Workflow-only roles. Build IDs must be exact lowercase 40-character image Git SHAs; production images may derive the Build ID from baked `GIT_SHA` when only the deployment name is set.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL
@@ -315,7 +328,7 @@ Do not add this workflow to `SCHEDULES`. The ordinary
 ## Homelab audit (daily)
 
 `homelab-audit-daily` (cron `30 6 * * *` PT) runs the deterministic
-`runHomelabAuditWorkflow` on the default queue. Typed collectors own the six
+`runHomelabAuditWorkflow` on the infra queue. Typed collectors own the six
 required checks: Prometheus alerts, durable alert occurrences, Temporal
 failures/stalls, Kubernetes workload health, ArgoCD state, and Buildkite main
 failures with failed-job logs. An optional OpenRouter call may write only the
@@ -327,14 +340,15 @@ and is delivered through the shared reporter as partial.
 
 ## Temporal workflow failure → Alerts occurrences
 
-`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.DEFAULT`) sends an Alerts occurrence through Alertmanager with the specific error for **every** Temporal workflow execution that fails or times out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. The activity (`src/activities/workflow-failure-watch.ts`) heartbeats a best-effort batch checkpoint and conservatively rescans the full lookback on retry so the public visibility iterator cannot skip failures:
+`temporal-failure-watch` (cron `*/5 * * * *`, `pollWorkflowFailuresWorkflow` on `TASK_QUEUES.REPORTS`) sends Alerts occurrences through Alertmanager for Temporal workflow executions that fail or time out — not just the workflows/thresholds covered by the hand-maintained Prometheus rules in `packages/homelab/.../monitoring/rules/temporal.ts`. Each watcher workflow has a hard budget of 100 detailed execution alerts across all activity attempts. The activity (`src/activities/workflow-failure-watch.ts`) persists both cursor progress and consumed detail budget in its heartbeat checkpoint, and conservatively rescans the full lookback on retry so the public visibility iterator cannot skip failures or reset the cap:
 
 1. Queries the Temporal visibility API for `ExecutionStatus IN ("Failed", "TimedOut")` closed in the last 24 hours so a worker outage can be recovered by the next poll (safe to overlap because Alertmanager dedups alerts by label set and each alert expires from the execution's close time, not from the latest poll).
-2. For each match, calls `getHandle(workflowId, runId).fetchHistory()` and then `.result()`, with bounded concurrency and Alertmanager batches so recovery can page partial progress before the activity deadline. The history classifies timeouts as `workflow-task`, `activity`, `execution`, or `unknown`; an agent-task timeout before any `ACTIVITY_TASK_STARTED` event is explicitly a worker/task-queue availability failure, including scheduled-but-undispatched activities. The closed `result()` rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
+2. For at most the first 100 matches across all retries, calls `getHandle(workflowId, runId).fetchHistory()` and then `.result()`, with bounded concurrency and Alertmanager batches so recovery can page partial progress before the activity deadline. The history classifies timeouts as `workflow-task`, `activity`, `execution`, or `unknown`; an agent-task timeout before any `ACTIVITY_TASK_STARTED` event is explicitly a worker/task-queue availability failure, including scheduled-but-undispatched activities. The closed `result()` rejects immediately with `WorkflowFailedError`, whose `.cause` carries the same failure type/message/stack the Temporal UI shows.
 3. Builds one `AlertmanagerAlert` per execution via the pure `buildWorkflowFailureAlert` helper (`src/shared/workflow-failure-alert.ts`) — labels `{alertname: "TemporalWorkflowFailed", workflowType, taskQueue, workflowId, runId}` for identity/dedup, plus a summary/description with the actual error, timeout classification/diagnosis, and a direct link to the failed run in the Temporal UI (`temporalUiExecutionUrl`).
-4. Posts the batch via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager Alerts receiver.
+4. Counts every remaining execution directly from visibility metadata without fetching history, then posts one stable critical `TemporalWorkflowFailureOverflow` alert with the omitted total and counts by workflow type/status. The overflow post must succeed before the cursor advances across omitted executions.
+5. Posts via `createAlertmanagerPoster` (`src/lib/alertmanager.ts`, shared with the Xcode Cloud webhook), which routes through the existing Alertmanager Alerts receiver. Alertmanager groups the sampled details by normal `namespace`/`alertname`; the dashboard webhook independently caps each delivery at 100 alerts and records any upstream truncation.
 
-No exclusion list — every workflow type produces an occurrence on any failure. Revisit with an exclusion list if that proves too noisy.
+No exclusion list — every workflow type contributes either a detailed occurrence or the overflow counts.
 
 ## Generic agent tasks
 
@@ -471,10 +485,10 @@ Artifacts are cached by request digest rather than by run, so this re-reads
 whatever a production run already paid for instead of re-billing it — which is
 also why pinning a snapshot reuses more cache than reading the latest one.
 
-**Cluster RBAC** — the core and agent worker SAs get the cluster-wide read-only
+**Cluster RBAC** — the infra and agent worker SAs get the cluster-wide read-only
 `temporal-worker-audit-reader` ClusterRole (see
 `packages/homelab/src/cdk8s/src/resources/temporal/audit-rbac.ts`). A separate
-TaskNotes namespace Role grants `pods/exec` only to the core worker so the
+TaskNotes namespace Role grants `pods/exec` only to the infra worker so the
 engine-status token never leaves that pod. The agent worker is intentionally
 absent from every pod-exec RoleBinding; the agent therefore cannot
 exec into TaskNotes or deterministic maintenance targets even if it disregards
@@ -509,13 +523,31 @@ policy-capable CNI but is not treated as current enforcement. Restoring uid and
 credential isolation for the native SDK agent itself is tracked in
 `packages/docs/todos/agent-sdk-provider-isolation.md`. Generic agent
 clones of this public repository are unauthenticated, and
-new agent email delivery activities execute on `TASK_QUEUES.DEFAULT`. Replayed
+new agent email delivery activities execute on `TASK_QUEUES.REPORTS`. Replayed
 histories preserve their original agent-queue activity command for Temporal
 determinism; that credential-free compatibility activity delegates a fixed
-`deliverReportWorkflow` to `TASK_QUEUES.DEFAULT`. Postal and report-state S3
-credentials therefore remain in the core worker in both paths. The outer email
+`deliverReportWorkflow` to `TASK_QUEUES.REPORTS`. Postal and report-state S3
+credentials therefore remain in the reports worker in both paths. The outer email
 activity budget must exceed the complete delegated delivery retry window; both
 durations are defined in `src/shared/report-delivery-policy.ts`.
+
+### Human email presentation contract
+
+`ReportEnvelopeV1` is the persisted and replay-safe source of truth. Keep
+subject selection and the human projection in
+`src/shared/report-presentation.ts`, and keep HTML/plain-text formatting in
+`src/shared/report-renderer.ts`; do not add presentation fields to Workflow or
+Activity inputs. Both formats lead with outcome, summary, and action, then show
+findings, optional context, plain-language checks, and a quiet technical footer.
+The email omits internal report/workflow/run IDs, command text, coverage markers,
+and evidence-receipt IDs while the archived envelope and delivery state retain
+them. Evidence URLs attach to the relevant item as `View source`.
+
+Every current report type must have a tailored subject policy. A new report type
+may use the generic fallback only while its producer and tests are being built;
+do not ship it without adding the exact subject matrix. Run `bun run
+preview:report-emails` to inspect every current family and representative status
+without Temporal, Postal, or an LLM.
 
 ### Report delivery is exclusive, not merely deduplicated
 

@@ -34,6 +34,7 @@ import XCTest
 /// A test that calls `XCUIApplication().launch()` directly bypasses both. That
 /// is why every flow goes through here, and why this is a function rather than
 /// a documented convention.
+@MainActor
 enum TestApp {
     /// An address nothing can be listening on.
     ///
@@ -48,6 +49,7 @@ enum TestApp {
     ///   - serverAddress: where to point it. Defaults to ``unreachableServer``;
     ///     pass a spawned test server's URL for a flow that genuinely needs
     ///     one. ⚠️ Never pass a real address.
+    ///   - storageFolder: an isolated Application Support folder for this launch.
     ///   - file: the caller, so a launch failure blames the flow.
     ///   - line: the caller's line, for the same reason.
     ///   - teardown: receives a closure that terminates the app; pass
@@ -55,15 +57,17 @@ enum TestApp {
     /// - Returns: the launched application, already in the foreground.
     static func launch(
         serverAddress: String = unreachableServer,
+        storageFolder: String = "TaskNotes-UITests-\(UUID().uuidString)",
         file: StaticString = #filePath,
         line: UInt = #line,
-        teardown: (@escaping @Sendable () -> Void) -> Void
+        teardown: (@escaping @Sendable () async -> Void) -> Void
     ) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = [
             // The argument domain. `UserDefaults.string(forKey:)` reads this in
             // preference to the persisted value, and nothing writes it back.
             "-\(UITesting.serverAddressDefaultsKey)", serverAddress,
+            "-\(UITesting.storageFolderDefaultsKey)", storageFolder,
             UITesting.flagArgument,
         ]
         app.launch()
@@ -73,7 +77,7 @@ enum TestApp {
             file: file,
             line: line
         )
-        teardown { app.terminate() }
+        teardown { @MainActor in app.terminate() }
         return app
     }
 }

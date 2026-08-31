@@ -4,12 +4,11 @@ import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
 import { shutdownProductAnalytics } from "#src/analytics/product-analytics.ts";
-import { shutdownDynamicConfig } from "#src/config/dynamic.ts";
+import {
+  shutdownDynamicConfig,
+  temporalCallGraphTracing,
+} from "#src/config/dynamic.ts";
 import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
-
-// Initialize OTel tracing first so any subsequent module that opens a span
-// has a tracer provider attached. No-op when TELEMETRY_ENABLED is unset.
-initializeTracing();
 
 const logger = createLogger("app");
 
@@ -81,6 +80,16 @@ await initializeDynamicConfig({
     tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
   },
   metrics: featureFlagMetrics,
+});
+
+initializeTracing({
+  environment: configuration.environment,
+  namespace: configuration.temporalNamespace,
+  taskQueue: `scout-${configuration.environment}-workflows`,
+  workerRole: "scout-backend",
+});
+logger.info("Temporal call-graph tracing boot decision resolved", {
+  enabled: temporalCallGraphTracing(),
 });
 
 const { shutdownHttpServer, shutdownTemporal, shutdownDiscord } =

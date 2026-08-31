@@ -35,7 +35,7 @@ const LYCHEE_FIXTURE = JSON.stringify({
         duration: { secs: 0, nanos: 5 },
       },
     ],
-    "README.md": [
+    "packages/docs/wiki/src/content/docs/index.md": [
       {
         url: "https://gone.example-registry.dev/pkg",
         status: {
@@ -44,6 +44,15 @@ const LYCHEE_FIXTURE = JSON.stringify({
         },
         span: { line: 3, column: 1 },
         duration: { secs: 2, nanos: 0 },
+      },
+      {
+        url: "error:",
+        status: {
+          text: "Error building URL for \"/docs/overview/\": Cannot resolve root-relative link '/docs/overview/'",
+          details:
+            "Cannot resolve root-relative link '/docs/overview/': To resolve root-relative links in local files, provide a root dir",
+        },
+        span: { line: 8, column: 1 },
       },
     ],
   },
@@ -70,6 +79,7 @@ describe("parseLycheeReport", () => {
     expect(parsed.totalLinks).toBe(120);
     expect(parsed.successfulLinks).toBe(115);
     expect(parsed.excludedLinks).toBe(2);
+    expect(parsed.ignoredRootRelativeLinks).toBe(1);
     expect(parsed.deadLinks).toEqual([
       {
         url: "https://github.com/shepherdjerred/definitely-missing",
@@ -80,7 +90,7 @@ describe("parseLycheeReport", () => {
       },
       {
         url: "https://gone.example-registry.dev/pkg",
-        source: "README.md",
+        source: "packages/docs/wiki/src/content/docs/index.md",
         status: "Network error: Connection failed.",
         line: 3,
       },
@@ -108,7 +118,42 @@ describe("parseLycheeReport", () => {
       }),
     );
     expect(parsed.deadLinks).toEqual([]);
+    expect(parsed.ignoredRootRelativeLinks).toBe(0);
     expect(parsed.timedOutLinks).toEqual([]);
+  });
+
+  test("keeps root-relative diagnostics from unchecked sources actionable", () => {
+    const source =
+      "packages/dotfiles/dot_agents/skills/apple-hig-helper/markdown/action-sheets.md";
+    const status =
+      "Error building URL for \"/design/human-interface-guidelines/action-sheets\": Cannot resolve root-relative link '/design/human-interface-guidelines/action-sheets'";
+    const parsed = parseLycheeReport(
+      JSON.stringify({
+        total: 1,
+        successful: 0,
+        errors: 1,
+        timeouts: 0,
+        excludes: 0,
+        error_map: {
+          [source]: [
+            {
+              url: "error:",
+              status: { text: status },
+            },
+          ],
+        },
+        timeout_map: {},
+      }),
+    );
+
+    expect(parsed.ignoredRootRelativeLinks).toBe(0);
+    expect(parsed.deadLinks).toEqual([
+      {
+        url: "error:",
+        source,
+        status,
+      },
+    ]);
   });
 
   test("rejects non-JSON output instead of returning empty", () => {
@@ -143,6 +188,7 @@ describe("buildLinkRotReport", () => {
         totalLinks: 10,
         successfulLinks: 10,
         excludedLinks: 0,
+        ignoredRootRelativeLinks: 0,
         deadLinks: [],
         timedOutLinks: [],
       }),
@@ -172,6 +218,9 @@ describe("buildLinkRotReport", () => {
     expect(report.findings[0]?.detail).toContain(
       "packages/docs/wiki/src/content/docs/reference/homelab.md:12",
     );
+    expect(report.checks[0]?.summary).toContain(
+      "1 site-root-relative link was delegated",
+    );
     expect(report.findings[2]?.section).toBe("Timed-out links");
     expect(report.findings[2]?.detail).toContain(
       "Retry the link or investigate its reachability",
@@ -197,6 +246,7 @@ describe("buildLinkRotReport", () => {
         totalLinks: 1,
         successfulLinks: 0,
         excludedLinks: 0,
+        ignoredRootRelativeLinks: 0,
         deadLinks: [],
         timedOutLinks: [
           {

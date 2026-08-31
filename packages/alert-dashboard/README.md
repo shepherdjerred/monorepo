@@ -46,6 +46,11 @@ The API server listens on port 7341 and the Vite dev server on 7342 (proxying
 REST routes live under `/api/v1`; the UI and tRPC transport share the same
 process in production (`bun run start`).
 
+Webhook deliveries retain Alertmanager's `truncatedAlerts` count in their API
+evidence. Opening email lists at most 25 accepted occurrences and states both
+the remaining accepted count and any upstream Alertmanager truncation; every
+accepted occurrence remains in the SQLite ledger.
+
 ## Scripts
 
 | Command                      | What it does                                                        |
@@ -62,6 +67,32 @@ process in production (`bun run start`).
 | `bun run check:architecture` | dependency-cruiser layering rules (`scripts/check-architecture.ts`) |
 | `bun run migrate:deploy`     | Apply Prisma migrations (`prisma migrate deploy`)                   |
 | `bun run docker:build`       | Build the production image locally (`alert-dashboard:dev`)          |
+
+### Cancel incident email safely
+
+`email:cancel-incident` is dry-run by default. It selects only unsent,
+uncanceled outbox messages created in the explicit window where every linked
+occurrence is `TemporalWorkflowFailed`. Confirmed cancellations atomically
+record their time, operator, and reason; they do not delete ledger evidence.
+The email worker atomically claims an outbox row before calling Postal, and
+cancellation matches active unclaimed rows plus claims expired for five
+minutes, so an in-flight send cannot race cancellation while an abandoned
+claim can still be cleaned up. Claims are reclaimable after a process restart.
+Delivery is therefore at-least-once: reclaiming a claim can duplicate a Postal
+message if the original worker was still alive, but the claim token prevents
+that stale worker from recording the reclaimed row's result.
+
+```bash
+bun run email:cancel-incident -- \
+  --database file:/data/alert-dashboard.db \
+  --from 2026-08-29T22:47:35Z \
+  --to 2026-08-30T19:39:00Z \
+  --operator <operator> \
+  --reason "Scout retry amplification incident"
+
+# Repeat the reviewed command with --confirm to apply it. A claimed row is
+# excluded and remains owned by the sender.
+```
 
 ## Architecture
 

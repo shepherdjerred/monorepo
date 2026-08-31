@@ -3,6 +3,9 @@ import { PrismaLibSql } from "@prisma/adapter-libsql";
 import { Prisma, PrismaClient } from "#generated/prisma/client/index.js";
 import type {
   AlertLedgerRepository,
+  ClaimedPendingEmail,
+  EmailSendFailureInput,
+  EmailSendSuccessInput,
   IngestWebhookInput,
   IngestWebhookResult,
   PendingEmail,
@@ -26,6 +29,16 @@ import { replaceOccurrenceLabels } from "#infrastructure/prisma-labels";
 import { findObservedOccurrence } from "#infrastructure/prisma-occurrence";
 import { ingestWebhookAlert } from "#infrastructure/prisma-webhook-ingest";
 import {
+  claimPendingEmailRows,
+  markEmailFailedRow,
+  markEmailSentRow,
+} from "#infrastructure/prisma-email-claim";
+import {
+  cancelPendingEmails,
+  type CancelPendingEmailsInput,
+  type CancelPendingEmailsResult,
+} from "#infrastructure/prisma-email-cancellation";
+import {
   DeliveryIdSchema,
   OutboxIdSchema,
   SnapshotRunIdSchema,
@@ -38,7 +51,6 @@ import {
   type Summary,
   type SystemStatus,
 } from "#shared/schema";
-import { epochNanosecondsToInstantText } from "#shared/time";
 
 const RECONCILIATION_TRANSACTION_MAX_WAIT_MS = 15_000;
 const RECONCILIATION_TRANSACTION_TIMEOUT_MS = 60_000;
@@ -91,6 +103,7 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
             groupKey: input.payload.groupKey,
             status: input.payload.status,
             receiver: input.payload.receiver,
+            truncatedAlerts: input.payload.truncatedAlerts,
             ...(input.payload.notification_reason === undefined
               ? {}
               : { notificationReason: input.payload.notification_reason }),
@@ -108,7 +121,10 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
 
         let emailQueued = false;
         if (input.emailEnabled && newlyNotified.length > 0) {
-          const message = openingEmail(newlyNotified);
+          const message = openingEmail(
+            newlyNotified,
+            input.payload.truncatedAlerts,
+          );
           await transaction.emailOutbox.create({
             data: {
               id: OutboxIdSchema.parse(crypto.randomUUID()),
@@ -389,7 +405,11 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     limit: number,
   ): Promise<readonly PendingEmail[]> {
     return this.#prisma.emailOutbox.findMany({
-      where: { sentAtNs: null, nextAttemptAtNs: { lte: nowNs } },
+      where: {
+        sentAtNs: null,
+        canceledAtNs: null,
+        nextAttemptAtNs: { lte: nowNs },
+      },
       orderBy: { nextAttemptAtNs: "asc" },
       take: limit,
       select: {
@@ -402,30 +422,41 @@ export class PrismaAlertLedgerRepository implements AlertLedgerRepository {
     });
   }
 
-  async markEmailSent(id: string, sentAtNs: bigint): Promise<void> {
-    await this.#writeMutex.runExclusive(() =>
-      this.#prisma.emailOutbox.update({
-        where: { id },
-        data: { sentAtNs, attemptCount: { increment: 1 }, lastError: null },
-      }),
+  async claimPendingEmails(
+    nowNs: bigint,
+    limit: number,
+    sendingAtNs: bigint,
+  ): Promise<readonly ClaimedPendingEmail[]> {
+    return this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        claimPendingEmailRows(transaction, nowNs, limit, sendingAtNs),
+      ),
     );
   }
 
-  async markEmailFailed(
-    id: string,
-    failedAtNs: bigint,
-    nextAttemptAtNs: bigint,
-    error: string,
-  ): Promise<void> {
+  async cancelPendingEmails(
+    input: CancelPendingEmailsInput,
+  ): Promise<CancelPendingEmailsResult> {
+    return this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        cancelPendingEmails(transaction, input),
+      ),
+    );
+  }
+
+  async markEmailSent(input: EmailSendSuccessInput): Promise<void> {
     await this.#writeMutex.runExclusive(() =>
-      this.#prisma.emailOutbox.update({
-        where: { id },
-        data: {
-          nextAttemptAtNs,
-          attemptCount: { increment: 1 },
-          lastError: `${epochNanosecondsToInstantText(failedAtNs)} ${error}`,
-        },
-      }),
+      this.#prisma.$transaction((transaction) =>
+        markEmailSentRow(transaction, input),
+      ),
+    );
+  }
+
+  async markEmailFailed(input: EmailSendFailureInput): Promise<void> {
+    await this.#writeMutex.runExclusive(() =>
+      this.#prisma.$transaction((transaction) =>
+        markEmailFailedRow(transaction, input),
+      ),
     );
   }
 

@@ -110,7 +110,9 @@ function ExperienceCard(props: {
           {props.icon}
         </div>
         <div className="space-y-2">
-          <CardTitle className="text-2xl">{props.title}</CardTitle>
+          <CardTitle className="text-2xl" aria-level={2}>
+            {props.title}
+          </CardTitle>
           <CardDescription>{props.description}</CardDescription>
         </div>
       </CardHeader>

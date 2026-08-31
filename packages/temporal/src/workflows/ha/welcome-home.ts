@@ -1,4 +1,4 @@
-import { sleep } from "@temporalio/workflow";
+import { log, sleep } from "@temporalio/workflow";
 import {
   anyoneHome,
   callServiceUnchecked,
@@ -27,15 +27,10 @@ export async function welcomeHome(firstArrival = true): Promise<void> {
   // wait and reconfirm before any side-effects.
   await sleep(PRESENCE_COOLDOWN_SECONDS * 1000);
   if (!(await anyoneHome())) {
-    console.warn(
-      JSON.stringify({
-        level: "info",
-        msg: "welcomeHome debounced: no one is home",
-        component: "ha-presence",
-        workflow: "welcomeHome",
-        phase: "debounced",
-      }),
-    );
+    log.info("Welcome-home presence event debounced", {
+      reason: "no-one-home",
+      phase: "debounced",
+    });
     return;
   }
 

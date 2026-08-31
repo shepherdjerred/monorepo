@@ -1,4 +1,4 @@
-import { ApplicationFailure } from "@temporalio/workflow";
+import { ApplicationFailure, log } from "@temporalio/workflow";
 import {
   everyoneAway,
   sendNotification,
@@ -10,7 +10,7 @@ import {
 
 export async function runVacuumIfNotHome(): Promise<void> {
   if (!(await everyoneAway())) {
-    console.warn("Someone is home, skipping vacuum");
+    log.info("Skipping vacuum run", { reason: "someone-home" });
     await setOutcome("skipped", "someone-home");
     return;
   }
@@ -27,7 +27,7 @@ export async function runVacuumIfNotHome(): Promise<void> {
     // startEligibleVacuums fails on anomalous states, so reaching this branch
     // proves every unit is already cleaning/returning. This benign reason is
     // allow-listed for this workflow in the monitoring rules (temporal.ts).
-    console.warn("All vacuums already active, skipping");
+    log.info("Skipping vacuum run", { reason: "all-units-active" });
     await setOutcome("skipped", "all-units-active");
     return;
   }

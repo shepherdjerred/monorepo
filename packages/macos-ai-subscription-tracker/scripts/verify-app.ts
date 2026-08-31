@@ -43,8 +43,25 @@ assertPlistValue("LSUIElement", "true");
 run(["codesign", "--verify", "--deep", "--strict", "--verbose=2", appPath]);
 
 const resourceBundle = join(resources, "QuotaBar_QuotaBar.bundle");
-for (const logo of ["claude.svg", "codex.svg", "kimi.svg", "grok.svg"]) {
-  await access(join(resourceBundle, "Contents", "Resources", logo));
+const structuredResourceDirectory = join(
+  resourceBundle,
+  "Contents",
+  "Resources",
+);
+const resourceDirectory = (await Bun.file(
+  join(resourceBundle, "Contents", "Info.plist"),
+).exists())
+  ? structuredResourceDirectory
+  : resourceBundle;
+for (const logo of [
+  "claude.svg",
+  "codex.svg",
+  "antigravity.svg",
+  "cursor.svg",
+  "kimi.svg",
+  "grok.svg",
+]) {
+  await access(join(resourceDirectory, logo));
 }
 for (const asset of [
   "brim-mark-light.svg",
@@ -53,9 +70,9 @@ for (const asset of [
   "brim-menubar-critical.svg",
   "brim-menubar-unavailable.svg",
 ]) {
-  await access(join(resourceBundle, "Contents", "Resources", asset));
+  await access(join(resourceDirectory, asset));
 }
-await access(join(resourceBundle, "Contents", "Resources", "NOTICE.md"));
+await access(join(resourceDirectory, "NOTICE.md"));
 console.log(`Verified ${appPath}`);
 
 function assertPlistValue(key: string, expected: string) {

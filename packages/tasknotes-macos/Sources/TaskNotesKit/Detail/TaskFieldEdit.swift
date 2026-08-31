@@ -120,6 +120,69 @@ public enum TaskFieldEdit: Sendable, Equatable {
     }
 }
 
+/// One intentional recurrence configuration change.
+///
+/// Unlike an ordinary field edit, applying a recurrence may need to establish
+/// its Scheduled start at the same time. Keeping these fields in one update
+/// prevents a sync pass from ever seeing a rule with no anchor date. Every
+/// unrelated field remains ``UpdateTaskRequest/untouched``.
+public struct TaskRecurrenceEdit: Sendable, Equatable {
+    /// The canonical RRULE produced by the shared core.
+    public let rule: String
+
+    /// The effective Scheduled start as an ISO civil date.
+    public let start: String
+
+    /// What subsequent occurrences are measured from.
+    public let anchor: RecurrenceAnchor
+
+    /// Whether the user changed Scheduled, or recurrence is establishing it.
+    public let writesScheduled: Bool
+
+    public init(rule: String, start: String, anchor: RecurrenceAnchor, writesScheduled: Bool) {
+        self.rule = rule
+        self.start = start
+        self.anchor = anchor
+        self.writesScheduled = writesScheduled
+    }
+
+    /// Validate and serialize a core draft before constructing the update.
+    public static func build(
+        draft: CommonRecurrenceDraft,
+        start: String,
+        anchor: RecurrenceAnchor,
+        writesScheduled: Bool
+    ) -> Result<Self, CoreError> {
+        CoreErrors.capturing { () throws(CoreError) -> Self in
+            let builtRule = try CoreErrors.rethrowingCore("building a recurrence rule") {
+                try recurrenceBuildCommon(draft: draft, start: start)
+            }
+            return Self(
+                rule: builtRule,
+                start: start,
+                anchor: anchor,
+                writesScheduled: writesScheduled
+            )
+        }
+    }
+
+    /// The update touching only recurrence, its anchor, and when required its start.
+    public var payload: UpdateTaskRequest {
+        var request = UpdateTaskRequest.untouched
+        request.recurrence = .set(value: rule)
+        request.recurrenceAnchor = .set(value: anchor)
+        if writesScheduled {
+            request.scheduled = .set(value: start)
+        }
+        return request
+    }
+
+    /// The command that atomically records the recurrence configuration.
+    public func command(for taskId: TaskId) -> CommandInput {
+        .update(taskId: taskId, payload: payload)
+    }
+}
+
 extension UpdateTaskRequest {
     /// A partial update that changes nothing.
     ///

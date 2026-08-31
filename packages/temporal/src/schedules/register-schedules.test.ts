@@ -20,10 +20,19 @@ import {
 } from "./orphan-detection.ts";
 import { buildScheduleState } from "./schedule-state.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
+import {
+  buildExecutionStartMetadata,
+  type TemporalBootstrapMetadata,
+} from "#shared/execution-metadata.ts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
 } as const;
+
+const TEST_BOOTSTRAP: TemporalBootstrapMetadata = {
+  environment: "dev",
+  releaseCommit: "0123456789abcdef0123456789abcdef01234567",
+};
 
 const OWNED_SCOUT_REPORT_MEMO = {
   owner: "scout-for-lol",
@@ -132,11 +141,21 @@ test("dynamic agent schedules preserve state while moving future runs", () => {
     state: { paused: true, note: "operator pause" },
   };
 
-  expect(routeDynamicAgentTaskSchedule(existing)).toEqual({
+  const executionMetadata = buildExecutionStartMetadata({
+    bootstrap: TEST_BOOTSTRAP,
+    workflowType: "agentTaskWorkflow",
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    trigger: "schedule",
+    summary: "Run agentTaskWorkflow",
+    description: "Recurring agent task scheduled via the agent-task API.",
+  });
+
+  expect(routeDynamicAgentTaskSchedule(existing, TEST_BOOTSTRAP)).toEqual({
     ...existing,
     action: {
       ...existing.action,
       taskQueue: TASK_QUEUES.WORKFLOWS,
+      ...executionMetadata,
     },
   });
 });
@@ -153,9 +172,9 @@ test("dynamic schedule reconciliation rejects a forged ownership marker", () => 
     state: {},
   };
 
-  expect(() => routeDynamicAgentTaskSchedule(unrelated)).toThrow(
-    "must start agentTaskWorkflow",
-  );
+  expect(() =>
+    routeDynamicAgentTaskSchedule(unrelated, TEST_BOOTSTRAP),
+  ).toThrow("must start agentTaskWorkflow");
 });
 
 describe("declared schedules are never reconciled as dynamic agent tasks", () => {

@@ -9,8 +9,27 @@ import {
   withMainRepositoryScan,
 } from "./main-repository-scan.ts";
 const EXCERPT_LIMIT = 2000;
+const ROOT_RELATIVE_LINK_DIAGNOSTIC = "Cannot resolve root-relative link";
+const ROOT_RELATIVE_LINK_OWNER_PREFIXES = [
+  "packages/docs/wiki/src/content/docs/",
+  "packages/scout-for-lol/packages/docs-site/src/content/docs/",
+  "packages/sjer.red/src/pages/",
+  "packages/webring/example/src/content/",
+] as const;
 /** lychee reserves exit 2 for "broken links found" — a finding, not a crash. */
 const LYCHEE_FINDINGS_EXIT_CODE = 2;
+
+const hasOwningSiteCheck = (source: string): boolean => {
+  const normalizedSource = source.startsWith("./") ? source.slice(2) : source;
+  return ROOT_RELATIVE_LINK_OWNER_PREFIXES.some((prefix) =>
+    normalizedSource.startsWith(prefix),
+  );
+};
+
+const isIgnoredRootRelativeLink = (link: DeadLink): boolean =>
+  link.url === "error:" &&
+  link.status.includes(ROOT_RELATIVE_LINK_DIAGNOSTIC) &&
+  hasOwningSiteCheck(link.source);
 
 /**
  * Minimal schema for the slice of lychee's `--format json` output this scan
@@ -56,6 +75,7 @@ export type LinkRotScanResult = {
   totalLinks: number;
   successfulLinks: number;
   excludedLinks: number;
+  ignoredRootRelativeLinks: number;
   deadLinks: DeadLink[];
   timedOutLinks: DeadLink[];
   /** Bounded evidence excerpt (dead link per source). */
@@ -82,25 +102,39 @@ export type ParsedLycheeReport = {
   totalLinks: number;
   successfulLinks: number;
   excludedLinks: number;
+  ignoredRootRelativeLinks: number;
   deadLinks: DeadLink[];
   timedOutLinks: DeadLink[];
 };
 
-/** Pure: lychee JSON text → typed dead/timed-out link lists. */
+/**
+ * Pure: lychee JSON text → typed dead/timed-out link lists.
+ *
+ * lychee cannot resolve site-root-relative URLs from a repository containing
+ * multiple sites, so it emits these as synthetic `error:` records. The wiki,
+ * Scout docs, sjer.red, and webring example builds validate their links
+ * against their actual roots; root-relative diagnostics elsewhere remain
+ * actionable findings.
+ */
 export function parseLycheeReport(json: string): ParsedLycheeReport {
   const report = LycheeReportSchema.parse(JSON.parse(json));
+  const allDeadLinks = flattenLinkMap(report.error_map);
+  const ignoredRootRelativeLinks = allDeadLinks.filter((link) =>
+    isIgnoredRootRelativeLink(link),
+  ).length;
   return {
     totalLinks: report.total,
     successfulLinks: report.successful,
     excludedLinks: report.excludes,
-    deadLinks: flattenLinkMap(report.error_map),
+    ignoredRootRelativeLinks,
+    deadLinks: allDeadLinks.filter((link) => !isIgnoredRootRelativeLink(link)),
     timedOutLinks: flattenLinkMap(report.timeout_map),
   };
 }
 
 /** Pure: bounded plain-text evidence excerpt for the report receipt. */
 export function buildLinkRotExcerpt(parsed: ParsedLycheeReport): string {
-  const summary = `${String(parsed.totalLinks)} links checked, ${String(parsed.deadLinks.length)} dead, ${String(parsed.timedOutLinks.length)} timed out, ${String(parsed.excludedLinks)} excluded`;
+  const summary = `${String(parsed.totalLinks)} links checked, ${String(parsed.deadLinks.length)} dead, ${String(parsed.timedOutLinks.length)} timed out, ${String(parsed.excludedLinks)} excluded, ${String(parsed.ignoredRootRelativeLinks)} root-relative delegated`;
   const lines = parsed.deadLinks.map(
     (link) => `${link.status}: ${link.url} (${link.source})`,
   );

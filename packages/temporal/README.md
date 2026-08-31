@@ -7,15 +7,12 @@ generic report-only Codex SDK agent tasks through OpenRouter, including the dail
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
 
-Production runs one image in thirteen single-replica Kubernetes Deployments. The
+Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
-without a task queue. Stable and candidate credentialless `workflows`
-Deployments own deterministic Workflow execution on `monorepo-workflows` and
-temporarily poll every legacy central queue so open histories can finish where
-they started. Both register under the `monorepo-central-workflows` Worker
-Deployment with the image's exact Git SHA as Build ID and `AUTO_UPGRADE` as the
-default behavior. The domain roles
-own only Activity Workers, with separate registries, credentials, service
+without a task queue. The credentialless `workflows` role owns deterministic
+Workflow execution on `monorepo-workflows` and temporarily polls the remaining
+legacy central queues so open histories can finish where they started. The domain
+roles own only Activity Workers, with separate registries, credentials, service
 accounts, and concurrency budgets. The default `all` role composes every role in
 one process for local development.
 
@@ -50,6 +47,7 @@ bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint
 bun run worker-deployment inspect --build-id <image-git-sha>
 bun run worker-deployment status --build-id <image-git-sha>
+bun run worker-deployment status --target scout-beta --build-id <image-git-sha>
 ```
 
 Worker Deployment rollouts use the package-local `worker-deployment` command;
@@ -72,6 +70,15 @@ changes through the normal pull-request flow before the next candidate.
 If an operator host dies, use `inspect` before removing a stale lease: it is a
 read-only routing and lease query that remains usable when candidate health
 checks or alert windows are failing.
+The target defaults to `central`; `--target scout-beta` and `--target
+scout-prod` select the stage-local Scout deployment, queue, replay bundle,
+pinned canary, image repository, and catalog pins.
+Scout extraction uses two capable image releases. The pre-entrypoint pin creates
+no pod. Copy the first capable candidate pin to stable; that creates only the
+credentialless stable poller. A later distinct candidate pin creates the ramp
+target, and `start --stable-build-id` establishes stable before sending 10% to
+candidate. The embedded poller remains only to drain old unversioned histories.
+Production remains embedded until beta acceptance completes.
 
 ## Documentation
 

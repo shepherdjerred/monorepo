@@ -1,5 +1,6 @@
 import {
   ApplicationFailure,
+  log,
   proxyActivities,
   sleep,
   upsertMemo,
@@ -72,7 +73,7 @@ export async function setOutcome(
       reason,
     });
   } catch (error) {
-    console.warn(
+    log.warn(
       `setOutcome: failed to record ${outcome}/${reason}: ${String(error)}`,
     );
   }
@@ -257,7 +258,7 @@ export async function verifyState(
     }
     await sleep(options.retryDelaySeconds * 1000);
   }
-  console.warn(`Verify failed: ${entityId} did not reach expected state`);
+  log.warn("Home Assistant entity verification failed", { entityId });
   return false;
 }
 

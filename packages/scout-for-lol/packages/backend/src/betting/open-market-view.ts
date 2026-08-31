@@ -310,7 +310,11 @@ async function loadWeeklyParlayMarkets(
       subjects: subjects.map((subject) => subject.alias),
       legs: criteria.legs.map((leg) =>
         stripDiscordMarkdown(
-          legLine(leg, undefined, aliases.get(leg.subject) ?? leg.subject),
+          legLine({
+            leg,
+            current: undefined,
+            subjectAlias: aliases.get(leg.subject) ?? leg.subject,
+          }),
         ),
       ),
       qualification: mapQualification(criteria),

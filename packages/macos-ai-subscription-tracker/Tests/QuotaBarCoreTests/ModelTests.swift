@@ -124,6 +124,7 @@ final class ModelTests: XCTestCase {
       providers: [claude, codex],
       settings: settings,
       store: MemorySnapshotStore(),
+      historyStore: MemoryHistoryStore(),
       providerTimeout: .seconds(1)
     )
     XCTAssertEqual(model.overallStatus, .unavailable)
@@ -208,6 +209,7 @@ final class ModelTests: XCTestCase {
       providers: [provider],
       settings: settings,
       store: MemorySnapshotStore(),
+      historyStore: MemoryHistoryStore(),
       providerTimeout: .seconds(1)
     )
 
@@ -220,7 +222,10 @@ final class ModelTests: XCTestCase {
   func testEnablingProviderDuringRefreshSchedulesFollowUp() async {
     let codex = FakeProvider(
       id: .codex,
-      results: [.success(snapshot(provider: .codex, remaining: 75))],
+      results: [
+        .success(snapshot(provider: .codex, remaining: 75)),
+        .success(snapshot(provider: .codex, remaining: 70)),
+      ],
       delay: .milliseconds(80)
     )
     let kimi = FakeProvider(
@@ -235,6 +240,7 @@ final class ModelTests: XCTestCase {
       providers: [codex, kimi],
       settings: settings,
       store: MemorySnapshotStore(),
+      historyStore: MemoryHistoryStore(),
       providerTimeout: .seconds(1)
     )
     let initialRefresh = Task { await model.refresh() }
@@ -244,6 +250,9 @@ final class ModelTests: XCTestCase {
 
     await initialRefresh.value
     await waitUntil { await kimi.fetchCount == 1 }
+    await waitUntil { model.overallStatus == .healthy }
+    let codexFetchCount = await codex.fetchCount
+    XCTAssertEqual(codexFetchCount, 2)
     XCTAssertEqual(model.overallStatus, .healthy)
   }
 
