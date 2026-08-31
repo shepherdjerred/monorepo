@@ -333,7 +333,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
   {
     id: "glitter-context-refresh-weekly",
     workflowType: "runGlitterContextRefresh",
-    args: [{ maxEstimatedCostUsd: 40 }],
+    args: [{ maxEstimatedCostUsd: 1 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
     timing: {
       kind: "cron",
@@ -346,7 +346,7 @@ export const SCHEDULES: ScheduleDefinition[] = [
     // backoff. Keep the workflow deadline above that 14h2m retry envelope so
     // a late first-attempt failure does not strand the paid run.
     workflowExecutionTimeout: "15 hours",
-    memo: "Weekly GPT-5.6 Luna extraction and Sol synthesis of shared Glitter style cards plus evidence-backed relationship history from the verified corpus",
+    memo: "Weekly GPT-5.6 Luna extraction and synthesis of shared Glitter style cards plus evidence-backed relationship history from the verified corpus",
     initialPauseNote:
       "Awaiting credentialed dry-run against the first approved complete snapshot",
     requiredEnvironment: [

@@ -38,10 +38,8 @@ import {
   GenerationBudget,
   type GenerationBudgetSummary,
 } from "./glitter-context-refresh-budget.ts";
-import {
-  applyRelationshipProposals,
-  selectRelationshipEvidence,
-} from "./glitter-context-refresh-relationships.ts";
+import { applyRelationshipProposals } from "./glitter-context-refresh-relationships.ts";
+import { prepareRelationshipEvaluation } from "./glitter-context-refresh-relationship-batching.ts";
 import {
   GLITTER_GENERATION_STATE_PATH,
   GLITTER_PEOPLE_PATH,
@@ -50,7 +48,6 @@ import {
 } from "./glitter-context-refresh-paths.ts";
 import { selectStyleRefreshCandidates } from "./glitter-context-refresh-selection.ts";
 import {
-  shouldEvaluateRelationships,
   shouldFailRefreshRun,
   shouldPersistRelationshipEvaluation,
   updateGenerationState,
@@ -229,26 +226,17 @@ export const glitterContextRefreshActivities = {
           ),
         );
       }
-      const relationshipsEvaluated = shouldEvaluateRelationships(
-        generationState.relationshipSourceSnapshotChecksum,
-        corpus.reference.snapshotSha256,
-      );
-      const relationshipEvidence = relationshipsEvaluated
-        ? selectRelationshipEvidence({
-            people: peopleDocument.people,
-            messages: corpus.messages,
-          })
-        : [];
-      const relationshipGenerationInput = {
-        people: peopleDocument.people.map((person) => ({
-          id: person.id,
-          displayName: person.displayName,
-        })),
-        currentRelationships: relationshipsDocument.events.filter(
-          (event) => event.status === "current",
-        ),
-        evidence: relationshipEvidence,
-      };
+      const relationshipEvaluation = prepareRelationshipEvaluation({
+        state: generationState,
+        people: peopleDocument,
+        relationships: relationshipsDocument,
+        messages: corpus.messages,
+        snapshotSha256: corpus.reference.snapshotSha256,
+      });
+      const relationshipsEvaluated = relationshipEvaluation.evaluated;
+      const relationshipEvidence = relationshipEvaluation.evidence;
+      const relationshipGenerationInput =
+        relationshipEvaluation.generationInput;
       const generationBudget = new GenerationBudget(input.maxEstimatedCostUsd);
       const stylePreflightCost = candidates.reduce((total, candidate) => {
         const existingCard = existingCards.get(candidate.person.id);
@@ -362,6 +350,7 @@ export const glitterContextRefreshActivities = {
       const persistRelationshipEvaluation = shouldPersistRelationshipEvaluation(
         {
           evaluated: relationshipsEvaluated,
+          relationshipEvaluationProgressed: relationshipEvaluation.progressed,
           refreshedPeopleCount: refreshedPeople.size,
           relationshipProposalCount,
         },
@@ -373,6 +362,9 @@ export const glitterContextRefreshActivities = {
         snapshotSha256: corpus.reference.snapshotSha256,
         refreshedAt,
         relationshipsEvaluated: persistRelationshipEvaluation,
+        relationshipEvaluationComplete: relationshipEvaluation.complete,
+        relationshipEvaluationProgressed: relationshipEvaluation.progressed,
+        relationshipEvaluationCursor: relationshipEvaluation.cursor,
       });
       await Bun.write(
         `${repoDir}/${GLITTER_GENERATION_STATE_PATH}`,

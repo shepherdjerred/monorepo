@@ -1,14 +1,19 @@
 import { describe, expect, test } from "vitest";
 import {
+  GenerationStateDocumentSchema,
   PeopleDocumentSchema,
   RelationshipsDocumentSchema,
 } from "@shepherdjerred/glitter-context/schema";
 import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
 import type { RelationshipProposal } from "./glitter-context-refresh-generate.ts";
-import { applyRelationshipProposals } from "./glitter-context-refresh-relationships.ts";
+import {
+  applyRelationshipProposals,
+  selectRelationshipEvidenceBatch,
+} from "./glitter-context-refresh-relationships.ts";
 import {
   shouldEvaluateRelationships,
   shouldPersistRelationshipEvaluation,
+  updateGenerationState,
 } from "./glitter-context-refresh-state.ts";
 
 const people = PeopleDocumentSchema.parse({
@@ -227,10 +232,11 @@ describe("weekly relationship evaluation", () => {
     );
   });
 
-  test("does not persist a watermark-only change", () => {
+  test("requires relationship progress for a watermark-only change", () => {
     expect(
       shouldPersistRelationshipEvaluation({
         evaluated: true,
+        relationshipEvaluationProgressed: false,
         refreshedPeopleCount: 0,
         relationshipProposalCount: 0,
       }),
@@ -238,6 +244,7 @@ describe("weekly relationship evaluation", () => {
     expect(
       shouldPersistRelationshipEvaluation({
         evaluated: true,
+        relationshipEvaluationProgressed: false,
         refreshedPeopleCount: 0,
         relationshipProposalCount: 1,
       }),
@@ -245,9 +252,80 @@ describe("weekly relationship evaluation", () => {
     expect(
       shouldPersistRelationshipEvaluation({
         evaluated: true,
+        relationshipEvaluationProgressed: false,
         refreshedPeopleCount: 1,
         relationshipProposalCount: 0,
       }),
     ).toBe(true);
+  });
+
+  test("persists a partial cursor and only advances the watermark at completion", () => {
+    const state = GenerationStateDocumentSchema.parse({
+      schemaVersion: 1,
+      relationshipSourceSnapshotChecksum: "a".repeat(64),
+      relationshipRefreshedAt: "2026-07-01T00:00:00.000Z",
+      people: [],
+    });
+    const partial = updateGenerationState({
+      state,
+      refreshedPeople: new Set(),
+      candidates: [],
+      snapshotSha256: "b".repeat(64),
+      refreshedAt: "2026-07-02T00:00:00.000Z",
+      relationshipsEvaluated: true,
+      relationshipEvaluationComplete: false,
+      relationshipEvaluationProgressed: true,
+      relationshipEvaluationCursor: "60000000000000001",
+    });
+    expect(partial.relationshipSourceSnapshotChecksum).toBe("a".repeat(64));
+    expect(partial.relationshipEvaluationSnapshotChecksum).toBe("b".repeat(64));
+    expect(partial.relationshipEvaluationCursor).toBe("60000000000000001");
+
+    const complete = updateGenerationState({
+      state: partial,
+      refreshedPeople: new Set(),
+      candidates: [],
+      snapshotSha256: "b".repeat(64),
+      refreshedAt: "2026-07-03T00:00:00.000Z",
+      relationshipsEvaluated: true,
+      relationshipEvaluationComplete: true,
+      relationshipEvaluationProgressed: true,
+      relationshipEvaluationCursor: "60000000000000002",
+    });
+    expect(complete.relationshipSourceSnapshotChecksum).toBe("b".repeat(64));
+    expect(complete.relationshipEvaluationSnapshotChecksum).toBeNull();
+    expect(complete.relationshipEvaluationCursor).toBeNull();
+  });
+
+  test("continues a partial snapshot from the persisted cursor", () => {
+    const first = relationshipEvidence[0];
+    if (first === undefined) {
+      throw new Error("expected relationship evidence");
+    }
+    const result = selectRelationshipEvidenceBatch({
+      people,
+      messages: relationshipEvidence.map((entry) => entry.message),
+      snapshotSha256: "b".repeat(64),
+      evaluationSnapshotChecksum: "b".repeat(64),
+      evaluationCursor: first.message.messageId,
+    });
+    expect(result.evidence.map((entry) => entry.message.messageId)).toEqual([
+      "60000000000000002",
+    ]);
+    expect(result.complete).toBe(false);
+  });
+
+  test("continues a partial cursor when a newer snapshot arrives", () => {
+    const result = selectRelationshipEvidenceBatch({
+      people,
+      messages: relationshipEvidence.map((entry) => entry.message),
+      snapshotSha256: "b".repeat(64),
+      evaluationSnapshotChecksum: "a".repeat(64),
+      evaluationCursor: relationshipEvidence[0]?.message.messageId ?? null,
+    });
+    expect(result.evidence.map((entry) => entry.message.messageId)).toEqual([
+      "60000000000000002",
+    ]);
+    expect(result.complete).toBe(false);
   });
 });

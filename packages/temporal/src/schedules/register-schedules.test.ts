@@ -673,7 +673,7 @@ describe("Glitter context refresh schedule", () => {
       expression: "0 11 * * 1",
       timezone: "America/Los_Angeles",
     });
-    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 40 }]);
+    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 1 }]);
     expect(schedule.workflowExecutionTimeout).toBe("15 hours");
     expect(buildScheduleState(schedule, {}).paused).toBe(true);
     expect(

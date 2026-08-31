@@ -20,9 +20,12 @@ import {
   glitterPrompt,
   useGlitterObjectArtifact,
 } from "./glitter-context-refresh-llm.ts";
+import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 
-const RELATIONSHIP_MODEL = "gpt-5.6-sol";
-const RELATIONSHIP_MAX_OUTPUT_TOKENS = 6000;
+export const RELATIONSHIP_MODEL = "gpt-5.6-luna";
+export const RELATIONSHIP_MAX_OUTPUT_TOKENS = 6000;
+export const RELATIONSHIP_INPUT_BYTE_LIMIT = 600_000;
+const MINIMUM_RELATIONSHIP_EVIDENCE = 2;
 const DETERMINISTIC_SEED = 0;
 
 const RelationshipProposalSchema = z.strictObject({
@@ -88,17 +91,48 @@ function relationshipMessages(input: RelationshipGenerationInput) {
   );
 }
 
+export function buildBoundedRelationshipInput(
+  input: RelationshipGenerationInput,
+): {
+  evidence: RelationshipGenerationInput["evidence"];
+  messages: ReturnType<typeof relationshipMessages>;
+  inputBytes: number;
+} {
+  const minimumEvidence = Math.min(
+    MINIMUM_RELATIONSHIP_EVIDENCE,
+    input.evidence.length,
+  );
+  const maximumOmittedEvidence = input.evidence.length - minimumEvidence;
+  for (
+    let omittedEvidence = 0;
+    omittedEvidence <= maximumOmittedEvidence;
+    omittedEvidence += 1
+  ) {
+    const evidence = input.evidence.slice(
+      0,
+      input.evidence.length - omittedEvidence,
+    );
+    const messages = relationshipMessages({ ...input, evidence });
+    const inputBytes = inputTokenUpperBound(JSON.stringify(messages));
+    if (inputBytes <= RELATIONSHIP_INPUT_BYTE_LIMIT) {
+      return { evidence, messages, inputBytes };
+    }
+  }
+  throw new GlitterEvidenceError(
+    `fixed Glitter relationship input exceeds ${String(RELATIONSHIP_INPUT_BYTE_LIMIT)} bytes after reducing evidence to ${String(minimumEvidence)} messages`,
+  );
+}
+
 export function estimateRelationshipGenerationCost(
   input: RelationshipGenerationInput,
 ): number {
   if (input.evidence.length === 0) {
     return 0;
   }
+  const bounded = buildBoundedRelationshipInput(input);
   return worstCaseGenerationCostUsd({
     model: RELATIONSHIP_MODEL,
-    inputTokenUpperBound: inputTokenUpperBound(
-      JSON.stringify(relationshipMessages(input)),
-    ),
+    inputTokenUpperBound: bounded.inputBytes,
     outputTokenUpperBound: RELATIONSHIP_MAX_OUTPUT_TOKENS,
   });
 }
@@ -117,7 +151,8 @@ export async function proposeRelationships(input: {
     return [];
   }
   const callSite = "glitter-context-relationships";
-  const messages = relationshipMessages(input);
+  const bounded = buildBoundedRelationshipInput(input);
+  const messages = bounded.messages;
   const CompletionArtifactSchema = glitterObjectArtifactSchema(
     RelationshipProposalsSchema,
   );
@@ -139,7 +174,7 @@ export async function proposeRelationships(input: {
       input.budget.authorizeUncachedCall(
         worstCaseGenerationCostUsd({
           model: RELATIONSHIP_MODEL,
-          inputTokenUpperBound: inputTokenUpperBound(JSON.stringify(messages)),
+          inputTokenUpperBound: bounded.inputBytes,
           outputTokenUpperBound: RELATIONSHIP_MAX_OUTPUT_TOKENS,
         }),
       );
@@ -153,7 +188,7 @@ export async function proposeRelationships(input: {
         reasoningEffort: "medium",
         seed: DETERMINISTIC_SEED,
         exhaustionError:
-          "GPT-5.6 Sol did not return parsed relationship proposals",
+          "GPT-5.6 Luna did not return parsed relationship proposals",
       });
     },
   });

@@ -1,4 +1,5 @@
 import type { StyleCard } from "@shepherdjerred/glitter-context/schema";
+import type { CurrentMessage } from "#shared/glitter-corpus.ts";
 import {
   inputTokenUpperBound,
   worstCaseGenerationCostUsd,
@@ -12,9 +13,10 @@ import {
   type StyleChunkSummary,
   type StyleSynthesis,
 } from "./glitter-context-refresh-style-schemas.ts";
+import { SYNTHESIS_INPUT_BYTE_LIMIT } from "./glitter-context-refresh-synthesis-limit.ts";
 
 export const EXTRACTION_MODEL = "gpt-5.6-luna";
-export const SYNTHESIS_MODEL = "gpt-5.6-sol";
+export const SYNTHESIS_MODEL = "gpt-5.6-luna";
 export const EXTRACTION_MAX_OUTPUT_TOKENS = 4000;
 export const EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS = 8000;
 export const SYNTHESIS_MAX_OUTPUT_TOKENS = 28_000;
@@ -25,6 +27,8 @@ export const MAX_SYNTHESIS_REPAIR_ATTEMPTS = 3;
 export type SummarizedChunk = {
   key: string;
   month: string;
+  startTimestamp: string;
+  endTimestamp: string;
   summary: StyleChunkSummary;
   /**
    * How many of this chunk's messages actually reached the card as evidence:
@@ -38,10 +42,12 @@ type StyleSynthesisPromptInput = {
   candidate: StyleRefreshCandidate;
   existingCard: StyleCard;
   chunks: readonly SummarizedChunk[];
+  directRecentMessages: readonly CurrentMessage[];
   repair: {
     previous: StyleSynthesis;
     error: string;
   } | null;
+  includeRepairPrevious: boolean;
 };
 
 type StyleCostPromptBuilders = {
@@ -87,11 +93,15 @@ export function estimateStyleGenerationCost(
     candidate: input.candidate,
     existingCard: input.existingCard,
     chunks: [],
+    directRecentMessages: input.candidate.directRecentMessages,
     repair: null,
+    includeRepairPrevious: false,
   });
-  const synthesisInputUpperBound =
+  const synthesisInputUpperBound = Math.min(
+    SYNTHESIS_INPUT_BYTE_LIMIT,
     inputTokenUpperBound(synthesisBase) +
-    chunks.length * EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS;
+      chunks.length * EXTRACTION_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
+  );
   // A truncated synthesis retries at the higher ceiling, so every semantic
   // attempt after the first is priced against that ceiling.
   const synthesisInitialCall = worstCaseGenerationCostUsd({
@@ -103,8 +113,7 @@ export function estimateStyleGenerationCost(
   });
   // A synthesis repair likewise serializes the prior synthesis (bounded by the
   // retry ceiling) plus the error into its request, and may incur the same retry.
-  const synthesisRepairInput =
-    synthesisInputUpperBound + SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS;
+  const synthesisRepairInput = SYNTHESIS_INPUT_BYTE_LIMIT;
   const synthesisRepairCall = worstCaseGenerationCostUsd({
     model: SYNTHESIS_MODEL,
     inputTokenUpperBound: synthesisRepairInput,

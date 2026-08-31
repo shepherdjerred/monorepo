@@ -228,9 +228,27 @@
                   "type": "integer",
                   "minimum": 0
                 },
+                "omitted_summarized_messages": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 0
+                },
+                "omitted_chunks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 0
+                },
+                "omitted_direct_recent_messages": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "default": 0
+                },
                 "date_range": { "$ref": "#/$defs/dateRange" },
                 "strategy": {
-                  "const": "all-safe-monthly-chunks-plus-latest-500"
+                  "enum": [
+                    "all-safe-monthly-chunks-plus-latest-500",
+                    "bounded-safe-monthly-chunks-plus-latest-direct"
+                  ]
                 }
               }
             },

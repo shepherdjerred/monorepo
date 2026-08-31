@@ -22,6 +22,18 @@
     "relationshipRefreshedAt": {
       "oneOf": [{ "type": "string", "format": "date-time" }, { "type": "null" }]
     },
+    "relationshipEvaluationSnapshotChecksum": {
+      "oneOf": [
+        { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        { "type": "null" }
+      ]
+    },
+    "relationshipEvaluationCursor": {
+      "oneOf": [
+        { "type": "string", "pattern": "^\\d{17,20}$" },
+        { "type": "null" }
+      ]
+    },
     "people": {
       "type": "array",
       "items": {

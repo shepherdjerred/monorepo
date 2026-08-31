@@ -148,6 +148,29 @@ const candidate = {
 };
 const firstTimestamp = CurrentMessageSchema.parse(messages[0]).timestamp;
 const lastTimestamp = CurrentMessageSchema.parse(messages.at(-1)).timestamp;
+const summarizedChunk = {
+  key: "person:2025-01",
+  month: "2025-01",
+  startTimestamp: firstTimestamp,
+  endTimestamp: lastTimestamp,
+  summary: StyleChunkSummarySchema.parse({
+    observations: [],
+    representativeMessages: [
+      {
+        messageId: messages[0]?.messageId,
+        content: messages[0]?.content,
+      },
+    ],
+  }),
+  summarizedMessageCount: 30,
+};
+const completeEvidence = {
+  chunks: [summarizedChunk],
+  directRecentMessages: messages,
+  omittedChunks: 0,
+  omittedSummarizedMessages: 0,
+  omittedDirectRecentMessages: 0,
+};
 
 describe("Glitter generated style-card schemas", () => {
   test("use strict Zod contracts for OpenRouter structured output", () => {
@@ -162,8 +185,7 @@ describe("Glitter generated style-card schemas", () => {
       candidate,
       existingCard,
       sourceSnapshotSha256: "a".repeat(64),
-      chunkCount: 1,
-      summarizedMessages: 30,
+      ...completeEvidence,
       synthesis,
     });
 
@@ -197,6 +219,9 @@ describe("Glitter generated style-card schemas", () => {
         summarized_messages: 30,
         chunks: 1,
         direct_recent_messages: 30,
+        omitted_summarized_messages: 0,
+        omitted_chunks: 0,
+        omitted_direct_recent_messages: 0,
         date_range: {
           start: firstTimestamp,
           end: lastTimestamp,
@@ -205,6 +230,50 @@ describe("Glitter generated style-card schemas", () => {
       },
       notes:
         "Generated from the checksum-verified Discord corpus; human review required.",
+    });
+  });
+
+  test("records bounded omissions and the actual synthesis evidence range", () => {
+    const olderMessage = CurrentMessageSchema.parse({
+      ...messages[0],
+      messageId: "42345678901234499",
+      timestamp: "2026-06-01T00:00:00.000Z",
+      selectedObservedAt: "2026-06-01T00:00:01.000Z",
+      selectedObservationKey: "older-observation",
+      rawSha256: "f".repeat(64),
+    });
+    const boundedCandidate = {
+      ...candidate,
+      messages: [olderMessage, ...messages],
+      safeMessages: [olderMessage, ...messages],
+      totalMessageCount: 31,
+    };
+
+    const result = finalizeStyleSynthesis({
+      candidate: boundedCandidate,
+      existingCard,
+      sourceSnapshotSha256: "a".repeat(64),
+      chunks: [],
+      directRecentMessages: messages,
+      omittedChunks: 1,
+      omittedSummarizedMessages: 1,
+      omittedDirectRecentMessages: 1,
+      synthesis,
+    });
+
+    expect(result.coverage.evidence).toMatchObject({
+      safe_messages: 31,
+      summarized_messages: 0,
+      chunks: 0,
+      direct_recent_messages: 30,
+      omitted_summarized_messages: 1,
+      omitted_chunks: 1,
+      omitted_direct_recent_messages: 1,
+      date_range: {
+        start: firstTimestamp,
+        end: lastTimestamp,
+      },
+      strategy: "bounded-safe-monthly-chunks-plus-latest-direct",
     });
   });
 
@@ -222,8 +291,7 @@ describe("Glitter generated style-card schemas", () => {
         candidate,
         existingCard,
         sourceSnapshotSha256: "a".repeat(64),
-        chunkCount: 1,
-        summarizedMessages: 30,
+        ...completeEvidence,
         synthesis: invalidSynthesis,
       }),
     ).toThrow("quotes cites unknown message IDs");
@@ -243,8 +311,7 @@ describe("Glitter generated style-card schemas", () => {
         candidate,
         existingCard,
         sourceSnapshotSha256: "a".repeat(64),
-        chunkCount: 1,
-        summarizedMessages: 30,
+        ...completeEvidence,
         synthesis: invalidSynthesis,
       }),
     ).toThrow(

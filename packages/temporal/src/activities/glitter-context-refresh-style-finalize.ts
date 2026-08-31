@@ -4,7 +4,9 @@ import {
   type StyleCard,
   type StyleCardV2,
 } from "@shepherdjerred/glitter-context/schema";
+import type { CurrentMessage } from "#shared/glitter-corpus.ts";
 import type { StyleRefreshCandidate } from "./glitter-context-refresh-selection.ts";
+import type { SummarizedChunk } from "./glitter-context-refresh-style-generation-cost.ts";
 import { requireKnownEvidence } from "./glitter-context-refresh-evidence.ts";
 import {
   STYLE_ARRAY_FIELDS,
@@ -235,20 +237,26 @@ export function finalizeStyleSynthesis(input: {
   candidate: StyleRefreshCandidate;
   existingCard: StyleCard;
   sourceSnapshotSha256: string;
-  chunkCount: number;
-  /**
-   * Messages that actually reached the card as evidence, summed from the chunks
-   * that yielded something. Not `safeMessages.length`: a chunk the model could
-   * not summarize contributes nothing, and counting it would let the card claim
-   * a month it silently omits.
-   */
-  summarizedMessages: number;
+  chunks: readonly SummarizedChunk[];
+  directRecentMessages: readonly CurrentMessage[];
+  omittedChunks: number;
+  omittedSummarizedMessages: number;
+  omittedDirectRecentMessages: number;
   synthesis: StyleSynthesis;
 }): StyleCardV2 {
   const allMessagesById = new Map(
     input.candidate.safeMessages.map((message) => [message.messageId, message]),
   );
-  const knownEvidenceIds = new Set(allMessagesById.keys());
+  const summarizedEvidenceIds = input.chunks.flatMap((chunk) => [
+    ...chunk.summary.observations.flatMap(
+      (observation) => observation.evidenceMessageIds,
+    ),
+    ...chunk.summary.representativeMessages.map((message) => message.messageId),
+  ]);
+  const knownEvidenceIds = new Set([
+    ...summarizedEvidenceIds,
+    ...input.directRecentMessages.map((message) => message.messageId),
+  ]);
   const fields = applyPatches({
     existingCard: input.existingCard,
     synthesis: input.synthesis,
@@ -281,18 +289,39 @@ export function finalizeStyleSynthesis(input: {
   );
   const firstCorpusMessage = input.candidate.messages[0];
   const lastCorpusMessage = input.candidate.messages.at(-1);
-  const firstSafeMessage = input.candidate.safeMessages[0];
-  const lastSafeMessage = input.candidate.safeMessages.at(-1);
-  if (
-    firstCorpusMessage === undefined ||
-    lastCorpusMessage === undefined ||
-    firstSafeMessage === undefined ||
-    lastSafeMessage === undefined
-  ) {
+  if (firstCorpusMessage === undefined || lastCorpusMessage === undefined) {
     throw new Error(
       `style refresh candidate ${input.candidate.person.id} lacks coverage messages`,
     );
   }
+  const summarizedMessages = input.chunks.reduce(
+    (total, chunk) => total + chunk.summarizedMessageCount,
+    0,
+  );
+  const evidenceStarts = [
+    ...input.chunks
+      .filter((chunk) => chunk.summarizedMessageCount > 0)
+      .map((chunk) => chunk.startTimestamp),
+    ...input.directRecentMessages.map((message) => message.timestamp),
+  ].toSorted();
+  const evidenceEnds = [
+    ...input.chunks
+      .filter((chunk) => chunk.summarizedMessageCount > 0)
+      .map((chunk) => chunk.endTimestamp),
+    ...input.directRecentMessages.map((message) => message.timestamp),
+  ].toSorted();
+  const firstEvidenceTimestamp = evidenceStarts[0];
+  const lastEvidenceTimestamp = evidenceEnds.at(-1);
+  if (
+    firstEvidenceTimestamp === undefined ||
+    lastEvidenceTimestamp === undefined
+  ) {
+    throw new Error(
+      `style refresh candidate ${input.candidate.person.id} has no bounded synthesis evidence`,
+    );
+  }
+  const boundedEvidence =
+    input.omittedChunks > 0 || input.omittedDirectRecentMessages > 0;
   const contentForIds = (messageIds: readonly string[]): string[] =>
     messageIds.map((messageId) => {
       const message = allMessagesById.get(messageId);
@@ -315,17 +344,23 @@ export function finalizeStyleSynthesis(input: {
       },
       evidence: {
         safe_messages: input.candidate.safeMessages.length,
-        summarized_messages: input.summarizedMessages,
-        chunks: input.chunkCount,
-        direct_recent_messages: input.candidate.directRecentMessages.length,
+        summarized_messages: summarizedMessages,
+        chunks: input.chunks.length,
+        direct_recent_messages: input.directRecentMessages.length,
+        omitted_summarized_messages: input.omittedSummarizedMessages,
+        omitted_chunks: input.omittedChunks,
+        omitted_direct_recent_messages: input.omittedDirectRecentMessages,
         date_range: {
-          start: firstSafeMessage.timestamp,
-          end: lastSafeMessage.timestamp,
+          start: firstEvidenceTimestamp,
+          end: lastEvidenceTimestamp,
         },
-        strategy: "all-safe-monthly-chunks-plus-latest-500",
+        strategy: boundedEvidence
+          ? "bounded-safe-monthly-chunks-plus-latest-direct"
+          : "all-safe-monthly-chunks-plus-latest-500",
       },
-      notes:
-        "Generated from the checksum-verified Discord corpus; human review required.",
+      notes: boundedEvidence
+        ? "Generated from byte-bounded evidence selected from the checksum-verified Discord corpus; omitted evidence is counted explicitly; human review required."
+        : "Generated from the checksum-verified Discord corpus; human review required.",
     },
     ...fields,
     summary,
