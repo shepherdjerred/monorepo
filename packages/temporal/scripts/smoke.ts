@@ -156,6 +156,12 @@ async function main(): Promise<void> {
     "TEMPORAL_NAMESPACE=prod",
     "-e",
     "TEMPORAL_WORKER_ROLE=control",
+    // The control role resolves feature flags at startup and refuses to boot
+    // without an explicit mode. There is no Flipt to reach from a smoke
+    // container, and this harness asserts the worker boots and then fails on
+    // Temporal — not how flags resolve — so it runs on call-site defaults.
+    "-e",
+    "FEATURE_FLAGS_MODE=disabled",
     "-e",
     "SENTRY_DSN=",
     IMAGE,

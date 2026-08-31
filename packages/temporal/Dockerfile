@@ -53,6 +53,7 @@ COPY --parents \
   packages/glitter-context \
   packages/llm-models \
   packages/scout-for-lol/packages/data \
+  packages/seaweedfs-backup \
   packages/toolkit \
   ./
 # llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
@@ -134,7 +135,11 @@ ARG KOMETA_VERSION=2.4.5
 ARG POSTGRESQL_BINARIES_VERSION=16.15.0
 ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 
-# --- Base system deps: ca-certificates, curl, git, and the pod-local agent firewall ---
+# --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
+# libxml2 is for the postgresql-binaries `postgres` server below: only that one
+# binary links it (pg_isready and initdb do not, which is why the step's own
+# version checks passed while `postgres --version` died on a missing
+# libxml2.so.2). Both the x86_64 and aarch64 tarballs need it.
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
 # into a build failure here. Reproducibility would need a snapshot archive, not
@@ -142,7 +147,7 @@ ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables util-linux; \
+    apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables libxml2 util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---
@@ -392,7 +397,8 @@ RUN set -e; \
     done; \
     rm /tmp/postgresql.tar.gz /tmp/postgresql.sha256; \
     pg_isready --version; \
-    initdb --version
+    initdb --version; \
+    postgres --version
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
@@ -414,6 +420,7 @@ COPY --parents \
   packages/llm-runtime \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \
+  packages/seaweedfs-backup \
   ./
 
 # Built artifacts from the build stage.
