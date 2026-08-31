@@ -698,6 +698,7 @@
         "database contract: postgresql sha256:23e11f8835aab768c37869fc00366a11c7866e07bf990b0a5856f6b858a9d6a3",
         "database contract: postgresql sha256:f0ab572acd02c57ac7b2464aec1a60bbf9e852d956f53cba2e7ea87d9b23d480",
         "database contract: postgresql sha256:146077c0658715f5f15493d33e58923a1dd31ff65a97976b12359c39ffabb1d7",
+        "database contract: postgresql sha256:45c69df29cbc9b77fb9c578d31a902a6c404a56cbf029e727f3f6e323ba3e798",
         "database contract: postgresql sha256:45c69df29cbc9b77fb9c578d31a902a6c404a56cbf029e727f3f6e323ba3e798"
       ]
     },
@@ -1467,7 +1468,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13290@sha256:7a44c1935d3a9c86be3960bd25f107cbfcaf26d192345b139236244d76a52c6b",
+      "value": "2.0.0-13301@sha256:cbae66e92c1c757dfb4449eb9e0efe5a926c20befc70813b55ee37589c447f7a",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
