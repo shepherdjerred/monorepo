@@ -7,9 +7,9 @@
       "buildNumber": 13290
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-13290",
-      "digest": "sha256:492ed118b6c3f1db816eec53dcfb03c1ef9e429e47af579d1399dea45ead9b9d",
-      "buildNumber": 13290
+      "buildNumber": 13338,
+      "version": "2.0.0-13338",
+      "digest": "sha256:8bf5d6d3c90b97c1b81a0db5552d242d6ebf163264b51287f5d1a4da121f54a8"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -47,9 +47,9 @@
       "buildNumber": 13290
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-13290",
-      "digest": "sha256:45c69df29cbc9b77fb9c578d31a902a6c404a56cbf029e727f3f6e323ba3e798",
-      "buildNumber": 13290
+      "buildNumber": 13340,
+      "version": "2.0.0-13340",
+      "digest": "sha256:14598e23735ce95e95790c4279bff5d487956be1285df2ec68ac2e58b83ac30a"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -87,9 +87,9 @@
       "buildNumber": 13000
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 13301,
       "version": "2.0.0-13301",
-      "digest": "sha256:cbae66e92c1c757dfb4449eb9e0efe5a926c20befc70813b55ee37589c447f7a"
+      "digest": "sha256:cbae66e92c1c757dfb4449eb9e0efe5a926c20befc70813b55ee37589c447f7a",
+      "buildNumber": 13301
     }
   }
 }
