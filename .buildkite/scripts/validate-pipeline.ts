@@ -32,6 +32,7 @@ import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
 import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
 import { validatePipelineResourceContracts } from "./validate-pipeline-resources.ts";
+import { validateTrmnlPipeline } from "./validate-pipeline-trmnl.ts";
 import { validatePipelineClarity } from "./validate-pipeline-clarity.ts";
 import { validateReportingPipeline } from "./validate-reporting-pipeline.ts";
 import { fixedCorpusMode, lanePaths, summarySteps } from "./migration-core.ts";
@@ -53,6 +54,7 @@ const PATH_GATED_PR_KEYS = new Set([
   "tasknotes-native-pr",
   "playwright-e2e-pr",
   "resume-build-pr",
+  "trmnl-validate-pr",
   "docker-e2e-pr",
   "trivy",
   "semgrep",
@@ -98,6 +100,7 @@ const { stepStarts, keys, stepBlocks } = collectStepBlocks(lines, {
 });
 
 validatePipelineResourceContracts(pipeline, stepBlocks);
+validateTrmnlPipeline(stepBlocks);
 for (const [key, block] of stepBlocks) {
   if (block.includes("command:") && !block.includes("timeout_in_minutes:")) {
     fail(`command step ${key} must declare timeout_in_minutes`);
@@ -412,7 +415,7 @@ for (const [stepKey, expectedRequests] of [
     stepBlocks.get(stepKey),
     "container-0",
   );
-  if (!commandContainer.includes(expectedRequests)) {
+  if (!commandContainer.replaceAll(/\s+/g, " ").includes(expectedRequests)) {
     fail(
       `${stepKey} must transfer the checkout tmpfs memory request to the checkout container`,
     );

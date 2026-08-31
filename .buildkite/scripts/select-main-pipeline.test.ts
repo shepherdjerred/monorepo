@@ -212,6 +212,15 @@ test("keeps native macOS lanes independently selectable", () => {
   expect(hkctlOnly.has("quotabar-macos-main")).toBe(false);
   expect(hkctlOnly.has("tasknotes-native-main")).toBe(false);
 
+});
+
+test("keeps TRMNL publication independently selectable", () => {
+  const selected = selectedKeys(steps, new Map([["trmnl", true]]));
+  expect(selected.has("trmnl-publish")).toBe(true);
+  expect(selected.has("verify")).toBe(true);
+});
+
+test("keeps QuotaBar and TaskNotes native lanes independently selectable", () => {
   const quotaOnly = selectedKeys(
     steps,
     new Map([

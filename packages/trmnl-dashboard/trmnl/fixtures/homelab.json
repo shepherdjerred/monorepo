@@ -1,0 +1,50 @@
+{
+  "screen": "homelab",
+  "generated_at": "2026-08-30T19:42:00.000Z",
+  "generated_time": "12:42 PM",
+  "status": "warning",
+  "summary": "1 warning alert",
+  "bugsink": {
+    "status": "ok",
+    "unresolved": 3,
+    "projects": [
+      { "name": "Dashboard", "unresolved": 2 },
+      { "name": "Automation", "unresolved": 1 }
+    ]
+  },
+  "kubernetes": {
+    "status": "ok",
+    "ready_nodes": 2,
+    "total_nodes": 2,
+    "unhealthy_pods": 0
+  },
+  "storage": {
+    "status": "ok",
+    "max_disk_used_percent": 67,
+    "volumes": [
+      { "name": "tank/appdata", "used_percent": 67 },
+      { "name": "tank/media", "used_percent": 54 },
+      { "name": "tank/backups", "used_percent": 41 }
+    ]
+  },
+  "hardware": {
+    "status": "ok",
+    "cpu_used_percent": 23,
+    "memory_used_percent": 61
+  },
+  "alerts": {
+    "status": "warning",
+    "open": 1,
+    "critical": 0,
+    "warning": 1,
+    "info": 0,
+    "recent": [
+      {
+        "severity": "warning",
+        "alertname": "BackupAge",
+        "summary": "Nightly backup is running late"
+      }
+    ]
+  },
+  "errors": []
+}

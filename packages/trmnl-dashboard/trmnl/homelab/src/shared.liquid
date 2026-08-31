@@ -1,0 +1,10 @@
+{% assign dashboard_status = status | upcase %}
+{% capture cpu_usage %}{% if hardware.cpu_used_percent %}{{ hardware.cpu_used_percent }}%{% else %}n/a{% endif %}{% endcapture %}
+{% capture memory_usage %}{% if hardware.memory_used_percent %}{{ hardware.memory_used_percent }}%{% else %}n/a{% endif %}{% endcapture %}
+{% capture disk_usage %}{% if storage.max_disk_used_percent %}{{ storage.max_disk_used_percent }}%{% else %}n/a{% endif %}{% endcapture %}
+{% capture dashboard_title_bar %}
+  <div class="title_bar">
+    <span class="title">Homelab</span>
+    <span class="instance">{{ dashboard_status }} · {{ generated_time }}</span>
+  </div>
+{% endcapture %}

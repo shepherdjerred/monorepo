@@ -105,6 +105,12 @@ common:
         secretKeyRef:
           name: buildkite-release-openrouter-credentials
           key: OPENROUTER_API_KEY
+  - grant_trmnl: &grant_trmnl
+      name: TRMNL_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: buildkite-trmnl-credentials
+          key: TRMNL_API_KEY
   - grant_chartmuseum_username: &grant_chartmuseum_username
       name: CHARTMUSEUM_USERNAME
       valueFrom:
@@ -1346,6 +1352,105 @@ steps:
                   # The checkout container separately requests its 1Gi tmpfs charge.
                   requests: { cpu: "1", memory: "2Gi" }
                   limits: { cpu: "2", memory: "4Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+
+  - label: ":frame_with_picture: TRMNL layouts (PR)"
+    key: trmnl-validate-pr
+    timeout_in_minutes: 20
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/buildkite-handoff.ts"
+        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - "packages/trmnl-dashboard/**"
+        - "packages/version-catalog/**"
+    cancel_on_build_failing: true
+    depends_on: verify
+    command: |
+      packages/trmnl-dashboard/scripts/trmnlp-ci.sh self-test
+      packages/trmnl-dashboard/scripts/trmnlp-ci.sh validate
+    artifact_paths:
+      - "packages/trmnl-dashboard/trmnl/*/_build/*.html"
+      - "packages/trmnl-dashboard/trmnl/*/_build/*.png"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: trmnl-validate-pr
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
+            containers:
+              - *checkout_container
+              - name: container-0
+                # renovate: datasource=docker depName=trmnl/trmnlp versioning=semver
+                image: "trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - *env_buildkite_shell
+                resources:
+                  requests:
+                    { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                  limits: { cpu: "2", memory: "4Gi", ephemeral-storage: "8Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+
+  - label: ":frame_with_picture: TRMNL publish (main)"
+    key: trmnl-publish
+    timeout_in_minutes: 20
+    if: build.branch == pipeline.default_branch
+    cancel_on_build_failing: true
+    depends_on: verify
+    concurrency: 1
+    concurrency_group: monorepo/trmnl-publish
+    command: packages/trmnl-dashboard/scripts/trmnlp-ci.sh publish
+    artifact_paths:
+      - "packages/trmnl-dashboard/trmnl/*/_build/*.html"
+      - "packages/trmnl-dashboard/trmnl/*/_build/*.png"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: trmnl-publish
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
+            containers:
+              - *checkout_container
+              - name: container-0
+                # renovate: datasource=docker depName=trmnl/trmnlp versioning=semver
+                image: "trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - *env_buildkite_shell
+                  - *grant_trmnl
+                resources:
+                  requests:
+                    { cpu: "1", memory: "2Gi", ephemeral-storage: "2Gi" }
+                  limits: { cpu: "2", memory: "4Gi", ephemeral-storage: "8Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors
@@ -3624,6 +3729,7 @@ steps:
       - tasknotes-native-main
       - playwright-e2e-main
       - resume-build-main
+      - trmnl-publish
       - docker-e2e-main
       - images
       - sites

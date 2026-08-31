@@ -1,0 +1,71 @@
+{
+  "screen": "home",
+  "generated_at": "2026-08-30T19:42:00.000Z",
+  "generated_time": "12:42 PM",
+  "status": "warning",
+  "summary": "2 items need attention",
+  "counts": {
+    "unavailable": 1,
+    "low_battery": 1
+  },
+  "presence": [
+    {
+      "entity_id": "person.resident",
+      "label": "Resident",
+      "state": "Home",
+      "status": "ok"
+    },
+    {
+      "entity_id": "device_tracker.phone",
+      "label": "Phone",
+      "state": "Home",
+      "status": "ok"
+    }
+  ],
+  "security": [
+    {
+      "entity_id": "lock.front_door",
+      "label": "Front Door",
+      "state": "Locked",
+      "status": "ok"
+    },
+    {
+      "entity_id": "binary_sensor.garage",
+      "label": "Garage",
+      "state": "Closed",
+      "status": "ok"
+    }
+  ],
+  "climate": [
+    {
+      "entity_id": "climate.downstairs",
+      "label": "Downstairs",
+      "state": "72 F",
+      "status": "ok"
+    },
+    {
+      "entity_id": "sensor.indoor_humidity",
+      "label": "Humidity",
+      "state": "44%",
+      "status": "ok"
+    }
+  ],
+  "unavailable": [
+    {
+      "entity_id": "sensor.garden_temperature",
+      "label": "Garden Sensor",
+      "state": "Unavailable",
+      "status": "warning"
+    }
+  ],
+  "low_batteries": [
+    {
+      "entity_id": "sensor.guest_remote_battery",
+      "label": "Guest Remote",
+      "state": "14",
+      "status": "warning",
+      "detail": "14%"
+    }
+  ],
+  "errors": []
+}

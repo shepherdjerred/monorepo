@@ -1,0 +1,7 @@
+{% assign dashboard_status = status | upcase %}
+{% capture dashboard_title_bar %}
+  <div class="title_bar">
+    <span class="title">Home Assistant</span>
+    <span class="instance">{{ dashboard_status }} · {{ generated_time }}</span>
+  </div>
+{% endcapture %}

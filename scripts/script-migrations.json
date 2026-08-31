@@ -568,6 +568,11 @@
       ]
     },
     {
+      "source": "packages/trmnl-dashboard/scripts/trmnlp-ci.sh",
+      "disposition": "retain",
+      "reason": "The pinned upstream trmnlp image provides POSIX shell and Ruby but intentionally excludes the monorepo Bun toolchain"
+    },
+    {
       "source": "scripts/check-env-var-names.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",

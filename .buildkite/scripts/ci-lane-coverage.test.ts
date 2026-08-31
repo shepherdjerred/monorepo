@@ -71,6 +71,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   "tasknotes-native": "tasknotes-native-pr",
   playwright: "playwright-e2e-pr",
   resume: "resume-build-pr",
+  trmnl: "trmnl-validate-pr",
   "docker-e2e": "docker-e2e-pr",
   images: null,
   "ci-base": null,

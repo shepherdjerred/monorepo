@@ -1,0 +1,39 @@
+<div class="layout layout--col gap--small">
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content">
+      <span class="title">Home</span>
+      <span class="value value--small">{{ summary }}</span>
+    </div>
+  </div>
+
+  <div class="grid grid--cols-2 gap--small">
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content"><span class="title">Unavailable</span><span class="value">{{ counts.unavailable }}</span></div>
+    </div>
+    <div class="item">
+      <div class="meta"></div>
+      <div class="content"><span class="title">Low Battery</span><span class="value">{{ counts.low_battery }}</span></div>
+    </div>
+  </div>
+
+  <div>
+    <span class="label label--underline">Presence & Security</span>
+    <table class="table table--condensed">
+      <tbody>
+        {% for entity in presence limit: 2 %}<tr><td>{{ entity.label }}</td><td class="text--right">{{ entity.state }}</td></tr>{% endfor %}
+        {% for entity in security limit: 2 %}<tr><td>{{ entity.label }}</td><td class="text--right">{{ entity.state }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <span class="label label--underline">Attention</span>
+    {% for entity in unavailable limit: 2 %}<div>{{ entity.label }} · {{ entity.state }}</div>{% endfor %}
+    {% for entity in low_batteries limit: 2 %}<div>{{ entity.label }} · {{ entity.detail }}</div>{% endfor %}
+    {% if counts.unavailable == 0 and counts.low_battery == 0 %}<div>All clear</div>{% endif %}
+  </div>
+</div>
+
+{{ dashboard_title_bar }}

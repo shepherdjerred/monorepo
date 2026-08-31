@@ -1,0 +1,21 @@
+#
+# Changes to this file will be overwritten by `trmnlp pull`.
+#
+---
+strategy: polling
+no_screen_padding: "no"
+dark_mode: "no"
+static_data: ""
+polling_verb: get
+framework_version: 3.1.1
+polling_url: https://trmnl.sjer.red/api/home
+polling_headers: x-api-key={{ api_key | url_encode }}
+name: Home Assistant Status
+description: Home status and device health.
+refresh_interval: 15
+id: 303046
+custom_fields:
+  - keyname: api_key
+    field_type: password
+    name: API Key
+    description: Dashboard polling key stored only in TRMNL.

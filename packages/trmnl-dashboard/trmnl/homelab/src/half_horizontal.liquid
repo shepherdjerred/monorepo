@@ -1,0 +1,25 @@
+<div class="layout layout--col gap--small">
+  <div class="grid grid--cols-4 gap--small">
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">K8s</span><span class="value value--small">{{ kubernetes.ready_nodes }}/{{ kubernetes.total_nodes }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Alerts</span><span class="value">{{ alerts.open }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Bugsink</span><span class="value">{{ bugsink.unresolved }}</span></div></div>
+    <div class="item"><div class="meta"></div><div class="content"><span class="title">Storage</span><span class="value value--small">{{ disk_usage }}</span></div></div>
+  </div>
+
+  <div class="grid grid--cols-2 gap--small">
+    <div>
+      <span class="label label--underline">Open Alerts</span>
+      <table class="table table--condensed"><tbody>
+        {% for alert in alerts.recent limit: 3 %}<tr><td>{{ alert.alertname }}</td><td class="text--right">{{ alert.severity }}</td></tr>{% else %}<tr><td>No open alerts</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+    <div>
+      <span class="label label--underline">Storage</span>
+      <table class="table table--condensed"><tbody>
+        {% for volume in storage.volumes limit: 3 %}<tr><td>{{ volume.name }}</td><td class="text--right">{{ volume.used_percent }}%</td></tr>{% else %}<tr><td>No metrics</td></tr>{% endfor %}
+      </tbody></table>
+    </div>
+  </div>
+</div>
+
+{{ dashboard_title_bar }}
