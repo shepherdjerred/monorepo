@@ -23,11 +23,33 @@ import {
   id = each.value.workspace_id
 }
 
+# The provider marks every computed attribute of a workspace — `id` included —
+# unknown on ANY in-place update, and `workspace_id` is ForceNew on api keys,
+# guardrails, and BYOK keys. Reading the id off the resource therefore turns a
+# single workspace edit into a forced replacement of every live credential in
+# that workspace: toggling `is_observability_broadcast_enabled` alone planned
+# `-/+` on five imported api keys, which `prevent_destroy` then refused.
+# Replacing them is not a formality — the raw key values reach consumers only
+# through the `openrouter_api_key_handoffs` output and a manual 1Password
+# rotation, so a replacement revokes credentials that birmel, buildkite,
+# macbook, temporal, and scout are still authenticating with.
+#
+# For a workspace we already import the id is known from the registry, so use
+# it directly and let workspace settings change in place. The fallback keeps
+# creation of a brand-new workspace working, and referencing the resource in
+# the other branch preserves the dependency edge either way.
+locals {
+  openrouter_workspace_ids = {
+    for name, workspace in var.openrouter_workspaces :
+    name => try(workspace.workspace_id, null) != null ? workspace.workspace_id : openrouter_workspace.managed[name].id
+  }
+}
+
 resource "openrouter_guardrail" "managed" {
   for_each = var.openrouter_guardrails
 
   name              = each.value.name
-  workspace_id      = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
+  workspace_id      = each.value.workspace_key == null ? null : local.openrouter_workspace_ids[each.value.workspace_key]
   description       = try(each.value.description, null)
   limit_usd         = try(each.value.limit_usd, null)
   reset_interval    = try(each.value.reset_interval, null)
@@ -55,7 +77,7 @@ resource "openrouter_api_key" "managed" {
   for_each = var.openrouter_api_keys
 
   name                  = each.value.name
-  workspace_id          = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
+  workspace_id          = each.value.workspace_key == null ? null : local.openrouter_workspace_ids[each.value.workspace_key]
   limit                 = try(each.value.limit, null)
   limit_reset           = try(each.value.limit_reset, null)
   include_byok_in_limit = try(each.value.include_byok_in_limit, null)
@@ -82,7 +104,7 @@ resource "openrouter_byok_key" "managed" {
   provider_slug          = each.value.provider_slug
   key                    = var.openrouter_byok_keys[each.key]
   name                   = try(each.value.name, null)
-  workspace_id           = each.value.workspace_key == null ? null : openrouter_workspace.managed[each.value.workspace_key].id
+  workspace_id           = each.value.workspace_key == null ? null : local.openrouter_workspace_ids[each.value.workspace_key]
   allowed_models         = try(each.value.allowed_models, null)
   allowed_user_ids       = try(each.value.allowed_user_ids, null)
   allowed_api_key_hashes = try(each.value.allowed_api_key_hashes, null)

@@ -22,7 +22,7 @@
       "limit_reset": "monthly",
       "include_byok_in_limit": true,
       "disabled": false,
-      "expires_at": "2027-08-15T00:45:22.240Z",
+      "expires_at": "2027-08-15T00:45:22.24Z",
       "onepassword_targets": [
         {
           "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
