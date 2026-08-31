@@ -7,6 +7,7 @@ import {
   isDynamicConfigReady,
   llmHourlyTokenBudget,
   shutdownDynamicConfig,
+  temporalCallGraphTracing,
   tournamentApiMode,
   type DynamicConfigSeed,
 } from "#src/config/dynamic.ts";
@@ -20,6 +21,7 @@ const SEED: DynamicConfigSeed = {
   llmDailyTokenBudget: 20_000_000,
   tournamentApiMode: "stub",
   tournamentMaxOpenLobbies: 10,
+  temporalCallGraphTracing: false,
 };
 
 afterEach(async () => {
@@ -110,6 +112,19 @@ describe("scout dynamic config", () => {
     });
     const value: string[] = exploreGuildAllowlist();
     expect(Array.isArray(value)).toBe(true);
+  });
+
+  test("the boot-time call-graph read resolves instead of throwing", async () => {
+    // index.ts calls this during startup, before any refresh. `snapshot.get`
+    // throws on an unseeded key and the accessor's `?? false` only guards a
+    // null snapshot, so an unseeded key kills the backend at boot — it shipped
+    // that way once and the scout-for-lol in-image smoke caught it.
+    await initializeDynamicConfig({
+      environment: DISABLED,
+      seed: SEED,
+      startPolling: false,
+    });
+    expect(temporalCallGraphTracing()).toBe(false);
   });
 
   test("readiness flips with initialize and shutdown", async () => {

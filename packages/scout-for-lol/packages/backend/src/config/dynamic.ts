@@ -151,7 +151,11 @@ export type DynamicConfigSeed = {
   exploreModel?: string;
   tournamentApiMode?: TournamentApiMode;
   tournamentMaxOpenLobbies?: number;
-  temporalCallGraphTracing?: boolean;
+  // Required, unlike the rest: `temporalCallGraphTracing()` is read
+  // unconditionally at boot, and `snapshot.get` throws on an unseeded key. Its
+  // `?? false` guards a null snapshot, not that throw — so an optional field
+  // here let the key ship unseeded and killed the backend at startup.
+  temporalCallGraphTracing: boolean;
 };
 
 const REFRESH_INTERVAL_MS = 60_000;
