@@ -111,6 +111,17 @@ describe("consumer file classification", () => {
     ).toBe(true);
   });
 
+  test("recognizes deleted published files", () => {
+    expect(
+      classifyConsumerChanges(
+        astroPath,
+        [`${astroPath}/dist/index.js`],
+        false,
+        ["dist", "src", "package.json", "README.md", "LICENSE"],
+      ).eligible,
+    ).toBe(true);
+  });
+
   test("ignores repository-only, tests, examples, and lockfiles", () => {
     expect(
       classifyConsumerChanges(
@@ -142,6 +153,32 @@ describe("consumer file classification", () => {
         false,
       ).eligible,
     ).toBe(true);
+  });
+
+  test("ignores files excluded by the package files list", () => {
+    expect(
+      classifyConsumerChanges(
+        webringPath,
+        [`${webringPath}/legacy-entrypoint.js`],
+        false,
+        ["dist", "src", "package.json", "README.md", "LICENSE"],
+      ).eligible,
+    ).toBe(false);
+  });
+
+  test("matches glob and negated package files entries", () => {
+    expect(
+      classifyConsumerChanges(
+        astroPath,
+        [
+          `${astroPath}/dist/index.js`,
+          `${astroPath}/dist/index.test.js`,
+          `${astroPath}/src/internal/generated.ts`,
+        ],
+        false,
+        ["dist/*.js", "src", "!src/internal/**"],
+      ).reasons,
+    ).toEqual(["published source changed: dist/index.js"]);
   });
 
   test("fails closed on an unknown package file", () => {
