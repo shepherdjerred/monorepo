@@ -8,6 +8,7 @@ const INITIAL_PAUSE_NOTE =
 export const BACKUP_SCHEDULES: ScheduleDefinition[] = [
   {
     id: "seaweedfs-backup-six-hourly",
+    namespace: "prod",
     workflowType: "runSeaweedFsBackupWorkflow",
     args: [{ cadence: "six-hourly" }],
     timing: {
@@ -23,6 +24,7 @@ export const BACKUP_SCHEDULES: ScheduleDefinition[] = [
   },
   {
     id: "seaweedfs-backup-daily",
+    namespace: "prod",
     workflowType: "runSeaweedFsBackupWorkflow",
     args: [{ cadence: "daily" }],
     timing: {
@@ -38,6 +40,7 @@ export const BACKUP_SCHEDULES: ScheduleDefinition[] = [
   },
   {
     id: "seaweedfs-backup-retention-gc-weekly",
+    namespace: "prod",
     workflowType: "runSeaweedFsBackupRetentionAndGcWorkflow",
     args: [],
     timing: {
