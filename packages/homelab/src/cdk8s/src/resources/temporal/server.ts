@@ -17,6 +17,11 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
+import {
+  TEMPORAL_POSTGRES_TLS_CA_FILE,
+  TEMPORAL_POSTGRES_TLS_SECRET,
+  TEMPORAL_POSTGRES_TLS_SERVER_NAME,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type CreateTemporalServerDeploymentProps = {
@@ -30,21 +35,20 @@ export function createTemporalServerDeployment(
   const UID = 1000;
   const GID = 1000;
 
-  // PostgreSQL credentials from postgres-operator
+  // PostgreSQL credentials from postgres-operator.
   const postgresSecretName =
     "temporal.temporal-postgresql.credentials.postgresql.acid.zalan.do";
+  const postgresSecret = Secret.fromSecretName(
+    chart,
+    "temporal-server-postgres-secret",
+    postgresSecretName,
+  );
 
   const deployment = new Deployment(chart, "temporal-server", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
     securityContext: {
       fsGroup: GID,
-    },
-    metadata: {
-      annotations: {
-        "ignore-check.kube-linter.io/no-read-only-root-fs":
-          "Temporal auto-setup requires writable filesystem for schema migrations",
-      },
     },
     podMetadata: {
       labels: {
@@ -53,14 +57,25 @@ export function createTemporalServerDeployment(
     },
   });
 
-  // Mount postgres-operator secret as volume
-  const pgSecretVolume = Volume.fromSecret(
+  const postgresTlsVolume = Volume.fromSecret(
     chart,
-    "temporal-pg-secret-volume",
-    Secret.fromSecretName(chart, "temporal-pg-secret", postgresSecretName),
-    {
-      name: "pg-secret",
-    },
+    "temporal-server-postgres-tls-volume",
+    Secret.fromSecretName(
+      chart,
+      "temporal-server-postgres-tls-secret",
+      TEMPORAL_POSTGRES_TLS_SECRET,
+    ),
+    { name: "postgres-tls" },
+  );
+  const configVolume = Volume.fromEmptyDir(
+    chart,
+    "temporal-server-config-volume",
+    "config",
+  );
+  const tmpVolume = Volume.fromEmptyDir(
+    chart,
+    "temporal-server-tmp-volume",
+    "tmp",
   );
 
   // Mount dynamic config as volume
@@ -73,10 +88,41 @@ export function createTemporalServerDeployment(
     },
   );
 
+  // The image's own entrypoint renders /etc/temporal/config/docker.yaml from
+  // /etc/temporal/config/config_template.yaml (baked into the image) via
+  // `dockerize`. Mounting configVolume straight onto /etc/temporal/config in
+  // the main container would completely shadow that directory — including
+  // the template the entrypoint depends on — leaving nothing for dockerize
+  // to render and crash-looping every pod before port 7233 ever opens. Copy
+  // the template into the (still-empty) shared volume first, from the same
+  // image, so the main container's mount already contains it.
+  const configTemplateImage = `temporalio/server:${versions["temporalio/server"]}`;
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "temporal-server-config-template",
+      image: configTemplateImage,
+      command: ["/bin/sh", "-c"],
+      args: [
+        "cp /etc/temporal/config/config_template.yaml /new-config/config_template.yaml",
+      ],
+      securityContext: {
+        user: UID,
+        group: GID,
+        ensureNonRoot: true,
+        readOnlyRootFilesystem: true,
+      },
+      volumeMounts: [{ path: "/new-config", volume: configVolume }],
+      resources: {
+        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
+        memory: { request: Size.mebibytes(16), limit: Size.mebibytes(64) },
+      },
+    }),
+  );
+
   deployment.addContainer(
     withCommonProps({
       name: "temporal-server",
-      image: `temporalio/auto-setup:${versions["temporalio/auto-setup"]}`,
+      image: configTemplateImage,
       ports: [
         { name: "grpc", number: 7233 },
         { name: "metrics", number: 9090 },
@@ -85,16 +131,35 @@ export function createTemporalServerDeployment(
         // Database configuration
         DB: EnvValue.fromValue("postgres12"),
         DB_PORT: EnvValue.fromValue("5432"),
-        POSTGRES_SEEDS: EnvValue.fromValue("temporal-postgresql"),
+        POSTGRES_SEEDS: EnvValue.fromValue(TEMPORAL_POSTGRES_TLS_SERVER_NAME),
+        POSTGRES_USER: EnvValue.fromSecretValue({
+          secret: postgresSecret,
+          key: "username",
+        }),
+        POSTGRES_PWD: EnvValue.fromSecretValue({
+          secret: postgresSecret,
+          key: "password",
+        }),
         DBNAME: EnvValue.fromValue("temporal"),
         VISIBILITY_DBNAME: EnvValue.fromValue("temporal_visibility"),
-        // Zalando postgres-operator issues self-signed certs whose SANs do not
-        // include the Kubernetes service hostname, so Temporal can encrypt the
-        // connection but cannot verify the host without a separately mounted CA.
         POSTGRES_TLS_ENABLED: EnvValue.fromValue("true"),
-        POSTGRES_TLS_DISABLE_HOST_VERIFICATION: EnvValue.fromValue("true"),
+        // Trust the stable CA (see temporal-db-tls.ts), not the rotating
+        // leaf's own tls.crt: the leaf's key rotates on every cert-manager
+        // renewal, but this long-running server only re-reads its trust
+        // file on pod restart. Trusting tls.crt would work until the first
+        // rotation, then silently break every new connection.
+        POSTGRES_TLS_CA_FILE: EnvValue.fromValue(
+          `/etc/temporal/postgres-tls/${TEMPORAL_POSTGRES_TLS_CA_FILE}`,
+        ),
+        POSTGRES_TLS_SERVER_NAME: EnvValue.fromValue(
+          TEMPORAL_POSTGRES_TLS_SERVER_NAME,
+        ),
         SQL_TLS_ENABLED: EnvValue.fromValue("true"),
-        SQL_TLS_DISABLE_HOST_VERIFICATION: EnvValue.fromValue("true"),
+        SQL_CA: EnvValue.fromValue(
+          `/etc/temporal/postgres-tls/${TEMPORAL_POSTGRES_TLS_CA_FILE}`,
+        ),
+        SQL_HOST_VERIFICATION: EnvValue.fromValue("true"),
+        SQL_HOST_NAME: EnvValue.fromValue(TEMPORAL_POSTGRES_TLS_SERVER_NAME),
 
         // All-in-one mode: run all 4 services in one process
         SERVICES: EnvValue.fromValue("frontend,history,matching,worker"),
@@ -113,25 +178,16 @@ export function createTemporalServerDeployment(
         // Prometheus metrics endpoint
         PROMETHEUS_ENDPOINT: EnvValue.fromValue("0.0.0.0:9090"),
       },
-      command: ["/bin/sh", "-c"],
-      args: [
-        // Read credentials from postgres-operator secret, export as env vars, then start
-        [
-          "export POSTGRES_USER=$(cat /pg-secret/username)",
-          "export POSTGRES_PWD=$(cat /pg-secret/password)",
-          "exec /etc/temporal/entrypoint.sh autosetup",
-        ].join(" && "),
-      ],
       securityContext: {
         user: UID,
         group: GID,
         ensureNonRoot: true,
-        readOnlyRootFilesystem: false,
+        readOnlyRootFilesystem: true,
       },
       volumeMounts: [
         {
-          path: "/pg-secret",
-          volume: pgSecretVolume,
+          path: "/etc/temporal/postgres-tls",
+          volume: postgresTlsVolume,
           readOnly: true,
         },
         {
@@ -139,6 +195,8 @@ export function createTemporalServerDeployment(
           volume: dynamicConfigVolume,
           readOnly: true,
         },
+        { path: "/etc/temporal/config", volume: configVolume },
+        { path: "/tmp", volume: tmpVolume },
       ],
       resources: {
         cpu: {
@@ -162,8 +220,7 @@ export function createTemporalServerDeployment(
       }),
       startup: Probe.fromTcpSocket({
         port: 7233,
-        // Auto-setup runs schema migrations on first start — allow up to 5 minutes
-        failureThreshold: 30,
+        failureThreshold: 18,
         periodSeconds: Duration.seconds(10),
       }),
     }),

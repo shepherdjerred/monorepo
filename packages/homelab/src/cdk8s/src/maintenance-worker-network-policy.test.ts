@@ -111,8 +111,15 @@ describe("maintenance worker network boundary", () => {
       return result.success ? [result.data] : [];
     });
     const jobs = namedResources.filter((resource) => resource.kind === "Job");
-    expect(jobs).toHaveLength(1);
-    expect(jobs[0]?.metadata?.name).toBe("temporal-namespace-init");
+    expect(
+      jobs
+        .map((job) => job.metadata?.name)
+        .sort((left, right) => (left ?? "").localeCompare(right ?? "")),
+    ).toEqual([
+      "temporal-backup-preflight",
+      "temporal-namespace-init",
+      "temporal-schema-migration",
+    ]);
     expect(
       namedResources.filter((resource) => resource.kind === "CronJob"),
     ).toHaveLength(0);

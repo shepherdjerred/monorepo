@@ -166,9 +166,28 @@ receives webhooks, and dispatches activities over named task queues.
 The rest of the repo talks to it only through its surfaces, which is what lets
 it be deployed and restarted independently of everything it automates.
 
+## Persistence changes happen before server changes
+
+The server process never creates or migrates its PostgreSQL schemas. An Argo
+PreSync hook runs the schema tools from the same Temporal release before the
+Deployment changes, after a separate hook proves a fresh successful Velero
+backup exists. If either hook fails, Argo leaves the currently running server
+in place.
+
+PostgreSQL presents a cert-manager certificate covering its Kubernetes service
+and pod names. Server and schema connections trust that certificate and verify
+the hostname; encryption without identity verification is not treated as a
+security boundary.
+
+This ordering makes a release recoverable: schemas move forward first because
+an older server can continue against a newer compatible schema, while a newer
+server on an older schema is unsafe. Each server version therefore gets its own
+deployment and runtime acceptance window.
+
 ## Related
 
 - [Workflow families](/explanation/temporal/workflow-families/) — what actually runs
 - [Event-driven surfaces](/explanation/temporal/event-surfaces/)
 - [Temporal workflow inventory](/reference/temporal-workflows/)
 - [Temporal PostgreSQL's TLS identity](/explanation/temporal/postgresql-tls-identity/)
+- [Upgrade the Temporal server](/how-to/upgrade-temporal-server/)

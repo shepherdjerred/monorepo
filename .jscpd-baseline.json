@@ -656,10 +656,6 @@
       "clones": 1,
       "tokens": 126
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts": {
-      "clones": 1,
-      "tokens": 124
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts": {
       "clones": 1,
       "tokens": 99
@@ -690,15 +686,11 @@
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts": {
       "clones": 1,
-      "tokens": 117
+      "tokens": 87
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
       "clones": 3,
       "tokens": 339
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts": {
-      "clones": 2,
-      "tokens": 180
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
       "clones": 1,
@@ -712,13 +704,9 @@
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts": {
-      "clones": 1,
-      "tokens": 106
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
-      "tokens": 108
+      "tokens": 88
     },
     "packages/homelab/src/cdk8s/src/misc/zfs-nvme-volume.ts|packages/homelab/src/cdk8s/src/misc/zfs-sata-volume.ts": {
       "clones": 1,

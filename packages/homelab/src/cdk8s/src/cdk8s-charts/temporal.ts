@@ -4,18 +4,38 @@ import { Namespace } from "cdk8s-plus-31";
 import {
   IntOrString,
   KubeNetworkPolicy,
+  type NetworkPolicyEgressRule,
   type NetworkPolicyIngressRule,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
+import { createTemporalBackupPreflightJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/backup-preflight.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
 import { createTemporalNamespaceInitJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/namespace-init.ts";
+import { createTemporalSchemaMigrationJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/schema-migration.ts";
 import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker.ts";
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-network-policies.ts";
+
+// Every Temporal-namespace workload egresses to cluster DNS the same way;
+// shared here so it is declared once instead of drifting per-policy.
+function dnsEgressRule(): NetworkPolicyEgressRule {
+  return {
+    to: [
+      {
+        namespaceSelector: {},
+        podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
+      },
+    ],
+    ports: [
+      { port: IntOrString.fromNumber(53), protocol: "UDP" },
+      { port: IntOrString.fromNumber(53), protocol: "TCP" },
+    ],
+  };
+}
 
 function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
   return {
@@ -73,6 +93,8 @@ export function createTemporalChart(app: App) {
 
   createTemporalPostgreSQLCertificate(chart);
   createTemporalPostgreSQLDatabase(chart);
+  createTemporalBackupPreflightJob(chart);
+  createTemporalSchemaMigrationJob(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
   createTemporalUiDeployment(chart, { serverService: server.service });
@@ -246,19 +268,7 @@ export function createTemporalChart(app: App) {
         },
       ],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // PostgreSQL within namespace
         {
           to: [
@@ -316,19 +326,7 @@ export function createTemporalChart(app: App) {
         },
       ],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // Temporal Server gRPC
         {
           to: [
@@ -344,9 +342,26 @@ export function createTemporalChart(app: App) {
     },
   });
 
-  // NetworkPolicy for PostgreSQL - only allow Temporal Server
+  // NetworkPolicy for PostgreSQL - only allow the server and schema hook.
+  //
+  // This must itself be a PreSync hook, staged ahead of the schema-migration
+  // Job's own PreSync wave (-1): PreSync hooks run in a phase that completes
+  // in full before ANY ordinary (non-hook) resource is applied, regardless of
+  // sync-wave. Left as a plain resource, ArgoCD would only add the
+  // temporal-schema-migration ingress rule below during the later Sync
+  // phase — after the schema-migration Job has already run (and had its
+  // PostgreSQL connection dropped by the netpol that predates this rule).
+  // No hook-delete-policy is set, so this persists as an ordinary tracked
+  // resource after creation and simply keeps being reconciled in PreSync on
+  // every subsequent sync.
   new KubeNetworkPolicy(chart, "temporal-postgresql-netpol", {
-    metadata: { name: "temporal-postgresql-netpol" },
+    metadata: {
+      name: "temporal-postgresql-netpol",
+      annotations: {
+        "argocd.argoproj.io/hook": "PreSync",
+        "argocd.argoproj.io/sync-wave": "-3",
+      },
+    },
     spec: {
       podSelector: {
         matchLabels: { cluster_name: "temporal-postgresql" },
@@ -360,9 +375,51 @@ export function createTemporalChart(app: App) {
                 matchLabels: { app: "temporal-server" },
               },
             },
+            {
+              podSelector: {
+                matchLabels: { app: "temporal-schema-migration" },
+              },
+            },
           ],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-schema-migration-netpol", {
+    metadata: { name: "temporal-schema-migration-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: { app: "temporal-schema-migration" },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        dnsEgressRule(),
+        {
+          to: [
+            {
+              podSelector: {
+                matchLabels: { cluster_name: "temporal-postgresql" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-backup-preflight-netpol", {
+    metadata: { name: "temporal-backup-preflight-netpol" },
+    spec: {
+      podSelector: {
+        matchLabels: { app: "temporal-backup-preflight" },
+      },
+      policyTypes: ["Egress"],
+      egress: [
+        dnsEgressRule(),
+        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
       ],
     },
   });
@@ -376,19 +433,7 @@ export function createTemporalChart(app: App) {
       },
       policyTypes: ["Egress"],
       egress: [
-        // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // Temporal Server gRPC
         {
           to: [
