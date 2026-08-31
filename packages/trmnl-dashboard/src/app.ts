@@ -1,18 +1,32 @@
 import type { AppConfig } from "./config.ts";
 import { collectHomePayload } from "./collectors/home.ts";
 import { collectHomelabPayload } from "./collectors/homelab.ts";
+import { PetCareService } from "./pet-care-service.ts";
+import { petDashboardEnabled } from "./dynamic-config.ts";
+import { featureFlagMetrics } from "./feature-flag-metrics.ts";
 import { worstStatus } from "./status.ts";
-import type { HomePayload, HomelabPayload } from "./types.ts";
+import type { HomePayload, HomelabPayload, PetCarePayload } from "./types.ts";
 
 export type AppDeps = {
   collectHome?: () => Promise<HomePayload>;
   collectHomelab?: () => Promise<HomelabPayload>;
+  getPetMetrics?: () => Promise<string>;
+  getFeatureFlagMetrics?: () => Promise<string>;
+  collectPets?: () => Promise<PetCarePayload>;
+  petDashboardEnabled?: () => Promise<boolean>;
 };
 
 export function createHandler(config: AppConfig, deps: AppDeps = {}) {
   const collectHome = deps.collectHome ?? (() => collectHomePayload(config));
   const collectHomelab =
     deps.collectHomelab ?? (() => collectHomelabPayload(config));
+  const petCareService = new PetCareService(config);
+  const getPetMetrics =
+    deps.getPetMetrics ?? (() => petCareService.getMetrics());
+  const getFeatureFlagMetrics =
+    deps.getFeatureFlagMetrics ?? featureFlagMetrics.render;
+  const collectPets = deps.collectPets ?? (() => petCareService.getPayload());
+  const isPetDashboardEnabled = deps.petDashboardEnabled ?? petDashboardEnabled;
 
   return async function handleRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -29,6 +43,16 @@ export function createHandler(config: AppConfig, deps: AppDeps = {}) {
       return json({ status: "ok" });
     }
 
+    if (url.pathname === "/metrics") {
+      const [flagMetrics, petMetrics] = await Promise.all([
+        getFeatureFlagMetrics(),
+        getPetMetrics(),
+      ]);
+      return new Response(`${flagMetrics}${petMetrics}`, {
+        headers: { "Content-Type": "text/plain; version=0.0.4; charset=utf-8" },
+      });
+    }
+
     if (!isAuthorized(request, config.trmnlApiKey)) {
       return json({ error: "unauthorized" }, 401);
     }
@@ -39,6 +63,13 @@ export function createHandler(config: AppConfig, deps: AppDeps = {}) {
 
     if (url.pathname === "/api/homelab") {
       return json(await collectHomelab());
+    }
+
+    if (url.pathname === "/api/pets") {
+      if (!(await isPetDashboardEnabled())) {
+        return json({ error: "not found" }, 404);
+      }
+      return json(await collectPets());
     }
 
     if (url.pathname === "/api/diagnostics") {

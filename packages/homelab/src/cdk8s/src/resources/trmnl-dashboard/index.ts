@@ -17,6 +17,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,
@@ -97,6 +98,11 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
           key: "HA_TOKEN",
         }),
         DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
+        FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_URL: EnvValue.fromValue(
+          "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+        ),
+        FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
         BUGSINK_URL: EnvValue.fromValue(
           "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
         ),
@@ -172,8 +178,17 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   setRevisionHistoryLimit(deployment, 5);
 
   const service = new Service(chart, "trmnl-dashboard-service", {
+    metadata: { labels: { app: "trmnl-dashboard" } },
     selector: deployment,
     ports: [{ port: 3000, name: "http" }],
+  });
+
+  createServiceMonitor(chart, {
+    name: "trmnl-dashboard",
+    namespace: "trmnl-dashboard",
+    port: "http",
+    interval: "30s",
+    matchLabels: { app: "trmnl-dashboard" },
   });
 
   createCloudflareTunnelBinding(chart, "trmnl-dashboard-cf-tunnel", {
@@ -189,9 +204,9 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
   return { deployment, service };
 }
 
-export const trmnlDashboardPorts = [53, 80, 443, 8000, 8123, 9090, 9093].map(
-  (port) => ({
-    port: IntOrString.fromNumber(port),
-    protocol: port === 53 ? "UDP" : "TCP",
-  }),
-);
+export const trmnlDashboardPorts = [
+  53, 80, 443, 8000, 8080, 8123, 9090, 9093,
+].map((port) => ({
+  port: IntOrString.fromNumber(port),
+  protocol: port === 53 ? "UDP" : "TCP",
+}));

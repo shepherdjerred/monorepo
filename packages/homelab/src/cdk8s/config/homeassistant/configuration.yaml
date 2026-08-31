@@ -54,7 +54,7 @@ homekit:
       exclude_entities:
         - binary_sensor.remote_ui
         - sensor.800_series_long_range_usb_controller_status
-        - sensor.petlibro_petlibro_sjer_red
+        - sensor.petlibro_petlibro_ha_sjer_red
         - switch.hacs_pre_release
         # Sonos "buttons lock" config toggle, not a real door lock (same device
         # cluster as the already-excluded auto_brightness/proximity_mode switches)
@@ -236,6 +236,18 @@ script: !include scripts.yaml
 # Template binary sensors for monitoring
 # Note: Jinja2 templates are escaped for Helm compatibility ({{ "{{" }} ... {{ "}}" }})
 template:
+  # PetLibro Dockstream 2 should run continuously. The enum selector itself has
+  # no numeric Prometheus series, so collapse Wi-Fi, mode, and dispensing into
+  # one problem sensor. The Prometheus rule holds it for five minutes before
+  # alerting so brief integration refreshes do not page.
+  - binary_sensor:
+      - name: "PetLibro Fountain Operation Problem"
+        unique_id: petlibro_fountain_operation_problem
+        device_class: problem
+        state: >
+          {{ "{{" }} states('binary_sensor.dockstream_2_smart_fountain_wi_fi') != 'on'
+             or states('binary_sensor.dockstream_2_smart_fountain_water_dispensing_state') != 'on'
+             or states('select.dockstream_2_smart_fountain_water_dispensing_mode') != 'Flowing Water (Constant)' {{ "}}" }}
   # Roborock Saros 10R per-floor "problem" bridges. The vacuum/status/error enum
   # sensors carry no numeric Prometheus metric, so HA's exporter can't alert on
   # them directly; these device_class:problem template binary_sensors collapse the

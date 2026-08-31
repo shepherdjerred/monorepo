@@ -24,4 +24,13 @@ describe("trmnl-dashboard configuration", () => {
     expect(yaml).toContain("bugsink-bugsink-service.bugsink");
     expect(yaml).toContain("bugsink-bugsink-service.bugsink.svc.cluster.local");
   });
+
+  it("exposes pet metrics only through the Prometheus-selected service", async () => {
+    const yaml = await synthesizeApp();
+
+    expect(yaml).toContain("kind: ServiceMonitor");
+    expect(yaml).toContain("name: trmnl-dashboard-service-monitor");
+    expect(yaml).toContain("path: /metrics");
+    expect(yaml).toContain("kubernetes.io/metadata.name: prometheus");
+  });
 });

@@ -17,7 +17,8 @@ import {
   HaWebSocketResultError,
 } from "./errors.ts";
 import type { EventMessage, ResultMessage } from "./messages.ts";
-import { AuthMessage, ServerMessage } from "./messages.ts";
+import { AuthMessage, EntityRegistryEntry, ServerMessage } from "./messages.ts";
+import type { EntityRegistryEntry as EntityRegistryEntryType } from "./messages.ts";
 import type { WebSocketLike, WebSocketLikeCtor } from "./socket-helpers.ts";
 import {
   buildWsUrl,
@@ -174,6 +175,13 @@ export class HomeAssistantEventClient<S extends HaSchema = DefaultHaSchema> {
   public async getStates(): Promise<EntityState[]> {
     const { result } = this.sendRequest({ type: "get_states" });
     return z.array(EntityStateSchema).parse(await result);
+  }
+
+  public async getEntityRegistry(): Promise<EntityRegistryEntryType[]> {
+    const { result } = this.sendRequest({
+      type: "config/entity_registry/list",
+    });
+    return z.array(EntityRegistryEntry).parse(await result);
   }
 
   private async openAndAuth(): Promise<void> {

@@ -1,0 +1,90 @@
+<div class="layout layout--col gap--small">
+  {% if problems.size > 0 %}
+    <div class="item item--emphasis">
+      <div class="meta"></div>
+      <div class="content">
+        <span class="label">ACTIVE PROBLEMS</span>
+        <span class="value value--small">
+          {% for problem in problems limit: 2 %}
+            {{ problem.severity | upcase }} · {{ problem.summary }}{% unless forloop.last %}<br>{% endunless %}
+          {% endfor %}
+        </span>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="grid grid--cols-3 gap--small">
+    <div>
+      <span class="label label--underline">Fountain · {{ fountain.status | upcase }}</span>
+      <table class="table table--condensed">
+        <tbody>
+          <tr><td>Water</td><td class="text--right">{% if fountain.water_percent %}{{ fountain.water_percent }}%{% else %}n/a{% endif %}</td></tr>
+          <tr><td>Clean / Filter</td><td class="text--right">{{ fountain.cleaning_days | default: "n/a" }}d / {{ fountain.filter_days | default: "n/a" }}d</td></tr>
+          <tr><td>Flow</td><td class="text--right">{% if fountain.dispensing %}constant{% else %}check{% endif %}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">Feeders</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for feeder in feeders %}
+            <tr>
+              <td>{{ feeder.label }}</td>
+              <td class="text--right">{{ feeder.status | upcase }} · {{ feeder.desiccant_days | default: "n/a" }}d</td>
+            </tr>
+          {% endfor %}
+          <tr><td>Food today</td><td class="text--right">{{ activity.food_grams | default: "n/a" }}g</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">LR5 Pro · {{ litter_robot.status | default: "unknown" | upcase }}</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% if litter_robot %}
+            <tr><td>Globe litter</td><td class="text--right">{{ litter_robot.litter_percent }}%</td></tr>
+            <tr><td>Waste</td><td class="text--right">{{ litter_robot.waste_percent }}%</td></tr>
+            <tr><td>Hopper</td><td class="text--right">{{ litter_robot.hopper_status }} · raw {{ litter_robot.hopper_level_raw | default: "n/a" }}</td></tr>
+          {% else %}
+            <tr><td>Diagnostics unavailable</td></tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <span class="label label--underline">Roborock Fleet</span>
+    <table class="table table--condensed">
+      <thead>
+        <tr><th>Floor</th><th>Status</th><th class="text--right">Battery</th><th class="text--right">Consumable</th><th class="text--right">Tanks / Fluid</th></tr>
+      </thead>
+      <tbody>
+        {% for vacuum in vacuums %}
+          <tr>
+            <td>{{ vacuum.label }}</td>
+            <td>{{ vacuum.status | upcase }} · {{ vacuum.state | default: "unavailable" }}</td>
+            <td class="text--right">{% if vacuum.battery_percent %}{{ vacuum.battery_percent }}%{% else %}n/a{% endif %}</td>
+            <td class="text--right">{% if vacuum.consumable_hours %}{{ vacuum.consumable_hours | round }}h{% else %}n/a{% endif %}</td>
+            <td class="text--right">{% if vacuum.clean_water_empty or vacuum.dirty_water_full or vacuum.cleaning_fluid_low or vacuum.water_shortage %}CHECK{% else %}OK{% endif %}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="grid grid--cols-4 gap--small">
+    <div class="item"><div class="content"><span class="title">Drank</span><span class="value value--small">{{ activity.drinking_ounces | default: "n/a" }} oz</span></div></div>
+    <div class="item"><div class="content"><span class="title">Drinks</span><span class="value value--small">{{ activity.drinking_visits | default: "n/a" }}</span></div></div>
+    <div class="item"><div class="content"><span class="title">Feedings</span><span class="value value--small">{{ activity.feedings | default: "n/a" }}</span></div></div>
+    <div class="item"><div class="content"><span class="title">Litter cycles</span><span class="value value--small">{{ activity.litter_cycles | default: "n/a" }}</span></div></div>
+  </div>
+</div>
+
+<div class="title_bar">
+  <span class="title">Pet Care</span>
+  <span class="instance">{{ status | upcase }} · {{ generated_time }}</span>
+</div>

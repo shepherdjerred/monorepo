@@ -9,6 +9,8 @@ Plugins.
 - `GET /healthz` - configuration health
 - `GET /api/home` - Home Assistant status payload
 - `GET /api/homelab` - homelab status payload
+- `GET /api/pets` - pet-care status and daily activity payload (feature flagged)
+- `GET /metrics` - internal Prometheus metrics, including fresh LR5 diagnostics
 - `GET /api/diagnostics` - per-source fetch diagnostics for both payloads
 
 Protected endpoints require `x-api-key` to match `TRMNL_API_KEY`.
@@ -17,6 +19,16 @@ Protected endpoints require `x-api-key` to match `TRMNL_API_KEY`.
 
 Payloads are assembled from five clients in `src/clients/`: `alerts`,
 `bugsink`, `home-assistant`, `kubernetes`, and `prometheus`.
+
+Pet-care collection reads ordinary PetLibro and Roborock entities plus a
+strictly validated Whisker diagnostics payload for LR5 and hopper data. It
+discovers the Whisker config entry through Home Assistant's entity registry;
+the internal ID and raw diagnostics are never returned or exported as labels.
+
+`/api/pets` is controlled by the managed `pet-dashboard-enabled` flag and is
+absent (404) by default. The internal metrics endpoint remains available to the
+restricted Prometheus ServiceMonitor so alerts can be verified before the TRMNL
+screen is enabled.
 
 ## Configuration
 
