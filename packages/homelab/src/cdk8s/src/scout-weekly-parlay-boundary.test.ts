@@ -48,9 +48,15 @@ describe("Scout weekly parlay deployment boundary", () => {
             value: stage,
           }),
           expect.objectContaining({
-            name: "TEMPORAL_LEGACY_NAMESPACE",
-            value: "default",
+            name: "TEMPORAL_SCHEDULE_RECONCILIATION",
+            value: "disabled",
           }),
+        ]),
+      );
+      // The `default` drain is retired for Scout; see scout-temporal.test.ts.
+      expect(deployment.template.spec.containers[0]?.env).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ name: "TEMPORAL_LEGACY_NAMESPACE" }),
         ]),
       );
       expect(
