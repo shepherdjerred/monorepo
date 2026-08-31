@@ -146,13 +146,36 @@ manually created replacement.
 ### OpenRouter
 
 The official pinned `OpenRouterTeam/openrouter` provider manages workspaces,
-guardrails, inference API keys, and BYOK credentials. BYOK values are injected
-separately from committed metadata, and the provider supports updating a key in
-place. Every current workspace, supported inference key, and BYOK credential is
-committed with its import ID and exact live settings before replacement keys are
-created. Generated keys name their existing 1Password targets; imported external
+guardrails, and inference API keys. Every current workspace and supported
+inference key is committed with its import ID and exact live settings before
+replacement keys are created. Generated keys name their existing 1Password targets; imported external
 keys may intentionally have no repository handoff. OpenRouter management keys
 are bootstrap credentials and are never used as application inference keys.
+
+**BYOK credentials are deliberately NOT managed here.** `openrouter_byok_key`
+declares `key` — the raw upstream Anthropic/OpenAI API key — as a _required_
+attribute, and OpenRouter never returns it, so OpenTofu cannot read an existing
+credential and cannot avoid pushing a value. Nor can it mint one: across every
+resource and data source of both the `ippontech/anthropic` and `openai/openai`
+providers there is no computed+sensitive attribute at all. `anthropic_api_key`
+exposes only `partial_key_hint`, and `openai_project_service_account` exposes no
+key attribute, so the secret can only enter from outside OpenTofu.
+
+Managing BYOK here would therefore require both provider keys to sit in a
+CI-readable 1Password field, granting every Buildkite job holding that grant
+standing access to them — a permanent cost paid to version-control a few
+policy fields (`allowed_models`, `disabled`, `is_fallback`, workspace binding)
+that change rarely. BYOK is instead wired by hand in the OpenRouter UI, and
+`openrouter_byok_credentials` is an empty map.
+
+To adopt them later: populate `OPENROUTER_BYOK_KEYS_JSON` on the
+`openrouter-tofu-credentials` item with `{"<name>": "<raw provider key>"}` and
+add the matching entries (with their `byok_key_id`) back to
+`desired-state.json`. The resource, variables, and import wiring all remain in
+place, and `assertPlatformSecretCoverage` in `tofu-stack.ts` fails fast naming
+any credential whose key is missing. Note that whatever value is supplied
+becomes what OpenRouter stores — if it differs from the key wired today, the
+apply rotates the credential rather than adopting it.
 
 ### GitHub
 

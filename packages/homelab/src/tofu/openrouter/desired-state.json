@@ -146,20 +146,5 @@
       ]
     }
   },
-  "openrouter_byok_credentials": {
-    "anthropic": {
-      "byok_key_id": "1b403168-3a58-4940-a3c9-2e4701513e37",
-      "provider_slug": "anthropic",
-      "workspace_key": "default",
-      "disabled": false,
-      "is_fallback": false
-    },
-    "openai": {
-      "byok_key_id": "f0ab6178-3d8b-48a7-aafc-0c2ce983d998",
-      "provider_slug": "openai",
-      "workspace_key": "default",
-      "disabled": false,
-      "is_fallback": false
-    }
-  }
+  "openrouter_byok_credentials": {}
 }
