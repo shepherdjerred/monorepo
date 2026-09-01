@@ -148,7 +148,12 @@ async function openingStakeNeeded(
 ): Promise<number> {
   const revision =
     await dependencies.prismaClient.bucksDareV2Revision.findUniqueOrThrow({
-      where: { dareId_revision: input },
+      where: {
+        dareId_revision: {
+          dareId: input.dareId,
+          revision: input.revision,
+        },
+      },
       select: { openingStake: true },
     });
   return revision.openingStake;

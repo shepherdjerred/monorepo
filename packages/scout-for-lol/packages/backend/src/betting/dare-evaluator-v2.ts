@@ -16,6 +16,7 @@ import {
   type DareTruthValue,
 } from "#src/betting/dare-evidence-v2.ts";
 import { evaluateDareEvidenceV2 as evaluateDareResultV2 } from "#src/betting/dare-result-evaluator-v2.ts";
+import { andDareTruthV2, orDareTruthV2 } from "#src/betting/dare-truth-v2.ts";
 
 export type DareTimelineEvidenceV2 = {
   coverage: "complete" | "missing";
@@ -31,16 +32,6 @@ export type DareTimelineEvidenceV2 = {
     role: "subject" | "killer" | "victim" | "assist" | "creator";
   }[];
 };
-
-function andTruth(values: readonly DareTruthValue[]): DareTruthValue {
-  if (values.includes(false)) return false;
-  return values.includes(null) ? null : true;
-}
-
-function orTruth(values: readonly DareTruthValue[]): DareTruthValue {
-  if (values.includes(true)) return true;
-  return values.includes(null) ? null : false;
-}
 
 function compare(
   actual: string | number | boolean,
@@ -246,7 +237,9 @@ function evaluatePredicate(
   const values = expression.operands.map((operand) =>
     evaluatePredicate(operand, context),
   );
-  return expression.kind === "and" ? andTruth(values) : orTruth(values);
+  return expression.kind === "and"
+    ? andDareTruthV2(values)
+    : orDareTruthV2(values);
 }
 
 function participantsForSet(

@@ -15,6 +15,11 @@ import {
   evaluateDareEvidenceV2,
   evaluateDareMatchV2,
 } from "#src/betting/dare-evaluator-v2.ts";
+import {
+  DEATHCAP_TIMELINE_PLAN,
+  makeTwistedFateMatch,
+  TWISTED_FATE_SAME_GAME_PLAN,
+} from "#src/betting/dare-v2-test-fixtures.ts";
 
 const TARGET: DareTargetBindingV2 = {
   key: "virmel",
@@ -36,62 +41,7 @@ const SECOND_TARGET: DareTargetBindingV2 = {
   ],
 };
 
-const PLAN = DareCompiledPlanV2Schema.parse({
-  version: 2,
-  maxEligibleGames: 100,
-  gameSets: [
-    {
-      name: "qualifying_game",
-      targetKeys: ["virmel"],
-      relationship: "independent",
-      queues: ["solo", "flex", "ranked 5s"],
-      orderBy: "game_end_at_asc_match_id_asc",
-      limit: 100,
-      projections: [],
-      predicate: {
-        kind: "and",
-        operands: [
-          {
-            kind: "comparison",
-            value: {
-              kind: "participant",
-              target: "virmel",
-              field: "champion_name",
-            },
-            operator: "eq",
-            threshold: "Twisted Fate",
-          },
-          {
-            kind: "comparison",
-            value: {
-              kind: "participant_rate",
-              target: "virmel",
-              field: "cs_per_minute",
-            },
-            operator: "gte",
-            threshold: 8,
-          },
-          {
-            kind: "comparison",
-            value: {
-              kind: "participant",
-              target: "virmel",
-              field: "time_played",
-            },
-            operator: "gte",
-            threshold: 1200,
-          },
-        ],
-      },
-    },
-  ],
-  result: {
-    kind: "matching_games",
-    gameSet: "qualifying_game",
-    operator: "gte",
-    threshold: 1,
-  },
-});
+const PLAN = TWISTED_FATE_SAME_GAME_PLAN;
 
 let fixture: RawMatch;
 
@@ -108,24 +58,7 @@ function matchWithStats(input: {
   timePlayed: number;
   creepScore: number;
 }): RawMatch {
-  const copy = RawMatchSchema.parse(structuredClone(fixture));
-  const target = RawParticipantSchema.parse({
-    ...copy.info.participants[0],
-    puuid: "virmel-puuid",
-    championName: "TwistedFate",
-    timePlayed: input.timePlayed,
-    totalMinionsKilled: input.creepScore,
-    neutralMinionsKilled: 0,
-  });
-  return RawMatchSchema.parse({
-    ...copy,
-    metadata: { ...copy.metadata, matchId: input.matchId },
-    info: {
-      ...copy.info,
-      queueId: 420,
-      participants: [target, ...copy.info.participants.slice(1)],
-    },
-  });
+  return makeTwistedFateMatch(fixture, input);
 }
 
 function evidence(match: RawMatch) {
@@ -334,7 +267,7 @@ describe("Dare evaluator v2 arithmetic and aggregates", () => {
   });
 
   test("counts arithmetic nesting toward the expression depth limit", () => {
-    const invalid = DareCompiledPlanV2Schema.parse({
+    const invalid = DareCompiledPlanV2Schema.safeParse({
       ...PLAN,
       gameSets: [
         {
@@ -349,7 +282,9 @@ describe("Dare evaluator v2 arithmetic and aggregates", () => {
       ],
     });
 
-    expect(darePlanSemanticIssues(invalid, [TARGET])).toContain(
+    expect(invalid.success).toBe(false);
+    if (invalid.success) throw new Error("Expected an over-deep plan.");
+    expect(invalid.error.issues.map((issue) => issue.message)).toContain(
       "A dare expression may be at most 12 levels deep.",
     );
   });
@@ -476,28 +411,7 @@ describe("Dare evaluator v2 match and timeline context", () => {
   });
 
   test("filters timeline events by item ID", () => {
-    const itemPlan = DareCompiledPlanV2Schema.parse({
-      ...PLAN,
-      gameSets: [
-        {
-          ...PLAN.gameSets[0],
-          predicate: {
-            kind: "comparison",
-            value: {
-              kind: "timeline_event_count",
-              eventType: "ITEM_PURCHASED",
-              target: "virmel",
-              role: "subject",
-              afterMs: null,
-              beforeMs: null,
-              itemId: 3089,
-            },
-            operator: "gte",
-            threshold: 1,
-          },
-        },
-      ],
-    });
+    const itemPlan = DEATHCAP_TIMELINE_PLAN;
     const match = matchWithStats({
       matchId: "NA1_ITEM",
       timePlayed: 20 * 60,

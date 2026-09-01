@@ -7,6 +7,7 @@ import type {
   DareMatchEvidenceV2,
   DareTruthValue,
 } from "#src/betting/dare-evidence-v2.ts";
+import { andDareTruthV2, orDareTruthV2 } from "#src/betting/dare-truth-v2.ts";
 
 function compareCount(
   count: number,
@@ -96,16 +97,6 @@ function aggregateTruth(
   );
 }
 
-function andTruth(values: readonly DareTruthValue[]): DareTruthValue {
-  if (values.includes(false)) return false;
-  return values.includes(null) ? null : true;
-}
-
-function orTruth(values: readonly DareTruthValue[]): DareTruthValue {
-  if (values.includes(true)) return true;
-  return values.includes(null) ? null : false;
-}
-
 function resultTruth(
   expression: DareResultExpressionV2,
   evidence: readonly DareMatchEvidenceV2[],
@@ -130,7 +121,9 @@ function resultTruth(
   const values = expression.operands.map((operand) =>
     resultTruth(operand, evidence, gameSets),
   );
-  return expression.kind === "and" ? andTruth(values) : orTruth(values);
+  return expression.kind === "and"
+    ? andDareTruthV2(values)
+    : orDareTruthV2(values);
 }
 
 export function evaluateDareEvidenceV2(input: {

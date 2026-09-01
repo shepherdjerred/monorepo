@@ -7,7 +7,11 @@ import {
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { DARE_ACCEPT_WINDOW_MS } from "#src/betting/constants.ts";
-import { stakeDareV2ContributionInTransaction } from "#src/betting/dare-ledger-v2.ts";
+import {
+  dareV2MoneyFactsInTransaction,
+  refundDareV2ContributionsInTransaction,
+  stakeDareV2ContributionInTransaction,
+} from "#src/betting/dare-ledger-v2.ts";
 import {
   bindDareV2Deadline,
   currentDareV2State,
@@ -33,7 +37,21 @@ export async function fundDareV2InTransaction(
   });
   if (revision === null) return { kind: "stale_revision" } as const;
   const targets = parseDareV2Targets(revision.targetsJson);
-  const acceptDeadline = new Date(input.now.getTime() + DARE_ACCEPT_WINDOW_MS);
+  const deadlineSpec = parseDareV2Deadline(revision.deadlineSpecJson);
+  const absoluteDeadline =
+    deadlineSpec.kind === "absolute"
+      ? bindDareV2Deadline(deadlineSpec, input.now)
+      : null;
+  if (absoluteDeadline !== null && absoluteDeadline <= input.now) {
+    return { kind: "deadline_expired" } as const;
+  }
+  const defaultAcceptDeadline = new Date(
+    input.now.getTime() + DARE_ACCEPT_WINDOW_MS,
+  );
+  const acceptDeadline =
+    absoluteDeadline !== null && absoluteDeadline < defaultAcceptDeadline
+      ? absoluteDeadline
+      : defaultAcceptDeadline;
   const claimed = await tx.bucksDareV2.updateManyAndReturn({
     where: {
       id: input.dareId,
@@ -153,6 +171,31 @@ export async function acceptDareV2InTransaction(
   const targets = parseDareV2Targets(revision.targetsJson);
   const deadlineSpec = parseDareV2Deadline(revision.deadlineSpecJson);
   const deadlineAt = bindDareV2Deadline(deadlineSpec, input.now);
+  if (deadlineAt <= input.now) {
+    const expired = await tx.bucksDareV2.updateMany({
+      where: { id: input.dareId, dareState: "pending_accept" },
+      data: { dareState: "expired", settledAt: input.now },
+    });
+    if (expired.count !== 1) {
+      return {
+        kind: "not_accepting",
+        dareState: await currentDareV2State(tx, input.dareId),
+      } as const;
+    }
+    const facts = await dareV2MoneyFactsInTransaction(tx, {
+      dareId: dare.id,
+      serverId: dare.serverId,
+      potTotal: dare.potTotal,
+      targetAliases: targets.map((target) => target.alias),
+      conditionSummary: revision.plainLanguage,
+    });
+    await refundDareV2ContributionsInTransaction(tx, {
+      facts,
+      resolution: "expired",
+      withCut: false,
+    });
+    return { kind: "accept_window_expired", dareState: "expired" } as const;
+  }
   const contract = DareContractV2Schema.parse({
     version: DARE_CONTRACT_VERSION,
     canonicalScoutQl: revision.canonicalScoutQl,

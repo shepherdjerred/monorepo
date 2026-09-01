@@ -5,10 +5,8 @@ import {
   dareV2MoneyFactsInTransaction,
   refundDareV2ContributionsInTransaction,
 } from "#src/betting/dare-ledger-v2.ts";
-import {
-  settleActiveDareV2AtBound,
-  type DareV2SettlementSummary,
-} from "#src/betting/dare-settle-v2.ts";
+import { settleActiveDareV2AtBound } from "#src/betting/dare-settle-v2.ts";
+import type { DareV2SettlementSummary } from "#src/betting/dare-settle-types-v2.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 

@@ -10,6 +10,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { dareV2CalloutComponents } from "#src/betting/dare-components-v2.ts";
+import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";
@@ -296,19 +297,29 @@ export async function refreshDareV2Callout(
       );
       if (state?.messageRef == null) return;
       const ref = BucksMessageRefSchema.parse(JSON.parse(state.messageRef));
-      await dependencies.editMessage({
-        channelId: DiscordChannelIdSchema.parse(ref.channelId),
-        messageId: ref.messageId,
-        options: {
-          content: state.content,
-          components: dareV2CalloutComponents({
-            state: state.state,
-            dareId: state.id,
-            revision: state.revision,
-          }),
-          allowedMentions: { parse: [] },
+      await observeBucksDelivery(
+        {
+          surface: "dare_update",
+          operation: "edit",
+          serverId: state.serverId,
+          channelId: ref.channelId,
         },
-      });
+        async () => {
+          await dependencies.editMessage({
+            channelId: DiscordChannelIdSchema.parse(ref.channelId),
+            messageId: ref.messageId,
+            options: {
+              content: state.content,
+              components: dareV2CalloutComponents({
+                state: state.state,
+                dareId: state.id,
+                revision: state.revision,
+              }),
+              allowedMentions: { parse: [] },
+            },
+          });
+        },
+      );
     } catch (error) {
       logger.error(
         `Could not refresh Dare v2 ${dareId.toString()} callout:`,
@@ -317,6 +328,7 @@ export async function refreshDareV2Callout(
       Sentry.captureException(error, {
         tags: { source: "betting-dare-v2-refresh", dareId: dareId.toString() },
       });
+      throw error;
     }
   });
 }

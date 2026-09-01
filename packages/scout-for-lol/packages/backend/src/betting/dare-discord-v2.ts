@@ -1,4 +1,3 @@
-import { type ActionRowBuilder, type ButtonBuilder } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -18,21 +17,11 @@ import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consum
 import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { createLogger } from "#src/logger.ts";
+import type { DareButtonInteractionBase } from "#src/betting/dare-button-interaction.ts";
 
 const logger = createLogger("betting-dare-discord-v2");
 
-export type DareV2ButtonInteraction = {
-  customId: string;
-  guildId: string | null;
-  user: { id: string };
-  deferReply: (options: { ephemeral: true }) => Promise<unknown>;
-  deferUpdate: () => Promise<unknown>;
-  editReply: (options: {
-    content: string;
-    components?: ActionRowBuilder<ButtonBuilder>[];
-    embeds?: never[];
-  }) => Promise<unknown>;
-};
+type DareV2ButtonInteraction = DareButtonInteractionBase;
 
 export type DareV2DiscordDependencies = DareV2CalloutDependencies & {
   createIntent: typeof createDareV2ConfirmationIntent;

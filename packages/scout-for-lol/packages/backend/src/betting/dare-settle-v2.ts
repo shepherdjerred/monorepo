@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/bun";
 import {
   DareCompiledPlanV2Schema,
   DareContractV2Schema,
@@ -9,10 +10,7 @@ import type { Prisma } from "#generated/prisma/client/index.js";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import type { DareTimelineEvidenceV2 } from "#src/betting/dare-evaluator-v2.ts";
 import { dareEvaluatorImplementationV2 } from "#src/betting/dare-evaluator-registry-v2.ts";
-import {
-  DareMatchEvidenceV2Schema,
-  type DareMatchEvidenceV2,
-} from "#src/betting/dare-evidence-v2.ts";
+import type { DareMatchEvidenceV2 } from "#src/betting/dare-evidence-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
   payDareV2TargetsInTransaction,
@@ -22,6 +20,15 @@ import type {
   DareFinalityV2,
   DareProofV2,
 } from "#src/betting/dare-proof-v2.ts";
+import { collectDareV2Batch } from "#src/betting/dare-settle-batch-v2.ts";
+import {
+  dareV2EvidenceCreateData,
+  storedDareV2Evidence,
+} from "#src/betting/dare-settle-evidence-v2.ts";
+import {
+  DareV2PartialSettlementError,
+  type DareV2SettlementSummary,
+} from "#src/betting/dare-settle-types-v2.ts";
 import {
   darePlanNeedsTimeline,
   loadDareTimelineEvidenceV2,
@@ -33,78 +40,13 @@ import {
   type Db,
   type ExtendedPrismaClient,
 } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
 
-export type DareV2SettlementSummary = {
-  contractVersion: 2;
-  dareId: number;
-  serverId: string;
-  channelId: string;
-  matchId?: string | undefined;
-  resolution: "captured" | "achieved" | "unachieved" | "voided";
-  value: boolean | null;
-  finality: DareFinalityV2;
-  proof: DareProofV2 | null;
-};
+const logger = createLogger("betting-dare-settle-v2");
 
 type ActiveDareV2Row = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
 }>;
-
-function storedEvidence(row: {
-  matchId: string;
-  gameStartAt: Date;
-  gameEndAt: Date;
-  queueType: string;
-  candidateMembership: string;
-  evaluationOutput: string;
-  coverageState: string;
-  targetDependencies: string;
-  sourceReferences: string;
-  evaluationTrace: string;
-}): DareMatchEvidenceV2 {
-  const output: unknown = JSON.parse(row.evaluationOutput);
-  if (typeof output !== "object" || output === null) {
-    throw new Error(
-      `Dare v2 evidence ${row.matchId} has invalid evaluation output.`,
-    );
-  }
-  return DareMatchEvidenceV2Schema.parse({
-    matchId: row.matchId,
-    gameStartAt: row.gameStartAt.toISOString(),
-    gameEndAt: row.gameEndAt.toISOString(),
-    queue: row.queueType,
-    candidateSets: JSON.parse(row.candidateMembership),
-    ...output,
-    coverageState: row.coverageState,
-    targetDependencies: JSON.parse(row.targetDependencies),
-    sourceReferences: JSON.parse(row.sourceReferences),
-    evaluationTrace: JSON.parse(row.evaluationTrace),
-  });
-}
-
-function evidenceCreateData(
-  dareId: number,
-  evidence: DareMatchEvidenceV2,
-  planVersion: string,
-) {
-  return {
-    dareId,
-    matchId: evidence.matchId,
-    gameStartAt: new Date(evidence.gameStartAt),
-    gameEndAt: new Date(evidence.gameEndAt),
-    queueType: evidence.queue,
-    candidateMembership: JSON.stringify(evidence.candidateSets),
-    sourceReferences: JSON.stringify(evidence.sourceReferences),
-    evaluationOutput: JSON.stringify({
-      setResults: evidence.setResults,
-      setValues: evidence.setValues,
-    }),
-    coverageState: evidence.coverageState,
-    targetDependencies: JSON.stringify(evidence.targetDependencies),
-    evaluationTrace: JSON.stringify(evidence.evaluationTrace),
-    planVersion,
-  };
-}
 
 async function freshFacts(
   tx: Db,
@@ -223,7 +165,7 @@ async function captureOneDareV2(
   if (claim.count !== 1) return undefined;
   const captured = await tx.bucksDareV2Evidence.createMany({
     data: [
-      evidenceCreateData(
+      dareV2EvidenceCreateData(
         input.dare.id,
         input.matchEvidence,
         `${input.contract.compilerVersion}:${input.contract.evaluatorVersion}`,
@@ -236,7 +178,7 @@ async function captureOneDareV2(
     where: { dareId: input.dare.id },
     orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
   });
-  const evidence = rows.map((row) => storedEvidence(row));
+  const evidence = rows.map((row) => storedDareV2Evidence(row));
   const evaluator = dareEvaluatorImplementationV2(
     input.contract.evaluatorVersion,
   );
@@ -346,6 +288,25 @@ function matchSettlementContext(matchData: RawMatch) {
   };
 }
 
+function reportBatchFailure(
+  stage: "inspect" | "settle",
+  row: ActiveDareV2Row,
+  matchId: string,
+  error: unknown,
+): void {
+  logger.error(
+    `Could not ${stage} Dare v2 ${row.id.toString()} for ${matchId}:`,
+    error,
+  );
+  Sentry.captureException(error, {
+    tags: {
+      source: `betting-dare-v2-${stage}`,
+      matchId,
+      dareId: row.id.toString(),
+    },
+  });
+}
+
 export async function settleDaresV2ForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -368,47 +329,83 @@ export async function settleDaresV2ForMatch(
   });
   const summaries: DareV2SettlementSummary[] = [];
   const contracts: { row: ActiveDareV2Row; contract: DareContractV2 }[] = [];
-  for (const row of rows) {
-    const inspected = await inspectStoredContract(row, prismaClient, now);
-    if (inspected.kind === "valid") {
-      contracts.push({ row, contract: inspected.contract });
-    } else {
-      if (inspected.summary !== null) summaries.push(inspected.summary);
+  const inspected = await collectDareV2Batch(
+    rows,
+    async (row) => ({
+      row,
+      outcome: await inspectStoredContract(row, prismaClient, now),
+    }),
+    (row, error) => {
+      reportBatchFailure("inspect", row, matchData.metadata.matchId, error);
+    },
+  );
+  for (const result of inspected.values) {
+    if (result.outcome.kind === "valid") {
+      contracts.push({ row: result.row, contract: result.outcome.contract });
+    } else if (result.outcome.summary !== null) {
+      summaries.push(result.outcome.summary);
     }
   }
   const relevant = contracts.filter(({ contract }) =>
     matchTouchesContract(matchData, contract),
   );
-  if (relevant.length === 0) return summaries;
+  if (relevant.length === 0) {
+    if (inspected.firstFailure !== null) {
+      throw new DareV2PartialSettlementError(
+        summaries,
+        inspected.firstFailure.error,
+      );
+    }
+    return summaries;
+  }
   const needsTimeline = relevant.some(({ contract }) =>
     darePlanNeedsTimeline(contract.compiledPlan),
   );
-  const timeline: DareTimelineEvidenceV2 =
-    options.timeline ??
-    (needsTimeline
-      ? await loadDareTimelineEvidenceV2(matchData.metadata.matchId)
-      : { coverage: "missing", events: [], participants: [] });
-  for (const { row, contract } of relevant) {
-    const plan = DareCompiledPlanV2Schema.parse(contract.compiledPlan);
-    const evaluator = dareEvaluatorImplementationV2(contract.evaluatorVersion);
-    const matchEvidence = evaluator.evaluateMatch({
-      plan,
-      targets: contract.targets,
-      matchData,
-      queue: context.queue,
-      timeline,
-    });
-    if (!Object.values(matchEvidence.candidateSets).some(Boolean)) continue;
-    const summary = await prismaClient.$transaction(
-      async (tx) =>
-        await captureOneDareV2(tx, {
-          dare: row,
-          contract,
-          matchEvidence,
-          now,
-        }),
-    );
+  let timeline: DareTimelineEvidenceV2;
+  try {
+    timeline =
+      options.timeline ??
+      (needsTimeline
+        ? await loadDareTimelineEvidenceV2(matchData.metadata.matchId)
+        : { coverage: "missing", events: [], participants: [] });
+  } catch (error) {
+    throw new DareV2PartialSettlementError(summaries, error);
+  }
+  const captured = await collectDareV2Batch(
+    relevant,
+    async ({ row, contract }) => {
+      const plan = DareCompiledPlanV2Schema.parse(contract.compiledPlan);
+      const evaluator = dareEvaluatorImplementationV2(
+        contract.evaluatorVersion,
+      );
+      const matchEvidence = evaluator.evaluateMatch({
+        plan,
+        targets: contract.targets,
+        matchData,
+        queue: context.queue,
+        timeline,
+      });
+      if (!Object.values(matchEvidence.candidateSets).some(Boolean)) return;
+      return await prismaClient.$transaction(
+        async (tx) =>
+          await captureOneDareV2(tx, {
+            dare: row,
+            contract,
+            matchEvidence,
+            now,
+          }),
+      );
+    },
+    ({ row }, error) => {
+      reportBatchFailure("settle", row, matchData.metadata.matchId, error);
+    },
+  );
+  for (const summary of captured.values) {
     if (summary !== undefined) summaries.push(summary);
+  }
+  const firstFailure = inspected.firstFailure ?? captured.firstFailure;
+  if (firstFailure !== null) {
+    throw new DareV2PartialSettlementError(summaries, firstFailure.error);
   }
   return summaries;
 }
@@ -459,7 +456,7 @@ export async function settleActiveDareV2AtBound(
       where: { dareId: dare.id },
       orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
     });
-    const evidence = rows.map((row) => storedEvidence(row));
+    const evidence = rows.map((row) => storedDareV2Evidence(row));
     const finality = evaluator.analyzeFinality({
       plan: contract.compiledPlan,
       evidence,
