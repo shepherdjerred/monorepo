@@ -447,4 +447,73 @@ describe("Dare evaluator v2 match and timeline context", () => {
     ).toBe(true);
     expect(formatDareScoutQlV2(itemPlan)).toContain("te.item_id = 3089");
   });
+
+  test("filters match-wide timeline events by participant role", () => {
+    const rolePlan = DareCompiledPlanV2Schema.parse({
+      ...PLAN,
+      gameSets: [
+        {
+          ...PLAN.gameSets[0],
+          predicate: {
+            kind: "comparison",
+            value: {
+              kind: "timeline_event_count",
+              eventType: "CHAMPION_KILL",
+              target: null,
+              role: "killer",
+              afterMs: null,
+              beforeMs: null,
+              itemId: null,
+            },
+            operator: "eq",
+            threshold: 1,
+          },
+        },
+      ],
+    });
+    const match = matchWithStats({
+      matchId: "NA1_ROLE",
+      timePlayed: 20 * 60,
+      creepScore: 160,
+    });
+    const roleEvidence = evaluateDareMatchV2({
+      plan: rolePlan,
+      targets: [TARGET],
+      matchData: match,
+      queue: "solo",
+      timeline: {
+        coverage: "complete",
+        events: [
+          {
+            eventId: "NA1_ROLE:1:0",
+            eventType: "CHAMPION_KILL",
+            timestampMs: 60_000,
+            itemId: null,
+          },
+          {
+            eventId: "NA1_ROLE:1:1",
+            eventType: "CHAMPION_KILL",
+            timestampMs: 90_000,
+            itemId: null,
+          },
+        ],
+        participants: [
+          {
+            eventId: "NA1_ROLE:1:0",
+            puuid: "victim-puuid",
+            role: "victim",
+          },
+          {
+            eventId: "NA1_ROLE:1:1",
+            puuid: "killer-puuid",
+            role: "killer",
+          },
+        ],
+      },
+    });
+
+    expect(
+      evaluateDareEvidenceV2({ plan: rolePlan, evidence: [roleEvidence] }),
+    ).toBe(true);
+  });
 });

@@ -107,11 +107,15 @@ function timelineCount(
   context: CompileContext,
 ): SqlFragment {
   const participantJoin =
-    value.target === null
+    value.target === null && value.role === null
       ? frag("")
       : seq(
-          " INNER JOIN timeline_event_participants AS tep ON tep.event_id = te.event_id AND tep.puuid = ",
-          `${targetAlias(context.gameSet, value.target)}.puuid`,
+          " INNER JOIN timeline_event_participants AS tep ON tep.event_id = te.event_id",
+          value.target === null
+            ? frag("")
+            : frag(
+                ` AND tep.puuid = ${targetAlias(context.gameSet, value.target)}.puuid`,
+              ),
           value.role === null
             ? frag("")
             : frag(" AND tep.role = ?", [scalarParam(value.role)]),

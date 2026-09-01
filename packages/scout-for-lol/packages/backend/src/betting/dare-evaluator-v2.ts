@@ -126,7 +126,7 @@ function timelineEventCount(
     timeline.participants
       .filter(
         (entry) =>
-          entry.puuid === puuid &&
+          (puuid === null || entry.puuid === puuid) &&
           (value.role === null || entry.role === value.role),
       )
       .map((entry) => entry.eventId),
@@ -137,7 +137,9 @@ function timelineEventCount(
       (value.afterMs === null || event.timestampMs >= value.afterMs) &&
       (value.beforeMs === null || event.timestampMs <= value.beforeMs) &&
       (value.itemId === null || event.itemId === value.itemId) &&
-      (value.target === null || participantEvents.has(event.eventId)),
+      (value.target === null && value.role === null
+        ? true
+        : participantEvents.has(event.eventId)),
   ).length;
 }
 

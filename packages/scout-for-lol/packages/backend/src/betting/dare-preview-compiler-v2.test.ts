@@ -36,7 +36,7 @@ describe("Dare v2 lake compiler", () => {
                 value: {
                   kind: "timeline_event_count",
                   eventType: hostile,
-                  target: "target",
+                  target: null,
                   role: "killer",
                   afterMs: 1000,
                   beforeMs: 2000,
@@ -103,6 +103,10 @@ describe("Dare v2 lake compiler", () => {
     expect(paramValues(compiled.params)).toContain(hostile);
     expect(compiled.sql).toContain("timeline_coverage");
     expect(compiled.sql).toContain("COUNT(DISTINCT te.event_id)");
+    expect(compiled.sql).toContain(
+      "INNER JOIN timeline_event_participants AS tep ON tep.event_id = te.event_id AND tep.role = ?",
+    );
+    expect(compiled.sql).not.toContain("tep.puuid");
     expect(compiled.sql).toContain("(p0.kills + p0.assists)");
   });
 });
