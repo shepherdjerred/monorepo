@@ -1,4 +1,5 @@
 import path from "node:path";
+import { format } from "prettier";
 import { z } from "zod";
 import { DareParaphraseCorpusSchema } from "#src/model/dare-paraphrase-corpus.ts";
 
@@ -6,7 +7,10 @@ const outputPath = path.join(
   import.meta.dir,
   "../src/model/dare-v2-paraphrase-corpus.schema.json",
 );
-const generated = `${JSON.stringify(z.toJSONSchema(DareParaphraseCorpusSchema), null, 2)}\n`;
+const generated = await format(
+  JSON.stringify(z.toJSONSchema(DareParaphraseCorpusSchema)),
+  { parser: "json" },
+);
 
 if (Bun.argv.includes("--write")) {
   await Bun.write(outputPath, generated);

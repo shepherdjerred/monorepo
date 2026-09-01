@@ -43,6 +43,7 @@
     "ajv": "^8.20.0",
     "bun-types": "1.4.0",
     "eslint": "^10.3.0",
+    "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "4.1.10",

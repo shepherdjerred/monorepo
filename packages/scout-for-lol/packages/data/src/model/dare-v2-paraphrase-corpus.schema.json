@@ -2,28 +2,16 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "$schema": {
-      "type": "string",
-      "minLength": 1
-    },
-    "version": {
-      "type": "number",
-      "const": 1
-    },
-    "promptVersion": {
-      "type": "string",
-      "const": "explore-dare-v2-2"
-    },
+    "$schema": { "type": "string", "minLength": 1 },
+    "version": { "type": "number", "const": 1 },
+    "promptVersion": { "type": "string", "const": "explore-dare-v2-2" },
     "cases": {
       "minItems": 1,
       "type": "array",
       "items": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9_]+$"
-          },
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]+$" },
           "categories": {
             "minItems": 1,
             "type": "array",
@@ -47,29 +35,17 @@
           "paraphrases": {
             "minItems": 1,
             "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            }
+            "items": { "type": "string", "minLength": 1 }
           },
           "targetAliases": {
             "type": "object",
-            "propertyNames": {
-              "type": "string",
-              "minLength": 1
-            },
-            "additionalProperties": {
-              "type": "string",
-              "minLength": 1
-            }
+            "propertyNames": { "type": "string", "minLength": 1 },
+            "additionalProperties": { "type": "string", "minLength": 1 }
           },
           "plan": {
             "type": "object",
             "properties": {
-              "version": {
-                "type": "number",
-                "const": 2
-              },
+              "version": { "type": "number", "const": 2 },
               "gameSets": {
                 "minItems": 1,
                 "maxItems": 20,
@@ -85,10 +61,7 @@
                       "minItems": 1,
                       "maxItems": 5,
                       "type": "array",
-                      "items": {
-                        "type": "string",
-                        "minLength": 1
-                      }
+                      "items": { "type": "string", "minLength": 1 }
                     },
                     "relationship": {
                       "type": "string",
@@ -129,9 +102,7 @@
                         ]
                       }
                     },
-                    "predicate": {
-                      "$ref": "#/$defs/__schema0"
-                    },
+                    "predicate": { "$ref": "#/$defs/__schema0" },
                     "projections": {
                       "maxItems": 20,
                       "type": "array",
@@ -142,14 +113,9 @@
                             "type": "string",
                             "pattern": "^[a-z][a-z0-9_]{0,39}$"
                           },
-                          "value": {
-                            "$ref": "#/$defs/__schema1"
-                          }
+                          "value": { "$ref": "#/$defs/__schema1" }
                         },
-                        "required": [
-                          "name",
-                          "value"
-                        ],
+                        "required": ["name", "value"],
                         "additionalProperties": false
                       }
                     },
@@ -157,11 +123,7 @@
                       "type": "string",
                       "const": "game_end_at_asc_match_id_asc"
                     },
-                    "limit": {
-                      "type": "integer",
-                      "minimum": 1,
-                      "maximum": 100
-                    }
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
                   },
                   "required": [
                     "name",
@@ -176,21 +138,14 @@
                   "additionalProperties": false
                 }
               },
-              "result": {
-                "$ref": "#/$defs/__schema2"
-              },
+              "result": { "$ref": "#/$defs/__schema2" },
               "maxEligibleGames": {
                 "type": "integer",
                 "minimum": 1,
                 "maximum": 100
               }
             },
-            "required": [
-              "version",
-              "gameSets",
-              "result",
-              "maxEligibleGames"
-            ],
+            "required": ["version", "gameSets", "result", "maxEligibleGames"],
             "additionalProperties": false
           },
           "deadlineSpec": {
@@ -198,44 +153,24 @@
               {
                 "type": "object",
                 "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "relative"
-                  },
-                  "days": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 90
-                  }
+                  "kind": { "type": "string", "const": "relative" },
+                  "days": { "type": "integer", "minimum": 1, "maximum": 90 }
                 },
-                "required": [
-                  "kind",
-                  "days"
-                ],
+                "required": ["kind", "days"],
                 "additionalProperties": false
               },
               {
                 "type": "object",
                 "properties": {
-                  "kind": {
-                    "type": "string",
-                    "const": "absolute"
-                  },
+                  "kind": { "type": "string", "const": "absolute" },
                   "deadlineAt": {
                     "type": "string",
                     "format": "date-time",
                     "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
                   },
-                  "timezone": {
-                    "type": "string",
-                    "minLength": 1
-                  }
+                  "timezone": { "type": "string", "minLength": 1 }
                 },
-                "required": [
-                  "kind",
-                  "deadlineAt",
-                  "timezone"
-                ],
+                "required": ["kind", "deadlineAt", "timezone"],
                 "additionalProperties": false
               }
             ]
@@ -249,10 +184,7 @@
             "type": "string",
             "pattern": "^[a-f0-9]{64}$"
           },
-          "expectedMeaning": {
-            "type": "string",
-            "minLength": 1
-          }
+          "expectedMeaning": { "type": "string", "minLength": 1 }
         },
         "required": [
           "id",
@@ -269,12 +201,7 @@
       }
     }
   },
-  "required": [
-    "$schema",
-    "version",
-    "promptVersion",
-    "cases"
-  ],
+  "required": ["$schema", "version", "promptVersion", "cases"],
   "additionalProperties": false,
   "$defs": {
     "__schema0": {
@@ -282,103 +209,56 @@
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "comparison"
-            },
-            "value": {
-              "$ref": "#/$defs/__schema1"
-            },
+            "kind": { "type": "string", "const": "comparison" },
+            "value": { "$ref": "#/$defs/__schema1" },
             "operator": {
               "type": "string",
-              "enum": [
-                "eq",
-                "neq",
-                "gte",
-                "lte",
-                "gt",
-                "lt"
-              ]
+              "enum": ["eq", "neq", "gte", "lte", "gt", "lt"]
             },
             "threshold": {
               "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "number"
-                },
-                {
-                  "type": "boolean"
-                }
+                { "type": "string" },
+                { "type": "number" },
+                { "type": "boolean" }
               ]
             }
           },
-          "required": [
-            "kind",
-            "value",
-            "operator",
-            "threshold"
-          ],
+          "required": ["kind", "value", "operator", "threshold"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "and"
-            },
+            "kind": { "type": "string", "const": "and" },
             "operands": {
               "minItems": 1,
               "type": "array",
-              "items": {
-                "$ref": "#/$defs/__schema0"
-              }
+              "items": { "$ref": "#/$defs/__schema0" }
             }
           },
-          "required": [
-            "kind",
-            "operands"
-          ],
+          "required": ["kind", "operands"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "or"
-            },
+            "kind": { "type": "string", "const": "or" },
             "operands": {
               "minItems": 1,
               "type": "array",
-              "items": {
-                "$ref": "#/$defs/__schema0"
-              }
+              "items": { "$ref": "#/$defs/__schema0" }
             }
           },
-          "required": [
-            "kind",
-            "operands"
-          ],
+          "required": ["kind", "operands"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "not"
-            },
-            "operand": {
-              "$ref": "#/$defs/__schema0"
-            }
+            "kind": { "type": "string", "const": "not" },
+            "operand": { "$ref": "#/$defs/__schema0" }
           },
-          "required": [
-            "kind",
-            "operand"
-          ],
+          "required": ["kind", "operand"],
           "additionalProperties": false
         }
       ]
@@ -388,14 +268,8 @@
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "participant"
-            },
-            "target": {
-              "type": "string",
-              "minLength": 1
-            },
+            "kind": { "type": "string", "const": "participant" },
+            "target": { "type": "string", "minLength": 1 },
             "field": {
               "type": "string",
               "enum": [
@@ -420,137 +294,65 @@
               ]
             }
           },
-          "required": [
-            "kind",
-            "target",
-            "field"
-          ],
+          "required": ["kind", "target", "field"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "participant_rate"
-            },
-            "target": {
-              "type": "string",
-              "minLength": 1
-            },
+            "kind": { "type": "string", "const": "participant_rate" },
+            "target": { "type": "string", "minLength": 1 },
             "field": {
               "type": "string",
-              "enum": [
-                "cs_per_minute",
-                "damage_per_minute",
-                "kda"
-              ]
+              "enum": ["cs_per_minute", "damage_per_minute", "kda"]
             }
           },
-          "required": [
-            "kind",
-            "target",
-            "field"
-          ],
+          "required": ["kind", "target", "field"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "game"
-            },
-            "field": {
-              "type": "string",
-              "enum": [
-                "duration_seconds",
-                "queue"
-              ]
-            }
+            "kind": { "type": "string", "const": "game" },
+            "field": { "type": "string", "enum": ["duration_seconds", "queue"] }
           },
-          "required": [
-            "kind",
-            "field"
-          ],
+          "required": ["kind", "field"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "related_participant_count"
-            },
-            "target": {
-              "type": "string",
-              "minLength": 1
-            },
-            "relationship": {
-              "type": "string",
-              "enum": [
-                "ally",
-                "opponent"
-              ]
-            },
+            "kind": { "type": "string", "const": "related_participant_count" },
+            "target": { "type": "string", "minLength": 1 },
+            "relationship": { "type": "string", "enum": ["ally", "opponent"] },
             "championName": {
               "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1
-                },
-                {
-                  "type": "null"
-                }
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
               ]
             }
           },
-          "required": [
-            "kind",
-            "target",
-            "relationship",
-            "championName"
-          ],
+          "required": ["kind", "target", "relationship", "championName"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "timeline_event_count"
-            },
-            "eventType": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 80
-            },
+            "kind": { "type": "string", "const": "timeline_event_count" },
+            "eventType": { "type": "string", "minLength": 1, "maxLength": 80 },
             "target": {
               "anyOf": [
-                {
-                  "type": "string",
-                  "minLength": 1
-                },
-                {
-                  "type": "null"
-                }
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
               ]
             },
             "role": {
               "anyOf": [
                 {
                   "type": "string",
-                  "enum": [
-                    "subject",
-                    "killer",
-                    "victim",
-                    "assist",
-                    "creator"
-                  ]
+                  "enum": ["subject", "killer", "victim", "assist", "creator"]
                 },
-                {
-                  "type": "null"
-                }
+                { "type": "null" }
               ]
             },
             "afterMs": {
@@ -560,9 +362,7 @@
                   "minimum": 0,
                   "maximum": 9007199254740991
                 },
-                {
-                  "type": "null"
-                }
+                { "type": "null" }
               ]
             },
             "beforeMs": {
@@ -572,9 +372,7 @@
                   "minimum": 0,
                   "maximum": 9007199254740991
                 },
-                {
-                  "type": "null"
-                }
+                { "type": "null" }
               ]
             },
             "itemId": {
@@ -584,9 +382,7 @@
                   "exclusiveMinimum": 0,
                   "maximum": 9007199254740991
                 },
-                {
-                  "type": "null"
-                }
+                { "type": "null" }
               ]
             }
           },
@@ -604,32 +400,15 @@
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "arithmetic"
-            },
+            "kind": { "type": "string", "const": "arithmetic" },
             "operator": {
               "type": "string",
-              "enum": [
-                "add",
-                "subtract",
-                "multiply",
-                "divide"
-              ]
+              "enum": ["add", "subtract", "multiply", "divide"]
             },
-            "left": {
-              "$ref": "#/$defs/__schema1"
-            },
-            "right": {
-              "$ref": "#/$defs/__schema1"
-            }
+            "left": { "$ref": "#/$defs/__schema1" },
+            "right": { "$ref": "#/$defs/__schema1" }
           },
-          "required": [
-            "kind",
-            "operator",
-            "left",
-            "right"
-          ],
+          "required": ["kind", "operator", "left", "right"],
           "additionalProperties": false
         }
       ]
@@ -639,75 +418,32 @@
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "matching_games"
-            },
-            "gameSet": {
-              "type": "string",
-              "minLength": 1
-            },
+            "kind": { "type": "string", "const": "matching_games" },
+            "gameSet": { "type": "string", "minLength": 1 },
             "operator": {
               "type": "string",
-              "enum": [
-                "eq",
-                "gte",
-                "lte",
-                "gt",
-                "lt"
-              ]
+              "enum": ["eq", "gte", "lte", "gt", "lt"]
             },
-            "threshold": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 100
-            }
+            "threshold": { "type": "integer", "minimum": 0, "maximum": 100 }
           },
-          "required": [
-            "kind",
-            "gameSet",
-            "operator",
-            "threshold"
-          ],
+          "required": ["kind", "gameSet", "operator", "threshold"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "aggregate"
-            },
-            "gameSet": {
-              "type": "string",
-              "minLength": 1
-            },
-            "projection": {
-              "type": "string",
-              "minLength": 1
-            },
+            "kind": { "type": "string", "const": "aggregate" },
+            "gameSet": { "type": "string", "minLength": 1 },
+            "projection": { "type": "string", "minLength": 1 },
             "function": {
               "type": "string",
-              "enum": [
-                "sum",
-                "average",
-                "minimum",
-                "maximum"
-              ]
+              "enum": ["sum", "average", "minimum", "maximum"]
             },
             "operator": {
               "type": "string",
-              "enum": [
-                "eq",
-                "gte",
-                "lte",
-                "gt",
-                "lt"
-              ]
+              "enum": ["eq", "gte", "lte", "gt", "lt"]
             },
-            "threshold": {
-              "type": "number"
-            }
+            "threshold": { "type": "number" }
           },
           "required": [
             "kind",
@@ -722,60 +458,36 @@
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "and"
-            },
+            "kind": { "type": "string", "const": "and" },
             "operands": {
               "minItems": 1,
               "type": "array",
-              "items": {
-                "$ref": "#/$defs/__schema2"
-              }
+              "items": { "$ref": "#/$defs/__schema2" }
             }
           },
-          "required": [
-            "kind",
-            "operands"
-          ],
+          "required": ["kind", "operands"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "or"
-            },
+            "kind": { "type": "string", "const": "or" },
             "operands": {
               "minItems": 1,
               "type": "array",
-              "items": {
-                "$ref": "#/$defs/__schema2"
-              }
+              "items": { "$ref": "#/$defs/__schema2" }
             }
           },
-          "required": [
-            "kind",
-            "operands"
-          ],
+          "required": ["kind", "operands"],
           "additionalProperties": false
         },
         {
           "type": "object",
           "properties": {
-            "kind": {
-              "type": "string",
-              "const": "not"
-            },
-            "operand": {
-              "$ref": "#/$defs/__schema2"
-            }
+            "kind": { "type": "string", "const": "not" },
+            "operand": { "$ref": "#/$defs/__schema2" }
           },
-          "required": [
-            "kind",
-            "operand"
-          ],
+          "required": ["kind", "operand"],
           "additionalProperties": false
         }
       ]
