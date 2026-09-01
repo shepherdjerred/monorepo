@@ -82,9 +82,9 @@
       "buildNumber": 13290
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
-      "version": "2.0.0-13000",
-      "digest": "sha256:7dcdccbfe094f8df5e0fa83809e7eeda3f6f43d2e70584b4a5207765fbb73dae",
-      "buildNumber": 13000
+      "version": "2.0.0-13290",
+      "digest": "sha256:839757bc2a1ffbdca5111843e6e78ea41771b6c73d486111ee993e2fda762fb5",
+      "buildNumber": 13290
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-13301",

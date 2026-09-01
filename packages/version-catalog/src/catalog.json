@@ -1459,7 +1459,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13000@sha256:7dcdccbfe094f8df5e0fa83809e7eeda3f6f43d2e70584b4a5207765fbb73dae",
+      "value": "2.0.0-13290@sha256:839757bc2a1ffbdca5111843e6e78ea41771b6c73d486111ee993e2fda762fb5",
       "notes": [
         "Stable central Workflow Worker image - promoted after a 24-hour clean soak",
         "not managed by renovate"
