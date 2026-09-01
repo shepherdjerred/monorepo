@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/bun";
 import type { RawMatch } from "@scout-for-lol/data";
 import { awardBucksForMatch, type EarnedAward } from "#src/betting/earnings.ts";
 import {
@@ -15,6 +16,7 @@ import type { DareTimelineEvidenceV2 } from "#src/betting/dare-evaluator-v2.ts";
 import {
   defaultDareV2CalloutDependencies,
   refreshPendingDareV2Callouts,
+  type DareV2CalloutDependencies,
 } from "#src/betting/dare-callout-v2.ts";
 import {
   DarePartialSettlementError,
@@ -28,6 +30,23 @@ import type { ClosedPool } from "#src/betting/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { captureWeeklyParlayContributions } from "#src/betting/weekly-parlay-contribution.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("betting-postmatch-hook");
+
+export async function refreshPendingDareV2CalloutsWithoutBlocking(
+  dependencies: DareV2CalloutDependencies,
+  refresh: typeof refreshPendingDareV2Callouts = refreshPendingDareV2Callouts,
+): Promise<void> {
+  try {
+    await refresh(dependencies);
+  } catch (error) {
+    logger.error("Could not refresh pending Dare v2 callouts:", error);
+    Sentry.captureException(error, {
+      tags: { source: "betting-postmatch-dare-v2-delivery" },
+    });
+  }
+}
 
 export async function refreshSettledPoolMessages(
   straightPools: readonly { matchId: string; serverId: string }[],
@@ -130,14 +149,14 @@ export async function settleAndAwardBucks(
     });
   } catch (error) {
     if (error instanceof DareV2PartialSettlementError) {
-      await refreshPendingDareV2Callouts({
+      await refreshPendingDareV2CalloutsWithoutBlocking({
         ...defaultDareV2CalloutDependencies,
         prismaClient,
       });
     }
     throw error;
   }
-  await refreshPendingDareV2Callouts({
+  await refreshPendingDareV2CalloutsWithoutBlocking({
     ...defaultDareV2CalloutDependencies,
     prismaClient,
   });

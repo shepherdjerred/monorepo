@@ -29,6 +29,7 @@ import {
   DareV2PartialSettlementError,
   type DareV2SettlementSummary,
 } from "#src/betting/dare-settle-types-v2.ts";
+import { settleDareV2OrVoidOnStorageOverflow } from "#src/betting/dare-settle-overflow-v2.ts";
 import {
   darePlanNeedsTimeline,
   loadDareTimelineEvidenceV2,
@@ -46,11 +47,9 @@ import {
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-dare-settle-v2");
-
 type ActiveDareV2Row = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
 }>;
-
 async function freshFacts(
   tx: Db,
   input: {
@@ -383,14 +382,23 @@ export async function settleDaresV2ForMatch(
         timeline,
       });
       if (!Object.values(matchEvidence.candidateSets).some(Boolean)) return;
-      return await prismaClient.$transaction(
-        async (tx) =>
-          await captureOneDareV2(tx, {
-            dare: row,
-            contract,
-            matchEvidence,
-            now,
-          }),
+      return await settleDareV2OrVoidOnStorageOverflow(
+        {
+          dare: row,
+          prismaClient,
+          now,
+          matchId: matchData.metadata.matchId,
+        },
+        async () =>
+          await prismaClient.$transaction(
+            async (tx) =>
+              await captureOneDareV2(tx, {
+                dare: row,
+                contract,
+                matchEvidence,
+                now,
+              }),
+          ),
       );
     },
     ({ row }, error) => {
@@ -407,7 +415,6 @@ export async function settleDaresV2ForMatch(
   return summaries;
 }
 
-/** Whether the live post-match path must retain a timeline before v2 capture. */
 export async function dareV2MatchNeedsTimeline(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -443,47 +450,51 @@ export async function settleActiveDareV2AtBound(
   }
   const contract = parseDareV2Contract(dare.contractJson);
   const evaluator = dareEvaluatorImplementationV2(contract.evaluatorVersion);
-  return await prismaClient.$transaction(async (tx) => {
-    const claim = await tx.bucksDareV2.updateMany({
-      where: { id: dare.id, dareState: "active" },
-      data: { updatedAt: now, ...pendingDareV2CalloutRefresh() },
-    });
-    if (claim.count !== 1) return;
-    const rows = await tx.bucksDareV2Evidence.findMany({
-      where: { dareId: dare.id },
-      orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
-    });
-    const evidence = rows.map((row) => storedDareV2Evidence(row));
-    const finality = evaluator.analyzeFinality({
-      plan: contract.compiledPlan,
-      evidence,
-      deadlineReached: true,
-    });
-    const proof =
-      finality.value === null
-        ? null
-        : evaluator.buildProof({
-            plan: contract.compiledPlan,
-            evidence,
-            value: finality.value,
-            settledAt: now.toISOString(),
-          });
-    const resolution = await resolveFinalDareV2(tx, {
-      dare,
-      contract,
-      finality,
-      proof,
-      now,
-    });
-    return {
-      contractVersion: 2,
-      dareId: dare.id,
-      serverId: dare.serverId,
-      channelId: dare.channelId,
-      resolution,
-      value: finality.value,
-      finality,
-      proof,
-    };
-  });
+  return await settleDareV2OrVoidOnStorageOverflow(
+    { dare, prismaClient, now },
+    async () =>
+      await prismaClient.$transaction(async (tx) => {
+        const claim = await tx.bucksDareV2.updateMany({
+          where: { id: dare.id, dareState: "active" },
+          data: { updatedAt: now, ...pendingDareV2CalloutRefresh() },
+        });
+        if (claim.count !== 1) return;
+        const rows = await tx.bucksDareV2Evidence.findMany({
+          where: { dareId: dare.id },
+          orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
+        });
+        const evidence = rows.map((row) => storedDareV2Evidence(row));
+        const finality = evaluator.analyzeFinality({
+          plan: contract.compiledPlan,
+          evidence,
+          deadlineReached: true,
+        });
+        const proof =
+          finality.value === null
+            ? null
+            : evaluator.buildProof({
+                plan: contract.compiledPlan,
+                evidence,
+                value: finality.value,
+                settledAt: now.toISOString(),
+              });
+        const resolution = await resolveFinalDareV2(tx, {
+          dare,
+          contract,
+          finality,
+          proof,
+          now,
+        });
+        return {
+          contractVersion: 2,
+          dareId: dare.id,
+          serverId: dare.serverId,
+          channelId: dare.channelId,
+          resolution,
+          value: finality.value,
+          finality,
+          proof,
+        };
+      }),
+  );
 }

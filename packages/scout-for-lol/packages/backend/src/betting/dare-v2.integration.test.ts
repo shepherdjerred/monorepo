@@ -8,12 +8,17 @@ import {
   vi,
 } from "vitest";
 import {
+  BUCKS_INT32_MAX,
+  DareCompiledPlanV2Schema,
   RawMatchSchema,
   type DareDeadlineSpecV2,
   type DareTargetBindingV2,
   type RawMatch,
 } from "@scout-for-lol/data";
-import { SEED_GRANT } from "#src/betting/constants.ts";
+import {
+  DARE_WINDOW_INGESTION_GRACE_MS,
+  SEED_GRANT,
+} from "#src/betting/constants.ts";
 import {
   createDareDraftV2,
   reviseDareDraftV2,
@@ -42,6 +47,7 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
+import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   testAccountId,
@@ -71,6 +77,10 @@ const TARGET_BINDING: DareTargetBindingV2 = {
 };
 
 const PLAN = TWISTED_FATE_SAME_GAME_PLAN;
+const EXACTLY_ONE_PLAN = DareCompiledPlanV2Schema.parse({
+  ...PLAN,
+  result: { ...PLAN.result, operator: "eq", threshold: 1 },
+});
 
 const deps = {
   prismaClient: db,
@@ -121,6 +131,7 @@ afterAll(async () => {
 async function makeDraft(input?: {
   deadlineSpec?: DareDeadlineSpecV2;
   openingStake?: number;
+  plan?: typeof PLAN;
 }) {
   const result = await createDareDraftV2(
     {
@@ -129,7 +140,7 @@ async function makeDraft(input?: {
       challengerDiscordId: CHALLENGER,
       originalText:
         "I bet Virmel can't get 8 CS/m on Twisted Fate in a game at least 20m",
-      plan: PLAN,
+      plan: input?.plan ?? PLAN,
       targets: [TARGET_BINDING],
       deadlineSpec: input?.deadlineSpec ?? { kind: "relative", days: 7 },
       openingStake: input?.openingStake ?? 20,
@@ -170,6 +181,31 @@ function qualifyingMatch(matchId: string): RawMatch {
     timePlayed: 25 * 60,
     creepScore: 200,
   });
+}
+
+async function fillTargetWallet(dareId: number): Promise<void> {
+  const target = await db.bucksDareV2Target.findFirstOrThrow({
+    where: { dareId },
+    select: { bucksAccountId: true },
+  });
+  if (target.bucksAccountId === null) {
+    throw new Error("Expected the accepted target to have a Bucks wallet.");
+  }
+  const account = await db.bucksAccount.findUniqueOrThrow({
+    where: { id: target.bucksAccountId },
+  });
+  await db.$transaction((tx) =>
+    applyBucksDelta(tx, {
+      bucksAccountId: account.id,
+      delta: BUCKS_INT32_MAX - account.balance,
+      kind: "adjustment",
+      context: {
+        type: "adjustment",
+        note: "fill Dare v2 target wallet to the Int32 ceiling",
+        actorDiscordId: CHALLENGER,
+      },
+    }),
+  );
 }
 
 async function intent(input: {
@@ -588,6 +624,78 @@ describe("Dare v2 partial settlement", () => {
     });
     expect(firstDare.dareState).not.toBe("active");
     expect(secondDare.dareState).toBe("active");
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+});
+
+describe("Dare v2 payout storage overflow", () => {
+  test("voids and fully refunds an early-success payout that cannot fit", async () => {
+    const dareId = await makeDraft();
+    await activate(dareId, "overflow-match");
+    await fillTargetWallet(dareId);
+
+    const summaries = await settleDaresV2ForMatch(
+      qualifyingMatch("NA1_DARE_V2_OVERFLOW_MATCH"),
+      db,
+    );
+
+    expect(summaries).toMatchObject([
+      { dareId, resolution: "voided", value: null },
+    ]);
+    const dare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+    });
+    expect(dare.dareState).toBe("voided");
+    expect(dare.voidReason).toBe("storage_overflow");
+    expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(0);
+    const challenger = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
+      },
+    });
+    expect(challenger.balance).toBe(SEED_GRANT);
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+
+  test("voids and fully refunds a deadline payout that cannot fit", async () => {
+    const dareId = await makeDraft({ plan: EXACTLY_ONE_PLAN });
+    await activate(dareId, "overflow-deadline");
+    await fillTargetWallet(dareId);
+    await expect(
+      settleDaresV2ForMatch(
+        qualifyingMatch("NA1_DARE_V2_OVERFLOW_DEADLINE"),
+        db,
+      ),
+    ).resolves.toMatchObject([{ dareId, resolution: "captured", value: true }]);
+    const active = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+    });
+    if (active.deadlineAt === null) {
+      throw new Error("Expected the active Dare v2 to have a deadline.");
+    }
+
+    const summaries = await settleEndedDareV2Windows(
+      db,
+      new Date(
+        active.deadlineAt.getTime() + DARE_WINDOW_INGESTION_GRACE_MS + 1,
+      ),
+    );
+
+    expect(summaries).toMatchObject([
+      { dareId, resolution: "voided", value: null },
+    ]);
+    const dare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+    });
+    expect(dare.dareState).toBe("voided");
+    expect(dare.voidReason).toBe("storage_overflow");
+    expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(1);
+    const challenger = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
+      },
+    });
+    expect(challenger.balance).toBe(SEED_GRANT);
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 });
