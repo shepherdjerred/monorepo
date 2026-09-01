@@ -1,8 +1,4 @@
-import { type ReportRenderSpec } from "@scout-for-lol/data";
-import {
-  analyticsChartToImage,
-  type AnalyticsChartProps,
-} from "@scout-for-lol/report";
+import { analyticsChartToImage } from "@scout-for-lol/report";
 import { format, getISODay, parseISO, startOfISOWeek } from "date-fns";
 import { match } from "ts-pattern";
 import type {
@@ -20,23 +16,18 @@ import {
 import { resolveHeatmapAxes } from "#src/reports/heatmap-axes.ts";
 import { planGroupingNames } from "#src/reports/plan-columns.ts";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
+import {
+  chartBase,
+  chartRows,
+  requireFirst,
+  yColumns,
+  type AnalyticsChartBase,
+  type ReportChartRender,
+} from "#src/reports/report-chart-layout.ts";
 
-type ChartRender = Extract<
-  ReportRenderSpec,
-  {
-    kind:
-      | "STACKED_BAR"
-      | "AREA_CHART"
-      | "DONUT_CHART"
-      | "SCATTER_CHART"
-      | "HEATMAP"
-      | "RADAR_CHART"
-      | "KPI_CARD"
-      | "BUMP_CHART"
-      | "CALENDAR_HEATMAP"
-      | "HISTOGRAM"
-      | "BOX_PLOT";
-  }
+type ChartRender = Exclude<
+  ReportChartRender,
+  { kind: "BAR_CHART" | "LINE_CHART" }
 >;
 
 type AnalyticsRenderContext = {
@@ -49,11 +40,6 @@ type AnalyticsRenderContext = {
   display: MetricDisplay;
   rows: ReportResultRow[];
 };
-
-type AnalyticsChartBase = Pick<
-  AnalyticsChartProps,
-  "title" | "subtitle" | "theme" | "palette" | "colors" | "legend" | "labels"
->;
 
 export function renderLegacyAnalyticsImage(input: {
   title: string;
@@ -259,64 +245,4 @@ function renderKpiAnalytics(context: AnalyticsRenderContext): Buffer {
       value: formattedChartValue(plan, row, column),
     })),
   });
-}
-
-function chartBase(render: ChartRender, title: string): AnalyticsChartBase {
-  return {
-    title,
-    ...(render.options.subtitle === undefined
-      ? {}
-      : { subtitle: render.options.subtitle }),
-    ...(render.options.theme === undefined
-      ? {}
-      : { theme: render.options.theme }),
-    ...(render.options.palette === undefined
-      ? {}
-      : { palette: render.options.palette }),
-    ...(render.options.colors === undefined
-      ? {}
-      : { colors: render.options.colors }),
-    ...(render.options.legend === undefined
-      ? {}
-      : { legend: render.options.legend }),
-    ...(render.options.labels === undefined
-      ? {}
-      : { labels: render.options.labels }),
-  };
-}
-
-function yColumns(result: ReportQueryResult, render: ChartRender): string[] {
-  const configured = render.encoding.y;
-  if (Array.isArray(configured)) return configured;
-  if (configured !== undefined) return [configured];
-  const first = result.plan.outputs[0]?.name;
-  if (first === undefined) {
-    throw new Error("Cannot render a chart without an output column.");
-  }
-  return [first];
-}
-
-function requireFirst(columns: string[]): string {
-  const first = columns[0];
-  if (first === undefined) {
-    throw new Error("Chart requires at least one Y column.");
-  }
-  return first;
-}
-
-function chartRows(
-  plan: ScoutQlPlan,
-  rows: ReportResultRow[],
-  render: ChartRender,
-  column: string,
-): ReportResultRow[] {
-  if (render.options.sort === undefined || render.options.sort === "query") {
-    return rows;
-  }
-  const direction = render.options.sort === "asc" ? 1 : -1;
-  return rows.toSorted(
-    (left, right) =>
-      direction *
-      (chartNumber(plan, left, column) - chartNumber(plan, right, column)),
-  );
 }

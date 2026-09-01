@@ -13,7 +13,6 @@ import type {
   ReportQueryResult,
   ReportResultRow,
 } from "#src/reports/query-types.ts";
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
 import {
   formatRankedLabel,
   resolveMentionCount,
@@ -21,9 +20,15 @@ import {
 import {
   chartSeries,
   columnDisplay,
-  chartNumber,
 } from "#src/reports/report-chart-values.ts";
 import { renderLegacyAnalyticsImage } from "#src/reports/output-analytics.ts";
+import {
+  chartBase,
+  chartRows,
+  requireFirst,
+  yColumns,
+  type ReportChartRender,
+} from "#src/reports/report-chart-layout.ts";
 
 export type RenderedReportOutput = {
   content: string;
@@ -42,25 +47,7 @@ type RenderReportOutputParams = {
   playerDiscordIds?: Map<number, string>;
 };
 
-type ChartRender = Extract<
-  ReportRenderSpec,
-  {
-    kind:
-      | "BAR_CHART"
-      | "LINE_CHART"
-      | "STACKED_BAR"
-      | "AREA_CHART"
-      | "DONUT_CHART"
-      | "SCATTER_CHART"
-      | "HEATMAP"
-      | "RADAR_CHART"
-      | "KPI_CARD"
-      | "BUMP_CHART"
-      | "CALENDAR_HEATMAP"
-      | "HISTOGRAM"
-      | "BOX_PLOT";
-  }
->;
+type ChartRender = ReportChartRender;
 
 export function renderReportOutput(
   params: RenderReportOutputParams,
@@ -285,16 +272,24 @@ function hasThinRateRows(result: ReportQueryResult): boolean {
   });
 }
 
+function prepareChart(params: RenderReportOutputParams, render: ChartRender) {
+  const plan = params.result.plan;
+  const columns = yColumns(params.result, render);
+  const firstColumn = requireFirst(columns);
+  return {
+    plan,
+    columns,
+    display: columnDisplay(plan, firstColumn),
+    rows: chartRows(plan, params.result.rows, render, firstColumn),
+    title: render.options.title ?? params.title,
+  };
+}
+
 function renderBarChart(
   params: RenderReportOutputParams,
   render: Extract<ReportRenderSpec, { kind: "BAR_CHART" }>,
 ): RenderedReportOutput {
-  const plan = params.result.plan;
-  const columns = yColumns(params, render);
-  const firstColumn = requireFirst(columns);
-  const display = columnDisplay(plan, firstColumn);
-  const rows = chartRows(plan, params.result.rows, render, firstColumn);
-  const title = render.options.title ?? params.title;
+  const { plan, columns, display, rows, title } = prepareChart(params, render);
   const data = analyticsChartToImage({
     ...chartBase(render, title),
     chartType: "bar",
@@ -319,12 +314,7 @@ function renderLineChart(
   params: RenderReportOutputParams,
   render: Extract<ReportRenderSpec, { kind: "LINE_CHART" }>,
 ): RenderedReportOutput {
-  const plan = params.result.plan;
-  const columns = yColumns(params, render);
-  const firstColumn = requireFirst(columns);
-  const display = columnDisplay(plan, firstColumn);
-  const rows = chartRows(plan, params.result.rows, render, firstColumn);
-  const title = render.options.title ?? params.title;
+  const { plan, columns, display, rows, title } = prepareChart(params, render);
   const data = analyticsChartToImage({
     ...chartBase(render, title),
     chartType: "line",
@@ -362,65 +352,4 @@ function renderAnalyticsChart(
       data,
     },
   };
-}
-
-function chartBase(render: ChartRender, title: string) {
-  return {
-    title,
-    ...(render.options.subtitle === undefined
-      ? {}
-      : { subtitle: render.options.subtitle }),
-    ...(render.options.theme === undefined
-      ? {}
-      : { theme: render.options.theme }),
-    ...(render.options.palette === undefined
-      ? {}
-      : { palette: render.options.palette }),
-    ...(render.options.colors === undefined
-      ? {}
-      : { colors: render.options.colors }),
-    ...(render.options.legend === undefined
-      ? {}
-      : { legend: render.options.legend }),
-    ...(render.options.labels === undefined
-      ? {}
-      : { labels: render.options.labels }),
-  };
-}
-
-function yColumns(
-  params: RenderReportOutputParams,
-  render: ChartRender,
-): string[] {
-  const configured = render.encoding.y;
-  if (Array.isArray(configured)) return configured;
-  if (configured !== undefined) return [configured];
-  const first = params.result.plan.outputs[0]?.name;
-  if (first === undefined)
-    throw new Error("Cannot render a chart without an output column.");
-  return [first];
-}
-
-function requireFirst(columns: string[]): string {
-  const first = columns[0];
-  if (first === undefined)
-    throw new Error("Chart requires at least one Y column.");
-  return first;
-}
-
-function chartRows(
-  plan: ScoutQlPlan,
-  rows: ReportResultRow[],
-  render: ChartRender,
-  column: string,
-): ReportResultRow[] {
-  if (render.options.sort === undefined || render.options.sort === "query") {
-    return rows;
-  }
-  const direction = render.options.sort === "asc" ? 1 : -1;
-  return rows.toSorted(
-    (left, right) =>
-      direction *
-      (chartNumber(plan, left, column) - chartNumber(plan, right, column)),
-  );
 }

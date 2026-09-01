@@ -1257,12 +1257,8 @@
       "tokens": 72
     },
     "packages/scout-for-lol/packages/backend/src/reports/output-analytics.ts|packages/scout-for-lol/packages/backend/src/reports/output.ts": {
-      "clones": 4,
-      "tokens": 437
-    },
-    "packages/scout-for-lol/packages/backend/src/reports/output.ts|packages/scout-for-lol/packages/backend/src/reports/output.ts": {
-      "clones": 1,
-      "tokens": 91
+      "clones": 2,
+      "tokens": 176
     },
     "packages/scout-for-lol/packages/backend/src/reports/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
       "clones": 1,
