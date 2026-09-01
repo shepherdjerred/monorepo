@@ -35,8 +35,9 @@ export async function checkPostMatch(): Promise<{
   try {
     let matchHistoryError: unknown;
     let evidenceComplete = false;
+    let evidenceWatermark: Date | undefined;
     try {
-      evidenceComplete = await checkMatchHistory();
+      ({ evidenceComplete, evidenceWatermark } = await checkMatchHistory());
     } catch (error) {
       matchHistoryError = error;
       logger.error(
@@ -62,6 +63,7 @@ export async function checkPostMatch(): Promise<{
     try {
       ({ dareSummaries } = await runPostMatchMaintenance({
         settleDareV2Deadlines: evidenceComplete,
+        dareEvidenceWatermark: evidenceWatermark,
       }));
     } catch (error) {
       earningsRecoveryError = error;
@@ -100,6 +102,7 @@ export async function checkPostMatch(): Promise<{
 
 export async function runPostMatchMaintenance(options?: {
   settleDareV2Deadlines: boolean;
+  dareEvidenceWatermark?: Date | undefined;
 }): Promise<{
   dareSummaries: DareSettlementSummary[];
 }> {
@@ -124,7 +127,10 @@ export async function runPostMatchMaintenance(options?: {
       run: async () => {
         try {
           if (settleDareV2Deadlines) {
-            await settleEndedDareV2Windows();
+            await settleEndedDareV2Windows(
+              undefined,
+              options?.dareEvidenceWatermark,
+            );
           }
           await refreshPendingDareV2Callouts();
         } catch (error) {

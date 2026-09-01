@@ -16,4 +16,14 @@ describe("post-match discovery result compatibility", () => {
       }).evidenceComplete,
     ).toBe(false);
   });
+
+  test("preserves the completion watermark for deadline settlement", () => {
+    expect(
+      PostMatchDiscoveryResultSchema.parse({
+        matches: [],
+        evidenceComplete: true,
+        evidenceWatermark: "2026-09-01T16:00:00.000Z",
+      }).evidenceWatermark,
+    ).toBe("2026-09-01T16:00:00.000Z");
+  });
 });

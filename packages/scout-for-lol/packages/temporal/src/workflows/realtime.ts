@@ -82,6 +82,7 @@ export async function scoutPostMatchDiscoveryWorkflow(
   await realtimeActivities(input.stage).runPostMatchMaintenance({
     ...input,
     settleDareV2Deadlines: discovered.evidenceComplete,
+    evidenceWatermark: discovered.evidenceWatermark,
   });
   return { status: "completed", childrenStarted };
 }

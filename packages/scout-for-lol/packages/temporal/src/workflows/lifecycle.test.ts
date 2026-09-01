@@ -163,21 +163,34 @@ describe("realtime workflows", () => {
     ).resolves.toBe("completed");
   });
 
-  test("withholds Dare deadline settlement when discovery evidence is incomplete", async () => {
-    let settleDareV2Deadlines: boolean | undefined;
+  test("propagates Dare evidence completeness and its deadline watermark", async () => {
+    const maintenanceInputs: {
+      stage: "dev";
+      settleDareV2Deadlines: boolean;
+      evidenceWatermark?: string;
+    }[] = [];
+    let discoveryRun = 0;
     const workflow = await workflowWorker();
     const activities = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: "scout-dev-realtime",
       activities: {
-        discoverPostMatchIds: () => ({
-          matches: [],
-          evidenceComplete: false,
-        }),
+        discoverPostMatchIds: () => {
+          discoveryRun += 1;
+          return discoveryRun === 1
+            ? { matches: [], evidenceComplete: false }
+            : {
+                matches: [],
+                evidenceComplete: true,
+                evidenceWatermark: "2026-09-01T16:00:00.000Z",
+              };
+        },
         runPostMatchMaintenance: (input: {
+          stage: "dev";
           settleDareV2Deadlines: boolean;
+          evidenceWatermark?: string;
         }) => {
-          settleDareV2Deadlines = input.settleDareV2Deadlines;
+          maintenanceInputs.push(input);
         },
       },
       maxConcurrentActivityTaskExecutions: 1,
@@ -192,7 +205,21 @@ describe("realtime workflows", () => {
         args: [{ stage: "dev" }],
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
-    expect(settleDareV2Deadlines).toBe(false);
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: "postmatch-discovery-watermark",
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
+    expect(maintenanceInputs).toEqual([
+      { stage: "dev", settleDareV2Deadlines: false },
+      {
+        stage: "dev",
+        settleDareV2Deadlines: true,
+        evidenceWatermark: "2026-09-01T16:00:00.000Z",
+      },
+    ]);
   });
 
   test("restarts a failed match child without duplicating a successful child", async () => {

@@ -8,6 +8,7 @@ export type MatchDiscovery = {
   complete: boolean;
   intents: DiscoveredMatchIntent[];
   allPlayerConfigs: PlayerConfigEntry[];
+  evidenceWatermark: Date;
 };
 
 export type MatchCompletionResolver = (
@@ -15,11 +16,16 @@ export type MatchCompletionResolver = (
 ) => Promise<number | undefined>;
 
 export type MatchIntentOrderResult =
-  | { kind: "ordered"; intents: DiscoveredMatchIntent[] }
+  | {
+      kind: "ordered";
+      intents: DiscoveredMatchIntent[];
+      deferredMatchIds: DiscoveredMatchIntent["matchId"][];
+    }
   | { kind: "unavailable"; matchId: DiscoveredMatchIntent["matchId"] };
 
 export async function orderMatchIntentsByCompletion(
   intents: readonly DiscoveredMatchIntent[],
+  maximumCompletionTimestamp: number,
   completionOf: MatchCompletionResolver,
 ): Promise<MatchIntentOrderResult> {
   const ranked = await Promise.all(
@@ -41,9 +47,17 @@ export async function orderMatchIntentsByCompletion(
       intent: candidate.intent,
     });
   }
+  const withinWatermark = available.filter(
+    ({ gameEndTimestamp }) => gameEndTimestamp <= maximumCompletionTimestamp,
+  );
   return {
     kind: "ordered",
-    intents: available
+    deferredMatchIds: available
+      .filter(
+        ({ gameEndTimestamp }) => gameEndTimestamp > maximumCompletionTimestamp,
+      )
+      .map(({ intent }) => intent.matchId),
+    intents: withinWatermark
       .toSorted(
         (left, right) =>
           left.gameEndTimestamp - right.gameEndTimestamp ||

@@ -11,6 +11,7 @@ import { createLogger } from "#src/logger.ts";
 import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
 import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-processing.ts";
 import type { MatchPollAccount } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
+import { matchHistoryReadCount } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
 import { calculatePollingInterval } from "#src/utils/polling-intervals.ts";
 
 const logger = createLogger("postmatch-match-history-collection");
@@ -18,6 +19,7 @@ const logger = createLogger("postmatch-match-history-collection");
 async function collectNewMatchesForPlayer(
   account: MatchPollAccount,
   currentTime: Date,
+  requiredForActiveDare: boolean,
 ): Promise<PlayerWithMatchIds | undefined> {
   const { config: player, lastMatchTime, lastCheckedAt } = account;
   const puuid = player.league.leagueAccount.puuid;
@@ -27,7 +29,13 @@ async function collectNewMatchesForPlayer(
   );
 
   const lastProcessedMatchId = await getLastProcessedMatch(puuid);
-  const recentMatchIds = await getRecentMatchIds(player, 5);
+  // A mandatory Dare target must retain the whole contract evidence bound.
+  // Otherwise games that finish after this poll's watermark can crowd older,
+  // still-unobserved evidence out of the ordinary five-match history read.
+  const recentMatchIds = await getRecentMatchIds(
+    player,
+    matchHistoryReadCount(requiredForActiveDare),
+  );
   if (recentMatchIds === undefined) {
     throw new Error(`Match history is unavailable for ${puuid}`);
   }
@@ -76,6 +84,7 @@ export async function collectNewMatches(input: {
       const matches = await collectNewMatchesForPlayer(
         account,
         input.currentTime,
+        input.requiredDarePuuids.has(puuid),
       );
       if (matches !== undefined) playersWithMatches.push(matches);
     } catch (error) {

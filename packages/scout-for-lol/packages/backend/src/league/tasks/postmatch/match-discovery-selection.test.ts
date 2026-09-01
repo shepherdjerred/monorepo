@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
   activeDareTargetPuuids,
+  matchHistoryReadCount,
   selectMatchPollAccounts,
   unavailableRequiredPuuids,
   type MatchPollAccount,
@@ -34,6 +35,11 @@ function account(
 }
 
 describe("post-match discovery selection", () => {
+  test("retains the full contract evidence bound for mandatory Dare accounts", () => {
+    expect(matchHistoryReadCount(true)).toBe(100);
+    expect(matchHistoryReadCount(false)).toBe(5);
+  });
+
   test("polls every active Dare account outside ordinary eligibility and caps", () => {
     const recentlyChecked = new Date(NOW.getTime() - 60_000);
     const dareA = puuid("dare-a");

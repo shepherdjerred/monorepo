@@ -1,4 +1,7 @@
-import { DareTargetBindingV2Schema } from "@scout-for-lol/data";
+import {
+  DARE_V2_MAX_ELIGIBLE_GAMES,
+  DareTargetBindingV2Schema,
+} from "@scout-for-lol/data";
 import type { PlayerConfigEntry } from "@scout-for-lol/data";
 import { shouldCheckPlayer } from "#src/utils/polling-intervals.ts";
 
@@ -14,6 +17,10 @@ function puuidOf(account: MatchPollAccount): string {
 
 function checkedAtValue(account: MatchPollAccount): number {
   return account.lastCheckedAt?.getTime() ?? Number.NEGATIVE_INFINITY;
+}
+
+export function matchHistoryReadCount(requiredForActiveDare: boolean): number {
+  return requiredForActiveDare ? DARE_V2_MAX_ELIGIBLE_GAMES : 5;
 }
 
 function uniquePollAccounts(

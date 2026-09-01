@@ -147,6 +147,10 @@ function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
           await import("#src/league/tasks/postmatch/index.ts");
         await runPostMatchMaintenance({
           settleDareV2Deadlines: input.settleDareV2Deadlines,
+          dareEvidenceWatermark:
+            input.evidenceWatermark === undefined
+              ? undefined
+              : new Date(input.evidenceWatermark),
         });
       });
       Context.current().heartbeat({ phase: "complete" });

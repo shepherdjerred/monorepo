@@ -327,6 +327,7 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
       complete: false,
       intents: [],
       allPlayerConfigs: accountsWithState.map((account) => account.config),
+      evidenceWatermark: currentTime,
     };
   }
   const playersToCheck = selectMatchPollAccounts({
@@ -348,11 +349,13 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
       complete: false,
       intents: [],
       allPlayerConfigs: accountsWithState.map((account) => account.config),
+      evidenceWatermark: currentTime,
     };
   }
   const intents = deduplicateMatchIntents(collected.playersWithMatches);
   const ordered = await orderMatchIntentsByCompletion(
     intents,
+    currentTime.getTime(),
     async (intent) => {
       const match = await fetchMatchData(
         MatchIdSchema.parse(intent.matchId),
@@ -369,18 +372,26 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
       complete: false,
       intents: [],
       allPlayerConfigs: accountsWithState.map((account) => account.config),
+      evidenceWatermark: currentTime,
     };
+  }
+  if (ordered.deferredMatchIds.length > 0) {
+    logger.info(
+      `Deferring ${ordered.deferredMatchIds.length.toString()} match(es) completed after the poll watermark: ${ordered.deferredMatchIds.join(", ")}`,
+    );
   }
   return {
     complete: true,
     intents: ordered.intents,
     allPlayerConfigs: accountsWithState.map((account) => account.config),
+    evidenceWatermark: currentTime,
   };
 }
 
 export async function discoverPostMatchIntents(): Promise<{
   matches: DiscoveredMatchIntent[];
   evidenceComplete: boolean;
+  evidenceWatermark?: string;
 }> {
   if (shouldSkipPollingRun()) {
     return { matches: [], evidenceComplete: false };
@@ -396,7 +407,11 @@ export async function discoverPostMatchIntents(): Promise<{
       return { matches: [], evidenceComplete: false };
     }
     await setLastSuccessfulPollAt(new Date());
-    return { matches: discovery.intents, evidenceComplete: true };
+    return {
+      matches: discovery.intents,
+      evidenceComplete: true,
+      evidenceWatermark: discovery.evidenceWatermark.toISOString(),
+    };
   } finally {
     isPollingInProgress = false;
     pollingStartTime = undefined;
@@ -406,11 +421,14 @@ export async function discoverPostMatchIntents(): Promise<{
 /**
  * Main function to check for new matches via match history polling
  */
-export async function checkMatchHistory(): Promise<boolean> {
+export async function checkMatchHistory(): Promise<{
+  evidenceComplete: boolean;
+  evidenceWatermark?: Date;
+}> {
   // Prevent concurrent runs to avoid race conditions where two cron runs
   // could process the same match before lastProcessedMatchId is updated
   if (shouldSkipPollingRun()) {
-    return false;
+    return { evidenceComplete: false };
   }
 
   isPollingInProgress = true;
@@ -424,7 +442,7 @@ export async function checkMatchHistory(): Promise<boolean> {
       logger.warn(
         "Match discovery evidence is incomplete; leaving ingestion cursors unchanged",
       );
-      return false;
+      return { evidenceComplete: false };
     }
     if (discovery.intents.length === 0) {
       logger.info("✅ No new matches found for any players");
@@ -433,7 +451,10 @@ export async function checkMatchHistory(): Promise<boolean> {
         `⏱️  Match history check completed in ${totalTime.toString()}ms`,
       );
       await setLastSuccessfulPollAt(new Date());
-      return true;
+      return {
+        evidenceComplete: true,
+        evidenceWatermark: discovery.evidenceWatermark,
+      };
     }
 
     const totalDiscord = discovery.intents.filter(
@@ -471,7 +492,10 @@ export async function checkMatchHistory(): Promise<boolean> {
     );
 
     await setLastSuccessfulPollAt(new Date());
-    return true;
+    return {
+      evidenceComplete: true,
+      evidenceWatermark: discovery.evidenceWatermark,
+    };
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
     throw error;
