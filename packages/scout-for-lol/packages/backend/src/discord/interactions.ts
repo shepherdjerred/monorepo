@@ -30,10 +30,7 @@ import {
   handleDareButton,
   type DareButtonInteraction,
 } from "#src/betting/dare-discord.ts";
-import {
-  handleDareV2Button,
-  type DareV2ButtonInteraction,
-} from "#src/betting/dare-discord-v2.ts";
+import { handleDareV2Button } from "#src/betting/dare-discord-v2.ts";
 import {
   isDareV2CustomId,
   parseDareV2CustomId,
@@ -108,8 +105,7 @@ async function routeInteraction(interaction: Interaction): Promise<void> {
 export type RoutableButtonInteraction = BetButtonInteraction &
   BucksNavigationInteraction &
   ScoutPublishButtonInteraction &
-  DareButtonInteraction &
-  DareV2ButtonInteraction & {
+  DareButtonInteraction & {
     deferUpdate: () => Promise<unknown>;
     deferred: boolean;
     replied: boolean;

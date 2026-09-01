@@ -19,6 +19,7 @@ import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
+import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
 import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
@@ -32,6 +33,7 @@ export type BbDareV2Dependencies = {
   runTurn?: typeof runPersistedExploreTurn;
   createIntent?: typeof createDareV2ConfirmationIntent;
   isPolicyEnabled?: typeof isPolicyEnabled;
+  isExploreGuildAllowed?: typeof isExploreGuildAllowed;
 };
 
 function scopeText(plan: DareCompiledPlanV2): string {
@@ -109,6 +111,14 @@ export async function replyBbDareV2(
   },
   dependencies: BbDareV2Dependencies = {},
 ): Promise<void> {
+  const exploreAllowed =
+    dependencies.isExploreGuildAllowed ?? isExploreGuildAllowed;
+  if (!exploreAllowed(input.serverId)) {
+    await interaction.editReply({
+      content: "Scout Explore is not enabled in this server.",
+    });
+    return;
+  }
   const client = dependencies.client ?? prisma;
   const runTurn = dependencies.runTurn ?? runPersistedExploreTurn;
   const identity = { userId: input.challengerDiscordId };

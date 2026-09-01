@@ -16,6 +16,7 @@ import {
   describeDareTranslationFailure,
   replyBbDare,
 } from "#src/discord/commands/bb-dare.ts";
+import { replyBbDareV2 } from "#src/discord/commands/bb-dare-v2.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 import { bbInteractionAckMocks } from "#src/testing/bb-interaction-mocks.ts";
 
@@ -342,5 +343,27 @@ describe("/bb dare", () => {
       "at least 7 games where Virmel wins on Warwick",
     );
     expect(serialized).toContain("Confirm before");
+  });
+});
+
+describe("/bb dare Explore access", () => {
+  test("refuses Dare v2 before creating a turn in an ineligible guild", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+
+    await replyBbDareV2(
+      interaction,
+      {
+        serverId: SERVER,
+        channelId: DiscordChannelIdSchema.parse(CHANNEL),
+        challengerDiscordId: CHALLENGER,
+        text: "I bet Virmel can't win 7 games on Warwick",
+        amount: 20,
+      },
+      { isExploreGuildAllowed: () => false },
+    );
+
+    expect(interaction.editReply).toHaveBeenCalledWith({
+      content: "Scout Explore is not enabled in this server.",
+    });
   });
 });
