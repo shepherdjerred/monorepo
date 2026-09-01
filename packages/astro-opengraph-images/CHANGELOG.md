@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.20.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.0...astro-opengraph-images-v1.20.1) (2026-09-01)
+
+No library behavior changes. The shipped code is identical to 1.20.0; this release exists only because of documentation fixes that release-please picked up.
+
+- README links for the built-in `black-and-white` and `custom-property` presets now point to their actual source filenames ([30f335d](https://github.com/shepherdjerred/monorepo/commit/30f335dac39e7807ae6be556ec0a8ced8a9f0738))
+
 ## [1.20.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.19.0...astro-opengraph-images-v1.20.0) (2026-08-25)
 
 A major `satori` bump plus a startup-cost improvement; no public API changes.
