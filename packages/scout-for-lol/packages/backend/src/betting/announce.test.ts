@@ -483,9 +483,10 @@ function parlaySummary(serverId: string) {
 }
 
 describe("buildAnnouncements", () => {
-  test("attaches a parlay to the guild's own outcome announcement", () => {
+  test("attaches a parlay to a visible outcome announcement", () => {
     const announcements = buildAnnouncements({
       closures: [],
+      earnings: [],
       settlements: [
         {
           matchId: "NA1_1",
@@ -495,7 +496,25 @@ describe("buildAnnouncements", () => {
           winnersPool: 5,
           losersPool: 5,
           houseCut: 1,
-          bets: [],
+          bets: [
+            {
+              betId: 1,
+              bucksAccountId: 1,
+              discordId: bucksTestDiscordId(1),
+              isHouse: false,
+              predictedTeamId: 100,
+              submittedStake: 5,
+              matchedStake: 5,
+              unmatchedStake: 0,
+              grossPayout: 10,
+              houseCut: 0,
+              payout: 10,
+              winnings: 5,
+              won: true,
+              refunded: false,
+              subjectPuuid: "winner-puuid",
+            },
+          ],
         },
       ],
       parlaySettlements: [parlaySummary(SERVER_ID)],
@@ -512,6 +531,7 @@ describe("buildAnnouncements", () => {
   test("carries a parlay whose pool this pass did not settle", () => {
     const announcements = buildAnnouncements({
       closures: [],
+      earnings: [],
       settlements: [],
       parlaySettlements: [parlaySummary(SERVER_ID)],
     });
@@ -544,6 +564,7 @@ describe("buildAnnouncements", () => {
           ],
         },
       ],
+      earnings: [],
       settlements: [],
       parlaySettlements: [parlaySummary(SERVER_ID)],
     });
@@ -557,10 +578,88 @@ describe("buildAnnouncements", () => {
     expect(
       buildAnnouncements({
         closures: [],
+        earnings: [],
         settlements: [],
         parlaySettlements: [],
       }),
     ).toEqual([]);
+  });
+
+  test("does not announce a settlement with no player-visible outcome", () => {
+    expect(
+      buildAnnouncements({
+        closures: [],
+        earnings: [],
+        settlements: [
+          {
+            matchId: "NA1_1",
+            serverId: SERVER_ID,
+            winningTeamId: 100,
+            voidReason: undefined,
+            winnersPool: 0,
+            losersPool: 0,
+            houseCut: 0,
+            bets: [],
+          },
+        ],
+        parlaySettlements: [],
+      }),
+    ).toEqual([]);
+  });
+
+  test("keeps an earnings-only settlement visible", () => {
+    const announcements = buildAnnouncements({
+      closures: [],
+      earnings: [
+        {
+          serverId: SERVER_ID,
+          discordId: bucksTestDiscordId(1),
+          alias: "Sean",
+          reasons: ["played"],
+          total: 1,
+        },
+      ],
+      settlements: [
+        {
+          matchId: "NA1_1",
+          serverId: SERVER_ID,
+          winningTeamId: 100,
+          voidReason: undefined,
+          winnersPool: 0,
+          losersPool: 0,
+          houseCut: 0,
+          bets: [],
+        },
+      ],
+      parlaySettlements: [],
+    });
+
+    expect(announcements).toHaveLength(1);
+    expect(announcements[0]?.includeOutcome).toBe(true);
+  });
+
+  test("carries a parlay without an empty outcome section", () => {
+    const announcements = buildAnnouncements({
+      closures: [],
+      earnings: [],
+      settlements: [
+        {
+          matchId: "NA1_1",
+          serverId: SERVER_ID,
+          winningTeamId: 100,
+          voidReason: undefined,
+          winnersPool: 0,
+          losersPool: 0,
+          houseCut: 0,
+          bets: [],
+        },
+      ],
+      parlaySettlements: [parlaySummary(SERVER_ID)],
+    });
+
+    expect(announcements).toHaveLength(1);
+    expect(announcements[0]?.includeOutcome).toBe(false);
+    expect(announcements[0]?.parlay).toBeDefined();
   });
 });
 
