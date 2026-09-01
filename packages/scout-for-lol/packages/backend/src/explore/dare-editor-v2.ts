@@ -106,6 +106,30 @@ async function prepareEditorDraft(
   };
 }
 
+async function prepareValidEditorDraft(
+  input: EditorInput,
+  userId: DiscordAccountId,
+  guildIds: string[],
+) {
+  const result = await prepareEditorDraft(input, userId, guildIds);
+  if (result.kind === "invalid") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: result.issues.join(" "),
+    });
+  }
+  if (result.prepared.kind === "invalid") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: result.prepared.issues.join(" "),
+    });
+  }
+  return {
+    owned: result.owned,
+    prepared: result.prepared,
+  };
+}
+
 export async function validateDareDraftEditorV2(
   input: EditorInput,
   userId: DiscordAccountId,
@@ -126,27 +150,6 @@ export async function validateDareDraftEditorV2(
         plainLanguage: prepared.draft.plainLanguage,
         semanticProofPlan: prepared.draft.semanticProofPlan,
       };
-}
-
-async function prepareValidEditorDraft(
-  input: EditorInput,
-  userId: DiscordAccountId,
-  guildIds: string[],
-) {
-  const result = await prepareEditorDraft(input, userId, guildIds);
-  if (result.kind === "invalid") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: result.issues.join(" "),
-    });
-  }
-  if (result.prepared.kind === "invalid") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: result.prepared.issues.join(" "),
-    });
-  }
-  return { owned: result.owned, prepared: result.prepared };
 }
 
 export async function previewDareDraftEditorV2(
