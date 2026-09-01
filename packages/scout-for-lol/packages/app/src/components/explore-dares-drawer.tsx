@@ -195,6 +195,9 @@ function DareDetail(props: {
     canonicalScoutQl: string;
     plan: DareCompiledPlanV2;
     semanticProofPlan: string;
+    compilerVersion: string;
+    evaluatorVersion: string;
+    scoutQlPlanHash: string | null;
     originalText: string;
     deadlineSpec: DareDeadlineSpecV2;
     targetAliases: string[];
@@ -228,6 +231,10 @@ function DareDetail(props: {
       <p className="whitespace-pre-wrap text-sm">{props.dare.plainLanguage}</p>
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <Fact label="Revision" value={revision.toString()} />
+        <Fact
+          label="Compiler"
+          value={`${props.dare.compilerVersion} / ${props.dare.evaluatorVersion}`}
+        />
         <Fact label="Targets" value={props.dare.targetAliases.join(", ")} />
         <Fact
           label="Opening stake"
@@ -249,6 +256,11 @@ function DareDetail(props: {
       <section className="space-y-2">
         <h4 className="text-sm font-medium">ScoutQL</h4>
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
+        {props.dare.scoutQlPlanHash !== null && (
+          <p className="font-mono text-xs text-scout-subtle">
+            Immutable plan {props.dare.scoutQlPlanHash}
+          </p>
+        )}
       </section>
       {props.dare.proof !== null && (
         <section className="space-y-2">

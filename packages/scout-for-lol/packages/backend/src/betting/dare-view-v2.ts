@@ -50,6 +50,10 @@ export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   originalText: z.string().min(1),
   deadlineSpec: DareDeadlineSpecV2Schema,
   compilerVersion: z.string().min(1),
+  scoutQlPlanHash: z
+    .string()
+    .regex(/^[a-f\d]{64}$/)
+    .nullable(),
   evaluatorVersion: z.string().min(1),
   targets: z.array(StoredTargetSchema),
   proof: z.json().nullable(),
@@ -81,6 +85,7 @@ type VisibleDareRow = {
     originalText: string;
     canonicalScoutQl: string;
     compiledPlan: string;
+    scoutQlPlanHash: string | null;
     compilerVersion: string;
     evaluatorVersion: string;
     targetsJson: string;
@@ -172,6 +177,7 @@ function inspection(row: VisibleDareRow): DareV2Inspection {
       JSON.parse(revision.deadlineSpecJson),
     ),
     compilerVersion: revision.compilerVersion,
+    scoutQlPlanHash: revision.scoutQlPlanHash,
     evaluatorVersion: revision.evaluatorVersion,
     targets:
       row.targets.length === 0

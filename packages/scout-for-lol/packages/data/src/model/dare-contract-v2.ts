@@ -8,7 +8,7 @@ export const DARE_SCOUTQL_COMPILER_VERSIONS = [
   "dare-scoutql-2",
 ] as const;
 export const DARE_EVALUATOR_V2_VERSIONS = ["dare-evaluator-2"] as const;
-export const DARE_SCOUTQL_COMPILER_VERSION = DARE_SCOUTQL_COMPILER_VERSIONS[1];
+export const DARE_SCOUTQL_COMPILER_VERSION = "dare-scoutql-2" as const;
 export const DARE_EVALUATOR_V2_VERSION = DARE_EVALUATOR_V2_VERSIONS[0];
 export const DareScoutQlCompilerVersionSchema = z.enum(
   DARE_SCOUTQL_COMPILER_VERSIONS,
@@ -438,11 +438,10 @@ export const DareDeadlineSpecV2Schema = z.union([
 ]);
 export type DareDeadlineSpecV2 = z.infer<typeof DareDeadlineSpecV2Schema>;
 
-export const DareContractV2Schema = z.strictObject({
+const DareContractV2BaseSchema = z.strictObject({
   version: z.literal(DARE_CONTRACT_VERSION),
   canonicalScoutQl: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   compiledPlan: DareCompiledPlanV2Schema,
-  compilerVersion: DareScoutQlCompilerVersionSchema,
   evaluatorVersion: DareEvaluatorV2VersionSchema,
   targets: z.array(DareTargetBindingV2Schema).min(1).max(DARE_V2_MAX_TARGETS),
   openingStake: BucksStakeSchema,
@@ -455,4 +454,15 @@ export const DareContractV2Schema = z.strictObject({
   plainLanguage: z.string().min(1),
   semanticProofPlan: z.string().min(1),
 });
+
+export const DareContractV2Schema = z.discriminatedUnion("compilerVersion", [
+  DareContractV2BaseSchema.extend({
+    compilerVersion: z.literal("dare-scoutql-1"),
+  }),
+  DareContractV2BaseSchema.extend({
+    compilerVersion: z.literal("dare-scoutql-2"),
+    scoutQlImmutableAst: z.string().min(1),
+    scoutQlPlanHash: z.string().regex(/^[a-f\d]{64}$/),
+  }),
+]);
 export type DareContractV2 = z.infer<typeof DareContractV2Schema>;

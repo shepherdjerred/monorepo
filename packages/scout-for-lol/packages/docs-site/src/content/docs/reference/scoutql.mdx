@@ -70,6 +70,11 @@ rejected.
 This separation is deliberate. A contract must remain reproducible after a
 player rename, prompt change, or compiler upgrade, while an interactive report
 is allowed to resolve today's player aliases and render rows for exploration.
+Each saved revision records the compiler and evaluator versions. Compiler v2
+also stores the immutable DuckDB AST and its SHA-256 plan hash; activation copies
+those artifacts into the funded contract, and settlement records the same
+identity in evidence rows and the final proof. Compiler v1 contracts remain
+readable so funded work never depends on a rollout flag or migration rewrite.
 
 ## Clause order
 

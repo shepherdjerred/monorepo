@@ -41,6 +41,7 @@ import {
 } from "#src/betting/dare-view-v2.ts";
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
 import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
+import { parseDareV2Contract } from "#src/betting/dare-v2-common.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -445,6 +446,15 @@ describe("Dare v2 draft and lifecycle", () => {
     expect(active.fundedRevision).toBe(1);
     expect(active.deadlineAt?.toISOString()).toBe("2026-09-08T12:00:00.000Z");
     expect(active.contractJson).not.toBeNull();
+    if (active.contractJson === null) return;
+    const contract = parseDareV2Contract(active.contractJson);
+    expect(contract.compilerVersion).toBe("dare-scoutql-2");
+    if (contract.compilerVersion !== "dare-scoutql-2") return;
+    expect(contract.scoutQlPlanHash).toBe(
+      new Bun.CryptoHasher("sha256")
+        .update(contract.scoutQlImmutableAst)
+        .digest("hex"),
+    );
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 });
