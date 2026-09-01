@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
@@ -192,6 +193,32 @@ describe("/bb dare", () => {
     expect(interaction.editReply).toHaveBeenCalledWith({
       content: "💸 You have **3 BB** but need **10 BB**.",
     });
+    expect(translate).not.toHaveBeenCalled();
+  });
+
+  test("routes the command through the persisted Explore Dare v2 flow", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+    const replyDareV2 = vi.fn(() => Promise.resolve());
+    const translate = vi.fn();
+    await replyBbDare(interaction, SERVER, CHALLENGER, {
+      isDareV2PolicyEnabled: () => Promise.resolve(true),
+      isDaresPolicyEnabled: () => Promise.resolve(false),
+      loadDareBalance: () => Promise.resolve(100),
+      replyDareV2,
+      translate,
+    });
+
+    expect(replyDareV2).toHaveBeenCalledWith(
+      interaction,
+      {
+        serverId: SERVER,
+        channelId: DiscordChannelIdSchema.parse(CHANNEL),
+        challengerDiscordId: CHALLENGER,
+        text: "I bet Virmel can't win 7 games on Warwick",
+        amount: 20,
+      },
+      undefined,
+    );
     expect(translate).not.toHaveBeenCalled();
   });
 

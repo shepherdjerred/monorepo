@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/bun";
 import {
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TIMEOUT_MS,
+  type DiscordChannelId,
   type ExploreMessage,
   type ExploreStreamEvent,
   type ExploreTraceEntry,
@@ -85,6 +86,7 @@ export async function runPersistedExploreTurn(
     /** The asker's servers; scopes `player('…')` alias resolution. */
     guildIds: string[];
     abortSignal?: AbortSignal;
+    originChannelId?: DiscordChannelId | undefined;
     abortOutcome?: () => Extract<ExploreTurnOutcome, "stopped" | "interrupted">;
     emit: (event: ExploreStreamEvent) => void | Promise<void>;
   },
@@ -156,6 +158,7 @@ export async function runPersistedExploreTurn(
     throwIfAborted(abortController.signal);
     const result = await dependencies.executeAgent({
       runId: input.ticket.runId,
+      conversationId: input.started.conversationId,
       subject: { kind: "discord_user", id: input.identity.userId },
       question: input.started.question,
       // The last history item is the question being answered. The agent gets
@@ -163,6 +166,7 @@ export async function runPersistedExploreTurn(
       history: input.history.slice(0, -1),
       guildIds: input.guildIds,
       requesterId: input.identity.userId,
+      originChannelId: input.originChannelId ?? null,
       abortSignal: abortController.signal,
       emit: record,
     });

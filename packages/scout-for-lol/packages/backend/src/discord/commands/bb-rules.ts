@@ -1,4 +1,9 @@
-import { formatInteger } from "@scout-for-lol/data";
+import {
+  DARE_V2_MAX_ELIGIBLE_GAMES,
+  DARE_V2_MAX_HORIZON_DAYS,
+  DARE_V2_MAX_TARGETS,
+  formatInteger,
+} from "@scout-for-lol/data";
 import { EmbedBuilder } from "discord.js";
 import {
   BETTING_WINDOW_MS,
@@ -15,6 +20,7 @@ import {
 } from "#src/betting/constants.ts";
 import { EARNED_REWARDS } from "#src/betting/earnings.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
+import { DARE_V2_INTENT_TTL_MS } from "#src/betting/constants.ts";
 import {
   WEEKLY_PARLAY_ELIGIBLE_QUEUES,
   WEEKLY_PARLAY_MAX_LEGS,
@@ -66,7 +72,26 @@ function days(milliseconds: number): string {
   return Math.floor(milliseconds / 86_400_000).toString();
 }
 
-export function buildBbRulesEmbed(): EmbedBuilder {
+function dareRules(version: 1 | 2, cut: string): string[] {
+  if (version === 1) {
+    return [
+      `\`/bb dare\` puts a one-sided bounty on up to **${DARE_MAX_TARGETS.toString()}** tracked players: contributors fund the pot, targets risk nothing.`,
+      `Every target must accept within **${hours(DARE_ACCEPT_WINDOW_MS)} hours**; any decline — or a lapsed window — cancels the dare and refunds every contribution free.`,
+      `A windowed dare runs **${DARE_DEFAULT_WINDOW_DAYS.toString()} days** by default (up to **${DARE_MAX_WINDOW_DAYS.toString()}**); a next-game dare waits up to **${days(DARE_NEXT_GAME_TIMEOUT_MS)} days** for that game.`,
+      "Anyone except a target can pile onto the pot at any time. Contributions are append-only — they never come back out early.",
+      `Achieved: the targets split the pot evenly, each share minus **${cut}%** (rounded down; any indivisible remainder goes to the house). Not achieved: each contributor gets their total back minus **${cut}%** (rounded to the nearest BB).`,
+    ];
+  }
+  return [
+    `\`/bb dare\` creates a private Explore draft for **1-${DARE_V2_MAX_TARGETS.toString()}** frozen targets. Its preview explicitly states same-game/cross-game scope, target relationship, queues, bounds, and generated ScoutQL.`,
+    `Funding is a single-use **${minutes(DARE_V2_INTENT_TTL_MS)} minute** confirmation. It freezes the revision and opens a **${hours(DARE_ACCEPT_WINDOW_MS)} hour** acceptance window; decline, expiry, or challenger cancellation then refunds everyone free.`,
+    `After every target accepts, the contract runs for at most **${DARE_V2_MAX_HORIZON_DAYS.toString()} days** and **${DARE_V2_MAX_ELIGIBLE_GAMES.toString()} eligible games**. Active terms and deadlines cannot be edited or cancelled.`,
+    "Targets risk nothing. Missing required timeline evidence stays unknown; an unknowable final result voids with full refunds.",
+    `Achieved: only targets required by the decisive proof split the pot, each share minus **${cut}%**. Not achieved: contributors receive their totals minus **${cut}%**.`,
+  ];
+}
+
+export function buildBbRulesEmbed(dareVersion: 1 | 2 = 1): EmbedBuilder {
   const outcomeWindow = minutes(BETTING_WINDOW_MS);
   const parlayWindow = minutes(PARLAY_BETTING_WINDOW_MS);
   const cut = HOUSE_CUT_PERCENT.toString();
@@ -127,13 +152,7 @@ export function buildBbRulesEmbed(): EmbedBuilder {
       },
       {
         name: "Dares",
-        value: [
-          `\`/bb dare\` puts a one-sided bounty on up to **${DARE_MAX_TARGETS.toString()}** tracked players: contributors fund the pot, targets risk nothing.`,
-          `Every target must accept within **${hours(DARE_ACCEPT_WINDOW_MS)} hours**; any decline — or a lapsed window — cancels the dare and refunds every contribution free.`,
-          `A windowed dare runs **${DARE_DEFAULT_WINDOW_DAYS.toString()} days** by default (up to **${DARE_MAX_WINDOW_DAYS.toString()}**); a next-game dare waits up to **${days(DARE_NEXT_GAME_TIMEOUT_MS)} days** for that game.`,
-          "Anyone except a target can pile onto the pot at any time. Contributions are append-only — they never come back out early.",
-          `Achieved: the targets split the pot evenly, each share minus **${cut}%** (rounded down; any indivisible remainder goes to the house). Not achieved: each contributor gets their total back minus **${cut}%** (rounded to the nearest BB).`,
-        ].join("\n"),
+        value: dareRules(dareVersion, cut).join("\n"),
       },
       {
         name: "Voids & refunds",

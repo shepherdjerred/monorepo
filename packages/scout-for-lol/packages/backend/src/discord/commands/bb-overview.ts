@@ -5,6 +5,7 @@ import {
   resolveLedgerGameLabels,
 } from "#src/betting/navigation.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { buildBbPrizesEmbed } from "#src/discord/commands/bb-prizes.ts";
 import { buildBbRulesEmbed } from "#src/discord/commands/bb-rules.ts";
 
@@ -16,8 +17,15 @@ export async function replyBbPrizes(
 
 export async function replyBbRules(
   interaction: BbCommandInteraction,
+  serverId: DiscordGuildId,
+  policy: typeof isPolicyEnabled = isPolicyEnabled,
 ): Promise<void> {
-  await interaction.editReply({ embeds: [buildBbRulesEmbed()] });
+  const dareVersion = (await policy("dare_v2", {
+    server: serverId,
+  }))
+    ? 2
+    : 1;
+  await interaction.editReply({ embeds: [buildBbRulesEmbed(dareVersion)] });
 }
 
 export async function replyBbHistory(

@@ -20,6 +20,10 @@ import {
 } from "#src/betting/dare-translate.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
+import {
+  replyBbDareV2,
+  type BbDareV2Dependencies,
+} from "#src/discord/commands/bb-dare-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -41,8 +45,11 @@ const BUCKS_COLOR = 0x2e_cc_71;
 
 export type BbDareCommandDependencies = {
   isDaresPolicyEnabled?: typeof isPolicyEnabled;
+  isDareV2PolicyEnabled?: typeof isPolicyEnabled;
   translate?: typeof translateDare;
   createDare?: typeof createProposedDare;
+  replyDareV2?: typeof replyBbDareV2;
+  dareV2?: BbDareV2Dependencies;
   /** Best-effort wallet read for the friendlier pre-translation error. */
   loadDareBalance?: (
     serverId: DiscordGuildId,
@@ -84,18 +91,30 @@ export function describeDareTranslationFailure(
   }
 }
 
+async function enabledDareVersion(
+  serverId: DiscordGuildId,
+  dependencies: BbDareCommandDependencies,
+): Promise<1 | 2 | null> {
+  const v2Policy =
+    dependencies.isDareV2PolicyEnabled ??
+    (dependencies.isDaresPolicyEnabled === undefined ? isPolicyEnabled : null);
+  if (v2Policy !== null && (await v2Policy("dare_v2", { server: serverId }))) {
+    return 2;
+  }
+  const v1Policy = dependencies.isDaresPolicyEnabled ?? isPolicyEnabled;
+  return (await v1Policy("bucks_dares_enabled", { server: serverId }))
+    ? 1
+    : null;
+}
+
 export async function replyBbDare(
   interaction: BbCommandInteraction,
   serverId: DiscordGuildId,
   discordId: DiscordAccountId,
   dependencies: BbDareCommandDependencies = {},
 ): Promise<void> {
-  if (
-    !(await (dependencies.isDaresPolicyEnabled ?? isPolicyEnabled)(
-      "bucks_dares_enabled",
-      { server: serverId },
-    ))
-  ) {
+  const dareVersion = await enabledDareVersion(serverId, dependencies);
+  if (dareVersion === null) {
     await interaction.editReply({ content: DARES_NOT_ENABLED });
     return;
   }
@@ -138,6 +157,21 @@ export async function replyBbDare(
       `⚠️ Skipping the early dare balance check for ${serverId}:`,
       error,
     );
+  }
+
+  if (dareVersion === 2) {
+    await (dependencies.replyDareV2 ?? replyBbDareV2)(
+      interaction,
+      {
+        serverId,
+        channelId,
+        challengerDiscordId: discordId,
+        text,
+        amount,
+      },
+      dependencies.dareV2,
+    );
+    return;
   }
 
   const translation = await (dependencies.translate ?? translateDare)({

@@ -249,6 +249,15 @@ describe("/bb command contract", () => {
     expect(rendered).toContain("both teams have a tracked player");
   });
 
+  test("rules explain the active Dare v2 lifecycle without v1 horizons", () => {
+    const rendered = JSON.stringify(buildBbRulesEmbed(2).toJSON());
+    expect(rendered).toContain("private Explore draft");
+    expect(rendered).toContain("same-game/cross-game scope");
+    expect(rendered).toContain("single-use **10 minute** confirmation");
+    expect(rendered).toContain("Missing required timeline evidence");
+    expect(rendered).not.toContain("next-game dare");
+  });
+
   // /bb rules used to say "no cash value" while /bb prizes printed CAD figures
   // up to $1,000,000 with no cross-reference.
   test("rules and prizes agree that the exchange rate is a joke", () => {

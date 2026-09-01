@@ -102,4 +102,61 @@ describe("Explore trace recording", () => {
       "execution",
     );
   });
+
+  test("removes Dare draft and confirmation payloads from a shared transcript", () => {
+    const trace: ExploreTraceEntry[] = [];
+    recordExploreTraceEvent(trace, {
+      ...TOOL_CALL,
+      toolCallId: "dare-call-1",
+      toolName: "create_dare_draft",
+      message: "Creating a private Dare draft.",
+      rawInput: {
+        kind: "value",
+        value: { scoutQl: "owner-only-contract", stake: 20 },
+        byteLength: 49,
+      },
+    });
+    recordExploreTraceEvent(trace, {
+      type: "tool_result",
+      toolCallId: "dare-call-1",
+      toolName: "create_dare_draft",
+      status: "succeeded",
+      message: "Created the draft.",
+      durationMs: 40,
+      details: TOOL_CALL.details,
+      rawOutput: {
+        kind: "value",
+        value: {
+          dareId: "private-dare-id",
+          confirmationToken: "single-use-secret",
+        },
+        byteLength: 83,
+      },
+    });
+    const transcript = ExploreTranscriptSchema.parse({
+      conversation: {
+        id: "11111111-1111-4111-8111-111111111111",
+        title: "Private Dare",
+        shareToken: "a".repeat(32),
+        sharedLeafId: "22222222-2222-4222-8222-222222222222",
+        createdAt: "2026-08-18T12:00:00.000Z",
+        updatedAt: "2026-08-18T12:00:00.000Z",
+      },
+      messages: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          role: "assistant",
+          content: "Your private draft is ready.",
+          trace,
+          createdAt: "2026-08-18T12:00:00.000Z",
+        },
+      ],
+    });
+
+    const encoded = JSON.stringify(redactSharedExploreTranscript(transcript));
+    expect(encoded).not.toContain("owner-only-contract");
+    expect(encoded).not.toContain("private-dare-id");
+    expect(encoded).not.toContain("single-use-secret");
+    expect(encoded).toContain("Created the draft.");
+  });
 });

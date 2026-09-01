@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { User } from "#generated/prisma/client/index.js";
 import {
   DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
   type DiscordAccountId,
   ExploreConversationIdSchema,
   ExploreConversationTitleSchema,
@@ -11,6 +12,12 @@ import {
   ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
 } from "@scout-for-lol/data";
+import {
+  inspectVisibleDareV2,
+  listVisibleDaresV2,
+} from "#src/betting/dare-view-v2.ts";
+import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
+import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
@@ -36,6 +43,13 @@ import {
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
+import {
+  DareDraftEditorInputSchema,
+  DareDraftPreviewInputSchema,
+  previewDareDraftEditorV2,
+  reviseDareDraftEditorV2,
+  validateDareDraftEditorV2,
+} from "#src/explore/dare-editor-v2.ts";
 import {
   protectedProcedure,
   router,
@@ -111,6 +125,107 @@ export const exploreRouter = router({
     const userId = await requireExploreUser(ctx.user);
     return await listExploreConversations(prisma, userId);
   }),
+
+  dareList: exploreProcedure
+    .input(
+      z.strictObject({
+        scope: z.enum(["mine", "guild"]),
+        search: z.string().min(1).max(100).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const pages = await Promise.all(
+        guildIds.map(
+          async (guildId) =>
+            await listVisibleDaresV2(
+              {
+                serverId: DiscordGuildIdSchema.parse(guildId),
+                viewerDiscordId: userId,
+                scope: input.scope,
+                ...(input.search === undefined ? {} : { search: input.search }),
+              },
+              prisma,
+            ),
+        ),
+      );
+      return pages
+        .flat()
+        .toSorted((left, right) =>
+          right.updatedAt.localeCompare(left.updatedAt),
+        )
+        .slice(0, 100);
+    }),
+
+  dareInspect: exploreProcedure
+    .input(z.strictObject({ dareId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      for (const guildId of guildIds) {
+        const dare = await inspectVisibleDareV2(
+          {
+            dareId: input.dareId,
+            serverId: DiscordGuildIdSchema.parse(guildId),
+            viewerDiscordId: userId,
+          },
+          prisma,
+        );
+        if (dare !== null) return dare;
+      }
+      throw new TRPCError({ code: "NOT_FOUND", message: "Dare not found." });
+    }),
+
+  dareValidateDraft: exploreProcedure
+    .input(DareDraftEditorInputSchema)
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      return await validateDareDraftEditorV2(input, userId, guildIds);
+    }),
+
+  darePreviewDraft: exploreProcedure
+    .input(DareDraftPreviewInputSchema)
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      return await previewDareDraftEditorV2(input, userId, guildIds);
+    }),
+
+  dareReviseDraft: webMutationProcedure
+    .input(DareDraftEditorInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      return await reviseDareDraftEditorV2(input, userId, guildIds);
+    }),
+
+  confirmDareIntent: webMutationProcedure
+    .input(z.strictObject({ intentId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
+        where: { id: input.intentId },
+        include: { dare: { select: { serverId: true } } },
+      });
+      if (intent === null || !guildIds.includes(intent.dare.serverId)) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Confirmation not found.",
+        });
+      }
+      const outcome = await consumeDareV2ConfirmationIntent({
+        intentId: input.intentId,
+        serverId: DiscordGuildIdSchema.parse(intent.dare.serverId),
+        actorDiscordId: userId,
+      });
+      const callout = [
+        "not_found",
+        "forbidden",
+        "intent_expired",
+        "feature_disabled",
+        "insufficient",
+      ].includes(outcome.kind)
+        ? null
+        : await tryEnsureDareV2Callout(intent.dareId);
+      return { ...outcome, callout };
+    }),
 
   activeRuns: exploreProcedure.query(async ({ ctx }) => {
     const userId = await requireExploreUser(ctx.user);
