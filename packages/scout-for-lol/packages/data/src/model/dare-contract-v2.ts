@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
 export const DARE_CONTRACT_VERSION = 2;
@@ -256,12 +257,139 @@ export const DareResultExpressionV2Schema: z.ZodType<DareResultExpressionV2> =
     ]),
   );
 
-export const DareCompiledPlanV2Schema = z.strictObject({
-  version: z.literal(DARE_CONTRACT_VERSION),
-  gameSets: z.array(DareGameSetV2Schema).min(1).max(DARE_V2_MAX_GAME_SETS),
-  result: DareResultExpressionV2Schema,
-  maxEligibleGames: z.number().int().min(1).max(DARE_V2_MAX_ELIGIBLE_GAMES),
-});
+type DarePlanComplexityV2 = {
+  predicates: number;
+  maxDepth: number;
+};
+
+function dareValueDepth(value: DareValueV2): number {
+  return value.kind === "arithmetic"
+    ? 1 + Math.max(dareValueDepth(value.left), dareValueDepth(value.right))
+    : 1;
+}
+
+function dareValueNeedsTimeline(value: DareValueV2): boolean {
+  if (value.kind === "timeline_event_count") return true;
+  return (
+    value.kind === "arithmetic" &&
+    (dareValueNeedsTimeline(value.left) || dareValueNeedsTimeline(value.right))
+  );
+}
+
+function dareValueRelatedRelationCount(value: DareValueV2): number {
+  if (value.kind === "related_participant_count") return 1;
+  return value.kind === "arithmetic"
+    ? dareValueRelatedRelationCount(value.left) +
+        dareValueRelatedRelationCount(value.right)
+    : 0;
+}
+
+function inspectDareBooleanComplexity(
+  expression: DareBooleanExpressionV2,
+  depth: number,
+  facts: DarePlanComplexityV2,
+): void {
+  facts.maxDepth = Math.max(facts.maxDepth, depth);
+  if (expression.kind === "comparison") {
+    facts.predicates += 1;
+    facts.maxDepth = Math.max(
+      facts.maxDepth,
+      depth + dareValueDepth(expression.value),
+    );
+    return;
+  }
+  if (expression.kind === "not") {
+    inspectDareBooleanComplexity(expression.operand, depth + 1, facts);
+    return;
+  }
+  for (const operand of expression.operands) {
+    inspectDareBooleanComplexity(operand, depth + 1, facts);
+  }
+}
+
+function inspectDareResultComplexity(
+  expression: DareResultExpressionV2,
+  depth: number,
+  facts: DarePlanComplexityV2,
+): void {
+  facts.maxDepth = Math.max(facts.maxDepth, depth);
+  if (expression.kind === "matching_games" || expression.kind === "aggregate") {
+    facts.predicates += 1;
+    return;
+  }
+  if (expression.kind === "not") {
+    inspectDareResultComplexity(expression.operand, depth + 1, facts);
+    return;
+  }
+  for (const operand of expression.operands) {
+    inspectDareResultComplexity(operand, depth + 1, facts);
+  }
+}
+
+function dareGameSetValues(gameSet: DareGameSetV2): DareValueV2[] {
+  const values = gameSet.projections.map((projection) => projection.value);
+  const collectValues = (expression: DareBooleanExpressionV2): void => {
+    if (expression.kind === "comparison") {
+      values.push(expression.value);
+      return;
+    }
+    if (expression.kind === "not") {
+      collectValues(expression.operand);
+      return;
+    }
+    for (const operand of expression.operands) collectValues(operand);
+  };
+  collectValues(gameSet.predicate);
+  return values;
+}
+
+function dareGameSetJoinedRelations(gameSet: DareGameSetV2): number {
+  const values = dareGameSetValues(gameSet);
+  const timelineRelations = values.some((value) =>
+    dareValueNeedsTimeline(value),
+  )
+    ? 2
+    : 0;
+  const relatedRelations = values.reduce(
+    (count, value) => count + dareValueRelatedRelationCount(value),
+    0,
+  );
+  return gameSet.targetKeys.length + timelineRelations + relatedRelations;
+}
+
+export const DareCompiledPlanV2Schema = z
+  .strictObject({
+    version: z.literal(DARE_CONTRACT_VERSION),
+    gameSets: z.array(DareGameSetV2Schema).min(1).max(DARE_V2_MAX_GAME_SETS),
+    result: DareResultExpressionV2Schema,
+    maxEligibleGames: z.number().int().min(1).max(DARE_V2_MAX_ELIGIBLE_GAMES),
+  })
+  .superRefine((plan, context) => {
+    const facts: DarePlanComplexityV2 = { predicates: 0, maxDepth: 0 };
+    for (const [index, gameSet] of plan.gameSets.entries()) {
+      inspectDareBooleanComplexity(gameSet.predicate, 1, facts);
+      if (dareGameSetJoinedRelations(gameSet) > DARE_V2_MAX_JOINED_RELATIONS) {
+        context.addIssue({
+          code: "custom",
+          message: `A game set may join at most ${DARE_V2_MAX_JOINED_RELATIONS.toString()} relations.`,
+          path: ["gameSets", index],
+        });
+      }
+    }
+    inspectDareResultComplexity(plan.result, 1, facts);
+    if (facts.predicates > DARE_V2_MAX_PREDICATES) {
+      context.addIssue({
+        code: "custom",
+        message: `A dare may contain at most ${DARE_V2_MAX_PREDICATES.toString()} predicates.`,
+      });
+    }
+    if (facts.maxDepth > DARE_V2_MAX_EXPRESSION_DEPTH) {
+      context.addIssue({
+        code: "custom",
+        message: `A dare expression may be at most ${DARE_V2_MAX_EXPRESSION_DEPTH.toString()} levels deep.`,
+      });
+    }
+  });
 export type DareCompiledPlanV2 = z.infer<typeof DareCompiledPlanV2Schema>;
 
 export const DareDeadlineSpecV2Schema = z.union([
@@ -284,7 +412,7 @@ export const DareContractV2Schema = z.strictObject({
   compilerVersion: DareScoutQlCompilerVersionSchema,
   evaluatorVersion: DareEvaluatorV2VersionSchema,
   targets: z.array(DareTargetBindingV2Schema).min(1).max(DARE_V2_MAX_TARGETS),
-  openingStake: z.number().int().positive(),
+  openingStake: BucksStakeSchema,
   serverId: z.string().min(1),
   channelId: z.string().min(1),
   revision: z.number().int().positive(),
