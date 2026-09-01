@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { Context } from "@temporalio/activity";
+import { ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import {
@@ -113,8 +114,9 @@ describe("realtime workflows", () => {
     expect(result).toBe("stale");
   });
 
-  test("durably starts independently identified match children", async () => {
+  test("ingests independently identified match children in discovery order", async () => {
     const ingested: string[] = [];
+    let secondStartedBeforeFirstCompleted = false;
     const workflow = await workflowWorker();
     const activities = await Worker.create({
       connection: environment.nativeConnection,
@@ -128,7 +130,12 @@ describe("realtime workflows", () => {
             delivery: "live",
           })),
         }),
-        ingestMatch: (input: { matchId: string }) => {
+        ingestMatch: async (input: { matchId: string }) => {
+          if (input.matchId === "NA1_100") {
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          } else if (ingested.length === 0) {
+            secondStartedBeforeFirstCompleted = true;
+          }
           ingested.push(input.matchId);
         },
         runPostMatchMaintenance: () => {
@@ -148,7 +155,8 @@ describe("realtime workflows", () => {
       },
     );
     expect(result).toEqual({ status: "completed", childrenStarted: 2 });
-    await expect.poll(() => ingested).toEqual(["NA1_100", "NA1_101"]);
+    expect(ingested).toEqual(["NA1_100", "NA1_101"]);
+    expect(secondStartedBeforeFirstCompleted).toBe(false);
     await expect(
       environment.client.workflow.getHandle("scout-dev-match-NA1_100").result(),
     ).resolves.toBe("completed");
@@ -156,24 +164,30 @@ describe("realtime workflows", () => {
 
   test("restarts a failed match child without duplicating a successful child", async () => {
     let attempts = 0;
+    let failIngestion = true;
+    let includeMatchInDiscovery = true;
     const workflow = await workflowWorker();
     const activities = await Worker.create({
       connection: environment.nativeConnection,
       taskQueue: "scout-dev-realtime",
       activities: {
         discoverPostMatchIds: () => ({
-          matches: [
-            {
-              matchId: "NA1_200",
-              sourcePuuid: "puuid-NA1_200",
-              region: "AMERICA_NORTH",
-              delivery: "live",
-            },
-          ],
+          matches: includeMatchInDiscovery
+            ? [
+                {
+                  matchId: "NA1_200",
+                  sourcePuuid: "puuid-NA1_200",
+                  region: "AMERICA_NORTH",
+                  delivery: "live",
+                },
+              ]
+            : [],
         }),
         ingestMatch: () => {
           attempts += 1;
-          if (attempts <= 5) throw new Error("first execution fails");
+          if (failIngestion) {
+            throw ApplicationFailure.nonRetryable("first execution fails");
+          }
         },
         runPostMatchMaintenance: () => {
           return;
@@ -190,11 +204,12 @@ describe("realtime workflows", () => {
         workflowId: "postmatch-discovery-first-failure",
         args: [{ stage: "dev" }],
       }),
-    ).resolves.toEqual({ status: "completed", childrenStarted: 1 });
+    ).rejects.toThrow();
     await expect(
       environment.client.workflow.getHandle("scout-dev-match-NA1_200").result(),
     ).rejects.toThrow();
 
+    failIngestion = false;
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
         taskQueue: "scout-dev",
@@ -205,8 +220,9 @@ describe("realtime workflows", () => {
     await expect(
       environment.client.workflow.getHandle("scout-dev-match-NA1_200").result(),
     ).resolves.toBe("completed");
-    expect(attempts).toBe(6);
+    expect(attempts).toBe(2);
 
+    includeMatchInDiscovery = false;
     await expect(
       environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
         taskQueue: "scout-dev",
@@ -214,7 +230,7 @@ describe("realtime workflows", () => {
         args: [{ stage: "dev" }],
       }),
     ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
-    expect(attempts).toBe(6);
+    expect(attempts).toBe(2);
   });
 });
 

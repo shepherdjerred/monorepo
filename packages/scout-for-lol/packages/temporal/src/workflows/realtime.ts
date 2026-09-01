@@ -2,7 +2,6 @@ import { startChild, workflowInfo } from "@temporalio/workflow";
 import {
   defineSearchAttributeKey,
   SearchAttributeType,
-  WorkflowExecutionAlreadyStartedError,
 } from "@temporalio/common";
 import {
   ScoutMatchIngestionInputSchema,
@@ -61,18 +60,21 @@ export async function scoutPostMatchDiscoveryWorkflow(
   );
   let childrenStarted = 0;
   for (const match of discovered.matches) {
-    try {
-      await startChild(scoutMatchIngestionWorkflow, {
-        workflowId: scoutMatchWorkflowId(input.stage, match.matchId),
-        workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-        taskQueue: scoutTaskQueues(input.stage).workflow,
-        parentClosePolicy: "ABANDON",
-        args: [{ stage: input.stage, ...match }],
-      });
-      childrenStarted += 1;
-    } catch (error) {
-      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
-    }
+    const workflowId = scoutMatchWorkflowId(input.stage, match.matchId);
+    const child = await startChild(scoutMatchIngestionWorkflow, {
+      workflowId,
+      workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+      taskQueue: scoutTaskQueues(input.stage).workflow,
+      parentClosePolicy: "ABANDON",
+      args: [{ stage: input.stage, ...match }],
+    });
+    childrenStarted += 1;
+    // Bounded Dare plans are ordered by match end time. Discovery returns a
+    // player's batch oldest-first, so do not allow a later child to capture
+    // evidence and settle while an earlier child is still ingesting. If an
+    // older run already owns this child ID, startChild fails the discovery
+    // workflow and the next poll rediscovers only the still-unprocessed tail.
+    await child.result();
   }
   setWorkflowPhase("**Phase:** running post-match maintenance");
   await realtimeActivities(input.stage).runPostMatchMaintenance(input);
