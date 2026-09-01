@@ -120,6 +120,13 @@ export async function reconcileGuildScopedCommands(
       );
     } catch (error) {
       if (discordErrorCode(error) === MISSING_ACCESS) {
+        // Forget what was written, because this error is the one that means
+        // the cached entry is wrong: Discord drops a guild's commands when the
+        // bot is removed, and a rejoin can race `guildCreate` so even the
+        // forced write lands before access is restored. Keeping the entry
+        // would make every later poll skip an identical payload and leave that
+        // guild commandless until the process restarts.
+        lastWrittenGuildPayloads.delete(guildId);
         logger.info(`⏭️  Skipping guild ${guildId} — this bot is not in it`);
         continue;
       }

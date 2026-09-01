@@ -1080,10 +1080,6 @@
       "clones": 1,
       "tokens": 92
     },
-    "packages/scout-for-lol/packages/backend/src/discord/commands/definitions.test.ts|packages/scout-for-lol/packages/backend/src/discord/rest.test.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
     "packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts|packages/scout-for-lol/packages/backend/src/discord/embeds/competition.ts": {
       "clones": 1,
       "tokens": 96
