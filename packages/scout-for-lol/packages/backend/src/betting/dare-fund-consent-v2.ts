@@ -21,20 +21,13 @@ import {
 } from "#src/betting/dare-v2-common.ts";
 import type { Db } from "#src/database/index.ts";
 
-function contractCompilerFields(revision: {
+function contractCompilerVersion(revision: {
   compilerVersion: string;
   scoutQlImmutableAst: string | null;
   scoutQlPlanHash: string | null;
-}):
-  | { compilerVersion: "dare-scoutql-1" }
-  | { compilerVersion: "dare-scoutql-2" }
-  | {
-      compilerVersion: "dare-scoutql-2";
-      scoutQlImmutableAst: string;
-      scoutQlPlanHash: string;
-    } {
+}): "dare-scoutql-1" | "dare-scoutql-2" {
   if (revision.compilerVersion === "dare-scoutql-1") {
-    return { compilerVersion: "dare-scoutql-1" };
+    return "dare-scoutql-1";
   }
   if (revision.compilerVersion !== "dare-scoutql-2") {
     throw new Error(
@@ -45,7 +38,7 @@ function contractCompilerFields(revision: {
     revision.scoutQlImmutableAst === null &&
     revision.scoutQlPlanHash === null
   ) {
-    return { compilerVersion: "dare-scoutql-2" };
+    return "dare-scoutql-2";
   }
   if (
     revision.scoutQlImmutableAst === null ||
@@ -55,11 +48,7 @@ function contractCompilerFields(revision: {
       "Dare ScoutQL compiler v2 revision has an incomplete immutable artifact.",
     );
   }
-  return {
-    compilerVersion: "dare-scoutql-2",
-    scoutQlImmutableAst: revision.scoutQlImmutableAst,
-    scoutQlPlanHash: revision.scoutQlPlanHash,
-  };
+  return "dare-scoutql-2";
 }
 
 export async function fundDareV2InTransaction(
@@ -250,7 +239,7 @@ export async function acceptDareV2InTransaction(
     version: DARE_CONTRACT_VERSION,
     canonicalScoutQl: revision.canonicalScoutQl,
     compiledPlan: plan,
-    ...contractCompilerFields(revision),
+    compilerVersion: contractCompilerVersion(revision),
     evaluatorVersion: revision.evaluatorVersion,
     targets,
     openingStake: revision.openingStake,

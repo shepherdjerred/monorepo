@@ -449,11 +449,15 @@ describe("Dare v2 draft and lifecycle", () => {
     if (active.contractJson === null) return;
     const contract = parseDareV2Contract(active.contractJson);
     expect(contract.compilerVersion).toBe("dare-scoutql-2");
-    expect("scoutQlPlanHash" in contract).toBe(true);
-    if (!("scoutQlPlanHash" in contract)) return;
-    expect(contract.scoutQlPlanHash).toBe(
+    expect("scoutQlPlanHash" in contract).toBe(false);
+    const revision = await db.bucksDareV2Revision.findUniqueOrThrow({
+      where: { dareId_revision: { dareId, revision: 1 } },
+    });
+    expect(revision.scoutQlImmutableAst).not.toBeNull();
+    if (revision.scoutQlImmutableAst === null) return;
+    expect(revision.scoutQlPlanHash).toBe(
       new Bun.CryptoHasher("sha256")
-        .update(contract.scoutQlImmutableAst)
+        .update(revision.scoutQlImmutableAst)
         .digest("hex"),
     );
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
