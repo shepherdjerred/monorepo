@@ -1353,6 +1353,18 @@ and the BB-specific model config (`BB_ASK_MODEL`) is gone — turns run on
     the outcome, where they used to fail independently. That is the price of one
     extra post-match message, and it beats the old chunked send that could
     deliver chunk 1 and drop chunk 2.
+- **A settlement with nothing player-visible is withheld, and that call is made
+  after the pool is read.** A settled pool whose only bets were the house's own
+  fills renders a title and nothing else, so it is not sent. Visibility is not
+  decidable from the settlement summary alone: a pool that closed on an earlier
+  tick settles with an empty `bets` list and its refunds recorded only on
+  `BucksBet`, so filtering in `buildAnnouncements` silently drops the refund
+  receipt for exactly the retry case the stored-unmatched query exists to cover.
+  `buildAnnouncements` therefore picks destinations only; `announceSettlements`
+  decides the outcome section once it holds the pool's unmatched rows, and a
+  carrier left with just a parlay keeps the `parlay` nonce kind so it cannot
+  collide with an outcome already delivered. Withheld settlements are counted in
+  `betting_settlement_suppressed_total` rather than dropped silently.
 - **Successful mutations refresh the prematch message instead of posting a
   receipt.** `/bb transfer` is the explicit exception described above. Button
   and `/bb` placement or cancellation confirmations remain
