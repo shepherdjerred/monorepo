@@ -327,6 +327,17 @@ describe("Dare v2 draft and lifecycle", () => {
     );
     expect(mine).toHaveLength(1);
     expect(mine[0]?.targetAliases).toEqual(["Virmel"]);
+    await expect(
+      listVisibleDaresV2(
+        {
+          serverId: SERVER,
+          viewerDiscordId: CHALLENGER,
+          scope: "mine",
+          search: "Virmel",
+        },
+        db,
+      ),
+    ).resolves.toHaveLength(1);
     const inspected = await inspectVisibleDareV2(
       {
         dareId,

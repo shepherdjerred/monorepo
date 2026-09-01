@@ -80,20 +80,50 @@ export function ExploreDaresDrawer() {
           />
         </div>
 
-        {detail.data === undefined ? (
+        {selectedId === null ? (
           <DareList
             loading={list.isLoading}
             error={list.error}
             dares={list.data ?? []}
             onSelect={setSelectedId}
           />
+        ) : detail.isLoading ? (
+          <p className="mt-6 text-sm text-scout-subtle">Loading dare…</p>
+        ) : detail.error === null ? (
+          detail.data === undefined ? null : (
+            <DareDetail
+              dare={detail.data}
+              onBack={() => {
+                setSelectedId(null);
+              }}
+            />
+          )
         ) : (
-          <DareDetail
-            dare={detail.data}
-            onBack={() => {
-              setSelectedId(null);
-            }}
-          />
+          <div className="mt-6 space-y-3">
+            <p className="text-sm text-scout-danger">{detail.error.message}</p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  void detail.refetch();
+                }}
+              >
+                Try again
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSelectedId(null);
+                }}
+              >
+                Back to dares
+              </Button>
+            </div>
+          </div>
         )}
       </SheetContent>
     </Sheet>
@@ -170,8 +200,10 @@ function DareDetail(props: {
     openingStake: number;
     potTotal: number;
     evidenceGames: number;
+    acceptDeadline: string | null;
     deadlineAt: string | null;
     finalValue: boolean | null;
+    proof: unknown;
     voidReason: string | null;
   };
   onBack: () => void;
@@ -205,19 +237,26 @@ function DareDetail(props: {
           label="Evidence"
           value={`${props.dare.evidenceGames.toString()} games`}
         />
-        <Fact
-          label="Deadline"
-          value={
-            props.dare.deadlineAt === null
-              ? "Starts after acceptance"
-              : new Date(props.dare.deadlineAt).toLocaleString()
-          }
-        />
+        <Fact label="Deadline" value={deadlineDescription(props.dare)} />
+        {props.dare.acceptDeadline !== null && (
+          <Fact
+            label="Accept by"
+            value={new Date(props.dare.acceptDeadline).toLocaleString()}
+          />
+        )}
       </dl>
       <section className="space-y-2">
         <h4 className="text-sm font-medium">ScoutQL</h4>
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
       </section>
+      {props.dare.proof !== null && (
+        <section className="space-y-2">
+          <h4 className="text-sm font-medium">Settlement proof</h4>
+          <pre className="max-h-96 overflow-auto rounded-md border border-scout-border bg-scout-surface p-3 text-xs whitespace-pre-wrap">
+            {JSON.stringify(props.dare.proof, null, 2)}
+          </pre>
+        </section>
+      )}
       <section className="space-y-2">
         <h4 className="text-sm font-medium">Proof plan</h4>
         <p className="whitespace-pre-wrap text-xs text-scout-subtle">
@@ -231,6 +270,24 @@ function DareDetail(props: {
       )}
     </div>
   );
+}
+
+function deadlineDescription(dare: {
+  deadlineAt: string | null;
+  deadlineSpec: DareDeadlineSpecV2;
+}): string {
+  if (dare.deadlineAt !== null) {
+    return new Date(dare.deadlineAt).toLocaleString();
+  }
+  if (dare.deadlineSpec.kind === "absolute") {
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: dare.deadlineSpec.timezone,
+      timeZoneName: "short",
+    }).format(new Date(dare.deadlineSpec.deadlineAt));
+  }
+  return `${dare.deadlineSpec.days.toString()} days after every target accepts`;
 }
 
 function Fact(props: { label: string; value: string }) {

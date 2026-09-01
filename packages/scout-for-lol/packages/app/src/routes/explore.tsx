@@ -63,6 +63,7 @@ export function Explore() {
     status,
     enabled,
     quota,
+    daresEnabled,
     conversations,
     transcript,
     messages,
@@ -312,7 +313,7 @@ export function Explore() {
           drawerOpen={drawerOpen}
           onDrawerOpenChange={setDrawerOpen}
           sidebar={sidebar}
-          extraActions={<ExploreDaresDrawer />}
+          extraActions={daresEnabled ? <ExploreDaresDrawer /> : undefined}
           {...(headerActions === undefined ? {} : { actions: headerActions })}
         />
 
@@ -459,6 +460,7 @@ function useExploreConversation(conversationId: string | null) {
   const trpc = useTRPC();
   const status = useQuery(trpc.explore.status.queryOptions());
   const enabled = status.data?.enabled === true;
+  const daresEnabled = status.data?.daresEnabled === true;
   const conversations = useQuery({
     ...trpc.explore.list.queryOptions(),
     enabled,
@@ -471,6 +473,7 @@ function useExploreConversation(conversationId: string | null) {
   return {
     status,
     enabled,
+    daresEnabled,
     quota: status.data?.quota ?? [],
     conversations,
     transcript,

@@ -239,6 +239,11 @@ export async function listVisibleDaresV2(
                       some: { originalText: { contains: search } },
                     },
                   },
+                  {
+                    revisions: {
+                      some: { targetsJson: { contains: search } },
+                    },
+                  },
                   { targets: { some: { alias: { contains: search } } } },
                 ],
               },

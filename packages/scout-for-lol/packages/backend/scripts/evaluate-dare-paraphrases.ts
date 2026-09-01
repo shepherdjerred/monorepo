@@ -29,6 +29,17 @@ const REPORT_URL = new URL(
   import.meta.url,
 );
 const FIXED_NOW = new Date("2026-09-01T00:00:00.000Z");
+const EVAL_PROMPT_TEMPLATE = [
+  "Translate this dare request into the required structured contract.",
+  `Current time: ${FIXED_NOW.toISOString()}`,
+  "Available frozen targets: {{TARGETS}}",
+  "Set targetKeys to exactly: {{TARGET_KEYS}}. Use those exact keys in every plan target reference.",
+  "Set openingStake to exactly {{OPENING_STAKE}} BB.",
+  "If the request has no deadline, set deadlineSpec to exactly 7 relative days. If it names an absolute deadline, translate that date and preserve its explicit IANA timezone.",
+  "Preserve the user's exact request in originalText.",
+  "Request:",
+  "{{REQUEST}}",
+].join("\n");
 
 async function loadCorpus(): Promise<{
   corpus: DareParaphraseCorpus;
@@ -44,19 +55,15 @@ function evalPrompt(input: {
   targetAliases: Readonly<Record<string, string>>;
   openingStake: number;
 }): string {
-  return [
-    "Translate this dare request into the required structured contract.",
-    `Current time: ${FIXED_NOW.toISOString()}`,
-    `Available frozen targets: ${Object.entries(input.targetAliases)
+  return EVAL_PROMPT_TEMPLATE.replace(
+    "{{TARGETS}}",
+    Object.entries(input.targetAliases)
       .map(([key, alias]) => `${key}=${alias}`)
-      .join(", ")}`,
-    `Set targetKeys to exactly: ${Object.keys(input.targetAliases).join(", ")}. Use those exact keys in every plan target reference.`,
-    `Set openingStake to exactly ${input.openingStake.toString()} BB.`,
-    "If the request has no deadline, set deadlineSpec to exactly 7 relative days. If it names an absolute deadline, translate that date and preserve its explicit IANA timezone.",
-    "Preserve the user's exact request in originalText.",
-    "Request:",
-    input.paraphrase,
-  ].join("\n");
+      .join(", "),
+  )
+    .replace("{{TARGET_KEYS}}", Object.keys(input.targetAliases).join(", "))
+    .replace("{{OPENING_STAKE}}", input.openingStake.toString())
+    .replace("{{REQUEST}}", input.paraphrase);
 }
 
 async function evaluateParaphrase(
@@ -114,6 +121,9 @@ async function evaluateParaphrase(
         JSON.stringify(entry.deadlineSpec) &&
       output.openingStake === entry.openingStake;
     if (!metadataMatches) issues.push("Deadline or opening stake drifted.");
+    if (output.originalText !== paraphrase) {
+      issues.push("Original request text drifted.");
+    }
     const passed =
       issues.length === 0 &&
       actualCanonicalSha256 === entry.expectedCanonicalSha256;
@@ -164,7 +174,9 @@ async function main(): Promise<void> {
     version: 2,
     corpusVersion: corpus.version,
     promptVersion: corpus.promptVersion,
-    promptSha256: dareModelEvalSha256(dareExplorePromptSection()),
+    promptSha256: dareModelEvalSha256(
+      `${dareExplorePromptSection()}\n${EVAL_PROMPT_TEMPLATE}`,
+    ),
     corpusSha256: dareModelEvalSha256(raw),
     model: DARE_V2_EVAL_MODEL,
     generatedAt: new Date().toISOString(),

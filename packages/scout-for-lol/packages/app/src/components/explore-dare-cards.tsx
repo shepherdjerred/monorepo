@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, CircleX, Clock3, FilePenLine } from "lucide-react";
 import { z } from "zod";
 import type { ExploreTraceEntry } from "@scout-for-lol/data";
@@ -113,6 +113,58 @@ function DraftCard(props: { draft: z.infer<typeof DraftDataSchema> }) {
   );
 }
 
+function persistedConfirmationOutcome(
+  action: z.infer<typeof IntentDataSchema>["action"],
+  status:
+    { state: "consumed" | "expired" | "pending"; result: unknown } | undefined,
+): DareIntentConfirmationOutcome | null {
+  if (status?.state === "consumed") {
+    return classifyDareIntentConfirmation(action, {
+      kind: "already_consumed",
+      result: status.result,
+    });
+  }
+  if (status?.state === "expired") {
+    return classifyDareIntentConfirmation(action, { kind: "intent_expired" });
+  }
+  return null;
+}
+
+function IntentOutcomeIcon(props: {
+  outcome: DareIntentConfirmationOutcome | null;
+}) {
+  if (props.outcome === null) {
+    return <Clock3 className="size-4 text-scout-primary" />;
+  }
+  return props.outcome.status === "confirmed" ? (
+    <CheckCircle2 className="size-4 text-scout-primary" />
+  ) : (
+    <CircleX className="size-4 text-scout-danger" />
+  );
+}
+
+function intentHeading(
+  action: z.infer<typeof IntentDataSchema>["action"],
+  outcome: DareIntentConfirmationOutcome | null,
+): string {
+  if (outcome === null) return `Confirm ${action}`;
+  return outcome.status === "confirmed"
+    ? "Action confirmed"
+    : "Action was not confirmed";
+}
+
+function IntentOutcomeMessage(props: {
+  outcome: DareIntentConfirmationOutcome;
+}) {
+  return (
+    <p
+      className={`text-sm capitalize ${props.outcome.status === "failed" ? "text-scout-danger" : ""}`}
+    >
+      {props.outcome.message}
+    </p>
+  );
+}
+
 function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
@@ -122,24 +174,24 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
   const mutation = useMutation(
     trpc.explore.confirmDareIntent.mutationOptions(),
   );
+  const persisted = useQuery(
+    trpc.explore.dareIntentStatus.queryOptions({
+      intentId: props.intent.intentId,
+    }),
+  );
   const expires = new Date(props.intent.expiresAt);
+  const persistedOutcome = persistedConfirmationOutcome(
+    props.intent.action,
+    persisted.data,
+  );
+  const displayedOutcome = outcome ?? persistedOutcome;
 
   return (
     <section className="space-y-3 rounded-lg border border-scout-primary/40 bg-scout-primary/5 p-4">
       <div className="flex items-center gap-2">
-        {outcome === null ? (
-          <Clock3 className="size-4 text-scout-primary" />
-        ) : outcome.status === "confirmed" ? (
-          <CheckCircle2 className="size-4 text-scout-primary" />
-        ) : (
-          <CircleX className="size-4 text-scout-danger" />
-        )}
+        <IntentOutcomeIcon outcome={displayedOutcome} />
         <h3 className="font-medium">
-          {outcome === null
-            ? `Confirm ${props.intent.action}`
-            : outcome.status === "confirmed"
-              ? "Action confirmed"
-              : "Action was not confirmed"}
+          {intentHeading(props.intent.action, displayedOutcome)}
         </h3>
       </div>
       <p className="text-sm text-scout-subtle">
@@ -147,7 +199,7 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
         {props.intent.revision.toString()}. This single-use confirmation expires{" "}
         {expires.toLocaleTimeString()}.
       </p>
-      {outcome === null || outcome.retryable ? (
+      {displayedOutcome === null || displayedOutcome.retryable ? (
         <div className="flex gap-2">
           <Button
             type="button"
@@ -167,6 +219,14 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
                     void queryClient.invalidateQueries({
                       queryKey: trpc.explore.dareList.pathKey(),
                     });
+                    void queryClient.invalidateQueries({
+                      queryKey: trpc.explore.dareInspect.pathKey(),
+                    });
+                    void queryClient.invalidateQueries({
+                      queryKey: trpc.explore.dareIntentStatus.queryKey({
+                        intentId: props.intent.intentId,
+                      }),
+                    });
                   },
                 },
               );
@@ -174,22 +234,21 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
           >
             {mutation.isPending
               ? "Confirming…"
-              : outcome === null
+              : displayedOutcome === null
                 ? "Confirm"
                 : "Try again"}
           </Button>
         </div>
       ) : (
-        <p
-          className={`text-sm capitalize ${outcome.status === "failed" ? "text-scout-danger" : ""}`}
-        >
-          {outcome.message}
+        <IntentOutcomeMessage outcome={displayedOutcome} />
+      )}
+      {displayedOutcome?.status === "failed" && displayedOutcome.retryable && (
+        <p className="text-sm capitalize text-scout-danger">
+          {displayedOutcome.message}
         </p>
       )}
-      {outcome?.status === "failed" && outcome.retryable && (
-        <p className="text-sm capitalize text-scout-danger">
-          {outcome.message}
-        </p>
+      {persisted.error !== null && (
+        <p className="text-sm text-scout-danger">{persisted.error.message}</p>
       )}
       {outcome?.deliveryWarning !== null &&
         outcome?.deliveryWarning !== undefined && (

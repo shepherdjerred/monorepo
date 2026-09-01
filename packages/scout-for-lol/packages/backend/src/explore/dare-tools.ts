@@ -102,12 +102,14 @@ export type DareExploreToolsInput = {
 export async function dareExploreEnabled(
   capability: BucksExploreCapability | null,
 ): Promise<boolean> {
-  return (
-    capability !== null &&
-    (await isPolicyEnabled("dare_v2", {
+  if (capability === null) return false;
+  const [dareEnabled, relationalEnabled] = await Promise.all([
+    isPolicyEnabled("dare_v2", { server: capability.serverId }),
+    isPolicyEnabled("scoutql_relational_enabled", {
       server: capability.serverId,
-    }))
-  );
+    }),
+  ]);
+  return dareEnabled && relationalEnabled;
 }
 
 function result(kind: string, message: string, data: unknown): DareToolResult {

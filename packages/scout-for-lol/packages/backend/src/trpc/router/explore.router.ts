@@ -18,6 +18,8 @@ import {
 } from "#src/betting/dare-view-v2.ts";
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
 import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
+import { DareV2IntentActionSchema } from "#src/betting/dare-intent-v2.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
@@ -95,6 +97,50 @@ async function requireExploreUserAndGuilds(
   };
 }
 
+async function dareSurfaceEnabled(
+  userId: DiscordAccountId,
+  guildIds: string[],
+): Promise<boolean> {
+  const [enabledByGuild, existingDare] = await Promise.all([
+    Promise.all(
+      guildIds.map(async (guildId) => {
+        const serverId = DiscordGuildIdSchema.parse(guildId);
+        const [dareEnabled, relationalEnabled] = await Promise.all([
+          isPolicyEnabled("dare_v2", { server: serverId }),
+          isPolicyEnabled("scoutql_relational_enabled", { server: serverId }),
+        ]);
+        return dareEnabled && relationalEnabled;
+      }),
+    ),
+    prisma.bucksDareV2.findFirst({
+      where: {
+        serverId: { in: guildIds },
+        dareState: { not: "deleted" },
+        OR: [{ dareState: { not: "draft" } }, { challengerDiscordId: userId }],
+      },
+      select: { id: true },
+    }),
+  ]);
+  return enabledByGuild.some(Boolean) || existingDare !== null;
+}
+
+async function requireGuildDareIntent(intentId: string, guildIds: string[]) {
+  const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
+    where: { id: intentId },
+    include: { dare: { select: { serverId: true } } },
+  });
+  if (!guildIds.includes(intent?.dare.serverId ?? "")) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Confirmation not found.",
+    });
+  }
+  if (intent === null) {
+    throw new Error("A visible Dare confirmation unexpectedly disappeared.");
+  }
+  return intent;
+}
+
 const exploreProcedure = protectedProcedure;
 
 export const exploreRouter = router({
@@ -105,17 +151,18 @@ export const exploreRouter = router({
    */
   status: exploreProcedure.query(async ({ ctx }) => {
     if (!isExploreConfigured()) {
-      return { enabled: false, quota: [] };
+      return { enabled: false, daresEnabled: false, quota: [] };
     }
     try {
-      const userId = await requireExploreUser(ctx.user);
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
       return {
         enabled: true,
+        daresEnabled: await dareSurfaceEnabled(userId, guildIds),
         quota: getExploreQuotaStatus({ userId }).quota,
       };
     } catch (error) {
       if (error instanceof TRPCError && error.code === "FORBIDDEN") {
-        return { enabled: false, quota: [] };
+        return { enabled: false, daresEnabled: false, quota: [] };
       }
       throw error;
     }
@@ -196,20 +243,38 @@ export const exploreRouter = router({
       return await reviseDareDraftEditorV2(input, userId, guildIds);
     }),
 
-  confirmDareIntent: webMutationProcedure
+  dareIntentStatus: exploreProcedure
     .input(z.strictObject({ intentId: z.uuid() }))
-    .mutation(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }) => {
       const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
-        where: { id: input.intentId },
-        include: { dare: { select: { serverId: true } } },
-      });
-      if (intent === null || !guildIds.includes(intent.dare.serverId)) {
+      const intent = await requireGuildDareIntent(input.intentId, guildIds);
+      if (intent.actorDiscordId !== userId) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Confirmation not found.",
         });
       }
+      return {
+        state:
+          intent.consumedAt === null
+            ? intent.expiresAt.getTime() <= Date.now()
+              ? ("expired" as const)
+              : ("pending" as const)
+            : ("consumed" as const),
+        action: DareV2IntentActionSchema.parse(intent.action),
+        expiresAt: intent.expiresAt.toISOString(),
+        result:
+          intent.resultJson === null
+            ? null
+            : z.json().parse(JSON.parse(intent.resultJson)),
+      };
+    }),
+
+  confirmDareIntent: webMutationProcedure
+    .input(z.strictObject({ intentId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const intent = await requireGuildDareIntent(input.intentId, guildIds);
       const outcome = await consumeDareV2ConfirmationIntent({
         intentId: input.intentId,
         serverId: DiscordGuildIdSchema.parse(intent.dare.serverId),
