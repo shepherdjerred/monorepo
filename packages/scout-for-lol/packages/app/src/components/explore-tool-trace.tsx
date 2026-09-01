@@ -269,6 +269,9 @@ function toolLabel(toolName: string): string {
   if (toolName === "run_report_query") {
     return "Run ScoutQL";
   }
+  if (toolName === "validate_dare_scoutql") {
+    return "Compile Dare ScoutQL";
+  }
   if (toolName === "get_bucks_dataset") {
     return "Read Bryan Bucks dataset";
   }

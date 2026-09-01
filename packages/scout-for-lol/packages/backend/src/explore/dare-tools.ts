@@ -38,6 +38,7 @@ import { historicallyPreviewDareV2 } from "#src/betting/dare-preview-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import { validateRelationalScoutQl } from "#src/reports/duckdb/relational-scoutql.ts";
 
 export const DareToolResultSchema = z.strictObject({
   kind: z.string().min(1),
@@ -55,6 +56,14 @@ export const DareDefinitionToolInputSchema = z.strictObject({
   plan: DareCompiledPlanV2Schema,
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
+});
+
+export const DareScoutQlToolInputSchema = z.strictObject({
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
+  targetKeys: z
+    .array(z.string().regex(/^T\d{1,2}$/))
+    .min(1)
+    .max(DARE_V2_MAX_TARGETS),
 });
 
 export const ReviseDareToolInputSchema = DareDefinitionToolInputSchema.extend({
@@ -173,6 +182,17 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     };
   };
 
+  const resolvedTargetKeys = async (requestedKeys: readonly string[]) => {
+    const available = await shortlist();
+    const availableKeys = new Set(available.map((target) => target.key));
+    for (const key of requestedKeys) {
+      if (!availableKeys.has(key)) {
+        throw new Error(`Dare target ${key} is not in the current shortlist.`);
+      }
+    }
+    return [...new Set(requestedKeys)];
+  };
+
   return {
     language: () =>
       input.track("get_dare_language", async () => {
@@ -204,6 +224,30 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             },
           },
         );
+      }),
+    validateScoutQl: (raw: unknown) =>
+      input.track("validate_dare_scoutql", async () => {
+        const parsed = DareScoutQlToolInputSchema.parse(raw);
+        const targetKeys = await resolvedTargetKeys(parsed.targetKeys);
+        const validation = await validateRelationalScoutQl({
+          queryText: parsed.queryText,
+          allowedTargetKeys: targetKeys,
+        });
+        return validation.kind === "invalid"
+          ? result(
+              "invalid_scoutql",
+              "The relational ScoutQL is not a valid Dare contract query.",
+              { issues: validation.issues },
+            )
+          : result(
+              "valid_scoutql",
+              "The relational ScoutQL is valid and canonically formatted.",
+              {
+                canonicalScoutQl: validation.compilation.canonicalScoutQl,
+                planHash: validation.compilation.planHash,
+                facts: validation.compilation.facts,
+              },
+            );
       }),
     validate: (raw: unknown) =>
       input.track("validate_dare_contract", async () => {
@@ -394,6 +438,13 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
       inputSchema: DareDefinitionToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.validate(raw),
+    }),
+    validate_dare_scoutql: tool({
+      description:
+        "Parse, validate, and canonically format relational ScoutQL for a Dare v2 contract. Enforces the closed source/function catalogs, frozen dare_target bindings, one achieved output, non-recursive CTEs, and all query limits without executing the query.",
+      inputSchema: DareScoutQlToolInputSchema,
+      outputSchema: DareToolResultSchema,
+      execute: (raw) => executors.validateScoutQl(raw),
     }),
     preview_dare_contract: tool({
       description:

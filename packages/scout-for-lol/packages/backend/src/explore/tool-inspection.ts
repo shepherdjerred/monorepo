@@ -24,6 +24,7 @@ import {
   DareInspectToolInputSchema,
   DareListToolInputSchema,
   DarePreviewToolInputSchema,
+  DareScoutQlToolInputSchema,
   DareToolResultSchema,
   ReviseDareToolInputSchema,
 } from "#src/explore/dare-tools.ts";
@@ -67,6 +68,10 @@ const DARE_TOOL_SCHEMAS = new Map<
   [
     "validate_dare_contract",
     { input: DareDefinitionToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "validate_dare_scoutql",
+    { input: DareScoutQlToolInputSchema, output: DareToolResultSchema },
   ],
   [
     "preview_dare_contract",

@@ -211,6 +211,7 @@ function boundedRawValue(
 const DARE_TOOL_CALL_MESSAGES = new Map([
   ["get_dare_language", "Reading Dare v2 rules."],
   ["validate_dare_contract", "Checking the dare contract."],
+  ["validate_dare_scoutql", "Compiling the dare ScoutQL."],
   ["preview_dare_contract", "Backtesting the dare contract."],
   ["create_dare_draft", "Saving the dare draft."],
   ["revise_dare_draft", "Saving a draft revision."],

@@ -29,17 +29,22 @@ name the `SELECT` produced.
 
 The editor syntax documented on this page is report ScoutQL: one bounded data
 source plus grouping, aggregation, ordering, and rendering. Dare v2 contracts
-use a generated relational profile of ScoutQL. The authoring tools—not raw user
-SQL—produce its qualified columns, aliases, non-recursive CTEs, bounded joins,
-scalar subqueries, and deterministic first-N game sets.
+use a relational profile of ScoutQL with qualified columns, aliases,
+non-recursive CTEs, bounded joins, scalar subqueries, and deterministic first-N
+game sets. Explore can parse, validate, and canonically format that profile
+without executing it; the contract authoring tools generate the query and its
+typed evaluator plan together.
 
 Contract ScoutQL always returns exactly one nullable Boolean named `achieved`:
 `true` means proven, `false` means conclusively not achieved, and `null` means
 the bounded evidence is insufficient. Its compiler accepts only the closed
 match and timeline catalog, freezes every `dare_target('Tn')` binding at
 funding, parameterizes values, and rejects wall-clock or dynamic player
-resolution. The ordinary report editor does not accept this relational profile;
-inspect and revise it through the dare card in Explore.
+resolution. Validation first serializes the DuckDB AST, then applies Scout's
+closed-world source, function, target, statement, and complexity policy. A
+successful compilation returns canonical text plus the hash of its immutable
+AST; it never runs the submitted query. The ordinary report editor does not
+accept this relational profile; inspect and revise contracts through Explore.
 
 This separation is deliberate. A contract must remain reproducible after a
 player rename, prompt change, or compiler upgrade, while an interactive report
