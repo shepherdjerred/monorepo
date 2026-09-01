@@ -984,6 +984,20 @@ from `guildCreate`; a guild the running bot cannot access is skipped only for
 Discord's `MISSING_ACCESS`, while every other registration failure remains
 fatal during startup.
 
+**The reconcile recomputes every minute but only writes on a change.** The
+dynamic-config poll fires every 60 seconds and this is its only listener, so an
+unconditional PUT meant 1,440 no-op bulk-overwrites a day and 1,440 log lines
+that made the one reporting a real change worthless. Recomputing is not
+skippable — `betting_enabled` and `tournament_lobbies_enabled` are evaluated
+per guild against Flipt rather than carried in the config snapshot, so nothing
+short of rebuilding the payload notices an operator flipping one. `rest.ts`
+therefore keeps the serialized payload it last wrote per guild and skips an
+identical write, recording it only after the PUT lands so a failure retries on
+the next poll. Startup and `guildCreate` pass `force`, because neither knows
+what Discord currently holds and a rejoined guild has had its commands dropped
+while a cached entry survives. The accepted cost is that this process will not
+repair guild commands edited out of band until it restarts.
+
 The feature scope remains enforced by the flag and guild-scoped registration;
 user-facing betting surfaces should not advertise the allowlist. `/bb prizes`
 is the deliberate exception: it displays the existing 1:10 catalog and
