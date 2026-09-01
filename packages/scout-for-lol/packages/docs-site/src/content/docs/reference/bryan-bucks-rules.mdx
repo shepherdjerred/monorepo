@@ -6,9 +6,21 @@ sidebar:
 ---
 
 import {
+  DARE_V2_MAX_ELIGIBLE_GAMES,
+  DARE_V2_MAX_EXPRESSION_DEPTH,
+  DARE_V2_MAX_GAME_SETS,
+  DARE_V2_MAX_HORIZON_DAYS,
+  DARE_V2_MAX_JOINED_RELATIONS,
+  DARE_V2_MAX_PREDICATES,
+  DARE_V2_MAX_QUERY_LENGTH,
+  DARE_V2_MAX_TARGETS,
+} from "@scout-for-lol/data";
+import {
   BETTING_WINDOW_MS,
   BUCKS_EARNING_QUEUES,
   BUTTON_STAKES,
+  DARE_ACCEPT_WINDOW_MS,
+  DARE_V2_INTENT_TTL_MS,
   HOUSE_BANKROLL,
   HOUSE_MATCH_LIMIT,
   MINIMUM_BUCKS_TRANSFER,
@@ -73,6 +85,60 @@ detection cannot silently extend it.
 
 A market that never receives a result is voided and fully refunded after{" "}
 {VOID_GRACE_MS / 3_600_000} hours.
+
+## Scout dares
+
+A Dare v2 draft is private and unfunded. It can be revised repeatedly in
+Explore, historically previewed against data Scout already has, or deleted.
+Funding freezes that exact revision, debits the opening stake, publishes the
+contract in the server, and opens a {DARE_ACCEPT_WINDOW_MS / 3_600_000}-hour
+acceptance window. Every target must accept. A decline, acceptance expiry, or
+challenger cancellation during that window returns every contribution in full.
+
+After all targets accept, relative deadlines are bound to immutable timestamps
+and the dare becomes active. Active contracts cannot be edited or cancelled.
+Scout evaluates evidence in match-end-time then match-ID order and may settle
+early only when the result cannot reverse. At the deadline or game cap, `true`
+pays the proving targets, `false` refunds contributors with the normal
+cancellation cut, and an unknowable result caused by missing evidence voids
+with full refunds.
+
+Targets risk no BB. Anyone who contributes funds the pot. A successful proof
+splits the pot among only the targets required by the decisive Boolean branch,
+then applies the normal winner house cut. An unsuccessful dare returns each
+contributor's stake less the normal cancellation cut. Declines, acceptance
+expiry, cancellation before activation, and missing-evidence voids are full,
+fee-free refunds.
+
+Conditions may nest `AND`, `OR`, and `NOT`, and numeric values may be added,
+subtracted, multiplied, or divided inside a condition. For example, two named
+opponents can be required to combine for at least 20 kills in the same match;
+that is one game set, not two independent achievements.
+
+A game-set condition can also count a named champion among a target's allies
+or opponents, so “against Yasuo” is bound to the same qualifying match. Retained
+timeline events may be filtered by event type, participant role, elapsed-time
+range, and item ID; for example, an `ITEM_PURCHASED` event for item `3089`
+proves a Rabadon's Deathcap purchase. If Scout did not retain that timeline,
+the condition is unknown rather than false.
+
+| Dare contract limit    | Value                                                                 |
+| ---------------------- | --------------------------------------------------------------------- |
+| Targets                | 1–{DARE_V2_MAX_TARGETS}                                               |
+| Horizon                | at most {DARE_V2_MAX_HORIZON_DAYS} days                               |
+| Eligible games         | at most {DARE_V2_MAX_ELIGIBLE_GAMES}                                  |
+| Game sets / CTEs       | at most {DARE_V2_MAX_GAME_SETS}                                       |
+| Joined relations       | at most {DARE_V2_MAX_JOINED_RELATIONS}                                |
+| Predicates             | at most {DARE_V2_MAX_PREDICATES}                                      |
+| Boolean depth          | at most {DARE_V2_MAX_EXPRESSION_DEPTH}                                |
+| Canonical query length | at most {DARE_V2_MAX_QUERY_LENGTH.toLocaleString("en-US")} characters |
+| Action confirmation    | {DARE_V2_INTENT_TTL_MS / 60_000} minutes, single use                  |
+
+Contract queues default to ranked solo and flex, and may use another queue only
+when Scout can classify it reliably. A timeline condition is rejected for a
+queue whose timelines Scout cannot supply. Scout does not call Riot solely to
+backfill a dare: historical previews and settlement use retained lake data and
+future ingestion.
 
 ## Weekly parlays
 

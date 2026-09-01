@@ -5,6 +5,7 @@ import type { ExploreConversation } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreComposer } from "#src/components/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore-header.tsx";
+import { ExploreDaresDrawer } from "#src/components/explore-dares-drawer.tsx";
 import { ExploreShareRow } from "#src/components/explore-share.tsx";
 import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
 import {
@@ -311,6 +312,7 @@ export function Explore() {
           drawerOpen={drawerOpen}
           onDrawerOpenChange={setDrawerOpen}
           sidebar={sidebar}
+          extraActions={<ExploreDaresDrawer />}
           {...(headerActions === undefined ? {} : { actions: headerActions })}
         />
 

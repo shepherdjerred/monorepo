@@ -25,6 +25,26 @@ conveniences layered on top: `AVG(win)` is an error in DuckDB and an error
 here, aggregates are always written out, and a name in `WITH (...)` has to be a
 name the `SELECT` produced.
 
+## Report ScoutQL and contract ScoutQL
+
+The editor syntax documented on this page is report ScoutQL: one bounded data
+source plus grouping, aggregation, ordering, and rendering. Dare v2 contracts
+use a generated relational profile of ScoutQL. The authoring tools—not raw user
+SQL—produce its qualified columns, aliases, non-recursive CTEs, bounded joins,
+scalar subqueries, and deterministic first-N game sets.
+
+Contract ScoutQL always returns exactly one nullable Boolean named `achieved`:
+`true` means proven, `false` means conclusively not achieved, and `null` means
+the bounded evidence is insufficient. Its compiler accepts only the closed
+match and timeline catalog, freezes every `dare_target('Tn')` binding at
+funding, parameterizes values, and rejects wall-clock or dynamic player
+resolution. The ordinary report editor does not accept this relational profile;
+inspect and revise it through the dare card in Explore.
+
+This separation is deliberate. A contract must remain reproducible after a
+player rename, prompt change, or compiler upgrade, while an interactive report
+is allowed to resolve today's player aliases and render rows for exploration.
+
 ## Clause order
 
 ```text

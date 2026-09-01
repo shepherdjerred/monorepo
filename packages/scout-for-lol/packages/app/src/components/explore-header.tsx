@@ -18,6 +18,7 @@ export function ExploreHeader(props: {
   drawerOpen: boolean;
   onDrawerOpenChange: (open: boolean) => void;
   sidebar: ReactNode;
+  extraActions?: ReactNode;
   actions?: {
     shared: boolean;
     sharing: boolean;
@@ -66,37 +67,42 @@ export function ExploreHeader(props: {
         </h1>
       </div>
 
-      {props.actions !== undefined && (
+      {(props.actions !== undefined || props.extraActions !== undefined) && (
         <div className="flex shrink-0 items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="Export as markdown"
-            onClick={props.actions.onExport}
-          >
-            <Download className="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-            disabled={props.actions.sharing}
-            onClick={props.actions.onShare}
-          >
-            <Share2 className="size-4" />
-            {props.actions.shared ? "Copy link" : "Share"}
-          </Button>
-          {props.actions.shared && (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              aria-label="Stop sharing"
-              title="Stop sharing"
-              disabled={props.actions.revoking}
-              onClick={props.actions.onRevoke}
-            >
-              <Link2Off className="size-4" />
-            </Button>
+          {props.extraActions}
+          {props.actions !== undefined && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Export as markdown"
+                onClick={props.actions.onExport}
+              >
+                <Download className="size-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                disabled={props.actions.sharing}
+                onClick={props.actions.onShare}
+              >
+                <Share2 className="size-4" />
+                {props.actions.shared ? "Copy link" : "Share"}
+              </Button>
+              {props.actions.shared && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Stop sharing"
+                  title="Stop sharing"
+                  disabled={props.actions.revoking}
+                  onClick={props.actions.onRevoke}
+                >
+                  <Link2Off className="size-4" />
+                </Button>
+              )}
+            </>
           )}
         </div>
       )}

@@ -18,6 +18,7 @@ Most of what `/bb` does — except `/bb ask` — is also available on the
 | `/bb history`       | Paged transaction ledger with running balances        | Private                        |
 | `/bb transfer`      | Send half of a total spend to another wallet          | Private result, public receipt |
 | `/bb notifications` | Choose settlement DMs about your bets and bets on you | Private                        |
+| `/bb dare`          | Draft a ScoutQL-backed challenge from plain language  | Private preview, then public   |
 | `/bb rules`         | The complete rulebook                                 | **Public**                     |
 | `/bb prizes`        | The joke prize catalogue                              | **Public**                     |
 
@@ -34,6 +35,13 @@ server the Explore agent also carries the bounded Bucks analytics tools, so a
 question like "how have I done on parlays this month?" is asked there. Answers
 are saved to your private Explore conversation in the web app, where you can
 continue, publish, or share them.
+
+`/bb dare` also starts a new private Explore conversation. Scout translates the
+request into a versioned contract, saves an unfunded draft, and returns a
+preview that spells out same-game or cross-game scope, target relationships,
+queues, game and time bounds, stake, and generated contract ScoutQL. Funding is
+never automatic: use **Confirm and fund**, **Revise in Explore**, or **Cancel
+draft** from that preview.
 
 ## Options
 
@@ -65,6 +73,25 @@ several delivered DMs so it stays discoverable without becoming noise.
 `bets_on_you` controls settlement DMs about other users betting on your tracked
 player. Settings are independent and scoped to this server.
 
+### `/bb dare`
+
+| Option   | Required | Values                                        |
+| -------- | -------- | --------------------------------------------- |
+| `dare`   | yes      | Plain-language contract, up to 400 characters |
+| `amount` | yes      | Positive whole-BB opening stake               |
+
+Name one to five linked Scout players. Conditions inside one game set must all
+hold in the same match; conditions allowed to occur in different matches use
+separate game sets. The contract can combine those sets with nested AND, OR,
+and NOT expressions, count matching games, aggregate projected values, bind a
+queue, select the first N games, and require targets to play in the same match,
+on the same team, or against one another.
+
+If Scout cannot represent the request without guessing—most importantly an
+absolute deadline without an IANA timezone—the draft stays private so it can be
+clarified in Explore. Nothing is debited until a ten-minute confirmation intent
+is confirmed.
+
 ## Buttons
 
 The pre-match message carries the outcome market's controls. Match and weekly
@@ -76,6 +103,8 @@ than posting a receipt for each bet.
 | Pre-match card | `WIN · 1 BB`, `WIN · 5 BB`, `LOSE · 1 BB`, `LOSE · 5 BB`, `Cancel` |
 | Match parlay   | `YES 1`, `YES 5`, `NO 1`, `NO 5`, `Cancel`                         |
 | Weekly parlay  | `YES · 1 BB`, `NO · 1 BB`, `Cancel`                                |
+| Dare draft     | `Confirm and fund`, `Revise in Explore`, `Cancel draft`            |
+| Funded dare    | `Accept`, `Decline`, `Cancel and refund`, `Pile on` denominations  |
 | `/bb history`  | `Previous`, `Next`                                                 |
 
 On a mixed lobby the pre-match buttons read `Blue`/`Red` instead of

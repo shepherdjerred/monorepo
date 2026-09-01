@@ -63,6 +63,21 @@ shows.
 You have completed an Explore conversation: one question, one evidence-aware
 answer, and one useful refinement.
 
+## Optional: continue a Discord dare
+
+In a Bryan Bucks server with Dare v2 enabled, `/bb dare` creates a separate
+private Explore conversation and an unfunded draft. Open **Revise in Explore**
+from Discord, then tell Scout what was wrong in ordinary language—for example,
+“the CS and duration conditions must happen in the same game.”
+
+Before replacing the draft, inspect the card's explicit scope, targets,
+participation relationship, queues, first-N or game cap, deadline, stake, plain
+meaning, and canonical ScoutQL. Historical preview uses only matches and
+timelines already present in Scout's lake; missing timeline coverage is shown as
+unknown rather than as a failed condition. Save the revision only when the diff
+matches the intended dare, then prepare and confirm funding. The confirmation
+is single-use and expires after ten minutes.
+
 ## Next steps
 
 - [Find and interpret a player profile](/docs/how-to/find-player-profile/)
