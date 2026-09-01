@@ -103,6 +103,25 @@ describe("Dare v2 ScoutQL plan compiler", () => {
     });
   });
 
+  test("rejects an edit that drops a frozen target", async () => {
+    const corpus = await loadCorpus();
+    const example = corpus.cases.find(
+      (entry) => entry.id === "twisted_fate_same_game",
+    );
+    expect(example).toBeDefined();
+    if (example === undefined) return;
+
+    const result = await compileDareScoutQlPlanV2({
+      queryText: formatDareScoutQlV2(example.plan),
+      targets: targetBindings({ ...example.targetAliases, T2: "Bryan" }),
+    });
+
+    expect(result).toEqual({
+      kind: "invalid",
+      issues: ["Frozen target T2 is not used by any game set."],
+    });
+  });
+
   test("round-trips canonical division with its zero guard", async () => {
     const plan = DareCompiledPlanV2Schema.parse({
       version: 2,

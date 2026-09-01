@@ -417,10 +417,17 @@ export function darePlanSemanticIssues(
     issues.push("Game set names must be unique.");
   }
   const facts = { predicates: 0, maxDepth: 0 };
+  const referencedTargetKeys = new Set<string>();
   for (const gameSet of plan.gameSets) {
     const setFacts = inspectGameSet(gameSet, targetKeys, issues);
+    for (const key of gameSet.targetKeys) referencedTargetKeys.add(key);
     facts.predicates += setFacts.predicates;
     facts.maxDepth = Math.max(facts.maxDepth, setFacts.maxDepth);
+  }
+  for (const target of targets) {
+    if (!referencedTargetKeys.has(target.key)) {
+      issues.push(`Frozen target ${target.key} is not used by any game set.`);
+    }
   }
   inspectResult(plan.result, 1, { facts, gameSets, issues });
   if (facts.predicates > DARE_V2_MAX_PREDICATES) {
