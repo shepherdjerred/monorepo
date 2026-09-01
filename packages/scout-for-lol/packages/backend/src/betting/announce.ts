@@ -16,7 +16,10 @@ import { buildSettlementMessage } from "#src/betting/outcome-message.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { deliverSettlementDms } from "#src/betting/settlement-dm-delivery.ts";
-import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting.ts";
+import {
+  bettingSettlementSuppressedTotal,
+  bettingSettlementUndeliverableTotal,
+} from "#src/metrics/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/sweep-types.ts";
@@ -266,7 +269,13 @@ async function sendSettlementMessages(input: {
 
 type Announcement = {
   summary: SettlementSummary;
-  /** False when the embed exists only to carry a parlay result. */
+  /**
+   * False when the embed exists only to carry a parlay result.
+   *
+   * True only means the carrier is allowed to render an outcome section.
+   * Whether it has one to render depends on the pool's stored refunds, so
+   * `announceSettlements` makes that call once it has read the pool.
+   */
   includeOutcome: boolean;
   parlay: ParlaySettlementSummary | undefined;
 };
@@ -286,6 +295,27 @@ function zeroSummary(matchId: string, serverId: string): SettlementSummary {
 }
 
 /**
+ * Whether a settlement's outcome section would say anything a player can see.
+ *
+ * A settled pool whose only bets were the house's own fills, with no earning
+ * and no refund to report, renders a title and nothing else. Deciding this
+ * needs the pool's stored refunds as well as the summary, because a pool that
+ * closed on an earlier tick reaches settlement with an empty `bets` list and
+ * its refunds recorded only in the database.
+ */
+function outcomeIsVisible(input: {
+  summary: SettlementSummary;
+  unmatchedCount: number;
+  earnings: readonly EarnedAward[];
+}): boolean {
+  return (
+    input.summary.bets.some((bet) => !bet.isHouse) ||
+    input.unmatchedCount > 0 ||
+    input.earnings.some((award) => award.serverId === input.summary.serverId)
+  );
+}
+
+/**
  * A settled pool with no recorded message has no destination and no second
  * chance: it has committed as settled, so a later pass returns no summary. A
  * pool that owed nobody anything is not worth reporting.
@@ -301,10 +331,7 @@ function reportUndeliverableSettlement(input: {
   earnings: readonly EarnedAward[];
 }): void {
   const owedSomeone =
-    input.summary.bets.some((bet) => !bet.isHouse) ||
-    input.unmatchedCount > 0 ||
-    (input.parlay?.bets.length ?? 0) > 0 ||
-    input.earnings.some((award) => award.serverId === input.summary.serverId);
+    outcomeIsVisible(input) || (input.parlay?.bets.length ?? 0) > 0;
   bettingSettlementUndeliverableTotal.inc({
     reason: owedSomeone ? "no_refs_owed" : "no_refs_unowed",
   });
@@ -332,19 +359,13 @@ function reportUndeliverableSettlement(input: {
  */
 export function buildAnnouncements(input: {
   closures: readonly ClosedPool[];
-  earnings: readonly EarnedAward[];
   settlements: readonly SettlementSummary[];
   parlaySettlements: readonly ParlaySettlementSummary[];
 }): Announcement[] {
-  const outcomeSettlements = input.settlements.filter(
-    (summary) =>
-      summary.bets.some((bet) => !bet.isHouse) ||
-      input.earnings.some((award) => award.serverId === summary.serverId),
-  );
   const settlementServerIds = new Set(
-    outcomeSettlements.map((summary) => summary.serverId),
+    input.settlements.map((summary) => summary.serverId),
   );
-  const announcements: Announcement[] = outcomeSettlements.map((summary) => ({
+  const announcements: Announcement[] = input.settlements.map((summary) => ({
     summary,
     includeOutcome: true,
     parlay: undefined,
@@ -455,6 +476,21 @@ export async function announceSettlements(
             .filter((bet) => !settledBetIds.has(bet.id))
             .map((bet) => storedUnmatchedPosition(bet))
         : [];
+      // A pool whose only bets were house fills settles with nothing a player
+      // can read, and a title-only embed is worse than silence. The refunds
+      // are only knowable here, which is why the carrier is built first and
+      // its outcome section decided second.
+      const showOutcome =
+        includeOutcome &&
+        outcomeIsVisible({
+          summary,
+          unmatchedCount: unmatchedPositions.length,
+          earnings: input.earnings,
+        });
+      if (!showOutcome && parlay === undefined) {
+        bettingSettlementSuppressedTotal.inc({ reason: "nothing_to_report" });
+        continue;
+      }
 
       const roster = BucksPoolRosterSchema.parse(
         JSON.parse(pool.roster),
@@ -462,7 +498,7 @@ export async function announceSettlements(
       const anchor = bettingAnchor(roster);
       const message = buildSettlementMessage({
         summary,
-        includeOutcome,
+        includeOutcome: showOutcome,
         parlay,
         framing: anchor === undefined ? undefined : subjectFraming(anchor),
         earnings: input.earnings,
@@ -503,7 +539,7 @@ export async function announceSettlements(
           refs,
           message,
           summary,
-          includeOutcome,
+          includeOutcome: showOutcome,
           postmatchMessageIds: input.postmatchMessageIds,
           dependencies: deliveryDependencies,
         });
@@ -515,7 +551,7 @@ export async function announceSettlements(
       try {
         await deliverSettlementDms({
           summary,
-          includeOutcome,
+          includeOutcome: showOutcome,
           parlay,
           unmatchedPositions,
           roster,

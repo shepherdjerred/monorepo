@@ -203,6 +203,13 @@ export const bettingSettlementUndeliverableTotal = new Counter({
   registers: [registry],
 });
 
+export const bettingSettlementSuppressedTotal = new Counter({
+  name: "betting_settlement_suppressed_total",
+  help: "Bryan Bucks settlements withheld because they had nothing to say, by reason.",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
 /* ------------------------------------------------------ reconciliation -- */
 
 export const bettingReconciliationRunsTotal = new Counter({
