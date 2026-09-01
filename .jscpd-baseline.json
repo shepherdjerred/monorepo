@@ -1640,10 +1640,6 @@
       "clones": 1,
       "tokens": 83
     },
-    "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/schemas.ts": {
-      "clones": 1,
-      "tokens": 404
-    },
     "packages/tasks-for-obsidian/src/domain/base-schemas.ts|packages/tasks-for-obsidian/src/domain/wire.ts": {
       "clones": 2,
       "tokens": 166
