@@ -134,6 +134,15 @@
     },
     // Every env var a pipeline step's scripts require must be provided by that
     // step. Reads the committed vault snapshot (hashes only), never 1Password.
+    "//#check-worker-image-pins": {
+      // Offline only. The networked proof against the registry runs as its own
+      // pipeline step; `verify` never touches the network.
+      "inputs": [
+        "packages/version-catalog/src/catalog.json",
+        "scripts/pin-candidates-state.json",
+        "scripts/verify-worker-image-build-ids.ts"
+      ]
+    },
     "//#check-ci-env": {
       // Every tree requiredEnvFrom may analyze has to be hashed, not just the
       // pipeline: the checker treats literal `.buildkite/scripts/*.ts`

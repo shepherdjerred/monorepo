@@ -54,7 +54,8 @@
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
       "digest": "sha256:146077c0658715f5f15493d33e58923a1dd31ff65a97976b12359c39ffabb1d7",
-      "buildNumber": 13153
+      "buildNumber": 13153,
+      "gitSha": "c42ee297992a5be0d83541b9c7deda5d4ceb99c7"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-13362",
@@ -84,7 +85,8 @@
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-13290",
       "digest": "sha256:839757bc2a1ffbdca5111843e6e78ea41771b6c73d486111ee993e2fda762fb5",
-      "buildNumber": 13290
+      "buildNumber": 13290,
+      "gitSha": "f23505a7251c5029e01d8157e31800e89cec8298"
     },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-13362",
