@@ -208,6 +208,27 @@ async function fillTargetWallet(dareId: number): Promise<void> {
   );
 }
 
+async function expectStorageOverflowVoid(
+  dareId: number,
+  evidenceCount: number,
+): Promise<void> {
+  const dare = await db.bucksDareV2.findUniqueOrThrow({
+    where: { id: dareId },
+  });
+  expect(dare.dareState).toBe("voided");
+  expect(dare.voidReason).toBe("storage_overflow");
+  expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(
+    evidenceCount,
+  );
+  const challenger = await db.bucksAccount.findUniqueOrThrow({
+    where: {
+      serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
+    },
+  });
+  expect(challenger.balance).toBe(SEED_GRANT);
+  await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+}
+
 async function intent(input: {
   dareId: number;
   actor: typeof CHALLENGER;
@@ -642,19 +663,7 @@ describe("Dare v2 payout storage overflow", () => {
     expect(summaries).toMatchObject([
       { dareId, resolution: "voided", value: null },
     ]);
-    const dare = await db.bucksDareV2.findUniqueOrThrow({
-      where: { id: dareId },
-    });
-    expect(dare.dareState).toBe("voided");
-    expect(dare.voidReason).toBe("storage_overflow");
-    expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(0);
-    const challenger = await db.bucksAccount.findUniqueOrThrow({
-      where: {
-        serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
-      },
-    });
-    expect(challenger.balance).toBe(SEED_GRANT);
-    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+    await expectStorageOverflowVoid(dareId, 0);
   });
 
   test("voids and fully refunds a deadline payout that cannot fit", async () => {
@@ -684,19 +693,7 @@ describe("Dare v2 payout storage overflow", () => {
     expect(summaries).toMatchObject([
       { dareId, resolution: "voided", value: null },
     ]);
-    const dare = await db.bucksDareV2.findUniqueOrThrow({
-      where: { id: dareId },
-    });
-    expect(dare.dareState).toBe("voided");
-    expect(dare.voidReason).toBe("storage_overflow");
-    expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(1);
-    const challenger = await db.bucksAccount.findUniqueOrThrow({
-      where: {
-        serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
-      },
-    });
-    expect(challenger.balance).toBe(SEED_GRANT);
-    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+    await expectStorageOverflowVoid(dareId, 1);
   });
 });
 
