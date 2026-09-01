@@ -956,10 +956,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/lane-prior-s3.ts|packages/scout-for-lol/packages/backend/scripts/queue-activity-s3.ts": {
-      "clones": 2,
-      "tokens": 563
-    },
     "packages/scout-for-lol/packages/backend/scripts/register-tournament-provider.ts|packages/scout-for-lol/packages/backend/scripts/tournament-stub-smoke.ts": {
       "clones": 1,
       "tokens": 74
