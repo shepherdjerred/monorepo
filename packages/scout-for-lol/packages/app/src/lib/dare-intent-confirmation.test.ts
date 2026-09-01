@@ -7,6 +7,7 @@ describe("Dare intent confirmation presentation", () => {
       status: "confirmed",
       message: "funded",
       retryable: false,
+      deliveryWarning: null,
     });
     expect(
       classifyDareIntentConfirmation("fund", {
@@ -18,6 +19,7 @@ describe("Dare intent confirmation presentation", () => {
       status: "failed",
       message: "insufficient",
       retryable: true,
+      deliveryWarning: null,
     });
   });
 
@@ -31,6 +33,7 @@ describe("Dare intent confirmation presentation", () => {
       status: "confirmed",
       message: "accepted earlier",
       retryable: false,
+      deliveryWarning: null,
     });
     expect(
       classifyDareIntentConfirmation("accept", {
@@ -50,5 +53,20 @@ describe("Dare intent confirmation presentation", () => {
       classifyDareIntentConfirmation("accept", { kind: "intent_expired" })
         .retryable,
     ).toBe(false);
+  });
+
+  test("separately warns when a committed action loses public delivery", () => {
+    expect(
+      classifyDareIntentConfirmation("fund", {
+        kind: "funded",
+        callout: "failed",
+      }),
+    ).toEqual({
+      status: "confirmed",
+      message: "funded",
+      retryable: false,
+      deliveryWarning:
+        "The action committed, but Scout could not post or refresh the public Dare callout. Nothing was reversed; delivery will be retried.",
+    });
   });
 });

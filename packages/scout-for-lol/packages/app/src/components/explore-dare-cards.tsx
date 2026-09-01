@@ -191,6 +191,10 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
           {outcome.message}
         </p>
       )}
+      {outcome?.deliveryWarning !== null &&
+        outcome?.deliveryWarning !== undefined && (
+          <p className="text-sm text-scout-danger">{outcome.deliveryWarning}</p>
+        )}
       {mutation.error !== null && (
         <p className="text-sm text-scout-danger">{mutation.error.message}</p>
       )}

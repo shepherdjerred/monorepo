@@ -1230,8 +1230,11 @@ principal and profit credits around the matching user debit and house credit;
 the payout rows still sum to the stored gross payout in one transaction.
 Remakes and expired or unsupported pools remain full refunds with no cut.
 
-Bryan Bucks AI analysis lives in `/scout ask`, not a `/bb` subcommand. In the
-one betting-enabled guild, the Explore agent gains four bounded, Zod-validated
+Bryan Bucks AI analysis lives in `/scout ask`, not a `/bb` subcommand. Dare
+contract authoring is the narrow exception: `/bb dare` starts a fresh private,
+persisted Explore conversation and asks only the bounded Dare tools to create a
+draft for explicit confirmation; it does not answer Bucks analytics questions.
+In the one betting-enabled guild, the Explore agent gains four bounded, Zod-validated
 Bucks tools (`explore/bucks-tools.ts`) — never SQL or raw Prisma — alongside
 its ScoutQL tools; the model decides per question which to use. Capability is
 derived per turn in `streamExploreAgent` from the turn's guild scope: a sync

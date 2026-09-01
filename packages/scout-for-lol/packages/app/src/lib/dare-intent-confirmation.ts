@@ -7,10 +7,12 @@ export type DareIntentConfirmationOutcome = {
   status: "confirmed" | "failed";
   message: string;
   retryable: boolean;
+  deliveryWarning: string | null;
 };
 
 const KindResultSchema = z.looseObject({ kind: z.string() });
 const NestedResultSchema = z.looseObject({ result: z.unknown() });
+const CalloutResultSchema = z.looseObject({ callout: z.unknown() });
 
 function kindOf(value: unknown): string | null {
   return KindResultSchema.safeParse(value).data?.kind ?? null;
@@ -35,6 +37,12 @@ function nestedResult(value: unknown): unknown {
   return NestedResultSchema.safeParse(value).data?.result ?? null;
 }
 
+function deliveryWarning(value: unknown): string | null {
+  return CalloutResultSchema.safeParse(value).data?.callout === "failed"
+    ? "The action committed, but Scout could not post or refresh the public Dare callout. Nothing was reversed; delivery will be retried."
+    : null;
+}
+
 export function classifyDareIntentConfirmation(
   action: DareIntentAction,
   result: unknown,
@@ -46,6 +54,7 @@ export function classifyDareIntentConfirmation(
       status: "confirmed",
       message: kind.replaceAll("_", " "),
       retryable: false,
+      deliveryWarning: deliveryWarning(result),
     };
   }
   if (
@@ -56,6 +65,7 @@ export function classifyDareIntentConfirmation(
       status: "confirmed",
       message: `${expected.replaceAll("_", " ")} earlier`,
       retryable: false,
+      deliveryWarning: deliveryWarning(result),
     };
   }
   const failureKind = kind ?? "invalid result";
@@ -63,5 +73,6 @@ export function classifyDareIntentConfirmation(
     status: "failed",
     message: failureKind.replaceAll("_", " "),
     retryable: kind === "insufficient" || kind === "feature_disabled",
+    deliveryWarning: null,
   };
 }
