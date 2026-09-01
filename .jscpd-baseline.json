@@ -1508,10 +1508,6 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/streambot/test/playback-machine.test.ts|packages/streambot/test/playback-machine.test.ts": {
-      "clones": 16,
-      "tokens": 1440
-    },
     "packages/streambot/test/player-card.test.ts|packages/streambot/test/player-controls.test.ts": {
       "clones": 1,
       "tokens": 118

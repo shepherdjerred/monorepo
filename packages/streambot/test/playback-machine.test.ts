@@ -5,7 +5,10 @@ import {
   type PlaybackActors,
 } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { RunStreamInput } from "@shepherdjerred/streambot/machine/types.ts";
+import type {
+  PlaybackInput,
+  RunStreamInput,
+} from "@shepherdjerred/streambot/machine/types.ts";
 import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
 import {
@@ -86,19 +89,46 @@ function makeActors(overrides: Partial<PlaybackActors> = {}): PlaybackActors {
   };
 }
 
-function startActor(actors: PlaybackActors) {
-  const actor = createActor(createPlaybackMachine(actors), { input: INPUT });
+function startActor(actors: PlaybackActors, input: PlaybackInput = INPUT) {
+  const actor = createActor(createPlaybackMachine(actors), { input });
   actor.start();
   return actor;
 }
 
+async function startFilePlayback(
+  titles: string[],
+  actorOverrides: Partial<PlaybackActors> = {},
+  input: PlaybackInput = INPUT,
+) {
+  const stream = makeStreamController();
+  const actor = startActor(
+    makeActors({ runStream: stream.runStream, ...actorOverrides }),
+    input,
+  );
+  for (const title of titles) {
+    actor.send({ type: "ADD", source: fileSource(title), requesterId: U1 });
+  }
+  await waitFor(actor, (snapshot) => snapshot.matches("streaming"), WAIT);
+  return { actor, stream };
+}
+
+async function waitForCurrentFile(
+  actor: ReturnType<typeof startActor>,
+  title: string,
+): Promise<void> {
+  await waitFor(
+    actor,
+    (snapshot) =>
+      snapshot.matches("streaming") &&
+      snapshot.context.current?.source.kind === "file" &&
+      snapshot.context.current.source.title === title,
+    WAIT,
+  );
+}
+
 describe("playback machine", () => {
   test("plays a file then winds down to idle after the grace period", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
-
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["movie"]);
     expect(actor.getSnapshot().context.current?.source).toEqual(
       fileSource("movie"),
     );
@@ -110,11 +140,7 @@ describe("playback machine", () => {
   });
 
   test("advances to the next queued item when a stream ends", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("first"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("second"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["first", "second"]);
     expect(actor.getSnapshot().context.current?.source).toEqual(
       fileSource("first"),
     );
@@ -131,11 +157,7 @@ describe("playback machine", () => {
   });
 
   test("SKIP plays the next item, SKIP on the last winds down", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor } = await startFilePlayback(["a", "b"]);
 
     actor.send({ type: "SKIP" });
     await waitFor(
@@ -152,11 +174,7 @@ describe("playback machine", () => {
   });
 
   test("STOP clears the queue and leaves", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor } = await startFilePlayback(["a", "b"]);
 
     actor.send({ type: "STOP" });
     await waitFor(actor, (s) => s.matches("idle"), WAIT);
@@ -164,20 +182,13 @@ describe("playback machine", () => {
   });
 
   test("streamer detach leaves voice and clears the queue", async () => {
-    const stream = makeStreamController();
     let leaveCalls = 0;
-    const actor = startActor(
-      makeActors({
-        runStream: stream.runStream,
-        leaveVoice: () => {
-          leaveCalls += 1;
-          return Promise.resolve();
-        },
-      }),
-    );
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor } = await startFilePlayback(["a", "b"], {
+      leaveVoice: () => {
+        leaveCalls += 1;
+        return Promise.resolve();
+      },
+    });
 
     actor.send({ type: "STREAMER_VOICE_DETACHED", reason: "kicked" });
 
@@ -189,10 +200,7 @@ describe("playback machine", () => {
   });
 
   test("admin voice move updates the active voice target without dropping playback", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor } = await startFilePlayback(["movie"]);
 
     actor.send({
       type: "VOICE_TARGET_MOVED",
@@ -205,10 +213,7 @@ describe("playback machine", () => {
   });
 
   test("loop=track replays the current item", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("repeat"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["repeat"]);
     actor.send({ type: "SET_LOOP", mode: "track" });
 
     stream.endCurrent();
@@ -223,11 +228,7 @@ describe("playback machine", () => {
   });
 
   test("loop=queue cycles items to the back", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["a", "b"]);
     actor.send({ type: "SET_LOOP", mode: "queue" });
 
     stream.endCurrent();
@@ -288,10 +289,7 @@ describe("playback machine", () => {
 describe("queue editing events", () => {
   test("ADD_NEXT, REMOVE, MOVE, SHUFFLE, SET_VOLUME", async () => {
     // Hold the first stream open so the queue stays populated while we edit it.
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor } = await startFilePlayback(["a"]);
     actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
     actor.send({ type: "ADD", source: fileSource("c"), requesterId: U1 });
     actor.send({
@@ -343,17 +341,11 @@ function makeSeekRecorder() {
 describe("playback machine — resume", () => {
   test("first item after a resume streams at the saved seek offset", async () => {
     const rec = makeSeekRecorder();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: rec.runStream })),
-      {
-        input: {
-          ...INPUT,
-          initialQueue: [{ source: fileSource("movie"), requesterId: U1 }],
-          initialSeekSeconds: 90,
-        },
-      },
-    );
-    actor.start();
+    const actor = startActor(makeActors({ runStream: rec.runStream }), {
+      ...INPUT,
+      initialQueue: [{ source: fileSource("movie"), requesterId: U1 }],
+      initialSeekSeconds: 90,
+    });
 
     await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(rec.seeks[0]).toBe(90);
@@ -364,18 +356,12 @@ describe("playback machine — resume", () => {
 
   test("consumeSeek: a track-loop replay restarts the same item at 0", async () => {
     const rec = makeSeekRecorder();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: rec.runStream })),
-      {
-        input: {
-          ...INPUT,
-          initialQueue: [{ source: fileSource("movie"), requesterId: U1 }],
-          initialLoop: "track",
-          initialSeekSeconds: 90,
-        },
-      },
-    );
-    actor.start();
+    const actor = startActor(makeActors({ runStream: rec.runStream }), {
+      ...INPUT,
+      initialQueue: [{ source: fileSource("movie"), requesterId: U1 }],
+      initialLoop: "track",
+      initialSeekSeconds: 90,
+    });
 
     await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(rec.seeks[0]).toBe(90);
@@ -388,20 +374,14 @@ describe("playback machine — resume", () => {
 
   test("the next item after a resumed item streams at 0 (seek not reused)", async () => {
     const rec = makeSeekRecorder();
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream: rec.runStream })),
-      {
-        input: {
-          ...INPUT,
-          initialQueue: [
-            { source: fileSource("movie"), requesterId: U1 },
-            { source: fileSource("next"), requesterId: U1 },
-          ],
-          initialSeekSeconds: 90,
-        },
-      },
-    );
-    actor.start();
+    const actor = startActor(makeActors({ runStream: rec.runStream }), {
+      ...INPUT,
+      initialQueue: [
+        { source: fileSource("movie"), requesterId: U1 },
+        { source: fileSource("next"), requesterId: U1 },
+      ],
+      initialSeekSeconds: 90,
+    });
 
     await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(rec.seeks[0]).toBe(90);
@@ -418,9 +398,9 @@ describe("playback machine — resume", () => {
 describe("CHANGE_SUBTITLES", () => {
   test("restarts the current source with a new subtitle pref at the saved position", async () => {
     const rec = makeSeekRecorder();
-    const actor = startActor(makeActors({ runStream: rec.runStream }));
-    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor } = await startFilePlayback(["movie"], {
+      runStream: rec.runStream,
+    });
     expect(rec.seeks[0]).toBe(0);
 
     actor.send({
@@ -446,13 +426,10 @@ describe("CHANGE_SUBTITLES", () => {
       seeks.push(input.seekSeconds);
       return new Promise<void>((resolve) => resolvers.push(resolve));
     };
-    const actor = createActor(
-      createPlaybackMachine(makeActors({ runStream })),
-      {
-        input: { ...INPUT, initialLoop: "track" },
-      },
-    );
-    actor.start();
+    const actor = startActor(makeActors({ runStream }), {
+      ...INPUT,
+      initialLoop: "track",
+    });
     actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
     await waitFor(actor, (s) => s.matches("streaming"), WAIT);
 
@@ -487,6 +464,21 @@ function urlSource(query: string): Source {
   return { kind: "url", url: `https://example.com/${query}` };
 }
 
+function addPreResolvedSource(actor: ReturnType<typeof startActor>) {
+  const preResolved = {
+    title: "pre",
+    ffmpegInput: "pre://input",
+    chapters: [],
+  };
+  actor.send({
+    type: "ADD",
+    source: urlSource("video"),
+    requesterId: U1,
+    preResolved,
+  });
+  return preResolved;
+}
+
 describe("preResolved (synchronous pre-validation short-circuit)", () => {
   test("resolveSource actor receives preResolved and its output is used as-is", async () => {
     const seenPreResolved: unknown[] = [];
@@ -501,13 +493,7 @@ describe("preResolved (synchronous pre-validation short-circuit)", () => {
       );
     };
     const actor = startActor(makeActors({ resolveSource }));
-    const stub = { title: "pre", ffmpegInput: "pre://input", chapters: [] };
-    actor.send({
-      type: "ADD",
-      source: urlSource("video"),
-      requesterId: U1,
-      preResolved: stub,
-    });
+    const stub = addPreResolvedSource(actor);
     await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(seenPreResolved[0]).toEqual(stub);
     expect(actor.getSnapshot().context.resolved).toEqual(stub);
@@ -526,20 +512,11 @@ describe("preResolved (synchronous pre-validation short-circuit)", () => {
       );
     };
     const stream = makeStreamController();
-    const actor = createActor(
-      createPlaybackMachine(
-        makeActors({ resolveSource, runStream: stream.runStream }),
-      ),
-      { input: { ...INPUT, initialLoop: "track" } },
+    const actor = startActor(
+      makeActors({ resolveSource, runStream: stream.runStream }),
+      { ...INPUT, initialLoop: "track" },
     );
-    actor.start();
-    const stub = { title: "pre", ffmpegInput: "pre://input", chapters: [] };
-    actor.send({
-      type: "ADD",
-      source: urlSource("video"),
-      requesterId: U1,
-      preResolved: stub,
-    });
+    const stub = addPreResolvedSource(actor);
     await waitFor(actor, (s) => s.matches("streaming"), WAIT);
     expect(seenPreResolved[0]).toEqual(stub);
     expect(actor.getSnapshot().context.resolved).toEqual(stub);
@@ -558,10 +535,7 @@ describe("preResolved (synchronous pre-validation short-circuit)", () => {
 
 describe("crash recovery ladder", () => {
   test("a mid-stream crash re-queues the same item and retries at the crash position", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("movie"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["movie"]);
 
     stream.crashCurrent(crashError(42));
     await waitFor(
@@ -584,14 +558,10 @@ describe("crash recovery ladder", () => {
   });
 
   test("the ladder walks hw → hw → hw-upload → sw, then gives up and plays the next item", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    const { actor, stream } = await startFilePlayback(["cursed", "next"]);
     // lastErrorKind is transient (cleared when the next item resolves) — observe it via snapshots.
     const errorKinds: (string | null)[] = [];
     actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
-    actor.send({ type: "ADD", source: fileSource("cursed"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("next"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       stream.crashCurrent(crashError(10 * attempt));
@@ -630,11 +600,8 @@ describe("crash recovery ladder", () => {
   });
 
   test("an ended-short (exit-0 truncation) crash carries its reason into the notice and does not loop forever under loop:track", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    const { actor, stream } = await startFilePlayback(["trunc"]);
     actor.send({ type: "SET_LOOP", mode: "track" });
-    actor.send({ type: "ADD", source: fileSource("trunc"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       stream.crashCurrent(crashError(40, "ended-short"));
@@ -655,11 +622,7 @@ describe("crash recovery ladder", () => {
   });
 
   test("a natural end resets the retry budget for the next item", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["a", "b"]);
 
     stream.crashCurrent(crashError(5));
     await waitFor(
@@ -668,25 +631,14 @@ describe("crash recovery ladder", () => {
       WAIT,
     );
     stream.endCurrent(); // retry of "a" plays to the end
-    await waitFor(
-      actor,
-      (s) =>
-        s.matches("streaming") &&
-        s.context.current?.source.kind === "file" &&
-        s.context.current.source.title === "b",
-      WAIT,
-    );
+    await waitForCurrentFile(actor, "b");
     expect(actor.getSnapshot().context.crashRetries).toBe(0);
     expect(stream.inputs[2]?.pipelineMode).toBe("hw");
     expect(stream.inputs[2]?.seekSeconds).toBe(0);
   });
 
   test("SKIP during a crashing item resets the budget for the next item", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["a", "b"]);
 
     stream.crashCurrent(crashError(5));
     await waitFor(
@@ -695,23 +647,13 @@ describe("crash recovery ladder", () => {
       WAIT,
     );
     actor.send({ type: "SKIP" });
-    await waitFor(
-      actor,
-      (s) =>
-        s.matches("streaming") &&
-        s.context.current?.source.kind === "file" &&
-        s.context.current.source.title === "b",
-      WAIT,
-    );
+    await waitForCurrentFile(actor, "b");
     expect(actor.getSnapshot().context.crashRetries).toBe(0);
     expect(stream.inputs[2]?.pipelineMode).toBe("hw");
   });
 
   test("PRODUCER_STALLED retries at the reported position via the same ladder", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
-    actor.send({ type: "ADD", source: fileSource("stally"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["stally"]);
 
     actor.send({
       type: "PRODUCER_STALLED",
@@ -730,13 +672,9 @@ describe("crash recovery ladder", () => {
   });
 
   test("a non-crash stream error still drops the item without retrying", async () => {
-    const stream = makeStreamController();
-    const actor = startActor(makeActors({ runStream: stream.runStream }));
+    const { actor, stream } = await startFilePlayback(["a", "b"]);
     const errorKinds: (string | null)[] = [];
     actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
 
     stream.crashCurrent(new Error("plain stream error"));
     await waitFor(
@@ -755,7 +693,6 @@ describe("crash recovery ladder", () => {
 
 describe("crash recovery — state cleanup", () => {
   test("a rejected recovery re-resolve clears recovery state so the NEXT item starts clean", async () => {
-    const stream = makeStreamController();
     // "a" resolves for its initial play and its first crash-retry, then its SECOND re-resolve
     // (recovery attempt 2) rejects; "b" resolves normally.
     let resolveCalls = 0;
@@ -766,12 +703,9 @@ describe("crash recovery — state cleanup", () => {
       }
       return makeActors().resolveSource(input, signal);
     };
-    const actor = startActor(
-      makeActors({ resolveSource, runStream: stream.runStream }),
-    );
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["a", "b"], {
+      resolveSource,
+    });
 
     // Crash once (retry 1, resumes at 42 on hw), then crash again — the retry-2 re-resolve rejects.
     stream.crashCurrent(crashError(42));
@@ -785,14 +719,7 @@ describe("crash recovery — state cleanup", () => {
 
     // The failed re-resolve drops "a" and advances to "b", which must start CLEAN — not inherit
     // "a"'s crash offset (84) or its escalated hw-upload pipeline.
-    await waitFor(
-      actor,
-      (s) =>
-        s.matches("streaming") &&
-        s.context.current?.source.kind === "file" &&
-        s.context.current.source.title === "b",
-      WAIT,
-    );
+    await waitForCurrentFile(actor, "b");
     const context = actor.getSnapshot().context;
     expect(context.crashRetries).toBe(0);
     expect(context.resumeSeekSeconds).toBe(0);
@@ -802,7 +729,6 @@ describe("crash recovery — state cleanup", () => {
   });
 
   test("SKIP during a recovery re-resolve clears recovery state (a non-onError resolving exit)", async () => {
-    const stream = makeStreamController();
     // "a" resolves initially, then its crash-retry re-resolve HANGS so we can SKIP mid-resolve.
     let resolveCalls = 0;
     const resolveSource: PlaybackActors["resolveSource"] = (input, signal) => {
@@ -816,12 +742,9 @@ describe("crash recovery — state cleanup", () => {
       }
       return makeActors().resolveSource(input, signal);
     };
-    const actor = startActor(
-      makeActors({ resolveSource, runStream: stream.runStream }),
-    );
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
+    const { actor, stream } = await startFilePlayback(["a", "b"], {
+      resolveSource,
+    });
 
     stream.crashCurrent(crashError(42));
     // The retry re-resolve is now hanging in `resolving` with recovery state set.
@@ -839,14 +762,7 @@ describe("crash recovery — state cleanup", () => {
     // SKIP mid-resolve — this exits `resolving` via the SKIP transition, NOT onError. It must still
     // clear recovery state so "b" doesn't inherit "a"'s crash offset/pipeline.
     actor.send({ type: "SKIP" });
-    await waitFor(
-      actor,
-      (s) =>
-        s.matches("streaming") &&
-        s.context.current?.source.kind === "file" &&
-        s.context.current.source.title === "b",
-      WAIT,
-    );
+    await waitForCurrentFile(actor, "b");
     const context = actor.getSnapshot().context;
     expect(context.resumeSeekSeconds).toBe(0);
     expect(context.crashRetries).toBe(0);
@@ -856,45 +772,30 @@ describe("crash recovery — state cleanup", () => {
   });
 
   test("a recovery re-resolve that TIMES OUT clears recovery state (the wedge-timeout exit)", async () => {
-    const stream = makeStreamController();
     let resolveCalls = 0;
-    const actor = createActor(
-      createPlaybackMachine(
-        makeActors({
-          runStream: stream.runStream,
-          resolveSource: (input, signal) => {
-            resolveCalls += 1;
-            if (resolveCalls === 2) {
-              return new Promise((_resolve, reject) => {
-                signal.addEventListener("abort", () => {
-                  reject(new Error("aborted"));
-                });
+    const { actor, stream } = await startFilePlayback(
+      ["a", "b"],
+      {
+        resolveSource: (input, signal) => {
+          resolveCalls += 1;
+          if (resolveCalls === 2) {
+            return new Promise((_resolve, reject) => {
+              signal.addEventListener("abort", () => {
+                reject(new Error("aborted"));
               });
-            }
-            return makeActors().resolveSource(input, signal);
-          },
-        }),
-      ),
-      { input: { ...INPUT, wedgeTimeoutsMs: { resolve: 40 } } },
+            });
+          }
+          return makeActors().resolveSource(input, signal);
+        },
+      },
+      { ...INPUT, wedgeTimeoutsMs: { resolve: 40 } },
     );
-    actor.start();
     // lastErrorKind is transient (cleared when "b" resolves) — capture it across snapshots.
     const errorKinds: (string | null)[] = [];
     actor.subscribe((s) => errorKinds.push(s.context.lastErrorKind));
-    actor.send({ type: "ADD", source: fileSource("a"), requesterId: U1 });
-    actor.send({ type: "ADD", source: fileSource("b"), requesterId: U1 });
-    await waitFor(actor, (s) => s.matches("streaming"), WAIT);
-
     stream.crashCurrent(crashError(55));
     // The retry re-resolve hangs → the wedge `resolveTimeout` fires → failed → skipped → "b".
-    await waitFor(
-      actor,
-      (s) =>
-        s.matches("streaming") &&
-        s.context.current?.source.kind === "file" &&
-        s.context.current.source.title === "b",
-      WAIT,
-    );
+    await waitForCurrentFile(actor, "b");
     const context = actor.getSnapshot().context;
     expect(errorKinds).toContain("timeout");
     expect(context.resumeSeekSeconds).toBe(0);
