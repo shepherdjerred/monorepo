@@ -197,6 +197,34 @@ const includeVisibleDare = {
   _count: { select: { evidence: true } },
 };
 
+const VISIBLE_DARE_PAGE_SIZE = 100;
+
+function matchesVisibleDareSearch(
+  row: VisibleDareRow,
+  item: DareV2ListItem,
+  search: string | undefined,
+): boolean {
+  if (search === undefined || search.length === 0) return true;
+  const normalizedSearch = search.toLocaleLowerCase();
+  const revision = activeRevision(row);
+  return (
+    revision.originalText.toLocaleLowerCase().includes(normalizedSearch) ||
+    item.targetAliases.some((alias) =>
+      alias.toLocaleLowerCase().includes(normalizedSearch),
+    )
+  );
+}
+
+function matchingVisibleDareItems(
+  rows: VisibleDareRow[],
+  search: string | undefined,
+): DareV2ListItem[] {
+  return rows
+    .map((row) => ({ row, item: listItem(row) }))
+    .filter(({ row, item }) => matchesVisibleDareSearch(row, item, search))
+    .map(({ item }) => item);
+}
+
 function visibleState(state: BucksDareV2State): boolean {
   return state !== "draft" && state !== "deleted";
 }
@@ -211,50 +239,45 @@ export async function listVisibleDaresV2(
   prisma: ExtendedPrismaClient,
 ): Promise<DareV2ListItem[]> {
   const search = input.search?.trim();
-  const rows = await prisma.bucksDareV2.findMany({
-    where: {
-      serverId: input.serverId,
-      AND: [
-        input.scope === "guild"
-          ? { dareState: { notIn: ["draft", "deleted"] } }
-          : {
-              dareState: { not: "deleted" },
-              OR: [
-                { challengerDiscordId: input.viewerDiscordId },
-                { targets: { some: { discordId: input.viewerDiscordId } } },
-                {
-                  contributions: {
-                    some: { discordId: input.viewerDiscordId },
-                  },
-                },
-              ],
-            },
-        ...(search === undefined || search.length === 0
-          ? []
-          : [
-              {
+  const matches: DareV2ListItem[] = [];
+  let cursorId: number | undefined;
+  while (matches.length < VISIBLE_DARE_PAGE_SIZE) {
+    const rows = await prisma.bucksDareV2.findMany({
+      where: {
+        serverId: input.serverId,
+        AND: [
+          input.scope === "guild"
+            ? { dareState: { notIn: ["draft", "deleted"] } }
+            : {
+                dareState: { not: "deleted" },
                 OR: [
+                  { challengerDiscordId: input.viewerDiscordId },
+                  { targets: { some: { discordId: input.viewerDiscordId } } },
                   {
-                    revisions: {
-                      some: { originalText: { contains: search } },
+                    contributions: {
+                      some: { discordId: input.viewerDiscordId },
                     },
                   },
-                  {
-                    revisions: {
-                      some: { targetsJson: { contains: search } },
-                    },
-                  },
-                  { targets: { some: { alias: { contains: search } } } },
                 ],
               },
-            ]),
-      ],
-    },
-    include: includeVisibleDare,
-    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-    take: 100,
-  });
-  return rows.map((row) => listItem(row));
+        ],
+      },
+      include: includeVisibleDare,
+      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+      take: VISIBLE_DARE_PAGE_SIZE,
+      ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
+    });
+    matches.push(...matchingVisibleDareItems(rows, search));
+    if (matches.length >= VISIBLE_DARE_PAGE_SIZE) {
+      return matches.slice(0, VISIBLE_DARE_PAGE_SIZE);
+    }
+    const lastRow = rows.at(-1);
+    if (lastRow === undefined || rows.length < VISIBLE_DARE_PAGE_SIZE) {
+      return matches;
+    }
+    cursorId = lastRow.id;
+  }
+  return matches;
 }
 
 export async function inspectVisibleDareV2(

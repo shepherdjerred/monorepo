@@ -20,6 +20,7 @@ import {
 } from "@scout-for-lol/design-system/components/tabs";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { ExploreDareEditor } from "#src/components/explore-dare-editor.tsx";
+import { dareDeadlineDescription } from "#src/lib/dare-deadline.ts";
 import { dareEditorInstanceKey } from "#src/lib/dare-editor-state.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
@@ -237,7 +238,7 @@ function DareDetail(props: {
           label="Evidence"
           value={`${props.dare.evidenceGames.toString()} games`}
         />
-        <Fact label="Deadline" value={deadlineDescription(props.dare)} />
+        <Fact label="Deadline" value={dareDeadlineDescription(props.dare)} />
         {props.dare.acceptDeadline !== null && (
           <Fact
             label="Accept by"
@@ -270,24 +271,6 @@ function DareDetail(props: {
       )}
     </div>
   );
-}
-
-function deadlineDescription(dare: {
-  deadlineAt: string | null;
-  deadlineSpec: DareDeadlineSpecV2;
-}): string {
-  if (dare.deadlineAt !== null) {
-    return new Date(dare.deadlineAt).toLocaleString();
-  }
-  if (dare.deadlineSpec.kind === "absolute") {
-    return new Intl.DateTimeFormat(undefined, {
-      dateStyle: "medium",
-      timeStyle: "short",
-      timeZone: dare.deadlineSpec.timezone,
-      timeZoneName: "short",
-    }).format(new Date(dare.deadlineSpec.deadlineAt));
-  }
-  return `${dare.deadlineSpec.days.toString()} days after every target accepts`;
 }
 
 function Fact(props: { label: string; value: string }) {

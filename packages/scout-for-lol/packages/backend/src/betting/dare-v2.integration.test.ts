@@ -364,6 +364,53 @@ describe("Dare v2 draft and lifecycle", () => {
     ).resolves.toEqual([]);
   });
 
+  test("searches only the active revision's visible text and aliases", async () => {
+    const dareId = await makeDraft();
+    const revised = await reviseDareDraftV2(
+      {
+        dareId,
+        serverId: SERVER,
+        challengerDiscordId: CHALLENGER,
+        expectedRevision: 1,
+        definition: {
+          originalText: "same-game farming challenge for the current target",
+          plan: PLAN,
+          targets: [{ ...TARGET_BINDING, alias: "CurrentAlias" }],
+          deadlineSpec: { kind: "relative", days: 7 },
+          openingStake: 20,
+        },
+      },
+      deps,
+      T0,
+    );
+    expect(revised.kind).toBe("revised");
+
+    await expect(
+      listVisibleDaresV2(
+        {
+          serverId: SERVER,
+          viewerDiscordId: CHALLENGER,
+          scope: "mine",
+          search: "currentalias",
+        },
+        db,
+      ),
+    ).resolves.toHaveLength(1);
+    for (const hiddenSearch of ["Virmel", "virmel-puuid", "virmel"] as const) {
+      await expect(
+        listVisibleDaresV2(
+          {
+            serverId: SERVER,
+            viewerDiscordId: CHALLENGER,
+            scope: "mine",
+            search: hiddenSearch,
+          },
+          db,
+        ),
+      ).resolves.toEqual([]);
+    }
+  });
+
   test("funds once, freezes the revision, and binds the deadline on acceptance", async () => {
     const dareId = await makeDraft();
     const fundIntent = await intent({
