@@ -97,7 +97,23 @@
       "ignoreDependencies": ["cdk8s-cli"]
     },
     "packages/homelab/src/helm-types": {
-      "entry": ["src/**/*.ts"],
+      "entry": [
+        "src/types.ts",
+        "src/schemas.ts",
+        "src/config.ts",
+        "src/chart-info-parser.ts",
+        "src/yaml-comments.ts",
+        "src/chart-fetcher.ts",
+        "src/type-converter.ts",
+        "src/interface-generator.ts",
+        "src/utils.ts",
+        "src/comment-parser.ts",
+        "src/helm-types.ts",
+        "src/yaml-comment-filters.ts",
+        "src/yaml-comment-regex-parser.ts",
+        "src/yaml-preprocess.ts",
+        "src/type-converter-helpers.ts"
+      ],
       "project": ["src/**/*.ts"]
     },
     "packages/discord-plays-pokemon/packages/backend": {

@@ -1,9 +1,4 @@
 {
-  "src/code-generator.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
   "src/comment-parser.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
@@ -20,11 +15,6 @@
     }
   },
   "src/type-converter.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/type-inference.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

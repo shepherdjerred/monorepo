@@ -788,21 +788,9 @@
       "clones": 3,
       "tokens": 222
     },
-    "packages/homelab/src/helm-types/src/code-generator.ts|packages/homelab/src/helm-types/src/interface-generator.ts": {
-      "clones": 2,
-      "tokens": 934
-    },
     "packages/homelab/src/helm-types/src/comment-parser.test.ts|packages/homelab/src/helm-types/src/yaml-comments.test.ts": {
       "clones": 1,
       "tokens": 237
-    },
-    "packages/homelab/src/helm-types/src/type-converter-helpers.ts|packages/homelab/src/helm-types/src/type-inference.ts": {
-      "clones": 1,
-      "tokens": 290
-    },
-    "packages/homelab/src/helm-types/src/type-converter.ts|packages/homelab/src/helm-types/src/type-inference.ts": {
-      "clones": 6,
-      "tokens": 1346
     },
     "packages/llm-observability/src/archive-uploader.ts|packages/llm-observability/test/e2e/signed-fetch.ts": {
       "clones": 1,
