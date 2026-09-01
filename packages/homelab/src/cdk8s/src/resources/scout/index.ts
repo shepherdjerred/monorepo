@@ -223,7 +223,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
     FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
     TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
-    // No TEMPORAL_LEGACY_NAMESPACE: the `default` drain is retired for Scout.
+    // No TEMPORAL_LEGACY_NAMESPACE: the `default` drain is retired.
     // The legacy namespace holds no Scout execution this backend can finish,
     // and building its workers is what put the beta supervisor into a
     // reconnect loop.

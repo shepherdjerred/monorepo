@@ -185,8 +185,15 @@ describe("Temporal workflow outcome rules", () => {
         (rule) => rule.alert === "TemporalDomainWorkflowPollerUnavailable",
       )
       .map((rule) => rule.expr.value);
+    // The threshold is the served-namespace count, so retiring the `default`
+    // drain has to move both together: one namespace served, one required.
+    // Changing the env without the rule would leave this at < 2 and fire on
+    // every queue the moment the workers rolled.
     expect(workflowPollerExpressions).toContain(
-      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="buildkite",exported_namespace=~"prod|default",task_queue="maintenance",poller_type="workflow_task"})) < 2',
+      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="buildkite",exported_namespace=~"prod",task_queue="maintenance",poller_type="workflow_task"})) < 1',
+    );
+    expect(workflowPollerExpressions.join("\n")).not.toContain(
+      'exported_namespace=~"prod|default"',
     );
     const scoutBetaExpression = workflowPollerExpressions.find(
       (expression) =>
