@@ -5,6 +5,7 @@ import {
 } from "@temporalio/common";
 import {
   ScoutMatchIngestionInputSchema,
+  PostMatchDiscoveryResultSchema,
   ScoutPostMatchDiscoveryInputSchema,
   ScoutRealtimePollInputSchema,
   type ScoutMatchIngestionInput,
@@ -55,8 +56,8 @@ export async function scoutPostMatchDiscoveryWorkflow(
 ): Promise<{ status: ScoutWorkflowStatus; childrenStarted: number }> {
   const input = ScoutPostMatchDiscoveryInputSchema.parse(rawInput);
   setWorkflowPhase("**Phase:** discovering completed matches");
-  const discovered = await realtimeActivities(input.stage).discoverPostMatchIds(
-    input,
+  const discovered = PostMatchDiscoveryResultSchema.parse(
+    await realtimeActivities(input.stage).discoverPostMatchIds(input),
   );
   let childrenStarted = 0;
   for (const match of discovered.matches) {
@@ -78,6 +79,9 @@ export async function scoutPostMatchDiscoveryWorkflow(
     await child.result();
   }
   setWorkflowPhase("**Phase:** running post-match maintenance");
-  await realtimeActivities(input.stage).runPostMatchMaintenance(input);
+  await realtimeActivities(input.stage).runPostMatchMaintenance({
+    ...input,
+    settleDareV2Deadlines: discovered.evidenceComplete,
+  });
   return { status: "completed", childrenStarted };
 }

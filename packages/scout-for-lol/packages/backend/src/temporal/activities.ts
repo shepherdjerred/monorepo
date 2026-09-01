@@ -138,15 +138,16 @@ function createRealtimeActivities(): ScoutTemporalActivityGroups["realtime"] {
         async () => {
           const { discoverPostMatchIntents } =
             await import("#src/league/tasks/postmatch/match-history-polling.ts");
-          const matches = await discoverPostMatchIntents();
-          return { matches };
+          return await discoverPostMatchIntents();
         },
       ),
-    runPostMatchMaintenance: async () => {
+    runPostMatchMaintenance: async (input) => {
       await heartbeatWhile({ phase: "postmatch-maintenance" }, async () => {
         const { runPostMatchMaintenance } =
           await import("#src/league/tasks/postmatch/index.ts");
-        await runPostMatchMaintenance();
+        await runPostMatchMaintenance({
+          settleDareV2Deadlines: input.settleDareV2Deadlines,
+        });
       });
       Context.current().heartbeat({ phase: "complete" });
     },

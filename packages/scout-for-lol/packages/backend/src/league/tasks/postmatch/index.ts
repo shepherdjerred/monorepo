@@ -34,8 +34,9 @@ export async function checkPostMatch(): Promise<{
 
   try {
     let matchHistoryError: unknown;
+    let evidenceComplete = false;
     try {
-      await checkMatchHistory();
+      evidenceComplete = await checkMatchHistory();
     } catch (error) {
       matchHistoryError = error;
       logger.error(
@@ -59,7 +60,9 @@ export async function checkPostMatch(): Promise<{
     let earningsRecoveryError: unknown;
     let dareSummaries: DareSettlementSummary[] = [];
     try {
-      ({ dareSummaries } = await runPostMatchMaintenance());
+      ({ dareSummaries } = await runPostMatchMaintenance({
+        settleDareV2Deadlines: evidenceComplete,
+      }));
     } catch (error) {
       earningsRecoveryError = error;
     }
@@ -95,7 +98,9 @@ export async function checkPostMatch(): Promise<{
   }
 }
 
-export async function runPostMatchMaintenance(): Promise<{
+export async function runPostMatchMaintenance(options?: {
+  settleDareV2Deadlines: boolean;
+}): Promise<{
   dareSummaries: DareSettlementSummary[];
 }> {
   if (isFeatureHardDisabled("betting_enabled")) {
@@ -103,6 +108,7 @@ export async function runPostMatchMaintenance(): Promise<{
   }
 
   let dareSummaries: DareSettlementSummary[] = [];
+  const settleDareV2Deadlines = options?.settleDareV2Deadlines ?? true;
   // Isolated per step, then re-thrown: the dare window settle is LAST, and
   // without isolation a persistently failing earnings retry or stale-pool
   // announce would starve those refunds while the money stayed escrowed.
@@ -117,7 +123,9 @@ export async function runPostMatchMaintenance(): Promise<{
       name: "dare v2 deadline settle",
       run: async () => {
         try {
-          await settleEndedDareV2Windows();
+          if (settleDareV2Deadlines) {
+            await settleEndedDareV2Windows();
+          }
           await refreshPendingDareV2Callouts();
         } catch (error) {
           if (error instanceof DareV2PartialSettlementError) {

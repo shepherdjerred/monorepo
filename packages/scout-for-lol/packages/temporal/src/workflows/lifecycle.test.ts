@@ -123,6 +123,7 @@ describe("realtime workflows", () => {
       taskQueue: "scout-dev-realtime",
       activities: {
         discoverPostMatchIds: () => ({
+          evidenceComplete: true,
           matches: ["NA1_100", "NA1_101"].map((matchId) => ({
             matchId,
             sourcePuuid: `puuid-${matchId}`,
@@ -162,6 +163,38 @@ describe("realtime workflows", () => {
     ).resolves.toBe("completed");
   });
 
+  test("withholds Dare deadline settlement when discovery evidence is incomplete", async () => {
+    let settleDareV2Deadlines: boolean | undefined;
+    const workflow = await workflowWorker();
+    const activities = await Worker.create({
+      connection: environment.nativeConnection,
+      taskQueue: "scout-dev-realtime",
+      activities: {
+        discoverPostMatchIds: () => ({
+          matches: [],
+          evidenceComplete: false,
+        }),
+        runPostMatchMaintenance: (input: {
+          settleDareV2Deadlines: boolean;
+        }) => {
+          settleDareV2Deadlines = input.settleDareV2Deadlines;
+        },
+      },
+      maxConcurrentActivityTaskExecutions: 1,
+    });
+    await startWorker(workflow);
+    await startWorker(activities);
+
+    await expect(
+      environment.client.workflow.execute(scoutPostMatchDiscoveryWorkflow, {
+        taskQueue: "scout-dev",
+        workflowId: "postmatch-discovery-incomplete",
+        args: [{ stage: "dev" }],
+      }),
+    ).resolves.toEqual({ status: "completed", childrenStarted: 0 });
+    expect(settleDareV2Deadlines).toBe(false);
+  });
+
   test("restarts a failed match child without duplicating a successful child", async () => {
     let attempts = 0;
     let failIngestion = true;
@@ -172,6 +205,7 @@ describe("realtime workflows", () => {
       taskQueue: "scout-dev-realtime",
       activities: {
         discoverPostMatchIds: () => ({
+          evidenceComplete: true,
           matches: includeMatchInDiscovery
             ? [
                 {

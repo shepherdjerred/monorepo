@@ -228,9 +228,21 @@ export type IngestionReconciliationResult = z.infer<
 
 export const PostMatchDiscoveryResultSchema = z.object({
   matches: z.array(ScoutMatchIngestionInputSchema.omit({ stage: true })),
+  // Old activity completions predate this field and only returned after a
+  // complete discovery. Defaulting those replayed payloads to true preserves
+  // in-flight workflow compatibility across the rollout.
+  evidenceComplete: z.boolean().default(true),
 });
 export type PostMatchDiscoveryResult = z.infer<
   typeof PostMatchDiscoveryResultSchema
+>;
+
+export const ScoutPostMatchMaintenanceInputSchema =
+  ScoutPostMatchDiscoveryInputSchema.extend({
+    settleDareV2Deadlines: z.boolean(),
+  });
+export type ScoutPostMatchMaintenanceInput = z.infer<
+  typeof ScoutPostMatchMaintenanceInputSchema
 >;
 
 export const ReportScheduleDrainResultSchema = z.object({

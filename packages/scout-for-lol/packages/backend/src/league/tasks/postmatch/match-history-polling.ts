@@ -378,10 +378,13 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
   };
 }
 
-export async function discoverPostMatchIntents(): Promise<
-  DiscoveredMatchIntent[]
-> {
-  if (shouldSkipPollingRun()) return [];
+export async function discoverPostMatchIntents(): Promise<{
+  matches: DiscoveredMatchIntent[];
+  evidenceComplete: boolean;
+}> {
+  if (shouldSkipPollingRun()) {
+    return { matches: [], evidenceComplete: false };
+  }
   isPollingInProgress = true;
   pollingStartTime = Date.now();
   try {
@@ -390,10 +393,10 @@ export async function discoverPostMatchIntents(): Promise<
       logger.warn(
         "Match discovery evidence is incomplete; maintenance may proceed without advancing ingestion cursors",
       );
-      return [];
+      return { matches: [], evidenceComplete: false };
     }
     await setLastSuccessfulPollAt(new Date());
-    return discovery.intents;
+    return { matches: discovery.intents, evidenceComplete: true };
   } finally {
     isPollingInProgress = false;
     pollingStartTime = undefined;
@@ -403,11 +406,11 @@ export async function discoverPostMatchIntents(): Promise<
 /**
  * Main function to check for new matches via match history polling
  */
-export async function checkMatchHistory(): Promise<void> {
+export async function checkMatchHistory(): Promise<boolean> {
   // Prevent concurrent runs to avoid race conditions where two cron runs
   // could process the same match before lastProcessedMatchId is updated
   if (shouldSkipPollingRun()) {
-    return;
+    return false;
   }
 
   isPollingInProgress = true;
@@ -421,7 +424,7 @@ export async function checkMatchHistory(): Promise<void> {
       logger.warn(
         "Match discovery evidence is incomplete; leaving ingestion cursors unchanged",
       );
-      return;
+      return false;
     }
     if (discovery.intents.length === 0) {
       logger.info("✅ No new matches found for any players");
@@ -430,7 +433,7 @@ export async function checkMatchHistory(): Promise<void> {
         `⏱️  Match history check completed in ${totalTime.toString()}ms`,
       );
       await setLastSuccessfulPollAt(new Date());
-      return;
+      return true;
     }
 
     const totalDiscord = discovery.intents.filter(
@@ -468,6 +471,7 @@ export async function checkMatchHistory(): Promise<void> {
     );
 
     await setLastSuccessfulPollAt(new Date());
+    return true;
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
     throw error;
