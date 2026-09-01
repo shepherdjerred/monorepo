@@ -11,8 +11,10 @@ import {
   BUCKS_INT32_MAX,
   DareCompiledPlanV2Schema,
   RawMatchSchema,
+  type DareCompiledPlanV2,
   type DareDeadlineSpecV2,
   type DareTargetBindingV2,
+  type DiscordAccountId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import {
@@ -28,13 +30,7 @@ import {
   refreshDareV2Callout,
   refreshPendingDareV2Callouts,
 } from "#src/betting/dare-callout-v2.ts";
-import { settleDaresV2ForMatch } from "#src/betting/dare-settle-v2.ts";
-import { settleEndedDareV2Windows } from "#src/betting/dare-sweep-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dare-settle-types-v2.ts";
-import {
-  makeTwistedFateMatch,
-  TWISTED_FATE_SAME_GAME_PLAN,
-} from "#src/betting/dare-v2-test-fixtures.ts";
 import {
   inspectVisibleDareV2,
   listVisibleDaresV2,
@@ -42,6 +38,13 @@ import {
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
 import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import { parseDareV2Contract } from "#src/betting/dare-v2-common.ts";
+import { settleDaresV2ForMatch } from "#src/betting/dare-settle-v2.ts";
+import { settleEndedDareV2Windows } from "#src/betting/dare-sweep-v2.ts";
+import {
+  DEATHCAP_TIMELINE_PLAN,
+  makeTwistedFateMatch,
+  TWISTED_FATE_SAME_GAME_PLAN,
+} from "#src/betting/dare-v2-test-fixtures.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,
@@ -61,6 +64,8 @@ const SERVER = testGuildId("921");
 const CHANNEL = testChannelId("922");
 const CHALLENGER = testAccountId("923");
 const TARGET = testAccountId("924");
+const SECOND_TARGET = testAccountId("925");
+const CONTRIBUTOR = testAccountId("926");
 const T0 = new Date("2026-09-01T12:00:00.000Z");
 let matchFixture: RawMatch;
 
@@ -77,6 +82,19 @@ const TARGET_BINDING: DareTargetBindingV2 = {
   ],
 };
 
+const SECOND_TARGET_BINDING: DareTargetBindingV2 = {
+  key: "bryan",
+  discordId: SECOND_TARGET,
+  playerId: 2,
+  alias: "Bryan",
+  accounts: [
+    {
+      puuid: "bryan-puuid",
+      trackingStartedAt: "2026-01-01T00:00:00.000Z",
+    },
+  ],
+};
+
 const PLAN = TWISTED_FATE_SAME_GAME_PLAN;
 const EXACTLY_ONE_PLAN = DareCompiledPlanV2Schema.parse({
   ...PLAN,
@@ -88,6 +106,33 @@ const ARENA_PLAN = DareCompiledPlanV2Schema.parse({
     ...gameSet,
     queues: ["arena"],
   })),
+});
+
+const TWO_TARGET_PLAN = DareCompiledPlanV2Schema.parse({
+  ...PLAN,
+  gameSets: [
+    {
+      ...PLAN.gameSets[0],
+      targetKeys: ["virmel", "bryan"],
+      relationship: "same_team",
+      predicate: {
+        kind: "and",
+        operands: [
+          PLAN.gameSets[0]?.predicate,
+          {
+            kind: "comparison",
+            value: {
+              kind: "participant",
+              target: "bryan",
+              field: "kills",
+            },
+            operator: "gte",
+            threshold: 0,
+          },
+        ],
+      },
+    },
+  ],
 });
 
 const deps = {
@@ -136,11 +181,14 @@ afterAll(async () => {
   await db.$disconnect();
 });
 
-async function makeDraft(input?: {
-  deadlineSpec?: DareDeadlineSpecV2;
-  openingStake?: number;
-  plan?: typeof PLAN;
-}) {
+async function makeDraft(
+  input: {
+    plan?: DareCompiledPlanV2 | undefined;
+    targets?: DareTargetBindingV2[] | undefined;
+    deadlineSpec?: DareDeadlineSpecV2 | undefined;
+    openingStake?: number | undefined;
+  } = {},
+) {
   const result = await createDareDraftV2(
     {
       serverId: SERVER,
@@ -148,10 +196,10 @@ async function makeDraft(input?: {
       challengerDiscordId: CHALLENGER,
       originalText:
         "I bet Virmel can't get 8 CS/m on Twisted Fate in a game at least 20m",
-      plan: input?.plan ?? PLAN,
-      targets: [TARGET_BINDING],
-      deadlineSpec: input?.deadlineSpec ?? { kind: "relative", days: 7 },
-      openingStake: input?.openingStake ?? 20,
+      plan: input.plan ?? PLAN,
+      targets: input.targets ?? [TARGET_BINDING],
+      deadlineSpec: input.deadlineSpec ?? { kind: "relative", days: 7 },
+      openingStake: input.openingStake ?? 20,
     },
     deps,
     T0,
@@ -159,36 +207,6 @@ async function makeDraft(input?: {
   if (result.kind !== "created")
     throw new Error("Expected Dare v2 draft creation.");
   return result.dareId;
-}
-
-async function activate(dareId: number, key: string): Promise<void> {
-  const fundIntent = await intent({
-    dareId,
-    actor: CHALLENGER,
-    action: "fund",
-    key: `fund-${key}`,
-  });
-  await consume(fundIntent, CHALLENGER);
-  const acceptIntent = await intent({
-    dareId,
-    actor: TARGET,
-    action: "accept",
-    key: `accept-${key}`,
-  });
-  const result = await consume(acceptIntent, TARGET);
-  if (result.kind !== "accepted" || !result.activated) {
-    throw new Error("Expected an active Dare v2 contract.");
-  }
-}
-
-function qualifyingMatch(matchId: string): RawMatch {
-  const gameStartTimestamp = T0.getTime() + 60 * 60 * 1000;
-  return makeTwistedFateMatch(matchFixture, {
-    matchId,
-    gameStartTimestamp,
-    timePlayed: 25 * 60,
-    creepScore: 200,
-  });
 }
 
 function qualifyingArenaMatch(matchId: string): RawMatch {
@@ -208,7 +226,6 @@ function qualifyingArenaMatch(matchId: string): RawMatch {
     },
   });
 }
-
 async function fillTargetWallet(dareId: number): Promise<void> {
   const target = await db.bucksDareV2Target.findFirstOrThrow({
     where: { dareId },
@@ -233,7 +250,6 @@ async function fillTargetWallet(dareId: number): Promise<void> {
     }),
   );
 }
-
 async function expectStorageOverflowVoid(
   dareId: number,
   evidenceCount: number,
@@ -257,7 +273,7 @@ async function expectStorageOverflowVoid(
 
 async function intent(input: {
   dareId: number;
-  actor: typeof CHALLENGER;
+  actor: DiscordAccountId;
   action: "fund" | "accept" | "decline" | "cancel";
   key: string;
 }) {
@@ -278,7 +294,7 @@ async function intent(input: {
   return result.intentId;
 }
 
-async function consume(intentId: string, actor: typeof CHALLENGER) {
+async function consume(intentId: string, actor: DiscordAccountId) {
   return await consumeDareV2ConfirmationIntent(
     { intentId, serverId: SERVER, actorDiscordId: actor },
     deps,
@@ -312,6 +328,56 @@ function clientFailingSecondTransaction(message: string) {
       }
       return Reflect.get(target, property, target);
     },
+  });
+}
+
+async function fund(dareId: number, key: string): Promise<void> {
+  const fundIntent = await intent({
+    dareId,
+    actor: CHALLENGER,
+    action: "fund",
+    key,
+  });
+  const funded = await consume(fundIntent, CHALLENGER);
+  if (funded.kind !== "funded") throw new Error("Expected funded Dare v2.");
+}
+
+async function activate(dareId: number, key: string): Promise<void> {
+  await fund(dareId, `fund-${key}`);
+  const acceptIntent = await intent({
+    dareId,
+    actor: TARGET,
+    action: "accept",
+    key: `accept-${key}`,
+  });
+  const accepted = await consume(acceptIntent, TARGET);
+  if (accepted.kind !== "accepted" || !accepted.activated) {
+    throw new Error("Expected active Dare v2.");
+  }
+}
+
+function matchWithStats(input: {
+  matchId: string;
+  minutesAfterActivation: number;
+  timePlayed: number;
+  creepScore: number;
+}): RawMatch {
+  const gameStartTimestamp =
+    T0.getTime() + input.minutesAfterActivation * 60 * 1000;
+  return makeTwistedFateMatch(matchFixture, {
+    matchId: input.matchId,
+    timePlayed: input.timePlayed,
+    creepScore: input.creepScore,
+    gameStartTimestamp,
+  });
+}
+
+function qualifyingMatch(matchId: string): RawMatch {
+  return matchWithStats({
+    matchId,
+    minutesAfterActivation: 60,
+    timePlayed: 25 * 60,
+    creepScore: 200,
   });
 }
 
@@ -641,7 +707,9 @@ describe("Dare v2 draft mutation and cancellation", () => {
       }),
     ).toBe(1);
   });
+});
 
+describe("Dare v2 funded lifecycle", () => {
   test("challenger cancellation during acceptance refunds the full stake", async () => {
     const dareId = await makeDraft();
     const fundIntent = await intent({
@@ -795,6 +863,233 @@ describe("Dare v2 partial settlement", () => {
     });
     expect(firstDare.dareState).not.toBe("active");
     expect(secondDare.dareState).toBe("active");
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+
+  test("activates exactly once when every target accepts concurrently", async () => {
+    const dareId = await makeDraft({
+      plan: TWO_TARGET_PLAN,
+      targets: [TARGET_BINDING, SECOND_TARGET_BINDING],
+    });
+    await fund(dareId, "concurrent-acceptance");
+    const firstIntent = await intent({
+      dareId,
+      actor: TARGET,
+      action: "accept",
+      key: "accept-virmel",
+    });
+    const secondIntent = await intent({
+      dareId,
+      actor: SECOND_TARGET,
+      action: "accept",
+      key: "accept-bryan",
+    });
+
+    const outcomes = await Promise.all([
+      consume(firstIntent, TARGET),
+      consume(secondIntent, SECOND_TARGET),
+    ]);
+
+    expect(outcomes.every((outcome) => outcome.kind === "accepted")).toBe(true);
+    expect(
+      outcomes.filter(
+        (outcome) => outcome.kind === "accepted" && outcome.activated,
+      ),
+    ).toHaveLength(1);
+    const dare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+      include: { targets: true },
+    });
+    expect(dare.dareState).toBe("active");
+    expect(dare.targets.every((target) => target.acceptedAt !== null)).toBe(
+      true,
+    );
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+
+  test("conserves concurrent contributions from one wallet", async () => {
+    const dareId = await makeDraft();
+    await fund(dareId, "concurrent-contribution");
+    const first = await createDareV2ConfirmationIntent(
+      {
+        dareId,
+        serverId: SERVER,
+        actorDiscordId: CONTRIBUTOR,
+        expectedRevision: 1,
+        payload: { action: "contribute", amount: 5 },
+        idempotencyKey: "contribute-five",
+      },
+      deps,
+      T0,
+    );
+    const second = await createDareV2ConfirmationIntent(
+      {
+        dareId,
+        serverId: SERVER,
+        actorDiscordId: CONTRIBUTOR,
+        expectedRevision: 1,
+        payload: { action: "contribute", amount: 7 },
+        idempotencyKey: "contribute-seven",
+      },
+      deps,
+      T0,
+    );
+    if (first.kind !== "intent_created" || second.kind !== "intent_created") {
+      throw new Error("Expected contribution confirmation intents.");
+    }
+
+    const outcomes = await Promise.all([
+      consume(first.intentId, CONTRIBUTOR),
+      consume(second.intentId, CONTRIBUTOR),
+    ]);
+
+    expect(outcomes.map((outcome) => outcome.kind).sort()).toEqual([
+      "contributed",
+      "contributed",
+    ]);
+    const dare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+    });
+    expect(dare.potTotal).toBe(32);
+    expect(
+      await db.bucksDareV2Contribution.aggregate({
+        where: { dareId },
+        _sum: { amount: true },
+      }),
+    ).toMatchObject({ _sum: { amount: 32 } });
+    const wallet = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER, discordId: CONTRIBUTOR },
+      },
+    });
+    expect(wallet.balance).toBe(SEED_GRANT - 12);
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+});
+
+describe("Dare v2 evidence and settlement", () => {
+  test("captures and pays one proof under concurrent match replay", async () => {
+    const dareId = await makeDraft();
+    await activate(dareId, "achieved-replay");
+    const match = matchWithStats({
+      matchId: "NA1_DARE_V2_ACHIEVED",
+      minutesAfterActivation: 60,
+      timePlayed: 25 * 60,
+      creepScore: 200,
+    });
+
+    const replayed = await Promise.all([
+      settleDaresV2ForMatch(match, db, {
+        now: new Date(T0.getTime() + 90_000),
+      }),
+      settleDaresV2ForMatch(match, db, {
+        now: new Date(T0.getTime() + 91_000),
+      }),
+    ]);
+    const summaries = replayed.flat();
+
+    expect(summaries).toHaveLength(1);
+    expect(summaries[0]).toMatchObject({
+      dareId,
+      resolution: "achieved",
+      value: true,
+      proof: {
+        planVersion: 2,
+        compilerVersion: "dare-scoutql-2",
+        evaluatorVersion: "dare-evaluator-2",
+        qualifyingMatchIds: [match.metadata.matchId],
+        targetKeys: ["virmel"],
+      },
+    });
+    expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(1);
+    const target = await db.bucksDareV2Target.findFirstOrThrow({
+      where: { dareId, targetKey: "virmel" },
+    });
+    expect((target.payout ?? 0) + (target.fee ?? 0)).toBe(20);
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+
+  test("serializes concurrent evidence and applies the unsuccessful cut at the bound", async () => {
+    const dareId = await makeDraft();
+    await activate(dareId, "unachieved-bound");
+    const firstMatch = matchWithStats({
+      matchId: "NA1_DARE_V2_MISS_A",
+      minutesAfterActivation: 60,
+      timePlayed: 25 * 60,
+      creepScore: 100,
+    });
+    const secondMatch = matchWithStats({
+      matchId: "NA1_DARE_V2_MISS_B",
+      minutesAfterActivation: 120,
+      timePlayed: 25 * 60,
+      creepScore: 100,
+    });
+
+    await Promise.all([
+      settleDaresV2ForMatch(firstMatch, db),
+      settleDaresV2ForMatch(secondMatch, db),
+    ]);
+    expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(2);
+    const boundAt = new Date(
+      T0.getTime() + 8 * 24 * 60 * 60 * 1000 + DARE_WINDOW_INGESTION_GRACE_MS,
+    );
+    const settled = await settleEndedDareV2Windows(db, boundAt);
+
+    expect(settled).toHaveLength(1);
+    expect(settled[0]).toMatchObject({
+      dareId,
+      resolution: "unachieved",
+      value: false,
+      finality: { final: true, reason: "deadline" },
+    });
+    const wallet = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
+      },
+    });
+    expect(wallet.balance).toBeLessThan(SEED_GRANT);
+    expect(wallet.balance).toBeGreaterThan(SEED_GRANT - 20);
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+
+  test("voids and fully refunds a timeline contract that remains unknowable", async () => {
+    const dareId = await makeDraft({ plan: DEATHCAP_TIMELINE_PLAN });
+    await activate(dareId, "missing-timeline");
+    const match = matchWithStats({
+      matchId: "NA1_DARE_V2_NO_TIMELINE",
+      minutesAfterActivation: 60,
+      timePlayed: 25 * 60,
+      creepScore: 200,
+    });
+    const captured = await settleDaresV2ForMatch(match, db, {
+      timeline: { coverage: "missing", events: [], participants: [] },
+    });
+    expect(captured).toMatchObject([
+      { dareId, resolution: "captured", value: null },
+    ]);
+    const boundAt = new Date(
+      T0.getTime() + 8 * 24 * 60 * 60 * 1000 + DARE_WINDOW_INGESTION_GRACE_MS,
+    );
+    const settled = await settleEndedDareV2Windows(db, boundAt);
+
+    expect(settled).toMatchObject([
+      {
+        dareId,
+        resolution: "voided",
+        value: null,
+        finality: { final: true, reason: "deadline" },
+      },
+    ]);
+    const dare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+    });
+    expect(dare.voidReason).toBe("missing_evidence");
+    const wallet = await db.bucksAccount.findUniqueOrThrow({
+      where: {
+        serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
+      },
+    });
+    expect(wallet.balance).toBe(SEED_GRANT);
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 });

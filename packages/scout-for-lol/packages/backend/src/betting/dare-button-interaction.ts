@@ -1,5 +1,6 @@
 import type { ActionRowBuilder, ButtonBuilder } from "discord.js";
 
+/** Structural Discord interaction shared by both Dare contract versions. */
 export type DareButtonInteractionBase = {
   customId: string;
   guildId: string | null;
