@@ -4,7 +4,6 @@ import { prisma as defaultPrisma } from "#src/database/index.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { readBuildFingerprint } from "#src/report-lake/build-manifest.ts";
 import { createLogger } from "#src/logger.ts";
-import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
 import {
   publishCompactionMetrics,
   writeCompactionManifest,
@@ -28,22 +27,12 @@ import {
   readCurrentBuildDir,
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
-import {
-  CompetitionRankHistoryLakeRowSchema,
-  MATCH_LAKE_COLUMNS,
-  MatchLakeRowSchema,
-  PREMATCH_LAKE_COLUMNS,
-  PrematchLakeRowSchema,
-} from "@scout-for-lol/data";
+import { MATCH_LAKE_COLUMNS, PREMATCH_LAKE_COLUMNS } from "@scout-for-lol/data";
 import {
   duckDbColumnsSpec,
   lakeSchemaFingerprint,
 } from "#src/report-lake/schema.ts";
-import {
-  listStagingFiles,
-  removeFoldedStagingFiles,
-  type ReportLakeStagingTable,
-} from "#src/report-lake/staging.ts";
+import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { linkTreeContents } from "#src/report-lake/link-tree.ts";
@@ -51,10 +40,9 @@ import type {
   CompactionOptions,
   ReportLakeProgress,
 } from "#src/report-lake/compaction-types.ts";
-import {
-  type StagingParseResult,
-  writeFoldParquet,
-} from "#src/report-lake/fold-parquet.ts";
+import { writeFoldParquet } from "#src/report-lake/fold-parquet.ts";
+import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
+import { readStagingRows } from "#src/report-lake/read-staging-rows.ts";
 
 const logger = createLogger("report-lake-compactor");
 
@@ -76,79 +64,6 @@ async function withCompactionLock<T>(fn: () => Promise<T>): Promise<T | null> {
   } finally {
     compactionInFlight = false;
   }
-}
-
-async function readStagingRows(
-  lakeDir: string,
-  table: ReportLakeStagingTable,
-  onProgress?: (progress: ReportLakeProgress) => void,
-): Promise<StagingParseResult> {
-  const schema =
-    table === "matches"
-      ? MatchLakeRowSchema
-      : table === "prematch"
-        ? PrematchLakeRowSchema
-        : CompetitionRankHistoryLakeRowSchema;
-  const rowsByMonth = new Map<string, object[]>();
-  const foldedIds = new Set<string>();
-  let rows = 0;
-  let skipped = 0;
-
-  for (const file of await listStagingFiles(lakeDir, table)) {
-    const stem = file
-      .split("/")
-      .at(-1)
-      ?.replace(/\.jsonl$/, "");
-    if (stem === undefined) {
-      continue;
-    }
-    const text = await Bun.file(file).text();
-    let fileOk = true;
-    const fileRows: { month: string; row: object }[] = [];
-    for (const line of text.split("\n")) {
-      if (line.trim().length === 0) {
-        continue;
-      }
-      let parsedLine: unknown;
-      try {
-        parsedLine = JSON.parse(line);
-      } catch {
-        fileOk = false;
-        break;
-      }
-      const parsed = schema.safeParse(parsedLine);
-      if (!parsed.success) {
-        fileOk = false;
-        break;
-      }
-      fileRows.push({ month: parsed.data.month, row: parsed.data });
-    }
-    if (!fileOk) {
-      // Leave the file for the nightly rebuild path, which re-derives the
-      // same data from S3; count it so drift is visible.
-      reportLakeCompactionSkippedTotal.inc({ table });
-      skipped += 1;
-      logger.warn(`Staging file failed validation, leaving for rebuild`, {
-        file,
-      });
-      continue;
-    }
-    for (const { month, row } of fileRows) {
-      const bucket = rowsByMonth.get(month) ?? [];
-      bucket.push(row);
-      rowsByMonth.set(month, bucket);
-      rows += 1;
-    }
-    foldedIds.add(stem);
-    onProgress?.({
-      phase: "reading-staging",
-      table,
-      files: foldedIds.size + skipped,
-      rows,
-      skipped,
-    });
-  }
-  return { rowsByMonth, foldedIds, rows, skipped };
 }
 
 /**
@@ -220,6 +135,26 @@ export async function runReportLakeFold(
       "competition_rank_history",
       options.onProgress,
     );
+    const stagedTimelineEvents = await readStagingRows(
+      lakeDir,
+      "timeline_events",
+      options.onProgress,
+    );
+    const stagedTimelineEventParticipants = await readStagingRows(
+      lakeDir,
+      "timeline_event_participants",
+      options.onProgress,
+    );
+    const stagedTimelineParticipantFrames = await readStagingRows(
+      lakeDir,
+      "timeline_participant_frames",
+      options.onProgress,
+    );
+    const stagedTimelineCoverage = await readStagingRows(
+      lakeDir,
+      "timeline_coverage",
+      options.onProgress,
+    );
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
     await writeFoldParquet(
@@ -227,6 +162,30 @@ export async function runReportLakeFold(
       buildId,
       "competition_rank_history",
       stagedRankHistory,
+    );
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "timeline_events",
+      stagedTimelineEvents,
+    );
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "timeline_event_participants",
+      stagedTimelineEventParticipants,
+    );
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "timeline_participant_frames",
+      stagedTimelineParticipantFrames,
+    );
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "timeline_coverage",
+      stagedTimelineCoverage,
     );
     const accountRows = await writeAccountsParquet(prisma, buildDir);
     options.onProgress?.({ phase: "publishing", rows: accountRows });
@@ -238,9 +197,18 @@ export async function runReportLakeFold(
       prematchRows: stagedPrematches.rows,
       accountRows,
       competitionRankHistoryRows: stagedRankHistory.rows,
+      timelineEventRows: stagedTimelineEvents.rows,
+      timelineEventParticipantRows: stagedTimelineEventParticipants.rows,
+      timelineParticipantFrameRows: stagedTimelineParticipantFrames.rows,
+      timelineCoverageRows: stagedTimelineCoverage.rows,
       skippedMatches: stagedMatches.skipped,
       skippedPrematches: stagedPrematches.skipped,
       skippedCompetitionRankHistory: stagedRankHistory.skipped,
+      skippedTimelines:
+        stagedTimelineEvents.skipped +
+        stagedTimelineEventParticipants.skipped +
+        stagedTimelineParticipantFrames.skipped +
+        stagedTimelineCoverage.skipped,
     };
     await writeCompactionManifest(buildDir, summary);
     await publishBuild(lakeDir, buildId);
@@ -255,6 +223,26 @@ export async function runReportLakeFold(
       lakeDir,
       "competition_rank_history",
       stagedRankHistory.foldedIds,
+    );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "timeline_events",
+      stagedTimelineEvents.foldedIds,
+    );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "timeline_event_participants",
+      stagedTimelineEventParticipants.foldedIds,
+    );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "timeline_participant_frames",
+      stagedTimelineParticipantFrames.foldedIds,
+    );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "timeline_coverage",
+      stagedTimelineCoverage.foldedIds,
     );
     await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
@@ -331,6 +319,20 @@ async function rebuildLocked(
       onProgress?.({ phase: "reading-s3", table: "prematch", ...progress });
     },
   });
+  const timelines = await rebuildTimelineParquet({
+    client,
+    bucket,
+    buildDir,
+    abortSignal: deadline,
+    timeoutMs: remainingTimeoutMs(),
+    onProgress: (progress) => {
+      onProgress?.({
+        phase: "reading-s3",
+        table: "timeline_coverage",
+        ...progress,
+      });
+    },
+  });
   deadline.throwIfAborted();
   await matchWriter.close();
   await prematchWriter.close();
@@ -391,9 +393,14 @@ async function rebuildLocked(
     prematchRows: prematchWriter.rows,
     accountRows,
     competitionRankHistoryRows: rankHistory.rows,
+    timelineEventRows: timelines.eventRows,
+    timelineEventParticipantRows: timelines.eventParticipantRows,
+    timelineParticipantFrameRows: timelines.participantFrameRows,
+    timelineCoverageRows: timelines.coverageRows,
     skippedMatches,
     skippedPrematches,
     skippedCompetitionRankHistory: rankHistory.skipped,
+    skippedTimelines: timelines.skipped,
   };
   await writeCompactionManifest(buildDir, summary);
   await publishBuild(lakeDir, buildId);
@@ -405,6 +412,14 @@ async function rebuildLocked(
     "competition_rank_history",
     foldedRankHistoryIds,
   );
+  for (const table of [
+    "timeline_events",
+    "timeline_event_participants",
+    "timeline_participant_frames",
+    "timeline_coverage",
+  ] as const) {
+    await removeFoldedStagingFiles(lakeDir, table, timelines.foldedIds);
+  }
   await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
   const durationMs = Date.now() - startedAt;

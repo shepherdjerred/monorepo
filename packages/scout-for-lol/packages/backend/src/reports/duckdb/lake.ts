@@ -5,6 +5,12 @@ import {
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
+import {
+  TIMELINE_COVERAGE_LAKE_COLUMNS,
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+} from "@scout-for-lol/data/model/timeline-lake-columns.ts";
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
 
@@ -50,6 +56,14 @@ export type LakeFiles = {
   accountsParquet: string | undefined;
   competitionRankHistoryParquet: string[];
   competitionRankHistoryStaging: string[];
+  timelineEventsParquet: string[];
+  timelineEventsStaging: string[];
+  timelineEventParticipantsParquet: string[];
+  timelineEventParticipantsStaging: string[];
+  timelineParticipantFramesParquet: string[];
+  timelineParticipantFramesStaging: string[];
+  timelineCoverageParquet: string[];
+  timelineCoverageStaging: string[];
 };
 
 async function globParquet(root: string, table: string): Promise<string[]> {
@@ -63,12 +77,23 @@ async function globParquet(root: string, table: string): Promise<string[]> {
 
 export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
   const buildDir = await readCurrentBuildDir(lakeDir);
-  const [matchesStaging, prematchStaging, competitionRankHistoryStaging] =
-    await Promise.all([
-      listStagingFiles(lakeDir, "matches"),
-      listStagingFiles(lakeDir, "prematch"),
-      listStagingFiles(lakeDir, "competition_rank_history"),
-    ]);
+  const [
+    matchesStaging,
+    prematchStaging,
+    competitionRankHistoryStaging,
+    timelineEventsStaging,
+    timelineEventParticipantsStaging,
+    timelineParticipantFramesStaging,
+    timelineCoverageStaging,
+  ] = await Promise.all([
+    listStagingFiles(lakeDir, "matches"),
+    listStagingFiles(lakeDir, "prematch"),
+    listStagingFiles(lakeDir, "competition_rank_history"),
+    listStagingFiles(lakeDir, "timeline_events"),
+    listStagingFiles(lakeDir, "timeline_event_participants"),
+    listStagingFiles(lakeDir, "timeline_participant_frames"),
+    listStagingFiles(lakeDir, "timeline_coverage"),
+  ]);
   if (buildDir === undefined) {
     return {
       matchesParquet: [],
@@ -78,14 +103,33 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
       accountsParquet: undefined,
       competitionRankHistoryParquet: [],
       competitionRankHistoryStaging,
+      timelineEventsParquet: [],
+      timelineEventsStaging,
+      timelineEventParticipantsParquet: [],
+      timelineEventParticipantsStaging,
+      timelineParticipantFramesParquet: [],
+      timelineParticipantFramesStaging,
+      timelineCoverageParquet: [],
+      timelineCoverageStaging,
     };
   }
-  const [matchesParquet, prematchParquet, competitionRankHistoryParquet] =
-    await Promise.all([
-      globParquet(buildDir, "matches"),
-      globParquet(buildDir, "prematch"),
-      globParquet(buildDir, "competition_rank_history"),
-    ]);
+  const [
+    matchesParquet,
+    prematchParquet,
+    competitionRankHistoryParquet,
+    timelineEventsParquet,
+    timelineEventParticipantsParquet,
+    timelineParticipantFramesParquet,
+    timelineCoverageParquet,
+  ] = await Promise.all([
+    globParquet(buildDir, "matches"),
+    globParquet(buildDir, "prematch"),
+    globParquet(buildDir, "competition_rank_history"),
+    globParquet(buildDir, "timeline_events"),
+    globParquet(buildDir, "timeline_event_participants"),
+    globParquet(buildDir, "timeline_participant_frames"),
+    globParquet(buildDir, "timeline_coverage"),
+  ]);
   const accountsPath = path.join(buildDir, "accounts", "accounts.parquet");
   const accountsParquet = (await Bun.file(accountsPath).exists())
     ? accountsPath
@@ -98,6 +142,14 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
     accountsParquet,
     competitionRankHistoryParquet,
     competitionRankHistoryStaging,
+    timelineEventsParquet,
+    timelineEventsStaging,
+    timelineEventParticipantsParquet,
+    timelineEventParticipantsStaging,
+    timelineParticipantFramesParquet,
+    timelineParticipantFramesStaging,
+    timelineCoverageParquet,
+    timelineCoverageStaging,
   };
 }
 
@@ -113,7 +165,14 @@ type UnionSourceInput = {
     string,
     "VARCHAR" | "INTEGER" | "BIGINT" | "DOUBLE" | "BOOLEAN" | "TIMESTAMP"
   >;
-  dedupe: "matches" | "prematch" | "competition-rank-daily-snapshot";
+  dedupe:
+    | "matches"
+    | "prematch"
+    | "competition-rank-daily-snapshot"
+    | "timeline-events"
+    | "timeline-event-participants"
+    | "timeline-participant-frames"
+    | "timeline-coverage";
   /** WHERE predicate pushed into BOTH branches (empty sql = no filter). */
   predicate: SqlFragment;
 };
@@ -152,8 +211,22 @@ export function buildUnionSource(
       params,
     };
   }
-  const partition =
-    input.dedupe === "matches" ? "match_id, puuid" : "dedupe_key, puuid";
+  const partition = (() => {
+    switch (input.dedupe) {
+      case "matches":
+        return "match_id, puuid";
+      case "prematch":
+        return "dedupe_key, puuid";
+      case "timeline-events":
+        return "event_id";
+      case "timeline-event-participants":
+        return "event_id, participant_id, role, role_index";
+      case "timeline-participant-frames":
+        return "match_id, frame_index, participant_id";
+      case "timeline-coverage":
+        return "match_id";
+    }
+  })();
   const sourceOrder = "src";
   return {
     sql: `SELECT * FROM (${unioned}) QUALIFY row_number() OVER (PARTITION BY ${partition} ORDER BY ${sourceOrder}) = 1`,
@@ -196,6 +269,58 @@ export function buildCompetitionRankHistorySource(
     stagingFiles: files.competitionRankHistoryStaging,
     columns: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
     dedupe: "competition-rank-daily-snapshot",
+    predicate,
+  });
+}
+
+export function buildTimelineEventsSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.timelineEventsParquet,
+    stagingFiles: files.timelineEventsStaging,
+    columns: TIMELINE_EVENT_LAKE_COLUMNS,
+    dedupe: "timeline-events",
+    predicate,
+  });
+}
+
+export function buildTimelineEventParticipantsSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.timelineEventParticipantsParquet,
+    stagingFiles: files.timelineEventParticipantsStaging,
+    columns: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+    dedupe: "timeline-event-participants",
+    predicate,
+  });
+}
+
+export function buildTimelineParticipantFramesSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.timelineParticipantFramesParquet,
+    stagingFiles: files.timelineParticipantFramesStaging,
+    columns: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+    dedupe: "timeline-participant-frames",
+    predicate,
+  });
+}
+
+export function buildTimelineCoverageSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.timelineCoverageParquet,
+    stagingFiles: files.timelineCoverageStaging,
+    columns: TIMELINE_COVERAGE_LAKE_COLUMNS,
+    dedupe: "timeline-coverage",
     predicate,
   });
 }

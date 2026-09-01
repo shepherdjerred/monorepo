@@ -4,6 +4,10 @@ import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
+  TIMELINE_COVERAGE_LAKE_COLUMNS,
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
@@ -23,6 +27,10 @@ describe("lakeSchemaFingerprint", () => {
       prematch: PREMATCH_LAKE_COLUMNS,
       accounts: ACCOUNT_LAKE_COLUMNS,
       competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+      timeline_events: TIMELINE_EVENT_LAKE_COLUMNS,
+      timeline_event_participants: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+      timeline_participant_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+      timeline_coverage: TIMELINE_COVERAGE_LAKE_COLUMNS,
     };
     const hasher = new Bun.CryptoHasher("sha256");
     for (const [table, columns] of Object.entries(tables)) {

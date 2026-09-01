@@ -5,18 +5,34 @@ import {
   PREMATCH_LAKE_COLUMNS as importedPrematchLakeColumns,
   type DuckDbColumnType,
 } from "@scout-for-lol/data/model/lake-columns.ts";
+import {
+  TIMELINE_COVERAGE_LAKE_COLUMNS as importedTimelineCoverageLakeColumns,
+  TIMELINE_EVENT_LAKE_COLUMNS as importedTimelineEventLakeColumns,
+  TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS as importedTimelineEventParticipantLakeColumns,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS as importedTimelineParticipantFrameLakeColumns,
+} from "@scout-for-lol/data/model/timeline-lake-columns.ts";
 
 const ACCOUNT_LAKE_COLUMNS = importedAccountLakeColumns;
 const COMPETITION_RANK_HISTORY_LAKE_COLUMNS =
   importedCompetitionRankHistoryLakeColumns;
 const MATCH_LAKE_COLUMNS = importedMatchLakeColumns;
 const PREMATCH_LAKE_COLUMNS = importedPrematchLakeColumns;
+const TIMELINE_COVERAGE_LAKE_COLUMNS = importedTimelineCoverageLakeColumns;
+const TIMELINE_EVENT_LAKE_COLUMNS = importedTimelineEventLakeColumns;
+const TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS =
+  importedTimelineEventParticipantLakeColumns;
+const TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS =
+  importedTimelineParticipantFrameLakeColumns;
 
 export {
   ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
+  TIMELINE_COVERAGE_LAKE_COLUMNS,
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 };
 
 /**
@@ -92,6 +108,10 @@ export function lakeSchemaFingerprint(): string {
     prematch: PREMATCH_LAKE_COLUMNS,
     accounts: ACCOUNT_LAKE_COLUMNS,
     competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
+    timeline_events: TIMELINE_EVENT_LAKE_COLUMNS,
+    timeline_event_participants: TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+    timeline_participant_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+    timeline_coverage: TIMELINE_COVERAGE_LAKE_COLUMNS,
   };
   const hasher = new Bun.CryptoHasher("sha256");
   for (const [table, columns] of Object.entries(tables)) {

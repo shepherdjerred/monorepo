@@ -32,6 +32,12 @@ export const MATCHES_STAGING_DIR = "matches-recent";
 export const PREMATCH_STAGING_DIR = "prematch-recent";
 export const COMPETITION_RANK_HISTORY_STAGING_DIR =
   "competition-rank-history-recent";
+export const TIMELINE_EVENTS_STAGING_DIR = "timeline-events-recent";
+export const TIMELINE_EVENT_PARTICIPANTS_STAGING_DIR =
+  "timeline-event-participants-recent";
+export const TIMELINE_PARTICIPANT_FRAMES_STAGING_DIR =
+  "timeline-participant-frames-recent";
+export const TIMELINE_COVERAGE_STAGING_DIR = "timeline-coverage-recent";
 
 export function resolveLakeDir(): string {
   // Widened to unknown because the former process-wide Bun module mock could
@@ -69,12 +75,36 @@ export function competitionRankHistoryStagingDir(lakeDir: string): string {
   return path.join(lakeDir, COMPETITION_RANK_HISTORY_STAGING_DIR);
 }
 
+export function timelineEventsStagingDir(lakeDir: string): string {
+  return path.join(lakeDir, TIMELINE_EVENTS_STAGING_DIR);
+}
+
+export function timelineEventParticipantsStagingDir(lakeDir: string): string {
+  return path.join(lakeDir, TIMELINE_EVENT_PARTICIPANTS_STAGING_DIR);
+}
+
+export function timelineParticipantFramesStagingDir(lakeDir: string): string {
+  return path.join(lakeDir, TIMELINE_PARTICIPANT_FRAMES_STAGING_DIR);
+}
+
+export function timelineCoverageStagingDir(lakeDir: string): string {
+  return path.join(lakeDir, TIMELINE_COVERAGE_STAGING_DIR);
+}
+
 /** Create the lake's top-level directories if they don't exist yet. */
 export async function ensureLakeScaffold(lakeDir: string): Promise<void> {
   await mkdir(path.join(lakeDir, BUILDS_DIR), { recursive: true });
   await mkdir(matchesStagingDir(lakeDir), { recursive: true });
   await mkdir(prematchStagingDir(lakeDir), { recursive: true });
   await mkdir(competitionRankHistoryStagingDir(lakeDir), { recursive: true });
+  await mkdir(timelineEventsStagingDir(lakeDir), { recursive: true });
+  await mkdir(timelineEventParticipantsStagingDir(lakeDir), {
+    recursive: true,
+  });
+  await mkdir(timelineParticipantFramesStagingDir(lakeDir), {
+    recursive: true,
+  });
+  await mkdir(timelineCoverageStagingDir(lakeDir), { recursive: true });
 }
 
 /**

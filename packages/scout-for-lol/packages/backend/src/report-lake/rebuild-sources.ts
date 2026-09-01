@@ -3,6 +3,7 @@ import {
   CachedLeaderboardSchema,
   RawCurrentGameInfoSchema,
   RawMatchSchema,
+  RawTimelineSchema,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
@@ -11,11 +12,13 @@ import {
   flattenMatch,
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
+import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 import type { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   stagingIdForCompetitionRankHistory,
   stagingIdForMatch,
   stagingIdForPrematch,
+  stagingIdForTimeline,
 } from "#src/report-lake/staging.ts";
 import {
   MATCH_PREFIX,
@@ -105,6 +108,115 @@ export async function populateMatchesFromS3(
   if (batch.length > 0) {
     await flush();
   }
+  return skipped;
+}
+
+type TimelineRebuildWriters = {
+  events: NdjsonFileWriter;
+  eventParticipants: NdjsonFileWriter;
+  participantFrames: NdjsonFileWriter;
+  coverage: NdjsonFileWriter;
+};
+
+function timelineWriterRows(writers: TimelineRebuildWriters): number {
+  return (
+    writers.events.rows +
+    writers.eventParticipants.rows +
+    writers.participantFrames.rows +
+    writers.coverage.rows
+  );
+}
+
+function timelineObservedAt(key: string, lastModified: Date | undefined): Date {
+  if (lastModified !== undefined) return lastModified;
+  const keyDate = /games\/(\d{4})\/(\d{2})\/(\d{2})\//.exec(key);
+  const year = keyDate?.at(1);
+  const month = keyDate?.at(2);
+  const day = keyDate?.at(3);
+  if (year === undefined || month === undefined || day === undefined) {
+    throw new Error(`Timeline object key has no stable date: ${key}`);
+  }
+  return new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+}
+
+/** Replay only already-retained timeline objects into the normalized lake. */
+export async function populateTimelinesFromS3(options: {
+  client: S3Client;
+  bucket: string;
+  writers: TimelineRebuildWriters;
+  foldedIds: Set<string>;
+  abortSignal?: AbortSignal;
+  onProgress?: (progress: {
+    files: number;
+    rows: number;
+    skipped: number;
+  }) => void;
+}): Promise<number> {
+  let skipped = 0;
+  const batch: { key: string; observedAt: Date }[] = [];
+  const flush = async (): Promise<void> => {
+    const timelines = await Promise.all(
+      batch.map(async (item) => {
+        const rawParsed: unknown = JSON.parse(
+          await readRawObjectText(
+            options.client,
+            options.bucket,
+            item.key,
+            options,
+          ),
+        );
+        const parsed = RawTimelineSchema.safeParse(rawParsed);
+        if (!parsed.success) {
+          logger.warn(
+            `Skipping S3 timeline ${item.key}: rawJson failed validation`,
+            { issue: parsed.error.issues[0] },
+          );
+          return null;
+        }
+        return { timeline: parsed.data, observedAt: item.observedAt };
+      }),
+    );
+    batch.length = 0;
+    for (const result of timelines) {
+      if (result === null) {
+        skipped += 1;
+        reportLakeCompactionSkippedTotal.inc({ table: "timeline_coverage" });
+        continue;
+      }
+      const flattened = flattenTimeline(result.timeline, result.observedAt);
+      for (const row of flattened.events) options.writers.events.write(row);
+      for (const row of flattened.eventParticipants) {
+        options.writers.eventParticipants.write(row);
+      }
+      for (const row of flattened.participantFrames) {
+        options.writers.participantFrames.write(row);
+      }
+      for (const row of flattened.coverage) options.writers.coverage.write(row);
+      options.foldedIds.add(
+        stagingIdForTimeline(result.timeline.metadata.matchId),
+      );
+    }
+    options.onProgress?.({
+      files: options.foldedIds.size + skipped,
+      rows: timelineWriterRows(options.writers),
+      skipped,
+    });
+  };
+
+  for await (const ref of enumerateRawObjects(
+    options.client,
+    options.bucket,
+    MATCH_PREFIX,
+    options,
+  )) {
+    if (classifyRawObjectKey(ref.key) !== "timeline") continue;
+    batch.push({
+      key: ref.key,
+      observedAt: timelineObservedAt(ref.key, ref.lastModified),
+    });
+    if (batch.length >= REBUILD_S3_CONCURRENCY) await flush();
+  }
+  if (batch.length > 0) await flush();
   return skipped;
 }
 

@@ -19,6 +19,14 @@ export const TEST_LAKE_FILES: LakeFiles = {
   accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",
   competitionRankHistoryParquet: [],
   competitionRankHistoryStaging: [],
+  timelineEventsParquet: [],
+  timelineEventsStaging: [],
+  timelineEventParticipantsParquet: [],
+  timelineEventParticipantsStaging: [],
+  timelineParticipantFramesParquet: [],
+  timelineParticipantFramesStaging: [],
+  timelineCoverageParquet: [],
+  timelineCoverageStaging: [],
 };
 
 /** Flatten bound parameters to the scalar values they carry. */

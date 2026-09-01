@@ -7,6 +7,7 @@ import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   writeMatchStagingFile,
   writePrematchStagingFile,
+  writeTimelineStagingFiles,
 } from "#src/report-lake/staging.ts";
 import {
   saveMatchToS3,
@@ -41,8 +42,8 @@ export async function ingestTimeline(
   timeline: RawTimeline,
   trackedPlayerAliases: string[],
 ): Promise<void> {
-  // Timelines have no lake reader, so there is no staging step.
   await saveTimelineToS3(timeline, trackedPlayerAliases);
+  await writeTimelineStagingFiles(resolveLakeDir(), timeline, new Date());
 }
 
 export async function ingestPrematch(
