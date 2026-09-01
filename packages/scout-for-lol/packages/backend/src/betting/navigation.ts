@@ -56,6 +56,10 @@ const LEDGER_KIND_LABELS = {
   transfer_sent: "transfer sent",
   transfer_received: "transfer received",
   transfer_fee: "transfer fee",
+  dare_stake: "dare pot contribution",
+  dare_payout: "dare bounty payout",
+  dare_refund: "dare refund",
+  dare_fee: "dare fee",
   adjustment: "adjustment",
 } satisfies Record<BucksLedgerKind, string>;
 
@@ -115,6 +119,11 @@ function contextAliasLabel(context: LedgerContext): string | undefined {
       ...context.backedAliases,
       ...context.opposingAliases,
     ]);
+  }
+  // Dare contexts carry their frozen target aliases; dares have no pool, so
+  // a dare_payout's match ID must never fall through to the roster lookup.
+  if (context?.type === "dare") {
+    return formatGameLabel(context.targetAliases);
   }
   return;
 }

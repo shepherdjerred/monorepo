@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import {
+  compare,
   matchNumericValue,
   opponentTeamPingValue,
   participantBooleanValue,
@@ -42,16 +43,6 @@ export const ParlayLegResultsSchema = z
 export type ParlayEvaluation =
   | { kind: "evaluated"; yesResult: boolean; legs: ParlayLegResult[] }
   | { kind: "void"; reason: BucksParlayVoidReason };
-
-function compare(
-  actual: number,
-  operator: "gte" | "lte" | "eq",
-  threshold: number,
-): boolean {
-  if (operator === "gte") return actual >= threshold;
-  if (operator === "lte") return actual <= threshold;
-  return actual === threshold;
-}
 
 function participantFor(
   matchData: RawMatch,

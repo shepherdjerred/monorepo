@@ -31,6 +31,17 @@ export type BucksLifecycleTransition =
   | "bucks.weekly_parlay_bet.cancelled"
   | "bucks.weekly_parlay_bet.settled"
   | "bucks.weekly_parlay.contribution_recorded"
+  | "bucks.dare.proposed"
+  | "bucks.dare.confirmed"
+  | "bucks.dare.contributed"
+  | "bucks.dare.accepted"
+  | "bucks.dare.activated"
+  | "bucks.dare.declined"
+  | "bucks.dare.expired"
+  | "bucks.dare.achieved"
+  | "bucks.dare.unachieved"
+  | "bucks.dare.voided"
+  | "bucks.dare.abandoned"
   | "bucks.earning.awarded"
   | "bucks.transfer.completed"
   | "bucks.transfer.rejected";
@@ -50,6 +61,7 @@ export function aggregateBucksPendingStakes(
   pendingOutcome: readonly BucksPendingOutcome[],
   pendingParlay: readonly BucksPendingStake[],
   pendingWeekly: readonly BucksPendingStake[],
+  pendingDare: readonly BucksPendingStake[] = [],
 ): Map<string, number> {
   const pendingByServer = new Map<string, number>();
   for (const bet of pendingOutcome) {
@@ -59,7 +71,9 @@ export function aggregateBucksPendingStakes(
       bet.matchedStake ?? bet.stake,
     );
   }
-  for (const bet of [...pendingParlay, ...pendingWeekly]) {
+  // A dare's contributions are money at risk until the dare resolves — the
+  // same "pending stake" the outcome/parlay/weekly sources measure.
+  for (const bet of [...pendingParlay, ...pendingWeekly, ...pendingDare]) {
     addStake(pendingByServer, bet.bucksAccount.serverId, bet.stake);
   }
   return pendingByServer;

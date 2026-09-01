@@ -286,6 +286,22 @@ export const TEAM_OBJECTIVE_CATALOG = z
     ),
   );
 
+/**
+ * The one numeric comparison used by every Bucks condition evaluator.
+ *
+ * Shared by parlay and dare settlement so a third hand-rolled copy cannot
+ * drift on operator semantics.
+ */
+export function compare(
+  actual: number,
+  operator: "gte" | "lte" | "eq",
+  threshold: number,
+): boolean {
+  if (operator === "gte") return actual >= threshold;
+  if (operator === "lte") return actual <= threshold;
+  return actual === threshold;
+}
+
 export function participantNumericValue(
   participant: RawParticipant,
   field: SettlementParticipantNumericField,

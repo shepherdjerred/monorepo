@@ -22,6 +22,7 @@ function fakeInteraction(input?: {
   return {
     id: "bb-transfer-test",
     guildId: SERVER,
+    channelId: "1337623164146155594",
     user: { id: SENDER },
     options: {
       getSubcommand: () => "transfer",

@@ -44,7 +44,12 @@ export type DiscordCommandName =
   | "scout";
 export type DiscordCommandStatus = "success" | "error";
 export type BucksMemberActivityKind =
-  "command" | "outcome_bet" | "parlay_bet" | "weekly_parlay_bet" | "navigation";
+  | "command"
+  | "outcome_bet"
+  | "parlay_bet"
+  | "weekly_parlay_bet"
+  | "navigation"
+  | "dare";
 export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
 
 export type ProductAnalyticsEventOptions = {

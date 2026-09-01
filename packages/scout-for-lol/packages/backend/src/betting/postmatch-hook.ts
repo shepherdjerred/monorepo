@@ -8,6 +8,12 @@ import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
 } from "#src/betting/parlay-settle.ts";
+import { settleDaresForMatch } from "#src/betting/dare-settle.ts";
+import {
+  DarePartialSettlementError,
+  type DareSettlementSummary,
+} from "#src/betting/dare-settle-shared.ts";
+import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
 import { refreshClosedParlayMessages } from "#src/betting/parlay-refresh.ts";
 import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
@@ -36,13 +42,18 @@ export async function refreshSettledPoolMessages(
 /**
  * The one call the post-match poller makes into Bryan Bucks.
  *
- * Each operation swallows its own errors, so this never throws and never
- * blocks the match-history cursor from advancing.
+ * Every operation except dares swallows its own errors, so this never
+ * throws for their sake and never blocks the match-history cursor from
+ * advancing on their account. Dares are the deliberate exception — see the
+ * comment at that call site and `settleDaresForMatch`'s doc comment for why
+ * a dare capture failure, after its own short bounded retry, propagates out
+ * of this function instead of being swallowed.
  *
  * Order matters: settlement reads `betOutcome: "pending"` bets and earning
  * writes only ledger rows, so they do not contend — but settling first means a
  * an outcome or parlay settlement failure cannot be masked by an earning
- * failure in the logs.
+ * failure in the logs. Dares run last for a different reason — see the
+ * comment at that call site.
  */
 export async function settleAndAwardBucks(
   matchData: RawMatch,
@@ -51,6 +62,7 @@ export async function settleAndAwardBucks(
   closures: ClosedPool[];
   settlements: SettlementSummary[];
   parlaySettlements: ParlaySettlementSummary[];
+  dareSettlements: DareSettlementSummary[];
   earnings: EarnedAward[];
 }> {
   if (isFeatureHardDisabled("betting_enabled")) {
@@ -58,6 +70,7 @@ export async function settleAndAwardBucks(
       closures: [],
       settlements: [],
       parlaySettlements: [],
+      dareSettlements: [],
       earnings: [],
     };
   }
@@ -87,10 +100,37 @@ export async function settleAndAwardBucks(
       await refreshClosedBucksMessages(pools, prismaClient);
     },
   );
+  // Dares run LAST, and unlike everything above, settleDaresForMatch CAN
+  // throw (after its own short bounded retry exhausts — see its doc
+  // comment). Everything above it (parlay settlement, weekly capture,
+  // earnings) already committed its own idempotent, state-gated writes, so
+  // a throw here — and the caller not advancing the cursor — simply retries
+  // the whole match later; those writes safely no-op on replay. Running
+  // dares last also means an ordinary (non-retry-exhausting) throw anywhere
+  // ABOVE this line can never discard an already-committed dare summary
+  // before it reaches delivery: a dare's summary is one-shot the same way an
+  // outcome settlement's is (see AGENTS.md's "settlement summary is
+  // one-shot" note), and computing it earlier would risk losing that return
+  // value to a later throw, leaving an already-terminal dare with no
+  // summary to announce, ever.
+  let dareSettlements: DareSettlementSummary[];
+  try {
+    dareSettlements = await settleDaresForMatch(matchData, prismaClient);
+  } catch (error) {
+    if (error instanceof DarePartialSettlementError) {
+      // Deliver what DID commit before propagating: those summaries are
+      // one-shot and cannot be reproduced on a retry (see
+      // settleDaresForMatch's doc comment). The retry that follows this
+      // throw only needs to re-attempt whichever dare actually failed.
+      await deliverDareSummaries(error.summaries, prismaClient);
+    }
+    throw error;
+  }
   return {
     closures,
     settlements: retry.settlements,
     parlaySettlements,
+    dareSettlements,
     earnings,
   };
 }

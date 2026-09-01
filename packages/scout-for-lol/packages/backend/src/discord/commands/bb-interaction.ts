@@ -7,6 +7,9 @@ import type {
 export type BbCommandInteraction = {
   id: string;
   guildId: string | null;
+  /** Where the command was invoked — the channel a dare's public callout and
+   * result messages are bound to. */
+  channelId: string | null;
   user: { id: string };
   options: Pick<
     ChatInputCommandInteraction["options"],

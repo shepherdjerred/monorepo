@@ -3,7 +3,10 @@ import {
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
 } from "#src/betting/parlay-stat-fields.ts";
-import { ParticipantNumericFieldSchema } from "#src/betting/parlay-catalog.ts";
+import {
+  compare,
+  ParticipantNumericFieldSchema,
+} from "#src/betting/parlay-catalog.ts";
 import type {
   ParlayHistory,
   ParlayHistoryMatch,
@@ -42,16 +45,6 @@ export type ParlayPrice = {
 };
 
 type ConditionOutcome = boolean | undefined;
-
-function compare(
-  actual: number,
-  operator: "gte" | "lte" | "eq",
-  threshold: number,
-): boolean {
-  if (operator === "gte") return actual >= threshold;
-  if (operator === "lte") return actual <= threshold;
-  return actual === threshold;
-}
 
 /**
  * Whether a condition held in one historical match, or undefined when history

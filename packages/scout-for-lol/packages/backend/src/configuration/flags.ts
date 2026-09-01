@@ -143,6 +143,7 @@ export type FlagName =
   | "ai_reports_unlimited"
   | "ai_reviews_enabled"
   | "betting_enabled"
+  | "bucks_dares_enabled"
   | "bucks_transfers_enabled"
   | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
@@ -169,6 +170,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "ai_reports_unlimited",
     "ai_reviews_enabled",
     "betting_enabled",
+    "bucks_dares_enabled",
     "bucks_transfers_enabled",
     "weekly_parlays_enabled",
     "betting_player_bet_outcome_dm_enabled",
@@ -247,6 +249,16 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
         attributes: { server: MY_SERVER },
       },
     ],
+  },
+  // Free-text Bryan Bucks dare bounties. Gates creating a dare, contributing
+  // to a pot, and accepting only; chicken-out (decline), refunds, sweeps, and
+  // settlement stay ungated so escrowed contributions can always be resolved
+  // after a revocation. Narrower than the betting economy itself, so the
+  // domain requires both flags. Production's hard-disable policy wins before
+  // this registry or Flipt is evaluated.
+  bucks_dares_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
   // Fee-bearing Bryan Bucks wallet transfers. This is narrower than the
   // betting economy itself, so the domain requires both flags. Production's

@@ -3,6 +3,11 @@ import { EmbedBuilder } from "discord.js";
 import {
   BETTING_WINDOW_MS,
   BUCKS_EARNING_QUEUES,
+  DARE_ACCEPT_WINDOW_MS,
+  DARE_DEFAULT_WINDOW_DAYS,
+  DARE_MAX_TARGETS,
+  DARE_MAX_WINDOW_DAYS,
+  DARE_NEXT_GAME_TIMEOUT_MS,
   HOUSE_MATCH_LIMIT,
   MINIMUM_BUCKS_TRANSFER,
   PARLAY_BETTING_WINDOW_MS,
@@ -51,6 +56,14 @@ const BUCKS_COLOR = 0x2e_cc_71;
  */
 function minutes(milliseconds: number): string {
   return Math.floor(milliseconds / 60_000).toString();
+}
+
+function hours(milliseconds: number): string {
+  return Math.floor(milliseconds / 3_600_000).toString();
+}
+
+function days(milliseconds: number): string {
+  return Math.floor(milliseconds / 86_400_000).toString();
 }
 
 export function buildBbRulesEmbed(): EmbedBuilder {
@@ -110,6 +123,16 @@ export function buildBbRulesEmbed(): EmbedBuilder {
           `Each leg must historically land at **${(WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS / 100).toString()}-${(WEEKLY_PARLAY_MAX_LEG_PROBABILITY_BPS / 100).toString()}%**, and the full parlay at **${(WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS / 100).toString()}-${(WEEKLY_PARLAY_MAX_YES_PROBABILITY_BPS / 100).toString()}%**.`,
           `If the Sunday opening is missed, a catch-up market may open midweek with at least **${WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS.toString()} hours** to bet. Its message shows the exact clocks, and games finished before betting closes never count.`,
           "YES can settle early once every leg is impossible to undo; NO always waits for the end. Cancelling before betting closes is free.",
+        ].join("\n"),
+      },
+      {
+        name: "Dares",
+        value: [
+          `\`/bb dare\` puts a one-sided bounty on up to **${DARE_MAX_TARGETS.toString()}** tracked players: contributors fund the pot, targets risk nothing.`,
+          `Every target must accept within **${hours(DARE_ACCEPT_WINDOW_MS)} hours**; any decline — or a lapsed window — cancels the dare and refunds every contribution free.`,
+          `A windowed dare runs **${DARE_DEFAULT_WINDOW_DAYS.toString()} days** by default (up to **${DARE_MAX_WINDOW_DAYS.toString()}**); a next-game dare waits up to **${days(DARE_NEXT_GAME_TIMEOUT_MS)} days** for that game.`,
+          "Anyone except a target can pile onto the pot at any time. Contributions are append-only — they never come back out early.",
+          `Achieved: the targets split the pot evenly, each share minus **${cut}%** (rounded down; any indivisible remainder goes to the house). Not achieved: each contributor gets their total back minus **${cut}%** (rounded to the nearest BB).`,
         ].join("\n"),
       },
       {

@@ -3,25 +3,14 @@ import {
   WeeklyParlaySubjectsSchema,
   type WeeklyParlaySubject,
 } from "#src/betting/weekly-parlay-criteria.ts";
+import { findTrackedPlayersWithAccounts } from "#src/betting/tracked-players.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 export async function loadWeeklyParlaySubjects(
   serverId: DiscordGuildId,
   prismaClient: ExtendedPrismaClient,
 ): Promise<WeeklyParlaySubject[]> {
-  const players = await prismaClient.player.findMany({
-    where: { serverId, discordId: { not: null }, accounts: { some: {} } },
-    select: {
-      id: true,
-      alias: true,
-      discordId: true,
-      accounts: {
-        select: { puuid: true, createdTime: true },
-        orderBy: { id: "asc" },
-      },
-    },
-    orderBy: { id: "asc" },
-  });
+  const players = await findTrackedPlayersWithAccounts(serverId, prismaClient);
   return players.flatMap((player) => {
     if (player.discordId === null) {
       return [];

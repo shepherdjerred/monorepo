@@ -36,7 +36,10 @@ export type BucksMessageSurface =
   | "settlement"
   | "transfer_receipt"
   | "weekly_parlay"
-  | "weekly_leaderboard";
+  | "weekly_leaderboard"
+  | "dare_callout"
+  | "dare_update"
+  | "dare_result";
 
 export type BucksMessageOperation = "send" | "edit";
 

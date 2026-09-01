@@ -76,6 +76,10 @@ export const BucksLedgerKindSchema = z.enum([
   "transfer_sent",
   "transfer_received",
   "transfer_fee",
+  "dare_stake",
+  "dare_payout",
+  "dare_refund",
+  "dare_fee",
   "adjustment",
 ]);
 
@@ -144,6 +148,49 @@ export const BucksWeeklyParlayVoidReasonSchema = z.enum([
   "missing_data",
   "storage_overflow",
 ]);
+
+/**
+ * Lifecycle of a free-text dare bounty (`BucksDare.dareState`).
+ *
+ * `proposed` holds no money; the challenger's confirmation debits the first
+ * contribution and moves to `pending_accept`. Every listed target accepting
+ * flips it `active`. The five terminal resolutions are distinct on purpose:
+ * `achieved`/`unachieved` are the two house-cut outcomes, while `declined`,
+ * `expired` (accept window lapsed), and `voided` refund in full with no cut.
+ * `abandoned` is a `proposed` dare that was cancelled or timed out before any
+ * Buck moved.
+ */
+export type BucksDareState = z.infer<typeof BucksDareStateSchema>;
+export const BucksDareStateSchema = z.enum([
+  "proposed",
+  "pending_accept",
+  "active",
+  "achieved",
+  "unachieved",
+  "declined",
+  "expired",
+  "voided",
+  "abandoned",
+]);
+
+/**
+ * The dare states whose escrowed contributions are still open: the pot can
+ * still grow, and every contribution is still owed back until the dare
+ * reaches a terminal state. The ONE definition shared by the contribution
+ * claim and the refundable-headroom query, so the two can never disagree
+ * about which dares hold live money.
+ */
+export const OPEN_BUCKS_DARE_STATES = [
+  "pending_accept",
+  "active",
+] as const satisfies readonly BucksDareState[];
+
+/**
+ * How a dare's clock is bounded: the targets' very next qualifying game, or a
+ * window of days measured from activation.
+ */
+export type BucksDareHorizonKind = z.infer<typeof BucksDareHorizonKindSchema>;
+export const BucksDareHorizonKindSchema = z.enum(["next_game", "window"]);
 
 /**
  * Why a pool paid nobody.
@@ -412,6 +459,43 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     recipientAmount: BucksStakeSchema,
     feeAmount: BucksStakeSchema,
     role: z.enum(["sender", "recipient", "house"]),
+  }),
+  z.strictObject({
+    type: z.literal("dare"),
+    dareId: z.number().int().positive(),
+    /** Which side of the bounty this row belongs to. Contributors fund the
+     * pot, targets are the payees, and the house takes the cut rows. */
+    role: z.enum(["contributor", "target", "house"]),
+    /** Target aliases frozen at write time — Player rows are renameable and
+     * prunable, and a ledger that re-derives its explanation is not a ledger. */
+    targetAliases: z.array(z.string().min(1)).min(1),
+    /** The code-rendered description of the achievement condition — never the
+     * model's paraphrase. */
+    conditionSummary: z.string().min(1),
+    potTotal: BucksStakeSchema,
+    /** This row's gross amount: the contribution, the gross refund total, or
+     * the gross payout share the net/fee rows decompose. */
+    amount: BucksStakeSchema,
+    /** Distinguishes the rows a single settlement writes: the target's net
+     * share, the house fee on it, the pot remainder, a contributor's net
+     * refund, or the house cut on that refund. */
+    payoutComponent: z
+      .enum([
+        "contribution",
+        "share",
+        "fee",
+        "remainder",
+        "refund",
+        "refund_fee",
+      ])
+      .optional(),
+    /** Gross per-target share before the house cut, kept so history can show
+     * the arithmetic without reconstructing it from sibling rows. */
+    grossShare: z.number().int().nonnegative().optional(),
+    resolution: z
+      .enum(["achieved", "unachieved", "declined", "expired", "voided"])
+      .optional(),
+    voidReason: z.string().optional(),
   }),
   z.strictObject({
     type: z.literal("adjustment"),

@@ -39,6 +39,7 @@ export type BucksTransitionFields = {
   serverId?: string;
   poolId?: number;
   marketId?: number;
+  dareId?: number;
   betId?: number;
   parlayBetId?: number;
   definitionId?: number;

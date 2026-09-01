@@ -1,11 +1,10 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
-import type {
-  DiscordAccountId,
-  DiscordGuildId,
-  LeaguePuuid,
-} from "@scout-for-lol/data";
+import { describe, expect, test } from "vitest";
 import { loadWeeklyParlaySubjects } from "#src/betting/weekly-parlay-subjects.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  trackedPlayerFactory,
+  usePlayerAccountCleanup,
+} from "#src/testing/bucks-fixtures.ts";
 import {
   testAccountId,
   testGuildId,
@@ -18,49 +17,9 @@ const OTHER_SERVER_ID = testGuildId("702");
 const CREATOR_ID = testAccountId("701");
 const CREATED_AT = new Date("2026-08-24T12:00:00.000Z");
 
-async function createPlayer(input: {
-  alias: string;
-  serverId: DiscordGuildId;
-  discordId?: DiscordAccountId;
-  accounts: readonly LeaguePuuid[];
-}): Promise<number> {
-  const player = await prisma.player.create({
-    data: {
-      alias: input.alias,
-      ...(input.discordId === undefined ? {} : { discordId: input.discordId }),
-      serverId: input.serverId,
-      creatorDiscordId: CREATOR_ID,
-      createdTime: CREATED_AT,
-      updatedTime: CREATED_AT,
-    },
-  });
-  for (const [index, puuid] of input.accounts.entries()) {
-    await prisma.account.create({
-      data: {
-        alias: `${input.alias}-${index.toString()}`,
-        puuid,
-        region: "AMERICA_NORTH",
-        playerId: player.id,
-        serverId: input.serverId,
-        creatorDiscordId: CREATOR_ID,
-        createdTime: new Date(CREATED_AT.getTime() + index * 60_000),
-        updatedTime: CREATED_AT,
-      },
-    });
-  }
-  return player.id;
-}
+const createPlayer = trackedPlayerFactory(prisma, CREATOR_ID, CREATED_AT);
 
-beforeEach(async () => {
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
-});
-
-afterAll(async () => {
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
-  await prisma.$disconnect();
-});
+usePlayerAccountCleanup(prisma);
 
 describe("loadWeeklyParlaySubjects", () => {
   test("loads deterministic eligible subjects solely from database links", async () => {

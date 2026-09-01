@@ -152,6 +152,7 @@ function fakeNotificationsInteraction(input: {
   return {
     id: "bb-notifications-test",
     guildId: SERVER,
+    channelId: "1337623164146155594",
     user: { id: USER },
     options: {
       getSubcommand: () => "notifications",

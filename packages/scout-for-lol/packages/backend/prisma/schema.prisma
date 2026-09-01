@@ -830,11 +830,12 @@ model BucksAccount {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  ledgerEntries    BucksLedgerEntry[]
-  bets             BucksBet[]
-  parlayBets       BucksParlayBet[]
-  weeklyParlayBets BucksWeeklyParlayBet[]
-  openPositions    BucksOpenPosition[]
+  ledgerEntries     BucksLedgerEntry[]
+  bets              BucksBet[]
+  parlayBets        BucksParlayBet[]
+  weeklyParlayBets  BucksWeeklyParlayBet[]
+  openPositions     BucksOpenPosition[]
+  dareContributions BucksDareContribution[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -889,6 +890,7 @@ model BucksLedgerEntry {
   // bet_payout | bet_*_refund | winner_fee | house_match | cancel_fee |
   // parlay_stake | parlay_reserve | parlay_payout | parlay_refund |
   // parlay_release | transfer_sent | transfer_received | transfer_fee |
+  // dare_stake | dare_payout | dare_refund | dare_fee |
   // legacy bet_refund/house_rake/peek_pass | adjustment.
   // Not a Prisma enum (kept a plain string through the Postgres migration).
   // Zod-validated on write
@@ -1330,6 +1332,138 @@ model BucksWeeklyParlayDelivery {
 
   @@unique([marketId, actionKey])
   @@index([deliveryState, scheduledAt])
+}
+
+// One free-text dare bounty: a one-sided pot contributors fund and targets can
+// win by achieving a translated, code-evaluated condition off ingested match
+// data. Targets never stake; achieved splits the pot among them, unachieved
+// refunds the contributors, and both resolved outcomes pay the house cut.
+model BucksDare {
+  id                  Int    @id @default(autoincrement())
+  serverId            String
+  channelId           String
+  challengerDiscordId String
+
+  // BucksDareHorizonKind: next_game | window.
+  horizonKind  String
+  // 1..31, set only for horizonKind "window".
+  windowDays   Int?
+  // Set at activation for "window" dares; the sweep deadline for unachieved.
+  windowEndsAt DateTime?
+
+  // JSON combinator tree with canonical leaf order (DareConditionsSchema).
+  // Settlement evaluates only this; it never touches model output.
+  conditions       String
+  conditionVersion Int
+  evaluatorVersion String
+
+  // The challenger's exact free text, kept for audit alongside the frozen
+  // model translation record. The confirmation the challenger approved is
+  // rendered by code from `conditions`, never from these.
+  originalText String
+  translation  String?
+
+  // Denormalized pot; the contribution rows remain authoritative. Settlement
+  // asserts equality and throws on drift rather than trusting this column.
+  potTotal Int @default(0)
+
+  // BucksDareState: proposed | pending_accept | active | achieved |
+  // unachieved | declined | expired | voided | abandoned.
+  // Deliberately not named `status` — brand-prisma-types would type it
+  // ParticipantStatus.
+  dareState String @default("proposed")
+
+  proposalExpiresAt DateTime
+  acceptDeadline    DateTime?
+  activatedAt       DateTime?
+  settledAt         DateTime?
+  voidReason        String?
+
+  // JSON BucksMessageRef for the public callout message, so serialized pot
+  // and progress edits land on exactly the right message.
+  messageRef String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  targets       BucksDareTarget[]
+  contributions BucksDareContribution[]
+  games         BucksDareGame[]
+
+  @@index([dareState, proposalExpiresAt])
+  @@index([dareState, acceptDeadline])
+  @@index([dareState, windowEndsAt])
+}
+
+// Consent and payee record for one dared player. Identity (alias, accounts) is
+// frozen at creation because Player rows are renameable and prunable; the
+// wallet is bound at accept time so a dare can name someone without a wallet.
+model BucksDareTarget {
+  id        Int       @id @default(autoincrement())
+  dareId    Int
+  dare      BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  discordId String
+  playerId  Int
+  alias     String
+
+  // JSON [{puuid, trackingStartedAt}] — the union across the user's Player
+  // rows, frozen at creation. Qualifying-game candidacy reads only these.
+  accounts String
+
+  // Set when the target accepts; targets risk nothing before then.
+  bucksAccountId Int?
+  acceptedAt     DateTime?
+  declinedAt     DateTime?
+
+  // Net payout and house fee recorded at achieved settlement.
+  payout Int?
+  fee    Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dareId, discordId])
+}
+
+// Append-only pot funding. Contributions are never retracted: the void and
+// decline paths refund every row in full, and unachieved refunds each
+// contributor's total minus the house cut.
+model BucksDareContribution {
+  id             Int          @id @default(autoincrement())
+  dareId         Int
+  dare           BucksDare    @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  bucksAccountId Int
+  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+  discordId      String
+  amount         Int
+  createdAt      DateTime     @default(now())
+
+  @@index([dareId])
+  // Serves refundable-headroom queries: open dare escrow counts against the
+  // contributor's Int32 credit headroom until the dare resolves.
+  @@index([bucksAccountId])
+}
+
+// Idempotent capture of one qualifying game against one active dare. The
+// unique key makes ingest replays P2002 no-ops, and `leafHits` aligns to the
+// conditions tree's canonical leaf order forever.
+model BucksDareGame {
+  id          Int       @id @default(autoincrement())
+  dareId      Int
+  dare        BucksDare @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  matchId     String
+  gameStartAt DateTime
+  gameEndAt   DateTime
+  queueType   String
+
+  // JSON boolean[] aligned to dareLeavesInCanonicalOrder(conditions).
+  leafHits String
+  // Frozen per-target facts for audit; settlement re-reads leafHits only.
+  snapshot String
+
+  createdAt DateTime @default(now())
+
+  @@unique([dareId, matchId])
 }
 
 // Durable marker for Bucks EARNINGS on a (match, guild).
