@@ -31,6 +31,18 @@ type TemporalDomainQueueDefinition = {
   candidateServicePattern?: string;
   activityPoller: boolean;
   servedNamespaces: readonly string[];
+  /**
+   * Namespaces that carry *workflow* pollers, when they differ from the
+   * activity ones.
+   *
+   * `workerNamespaces()` gives the `scout` role's activity workers `beta`,
+   * but the `workflows` role only gets `beta` for `monorepo-workflows`. So
+   * `scout` receives activity tasks in `beta` while its workflows run on
+   * `beta/monorepo-workflows` — no workflow poller belongs on `beta/scout`.
+   * Driving both rules from one list made the workflow rule permanently short
+   * by one namespace, so it fired continuously and meant nothing.
+   */
+  workflowServedNamespaces?: readonly string[];
 };
 
 // Do not install these rules until both tracks can render. A capable
@@ -127,6 +139,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       servicePattern: ".*temporal-scout-worker.*metrics.*",
       activityPoller: true,
       servedNamespaces: ["prod", "beta"],
+      workflowServedNamespaces: ["prod"],
     },
     {
       queue: "agent-task",
@@ -179,6 +192,9 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
     // and hardcoding `temporal` here selected no series at all for them —
     // an alert that can never fire.
     const pollerSelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
+    const workflowNamespaces =
+      definition.workflowServedNamespaces ?? definition.servedNamespaces;
+    const workflowPollerSelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${workflowNamespaces.join("|")}",task_queue="${definition.queue}"`;
     // Server metric, so the queue name is sanitized — see serverMetricTaskQueue.
     const backlogQueue = serverMetricTaskQueue(definition.queue);
     const labels = { severity: "warning", task_queue: definition.queue };
@@ -213,7 +229,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "The domain queue has had no workflow-task poller for five minutes. Inspect its worker pod and Temporal connectivity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `count(sum by (exported_namespace) (temporal_worker_num_pollers{${pollerSelector},poller_type="workflow_task"})) < ${String(definition.servedNamespaces.length)}`,
+          `count(sum by (exported_namespace) (temporal_worker_num_pollers{${workflowPollerSelector},poller_type="workflow_task"})) < ${String(workflowNamespaces.length)}`,
         ),
         for: "5m",
         labels,
