@@ -47,18 +47,7 @@ export async function checkPostMatch(): Promise<{
         error,
       );
     }
-    if (bettingHardDisabled) {
-      if (matchHistoryError !== undefined) {
-        throw asError(matchHistoryError, "Match history polling failed");
-      }
-      const executionTime = Date.now() - startTime;
-      logger.info(
-        `✅ Post-match check completed successfully in ${executionTime.toString()}ms`,
-      );
-      return { dareSummaries: [] };
-    }
-
-    let earningsRecoveryError: unknown;
+    let maintenanceError: unknown;
     let dareSummaries: DareSettlementSummary[] = [];
     try {
       ({ dareSummaries } = await runPostMatchMaintenance({
@@ -66,23 +55,20 @@ export async function checkPostMatch(): Promise<{
         dareEvidenceWatermark: evidenceWatermark,
       }));
     } catch (error) {
-      earningsRecoveryError = error;
+      maintenanceError = error;
     }
 
-    if (
-      matchHistoryError !== undefined &&
-      earningsRecoveryError !== undefined
-    ) {
+    if (matchHistoryError !== undefined && maintenanceError !== undefined) {
       throw new AggregateError(
-        [matchHistoryError, earningsRecoveryError],
+        [matchHistoryError, maintenanceError],
         "Post-match polling and Bryan Bucks recovery both failed",
       );
     }
     if (matchHistoryError !== undefined) {
       throw asError(matchHistoryError, "Match history polling failed");
     }
-    if (earningsRecoveryError !== undefined) {
-      throw asError(earningsRecoveryError, "Bryan Bucks recovery failed");
+    if (maintenanceError !== undefined) {
+      throw asError(maintenanceError, "Bryan Bucks recovery failed");
     }
 
     const executionTime = Date.now() - startTime;
@@ -106,22 +92,14 @@ export async function runPostMatchMaintenance(options?: {
 }): Promise<{
   dareSummaries: DareSettlementSummary[];
 }> {
-  if (isFeatureHardDisabled("betting_enabled")) {
-    return { dareSummaries: [] };
-  }
-
+  const bettingHardDisabled = isFeatureHardDisabled("betting_enabled");
   let dareSummaries: DareSettlementSummary[] = [];
   const settleDareV2Deadlines = options?.settleDareV2Deadlines ?? true;
-  // Isolated per step, then re-thrown: the dare window settle is LAST, and
-  // without isolation a persistently failing earnings retry or stale-pool
-  // announce would starve those refunds while the money stayed escrowed.
-  await runMaintenanceSteps("post-match maintenance", [
-    {
-      name: "pending earnings retry",
-      run: async () => {
-        await retryPendingBucksEarnings();
-      },
-    },
+  // Dare v2 recovery is never feature-gated. Once a contract is funded its
+  // settlement and refund paths must survive both rollout revocation and the
+  // broader Bryan Bucks hard-disable. Other betting maintenance remains
+  // behind the hard-disable policy.
+  const steps = [
     {
       name: "dare v2 deadline settle",
       run: async () => {
@@ -141,30 +119,43 @@ export async function runPostMatchMaintenance(options?: {
         }
       },
     },
-    { name: "stale betting pool void", run: voidStaleAndAnnounce },
-    {
-      name: "stale parlay market void",
-      run: async () => {
-        await voidStaleParlayMarkets();
+  ];
+  if (!bettingHardDisabled) {
+    steps.push(
+      {
+        name: "pending earnings retry",
+        run: async () => {
+          await retryPendingBucksEarnings();
+        },
       },
-    },
-    {
-      // Ended dare windows settle unachieved here, beside the other post-match
-      // clocks.
-      name: "dare window settle",
-      run: async () => {
-        dareSummaries = await settleEndedDareWindows();
+      { name: "stale betting pool void", run: voidStaleAndAnnounce },
+      {
+        name: "stale parlay market void",
+        run: async () => {
+          await voidStaleParlayMarkets();
+        },
       },
-    },
-    {
-      // Delivery runs after the refunds committed and swallows per-summary, so
-      // a dead channel never blocks or re-runs a settlement.
-      name: "dare summary delivery",
-      run: async () => {
-        await deliverDareSummaries(dareSummaries);
+      {
+        // Ended dare windows settle unachieved here, beside the other post-match
+        // clocks.
+        name: "dare window settle",
+        run: async () => {
+          dareSummaries = await settleEndedDareWindows();
+        },
       },
-    },
-  ]);
+      {
+        // Delivery runs after the refunds committed and swallows per-summary, so
+        // a dead channel never blocks or re-runs a settlement.
+        name: "dare summary delivery",
+        run: async () => {
+          await deliverDareSummaries(dareSummaries);
+        },
+      },
+    );
+  }
+  // Isolated per step, then re-thrown: a persistently failing recovery path
+  // cannot starve the remaining clocks while money stays escrowed.
+  await runMaintenanceSteps("post-match maintenance", steps);
   return { dareSummaries };
 }
 

@@ -30,14 +30,20 @@ export async function checkPreMatch(): Promise<{
 
   try {
     // Every step runs even when an earlier one throws, and the collected
-    // failures are re-thrown at the end. The dare clocks are LAST, so without
-    // this a persistently failing Riot poll or parlay refresh would starve
-    // dare refunds indefinitely while the money stayed escrowed.
+    // failures are re-thrown at the end. Dare v2 recovery is outside every
+    // feature flag so a rollout revocation cannot strand funded contracts.
     const steps: MaintenanceStep[] = [
       {
         name: "active-game detection",
         run: async () => {
           await checkActiveGames();
+        },
+      },
+      {
+        name: "dare v2 accept-window expiry",
+        run: async () => {
+          await expireDareV2AcceptWindows();
+          await refreshPendingDareV2Callouts();
         },
       },
     ];
@@ -84,13 +90,6 @@ export async function checkPreMatch(): Promise<{
           name: "dare accept-window expiry",
           run: async () => {
             dareSummaries.push(...(await expireDareAcceptWindows()));
-          },
-        },
-        {
-          name: "dare v2 accept-window expiry",
-          run: async () => {
-            await expireDareV2AcceptWindows();
-            await refreshPendingDareV2Callouts();
           },
         },
         {

@@ -1,0 +1,112 @@
+import { beforeEach, describe, expect, test, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  abandonExpiredDareProposals: vi.fn(async () => []),
+  activatePendingParlayMarkets: vi.fn(() => Promise.resolve()),
+  announceSettlements: vi.fn(() => Promise.resolve()),
+  checkActiveGames: vi.fn(() => Promise.resolve()),
+  checkMatchHistory: vi.fn(() => Promise.resolve()),
+  closeExpiredBettingWindows: vi.fn(async () => []),
+  closeExpiredParlayWindows: vi.fn(async () => []),
+  deliverDareSummaries: vi.fn(() => Promise.resolve()),
+  expireDareAcceptWindows: vi.fn(async () => []),
+  expireDareV2AcceptWindows: vi.fn(async () => [17]),
+  getPostmatchMessageIds: vi.fn(async () => new Map<string, string>()),
+  refreshClosedBucksMessages: vi.fn(() => Promise.resolve()),
+  refreshClosedParlayMessages: vi.fn(() => Promise.resolve()),
+  refreshDareV2Callouts: vi.fn(() => Promise.resolve()),
+  retryPendingBucksEarnings: vi.fn(() => Promise.resolve()),
+  settleEndedDareV2Windows: vi.fn(async () => []),
+  settleEndedDareWindows: vi.fn(async () => []),
+  voidStaleBettingPools: vi.fn(async () => ({
+    closures: [],
+    settlements: [],
+  })),
+  voidStaleParlayMarkets: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock("#src/league/tasks/prematch/active-game-detection.ts", () => ({
+  checkActiveGames: mocks.checkActiveGames,
+}));
+vi.mock("#src/league/tasks/postmatch/match-history-polling.ts", () => ({
+  checkMatchHistory: mocks.checkMatchHistory,
+}));
+vi.mock("#src/betting/dare-sweep.ts", () => ({
+  abandonExpiredDareProposals: mocks.abandonExpiredDareProposals,
+  expireDareAcceptWindows: mocks.expireDareAcceptWindows,
+  settleEndedDareWindows: mocks.settleEndedDareWindows,
+}));
+vi.mock("#src/betting/dare-delivery.ts", () => ({
+  deliverDareSummaries: mocks.deliverDareSummaries,
+}));
+vi.mock("#src/betting/dare-sweep-v2.ts", () => ({
+  expireDareV2AcceptWindows: mocks.expireDareV2AcceptWindows,
+  settleEndedDareV2Windows: mocks.settleEndedDareV2Windows,
+}));
+vi.mock("#src/betting/dare-callout-v2.ts", () => ({
+  refreshDareV2Callouts: mocks.refreshDareV2Callouts,
+}));
+vi.mock("#src/betting/sweep.ts", () => ({
+  closeExpiredBettingWindows: mocks.closeExpiredBettingWindows,
+}));
+vi.mock("#src/betting/parlay-sweep.ts", () => ({
+  closeExpiredParlayWindows: mocks.closeExpiredParlayWindows,
+  voidStaleParlayMarkets: mocks.voidStaleParlayMarkets,
+}));
+vi.mock("#src/betting/parlay-publish.ts", () => ({
+  activatePendingParlayMarkets: mocks.activatePendingParlayMarkets,
+}));
+vi.mock("#src/betting/parlay-refresh.ts", () => ({
+  refreshClosedParlayMessages: mocks.refreshClosedParlayMessages,
+}));
+vi.mock("#src/betting/message-refresh.ts", () => ({
+  refreshClosedBucksMessages: mocks.refreshClosedBucksMessages,
+}));
+vi.mock("#src/betting/earnings-retry.ts", () => ({
+  retryPendingBucksEarnings: mocks.retryPendingBucksEarnings,
+}));
+vi.mock("#src/betting/announce.ts", () => ({
+  announceSettlements: mocks.announceSettlements,
+}));
+vi.mock("#src/betting/void-stale.ts", () => ({
+  voidStaleBettingPools: mocks.voidStaleBettingPools,
+}));
+vi.mock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
+  getPostmatchMessageIdsForMatchIdOrEmpty: mocks.getPostmatchMessageIds,
+}));
+vi.mock("#src/configuration/flags.ts", () => ({
+  isFeatureHardDisabled: () => true,
+}));
+vi.mock("#src/logger.ts", () => ({
+  createLogger: () => ({ info: vi.fn(), error: vi.fn() }),
+}));
+
+import { checkPostMatch } from "#src/league/tasks/postmatch/index.ts";
+import { checkPreMatch } from "#src/league/tasks/prematch/index.ts";
+
+describe("Dare v2 recovery", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test("expires funded acceptance windows while betting is hard-disabled", async () => {
+    await expect(checkPreMatch()).resolves.toEqual({ dareSummaries: [] });
+
+    expect(mocks.checkActiveGames).toHaveBeenCalledOnce();
+    expect(mocks.expireDareV2AcceptWindows).toHaveBeenCalledOnce();
+    expect(mocks.refreshDareV2Callouts).toHaveBeenCalledWith([17]);
+    expect(mocks.abandonExpiredDareProposals).not.toHaveBeenCalled();
+    expect(mocks.closeExpiredBettingWindows).not.toHaveBeenCalled();
+  });
+
+  test("settles funded contracts while betting is hard-disabled", async () => {
+    await expect(checkPostMatch()).resolves.toEqual({ dareSummaries: [] });
+
+    expect(mocks.checkMatchHistory).toHaveBeenCalledOnce();
+    expect(mocks.settleEndedDareV2Windows).toHaveBeenCalledOnce();
+    expect(mocks.refreshDareV2Callouts).toHaveBeenCalledWith([]);
+    expect(mocks.retryPendingBucksEarnings).not.toHaveBeenCalled();
+    expect(mocks.settleEndedDareWindows).not.toHaveBeenCalled();
+    expect(mocks.voidStaleBettingPools).not.toHaveBeenCalled();
+  });
+});
