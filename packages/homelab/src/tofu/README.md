@@ -95,7 +95,7 @@ Each domain gets its own `.tf` file (e.g. `scout-for-lol-com.tf`) containing:
 | `cloudflare_record` (DMARC) | `v=DMARC1; p=reject` policy                         |
 
 Domains: `scout-for-lol.com`, `discord-plays-pokemon.com`, `better-skill-capped.com`, `clauderon.com`,
-`jerredshepherd.com`, `jerred.is`, `ts-mc.net`, `sjer.red`, `glitter-boys.com`, `shepherdjerred.com`
+`jerredshepherd.com`, `ts-mc.net`, `sjer.red`, `glitter-boys.com`, `shepherdjerred.com`
 
 Scoped `cloudflare_api_token` resources live in the isolated
 `cloudflare-tokens` state. The bootstrap token and legacy global API key remain
