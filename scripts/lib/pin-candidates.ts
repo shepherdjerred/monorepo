@@ -16,8 +16,23 @@ const VersionSchema = z.string().min(1);
 const CandidateSchema = z
   .object({ version: VersionSchema, digest: DigestSchema })
   .strict();
+/**
+ * The commit an image was built from, as baked into its `GIT_SHA`.
+ *
+ * Optional because pins minted before this field existed have none. Without
+ * it a pin records only a version and a digest, and the commit it corresponds
+ * to lives nowhere in the repo — so a reviewer cannot tell `2.0.0-13000` from
+ * `2.0.0-13153` and an operator has nothing to contradict a wrong assumption.
+ * That is precisely how a Worker Deployment came to route to a Build ID no
+ * running pod carried. Build numbers do not order with commits: 13000 is
+ * `3f9be51c` while 13153 is `c42ee297`.
+ */
+const GitShaSchema = z
+  .string()
+  .regex(/^[0-9a-f]{40}$/, "gitSha must be a 40-character lowercase commit");
 const PinSchema = CandidateSchema.extend({
   buildNumber: z.number().int().positive(),
+  gitSha: GitShaSchema.optional(),
 });
 
 export const PinCandidatesSchema = z
