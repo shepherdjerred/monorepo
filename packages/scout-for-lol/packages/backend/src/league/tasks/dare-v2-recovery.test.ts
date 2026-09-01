@@ -5,7 +5,9 @@ const mocks = vi.hoisted(() => ({
   activatePendingParlayMarkets: vi.fn(() => Promise.resolve()),
   announceSettlements: vi.fn(() => Promise.resolve()),
   checkActiveGames: vi.fn(() => Promise.resolve()),
-  checkMatchHistory: vi.fn(() => Promise.resolve()),
+  checkMatchHistory: vi.fn(() =>
+    Promise.resolve({ evidenceComplete: true, evidenceWatermark: undefined }),
+  ),
   closeExpiredBettingWindows: vi.fn(async () => []),
   closeExpiredParlayWindows: vi.fn(async () => []),
   deliverDareSummaries: vi.fn(() => Promise.resolve()),
