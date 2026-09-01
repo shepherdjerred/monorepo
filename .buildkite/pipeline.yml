@@ -659,13 +659,22 @@ common:
         # precisely classified: transient.ts only emits it for a known
         # transient signature, so a retry here cannot mask a logical failure.
         #
-        # 2 was tuned for an occasional blip. It is far too small when a
-        # dependency's network path degrades: the PostHog control-plane stack
-        # reads 79 resources in one plan, and with the homelab's path to
-        # us.posthog.com dropping 8-45% of connections (measured from both
-        # cluster nodes; PostHog itself answers in 48ms whenever a connection
-        # lands) a single read failing aborts the whole plan. Five consecutive
-        # main builds failed that way, each exhausting all three attempts.
+        # 2 was tuned for an occasional blip. It is far too small when an
+        # upstream degrades: the PostHog control-plane stack reads 79 resources
+        # in one plan, and one failed read aborts the whole plan. Five
+        # consecutive main builds failed that way, each exhausting all three
+        # attempts.
+        #
+        # The fault is in PostHog, not in this network -- worth recording,
+        # because the symptom invites the opposite conclusion. us.posthog.com
+        # is an AWS ELB (posthog-ingress-prod-us-256455477.us-east-1). On a
+        # failing request TLS completes, the server sends a NewSessionTicket
+        # *after* receiving the request, and then returns zero bytes without
+        # closing -- the backend behind the ELB accepts and never answers.
+        # Failures are spread evenly over all its node IPs, and two unrelated
+        # networks measured the same rate at the same moment (8%, 50% and 73%
+        # at different times of day). When a request does land, the response
+        # carries django;dur=48, so the far end is not slow, it is absent.
         #
         # This does not weaken the gate -- the step must still succeed. Revisit
         # when the egress path is fixed rather than leaving it high forever.
