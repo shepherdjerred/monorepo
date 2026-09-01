@@ -3,6 +3,7 @@ import { LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
   activeDareTargetPuuids,
   selectMatchPollAccounts,
+  unavailableRequiredPuuids,
   type MatchPollAccount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
 
@@ -53,16 +54,14 @@ describe("post-match discovery selection", () => {
     ).toEqual([dareA, dareB]);
   });
 
-  test("refuses to ingest while a frozen Dare account cannot be polled", () => {
+  test("identifies a frozen Dare account that is no longer configured", () => {
     const missing = puuid("missing");
-    expect(() =>
-      selectMatchPollAccounts({
+    expect(
+      unavailableRequiredPuuids({
         accounts: [account(puuid("available"), undefined)],
         requiredPuuids: new Set([missing]),
-        currentTime: NOW,
-        ordinaryLimit: 50,
       }),
-    ).toThrow("missing");
+    ).toEqual([missing]);
   });
 
   test("parses every frozen account for active-target prioritization", () => {

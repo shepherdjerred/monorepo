@@ -369,6 +369,15 @@ describe("dare result copy", () => {
     );
   });
 
+  test("explains when a frozen target account becomes unavailable", () => {
+    expect(
+      dareVoidedContent({
+        voidReason: "target_unavailable",
+        refunds: [],
+      }),
+    ).toContain("A frozen target account is no longer available to evaluate.");
+  });
+
   test("pins the private acknowledgements", () => {
     expect(
       dareAcceptAckContent({

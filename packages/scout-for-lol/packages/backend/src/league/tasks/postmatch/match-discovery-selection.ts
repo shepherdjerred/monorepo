@@ -46,6 +46,18 @@ export function activeDareTargetPuuids(
   return result;
 }
 
+export function unavailableRequiredPuuids(input: {
+  accounts: readonly MatchPollAccount[];
+  requiredPuuids: ReadonlySet<string>;
+}): string[] {
+  const availablePuuids = new Set(
+    uniquePollAccounts(input.accounts).map((account) => puuidOf(account)),
+  );
+  return [...input.requiredPuuids]
+    .filter((puuid) => !availablePuuids.has(puuid))
+    .toSorted();
+}
+
 export function selectMatchPollAccounts(input: {
   accounts: readonly MatchPollAccount[];
   requiredPuuids: ReadonlySet<string>;
@@ -53,16 +65,6 @@ export function selectMatchPollAccounts(input: {
   ordinaryLimit: number;
 }): MatchPollAccount[] {
   const accounts = uniquePollAccounts(input.accounts);
-  const availablePuuids = new Set(accounts.map((account) => puuidOf(account)));
-  const unavailableRequired = [...input.requiredPuuids]
-    .filter((puuid) => !availablePuuids.has(puuid))
-    .toSorted();
-  if (unavailableRequired.length > 0) {
-    throw new Error(
-      `Active Dare v2 target account(s) are unavailable for live polling: ${unavailableRequired.join(", ")}`,
-    );
-  }
-
   const required = accounts
     .filter((account) => input.requiredPuuids.has(puuidOf(account)))
     .toSorted((left, right) => puuidOf(left).localeCompare(puuidOf(right)));

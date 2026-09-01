@@ -5,31 +5,52 @@ import type { PlayerWithMatchIds } from "#src/league/tasks/postmatch/match-proce
 export type DiscoveredMatchIntent = Omit<ScoutMatchIngestionInput, "stage">;
 
 export type MatchDiscovery = {
+  complete: boolean;
   intents: DiscoveredMatchIntent[];
   allPlayerConfigs: PlayerConfigEntry[];
 };
 
 export type MatchCompletionResolver = (
   intent: DiscoveredMatchIntent,
-) => Promise<number>;
+) => Promise<number | undefined>;
+
+export type MatchIntentOrderResult =
+  | { kind: "ordered"; intents: DiscoveredMatchIntent[] }
+  | { kind: "unavailable"; matchId: DiscoveredMatchIntent["matchId"] };
 
 export async function orderMatchIntentsByCompletion(
   intents: readonly DiscoveredMatchIntent[],
   completionOf: MatchCompletionResolver,
-): Promise<DiscoveredMatchIntent[]> {
+): Promise<MatchIntentOrderResult> {
   const ranked = await Promise.all(
     intents.map(async (intent) => {
       const gameEndTimestamp = await completionOf(intent);
       return { gameEndTimestamp, intent };
     }),
   );
-  return ranked
-    .toSorted(
-      (left, right) =>
-        left.gameEndTimestamp - right.gameEndTimestamp ||
-        left.intent.matchId.localeCompare(right.intent.matchId),
-    )
-    .map(({ intent }) => intent);
+  const available: {
+    gameEndTimestamp: number;
+    intent: DiscoveredMatchIntent;
+  }[] = [];
+  for (const candidate of ranked) {
+    if (candidate.gameEndTimestamp === undefined) {
+      return { kind: "unavailable", matchId: candidate.intent.matchId };
+    }
+    available.push({
+      gameEndTimestamp: candidate.gameEndTimestamp,
+      intent: candidate.intent,
+    });
+  }
+  return {
+    kind: "ordered",
+    intents: available
+      .toSorted(
+        (left, right) =>
+          left.gameEndTimestamp - right.gameEndTimestamp ||
+          left.intent.matchId.localeCompare(right.intent.matchId),
+      )
+      .map(({ intent }) => intent),
+  };
 }
 
 export function deduplicateMatchIntents(

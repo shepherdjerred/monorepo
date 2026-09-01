@@ -12,7 +12,11 @@ export type RefundableDareV2Row = Prisma.BucksDareV2GetPayload<{
 
 export async function voidDareV2WithFullRefund(
   dare: RefundableDareV2Row,
-  reason: "invalid_contract" | "unknown_evaluator" | "storage_overflow",
+  reason:
+    | "invalid_contract"
+    | "unknown_evaluator"
+    | "storage_overflow"
+    | "target_unavailable",
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<boolean> {

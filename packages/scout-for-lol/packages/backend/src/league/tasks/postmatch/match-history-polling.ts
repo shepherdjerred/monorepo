@@ -1,34 +1,29 @@
 import type { MatchId } from "@scout-for-lol/data/index.ts";
 import {
-  getRecentMatchIds,
-  filterNewMatches,
-} from "#src/league/api/match-history.ts";
-import {
   getAccountsWithState,
   updateLastProcessedMatch,
-  getLastProcessedMatch,
-  updateLastCheckedAt,
   prisma,
 } from "#src/database/index.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
-import { calculatePollingInterval } from "#src/utils/polling-intervals.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 import {
   processMatchForPlayer,
-  type PlayerWithMatchIds,
   type ProcessMatchUpdateOptions,
 } from "#src/league/tasks/postmatch/match-processing.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
+import {
+  voidDareV2WithFullRefund,
+  type RefundableDareV2Row,
+} from "#src/betting/dare-void-v2.ts";
 import type { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { settleBucksWithDareTimelineV2 } from "#src/betting/dare-postmatch-timeline-v2.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
-import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 import {
@@ -45,9 +40,11 @@ import {
 import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
 import { deliverPostmatchReport } from "#src/league/tasks/postmatch/match-report-delivery.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
+import { collectNewMatches } from "#src/league/tasks/postmatch/match-history-collection.ts";
 import {
   activeDareTargetPuuids,
   selectMatchPollAccounts,
+  unavailableRequiredPuuids,
   type MatchPollAccount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
 
@@ -263,102 +260,55 @@ export async function processMatchAndUpdatePlayers(
   }
 }
 
-/**
- * Collect new matches for each player, handling gap detection and backfill recovery.
- */
-async function collectNewMatchesForPlayer(
-  account: MatchPollAccount,
-  currentTime: Date,
-): Promise<PlayerWithMatchIds | undefined> {
-  const { config: player, lastMatchTime, lastCheckedAt } = account;
-  const puuid = player.league.leagueAccount.puuid;
-  const interval = calculatePollingInterval(lastMatchTime, currentTime);
-  logger.info(
-    `[${player.alias}] 🔍 Checking match history (interval: ${interval.toString()}min, last match: ${lastMatchTime ? lastMatchTime.toISOString() : "never"}, last checked: ${lastCheckedAt ? lastCheckedAt.toISOString() : "never"})`,
-  );
-
-  const lastProcessedMatchId = await getLastProcessedMatch(puuid);
-  const recentMatchIds = await getRecentMatchIds(player, 5);
-  if (recentMatchIds === undefined) {
-    throw new Error(`Match history is unavailable for ${puuid}`);
-  }
-  await updateLastCheckedAt(puuid, currentTime);
-  if (recentMatchIds.length === 0) {
-    logger.info(`[${player.alias}] ℹ️  No recent matches found`);
-    return;
-  }
-
-  const { matchIds: newMatchIds, gapDetected } = filterNewMatches(
-    recentMatchIds,
-    lastProcessedMatchId,
-  );
-  if (newMatchIds.length === 0) {
-    logger.info(`[${player.alias}] ✅ No new matches to process`);
-    return;
-  }
-
-  const recovered = gapDetected
-    ? await recoverMissedMatches(player, newMatchIds)
-    : { discordMatchIds: newMatchIds, backfillMatchIds: [] };
-  logger.info(
-    `[${player.alias}] 🆕 Found ${recovered.discordMatchIds.length.toString()} new match(es) for Discord: ${recovered.discordMatchIds.join(", ")}`,
-  );
-  return {
-    player,
-    matchIds: recovered.discordMatchIds,
-    backfillMatchIds: recovered.backfillMatchIds,
-  };
-}
-
-async function collectNewMatches(
-  playersToCheck: MatchPollAccount[],
-  currentTime: Date,
-  requiredDarePuuids: ReadonlySet<string>,
-): Promise<PlayerWithMatchIds[]> {
-  const playersWithMatches: PlayerWithMatchIds[] = [];
-
-  for (const account of playersToCheck) {
-    const player = account.config;
-    const puuid = player.league.leagueAccount.puuid;
-    try {
-      const matches = await collectNewMatchesForPlayer(account, currentTime);
-      if (matches !== undefined) playersWithMatches.push(matches);
-    } catch (error) {
-      logger.error(`[${player.alias}] ❌ Error checking match history:`, error);
-      Sentry.captureException(error, {
-        tags: {
-          source: "match-history-check",
-          playerAlias: player.alias,
-          puuid,
-        },
-      });
-      if (requiredDarePuuids.has(puuid)) {
-        throw new Error(
-          `Active Dare v2 target history poll failed for ${puuid}`,
-          { cause: error },
-        );
-      }
+async function recoverUnavailableActiveDares(input: {
+  activeDares: readonly RefundableDareV2Row[];
+  accounts: readonly MatchPollAccount[];
+  currentTime: Date;
+}): Promise<Set<string>> {
+  const requiredPuuids = new Set<string>();
+  for (const dare of input.activeDares) {
+    const darePuuids = activeDareTargetPuuids(dare.targets);
+    const unavailable = unavailableRequiredPuuids({
+      accounts: input.accounts,
+      requiredPuuids: darePuuids,
+    });
+    if (unavailable.length > 0) {
+      logger.warn(
+        `Voiding Dare ${dare.id.toString()} because frozen target account(s) are unavailable: ${unavailable.join(", ")}`,
+      );
+      await voidDareV2WithFullRefund(
+        dare,
+        "target_unavailable",
+        prisma,
+        input.currentTime,
+      );
+      continue;
     }
+    for (const puuid of darePuuids) requiredPuuids.add(puuid);
   }
-
-  return playersWithMatches;
+  return requiredPuuids;
 }
 
 async function collectMatchDiscovery(): Promise<MatchDiscovery> {
-  const [allAccountsWithState, blockedPuuids, activeDareTargets] =
+  const currentTime = new Date();
+  const [allAccountsWithState, blockedPuuids, activeDares] =
     await prisma.$transaction(
       async (tx) =>
         await Promise.all([
           getAccountsWithState(tx, getActiveServerIds()),
           getPuuidsBlockedFromLivePolling(tx),
-          tx.bucksDareV2Target.findMany({
-            where: { dare: { dareState: "active" } },
-            select: { accounts: true },
+          tx.bucksDareV2.findMany({
+            where: { dareState: "active" },
+            include: { targets: { orderBy: { id: "asc" } } },
           }),
         ]),
       { isolationLevel: "RepeatableRead" },
     );
-  const requiredDarePuuids = activeDareTargetPuuids(activeDareTargets);
+  const requiredDarePuuids = await recoverUnavailableActiveDares({
+    activeDares,
+    accounts: allAccountsWithState,
+    currentTime,
+  });
   const accountsWithState = allAccountsWithState.filter(
     ({ config }) => !blockedPuuids.has(config.league.leagueAccount.puuid),
   );
@@ -366,7 +316,19 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
     `📊 Found ${accountsWithState.length.toString()} pollable player account(s); ${blockedPuuids.size.toString()} PUUID(s) are completing initial history import; ${requiredDarePuuids.size.toString()} active Dare account(s) are mandatory`,
   );
 
-  const currentTime = new Date();
+  const blockedRequiredPuuids = [...requiredDarePuuids].filter((puuid) =>
+    blockedPuuids.has(puuid),
+  );
+  if (blockedRequiredPuuids.length > 0) {
+    logger.warn(
+      `Withholding match discovery while active Dare target account(s) finish initial history import: ${blockedRequiredPuuids.join(", ")}`,
+    );
+    return {
+      complete: false,
+      intents: [],
+      allPlayerConfigs: accountsWithState.map((account) => account.config),
+    };
+  }
   const playersToCheck = selectMatchPollAccounts({
     accounts: accountsWithState,
     requiredPuuids: requiredDarePuuids,
@@ -376,29 +338,42 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
   logger.info(
     `📊 Checking ${playersToCheck.length.toString()} unique account(s) this run`,
   );
-  const playersWithMatches = await collectNewMatches(
+  const collected = await collectNewMatches({
     playersToCheck,
     currentTime,
     requiredDarePuuids,
-  );
-  const intents = deduplicateMatchIntents(playersWithMatches);
-  const orderedIntents = await orderMatchIntentsByCompletion(
+  });
+  if (!collected.complete) {
+    return {
+      complete: false,
+      intents: [],
+      allPlayerConfigs: accountsWithState.map((account) => account.config),
+    };
+  }
+  const intents = deduplicateMatchIntents(collected.playersWithMatches);
+  const ordered = await orderMatchIntentsByCompletion(
     intents,
     async (intent) => {
       const match = await fetchMatchData(
         MatchIdSchema.parse(intent.matchId),
         intent.region,
       );
-      if (match === undefined) {
-        throw new Error(
-          `Could not establish completion time for ${intent.matchId}; refusing the discovery batch`,
-        );
-      }
-      return match.info.gameEndTimestamp;
+      return match?.info.gameEndTimestamp;
     },
   );
+  if (ordered.kind === "unavailable") {
+    logger.warn(
+      `Withholding match discovery because completion time is unavailable for ${ordered.matchId}`,
+    );
+    return {
+      complete: false,
+      intents: [],
+      allPlayerConfigs: accountsWithState.map((account) => account.config),
+    };
+  }
   return {
-    intents: orderedIntents,
+    complete: true,
+    intents: ordered.intents,
     allPlayerConfigs: accountsWithState.map((account) => account.config),
   };
 }
@@ -411,6 +386,12 @@ export async function discoverPostMatchIntents(): Promise<
   pollingStartTime = Date.now();
   try {
     const discovery = await collectMatchDiscovery();
+    if (!discovery.complete) {
+      logger.warn(
+        "Match discovery evidence is incomplete; maintenance may proceed without advancing ingestion cursors",
+      );
+      return [];
+    }
     await setLastSuccessfulPollAt(new Date());
     return discovery.intents;
   } finally {
@@ -436,6 +417,12 @@ export async function checkMatchHistory(): Promise<void> {
 
   try {
     const discovery = await collectMatchDiscovery();
+    if (!discovery.complete) {
+      logger.warn(
+        "Match discovery evidence is incomplete; leaving ingestion cursors unchanged",
+      );
+      return;
+    }
     if (discovery.intents.length === 0) {
       logger.info("✅ No new matches found for any players");
       const totalTime = Date.now() - startTime;

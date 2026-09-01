@@ -30,22 +30,22 @@ describe("post-match discovery intent ordering", () => {
       },
     );
 
-    expect(ordered.map((match) => match.matchId)).toEqual([
+    expect(ordered.kind).toBe("ordered");
+    if (ordered.kind !== "ordered") throw new Error("Expected ordered result");
+    expect(ordered.intents.map((match) => match.matchId)).toEqual([
       "NA1_100_A",
       "NA1_100_B",
       "NA1_300",
     ]);
   });
 
-  test("fails the whole batch when one completion time is unresolved", async () => {
+  test("withholds the whole batch when one completion time is unresolved", async () => {
     await expect(
       orderMatchIntentsByCompletion(
         [intent("NA1_UNKNOWN"), intent("NA1_KNOWN")],
         (match) =>
-          match.matchId === "NA1_KNOWN"
-            ? Promise.resolve(200)
-            : Promise.reject(new Error("completion unavailable")),
+          Promise.resolve(match.matchId === "NA1_KNOWN" ? 200 : undefined),
       ),
-    ).rejects.toThrow("completion unavailable");
+    ).resolves.toEqual({ kind: "unavailable", matchId: "NA1_UNKNOWN" });
   });
 });
