@@ -30,6 +30,11 @@ import {
   handleDareButton,
   type DareButtonInteraction,
 } from "#src/betting/dare-discord.ts";
+import { handleDareV2Button } from "#src/betting/dare-discord-v2.ts";
+import {
+  isDareV2CustomId,
+  parseDareV2CustomId,
+} from "#src/betting/dare-custom-id-v2.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {
@@ -165,9 +170,44 @@ async function routeDareButton(
   }
 }
 
+async function routeDareV2Button(
+  interaction: RoutableButtonInteraction,
+): Promise<void> {
+  try {
+    if (parseDareV2CustomId(interaction.customId) === undefined) {
+      discordComponentsTotal.inc({ namespace: "bbd2", status: "malformed" });
+      await interaction.deferUpdate();
+      return;
+    }
+    await handleDareV2Button(interaction);
+    await captureButtonActivity(interaction, "dare", "success");
+    discordComponentsTotal.inc({ namespace: "bbd2", status: "success" });
+  } catch (error) {
+    await captureButtonActivity(interaction, "dare", "error");
+    logger.error("Error handling a Bryan Bucks Dare v2 button:", error);
+    discordComponentsTotal.inc({ namespace: "bbd2", status: "error" });
+    if (interaction.deferred || interaction.replied) {
+      await interaction.followUp({
+        content: "Something went wrong with that dare. Try again shortly.",
+        flags: MessageFlags.Ephemeral,
+        allowedMentions: { parse: [] },
+      });
+      return;
+    }
+    await interaction.deferReply({ ephemeral: true });
+    await interaction.editReply({
+      content: "Something went wrong with that dare. Try again shortly.",
+    });
+  }
+}
+
 export async function routeButton(
   interaction: RoutableButtonInteraction,
 ): Promise<void> {
+  if (isDareV2CustomId(interaction.customId)) {
+    await routeDareV2Button(interaction);
+    return;
+  }
   if (isDareCustomId(interaction.customId)) {
     await routeDareButton(interaction);
     return;

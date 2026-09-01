@@ -6,9 +6,16 @@ import {
   refundDareV2ContributionsInTransaction,
 } from "#src/betting/dare-ledger-v2.ts";
 import { settleActiveDareV2AtBound } from "#src/betting/dare-settle-v2.ts";
-import type { DareV2SettlementSummary } from "#src/betting/dare-settle-types-v2.ts";
+import {
+  DareV2PartialSettlementError,
+  type DareV2SettlementSummary,
+} from "#src/betting/dare-settle-types-v2.ts";
+import { collectDareV2Batch } from "#src/betting/dare-settle-batch-v2.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("betting-dare-sweep-v2");
 
 type PendingDareV2 = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
@@ -88,31 +95,41 @@ export async function settleEndedDareV2Windows(
     include: { targets: { orderBy: { id: "asc" } } },
     orderBy: { id: "asc" },
   });
-  const summaries: DareV2SettlementSummary[] = [];
-  for (const row of rows) {
-    if (!hasReadableContract(row.contractJson)) {
+  const batch = await collectDareV2Batch(
+    rows,
+    async (row): Promise<DareV2SettlementSummary | undefined> => {
+      if (hasReadableContract(row.contractJson)) {
+        return await settleActiveDareV2AtBound(row, prismaClient, now);
+      }
       const voided = await voidDareV2WithFullRefund(
         row,
         "invalid_contract",
         prismaClient,
         now,
       );
-      if (voided) {
-        summaries.push({
-          contractVersion: 2,
-          dareId: row.id,
-          serverId: row.serverId,
-          channelId: row.channelId,
-          resolution: "voided",
-          value: null,
-          finality: { value: null, final: true, reason: "contract_error" },
-          proof: null,
-        });
-      }
-      continue;
-    }
-    const summary = await settleActiveDareV2AtBound(row, prismaClient, now);
-    if (summary !== undefined) summaries.push(summary);
+      return voided
+        ? {
+            contractVersion: 2,
+            dareId: row.id,
+            serverId: row.serverId,
+            channelId: row.channelId,
+            resolution: "voided",
+            value: null,
+            finality: { value: null, final: true, reason: "contract_error" },
+            proof: null,
+          }
+        : undefined;
+    },
+    (row, error) => {
+      logger.error(
+        `Failed to settle ended Dare v2 ${row.id.toString()}:`,
+        error,
+      );
+    },
+  );
+  const summaries = batch.values.filter((summary) => summary !== undefined);
+  if (batch.firstFailure !== null) {
+    throw new DareV2PartialSettlementError(summaries, batch.firstFailure.error);
   }
   return summaries;
 }

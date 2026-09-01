@@ -10,6 +10,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { dareV2CalloutComponents } from "#src/betting/dare-components-v2.ts";
+import { dareV2CalloutContent } from "#src/betting/dare-callout-content-v2.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -66,56 +67,6 @@ export type DareV2CalloutState = {
   content: string;
 };
 
-function statusText(input: {
-  state: BucksDareV2State;
-  targets: readonly {
-    alias: string;
-    acceptedAt: Date | null;
-    declinedAt: Date | null;
-  }[];
-  acceptDeadline: Date | null;
-  deadlineAt: Date | null;
-  finalValue: boolean | null;
-  voidReason: string | null;
-}): string {
-  if (input.state === "pending_accept") {
-    const decisions = input.targets
-      .map((target) => {
-        const state =
-          target.declinedAt === null
-            ? target.acceptedAt === null
-              ? "waiting"
-              : "accepted"
-            : "declined";
-        return `${target.alias}: ${state}`;
-      })
-      .join(" · ");
-    const deadline =
-      input.acceptDeadline === null
-        ? ""
-        : ` · closes <t:${Math.floor(input.acceptDeadline.getTime() / 1000).toString()}:R>`;
-    return `Waiting for targets — ${decisions}${deadline}`;
-  }
-  if (input.state === "active") {
-    return input.deadlineAt === null
-      ? "Active"
-      : `Active · ends <t:${Math.floor(input.deadlineAt.getTime() / 1000).toString()}:R>`;
-  }
-  if (input.state === "achieved") return "Achieved — the proof paid out.";
-  if (input.state === "unachieved")
-    return "Unachieved — contributor refunds settled.";
-  if (input.state === "voided") {
-    return `Voided with full refunds${input.voidReason === null ? "" : ` — ${input.voidReason.replaceAll("_", " ")}`}.`;
-  }
-  if (input.state === "declined")
-    return "Declined — every contribution was fully refunded.";
-  if (input.state === "expired")
-    return "Acceptance expired — every contribution was fully refunded.";
-  if (input.state === "cancelled")
-    return "Cancelled — every contribution was fully refunded.";
-  return input.finalValue === null ? input.state : String(input.finalValue);
-}
-
 export async function loadDareV2CalloutState(
   dareId: number,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -139,7 +90,6 @@ export async function loadDareV2CalloutState(
     );
   }
   const state = BucksDareV2StateSchema.parse(dare.dareState);
-  const targets = dare.targets.map((target) => target.alias).join(", ");
   return {
     id: dare.id,
     serverId: dare.serverId,
@@ -149,23 +99,21 @@ export async function loadDareV2CalloutState(
     revision: revisionNumber,
     challengerDiscordId: dare.challengerDiscordId,
     targetDiscordIds: dare.targets.map((target) => target.discordId),
-    content: [
-      `🎯 **Scout Dare #${dare.id.toString()}**`,
-      `<@${dare.challengerDiscordId}> put **${dare.potTotal.toString()} BB** on ${targets}.`,
-      "",
-      `**Contract · revision ${revisionNumber.toString()}**`,
-      revision.plainLanguage,
-      "",
-      `**Progress** · ${dare._count.evidence.toString()} evidence games`,
-      `**Status** · ${statusText({
-        state,
-        targets: dare.targets,
-        acceptDeadline: dare.acceptDeadline,
-        deadlineAt: dare.deadlineAt,
-        finalValue: dare.finalValue,
-        voidReason: dare.voidReason,
-      })}`,
-    ].join("\n"),
+    content: dareV2CalloutContent({
+      id: dare.id,
+      challengerDiscordId: dare.challengerDiscordId,
+      potTotal: dare.potTotal,
+      targetAliases: dare.targets.map((target) => target.alias),
+      revision: revisionNumber,
+      plainLanguage: revision.plainLanguage,
+      evidenceCount: dare._count.evidence,
+      state,
+      targets: dare.targets,
+      acceptDeadline: dare.acceptDeadline,
+      deadlineAt: dare.deadlineAt,
+      finalValue: dare.finalValue,
+      voidReason: dare.voidReason,
+    }),
   };
 }
 
@@ -245,27 +193,36 @@ export async function postDareV2Callout(
         );
         if (state === null)
           throw new Error(`Dare v2 ${dareId.toString()} not found.`);
-        const message = await dependencies.sendMessage(
+        const message = await observeBucksDelivery(
           {
-            // Discord deduplicates a retried create with the same nonce when
-            // enforceNonce is true. This closes the send-succeeded / database-
-            // persist-failed window without making settlement depend on
-            // message delivery.
-            nonce: `dare-v2-${state.id.toString()}`,
-            enforceNonce: true,
-            content: state.content,
-            components: dareV2CalloutComponents({
-              state: state.state,
-              dareId: state.id,
-              revision: state.revision,
-            }),
-            allowedMentions: {
-              parse: [],
-              users: [state.challengerDiscordId, ...state.targetDiscordIds],
-            },
+            surface: "dare_callout",
+            operation: "send",
+            serverId: state.serverId,
+            channelId: state.channelId,
           },
-          DiscordChannelIdSchema.parse(state.channelId),
-          DiscordGuildIdSchema.parse(state.serverId),
+          async () =>
+            await dependencies.sendMessage(
+              {
+                // Discord deduplicates a retried create with the same nonce
+                // when enforceNonce is true. This closes the send-succeeded /
+                // database-persist-failed window without making settlement
+                // depend on message delivery.
+                nonce: `dare-v2-${state.id.toString()}`,
+                enforceNonce: true,
+                content: state.content,
+                components: dareV2CalloutComponents({
+                  state: state.state,
+                  dareId: state.id,
+                  revision: state.revision,
+                }),
+                allowedMentions: {
+                  parse: [],
+                  users: [state.challengerDiscordId, ...state.targetDiscordIds],
+                },
+              },
+              DiscordChannelIdSchema.parse(state.channelId),
+              DiscordGuildIdSchema.parse(state.serverId),
+            ),
         );
         await persistDareV2MessageRef(
           dareId,

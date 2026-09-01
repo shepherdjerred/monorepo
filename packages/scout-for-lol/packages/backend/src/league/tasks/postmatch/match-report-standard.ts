@@ -73,6 +73,7 @@ async function fetchAndRecordTimeline(options: {
     const timelineData = await fetchMatchTimeline(
       options.matchId,
       playerRegion,
+      options.persistence === "required" ? "throw" : "return_undefined",
     );
     if (timelineData) {
       logger.info(

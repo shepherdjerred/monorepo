@@ -1,4 +1,5 @@
 import {
+  BUCKS_INT32_MAX,
   BucksStakeSchema,
   DARE_V2_MAX_HORIZON_DAYS,
   DARE_V2_MAX_QUERY_LENGTH,
@@ -19,6 +20,8 @@ import {
   formatDareScoutQlV2,
   darePlanSemanticIssues,
 } from "#src/betting/dare-contract-compiler-v2.ts";
+import { dareV2CalloutContent } from "#src/betting/dare-callout-content-v2.ts";
+import { DARE_CALLOUT_MAX_LENGTH } from "#src/betting/dare-copy.ts";
 import {
   dareV2DraftsEnabled,
   defaultDareV2Dependencies,
@@ -157,6 +160,31 @@ export function prepareDareDraftV2(
       `Canonical ScoutQL exceeds ${DARE_V2_MAX_QUERY_LENGTH.toString()} characters.`,
     );
   }
+  const plainLanguage = renderDarePlanV2(plan, targets);
+  const calloutPreview = dareV2CalloutContent({
+    id: BUCKS_INT32_MAX,
+    challengerDiscordId: "9".repeat(20),
+    potTotal: BUCKS_INT32_MAX,
+    targetAliases: targets.map((target) => target.alias),
+    revision: BUCKS_INT32_MAX,
+    plainLanguage,
+    evidenceCount: BUCKS_INT32_MAX,
+    state: "pending_accept",
+    targets: targets.map((target) => ({
+      alias: target.alias,
+      acceptedAt: new Date(0),
+      declinedAt: null,
+    })),
+    acceptDeadline: new Date(9_999_999_999_000),
+    deadlineAt: null,
+    finalValue: null,
+    voidReason: null,
+  });
+  if (calloutPreview.length > DARE_CALLOUT_MAX_LENGTH) {
+    issues.push(
+      `The public Dare callout exceeds Discord's ${DARE_CALLOUT_MAX_LENGTH.toString()}-character limit.`,
+    );
+  }
   if (issues.length > 0 || !stake.success) return { kind: "invalid", issues };
   return {
     kind: "valid",
@@ -167,7 +195,7 @@ export function prepareDareDraftV2(
       deadlineSpec,
       openingStake: stake.data,
       canonicalScoutQl,
-      plainLanguage: renderDarePlanV2(plan, targets),
+      plainLanguage,
       semanticProofPlan: renderDareProofPlanV2(plan),
       ...(definition.translationJson === undefined
         ? {}

@@ -23,6 +23,7 @@ import {
   refreshDareV2Callout,
 } from "#src/betting/dare-callout-v2.ts";
 import { settleDaresV2ForMatch } from "#src/betting/dare-settle-v2.ts";
+import { settleEndedDareV2Windows } from "#src/betting/dare-sweep-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dare-settle-types-v2.ts";
 import {
   makeTwistedFateMatch,
@@ -209,6 +210,25 @@ async function expectChallengerBalance(balance: number): Promise<void> {
   });
   expect(wallet.balance).toBe(balance);
   await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+}
+
+function clientFailingSecondTransaction(message: string) {
+  let transactionCalls = 0;
+  return new Proxy(db, {
+    get(target, property) {
+      if (property === "$transaction") {
+        return (
+          ...transactionArguments: Parameters<typeof db.$transaction>
+        ) => {
+          transactionCalls += 1;
+          return transactionCalls === 1
+            ? Reflect.apply(target.$transaction, target, transactionArguments)
+            : Promise.reject(new Error(message));
+        };
+      }
+      return Reflect.get(target, property, target);
+    },
+  });
 }
 
 describe("Dare v2 draft and lifecycle", () => {
@@ -447,6 +467,47 @@ describe("Dare v2 draft mutation and cancellation", () => {
     expect(cancelled.kind).toBe("cancelled");
     await expectChallengerBalance(SEED_GRANT);
   });
+
+  test("refuses a contribution consumed after an active Dare deadline", async () => {
+    const dareId = await makeDraft();
+    await activate(dareId, "contribution-deadline");
+    const deadlineAt = new Date(T0.getTime() + 60_000);
+    await db.bucksDareV2.update({
+      where: { id: dareId },
+      data: { deadlineAt },
+    });
+    const contribution = await createDareV2ConfirmationIntent(
+      {
+        dareId,
+        serverId: SERVER,
+        actorDiscordId: CHALLENGER,
+        expectedRevision: 1,
+        payload: { action: "contribute", amount: 5 },
+        idempotencyKey: "contribution-after-deadline",
+      },
+      deps,
+      T0,
+    );
+    if (contribution.kind !== "intent_created") {
+      throw new Error("Expected a contribution intent.");
+    }
+
+    await expect(
+      consumeDareV2ConfirmationIntent(
+        {
+          intentId: contribution.intentId,
+          serverId: SERVER,
+          actorDiscordId: CHALLENGER,
+        },
+        deps,
+        new Date(deadlineAt.getTime() + 1),
+      ),
+    ).resolves.toMatchObject({ kind: "too_late", dareState: "active" });
+    expect(await db.bucksDareV2Contribution.count({ where: { dareId } })).toBe(
+      1,
+    );
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
 });
 
 describe("Dare v2 partial settlement", () => {
@@ -455,22 +516,9 @@ describe("Dare v2 partial settlement", () => {
     const secondDareId = await makeDraft({ openingStake: 5 });
     await activate(firstDareId, "partial-first");
     await activate(secondDareId, "partial-second");
-    let transactionCalls = 0;
-    const partiallyFailingClient = new Proxy(db, {
-      get(target, property) {
-        if (property === "$transaction") {
-          return (
-            ...transactionArguments: Parameters<typeof db.$transaction>
-          ) => {
-            transactionCalls += 1;
-            return transactionCalls === 1
-              ? Reflect.apply(target.$transaction, target, transactionArguments)
-              : Promise.reject(new Error("simulated second Dare v2 failure"));
-          };
-        }
-        return Reflect.get(target, property, target);
-      },
-    });
+    const partiallyFailingClient = clientFailingSecondTransaction(
+      "simulated second Dare v2 failure",
+    );
     const match = qualifyingMatch("NA1_DARE_V2_PARTIAL");
     let caught: unknown;
     try {
@@ -498,6 +546,46 @@ describe("Dare v2 partial settlement", () => {
     await expect(settleDaresV2ForMatch(match, db)).resolves.toMatchObject([
       { dareId: secondDareId, resolution: "achieved", value: true },
     ]);
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+
+  test("preserves deadline summaries when a later settlement fails", async () => {
+    const firstDareId = await makeDraft({ openingStake: 5 });
+    const secondDareId = await makeDraft({ openingStake: 5 });
+    await activate(firstDareId, "deadline-partial-first");
+    await activate(secondDareId, "deadline-partial-second");
+    await db.bucksDareV2.updateMany({
+      where: { id: { in: [firstDareId, secondDareId] } },
+      data: { deadlineAt: new Date(T0.getTime() - 60 * 60 * 1000) },
+    });
+    const partiallyFailingClient = clientFailingSecondTransaction(
+      "simulated deadline settlement failure",
+    );
+    let caught: unknown;
+    try {
+      await settleEndedDareV2Windows(
+        partiallyFailingClient,
+        new Date(T0.getTime() + 60 * 60 * 1000),
+      );
+    } catch (error) {
+      caught = error;
+    }
+
+    if (!(caught instanceof DareV2PartialSettlementError)) {
+      throw new Error(
+        `Expected a DareV2PartialSettlementError, got ${String(caught)}.`,
+      );
+    }
+    expect(caught.summaries).toHaveLength(1);
+    expect(caught.summaries[0]?.dareId).toBe(firstDareId);
+    const firstDare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: firstDareId },
+    });
+    const secondDare = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: secondDareId },
+    });
+    expect(firstDare.dareState).not.toBe("active");
+    expect(secondDare.dareState).toBe("active");
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 });
@@ -574,5 +662,28 @@ describe("Dare v2 callout delivery", () => {
       "Discord edit failed",
     );
     expect(dependencies.editMessage).toHaveBeenCalledTimes(1);
+  });
+
+  test("propagates a failed initial callout send for retry", async () => {
+    const dareId = await makeDraft();
+    const fundIntent = await intent({
+      dareId,
+      actor: CHALLENGER,
+      action: "fund",
+      key: "fund-callout-send-failure",
+    });
+    await consume(fundIntent, CHALLENGER);
+    const dependencies = {
+      prismaClient: db,
+      sendMessage: vi.fn(() =>
+        Promise.reject(new Error("Discord send failed")),
+      ),
+      editMessage: vi.fn(() => Promise.resolve()),
+    };
+
+    await expect(postDareV2Callout(dareId, dependencies)).rejects.toThrow(
+      "Discord send failed",
+    );
+    expect(dependencies.sendMessage).toHaveBeenCalledTimes(1);
   });
 });

@@ -27,7 +27,10 @@ export async function contributeToDareV2InTransaction(
     where: {
       id: input.dareId,
       fundedRevision: input.revision,
-      dareState: { in: [...OPEN_BUCKS_DARE_V2_STATES] },
+      OR: [
+        { dareState: "pending_accept" },
+        { dareState: "active", deadlineAt: { gt: input.now } },
+      ],
       potTotal: { lte: BUCKS_INT32_MAX - input.amount },
       targets: { none: { discordId: input.actorDiscordId } },
     },
@@ -54,7 +57,11 @@ export async function contributeToDareV2InTransaction(
       return { kind: "target_cannot_contribute" } as const;
     }
     const state = BucksDareV2StateSchema.parse(current.dareState);
+    const beforeDeadline =
+      state !== "active" ||
+      (current.deadlineAt !== null && current.deadlineAt > input.now);
     if (
+      beforeDeadline &&
       OPEN_DARE_STATES.has(state) &&
       current.potTotal + input.amount > BUCKS_INT32_MAX
     ) {

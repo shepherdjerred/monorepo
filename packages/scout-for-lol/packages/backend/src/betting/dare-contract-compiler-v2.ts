@@ -19,10 +19,7 @@ import {
   dareValueTargetKeys,
 } from "#src/betting/dare-value-v2.ts";
 
-function quote(value: string): string {
-  return `'${value.replaceAll("'", "''")}'`;
-}
-
+const quote = (value: string): string => `'${value.replaceAll("'", "''")}'`;
 function comparisonOperator(operator: string): string {
   if (operator === "eq") return "=";
   if (operator === "neq") return "!=";
@@ -259,9 +256,8 @@ function inspectPredicate(
   }
 }
 
-function valueIsNumeric(value: DareValueV2): boolean {
-  return dareValuePrimitiveType(value) === "number";
-}
+const valueIsNumeric = (value: DareValueV2): boolean =>
+  dareValuePrimitiveType(value) === "number";
 
 function inspectValueBinding(
   value: DareValueV2,
@@ -403,6 +399,11 @@ function inspectGameSet(
   if (gameSet.relationship === "independent" && gameSet.targetKeys.length > 1) {
     issues.push(
       `Independent game set ${gameSet.name} must bind exactly one target; use separate game sets for separate games.`,
+    );
+  }
+  if (gameSet.relationship === "opponents" && gameSet.targetKeys.length !== 2) {
+    issues.push(
+      `Opponent game set ${gameSet.name} must bind exactly two targets.`,
     );
   }
   for (const key of gameSet.targetKeys) {
