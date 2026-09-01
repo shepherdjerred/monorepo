@@ -1,6 +1,7 @@
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { DareContractV2Schema } from "@scout-for-lol/data";
 import { DARE_WINDOW_INGESTION_GRACE_MS } from "#src/betting/constants.ts";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
   refundDareV2ContributionsInTransaction,
@@ -42,7 +43,11 @@ async function expireOne(
         dareState: "pending_accept",
         acceptDeadline: { lt: now },
       },
-      data: { dareState: "expired", settledAt: now },
+      data: {
+        dareState: "expired",
+        settledAt: now,
+        ...pendingDareV2CalloutRefresh(),
+      },
     });
     if (claim.count !== 1) return false;
     const revision = await tx.bucksDareV2Revision.findUniqueOrThrow({

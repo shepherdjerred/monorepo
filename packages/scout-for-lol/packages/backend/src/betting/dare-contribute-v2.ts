@@ -5,6 +5,7 @@ import {
   type BucksDareV2State,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import { stakeDareV2ContributionInTransaction } from "#src/betting/dare-ledger-v2.ts";
 import type { Db } from "#src/database/index.ts";
 
@@ -34,7 +35,11 @@ export async function contributeToDareV2InTransaction(
       potTotal: { lte: BUCKS_INT32_MAX - input.amount },
       targets: { none: { discordId: input.actorDiscordId } },
     },
-    data: { potTotal: { increment: input.amount }, updatedAt: input.now },
+    data: {
+      potTotal: { increment: input.amount },
+      updatedAt: input.now,
+      ...pendingDareV2CalloutRefresh(),
+    },
     select: {
       id: true,
       serverId: true,

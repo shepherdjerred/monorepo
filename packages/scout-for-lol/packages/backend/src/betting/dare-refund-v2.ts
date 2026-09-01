@@ -1,4 +1,5 @@
 import type { DiscordAccountId } from "@scout-for-lol/data";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
   refundDareV2ContributionsInTransaction,
@@ -50,7 +51,11 @@ export async function declineDareV2InTransaction(
         },
       },
     },
-    data: { dareState: "declined", settledAt: input.now },
+    data: {
+      dareState: "declined",
+      settledAt: input.now,
+      ...pendingDareV2CalloutRefresh(),
+    },
   });
   if (claim.count !== 1) {
     return {
@@ -97,7 +102,11 @@ export async function cancelDareV2InTransaction(
       dareState: "pending_accept",
       fundedRevision: input.revision,
     },
-    data: { dareState: "cancelled", settledAt: input.now },
+    data: {
+      dareState: "cancelled",
+      settledAt: input.now,
+      ...pendingDareV2CalloutRefresh(),
+    },
   });
   if (claim.count !== 1) {
     return {

@@ -7,6 +7,7 @@ import {
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { DARE_ACCEPT_WINDOW_MS } from "#src/betting/constants.ts";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
   refundDareV2ContributionsInTransaction,
@@ -66,6 +67,7 @@ export async function fundDareV2InTransaction(
       potTotal: revision.openingStake,
       proposalExpiresAt: input.now,
       acceptDeadline,
+      ...pendingDareV2CalloutRefresh(),
     },
     select: { id: true, serverId: true },
   });
@@ -123,7 +125,10 @@ export async function acceptDareV2InTransaction(
       fundedRevision: input.revision,
       acceptDeadline: { gt: input.now },
     },
-    data: { updatedAt: input.now },
+    data: {
+      updatedAt: input.now,
+      ...pendingDareV2CalloutRefresh(),
+    },
   });
   if (claim.count !== 1) {
     const state = await currentDareV2State(tx, input.dareId);
@@ -174,7 +179,11 @@ export async function acceptDareV2InTransaction(
   if (deadlineAt <= input.now) {
     const expired = await tx.bucksDareV2.updateMany({
       where: { id: input.dareId, dareState: "pending_accept" },
-      data: { dareState: "expired", settledAt: input.now },
+      data: {
+        dareState: "expired",
+        settledAt: input.now,
+        ...pendingDareV2CalloutRefresh(),
+      },
     });
     if (expired.count !== 1) {
       return {

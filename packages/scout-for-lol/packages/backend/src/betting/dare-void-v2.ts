@@ -1,4 +1,5 @@
 import type { Prisma } from "#generated/prisma/client/index.js";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
   refundDareV2ContributionsInTransaction,
@@ -23,6 +24,7 @@ export async function voidDareV2WithFullRefund(
         settledAt: now,
         finalValue: null,
         voidReason: reason,
+        ...pendingDareV2CalloutRefresh(),
       },
     });
     if (claim.count !== 1) return false;

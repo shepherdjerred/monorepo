@@ -1,7 +1,7 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { settleEndedDareWindows } from "#src/betting/dare-sweep.ts";
 import { settleEndedDareV2Windows } from "#src/betting/dare-sweep-v2.ts";
-import { refreshDareV2Callouts } from "#src/betting/dare-callout-v2.ts";
+import { refreshPendingDareV2Callouts } from "#src/betting/dare-callout-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dare-settle-types-v2.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
 import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
@@ -117,15 +117,11 @@ export async function runPostMatchMaintenance(): Promise<{
       name: "dare v2 deadline settle",
       run: async () => {
         try {
-          const summaries = await settleEndedDareV2Windows();
-          await refreshDareV2Callouts(
-            summaries.map((summary) => summary.dareId),
-          );
+          await settleEndedDareV2Windows();
+          await refreshPendingDareV2Callouts();
         } catch (error) {
           if (error instanceof DareV2PartialSettlementError) {
-            await refreshDareV2Callouts(
-              error.summaries.map((summary) => summary.dareId),
-            );
+            await refreshPendingDareV2Callouts();
           }
           throw error;
         }

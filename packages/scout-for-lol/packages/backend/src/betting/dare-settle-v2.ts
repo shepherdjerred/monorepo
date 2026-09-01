@@ -8,6 +8,7 @@ import {
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
+import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import type { DareTimelineEvidenceV2 } from "#src/betting/dare-evaluator-v2.ts";
 import { dareEvaluatorImplementationV2 } from "#src/betting/dare-evaluator-registry-v2.ts";
 import type { DareMatchEvidenceV2 } from "#src/betting/dare-evidence-v2.ts";
@@ -160,7 +161,10 @@ async function captureOneDareV2(
 ): Promise<DareV2SettlementSummary | undefined> {
   const claim = await tx.bucksDareV2.updateMany({
     where: { id: input.dare.id, dareState: "active" },
-    data: { updatedAt: input.now },
+    data: {
+      updatedAt: input.now,
+      ...pendingDareV2CalloutRefresh(),
+    },
   });
   if (claim.count !== 1) return undefined;
   const captured = await tx.bucksDareV2Evidence.createMany({
@@ -449,7 +453,7 @@ export async function settleActiveDareV2AtBound(
   return await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksDareV2.updateMany({
       where: { id: dare.id, dareState: "active" },
-      data: { updatedAt: now },
+      data: { updatedAt: now, ...pendingDareV2CalloutRefresh() },
     });
     if (claim.count !== 1) return;
     const rows = await tx.bucksDareV2Evidence.findMany({

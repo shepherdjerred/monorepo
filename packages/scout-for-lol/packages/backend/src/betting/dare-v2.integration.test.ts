@@ -21,6 +21,7 @@ import {
 import {
   postDareV2Callout,
   refreshDareV2Callout,
+  refreshPendingDareV2Callouts,
 } from "#src/betting/dare-callout-v2.ts";
 import { settleDaresV2ForMatch } from "#src/betting/dare-settle-v2.ts";
 import { settleEndedDareV2Windows } from "#src/betting/dare-sweep-v2.ts";
@@ -542,6 +543,7 @@ describe("Dare v2 partial settlement", () => {
       where: { id: secondDareId },
     });
     expect(firstDare.dareState).toBe("achieved");
+    expect(firstDare.calloutRefreshPending).toBe(true);
     expect(secondDare.dareState).toBe("active");
     await expect(settleDaresV2ForMatch(match, db)).resolves.toMatchObject([
       { dareId: secondDareId, resolution: "achieved", value: true },
@@ -636,9 +638,10 @@ describe("Dare v2 callout delivery", () => {
     });
     expect(dare.calloutClaimId).toBeNull();
     expect(dare.calloutClaimedAt).toBeNull();
+    expect(dare.calloutRefreshPending).toBe(false);
   });
 
-  test("propagates a failed callout edit for retry", async () => {
+  test("persists a failed callout edit for a later retry", async () => {
     const dareId = await makeDraft();
     const fundIntent = await intent({
       dareId,
@@ -657,11 +660,82 @@ describe("Dare v2 callout delivery", () => {
       ),
     };
     await postDareV2Callout(dareId, dependencies);
+    const acceptIntent = await intent({
+      dareId,
+      actor: TARGET,
+      action: "accept",
+      key: "accept-before-callout-edit",
+    });
+    await consume(acceptIntent, TARGET);
 
     await expect(refreshDareV2Callout(dareId, dependencies)).rejects.toThrow(
       "Discord edit failed",
     );
     expect(dependencies.editMessage).toHaveBeenCalledTimes(1);
+    expect(
+      await db.bucksDareV2.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { calloutRefreshPending: true },
+      }),
+    ).toEqual({ calloutRefreshPending: true });
+
+    const retryEditor = vi.fn(() => Promise.resolve());
+    await expect(
+      refreshPendingDareV2Callouts({
+        ...dependencies,
+        editMessage: retryEditor,
+      }),
+    ).resolves.toEqual([dareId]);
+    expect(retryEditor).toHaveBeenCalledTimes(1);
+    expect(
+      await db.bucksDareV2.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { calloutRefreshPending: true },
+      }),
+    ).toEqual({ calloutRefreshPending: false });
+  });
+
+  test("does not clear refresh work created during a callout edit", async () => {
+    const dareId = await makeDraft();
+    const fundIntent = await intent({
+      dareId,
+      actor: CHALLENGER,
+      action: "fund",
+      key: "fund-concurrent-callout-edit",
+    });
+    await consume(fundIntent, CHALLENGER);
+    const dependencies = {
+      prismaClient: db,
+      sendMessage: vi.fn(() =>
+        Promise.resolve({ channelId: CHANNEL, id: "concurrent-edit-message" }),
+      ),
+      editMessage: vi.fn(async () => {
+        await db.bucksDareV2.update({
+          where: { id: dareId },
+          data: {
+            calloutRefreshPending: true,
+            calloutRefreshVersion: { increment: 1 },
+          },
+        });
+      }),
+    };
+    await postDareV2Callout(dareId, dependencies);
+    await db.bucksDareV2.update({
+      where: { id: dareId },
+      data: {
+        calloutRefreshPending: true,
+        calloutRefreshVersion: { increment: 1 },
+      },
+    });
+
+    await refreshDareV2Callout(dareId, dependencies);
+
+    expect(
+      await db.bucksDareV2.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { calloutRefreshPending: true },
+      }),
+    ).toEqual({ calloutRefreshPending: true });
   });
 
   test("propagates a failed initial callout send for retry", async () => {

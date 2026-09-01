@@ -60,6 +60,7 @@ export type DareV2CalloutState = {
   serverId: string;
   channelId: string;
   messageRef: string | null;
+  calloutRefreshVersion: number;
   state: BucksDareV2State;
   revision: number;
   challengerDiscordId: string;
@@ -95,6 +96,7 @@ export async function loadDareV2CalloutState(
     serverId: dare.serverId,
     channelId: dare.channelId,
     messageRef: dare.messageRef,
+    calloutRefreshVersion: dare.calloutRefreshVersion,
     state,
     revision: revisionNumber,
     challengerDiscordId: dare.challengerDiscordId,
@@ -118,22 +120,31 @@ export async function loadDareV2CalloutState(
 }
 
 export async function persistDareV2MessageRef(
-  dareId: number,
-  claimId: string,
-  ref: { channelId: string; messageId: string },
+  input: {
+    dareId: number;
+    claimId: string;
+    calloutRefreshVersion: number;
+    ref: { channelId: string; messageId: string };
+  },
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<void> {
   const persisted = await prismaClient.bucksDareV2.updateMany({
-    where: { id: dareId, calloutClaimId: claimId, messageRef: null },
+    where: {
+      id: input.dareId,
+      calloutClaimId: input.claimId,
+      calloutRefreshVersion: input.calloutRefreshVersion,
+      messageRef: null,
+    },
     data: {
-      messageRef: JSON.stringify(ref),
+      messageRef: JSON.stringify(input.ref),
       calloutClaimId: null,
       calloutClaimedAt: null,
+      calloutRefreshPending: false,
     },
   });
   if (persisted.count !== 1) {
     throw new Error(
-      `Dare v2 ${dareId.toString()} lost its callout delivery claim.`,
+      `Dare v2 ${input.dareId.toString()} lost its callout delivery claim.`,
     );
   }
 }
@@ -225,9 +236,12 @@ export async function postDareV2Callout(
             ),
         );
         await persistDareV2MessageRef(
-          dareId,
-          claimId,
-          { channelId: message.channelId, messageId: message.id },
+          {
+            dareId,
+            claimId,
+            calloutRefreshVersion: state.calloutRefreshVersion,
+            ref: { channelId: message.channelId, messageId: message.id },
+          },
           dependencies.prismaClient,
         );
         return { kind: "posted", channelId: message.channelId, id: message.id };
@@ -277,6 +291,14 @@ export async function refreshDareV2Callout(
           });
         },
       );
+      await dependencies.prismaClient.bucksDareV2.updateMany({
+        where: {
+          id: state.id,
+          calloutRefreshPending: true,
+          calloutRefreshVersion: state.calloutRefreshVersion,
+        },
+        data: { calloutRefreshPending: false },
+      });
     } catch (error) {
       logger.error(
         `Could not refresh Dare v2 ${dareId.toString()} callout:`,
@@ -299,6 +321,19 @@ export async function refreshDareV2Callouts(
       await refreshDareV2Callout(dareId, dependencies);
     }),
   );
+}
+
+export async function refreshPendingDareV2Callouts(
+  dependencies: DareV2CalloutDependencies = defaultDareV2CalloutDependencies,
+): Promise<number[]> {
+  const pending = await dependencies.prismaClient.bucksDareV2.findMany({
+    where: { calloutRefreshPending: true, messageRef: { not: null } },
+    orderBy: { id: "asc" },
+    select: { id: true },
+  });
+  const dareIds = pending.map((dare) => dare.id);
+  await refreshDareV2Callouts(dareIds, dependencies);
+  return dareIds;
 }
 
 export async function ensureDareV2Callout(

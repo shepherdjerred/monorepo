@@ -1470,30 +1470,32 @@ model BucksDareGame {
 // freezes one revision into contractJson. V1 rows remain in BucksDare and are
 // never migrated or reinterpreted by this model.
 model BucksDareV2 {
-  id                   Int       @id @default(autoincrement())
-  serverId             String
-  channelId            String
-  challengerDiscordId  String
-  originConversationId String?
-  dareState            String    @default("draft")
-  currentRevision      Int       @default(1)
-  fundedRevision       Int?
-  contractJson         String?
-  openingStake         Int
-  potTotal             Int       @default(0)
-  proposalExpiresAt    DateTime?
-  acceptDeadline       DateTime?
-  activatedAt          DateTime?
-  deadlineAt           DateTime?
-  settledAt            DateTime?
-  finalValue           Boolean?
-  proofJson            String?
-  voidReason           String?
-  messageRef           String?
-  calloutClaimId       String?
-  calloutClaimedAt     DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  id                    Int       @id @default(autoincrement())
+  serverId              String
+  channelId             String
+  challengerDiscordId   String
+  originConversationId  String?
+  dareState             String    @default("draft")
+  currentRevision       Int       @default(1)
+  fundedRevision        Int?
+  contractJson          String?
+  openingStake          Int
+  potTotal              Int       @default(0)
+  proposalExpiresAt     DateTime?
+  acceptDeadline        DateTime?
+  activatedAt           DateTime?
+  deadlineAt            DateTime?
+  settledAt             DateTime?
+  finalValue            Boolean?
+  proofJson             String?
+  voidReason            String?
+  messageRef            String?
+  calloutClaimId        String?
+  calloutClaimedAt      DateTime?
+  calloutRefreshPending Boolean   @default(false)
+  calloutRefreshVersion Int       @default(0)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   revisions     BucksDareV2Revision[]
   targets       BucksDareV2Target[]
@@ -1505,6 +1507,7 @@ model BucksDareV2 {
   @@index([serverId, dareState, updatedAt])
   @@index([dareState, acceptDeadline])
   @@index([dareState, deadlineAt])
+  @@index([calloutRefreshPending, updatedAt])
 }
 
 // Immutable history of draft iterations. Replacing a draft appends a revision;
