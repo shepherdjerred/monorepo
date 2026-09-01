@@ -59,6 +59,17 @@ export function parseDareV2Contract(raw: string): DareContractV2 {
   return DareContractV2Schema.parse(JSON.parse(raw));
 }
 
+export function readableDareV2Contract(
+  raw: string | null,
+): DareContractV2 | null {
+  if (raw === null) return null;
+  try {
+    return DareContractV2Schema.safeParse(JSON.parse(raw)).data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function currentDareV2State(
   reader: {
     bucksDareV2: {

@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
   DareCompiledPlanV2Schema,
-  DareContractV2Schema,
   resolveQueueTypeFromGame,
   type DareContractV2,
   type RawMatch,
@@ -34,7 +33,10 @@ import {
   darePlanNeedsTimeline,
   loadDareTimelineEvidenceV2,
 } from "#src/betting/dare-timeline-evidence-v2.ts";
-import { parseDareV2Contract } from "#src/betting/dare-v2-common.ts";
+import {
+  parseDareV2Contract,
+  readableDareV2Contract,
+} from "#src/betting/dare-v2-common.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
 import {
   prisma,
@@ -235,15 +237,6 @@ function matchTouchesContract(
   );
 }
 
-function readableContract(raw: string | null): DareContractV2 | null {
-  if (raw === null) return null;
-  try {
-    return DareContractV2Schema.safeParse(JSON.parse(raw)).data ?? null;
-  } catch {
-    return null;
-  }
-}
-
 async function inspectStoredContract(
   row: ActiveDareV2Row,
   prismaClient: ExtendedPrismaClient,
@@ -252,7 +245,7 @@ async function inspectStoredContract(
   | { kind: "valid"; contract: DareContractV2 }
   | { kind: "invalid"; summary: DareV2SettlementSummary | null }
 > {
-  const contract = readableContract(row.contractJson);
+  const contract = readableDareV2Contract(row.contractJson);
   if (contract !== null) return { kind: "valid", contract };
   const voided = await voidDareV2WithFullRefund(
     row,
@@ -431,7 +424,7 @@ export async function dareV2MatchNeedsTimeline(
     orderBy: { id: "asc" },
   });
   return rows.some((row) => {
-    const contract = readableContract(row.contractJson);
+    const contract = readableDareV2Contract(row.contractJson);
     return (
       contract !== null &&
       matchTouchesContract(matchData, contract) &&
