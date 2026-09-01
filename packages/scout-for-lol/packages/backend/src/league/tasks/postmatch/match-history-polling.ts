@@ -1,11 +1,4 @@
-import type {
-  RawMatch,
-  PlayerConfigEntry,
-  LeaguePuuid,
-  MatchId,
-  DiscordChannelId,
-  DiscordGuildId,
-} from "@scout-for-lol/data/index.ts";
+import type { PlayerConfigEntry, MatchId } from "@scout-for-lol/data/index.ts";
 import {
   getRecentMatchIds,
   filterNewMatches,
@@ -13,27 +6,17 @@ import {
 import {
   getAccountsWithState,
   updateLastProcessedMatch,
-  getChannelsSubscribedToPlayers,
   getLastProcessedMatch,
   updateLastCheckedAt,
   prisma,
 } from "#src/database/index.ts";
-import {
-  MatchIdSchema,
-  DiscordGuildIdSchema,
-  resolveQueueTypeFromGame,
-} from "@scout-for-lol/data/index.ts";
-import {
-  channelsPassingQueueFilter,
-  deliverToChannels,
-} from "#src/league/tasks/notification-filters.ts";
+import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import {
   shouldCheckPlayer,
   calculatePollingInterval,
 } from "#src/utils/polling-intervals.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
-import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
   processMatchForPlayer,
   type PlayerWithMatchIds,
@@ -43,18 +26,13 @@ import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
-import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
-import { uniqueBy } from "remeda";
+import type { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
+import { settleBucksWithDareTimelineV2 } from "#src/betting/dare-postmatch-timeline-v2.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 import { recoverMissedMatches } from "#src/league/tasks/postmatch/gap-recovery.ts";
-import {
-  getPostmatchMessageIdsForMatchIdOrEmpty,
-  getPrematchMessageIdsForMatchIdOrEmpty,
-  recordPostmatchMessageIds,
-} from "#src/league/tasks/prematch/active-game-queries.ts";
-import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
+import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 import {
   deduplicateMatchIntents,
@@ -67,14 +45,12 @@ import {
   recordScoutEffectFailure,
 } from "#src/temporal/effect-claims.ts";
 import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
+import { deliverPostmatchReport } from "#src/league/tasks/postmatch/match-report-delivery.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
 let isPollingInProgress = false;
 let pollingStartTime: number | undefined;
-
-// Suppress stale Discord notifications and AI reviews after recovery.
-const MAX_DISCORD_ALERT_AGE_MS = 3 * 60 * 60 * 1000;
 
 export const isMatchHistoryPollingInProgress = (): boolean =>
   isPollingInProgress;
@@ -129,78 +105,6 @@ function shouldSkipPollingRun(): boolean {
   );
   matchHistoryPollingSkipsTotal.inc({ reason: "concurrent_run" });
   return true;
-}
-
-/**
- * Process a completed match and send Discord notifications
- */
-async function processMatch(
-  matchData: RawMatch,
-  trackedPlayers: PlayerConfigEntry[],
-): Promise<Map<DiscordChannelId, string>> {
-  const matchId = MatchIdSchema.parse(matchData.metadata.matchId);
-
-  const playersInMatch = trackedPlayers.filter((player) =>
-    matchData.metadata.participants.includes(player.league.leagueAccount.puuid),
-  );
-
-  const puuids: LeaguePuuid[] = playersInMatch.map(
-    (p) => p.league.leagueAccount.puuid,
-  );
-  const channels = await getChannelsSubscribedToPlayers(puuids);
-
-  // Resolve queue + apply per-subscription filters; deliver only to channels
-  // with at least one passing in-match subscription (covers "no subscribers"
-  // too, since that yields no delivery channels).
-  const queueType = resolveQueueTypeFromGame(
-    matchData.info.queueId,
-    matchData.info.gameMode,
-    matchData.info.gameType,
-  );
-  const deliverChannels = channelsPassingQueueFilter(channels, queueType);
-  if (deliverChannels.length === 0) {
-    logger.info(
-      `[processMatch] 🔕 No delivery channels for match ${matchId} (queue ${queueType ?? "unknown"}, ${channels.length.toString()} subscribed)`,
-    );
-    return new Map();
-  }
-
-  const targetGuildIds: DiscordGuildId[] = uniqueBy(
-    deliverChannels.map((c) => DiscordGuildIdSchema.parse(c.serverId)),
-    (id) => id,
-  );
-
-  const matchAgeMs = Date.now() - matchData.info.gameCreation;
-  if (matchAgeMs > MAX_DISCORD_ALERT_AGE_MS) {
-    const ageHours = (matchAgeMs / (60 * 60 * 1000)).toFixed(1);
-    logger.info(
-      `[processMatch] ⏰ Skipping match ${matchId} — ${ageHours}h old (cutoff ${(MAX_DISCORD_ALERT_AGE_MS / (60 * 60 * 1000)).toString()}h)`,
-    );
-    return new Map();
-  }
-
-  const message = await generateMatchReport(matchData, trackedPlayers, {
-    targetGuildIds,
-  });
-
-  if (!message) {
-    logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
-    return new Map();
-  }
-
-  const delivery = await deliverToChannels({
-    message,
-    channels: deliverChannels,
-    logPrefix: "[processMatch]",
-    sentryTags: { matchId },
-    replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
-    effectKeyPrefix: `postmatch-discord:${matchId}`,
-  });
-  await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
-  // Durable so a settlement announced by a later process can still reply to
-  // the report. Best-effort by design: the report is already delivered.
-  await recordPostmatchMessageIds(matchId, delivery.messageIdsByChannel);
-  return delivery.messageIdsByChannel;
 }
 
 /**
@@ -264,7 +168,11 @@ export async function processMatchAndUpdatePlayers(
 
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
   // when the ordinary match report is suppressed. See settleAndAwardBucks.
-  const bucks = await settleAndAwardBucks(matchData);
+  const { bucks, prefetchedTimeline } = await settleBucksWithDareTimelineV2({
+    matchData,
+    trackedPlayers: allTrackedPlayers,
+    prismaClient: prisma,
+  });
   let postmatchMessageIds: ReadonlyMap<string, string> = new Map();
 
   if (!silent) {
@@ -274,7 +182,11 @@ export async function processMatchAndUpdatePlayers(
     // succeeded, and these failures are deterministic — retrying every poll
     // would re-run the whole AI pipeline and burn tokens for nothing.
     try {
-      postmatchMessageIds = await processMatch(matchData, allTrackedPlayers);
+      postmatchMessageIds = await deliverPostmatchReport({
+        matchData,
+        trackedPlayers: allTrackedPlayers,
+        ...(prefetchedTimeline === undefined ? {} : { prefetchedTimeline }),
+      });
     } catch (error) {
       logger.error(
         `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance (durable S3 copy already saved)`,

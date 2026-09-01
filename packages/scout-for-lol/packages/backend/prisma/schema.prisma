@@ -830,12 +830,13 @@ model BucksAccount {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  ledgerEntries     BucksLedgerEntry[]
-  bets              BucksBet[]
-  parlayBets        BucksParlayBet[]
-  weeklyParlayBets  BucksWeeklyParlayBet[]
-  openPositions     BucksOpenPosition[]
-  dareContributions BucksDareContribution[]
+  ledgerEntries       BucksLedgerEntry[]
+  bets                BucksBet[]
+  parlayBets          BucksParlayBet[]
+  weeklyParlayBets    BucksWeeklyParlayBet[]
+  openPositions       BucksOpenPosition[]
+  dareContributions   BucksDareContribution[]
+  dareV2Contributions BucksDareV2Contribution[]
 
   @@unique([serverId, discordId])
   @@index([serverId, balance])
@@ -1080,7 +1081,6 @@ model BucksMatchPool {
   // no_counterparty and house_unavailable values.
   // Non-null iff poolState == "voided".
   voidReason String?
-
 
   settledAt DateTime?
 
@@ -1464,6 +1464,147 @@ model BucksDareGame {
   createdAt DateTime @default(now())
 
   @@unique([dareId, matchId])
+}
+
+// ScoutQL-backed Dare v2. Draft revisions are private and unfunded; funding
+// freezes one revision into contractJson. V1 rows remain in BucksDare and are
+// never migrated or reinterpreted by this model.
+model BucksDareV2 {
+  id                   Int       @id @default(autoincrement())
+  serverId             String
+  channelId            String
+  challengerDiscordId  String
+  originConversationId String?
+  dareState            String    @default("draft")
+  currentRevision      Int       @default(1)
+  fundedRevision       Int?
+  contractJson         String?
+  openingStake         Int
+  potTotal             Int       @default(0)
+  proposalExpiresAt    DateTime?
+  acceptDeadline       DateTime?
+  activatedAt          DateTime?
+  deadlineAt           DateTime?
+  settledAt            DateTime?
+  finalValue           Boolean?
+  proofJson            String?
+  voidReason           String?
+  messageRef           String?
+  calloutClaimId       String?
+  calloutClaimedAt     DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  revisions     BucksDareV2Revision[]
+  targets       BucksDareV2Target[]
+  contributions BucksDareV2Contribution[]
+  evidence      BucksDareV2Evidence[]
+  intents       BucksDareV2ConfirmationIntent[]
+
+  @@index([challengerDiscordId, dareState, updatedAt])
+  @@index([serverId, dareState, updatedAt])
+  @@index([dareState, acceptDeadline])
+  @@index([dareState, deadlineAt])
+}
+
+// Immutable history of draft iterations. Replacing a draft appends a revision;
+// it never mutates the ScoutQL/plan the challenger previously reviewed.
+model BucksDareV2Revision {
+  id                Int         @id @default(autoincrement())
+  dareId            Int
+  dare              BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision          Int
+  originalText      String
+  canonicalScoutQl  String
+  compiledPlan      String
+  compilerVersion   String
+  evaluatorVersion  String
+  targetsJson       String
+  deadlineSpecJson  String
+  openingStake      Int
+  plainLanguage     String
+  semanticProofPlan String
+  translationJson   String?
+  createdAt         DateTime    @default(now())
+
+  @@unique([dareId, revision])
+}
+
+model BucksDareV2Target {
+  id             Int         @id @default(autoincrement())
+  dareId         Int
+  dare           BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  targetKey      String
+  discordId      String
+  playerId       Int
+  alias          String
+  accounts       String
+  bucksAccountId Int?
+  acceptedAt     DateTime?
+  declinedAt     DateTime?
+  payout         Int?
+  fee            Int?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([dareId, targetKey])
+  @@unique([dareId, discordId])
+}
+
+model BucksDareV2Contribution {
+  id             Int          @id @default(autoincrement())
+  dareId         Int
+  dare           BucksDareV2  @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  bucksAccountId Int
+  bucksAccount   BucksAccount @relation(fields: [bucksAccountId], references: [id], onDelete: Cascade)
+  discordId      String
+  amount         Int
+  createdAt      DateTime     @default(now())
+
+  @@index([dareId])
+  @@index([bucksAccountId])
+}
+
+// Immutable one-row-per-match evidence. The plan is re-evaluated from these
+// rows transactionally; ingestion order cannot change the chronological proof.
+model BucksDareV2Evidence {
+  id                  Int         @id @default(autoincrement())
+  dareId              Int
+  dare                BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  matchId             String
+  gameStartAt         DateTime
+  gameEndAt           DateTime
+  queueType           String
+  candidateMembership String
+  sourceReferences    String
+  evaluationOutput    String
+  coverageState       String
+  targetDependencies  String
+  evaluationTrace     String
+  planVersion         String
+  createdAt           DateTime    @default(now())
+
+  @@unique([dareId, matchId])
+  @@index([dareId, gameEndAt, matchId])
+}
+
+// Binding or financial actions are prepared as revision-bound, single-use
+// intents. The button/control consumes the intent idempotently after approval.
+model BucksDareV2ConfirmationIntent {
+  id             String      @id @default(uuid())
+  dareId         Int
+  dare           BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision       Int
+  actorDiscordId String
+  action         String
+  actionPayload  String
+  idempotencyKey String      @unique
+  expiresAt      DateTime
+  consumedAt     DateTime?
+  resultJson     String?
+  createdAt      DateTime    @default(now())
+
+  @@index([dareId, expiresAt])
 }
 
 // Durable marker for Bucks EARNINGS on a (match, guild).

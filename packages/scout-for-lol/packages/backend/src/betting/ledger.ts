@@ -2,6 +2,7 @@ import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,
   OPEN_BUCKS_DARE_STATES,
+  OPEN_BUCKS_DARE_V2_STATES,
   type BucksLedgerContext,
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
@@ -130,6 +131,7 @@ export async function refundableBucksHeldForAccounts(
     humanWeeklyRows,
     houseWeeklyRows,
     humanDareRows,
+    humanDareV2Rows,
   ] = await Promise.all([
     tx.bucksBet.findMany({
       where: {
@@ -184,6 +186,14 @@ export async function refundableBucksHeldForAccounts(
       },
       _sum: { amount: true },
     }),
+    tx.bucksDareV2Contribution.groupBy({
+      by: ["bucksAccountId"],
+      where: {
+        bucksAccountId: { in: humanAccountIds },
+        dare: { dareState: { in: [...OPEN_BUCKS_DARE_V2_STATES] } },
+      },
+      _sum: { amount: true },
+    }),
   ]);
 
   const outcomeByAccount = new Map<number, bigint>();
@@ -202,6 +212,9 @@ export async function refundableBucksHeldForAccounts(
   );
   const dareByAccount = new Map(
     humanDareRows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
+  );
+  const dareV2ByAccount = new Map(
+    humanDareV2Rows.map((row) => [row.bucksAccountId, row._sum.amount ?? 0]),
   );
   const reserveByServer = new Map<string, bigint>();
   for (const row of houseParlayRows) {
@@ -227,7 +240,8 @@ export async function refundableBucksHeldForAccounts(
           ? (reserveByServer.get(account.serverId) ?? 0n)
           : BigInt(parlayByAccount.get(account.id) ?? 0) +
             BigInt(weeklyByAccount.get(account.id) ?? 0) +
-            BigInt(dareByAccount.get(account.id) ?? 0)),
+            BigInt(dareByAccount.get(account.id) ?? 0) +
+            BigInt(dareV2ByAccount.get(account.id) ?? 0)),
     ]),
   );
 }
@@ -277,7 +291,7 @@ export async function refundableBucksHeld(
       BigInt(weekly._sum.houseReserve ?? 0)
     );
   }
-  const [parlay, weekly, dare] = await Promise.all([
+  const [parlay, weekly, dare, dareV2] = await Promise.all([
     tx.bucksParlayBet.aggregate({
       where: { bucksAccountId, betOutcome: "pending" },
       _sum: { stake: true },
@@ -296,12 +310,20 @@ export async function refundableBucksHeld(
       },
       _sum: { amount: true },
     }),
+    tx.bucksDareV2Contribution.aggregate({
+      where: {
+        bucksAccountId,
+        dare: { dareState: { in: [...OPEN_BUCKS_DARE_V2_STATES] } },
+      },
+      _sum: { amount: true },
+    }),
   ]);
   return (
     outcomeHeld +
     BigInt(parlay._sum.stake ?? 0) +
     BigInt(weekly._sum.stake ?? 0) +
-    BigInt(dare._sum.amount ?? 0)
+    BigInt(dare._sum.amount ?? 0) +
+    BigInt(dareV2._sum.amount ?? 0)
   );
 }
 

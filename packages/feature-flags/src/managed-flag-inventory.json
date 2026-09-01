@@ -159,10 +159,62 @@
       "thresholdRollouts": []
     },
     {
+      "key": "dare_v2",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable funding ScoutQL-backed Bryan Bucks Dare v2 contracts.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "bucks_transfers_enabled",
       "owner": "scout",
       "source": "scout-policy",
       "purpose": "Enable fee-bearing Bryan Bucks wallet transfers.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "scoutql_relational_enabled",
+      "owner": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable relational and timeline ScoutQL sources.",
       "type": "boolean",
       "default": false,
       "rollouts": [

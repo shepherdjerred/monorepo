@@ -1,0 +1,194 @@
+import {
+  DARE_CONTRACT_VERSION,
+  DareCompiledPlanV2Schema,
+  DareContractV2Schema,
+  DiscordAccountIdSchema,
+  PlayerIdSchema,
+  type DiscordAccountId,
+} from "@scout-for-lol/data";
+import { DARE_ACCEPT_WINDOW_MS } from "#src/betting/constants.ts";
+import { stakeDareV2ContributionInTransaction } from "#src/betting/dare-ledger-v2.ts";
+import {
+  bindDareV2Deadline,
+  currentDareV2State,
+  parseDareV2Deadline,
+  parseDareV2Targets,
+} from "#src/betting/dare-v2-common.ts";
+import type { Db } from "#src/database/index.ts";
+
+export async function fundDareV2InTransaction(
+  tx: Db,
+  input: {
+    dareId: number;
+    revision: number;
+    actorDiscordId: DiscordAccountId;
+    bucksAccountId: number;
+    now: Date;
+  },
+) {
+  const revision = await tx.bucksDareV2Revision.findUnique({
+    where: {
+      dareId_revision: { dareId: input.dareId, revision: input.revision },
+    },
+  });
+  if (revision === null) return { kind: "stale_revision" } as const;
+  const targets = parseDareV2Targets(revision.targetsJson);
+  const acceptDeadline = new Date(input.now.getTime() + DARE_ACCEPT_WINDOW_MS);
+  const claimed = await tx.bucksDareV2.updateManyAndReturn({
+    where: {
+      id: input.dareId,
+      challengerDiscordId: input.actorDiscordId,
+      dareState: "draft",
+      currentRevision: input.revision,
+    },
+    data: {
+      dareState: "pending_accept",
+      fundedRevision: input.revision,
+      openingStake: revision.openingStake,
+      potTotal: revision.openingStake,
+      proposalExpiresAt: input.now,
+      acceptDeadline,
+    },
+    select: { id: true, serverId: true },
+  });
+  const dare = claimed[0];
+  if (dare === undefined || claimed.length !== 1) {
+    const state = await currentDareV2State(tx, input.dareId);
+    return { kind: "not_fundable", dareState: state } as const;
+  }
+  await tx.bucksDareV2Target.createMany({
+    data: targets.map((target) => ({
+      dareId: dare.id,
+      targetKey: target.key,
+      discordId: DiscordAccountIdSchema.parse(target.discordId),
+      playerId: PlayerIdSchema.parse(target.playerId),
+      alias: target.alias,
+      accounts: JSON.stringify(target.accounts),
+    })),
+  });
+  const balance = await stakeDareV2ContributionInTransaction(tx, {
+    facts: {
+      dareId: dare.id,
+      serverId: dare.serverId,
+      potTotal: revision.openingStake,
+      targetAliases: targets.map((target) => target.alias),
+      conditionSummary: revision.plainLanguage,
+    },
+    bucksAccountId: input.bucksAccountId,
+    discordId: input.actorDiscordId,
+    amount: revision.openingStake,
+  });
+  return {
+    kind: "funded",
+    dareId: dare.id,
+    revision: input.revision,
+    potTotal: revision.openingStake,
+    balanceAfter: balance,
+    acceptDeadline,
+  } as const;
+}
+
+export async function acceptDareV2InTransaction(
+  tx: Db,
+  input: {
+    dareId: number;
+    revision: number;
+    actorDiscordId: DiscordAccountId;
+    bucksAccountId: number;
+    now: Date;
+  },
+) {
+  const claim = await tx.bucksDareV2.updateMany({
+    where: {
+      id: input.dareId,
+      dareState: "pending_accept",
+      fundedRevision: input.revision,
+      acceptDeadline: { gt: input.now },
+    },
+    data: { updatedAt: input.now },
+  });
+  if (claim.count !== 1) {
+    const state = await currentDareV2State(tx, input.dareId);
+    return {
+      kind:
+        state === "pending_accept" ? "accept_window_expired" : "not_accepting",
+      dareState: state,
+    } as const;
+  }
+  const stamped = await tx.bucksDareV2Target.updateMany({
+    where: {
+      dareId: input.dareId,
+      discordId: input.actorDiscordId,
+      acceptedAt: null,
+      declinedAt: null,
+    },
+    data: { acceptedAt: input.now, bucksAccountId: input.bucksAccountId },
+  });
+  if (stamped.count !== 1) return { kind: "already_answered" } as const;
+  const unaccepted = await tx.bucksDareV2Target.count({
+    where: { dareId: input.dareId, acceptedAt: null },
+  });
+  const targetCount = await tx.bucksDareV2Target.count({
+    where: { dareId: input.dareId },
+  });
+  if (unaccepted > 0) {
+    return {
+      kind: "accepted",
+      activated: false,
+      acceptedCount: targetCount - unaccepted,
+      targetCount,
+    } as const;
+  }
+  const [dare, revision] = await Promise.all([
+    tx.bucksDareV2.findUniqueOrThrow({ where: { id: input.dareId } }),
+    tx.bucksDareV2Revision.findUniqueOrThrow({
+      where: {
+        dareId_revision: { dareId: input.dareId, revision: input.revision },
+      },
+    }),
+  ]);
+  const plan = DareCompiledPlanV2Schema.parse(
+    JSON.parse(revision.compiledPlan),
+  );
+  const targets = parseDareV2Targets(revision.targetsJson);
+  const deadlineSpec = parseDareV2Deadline(revision.deadlineSpecJson);
+  const deadlineAt = bindDareV2Deadline(deadlineSpec, input.now);
+  const contract = DareContractV2Schema.parse({
+    version: DARE_CONTRACT_VERSION,
+    canonicalScoutQl: revision.canonicalScoutQl,
+    compiledPlan: plan,
+    compilerVersion: revision.compilerVersion,
+    evaluatorVersion: revision.evaluatorVersion,
+    targets,
+    openingStake: revision.openingStake,
+    serverId: dare.serverId,
+    channelId: dare.channelId,
+    revision: input.revision,
+    activationAt: input.now.toISOString(),
+    deadlineAt: deadlineAt.toISOString(),
+    deadlineSpec,
+    plainLanguage: revision.plainLanguage,
+    semanticProofPlan: revision.semanticProofPlan,
+  });
+  const activated = await tx.bucksDareV2.updateMany({
+    where: { id: input.dareId, dareState: "pending_accept" },
+    data: {
+      dareState: "active",
+      activatedAt: input.now,
+      deadlineAt,
+      contractJson: JSON.stringify(contract),
+    },
+  });
+  if (activated.count !== 1) {
+    throw new Error(
+      `Dare v2 ${input.dareId.toString()} lost its activation claim.`,
+    );
+  }
+  return {
+    kind: "accepted",
+    activated: true,
+    acceptedCount: targetCount,
+    targetCount,
+    deadlineAt,
+  } as const;
+}

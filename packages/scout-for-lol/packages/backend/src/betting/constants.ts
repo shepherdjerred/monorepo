@@ -116,6 +116,9 @@ export const BUCKS_EARNING_QUEUES: readonly QueueType[] = [
  */
 export const DARE_PROPOSAL_TTL_MS = 10 * 60 * 1000;
 
+/** A binding or financial Dare v2 confirmation is single-use and short-lived. */
+export const DARE_V2_INTENT_TTL_MS = 10 * 60 * 1000;
+
 /**
  * How long targets have to accept before the dare expires and fully refunds.
  *

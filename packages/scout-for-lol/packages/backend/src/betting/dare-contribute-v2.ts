@@ -1,0 +1,96 @@
+import {
+  BUCKS_INT32_MAX,
+  BucksDareV2StateSchema,
+  OPEN_BUCKS_DARE_V2_STATES,
+  type BucksDareV2State,
+  type DiscordAccountId,
+} from "@scout-for-lol/data";
+import { stakeDareV2ContributionInTransaction } from "#src/betting/dare-ledger-v2.ts";
+import type { Db } from "#src/database/index.ts";
+
+const OPEN_DARE_STATES: ReadonlySet<BucksDareV2State> = new Set(
+  OPEN_BUCKS_DARE_V2_STATES,
+);
+
+export async function contributeToDareV2InTransaction(
+  tx: Db,
+  input: {
+    dareId: number;
+    revision: number;
+    actorDiscordId: DiscordAccountId;
+    bucksAccountId: number;
+    amount: number;
+    now: Date;
+  },
+) {
+  const claimed = await tx.bucksDareV2.updateManyAndReturn({
+    where: {
+      id: input.dareId,
+      fundedRevision: input.revision,
+      dareState: { in: [...OPEN_BUCKS_DARE_V2_STATES] },
+      potTotal: { lte: BUCKS_INT32_MAX - input.amount },
+      targets: { none: { discordId: input.actorDiscordId } },
+    },
+    data: { potTotal: { increment: input.amount }, updatedAt: input.now },
+    select: {
+      id: true,
+      serverId: true,
+      potTotal: true,
+      dareState: true,
+      fundedRevision: true,
+    },
+  });
+  const dare = claimed[0];
+  if (dare === undefined || claimed.length !== 1) {
+    const current = await tx.bucksDareV2.findUniqueOrThrow({
+      where: { id: input.dareId },
+      include: { targets: { select: { discordId: true } } },
+    });
+    if (
+      current.targets.some(
+        (target) => target.discordId === input.actorDiscordId,
+      )
+    ) {
+      return { kind: "target_cannot_contribute" } as const;
+    }
+    const state = BucksDareV2StateSchema.parse(current.dareState);
+    if (
+      OPEN_DARE_STATES.has(state) &&
+      current.potTotal + input.amount > BUCKS_INT32_MAX
+    ) {
+      return { kind: "pot_full", potTotal: current.potTotal } as const;
+    }
+    return { kind: "too_late", dareState: state } as const;
+  }
+  const [targets, revision] = await Promise.all([
+    tx.bucksDareV2Target.findMany({
+      where: { dareId: dare.id },
+      orderBy: { id: "asc" },
+      select: { alias: true },
+    }),
+    tx.bucksDareV2Revision.findUniqueOrThrow({
+      where: {
+        dareId_revision: { dareId: dare.id, revision: input.revision },
+      },
+      select: { plainLanguage: true },
+    }),
+  ]);
+  const balance = await stakeDareV2ContributionInTransaction(tx, {
+    facts: {
+      dareId: dare.id,
+      serverId: dare.serverId,
+      potTotal: dare.potTotal,
+      targetAliases: targets.map((target) => target.alias),
+      conditionSummary: revision.plainLanguage,
+    },
+    bucksAccountId: input.bucksAccountId,
+    discordId: input.actorDiscordId,
+    amount: input.amount,
+  });
+  return {
+    kind: "contributed",
+    amount: input.amount,
+    potTotal: dare.potTotal,
+    balanceAfter: balance,
+  } as const;
+}

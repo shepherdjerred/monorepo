@@ -9,6 +9,12 @@ import {
   type ParlaySettlementSummary,
 } from "#src/betting/parlay-settle.ts";
 import { settleDaresForMatch } from "#src/betting/dare-settle.ts";
+import { settleDaresV2ForMatch } from "#src/betting/dare-settle-v2.ts";
+import type { DareTimelineEvidenceV2 } from "#src/betting/dare-evaluator-v2.ts";
+import {
+  defaultDareV2CalloutDependencies,
+  refreshDareV2Callouts,
+} from "#src/betting/dare-callout-v2.ts";
 import {
   DarePartialSettlementError,
   type DareSettlementSummary,
@@ -58,6 +64,7 @@ export async function refreshSettledPoolMessages(
 export async function settleAndAwardBucks(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
+  options: { dareTimeline?: DareTimelineEvidenceV2 | undefined } = {},
 ): Promise<{
   closures: ClosedPool[];
   settlements: SettlementSummary[];
@@ -113,6 +120,18 @@ export async function settleAndAwardBucks(
   // one-shot" note), and computing it earlier would risk losing that return
   // value to a later throw, leaving an already-terminal dare with no
   // summary to announce, ever.
+  // V2 capture is also unflagged: any funded contract keeps evaluating after
+  // rollout revocation. Run it before v1 so a v2 failure cannot discard a
+  // one-shot v1 settlement summary that already committed.
+  const dareV2Settlements = await settleDaresV2ForMatch(
+    matchData,
+    prismaClient,
+    { timeline: options.dareTimeline },
+  );
+  await refreshDareV2Callouts(
+    dareV2Settlements.map((summary) => summary.dareId),
+    { ...defaultDareV2CalloutDependencies, prismaClient },
+  );
   let dareSettlements: DareSettlementSummary[];
   try {
     dareSettlements = await settleDaresForMatch(matchData, prismaClient);
