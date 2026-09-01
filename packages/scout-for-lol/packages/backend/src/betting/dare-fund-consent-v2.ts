@@ -27,6 +27,7 @@ function contractCompilerFields(revision: {
   scoutQlPlanHash: string | null;
 }):
   | { compilerVersion: "dare-scoutql-1" }
+  | { compilerVersion: "dare-scoutql-2" }
   | {
       compilerVersion: "dare-scoutql-2";
       scoutQlImmutableAst: string;
@@ -41,11 +42,17 @@ function contractCompilerFields(revision: {
     );
   }
   if (
+    revision.scoutQlImmutableAst === null &&
+    revision.scoutQlPlanHash === null
+  ) {
+    return { compilerVersion: "dare-scoutql-2" };
+  }
+  if (
     revision.scoutQlImmutableAst === null ||
     revision.scoutQlPlanHash === null
   ) {
     throw new Error(
-      "Dare ScoutQL compiler v2 revision is missing its immutable artifact.",
+      "Dare ScoutQL compiler v2 revision has an incomplete immutable artifact.",
     );
   }
   return {

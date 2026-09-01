@@ -458,6 +458,44 @@ describe("Dare v2 draft and lifecycle", () => {
     );
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
+
+  test("activates a pre-artifact compiler-v2 revision", async () => {
+    const dareId = await makeDraft();
+    await db.bucksDareV2Revision.update({
+      where: { dareId_revision: { dareId, revision: 1 } },
+      data: { scoutQlImmutableAst: null, scoutQlPlanHash: null },
+    });
+
+    const fundIntent = await intent({
+      dareId,
+      actor: CHALLENGER,
+      action: "fund",
+      key: "fund-pre-artifact",
+    });
+    expect(await consume(fundIntent, CHALLENGER)).toMatchObject({
+      kind: "funded",
+    });
+    const acceptIntent = await intent({
+      dareId,
+      actor: TARGET,
+      action: "accept",
+      key: "accept-pre-artifact",
+    });
+    expect(await consume(acceptIntent, TARGET)).toMatchObject({
+      kind: "accepted",
+      activated: true,
+    });
+
+    const active = await db.bucksDareV2.findUniqueOrThrow({
+      where: { id: dareId },
+    });
+    expect(active.contractJson).not.toBeNull();
+    if (active.contractJson === null) return;
+    const contract = parseDareV2Contract(active.contractJson);
+    expect(contract.compilerVersion).toBe("dare-scoutql-2");
+    expect("scoutQlPlanHash" in contract).toBe(false);
+    await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
 });
 
 describe("Dare v2 absolute deadlines", () => {
