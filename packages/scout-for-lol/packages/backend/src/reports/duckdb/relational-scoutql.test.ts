@@ -123,4 +123,62 @@ describe("relational ScoutQL compiler", () => {
       "A Dare contract query must return exactly one achieved column.",
     );
   });
+
+  test("does not treat a qualified physical source as a same-named CTE", async () => {
+    const result = await validateRelationalScoutQl({
+      queryText:
+        "WITH match_participants AS (SELECT 1 AS value) SELECT EXISTS (SELECT 1 FROM main.match_participants p WHERE p.puuid IN dare_target('virmel')) AS achieved",
+      allowedTargetKeys: TARGETS,
+    });
+
+    expect(result.kind).toBe("invalid");
+    if (result.kind !== "invalid") return;
+    expect(result.issues).toContain(
+      "ScoutQL source main.match_participants is not in the closed source catalog.",
+    );
+  });
+
+  test.each([
+    ["column argument", "dare_target(p.puuid)"],
+    ["no arguments", "dare_target()"],
+    ["multiple arguments", "dare_target('virmel', 'other')"],
+  ])(
+    "rejects a nonliteral dare_target %s even beside a valid call",
+    async (_name, call) => {
+      const result = await validateRelationalScoutQl({
+        queryText: `SELECT COUNT(*) > 0 AS achieved FROM match_participants p WHERE p.puuid IN dare_target('virmel') OR p.puuid IN ${call}`,
+        allowedTargetKeys: TARGETS,
+      });
+
+      expect(result.kind).toBe("invalid");
+      if (result.kind !== "invalid") return;
+      expect(result.issues).toContain(
+        "Every dare_target(...) call must contain exactly one string literal target key.",
+      );
+    },
+  );
+
+  test("rejects a non-Boolean achieved projection", async () => {
+    const result = await validateRelationalScoutQl({
+      queryText:
+        "SELECT 1 AS achieved FROM match_participants p WHERE p.puuid IN dare_target('virmel')",
+      allowedTargetKeys: TARGETS,
+    });
+
+    expect(result.kind).toBe("invalid");
+    if (result.kind !== "invalid") return;
+    expect(result.issues).toContain(
+      "A Dare contract query must return achieved as a Boolean expression.",
+    );
+  });
+
+  test("accepts a nullable Boolean achieved projection", async () => {
+    const result = await validateRelationalScoutQl({
+      queryText:
+        "SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE NULL END AS achieved FROM match_participants p WHERE p.puuid IN dare_target('virmel')",
+      allowedTargetKeys: TARGETS,
+    });
+
+    expect(result.kind).toBe("valid");
+  });
 });

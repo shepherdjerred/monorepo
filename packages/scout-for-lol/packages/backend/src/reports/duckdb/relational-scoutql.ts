@@ -7,6 +7,13 @@ import {
   DARE_V2_MAX_QUERY_LENGTH,
 } from "@scout-for-lol/data";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import {
+  relationalScoutQlArrayValue as arrayValue,
+  relationalScoutQlObjectValue as objectValue,
+  relationalScoutQlStringValue as stringValue,
+  type RelationalScoutQlJsonValue as JsonValue,
+} from "#src/reports/duckdb/relational-scoutql-json.ts";
+import { relationalScoutQlOutputIssues } from "#src/reports/duckdb/relational-scoutql-output.ts";
 
 const RELATIONAL_SCOUTQL_SOURCES = new Set([
   "match_participants",
@@ -33,9 +40,6 @@ const RELATIONAL_SCOUTQL_FUNCTIONS = new Set([
   "nullif",
   "sum",
 ]);
-
-type JsonValue =
-  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
 const JsonValueSchema: z.ZodType<JsonValue> = z.lazy(() =>
   z.union([
@@ -70,6 +74,7 @@ type AstFacts = {
   maxExpressionDepth: number;
   recursive: boolean;
   wallClockReferences: string[];
+  invalidTargetCalls: number;
 };
 
 export type RelationalScoutQlFacts = {
@@ -92,21 +97,6 @@ export type RelationalScoutQlCompilation = {
 export type RelationalScoutQlValidation =
   | { kind: "valid"; compilation: RelationalScoutQlCompilation }
   | { kind: "invalid"; issues: string[] };
-
-function objectValue(value: JsonValue | undefined) {
-  if (value === undefined || value === null || Array.isArray(value))
-    return null;
-  if (typeof value !== "object") return null;
-  return value;
-}
-
-function stringValue(value: JsonValue | undefined): string | null {
-  return typeof value === "string" ? value : null;
-}
-
-function arrayValue(value: JsonValue | undefined): JsonValue[] {
-  return Array.isArray(value) ? value : [];
-}
 
 function collectCteNames(value: JsonValue, facts: AstFacts): void {
   if (Array.isArray(value)) {
@@ -132,10 +122,25 @@ function collectCteNames(value: JsonValue, facts: AstFacts): void {
 function targetKeyFromFunction(
   object: Record<string, JsonValue>,
 ): string | null {
-  const firstChild = arrayValue(object["children"])[0];
-  const child = firstChild === undefined ? null : objectValue(firstChild);
-  const constant = child === null ? null : objectValue(child["value"]);
-  return constant === null ? null : stringValue(constant["value"]);
+  const children = arrayValue(object["children"]);
+  if (children.length !== 1) return null;
+  const child = objectValue(children[0]);
+  if (child === null || stringValue(child["class"]) !== "CONSTANT") {
+    return null;
+  }
+  const constant = objectValue(child["value"]);
+  if (constant === null) return null;
+  const type = objectValue(constant["type"]);
+  if (type === null || stringValue(type["id"]) !== "VARCHAR") return null;
+  return stringValue(constant["value"]);
+}
+
+function physicalTableName(object: Record<string, JsonValue>): string | null {
+  const table = stringValue(object["table_name"]);
+  if (table === null) return null;
+  const catalog = stringValue(object["catalog_name"]) ?? "";
+  const schema = stringValue(object["schema_name"]) ?? "";
+  return [catalog, schema, table].filter((part) => part.length > 0).join(".");
 }
 
 function collectStructuralFacts(
@@ -147,8 +152,13 @@ function collectStructuralFacts(
   if (nodeType === "JOIN") facts.joinedRelations += 1;
   if (nodeType === "BASE_TABLE") {
     const tableName = stringValue(object["table_name"]);
-    if (tableName !== null && !facts.cteNames.has(tableName)) {
-      facts.physicalSources.push(tableName);
+    const qualifiedName = physicalTableName(object);
+    const unqualifiedCte =
+      tableName !== null &&
+      qualifiedName === tableName &&
+      facts.cteNames.has(tableName);
+    if (qualifiedName !== null && !unqualifiedCte) {
+      facts.physicalSources.push(qualifiedName);
     }
   }
 }
@@ -162,7 +172,11 @@ function collectFunctionFacts(
   facts.functions.push(functionName);
   if (functionName !== "dare_target") return;
   const targetKey = targetKeyFromFunction(object);
-  if (targetKey !== null) facts.targetKeys.push(targetKey);
+  if (targetKey === null) {
+    facts.invalidTargetCalls += 1;
+  } else {
+    facts.targetKeys.push(targetKey);
+  }
 }
 
 function collectColumnFacts(
@@ -215,24 +229,6 @@ function collectAstFacts(
   for (const child of Object.values(object)) {
     collectAstFacts(child, facts, nextExpressionDepth);
   }
-}
-
-function outerSelectIssues(statement: JsonValue): string[] {
-  const statementObject = objectValue(statement);
-  const node =
-    statementObject === null ? null : objectValue(statementObject["node"]);
-  if (node === null || stringValue(node["type"]) !== "SELECT_NODE") {
-    return ["Relational ScoutQL must contain one SELECT statement."];
-  }
-  const selectList = arrayValue(node["select_list"]);
-  if (selectList.length !== 1) {
-    return ["A Dare contract query must return exactly one achieved column."];
-  }
-  const output = objectValue(selectList[0]);
-  if (output === null || stringValue(output["alias"]) !== "achieved") {
-    return ["A Dare contract query must return one column aliased achieved."];
-  }
-  return [];
 }
 
 function uniqueSorted(values: readonly string[]): string[] {
@@ -316,13 +312,14 @@ function semanticIssues(
     maxExpressionDepth: 0,
     recursive: false,
     wallClockReferences: [],
+    invalidTargetCalls: 0,
   };
   collectCteNames(statement, mutableFacts);
   collectAstFacts(statement, mutableFacts, 0);
   const physicalSources = uniqueSorted(mutableFacts.physicalSources);
   const functions = uniqueSorted(mutableFacts.functions);
   const targetKeys = uniqueSorted(mutableFacts.targetKeys);
-  const issues = outerSelectIssues(statement);
+  const issues = relationalScoutQlOutputIssues(statement);
   if (mutableFacts.recursive) {
     issues.push("Recursive CTEs are not supported in ScoutQL.");
   }
@@ -339,6 +336,11 @@ function semanticIssues(
     allowedTargetKeys,
     issues,
   });
+  if (mutableFacts.invalidTargetCalls > 0) {
+    issues.push(
+      "Every dare_target(...) call must contain exactly one string literal target key.",
+    );
+  }
   if (targetKeys.length === 0) {
     issues.push(
       "A Dare contract query must bind at least one dare_target(...).",
