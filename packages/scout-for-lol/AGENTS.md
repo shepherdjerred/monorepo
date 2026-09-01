@@ -654,6 +654,33 @@ module owns command dispatch only. It previously owned the event too and
 early-returned on anything that was not a chat-input command, which silently
 dropped every message component.
 
+**Gateway liveness is the heartbeat clock, not a boolean.** On 2026-09-01 beta
+answered every slash command with "The application did not respond" for 34
+minutes while looking healthy: the pod ran, REST kept working (match polling
+and the per-minute guild command reconcile both succeeded),
+`discord_connection_status` read 1, and no line was logged. Discord was
+dispatching `INTERACTION_CREATE` — a second gateway session on the same token
+received it — but the deployed shard had gone silent, and only a restart
+recovered it. Two things now prevent a repeat:
+
+- `discord/bootstrap.ts` listens to `Events.Shard*`. It previously listened for
+  `"disconnect"` and `"reconnecting"`, which are discord.js **v12** client
+  events — in v14 they belong to the sharding manager's `Shard`. `Client#on`
+  accepts any string, so they compiled, registered, counted as installed by the
+  bootstrap test, and could never fire. `DISCORD_EVENT_NAMES` holds `Events`
+  members so a non-event is a type error, and `bootstrap.test.ts` checks each
+  name against the enum.
+- `discord/gateway-health.ts` tracks the newest
+  `WebSocketShard#lastPingTimestamp` and `/livez` fails when it is more than
+  three heartbeat intervals stale, so Kubernetes restarts the pod. Staleness
+  alone is the verdict — an ordinary reconnect passes through `disconnected`
+  for seconds and must not restart anything, while a reconnect that never
+  completes stops the clock and trips the same threshold. `dev:web
+--no-discord-gateway` and `NODE_ENV=test` mark the gateway `disabled` and are
+  exempt. `discord_gateway_heartbeat_age_seconds` is the alertable form;
+  `discord_latency_ms` is not, because a frozen shard reports its last healthy
+  latency forever.
+
 Definitions are collected in `packages/backend/src/discord/commands/definitions.ts`
 and registered with a full global `applicationCommands` replacement in
 `discord/rest.ts`. After the gateway connects, every guild in the client's
