@@ -240,6 +240,39 @@ describe("Temporal workflow outcome rules", () => {
   });
 });
 
+describe("Temporal domain poller scoping", () => {
+  test("scopes the scout queue's workflow and activity pollers separately", () => {
+    // `scout` takes activity tasks in beta but runs its workflows on
+    // beta/monorepo-workflows, so no workflow poller belongs on beta/scout.
+    // Driving both rules from one namespace list left the workflow rule
+    // permanently short by one and firing continuously, which is how a poller
+    // alert comes to mean nothing.
+    const rules =
+      getTemporalRuleGroups().find(
+        (group) => group.name === "temporal-workflow-failures",
+      )?.rules ?? [];
+    const expressionsFor = (alert: string, queue: string): string[] =>
+      rules
+        .filter((rule) => rule.alert === alert)
+        .flatMap((rule) => {
+          const expression: unknown = rule.expr.value;
+          return typeof expression === "string" &&
+            expression.includes(`task_queue="${queue}"`)
+            ? [expression]
+            : [];
+        });
+
+    expect(
+      expressionsFor("TemporalDomainWorkflowPollerUnavailable", "scout"),
+    ).toEqual([
+      'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="temporal",exported_namespace=~"prod",task_queue="scout",poller_type="workflow_task"})) < 1',
+    ]);
+    expect(
+      expressionsFor("TemporalDomainActivityPollerUnavailable", "scout")[0],
+    ).toContain('exported_namespace=~"prod|beta"');
+  });
+});
+
 describe("Scout Data Dragon failure rules", () => {
   test("ScoutDataDragonAutoMergeFailed alerts on the last-failure recency gauge", () => {
     const expression = findFailureRule("ScoutDataDragonAutoMergeFailed");
