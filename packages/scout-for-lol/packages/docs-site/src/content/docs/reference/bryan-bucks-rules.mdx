@@ -127,7 +127,7 @@ the condition is unknown rather than false.
 | Targets                | 1–{DARE_V2_MAX_TARGETS}                                               |
 | Horizon                | at most {DARE_V2_MAX_HORIZON_DAYS} days                               |
 | Eligible games         | at most {DARE_V2_MAX_ELIGIBLE_GAMES}                                  |
-| Game sets / CTEs       | at most {DARE_V2_MAX_GAME_SETS}                                       |
+| Game sets              | at most {DARE_V2_MAX_GAME_SETS}                                       |
 | Joined relations       | at most {DARE_V2_MAX_JOINED_RELATIONS}                                |
 | Predicates             | at most {DARE_V2_MAX_PREDICATES}                                      |
 | Boolean depth          | at most {DARE_V2_MAX_EXPRESSION_DEPTH}                                |
@@ -139,6 +139,13 @@ when Scout can classify it reliably. A timeline condition is rejected for a
 queue whose timelines Scout cannot supply. Scout does not call Riot solely to
 backfill a dare: historical previews and settlement use retained lake data and
 future ingestion.
+
+The relational ScoutQL parser also caps an arbitrary query at 20 CTEs. A
+canonical Dare query may display compiler-generated candidate, eligibility, and
+bounded-set CTEs in addition to its game sets. Those supporting nodes do not
+increase the contract's semantic game-set, join, or predicate counts; the
+reverse compiler reconstructs and validates those limits before accepting the
+query.
 
 ## Weekly parlays
 

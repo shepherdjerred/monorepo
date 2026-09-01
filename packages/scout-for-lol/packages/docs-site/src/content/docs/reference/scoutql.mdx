@@ -50,6 +50,14 @@ never runs the submitted query. Only a canonical query that round-trips to the
 same immutable AST is accepted. The ordinary report editor does not accept this
 relational profile; inspect and revise contracts through Explore.
 
+An arbitrary relational query is limited to 20 CTEs, 8 joined relations, 60
+predicates, and expression depth 12. Canonical Dare text contains mechanical
+candidate, eligibility, and bounded-set CTEs and joins. The compiler allows
+that exact physical envelope only long enough to reverse-compile it, then
+enforces the same limits on the reconstructed semantic plan and requires an
+immutable-AST round trip. Renaming the supporting structure or using the wider
+envelope for another SQL shape is rejected.
+
 The contract profile keeps participant columns qualified (`p0.kills`) and uses
 a small closed set of Dare functions for semantics that must round-trip without
 ambiguity:
