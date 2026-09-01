@@ -200,4 +200,30 @@ describe("Discord command reconciliation", () => {
 
     expect(writes).toBe(2);
   });
+
+  test("forgets a guild after MISSING_ACCESS so a rejoin is rewritten", async () => {
+    // A removal drops that guild's commands on Discord's side, so the cached
+    // entry stops describing reality. `guildCreate` forces a write, but a
+    // rejoin can race it and hit MISSING_ACCESS before access is restored — if
+    // the entry survived that, every later poll would skip an identical
+    // payload and leave the guild commandless until the process restarts.
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000090";
+    resetConfigurationForTests();
+    const payloads: string[][] = [];
+    const put: DiscordCommandPut = (_route, body) => {
+      payloads.push(body.map((command) => command.name));
+      return Promise.resolve(undefined);
+    };
+
+    await reconcileGuildScopedCommands(["100000000000000090"], put);
+    await reconcileGuildScopedCommands(
+      ["100000000000000090"],
+      missingAccessPut,
+      { force: true },
+    );
+    await reconcileGuildScopedCommands(["100000000000000090"], put);
+
+    expect(payloads).toEqual([["scout"], ["scout"]]);
+  });
 });

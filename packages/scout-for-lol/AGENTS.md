@@ -993,9 +993,14 @@ per guild against Flipt rather than carried in the config snapshot, so nothing
 short of rebuilding the payload notices an operator flipping one. `rest.ts`
 therefore keeps the serialized payload it last wrote per guild and skips an
 identical write, recording it only after the PUT lands so a failure retries on
-the next poll. Startup and `guildCreate` pass `force`, because neither knows
-what Discord currently holds and a rejoined guild has had its commands dropped
-while a cached entry survives. The accepted cost is that this process will not
+the next poll, and **dropping the entry on `MISSING_ACCESS`** — that error is
+the one that means the cache is wrong, because Discord clears a guild's
+commands when the bot is removed. Startup and `guildCreate` pass `force`,
+because neither knows what Discord currently holds and a rejoined guild has had
+its commands dropped while a cached entry survives; forcing alone is not
+enough, since a rejoin can race `guildCreate` and hit `MISSING_ACCESS` before
+access is restored, which is exactly why that path invalidates rather than
+merely skipping. The accepted cost is that this process will not
 repair guild commands edited out of band until it restarts.
 
 The feature scope remains enforced by the flag and guild-scoped registration;
