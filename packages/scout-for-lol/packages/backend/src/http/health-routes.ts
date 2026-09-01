@@ -1,5 +1,9 @@
 import { getRiotApiHealth } from "#src/metrics/index.ts";
 import { getScoutTemporalHealth } from "#src/temporal/health.ts";
+import {
+  evaluateDiscordGatewayLiveness,
+  getDiscordGatewayHealth,
+} from "#src/discord/gateway-health.ts";
 
 /**
  * The `/livez` and `/healthz` probe handlers.
@@ -30,7 +34,16 @@ export type HealthRouteOptions = {
   readonly now?: number;
 };
 
-/** Liveness: fail only on a condition a restart actually fixes. */
+/**
+ * Liveness: fail only on a condition a restart actually fixes.
+ *
+ * Two such conditions exist. The Riot client can wedge in a way that only a
+ * fresh process clears, and — since 2026-09-01 — so can the Discord gateway:
+ * a shard that stops receiving heartbeat acknowledgements keeps every other
+ * signal green (REST works, `discord_connection_status` reads 1, the reported
+ * latency freezes on its last healthy value) while every slash command in
+ * every guild answers "The application did not respond".
+ */
 export function handleLivez({
   cors,
   startedAt = applicationStartTime,
@@ -61,22 +74,37 @@ export function handleLivez({
     now - lastSuccessTimestamp > fifteenMinutesMs;
   const riotApiHealthy = !(hasRecentAttempts && lastSuccessStale);
 
+  const discordGateway = evaluateDiscordGatewayLiveness({
+    now,
+    uptimeMs,
+    startupGraceMs: STARTUP_GRACE_PERIOD_MS,
+    health: getDiscordGatewayHealth(),
+  });
+
+  const healthy = riotApiHealthy && discordGateway.live;
+
   return Response.json(
     {
-      healthy: riotApiHealthy,
+      healthy,
       lastSuccessTimestamp: lastSuccessTimestamp ?? null,
       lastAttemptTimestamp: lastAttemptTimestamp ?? null,
       uptimeMs,
-      components: { riotApiHealthy },
+      components: { riotApiHealthy, discordGateway },
     },
     {
-      status: riotApiHealthy ? 200 : 503,
+      status: healthy ? 200 : 503,
       headers: { "Content-Type": "application/json", ...cors },
     },
   );
 }
 
-/** Readiness: whether this replica should receive traffic. */
+/**
+ * Readiness: whether this replica should receive traffic.
+ *
+ * The gateway is reported here but deliberately does not gate the status.
+ * Removing the only replica from the Service would take the web app and tRPC
+ * down as well, which is strictly worse than a bot that cannot hear Discord.
+ */
 export function handleHealthz({
   cors,
   startedAt = applicationStartTime,
@@ -102,7 +130,10 @@ export function handleHealthz({
       lastSuccessTimestamp: lastSuccessTimestamp ?? null,
       lastAttemptTimestamp: lastAttemptTimestamp ?? null,
       uptimeSeconds,
-      components: { temporal: getScoutTemporalHealth() },
+      components: {
+        temporal: getScoutTemporalHealth(),
+        discordGateway: getDiscordGatewayHealth(),
+      },
     },
     {
       status: healthy ? 200 : 503,
