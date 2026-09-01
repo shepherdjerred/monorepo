@@ -119,11 +119,6 @@
       "count": 1
     }
   },
-  "src/helm-types/src/code-generator.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
   "src/helm-types/src/comment-parser.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
@@ -140,11 +135,6 @@
     }
   },
   "src/helm-types/src/type-converter.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/helm-types/src/type-inference.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
