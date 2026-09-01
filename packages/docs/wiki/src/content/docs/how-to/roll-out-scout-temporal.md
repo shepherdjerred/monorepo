@@ -120,13 +120,29 @@ finish the migration.
 ## Retire the drain namespace
 
 After the last `default` execution closes, wait the additional 30-day retention
-window. Re-read live state immediately before cleanup and run the migration
-audit with the recorded cutover timestamp while the source inventory still
-exists. The audit must show schedule parity, no active source schedules, no
-`default` workflow starts after cutover, and no remaining `default` executions.
-This is the final `migrate:namespaces -- audit` run; it must happen before the
-source schedules are deleted because the command inventories its source
-schedules on every invocation.
+window, then re-read live state immediately before cleanup.
+
+Schedule parity is **not** verifiable at this point, and expecting it here is a
+trap. `migrate:namespaces -- audit` compares each target against its source
+byte for byte, but the gateway's first reconciliation after cutover adds
+`Environment`, `Domain`, `Trigger`, and `ReleaseCommit` search attributes plus
+static summaries to every target. The frozen sources never had those, so the
+comparison reports `does not match source` for a migration that was correct.
+Parity is checked once, immediately after `cutover --confirm` and **before**
+the gateway is restarted; see `packages/temporal/README.md`.
+
+What must still be confirmed before deleting anything is quiescence, and the
+source inventory has to exist to confirm it — the command re-inventories its
+sources on every invocation, so it is vacuous rather than passing once the
+sources are gone:
+
+- every source schedule is paused;
+- no `default` workflow starts after the cutover timestamp; and
+- no remaining `default` executions.
+
+That paused check is the only guard in the system against deleting a live
+schedule — `schedule delete` has none of its own — so run it immediately
+before the deletions and let nothing pause or unpause in between.
 
 Only after those checks pass, delete every paused source schedule from the
 drain namespace. List the schedules first, then delete each exact ID; do not

@@ -36,8 +36,7 @@ central queues remain `prod` plus the temporary `default` drain.
 | `glitter-corpus`  | `glitter-corpus`        |                    1 |
 | `glitter-context` | `glitter-context`       |                    1 |
 | `maintenance`     | `maintenance`           |                    1 |
-| `workflows`       | `workflows`             |                 none |
-| `legacy`          | `default` drain         |                    1 |
+| `workflows`       | `monorepo-workflows`    |                 none |
 
 The production manifests land in layers. In the Glitter layer, the existing
 legacy core and agent Deployments remain in place while the combined Glitter
@@ -105,8 +104,27 @@ TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPAC
   bun run migrate:namespaces -- cutover --confirm
 ```
 
-Record the cutover timestamp and use it for the final audit. Rollback is
-allowed only before a target workflow starts; after that, recover forward.
+Record the cutover timestamp. **Run `migrate:namespaces -- audit` with it
+before restarting the gateway**, not later:
+
+```bash
+TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
+  bun run migrate:namespaces -- audit --cutover-at <recorded-timestamp>
+```
+
+The audit compares each target against its source byte for byte. The gateway's
+first reconciliation adds `Environment`, `Domain`, `Trigger`, and
+`ReleaseCommit` search attributes plus static summaries to every target, which
+the frozen sources never had, so that comparison can never match again once the
+gateway has run. Auditing after the restart reports `does not match source` for
+a migration that was in fact correct.
+
+After the restart, the remaining invariants are still checkable directly:
+every source paused, every target carrying the recorded `cutoverAt`, and no
+executions or new starts in the legacy namespace.
+
+Rollback is allowed only before a target workflow starts; after that, recover
+forward.
 
 ## Documentation
 
