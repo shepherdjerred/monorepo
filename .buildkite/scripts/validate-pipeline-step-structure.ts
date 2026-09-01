@@ -24,13 +24,14 @@ export type StepStructureConfig = {
  * for in a diff, and it stays visible afterwards. Each entry needs a reason
  * and the condition that removes it again.
  *
- * tasknotes-native-main: the macOS agent cannot start a UI test runner --
- *   "Failed to initialize for UI testing: Timed out while enabling automation
- *   mode." That is a TCC grant on that machine, so no commit can satisfy it.
- *   Remove this entry once TaskNotesUITests-Runner is approved under System
- *   Settings > Privacy & Security > Accessibility on the agent, signed with
- *   the Apple Development identity so the grant survives rebuilds (see
- *   packages/tasknotes-macos/CLAUDE.md).
+ * tasknotes-native-main: one UI flow --
+ *   InspectorEditingUITests.testSchedulingRecurrenceNotesAndUndoSurviveLifecycleChanges
+ *   -- never sees the inspector after clicking a seeded task row on the agent,
+ *   and has failed that way in every completed run since the suite was
+ *   bootstrapped in CI. The runner itself starts and the other six flows pass,
+ *   so the automation-mode TCC grant this entry once blamed is not the cause
+ *   and approving TaskNotesUITests-Runner will not clear it. Remove this entry
+ *   once that flow passes on the agent.
  */
 const SOFT_FAIL_EXEMPT_NATIVE_STEPS: ReadonlySet<string> = new Set([
   "tasknotes-native-main",
