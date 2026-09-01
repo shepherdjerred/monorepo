@@ -23,7 +23,11 @@ describe("post-match discovery intent ordering", () => {
 
     const ordered = await orderMatchIntentsByCompletion(
       [intent("NA1_300"), intent("NA1_100_B"), intent("NA1_100_A")],
-      (match) => Promise.resolve(completionTimes.get(match.matchId)),
+      (match) => {
+        const completion = completionTimes.get(match.matchId);
+        if (completion === undefined) throw new Error("Missing fixture time");
+        return Promise.resolve(completion);
+      },
     );
 
     expect(ordered.map((match) => match.matchId)).toEqual([
@@ -33,13 +37,15 @@ describe("post-match discovery intent ordering", () => {
     ]);
   });
 
-  test("leaves an unresolved completion time for a later discovery poll", async () => {
-    const ordered = await orderMatchIntentsByCompletion(
-      [intent("NA1_UNKNOWN"), intent("NA1_KNOWN")],
-      (match) =>
-        Promise.resolve(match.matchId === "NA1_KNOWN" ? 200 : undefined),
-    );
-
-    expect(ordered.map((match) => match.matchId)).toEqual(["NA1_KNOWN"]);
+  test("fails the whole batch when one completion time is unresolved", async () => {
+    await expect(
+      orderMatchIntentsByCompletion(
+        [intent("NA1_UNKNOWN"), intent("NA1_KNOWN")],
+        (match) =>
+          match.matchId === "NA1_KNOWN"
+            ? Promise.resolve(200)
+            : Promise.reject(new Error("completion unavailable")),
+      ),
+    ).rejects.toThrow("completion unavailable");
   });
 });

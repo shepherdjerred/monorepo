@@ -69,11 +69,12 @@ export async function scoutPostMatchDiscoveryWorkflow(
       args: [{ stage: input.stage, ...match }],
     });
     childrenStarted += 1;
-    // Bounded Dare plans are ordered by match end time. Discovery returns a
-    // player's batch oldest-first, so do not allow a later child to capture
-    // evidence and settle while an earlier child is still ingesting. If an
-    // older run already owns this child ID, startChild fails the discovery
-    // workflow and the next poll rediscovers only the still-unprocessed tail.
+    // Bounded Dare plans are ordered by match end time. Discovery force-polls
+    // every frozen account in an active Dare, globally orders their completed
+    // matches, and fails the batch if any target or timestamp is unavailable.
+    // Do not allow a later child to capture evidence and settle while an
+    // earlier child is still ingesting. If an older run already owns this child
+    // ID, startChild fails and the next poll rediscovers the unprocessed tail.
     await child.result();
   }
   setWorkflowPhase("**Phase:** running post-match maintenance");

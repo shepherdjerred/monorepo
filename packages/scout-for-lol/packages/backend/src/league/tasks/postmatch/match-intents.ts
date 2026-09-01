@@ -11,21 +11,18 @@ export type MatchDiscovery = {
 
 export type MatchCompletionResolver = (
   intent: DiscoveredMatchIntent,
-) => Promise<number | undefined>;
+) => Promise<number>;
 
 export async function orderMatchIntentsByCompletion(
   intents: readonly DiscoveredMatchIntent[],
   completionOf: MatchCompletionResolver,
 ): Promise<DiscoveredMatchIntent[]> {
-  const rankGroups = await Promise.all(
+  const ranked = await Promise.all(
     intents.map(async (intent) => {
       const gameEndTimestamp = await completionOf(intent);
-      return gameEndTimestamp === undefined
-        ? []
-        : [{ gameEndTimestamp, intent }];
+      return { gameEndTimestamp, intent };
     }),
   );
-  const ranked = rankGroups.flat();
   return ranked
     .toSorted(
       (left, right) =>
