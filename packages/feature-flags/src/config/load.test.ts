@@ -41,8 +41,19 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flipt",
         FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLIPT_NAMESPACE: "scout",
       }),
     ).toThrow(/FLIPT_ENVIRONMENT is required/);
+  });
+
+  test("flipt mode requires an explicit namespace", () => {
+    expect(() =>
+      loadFeatureFlagConfiguration({
+        FEATURE_FLAGS_MODE: "flipt",
+        FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLIPT_ENVIRONMENT: "beta",
+      }),
+    ).toThrow(/FLIPT_NAMESPACE is required/);
   });
 
   test("flipt mode rejects a malformed URL as a config error", () => {
@@ -50,6 +61,8 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flipt",
         FLIPT_URL: "not-a-url",
+        FLIPT_NAMESPACE: "scout",
+        FLIPT_ENVIRONMENT: "beta",
       }),
     ).toThrow();
   });
@@ -62,12 +75,13 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flipt",
         FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLIPT_NAMESPACE: "scout",
         FLIPT_ENVIRONMENT: "beta",
       }),
     ).toEqual({
       mode: "flipt",
       url: "http://flipt.flipt.svc.cluster.local:8080",
-      namespace: "default",
+      namespace: "scout",
       environment: "beta",
       pollIntervalSeconds: 300,
     });
@@ -78,6 +92,7 @@ describe("loadFeatureFlagConfiguration", () => {
       loadFeatureFlagConfiguration({
         FEATURE_FLAGS_MODE: "flipt",
         FLIPT_URL: "http://flipt.flipt.svc.cluster.local:8080",
+        FLIPT_NAMESPACE: "scout",
         FLIPT_ENVIRONMENT: "beta",
         FLIPT_POLL_INTERVAL_SECONDS: "0",
       }),

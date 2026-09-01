@@ -119,10 +119,11 @@
         { "$ref": "#/$defs/behavior" },
         {
           "type": "object",
-          "required": ["key", "owner", "source", "purpose"],
+          "required": ["key", "owner", "namespace", "source", "purpose"],
           "properties": {
             "key": { "type": "string", "minLength": 1 },
             "owner": { "type": "string", "minLength": 1 },
+            "namespace": { "type": "string", "minLength": 1 },
             "source": { "type": "string", "minLength": 1 },
             "purpose": { "type": "string", "minLength": 1 }
           }
@@ -132,10 +133,23 @@
     }
   },
   "type": "object",
-  "required": ["version", "namespace", "environments", "flags", "exemptions"],
+  "required": ["version", "namespaces", "environments", "flags", "exemptions"],
   "properties": {
-    "version": { "const": 2 },
-    "namespace": { "type": "string", "minLength": 1 },
+    "version": { "const": 3 },
+    "namespaces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["key", "name", "description"],
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    },
     "environments": {
       "type": "array",
       "minItems": 1,

@@ -1,10 +1,42 @@
 {
-  "version": 2,
-  "namespace": "default",
+  "version": 3,
+  "namespaces": [
+    {
+      "key": "scout",
+      "name": "Scout",
+      "description": "Scout for League of Legends feature flags."
+    },
+    {
+      "key": "birmel",
+      "name": "Birmel",
+      "description": "Birmel feature flags."
+    },
+    {
+      "key": "streambot",
+      "name": "Streambot",
+      "description": "Discord Plays Pokemon streambot feature flags."
+    },
+    {
+      "key": "starlight-karma-bot",
+      "name": "Starlight Karma Bot",
+      "description": "Starlight Karma Bot feature flags."
+    },
+    {
+      "key": "trmnl-dashboard",
+      "name": "TRMNL Dashboard",
+      "description": "TRMNL dashboard feature flags."
+    },
+    {
+      "key": "temporal",
+      "name": "Temporal",
+      "description": "Shared Temporal platform feature flags."
+    }
+  ],
   "flags": [
     {
       "key": "ai_reports_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout AI report generation.",
       "type": "boolean",
@@ -31,6 +63,7 @@
     {
       "key": "ai_reports_unlimited",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Grant the beta user unlimited AI reports.",
       "type": "boolean",
@@ -57,6 +90,7 @@
     {
       "key": "ai_reviews_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout post-match AI reviews.",
       "type": "boolean",
@@ -83,6 +117,7 @@
     {
       "key": "betting_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable the Scout Bryan Bucks betting economy.",
       "type": "boolean",
@@ -109,6 +144,7 @@
     {
       "key": "betting_player_bet_outcome_dm_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Send players a direct message with their bet outcome.",
       "type": "boolean",
@@ -135,6 +171,7 @@
     {
       "key": "bucks_dares_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Bryan Bucks free-text dare bounties.",
       "type": "boolean",
@@ -161,6 +198,7 @@
     {
       "key": "dare_v2",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable funding ScoutQL-backed Bryan Bucks Dare v2 contracts.",
       "type": "boolean",
@@ -187,6 +225,7 @@
     {
       "key": "bucks_transfers_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable fee-bearing Bryan Bucks wallet transfers.",
       "type": "boolean",
@@ -213,6 +252,7 @@
     {
       "key": "scoutql_relational_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable relational and timeline ScoutQL sources.",
       "type": "boolean",
@@ -239,6 +279,7 @@
     {
       "key": "betting_settlement_dm_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Send betting settlement direct messages.",
       "type": "boolean",
@@ -265,6 +306,7 @@
     {
       "key": "competition_builder_v2_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout competition builder version two.",
       "type": "boolean",
@@ -291,6 +333,7 @@
     {
       "key": "custom_nights_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable the beta-only Scout custom-night Activity.",
       "type": "boolean",
@@ -317,6 +360,7 @@
     {
       "key": "debug",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout debug surfaces for the beta operator.",
       "type": "boolean",
@@ -343,6 +387,7 @@
     {
       "key": "initial_match_history_import_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable the initial Scout match-history import.",
       "type": "boolean",
@@ -354,6 +399,7 @@
     {
       "key": "scout-consumer-player-profiles-enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout consumer player profiles.",
       "type": "boolean",
@@ -365,6 +411,7 @@
     {
       "key": "tournament_lobbies_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout tournament lobbies.",
       "type": "boolean",
@@ -391,6 +438,7 @@
     {
       "key": "weekly_parlays_enabled",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-policy",
       "purpose": "Enable Scout weekly parlays.",
       "type": "boolean",
@@ -417,6 +465,7 @@
     {
       "key": "scout-betting-parlay-ai-model",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Select the Scout parlay AI model.",
       "type": "variant",
@@ -428,6 +477,7 @@
     {
       "key": "scout-bucks-ask-model",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Select the Scout Bryan Bucks ask model.",
       "type": "variant",
@@ -439,6 +489,7 @@
     {
       "key": "scout-explore-model",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Select the Scout Explore AI model.",
       "type": "variant",
@@ -450,6 +501,7 @@
     {
       "key": "scout-report-ai-model",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Select the Scout report AI model.",
       "type": "variant",
@@ -461,6 +513,7 @@
     {
       "key": "scout-tournament-api-mode",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Select the Scout tournament API mode.",
       "type": "variant",
@@ -472,6 +525,7 @@
     {
       "key": "scout-tournament-max-open-lobbies",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Bound the number of concurrently open Scout tournament lobbies.",
       "type": "variant",
@@ -481,8 +535,21 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout-temporal-call-graph-tracing",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-dynamic",
+      "purpose": "Enable Temporal client call-graph tracing in the Scout backend on restart.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "temporal-call-graph-tracing",
       "owner": "platform",
+      "namespace": "temporal",
       "source": "temporal-workers",
       "purpose": "Enable Temporal client, Workflow, and Activity call-graph tracing on worker restart.",
       "type": "boolean",
@@ -494,6 +561,7 @@
     {
       "key": "explore-guild-allowlist",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Select the Scout guilds allowed to use Explore.",
       "type": "variant",
@@ -505,6 +573,7 @@
     {
       "key": "llm-daily-token-budget",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Bound Scout daily LLM token usage.",
       "type": "variant",
@@ -516,6 +585,7 @@
     {
       "key": "llm-hourly-token-budget",
       "owner": "scout",
+      "namespace": "scout",
       "source": "scout-dynamic",
       "purpose": "Bound Scout hourly LLM token usage.",
       "type": "variant",
@@ -527,6 +597,7 @@
     {
       "key": "birmel-activity-tracking-enabled",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Enable Birmel activity tracking and role aggregation.",
       "type": "boolean",
@@ -538,6 +609,7 @@
     {
       "key": "birmel-agent-max-steps",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound Birmel agent steps.",
       "type": "variant",
@@ -549,6 +621,7 @@
     {
       "key": "birmel-agent-response-timeout-ms",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound Birmel agent response time.",
       "type": "variant",
@@ -560,6 +633,7 @@
     {
       "key": "birmel-agent-router-timeout-ms",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound Birmel agent router time.",
       "type": "variant",
@@ -571,6 +645,7 @@
     {
       "key": "birmel-birthdays-enabled",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Enable Birmel birthday announcements and roles.",
       "type": "boolean",
@@ -582,6 +657,7 @@
     {
       "key": "birmel-daily-posts-enabled",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Enable Birmel daily posts.",
       "type": "boolean",
@@ -593,6 +669,7 @@
     {
       "key": "birmel-elections-enabled",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Enable Birmel elections.",
       "type": "boolean",
@@ -604,6 +681,7 @@
     {
       "key": "birmel-llm-classifier-model",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel classifier model.",
       "type": "variant",
@@ -615,6 +693,7 @@
     {
       "key": "birmel-llm-embedding-model",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel embedding model.",
       "type": "variant",
@@ -626,6 +705,7 @@
     {
       "key": "birmel-llm-max-output-tokens",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound Birmel LLM output tokens.",
       "type": "variant",
@@ -637,6 +717,7 @@
     {
       "key": "birmel-llm-memory-model",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel memory model.",
       "type": "variant",
@@ -648,6 +729,7 @@
     {
       "key": "birmel-llm-model",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel primary LLM model.",
       "type": "variant",
@@ -659,6 +741,7 @@
     {
       "key": "birmel-llm-reasoning-effort",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Select Birmel reasoning effort.",
       "type": "variant",
@@ -670,6 +753,7 @@
     {
       "key": "birmel-persona-enabled",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Enable Birmel persona projection.",
       "type": "boolean",
@@ -681,6 +765,7 @@
     {
       "key": "birmel-persona-style-model",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Select the Birmel persona style model.",
       "type": "variant",
@@ -692,6 +777,7 @@
     {
       "key": "birmel-responder-enabled",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Enable the Birmel conversational responder.",
       "type": "boolean",
@@ -703,6 +789,7 @@
     {
       "key": "birmel-responder-engagement-window-ms",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound the Birmel responder engagement window.",
       "type": "variant",
@@ -714,6 +801,7 @@
     {
       "key": "birmel-responder-transcript-max-messages",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound Birmel responder transcript messages.",
       "type": "variant",
@@ -725,6 +813,7 @@
     {
       "key": "birmel-responder-transcript-window-ms",
       "owner": "birmel",
+      "namespace": "birmel",
       "source": "birmel-dynamic",
       "purpose": "Bound the Birmel responder transcript window.",
       "type": "variant",
@@ -736,6 +825,7 @@
     {
       "key": "karma-admin-user-id",
       "owner": "starlight-karma-bot",
+      "namespace": "starlight-karma-bot",
       "source": "karma-dynamic",
       "purpose": "Select the Karma administrator user.",
       "type": "variant",
@@ -747,6 +837,7 @@
     {
       "key": "karma-emoji",
       "owner": "starlight-karma-bot",
+      "namespace": "starlight-karma-bot",
       "source": "karma-dynamic",
       "purpose": "Select the emoji that awards karma.",
       "type": "variant",
@@ -758,6 +849,7 @@
     {
       "key": "player-card-enabled",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Enable Streambot player cards.",
       "type": "boolean",
@@ -769,6 +861,7 @@
     {
       "key": "pet-dashboard-enabled",
       "owner": "trmnl-dashboard",
+      "namespace": "trmnl-dashboard",
       "source": "trmnl-dashboard",
       "purpose": "Expose the authenticated pet-care TRMNL dashboard payload after deployment verification.",
       "type": "boolean",
@@ -780,6 +873,7 @@
     {
       "key": "streambot-idle-timeout-seconds",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Bound Streambot idle timeout.",
       "type": "variant",
@@ -791,6 +885,7 @@
     {
       "key": "streambot-player-card-repost-after-messages",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Set Streambot player-card repost interval.",
       "type": "variant",
@@ -802,6 +897,7 @@
     {
       "key": "streambot-player-card-tick-ms",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Set Streambot player-card refresh interval.",
       "type": "variant",
@@ -813,6 +909,7 @@
     {
       "key": "streambot-playlist-limit",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Bound the Streambot playlist.",
       "type": "variant",
@@ -824,6 +921,7 @@
     {
       "key": "streambot-reconnect-delay-seconds",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Set Streambot reconnect delay.",
       "type": "variant",
@@ -835,6 +933,7 @@
     {
       "key": "streambot-reconnect-enabled",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Enable Streambot reconnects after transient voice disconnects.",
       "type": "boolean",
@@ -846,6 +945,7 @@
     {
       "key": "streambot-reconnect-max-attempts",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Bound Streambot reconnect attempts.",
       "type": "variant",
@@ -857,6 +957,7 @@
     {
       "key": "streambot-subtitle-languages",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Select Streambot subtitle languages.",
       "type": "variant",
@@ -868,6 +969,7 @@
     {
       "key": "streambot-subtitles-include-auto-generated",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Use auto-generated captions when human subtitles are unavailable.",
       "type": "boolean",
@@ -879,6 +981,7 @@
     {
       "key": "subtitles-enabled",
       "owner": "streambot",
+      "namespace": "streambot",
       "source": "streambot-dynamic",
       "purpose": "Enable Streambot subtitles.",
       "type": "boolean",

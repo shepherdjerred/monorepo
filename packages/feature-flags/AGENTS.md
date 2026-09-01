@@ -29,10 +29,10 @@ layer.
 
 ## Two failure classes, deliberately different
 
-| Class                  | Examples                                                                          | Behavior                                                         |
-| ---------------------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Config error**       | missing/unknown `FEATURE_FLAGS_MODE`, malformed `FLIPT_URL`, non-scalar attribute | **Throws** from `initFeatureFlags`. A deploy bug should be loud. |
-| **Availability error** | backend unreachable, provider not ready, flag undefined                           | **Never throws.** Returns the call-site default with a reason.   |
+| Class                  | Examples                                                                                                                  | Behavior                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Config error**       | missing/unknown `FEATURE_FLAGS_MODE`, malformed `FLIPT_URL`, missing Flipt environment or namespace, non-scalar attribute | **Throws** from `initFeatureFlags`. A deploy bug should be loud. |
+| **Availability error** | backend unreachable, provider not ready, flag undefined                                                                   | **Never throws.** Returns the call-site default with a reason.   |
 
 This is a deliberate carve-out from the repo's fail-fast default, recorded here
 so review does not re-litigate it on every PR. A flag system that throws during
@@ -55,6 +55,9 @@ same reason: a flag backend must never stop a service from booting.
   hidden environment fork is the silent fallback this repo bans. Consumers set
   `FEATURE_FLAGS_MODE=disabled` explicitly in test environments — including in
   their `scripts/ci-test-manifest.json` entry.
+- **Flipt mode requires both `FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE`.** The
+  environment selects the stage repository; the namespace selects the product
+  flag catalog inside it. Neither selector has a fallback.
 - **Attributes are scalars only.** Flipt's evaluation context is
   `Record<string, string>`; an object would target on `"[object Object]"`.
 - **No logging dependency.** `onInitializationFailure` is injected so each

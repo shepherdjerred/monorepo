@@ -90,6 +90,8 @@ describe("Temporal feature-flag boundary", () => {
       expect(environment.get("FLIPT_URL")).toBe(
         "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       );
+      expect(environment.get("FLIPT_NAMESPACE")).toBe("temporal");
+      expect(environment.get("FLIPT_ENVIRONMENT")).toBe("prod");
       configuredComponents.add(component);
     }
     expect(configuredComponents).toEqual(expectedComponents);

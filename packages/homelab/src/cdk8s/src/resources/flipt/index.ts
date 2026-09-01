@@ -20,6 +20,11 @@ import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/ser
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { renderFliptFeatures } from "@shepherdjerred/feature-flags/flipt-features-renderer.ts";
+import {
+  managedFlagInventory,
+  managedFlagNamespaces,
+} from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 
 export const FLIPT_PORT = 8080;
 
@@ -40,6 +45,16 @@ const FLIPT_UID = 100;
 const FLIPT_GID = 1000;
 
 const DATA_PATH = "/var/opt/flipt";
+const ENVIRONMENT_DATA_PATH = `${DATA_PATH}/environments`;
+
+const FLIPT_SEED_DATA = Object.fromEntries(
+  managedFlagInventory.environments.flatMap((environment) =>
+    managedFlagNamespaces.map((namespace) => [
+      `${environment.key}.${namespace}.yaml`,
+      renderFliptFeatures(environment.key, namespace),
+    ]),
+  ),
+);
 
 // `version: "2.0"` is required — Flipt v2 rejects "1.0" with
 // `loading configuration: invalid version: 1.0` and refuses to start.
@@ -49,8 +64,9 @@ const DATA_PATH = "/var/opt/flipt";
 // silently loses every one of them on restart. Verified by creating a flag,
 // restarting the container, and getting a 404 from the evaluation snapshot.
 // With this config the same test round-trips, and each managed environment has
-// its own bare git repository. The retired `${DATA_PATH}/data` repository stays
-// on the PVC as an unreferenced rollback artifact.
+// its own bare git repository. The product namespace seed is validated before
+// first boot into the clean environment paths below; existing repositories are
+// never overwritten on later restarts.
 //
 // check_for_updates and telemetry_enabled both default to true and would fail
 // continuously against the DNS-only egress policy below.
@@ -65,11 +81,11 @@ storage:
   beta:
     backend:
       type: local
-      path: ${DATA_PATH}/data-beta
+      path: ${ENVIRONMENT_DATA_PATH}/beta
   prod:
     backend:
       type: local
-      path: ${DATA_PATH}/data-prod
+      path: ${ENVIRONMENT_DATA_PATH}/prod
 environments:
   beta:
     name: beta
@@ -91,7 +107,16 @@ meta:
   state_directory: ${DATA_PATH}/state
 `;
 
-export function createEnvironmentValidationScript(dataPath: string): string {
+export function createEnvironmentInitializationScript(
+  dataPath: string,
+  namespaces: readonly string[],
+): string {
+  const copyCommands = ["beta", "prod"].flatMap((environment) =>
+    namespaces.map(
+      (namespace) =>
+        `mkdir -p "$work_root/${environment}/${namespace}"\ncp "/etc/flipt-seed/${environment}.${namespace}.yaml" "$work_root/${environment}/${namespace}/features.yaml"`,
+    ),
+  );
   return `set -eu
 
 validate_repo() {
@@ -102,13 +127,41 @@ validate_repo() {
   fi
 }
 
-validate_repo "${dataPath}/data-beta"
-validate_repo "${dataPath}/data-prod"
+work_root="/tmp/flipt-seed"
+mkdir -p "$work_root/beta" "$work_root/prod"
+${copyCommands.join("\n")}
+
+initialize_environment() {
+  environment="$1"
+  repo="${dataPath}/environments/$environment"
+  seed="$work_root/$environment"
+
+  /flipt validate --work-dir "$seed"
+  if [ ! -e "$repo" ]; then
+    mkdir -p "$repo"
+    cp -R "$seed/." "$repo/"
+    return
+  fi
+
+  if [ -f "$repo/HEAD" ] || [ -f "$repo/config" ] || [ -d "$repo/objects" ]; then
+    validate_repo "$repo"
+    return
+  fi
+
+  # A failed first Flipt boot may leave the validated source tree in place.
+  # Keep it intact so the local backend can retry repository initialization.
+  /flipt validate --work-dir "$repo"
+}
+
+initialize_environment beta
+initialize_environment prod
 `;
 }
 
-const VALIDATE_ENVIRONMENTS_SCRIPT =
-  createEnvironmentValidationScript(DATA_PATH);
+const INITIALIZE_ENVIRONMENTS_SCRIPT = createEnvironmentInitializationScript(
+  DATA_PATH,
+  managedFlagNamespaces,
+);
 
 export function createFliptDeployment(chart: Chart) {
   const deployment = new Deployment(chart, "flipt", {
@@ -123,11 +176,14 @@ export function createFliptDeployment(chart: Chart) {
   const config = new ConfigMap(chart, "flipt-config", {
     data: { "config.yml": FLIPT_CONFIG },
   });
+  const seed = new ConfigMap(chart, "flipt-seed", {
+    data: FLIPT_SEED_DATA,
+  });
 
   deployment.podMetadata.addAnnotation(
     "config-hash",
     new Bun.CryptoHasher("sha256")
-      .update(FLIPT_CONFIG)
+      .update(`${FLIPT_CONFIG}\n${JSON.stringify(FLIPT_SEED_DATA)}`)
       .digest("hex")
       .slice(0, 12),
   );
@@ -141,13 +197,15 @@ export function createFliptDeployment(chart: Chart) {
     "flipt-data-volume",
     dataVolume.claim,
   );
+  const scratchVolume = Volume.fromEmptyDir(chart, "flipt-tmp-volume", "tmp");
+  const seedVolume = Volume.fromConfigMap(chart, "flipt-seed-volume", seed);
 
   deployment.addInitContainer(
     withCommonProps({
-      name: "validate-environments",
+      name: "initialize-environments",
       image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
       command: ["/bin/sh", "-c"],
-      args: [VALIDATE_ENVIRONMENTS_SCRIPT],
+      args: [INITIALIZE_ENVIRONMENTS_SCRIPT],
       resources: {
         cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
         memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
@@ -162,7 +220,11 @@ export function createFliptDeployment(chart: Chart) {
         capabilities: { drop: [Capability.ALL] },
         seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
       },
-      volumeMounts: [{ path: DATA_PATH, volume: persistentDataVolume }],
+      volumeMounts: [
+        { path: DATA_PATH, volume: persistentDataVolume },
+        { path: "/etc/flipt-seed", volume: seedVolume, readOnly: true },
+        { path: "/tmp", volume: scratchVolume },
+      ],
     }),
   );
 
@@ -217,7 +279,7 @@ export function createFliptDeployment(chart: Chart) {
         },
         {
           path: "/tmp",
-          volume: Volume.fromEmptyDir(chart, "flipt-tmp-volume", "tmp"),
+          volume: scratchVolume,
         },
       ],
     }),

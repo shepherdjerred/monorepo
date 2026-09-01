@@ -40,6 +40,7 @@
     "ts-pattern": "^5.9.0",
     "zod": "^4.4.3",
     "@shepherdjerred/helm-types": "workspace:*",
+    "@shepherdjerred/feature-flags": "workspace:*",
     "@shepherdjerred/version-catalog": "workspace:*",
     "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379"
   },

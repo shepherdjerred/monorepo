@@ -3,7 +3,11 @@ import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
 } from "@shepherdjerred/feature-flags/managed-flag-drift.ts";
-import { managedFlagInventory } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
+import {
+  managedFlagInventory,
+  managedFlagNamespaces,
+  materializeManagedNamespaceEnvironment,
+} from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 import {
   buildFliptFlagDriftAlert,
   type FliptFlagDriftAlertInput,
@@ -24,24 +28,38 @@ function requiredEnvironment(name: string): string {
 export type FliptFlagInventoryActivities = typeof fliptFlagInventoryActivities;
 
 export const fliptFlagInventoryActivities = {
-  async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult> {
-    const environment = requiredEnvironment("FLIPT_ENVIRONMENT");
-    const snapshot = await fetchFliptSnapshot({
-      url: requiredEnvironment("FLIPT_URL"),
-      namespace: managedFlagInventory.namespace,
-      environment,
-    });
-    const drift = compareManagedFlagInventory(snapshot);
-    const result: FliptFlagInventoryResult = {
-      namespace: managedFlagInventory.namespace,
-      environment,
-      missingInFlipt: drift.missingInFlipt,
-      undeclaredInInventory: drift.undeclaredInInventory,
-      observedAt: new Date().toISOString(),
-    };
-    await createAlertmanagerPoster(requiredEnvironment("ALERTMANAGER_URL"))([
-      buildFliptFlagDriftAlert(result, new Date()),
-    ]);
-    return result;
+  async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult[]> {
+    const url = requiredEnvironment("FLIPT_URL");
+    const observedAt = new Date().toISOString();
+    const results = await Promise.all(
+      managedFlagInventory.environments.flatMap((environment) =>
+        managedFlagNamespaces.map(async (namespace) => {
+          const expectedFlags = materializeManagedNamespaceEnvironment(
+            managedFlagInventory,
+            environment.key,
+            namespace,
+          );
+          const snapshot = await fetchFliptSnapshot({
+            url,
+            namespace,
+            environment: environment.key,
+          });
+          const drift = compareManagedFlagInventory(snapshot, expectedFlags);
+          return {
+            namespace,
+            environment: environment.key,
+            missingInFlipt: drift.missingInFlipt,
+            undeclaredInInventory: drift.undeclaredInInventory,
+            contractMismatches: drift.contractMismatches,
+            observedAt,
+          };
+        }),
+      ),
+    );
+    const alertTime = new Date();
+    await createAlertmanagerPoster(requiredEnvironment("ALERTMANAGER_URL"))(
+      results.map((result) => buildFliptFlagDriftAlert(result, alertTime)),
+    );
+    return results;
   },
 };

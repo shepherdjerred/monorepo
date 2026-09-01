@@ -1,10 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { App, Testing } from "cdk8s";
+import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import { createBirmelChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/birmel.ts";
 import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media.ts";
 import { createScoutChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { createStarlightKarmaBotChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/starlight-karma-bot.ts";
+import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/temporal.ts";
+import { createTrmnlDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/trmnl-dashboard.ts";
+import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/buildkite.ts";
 
 const ManifestSchema = z
   .object({
@@ -35,7 +38,13 @@ const ManifestSchema = z
 
 async function fliptConsumers(
   createChart: (app: App) => void | Promise<void>,
-): Promise<{ name: string; environment: string | undefined }[]> {
+): Promise<
+  {
+    name: string;
+    environment: string | undefined;
+    namespace: string | undefined;
+  }[]
+> {
   const app = new App();
   await createChart(app);
   return app.charts.flatMap((chart) =>
@@ -55,6 +64,7 @@ async function fliptConsumers(
               {
                 name: parsed.data.metadata.name,
                 environment: env.get("FLIPT_ENVIRONMENT"),
+                namespace: env.get("FLIPT_NAMESPACE"),
               },
             ];
           },
@@ -64,29 +74,86 @@ async function fliptConsumers(
 }
 
 describe("Flipt consumer environments", () => {
-  const cases: [string, string, (app: App) => void | Promise<void>][] = [
-    ["Scout beta", "beta", (app: App) => createScoutChart(app, "beta")],
-    ["Scout prod", "prod", (app: App) => createScoutChart(app, "prod")],
-    [
-      "Karma beta",
-      "beta",
-      (app: App) => createStarlightKarmaBotChart(app, "beta"),
-    ],
-    [
-      "Karma prod",
-      "prod",
-      (app: App) => createStarlightKarmaBotChart(app, "prod"),
-    ],
-    ["Birmel", "prod", (app: App) => createBirmelChart(app)],
-    ["Streambot", "prod", (app: App) => createMediaChart(app)],
+  const cases = [
+    {
+      name: "Scout beta",
+      environment: "beta",
+      namespace: "scout",
+      count: 1,
+      createChart: (app: App) => createScoutChart(app, "beta"),
+    },
+    {
+      name: "Scout prod",
+      environment: "prod",
+      namespace: "scout",
+      count: 1,
+      createChart: (app: App) => createScoutChart(app, "prod"),
+    },
+    {
+      name: "Karma beta",
+      environment: "beta",
+      namespace: "starlight-karma-bot",
+      count: 1,
+      createChart: (app: App) => createStarlightKarmaBotChart(app, "beta"),
+    },
+    {
+      name: "Karma prod",
+      environment: "prod",
+      namespace: "starlight-karma-bot",
+      count: 1,
+      createChart: (app: App) => createStarlightKarmaBotChart(app, "prod"),
+    },
+    {
+      name: "Birmel",
+      environment: "prod",
+      namespace: "birmel",
+      count: 1,
+      createChart: (app: App) => createBirmelChart(app),
+    },
+    {
+      name: "Streambot",
+      environment: "prod",
+      namespace: "streambot",
+      count: 1,
+      createChart: (app: App) => createMediaChart(app),
+    },
+    {
+      name: "TRMNL dashboard",
+      environment: "prod",
+      namespace: "trmnl-dashboard",
+      count: 1,
+      createChart: (app: App) => createTrmnlDashboardChart(app),
+    },
+    {
+      name: "Temporal",
+      environment: "prod",
+      namespace: "temporal",
+      count: 12,
+      createChart: (app: App) => createTemporalChart(app),
+    },
+    {
+      name: "Buildkite maintenance",
+      environment: "prod",
+      namespace: "temporal",
+      count: 1,
+      createChart: (app: App) => {
+        const chart = new Chart(app, "buildkite-feature-flags", {
+          disableResourceNameHashes: true,
+        });
+        createBuildkiteApp(chart);
+      },
+    },
   ];
 
   test.each(cases)(
-    "sets %s to %s",
-    async (_name, expectedEnvironment, createChart) => {
+    "sets $name to $environment/$namespace",
+    async ({ environment, namespace, count, createChart }) => {
       const consumers = await fliptConsumers(createChart);
-      expect(consumers).toHaveLength(1);
-      expect(consumers[0]?.environment).toBe(expectedEnvironment);
+      expect(consumers).toHaveLength(count);
+      for (const consumer of consumers) {
+        expect(consumer.environment).toBe(environment);
+        expect(consumer.namespace).toBe(namespace);
+      }
     },
   );
 });

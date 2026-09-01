@@ -62,7 +62,9 @@ function withFlags(flags: FliptSnapshot["flags"]): FliptSnapshot {
 
 describe("managed Flipt flag drift", () => {
   test("recognizes an aligned snapshot", () => {
-    expect(compareManagedFlagInventory(snapshot)).toEqual({
+    expect(
+      compareManagedFlagInventory(snapshot, managedFlagInventory.flags),
+    ).toEqual({
       missingInFlipt: [],
       undeclaredInInventory: [],
       contractMismatches: [],
@@ -74,6 +76,7 @@ describe("managed Flipt flag drift", () => {
     if (missing === undefined) throw new Error("aligned snapshot is empty");
     const result = compareManagedFlagInventory(
       withFlags(snapshot.flags.filter((flag) => flag.key !== missing)),
+      managedFlagInventory.flags,
     );
 
     expect(result.missingInFlipt).toEqual([missing]);
@@ -84,6 +87,7 @@ describe("managed Flipt flag drift", () => {
     const unexpected = { ...flagAt(0), key: "unexpected-test-flag" };
     const result = compareManagedFlagInventory(
       withFlags([...snapshot.flags, unexpected]),
+      managedFlagInventory.flags,
     );
 
     expect(result.missingInFlipt).toEqual([]);
@@ -99,6 +103,7 @@ describe("managed Flipt flag drift", () => {
         ...snapshot.flags.filter((flag) => flag.key !== missing),
         ...unexpectedKeys.map((key) => ({ ...flagAt(0), key })),
       ]),
+      managedFlagInventory.flags,
     );
 
     expect(result.missingInFlipt).toEqual([missing]);
@@ -113,6 +118,7 @@ describe("managed Flipt flag drift", () => {
     const changed = { ...flagAt(0), enabled: !flagAt(0).enabled };
     const result = compareManagedFlagInventory(
       withFlags([changed, ...snapshot.flags.slice(1)]),
+      managedFlagInventory.flags,
     );
 
     expect(result.missingInFlipt).toEqual([]);
@@ -151,6 +157,7 @@ describe("fetchFliptSnapshot", () => {
     await expect(
       fetchFliptSnapshot({
         url: "http://flipt.test",
+        namespace: "scout",
         environment: "default",
         fetcher: async () =>
           new Response("unavailable", {
@@ -165,6 +172,7 @@ describe("fetchFliptSnapshot", () => {
     await expect(
       fetchFliptSnapshot({
         url: "http://flipt.test",
+        namespace: "scout",
         environment: "default",
         fetcher: async () => {
           throw new Error("connection refused");
@@ -177,6 +185,7 @@ describe("fetchFliptSnapshot", () => {
     await expect(
       fetchFliptSnapshot({
         url: "http://flipt.test",
+        namespace: "scout",
         environment: "default",
         fetcher: async () =>
           Response.json({ flags: [{ key: "broken" }] }, { status: 200 }),

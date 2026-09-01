@@ -21,9 +21,18 @@ layered resolver in front of it.
 > and bootstrap**. Everything else is a **feature flag**.
 
 Bootstrap is the part that cannot be a flag because it is needed to construct
-the thing that reads flags. `FLIPT_URL` locates the provider, while
-`FLIPT_ENVIRONMENT` selects its isolated storage environment. Every Flipt client
-sets that selector explicitly so a missing deployment value fails loudly.
+the thing that reads flags. `FLIPT_URL` locates the provider,
+`FLIPT_ENVIRONMENT` selects an isolated stage repository (`beta` or `prod`),
+and `FLIPT_NAMESPACE` selects the product-owned keyspace inside that
+environment. Every Flipt client sets both selectors explicitly so a missing
+deployment value fails loudly.
+
+A Flipt namespace is not a Kubernetes namespace. The Kubernetes namespace is a
+network and workload boundary; the Flipt namespace is a flag-catalog boundary.
+For example, Scout beta runs against Flipt environment `beta` and namespace
+`scout`, while Temporal runs against environment `prod` and namespace
+`temporal`. Both Flipt environments contain the same six product namespaces so
+the inventory remains uniform even when a product has no beta consumer.
 
 The application `ENVIRONMENT` remains separate. It describes the application
 stage and may be passed as a targeting attribute. It does not choose where Flipt
@@ -112,11 +121,13 @@ If Flipt ever gains authentication, both of those are worth revisiting.
 Flipt v2 defaults to **in-memory storage**. It accepts flag writes, serves them
 back, and silently loses every one on restart. The deployment therefore gives
 beta and production separate local git backends on a ZFS PVC backed up by
-Velero. Environment isolation prevents a beta model or rollout change from
-altering production. Regression tests assert the storage and client selectors,
-because either omission produces a service that looks healthy while reading the
-wrong contract. The retired single-environment repository remains unreferenced
-on the PVC as a rollback artifact; removing it is a separate lifecycle decision.
+Velero. Each repository begins from a validated declarative seed with all six
+product namespaces; subsequent restarts validate existing repositories and do
+not overwrite operator changes. Environment isolation prevents a beta model or
+rollout change from altering production, while namespaces keep product flag
+catalogs separate within a stage. Regression tests assert the storage and both
+client selectors, because any omission produces a service that looks healthy
+while reading the wrong contract.
 
 ## Analytics has a different ownership boundary
 

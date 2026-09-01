@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest";
 import {
   managedFlagInventory,
-  materializeManagedEnvironment,
+  managedFlagNamespaces,
+  materializeManagedNamespaceEnvironment,
   type ManagedFlag,
 } from "../packages/feature-flags/src/managed-flag-inventory.ts";
 import {
-  checkManagedEnvironments,
+  checkManagedFlagMatrix,
   selectedManagedEnvironments,
+  selectedManagedNamespaces,
 } from "./check-flipt-flag-inventory.ts";
 
 function snapshotFlag(flag: ManagedFlag) {
@@ -44,60 +46,85 @@ function snapshotFlag(flag: ManagedFlag) {
   };
 }
 
-function alignedSnapshot(environment: string) {
+function alignedSnapshot(environment: string, namespace: string) {
   return {
-    flags: materializeManagedEnvironment(managedFlagInventory, environment).map(
-      (flag) => snapshotFlag(flag),
-    ),
+    flags: materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      environment,
+      namespace,
+    ).map((flag) => snapshotFlag(flag)),
   };
 }
 
 describe("check-flipt-flag-inventory", () => {
-  test("checks every managed environment by default", async () => {
+  test("checks the complete environment and namespace matrix by default", async () => {
     const loaded: string[] = [];
-    const messages = await checkManagedEnvironments({
-      namespace: "default",
-      loadSnapshot: (_namespace, environment) => {
-        loaded.push(environment);
-        return Promise.resolve(alignedSnapshot(environment));
+    const messages = await checkManagedFlagMatrix({
+      loadSnapshot: (environment, namespace) => {
+        loaded.push(`${environment}/${namespace}`);
+        return Promise.resolve(alignedSnapshot(environment, namespace));
       },
     });
 
-    expect(loaded).toEqual(["beta", "prod"]);
-    expect(messages).toHaveLength(2);
+    expect(loaded).toEqual(
+      ["beta", "prod"].flatMap((environment) =>
+        managedFlagNamespaces.map((namespace) => `${environment}/${namespace}`),
+      ),
+    );
+    expect(messages).toHaveLength(12);
   });
 
-  test("checks only an exact environment filter", async () => {
+  test("checks only exact environment and namespace filters", async () => {
     const loaded: string[] = [];
-    await checkManagedEnvironments({
-      namespace: "default",
+    await checkManagedFlagMatrix({
+      namespaceFilter: "scout",
       environmentFilter: "beta",
-      loadSnapshot: (_namespace, environment) => {
-        loaded.push(environment);
-        return Promise.resolve(alignedSnapshot(environment));
+      loadSnapshot: (environment, namespace) => {
+        loaded.push(`${environment}/${namespace}`);
+        return Promise.resolve(alignedSnapshot(environment, namespace));
       },
     });
-    expect(loaded).toEqual(["beta"]);
+    expect(loaded).toEqual(["beta/scout"]);
     expect(() => selectedManagedEnvironments("staging")).toThrow(
       /unknown managed environment filter: staging/,
     );
+    expect(() => selectedManagedNamespaces("default")).toThrow(
+      /unknown managed namespace filter: default/,
+    );
   });
 
-  test("names the failing environment for malformed snapshots and drift", async () => {
+  test("names the failing namespace and environment for malformed snapshots and drift", async () => {
     await expect(
-      checkManagedEnvironments({
-        namespace: "default",
+      checkManagedFlagMatrix({
+        namespaceFilter: "scout",
         environmentFilter: "prod",
         loadSnapshot: () => Promise.resolve({ flags: [] }),
       }),
-    ).rejects.toThrow(/default\/prod/);
+    ).rejects.toThrow(/prod\/scout/);
 
     await expect(
-      checkManagedEnvironments({
-        namespace: "default",
+      checkManagedFlagMatrix({
+        namespaceFilter: "temporal",
         environmentFilter: "beta",
         loadSnapshot: () => Promise.resolve({ invalid: true }),
       }),
-    ).rejects.toThrow(/default\/beta/);
+    ).rejects.toThrow(/beta\/temporal/);
+  });
+
+  test("checks the remaining matrix after one pair fails", async () => {
+    const loaded: string[] = [];
+    await expect(
+      checkManagedFlagMatrix({
+        loadSnapshot: (environment, namespace) => {
+          loaded.push(`${environment}/${namespace}`);
+          return Promise.resolve(
+            environment === "beta" && namespace === "scout"
+              ? { flags: [] }
+              : alignedSnapshot(environment, namespace),
+          );
+        },
+      }),
+    ).rejects.toThrow(/beta\/scout/);
+    expect(loaded).toHaveLength(12);
   });
 });

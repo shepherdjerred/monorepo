@@ -10,10 +10,11 @@ describe("buildFliptFlagDriftAlert", () => {
   test("fires one stable alert containing both mismatch directions", () => {
     const alert = buildFliptFlagDriftAlert(
       {
-        namespace: "default",
-        environment: "default",
+        namespace: "scout",
+        environment: "beta",
         missingInFlipt: ["declared-flag"],
         undeclaredInInventory: ["manual-flag"],
+        contractMismatches: ["model: expected Luna, got Sol"],
       },
       NOW,
     );
@@ -22,8 +23,8 @@ describe("buildFliptFlagDriftAlert", () => {
       alertname: "FliptManagedFlagDrift",
       severity: "warning",
       component: "feature-flags",
-      namespace: "default",
-      environment: "default",
+      namespace: "scout",
+      environment: "beta",
     });
     expect(alert.annotations["description"]).toContain(
       "Declared keys missing from Flipt: declared-flag",
@@ -31,6 +32,10 @@ describe("buildFliptFlagDriftAlert", () => {
     expect(alert.annotations["description"]).toContain(
       "Flipt keys absent from the inventory: manual-flag",
     );
+    expect(alert.annotations["description"]).toContain(
+      "Behavior contract mismatches: model: expected Luna, got Sol",
+    );
+    expect(alert.annotations["summary"]).toContain("beta/scout");
     expect(alert.endsAt).toBe(
       new Date(NOW.getTime() + FLIPT_FLAG_DRIFT_ALERT_TTL_MS).toISOString(),
     );
@@ -39,19 +44,21 @@ describe("buildFliptFlagDriftAlert", () => {
   test("resolves with the exact same labels when aligned", () => {
     const firing = buildFliptFlagDriftAlert(
       {
-        namespace: "default",
-        environment: "default",
+        namespace: "scout",
+        environment: "beta",
         missingInFlipt: ["declared-flag"],
         undeclaredInInventory: [],
+        contractMismatches: [],
       },
       NOW,
     );
     const alert = buildFliptFlagDriftAlert(
       {
-        namespace: "default",
-        environment: "default",
+        namespace: "scout",
+        environment: "beta",
         missingInFlipt: [],
         undeclaredInInventory: [],
+        contractMismatches: [],
       },
       NOW,
     );

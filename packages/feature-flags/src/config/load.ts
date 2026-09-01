@@ -59,7 +59,7 @@ export function loadFeatureFlagConfiguration(
   return FeatureFlagConfigurationSchema.parse({
     mode,
     url: requireVariable(environment, "FLIPT_URL"),
-    namespace: environment["FLIPT_NAMESPACE"] ?? "default",
+    namespace: requireVariable(environment, "FLIPT_NAMESPACE"),
     environment: requireVariable(environment, "FLIPT_ENVIRONMENT"),
     pollIntervalSeconds:
       rawPoll === undefined || rawPoll.length === 0

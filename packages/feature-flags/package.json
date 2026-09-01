@@ -18,6 +18,7 @@
   "dependencies": {
     "@flipt-io/flipt-client-js": "^0.5.0",
     "@openfeature/server-sdk": "^1.23.0",
+    "yaml": "^2.8.3",
     "zod": "^4.4.3"
   },
   "devDependencies": {
