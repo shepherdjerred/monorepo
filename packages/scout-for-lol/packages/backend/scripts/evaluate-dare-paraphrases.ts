@@ -1,9 +1,7 @@
 import { Output, generateText } from "ai";
 import {
   DareParaphraseCorpusSchema,
-  DiscordAccountIdSchema,
   type DareParaphraseCorpus,
-  type DareTargetBindingV2,
 } from "@scout-for-lol/data";
 import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
 import { darePlanSemanticIssues } from "#src/betting/dare-contract-compiler-v2.ts";
@@ -18,6 +16,7 @@ import {
   DARE_V2_EVAL_MODEL,
   DareModelEvalReportSchema,
   dareModelEvalSha256,
+  resolveDareModelEvalTargets,
 } from "#src/explore/dare-model-eval-v2.ts";
 import { dareExplorePromptSection } from "#src/explore/prompt.ts";
 
@@ -38,25 +37,6 @@ async function loadCorpus(): Promise<{
   const raw = await Bun.file(CORPUS_URL).text();
   const parsed: unknown = JSON.parse(raw);
   return { corpus: DareParaphraseCorpusSchema.parse(parsed), raw };
-}
-
-function targetBindings(
-  aliases: Readonly<Record<string, string>>,
-): DareTargetBindingV2[] {
-  return Object.entries(aliases).map(([key, alias], index) => ({
-    key,
-    alias,
-    discordId: DiscordAccountIdSchema.parse(
-      `2000000000000000${index.toString()}`,
-    ),
-    playerId: index + 1,
-    accounts: [
-      {
-        puuid: `${key}-eval-puuid`,
-        trackingStartedAt: "2026-01-01T00:00:00.000Z",
-      },
-    ],
-  }));
 }
 
 function evalPrompt(input: {
@@ -98,8 +78,15 @@ async function evaluateParaphrase(
       ...runtime.callOptions({ workload: "scout.dare-v2-eval" }),
     });
     const output = DareDefinitionToolInputSchema.parse(result.output);
-    const targets = targetBindings(entry.targetAliases);
-    const issues = darePlanSemanticIssues(output.plan, targets);
+    const resolvedTargets = resolveDareModelEvalTargets({
+      targetKeys: output.targetKeys,
+      targetAliases: entry.targetAliases,
+    });
+    const targets = resolvedTargets.targets;
+    const issues = [
+      ...resolvedTargets.issues,
+      ...darePlanSemanticIssues(output.plan, targets),
+    ];
     const prepared = prepareDareDraftV2(
       {
         originalText: output.originalText,

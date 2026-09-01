@@ -20,6 +20,7 @@ import {
 } from "@scout-for-lol/design-system/components/tabs";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { ExploreDareEditor } from "#src/components/explore-dare-editor.tsx";
+import { dareEditorInstanceKey } from "#src/lib/dare-editor-state.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 export function ExploreDaresDrawer() {
@@ -185,7 +186,12 @@ function DareDetail(props: {
         <h3 className="font-medium">Dare #{props.dare.id.toString()}</h3>
         <StatePill state={props.dare.state} />
       </div>
-      {props.dare.state === "draft" && <ExploreDareEditor dare={props.dare} />}
+      {props.dare.state === "draft" && (
+        <ExploreDareEditor
+          key={dareEditorInstanceKey(props.dare)}
+          dare={props.dare}
+        />
+      )}
       <p className="whitespace-pre-wrap text-sm">{props.dare.plainLanguage}</p>
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <Fact label="Revision" value={revision.toString()} />
