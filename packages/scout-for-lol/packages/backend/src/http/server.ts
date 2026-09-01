@@ -1,6 +1,6 @@
 import configuration from "#src/configuration.ts";
-import { getMetrics, getRiotApiHealth } from "#src/metrics/index.ts";
-import { getScoutTemporalHealth } from "#src/temporal/health.ts";
+import { getMetrics } from "#src/metrics/index.ts";
+import { handleHealthz, handleLivez } from "#src/http/health-routes.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
@@ -94,84 +94,6 @@ function corsHeadersFor(request: Request): Record<string, string> {
     };
   }
   return {};
-}
-
-const applicationStartTime = Date.now();
-
-function handleLivez(request: Request): Response {
-  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
-  const now = Date.now();
-  const uptimeMs = now - applicationStartTime;
-  const cors = corsHeadersFor(request);
-
-  // Grace period: first 5 minutes after startup, always healthy
-  const startupGracePeriodMs = 5 * 60 * 1000;
-  if (uptimeMs < startupGracePeriodMs) {
-    return Response.json(
-      { healthy: true, reason: "startup-grace-period", uptimeMs },
-      {
-        status: 200,
-        headers: { "Content-Type": "application/json", ...cors },
-      },
-    );
-  }
-
-  // After grace: unhealthy if API attempts exist in last 20 min AND last success >15 min ago
-  const twentyMinutesMs = 20 * 60 * 1000;
-  const fifteenMinutesMs = 15 * 60 * 1000;
-  const hasRecentAttempts =
-    lastAttemptTimestamp !== undefined &&
-    now - lastAttemptTimestamp < twentyMinutesMs;
-  const lastSuccessStale =
-    lastSuccessTimestamp === undefined ||
-    now - lastSuccessTimestamp > fifteenMinutesMs;
-  const healthy = !(hasRecentAttempts && lastSuccessStale);
-
-  return Response.json(
-    {
-      healthy,
-      lastSuccessTimestamp: lastSuccessTimestamp ?? null,
-      lastAttemptTimestamp: lastAttemptTimestamp ?? null,
-      uptimeMs,
-    },
-    {
-      status: healthy ? 200 : 503,
-      headers: { "Content-Type": "application/json", ...cors },
-    },
-  );
-}
-
-function handleHealthz(request: Request): Response {
-  const { lastSuccessTimestamp, lastAttemptTimestamp } = getRiotApiHealth();
-  const now = Date.now();
-  const uptimeSeconds = (now - applicationStartTime) / 1000;
-  const cors = corsHeadersFor(request);
-
-  // Unhealthy if: API attempts exist in last 10 minutes AND last success was >5 minutes ago
-  const tenMinutesMs = 10 * 60 * 1000;
-  const fiveMinutesMs = 5 * 60 * 1000;
-  const hasRecentAttempts =
-    lastAttemptTimestamp !== undefined &&
-    now - lastAttemptTimestamp < tenMinutesMs;
-  const lastSuccessStale =
-    lastSuccessTimestamp === undefined ||
-    now - lastSuccessTimestamp > fiveMinutesMs;
-  const healthy = !(hasRecentAttempts && lastSuccessStale);
-  const temporal = getScoutTemporalHealth();
-
-  return Response.json(
-    {
-      healthy,
-      lastSuccessTimestamp: lastSuccessTimestamp ?? null,
-      lastAttemptTimestamp: lastAttemptTimestamp ?? null,
-      uptimeSeconds,
-      components: { temporal },
-    },
-    {
-      status: healthy ? 200 : 503,
-      headers: { "Content-Type": "application/json", ...cors },
-    },
-  );
 }
 
 /**
@@ -282,14 +204,15 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
     });
   }
 
-  // Liveness probe - restarts pod on sustained API failure
+  // Liveness probe - restarts the pod on a sustained Riot API or Discord
+  // gateway failure
   if (url.pathname === "/livez") {
-    return handleLivez(request);
+    return handleLivez({ cors: corsHeadersFor(request) });
   }
 
   // Readiness probe - checks Riot API health
   if (url.pathname === "/healthz") {
-    return handleHealthz(request);
+    return handleHealthz({ cors: corsHeadersFor(request) });
   }
 
   // Build/deploy identity: version, git SHA, tRPC contract hash
