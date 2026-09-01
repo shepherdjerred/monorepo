@@ -249,3 +249,60 @@ describe("ExploreTranscript", () => {
     expect(markup).not.toContain("Validate ScoutQL");
   });
 });
+
+describe("Explore Dare transcript cards", () => {
+  test("renders a private Dare draft card for persisted and streaming owner traces", () => {
+    const trace = [
+      {
+        toolCallId: "dare-call-1",
+        toolName: "create_dare_draft",
+        message: "The private dare draft was saved.",
+        status: "succeeded" as const,
+        durationMs: 40,
+        details: {
+          kind: "execution" as const,
+          queryText: "WITH eligible_games AS (...) SELECT achieved",
+          ok: true,
+          rowsReturned: null,
+          rowsScanned: null,
+          renderKind: null,
+        },
+        rawInput: null,
+        rawOutput: {
+          kind: "value" as const,
+          value: {
+            kind: "created",
+            message: "The private dare draft was saved.",
+            data: {
+              dareId: 42,
+              revision: 1,
+              canonicalScoutQl: "WITH eligible_games AS (...) SELECT achieved",
+              plainLanguage: "One game: Virmel gets 8 CS/min on Twisted Fate.",
+              semanticProofPlan: "Evaluate the same eligible match.",
+              openingStake: 20,
+              targetAliases: ["Virmel"],
+            },
+          },
+          byteLength: 400,
+        },
+      },
+    ];
+    const ownerPersisted = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[assistantMessage({ trace })]}
+        showRawTrace
+      />,
+    );
+    const ownerStreaming = renderToStaticMarkup(
+      <ExploreTranscript messages={[]} pendingTrace={trace} showRawTrace />,
+    );
+    const shared = renderToStaticMarkup(
+      <ExploreTranscript messages={[assistantMessage({ trace })]} />,
+    );
+
+    expect(ownerPersisted).toContain("Dare #42 draft");
+    expect(ownerStreaming).toContain("Dare #42 draft");
+    expect(ownerPersisted).toContain("One game: Virmel gets 8 CS/min");
+    expect(shared).not.toContain("Dare #42 draft");
+  });
+});

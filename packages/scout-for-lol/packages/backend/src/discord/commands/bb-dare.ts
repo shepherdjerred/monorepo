@@ -98,8 +98,12 @@ async function enabledDareVersion(
   const v2Policy =
     dependencies.isDareV2PolicyEnabled ??
     (dependencies.isDaresPolicyEnabled === undefined ? isPolicyEnabled : null);
-  if (v2Policy !== null && (await v2Policy("dare_v2", { server: serverId }))) {
-    return 2;
+  if (v2Policy !== null) {
+    const [v2Enabled, relationalEnabled] = await Promise.all([
+      v2Policy("dare_v2", { server: serverId }),
+      v2Policy("scoutql_relational_enabled", { server: serverId }),
+    ]);
+    if (v2Enabled && relationalEnabled) return 2;
   }
   const v1Policy = dependencies.isDaresPolicyEnabled ?? isPolicyEnabled;
   return (await v1Policy("bucks_dares_enabled", { server: serverId }))

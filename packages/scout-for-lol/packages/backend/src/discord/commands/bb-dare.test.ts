@@ -197,32 +197,6 @@ describe("/bb dare", () => {
     expect(translate).not.toHaveBeenCalled();
   });
 
-  test("routes the command through the persisted Explore Dare v2 flow", async () => {
-    const interaction = fakeInteraction({ amount: 20 });
-    const replyDareV2 = vi.fn(() => Promise.resolve());
-    const translate = vi.fn();
-    await replyBbDare(interaction, SERVER, CHALLENGER, {
-      isDareV2PolicyEnabled: () => Promise.resolve(true),
-      isDaresPolicyEnabled: () => Promise.resolve(false),
-      loadDareBalance: () => Promise.resolve(100),
-      replyDareV2,
-      translate,
-    });
-
-    expect(replyDareV2).toHaveBeenCalledWith(
-      interaction,
-      {
-        serverId: SERVER,
-        channelId: DiscordChannelIdSchema.parse(CHANNEL),
-        challengerDiscordId: CHALLENGER,
-        text: "I bet Virmel can't win 7 games on Warwick",
-        amount: 20,
-      },
-      undefined,
-    );
-    expect(translate).not.toHaveBeenCalled();
-  });
-
   test("a broken balance read never blocks the dare", async () => {
     const interaction = fakeInteraction();
     const createDare = makeCreateDare();
@@ -343,6 +317,49 @@ describe("/bb dare", () => {
       "at least 7 games where Virmel wins on Warwick",
     );
     expect(serialized).toContain("Confirm before");
+  });
+});
+
+describe("/bb dare v2 routing", () => {
+  test("routes the command through the persisted Explore Dare v2 flow", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+    const replyDareV2 = vi.fn(() => Promise.resolve());
+    const translate = vi.fn();
+    await replyBbDare(interaction, SERVER, CHALLENGER, {
+      isDareV2PolicyEnabled: () => Promise.resolve(true),
+      isDaresPolicyEnabled: () => Promise.resolve(false),
+      loadDareBalance: () => Promise.resolve(100),
+      replyDareV2,
+      translate,
+    });
+
+    expect(replyDareV2).toHaveBeenCalledWith(
+      interaction,
+      {
+        serverId: SERVER,
+        channelId: DiscordChannelIdSchema.parse(CHANNEL),
+        challengerDiscordId: CHALLENGER,
+        text: "I bet Virmel can't win 7 games on Warwick",
+        amount: 20,
+      },
+      undefined,
+    );
+    expect(translate).not.toHaveBeenCalled();
+  });
+
+  test("does not route to Dare v2 without relational ScoutQL", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+    const replyDareV2 = vi.fn(() => Promise.resolve());
+    await replyBbDare(interaction, SERVER, CHALLENGER, {
+      isDareV2PolicyEnabled: (flag) => Promise.resolve(flag === "dare_v2"),
+      isDaresPolicyEnabled: () => Promise.resolve(false),
+      replyDareV2,
+    });
+
+    expect(replyDareV2).not.toHaveBeenCalled();
+    expect(interaction.editReply).toHaveBeenCalledWith({
+      content: "🚫 Bryan Bucks dares aren't enabled in this server.",
+    });
   });
 });
 

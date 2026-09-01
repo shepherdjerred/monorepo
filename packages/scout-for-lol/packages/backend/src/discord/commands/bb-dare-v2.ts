@@ -4,6 +4,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
 import {
   DareCompiledPlanV2Schema,
@@ -24,7 +25,14 @@ import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
 import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { truncateEmbedFieldValue } from "#src/discord/utils/message.ts";
+import {
+  exploreAnswerChunks,
+  NO_GENERATED_MENTIONS,
+} from "#src/discord/scout/messages.ts";
+import {
+  splitMessageIntoChunks,
+  truncateEmbedFieldValue,
+} from "#src/discord/utils/message.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 
@@ -98,6 +106,41 @@ async function loadCreatedDraft(
   });
   const revision = dare?.revisions[0];
   return dare === null || revision === undefined ? null : { dare, revision };
+}
+
+async function replyWithoutDraft(
+  interaction: BbCommandInteraction,
+  conversationId: string,
+  terminal: Awaited<ReturnType<typeof runPersistedExploreTurn>>,
+): Promise<void> {
+  const answerChunks =
+    terminal.type === "final"
+      ? exploreAnswerChunks(terminal.message)
+      : splitMessageIntoChunks(terminal.message);
+  const first = answerChunks[0];
+  if (first === undefined) {
+    throw new Error("Saved Dare Explore turn had no Discord content.");
+  }
+  await interaction.editReply({
+    content: first,
+    components: noDraftComponents(conversationId),
+    allowedMentions: NO_GENERATED_MENTIONS,
+  });
+  for (const content of answerChunks.slice(1)) {
+    await interaction.followUp({
+      content,
+      flags: MessageFlags.Ephemeral,
+      allowedMentions: NO_GENERATED_MENTIONS,
+    });
+  }
+  await interaction.followUp({
+    content:
+      terminal.type === "final"
+        ? "No draft was funded or made public. Continue in Explore to clarify it."
+        : "The conversation was saved; continue in Explore to revise the request.",
+    flags: MessageFlags.Ephemeral,
+    allowedMentions: NO_GENERATED_MENTIONS,
+  });
 }
 
 export async function replyBbDareV2(
@@ -175,14 +218,7 @@ export async function replyBbDareV2(
       input.challengerDiscordId,
     );
     if (draft === null) {
-      await interaction.editReply({
-        content:
-          terminal.type === "final"
-            ? `${terminal.message.content}\n\nNo draft was funded or made public. Continue in Explore to clarify it.`
-            : `${terminal.message}\n\nThe conversation was saved; continue in Explore to revise the request.`,
-        components: noDraftComponents(conversationId),
-        allowedMentions: { parse: [] },
-      });
+      await replyWithoutDraft(interaction, conversationId, terminal);
       return;
     }
     const createIntent =
