@@ -34,6 +34,35 @@ export type TracingResourceOptions = {
   readonly workerRole?: string;
 };
 
+export type TracingInitializationFieldsOptions = {
+  readonly serviceName: string;
+  readonly serviceVersion: string;
+  readonly otlpEndpoint: string;
+  readonly defaultDomain: string;
+  readonly resource: TracingResourceOptions;
+};
+
+export function buildTracingInitializationFields({
+  serviceName,
+  serviceVersion,
+  otlpEndpoint,
+  defaultDomain,
+  resource,
+}: TracingInitializationFieldsOptions): Record<string, unknown> {
+  return {
+    serviceName,
+    serviceVersion,
+    otlpEndpoint,
+    environment: resource.environment ?? "dev",
+    domain: resource.domain ?? defaultDomain,
+    ...(resource.namespace === undefined
+      ? {}
+      : { namespace: resource.namespace }),
+    taskQueue: resource.taskQueue ?? "unknown",
+    workerRole: resource.workerRole ?? "unknown",
+  };
+}
+
 /**
  * `defaultDomain` is caller-specific (packages/temporal's shared
  * central-workflows process falls back to "platform"; Scout backend falls
@@ -51,7 +80,9 @@ export function buildTracingResource(
     [ATTR_SERVICE_VERSION]: serviceVersion,
     "deployment.environment.name": options.environment ?? "dev",
     "temporal.domain": options.domain ?? defaultDomain,
-    "temporal.namespace": options.namespace ?? "default",
+    ...(options.namespace === undefined
+      ? {}
+      : { "temporal.namespace": options.namespace }),
     "temporal.task_queue": options.taskQueue ?? "unknown",
     "temporal.worker.role": options.workerRole ?? "unknown",
   });

@@ -61,7 +61,7 @@ Bootstrap configuration:
 
 | Name                              | Contract                                   |
 | --------------------------------- | ------------------------------------------ |
-| `TEMPORAL_NAMESPACE`              | non-empty; currently `default`             |
+| `TEMPORAL_NAMESPACE`              | required `dev`, `beta`, or `prod`          |
 | `TEMPORAL_WORKER_DEPLOYMENT_NAME` | paired with Build ID; central value above  |
 | `TEMPORAL_WORKER_BUILD_ID`        | exact lowercase 40-character image Git SHA |
 

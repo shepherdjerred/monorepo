@@ -10,7 +10,7 @@ import {
 } from "@shepherdjerred/temporal-observability/workflow-span-sink";
 
 const WORKFLOW_INFO = {
-  namespace: "default",
+  namespace: "prod",
   taskQueue: "monorepo-workflows",
   workflowId: "workflow-1",
   runId: "run-1",
@@ -64,7 +64,7 @@ describe("createValidatedWorkflowSpanSink", () => {
     expect(exported[0]?.parentSpanContext?.spanId).toBe("fedcba9876543210");
     expect(exported[0]?.attributes).toMatchObject({
       existing: "value",
-      "temporal.namespace": "default",
+      "temporal.namespace": "prod",
       "temporal.task_queue": "monorepo-workflows",
       "temporal.workflow_id": "workflow-1",
     });

@@ -14,7 +14,7 @@ function execution(
   return {
     workflowId: `workflow-${String(index)}`,
     runId: `run-${String(index)}`,
-    temporalNamespace: "default",
+    temporalNamespace: "prod",
     workflowType,
     taskQueue: "default",
     startTime: new Date(OBSERVED_AT.getTime() - (index + 1) * 1000),

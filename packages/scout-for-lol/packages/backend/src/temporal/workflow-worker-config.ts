@@ -10,7 +10,7 @@ const WorkflowWorkerEnvironmentSchema = z
     GIT_SHA: WorkerBuildIdSchema,
     TEMPORAL_ADDRESS: z.string().min(1),
     TEMPORAL_METRICS_ADDRESS: z.string().min(1).default("0.0.0.0:9464"),
-    TEMPORAL_NAMESPACE: z.string().min(1).default("default"),
+    TEMPORAL_NAMESPACE: z.enum(["beta", "prod"]),
     TEMPORAL_WORKER_BUILD_ID: WorkerBuildIdSchema.optional(),
     TEMPORAL_WORKER_DEPLOYMENT_NAME: z.string().min(1),
   })
@@ -25,13 +25,20 @@ const WorkflowWorkerEnvironmentSchema = z
         message: "must match the baked GIT_SHA",
       });
     }
+    if (environment.TEMPORAL_NAMESPACE !== environment.ENVIRONMENT) {
+      context.addIssue({
+        code: "custom",
+        path: ["TEMPORAL_NAMESPACE"],
+        message: "must match ENVIRONMENT",
+      });
+    }
   });
 
 export type ScoutWorkflowWorkerConfiguration = {
   stage: "beta" | "prod";
   address: string;
   metricsAddress: string;
-  namespace: string;
+  namespace: "beta" | "prod";
   deploymentName: string;
   buildId: string;
 };

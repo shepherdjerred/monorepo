@@ -49,25 +49,15 @@ export async function startScoutCompetitionActivityWorker(): Promise<
 
   const taskQueue = scoutCompetitionTaskQueue(configuration.environment);
   const connection = await NativeConnection.connect({ address });
-  const namespaces =
-    configuration.temporalLegacyNamespace === undefined
-      ? [configuration.temporalNamespace]
-      : [
-          configuration.temporalNamespace,
-          configuration.temporalLegacyNamespace,
-        ];
-  const workers = await Promise.all(
-    namespaces.map(
-      async (namespace) =>
-        await Worker.create({
-          connection,
-          namespace,
-          taskQueue,
-          activities: { runScheduledCompetitionUpdates },
-          maxConcurrentActivityTaskExecutions: 1,
-        }),
-    ),
-  );
+  const workers = [
+    await Worker.create({
+      connection,
+      namespace: configuration.temporalNamespace,
+      taskQueue,
+      activities: { runScheduledCompetitionUpdates },
+      maxConcurrentActivityTaskExecutions: 1,
+    }),
+  ];
 
   const lifecycle = { shutdownStarted: false };
   let runFailure: Error | undefined;

@@ -2,10 +2,7 @@ import { VersioningBehavior } from "@temporalio/common";
 import { Worker } from "@temporalio/worker";
 import type { NativeConnection } from "@temporalio/worker";
 import type { createTemporalWorkerTracing } from "@shepherdjerred/temporal-observability/interceptors";
-import type {
-  LegacyTemporalNamespace,
-  TemporalNamespace,
-} from "./shared/temporal-namespace.ts";
+import type { TemporalNamespace } from "./shared/temporal-namespace.ts";
 import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
 import type { TemporalBootstrap } from "./shared/temporal-bootstrap.ts";
 import type { QueueWorkerDefinition } from "./worker-config.ts";
@@ -24,8 +21,7 @@ export type CreateQueueWorkerOptions = {
 export async function createQueueWorker(
   definition: QueueWorkerDefinition,
   options: CreateQueueWorkerOptions,
-  namespace: TemporalNamespace | LegacyTemporalNamespace,
-  legacyDrain: boolean,
+  namespace: TemporalNamespace,
 ): Promise<Worker> {
   const {
     connection,
@@ -36,9 +32,6 @@ export async function createQueueWorker(
     temporalTracing,
   } = options;
   if (definition.kind === "workflow") {
-    const workerDeployment = legacyDrain
-      ? undefined
-      : bootstrap.workerDeployment;
     return await Worker.create({
       connection,
       namespace,
@@ -56,21 +49,20 @@ export async function createQueueWorker(
         : { sinks: temporalTracing.sinks }),
       workflowTaskPollerBehavior: WORKFLOW_TASK_POLLER_BEHAVIOR,
       taskQueue: definition.taskQueue,
-      ...(workerDeployment === undefined
+      ...(bootstrap.workerDeployment === undefined
         ? {}
         : {
             workerDeploymentOptions: {
-              version: workerDeployment,
+              version: bootstrap.workerDeployment,
               useWorkerVersioning: true,
               defaultVersioningBehavior: VersioningBehavior.AUTO_UPGRADE,
             },
           }),
-      ...(!legacyDrain &&
-      definition.maxConcurrentWorkflowTaskExecutions === undefined
+      ...(definition.maxConcurrentWorkflowTaskExecutions === undefined
         ? {}
         : {
             maxConcurrentWorkflowTaskExecutions:
-              definition.maxConcurrentWorkflowTaskExecutions ?? 1,
+              definition.maxConcurrentWorkflowTaskExecutions,
           }),
     });
   }
@@ -82,12 +74,11 @@ export async function createQueueWorker(
     ...(temporalTracing === undefined
       ? {}
       : { interceptors: { activity: temporalTracing.activity } }),
-    ...(!legacyDrain &&
-    definition.maxConcurrentActivityTaskExecutions === undefined
+    ...(definition.maxConcurrentActivityTaskExecutions === undefined
       ? {}
       : {
           maxConcurrentActivityTaskExecutions:
-            definition.maxConcurrentActivityTaskExecutions ?? 1,
+            definition.maxConcurrentActivityTaskExecutions,
         }),
   });
 }

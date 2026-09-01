@@ -1,8 +1,8 @@
 import { z } from "zod/v4";
 import type { FailedWorkflowExecution } from "#shared/workflow-failure-alert.ts";
 import {
-  AnyTemporalNamespaceSchema,
-  type AnyTemporalNamespace,
+  TemporalNamespaceSchema,
+  type TemporalNamespace,
 } from "#shared/temporal-namespace.ts";
 import type { WorkflowFailureOverflowSummary } from "./workflow-failure-watch-overflow.ts";
 
@@ -50,7 +50,7 @@ export type WorkflowFailureWatchCheckpoint = {
 };
 export type WorkflowFailureWatchCheckpoints = Partial<
   Record<
-    AnyTemporalNamespace,
+    TemporalNamespace,
     WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor
   >
 >;
@@ -60,51 +60,6 @@ export function workflowExecutionKey(
   runId: string,
 ): string {
   return `${workflowId}\u{0000}${runId}`;
-}
-
-/**
- * Decode the last heartbeat from a retrying activity. Heartbeats from the
- * pre-checkpoint implementation have no `checkpoint` field and intentionally
- * resume from the lookback boundary; malformed checkpoint data fails loudly so
- * a broken progress contract cannot silently skip executions.
- */
-export function parseWorkflowFailureWatchCheckpoint(
-  details: unknown,
-): WorkflowFailureWatchCheckpoint | undefined {
-  if (details === undefined) {
-    return undefined;
-  }
-  const detailsRecord = z.record(z.string(), z.unknown()).parse(details);
-  const checkpoint = detailsRecord["checkpoint"];
-  if (checkpoint === undefined || checkpoint === null) {
-    return undefined;
-  }
-  const parsed = WorkflowFailureWatchCheckpointSchema.safeParse(checkpoint);
-  if (parsed.success) {
-    return {
-      detailedAlertsConsumed: parsed.data.detailedAlertsConsumed,
-      ...(parsed.data.cursor === undefined
-        ? {}
-        : { cursor: parsedCursor(parsed.data.cursor) }),
-      ...(parsed.data.overflow === undefined
-        ? {}
-        : {
-            overflow: {
-              ...parsed.data.overflow,
-              newestOmittedCloseTime: new Date(
-                parsed.data.overflow.newestOmittedCloseTime,
-              ),
-            },
-          }),
-    };
-  }
-  // Heartbeats written before the fanout budget used the cursor fields at the
-  // checkpoint root. They consumed no persisted detail budget.
-  const legacyCursor = WorkflowFailureWatchCursorSchema.parse(checkpoint);
-  return {
-    detailedAlertsConsumed: 0,
-    cursor: parsedCursor(legacyCursor),
-  };
 }
 
 function parsedCursor(
@@ -139,7 +94,7 @@ export function parseWorkflowFailureWatchLookbackSince(
   return new Date(z.iso.datetime({ offset: true }).parse(lookbackSince));
 }
 
-export function serializedCheckpoint(
+function serializedCheckpoint(
   checkpoint:
     WorkflowFailureWatchCheckpoint | WorkflowFailureWatchCursor | undefined,
 ): Record<string, unknown> | null {
@@ -208,7 +163,7 @@ export function parseWorkflowFailureWatchCheckpoints(
     .parse(rawCheckpoints);
   return Object.fromEntries(
     Object.entries(checkpointsRecord).map(([namespace, checkpoint]) => [
-      AnyTemporalNamespaceSchema.parse(namespace),
+      TemporalNamespaceSchema.parse(namespace),
       parseCheckpointValue(checkpoint),
     ]),
   );

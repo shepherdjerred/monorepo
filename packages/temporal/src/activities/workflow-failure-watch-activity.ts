@@ -12,25 +12,22 @@ import {
   type PollWorkflowFailuresResult,
 } from "./workflow-failure-watch.ts";
 import {
-  parseWorkflowFailureWatchCheckpoint,
   parseWorkflowFailureWatchCheckpoints,
   parseWorkflowFailureWatchLookbackSince,
   serializedCheckpoints,
-  serializedCheckpoint,
   type WorkflowFailureWatchCheckpoints,
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import {
-  parseLegacyTemporalNamespace,
   parseTemporalNamespace,
   temporalNamespacesForMonitoring,
-  type AnyTemporalNamespace,
+  type TemporalNamespace,
 } from "#shared/temporal-namespace.ts";
 
 const HEARTBEAT_INTERVAL_MS = 10_000;
 
 function checkpointForPolling(
-  checkpoint: WorkflowFailureWatchCheckpoints[AnyTemporalNamespace],
+  checkpoint: WorkflowFailureWatchCheckpoints[TemporalNamespace],
 ): WorkflowFailureWatchCheckpoint | undefined {
   if (checkpoint === undefined) return undefined;
   if ("closeTime" in checkpoint) {
@@ -43,7 +40,7 @@ async function runPollWorkflowFailuresImpl(
   checkpoints: WorkflowFailureWatchCheckpoints,
   lookbackSince: Date,
   onCheckpoint: (
-    namespace: AnyTemporalNamespace,
+    namespace: TemporalNamespace,
     checkpoint: WorkflowFailureWatchCheckpoint,
   ) => void,
 ): Promise<PollWorkflowFailuresResult> {
@@ -52,7 +49,6 @@ async function runPollWorkflowFailuresImpl(
   );
   const namespaces = temporalNamespacesForMonitoring(
     parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
-    parseLegacyTemporalNamespace(Bun.env["TEMPORAL_LEGACY_NAMESPACE"]),
   );
   const aggregate: PollWorkflowFailuresResult = {
     scanned: 0,
@@ -91,11 +87,6 @@ export const workflowFailureWatchActivities = {
     const heartbeatDetails: unknown = Context.current().info.heartbeatDetails;
     const checkpoints: WorkflowFailureWatchCheckpoints =
       parseWorkflowFailureWatchCheckpoints(heartbeatDetails);
-    const legacyCheckpoint =
-      parseWorkflowFailureWatchCheckpoint(heartbeatDetails);
-    if (legacyCheckpoint !== undefined && checkpoints.default === undefined) {
-      checkpoints.default = legacyCheckpoint;
-    }
     let lookbackSince =
       parseWorkflowFailureWatchLookbackSince(heartbeatDetails) ??
       new Date(start - DEFAULT_LOOKBACK_MS);
@@ -104,7 +95,6 @@ export const workflowFailureWatchActivities = {
         phase: "pollWorkflowFailures",
         elapsedMs: Date.now() - start,
         lookbackSince: lookbackSince.toISOString(),
-        checkpoint: serializedCheckpoint(checkpoints.prod),
         checkpoints: serializedCheckpoints(checkpoints),
       });
     };

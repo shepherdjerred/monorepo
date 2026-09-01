@@ -6,11 +6,6 @@ export type TemporalNamespace = z.infer<typeof TemporalNamespaceSchema>;
 export const ScoutStageSchema = TemporalNamespaceSchema;
 export type ScoutStage = TemporalNamespace;
 
-export const TemporalLegacyNamespaceSchema = z.literal("default");
-export type TemporalLegacyNamespace = z.infer<
-  typeof TemporalLegacyNamespaceSchema
->;
-
 export const DETACHED_WORK_MAX_ATTEMPTS = 4;
 
 const OpaqueIdentifierSchema = z

@@ -38,9 +38,7 @@ import {
   shutdownCallGraphTracing,
 } from "./config/call-graph-tracing.ts";
 import {
-  parseLegacyTemporalNamespace,
   parseTemporalNamespace,
-  type LegacyTemporalNamespace,
   type TemporalNamespace,
 } from "./shared/temporal-namespace.ts";
 import {
@@ -49,7 +47,6 @@ import {
 } from "./shared/worker-namespaces.ts";
 import {
   parseScheduleReconciliationMode,
-  isScheduleNamespaceDrained,
   type ScheduleReconciliationMode,
 } from "./shared/schedule-reconciliation.ts";
 import { createQueueWorker } from "./worker-factory.ts";
@@ -185,33 +182,11 @@ type StartRoleServicesOptions = {
   readonly callGraphTracing: boolean;
   readonly namespace: TemporalNamespace;
   readonly scheduleReconciliation: ScheduleReconciliationMode;
-  readonly legacyNamespace: LegacyTemporalNamespace | undefined;
   readonly roleContract: ReturnType<typeof getWorkerRoleContract>;
 };
 
-async function shouldReconcileSchedules(
-  options: StartRoleServicesOptions,
-  connection: Connection,
-): Promise<boolean> {
-  if (options.scheduleReconciliation !== "auto") {
-    return options.scheduleReconciliation === "enabled";
-  }
-  const shouldReconcile =
-    options.legacyNamespace === undefined ||
-    (await isScheduleNamespaceDrained(
-      new Client({
-        connection,
-        namespace: options.legacyNamespace,
-      }),
-    ));
-  jsonLog(
-    "info",
-    shouldReconcile
-      ? "Legacy schedule namespace drained"
-      : "Legacy schedule namespace still active",
-    { namespace: options.legacyNamespace ?? "none" },
-  );
-  return shouldReconcile;
+function shouldReconcileSchedules(options: StartRoleServicesOptions): boolean {
+  return options.scheduleReconciliation !== "disabled";
 }
 
 async function registerGatewaySchedules(
@@ -270,10 +245,7 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
       ],
     },
   });
-  const shouldReconcile = await shouldReconcileSchedules(
-    options,
-    clientConnection,
-  );
+  const shouldReconcile = shouldReconcileSchedules(options);
   let httpServers: EventBridgeHandle | undefined;
   if (shouldReconcile && options.roleContract.runsGateway) {
     await registerGatewaySchedules(options, clientConnection);
@@ -342,14 +314,10 @@ async function main(): Promise<void> {
   const scheduleReconciliation = parseScheduleReconciliationMode(
     Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
   );
-  const legacyNamespace = parseLegacyTemporalNamespace(
-    Bun.env["TEMPORAL_LEGACY_NAMESPACE"],
-  );
   jsonLog("info", "Connecting to Temporal server", {
     address,
     role,
     namespace,
-    legacyNamespace,
   });
 
   const connection = await NativeConnection.connect({ address });
@@ -368,10 +336,8 @@ async function main(): Promise<void> {
       queueRole: definition.role,
       taskQueue: definition.taskQueue,
       activeNamespace: namespace,
-      legacyNamespace,
     });
     for (const workerNamespace of namespaces) {
-      const legacyDrain = workerNamespace === legacyNamespace;
       const worker = await createQueueWorker(
         definition,
         {
@@ -383,12 +349,10 @@ async function main(): Promise<void> {
           temporalTracing,
         },
         workerNamespace,
-        legacyDrain,
       );
       workers.push(worker);
       jsonLog("info", "Worker created", {
         namespace: workerNamespace,
-        legacyDrain,
         workerKind: definition.kind,
         queueRole: definition.role,
         taskQueue: definition.taskQueue,
@@ -411,7 +375,6 @@ async function main(): Promise<void> {
     callGraphTracing,
     namespace,
     scheduleReconciliation,
-    legacyNamespace,
     roleContract,
   });
 

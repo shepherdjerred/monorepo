@@ -28,11 +28,11 @@ promoting changed Workflow code:
 
 ```bash
 cd packages/scout-for-lol/packages/temporal
-TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true TEMPORAL_NAMESPACE=beta \
   bun run replay:histories <scout-workflow-id>...
 
 cd packages/temporal
-TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true \
+TEMPORAL_ADDRESS=<beta-address> TEMPORAL_TLS=true TEMPORAL_NAMESPACE=beta \
   bun run replay:scout-histories <weekly-or-bryan-workflow-id>...
 ```
 
@@ -48,7 +48,7 @@ cd packages/scout-for-lol/packages/temporal
 bun run canary -- \
   --stage beta \
   --address <beta-address> \
-  --namespace default
+  --namespace beta
 ```
 
 The result must name `scout-beta-realtime`, `scout-beta-interactive`,

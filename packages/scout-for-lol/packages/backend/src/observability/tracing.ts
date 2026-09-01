@@ -14,6 +14,7 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import { buildArchiveSpanProcessor } from "@shepherdjerred/llm-observability";
 import {
+  buildTracingInitializationFields,
   buildTracingResource,
   LoggingSpanExporter,
   type TracingResourceOptions,
@@ -123,16 +124,17 @@ export function initializeTracing(
   sdk.start();
   tracer = trace.getTracer(serviceName);
 
-  jsonLog("info", "OpenTelemetry tracing initialized", {
-    serviceName,
-    serviceVersion,
-    otlpEndpoint,
-    environment: options.environment ?? "dev",
-    domain: options.domain ?? "scout",
-    namespace: options.namespace ?? "default",
-    taskQueue: options.taskQueue ?? "unknown",
-    workerRole: options.workerRole ?? "unknown",
-  });
+  jsonLog(
+    "info",
+    "OpenTelemetry tracing initialized",
+    buildTracingInitializationFields({
+      defaultDomain: "scout",
+      otlpEndpoint,
+      resource: options,
+      serviceName,
+      serviceVersion,
+    }),
+  );
   tracingRuntime = { processor: rootProcessor, resource };
   return tracingRuntime;
 }

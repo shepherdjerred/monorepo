@@ -10,7 +10,7 @@ import {
   rolloutPoller,
   type RolloutCommandRunner,
 } from "./worker-deployment-proofs.ts";
-import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
+import { WORKFLOW_TASK_QUEUES } from "#worker-config";
 
 const CANDIDATE = "b".repeat(40);
 const STABLE = "a".repeat(40);
@@ -217,7 +217,7 @@ function describeVersionFixture(
     taskQueuesInfos: fixture.omitWorkflowQueue
       ? []
       : fixture.workflowQueue === undefined
-        ? RETAINED_WORKFLOW_TASK_QUEUES.map((name) => ({
+        ? WORKFLOW_TASK_QUEUES.map((name) => ({
             name,
             type: "workflow" as const,
           }))
@@ -301,7 +301,7 @@ async function options(
   return {
     action,
     address: "temporal.test:7233",
-    namespace: "default",
+    namespace: "prod",
     deploymentName: DEPLOYMENT,
     buildId: CANDIDATE,
     taskQueue: "monorepo-workflows",
@@ -373,7 +373,7 @@ describe("Worker Deployment rollout", () => {
       rampPercentage: 0,
       workflowPollers: 1,
       activeTemporalAlerts: 0,
-      candidateWorkflowQueues: RETAINED_WORKFLOW_TASK_QUEUES.toSorted(),
+      candidateWorkflowQueues: WORKFLOW_TASK_QUEUES.toSorted(),
     });
     expect(
       commands.some((command) => command.includes("describe-version")),

@@ -20,8 +20,8 @@ Production uses the same Bun image in twelve single-replica Kubernetes
 Deployments selected by `TEMPORAL_WORKER_ROLE`. `control` owns schedule
 reconciliation and public HTTP/event surfaces without a task queue. The
 credentialless `workflows` role runs as stable and candidate Deployments on
-`monorepo-workflows` and keeps temporary pollers on every legacy central queue.
-Both use the Temporal Worker Deployment `monorepo-central-workflows`, exact
+`monorepo-workflows`. Both use the Temporal Worker Deployment
+`monorepo-central-workflows`, exact
 image Git SHA Build IDs, and default `AUTO_UPGRADE` behavior. The stable and
 candidate catalog pins must remain distinct: CI advances candidate only while
 the two pins are equal, retaining the deployed candidate throughout a rollout.
@@ -31,17 +31,16 @@ to copy stable back to candidate before the next CI image release may advance
 it; review and commit both the catalog and pin-state changes through the normal
 PR flow.
 Domain roles are Activity-only and own their registries in the typed contract
-in `src/worker-config.ts`. The default `all` role preserves the single-process local development
-behavior. Keep new queue ownership and capabilities in that contract so a
+in `src/worker-config.ts`. The explicit local `all` role preserves the
+single-process development behavior. Keep new queue ownership and capabilities in that contract so a
 provider subprocess, heavy Glitter failure, or maintenance subprocess cannot
 take down another domain or inherit its Kubernetes permissions.
 
 Every new central start, schedule, and child must target
 `TASK_QUEUES.WORKFLOWS`. Every Activity proxy must name the domain queue that
 owns the effect and must never use the Workflow queue. Continue-as-new inherits
-the current Workflow task queue; this keeps new chains on `monorepo-workflows`
-and lets remaining pre-cutover chains finish on their original queue. The
-pre-retirement default queue is no longer supported.
+the current Workflow task queue, which keeps central chains on
+`monorepo-workflows`.
 
 The bootstrap contract is `TEMPORAL_NAMESPACE` plus the paired
 `TEMPORAL_WORKER_DEPLOYMENT_NAME` and `TEMPORAL_WORKER_BUILD_ID`. The Build ID
@@ -185,7 +184,7 @@ stays at 0 and is indistinguishable from a clean "no orphans" result.
 ## Commands
 
 ```bash
-bun run start        # Start worker (connects to Temporal server)
+TEMPORAL_NAMESPACE=dev TEMPORAL_WORKER_ROLE=all bun run start # Start local worker
 bun run typecheck    # Type check (runs ensure-ha-schema first)
 bun run lint         # ESLint
 bun run test         # Run tests (incl. workflow-bundle smoke test)
@@ -238,7 +237,8 @@ Workflow:
 ## Environment Variables
 
 - `TEMPORAL_ADDRESS` — Temporal server gRPC address (default: `temporal-server.temporal.svc.cluster.local:7233`)
-- `TEMPORAL_WORKER_ROLE` — process role: `all` (default/local), `control`, `workflows`, `agent`, `backup`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Invalid values fail startup.
+- `TEMPORAL_NAMESPACE` — required active namespace: `dev`, `beta`, or `prod`.
+- `TEMPORAL_WORKER_ROLE` — required process role: `all` (local only), `control`, `workflows`, `agent`, `backup`, `glitter`, `glitter-context`, `glitter-corpus`, `home`, `infra`, `maintenance`, `repo`, `reports`, or `scout`. Missing and invalid values fail startup.
 - `HA_URL` — Home Assistant URL
 - `HA_TOKEN` — Home Assistant long-lived access token
 - `GOLINK_URL` — Golink service URL

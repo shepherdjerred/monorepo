@@ -62,8 +62,9 @@ change.
 Every programmatic start and Schedule carries the same four Keyword Search
 Attributes: environment, domain, trigger, and the Git commit that initiated the
 execution. Temporal's built-in Schedule attributes remain authoritative for
-Schedule identity. This makes the UI and CLI useful across the shared
-`default` namespace without copying Schedule IDs into another attribute. The
+Schedule identity. This makes the UI and CLI useful within the
+environment-scoped `dev`, `beta`, and `prod` namespaces without copying
+Schedule IDs into another attribute. The
 [Search Attribute schema and domain derivation](https://github.com/shepherdjerred/monorepo/blob/ad28b407ada3330924ba0248a7d50000f9c38178/packages/temporal/src/shared/execution-metadata.ts)
 live in one file; the
 [client interceptor](https://github.com/shepherdjerred/monorepo/blob/ad28b407ada3330924ba0248a7d50000f9c38178/packages/temporal/src/lib/execution-metadata-client-interceptor.ts)
@@ -102,18 +103,15 @@ implement this boundary.
 The gateway is a control process: it reconciles schedules and serves the public
 HTTP surfaces but does not poll a task queue or receive a Kubernetes token. A
 second credentialless process runs all deterministic central Workflow code.
-Every new start, schedule, and child goes to `monorepo-workflows`. Nine
+Every new central start, schedule, and child goes to `monorepo-workflows`. Nine
 Activity-only roles own `home`, `reports`, `infra`,
 `repo-automation`, `scout`, `agent-task`, `glitter-corpus`, `glitter-context`,
 and `maintenance`.
 
 Temporal executions cannot move to another Workflow task queue after they
-start. The Workflow-only process therefore polls `monorepo-workflows` plus the
-remaining legacy central queues until live visibility shows that each old queue
-has zero open executions. Continue-as-new inherits the current queue, so new
-chains stay on `monorepo-workflows`; pre-retirement default histories are no
-longer supported. A replay test generated a real history before Activity queues
-were explicit and verifies it against the new routing on every change.
+start. Continue-as-new inherits the current queue, so central chains remain on
+`monorepo-workflows`. Replay tests verify retained histories against candidate
+Workflow bundles before routing changes.
 
 The split is about authorization and failure isolation, not capacity. Queues
 isolate concurrency; **processes** isolate runtime failures, credentials, and

@@ -113,7 +113,7 @@ export function temporalDashboardLinks() {
     {
       title: "Temporal UI",
       type: "link",
-      url: "https://temporal-ui.tailnet-1a49.ts.net/namespaces/default/workflows",
+      url: "https://temporal-ui.tailnet-1a49.ts.net/namespaces/prod/workflows",
       targetBlank: true,
       keepTime: true,
     },
@@ -196,7 +196,7 @@ export function createTemporalPlatformPanels() {
         "Workflow Task execution failures by queue, type, and reason. Nondeterminism is a rollout stop condition.",
       targets: [
         {
-          expr: 'sum by (task_queue, workflow_type, failure_reason) (increase(temporal_worker_workflow_task_execution_failed{exported_namespace="default"}[10m])) or on() vector(0)',
+          expr: 'sum by (exported_namespace, task_queue, workflow_type, failure_reason) (increase(temporal_worker_workflow_task_execution_failed{exported_namespace=~"prod|beta"}[10m])) or on() vector(0)',
           legend: "{{task_queue}} {{workflow_type}} {{failure_reason}}",
         },
       ],
@@ -214,7 +214,7 @@ export function createTemporalPlatformPanels() {
         {
           // activity_task_fail, not activity_fail — see
           // TemporalActivityRetriesExhausted in temporal-platform-health.ts.
-          expr: 'sum by (taskqueue, workflowType, activityType) (increase(activity_task_fail{namespace="default"}[15m])) or on() vector(0)',
+          expr: 'sum by (exported_namespace, taskqueue, workflowType, activityType) (increase(activity_task_fail{exported_namespace=~"prod|beta"}[15m])) or on() vector(0)',
           legend: "{{taskqueue}} {{workflowType}} {{activityType}}",
         },
       ],

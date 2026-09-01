@@ -1,5 +1,8 @@
 import { Client, Connection } from "@temporalio/client";
 import { Worker } from "@temporalio/worker";
+import { z } from "zod";
+
+export const TemporalReplayNamespaceSchema = z.enum(["dev", "beta", "prod"]);
 
 export async function replayTemporalHistories(input: {
   workflowIds: readonly string[];
@@ -19,6 +22,9 @@ export async function replayTemporalHistories(input: {
   if (tls !== undefined && tls !== "true" && tls !== "false") {
     throw new Error(`TEMPORAL_TLS must be true or false, got ${tls}`);
   }
+  const namespace = TemporalReplayNamespaceSchema.parse(
+    environment["TEMPORAL_NAMESPACE"],
+  );
   const connection = await Connection.connect({
     address,
     ...(tls === "true" ? { tls: true } : {}),
@@ -26,7 +32,7 @@ export async function replayTemporalHistories(input: {
   try {
     const client = new Client({
       connection,
-      namespace: environment["TEMPORAL_NAMESPACE"] ?? "default",
+      namespace,
     });
     for (const workflowId of input.workflowIds) {
       const history = await client.workflow
