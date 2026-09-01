@@ -4,6 +4,24 @@ import { scoutWorkflowWorkerImageIsCapable } from "@shepherdjerred/homelab/cdk8s
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 type PrometheusRule = NonNullable<PrometheusRuleSpecGroups["rules"]>[number];
+
+/**
+ * Task-queue name as it appears on the Temporal **server's** own metrics.
+ *
+ * The server sanitizes its metric tag values, so `monorepo-workflows` is
+ * published as `monorepo_workflows`. The SDK's exporter does not, so
+ * `temporal_worker_num_pollers` keeps the hyphen. Selecting the hyphenated
+ * name against a server metric matches nothing and yields a rule that cannot
+ * fire — which is exactly how a fifteen-hour total outage of the workflow
+ * plane produced no page: seven of the eleven central queues have a hyphen,
+ * including `monorepo-workflows`.
+ *
+ * Use this for `approximate_backlog_*` only. Never for `task_queue` on SDK
+ * metrics.
+ */
+export function serverMetricTaskQueue(queue: string): string {
+  return queue.replaceAll("-", "_");
+}
 type TemporalDomainQueueDefinition = {
   queue: string;
   metricsNamespace: string;
@@ -161,6 +179,8 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
     // and hardcoding `temporal` here selected no series at all for them —
     // an alert that can never fire.
     const pollerSelector = `namespace="${definition.metricsNamespace}",exported_namespace=~"${servedNamespaces}",task_queue="${definition.queue}"`;
+    // Server metric, so the queue name is sanitized — see serverMetricTaskQueue.
+    const backlogQueue = serverMetricTaskQueue(definition.queue);
     const labels = { severity: "warning", task_queue: definition.queue };
     const candidateDeploymentPattern = definition.candidateDeploymentPattern;
     const candidateServicePattern = definition.candidateServicePattern;
@@ -207,7 +227,7 @@ export function buildTemporalDomainWorkerHealthRules(): PrometheusRule[] {
             "Temporal matching has reported queued workflow or activity tasks for ten minutes. Inspect pollers and schedule-to-start latency before changing capacity.",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `max(approximate_backlog_count{namespace="temporal",taskqueue="${definition.queue}",task_type=~"${definition.activityPoller ? "Workflow|Activity" : "Workflow"}"}) > 0`,
+          `max(approximate_backlog_count{namespace="temporal",taskqueue="${backlogQueue}",task_type=~"${definition.activityPoller ? "Workflow|Activity" : "Workflow"}"}) > 0`,
         ),
         for: "10m",
         labels,

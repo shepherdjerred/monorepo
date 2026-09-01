@@ -20,6 +20,32 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
         labels: { severity: "warning" },
       },
       {
+        alert: "TemporalWorkflowPlaneStalled",
+        annotations: {
+          summary: escapePrometheusTemplate(
+            "Temporal Workflow tasks are not being picked up on {{ $labels.taskqueue }}",
+          ),
+          description: escapePrometheusTemplate(
+            "Workflow tasks have sat unclaimed on {{ $labels.taskqueue }} in {{ $labels.exported_namespace }} for over fifteen minutes. The usual cause is that the Worker Deployment's current version points at a Build ID no running pod carries, so tasks route to a queue nobody polls — pollers look healthy while nothing executes. Compare `worker deployment describe` against the Build IDs actually reporting pollers.",
+          ),
+          runbook_url:
+            "https://wiki.sjer.red/how-to/roll-out-a-temporal-worker-deployment/",
+        },
+        // Age, not count. A terminated execution can leave tombstoned tasks
+        // behind that keep a non-zero count at age 0 — the retired `default`
+        // namespace shows exactly that — whereas a genuine stall is defined by
+        // tasks getting older. This is the signal that was missing when the
+        // workflow plane was dead for fifteen hours and every existing rule
+        // stayed silent: the pollers were up, so poller alerts saw nothing,
+        // and the backlog rule was selecting a task-queue name that does not
+        // exist on the server's metrics.
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          'max by (exported_namespace, taskqueue) (approximate_backlog_age_seconds{namespace="temporal",task_type="Workflow",exported_namespace=~"prod|beta"}) > 900',
+        ),
+        for: "10m",
+        labels: { severity: "critical" },
+      },
+      {
         alert: "TemporalWorkflowTaskFailing",
         annotations: {
           summary: escapePrometheusTemplate(
@@ -30,7 +56,7 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(temporal_worker_workflow_task_execution_failed{exported_namespace="default",failure_reason!="NonDeterminismError"}[10m]) > 0',
+          'increase(temporal_worker_workflow_task_execution_failed{exported_namespace=~"prod|beta",failure_reason!="NonDeterminismError"}[10m]) > 0',
         ),
         for: "2m",
         labels: { severity: "warning" },
@@ -46,7 +72,7 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(temporal_worker_workflow_task_execution_failed{exported_namespace="default",failure_reason="NonDeterminismError"}[10m]) > 0 or increase(service_errors_nondeterministic[10m]) > 0',
+          'increase(temporal_worker_workflow_task_execution_failed{exported_namespace=~"prod|beta",failure_reason="NonDeterminismError"}[10m]) > 0 or increase(service_errors_nondeterministic[10m]) > 0',
         ),
         for: "1m",
         labels: { severity: "critical" },
@@ -63,10 +89,13 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
         },
         // activity_task_fail (not activity_fail) is the series every other
         // Temporal/Scout failure rule in this repo queries (temporal.ts,
-        // scout.ts), and it carries a plain `namespace` label rather than
-        // the temporal_worker_*-prefixed metrics' `exported_namespace`.
+        // scout.ts). It comes from the Temporal server, so `namespace` is the
+        // *Kubernetes* namespace it was scraped in ("temporal") and the
+        // Temporal namespace is `exported_namespace` — the same shape as
+        // approximate_backlog_count. Selecting namespace="default" matched no
+        // series at all, so this alert could never fire.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'increase(activity_task_fail{namespace="default"}[15m]) > 0',
+          'increase(activity_task_fail{exported_namespace=~"prod|beta"}[15m]) > 0',
         ),
         for: "1m",
         labels: { severity: "warning" },

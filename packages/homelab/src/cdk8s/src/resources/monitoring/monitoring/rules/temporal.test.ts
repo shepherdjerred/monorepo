@@ -41,14 +41,36 @@ describe("Temporal workflow outcome rules", () => {
       'failure_reason="NonDeterminismError"',
     );
     // activity_task_fail, not activity_fail — the metric every other
-    // Temporal/Scout failure rule in this file queries, and it carries
-    // `namespace`, not the temporal_worker_*-prefixed metrics' `exported_namespace`.
+    // Temporal/Scout failure rule in this file queries. It comes from the
+    // server, so `namespace` is the Kubernetes namespace and the Temporal
+    // namespace is `exported_namespace`; selecting namespace="default"
+    // matched nothing and the alert could never fire.
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
       "activity_task_fail",
     );
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
+      'exported_namespace=~"prod|beta"',
+    );
+    expect(expressions.get("TemporalActivityRetriesExhausted")).not.toContain(
       'namespace="default"',
     );
+    // The retired drain namespace is empty, so watching it is watching nothing.
+    for (const alert of [
+      "TemporalWorkflowTaskFailing",
+      "TemporalWorkflowNondeterministic",
+    ]) {
+      expect(expressions.get(alert), alert).toContain(
+        'exported_namespace=~"prod|beta"',
+      );
+    }
+    // Tasks aging on a queue nobody polls — the shape of the outage every
+    // other rule missed, because pollers were healthy the whole time.
+    const stalled = expressions.get("TemporalWorkflowPlaneStalled");
+    expect(stalled).toContain("approximate_backlog_age_seconds");
+    expect(stalled).toContain('exported_namespace=~"prod|beta"');
+    expect(stalled).toContain("> 900");
+    // Age, not count: tombstoned tasks hold a non-zero count at age zero.
+    expect(stalled).not.toContain("approximate_backlog_count");
   });
 
   test("excludes intentional warm-morning preheat skips", () => {
@@ -130,14 +152,22 @@ describe("Temporal workflow outcome rules", () => {
           expression.includes("approximate_backlog_count"),
       ),
     ).toBe(true);
+    // The Temporal server sanitizes its metric tag values, so a hyphenated
+    // queue is published as `repo_automation` / `monorepo_workflows`. These
+    // assertions were previously inverted, which pinned a selector that
+    // matched no series: the backlog rule was silent for all seven hyphenated
+    // queues, including monorepo-workflows, throughout a fifteen-hour outage.
     expect(backlogExpressions).toContain(
-      'max(approximate_backlog_count{namespace="temporal",taskqueue="repo-automation",task_type=~"Workflow|Activity"}) > 0',
+      'max(approximate_backlog_count{namespace="temporal",taskqueue="repo_automation",task_type=~"Workflow|Activity"}) > 0',
     );
     expect(backlogExpressions).toContain(
-      'max(approximate_backlog_count{namespace="temporal",taskqueue="monorepo-workflows",task_type=~"Workflow"}) > 0',
+      'max(approximate_backlog_count{namespace="temporal",taskqueue="monorepo_workflows",task_type=~"Workflow"}) > 0',
     );
     expect(backlogExpressions.join("\n")).not.toContain(
-      'taskqueue="repo_automation"',
+      'taskqueue="repo-automation"',
+    );
+    expect(backlogExpressions.join("\n")).not.toContain(
+      'taskqueue="monorepo-workflows"',
     );
 
     const workerMetricsDown = failuresGroup.rules.find(
