@@ -85,7 +85,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       candidateDeploymentPattern: "temporal-temporal-workflows-candidate",
       candidateServicePattern: ".*temporal-workflows-candidate.*metrics.*",
       activityPoller: false,
-      servedNamespaces: ["prod", "beta", "default"],
+      servedNamespaces: ["prod", "beta"],
     },
     ...scoutWorkflowQueues,
     {
@@ -94,7 +94,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-home-worker",
       servicePattern: ".*temporal-home-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "reports",
@@ -102,7 +102,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-reports-worker",
       servicePattern: ".*temporal-reports-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "infra",
@@ -110,7 +110,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-infra-worker",
       servicePattern: ".*temporal-infra-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "repo-automation",
@@ -118,7 +118,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-repo-worker",
       servicePattern: ".*temporal-repo-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "scout",
@@ -126,7 +126,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-scout-worker",
       servicePattern: ".*temporal-scout-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "beta", "default"],
+      servedNamespaces: ["prod", "beta"],
     },
     {
       queue: "agent-task",
@@ -134,7 +134,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-agent-worker",
       servicePattern: ".*temporal-agent-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "glitter-corpus",
@@ -142,7 +142,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-glitter-corpus-worker",
       servicePattern: ".*temporal-glitter-corpus-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "glitter-context",
@@ -150,7 +150,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-glitter-context-worker",
       servicePattern: ".*temporal-glitter-context-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "backup",
@@ -158,7 +158,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-temporal-backup-worker",
       servicePattern: ".*temporal-backup-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
     {
       queue: "maintenance",
@@ -166,7 +166,7 @@ export const TEMPORAL_DOMAIN_QUEUES: readonly TemporalDomainQueueDefinition[] =
       deploymentPattern: "temporal-maintenance-worker",
       servicePattern: ".*temporal-maintenance-worker.*metrics.*",
       activityPoller: true,
-      servedNamespaces: ["prod", "default"],
+      servedNamespaces: ["prod"],
     },
   ];
 

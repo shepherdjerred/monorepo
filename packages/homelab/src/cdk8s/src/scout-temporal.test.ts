@@ -134,7 +134,7 @@ describe("Scout competition Temporal boundary", () => {
     expect(serialized).not.toContain("for namespace in dev");
   });
 
-  test("gives every central worker its active and drain namespaces", () => {
+  test("gives every central worker its active namespace and no drain", () => {
     const synthesized = allScoutTemporalResources();
     const workerNames = [
       "temporal-temporal-workflows-stable",
@@ -158,9 +158,10 @@ describe("Scout competition Temporal boundary", () => {
       expect(serialized, name).toContain(
         '"name":"TEMPORAL_NAMESPACE","value":"prod"',
       );
-      expect(serialized, name).toContain(
-        '"name":"TEMPORAL_LEGACY_NAMESPACE","value":"default"',
-      );
+      // The `default` drain is retired. No central worker may poll it: the
+      // namespace is empty and guarded against new starts, so a poller there
+      // would find nothing and mask a misrouted deployment.
+      expect(serialized, name).not.toContain("TEMPORAL_LEGACY_NAMESPACE");
       if (name === "temporal-temporal-gateway") {
         expect(serialized, name).toContain(
           '"name":"TEMPORAL_SCHEDULE_RECONCILIATION","value":"auto"',

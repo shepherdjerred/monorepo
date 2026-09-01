@@ -18,11 +18,17 @@ one process for local development.
 
 Temporal namespaces are environment-scoped: local servers use `dev`, Scout
 beta uses `beta`, and production plus shared control-plane jobs use `prod`.
-During migration, `TEMPORAL_LEGACY_NAMESPACE=default` adds bounded worker-only
-pollers so existing histories can finish without allowing new starts there.
+The `default` namespace is retired. During the migration
+`TEMPORAL_LEGACY_NAMESPACE=default` added bounded worker-only pollers so
+existing histories could finish without allowing new starts there; the
+cutover completed on 2026-08-31 and the drain was removed once `default` held
+no running executions. The namespace itself stays registered but empty, and
+`TemporalDefaultNamespaceStartAttempted` alerts if anything tries to start
+work there.
+
 The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned weekly parlay and Bryan Bucks analytics schedules; all other
-central queues remain `prod` plus the temporary `default` drain.
+central queues are `prod` only.
 
 | Role              | Queue or surface        | Activity concurrency |
 | ----------------- | ----------------------- | -------------------: |
