@@ -449,7 +449,8 @@ describe("Dare v2 draft and lifecycle", () => {
     if (active.contractJson === null) return;
     const contract = parseDareV2Contract(active.contractJson);
     expect(contract.compilerVersion).toBe("dare-scoutql-2");
-    if (contract.compilerVersion !== "dare-scoutql-2") return;
+    expect("scoutQlPlanHash" in contract).toBe(true);
+    if (!("scoutQlPlanHash" in contract)) return;
     expect(contract.scoutQlPlanHash).toBe(
       new Bun.CryptoHasher("sha256")
         .update(contract.scoutQlImmutableAst)

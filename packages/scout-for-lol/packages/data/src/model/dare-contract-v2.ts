@@ -455,9 +455,12 @@ const DareContractV2BaseSchema = z.strictObject({
   semanticProofPlan: z.string().min(1),
 });
 
-export const DareContractV2Schema = z.discriminatedUnion("compilerVersion", [
+export const DareContractV2Schema = z.union([
   DareContractV2BaseSchema.extend({
     compilerVersion: z.literal("dare-scoutql-1"),
+  }),
+  DareContractV2BaseSchema.extend({
+    compilerVersion: z.literal("dare-scoutql-2"),
   }),
   DareContractV2BaseSchema.extend({
     compilerVersion: z.literal("dare-scoutql-2"),

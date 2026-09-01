@@ -20,4 +20,13 @@ describe("Dare v2 evidence plan versions", () => {
       }),
     ).toBe("dare-scoutql-2:dare-evaluator-2:plan-hash");
   });
+
+  test("preserves the two-part tag for pre-artifact compiler-v2 evidence", () => {
+    expect(
+      dareV2EvidencePlanVersion({
+        compilerVersion: "dare-scoutql-2",
+        evaluatorVersion: "dare-evaluator-2",
+      }),
+    ).toBe("dare-scoutql-2:dare-evaluator-2");
+  });
 });

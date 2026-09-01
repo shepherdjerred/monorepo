@@ -12,14 +12,23 @@ describe("Dare v2 compiler artifact compatibility", () => {
     ).toBe("dare-scoutql-1");
   });
 
-  test("requires immutable artifacts for compiler v2 contracts", () => {
+  test("keeps pre-artifact compiler v2 contracts parseable", () => {
+    const contract = DareContractV2Schema.parse({
+      ...DARE_V2_TEST_CONTRACT_BASE,
+      compilerVersion: "dare-scoutql-2",
+    });
+    expect(contract.compilerVersion).toBe("dare-scoutql-2");
+    expect("scoutQlPlanHash" in contract).toBe(false);
+  });
+
+  test("requires both immutable artifacts on artifact-bound contracts", () => {
     expect(
       DareContractV2Schema.safeParse({
         ...DARE_V2_TEST_CONTRACT_BASE,
         compilerVersion: "dare-scoutql-2",
+        scoutQlImmutableAst: "immutable-ast",
       }).success,
     ).toBe(false);
-
     const contract = DareContractV2Schema.parse({
       ...DARE_V2_TEST_CONTRACT_BASE,
       compilerVersion: "dare-scoutql-2",
@@ -27,5 +36,6 @@ describe("Dare v2 compiler artifact compatibility", () => {
       scoutQlPlanHash: "0".repeat(64),
     });
     expect(contract.compilerVersion).toBe("dare-scoutql-2");
+    expect("scoutQlPlanHash" in contract).toBe(true);
   });
 });
