@@ -18,6 +18,7 @@ export type GapRecoveryResult = {
 export async function recoverMissedMatches(
   player: PlayerConfigEntry,
   fallbackMatchIds: MatchId[],
+  requiredForActiveDare: boolean,
 ): Promise<GapRecoveryResult> {
   const puuid = player.league.leagueAccount.puuid;
   const lastPollAt = await getLastSuccessfulPollAt();
@@ -42,6 +43,7 @@ export async function recoverMissedMatches(
     player.league.leagueAccount.region,
     startEpoch,
     endEpoch,
+    { requireComplete: requiredForActiveDare },
   );
 
   const mostRecent = allMissedMatchIds[0];
