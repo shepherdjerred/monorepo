@@ -15,12 +15,12 @@ import {
   discordUsersGauge,
   discordLatency,
 } from "#src/metrics/index.ts";
-import { discordGatewayHeartbeatAge } from "#src/metrics/discord-gateway.ts";
 import {
+  discordGatewayHeartbeatAge,
   getDiscordGatewayHealth,
   recordDiscordGatewayHeartbeat,
   setDiscordGatewayState,
-} from "#src/discord/gateway-health.ts";
+} from "#src/metrics/discord-gateway-health.ts";
 import { voiceManager } from "#src/voice/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";

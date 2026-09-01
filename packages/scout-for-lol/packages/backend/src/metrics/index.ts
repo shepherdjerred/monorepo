@@ -7,7 +7,7 @@ import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
 import "#src/metrics/feature-flags.ts";
-import "#src/metrics/discord-gateway.ts";
+import "#src/metrics/discord-gateway-health.ts";
 
 const logger = createLogger("metrics");
 
