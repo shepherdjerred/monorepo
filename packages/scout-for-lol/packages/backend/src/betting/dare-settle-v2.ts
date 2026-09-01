@@ -22,6 +22,7 @@ import type {
 import { collectDareV2Batch } from "#src/betting/dare-settle-batch-v2.ts";
 import {
   dareV2EvidenceCreateData,
+  dareV2EvidencePlanVersion,
   storedDareV2Evidence,
 } from "#src/betting/dare-settle-evidence-v2.ts";
 import {
@@ -171,7 +172,7 @@ async function captureOneDareV2(
       dareV2EvidenceCreateData(
         input.dare.id,
         input.matchEvidence,
-        `${input.contract.compilerVersion}:${input.contract.evaluatorVersion}:${dareV2ScoutQlPlanHash(input.contract) ?? "legacy"}`,
+        dareV2EvidencePlanVersion(input.contract),
       ),
     ],
     skipDuplicates: true,
