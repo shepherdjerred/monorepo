@@ -2,53 +2,24 @@ import { describe, expect, test } from "vitest";
 import {
   DARE_V2_MAX_GAME_SETS,
   DareCompiledPlanV2Schema,
-  DareParaphraseCorpusSchema,
-  DiscordAccountIdSchema,
-  type DareParaphraseCorpus,
-  type DareTargetBindingV2,
 } from "@scout-for-lol/data";
 import { formatDareScoutQlV2 } from "#src/betting/dare-contract-compiler-v2.ts";
 import { canonicalDarePlanJsonV2 } from "#src/betting/dare-plan-canonical-v2.ts";
 import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
-
-const CORPUS_URL = new URL(
-  "../../../data/src/model/dare-v2-paraphrase-corpus.json",
-  import.meta.url,
-);
-
-async function loadCorpus(): Promise<DareParaphraseCorpus> {
-  const raw: unknown = await Bun.file(CORPUS_URL).json();
-  return DareParaphraseCorpusSchema.parse(raw);
-}
-
-function targetBindings(
-  targetAliases: Readonly<Record<string, string>>,
-): DareTargetBindingV2[] {
-  return Object.entries(targetAliases).map(([key, alias], index) => ({
-    key,
-    alias,
-    discordId: DiscordAccountIdSchema.parse(
-      `1000000000000000${index.toString()}`,
-    ),
-    playerId: index + 1,
-    accounts: [
-      {
-        puuid: `${key}-frozen-puuid`,
-        trackingStartedAt: "2026-01-01T00:00:00.000Z",
-      },
-    ],
-  }));
-}
+import {
+  dareTargetBindingsForAliases,
+  loadDareParaphraseCorpus,
+} from "#src/betting/dare-v2-test-fixtures.ts";
 
 describe("Dare v2 ScoutQL plan compiler", () => {
   test("round-trips every canonical plan in the paraphrase corpus", async () => {
-    const corpus = await loadCorpus();
+    const corpus = await loadDareParaphraseCorpus();
 
     for (const entry of corpus.cases) {
       const queryText = formatDareScoutQlV2(entry.plan);
       const result = await compileDareScoutQlPlanV2({
         queryText,
-        targets: targetBindings(entry.targetAliases),
+        targets: dareTargetBindingsForAliases(entry.targetAliases),
       });
 
       expect(result.kind, `${entry.id}: ${JSON.stringify(result)}`).toBe(
@@ -60,7 +31,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
       );
       const recompiled = await compileDareScoutQlPlanV2({
         queryText: result.compilation.canonicalScoutQl,
-        targets: targetBindings(entry.targetAliases),
+        targets: dareTargetBindingsForAliases(entry.targetAliases),
       });
       expect(recompiled.kind, entry.id).toBe("valid");
       if (recompiled.kind !== "valid") continue;
@@ -71,7 +42,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
   });
 
   test("turns a threshold edit into a new immutable plan", async () => {
-    const corpus = await loadCorpus();
+    const corpus = await loadDareParaphraseCorpus();
     const example = corpus.cases.find(
       (entry) => entry.id === "twisted_fate_same_game",
     );
@@ -85,7 +56,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
     );
     const result = await compileDareScoutQlPlanV2({
       queryText: editedQuery,
-      targets: targetBindings(example.targetAliases),
+      targets: dareTargetBindingsForAliases(example.targetAliases),
     });
 
     expect(editedQuery).not.toBe(originalQuery);
@@ -104,7 +75,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
   });
 
   test("rejects an edit that drops a frozen target", async () => {
-    const corpus = await loadCorpus();
+    const corpus = await loadDareParaphraseCorpus();
     const example = corpus.cases.find(
       (entry) => entry.id === "twisted_fate_same_game",
     );
@@ -113,7 +84,10 @@ describe("Dare v2 ScoutQL plan compiler", () => {
 
     const result = await compileDareScoutQlPlanV2({
       queryText: formatDareScoutQlV2(example.plan),
-      targets: targetBindings({ ...example.targetAliases, T2: "Bryan" }),
+      targets: dareTargetBindingsForAliases({
+        ...example.targetAliases,
+        T2: "Bryan",
+      }),
     });
 
     expect(result).toEqual({
@@ -162,7 +136,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
 
     const result = await compileDareScoutQlPlanV2({
       queryText: formatDareScoutQlV2(plan),
-      targets: targetBindings({ virmel: "Virmel" }),
+      targets: dareTargetBindingsForAliases({ virmel: "Virmel" }),
     });
 
     expect(result.kind, JSON.stringify(result)).toBe("valid");
@@ -173,7 +147,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
   });
 
   test("rejects valid SQL outside the immutable Dare profile", async () => {
-    const corpus = await loadCorpus();
+    const corpus = await loadDareParaphraseCorpus();
     const example = corpus.cases[0];
     expect(example).toBeDefined();
     if (example === undefined) return;
@@ -184,7 +158,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
     );
     const result = await compileDareScoutQlPlanV2({
       queryText,
-      targets: targetBindings(example.targetAliases),
+      targets: dareTargetBindingsForAliases(example.targetAliases),
     });
 
     expect(result).toEqual({
@@ -235,7 +209,7 @@ describe("Dare v2 ScoutQL plan compiler", () => {
 
     const result = await compileDareScoutQlPlanV2({
       queryText: formatDareScoutQlV2(plan),
-      targets: targetBindings({ virmel: "Virmel" }),
+      targets: dareTargetBindingsForAliases({ virmel: "Virmel" }),
     });
 
     expect(result.kind, JSON.stringify(result)).toBe("valid");

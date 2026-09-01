@@ -128,8 +128,8 @@ export async function validateDareDraftEditorV2(
       };
 }
 
-export async function previewDareDraftEditorV2(
-  input: z.infer<typeof DareDraftPreviewInputSchema>,
+async function prepareValidEditorDraft(
+  input: EditorInput,
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
@@ -140,13 +140,25 @@ export async function previewDareDraftEditorV2(
       message: result.issues.join(" "),
     });
   }
-  const { owned, prepared } = result;
-  if (prepared.kind === "invalid") {
+  if (result.prepared.kind === "invalid") {
     throw new TRPCError({
       code: "BAD_REQUEST",
-      message: prepared.issues.join(" "),
+      message: result.prepared.issues.join(" "),
     });
   }
+  return { owned: result.owned, prepared: result.prepared };
+}
+
+export async function previewDareDraftEditorV2(
+  input: z.infer<typeof DareDraftPreviewInputSchema>,
+  userId: DiscordAccountId,
+  guildIds: string[],
+) {
+  const { owned, prepared } = await prepareValidEditorDraft(
+    input,
+    userId,
+    guildIds,
+  );
   const end = new Date();
   return await historicallyPreviewDareV2({
     plan: prepared.draft.plan,
@@ -161,20 +173,11 @@ export async function reviseDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
-  const result = await prepareEditorDraft(input, userId, guildIds);
-  if (result.kind === "invalid") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: result.issues.join(" "),
-    });
-  }
-  const { owned, prepared } = result;
-  if (prepared.kind === "invalid") {
-    throw new TRPCError({
-      code: "BAD_REQUEST",
-      message: prepared.issues.join(" "),
-    });
-  }
+  const { owned, prepared } = await prepareValidEditorDraft(
+    input,
+    userId,
+    guildIds,
+  );
   return await reviseDareDraftV2({
     dareId: input.dareId,
     serverId: DiscordGuildIdSchema.parse(owned.dare.serverId),
