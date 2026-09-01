@@ -264,9 +264,9 @@ async function startRoleServices(options: StartRoleServicesOptions): Promise<{
   };
 }
 
-// `bun run start` (the documented local command, no env file) and a manual
-// `docker build` without --build-arg GIT_SHA (which bakes the Dockerfile's
-// ARG GIT_SHA=unknown default) both leave these unset or "unknown".
+// Local development and a manual `docker build` without --build-arg GIT_SHA
+// (which bakes the Dockerfile's ARG GIT_SHA=unknown default) can leave the
+// bootstrap metadata unset or "unknown".
 // ReleaseCommitSchema requires an exact 40-character hex SHA and
 // ExecutionEnvironmentSchema has no default of its own, so without this the
 // worker throws in parseTemporalBootstrapMetadata before it ever connects.

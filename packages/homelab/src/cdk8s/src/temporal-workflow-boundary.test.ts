@@ -86,16 +86,10 @@ describe("central Temporal Workflow boundary", () => {
         "TZ",
       ]);
       // Namespace isolation: this role polls the active prod namespace only.
-      // The `default` drain is retired — every chain started there closed
-      // before the namespace was emptied, so a poller on it would find
-      // nothing and only widen the blast radius of a misconfiguration.
       expect(container.env).toContainEqual({
         name: "TEMPORAL_NAMESPACE",
         value: "prod",
       });
-      expect(container.env.map((variable) => variable.name)).not.toContain(
-        "TEMPORAL_LEGACY_NAMESPACE",
-      );
       expect(container.env).toContainEqual({
         name: "TEMPORAL_WORKER_DEPLOYMENT_NAME",
         value: "monorepo-central-workflows",

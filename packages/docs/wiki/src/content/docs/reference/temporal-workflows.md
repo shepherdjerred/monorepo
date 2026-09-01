@@ -16,12 +16,11 @@ Cron times are `America/Los_Angeles` wall-clock. Source:
 
 ## Task queue routing
 
-| Concern                        | Queue                  | Poller                                   |
-| ------------------------------ | ---------------------- | ---------------------------------------- |
-| New central Workflow tasks     | `monorepo-workflows`   | credentialless `workflows` role          |
-| Pre-cutover Workflow tasks     | original central queue | temporary poller in the `workflows` role |
-| Effects                        | owning domain queue    | Activity-only domain role                |
-| Pre-cutover default Activities | `default`              | temporary `legacy` role                  |
+| Concern                    | Queue                     | Poller                          |
+| -------------------------- | ------------------------- | ------------------------------- |
+| Central Workflow tasks     | `monorepo-workflows`      | credentialless `workflows` role |
+| Effects                    | owning domain queue       | Activity-only domain role       |
+| Scout stage Workflow tasks | `scout-beta`/`scout-prod` | stage Workflow Deployment       |
 
 Schedules, programmatic roots, and child Workflows name
 `monorepo-workflows`. Continue-as-new inherits the current Workflow queue.
@@ -53,9 +52,9 @@ Scout beta requires two workflow-capable image releases. Pins at or before build
 stable creates only the stable pod; a later distinct candidate pin creates the
 ramp target. Both pods have only Temporal and DNS egress, expose SDK metrics to
 Prometheus, and carry no Discord, PostgreSQL, Riot, S3, or report-lake access.
-The embedded backend poller drains old unversioned histories but is not a
-Worker Deployment rollback version. Scout production repeats the sequence only
-after beta acceptance.
+The embedded backend poller completes histories created before Workflow
+Deployment routing, but is not a rollback version. Scout production repeats
+the sequence only after beta acceptance.
 
 Bootstrap configuration:
 

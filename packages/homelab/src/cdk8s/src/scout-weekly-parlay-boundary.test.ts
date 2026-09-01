@@ -53,12 +53,6 @@ describe("Scout weekly parlay deployment boundary", () => {
           }),
         ]),
       );
-      // The `default` drain is retired for Scout; see scout-temporal.test.ts.
-      expect(deployment.template.spec.containers[0]?.env).not.toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ name: "TEMPORAL_LEGACY_NAMESPACE" }),
-        ]),
-      );
       expect(
         findResource(scout, "NetworkPolicy", "scout-egress-netpol").spec,
       ).toEqual(

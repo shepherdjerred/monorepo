@@ -43,18 +43,13 @@ describe("Temporal workflow outcome rules", () => {
     // activity_task_fail, not activity_fail — the metric every other
     // Temporal/Scout failure rule in this file queries. It comes from the
     // server, so `namespace` is the Kubernetes namespace and the Temporal
-    // namespace is `exported_namespace`; selecting namespace="default"
-    // matched nothing and the alert could never fire.
+    // namespace is `exported_namespace`.
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
       "activity_task_fail",
     );
     expect(expressions.get("TemporalActivityRetriesExhausted")).toContain(
       'exported_namespace=~"prod|beta"',
     );
-    expect(expressions.get("TemporalActivityRetriesExhausted")).not.toContain(
-      'namespace="default"',
-    );
-    // The retired drain namespace is empty, so watching it is watching nothing.
     for (const alert of [
       "TemporalWorkflowTaskFailing",
       "TemporalWorkflowNondeterministic",
@@ -185,15 +180,10 @@ describe("Temporal workflow outcome rules", () => {
         (rule) => rule.alert === "TemporalDomainWorkflowPollerUnavailable",
       )
       .map((rule) => rule.expr.value);
-    // The threshold is the served-namespace count, so retiring the `default`
-    // drain has to move both together: one namespace served, one required.
-    // Changing the env without the rule would leave this at < 2 and fire on
-    // every queue the moment the workers rolled.
+    // The threshold is the served-namespace count: one namespace served, one
+    // required for this production-only queue.
     expect(workflowPollerExpressions).toContain(
       'count(sum by (exported_namespace) (temporal_worker_num_pollers{namespace="buildkite",exported_namespace=~"prod",task_queue="maintenance",poller_type="workflow_task"})) < 1',
-    );
-    expect(workflowPollerExpressions.join("\n")).not.toContain(
-      'exported_namespace=~"prod|default"',
     );
     const scoutBetaExpression = workflowPollerExpressions.find(
       (expression) =>
@@ -229,11 +219,13 @@ describe("Temporal workflow outcome rules", () => {
     expect(alerts).not.toContain("TemporalAgentTaskTimeoutScanFailed");
   });
 
-  test("guards default against new workflow starts while permitting drain polling", () => {
+  test("alerts on workflow starts outside the active namespaces", () => {
     const expression = findFailureRule(
-      "TemporalDefaultNamespaceStartAttempted",
+      "TemporalUnexpectedNamespaceStartAttempted",
     );
-    expect(expression).toContain('exported_namespace="default"');
+    expect(expression).toContain(
+      'exported_namespace!~"beta|prod|temporal-system"',
+    );
     expect(expression).toContain("StartWorkflowExecution");
     expect(expression).toContain("SignalWithStartWorkflowExecution");
     expect(expression).not.toContain("poll");

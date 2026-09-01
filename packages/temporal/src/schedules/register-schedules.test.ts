@@ -708,20 +708,6 @@ describe("Glitter context refresh schedule", () => {
       }),
     ).toEqual({ paused: false });
   });
-
-  test("preserves migration metadata on an active schedule", () => {
-    const schedule = findScheduleById("glitter-context-refresh-weekly");
-    const configured = configuredEnvironment(schedule);
-    expect(
-      buildScheduleState(schedule, configured, {
-        paused: false,
-        note: "temporal-namespace-migration:v1:encoded-state",
-      }),
-    ).toEqual({
-      paused: false,
-      note: "temporal-namespace-migration:v1:encoded-state",
-    });
-  });
 });
 
 describe("homelab daily audit schedule config", () => {

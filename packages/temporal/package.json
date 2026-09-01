@@ -36,7 +36,6 @@
     "canary:report-reliability": "bun run scripts/report-reliability-canary.ts --production-only",
     "inventory:report-schedules": "bun run scripts/inventory-report-schedules.ts",
     "preview:report-emails": "bun run scripts/render-report-email-previews.ts",
-    "migrate:namespaces": "bun run scripts/migrate-namespaces.ts",
     "check:rehearsal": "bun run scripts/check-schedule-rehearsal.ts",
     "glitter:import-seed": "bun run scripts/import-glitter-seed.ts",
     "glitter:operate": "bun run scripts/operate-glitter-corpus.ts",

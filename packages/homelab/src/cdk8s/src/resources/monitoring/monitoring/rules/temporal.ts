@@ -201,15 +201,15 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
       name: "temporal-workflow-failures",
       rules: [
         {
-          alert: "TemporalDefaultNamespaceStartAttempted",
+          alert: "TemporalUnexpectedNamespaceStartAttempted",
           annotations: {
-            summary: "A workflow start was attempted in Temporal default",
+            summary: "A workflow start used an unexpected Temporal namespace",
             description: escapePrometheusTemplate(
-              "Temporal received {{ $value }} workflow-start request(s) for the migration-only default namespace in the last 15 minutes. Legacy workers may finish existing executions there, but no client or schedule may start new work. Inspect the operation label and the default namespace immediately.",
+              "Temporal received {{ $value }} workflow-start request(s) for unexpected namespace {{ $labels.exported_namespace }} in the last 15 minutes. Active workloads may start only in beta or prod; temporal-system is reserved for server internals. Inspect the operation label and the caller configuration immediately.",
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'increase(service_requests{exported_namespace="default",operation=~"StartWorkflowExecution|SignalWithStartWorkflowExecution"}[15m]) > 0',
+            'increase(service_requests{exported_namespace!~"beta|prod|temporal-system",operation=~"StartWorkflowExecution|SignalWithStartWorkflowExecution"}[15m]) > 0',
           ),
           for: "1m",
           labels: {
