@@ -81,9 +81,11 @@ export function filterNewMatches(
   }
 
   // Return all matches that come before the last processed match in the array
-  // (newer matches have lower indices since the API returns them in descending order)
+  // (newer matches have lower indices since the API returns them in descending
+  // order). Process the discovered batch oldest-first so bounded Dare evidence
+  // is captured in its canonical chronological order before finality is tested.
   return {
-    matchIds: matchIds.slice(0, lastProcessedIndex),
+    matchIds: matchIds.slice(0, lastProcessedIndex).reverse(),
     gapDetected: false,
   };
 }

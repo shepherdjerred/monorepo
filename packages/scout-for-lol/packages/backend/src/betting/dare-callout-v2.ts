@@ -327,12 +327,16 @@ export async function refreshPendingDareV2Callouts(
   dependencies: DareV2CalloutDependencies = defaultDareV2CalloutDependencies,
 ): Promise<number[]> {
   const pending = await dependencies.prismaClient.bucksDareV2.findMany({
-    where: { calloutRefreshPending: true, messageRef: { not: null } },
+    where: { calloutRefreshPending: true },
     orderBy: { id: "asc" },
     select: { id: true },
   });
   const dareIds = pending.map((dare) => dare.id);
-  await refreshDareV2Callouts(dareIds, dependencies);
+  await Promise.all(
+    dareIds.map(async (dareId) => {
+      await ensureDareV2Callout(dareId, dependencies);
+    }),
+  );
   return dareIds;
 }
 

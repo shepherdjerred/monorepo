@@ -864,5 +864,34 @@ describe("Dare v2 callout delivery", () => {
       "Discord send failed",
     );
     expect(dependencies.sendMessage).toHaveBeenCalledTimes(1);
+    expect(
+      await db.bucksDareV2.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { calloutRefreshPending: true, messageRef: true },
+      }),
+    ).toEqual({ calloutRefreshPending: true, messageRef: null });
+
+    const retrySender = vi.fn(() =>
+      Promise.resolve({ channelId: CHANNEL, id: "retried-callout-message" }),
+    );
+    await expect(
+      refreshPendingDareV2Callouts({
+        ...dependencies,
+        sendMessage: retrySender,
+      }),
+    ).resolves.toEqual([dareId]);
+    expect(retrySender).toHaveBeenCalledTimes(1);
+    expect(
+      await db.bucksDareV2.findUniqueOrThrow({
+        where: { id: dareId },
+        select: { calloutRefreshPending: true, messageRef: true },
+      }),
+    ).toEqual({
+      calloutRefreshPending: false,
+      messageRef: JSON.stringify({
+        channelId: CHANNEL,
+        messageId: "retried-callout-message",
+      }),
+    });
   });
 });
