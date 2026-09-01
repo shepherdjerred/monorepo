@@ -1,4 +1,3 @@
-import * as Sentry from "@sentry/bun";
 import {
   DareCompiledPlanV2Schema,
   resolveQueueTypeFromGame,
@@ -30,6 +29,7 @@ import {
   type DareV2SettlementSummary,
 } from "#src/betting/dare-settle-types-v2.ts";
 import { settleDareV2OrVoidOnStorageOverflow } from "#src/betting/dare-settle-overflow-v2.ts";
+import { reportDareV2BatchFailure } from "#src/betting/dare-settle-report-v2.ts";
 import {
   darePlanNeedsTimeline,
   loadDareTimelineEvidenceV2,
@@ -44,9 +44,6 @@ import {
   type Db,
   type ExtendedPrismaClient,
 } from "#src/database/index.ts";
-import { createLogger } from "#src/logger.ts";
-
-const logger = createLogger("betting-dare-settle-v2");
 type ActiveDareV2Row = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
 }>;
@@ -284,25 +281,6 @@ function matchSettlementContext(matchData: RawMatch) {
   };
 }
 
-function reportBatchFailure(
-  stage: "inspect" | "settle",
-  row: ActiveDareV2Row,
-  matchId: string,
-  error: unknown,
-): void {
-  logger.error(
-    `Could not ${stage} Dare v2 ${row.id.toString()} for ${matchId}:`,
-    error,
-  );
-  Sentry.captureException(error, {
-    tags: {
-      source: `betting-dare-v2-${stage}`,
-      matchId,
-      dareId: row.id.toString(),
-    },
-  });
-}
-
 export async function settleDaresV2ForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -332,7 +310,12 @@ export async function settleDaresV2ForMatch(
       outcome: await inspectStoredContract(row, prismaClient, now),
     }),
     (row, error) => {
-      reportBatchFailure("inspect", row, matchData.metadata.matchId, error);
+      reportDareV2BatchFailure(
+        "inspect",
+        row,
+        matchData.metadata.matchId,
+        error,
+      );
     },
   );
   for (const result of inspected.values) {
@@ -402,7 +385,12 @@ export async function settleDaresV2ForMatch(
       );
     },
     ({ row }, error) => {
-      reportBatchFailure("settle", row, matchData.metadata.matchId, error);
+      reportDareV2BatchFailure(
+        "settle",
+        row,
+        matchData.metadata.matchId,
+        error,
+      );
     },
   );
   for (const summary of captured.values) {
