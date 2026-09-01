@@ -1,6 +1,8 @@
+import { IllegalStateError } from "@temporalio/common";
 import { describe, expect, test } from "vitest";
 import {
   discardPartialRuntime,
+  isRuntimeAlreadyInstalled,
   reconnectDelayMs,
 } from "#src/temporal/connected-runtime.ts";
 
@@ -171,5 +173,42 @@ describe("reconnectDelayMs", () => {
     expect(reconnectDelayMs(5)).toBe(60_000);
     expect(reconnectDelayMs(50)).toBe(60_000);
     expect(reconnectDelayMs(334)).toBe(60_000);
+  });
+});
+
+describe("isRuntimeAlreadyInstalled", () => {
+  // The two messages the SDK actually raises, from
+  // @temporalio/worker/lib/runtime.js Runtime.install().
+  test("recognises a singleton installed by install()", () => {
+    expect(
+      isRuntimeAlreadyInstalled(
+        new IllegalStateError("Runtime singleton has already been installed"),
+      ),
+    ).toBe(true);
+  });
+
+  test("recognises a singleton the SDK built for an earlier Worker", () => {
+    expect(
+      isRuntimeAlreadyInstalled(
+        new IllegalStateError(
+          "Runtime singleton has already been instantiated. Did you start a Worker before calling `install`?",
+        ),
+      ),
+    ).toBe(true);
+  });
+
+  test("does not swallow an unrelated IllegalStateError", () => {
+    expect(
+      isRuntimeAlreadyInstalled(
+        new IllegalStateError("Not running. Current state: DRAINING"),
+      ),
+    ).toBe(false);
+  });
+
+  test("does not swallow an ordinary error", () => {
+    expect(isRuntimeAlreadyInstalled(new Error("connection refused"))).toBe(
+      false,
+    );
+    expect(isRuntimeAlreadyInstalled(undefined)).toBe(false);
   });
 });

@@ -1,4 +1,5 @@
 import { Client, Connection } from "@temporalio/client";
+import { IllegalStateError } from "@temporalio/common";
 import {
   DefaultLogger,
   NativeConnection,
@@ -43,10 +44,43 @@ export function reconnectDelayMs(consecutiveFailures: number): number {
   const exponent = Math.max(0, consecutiveFailures - 1);
   return Math.min(RECONNECT_DELAY_MS * 2 ** exponent, RECONNECT_DELAY_MAX_MS);
 }
-let runtimeInstalled = false;
-
+/**
+ * Install the SDK Runtime, tolerating the case where it is already installed.
+ *
+ * This deliberately does not memoise. `Runtime.shutdown()` deletes the
+ * singleton when it goes idle, and the SDK then silently rebuilds a *default*
+ * Runtime on the next `Worker.create` — losing the logger that forwards SDK
+ * output into our logger and the telemetry filter below. A one-shot boolean
+ * made that unrecoverable: it reported "already installed" for a Runtime that
+ * no longer existed. Re-attempting is the only way to reclaim it, and
+ * `install()` throws only while a singleton is actually present.
+ */
 function installTemporalRuntime(): void {
-  if (runtimeInstalled) return;
+  try {
+    installConfiguredRuntime();
+  } catch (error: unknown) {
+    // Narrow on purpose: an already-present singleton is the one benign
+    // outcome. Anything else is a real failure and must not be swallowed.
+    if (isRuntimeAlreadyInstalled(error)) return;
+    throw error;
+  }
+}
+
+/**
+ * The SDK raises `IllegalStateError` for two shapes of "a singleton is already
+ * here" — one for `install()` and one for a Runtime the SDK built itself on a
+ * prior `Worker.create` — and reuses the same class for unrelated faults.
+ * Match the message so a genuine failure still propagates.
+ */
+export function isRuntimeAlreadyInstalled(error: unknown): boolean {
+  return (
+    error instanceof IllegalStateError &&
+    (error.message.includes("already been installed") ||
+      error.message.includes("already been instantiated"))
+  );
+}
+
+function installConfiguredRuntime(): void {
   Runtime.install({
     logger: new DefaultLogger("INFO", (entry) => {
       const fields = {
@@ -65,7 +99,6 @@ function installTemporalRuntime(): void {
       },
     },
   });
-  runtimeInstalled = true;
 }
 
 type RealtimeActivities = Pick<
