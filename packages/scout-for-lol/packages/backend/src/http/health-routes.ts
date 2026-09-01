@@ -3,7 +3,7 @@ import { getScoutTemporalHealth } from "#src/temporal/health.ts";
 import {
   evaluateDiscordGatewayLiveness,
   getDiscordGatewayHealth,
-} from "#src/discord/gateway-health.ts";
+} from "#src/metrics/discord-gateway-health.ts";
 
 /**
  * The `/livez` and `/healthz` probe handlers.

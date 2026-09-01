@@ -1,5 +1,17 @@
+import { Gauge } from "prom-client";
+import { registry } from "#src/metrics/registry.ts";
+
 /**
  * Liveness state for the Discord gateway connection.
+ *
+ * ## Why this lives in `metrics/`
+ *
+ * It reads like `discord/` code, and the first version of it lived there — but
+ * `/livez` is the consumer, and `http/` is deliberately restricted to a named
+ * set of endpoint adapters that does not include `discord/`
+ * (`architecture.config.ts`). Health state that a probe reads is exactly what
+ * this layer already holds: `getRiotApiHealth` is the same shape for the same
+ * reason, and both probes read it from here.
  *
  * ## Why this exists
  *
@@ -143,3 +155,20 @@ export function evaluateDiscordGatewayLiveness({
     ? { live: false, reason: "heartbeat-stale", heartbeatAgeMs }
     : { live: true, reason: "heartbeat-fresh", heartbeatAgeMs };
 }
+
+/**
+ * Age of the newest Discord gateway heartbeat acknowledgement, in seconds.
+ *
+ * This is the alertable form of a signal `discord_latency_ms` hides. A zombie
+ * gateway keeps reporting its last measured latency forever, so that series
+ * still looks healthy while the bot receives nothing and every slash command
+ * answers "The application did not respond". The *age* of the acknowledgement
+ * that produced the number climbs without bound instead, so an alert on this
+ * gauge fires where an alert on latency never could. Normal operation keeps it
+ * below Discord's 41.25s heartbeat interval.
+ */
+export const discordGatewayHeartbeatAge = new Gauge({
+  name: "discord_gateway_heartbeat_age_seconds",
+  help: "Seconds since the newest Discord gateway heartbeat acknowledgement",
+  registers: [registry],
+});

@@ -7,7 +7,7 @@ import {
   resetDiscordGatewayHealthForTest,
   setDiscordGatewayState,
   type DiscordGatewayHealth,
-} from "#src/discord/gateway-health.ts";
+} from "#src/metrics/discord-gateway-health.ts";
 
 const NOW = 1_800_000_000_000;
 const GRACE_MS = 5 * 60 * 1000;

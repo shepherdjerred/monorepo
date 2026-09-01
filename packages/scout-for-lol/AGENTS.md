@@ -670,7 +670,7 @@ recovered it. Two things now prevent a repeat:
   bootstrap test, and could never fire. `DISCORD_EVENT_NAMES` holds `Events`
   members so a non-event is a type error, and `bootstrap.test.ts` checks each
   name against the enum.
-- `discord/gateway-health.ts` tracks the newest
+- `metrics/discord-gateway-health.ts` tracks the newest
   `WebSocketShard#lastPingTimestamp` and `/livez` fails when it is more than
   three heartbeat intervals stale, so Kubernetes restarts the pod. Staleness
   alone is the verdict — an ordinary reconnect passes through `disconnected`
