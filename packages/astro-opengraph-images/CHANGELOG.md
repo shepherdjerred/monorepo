@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.20.1](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.20.0...astro-opengraph-images-v1.20.1) (2026-09-01)
+
+
+### Bug Fixes
+
+* **root:** make link-rot results actionable ([#2570](https://github.com/shepherdjerred/monorepo/issues/2570)) ([30f335d](https://github.com/shepherdjerred/monorepo/commit/30f335dac39e7807ae6be556ec0a8ced8a9f0738))
+
 ## [1.20.0](https://github.com/shepherdjerred/monorepo/compare/astro-opengraph-images-v1.19.0...astro-opengraph-images-v1.20.0) (2026-08-25)
 
 A major `satori` bump plus a startup-cost improvement; no public API changes.
