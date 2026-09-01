@@ -213,7 +213,8 @@ describe("Scout beta workflow candidate", () => {
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       },
       { name: "TEMPORAL_METRICS_ADDRESS", value: "0.0.0.0:9464" },
-      { name: "TEMPORAL_NAMESPACE", value: "default" },
+      // The stage's own namespace — never the retired `default` drain.
+      { name: "TEMPORAL_NAMESPACE", value: "beta" },
       {
         name: "TEMPORAL_WORKER_DEPLOYMENT_NAME",
         value: "scout-beta-workflows",

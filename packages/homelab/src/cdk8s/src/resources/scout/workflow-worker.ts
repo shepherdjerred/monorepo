@@ -100,7 +100,12 @@ export function createScoutWorkflowWorker(
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
         ),
         TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
-        TEMPORAL_NAMESPACE: EnvValue.fromValue("default"),
+        // The stage's own namespace, not the retired `default` drain. These
+        // workers do not render yet (see scoutWorkflowWorkerImageIsCapable),
+        // so this never shipped — but the next stable promotion would have
+        // deployed a worker whose only poller sat on a namespace the
+        // migration emptied, executing nothing.
+        TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
         TEMPORAL_WORKER_DEPLOYMENT_NAME: EnvValue.fromValue(
           `scout-${stage}-workflows`,
         ),
