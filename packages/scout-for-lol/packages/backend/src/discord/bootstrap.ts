@@ -91,7 +91,9 @@ async function registerConnectedGuildCommands(
 
 async function handleNewGuild(guild: Guild): Promise<void> {
   try {
-    await reconcileGuildScopedCommands([guild.id]);
+    // Forced: Discord drops a guild's commands when the bot is removed, so a
+    // rejoin must write even if this process still remembers the old payload.
+    await reconcileGuildScopedCommands([guild.id], undefined, { force: true });
   } catch (error) {
     logger.error(
       `[Guild Create] Failed to reconcile commands for ${guild.id}:`,
