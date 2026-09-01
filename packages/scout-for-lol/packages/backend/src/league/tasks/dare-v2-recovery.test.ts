@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   getPostmatchMessageIds: vi.fn(async () => new Map<string, string>()),
   refreshClosedBucksMessages: vi.fn(() => Promise.resolve()),
   refreshClosedParlayMessages: vi.fn(() => Promise.resolve()),
-  refreshDareV2Callouts: vi.fn(() => Promise.resolve()),
+  refreshPendingDareV2Callouts: vi.fn(() => Promise.resolve([])),
   retryPendingBucksEarnings: vi.fn(() => Promise.resolve()),
   settleEndedDareV2Windows: vi.fn(async () => []),
   settleEndedDareWindows: vi.fn(async () => []),
@@ -44,7 +44,7 @@ vi.mock("#src/betting/dare-sweep-v2.ts", () => ({
   settleEndedDareV2Windows: mocks.settleEndedDareV2Windows,
 }));
 vi.mock("#src/betting/dare-callout-v2.ts", () => ({
-  refreshDareV2Callouts: mocks.refreshDareV2Callouts,
+  refreshPendingDareV2Callouts: mocks.refreshPendingDareV2Callouts,
 }));
 vi.mock("#src/betting/sweep.ts", () => ({
   closeExpiredBettingWindows: mocks.closeExpiredBettingWindows,
@@ -94,7 +94,7 @@ describe("Dare v2 recovery", () => {
 
     expect(mocks.checkActiveGames).toHaveBeenCalledOnce();
     expect(mocks.expireDareV2AcceptWindows).toHaveBeenCalledOnce();
-    expect(mocks.refreshDareV2Callouts).toHaveBeenCalledWith([17]);
+    expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
     expect(mocks.abandonExpiredDareProposals).not.toHaveBeenCalled();
     expect(mocks.closeExpiredBettingWindows).not.toHaveBeenCalled();
   });
@@ -104,7 +104,7 @@ describe("Dare v2 recovery", () => {
 
     expect(mocks.checkMatchHistory).toHaveBeenCalledOnce();
     expect(mocks.settleEndedDareV2Windows).toHaveBeenCalledOnce();
-    expect(mocks.refreshDareV2Callouts).toHaveBeenCalledWith([]);
+    expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
     expect(mocks.retryPendingBucksEarnings).not.toHaveBeenCalled();
     expect(mocks.settleEndedDareWindows).not.toHaveBeenCalled();
     expect(mocks.voidStaleBettingPools).not.toHaveBeenCalled();
