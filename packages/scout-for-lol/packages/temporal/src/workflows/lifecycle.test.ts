@@ -226,6 +226,7 @@ describe("realtime workflows", () => {
     let attempts = 0;
     let failIngestion = true;
     let includeMatchInDiscovery = true;
+    const maintenanceDeadlineSettlement: boolean[] = [];
     const workflow = await workflowWorker();
     const activities = await Worker.create({
       connection: environment.nativeConnection,
@@ -250,8 +251,10 @@ describe("realtime workflows", () => {
             throw ApplicationFailure.nonRetryable("first execution fails");
           }
         },
-        runPostMatchMaintenance: () => {
-          return;
+        runPostMatchMaintenance: (input: {
+          settleDareV2Deadlines: boolean;
+        }) => {
+          maintenanceDeadlineSettlement.push(input.settleDareV2Deadlines);
         },
       },
       maxConcurrentActivityTaskExecutions: 1,
@@ -266,6 +269,7 @@ describe("realtime workflows", () => {
         args: [{ stage: "dev" }],
       }),
     ).rejects.toThrow();
+    expect(maintenanceDeadlineSettlement).toEqual([false]);
     await expect(
       environment.client.workflow.getHandle("scout-dev-match-NA1_200").result(),
     ).rejects.toThrow();

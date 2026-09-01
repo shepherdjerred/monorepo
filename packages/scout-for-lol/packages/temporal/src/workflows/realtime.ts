@@ -60,6 +60,7 @@ export async function scoutPostMatchDiscoveryWorkflow(
     await realtimeActivities(input.stage).discoverPostMatchIds(input),
   );
   let childrenStarted = 0;
+  let childFailure: unknown;
   for (const match of discovered.matches) {
     const workflowId = scoutMatchWorkflowId(input.stage, match.matchId);
     const child = await startChild(scoutMatchIngestionWorkflow, {
@@ -76,13 +77,25 @@ export async function scoutPostMatchDiscoveryWorkflow(
     // Do not allow a later child to capture evidence and settle while an
     // earlier child is still ingesting. If an older run already owns this child
     // ID, startChild fails and the next poll rediscovers the unprocessed tail.
-    await child.result();
+    try {
+      await child.result();
+    } catch (error) {
+      childFailure = error;
+      break;
+    }
   }
   setWorkflowPhase("**Phase:** running post-match maintenance");
   await realtimeActivities(input.stage).runPostMatchMaintenance({
     ...input,
-    settleDareV2Deadlines: discovered.evidenceComplete,
+    settleDareV2Deadlines:
+      discovered.evidenceComplete && childFailure === undefined,
     evidenceWatermark: discovered.evidenceWatermark,
   });
+  if (childFailure !== undefined) {
+    if (childFailure instanceof Error) throw childFailure;
+    throw new Error("Match-ingestion child failed with a non-Error value", {
+      cause: childFailure,
+    });
+  }
   return { status: "completed", childrenStarted };
 }
