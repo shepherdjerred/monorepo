@@ -36,6 +36,7 @@ import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prema
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 import {
   deduplicateMatchIntents,
+  orderMatchIntentsByCompletion,
   type DiscoveredMatchIntent,
   type MatchDiscovery,
 } from "#src/league/tasks/postmatch/match-intents.ts";
@@ -46,6 +47,7 @@ import {
 } from "#src/temporal/effect-claims.ts";
 import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
 import { deliverPostmatchReport } from "#src/league/tasks/postmatch/match-report-delivery.ts";
+import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -376,8 +378,24 @@ async function collectMatchDiscovery(): Promise<MatchDiscovery> {
     playersToCheck,
     currentTime,
   );
+  const intents = deduplicateMatchIntents(playersWithMatches);
+  const orderedIntents = await orderMatchIntentsByCompletion(
+    intents,
+    async (intent) => {
+      const match = await fetchMatchData(
+        MatchIdSchema.parse(intent.matchId),
+        intent.region,
+      );
+      if (match === undefined) {
+        logger.warn(
+          `Could not establish completion time for ${intent.matchId}; leaving it for a later discovery poll`,
+        );
+      }
+      return match?.info.gameEndTimestamp;
+    },
+  );
   return {
-    intents: deduplicateMatchIntents(playersWithMatches),
+    intents: orderedIntents,
     allPlayerConfigs: accountsWithState.map((account) => account.config),
   };
 }

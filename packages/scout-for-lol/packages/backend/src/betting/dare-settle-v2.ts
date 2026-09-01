@@ -5,7 +5,7 @@ import {
   type RawMatch,
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
-import { classifyMatchForBetting } from "#src/betting/outcome.ts";
+import { isRemakeMatch } from "#src/betting/outcome.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import type { DareTimelineEvidenceV2 } from "#src/betting/dare-evaluator-v2.ts";
 import { dareEvaluatorImplementationV2 } from "#src/betting/dare-evaluator-registry-v2.ts";
@@ -267,7 +267,7 @@ async function inspectStoredContract(
 }
 
 function matchSettlementContext(matchData: RawMatch) {
-  if (classifyMatchForBetting(matchData).kind !== "decided") return null;
+  if (isRemakeMatch(matchData)) return null;
   const queue = resolveQueueTypeFromGame(
     matchData.info.queueId,
     matchData.info.gameMode,

@@ -81,6 +81,13 @@ const EXACTLY_ONE_PLAN = DareCompiledPlanV2Schema.parse({
   ...PLAN,
   result: { ...PLAN.result, operator: "eq", threshold: 1 },
 });
+const ARENA_PLAN = DareCompiledPlanV2Schema.parse({
+  ...PLAN,
+  gameSets: PLAN.gameSets.map((gameSet) => ({
+    ...gameSet,
+    queues: ["arena"],
+  })),
+});
 
 const deps = {
   prismaClient: db,
@@ -180,6 +187,24 @@ function qualifyingMatch(matchId: string): RawMatch {
     gameStartTimestamp,
     timePlayed: 25 * 60,
     creepScore: 200,
+  });
+}
+
+function qualifyingArenaMatch(matchId: string): RawMatch {
+  const match = qualifyingMatch(matchId);
+  const additionalParticipants = Array.from({ length: 6 }, (_, index) => ({
+    ...match.info.participants[index + 1],
+    participantId: match.info.participants.length + index + 1,
+    puuid: `arena-extra-${index.toString()}`,
+  }));
+  return RawMatchSchema.parse({
+    ...match,
+    info: {
+      ...match.info,
+      queueId: 1700,
+      gameMode: "CHERRY",
+      participants: [...match.info.participants, ...additionalParticipants],
+    },
   });
 }
 
@@ -565,6 +590,20 @@ describe("Dare v2 draft mutation and cancellation", () => {
       1,
     );
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+  });
+});
+
+describe("Dare v2 queue capture", () => {
+  test("captures a completed stat-only Arena game", async () => {
+    const dareId = await makeDraft({ plan: ARENA_PLAN });
+    await activate(dareId, "arena-stat-contract");
+
+    await expect(
+      settleDaresV2ForMatch(qualifyingArenaMatch("NA1_DARE_V2_ARENA_STAT"), db),
+    ).resolves.toMatchObject([{ dareId, resolution: "achieved", value: true }]);
+    await expect(
+      db.bucksDareV2Evidence.count({ where: { dareId } }),
+    ).resolves.toBe(1);
   });
 });
 
