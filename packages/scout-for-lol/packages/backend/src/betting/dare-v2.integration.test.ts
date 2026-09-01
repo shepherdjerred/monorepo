@@ -19,6 +19,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   DARE_WINDOW_INGESTION_GRACE_MS,
+  HOUSE_ACCOUNT_DISCORD_ID,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
 import {
@@ -310,6 +311,43 @@ async function expectChallengerBalance(balance: number): Promise<void> {
   });
   expect(wallet.balance).toBe(balance);
   await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
+}
+
+async function houseAccountId(): Promise<number> {
+  const house = await db.bucksAccount.findUniqueOrThrow({
+    where: {
+      serverId_discordId: {
+        serverId: SERVER,
+        discordId: HOUSE_ACCOUNT_DISCORD_ID,
+      },
+    },
+    select: { id: true },
+  });
+  return house.id;
+}
+
+async function expectSingleLedgerDelta(
+  bucksAccountId: number,
+  kind: string,
+  delta: number,
+): Promise<void> {
+  expect(
+    await db.bucksLedgerEntry.findMany({
+      where: { bucksAccountId, kind },
+      select: { delta: true },
+    }),
+  ).toEqual([{ delta }]);
+}
+
+async function activeDareDeadline(dareId: number): Promise<Date> {
+  const active = await db.bucksDareV2.findUniqueOrThrow({
+    where: { id: dareId },
+    select: { deadlineAt: true },
+  });
+  if (active.deadlineAt === null) {
+    throw new Error("Active Dare v2 has no deadline.");
+  }
+  return active.deadlineAt;
 }
 
 function clientFailingSecondTransaction(message: string) {
@@ -907,29 +945,31 @@ describe("Dare v2 partial settlement", () => {
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 
-  test("conserves concurrent contributions from one wallet", async () => {
-    const dareId = await makeDraft();
-    await fund(dareId, "concurrent-contribution");
+  test("conserves one wallet across concurrent contributions to distinct dares", async () => {
+    const firstDareId = await makeDraft({ openingStake: 5 });
+    const secondDareId = await makeDraft({ openingStake: 5 });
+    await fund(firstDareId, "concurrent-contribution-first");
+    await fund(secondDareId, "concurrent-contribution-second");
     const first = await createDareV2ConfirmationIntent(
       {
-        dareId,
+        dareId: firstDareId,
         serverId: SERVER,
         actorDiscordId: CONTRIBUTOR,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 5 },
-        idempotencyKey: "contribute-five",
+        payload: { action: "contribute", amount: 15 },
+        idempotencyKey: "contribute-first-fifteen",
       },
       deps,
       T0,
     );
     const second = await createDareV2ConfirmationIntent(
       {
-        dareId,
+        dareId: secondDareId,
         serverId: SERVER,
         actorDiscordId: CONTRIBUTOR,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 7 },
-        idempotencyKey: "contribute-seven",
+        payload: { action: "contribute", amount: 15 },
+        idempotencyKey: "contribute-second-fifteen",
       },
       deps,
       T0,
@@ -945,24 +985,28 @@ describe("Dare v2 partial settlement", () => {
 
     expect(outcomes.map((outcome) => outcome.kind).sort()).toEqual([
       "contributed",
-      "contributed",
+      "insufficient",
     ]);
-    const dare = await db.bucksDareV2.findUniqueOrThrow({
-      where: { id: dareId },
+    const dares = await db.bucksDareV2.findMany({
+      where: { id: { in: [firstDareId, secondDareId] } },
+      orderBy: { potTotal: "asc" },
     });
-    expect(dare.potTotal).toBe(32);
+    expect(dares.map((dare) => dare.potTotal)).toEqual([5, 20]);
     expect(
       await db.bucksDareV2Contribution.aggregate({
-        where: { dareId },
+        where: {
+          dareId: { in: [firstDareId, secondDareId] },
+          discordId: CONTRIBUTOR,
+        },
         _sum: { amount: true },
       }),
-    ).toMatchObject({ _sum: { amount: 32 } });
+    ).toMatchObject({ _sum: { amount: 15 } });
     const wallet = await db.bucksAccount.findUniqueOrThrow({
       where: {
         serverId_discordId: { serverId: SERVER, discordId: CONTRIBUTOR },
       },
     });
-    expect(wallet.balance).toBe(SEED_GRANT - 12);
+    expect(wallet.balance).toBe(SEED_GRANT - 15);
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 });
@@ -1005,7 +1049,12 @@ describe("Dare v2 evidence and settlement", () => {
     const target = await db.bucksDareV2Target.findFirstOrThrow({
       where: { dareId, targetKey: "virmel" },
     });
-    expect((target.payout ?? 0) + (target.fee ?? 0)).toBe(20);
+    expect(target).toMatchObject({ payout: 16, fee: 4 });
+    if (target.bucksAccountId === null) {
+      throw new Error("Accepted Dare v2 target has no wallet.");
+    }
+    await expectSingleLedgerDelta(target.bucksAccountId, "dare_payout", 16);
+    await expectSingleLedgerDelta(await houseAccountId(), "dare_fee", 4);
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 
@@ -1030,8 +1079,15 @@ describe("Dare v2 evidence and settlement", () => {
       settleDaresV2ForMatch(secondMatch, db),
     ]);
     expect(await db.bucksDareV2Evidence.count({ where: { dareId } })).toBe(2);
+    const deadlineAt = await activeDareDeadline(dareId);
+    const insideGrace = new Date(
+      deadlineAt.getTime() + DARE_WINDOW_INGESTION_GRACE_MS - 1,
+    );
+    await expect(settleEndedDareV2Windows(db, insideGrace)).resolves.toEqual(
+      [],
+    );
     const boundAt = new Date(
-      T0.getTime() + 8 * 24 * 60 * 60 * 1000 + DARE_WINDOW_INGESTION_GRACE_MS,
+      deadlineAt.getTime() + DARE_WINDOW_INGESTION_GRACE_MS + 1,
     );
     const settled = await settleEndedDareV2Windows(db, boundAt);
 
@@ -1047,8 +1103,9 @@ describe("Dare v2 evidence and settlement", () => {
         serverId_discordId: { serverId: SERVER, discordId: CHALLENGER },
       },
     });
-    expect(wallet.balance).toBeLessThan(SEED_GRANT);
-    expect(wallet.balance).toBeGreaterThan(SEED_GRANT - 20);
+    expect(wallet.balance).toBe(SEED_GRANT - 4);
+    await expectSingleLedgerDelta(wallet.id, "dare_refund", 16);
+    await expectSingleLedgerDelta(await houseAccountId(), "dare_fee", 4);
     await expect(reconcileBucksBalances(db)).resolves.toEqual([]);
   });
 
@@ -1067,8 +1124,9 @@ describe("Dare v2 evidence and settlement", () => {
     expect(captured).toMatchObject([
       { dareId, resolution: "captured", value: null },
     ]);
+    const deadlineAt = await activeDareDeadline(dareId);
     const boundAt = new Date(
-      T0.getTime() + 8 * 24 * 60 * 60 * 1000 + DARE_WINDOW_INGESTION_GRACE_MS,
+      deadlineAt.getTime() + DARE_WINDOW_INGESTION_GRACE_MS + 1,
     );
     const settled = await settleEndedDareV2Windows(db, boundAt);
 
