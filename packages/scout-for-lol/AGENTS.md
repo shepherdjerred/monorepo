@@ -670,7 +670,7 @@ recovered it. Two things now prevent a repeat:
   bootstrap test, and could never fire. `DISCORD_EVENT_NAMES` holds `Events`
   members so a non-event is a type error, and `bootstrap.test.ts` checks each
   name against the enum.
-- `discord/gateway-health.ts` tracks the newest
+- `metrics/discord-gateway-health.ts` tracks the newest
   `WebSocketShard#lastPingTimestamp` and `/livez` fails when it is more than
   three heartbeat intervals stale, so Kubernetes restarts the pod. Staleness
   alone is the verdict — an ordinary reconnect passes through `disconnected`
@@ -983,6 +983,25 @@ must receive `[]` to clear stale commands. A newly joined guild is reconciled
 from `guildCreate`; a guild the running bot cannot access is skipped only for
 Discord's `MISSING_ACCESS`, while every other registration failure remains
 fatal during startup.
+
+**The reconcile recomputes every minute but only writes on a change.** The
+dynamic-config poll fires every 60 seconds and this is its only listener, so an
+unconditional PUT meant 1,440 no-op bulk-overwrites a day and 1,440 log lines
+that made the one reporting a real change worthless. Recomputing is not
+skippable — `betting_enabled` and `tournament_lobbies_enabled` are evaluated
+per guild against Flipt rather than carried in the config snapshot, so nothing
+short of rebuilding the payload notices an operator flipping one. `rest.ts`
+therefore keeps the serialized payload it last wrote per guild and skips an
+identical write, recording it only after the PUT lands so a failure retries on
+the next poll, and **dropping the entry on `MISSING_ACCESS`** — that error is
+the one that means the cache is wrong, because Discord clears a guild's
+commands when the bot is removed. Startup and `guildCreate` pass `force`,
+because neither knows what Discord currently holds and a rejoined guild has had
+its commands dropped while a cached entry survives; forcing alone is not
+enough, since a rejoin can race `guildCreate` and hit `MISSING_ACCESS` before
+access is restored, which is exactly why that path invalidates rather than
+merely skipping. The accepted cost is that this process will not
+repair guild commands edited out of band until it restarts.
 
 The feature scope remains enforced by the flag and guild-scoped registration;
 user-facing betting surfaces should not advertise the allowlist. `/bb prizes`

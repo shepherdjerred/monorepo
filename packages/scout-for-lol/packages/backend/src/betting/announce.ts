@@ -332,13 +332,19 @@ function reportUndeliverableSettlement(input: {
  */
 export function buildAnnouncements(input: {
   closures: readonly ClosedPool[];
+  earnings: readonly EarnedAward[];
   settlements: readonly SettlementSummary[];
   parlaySettlements: readonly ParlaySettlementSummary[];
 }): Announcement[] {
-  const settlementServerIds = new Set(
-    input.settlements.map((summary) => summary.serverId),
+  const outcomeSettlements = input.settlements.filter(
+    (summary) =>
+      summary.bets.some((bet) => !bet.isHouse) ||
+      input.earnings.some((award) => award.serverId === summary.serverId),
   );
-  const announcements: Announcement[] = input.settlements.map((summary) => ({
+  const settlementServerIds = new Set(
+    outcomeSettlements.map((summary) => summary.serverId),
+  );
+  const announcements: Announcement[] = outcomeSettlements.map((summary) => ({
     summary,
     includeOutcome: true,
     parlay: undefined,

@@ -15,12 +15,12 @@ import {
   discordUsersGauge,
   discordLatency,
 } from "#src/metrics/index.ts";
-import { discordGatewayHeartbeatAge } from "#src/metrics/discord-gateway.ts";
 import {
+  discordGatewayHeartbeatAge,
   getDiscordGatewayHealth,
   recordDiscordGatewayHeartbeat,
   setDiscordGatewayState,
-} from "#src/discord/gateway-health.ts";
+} from "#src/metrics/discord-gateway-health.ts";
 import { voiceManager } from "#src/voice/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";
@@ -91,7 +91,9 @@ async function registerConnectedGuildCommands(
 
 async function handleNewGuild(guild: Guild): Promise<void> {
   try {
-    await reconcileGuildScopedCommands([guild.id]);
+    // Forced: Discord drops a guild's commands when the bot is removed, so a
+    // rejoin must write even if this process still remembers the old payload.
+    await reconcileGuildScopedCommands([guild.id], undefined, { force: true });
   } catch (error) {
     logger.error(
       `[Guild Create] Failed to reconcile commands for ${guild.id}:`,

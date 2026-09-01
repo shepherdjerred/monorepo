@@ -10,7 +10,7 @@ import {
   recordDiscordGatewayHeartbeat,
   resetDiscordGatewayHealthForTest,
   setDiscordGatewayState,
-} from "#src/discord/gateway-health.ts";
+} from "#src/metrics/discord-gateway-health.ts";
 
 const CORS = {};
 /** Well past the grace period, so the probe evaluates its components. */

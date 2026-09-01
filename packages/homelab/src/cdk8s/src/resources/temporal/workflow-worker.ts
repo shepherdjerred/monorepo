@@ -32,7 +32,6 @@ function createWorkflowWorker(
     envVariables: {
       TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
-      TEMPORAL_LEGACY_NAMESPACE: EnvValue.fromValue("default"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("workflows"),
       TEMPORAL_WORKER_DEPLOYMENT_NAME: EnvValue.fromValue(DEPLOYMENT_NAME),
