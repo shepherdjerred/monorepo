@@ -2,9 +2,9 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   BucksStakeSchema,
-  DareCompiledPlanV2Schema,
   DareDeadlineSpecV2Schema,
   DareTargetBindingV2Schema,
+  DARE_V2_MAX_QUERY_LENGTH,
   DiscordGuildIdSchema,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
@@ -13,13 +13,14 @@ import {
   reviseDareDraftV2,
 } from "#src/betting/dare-draft-v2.ts";
 import { historicallyPreviewDareV2 } from "#src/betting/dare-preview-v2.ts";
+import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
 import { prisma } from "#src/database/index.ts";
 
 export const DareDraftEditorInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
   expectedRevision: z.number().int().positive(),
   originalText: z.string().min(1).max(4000),
-  plan: DareCompiledPlanV2Schema,
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
 });
@@ -84,11 +85,20 @@ async function prepareEditorDraft(
     userId,
     guildIds,
   });
+  const compilation = await compileDareScoutQlPlanV2({
+    queryText: input.queryText,
+    targets: owned.targets,
+  });
+  if (compilation.kind === "invalid") {
+    return { kind: "invalid" as const, owned, issues: compilation.issues };
+  }
   return {
+    kind: "valid" as const,
     owned,
+    compilation: compilation.compilation,
     prepared: prepareDareDraftV2({
       originalText: input.originalText,
-      plan: input.plan,
+      plan: compilation.compilation.plan,
       targets: owned.targets,
       deadlineSpec: input.deadlineSpec,
       openingStake: input.openingStake,
@@ -101,12 +111,18 @@ export async function validateDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
-  const { prepared } = await prepareEditorDraft(input, userId, guildIds);
+  const result = await prepareEditorDraft(input, userId, guildIds);
+  if (result.kind === "invalid") {
+    return { kind: "invalid" as const, issues: result.issues };
+  }
+  const { prepared } = result;
   return prepared.kind === "invalid"
     ? { kind: "invalid" as const, issues: prepared.issues }
     : {
         kind: "valid" as const,
         canonicalScoutQl: prepared.draft.canonicalScoutQl,
+        scoutQlPlanHash: result.compilation.planHash,
+        scoutQlFacts: result.compilation.facts,
         plainLanguage: prepared.draft.plainLanguage,
         semanticProofPlan: prepared.draft.semanticProofPlan,
       };
@@ -117,7 +133,14 @@ export async function previewDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
-  const { owned, prepared } = await prepareEditorDraft(input, userId, guildIds);
+  const result = await prepareEditorDraft(input, userId, guildIds);
+  if (result.kind === "invalid") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: result.issues.join(" "),
+    });
+  }
+  const { owned, prepared } = result;
   if (prepared.kind === "invalid") {
     throw new TRPCError({
       code: "BAD_REQUEST",
@@ -138,7 +161,14 @@ export async function reviseDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
-  const { owned, prepared } = await prepareEditorDraft(input, userId, guildIds);
+  const result = await prepareEditorDraft(input, userId, guildIds);
+  if (result.kind === "invalid") {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: result.issues.join(" "),
+    });
+  }
+  const { owned, prepared } = result;
   if (prepared.kind === "invalid") {
     throw new TRPCError({
       code: "BAD_REQUEST",

@@ -1,9 +1,7 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  DareCompiledPlanV2Schema,
   DareDeadlineSpecV2Schema,
-  type DareCompiledPlanV2,
   type DareDeadlineSpecV2,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -23,7 +21,6 @@ type EditorDare = {
   id: number;
   currentRevision: number;
   originalText: string;
-  plan: DareCompiledPlanV2;
   deadlineSpec: DareDeadlineSpecV2;
   openingStake: number;
   canonicalScoutQl: string;
@@ -34,6 +31,16 @@ type ValidatedDraft = {
   canonicalScoutQl: string;
   plainLanguage: string;
   semanticProofPlan: string;
+  scoutQlPlanHash: string;
+  scoutQlFacts: {
+    cteCount: number;
+    joinedRelations: number;
+    predicates: number;
+    maxExpressionDepth: number;
+    physicalSources: string[];
+    functions: string[];
+    targetKeys: string[];
+  };
 };
 
 export function ExploreDareEditor(props: { dare: EditorDare }) {
@@ -41,9 +48,7 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [originalText, setOriginalText] = useState(props.dare.originalText);
-  const [planText, setPlanText] = useState(
-    JSON.stringify(props.dare.plan, null, 2),
-  );
+  const [queryText, setQueryText] = useState(props.dare.canonicalScoutQl);
   const [deadlineText, setDeadlineText] = useState(
     JSON.stringify(props.dare.deadlineSpec, null, 2),
   );
@@ -79,22 +84,17 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
   }
 
   function editorInput() {
-    let rawPlan: unknown;
     let rawDeadline: unknown;
     try {
-      rawPlan = JSON.parse(planText);
       rawDeadline = JSON.parse(deadlineText);
     } catch {
-      setError("The plan and deadline must be valid JSON.");
+      setError("The deadline must be valid JSON.");
       return null;
     }
-    const plan = DareCompiledPlanV2Schema.safeParse(rawPlan);
     const deadlineSpec = DareDeadlineSpecV2Schema.safeParse(rawDeadline);
     const openingStake = Number(stakeText);
-    if (!plan.success || !deadlineSpec.success) {
-      setError(
-        "The plan or deadline does not match the Dare v2 contract schema.",
-      );
+    if (!deadlineSpec.success) {
+      setError("The deadline does not match the Dare v2 contract schema.");
       return null;
     }
     if (!Number.isSafeInteger(openingStake) || openingStake <= 0) {
@@ -105,7 +105,7 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
       dareId: props.dare.id,
       expectedRevision: props.dare.currentRevision,
       originalText,
-      plan: plan.data,
+      queryText,
       deadlineSpec: deadlineSpec.data,
       openingStake,
     };
@@ -134,6 +134,7 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
         return null;
       }
       setError(null);
+      setQueryText(result.canonicalScoutQl);
       setValidated(result);
       return result;
     } catch (error_) {
@@ -238,8 +239,9 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
         <DialogHeader>
           <DialogTitle>Edit Dare #{props.dare.id.toString()}</DialogTitle>
           <DialogDescription>
-            Edit the typed contract plan; Scout regenerates canonical ScoutQL
-            and its exact meaning. No funded contract can enter this editor.
+            Edit the authoritative ScoutQL contract; Scout validates, formats,
+            explains, and backtests it before replacing this private draft. No
+            funded contract can enter this editor.
           </DialogDescription>
         </DialogHeader>
         <fieldset disabled={revise.isPending} className="space-y-4">
@@ -258,16 +260,16 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
                 }}
               />
             </label>
-            <label htmlFor={fieldId("plan")} className="space-y-1 text-sm">
-              <span className="font-medium">Contract plan</span>
+            <label htmlFor={fieldId("scoutql")} className="space-y-1 text-sm">
+              <span className="font-medium">ScoutQL contract</span>
               <Textarea
-                id={fieldId("plan")}
+                id={fieldId("scoutql")}
                 className="min-h-80 font-mono text-xs"
                 spellCheck={false}
-                value={planText}
+                value={queryText}
                 onChange={(event) => {
                   changed();
-                  setPlanText(event.target.value);
+                  setQueryText(event.target.value);
                 }}
               />
             </label>
@@ -343,6 +345,13 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
               <ScoutQlCode queryText={validated.canonicalScoutQl} />
               <p className="whitespace-pre-wrap text-sm">
                 {validated.plainLanguage}
+              </p>
+              <p className="text-xs text-scout-muted-foreground">
+                Plan {validated.scoutQlPlanHash.slice(0, 12)} ·{" "}
+                {validated.scoutQlFacts.cteCount.toString()} CTEs ·{" "}
+                {validated.scoutQlFacts.joinedRelations.toString()} joins ·{" "}
+                {validated.scoutQlFacts.predicates.toString()} predicates ·
+                depth {validated.scoutQlFacts.maxExpressionDepth.toString()}
               </p>
             </section>
           )}

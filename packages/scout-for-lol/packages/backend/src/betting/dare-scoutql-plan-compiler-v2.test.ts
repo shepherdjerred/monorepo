@@ -1,0 +1,126 @@
+import { describe, expect, test } from "vitest";
+import {
+  DareParaphraseCorpusSchema,
+  DiscordAccountIdSchema,
+  type DareParaphraseCorpus,
+  type DareTargetBindingV2,
+} from "@scout-for-lol/data";
+import { formatDareScoutQlV2 } from "#src/betting/dare-contract-compiler-v2.ts";
+import { canonicalDarePlanJsonV2 } from "#src/betting/dare-plan-canonical-v2.ts";
+import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
+
+const CORPUS_URL = new URL(
+  "../../../data/src/model/dare-v2-paraphrase-corpus.json",
+  import.meta.url,
+);
+
+async function loadCorpus(): Promise<DareParaphraseCorpus> {
+  const raw: unknown = await Bun.file(CORPUS_URL).json();
+  return DareParaphraseCorpusSchema.parse(raw);
+}
+
+function targetBindings(
+  targetAliases: Readonly<Record<string, string>>,
+): DareTargetBindingV2[] {
+  return Object.entries(targetAliases).map(([key, alias], index) => ({
+    key,
+    alias,
+    discordId: DiscordAccountIdSchema.parse(
+      `1000000000000000${index.toString()}`,
+    ),
+    playerId: index + 1,
+    accounts: [
+      {
+        puuid: `${key}-frozen-puuid`,
+        trackingStartedAt: "2026-01-01T00:00:00.000Z",
+      },
+    ],
+  }));
+}
+
+describe("Dare v2 ScoutQL plan compiler", () => {
+  test("round-trips every canonical plan in the paraphrase corpus", async () => {
+    const corpus = await loadCorpus();
+
+    for (const entry of corpus.cases) {
+      const queryText = formatDareScoutQlV2(entry.plan);
+      const result = await compileDareScoutQlPlanV2({
+        queryText,
+        targets: targetBindings(entry.targetAliases),
+      });
+
+      expect(result.kind, `${entry.id}: ${JSON.stringify(result)}`).toBe(
+        "valid",
+      );
+      if (result.kind !== "valid") continue;
+      expect(canonicalDarePlanJsonV2(result.compilation.plan), entry.id).toBe(
+        canonicalDarePlanJsonV2(entry.plan),
+      );
+      const recompiled = await compileDareScoutQlPlanV2({
+        queryText: result.compilation.canonicalScoutQl,
+        targets: targetBindings(entry.targetAliases),
+      });
+      expect(recompiled.kind, entry.id).toBe("valid");
+      if (recompiled.kind !== "valid") continue;
+      expect(recompiled.compilation.planHash, entry.id).toBe(
+        result.compilation.planHash,
+      );
+    }
+  });
+
+  test("turns a threshold edit into a new immutable plan", async () => {
+    const corpus = await loadCorpus();
+    const example = corpus.cases.find(
+      (entry) => entry.id === "twisted_fate_same_game",
+    );
+    expect(example).toBeDefined();
+    if (example === undefined) return;
+
+    const originalQuery = formatDareScoutQlV2(example.plan);
+    const editedQuery = originalQuery.replace(
+      "dare_rate('T1', 'cs_per_minute') >= 8",
+      "dare_rate('T1', 'cs_per_minute') >= 9",
+    );
+    const result = await compileDareScoutQlPlanV2({
+      queryText: editedQuery,
+      targets: targetBindings(example.targetAliases),
+    });
+
+    expect(editedQuery).not.toBe(originalQuery);
+    expect(result.kind).toBe("valid");
+    if (result.kind !== "valid") return;
+    expect(result.compilation.plan.gameSets[0]?.predicate).toMatchObject({
+      kind: "and",
+      operands: expect.arrayContaining([
+        expect.objectContaining({
+          kind: "comparison",
+          operator: "gte",
+          threshold: 9,
+        }),
+      ]),
+    });
+  });
+
+  test("rejects valid SQL outside the immutable Dare profile", async () => {
+    const corpus = await loadCorpus();
+    const example = corpus.cases[0];
+    expect(example).toBeDefined();
+    if (example === undefined) return;
+
+    const queryText = formatDareScoutQlV2(example.plan).replace(
+      "ORDER BY game_end_at ASC, match_id ASC",
+      "ORDER BY match_id ASC, game_end_at ASC",
+    );
+    const result = await compileDareScoutQlPlanV2({
+      queryText,
+      targets: targetBindings(example.targetAliases),
+    });
+
+    expect(result).toEqual({
+      kind: "invalid",
+      issues: [
+        "Dare ScoutQL uses a valid SQL construct outside the versioned contract profile. Format the generated contract query and edit only its Dare expressions.",
+      ],
+    });
+  });
+});

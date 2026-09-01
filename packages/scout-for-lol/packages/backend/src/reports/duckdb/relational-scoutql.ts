@@ -33,7 +33,12 @@ const RELATIONAL_SCOUTQL_FUNCTIONS = new Set([
   "contains",
   "count",
   "count_star",
+  "dare_aggregate",
+  "dare_matching_games",
+  "dare_rate",
+  "dare_related_participant_count",
   "dare_target",
+  "dare_timeline_event_count",
   "greatest",
   "max",
   "min",
@@ -98,6 +103,25 @@ export type RelationalScoutQlValidation =
   | { kind: "valid"; compilation: RelationalScoutQlCompilation }
   | { kind: "invalid"; issues: string[] };
 
+export function relationalScoutQlStatementFromImmutableAst(
+  immutableAst: string,
+): unknown {
+  const parsedJson: unknown = JSON.parse(immutableAst);
+  const envelope = SerializedSqlSchema.parse(parsedJson);
+  if (envelope.error) {
+    throw new Error(
+      "Immutable relational ScoutQL AST contains a parser error.",
+    );
+  }
+  const statements = envelope.statements ?? [];
+  const statement = statements[0];
+  if (statement === undefined || statements.length !== 1) {
+    throw new Error(
+      "Immutable relational ScoutQL AST must contain one statement.",
+    );
+  }
+  return statement;
+}
 function collectCteNames(value: JsonValue, facts: AstFacts): void {
   if (Array.isArray(value)) {
     for (const item of value) collectCteNames(item, facts);

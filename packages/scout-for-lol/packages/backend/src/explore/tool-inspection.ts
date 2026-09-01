@@ -27,7 +27,7 @@ import {
   DareScoutQlToolInputSchema,
   DareToolResultSchema,
   ReviseDareToolInputSchema,
-} from "#src/explore/dare-tools.ts";
+} from "#src/explore/dare-tool-schemas.ts";
 
 /**
  * The Bryan Bucks tools' validated shapes, keyed by tool name. They carry no

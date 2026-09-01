@@ -72,6 +72,36 @@ export const DareParticipantValueFieldV2Schema = z.enum([
   "penta_kills",
 ]);
 
+export const DareParticipantRateFieldV2Schema = z.enum([
+  "cs_per_minute",
+  "damage_per_minute",
+  "kda",
+]);
+
+export const DareComparisonOperatorV2Schema = z.enum([
+  "eq",
+  "neq",
+  "gte",
+  "lte",
+  "gt",
+  "lt",
+]);
+
+export const DareResultOperatorV2Schema = z.enum([
+  "eq",
+  "gte",
+  "lte",
+  "gt",
+  "lt",
+]);
+
+export const DareAggregateFunctionV2Schema = z.enum([
+  "sum",
+  "average",
+  "minimum",
+  "maximum",
+]);
+
 export type DareValueV2 =
   | {
       kind: "participant";
@@ -81,7 +111,7 @@ export type DareValueV2 =
   | {
       kind: "participant_rate";
       target: string;
-      field: "cs_per_minute" | "damage_per_minute" | "kda";
+      field: z.infer<typeof DareParticipantRateFieldV2Schema>;
     }
   | { kind: "game"; field: "duration_seconds" | "queue" }
   | {
@@ -120,7 +150,7 @@ export const DareValueV2Schema: z.ZodType<DareValueV2> = z.lazy(() =>
     z.strictObject({
       kind: z.literal("participant_rate"),
       target: z.string().min(1),
-      field: z.enum(["cs_per_minute", "damage_per_minute", "kda"]),
+      field: DareParticipantRateFieldV2Schema,
     }),
     z.strictObject({
       kind: z.literal("game"),
@@ -173,7 +203,7 @@ export const DareBooleanExpressionV2Schema: z.ZodType<DareBooleanExpressionV2> =
       z.strictObject({
         kind: z.literal("comparison"),
         value: DareValueV2Schema,
-        operator: z.enum(["eq", "neq", "gte", "lte", "gt", "lt"]),
+        operator: DareComparisonOperatorV2Schema,
         threshold: z.union([z.string(), z.number(), z.boolean()]),
       }),
       z.strictObject({
@@ -227,7 +257,7 @@ export const DareResultExpressionV2Schema: z.ZodType<DareResultExpressionV2> =
       z.strictObject({
         kind: z.literal("matching_games"),
         gameSet: z.string().min(1),
-        operator: z.enum(["eq", "gte", "lte", "gt", "lt"]),
+        operator: DareResultOperatorV2Schema,
         threshold: z
           .number()
           .int()
@@ -238,8 +268,8 @@ export const DareResultExpressionV2Schema: z.ZodType<DareResultExpressionV2> =
         kind: z.literal("aggregate"),
         gameSet: z.string().min(1),
         projection: z.string().min(1),
-        function: z.enum(["sum", "average", "minimum", "maximum"]),
-        operator: z.enum(["eq", "gte", "lte", "gt", "lt"]),
+        function: DareAggregateFunctionV2Schema,
+        operator: DareResultOperatorV2Schema,
         threshold: z.number(),
       }),
       z.strictObject({

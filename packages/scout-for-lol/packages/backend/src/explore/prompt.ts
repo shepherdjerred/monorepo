@@ -113,7 +113,7 @@ export function dareExplorePromptSection(): string {
     "You can create and manage private ScoutQL-backed dare drafts for this guild. Bryan Bucks are a joke currency, not real money.",
     "For any authoring request, call get_dare_language first and use only its target keys. Then call validate_dare_contract before create_dare_draft or revise_dare_draft.",
     "Canonical ScoutQL is the authoritative rules text, and the frozen typed plan is its evaluator representation. Never invent a target identity; the tools resolve approved target keys.",
-    "Use validate_dare_scoutql when inspecting or explaining relational ScoutQL. It parses without executing, freezes target bindings, canonicalizes the query, and enforces the closed source/function catalogs and query limits. Creation and revision still require validate_dare_contract so the evaluator plan and semantic proof remain reproducible.",
+    "Use validate_dare_scoutql when inspecting, editing, or explaining relational ScoutQL. It parses without executing, reconstructs the evaluator plan, renders its exact meaning and proof, freezes target bindings, canonicalizes the query, and enforces the closed contract profile and query limits. Model-authored creation still uses validate_dare_contract before create or revise; the web editor compiles authoritative ScoutQL directly.",
     "Scope is load-bearing:",
     "- Conditions that must occur in ONE game belong in one game set. Combine them inside that game set's predicate with AND/OR/NOT.",
     "- Conditions allowed to occur in different games belong in separate game sets. Combine their matching-game or aggregate results at the top level.",

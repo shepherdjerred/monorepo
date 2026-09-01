@@ -65,56 +65,26 @@ function arithmeticSql(
 
 function participantRateSql(
   value: Extract<DareValueV2, { kind: "participant_rate" }>,
-  gameSet: DareGameSetV2,
 ): string {
-  const alias = aliasForTarget(gameSet, value.target);
-  if (value.field === "cs_per_minute") {
-    return `(${alias}.creep_score * 60.0 / NULLIF(${alias}.time_played, 0))`;
-  }
-  if (value.field === "damage_per_minute") {
-    return `(${alias}.total_damage_dealt_to_champions * 60.0 / NULLIF(${alias}.time_played, 0))`;
-  }
-  return `((${alias}.kills + ${alias}.assists) * 1.0 / GREATEST(${alias}.deaths, 1))`;
+  return `dare_rate(${quote(value.target)}, ${quote(value.field)})`;
 }
 
 function relatedParticipantSql(
   value: Extract<DareValueV2, { kind: "related_participant_count" }>,
-  gameSet: DareGameSetV2,
 ): string {
-  const alias = aliasForTarget(gameSet, value.target);
-  const relationship =
-    value.relationship === "ally"
-      ? `rp.team_id = ${alias}.team_id AND rp.puuid <> ${alias}.puuid`
-      : `rp.team_id <> ${alias}.team_id`;
-  const champion =
-    value.championName === null
-      ? ""
-      : ` AND rp.champion_name = ${quote(normalizeChampionName(value.championName))}`;
-  return `(SELECT COUNT(*) FROM match_participants AS rp WHERE rp.match_id = p0.match_id AND ${relationship}${champion})`;
+  return `dare_related_participant_count(${quote(value.target)}, ${quote(value.relationship)}, ${value.championName === null ? "NULL" : quote(normalizeChampionName(value.championName))})`;
 }
 
 function timelineEventCountSql(
   value: Extract<DareValueV2, { kind: "timeline_event_count" }>,
-  gameSet: DareGameSetV2,
 ): string {
-  const participantJoin =
-    value.target === null
-      ? ""
-      : ` JOIN timeline_event_participants AS tep ON tep.event_id = te.event_id AND tep.puuid = ${aliasForTarget(gameSet, value.target)}.puuid${value.role === null ? "" : ` AND tep.role = ${quote(value.role)}`}`;
-  const clauses = [
-    "te.match_id = p0.match_id",
-    `te.event_type = ${quote(value.eventType)}`,
-  ];
-  if (value.afterMs !== null) {
-    clauses.push(`te.event_timestamp_ms >= ${value.afterMs.toString()}`);
-  }
-  if (value.beforeMs !== null) {
-    clauses.push(`te.event_timestamp_ms <= ${value.beforeMs.toString()}`);
-  }
-  if (value.itemId !== null) {
-    clauses.push(`te.item_id = ${value.itemId.toString()}`);
-  }
-  return `CASE WHEN EXISTS (SELECT 1 FROM timeline_coverage AS tc WHERE tc.match_id = p0.match_id AND tc.coverage_state = 'complete') THEN (SELECT COUNT(DISTINCT te.event_id) FROM timeline_events AS te${participantJoin} WHERE ${clauses.join(" AND ")}) ELSE NULL END`;
+  const argument = (argumentValue: string | number | null) =>
+    argumentValue === null
+      ? "NULL"
+      : typeof argumentValue === "number"
+        ? argumentValue.toString()
+        : quote(argumentValue);
+  return `dare_timeline_event_count(${quote(value.eventType)}, ${argument(value.target)}, ${argument(value.role)}, ${argument(value.afterMs)}, ${argument(value.beforeMs)}, ${argument(value.itemId)})`;
 }
 
 function valueSql(value: DareValueV2, gameSet: DareGameSetV2): string {
@@ -122,7 +92,7 @@ function valueSql(value: DareValueV2, gameSet: DareGameSetV2): string {
     return `${aliasForTarget(gameSet, value.target)}.${value.field}`;
   }
   if (value.kind === "participant_rate") {
-    return participantRateSql(value, gameSet);
+    return participantRateSql(value);
   }
   if (value.kind === "game") {
     return value.field === "duration_seconds"
@@ -130,12 +100,12 @@ function valueSql(value: DareValueV2, gameSet: DareGameSetV2): string {
       : "p0.queue";
   }
   if (value.kind === "related_participant_count") {
-    return relatedParticipantSql(value, gameSet);
+    return relatedParticipantSql(value);
   }
   if (value.kind === "arithmetic") {
     return arithmeticSql(value, gameSet);
   }
-  return timelineEventCountSql(value, gameSet);
+  return timelineEventCountSql(value);
 }
 
 function predicateSql(
@@ -154,18 +124,10 @@ function predicateSql(
 
 function resultSql(expression: DareResultExpressionV2): string {
   if (expression.kind === "matching_games") {
-    const comparison = comparisonOperator(expression.operator);
-    const threshold = expression.threshold.toString();
-    return `(SELECT CASE WHEN (lower_bound ${comparison} ${threshold}) = (upper_bound ${comparison} ${threshold}) THEN (lower_bound ${comparison} ${threshold}) ELSE NULL END FROM (SELECT COUNT(*) FILTER (WHERE matched IS TRUE) AS lower_bound, COUNT(*) FILTER (WHERE matched IS NOT FALSE) AS upper_bound FROM ${expression.gameSet}))`;
+    return `dare_matching_games(${quote(expression.gameSet)}, ${quote(expression.operator)}, ${expression.threshold.toString()})`;
   }
   if (expression.kind === "aggregate") {
-    const aggregate = {
-      sum: "SUM",
-      average: "AVG",
-      minimum: "MIN",
-      maximum: "MAX",
-    }[expression.function];
-    return `CASE WHEN EXISTS (SELECT 1 FROM ${expression.gameSet} WHERE matched IS NULL OR (matched IS TRUE AND ${expression.projection} IS NULL)) THEN NULL WHEN NOT EXISTS (SELECT 1 FROM ${expression.gameSet} WHERE matched IS TRUE) THEN FALSE ELSE (SELECT ${aggregate}(${expression.projection}) FROM ${expression.gameSet} WHERE matched IS TRUE) ${comparisonOperator(expression.operator)} ${expression.threshold.toString()} END`;
+    return `dare_aggregate(${quote(expression.gameSet)}, ${quote(expression.projection)}, ${quote(expression.function)}, ${quote(expression.operator)}, ${expression.threshold.toString()})`;
   }
   if (expression.kind === "not") {
     return `NOT (${resultSql(expression.operand)})`;

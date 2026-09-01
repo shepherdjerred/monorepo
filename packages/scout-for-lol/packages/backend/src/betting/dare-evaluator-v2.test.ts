@@ -127,12 +127,11 @@ describe("Dare evaluator v2 same-game scope", () => {
   test("formats an explicit single game set", () => {
     const query = formatDareScoutQlV2(PLAN);
     expect(query).toContain("qualifying_game AS (");
-    expect(query).toContain("p0.creep_score * 60.0");
+    expect(query).toContain("dare_rate('virmel', 'cs_per_minute') >= 8");
     expect(query).toContain("p0.time_played >= 1200");
     expect(query).toContain(
-      "COUNT(*) FILTER (WHERE matched IS TRUE) AS lower_bound",
+      "dare_matching_games('qualifying_game', 'gte', 1) AS achieved",
     );
-    expect(query).toContain("ELSE NULL END");
     expect(query).toContain("eligible_matches AS");
     expect(query).toContain("ORDER BY game_end_at ASC, match_id ASC");
   });
@@ -406,7 +405,7 @@ describe("Dare evaluator v2 match and timeline context", () => {
       }),
     ).toBe(true);
     expect(formatDareScoutQlV2(contextualPlan)).toContain(
-      "rp.team_id <> p0.team_id AND rp.champion_name = 'Yasuo'",
+      "dare_related_participant_count('virmel', 'opponent', 'Yasuo')",
     );
   });
 
@@ -445,7 +444,9 @@ describe("Dare evaluator v2 match and timeline context", () => {
     expect(
       evaluateDareEvidenceV2({ plan: itemPlan, evidence: [itemEvidence] }),
     ).toBe(true);
-    expect(formatDareScoutQlV2(itemPlan)).toContain("te.item_id = 3089");
+    expect(formatDareScoutQlV2(itemPlan)).toContain(
+      "dare_timeline_event_count('ITEM_PURCHASED', 'virmel', 'subject', NULL, NULL, 3089)",
+    );
   });
 
   test("filters match-wide timeline events by participant role", () => {

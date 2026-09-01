@@ -1,7 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
 import {
-  BucksStakeSchema,
   DARE_V2_MAX_ELIGIBLE_GAMES,
   DARE_V2_MAX_EXPRESSION_DEPTH,
   DARE_V2_MAX_GAME_SETS,
@@ -10,8 +9,6 @@ import {
   DARE_V2_MAX_PREDICATES,
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
-  DareCompiledPlanV2Schema,
-  DareDeadlineSpecV2Schema,
   DiscordChannelIdSchema,
   type DiscordAccountId,
   type DiscordChannelId,
@@ -25,80 +22,33 @@ import {
   reviseDareDraftV2,
   type DareDraftV2Definition,
 } from "#src/betting/dare-draft-v2.ts";
-import {
-  createDareV2ConfirmationIntent,
-  DareV2IntentPayloadSchema,
-} from "#src/betting/dare-intent-v2.ts";
+import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import {
   inspectVisibleDareV2,
   listVisibleDaresV2,
 } from "#src/betting/dare-view-v2.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { historicallyPreviewDareV2 } from "#src/betting/dare-preview-v2.ts";
+import {
+  renderDarePlanV2,
+  renderDareProofPlanV2,
+} from "#src/betting/dare-render-v2.ts";
+import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
-import { validateRelationalScoutQl } from "#src/reports/duckdb/relational-scoutql.ts";
-
-export const DareToolResultSchema = z.strictObject({
-  kind: z.string().min(1),
-  message: z.string().min(1),
-  data: z.json().nullable(),
-});
-export type DareToolResult = z.infer<typeof DareToolResultSchema>;
-
-export const DareDefinitionToolInputSchema = z.strictObject({
-  originalText: z.string().min(1).max(4000),
-  targetKeys: z
-    .array(z.string().regex(/^T\d{1,2}$/))
-    .min(1)
-    .max(5),
-  plan: DareCompiledPlanV2Schema,
-  deadlineSpec: DareDeadlineSpecV2Schema,
-  openingStake: BucksStakeSchema,
-});
-
-export const DareScoutQlToolInputSchema = z.strictObject({
-  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
-  targetKeys: z
-    .array(z.string().regex(/^T\d{1,2}$/))
-    .min(1)
-    .max(DARE_V2_MAX_TARGETS),
-});
-
-export const ReviseDareToolInputSchema = DareDefinitionToolInputSchema.extend({
-  dareId: z.number().int().positive(),
-  expectedRevision: z.number().int().positive(),
-});
-
-export const DarePreviewToolInputSchema = DareDefinitionToolInputSchema.extend({
-  historyDays: z
-    .number()
-    .int()
-    .min(1)
-    .max(DARE_V2_MAX_HORIZON_DAYS)
-    .default(30),
-});
-
-export const DareListToolInputSchema = z.strictObject({
-  scope: z.enum(["mine", "guild"]),
-  search: z.string().min(1).max(100).optional(),
-});
-
-export const DareInspectToolInputSchema = z.strictObject({
-  dareId: z.number().int().positive(),
-});
-
-export const DareActionToolInputSchema = z.strictObject({
-  dareId: z.number().int().positive(),
-  expectedRevision: z.number().int().positive(),
-  payload: DareV2IntentPayloadSchema,
-});
-
-export const DareDeleteToolInputSchema = z.strictObject({
-  dareId: z.number().int().positive(),
-  expectedRevision: z.number().int().positive(),
-});
+import {
+  DareActionToolInputSchema,
+  DareDefinitionToolInputSchema,
+  DareDeleteToolInputSchema,
+  DareInspectToolInputSchema,
+  DareListToolInputSchema,
+  DarePreviewToolInputSchema,
+  DareScoutQlToolInputSchema,
+  DareToolResultSchema,
+  ReviseDareToolInputSchema,
+  type DareToolResult,
+} from "#src/explore/dare-tool-schemas.ts";
 
 export type DareExploreToolsInput = {
   capability: BucksExploreCapability;
@@ -182,15 +132,15 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     };
   };
 
-  const resolvedTargetKeys = async (requestedKeys: readonly string[]) => {
+  const resolvedTargets = async (requestedKeys: readonly string[]) => {
     const available = await shortlist();
-    const availableKeys = new Set(available.map((target) => target.key));
-    for (const key of requestedKeys) {
-      if (!availableKeys.has(key)) {
+    return [...new Set(requestedKeys)].map((key) => {
+      const target = available.find((candidate) => candidate.key === key);
+      if (target === undefined) {
         throw new Error(`Dare target ${key} is not in the current shortlist.`);
       }
-    }
-    return [...new Set(requestedKeys)];
+      return target;
+    });
   };
 
   return {
@@ -228,10 +178,10 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     validateScoutQl: (raw: unknown) =>
       input.track("validate_dare_scoutql", async () => {
         const parsed = DareScoutQlToolInputSchema.parse(raw);
-        const targetKeys = await resolvedTargetKeys(parsed.targetKeys);
-        const validation = await validateRelationalScoutQl({
+        const targets = await resolvedTargets(parsed.targetKeys);
+        const validation = await compileDareScoutQlPlanV2({
           queryText: parsed.queryText,
-          allowedTargetKeys: targetKeys,
+          targets,
         });
         return validation.kind === "invalid"
           ? result(
@@ -246,6 +196,13 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
                 canonicalScoutQl: validation.compilation.canonicalScoutQl,
                 planHash: validation.compilation.planHash,
                 facts: validation.compilation.facts,
+                plainLanguage: renderDarePlanV2(
+                  validation.compilation.plan,
+                  targets,
+                ),
+                semanticProofPlan: renderDareProofPlanV2(
+                  validation.compilation.plan,
+                ),
               },
             );
       }),

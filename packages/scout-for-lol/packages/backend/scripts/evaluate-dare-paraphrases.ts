@@ -11,7 +11,7 @@ import {
   canonicalDarePlanV2,
 } from "#src/betting/dare-plan-canonical-v2.ts";
 import { renderDarePlanV2 } from "#src/betting/dare-render-v2.ts";
-import { DareDefinitionToolInputSchema } from "#src/explore/dare-tools.ts";
+import { DareDefinitionToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
 import {
   DARE_V2_EVAL_MODEL,
   DareModelEvalReportSchema,
