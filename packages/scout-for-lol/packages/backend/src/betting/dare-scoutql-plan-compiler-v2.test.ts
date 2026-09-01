@@ -103,6 +103,56 @@ describe("Dare v2 ScoutQL plan compiler", () => {
     });
   });
 
+  test("round-trips canonical division with its zero guard", async () => {
+    const plan = DareCompiledPlanV2Schema.parse({
+      version: 2,
+      gameSets: [
+        {
+          name: "ratio_game",
+          targetKeys: ["virmel"],
+          relationship: "independent",
+          queues: ["solo"],
+          predicate: {
+            kind: "comparison",
+            value: {
+              kind: "arithmetic",
+              operator: "divide",
+              left: {
+                kind: "participant",
+                target: "virmel",
+                field: "kills",
+              },
+              right: { kind: "game", field: "duration_seconds" },
+            },
+            operator: "gte",
+            threshold: 0.01,
+          },
+          projections: [],
+          orderBy: "game_end_at_asc_match_id_asc",
+          limit: 100,
+        },
+      ],
+      result: {
+        kind: "matching_games",
+        gameSet: "ratio_game",
+        operator: "gte",
+        threshold: 1,
+      },
+      maxEligibleGames: 100,
+    });
+
+    const result = await compileDareScoutQlPlanV2({
+      queryText: formatDareScoutQlV2(plan),
+      targets: targetBindings({ virmel: "Virmel" }),
+    });
+
+    expect(result.kind, JSON.stringify(result)).toBe("valid");
+    if (result.kind !== "valid") return;
+    expect(canonicalDarePlanJsonV2(result.compilation.plan)).toBe(
+      canonicalDarePlanJsonV2(plan),
+    );
+  });
+
   test("rejects valid SQL outside the immutable Dare profile", async () => {
     const corpus = await loadCorpus();
     const example = corpus.cases[0];

@@ -3,9 +3,12 @@ import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
 export const DARE_CONTRACT_VERSION = 2;
-export const DARE_SCOUTQL_COMPILER_VERSIONS = ["dare-scoutql-1"] as const;
+export const DARE_SCOUTQL_COMPILER_VERSIONS = [
+  "dare-scoutql-1",
+  "dare-scoutql-2",
+] as const;
 export const DARE_EVALUATOR_V2_VERSIONS = ["dare-evaluator-2"] as const;
-export const DARE_SCOUTQL_COMPILER_VERSION = DARE_SCOUTQL_COMPILER_VERSIONS[0];
+export const DARE_SCOUTQL_COMPILER_VERSION = DARE_SCOUTQL_COMPILER_VERSIONS[1];
 export const DARE_EVALUATOR_V2_VERSION = DARE_EVALUATOR_V2_VERSIONS[0];
 export const DareScoutQlCompilerVersionSchema = z.enum(
   DARE_SCOUTQL_COMPILER_VERSIONS,

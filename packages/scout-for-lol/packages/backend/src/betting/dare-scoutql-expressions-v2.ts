@@ -133,6 +133,26 @@ function arithmeticOperator(
   return undefined;
 }
 
+function divisionRightOperand(
+  expression: RelationalScoutQlAstValue,
+): RelationalScoutQlAstValue {
+  const nullIf = functionExpression(expression);
+  const operand = nullIf.children[0];
+  const zero = nullIf.children[1];
+  if (
+    operand === undefined ||
+    zero === undefined ||
+    nullIf.children.length !== 2 ||
+    nullIf.name.toLowerCase() !== "nullif" ||
+    constantValue(zero) !== 0
+  ) {
+    throw new DareScoutQlProfileError(
+      "Dare division requires the canonical NULLIF(right, 0) denominator.",
+    );
+  }
+  return operand;
+}
+
 export function dareValueFromScoutQl(
   expression: RelationalScoutQlAstValue,
   targetKeys: readonly string[],
@@ -169,7 +189,10 @@ export function dareValueFromScoutQl(
     kind: "arithmetic",
     operator: arithmetic,
     left: dareValueFromScoutQl(left, targetKeys),
-    right: dareValueFromScoutQl(right, targetKeys),
+    right: dareValueFromScoutQl(
+      arithmetic === "divide" ? divisionRightOperand(right) : right,
+      targetKeys,
+    ),
   };
 }
 

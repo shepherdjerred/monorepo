@@ -10,6 +10,12 @@ const AstConstantSchema = z.union([
   z.boolean(),
   z.null(),
 ]);
+const DecimalCastTypeSchema = z.object({
+  id: z.literal("DECIMAL"),
+  type_info: z.object({
+    scale: z.number().int().nonnegative(),
+  }),
+});
 
 export type AstObject = z.infer<typeof AstObjectSchema>;
 
@@ -55,18 +61,29 @@ export function expressionType(object: AstObject): string {
   return astString(object["type"], "an expression type");
 }
 
+function decimalValue(value: string | number | boolean | null, type: unknown) {
+  const decimalType = DecimalCastTypeSchema.safeParse(type);
+  return typeof value === "number" && decimalType.success
+    ? value / 10 ** decimalType.data.type_info.scale
+    : value;
+}
+
+function castConstantValue(object: AstObject) {
+  const value = constantValue(object["child"]);
+  const castType = astObject(object["cast_type"], "a cast type");
+  if (typeof value === "string" && castType["id"] === "BOOLEAN") {
+    if (value === "t" || value === "true") return true;
+    if (value === "f" || value === "false") return false;
+  }
+  return decimalValue(value, castType);
+}
+
 export function constantValue(
   expression: RelationalScoutQlAstValue,
 ): string | number | boolean | null {
   const object = astObject(expression, "a constant expression");
   if (expressionClass(object) === "CAST") {
-    const value = constantValue(object["child"]);
-    const castType = astObject(object["cast_type"], "a cast type");
-    if (typeof value === "string" && castType["id"] === "BOOLEAN") {
-      if (value === "t" || value === "true") return true;
-      if (value === "f" || value === "false") return false;
-    }
-    return value;
+    return castConstantValue(object);
   }
   if (expressionClass(object) !== "CONSTANT") {
     throw new DareScoutQlProfileError(
@@ -76,7 +93,9 @@ export function constantValue(
   const value = astObject(object["value"], "a constant value");
   if (value["is_null"] === true) return null;
   const parsed = AstConstantSchema.safeParse(value["value"]);
-  if (parsed.success) return parsed.data;
+  if (parsed.success) {
+    return decimalValue(parsed.data, value["type"]);
+  }
   throw new DareScoutQlProfileError(
     "Dare ScoutQL contains an unsupported literal.",
   );
