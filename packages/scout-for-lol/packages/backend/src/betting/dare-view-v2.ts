@@ -8,6 +8,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { formatDareScoutQlV2 } from "#src/betting/dare-contract-compiler-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
 const StoredTargetSchema = DareTargetBindingV2Schema.omit({
@@ -149,14 +150,22 @@ function listItem(row: VisibleDareRow): DareV2ListItem {
 
 function inspection(row: VisibleDareRow): DareV2Inspection {
   const revision = activeRevision(row);
+  const state = BucksDareV2StateSchema.parse(row.dareState);
+  const plan = DareCompiledPlanV2Schema.parse(
+    JSON.parse(revision.compiledPlan),
+  );
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
   return DareV2InspectionSchema.parse({
     ...listItem(row),
     channelId: row.channelId,
-    canonicalScoutQl: revision.canonicalScoutQl,
-    plan: DareCompiledPlanV2Schema.parse(JSON.parse(revision.compiledPlan)),
+    canonicalScoutQl: visibleDareScoutQlV2({
+      state,
+      plan,
+      storedCanonicalScoutQl: revision.canonicalScoutQl,
+    }),
+    plan,
     semanticProofPlan: revision.semanticProofPlan,
     originalText: revision.originalText,
     deadlineSpec: DareDeadlineSpecV2Schema.parse(
@@ -189,6 +198,16 @@ function inspection(row: VisibleDareRow): DareV2Inspection {
     proof: row.proofJson === null ? null : JSON.parse(row.proofJson),
     voidReason: row.voidReason,
   });
+}
+
+export function visibleDareScoutQlV2(input: {
+  state: BucksDareV2State;
+  plan: z.infer<typeof DareCompiledPlanV2Schema>;
+  storedCanonicalScoutQl: string;
+}): string {
+  return input.state === "draft"
+    ? formatDareScoutQlV2(input.plan)
+    : input.storedCanonicalScoutQl;
 }
 
 const includeVisibleDare = {

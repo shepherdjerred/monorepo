@@ -53,7 +53,9 @@ function expressionKind(
       : "other";
   }
   if (expressionClass === "FUNCTION") {
-    return stringValue(object["function_name"]) === "contains"
+    return new Set(["contains", "dare_aggregate", "dare_matching_games"]).has(
+      stringValue(object["function_name"]) ?? "",
+    )
       ? "boolean"
       : "other";
   }

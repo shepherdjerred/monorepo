@@ -181,4 +181,24 @@ describe("relational ScoutQL compiler", () => {
 
     expect(result.kind).toBe("valid");
   });
+
+  test("keeps arbitrary relational ScoutQL at twenty CTEs", async () => {
+    const queryText = [
+      "WITH",
+      Array.from(
+        { length: 21 },
+        (_unused, index) =>
+          `cte_${index.toString()} AS (SELECT ${index.toString()} AS value)`,
+      ).join(",\n"),
+      "SELECT EXISTS (SELECT 1 FROM match_participants AS p WHERE p.puuid IN dare_target('virmel')) AS achieved",
+    ].join("\n");
+    const result = await validateRelationalScoutQl({
+      queryText,
+      allowedTargetKeys: TARGETS,
+    });
+
+    expect(result.kind).toBe("invalid");
+    if (result.kind !== "invalid") return;
+    expect(result.issues).toContain("ScoutQL may contain at most 20 CTEs.");
+  });
 });

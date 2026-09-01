@@ -1,5 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
+  DARE_V2_MAX_GAME_SETS,
+  DareCompiledPlanV2Schema,
   DareParaphraseCorpusSchema,
   DiscordAccountIdSchema,
   type DareParaphraseCorpus,
@@ -122,5 +124,58 @@ describe("Dare v2 ScoutQL plan compiler", () => {
         "Dare ScoutQL uses a valid SQL construct outside the versioned contract profile. Format the generated contract query and edit only its Dare expressions.",
       ],
     });
+  });
+
+  test("accepts the full twenty-game-set contract limit", async () => {
+    const gameSets = Array.from(
+      { length: DARE_V2_MAX_GAME_SETS },
+      (_unused, index) => ({
+        name: `games_${index.toString()}`,
+        targetKeys: ["virmel"],
+        relationship: "independent",
+        queues: ["solo"],
+        predicate: {
+          kind: "comparison",
+          value: {
+            kind: "participant",
+            target: "virmel",
+            field: "kills",
+          },
+          operator: "gte",
+          threshold: 1,
+        },
+        projections: [],
+        orderBy: "game_end_at_asc_match_id_asc",
+        limit: 100,
+      }),
+    );
+    const plan = DareCompiledPlanV2Schema.parse({
+      version: 2,
+      gameSets,
+      result: {
+        kind: "or",
+        operands: gameSets.map((gameSet) => ({
+          kind: "matching_games",
+          gameSet: gameSet.name,
+          operator: "gte",
+          threshold: 1,
+        })),
+      },
+      maxEligibleGames: 100,
+    });
+
+    const result = await compileDareScoutQlPlanV2({
+      queryText: formatDareScoutQlV2(plan),
+      targets: targetBindings({ virmel: "Virmel" }),
+    });
+
+    expect(result.kind, JSON.stringify(result)).toBe("valid");
+    if (result.kind !== "valid") return;
+    expect(result.compilation.plan.gameSets).toHaveLength(
+      DARE_V2_MAX_GAME_SETS,
+    );
+    expect(result.compilation.facts.cteCount).toBe(
+      DARE_V2_MAX_GAME_SETS * 2 + 1,
+    );
   });
 });

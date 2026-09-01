@@ -1,11 +1,5 @@
 import { z } from "zod";
-import {
-  DARE_V2_MAX_EXPRESSION_DEPTH,
-  DARE_V2_MAX_GAME_SETS,
-  DARE_V2_MAX_JOINED_RELATIONS,
-  DARE_V2_MAX_PREDICATES,
-  DARE_V2_MAX_QUERY_LENGTH,
-} from "@scout-for-lol/data";
+import { DARE_V2_MAX_QUERY_LENGTH } from "@scout-for-lol/data";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
   relationalScoutQlArrayValue as arrayValue,
@@ -13,6 +7,11 @@ import {
   relationalScoutQlStringValue as stringValue,
   type RelationalScoutQlJsonValue as JsonValue,
 } from "#src/reports/duckdb/relational-scoutql-json.ts";
+import {
+  CANONICAL_DARE_SCOUTQL_LIMITS,
+  RAW_RELATIONAL_SCOUTQL_LIMITS,
+  type RelationalScoutQlComplexityLimits,
+} from "#src/reports/duckdb/relational-scoutql-limits.ts";
 import { relationalScoutQlOutputIssues } from "#src/reports/duckdb/relational-scoutql-output.ts";
 
 const RELATIONAL_SCOUTQL_SOURCES = new Set([
@@ -259,34 +258,38 @@ function uniqueSorted(values: readonly string[]): string[] {
   return [...new Set(values)].toSorted();
 }
 
-function appendLimitIssues(facts: AstFacts, issues: string[]): void {
-  const limits = [
+function appendLimitIssues(
+  facts: AstFacts,
+  limits: RelationalScoutQlComplexityLimits,
+  issues: string[],
+): void {
+  const measuredLimits = [
     {
       actual: facts.cteCount,
-      maximum: DARE_V2_MAX_GAME_SETS,
+      maximum: limits.ctes,
       label: "CTEs",
     },
     {
       actual: facts.joinedRelations,
-      maximum: DARE_V2_MAX_JOINED_RELATIONS,
+      maximum: limits.joinedRelations,
       label: "joined relations",
     },
     {
       actual: facts.predicates,
-      maximum: DARE_V2_MAX_PREDICATES,
+      maximum: limits.predicates,
       label: "predicates",
     },
   ];
-  for (const limit of limits) {
+  for (const limit of measuredLimits) {
     if (limit.actual > limit.maximum) {
       issues.push(
         `ScoutQL may contain at most ${limit.maximum.toString()} ${limit.label}.`,
       );
     }
   }
-  if (facts.maxExpressionDepth > DARE_V2_MAX_EXPRESSION_DEPTH) {
+  if (facts.maxExpressionDepth > limits.expressionDepth) {
     issues.push(
-      `ScoutQL expressions may be at most ${DARE_V2_MAX_EXPRESSION_DEPTH.toString()} levels deep.`,
+      `ScoutQL expressions may be at most ${limits.expressionDepth.toString()} levels deep.`,
     );
   }
 }
@@ -324,6 +327,7 @@ function appendCatalogIssues(input: {
 function semanticIssues(
   statement: JsonValue,
   allowedTargetKeys: ReadonlySet<string>,
+  limits: RelationalScoutQlComplexityLimits,
 ): { issues: string[]; facts: RelationalScoutQlFacts } {
   const mutableFacts: AstFacts = {
     cteNames: new Set(),
@@ -352,7 +356,7 @@ function semanticIssues(
       `ScoutQL wall-clock reference ${wallClock} is not allowed; use immutable bound parameters.`,
     );
   }
-  appendLimitIssues(mutableFacts, issues);
+  appendLimitIssues(mutableFacts, limits, issues);
   appendCatalogIssues({
     physicalSources,
     functions,
@@ -415,10 +419,13 @@ async function canonicalSql(serializedAst: string): Promise<string> {
  * submitted query. DuckDB supplies the SQL AST; Scout then applies a strict,
  * closed-world policy before retaining the canonical AST as the immutable plan.
  */
-export async function validateRelationalScoutQl(input: {
-  queryText: string;
-  allowedTargetKeys: readonly string[];
-}): Promise<RelationalScoutQlValidation> {
+async function validateRelationalScoutQlWithLimits(
+  input: {
+    queryText: string;
+    allowedTargetKeys: readonly string[];
+  },
+  limits: RelationalScoutQlComplexityLimits,
+): Promise<RelationalScoutQlValidation> {
   if (input.queryText.length > DARE_V2_MAX_QUERY_LENGTH) {
     return {
       kind: "invalid",
@@ -449,7 +456,11 @@ export async function validateRelationalScoutQl(input: {
   if (statement === undefined) {
     throw new Error("ScoutQL statement count changed after validation.");
   }
-  const analysis = semanticIssues(statement, new Set(input.allowedTargetKeys));
+  const analysis = semanticIssues(
+    statement,
+    new Set(input.allowedTargetKeys),
+    limits,
+  );
   if (analysis.issues.length > 0) {
     return { kind: "invalid", issues: analysis.issues };
   }
@@ -467,4 +478,29 @@ export async function validateRelationalScoutQl(input: {
       facts: analysis.facts,
     },
   };
+}
+
+export async function validateRelationalScoutQl(input: {
+  queryText: string;
+  allowedTargetKeys: readonly string[];
+}): Promise<RelationalScoutQlValidation> {
+  return await validateRelationalScoutQlWithLimits(
+    input,
+    RAW_RELATIONAL_SCOUTQL_LIMITS,
+  );
+}
+
+/**
+ * Structural validation envelope for canonical Dare queries. Callers must
+ * additionally reverse-compile, semantically validate, and exact-round-trip
+ * the query before accepting it as a contract.
+ */
+export async function validateCanonicalDareScoutQl(input: {
+  queryText: string;
+  allowedTargetKeys: readonly string[];
+}): Promise<RelationalScoutQlValidation> {
+  return await validateRelationalScoutQlWithLimits(
+    input,
+    CANONICAL_DARE_SCOUTQL_LIMITS,
+  );
 }

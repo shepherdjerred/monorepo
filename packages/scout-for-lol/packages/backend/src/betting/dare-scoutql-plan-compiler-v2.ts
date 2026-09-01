@@ -32,7 +32,7 @@ import {
 } from "#src/betting/dare-scoutql-expressions-v2.ts";
 import {
   relationalScoutQlStatementFromImmutableAst,
-  validateRelationalScoutQl,
+  validateCanonicalDareScoutQl,
   type RelationalScoutQlCompilation,
 } from "#src/reports/duckdb/relational-scoutql.ts";
 
@@ -293,7 +293,7 @@ export async function compileDareScoutQlPlanV2(input: {
   targets: readonly DareTargetBindingV2[];
 }): Promise<DareScoutQlPlanValidationV2> {
   const targetKeys = input.targets.map((target) => target.key);
-  const relational = await validateRelationalScoutQl({
+  const relational = await validateCanonicalDareScoutQl({
     queryText: input.queryText,
     allowedTargetKeys: targetKeys,
   });
@@ -304,7 +304,7 @@ export async function compileDareScoutQlPlanV2(input: {
     if (semanticIssues.length > 0) {
       return { kind: "invalid", issues: semanticIssues };
     }
-    const regenerated = await validateRelationalScoutQl({
+    const regenerated = await validateCanonicalDareScoutQl({
       queryText: formatDareScoutQlV2(plan),
       allowedTargetKeys: targetKeys,
     });
