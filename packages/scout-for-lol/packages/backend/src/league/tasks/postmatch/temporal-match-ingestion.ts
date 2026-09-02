@@ -3,16 +3,23 @@ import {
   MatchIdSchema,
   RegionSchema,
   type MatchId,
+  type RawMatch,
 } from "@scout-for-lol/data/index.ts";
-import {
-  getAccountsWithState,
-  prisma,
-  updateLastProcessedMatch,
-} from "#src/database/index.ts";
+import { getAccountsWithState, prisma } from "#src/database/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import { processMatchAndUpdatePlayers } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import type { DiscoveredMatchIntent } from "#src/league/tasks/postmatch/match-intents.ts";
+
+export function requireAuthoritativeMatchData(
+  matchId: string,
+  matchData: RawMatch | undefined,
+): RawMatch {
+  if (matchData === undefined) {
+    throw new Error(`Authoritative match data is unavailable for ${matchId}`);
+  }
+  return matchData;
+}
 
 export async function ingestDiscoveredMatch(
   input: DiscoveredMatchIntent,
@@ -31,11 +38,10 @@ export async function ingestDiscoveredMatch(
       `Tracked source account ${input.sourcePuuid} is unavailable for ${input.matchId}`,
     );
   }
-  const matchData = await fetchMatchData(matchId, region);
-  if (matchData === undefined) {
-    await updateLastProcessedMatch(sourcePuuid, matchId);
-    return;
-  }
+  const matchData = requireAuthoritativeMatchData(
+    input.matchId,
+    await fetchMatchData(matchId, region),
+  );
   await processMatchAndUpdatePlayers({
     matchData,
     allPlayerConfigs: allAccounts.map((account) => account.config),

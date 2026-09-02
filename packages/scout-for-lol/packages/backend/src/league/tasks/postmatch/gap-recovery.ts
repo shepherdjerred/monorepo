@@ -10,6 +10,23 @@ export type GapRecoveryResult = {
   backfillMatchIds: MatchId[];
 };
 
+export function recoveryStartAt(input: {
+  requiredForActiveDare: boolean;
+  lastProcessedMatchTime: Date | undefined;
+  lastSuccessfulPollAt: Date | undefined;
+  puuid: string;
+}): Date | undefined {
+  if (input.requiredForActiveDare) {
+    if (input.lastProcessedMatchTime === undefined) {
+      throw new Error(
+        `Cannot recover required Dare history for ${input.puuid} without an ingestion-backed cursor timestamp`,
+      );
+    }
+    return input.lastProcessedMatchTime;
+  }
+  return input.lastProcessedMatchTime ?? input.lastSuccessfulPollAt;
+}
+
 /**
  * When a gap is detected (lastProcessedMatchId not in recent history),
  * fetch all missed matches via paginated time-range API and split into
@@ -18,11 +35,21 @@ export type GapRecoveryResult = {
 export async function recoverMissedMatches(
   player: PlayerConfigEntry,
   fallbackMatchIds: MatchId[],
+  requiredForActiveDare: boolean,
+  lastProcessedMatchId: MatchId | null,
+  lastProcessedMatchTime: Date | undefined,
 ): Promise<GapRecoveryResult> {
   const puuid = player.league.leagueAccount.puuid;
   const lastPollAt = await getLastSuccessfulPollAt();
 
-  if (!lastPollAt) {
+  const recoveryStart = recoveryStartAt({
+    requiredForActiveDare,
+    lastProcessedMatchTime,
+    lastSuccessfulPollAt: lastPollAt ?? undefined,
+    puuid,
+  });
+
+  if (!recoveryStart) {
     // No lastPollAt — first startup, just process the most recent
     return {
       discordMatchIds: fallbackMatchIds.slice(0, 1),
@@ -30,11 +57,11 @@ export async function recoverMissedMatches(
     };
   }
 
-  const startEpoch = Math.floor(lastPollAt.getTime() / 1000);
+  const startEpoch = Math.floor(recoveryStart.getTime() / 1000);
   const endEpoch = Math.floor(Date.now() / 1000);
 
   logger.info(
-    `[${player.alias}] 🔄 Gap detected, fetching all missed matches since ${lastPollAt.toISOString()}`,
+    `[${player.alias}] 🔄 Gap detected, fetching all missed matches since ${recoveryStart.toISOString()}`,
   );
 
   const allMissedMatchIds = await fetchMatchIdsForTimeRange(
@@ -42,9 +69,13 @@ export async function recoverMissedMatches(
     player.league.leagueAccount.region,
     startEpoch,
     endEpoch,
+    { requireComplete: requiredForActiveDare },
   );
 
-  const mostRecent = allMissedMatchIds[0];
+  const missedMatchIds = allMissedMatchIds.filter(
+    (matchId) => matchId !== lastProcessedMatchId,
+  );
+  const mostRecent = missedMatchIds[0];
   if (!mostRecent) {
     // No matches in the time window — player has been inactive but the
     // cursor is stuck on a match outside the recent 5. Don't fire a Discord
@@ -63,7 +94,7 @@ export async function recoverMissedMatches(
   // Most recent match (index 0) gets Discord notification
   const discordMatchIds = [mostRecent];
   // Rest are backfill-only (reversed to process oldest first)
-  const backfillMatchIds = allMissedMatchIds.slice(1).reverse();
+  const backfillMatchIds = missedMatchIds.slice(1).reverse();
 
   logger.info(
     `[${player.alias}] 📦 ${discordMatchIds.length.toString()} match(es) for Discord, ${backfillMatchIds.length.toString()} for backfill`,

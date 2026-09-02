@@ -1,6 +1,10 @@
-import { describe, expect, test } from "vitest";
-import { refreshSettledPoolMessages } from "#src/betting/postmatch-hook.ts";
+import { describe, expect, test, vi } from "vitest";
+import {
+  refreshPendingDareV2CalloutsWithoutBlocking,
+  refreshSettledPoolMessages,
+} from "#src/betting/postmatch-hook.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
+import { defaultDareV2CalloutDependencies } from "#src/betting/dare-callout-v2.ts";
 
 describe("refreshSettledPoolMessages", () => {
   test("removes straight-bet controls once even when no outcome is announced", async () => {
@@ -30,5 +34,21 @@ describe("refreshSettledPoolMessages", () => {
     );
 
     expect(refreshed).toEqual([[settlement]]);
+  });
+});
+
+describe("refreshPendingDareV2CalloutsWithoutBlocking", () => {
+  test("does not discard settlement results when Discord editing fails", async () => {
+    const refresh = vi.fn(() =>
+      Promise.reject(new Error("Discord message was deleted")),
+    );
+
+    await expect(
+      refreshPendingDareV2CalloutsWithoutBlocking(
+        defaultDareV2CalloutDependencies,
+        refresh,
+      ),
+    ).resolves.toBeUndefined();
+    expect(refresh).toHaveBeenCalledOnce();
   });
 });

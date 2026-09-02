@@ -2,10 +2,10 @@ import { startChild, workflowInfo } from "@temporalio/workflow";
 import {
   defineSearchAttributeKey,
   SearchAttributeType,
-  WorkflowExecutionAlreadyStartedError,
 } from "@temporalio/common";
 import {
   ScoutMatchIngestionInputSchema,
+  PostMatchDiscoveryResultSchema,
   ScoutPostMatchDiscoveryInputSchema,
   ScoutRealtimePollInputSchema,
   type ScoutMatchIngestionInput,
@@ -56,25 +56,46 @@ export async function scoutPostMatchDiscoveryWorkflow(
 ): Promise<{ status: ScoutWorkflowStatus; childrenStarted: number }> {
   const input = ScoutPostMatchDiscoveryInputSchema.parse(rawInput);
   setWorkflowPhase("**Phase:** discovering completed matches");
-  const discovered = await realtimeActivities(input.stage).discoverPostMatchIds(
-    input,
+  const discovered = PostMatchDiscoveryResultSchema.parse(
+    await realtimeActivities(input.stage).discoverPostMatchIds(input),
   );
   let childrenStarted = 0;
+  let childFailure: unknown;
   for (const match of discovered.matches) {
     try {
-      await startChild(scoutMatchIngestionWorkflow, {
-        workflowId: scoutMatchWorkflowId(input.stage, match.matchId),
+      const workflowId = scoutMatchWorkflowId(input.stage, match.matchId);
+      const child = await startChild(scoutMatchIngestionWorkflow, {
+        workflowId,
         workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
         taskQueue: scoutTaskQueues(input.stage).workflow,
         parentClosePolicy: "ABANDON",
         args: [{ stage: input.stage, ...match }],
       });
       childrenStarted += 1;
+      // Bounded Dare plans are ordered by match end time. Discovery force-polls
+      // every frozen account in an active Dare, globally orders their completed
+      // matches, and fails the batch if any target or timestamp is unavailable.
+      // Do not allow a later child to capture evidence and settle while an
+      // earlier child is still ingesting. If an older run already owns this child
+      // ID, startChild fails and the next poll rediscovers the unprocessed tail.
+      await child.result();
     } catch (error) {
-      if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+      childFailure = error;
+      break;
     }
   }
   setWorkflowPhase("**Phase:** running post-match maintenance");
-  await realtimeActivities(input.stage).runPostMatchMaintenance(input);
+  await realtimeActivities(input.stage).runPostMatchMaintenance({
+    ...input,
+    settleDareV2Deadlines:
+      discovered.evidenceComplete && childFailure === undefined,
+    evidenceWatermark: discovered.evidenceWatermark,
+  });
+  if (childFailure !== undefined) {
+    if (childFailure instanceof Error) throw childFailure;
+    throw new Error("Match-ingestion child failed with a non-Error value", {
+      cause: childFailure,
+    });
+  }
   return { status: "completed", childrenStarted };
 }

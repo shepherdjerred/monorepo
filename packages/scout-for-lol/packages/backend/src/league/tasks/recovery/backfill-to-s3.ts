@@ -32,6 +32,10 @@ export type BackfillResult = {
   accountsProcessed: number;
 };
 
+export type MatchHistoryFetchOptions = {
+  requireComplete?: boolean;
+};
+
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
@@ -43,6 +47,7 @@ export async function fetchMatchIdsForTimeRange(
   region: Region,
   startTimeEpochSeconds: number,
   endTimeEpochSeconds: number,
+  options: MatchHistoryFetchOptions = {},
 ): Promise<MatchId[]> {
   const regionalRoute = platformToRegionalRoute(region);
   const parsedPuuid = LeaguePuuidSchema.parse(puuid);
@@ -68,6 +73,11 @@ export async function fetchMatchIdsForTimeRange(
     );
 
     if (matchIds === undefined) {
+      if (options.requireComplete) {
+        throw new Error(
+          `Match-history page ${offset.toString()} is unavailable for required Dare target ${puuid}`,
+        );
+      }
       hasMore = false;
       continue;
     }

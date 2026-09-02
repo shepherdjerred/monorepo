@@ -4,6 +4,8 @@ import {
   expireDareAcceptWindows,
 } from "#src/betting/dare-sweep.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
+import { expireDareV2AcceptWindows } from "#src/betting/dare-sweep-v2.ts";
+import { refreshPendingDareV2Callouts } from "#src/betting/dare-callout-v2.ts";
 import type { DareSettlementSummary } from "#src/betting/dare-settle-shared.ts";
 import { closeExpiredBettingWindows } from "#src/betting/sweep.ts";
 import { closeExpiredParlayWindows } from "#src/betting/parlay-sweep.ts";
@@ -82,6 +84,13 @@ export async function checkPreMatch(): Promise<{
           name: "dare accept-window expiry",
           run: async () => {
             dareSummaries.push(...(await expireDareAcceptWindows()));
+          },
+        },
+        {
+          name: "dare v2 accept-window expiry",
+          run: async () => {
+            await expireDareV2AcceptWindows();
+            await refreshPendingDareV2Callouts();
           },
         },
         {

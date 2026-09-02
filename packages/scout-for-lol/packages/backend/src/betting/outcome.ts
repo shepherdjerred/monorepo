@@ -29,7 +29,7 @@ export type MatchBettingOutcome =
  * ordinary surrender at 20 minutes is a real, bettable loss, while an early
  * surrender means the game never properly happened.
  */
-function isRemake(matchData: RawMatch): boolean {
+export function isRemakeMatch(matchData: RawMatch): boolean {
   if (matchData.info.endOfGameResult !== "GameComplete") {
     return true;
   }
@@ -85,7 +85,7 @@ export function classifyMatchForBetting(
   // Shape before remake: a payload we cannot even read a winner from is not
   // "a remake", and labelling it one would put a misleading reason in the
   // ledger.
-  if (isRemake(matchData)) {
+  if (isRemakeMatch(matchData)) {
     return { kind: "void", reason: "remake" };
   }
 

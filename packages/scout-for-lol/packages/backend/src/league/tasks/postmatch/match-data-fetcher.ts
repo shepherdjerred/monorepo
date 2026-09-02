@@ -10,7 +10,11 @@ import {
   isCustomMatchPayload,
   missingExpectedMatchFields,
 } from "@scout-for-lol/data";
-import { callRiotOrUndefined } from "#src/league/api/riot-call.ts";
+import {
+  callRiotOrThrow,
+  callRiotOrUndefined,
+  type CallRiotConfig,
+} from "#src/league/api/riot-call.ts";
 import { createLogger } from "#src/logger.ts";
 import { riotApiErrorsTotal } from "#src/metrics/index.ts";
 import { riotCustomMatchMissingFieldsTotal } from "#src/metrics/index.ts";
@@ -101,22 +105,23 @@ export async function fetchMatchData(
 export async function fetchMatchTimeline(
   matchId: MatchId,
   playerRegion: Region,
+  failureMode: "return_undefined" | "throw" = "return_undefined",
 ): Promise<RawTimeline | undefined> {
   const regionalRoute = platformToRegionalRoute(playerRegion);
-
-  return callRiotOrUndefined(
-    {
-      source: "match-timeline",
-      schema: RawTimelineSchema,
-      schemaLabel: "timeline",
-      context: { matchId, region: playerRegion },
-      onValidationFailure: {
-        kind: "save-to-s3",
-        assetType: "timeline",
-        id: matchId,
-      },
-      sentry: true,
+  const config: CallRiotConfig<RawTimeline> = {
+    source: "match-timeline",
+    schema: RawTimelineSchema,
+    schemaLabel: "timeline",
+    context: { matchId, region: playerRegion },
+    onValidationFailure: {
+      kind: "save-to-s3",
+      assetType: "timeline",
+      id: matchId,
     },
-    () => riotClient.match.timeline(matchId, regionalRoute),
-  );
+    sentry: true,
+  };
+  const fetch = () => riotClient.match.timeline(matchId, regionalRoute);
+  return failureMode === "throw"
+    ? await callRiotOrThrow(config, fetch)
+    : await callRiotOrUndefined(config, fetch);
 }

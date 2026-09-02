@@ -144,6 +144,7 @@ export type FlagName =
   | "ai_reviews_enabled"
   | "betting_enabled"
   | "bucks_dares_enabled"
+  | "dare_v2"
   | "bucks_transfers_enabled"
   | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
@@ -152,6 +153,7 @@ export type FlagName =
   | "custom_nights_enabled"
   | "debug"
   | "initial_match_history_import_enabled"
+  | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
   | "tournament_lobbies_enabled";
 
@@ -171,6 +173,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "ai_reviews_enabled",
     "betting_enabled",
     "bucks_dares_enabled",
+    "dare_v2",
     "bucks_transfers_enabled",
     "weekly_parlays_enabled",
     "betting_player_bet_outcome_dm_enabled",
@@ -178,6 +181,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "competition_builder_v2_enabled",
     "custom_nights_enabled",
     "tournament_lobbies_enabled",
+    "scoutql_relational_enabled",
   ],
 );
 
@@ -257,6 +261,18 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // domain requires both flags. Production's hard-disable policy wins before
   // this registry or Flipt is evaluated.
   bucks_dares_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
+  // ScoutQL-backed Dare v2 creation. Settlement and refunds never consult
+  // this flag; revoking it only stops new drafts from being funded.
+  dare_v2: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
+  // Relational/timeline ScoutQL access is an independently ramped capability
+  // because it exposes a wider query surface than Dare v2 creation itself.
+  scoutql_relational_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },

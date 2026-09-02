@@ -1,10 +1,5 @@
 import * as Sentry from "@sentry/bun";
-import {
-  MessageFlags,
-  type ActionRowBuilder,
-  type ButtonBuilder,
-  type InteractionReplyOptions,
-} from "discord.js";
+import { MessageFlags, type InteractionReplyOptions } from "discord.js";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
@@ -46,6 +41,7 @@ import type {
 } from "#src/betting/dare-create.ts";
 import { parseDareCustomId } from "#src/betting/dare-custom-id.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import type { DareButtonInteractionBase } from "#src/betting/dare-button-interaction.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-dare-discord");
@@ -72,17 +68,7 @@ const TARGETS_CANNOT_CONTRIBUTE =
  * satisfies this shape, so the router passes the live object with no cast and
  * tests build plain objects.
  */
-export type DareButtonInteraction = {
-  customId: string;
-  guildId: string | null;
-  user: { id: string };
-  deferReply: (options: { ephemeral: true }) => Promise<unknown>;
-  deferUpdate: () => Promise<unknown>;
-  editReply: (options: {
-    content: string;
-    components?: ActionRowBuilder<ButtonBuilder>[];
-    embeds?: never[];
-  }) => Promise<unknown>;
+export type DareButtonInteraction = DareButtonInteractionBase & {
   followUp: (options: InteractionReplyOptions) => Promise<unknown>;
 };
 

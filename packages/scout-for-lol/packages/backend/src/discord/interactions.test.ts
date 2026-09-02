@@ -7,6 +7,7 @@ import {
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
 import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
+import { formatDareV2CustomId } from "#src/betting/dare-custom-id-v2.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 
@@ -66,6 +67,22 @@ describe("routeButton", () => {
     const { interaction, calls } = fakeInteraction(customId);
     await routeButton(interaction);
     expect(calls).toEqual(["deferUpdate"]);
+  });
+
+  test("acknowledges malformed Dare v2 IDs and routes valid ones", async () => {
+    const malformed = fakeInteraction("bbd2:1:q:0:1:a:0");
+    await routeButton(malformed.interaction);
+    expect(malformed.calls).toEqual(["deferUpdate"]);
+
+    const valid = fakeInteraction(
+      formatDareV2CustomId({
+        kind: "delete",
+        dareId: 42,
+        revision: 1,
+      }),
+    );
+    await routeButton(valid.interaction);
+    expect(valid.calls).toEqual(["deferReply", "editReply"]);
   });
 
   test.each([

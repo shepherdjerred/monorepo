@@ -346,7 +346,9 @@ export function dareVoidedContent(input: {
       ? "Scout can no longer evaluate this dare's stored conditions."
       : input.voidReason === "storage_overflow"
         ? "A payout would not fit in a target's wallet."
-        : "This dare was voided.";
+        : input.voidReason === "target_unavailable"
+          ? "A frozen target account is no longer available to evaluate."
+          : "This dare was voided.";
   return [
     "↩️ **Bryan Bucks dare: VOIDED**",
     reason,

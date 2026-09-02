@@ -31,12 +31,12 @@ describe("filterNewMatches", () => {
     expect(result.matchIds).toEqual([]);
   });
 
-  test("returns gapDetected: false with new matches when lastProcessedMatchId is found", () => {
+  test("returns new matches oldest-first when lastProcessedMatchId is found", () => {
     const ids = [matchId("NA1_5"), matchId("NA1_4"), matchId("NA1_3")];
     const result = filterNewMatches(ids, matchId("NA1_3"));
 
     expect(result.gapDetected).toBe(false);
-    expect(result.matchIds).toEqual([matchId("NA1_5"), matchId("NA1_4")]);
+    expect(result.matchIds).toEqual([matchId("NA1_4"), matchId("NA1_5")]);
   });
 
   test("returns gapDetected: false with single new match", () => {

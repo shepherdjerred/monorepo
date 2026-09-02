@@ -372,6 +372,8 @@ async function processStandardMatch(
 export type GenerateMatchReportOptions = {
   /** Guild IDs that will receive this report - used for feature flag checks (e.g., AI reviews) */
   targetGuildIds: DiscordGuildId[];
+  /** A contract-required fetch already ran; null records a conclusive miss. */
+  prefetchedTimeline?: RawTimeline | null | undefined;
 };
 
 export type GenerateMatchReportDependencies = {
@@ -463,11 +465,14 @@ export async function generateMatchReport(
     );
 
     // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
-    const timelineData = await dependencies.fetchTimelineIfStandardMatch(
-      matchData,
-      matchId,
-      playersInMatch,
-    );
+    const timelineData =
+      options.prefetchedTimeline === undefined
+        ? await dependencies.fetchTimelineIfStandardMatch(
+            matchData,
+            matchId,
+            playersInMatch,
+          )
+        : (options.prefetchedTimeline ?? undefined);
 
     // Process match based on queue type
     const result = isArenaQueueOrMode(

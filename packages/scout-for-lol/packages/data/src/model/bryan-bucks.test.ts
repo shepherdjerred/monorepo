@@ -100,11 +100,25 @@ describe("BucksLedgerContextSchema dare variant", () => {
     voidReason: "evaluator version mismatch",
   };
 
+  const cancelledV2Refund: BucksLedgerContext = {
+    type: "dare",
+    dareId: 8,
+    contractVersion: 2,
+    role: "contributor",
+    targetAliases: ["virmel"],
+    conditionSummary: "win one ranked game",
+    potTotal: 20,
+    amount: 20,
+    payoutComponent: "refund",
+    resolution: "cancelled",
+  };
+
   test.each([
     ["contributor stake", contributorStake],
     ["target payout", targetPayout],
     ["house refund fee", houseRefundFee],
     ["voided refund", voidedRefund],
+    ["cancelled v2 refund", cancelledV2Refund],
   ])("round-trips a %s row through JSON", (_label, context) => {
     const stored = JSON.stringify(context);
     expect(BucksLedgerContextSchema.parse(JSON.parse(stored))).toEqual(context);
@@ -131,7 +145,7 @@ describe("BucksLedgerContextSchema dare variant", () => {
       "an unknown payout component",
       { ...contributorStake, payoutComponent: "bonus" },
     ],
-    ["an unknown resolution", { ...targetPayout, resolution: "cancelled" }],
+    ["an unknown resolution", { ...targetPayout, resolution: "forfeited" }],
     [
       "an unrecognized extra key",
       { ...contributorStake, extra: "strictObject rejects this" },

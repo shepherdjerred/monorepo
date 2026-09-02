@@ -11,6 +11,7 @@ import type {
   ScoutInteractiveRunInput,
   ScoutMatchIngestionInput,
   ScoutPostMatchDiscoveryInput,
+  ScoutPostMatchMaintenanceInput,
   ScoutQueueCanaryProbeInput,
   ScoutQueueCanaryProbeResult,
   ScoutRealtimePollInput,
@@ -28,7 +29,7 @@ export type ScoutTemporalActivities = {
     input: ScoutPostMatchDiscoveryInput,
   ) => Promise<PostMatchDiscoveryResult>;
   runPostMatchMaintenance: (
-    input: ScoutPostMatchDiscoveryInput,
+    input: ScoutPostMatchMaintenanceInput,
   ) => Promise<void>;
   ingestMatch: (input: ScoutMatchIngestionInput) => Promise<void>;
   fetchInitialHistoryPage: (
