@@ -100,6 +100,7 @@ describe("DareDetail", () => {
           dare={{
             id: 42,
             state: "settled",
+            originConversationId: null,
             currentRevision: 2,
             fundedRevision: 1,
             plainLanguage: "Virmel wins three games",
@@ -129,6 +130,6 @@ describe("DareDetail", () => {
     expect(html).toContain("3 games");
     expect(html).toContain("Settlement proof");
     expect(html).toContain("eligibleGames");
-    expect(html).toContain("Revise in Explore");
+    expect(html).not.toContain("Revise in Explore");
   });
 });

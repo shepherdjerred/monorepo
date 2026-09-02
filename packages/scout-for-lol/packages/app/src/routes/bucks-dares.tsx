@@ -214,6 +214,7 @@ export function DareDetail(props: {
   dare: {
     id: number;
     state: string;
+    originConversationId: string | null;
     currentRevision: number;
     fundedRevision: number | null;
     plainLanguage: string;
@@ -242,9 +243,14 @@ export function DareDetail(props: {
         <Button asChild variant="ghost" size="sm">
           <Link to="/bucks/dares">← Back to dares</Link>
         </Button>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/explore">Revise in Explore</Link>
-        </Button>
+        {props.dare.state === "draft" &&
+          props.dare.originConversationId !== null && (
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/explore/${props.dare.originConversationId}`}>
+                Revise in Explore
+              </Link>
+            </Button>
+          )}
       </div>
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">
