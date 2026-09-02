@@ -165,7 +165,12 @@ export function prepareDareDraftV2(
   const calloutPreview = dareV2CalloutContent({
     id: BUCKS_INT32_MAX,
     challengerDiscordId: "9".repeat(20),
+    openingStake: BUCKS_INT32_MAX,
     potTotal: BUCKS_INT32_MAX,
+    contributions: [
+      { discordId: "9".repeat(20), amount: BUCKS_INT32_MAX },
+      { discordId: "8".repeat(20), amount: BUCKS_INT32_MAX },
+    ],
     targetAliases: targets.map((target) => target.alias),
     revision: BUCKS_INT32_MAX,
     plainLanguage,
@@ -180,6 +185,7 @@ export function prepareDareDraftV2(
     deadlineAt: null,
     finalValue: null,
     voidReason: null,
+    enforceDiscordLimit: false,
   });
   if (calloutPreview.length > DARE_CALLOUT_MAX_LENGTH) {
     issues.push(
