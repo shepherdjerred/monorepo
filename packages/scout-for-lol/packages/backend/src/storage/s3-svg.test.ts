@@ -1,373 +1,176 @@
-/**
- * S3 SVG Storage Tests using aws-sdk-client-mock
- *
- * These tests verify SVG storage functionality using in-memory mocking.
- */
-
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { mockClient } from "aws-sdk-client-mock";
-import { z } from "zod";
-import { saveSvgToS3 } from "#src/storage/s3.ts";
-import { resetConfigurationForTests } from "#src/configuration.ts";
 import { MatchIdSchema } from "@scout-for-lol/data";
+import { saveSvgToS3 } from "#src/storage/s3.ts";
+import {
+  currentUtcDatePath,
+  getValidatedPutCommand,
+  mockFailedPut,
+  mockSuccessfulPut,
+  resetS3TestState,
+  s3Mock,
+  setS3TestBucket,
+} from "#src/storage/s3-test-helpers.ts";
 
-// Create S3 mock
-const s3Mock = mockClient(S3Client);
-
-// Zod schema for validating PutObjectCommand structure from mocks
-const PutObjectCommandSchema = z.object({
-  input: z.object({
-    Bucket: z.string(),
-    Key: z.string(),
-    Body: z.union([z.instanceof(Uint8Array), z.string()]),
-    ContentType: z.string(),
-    Metadata: z
-      .object({
-        matchId: z.string(),
-        queueType: z.string(),
-        uploadedAt: z.string(),
-      })
-      .optional(),
-  }),
-});
-
-// Helper to safely get and validate command from mock call
-function getValidatedCommand(callIndex: number) {
-  const call = s3Mock.call(callIndex);
-  const command = call?.args?.[0];
-  return PutObjectCommandSchema.parse(command);
+async function uploadSvg(
+  matchIdValue: string,
+  queueType = "solo",
+  svgContent = "<svg></svg>",
+) {
+  return saveSvgToS3(
+    MatchIdSchema.parse(matchIdValue),
+    svgContent,
+    queueType,
+    [],
+  );
 }
 
-beforeEach(() => {
-  // Ensure S3_BUCKET_NAME is set for tests, then re-read the memoized config.
-  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
-  resetConfigurationForTests();
-  // Reset mock before each test
-  s3Mock.reset();
-});
+beforeEach(resetS3TestState);
+afterEach(resetS3TestState);
 
-afterEach(() => {
-  // Restore the default bucket and drop any per-test configuration override.
-  Bun.env["S3_BUCKET_NAME"] = "test-bucket";
-  resetConfigurationForTests();
-  // Reset mock after each test
-  s3Mock.reset();
-});
+describe("saveSvgToS3 success cases", () => {
+  test("uploads SVG with the expected parameters and URL", async () => {
+    mockSuccessfulPut();
 
-// ============================================================================
-// Success Cases
-// ============================================================================
+    const result = await uploadSvg(
+      "NA1_1234567890",
+      "solo",
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100"/></svg>',
+    );
+    const command = getValidatedPutCommand();
 
-describe("saveSvgToS3 - Success Cases", () => {
-  test("uploads SVG with correct parameters", async () => {
-    const matchId = MatchIdSchema.parse("NA1_1234567890");
-    const svgContent =
-      '<svg xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100"/></svg>';
-    const queueType = "solo";
-
-    // Mock successful S3 upload
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    // Verify S3 command was called once
-    expect(s3Mock.calls().length).toBe(1);
-
-    // Get and validate the command that was called
-    const command = getValidatedCommand(0);
+    expect(s3Mock.calls()).toHaveLength(1);
     expect(command.input.Bucket).toBe("test-bucket");
     expect(command.input.ContentType).toBe("image/svg+xml");
-
-    // Verify return value format
     expect(result).toMatch(
       /^s3:\/\/test-bucket\/games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.svg$/,
     );
   });
 
-  test("handles arena queue type", async () => {
-    const matchId = MatchIdSchema.parse("NA1_ARENA");
-    const svgContent = "<svg></svg>";
-    const queueType = "arena";
+  test("handles the arena queue", async () => {
+    mockSuccessfulPut();
 
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
+    const result = await uploadSvg("NA1_ARENA", "arena");
+    const command = getValidatedPutCommand();
 
-    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    expect(s3Mock.calls().length).toBe(1);
-
-    const command = getValidatedCommand(0);
+    expect(s3Mock.calls()).toHaveLength(1);
     expect(command.input.Key).toContain("NA1_ARENA");
-
+    expect(command.input.Metadata?.["queueType"]).toBe("arena");
     expect(result).toBeDefined();
   });
 
   test("handles large SVG content", async () => {
-    const matchId = MatchIdSchema.parse("NA1_LARGE_SVG");
-    // Create a large SVG (simulating complex match report)
-    const largeSvgContent = "<svg>" + "x".repeat(100_000) + "</svg>";
-    const queueType = "solo";
+    mockSuccessfulPut();
 
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
+    await uploadSvg(
+      "NA1_LARGE_SVG",
+      "solo",
+      `<svg>${"x".repeat(100_000)}</svg>`,
+    );
 
-    const result = await saveSvgToS3(matchId, largeSvgContent, queueType, []);
-
-    expect(s3Mock.calls().length).toBe(1);
-
-    const command = getValidatedCommand(0);
-    // Body should be Uint8Array or string
-    expect(command.input.Body).toBeDefined();
-    const isValidBody =
-      command.input.Body instanceof Uint8Array ||
-      typeof command.input.Body === "string";
-    expect(isValidBody).toBe(true);
-
-    expect(result).toBeDefined();
+    const body = getValidatedPutCommand().input.Body;
+    expect(body).toBeDefined();
+    expect(body instanceof Uint8Array || typeof body === "string").toBe(true);
   });
 
-  test("handles SVG with special XML characters", async () => {
-    const matchId = MatchIdSchema.parse("NA1_SPECIAL_CHARS");
-    const svgContent =
-      '<svg xmlns="http://www.w3.org/2000/svg"><text>&lt;&gt;&amp;&quot;&#x27;</text></svg>';
-    const queueType = "solo";
-
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    expect(s3Mock.calls().length).toBe(1);
-    expect(result).toBeDefined();
-  });
-});
-
-// ============================================================================
-// Configuration Cases
-// ============================================================================
-
-describe("saveSvgToS3 - Configuration", () => {
-  test("returns undefined when S3_BUCKET_NAME is not configured", async () => {
-    delete Bun.env["S3_BUCKET_NAME"];
-    resetConfigurationForTests();
-
-    const matchId = MatchIdSchema.parse("NA1_SVG_NO_BUCKET");
-    const svgContent = "<svg></svg>";
-
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    const result = await saveSvgToS3(matchId, svgContent, "solo", []);
-
-    expect(result).toBeUndefined();
-    expect(s3Mock.calls().length).toBe(0);
-  });
-});
-
-// ============================================================================
-// Error Cases
-// ============================================================================
-
-describe("saveSvgToS3 - Error Handling", () => {
-  test("throws error when S3 upload fails", async () => {
-    const matchId = MatchIdSchema.parse("NA1_ERROR");
-    const svgContent = "<svg></svg>";
-    const queueType = "solo";
-
-    // Mock S3 error
-    s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
+  test("handles SVG XML entities", async () => {
+    mockSuccessfulPut();
 
     await expect(
-      saveSvgToS3(matchId, svgContent, queueType, []),
-    ).rejects.toThrow("Failed to save SVG NA1_ERROR to S3");
-
-    // Retried MAX_PUT_ATTEMPTS (3) times before throwing.
-    expect(s3Mock.calls().length).toBe(3);
-  });
-
-  test("throws error with match ID in error message", async () => {
-    const matchId = MatchIdSchema.parse("EUW1_NETWORK_ERROR");
-    const svgContent = "<svg></svg>";
-    const queueType = "flex";
-
-    s3Mock.on(PutObjectCommand).rejects(new Error("Network timeout"));
-
-    await expect(
-      saveSvgToS3(matchId, svgContent, queueType, []),
-    ).rejects.toThrow("Failed to save SVG EUW1_NETWORK_ERROR to S3");
+      uploadSvg(
+        "NA1_SPECIAL_CHARS",
+        "solo",
+        "<svg><text>&lt;&gt;&amp;&quot;&#x27;</text></svg>",
+      ),
+    ).resolves.toBeDefined();
+    expect(s3Mock.calls()).toHaveLength(1);
   });
 });
 
-// ============================================================================
-// S3 Key Format Tests
-// ============================================================================
+describe("saveSvgToS3 configuration", () => {
+  test("skips upload when the bucket is absent", async () => {
+    setS3TestBucket(undefined);
+    mockSuccessfulPut();
 
-describe("saveSvgToS3 - S3 Key Format", () => {
-  test("uses current date in S3 key", async () => {
-    const matchId = MatchIdSchema.parse("NA1_DATE_TEST");
-    const svgContent = "<svg></svg>";
-    const queueType = "solo";
+    await expect(uploadSvg("NA1_SVG_NO_BUCKET")).resolves.toBeUndefined();
+    expect(s3Mock.calls()).toHaveLength(0);
+  });
+});
 
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
+describe("saveSvgToS3 error handling", () => {
+  test.each([
+    {
+      matchId: "NA1_ERROR",
+      failure: "S3 upload failed",
+      expected: "Failed to save SVG NA1_ERROR to S3",
+    },
+    {
+      matchId: "EUW1_NETWORK_ERROR",
+      failure: "Network timeout",
+      expected: "Failed to save SVG EUW1_NETWORK_ERROR to S3",
+    },
+  ])(
+    "reports $matchId when upload fails",
+    async ({ matchId, failure, expected }) => {
+      mockFailedPut(failure);
 
-    await saveSvgToS3(matchId, svgContent, queueType, []);
+      await expect(uploadSvg(matchId)).rejects.toThrow(expected);
+      expect(s3Mock.calls()).toHaveLength(3);
+    },
+  );
+});
 
-    const command = getValidatedCommand(0);
+describe("saveSvgToS3 key and URL format", () => {
+  test("uses today's date, an SVG extension, and an s3 URL", async () => {
+    mockSuccessfulPut();
 
-    // Verify key structure
-    const key = command.input.Key;
+    const result = await uploadSvg("NA1_DATE_TEST");
+    const key = getValidatedPutCommand().input.Key;
+
     expect(key).toMatch(
       /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_DATE_TEST\/report\.svg$/,
     );
-
-    // Verify it uses today's date
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(now.getUTCDate()).padStart(2, "0");
-
-    expect(key).toContain(`games/${year.toString()}/${month}/${day}/`);
-  });
-
-  test("uses .svg extension", async () => {
-    const matchId = MatchIdSchema.parse("NA1_SVG_EXT");
-    const svgContent = "<svg></svg>";
-    const queueType = "solo";
-
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    const command = getValidatedCommand(0);
-
-    expect(command.input.Key.endsWith(".svg")).toBe(true);
-  });
-
-  test("returns s3:// URL format", async () => {
-    const matchId = MatchIdSchema.parse("NA1_URL_FORMAT");
-    const svgContent = "<svg></svg>";
-    const queueType = "solo";
-
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    const result = await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    if (result === undefined) throw new Error("Expected an uploaded SVG URL");
-    expect(result.startsWith("s3://test-bucket/")).toBe(true);
-    expect(result).toContain("games/");
-    expect(result.endsWith(".svg")).toBe(true);
+    expect(key).toContain(`games/${currentUtcDatePath()}/`);
+    expect(key.endsWith(".svg")).toBe(true);
+    expect(result).toMatch(/^s3:\/\/test-bucket\/games\/.+\.svg$/);
   });
 });
 
-// ============================================================================
-// Content Type and Metadata Tests
-// ============================================================================
+describe("saveSvgToS3 content and metadata", () => {
+  test("records content type, match, queue, and upload time", async () => {
+    mockSuccessfulPut();
 
-describe("saveSvgToS3 - Content Type and Metadata", () => {
-  test("sets correct ContentType for SVG", async () => {
-    const matchId = MatchIdSchema.parse("NA1_CONTENT_TYPE");
-    const svgContent = "<svg></svg>";
-    const queueType = "solo";
-
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    const command = getValidatedCommand(0);
+    await uploadSvg("NA1_METADATA");
+    const command = getValidatedPutCommand();
 
     expect(command.input.ContentType).toBe("image/svg+xml");
+    expect(command.input.Metadata?.["matchId"]).toBe("NA1_METADATA");
+    expect(command.input.Metadata?.["queueType"]).toBe("solo");
+    expect(command.input.Metadata?.["uploadedAt"]).toBeDefined();
   });
 
-  test("includes all required metadata fields", async () => {
-    const matchId = MatchIdSchema.parse("NA1_METADATA");
-    const svgContent = "<svg></svg>";
-    const queueType = "solo";
+  test("encodes Unicode SVG content", async () => {
+    mockSuccessfulPut();
 
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
+    await uploadSvg("NA1_UTF8", "solo", "<svg><text>Hello 世界</text></svg>");
 
-    await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    const command = getValidatedCommand(0);
-    expect(command.input.Metadata?.matchId).toBe(matchId);
-    expect(command.input.Metadata?.queueType).toBe(queueType);
-    expect(command.input.Metadata?.uploadedAt).toBeDefined();
-  });
-
-  test("converts SVG string to UTF-8 buffer", async () => {
-    const matchId = MatchIdSchema.parse("NA1_UTF8");
-    const svgContent = "<svg><text>Hello 世界</text></svg>";
-    const queueType = "solo";
-
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
-
-    await saveSvgToS3(matchId, svgContent, queueType, []);
-
-    const command = getValidatedCommand(0);
-    expect(command.input.Body).toBeDefined();
-    // Body should be a Uint8Array (UTF-8 encoded)
-    expect(
-      command.input.Body instanceof Uint8Array ||
-        typeof command.input.Body === "string",
-    ).toBe(true);
+    const body = getValidatedPutCommand().input.Body;
+    expect(body).toBeDefined();
+    expect(body instanceof Uint8Array || typeof body === "string").toBe(true);
   });
 });
 
-// ============================================================================
-// Concurrent Operations
-// ============================================================================
+describe("saveSvgToS3 concurrent operations", () => {
+  test("handles multiple concurrent uploads", async () => {
+    mockSuccessfulPut();
 
-describe("saveSvgToS3 - Concurrent Operations", () => {
-  test("handles multiple concurrent SVG uploads", async () => {
-    s3Mock.on(PutObjectCommand).resolves({
-      $metadata: { httpStatusCode: 200 },
-    });
+    const results = await Promise.all([
+      uploadSvg("NA1_CONCURRENT_1", "solo", "<svg>1</svg>"),
+      uploadSvg("NA1_CONCURRENT_2", "flex", "<svg>2</svg>"),
+      uploadSvg("NA1_CONCURRENT_3", "arena", "<svg>3</svg>"),
+    ]);
 
-    const uploads = [
-      saveSvgToS3(
-        MatchIdSchema.parse("NA1_CONCURRENT_1"),
-        "<svg>1</svg>",
-        "solo",
-        [],
-      ),
-      saveSvgToS3(
-        MatchIdSchema.parse("NA1_CONCURRENT_2"),
-        "<svg>2</svg>",
-        "flex",
-        [],
-      ),
-      saveSvgToS3(
-        MatchIdSchema.parse("NA1_CONCURRENT_3"),
-        "<svg>3</svg>",
-        "arena",
-        [],
-      ),
-    ];
-
-    const results = await Promise.all(uploads);
-
-    expect(s3Mock.calls().length).toBe(3);
+    expect(s3Mock.calls()).toHaveLength(3);
     expect(results).toHaveLength(3);
-
-    // Verify each result is unique
     expect(results[0]).toContain("NA1_CONCURRENT_1");
     expect(results[1]).toContain("NA1_CONCURRENT_2");
     expect(results[2]).toContain("NA1_CONCURRENT_3");

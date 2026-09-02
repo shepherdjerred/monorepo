@@ -1192,14 +1192,6 @@
       "clones": 3,
       "tokens": 272
     },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
-    "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/get-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-svg.test.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
     "packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts|packages/scout-for-lol/packages/backend/src/league/tasks/postmatch/match-report-classic.test.ts": {
       "clones": 1,
       "tokens": 76
@@ -1280,14 +1272,6 @@
       "clones": 2,
       "tokens": 161
     },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts": {
-      "clones": 5,
-      "tokens": 382
-    },
-    "packages/scout-for-lol/packages/backend/src/storage/s3-image.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-svg.test.ts": {
-      "clones": 2,
-      "tokens": 312
-    },
     "packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard-image.ts|packages/scout-for-lol/packages/backend/src/storage/s3-leaderboard.ts": {
       "clones": 1,
       "tokens": 79
@@ -1319,10 +1303,6 @@
     "packages/scout-for-lol/packages/backend/src/storage/s3-report-run.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3-report-run.test.ts": {
       "clones": 1,
       "tokens": 83
-    },
-    "packages/scout-for-lol/packages/backend/src/storage/s3.test.ts|packages/scout-for-lol/packages/backend/src/storage/s3.test.ts": {
-      "clones": 13,
-      "tokens": 1080
     },
     "packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts|packages/scout-for-lol/packages/backend/src/trpc/router/event.router.ts": {
       "clones": 1,
