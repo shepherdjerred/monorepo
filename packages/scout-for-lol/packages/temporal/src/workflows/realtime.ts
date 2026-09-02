@@ -62,22 +62,22 @@ export async function scoutPostMatchDiscoveryWorkflow(
   let childrenStarted = 0;
   let childFailure: unknown;
   for (const match of discovered.matches) {
-    const workflowId = scoutMatchWorkflowId(input.stage, match.matchId);
-    const child = await startChild(scoutMatchIngestionWorkflow, {
-      workflowId,
-      workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
-      taskQueue: scoutTaskQueues(input.stage).workflow,
-      parentClosePolicy: "ABANDON",
-      args: [{ stage: input.stage, ...match }],
-    });
-    childrenStarted += 1;
-    // Bounded Dare plans are ordered by match end time. Discovery force-polls
-    // every frozen account in an active Dare, globally orders their completed
-    // matches, and fails the batch if any target or timestamp is unavailable.
-    // Do not allow a later child to capture evidence and settle while an
-    // earlier child is still ingesting. If an older run already owns this child
-    // ID, startChild fails and the next poll rediscovers the unprocessed tail.
     try {
+      const workflowId = scoutMatchWorkflowId(input.stage, match.matchId);
+      const child = await startChild(scoutMatchIngestionWorkflow, {
+        workflowId,
+        workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
+        taskQueue: scoutTaskQueues(input.stage).workflow,
+        parentClosePolicy: "ABANDON",
+        args: [{ stage: input.stage, ...match }],
+      });
+      childrenStarted += 1;
+      // Bounded Dare plans are ordered by match end time. Discovery force-polls
+      // every frozen account in an active Dare, globally orders their completed
+      // matches, and fails the batch if any target or timestamp is unavailable.
+      // Do not allow a later child to capture evidence and settle while an
+      // earlier child is still ingesting. If an older run already owns this child
+      // ID, startChild fails and the next poll rediscovers the unprocessed tail.
       await child.result();
     } catch (error) {
       childFailure = error;
