@@ -43,9 +43,24 @@ const FLIPT_COMMAND = [
 // as 1000 would fail to write the git repo.
 const FLIPT_UID = 100;
 const FLIPT_GID = 1000;
+const FLIPT_SECURITY_CONTEXT = {
+  user: FLIPT_UID,
+  group: FLIPT_GID,
+  ensureNonRoot: true,
+  readOnlyRootFilesystem: true,
+  allowPrivilegeEscalation: false,
+  privileged: false,
+  capabilities: { drop: [Capability.ALL] },
+  seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
+};
+const FLIPT_INIT_RESOURCES = {
+  cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
+  memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
+};
 
 const DATA_PATH = "/var/opt/flipt";
-const ENVIRONMENT_DATA_PATH = `${DATA_PATH}/environments`;
+const REPOSITORY_DATA_PATH = `${DATA_PATH}/repositories`;
+const SEED_WORK_PATH = "/tmp/flipt-seed";
 
 const FLIPT_SEED_DATA = Object.fromEntries(
   managedFlagInventory.environments.flatMap((environment) =>
@@ -64,9 +79,9 @@ const FLIPT_SEED_DATA = Object.fromEntries(
 // silently loses every one of them on restart. Verified by creating a flag,
 // restarting the container, and getting a 404 from the evaluation snapshot.
 // With this config the same test round-trips, and each managed environment has
-// its own bare git repository. The product namespace seed is validated before
-// first boot into the clean environment paths below; existing repositories are
-// never overwritten on later restarts.
+// its own normal git repository. The product namespace seed is validated and
+// committed before first boot into the clean repository paths below; existing
+// repositories are never overwritten on later restarts.
 //
 // check_for_updates and telemetry_enabled both default to true and would fail
 // continuously against the DNS-only egress policy below.
@@ -79,13 +94,15 @@ server:
   http_port: ${FLIPT_PORT.toString()}
 storage:
   beta:
+    branch: main
     backend:
       type: local
-      path: ${ENVIRONMENT_DATA_PATH}/beta
+      path: ${REPOSITORY_DATA_PATH}/beta
   prod:
+    branch: main
     backend:
       type: local
-      path: ${ENVIRONMENT_DATA_PATH}/prod
+      path: ${REPOSITORY_DATA_PATH}/prod
 environments:
   beta:
     name: beta
@@ -107,8 +124,7 @@ meta:
   state_directory: ${DATA_PATH}/state
 `;
 
-export function createEnvironmentInitializationScript(
-  dataPath: string,
+export function createSeedValidationScript(
   namespaces: readonly string[],
 ): string {
   const copyCommands = ["beta", "prod"].flatMap((environment) =>
@@ -119,46 +135,76 @@ export function createEnvironmentInitializationScript(
   );
   return `set -eu
 
-validate_repo() {
-  repo="$1"
-  if [ ! -f "$repo/HEAD" ] || [ ! -f "$repo/config" ] || [ ! -d "$repo/objects" ]; then
-    echo "Flipt repository is missing or structurally invalid: $repo" >&2
-    exit 1
-  fi
-}
-
-work_root="/tmp/flipt-seed"
+work_root="${SEED_WORK_PATH}"
 mkdir -p "$work_root/beta" "$work_root/prod"
 ${copyCommands.join("\n")}
 
-initialize_environment() {
+validate_environment() {
   environment="$1"
-  repo="${dataPath}/environments/$environment"
   seed="$work_root/$environment"
 
   /flipt validate --work-dir "$seed"
-  if [ ! -e "$repo" ]; then
-    mkdir -p "$repo"
-    cp -R "$seed/." "$repo/"
-    return
-  fi
-
-  if [ -f "$repo/HEAD" ] || [ -f "$repo/config" ] || [ -d "$repo/objects" ]; then
-    validate_repo "$repo"
-    return
-  fi
-
-  # A failed first Flipt boot may leave the validated source tree in place.
-  # Keep it intact so the local backend can retry repository initialization.
-  /flipt validate --work-dir "$repo"
 }
 
+validate_environment beta
+validate_environment prod
+`;
+}
+
+export function createRepositoryInitializationScript(
+  dataPath: string,
+  namespaces: readonly string[],
+  workRoot = SEED_WORK_PATH,
+): string {
+  const trackedPaths = namespaces.map(
+    (namespace) => `"${namespace}/features.yaml"`,
+  );
+  return `set -eu
+
+validate_repository() {
+  candidate="$1"
+  if [ ! -d "$candidate/.git" ]; then
+    echo "Flipt repository is not a normal Git repository: $candidate" >&2
+    exit 1
+  fi
+  git -C "$candidate" show-ref --verify --quiet refs/heads/main
+  git -C "$candidate" cat-file -e 'refs/heads/main^{commit}'
+}
+
+initialize_environment() {
+  environment="$1"
+  repo="${dataPath}/repositories/$environment"
+  staging="$repo.initializing"
+  seed="${workRoot}/$environment"
+
+  if [ -e "$repo" ]; then
+    validate_repository "$repo"
+    return
+  fi
+  if [ -e "$staging" ]; then
+    echo "Stale Flipt repository initialization directory: $staging" >&2
+    exit 1
+  fi
+
+  mkdir -p "$staging"
+  cp -R "$seed/." "$staging/"
+  git -C "$staging" init --initial-branch=main
+  git -C "$staging" config user.name "Flipt seed initializer"
+  git -C "$staging" config user.email "flipt-seed@localhost"
+  git -C "$staging" add -- ${trackedPaths.join(" ")}
+  git -C "$staging" commit --message "Seed managed feature flags"
+  validate_repository "$staging"
+  mv "$staging" "$repo"
+}
+
+mkdir -p "${dataPath}/repositories"
 initialize_environment beta
 initialize_environment prod
 `;
 }
 
-const INITIALIZE_ENVIRONMENTS_SCRIPT = createEnvironmentInitializationScript(
+const VALIDATE_SEEDS_SCRIPT = createSeedValidationScript(managedFlagNamespaces);
+const INITIALIZE_REPOSITORIES_SCRIPT = createRepositoryInitializationScript(
   DATA_PATH,
   managedFlagNamespaces,
 );
@@ -202,27 +248,30 @@ export function createFliptDeployment(chart: Chart) {
 
   deployment.addInitContainer(
     withCommonProps({
-      name: "initialize-environments",
+      name: "validate-environment-seeds",
       image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
       command: ["/bin/sh", "-c"],
-      args: [INITIALIZE_ENVIRONMENTS_SCRIPT],
-      resources: {
-        cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
-        memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
-      },
-      securityContext: {
-        user: FLIPT_UID,
-        group: FLIPT_GID,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
+      args: [VALIDATE_SEEDS_SCRIPT],
+      resources: FLIPT_INIT_RESOURCES,
+      securityContext: FLIPT_SECURITY_CONTEXT,
+      volumeMounts: [
+        { path: "/etc/flipt-seed", volume: seedVolume, readOnly: true },
+        { path: "/tmp", volume: scratchVolume },
+      ],
+    }),
+  );
+
+  deployment.addInitContainer(
+    withCommonProps({
+      name: "initialize-environment-repositories",
+      image: `docker.io/alpine/git:${versions["alpine/git"]}`,
+      command: ["/bin/sh", "-c"],
+      args: [INITIALIZE_REPOSITORIES_SCRIPT],
+      resources: FLIPT_INIT_RESOURCES,
+      securityContext: FLIPT_SECURITY_CONTEXT,
+      envVariables: { HOME: EnvValue.fromValue("/tmp") },
       volumeMounts: [
         { path: DATA_PATH, volume: persistentDataVolume },
-        { path: "/etc/flipt-seed", volume: seedVolume, readOnly: true },
         { path: "/tmp", volume: scratchVolume },
       ],
     }),
@@ -238,16 +287,7 @@ export function createFliptDeployment(chart: Chart) {
         cpu: { request: Cpu.millis(25), limit: Cpu.millis(500) },
         memory: { request: Size.mebibytes(128), limit: Size.mebibytes(512) },
       },
-      securityContext: {
-        user: FLIPT_UID,
-        group: FLIPT_GID,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-        allowPrivilegeEscalation: false,
-        privileged: false,
-        capabilities: { drop: [Capability.ALL] },
-        seccompProfile: { type: SeccompProfileType.RUNTIME_DEFAULT },
-      },
+      securityContext: FLIPT_SECURITY_CONTEXT,
       startup: Probe.fromHttpGet("/health", {
         port: FLIPT_PORT,
         periodSeconds: Duration.seconds(5),
