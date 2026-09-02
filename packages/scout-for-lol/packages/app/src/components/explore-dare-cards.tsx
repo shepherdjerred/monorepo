@@ -217,10 +217,10 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
                       ),
                     );
                     void queryClient.invalidateQueries({
-                      queryKey: trpc.explore.dareList.pathKey(),
+                      queryKey: trpc.bucks.dareList.pathKey(),
                     });
                     void queryClient.invalidateQueries({
-                      queryKey: trpc.explore.dareInspect.pathKey(),
+                      queryKey: trpc.bucks.dareInspect.pathKey(),
                     });
                     void queryClient.invalidateQueries({
                       queryKey: trpc.explore.dareIntentStatus.queryKey({

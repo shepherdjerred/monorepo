@@ -5,9 +5,19 @@ import {
 } from "#src/routes/bucks-workspace.tsx";
 
 describe("bucksSectionItems", () => {
-  test("lists the four sections with an exact-match overview", () => {
-    expect(bucksSectionItems()).toEqual([
+  test("hides Dares when the selected guild has no Dare access", () => {
+    expect(bucksSectionItems(false)).toEqual([
       { label: "Overview", to: "/bucks", end: true },
+      { label: "History", to: "/bucks/history", end: false },
+      { label: "Leaderboard", to: "/bucks/leaderboard", end: false },
+      { label: "Settings", to: "/bucks/settings", end: false },
+    ]);
+  });
+
+  test("adds Dares for a guild with the feature or an existing Dare", () => {
+    expect(bucksSectionItems(true)).toEqual([
+      { label: "Overview", to: "/bucks", end: true },
+      { label: "Dares", to: "/bucks/dares", end: false },
       { label: "History", to: "/bucks/history", end: false },
       { label: "Leaderboard", to: "/bucks/leaderboard", end: false },
       { label: "Settings", to: "/bucks/settings", end: false },

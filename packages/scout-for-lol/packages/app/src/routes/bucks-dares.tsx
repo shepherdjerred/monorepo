@@ -1,74 +1,108 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Target } from "lucide-react";
-import type {
-  DareCompiledPlanV2,
-  DareDeadlineSpecV2,
-} from "@scout-for-lol/data";
+import { Search } from "lucide-react";
+import { Link, useNavigate, useParams } from "react-router";
+import { z } from "zod";
+import type { DareDeadlineSpecV2 } from "@scout-for-lol/data";
+import { BucksDareEditor } from "#src/components/bucks-dare-editor.tsx";
+import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetTrigger,
-} from "@scout-for-lol/design-system/components/sheet";
 import {
   Tabs,
   TabsList,
   TabsTrigger,
 } from "@scout-for-lol/design-system/components/tabs";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
-import { ExploreDareEditor } from "#src/components/explore-dare-editor.tsx";
+import {
+  ErrorState,
+  LoadingState,
+} from "@scout-for-lol/design-system/domain/states";
+import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { dareDeadlineDescription } from "#src/lib/dare-deadline.ts";
 import { dareEditorInstanceKey } from "#src/lib/dare-editor-state.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
+import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 
-export function ExploreDaresDrawer() {
+const DareIdSchema = z.coerce.number().int().positive();
+
+export function parseBucksDareId(
+  value: string | undefined,
+): { kind: "list" } | { kind: "detail"; dareId: number } | { kind: "invalid" } {
+  if (value === undefined) return { kind: "list" };
+  const parsed = DareIdSchema.safeParse(value);
+  return parsed.success
+    ? { kind: "detail", dareId: parsed.data }
+    : { kind: "invalid" };
+}
+
+export function BucksDares() {
+  const { guildId, guildName, daresAvailable } = useBucksGuild();
+  const { dareId: dareIdParam } = useParams();
+  const route = parseBucksDareId(dareIdParam);
+
+  if (!daresAvailable) {
+    return (
+      <EmptyState>
+        <h2>Dares aren&apos;t available here</h2>
+        <p>This server doesn&apos;t currently have Dares to manage.</p>
+        <Button asChild variant="outline">
+          <Link to="/bucks">Back to Bryan Bucks</Link>
+        </Button>
+      </EmptyState>
+    );
+  }
+  if (route.kind === "invalid") {
+    return <ErrorState message="This Dare link isn't valid." />;
+  }
+  return route.kind === "detail" ? (
+    <DareDetailPage guildId={guildId} dareId={route.dareId} />
+  ) : (
+    <DareListPage guildId={guildId} guildName={guildName} />
+  );
+}
+
+function DareListPage(props: { guildId: string; guildName: string }) {
   const trpc = useTRPC();
-  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const [scope, setScope] = useState<"mine" | "guild">("mine");
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-  const list = useQuery({
-    ...trpc.explore.dareList.queryOptions({
+  const trimmedSearch = search.trim();
+  const list = useQuery(
+    trpc.bucks.dareList.queryOptions({
+      guildId: props.guildId,
       scope,
-      ...(search.trim().length === 0 ? {} : { search: search.trim() }),
+      ...(trimmedSearch.length === 0 ? {} : { search: trimmedSearch }),
     }),
-    enabled: open,
-  });
-  const detail = useQuery({
-    ...trpc.explore.dareInspect.queryOptions({ dareId: selectedId ?? 0 }),
-    enabled: open && selectedId !== null,
-  });
+  );
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Target className="size-4" />
-          Dares
+    <div className="space-y-6">
+      <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold">Dares</h1>
+          <p className="text-sm text-scout-subtle">
+            Find and manage Dare contracts for {props.guildName}. Create or
+            revise one conversationally in Explore.
+          </p>
+        </div>
+        <Button asChild>
+          <Link to="/explore">Create in Explore</Link>
         </Button>
-      </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-        <SheetTitle className="text-base font-semibold">Scout dares</SheetTitle>
+      </header>
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs
           value={scope}
           onValueChange={(next) => {
-            if (next === "mine" || next === "guild") {
-              setScope(next);
-              setSelectedId(null);
-            }
+            if (next === "mine" || next === "guild") setScope(next);
           }}
-          className="mt-4"
         >
           <TabsList>
             <TabsTrigger value="mine">My Dares</TabsTrigger>
             <TabsTrigger value="guild">Guild Dares</TabsTrigger>
           </TabsList>
         </Tabs>
-
-        <div className="relative mt-4">
+        <div className="relative sm:w-80">
           <Search className="absolute top-1/2 left-2 size-4 -translate-y-1/2 text-scout-subtle" />
           <Input
             aria-label="Search dares"
@@ -80,58 +114,24 @@ export function ExploreDaresDrawer() {
             }}
           />
         </div>
+      </div>
 
-        {selectedId === null ? (
-          <DareList
-            loading={list.isLoading}
-            error={list.error}
-            dares={list.data ?? []}
-            onSelect={setSelectedId}
-          />
-        ) : detail.isLoading ? (
-          <p className="mt-6 text-sm text-scout-subtle">Loading dare…</p>
-        ) : detail.error === null ? (
-          detail.data === undefined ? null : (
-            <DareDetail
-              dare={detail.data}
-              onBack={() => {
-                setSelectedId(null);
-              }}
-            />
-          )
-        ) : (
-          <div className="mt-6 space-y-3">
-            <p className="text-sm text-scout-danger">{detail.error.message}</p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  void detail.refetch();
-                }}
-              >
-                Try again
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSelectedId(null);
-                }}
-              >
-                Back to dares
-              </Button>
-            </div>
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
+      <DareList
+        loading={list.isPending}
+        error={list.error}
+        dares={list.data ?? []}
+        onRetry={() => {
+          void list.refetch();
+        }}
+        onSelect={(dareId) => {
+          void navigate(`/bucks/dares/${dareId.toString()}`);
+        }}
+      />
+    </div>
   );
 }
 
-function DareList(props: {
+export function DareList(props: {
   loading: boolean;
   error: { message: string } | null;
   dares: {
@@ -143,26 +143,28 @@ function DareList(props: {
     evidenceGames: number;
     updatedAt: string;
   }[];
+  onRetry: () => void;
   onSelect: (dareId: number) => void;
 }) {
-  if (props.loading) {
-    return <p className="mt-6 text-sm text-scout-subtle">Loading dares…</p>;
-  }
+  if (props.loading) return <LoadingState label="Loading dares…" />;
   if (props.error !== null) {
-    return (
-      <p className="mt-6 text-sm text-scout-danger">{props.error.message}</p>
-    );
+    return <ErrorState message={props.error.message} onRetry={props.onRetry} />;
   }
   if (props.dares.length === 0) {
-    return <p className="mt-6 text-sm text-scout-subtle">No dares match.</p>;
+    return (
+      <EmptyState>
+        <h2>No dares match</h2>
+        <p>Try another search or create a Dare in Explore.</p>
+      </EmptyState>
+    );
   }
   return (
-    <ul className="mt-4 space-y-2">
+    <ul className="grid gap-3 lg:grid-cols-2">
       {props.dares.map((dare) => (
         <li key={dare.id}>
           <button
             type="button"
-            className="w-full space-y-2 rounded-lg border border-scout-border p-3 text-left hover:bg-scout-hover"
+            className="h-full w-full space-y-3 rounded-lg border border-scout-border p-4 text-left hover:bg-scout-hover"
             onClick={() => {
               props.onSelect(dare.id);
             }}
@@ -185,7 +187,30 @@ function DareList(props: {
   );
 }
 
-function DareDetail(props: {
+function DareDetailPage(props: { guildId: string; dareId: number }) {
+  const trpc = useTRPC();
+  const detail = useQuery(
+    trpc.bucks.dareInspect.queryOptions({
+      guildId: props.guildId,
+      dareId: props.dareId,
+    }),
+  );
+  if (detail.isPending) return <LoadingState label="Loading dare…" />;
+  if (detail.isError) {
+    return (
+      <ErrorState
+        message={detail.error.message}
+        onRetry={() => {
+          void detail.refetch();
+        }}
+      />
+    );
+  }
+  return <DareDetail guildId={props.guildId} dare={detail.data} />;
+}
+
+export function DareDetail(props: {
+  guildId: string;
   dare: {
     id: number;
     state: string;
@@ -193,7 +218,6 @@ function DareDetail(props: {
     fundedRevision: number | null;
     plainLanguage: string;
     canonicalScoutQl: string;
-    plan: DareCompiledPlanV2;
     semanticProofPlan: string;
     compilerVersion: string;
     evaluatorVersion: string;
@@ -210,26 +234,33 @@ function DareDetail(props: {
     proof: unknown;
     voidReason: string | null;
   };
-  onBack: () => void;
 }) {
   const revision = props.dare.fundedRevision ?? props.dare.currentRevision;
   return (
-    <div className="mt-4 space-y-4">
-      <Button type="button" variant="ghost" size="sm" onClick={props.onBack}>
-        ← Back to dares
-      </Button>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button asChild variant="ghost" size="sm">
+          <Link to="/bucks/dares">← Back to dares</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link to="/explore">Revise in Explore</Link>
+        </Button>
+      </div>
       <div className="flex items-center justify-between gap-2">
-        <h3 className="font-medium">Dare #{props.dare.id.toString()}</h3>
+        <h1 className="text-2xl font-semibold">
+          Dare #{props.dare.id.toString()}
+        </h1>
         <StatePill state={props.dare.state} />
       </div>
       {props.dare.state === "draft" && (
-        <ExploreDareEditor
+        <BucksDareEditor
           key={dareEditorInstanceKey(props.dare)}
+          guildId={props.guildId}
           dare={props.dare}
         />
       )}
       <p className="whitespace-pre-wrap text-sm">{props.dare.plainLanguage}</p>
-      <dl className="grid grid-cols-2 gap-3 text-sm">
+      <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <Fact label="Revision" value={revision.toString()} />
         <Fact
           label="Compiler"
@@ -254,7 +285,7 @@ function DareDetail(props: {
         )}
       </dl>
       <section className="space-y-2">
-        <h4 className="text-sm font-medium">ScoutQL</h4>
+        <h2 className="text-sm font-medium">ScoutQL</h2>
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
         {props.dare.scoutQlPlanHash !== null && (
           <p className="font-mono text-xs text-scout-subtle">
@@ -264,14 +295,14 @@ function DareDetail(props: {
       </section>
       {props.dare.proof !== null && (
         <section className="space-y-2">
-          <h4 className="text-sm font-medium">Settlement proof</h4>
+          <h2 className="text-sm font-medium">Settlement proof</h2>
           <pre className="max-h-96 overflow-auto rounded-md border border-scout-border bg-scout-surface p-3 text-xs whitespace-pre-wrap">
             {JSON.stringify(props.dare.proof, null, 2)}
           </pre>
         </section>
       )}
       <section className="space-y-2">
-        <h4 className="text-sm font-medium">Proof plan</h4>
+        <h2 className="text-sm font-medium">Proof plan</h2>
         <p className="whitespace-pre-wrap text-xs text-scout-subtle">
           {props.dare.semanticProofPlan}
         </p>

@@ -43,7 +43,7 @@ type ValidatedDraft = {
   };
 };
 
-export function ExploreDareEditor(props: { dare: EditorDare }) {
+export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -69,7 +69,7 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
   const inputVersion = useRef(0);
   const validationRequest = useRef(0);
   const previewRequest = useRef(0);
-  const revise = useMutation(trpc.explore.dareReviseDraft.mutationOptions());
+  const revise = useMutation(trpc.bucks.dareReviseDraft.mutationOptions());
   const fieldId = (name: string) =>
     `dare-${props.dare.id.toString()}-editor-${name}`;
 
@@ -120,7 +120,10 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
     setValidationPending(true);
     try {
       const result = await queryClient.query(
-        trpc.explore.dareValidateDraft.queryOptions(input),
+        trpc.bucks.dareValidateDraft.queryOptions({
+          guildId: props.guildId,
+          ...input,
+        }),
       );
       if (
         version !== inputVersion.current ||
@@ -166,7 +169,8 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
     setPreviewPending(true);
     try {
       const result = await queryClient.query(
-        trpc.explore.darePreviewDraft.queryOptions({
+        trpc.bucks.darePreviewDraft.queryOptions({
+          guildId: props.guildId,
           ...input,
           historyDays: days,
         }),
@@ -202,7 +206,10 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
       return;
     }
     try {
-      const outcome = await revise.mutateAsync(input);
+      const outcome = await revise.mutateAsync({
+        guildId: props.guildId,
+        ...input,
+      });
       if (outcome.kind !== "revised") {
         setError(
           `Draft was not revised (${outcome.kind.replaceAll("_", " ")}).`,
@@ -211,10 +218,10 @@ export function ExploreDareEditor(props: { dare: EditorDare }) {
       }
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: trpc.explore.dareList.pathKey(),
+          queryKey: trpc.bucks.dareList.pathKey(),
         }),
         queryClient.invalidateQueries({
-          queryKey: trpc.explore.dareInspect.pathKey(),
+          queryKey: trpc.bucks.dareInspect.pathKey(),
         }),
       ]);
       setOpen(false);

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   BucksParlaySideSchema,
@@ -6,6 +7,8 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   RiotTeamIdSchema,
+  type DiscordAccountId,
+  type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { captureBucksMemberActivity } from "#src/analytics/bryan-bucks.ts";
 import type { BucksMemberActivityKind } from "#src/analytics/product-analytics.ts";
@@ -16,6 +19,10 @@ import {
 } from "#src/betting/accounts.ts";
 import { cancelBet } from "#src/betting/cancel-bet.ts";
 import { bettingAnchor } from "#src/betting/components.ts";
+import {
+  inspectVisibleDareV2,
+  listVisibleDaresV2,
+} from "#src/betting/dare-view-v2.ts";
 import { cancellationHouseCut } from "#src/betting/house-cut.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { ledgerKindLabel } from "#src/betting/navigation.ts";
@@ -36,13 +43,56 @@ import {
   assertBucksScope,
   resolveBucksScope,
 } from "#src/consumer/bucks-access.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
+import {
+  DareDraftEditorInputSchema,
+  DareDraftPreviewInputSchema,
+  previewDareDraftEditorV2,
+  reviseDareDraftEditorV2,
+  validateDareDraftEditorV2,
+} from "#src/explore/dare-editor-v2.ts";
 import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const MatchInput = GuildInput.extend({
   matchId: z.string().min(1).max(64),
 });
+const DareListInput = GuildInput.extend({
+  scope: z.enum(["mine", "guild"]),
+  search: z.string().min(1).max(100).optional(),
+});
+const DareInspectInput = GuildInput.extend({
+  dareId: z.number().int().positive(),
+});
+const DareDraftInput = DareDraftEditorInputSchema.extend({
+  guildId: DiscordGuildIdSchema,
+});
+const DareDraftPreviewInput = DareDraftPreviewInputSchema.extend({
+  guildId: DiscordGuildIdSchema,
+});
+
+async function dareManagementAvailable(
+  guildId: DiscordGuildId,
+  viewerDiscordId: DiscordAccountId,
+): Promise<boolean> {
+  const [dareEnabled, relationalEnabled, existingDare] = await Promise.all([
+    isPolicyEnabled("dare_v2", { server: guildId }),
+    isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
+    prisma.bucksDareV2.findFirst({
+      where: {
+        serverId: guildId,
+        dareState: { not: "deleted" },
+        OR: [
+          { dareState: { not: "draft" } },
+          { challengerDiscordId: viewerDiscordId },
+        ],
+      },
+      select: { id: true },
+    }),
+  ]);
+  return (dareEnabled && relationalEnabled) || existingDare !== null;
+}
 
 /**
  * Best-effort member-activity analytics for a completed web mutation.
@@ -85,14 +135,88 @@ export const bucksRouter = router({
     if (scope.kind === "forbidden") {
       return { state: scope.reason } as const;
     }
+    const viewerDiscordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
     return {
       state: "available",
-      guilds: scope.guilds.map((guild) => ({
-        id: guild.id,
-        name: guild.name,
-      })),
+      guilds: await Promise.all(
+        scope.guilds.map(async (guild) => ({
+          id: guild.id,
+          name: guild.name,
+          daresAvailable: await dareManagementAvailable(
+            DiscordGuildIdSchema.parse(guild.id),
+            viewerDiscordId,
+          ),
+        })),
+      ),
     } as const;
   }),
+
+  dareList: webProcedure.input(DareListInput).query(async ({ ctx, input }) => {
+    await assertBucksScope(ctx.user, input.guildId);
+    return await listVisibleDaresV2(
+      {
+        serverId: input.guildId,
+        viewerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+        scope: input.scope,
+        ...(input.search === undefined ? {} : { search: input.search }),
+      },
+      prisma,
+    );
+  }),
+
+  dareInspect: webProcedure
+    .input(DareInspectInput)
+    .query(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const dare = await inspectVisibleDareV2(
+        {
+          dareId: input.dareId,
+          serverId: input.guildId,
+          viewerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+        },
+        prisma,
+      );
+      if (dare === null) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Dare not found." });
+      }
+      return dare;
+    }),
+
+  dareValidateDraft: webProcedure
+    .input(DareDraftInput)
+    .query(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const { guildId, ...draft } = input;
+      return await validateDareDraftEditorV2(
+        draft,
+        DiscordAccountIdSchema.parse(ctx.user.discordId),
+        [guildId],
+      );
+    }),
+
+  darePreviewDraft: webProcedure
+    .input(DareDraftPreviewInput)
+    .query(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const { guildId, ...draft } = input;
+      return await previewDareDraftEditorV2(
+        draft,
+        DiscordAccountIdSchema.parse(ctx.user.discordId),
+        [guildId],
+      );
+    }),
+
+  dareReviseDraft: webMutationProcedure
+    .input(DareDraftInput)
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const { guildId, ...draft } = input;
+      return await reviseDareDraftEditorV2(
+        draft,
+        DiscordAccountIdSchema.parse(ctx.user.discordId),
+        [guildId],
+      );
+    }),
 
   wallet: webProcedure.input(GuildInput).query(async ({ ctx, input }) => {
     await assertBucksScope(ctx.user, input.guildId);

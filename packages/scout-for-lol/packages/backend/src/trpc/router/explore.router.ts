@@ -12,14 +12,9 @@ import {
   ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
 } from "@scout-for-lol/data";
-import {
-  inspectVisibleDareV2,
-  listVisibleDaresV2,
-} from "#src/betting/dare-view-v2.ts";
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
 import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
 import { DareV2IntentActionSchema } from "#src/betting/dare-intent-v2.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
@@ -45,13 +40,6 @@ import {
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
-import {
-  DareDraftEditorInputSchema,
-  DareDraftPreviewInputSchema,
-  previewDareDraftEditorV2,
-  reviseDareDraftEditorV2,
-  validateDareDraftEditorV2,
-} from "#src/explore/dare-editor-v2.ts";
 import {
   protectedProcedure,
   router,
@@ -97,33 +85,6 @@ async function requireExploreUserAndGuilds(
   };
 }
 
-async function dareSurfaceEnabled(
-  userId: DiscordAccountId,
-  guildIds: string[],
-): Promise<boolean> {
-  const [enabledByGuild, existingDare] = await Promise.all([
-    Promise.all(
-      guildIds.map(async (guildId) => {
-        const serverId = DiscordGuildIdSchema.parse(guildId);
-        const [dareEnabled, relationalEnabled] = await Promise.all([
-          isPolicyEnabled("dare_v2", { server: serverId }),
-          isPolicyEnabled("scoutql_relational_enabled", { server: serverId }),
-        ]);
-        return dareEnabled && relationalEnabled;
-      }),
-    ),
-    prisma.bucksDareV2.findFirst({
-      where: {
-        serverId: { in: guildIds },
-        dareState: { not: "deleted" },
-        OR: [{ dareState: { not: "draft" } }, { challengerDiscordId: userId }],
-      },
-      select: { id: true },
-    }),
-  ]);
-  return enabledByGuild.some(Boolean) || existingDare !== null;
-}
-
 async function requireGuildDareIntent(intentId: string, guildIds: string[]) {
   const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
     where: { id: intentId },
@@ -151,18 +112,17 @@ export const exploreRouter = router({
    */
   status: exploreProcedure.query(async ({ ctx }) => {
     if (!isExploreConfigured()) {
-      return { enabled: false, daresEnabled: false, quota: [] };
+      return { enabled: false, quota: [] };
     }
     try {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const { userId } = await requireExploreUserAndGuilds(ctx.user);
       return {
         enabled: true,
-        daresEnabled: await dareSurfaceEnabled(userId, guildIds),
         quota: getExploreQuotaStatus({ userId }).quota,
       };
     } catch (error) {
       if (error instanceof TRPCError && error.code === "FORBIDDEN") {
-        return { enabled: false, daresEnabled: false, quota: [] };
+        return { enabled: false, quota: [] };
       }
       throw error;
     }
@@ -172,76 +132,6 @@ export const exploreRouter = router({
     const userId = await requireExploreUser(ctx.user);
     return await listExploreConversations(prisma, userId);
   }),
-
-  dareList: exploreProcedure
-    .input(
-      z.strictObject({
-        scope: z.enum(["mine", "guild"]),
-        search: z.string().min(1).max(100).optional(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      const pages = await Promise.all(
-        guildIds.map(
-          async (guildId) =>
-            await listVisibleDaresV2(
-              {
-                serverId: DiscordGuildIdSchema.parse(guildId),
-                viewerDiscordId: userId,
-                scope: input.scope,
-                ...(input.search === undefined ? {} : { search: input.search }),
-              },
-              prisma,
-            ),
-        ),
-      );
-      return pages
-        .flat()
-        .toSorted((left, right) =>
-          right.updatedAt.localeCompare(left.updatedAt),
-        )
-        .slice(0, 100);
-    }),
-
-  dareInspect: exploreProcedure
-    .input(z.strictObject({ dareId: z.number().int().positive() }))
-    .query(async ({ ctx, input }) => {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      for (const guildId of guildIds) {
-        const dare = await inspectVisibleDareV2(
-          {
-            dareId: input.dareId,
-            serverId: DiscordGuildIdSchema.parse(guildId),
-            viewerDiscordId: userId,
-          },
-          prisma,
-        );
-        if (dare !== null) return dare;
-      }
-      throw new TRPCError({ code: "NOT_FOUND", message: "Dare not found." });
-    }),
-
-  dareValidateDraft: exploreProcedure
-    .input(DareDraftEditorInputSchema)
-    .query(async ({ ctx, input }) => {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      return await validateDareDraftEditorV2(input, userId, guildIds);
-    }),
-
-  darePreviewDraft: exploreProcedure
-    .input(DareDraftPreviewInputSchema)
-    .query(async ({ ctx, input }) => {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      return await previewDareDraftEditorV2(input, userId, guildIds);
-    }),
-
-  dareReviseDraft: webMutationProcedure
-    .input(DareDraftEditorInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      return await reviseDareDraftEditorV2(input, userId, guildIds);
-    }),
 
   dareIntentStatus: exploreProcedure
     .input(z.strictObject({ intentId: z.uuid() }))

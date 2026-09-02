@@ -22,6 +22,8 @@ const KNOWN_URLS = [
   "/players",
   "/players/42",
   "/bucks",
+  "/bucks/dares",
+  "/bucks/dares/42",
   "/bucks/history",
   "/bucks/leaderboard",
   "/bucks/settings",
