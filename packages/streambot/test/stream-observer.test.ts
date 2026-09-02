@@ -108,25 +108,43 @@ describe("createStreamObserver", () => {
 /** Let the fast (2ms) watchdog interval fire at least once. */
 const tick = () => new Promise((resolve) => setTimeout(resolve, 25));
 
+function stallWatchdogHarness() {
+  const wall = { value: 0 };
+  const stalls: (number | undefined)[] = [];
+  const streamObserver = createStreamObserver(
+    true,
+    () => wall.value,
+    (lastMediaSeconds) => stalls.push(lastMediaSeconds),
+    2,
+  );
+  streamObserver.observer.onCommand?.("ffmpeg -i in.mkv out");
+  return { ...streamObserver, wall, stalls };
+}
+
+function advanceMedia(
+  observer: ReturnType<typeof createStreamObserver>["observer"],
+  wall: { value: number },
+  wallOffset = 0,
+): void {
+  for (let second = 1; second <= 25; second++) {
+    wall.value = wallOffset + second * 1000;
+    observer.onProgress?.({
+      timemark: `00:00:${String(second).padStart(2, "0")}.00`,
+    });
+  }
+}
+
 describe("createStreamObserver stall watchdog", () => {
   test("a wedged ffmpeg emitting the SAME timemark still trips the stall watchdog and reports the last media position", async () => {
-    let wall = 0;
-    const stalls: (number | undefined)[] = [];
-    const { observer, dispose } = createStreamObserver(
-      true,
-      () => wall,
-      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
-      2, // fast watchdog tick for a deterministic test
-    );
-    observer.onCommand?.("ffmpeg -i in.mkv out");
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
     // First parseable sample arms the watchdog at wall=1000 with media at 5s.
-    wall = 1000;
+    wall.value = 1000;
     observer.onProgress?.({ timemark: "00:00:05.00" });
     // A wedged process keeps reporting the SAME media timemark — the watchdog must NOT re-arm.
-    wall = 2000;
+    wall.value = 2000;
     observer.onProgress?.({ timemark: "00:00:05.00" });
     // 21s past the last real media advance (wall=1000).
-    wall = 22_000;
+    wall.value = 22_000;
     await tick();
 
     expect(stalls.length).toBeGreaterThanOrEqual(1);
@@ -136,22 +154,9 @@ describe("createStreamObserver stall watchdog", () => {
   });
 
   test("advancing media keeps the watchdog armed (no false stall)", async () => {
-    let wall = 0;
-    const stalls: (number | undefined)[] = [];
-    const { observer, dispose } = createStreamObserver(
-      true,
-      () => wall,
-      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
-      2,
-    );
-    observer.onCommand?.("ffmpeg -i in.mkv out");
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
     // Media advances in lockstep with wall-clock across a span > STALL_AFTER_SECONDS.
-    for (let i = 1; i <= 25; i++) {
-      wall = i * 1000;
-      observer.onProgress?.({
-        timemark: `00:00:${String(i).padStart(2, "0")}.00`,
-      });
-    }
+    advanceMedia(observer, wall);
     await tick();
 
     expect(stalls).toHaveLength(0);
@@ -159,33 +164,15 @@ describe("createStreamObserver stall watchdog", () => {
   });
 
   test("a seek (new onCommand) starts a fresh epoch — healthy post-seek playback is not a false stall", async () => {
-    let wall = 0;
-    const stalls: (number | undefined)[] = [];
-    const { observer, dispose } = createStreamObserver(
-      true,
-      () => wall,
-      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
-      2,
-    );
-    observer.onCommand?.("ffmpeg -i in.mkv out");
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
     // Play healthily well past the stall threshold so the pre-seek media baseline is high (25s).
-    for (let i = 1; i <= 25; i++) {
-      wall = i * 1000;
-      observer.onProgress?.({
-        timemark: `00:00:${String(i).padStart(2, "0")}.00`,
-      });
-    }
+    advanceMedia(observer, wall);
     // A /seek restarts ffmpeg at a new -ss → new onCommand, and its output timemark restarts near
     // zero. Without an epoch reset the low post-seek timemarks stay < the old 25s baseline, never
     // re-arm the watchdog, and a false stall fires ~20s later despite healthy playback.
-    wall = 26_000;
+    wall.value = 26_000;
     observer.onCommand?.("ffmpeg -ss 120 -i in.mkv out");
-    for (let i = 1; i <= 25; i++) {
-      wall = 26_000 + i * 1000;
-      observer.onProgress?.({
-        timemark: `00:00:${String(i).padStart(2, "0")}.00`,
-      });
-    }
+    advanceMedia(observer, wall, 26_000);
     await tick();
 
     expect(stalls).toHaveLength(0);
@@ -193,18 +180,10 @@ describe("createStreamObserver stall watchdog", () => {
   });
 
   test("the stall fires once per silence (not every tick)", async () => {
-    let wall = 0;
-    const stalls: (number | undefined)[] = [];
-    const { observer, dispose } = createStreamObserver(
-      true,
-      () => wall,
-      (lastMediaSeconds) => stalls.push(lastMediaSeconds),
-      2,
-    );
-    observer.onCommand?.("ffmpeg -i in.mkv out");
-    wall = 1000;
+    const { observer, dispose, wall, stalls } = stallWatchdogHarness();
+    wall.value = 1000;
     observer.onProgress?.({ timemark: "00:00:05.00" });
-    wall = 30_000; // deep into the stall; many watchdog ticks will elapse during the wait
+    wall.value = 30_000; // deep into the stall; many watchdog ticks will elapse during the wait
     await tick();
 
     expect(stalls).toHaveLength(1);

@@ -984,66 +984,40 @@ describe("CommandHandler subtitles command (track picker)", () => {
     ]);
   });
 
-  test("aborts (no dispatch) if the current source's kind changed while the picker was open", async () => {
-    // The picker was built from a file source's sidecar candidate, but by the time the user
-    // picks, playback has moved on to a url source — applying the sidecar trackRef there would
-    // throw the invariant guard in the subtitle resolver, so this must be caught first. The
-    // source-id read flips from a `file:` id to a `url:` id between picker-open and dispatch.
-    const h = makeHandler({
-      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
-      subtitleCandidates: [SIDECAR_CANDIDATE],
+  test.each([
+    {
+      scenario: "the source kind changed",
       currentSourceId: ["file:/movie.mkv", "url:https://youtu.be/abc"],
-    });
-    const { interaction, edits } = fakeInteraction({
-      sub: "subtitles",
-      userId: REQUESTER,
-      subtitleMenuPick: "sidecar:Movie.en.srt",
-    });
-    await h.handler.run(interaction);
-    expect(h.events).toHaveLength(0);
-    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
-    expect(h.subtitleMenuPending()).toBe(false);
-  });
-
-  test("aborts (no dispatch) when playback advanced to a different item with the SAME title", async () => {
-    // Two distinct files can share a display title. If playback advances from one to the other
-    // during the picker window, a title-only guard would let the old file's sidecar trackRef be
-    // applied to the new file. The source-id read changes (different path) even though the view's
-    // title is unchanged, so the stale pick must be rejected.
-    const h = makeHandler({
-      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
-      subtitleCandidates: [SIDECAR_CANDIDATE],
+    },
+    {
+      scenario: "a same-title item replaced the source",
       currentSourceId: ["file:/movies/dupe-a.mkv", "file:/movies/dupe-b.mkv"],
-    });
-    const { interaction, edits } = fakeInteraction({
-      sub: "subtitles",
-      userId: REQUESTER,
-      subtitleMenuPick: "sidecar:Movie.en.srt",
-    });
-    await h.handler.run(interaction);
-    expect(h.events).toHaveLength(0);
-    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
-    expect(h.subtitleMenuPending()).toBe(false);
-  });
-
-  test("aborts (no dispatch) when playback stopped entirely while the picker was open", async () => {
-    // The item ended and nothing replaced it: the second source-id read is null, which never
-    // equals the captured id, so the pick is rejected instead of dispatched into the void.
-    const h = makeHandler({
-      view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
-      subtitleCandidates: [SIDECAR_CANDIDATE],
+    },
+    {
+      scenario: "playback stopped",
       currentSourceId: ["file:/movie.mkv", null],
-    });
-    const { interaction, edits } = fakeInteraction({
-      sub: "subtitles",
-      userId: REQUESTER,
-      subtitleMenuPick: "sidecar:Movie.en.srt",
-    });
-    await h.handler.run(interaction);
-    expect(h.events).toHaveLength(0);
-    expect(edits.at(-1)).toContain("Playback changed while you were choosing");
-    expect(h.subtitleMenuPending()).toBe(false);
-  });
+    },
+  ])(
+    "aborts a stale subtitle pick when $scenario",
+    async ({ currentSourceId }) => {
+      const h = makeHandler({
+        view: { ...viewWithCurrent(REQUESTER), positionSeconds: 5 },
+        subtitleCandidates: [SIDECAR_CANDIDATE],
+        currentSourceId,
+      });
+      const { interaction, edits } = fakeInteraction({
+        sub: "subtitles",
+        userId: REQUESTER,
+        subtitleMenuPick: "sidecar:Movie.en.srt",
+      });
+      await h.handler.run(interaction);
+      expect(h.events).toHaveLength(0);
+      expect(edits.at(-1)).toContain(
+        "Playback changed while you were choosing",
+      );
+      expect(h.subtitleMenuPending()).toBe(false);
+    },
+  );
 });
 
 function playedSource(strings: Record<string, string>) {
