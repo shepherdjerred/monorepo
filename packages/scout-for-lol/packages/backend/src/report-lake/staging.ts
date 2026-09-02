@@ -4,6 +4,7 @@ import type {
   CachedLeaderboard,
   RawCurrentGameInfo,
   RawMatch,
+  RawTimeline,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
 import { reportLakeStagingWritesTotal } from "#src/metrics/report-lake.ts";
@@ -12,11 +13,16 @@ import {
   flattenMatch,
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
+import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 import {
   competitionRankHistoryStagingDir,
   ensureLakeScaffold,
   matchesStagingDir,
   prematchStagingDir,
+  timelineCoverageStagingDir,
+  timelineEventParticipantsStagingDir,
+  timelineEventsStagingDir,
+  timelineParticipantFramesStagingDir,
 } from "#src/report-lake/paths.ts";
 
 const logger = createLogger("report-lake-staging");
@@ -40,7 +46,13 @@ function sanitizeFileStem(stem: string): string {
 }
 
 export type ReportLakeStagingTable =
-  "matches" | "prematch" | "competition_rank_history";
+  | "matches"
+  | "prematch"
+  | "competition_rank_history"
+  | "timeline_events"
+  | "timeline_event_participants"
+  | "timeline_participant_frames"
+  | "timeline_coverage";
 
 export function matchStagingFilePath(lakeDir: string, matchId: string): string {
   return path.join(
@@ -67,6 +79,39 @@ export function competitionRankHistoryStagingFilePath(
   return path.join(
     competitionRankHistoryStagingDir(lakeDir),
     `${stagingIdForCompetitionRankHistory(leaderboard.competitionId, date)}.jsonl`,
+  );
+}
+
+function stagingDirectory(
+  lakeDir: string,
+  table: ReportLakeStagingTable,
+): string {
+  switch (table) {
+    case "matches":
+      return matchesStagingDir(lakeDir);
+    case "prematch":
+      return prematchStagingDir(lakeDir);
+    case "competition_rank_history":
+      return competitionRankHistoryStagingDir(lakeDir);
+    case "timeline_events":
+      return timelineEventsStagingDir(lakeDir);
+    case "timeline_event_participants":
+      return timelineEventParticipantsStagingDir(lakeDir);
+    case "timeline_participant_frames":
+      return timelineParticipantFramesStagingDir(lakeDir);
+    case "timeline_coverage":
+      return timelineCoverageStagingDir(lakeDir);
+  }
+}
+
+export function timelineStagingFilePath(
+  lakeDir: string,
+  table: Extract<ReportLakeStagingTable, `timeline_${string}`>,
+  matchId: string,
+): string {
+  return path.join(
+    stagingDirectory(lakeDir, table),
+    `${sanitizeFileStem(matchId)}.jsonl`,
   );
 }
 
@@ -125,6 +170,49 @@ export async function writePrematchStagingFile(
   }
 }
 
+export async function writeTimelineStagingFiles(
+  lakeDir: string,
+  timeline: RawTimeline,
+  observedAt: Date,
+): Promise<boolean> {
+  const flattened = flattenTimeline(timeline, observedAt);
+  const tables = [
+    { table: "timeline_events" as const, rows: flattened.events },
+    {
+      table: "timeline_event_participants" as const,
+      rows: flattened.eventParticipants,
+    },
+    {
+      table: "timeline_participant_frames" as const,
+      rows: flattened.participantFrames,
+    },
+    { table: "timeline_coverage" as const, rows: flattened.coverage },
+  ];
+  try {
+    await ensureLakeScaffold(lakeDir);
+    for (const { table, rows } of tables) {
+      if (rows.length > 0) {
+        await Bun.write(
+          timelineStagingFilePath(lakeDir, table, timeline.metadata.matchId),
+          toNdjson(rows),
+        );
+      }
+      reportLakeStagingWritesTotal.inc({ table, status: "success" });
+    }
+    return true;
+  } catch (error) {
+    logger.warn(
+      `Failed to write timeline staging files for ${timeline.metadata.matchId}`,
+      { error },
+    );
+    reportLakeStagingWritesTotal.inc({
+      table: "timeline_coverage",
+      status: "failed",
+    });
+    return false;
+  }
+}
+
 export async function writeCompetitionRankHistoryStagingFile(
   lakeDir: string,
   leaderboard: CachedLeaderboard,
@@ -158,12 +246,7 @@ export async function listStagingFiles(
   lakeDir: string,
   table: ReportLakeStagingTable,
 ): Promise<string[]> {
-  const dir =
-    table === "matches"
-      ? matchesStagingDir(lakeDir)
-      : table === "prematch"
-        ? prematchStagingDir(lakeDir)
-        : competitionRankHistoryStagingDir(lakeDir);
+  const dir = stagingDirectory(lakeDir, table);
   let names: string[];
   try {
     names = await readdir(dir);
@@ -217,4 +300,8 @@ export function stagingIdForCompetitionRankHistory(
   date: string,
 ): string {
   return sanitizeFileStem(`${competitionId.toString()}_${date}`);
+}
+
+export function stagingIdForTimeline(matchId: string): string {
+  return sanitizeFileStem(matchId);
 }

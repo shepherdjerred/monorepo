@@ -5,6 +5,10 @@ import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
+  TIMELINE_COVERAGE_LAKE_COLUMNS,
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
   duckDbColumnsSpec,
 } from "#src/report-lake/schema.ts";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
@@ -19,18 +23,32 @@ export type StagingParseResult = {
   skipped: number;
 };
 
+function columnsForTable(table: ReportLakeStagingTable) {
+  switch (table) {
+    case "matches":
+      return MATCH_LAKE_COLUMNS;
+    case "prematch":
+      return PREMATCH_LAKE_COLUMNS;
+    case "competition_rank_history":
+      return COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
+    case "timeline_events":
+      return TIMELINE_EVENT_LAKE_COLUMNS;
+    case "timeline_event_participants":
+      return TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS;
+    case "timeline_participant_frames":
+      return TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS;
+    case "timeline_coverage":
+      return TIMELINE_COVERAGE_LAKE_COLUMNS;
+  }
+}
+
 export async function writeFoldParquet(
   buildDir: string,
   buildId: string,
   table: ReportLakeStagingTable,
   staged: StagingParseResult,
 ): Promise<void> {
-  const columns =
-    table === "matches"
-      ? MATCH_LAKE_COLUMNS
-      : table === "prematch"
-        ? PREMATCH_LAKE_COLUMNS
-        : COMPETITION_RANK_HISTORY_LAKE_COLUMNS;
+  const columns = columnsForTable(table);
   for (const [month, rows] of staged.rowsByMonth) {
     const monthDir = path.join(buildDir, table, `month=${month}`);
     await mkdir(monthDir, { recursive: true });

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --emitDeclarationOnly -p tsconfig.weekly-parlay.build.json && bun build src/model/weekly-parlay.ts --outfile dist/model/weekly-parlay.js --target bun --external zod",
-    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check",
+    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-dare-paraphrase-schema.ts",
     "generate:asset-manifest": "bun run scripts/generate-asset-manifest.ts --write",
     "check:asset-manifest": "bun run scripts/generate-asset-manifest.ts --check",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
@@ -43,6 +43,7 @@
     "ajv": "^8.20.0",
     "bun-types": "1.4.0",
     "eslint": "^10.3.0",
+    "prettier": "3.9.6",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
     "vitest": "4.1.10",

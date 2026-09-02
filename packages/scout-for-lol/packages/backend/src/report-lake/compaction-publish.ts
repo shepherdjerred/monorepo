@@ -12,9 +12,14 @@ export type CompactionSummary = {
   prematchRows: number;
   accountRows: number;
   competitionRankHistoryRows: number;
+  timelineEventRows: number;
+  timelineEventParticipantRows: number;
+  timelineParticipantFrameRows: number;
+  timelineCoverageRows: number;
   skippedMatches: number;
   skippedPrematches: number;
   skippedCompetitionRankHistory: number;
+  skippedTimelines: number;
   durationMs: number;
 };
 
@@ -44,6 +49,10 @@ export function publishCompactionMetrics(
     ["prematch", summary.prematchRows],
     ["accounts", summary.accountRows],
     ["competition_rank_history", summary.competitionRankHistoryRows],
+    ["timeline_events", summary.timelineEventRows],
+    ["timeline_event_participants", summary.timelineEventParticipantRows],
+    ["timeline_participant_frames", summary.timelineParticipantFrameRows],
+    ["timeline_coverage", summary.timelineCoverageRows],
   ] as const) {
     reportLakeCompactionRowsTotal.inc({ table, tier: summary.tier }, rows);
   }

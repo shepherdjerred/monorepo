@@ -1,0 +1,417 @@
+{
+  "$schema": "./dare-v2-paraphrase-corpus.schema.json",
+  "version": 1,
+  "promptVersion": "explore-dare-v2-2",
+  "cases": [
+    {
+      "id": "twisted_fate_same_game",
+      "categories": ["same_game", "queue"],
+      "paraphrases": [
+        "I bet Virmel can't get 8 CS/m on Twisted Fate in a game that's at least 20m",
+        "Virmel must play one 20 minute Twisted Fate game and average at least 8 CS per minute in that same game"
+      ],
+      "targetAliases": { "T1": "Virmel" },
+      "plan": {
+        "version": 2,
+        "maxEligibleGames": 100,
+        "gameSets": [
+          {
+            "name": "qualifying_game",
+            "targetKeys": ["T1"],
+            "relationship": "independent",
+            "queues": ["solo", "flex"],
+            "predicate": {
+              "kind": "and",
+              "operands": [
+                {
+                  "kind": "comparison",
+                  "value": {
+                    "kind": "participant",
+                    "target": "T1",
+                    "field": "champion_name"
+                  },
+                  "operator": "eq",
+                  "threshold": "Twisted Fate"
+                },
+                {
+                  "kind": "comparison",
+                  "value": {
+                    "kind": "participant_rate",
+                    "target": "T1",
+                    "field": "cs_per_minute"
+                  },
+                  "operator": "gte",
+                  "threshold": 8
+                },
+                {
+                  "kind": "comparison",
+                  "value": {
+                    "kind": "participant",
+                    "target": "T1",
+                    "field": "time_played"
+                  },
+                  "operator": "gte",
+                  "threshold": 1200
+                }
+              ]
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 100
+          }
+        ],
+        "result": {
+          "kind": "matching_games",
+          "gameSet": "qualifying_game",
+          "operator": "gte",
+          "threshold": 1
+        }
+      },
+      "deadlineSpec": { "kind": "relative", "days": 7 },
+      "openingStake": 20,
+      "expectedCanonicalSha256": "b48df8a060290cbf75f95727951bf17c3749abfacbc978e2ad046c45a60f950f",
+      "expectedMeaning": "Every condition in this game set must hold in the same game.\nqualifying_game: Virmel in one game, in solo/flex, first 100 eligible games, where (Virmel's champion name equals Twisted Fate AND Virmel's cs per minute is at least 8 AND Virmel's time played is at least 1200)\nThe dare succeeds when qualifying_game matching-game count is at least 1."
+    },
+    {
+      "id": "separate_games_nested_boolean",
+      "categories": ["separate_games", "nested_boolean"],
+      "paraphrases": [
+        "Bryan needs a 10 kill game, and either two 15 assist games or three 10 kill games; those can all be different games"
+      ],
+      "targetAliases": { "T1": "Bryan" },
+      "plan": {
+        "version": 2,
+        "maxEligibleGames": 30,
+        "gameSets": [
+          {
+            "name": "kill_games",
+            "targetKeys": ["T1"],
+            "relationship": "independent",
+            "queues": ["solo", "flex"],
+            "predicate": {
+              "kind": "comparison",
+              "value": {
+                "kind": "participant",
+                "target": "T1",
+                "field": "kills"
+              },
+              "operator": "gte",
+              "threshold": 10
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 30
+          },
+          {
+            "name": "assist_games",
+            "targetKeys": ["T1"],
+            "relationship": "independent",
+            "queues": ["solo", "flex"],
+            "predicate": {
+              "kind": "comparison",
+              "value": {
+                "kind": "participant",
+                "target": "T1",
+                "field": "assists"
+              },
+              "operator": "gte",
+              "threshold": 15
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 30
+          }
+        ],
+        "result": {
+          "kind": "and",
+          "operands": [
+            {
+              "kind": "matching_games",
+              "gameSet": "kill_games",
+              "operator": "gte",
+              "threshold": 1
+            },
+            {
+              "kind": "or",
+              "operands": [
+                {
+                  "kind": "matching_games",
+                  "gameSet": "assist_games",
+                  "operator": "gte",
+                  "threshold": 2
+                },
+                {
+                  "kind": "matching_games",
+                  "gameSet": "kill_games",
+                  "operator": "gte",
+                  "threshold": 3
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "deadlineSpec": { "kind": "relative", "days": 7 },
+      "openingStake": 10,
+      "expectedCanonicalSha256": "1a63ddcfe9a049b36a02fb13ae62bfdaaea99708c6f2096c3fa797826f5807e9",
+      "expectedMeaning": "Each game set is evaluated independently; different game sets may use different games.\nkill_games: Bryan in one game, in solo/flex, first 30 eligible games, where Bryan's kills is at least 10\nassist_games: Bryan in one game, in solo/flex, first 30 eligible games, where Bryan's assists is at least 15\nThe dare succeeds when (kill_games matching-game count is at least 1 AND (assist_games matching-game count is at least 2 OR kill_games matching-game count is at least 3))."
+    },
+    {
+      "id": "five_targets_and_opponents",
+      "categories": ["target_relationship", "nested_boolean"],
+      "paraphrases": [
+        "The whole five stack must win a flex game together, or Aaron and Virmel must face each other and combine for at least 20 kills"
+      ],
+      "targetAliases": {
+        "T1": "Aaron",
+        "T2": "Virmel",
+        "T3": "Bryan",
+        "T4": "Long",
+        "T5": "Gex"
+      },
+      "plan": {
+        "version": 2,
+        "maxEligibleGames": 100,
+        "gameSets": [
+          {
+            "name": "five_stack_win",
+            "targetKeys": ["T1", "T2", "T3", "T4", "T5"],
+            "relationship": "same_team",
+            "queues": ["flex"],
+            "predicate": {
+              "kind": "comparison",
+              "value": {
+                "kind": "participant",
+                "target": "T1",
+                "field": "win"
+              },
+              "operator": "eq",
+              "threshold": true
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 100
+          },
+          {
+            "name": "head_to_head",
+            "targetKeys": ["T1", "T2"],
+            "relationship": "opponents",
+            "queues": ["solo", "flex"],
+            "predicate": {
+              "kind": "comparison",
+              "value": {
+                "kind": "arithmetic",
+                "operator": "add",
+                "left": {
+                  "kind": "participant",
+                  "target": "T1",
+                  "field": "kills"
+                },
+                "right": {
+                  "kind": "participant",
+                  "target": "T2",
+                  "field": "kills"
+                }
+              },
+              "operator": "gte",
+              "threshold": 20
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 100
+          }
+        ],
+        "result": {
+          "kind": "or",
+          "operands": [
+            {
+              "kind": "matching_games",
+              "gameSet": "five_stack_win",
+              "operator": "gte",
+              "threshold": 1
+            },
+            {
+              "kind": "matching_games",
+              "gameSet": "head_to_head",
+              "operator": "gte",
+              "threshold": 1
+            }
+          ]
+        }
+      },
+      "deadlineSpec": { "kind": "relative", "days": 7 },
+      "openingStake": 50,
+      "expectedCanonicalSha256": "a8cda2db9fc9b33e3ead5b51c8bcb05e59bce93b87652e2ccdee2eb5b903e5ae",
+      "expectedMeaning": "Each game set is evaluated independently; different game sets may use different games.\nfive_stack_win: Aaron, Virmel, Bryan, Long, Gex together on the same team in one game, in flex, first 100 eligible games, where Aaron's win equals true\nhead_to_head: Aaron, Virmel against each other in one game, in solo/flex, first 100 eligible games, where (Aaron's kills plus Virmel's kills) is at least 20\nThe dare succeeds when (five_stack_win matching-game count is at least 1 OR head_to_head matching-game count is at least 1)."
+    },
+    {
+      "id": "first_five_ranked_games",
+      "categories": ["first_n", "queue", "dated_window"],
+      "paraphrases": [
+        "In Virmel's first five solo queue games, he must win at least three before September 15 at 8pm America/Los_Angeles"
+      ],
+      "targetAliases": { "T1": "Virmel" },
+      "plan": {
+        "version": 2,
+        "maxEligibleGames": 5,
+        "gameSets": [
+          {
+            "name": "first_five_solo",
+            "targetKeys": ["T1"],
+            "relationship": "independent",
+            "queues": ["solo"],
+            "predicate": {
+              "kind": "comparison",
+              "value": {
+                "kind": "participant",
+                "target": "T1",
+                "field": "win"
+              },
+              "operator": "eq",
+              "threshold": true
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 5
+          }
+        ],
+        "result": {
+          "kind": "matching_games",
+          "gameSet": "first_five_solo",
+          "operator": "gte",
+          "threshold": 3
+        }
+      },
+      "deadlineSpec": {
+        "kind": "absolute",
+        "deadlineAt": "2026-09-16T03:00:00.000Z",
+        "timezone": "America/Los_Angeles"
+      },
+      "openingStake": 25,
+      "expectedCanonicalSha256": "92375b949d758ab306919a4620373ba499c5d0f9821e00b1ab13b5b04582db25",
+      "expectedMeaning": "Every condition in this game set must hold in the same game.\nfirst_five_solo: Virmel in one game, in solo, first 5 eligible games, where Virmel's win equals true\nThe dare succeeds when first_five_solo matching-game count is at least 3."
+    },
+    {
+      "id": "timeline_and_aggregate",
+      "categories": ["aggregate", "timeline", "same_game"],
+      "paraphrases": [
+        "Across up to ten games, Virmel must average 8 CS per minute in games where he gets a champion kill before ten minutes"
+      ],
+      "targetAliases": { "T1": "Virmel" },
+      "plan": {
+        "version": 2,
+        "maxEligibleGames": 10,
+        "gameSets": [
+          {
+            "name": "early_kill_games",
+            "targetKeys": ["T1"],
+            "relationship": "independent",
+            "queues": ["solo", "flex"],
+            "predicate": {
+              "kind": "comparison",
+              "value": {
+                "kind": "timeline_event_count",
+                "eventType": "CHAMPION_KILL",
+                "target": "T1",
+                "role": "killer",
+                "afterMs": null,
+                "beforeMs": 600000,
+                "itemId": null
+              },
+              "operator": "gte",
+              "threshold": 1
+            },
+            "projections": [
+              {
+                "name": "cs_per_minute",
+                "value": {
+                  "kind": "participant_rate",
+                  "target": "T1",
+                  "field": "cs_per_minute"
+                }
+              }
+            ],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 10
+          }
+        ],
+        "result": {
+          "kind": "aggregate",
+          "gameSet": "early_kill_games",
+          "projection": "cs_per_minute",
+          "function": "average",
+          "operator": "gte",
+          "threshold": 8
+        }
+      },
+      "deadlineSpec": { "kind": "relative", "days": 7 },
+      "openingStake": 15,
+      "expectedCanonicalSha256": "ce1c752da7eeb2ae7924c301bbd00b9714e1a586dcae2bf02ed96a88856e03b7",
+      "expectedMeaning": "Every condition in this game set must hold in the same game.\nearly_kill_games: Virmel in one game, in solo/flex, first 10 eligible games, where Virmel's CHAMPION_KILL timeline events as killer before 600 seconds is at least 1; record cs_per_minute=Virmel's cs per minute\nThe dare succeeds when average of early_kill_games.cs_per_minute is at least 8."
+    },
+    {
+      "id": "opponent_champion_and_item",
+      "categories": ["same_game", "match_context", "timeline", "item"],
+      "paraphrases": [
+        "Virmel must play against Yasuo and buy Rabadon's Deathcap in that same ranked game",
+        "In one solo or flex game, Virmel has to face a Yasuo and purchase item 3089"
+      ],
+      "targetAliases": { "T1": "Virmel" },
+      "plan": {
+        "version": 2,
+        "maxEligibleGames": 100,
+        "gameSets": [
+          {
+            "name": "yasuo_deathcap_game",
+            "targetKeys": ["T1"],
+            "relationship": "independent",
+            "queues": ["solo", "flex"],
+            "predicate": {
+              "kind": "and",
+              "operands": [
+                {
+                  "kind": "comparison",
+                  "value": {
+                    "kind": "related_participant_count",
+                    "target": "T1",
+                    "relationship": "opponent",
+                    "championName": "Yasuo"
+                  },
+                  "operator": "gte",
+                  "threshold": 1
+                },
+                {
+                  "kind": "comparison",
+                  "value": {
+                    "kind": "timeline_event_count",
+                    "eventType": "ITEM_PURCHASED",
+                    "target": "T1",
+                    "role": "subject",
+                    "afterMs": null,
+                    "beforeMs": null,
+                    "itemId": 3089
+                  },
+                  "operator": "gte",
+                  "threshold": 1
+                }
+              ]
+            },
+            "projections": [],
+            "orderBy": "game_end_at_asc_match_id_asc",
+            "limit": 100
+          }
+        ],
+        "result": {
+          "kind": "matching_games",
+          "gameSet": "yasuo_deathcap_game",
+          "operator": "gte",
+          "threshold": 1
+        }
+      },
+      "deadlineSpec": { "kind": "relative", "days": 7 },
+      "openingStake": 20,
+      "expectedCanonicalSha256": "4f9eaf6bc93d026a9becbeb9584367030dae5c811077aaafe63dd46975fd5630",
+      "expectedMeaning": "Every condition in this game set must hold in the same game.\nyasuo_deathcap_game: Virmel in one game, in solo/flex, first 100 eligible games, where (the number of Yasuo opponents of Virmel is at least 1 AND Virmel's ITEM_PURCHASED timeline events as subject for item 3089 is at least 1)\nThe dare succeeds when yasuo_deathcap_game matching-game count is at least 1."
+    }
+  ]
+}

@@ -663,14 +663,6 @@ resource "cloudflare_dns_record" "sjer_red_dmarc_report_clauderon_com" {
   content = "v=DMARC1"
 }
 
-resource "cloudflare_dns_record" "sjer_red_dmarc_report_jerred_is" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "jerred.is._report._dmarc"
-  type    = "TXT"
-  content = "v=DMARC1"
-}
-
 resource "cloudflare_dns_record" "sjer_red_dmarc_report_jerredshepherd_com" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1

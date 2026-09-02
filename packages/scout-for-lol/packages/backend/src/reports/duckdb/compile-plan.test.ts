@@ -95,6 +95,14 @@ const EMPTY_LAKE: LakeFiles = {
   accountsParquet: undefined,
   competitionRankHistoryParquet: [],
   competitionRankHistoryStaging: [],
+  timelineEventsParquet: [],
+  timelineEventsStaging: [],
+  timelineEventParticipantsParquet: [],
+  timelineEventParticipantsStaging: [],
+  timelineParticipantFramesParquet: [],
+  timelineParticipantFramesStaging: [],
+  timelineCoverageParquet: [],
+  timelineCoverageStaging: [],
 };
 
 describe("pushdown", () => {

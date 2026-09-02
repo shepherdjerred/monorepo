@@ -1,0 +1,496 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "version": { "type": "number", "const": 1 },
+    "promptVersion": { "type": "string", "const": "explore-dare-v2-2" },
+    "cases": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]+$" },
+          "categories": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "same_game",
+                "separate_games",
+                "nested_boolean",
+                "target_relationship",
+                "first_n",
+                "queue",
+                "dated_window",
+                "aggregate",
+                "timeline",
+                "match_context",
+                "item"
+              ]
+            }
+          },
+          "paraphrases": {
+            "minItems": 1,
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "targetAliases": {
+            "type": "object",
+            "propertyNames": { "type": "string", "minLength": 1 },
+            "additionalProperties": { "type": "string", "minLength": 1 }
+          },
+          "plan": {
+            "type": "object",
+            "properties": {
+              "version": { "type": "number", "const": 2 },
+              "gameSets": {
+                "minItems": 1,
+                "maxItems": 20,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_]{0,39}$"
+                    },
+                    "targetKeys": {
+                      "minItems": 1,
+                      "maxItems": 5,
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 }
+                    },
+                    "relationship": {
+                      "type": "string",
+                      "enum": [
+                        "same_match",
+                        "same_team",
+                        "opponents",
+                        "independent"
+                      ]
+                    },
+                    "queues": {
+                      "minItems": 1,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "solo",
+                          "flex",
+                          "ranked 5s",
+                          "clash",
+                          "aram clash",
+                          "aram",
+                          "arurf",
+                          "urf",
+                          "quickplay",
+                          "swiftplay",
+                          "arena",
+                          "classic",
+                          "classic aram mayhem",
+                          "brawl",
+                          "aram mayhem",
+                          "normal",
+                          "draft pick",
+                          "easy doom bots",
+                          "normal doom bots",
+                          "hard doom bots",
+                          "custom"
+                        ]
+                      }
+                    },
+                    "predicate": { "$ref": "#/$defs/__schema0" },
+                    "projections": {
+                      "maxItems": 20,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]{0,39}$"
+                          },
+                          "value": { "$ref": "#/$defs/__schema1" }
+                        },
+                        "required": ["name", "value"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "orderBy": {
+                      "type": "string",
+                      "const": "game_end_at_asc_match_id_asc"
+                    },
+                    "limit": { "type": "integer", "minimum": 1, "maximum": 100 }
+                  },
+                  "required": [
+                    "name",
+                    "targetKeys",
+                    "relationship",
+                    "queues",
+                    "predicate",
+                    "projections",
+                    "orderBy",
+                    "limit"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "result": { "$ref": "#/$defs/__schema2" },
+              "maxEligibleGames": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            "required": ["version", "gameSets", "result", "maxEligibleGames"],
+            "additionalProperties": false
+          },
+          "deadlineSpec": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": { "type": "string", "const": "relative" },
+                  "days": { "type": "integer", "minimum": 1, "maximum": 90 }
+                },
+                "required": ["kind", "days"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": { "type": "string", "const": "absolute" },
+                  "deadlineAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+                  },
+                  "timezone": { "type": "string", "minLength": 1 }
+                },
+                "required": ["kind", "deadlineAt", "timezone"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "openingStake": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "maximum": 2147483647
+          },
+          "expectedCanonicalSha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "expectedMeaning": { "type": "string", "minLength": 1 }
+        },
+        "required": [
+          "id",
+          "categories",
+          "paraphrases",
+          "targetAliases",
+          "plan",
+          "deadlineSpec",
+          "openingStake",
+          "expectedCanonicalSha256",
+          "expectedMeaning"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["$schema", "version", "promptVersion", "cases"],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "comparison" },
+            "value": { "$ref": "#/$defs/__schema1" },
+            "operator": {
+              "type": "string",
+              "enum": ["eq", "neq", "gte", "lte", "gt", "lt"]
+            },
+            "threshold": {
+              "anyOf": [
+                { "type": "string" },
+                { "type": "number" },
+                { "type": "boolean" }
+              ]
+            }
+          },
+          "required": ["kind", "value", "operator", "threshold"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "and" },
+            "operands": {
+              "minItems": 1,
+              "type": "array",
+              "items": { "$ref": "#/$defs/__schema0" }
+            }
+          },
+          "required": ["kind", "operands"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "or" },
+            "operands": {
+              "minItems": 1,
+              "type": "array",
+              "items": { "$ref": "#/$defs/__schema0" }
+            }
+          },
+          "required": ["kind", "operands"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "not" },
+            "operand": { "$ref": "#/$defs/__schema0" }
+          },
+          "required": ["kind", "operand"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "participant" },
+            "target": { "type": "string", "minLength": 1 },
+            "field": {
+              "type": "string",
+              "enum": [
+                "champion_name",
+                "team_position",
+                "team_id",
+                "win",
+                "kills",
+                "deaths",
+                "assists",
+                "creep_score",
+                "gold_earned",
+                "vision_score",
+                "time_played",
+                "total_damage_dealt_to_champions",
+                "wards_placed",
+                "wards_killed",
+                "double_kills",
+                "triple_kills",
+                "quadra_kills",
+                "penta_kills"
+              ]
+            }
+          },
+          "required": ["kind", "target", "field"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "participant_rate" },
+            "target": { "type": "string", "minLength": 1 },
+            "field": {
+              "type": "string",
+              "enum": ["cs_per_minute", "damage_per_minute", "kda"]
+            }
+          },
+          "required": ["kind", "target", "field"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "game" },
+            "field": { "type": "string", "enum": ["duration_seconds", "queue"] }
+          },
+          "required": ["kind", "field"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "related_participant_count" },
+            "target": { "type": "string", "minLength": 1 },
+            "relationship": { "type": "string", "enum": ["ally", "opponent"] },
+            "championName": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            }
+          },
+          "required": ["kind", "target", "relationship", "championName"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "timeline_event_count" },
+            "eventType": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "target": {
+              "anyOf": [
+                { "type": "string", "minLength": 1 },
+                { "type": "null" }
+              ]
+            },
+            "role": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": ["subject", "killer", "victim", "assist", "creator"]
+                },
+                { "type": "null" }
+              ]
+            },
+            "afterMs": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "beforeMs": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            },
+            "itemId": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991
+                },
+                { "type": "null" }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "eventType",
+            "target",
+            "role",
+            "afterMs",
+            "beforeMs",
+            "itemId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "arithmetic" },
+            "operator": {
+              "type": "string",
+              "enum": ["add", "subtract", "multiply", "divide"]
+            },
+            "left": { "$ref": "#/$defs/__schema1" },
+            "right": { "$ref": "#/$defs/__schema1" }
+          },
+          "required": ["kind", "operator", "left", "right"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "__schema2": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "matching_games" },
+            "gameSet": { "type": "string", "minLength": 1 },
+            "operator": {
+              "type": "string",
+              "enum": ["eq", "gte", "lte", "gt", "lt"]
+            },
+            "threshold": { "type": "integer", "minimum": 0, "maximum": 100 }
+          },
+          "required": ["kind", "gameSet", "operator", "threshold"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "aggregate" },
+            "gameSet": { "type": "string", "minLength": 1 },
+            "projection": { "type": "string", "minLength": 1 },
+            "function": {
+              "type": "string",
+              "enum": ["sum", "average", "minimum", "maximum"]
+            },
+            "operator": {
+              "type": "string",
+              "enum": ["eq", "gte", "lte", "gt", "lt"]
+            },
+            "threshold": { "type": "number" }
+          },
+          "required": [
+            "kind",
+            "gameSet",
+            "projection",
+            "function",
+            "operator",
+            "threshold"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "and" },
+            "operands": {
+              "minItems": 1,
+              "type": "array",
+              "items": { "$ref": "#/$defs/__schema2" }
+            }
+          },
+          "required": ["kind", "operands"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "or" },
+            "operands": {
+              "minItems": 1,
+              "type": "array",
+              "items": { "$ref": "#/$defs/__schema2" }
+            }
+          },
+          "required": ["kind", "operands"],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "type": "string", "const": "not" },
+            "operand": { "$ref": "#/$defs/__schema2" }
+          },
+          "required": ["kind", "operand"],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

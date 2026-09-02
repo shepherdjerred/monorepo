@@ -331,11 +331,6 @@
       "count": 1
     }
   },
-  "src/report-lake/compactor.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/report-lake/rebuild-sources.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
