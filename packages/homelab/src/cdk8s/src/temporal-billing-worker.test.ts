@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   findTemporalResource,
+  findTemporalWorkerContainer,
   synthesizeTemporalResources,
 } from "./temporal-test-resources.ts";
 
@@ -12,42 +13,10 @@ function resources() {
 describe("Temporal OpenAI billing boundary", () => {
   test("projects the dedicated admin credential only into the billing worker", () => {
     const synthesized = resources();
-    const deployment = findTemporalResource(
+    const { pod, container } = findTemporalWorkerContainer(
       synthesized,
-      "Deployment",
       "temporal-temporal-billing-worker",
     );
-    const pod = z
-      .object({
-        template: z.object({
-          metadata: z.object({ labels: z.record(z.string(), z.string()) }),
-          spec: z.object({
-            automountServiceAccountToken: z.literal(false),
-            containers: z.array(
-              z.object({
-                env: z.array(
-                  z.object({
-                    name: z.string(),
-                    value: z.string().optional(),
-                    valueFrom: z
-                      .object({
-                        secretKeyRef: z.object({
-                          key: z.string(),
-                          name: z.string(),
-                        }),
-                      })
-                      .optional(),
-                  }),
-                ),
-              }),
-            ),
-          }),
-        }),
-      })
-      .parse(deployment.spec).template;
-    const container = pod.spec.containers[0];
-    if (container === undefined)
-      throw new Error("Billing container is missing");
     expect(pod.metadata.labels["component"]).toBe("billing-worker");
     expect(container.env.map((entry) => entry.name).sort()).toEqual([
       "ALERTMANAGER_URL",
@@ -73,7 +42,12 @@ describe("Temporal OpenAI billing boundary", () => {
       },
     });
     expect(
-      JSON.stringify(synthesized.filter((resource) => resource !== deployment)),
+      JSON.stringify(
+        synthesized.filter(
+          (resource) =>
+            resource.metadata.name !== "temporal-temporal-billing-worker",
+        ),
+      ),
     ).not.toContain("OPENAI_ADMIN_KEY");
 
     const item = findTemporalResource(

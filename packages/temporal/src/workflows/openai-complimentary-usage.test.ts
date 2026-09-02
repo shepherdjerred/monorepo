@@ -1,32 +1,8 @@
-import { Worker, type WorkerOptions } from "@temporalio/worker";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { describe, expect, test } from "vitest";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
-
-async function runTest<T>(
-  environment: TestWorkflowEnvironment,
-  activities: NonNullable<WorkerOptions["activities"]>,
-  execute: () => Promise<T>,
-): Promise<T> {
-  const workflowWorker = await Worker.create({
-    connection: environment.nativeConnection,
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    workflowsPath: new URL("index.ts", import.meta.url).pathname,
-  });
-  const activityWorker = await Worker.create({
-    connection: environment.nativeConnection,
-    taskQueue: TASK_QUEUES.BILLING,
-    activities,
-  });
-  const activityRun = activityWorker.run();
-  try {
-    return await workflowWorker.runUntil(execute());
-  } finally {
-    activityWorker.shutdown();
-    await activityRun;
-  }
-}
+import { TestWorkflowEnvironment } from "@temporalio/testing";
+import { runWorkflowWithActivityWorker } from "./test-support.ts";
 
 describe("OpenAI complimentary reconciliation workflow", () => {
   test("routes to billing and returns the reconciliation", async () => {
@@ -41,10 +17,13 @@ describe("OpenAI complimentary reconciliation workflow", () => {
     };
     try {
       await expect(
-        runTest(
-          environment,
-          { reconcileOpenAiComplimentaryUsage: () => Promise.resolve(result) },
-          () =>
+        runWorkflowWithActivityWorker(environment, {
+          activityTaskQueue: TASK_QUEUES.BILLING,
+          workflowPath: new URL("index.ts", import.meta.url).pathname,
+          activities: {
+            reconcileOpenAiComplimentaryUsage: () => Promise.resolve(result),
+          },
+          execute: () =>
             environment.client.workflow.execute(
               runOpenAiComplimentaryUsageReconciliation,
               {
@@ -53,7 +32,7 @@ describe("OpenAI complimentary reconciliation workflow", () => {
                 workflowId: `test-openai-usage-${crypto.randomUUID()}`,
               },
             ),
-        ),
+        }),
       ).resolves.toEqual(result);
     } finally {
       await environment.teardown();
@@ -65,15 +44,16 @@ describe("OpenAI complimentary reconciliation workflow", () => {
     let attempts = 0;
     try {
       await expect(
-        runTest(
-          environment,
-          {
+        runWorkflowWithActivityWorker(environment, {
+          activityTaskQueue: TASK_QUEUES.BILLING,
+          workflowPath: new URL("index.ts", import.meta.url).pathname,
+          activities: {
             reconcileOpenAiComplimentaryUsage: () => {
               attempts += 1;
               throw new Error("OpenAI unavailable");
             },
           },
-          () =>
+          execute: () =>
             environment.client.workflow.execute(
               runOpenAiComplimentaryUsageReconciliation,
               {
@@ -82,7 +62,7 @@ describe("OpenAI complimentary reconciliation workflow", () => {
                 workflowId: `test-openai-usage-failure-${crypto.randomUUID()}`,
               },
             ),
-        ),
+        }),
       ).rejects.toThrow("Workflow execution failed");
       expect(attempts).toBe(3);
     } finally {
