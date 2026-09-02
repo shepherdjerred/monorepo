@@ -58,62 +58,51 @@ function scripted(pages: Page[]): {
   };
 }
 
+async function listScriptedTasks(pages: Page[]) {
+  const transport = scripted(pages);
+  const client = new TaskNotesClient({ baseUrl: BASE, fetch: transport.fetch });
+  return { offsets: transport.offsets, result: await client.listTasks() };
+}
+
 describe("listTasks", () => {
   test("pages until hasMore is false, advancing by what it received", async () => {
-    const transport = scripted([
+    const { offsets, result } = await listScriptedTasks([
       { total: 2, paths: ["TaskNotes/a.md"], hasMore: true },
       { total: 2, paths: ["TaskNotes/b.md"], hasMore: false },
     ]);
-    const client = new TaskNotesClient({
-      baseUrl: BASE,
-      fetch: transport.fetch,
-    });
 
-    const result = await client.listTasks();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.map((task) => String(task.id))).toEqual([
       "TaskNotes/a.md",
       "TaskNotes/b.md",
     ]);
-    expect(transport.offsets()).toEqual(["0", "1"]);
+    expect(offsets()).toEqual(["0", "1"]);
   });
 
   test("a total that moves between pages restarts the pull from the beginning", async () => {
-    const transport = scripted([
+    const { offsets, result } = await listScriptedTasks([
       { total: 2, paths: ["TaskNotes/a.md"], hasMore: true },
       { total: 3, paths: ["TaskNotes/b.md"], hasMore: true },
       { total: 2, paths: ["TaskNotes/a.md"], hasMore: true },
       { total: 2, paths: ["TaskNotes/b.md"], hasMore: false },
     ]);
-    const client = new TaskNotesClient({
-      baseUrl: BASE,
-      fetch: transport.fetch,
-    });
-
-    const result = await client.listTasks();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value).toHaveLength(2);
-    expect(transport.offsets()).toEqual(["0", "1", "0", "1"]);
+    expect(offsets()).toEqual(["0", "1", "0", "1"]);
   });
 
   test("a task arriving on two pages discards the pass", async () => {
     // A delete ahead of the offset pulls the array back by one, so an item
     // already collected slides into the next page — and the one between them is
     // never seen. The repeat is the only evidence.
-    const transport = scripted([
+    const { result } = await listScriptedTasks([
       { total: 2, paths: ["TaskNotes/a.md"], hasMore: true },
       { total: 2, paths: ["TaskNotes/a.md"], hasMore: false },
       { total: 2, paths: ["TaskNotes/a.md"], hasMore: true },
       { total: 2, paths: ["TaskNotes/b.md"], hasMore: false },
     ]);
-    const client = new TaskNotesClient({
-      baseUrl: BASE,
-      fetch: transport.fetch,
-    });
-
-    const result = await client.listTasks();
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.map((task) => String(task.id))).toEqual([
@@ -126,16 +115,11 @@ describe("listTasks", () => {
     // Every pass ends one task short of the count the server itself declared.
     // Returning it would delete a live task from the app.
     const short: Page = { total: 3, paths: ["TaskNotes/a.md"], hasMore: false };
-    const transport = scripted([short, short, short]);
-    const client = new TaskNotesClient({
-      baseUrl: BASE,
-      fetch: transport.fetch,
-    });
+    const { offsets, result } = await listScriptedTasks([short, short, short]);
 
-    const result = await client.listTasks();
     expect(result.ok).toBe(false);
     if (result.ok) return;
     expect(result.error.message).toContain("changed underneath");
-    expect(transport.offsets()).toHaveLength(3);
+    expect(offsets()).toHaveLength(3);
   });
 });
