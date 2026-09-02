@@ -904,10 +904,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/discover-marketing-showcase.ts|packages/scout-for-lol/packages/backend/scripts/generate-marketing-showcase.ts": {
-      "clones": 1,
-      "tokens": 296
-    },
     "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts": {
       "clones": 1,
       "tokens": 70
