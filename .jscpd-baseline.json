@@ -1360,10 +1360,6 @@
       "clones": 1,
       "tokens": 70
     },
-    "packages/scout-for-lol/packages/data/src/model/competition.test.ts|packages/scout-for-lol/packages/data/src/model/competition.test.ts": {
-      "clones": 14,
-      "tokens": 1582
-    },
     "packages/scout-for-lol/packages/data/src/model/explore.ts|packages/scout-for-lol/packages/data/src/model/report-ai.ts": {
       "clones": 1,
       "tokens": 76
