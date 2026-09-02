@@ -860,21 +860,9 @@
       "clones": 1,
       "tokens": 74
     },
-    "packages/pr-fleet-controller/test/controller.test.ts|packages/pr-fleet-controller/test/controller.test.ts": {
-      "clones": 8,
-      "tokens": 913
-    },
     "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/operator-question-replay.test.ts": {
       "clones": 1,
       "tokens": 74
-    },
-    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts": {
-      "clones": 1,
-      "tokens": 115
-    },
-    "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/run-bundle.test.ts": {
-      "clones": 2,
-      "tokens": 192
     },
     "packages/pr-fleet-controller/test/operator-question-replay.test.ts|packages/pr-fleet-controller/test/run-recorder-failure.test.ts": {
       "clones": 1,
@@ -883,10 +871,6 @@
     "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/operator-review-regressions.test.ts": {
       "clones": 2,
       "tokens": 160
-    },
-    "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/replay-boundary-regressions.test.ts": {
-      "clones": 1,
-      "tokens": 84
     },
     "packages/pr-fleet-controller/test/operator-review-regressions.test.ts|packages/pr-fleet-controller/test/worktree.test.ts": {
       "clones": 1,

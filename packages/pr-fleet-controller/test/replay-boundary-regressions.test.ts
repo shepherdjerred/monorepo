@@ -1,53 +1,29 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
+import { writeFile } from "node:fs/promises";
 import {
   loadRunBundle,
   replayRunBundle,
 } from "@shepherdjerred/pr-fleet-controller/src/replay/run-inspection.ts";
-import { RunRecorder } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
 import {
   PrStateSchema,
   type FleetSnapshot,
 } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
-import { evidence, identity } from "./fixtures.ts";
+import {
+  createRunRecorder,
+  emptyFleetSnapshot as snapshot,
+  evidence,
+  identity,
+  TemporaryDirectoryOwner,
+} from "./fixtures.ts";
 
-const snapshot: FleetSnapshot = {
-  open: 0,
-  green: 0,
-  active: 0,
-  queued: 0,
-  pending: 0,
-  waiting: 0,
-  paused: 0,
-  prs: [],
-};
-const temporaryDirectories: string[] = [];
+const temporaryDirectories = new TemporaryDirectoryOwner();
 
 afterEach(async () => {
-  await Promise.all(
-    temporaryDirectories
-      .splice(0)
-      .map((directory) => rm(directory, { recursive: true, force: true })),
-  );
+  await temporaryDirectories.cleanup();
 });
 
-async function createRecorder(): Promise<RunRecorder> {
-  const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-replay-"));
-  temporaryDirectories.push(stateDirectory);
-  return RunRecorder.create({
-    stateDirectory,
-    controllerVersion: "0.1.0",
-    controllerCommit: "a".repeat(40),
-    controllerSourceDirty: false,
-    controllerSourceFingerprint: "b".repeat(64),
-    model: "openai/gpt-5.6-terra",
-    repository: "example/repository",
-    checkout: "/tmp/checkout",
-    worktreeRoot: "/tmp/worktrees",
-    maxWorkers: 2,
-  });
+function createRecorder() {
+  return createRunRecorder(temporaryDirectories, "pr-fleet-replay-");
 }
 
 const replayOptions = {

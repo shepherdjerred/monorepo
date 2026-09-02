@@ -42,8 +42,8 @@ function cleanWorktreeContext(pr: PrIdentity): WorktreeContext {
 }
 
 class FakeEnvironment implements FleetEnvironment {
-  readonly prs: PrIdentity[];
-  readonly evidenceByPr: Map<number, ReadinessEvidence>;
+  prs: PrIdentity[];
+  evidenceByPr: Map<number, ReadinessEvidence>;
 
   constructor(prs: PrIdentity[], evidenceByPr: Map<number, ReadinessEvidence>) {
     this.prs = prs;
@@ -264,77 +264,7 @@ class AttemptRecordingRunner implements WorkerRunner {
   }
 }
 
-class MutableEnvironment implements FleetEnvironment {
-  prs: PrIdentity[];
-  evidenceByPr: Map<number, ReadinessEvidence>;
-
-  constructor(prs: PrIdentity[], evidenceByPr: Map<number, ReadinessEvidence>) {
-    this.prs = prs;
-    this.evidenceByPr = evidenceByPr;
-  }
-
-  listOpenPrs(): Promise<PrIdentity[]> {
-    return Promise.resolve(this.prs);
-  }
-
-  refreshEvidence(pr: PrIdentity): Promise<ReadinessEvidence> {
-    const current = this.evidenceByPr.get(pr.number);
-    if (current === undefined) {
-      throw new Error("Missing fake evidence");
-    }
-    return Promise.resolve(current);
-  }
-
-  findWorktree(): Promise<string | null> {
-    return Promise.resolve("/tmp/pr-fleet-fake");
-  }
-
-  provisionWorktree(): Promise<string> {
-    return Promise.resolve("/tmp/pr-fleet-fake");
-  }
-
-  assignWorktreeBranch(
-    _worktree: string,
-    pr: PrIdentity,
-  ): Promise<WorktreeContext> {
-    return Promise.resolve(cleanWorktreeContext(pr));
-  }
-
-  runLocalCommand(_request: CommandRequest): Promise<CommandResult> {
-    return Promise.resolve({
-      exitCode: 0,
-      stdout: "",
-      stderr: "",
-      termination: "exit",
-    });
-  }
-
-  startRestack(): Promise<CommandResult> {
-    return Promise.resolve({
-      exitCode: 0,
-      stdout: "",
-      stderr: "",
-      termination: "exit",
-    });
-  }
-
-  continueRestack(): Promise<CommandResult> {
-    return Promise.resolve({
-      exitCode: 0,
-      stdout: "",
-      stderr: "",
-      termination: "exit",
-    });
-  }
-
-  publishFix() {
-    return Promise.resolve({ headSha: "a".repeat(40) });
-  }
-
-  publishRestack() {
-    return Promise.resolve({ headSha: "a".repeat(40) });
-  }
-}
+class MutableEnvironment extends FakeEnvironment {}
 
 class ControllableRunner implements WorkerRunner {
   readonly #rejects: ((error: Error) => void)[] = [];
@@ -496,6 +426,27 @@ class CorrelationEnvironment extends FakeEnvironment {
   }
 }
 
+type FleetControllerOptions = ConstructorParameters<typeof FleetController>[0];
+
+function controllerHarness(
+  overrides: Partial<FleetControllerOptions> = {},
+): FleetController {
+  return new FleetController({
+    config: {
+      model: "openai/gpt-5",
+      repo: "shepherdjerred/monorepo",
+      checkout: "/tmp/repo",
+      worktreeRoot: "/tmp/worktrees",
+      maxWorkers: 1,
+    },
+    environment: new FakeEnvironment([], new Map()),
+    workerRunner: new BlockingRunner(),
+    observer: new RecordingObserver(),
+    store: new FleetStore(1),
+    ...overrides,
+  });
+}
+
 test("a fleet tick classifies every PR and queues excess actionable work", async () => {
   const first = identity(1);
   const second = identity(2);
@@ -514,14 +465,7 @@ test("a fleet tick classifies every PR and queues excess actionable work", async
     ]),
   );
   const observer = new RecordingObserver();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: new BlockingRunner(),
     observer,
@@ -543,14 +487,7 @@ test("a PR head move defers only that PR and schedules immediate refresh", async
     new Map([[pr.number, evidence(pr)]]),
   );
   const observer = new RecordingObserver();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: new BlockingRunner(),
     observer,
@@ -570,14 +507,7 @@ test("a failed heartbeat rearms reconciliation", async () => {
   const environment = new OneFailureEnvironment([], new Map());
   const observer = new RecordingObserver();
   const scheduler = new RecordingScheduler();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: new BlockingRunner(),
     observer,
@@ -603,14 +533,7 @@ test("a heartbeat capture failure requests coordinated shutdown", async () => {
   const telemetry = new KindFailingTelemetry();
   const scheduler = new RecordingScheduler();
   const fatal = Promise.withResolvers<Error>();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment([], new Map()),
     workerRunner: new BlockingRunner(),
     observer: new RecordingObserver(),
@@ -637,14 +560,7 @@ test("a heartbeat capture failure requests coordinated shutdown", async () => {
 test("shutdown waits for an in-flight reconciliation before completing", async () => {
   const environment = new DeferredListEnvironment([], new Map());
   const telemetry = new RecordingTelemetry();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: new BlockingRunner(),
     observer: new RecordingObserver(),
@@ -672,14 +588,7 @@ test("shutdown waits for an in-flight reconciliation before completing", async (
 
 test("shutdown completion waits for the coordinated master settlement", async () => {
   const telemetry = new RecordingTelemetry();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment([], new Map()),
     workerRunner: new BlockingRunner(),
     observer: new RecordingObserver(),
@@ -712,14 +621,7 @@ test("shutdown rejects worker terminal telemetry persistence failures", async ()
     link: null,
     softFail: false,
   };
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -764,14 +666,7 @@ test("shutdown start persistence failure still aborts and settles workers", asyn
     softFail: false,
   };
   const runner = new RecordingRunner();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -814,14 +709,7 @@ test("worker completion capture failures escape settlement and stop the controll
   const runner = new DeferredSuccessfulRunner();
   const fatal = Promise.withResolvers<Error>();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -867,14 +755,7 @@ test("worker completion capture failures escape settlement and stop the controll
 });
 
 test("controller rejects ticks after shutdown starts", async () => {
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment([], new Map()),
     workerRunner: new BlockingRunner(),
     observer: new RecordingObserver(),
@@ -904,14 +785,7 @@ test("controller tick commands carry tick and PR correlation", async () => {
     [pr],
     new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
   );
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: new BlockingRunner(),
     observer: new RecordingObserver(),
@@ -950,14 +824,7 @@ test("shutdown cancels a worker dispatched by an already-running tick", async ()
   const runner = new RecordingRunner();
   const telemetry = new RecordingTelemetry();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: runner,
     observer: new RecordingObserver(),
@@ -994,14 +861,7 @@ test("pausing an active worker records cancellation instead of failure", async (
   };
   const telemetry = new RecordingTelemetry();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -1036,14 +896,7 @@ test("records worker start before the runner can emit its first attempt", async 
     softFail: false,
   };
   const telemetry = new RecordingTelemetry();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -1088,14 +941,7 @@ test("does not schedule a worker when persisting its start fails", async () => {
   };
   const runner = new RecordingRunner();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new FakeEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -1130,14 +976,7 @@ test("worktree capture failures stop the controller instead of pausing the PR", 
   };
   const runner = new RecordingRunner();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment: new WorktreeCaptureFailingEnvironment(
       [pr],
       new Map([[1, evidence(pr, { checks: [failedCheck] })]]),
@@ -1171,14 +1010,7 @@ test("aborts a worker whose assigned head changes and does not pause it", async 
   const runner = new RecordingRunner();
   const telemetry = new RecordingTelemetry();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: runner,
     observer: new RecordingObserver(),
@@ -1233,14 +1065,7 @@ test("keeps a closed PR's leases until its worker settles", async () => {
   );
   const runner = new ControllableRunner();
   const store = new FleetStore(1);
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: runner,
     observer: new RecordingObserver(),
@@ -1289,14 +1114,7 @@ test("an operator question parks only its PR, releases leases, and resumes on an
   const runner = new DeferredSuccessfulRunner();
   const store = new FleetStore(1);
   const telemetry = new RecordingTelemetry();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: runner,
     observer: new RecordingObserver(),
@@ -1416,14 +1234,7 @@ test("a head change supersedes an unanswered operator request", async () => {
   );
   const store = new FleetStore(1);
   const telemetry = new RecordingTelemetry();
-  const controller = new FleetController({
-    config: {
-      model: "openai/gpt-5",
-      repo: "shepherdjerred/monorepo",
-      checkout: "/tmp/repo",
-      worktreeRoot: "/tmp/worktrees",
-      maxWorkers: 1,
-    },
+  const controller = controllerHarness({
     environment,
     workerRunner: new BlockingRunner(),
     observer: new RecordingObserver(),
