@@ -156,12 +156,12 @@ async function collectMatchIds(competition: CompetitionWithCriteria): Promise<{
 
   for (const participant of participants) {
     for (const account of participant.player.accounts) {
-      const accountMatchIds = await fetchMatchIdsForTimeRange(
-        account.puuid,
-        account.region,
-        startSeconds,
-        endSeconds,
-      );
+      const accountMatchIds = await fetchMatchIdsForTimeRange({
+        puuid: account.puuid,
+        region: account.region,
+        startTimeEpochSeconds: startSeconds,
+        endTimeEpochSeconds: endSeconds,
+      });
       for (const matchId of accountMatchIds) {
         matchIds.add(matchId);
         aliasesByMatchId.set(matchId, [

@@ -29,13 +29,13 @@ describe("fetchMatchIdsForTimeRange", () => {
       .mockResolvedValueOnce(firstPage)
       .mockResolvedValueOnce(undefined);
 
-    const result = fetchMatchIdsForTimeRange(
-      "a".repeat(78),
-      "AMERICA_NORTH",
-      1,
-      2,
-      { requireComplete: true },
-    );
+    const result = fetchMatchIdsForTimeRange({
+      puuid: "a".repeat(78),
+      region: "AMERICA_NORTH",
+      startTimeEpochSeconds: 1,
+      endTimeEpochSeconds: 2,
+      requireComplete: true,
+    });
     const rejection = expect(result).rejects.toThrow(
       "Match-history page 100 is unavailable for required Dare target",
     );

@@ -35,8 +35,18 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "bun run dev -- --host 127.0.0.1",
+    // --force discards the persisted dependency-optimizer cache. Turbo runs
+    // this package's `build` immediately before `test:e2e`, which leaves a
+    // populated node_modules/.vite; Vite's optimizer can then stall before it
+    // binds the port, and the server never comes up. --strictPort makes a
+    // port collision fail loudly instead of silently serving elsewhere.
+    command: "bun run dev -- --host 127.0.0.1 --port 5181 --force --strictPort",
     url: "http://127.0.0.1:5181/customs/",
+    // Playwright defaults to 60s. This server shares the browser-E2E pod with
+    // the design-system workbench run, and timed out at exactly 60s on build
+    // 13670 without emitting an error. 120s matches every other Playwright
+    // web server in the repo.
+    timeout: 120_000,
     reuseExistingServer: !isCI,
   },
 });

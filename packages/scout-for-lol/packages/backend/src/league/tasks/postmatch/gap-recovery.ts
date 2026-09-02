@@ -32,13 +32,20 @@ export function recoveryStartAt(input: {
  * fetch all missed matches via paginated time-range API and split into
  * Discord (most recent) and backfill (rest, oldest first) buckets.
  */
-export async function recoverMissedMatches(
-  player: PlayerConfigEntry,
-  fallbackMatchIds: MatchId[],
-  requiredForActiveDare: boolean,
-  lastProcessedMatchId: MatchId | null,
-  lastProcessedMatchTime: Date | undefined,
-): Promise<GapRecoveryResult> {
+export async function recoverMissedMatches(input: {
+  player: PlayerConfigEntry;
+  fallbackMatchIds: MatchId[];
+  requiredForActiveDare: boolean;
+  lastProcessedMatchId: MatchId | null;
+  lastProcessedMatchTime: Date | undefined;
+}): Promise<GapRecoveryResult> {
+  const {
+    player,
+    fallbackMatchIds,
+    requiredForActiveDare,
+    lastProcessedMatchId,
+    lastProcessedMatchTime,
+  } = input;
   const puuid = player.league.leagueAccount.puuid;
   const lastPollAt = await getLastSuccessfulPollAt();
 
@@ -64,13 +71,13 @@ export async function recoverMissedMatches(
     `[${player.alias}] 🔄 Gap detected, fetching all missed matches since ${recoveryStart.toISOString()}`,
   );
 
-  const allMissedMatchIds = await fetchMatchIdsForTimeRange(
+  const allMissedMatchIds = await fetchMatchIdsForTimeRange({
     puuid,
-    player.league.leagueAccount.region,
-    startEpoch,
-    endEpoch,
-    { requireComplete: requiredForActiveDare },
-  );
+    region: player.league.leagueAccount.region,
+    startTimeEpochSeconds: startEpoch,
+    endTimeEpochSeconds: endEpoch,
+    requireComplete: requiredForActiveDare,
+  });
 
   const missedMatchIds = allMissedMatchIds.filter(
     (matchId) => matchId !== lastProcessedMatchId,

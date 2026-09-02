@@ -55,13 +55,13 @@ async function collectNewMatchesForPlayer(
   }
 
   const recovered = gapDetected
-    ? await recoverMissedMatches(
+    ? await recoverMissedMatches({
         player,
-        newMatchIds,
+        fallbackMatchIds: newMatchIds,
         requiredForActiveDare,
         lastProcessedMatchId,
-        account.lastMatchTime,
-      )
+        lastProcessedMatchTime: account.lastMatchTime,
+      })
     : { discordMatchIds: newMatchIds, backfillMatchIds: [] };
   logger.info(
     `[${player.alias}] 🆕 Found ${recovered.discordMatchIds.length.toString()} new match(es) for Discord: ${recovered.discordMatchIds.join(", ")}`,

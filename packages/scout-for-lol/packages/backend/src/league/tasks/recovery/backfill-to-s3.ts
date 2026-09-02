@@ -32,7 +32,16 @@ export type BackfillResult = {
   accountsProcessed: number;
 };
 
-export type MatchHistoryFetchOptions = {
+export type MatchHistoryTimeRangeQuery = {
+  puuid: string;
+  region: Region;
+  startTimeEpochSeconds: number;
+  endTimeEpochSeconds: number;
+  /**
+   * Reject the whole range when any page is unavailable, instead of returning
+   * the pages that did load. Required for Dare evidence, where a partial match
+   * history is indistinguishable from a player who simply did not play.
+   */
   requireComplete?: boolean;
 };
 
@@ -43,12 +52,15 @@ function sleep(ms: number): Promise<void> {
 }
 
 export async function fetchMatchIdsForTimeRange(
-  puuid: string,
-  region: Region,
-  startTimeEpochSeconds: number,
-  endTimeEpochSeconds: number,
-  options: MatchHistoryFetchOptions = {},
+  query: MatchHistoryTimeRangeQuery,
 ): Promise<MatchId[]> {
+  const {
+    puuid,
+    region,
+    startTimeEpochSeconds,
+    endTimeEpochSeconds,
+    requireComplete,
+  } = query;
   const regionalRoute = platformToRegionalRoute(region);
   const parsedPuuid = LeaguePuuidSchema.parse(puuid);
   const allMatchIds: MatchId[] = [];
@@ -73,7 +85,7 @@ export async function fetchMatchIdsForTimeRange(
     );
 
     if (matchIds === undefined) {
-      if (options.requireComplete) {
+      if (requireComplete === true) {
         throw new Error(
           `Match-history page ${offset.toString()} is unavailable for required Dare target ${puuid}`,
         );
@@ -144,12 +156,12 @@ export async function backfillMatchesToS3(
     );
 
     try {
-      const matchIds = await fetchMatchIdsForTimeRange(
+      const matchIds = await fetchMatchIdsForTimeRange({
         puuid,
         region,
         startTimeEpochSeconds,
         endTimeEpochSeconds,
-      );
+      });
 
       logger.info(
         `[${account.alias}] Found ${matchIds.length.toString()} matches in backfill window`,
