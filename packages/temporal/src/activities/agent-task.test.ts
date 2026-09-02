@@ -67,6 +67,20 @@ async function testWorkdir(): Promise<string> {
   return await mkdtemp(path.join(os.tmpdir(), "agent-task-test-"));
 }
 
+async function captureRunFailure(
+  activities: ReturnType<typeof createTestAgentTaskActivities>,
+): Promise<unknown> {
+  try {
+    await activities.runAgentTask({
+      input: baseInput,
+      workdir: await testWorkdir(),
+    });
+  } catch (error: unknown) {
+    return error;
+  }
+  throw new Error("expected agent task to fail");
+}
+
 // runAgent builds a real provider environment, which fails fast without the
 // provider's OpenRouter credential.
 const originalOpenRouterCredential = Bun.env["OPENROUTER_API_KEY"];
@@ -263,15 +277,7 @@ describe("agent task runtime support", () => {
       });
     });
 
-    let caught: unknown;
-    try {
-      await activities.runAgentTask({
-        input: baseInput,
-        workdir: await testWorkdir(),
-      });
-    } catch (error: unknown) {
-      caught = error;
-    }
+    const caught = await captureRunFailure(activities);
     expect(caught).toBeInstanceOf(ApplicationFailure);
     expect(
       caught instanceof ApplicationFailure ? caught.nonRetryable : false,
@@ -286,15 +292,7 @@ describe("agent task runtime support", () => {
       Promise.resolve(sdkResult("codex", { markdown: "" })),
     );
 
-    let caught: unknown;
-    try {
-      await activities.runAgentTask({
-        input: baseInput,
-        workdir: await testWorkdir(),
-      });
-    } catch (error: unknown) {
-      caught = error;
-    }
+    const caught = await captureRunFailure(activities);
     expect(caught).toBeInstanceOf(ApplicationFailure);
     expect(
       caught instanceof ApplicationFailure ? caught.nonRetryable : false,
@@ -313,15 +311,7 @@ describe("agent task runtime support", () => {
       Promise.resolve(sdkResult("codex", undefined)),
     );
 
-    let caught: unknown;
-    try {
-      await activities.runAgentTask({
-        input: baseInput,
-        workdir: await testWorkdir(),
-      });
-    } catch (error: unknown) {
-      caught = error;
-    }
+    const caught = await captureRunFailure(activities);
     expect(caught instanceof Error ? caught.message : "").toContain(
       "missing-structured-output",
     );

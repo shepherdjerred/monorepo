@@ -77,6 +77,19 @@ async function postWebhook(
   );
 }
 
+async function closedPrScenario(merged: boolean) {
+  const cancelCalls: CancelCall[] = [];
+  const cancel = vi.fn(async (input: CancelBuildkiteBuildsInput) => {
+    cancelCalls.push([input]);
+  });
+  const app = buildWebhookApp(SECRET, { startCancel: cancel });
+  const response = await postWebhook(
+    app,
+    makeBaseEvent({ action: "closed", merged }),
+  );
+  return { cancel, cancelCalls, response };
+}
+
 describe("buildWebhookApp signature verification", () => {
   it("returns 401 when X-Hub-Signature-256 is missing", async () => {
     const startPr = vi.fn(noopConflictPr);
@@ -269,17 +282,9 @@ describe("buildWebhookApp per-PR conflict check", () => {
 
 describe("buildWebhookApp PR closed", () => {
   it("starts the cancel workflow when a merged PR is closed", async () => {
-    const cancelCalls: CancelCall[] = [];
-    const cancel = vi.fn(async (input: CancelBuildkiteBuildsInput) => {
-      cancelCalls.push([input]);
-    });
-    const app = buildWebhookApp(SECRET, { startCancel: cancel });
-    const res = await postWebhook(
-      app,
-      makeBaseEvent({ action: "closed", merged: true }),
-    );
-    expect(res.status).toBe(200);
-    expect(await res.text()).toContain("cancel started");
+    const { cancel, cancelCalls, response } = await closedPrScenario(true);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain("cancel started");
     expect(cancel).toHaveBeenCalledTimes(1);
     const call = cancelCalls[0];
     if (call === undefined) {
@@ -295,16 +300,8 @@ describe("buildWebhookApp PR closed", () => {
   });
 
   it("starts the cancel workflow when a PR is closed without merging", async () => {
-    const cancelCalls: CancelCall[] = [];
-    const cancel = vi.fn(async (input: CancelBuildkiteBuildsInput) => {
-      cancelCalls.push([input]);
-    });
-    const app = buildWebhookApp(SECRET, { startCancel: cancel });
-    const res = await postWebhook(
-      app,
-      makeBaseEvent({ action: "closed", merged: false }),
-    );
-    expect(res.status).toBe(200);
+    const { cancel, cancelCalls, response } = await closedPrScenario(false);
+    expect(response.status).toBe(200);
     expect(cancel).toHaveBeenCalledTimes(1);
     expect(cancelCalls[0]?.[0].merged).toBe(false);
   });
