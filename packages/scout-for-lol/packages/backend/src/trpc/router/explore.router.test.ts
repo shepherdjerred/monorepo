@@ -71,7 +71,6 @@ describe("explore router", () => {
 
     expect(await caller.explore.status()).toEqual({
       enabled: false,
-      daresEnabled: false,
       quota: [],
     });
     await expect(caller.explore.list()).rejects.toThrow(/not enabled/i);
@@ -83,7 +82,6 @@ describe("explore router", () => {
 
     const status = await caller.explore.status();
     expect(status.enabled).toBe(false);
-    expect(status.daresEnabled).toBe(false);
     await expect(caller.explore.list()).rejects.toThrow(/limited to a few/i);
   });
 
@@ -92,25 +90,8 @@ describe("explore router", () => {
 
     const status = await caller.explore.status();
     expect(status.enabled).toBe(true);
-    expect(status.daresEnabled).toBe(false);
     expect(status.quota.length).toBeGreaterThan(0);
     expect(await caller.explore.list()).toEqual([]);
-  });
-
-  test("exposes the Dare surface only for a relevant private draft", async () => {
-    await trpc.prisma.bucksDareV2.create({
-      data: {
-        serverId: ALLOWED_GUILD,
-        channelId: DARE_CHANNEL,
-        challengerDiscordId: OWNER,
-        openingStake: 20,
-      },
-    });
-
-    const ownerStatus = await trpc.authedCaller(OWNER).explore.status();
-    const strangerStatus = await trpc.authedCaller(STRANGER).explore.status();
-    expect(ownerStatus.daresEnabled).toBe(true);
-    expect(strangerStatus.daresEnabled).toBe(false);
   });
 
   test("reloads a confirmation intent's durable outcome for its actor", async () => {

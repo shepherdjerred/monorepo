@@ -70,6 +70,12 @@ private Explore conversation and an unfunded draft. Open **Revise in Explore**
 from Discord, then tell Scout what was wrong in ordinary language—for example,
 “the CS and duration conditions must happen in the same game.”
 
+To find the draft later, open Bryan Bucks, choose its server, and select the
+**Dares** tab. **My Dares** contains your private draft; **Guild Dares** contains
+the server's funded contracts. Open the draft there to inspect its evidence or
+use the advanced editor, then return to Explore for another conversational
+revision.
+
 Before replacing the draft, inspect the card's explicit scope, targets,
 participation relationship, queues, first-N or game cap, deadline, stake, plain
 meaning, and canonical ScoutQL. Historical preview uses only matches and

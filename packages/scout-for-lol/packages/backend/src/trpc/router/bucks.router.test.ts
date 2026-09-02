@@ -8,6 +8,7 @@ import {
 } from "vitest";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -40,6 +41,7 @@ const guildId = DiscordGuildIdSchema.parse("100000000000000061");
 const otherGuildId = DiscordGuildIdSchema.parse("100000000000000062");
 const actor = DiscordAccountIdSchema.parse("300000000000000061");
 const rival = bucksTestDiscordId(7);
+const DARE_CHANNEL_ID = DiscordChannelIdSchema.parse("200000000000000061");
 const MATCH_ID = "NA1_5000009101";
 
 function caller() {
@@ -47,6 +49,8 @@ function caller() {
 }
 
 async function clearAll(): Promise<void> {
+  await db.bucksDareV2ConfirmationIntent.deleteMany();
+  await db.bucksDareV2.deleteMany();
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksOpenPosition.deleteMany();
   await db.bucksWeeklyParlayBet.deleteMany();
@@ -251,6 +255,8 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   resetFlagOverrides("betting_enabled");
+  resetFlagOverrides("dare_v2");
+  resetFlagOverrides("scoutql_relational_enabled");
   resetFlagOverrides("weekly_parlays_enabled");
   addFlagOverride("betting_enabled", true, { server: guildId });
   trpc.setMembership([{ guildId, asAdmin: false }]);
@@ -259,6 +265,8 @@ beforeEach(async () => {
 
 afterAll(async () => {
   resetFlagOverrides("betting_enabled");
+  resetFlagOverrides("dare_v2");
+  resetFlagOverrides("scoutql_relational_enabled");
   resetFlagOverrides("weekly_parlays_enabled");
   await shutdownFeatureFlags();
   await db.$disconnect();
@@ -280,8 +288,46 @@ describe("bucks.status", () => {
     const status = await caller().bucks.status();
     expect(status).toEqual({
       state: "available",
-      guilds: [{ id: guildId, name: "test-guild" }],
+      guilds: [{ id: guildId, name: "test-guild", daresAvailable: false }],
     });
+  });
+
+  test("shows Dares when the v2 and relational flags are enabled", async () => {
+    addFlagOverride("dare_v2", true, { server: guildId });
+    addFlagOverride("scoutql_relational_enabled", true, { server: guildId });
+
+    const status = await caller().bucks.status();
+    expect(status).toMatchObject({
+      guilds: [{ id: guildId, daresAvailable: true }],
+    });
+  });
+
+  test("keeps Dares available to the owner of an existing private draft", async () => {
+    await db.bucksDareV2.create({
+      data: {
+        serverId: guildId,
+        channelId: DARE_CHANNEL_ID,
+        challengerDiscordId: actor,
+        openingStake: 20,
+      },
+    });
+
+    const status = await caller().bucks.status();
+    expect(status).toMatchObject({ guilds: [{ daresAvailable: true }] });
+  });
+
+  test("does not expose another member's private draft", async () => {
+    await db.bucksDareV2.create({
+      data: {
+        serverId: guildId,
+        channelId: DARE_CHANNEL_ID,
+        challengerDiscordId: rival,
+        openingStake: 20,
+      },
+    });
+
+    const status = await caller().bucks.status();
+    expect(status).toMatchObject({ guilds: [{ daresAvailable: false }] });
   });
 
   test("answers no_shared_guild when the member shares no enabled guild", async () => {
@@ -301,6 +347,18 @@ describe("bucks.status", () => {
 });
 
 describe("bucks reads", () => {
+  test("Dare management is scoped to an explicit shared guild", async () => {
+    await expect(
+      caller().bucks.dareList({ guildId, scope: "mine" }),
+    ).resolves.toEqual([]);
+    await expect(
+      caller().bucks.dareList({ guildId: otherGuildId, scope: "guild" }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(
+      caller().bucks.dareInspect({ guildId, dareId: 999 }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   test("wallet answers null before any Bucks interaction", async () => {
     const wallet = await caller().bucks.wallet({ guildId });
     expect(wallet).toEqual({ eligible: false, wallet: null });

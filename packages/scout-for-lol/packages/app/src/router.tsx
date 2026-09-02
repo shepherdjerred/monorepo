@@ -28,6 +28,7 @@ import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
 import { ConsumerWorkspace } from "#src/routes/consumer-workspace.tsx";
 import { BucksWorkspace } from "#src/routes/bucks-workspace.tsx";
 import { BucksOverview } from "#src/routes/bucks-overview.tsx";
+import { BucksDares } from "#src/routes/bucks-dares.tsx";
 import { BucksHistory } from "#src/routes/bucks-history.tsx";
 import { BucksLeaderboard } from "#src/routes/bucks-leaderboard.tsx";
 import { BucksSettings } from "#src/routes/bucks-settings.tsx";
@@ -229,6 +230,11 @@ export const routes: RouteObject[] = [
                   {
                     index: true,
                     element: <BucksOverview />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "dares/:dareId?",
+                    element: <BucksDares />,
                     errorElement: <RouteErrorPanel />,
                   },
                   {

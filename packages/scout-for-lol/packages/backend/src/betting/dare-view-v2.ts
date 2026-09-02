@@ -44,6 +44,7 @@ export type DareV2ListItem = z.infer<typeof DareV2ListItemSchema>;
 
 export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   channelId: z.string().min(1),
+  originConversationId: z.string().min(1).nullable(),
   canonicalScoutQl: z.string().min(1),
   plan: DareCompiledPlanV2Schema,
   semanticProofPlan: z.string().min(1),
@@ -65,6 +66,7 @@ type VisibleDareRow = {
   id: number;
   serverId: string;
   channelId: string;
+  originConversationId: string | null;
   challengerDiscordId: string;
   dareState: string;
   currentRevision: number;
@@ -165,6 +167,7 @@ function inspection(row: VisibleDareRow): DareV2Inspection {
   return DareV2InspectionSchema.parse({
     ...listItem(row),
     channelId: row.channelId,
+    originConversationId: row.originConversationId,
     canonicalScoutQl: visibleDareScoutQlV2({
       state,
       plan,

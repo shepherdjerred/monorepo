@@ -454,13 +454,14 @@ export function normalizePath(pathname: string): string {
       /\/reports\/(?!new(?:\/|$)|help(?:\/|$))[^/]+/,
       "/reports/:reportId",
     )
+    .replace(/^\/bucks\/dares\/[^/]+/, "/bucks/dares/:dareId")
     // Share token first, so the conversation rule's lookahead then sees the
     // already-templated `s` segment. The token is the share credential — it
     // is templated away before anything reaches PostHog.
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
     .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId)?|\/bucks(?:\/(?:history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId)?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

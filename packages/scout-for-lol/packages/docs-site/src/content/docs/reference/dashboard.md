@@ -15,28 +15,37 @@ A beta deployment of the same dashboard runs at
 
 ## Top level
 
-| Route                  | Contents                                          |
-| ---------------------- | ------------------------------------------------- |
-| `/app/`                | Server picker — the servers you can manage        |
-| `/app/welcome`         | Guided onboarding wizard                          |
-| `/app/installed`       | Landing page after adding Scout to a server       |
-| `/app/explore`         | Persistent Explore conversations and dare drawers |
-| `/app/g/<server id>/…` | The workspace for one server                      |
+| Route                  | Contents                                            |
+| ---------------------- | --------------------------------------------------- |
+| `/app/`                | Server picker — the servers you can manage          |
+| `/app/welcome`         | Guided onboarding wizard                            |
+| `/app/installed`       | Landing page after adding Scout to a server         |
+| `/app/explore`         | Persistent Explore conversations and Dare authoring |
+| `/app/bucks/dares`     | Dare discovery and management for Bryan Bucks       |
+| `/app/g/<server id>/…` | The workspace for one server                        |
 
 ## Explore
 
 Explore keeps private, branching conversations over Scout's recorded match
-corpus. When Dare v2 is enabled for one of your Bryan Bucks servers, the header
-also opens searchable **My Dares** and **Guild Dares** drawers.
+corpus. It is also the conversational Dare authoring surface: `/bb dare` starts
+a private Explore conversation, and transcript cards let the author clarify a
+contract and confirm its next action.
+
+## Bryan Bucks Dares
+
+The **Dares** tab under Bryan Bucks is the discovery and management surface for
+the currently selected server. It appears when Dare v2 is enabled or when the
+member has an existing Dare that must remain accessible.
 
 **My Dares** includes your private unfunded drafts and every visible funded
-contract. **Guild Dares** includes funded contracts in servers you currently
-share; it never exposes another member's draft. A dare card shows its stable ID,
-revision, lifecycle state, explicit same-game or cross-game meaning, targets,
-queue and time bounds, current pot, evidence progress, and reproducible proof
-after settlement.
+contract involving you. **Guild Dares** includes funded contracts in the
+selected server; it never exposes another member's draft. A Dare detail shows
+its stable ID, revision, lifecycle state, explicit same-game or cross-game
+meaning, targets, queue and time bounds, current pot, evidence progress, and
+reproducible proof after settlement.
 
-Draft owners can validate, historically preview, revise, or delete a draft.
+Draft owners can validate, historically preview, or revise a draft with the
+advanced editor, or return to Explore for conversational revision.
 The advanced editor exposes the typed contract plan and generated ScoutQL with
 diagnostics, semantic explanation, and a meaning diff before revision. Funding,
 acceptance, decline, contribution, and cancellation first create a revision-

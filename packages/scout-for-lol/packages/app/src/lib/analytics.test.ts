@@ -198,6 +198,11 @@ describe("normalizePath", () => {
     );
     expect(normalizePath("/explore/s")).toBe("/not-found");
   });
+
+  test("templates Bryan Bucks Dare ids", () => {
+    expect(normalizePath("/bucks/dares")).toBe("/bucks/dares");
+    expect(normalizePath("/bucks/dares/42")).toBe("/bucks/dares/:dareId");
+  });
 });
 
 describe("privacy settings", () => {

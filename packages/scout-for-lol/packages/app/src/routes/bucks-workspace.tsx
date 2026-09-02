@@ -24,19 +24,23 @@ import { useTRPC } from "#src/lib/trpc.ts";
 export type BucksOutletContext = {
   guildId: string;
   guildName: string;
+  daresAvailable: boolean;
 };
 
 export function useBucksGuild(): BucksOutletContext {
   return useOutletContext<BucksOutletContext>();
 }
 
-export function bucksSectionItems(): {
+export function bucksSectionItems(daresAvailable: boolean): {
   label: string;
   to: string;
   end: boolean;
 }[] {
   return [
     { label: "Overview", to: "/bucks", end: true },
+    ...(daresAvailable
+      ? [{ label: "Dares", to: "/bucks/dares", end: false }]
+      : []),
     { label: "History", to: "/bucks/history", end: false },
     { label: "Leaderboard", to: "/bucks/leaderboard", end: false },
     { label: "Settings", to: "/bucks/settings", end: false },
@@ -77,10 +81,10 @@ export function resolveBucksGuildSelection(input: {
   };
 }
 
-function SectionNav() {
+function SectionNav(props: { daresAvailable: boolean }) {
   return (
     <nav className="flex gap-1">
-      {bucksSectionItems().map((item) => (
+      {bucksSectionItems(props.daresAvailable).map((item) => (
         <NavLink
           key={item.to}
           to={item.to}
@@ -226,10 +230,11 @@ export function BucksWorkspace() {
   const context: BucksOutletContext = {
     guildId: guild.id,
     guildName: guild.name,
+    daresAvailable: guild.daresAvailable,
   };
   return (
     <BucksPage>
-      <SectionNav />
+      <SectionNav daresAvailable={guild.daresAvailable} />
       <Outlet context={context} />
     </BucksPage>
   );

@@ -1,9 +1,11 @@
 import { afterEach, describe, expect, test } from "vitest";
+import { dareV2DraftComponents } from "#src/betting/dare-components-v2.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   getDocsUrl,
   getExploreConversationUrl,
 } from "#src/discord/commands/links.ts";
+import { exploreActionRow } from "#src/discord/scout/messages.ts";
 import { buildDiscordInstallUrl } from "#src/lib/discord/install-url.ts";
 import { PermissionFlagsBits, PermissionsBitField } from "discord.js";
 
@@ -31,8 +33,36 @@ describe("stage-aware Discord links", () => {
 
     expect(getDocsUrl()).toBe("https://beta.scout-for-lol.com/docs/");
     expect(getExploreConversationUrl("conversation-id")).toBe(
-      "https://beta.scout-for-lol.com/app/explore/conversation-id/",
+      "https://beta.scout-for-lol.com/app/explore/conversation-id",
     );
+  });
+
+  test("keeps Scout and Bryan Bucks conversation buttons slashless", () => {
+    Bun.env["WEB_APP_ORIGIN"] = "https://beta.scout-for-lol.com/";
+    resetConfigurationForTests();
+    const conversationId = "10000000-0000-4000-8000-000000000001";
+    const expected = `https://beta.scout-for-lol.com/app/explore/${conversationId}`;
+
+    const scoutButton = JSON.stringify(
+      exploreActionRow({
+        conversationId,
+        assistantMessageId: "10000000-0000-4000-8000-000000000002",
+        posted: false,
+      }),
+    );
+    const dareButtons = JSON.stringify(
+      dareV2DraftComponents({
+        intentId: "10000000-0000-4000-8000-000000000003",
+        dareId: 7,
+        revision: 2,
+        conversationId,
+      }),
+    );
+
+    expect(scoutButton).toContain(`"url":"${expected}"`);
+    expect(dareButtons).toContain(`"url":"${expected}"`);
+    expect(scoutButton).not.toContain(`"url":"${expected}/"`);
+    expect(dareButtons).not.toContain(`"url":"${expected}/"`);
   });
 
   test("keeps applications.commands in the install URL", () => {

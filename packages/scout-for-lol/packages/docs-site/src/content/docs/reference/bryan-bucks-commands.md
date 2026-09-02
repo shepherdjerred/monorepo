@@ -43,6 +43,11 @@ queues, game and time bounds, stake, and generated contract ScoutQL. Funding is
 never automatic: use **Confirm and fund**, **Revise in Explore**, or **Cancel
 draft** from that preview.
 
+Use the **Dares** tab in Bryan Bucks to search **My Dares** or the selected
+server's funded **Guild Dares**, inspect contract evidence and proof, and edit
+an unfunded draft. Explore remains the conversational creation and revision
+surface.
+
 ## Options
 
 ### `/bb transfer`
