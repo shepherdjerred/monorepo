@@ -7,9 +7,9 @@
       "buildNumber": 13412
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-13704",
-      "digest": "sha256:75cd75b079e72a25eda54654e7af7f66e23f1a75592b7a827560444c1730ea62",
-      "buildNumber": 13704
+      "buildNumber": 13744,
+      "version": "2.0.0-13744",
+      "digest": "sha256:4397964b30bbf6a82c5619933fb198e7511dfffd192722f1ee86e6e1e296fa16"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -42,14 +42,14 @@
       "buildNumber": 11934
     },
     "shepherdjerred/scout-evals": {
-      "version": "2.0.0-13685",
-      "digest": "sha256:75404572e753344fd6a8f73066c9bb6096cd35d3dda1f20ab16e50a41b105866",
-      "buildNumber": 13685
+      "buildNumber": 13744,
+      "version": "2.0.0-13744",
+      "digest": "sha256:5f02489a1da71bec463004c5e62db91213739b1da728a31bd1b8e2a7ce278b8b"
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 13734,
-      "version": "2.0.0-13734",
-      "digest": "sha256:63092770261ffe4f834692eceb512e726c0b1ca248dae29d2b0ba54de598f837"
+      "buildNumber": 13746,
+      "version": "2.0.0-13746",
+      "digest": "sha256:9e08c1b66540ce369b68e5076e16110e0aac2a4eeecadf75201348a21304db2b"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -63,9 +63,9 @@
       "buildNumber": 13704
     },
     "shepherdjerred/streambot": {
-      "version": "2.0.0-13704",
-      "digest": "sha256:05d14a3731d39f74cd5be018781762a05b05c172ddae2bbd66556bac46e58668",
-      "buildNumber": 13704
+      "buildNumber": 13750,
+      "version": "2.0.0-13750",
+      "digest": "sha256:3c408b58719f1c78a36b5749f5967894d8879112fb211eccdf639e78576384b7"
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-13412",
@@ -73,9 +73,9 @@
       "buildNumber": 13412
     },
     "shepherdjerred/temporal-worker": {
-      "version": "2.0.0-13712",
-      "digest": "sha256:22de3aad363685a808891039c98a0525eb9a40cf7872eedb8524c9938e5ce8a8",
-      "buildNumber": 13712
+      "buildNumber": 13744,
+      "version": "2.0.0-13744",
+      "digest": "sha256:d480cb6c85d7abf97b38ad72dbe3b312718740ea8435dba9b60217dec3895c0b"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13384",
