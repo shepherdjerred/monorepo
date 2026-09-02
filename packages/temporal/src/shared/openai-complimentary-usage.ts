@@ -89,7 +89,7 @@ async function fetchPage(input: {
   readonly url: URL;
   readonly adminKey: string;
   readonly fetcher: OpenAiUsageFetch;
-  readonly cancellationSignal?: AbortSignal;
+  readonly cancellationSignal: AbortSignal | undefined;
 }): Promise<unknown> {
   const timeoutSignal = AbortSignal.timeout(30_000);
   const signal =
@@ -114,7 +114,7 @@ async function fetchCompletions(input: {
   readonly adminKey: string;
   readonly projectId: string;
   readonly fetcher: OpenAiUsageFetch;
-  readonly cancellationSignal?: AbortSignal;
+  readonly cancellationSignal: AbortSignal | undefined;
 }): Promise<z.infer<typeof CompletionResultSchema>[]> {
   const results: z.infer<typeof CompletionResultSchema>[] = [];
   let cursor: string | undefined;
@@ -150,7 +150,7 @@ async function fetchCosts(input: {
   readonly adminKey: string;
   readonly projectId: string;
   readonly fetcher: OpenAiUsageFetch;
-  readonly cancellationSignal?: AbortSignal;
+  readonly cancellationSignal: AbortSignal | undefined;
 }): Promise<z.infer<typeof CostResultSchema>[]> {
   const results: z.infer<typeof CostResultSchema>[] = [];
   let cursor: string | undefined;
