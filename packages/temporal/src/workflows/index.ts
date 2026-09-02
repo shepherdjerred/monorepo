@@ -173,7 +173,9 @@ export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
 
-export async function runFliptFlagInventory(): Promise<FliptFlagInventoryResult> {
+export async function runFliptFlagInventory(): Promise<
+  FliptFlagInventoryResult[]
+> {
   return _runFliptFlagInventory();
 }
 

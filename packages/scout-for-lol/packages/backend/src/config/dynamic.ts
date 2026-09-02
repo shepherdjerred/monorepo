@@ -134,7 +134,7 @@ const DEFINITION = {
     schema: z.boolean(),
     sources: ["flag", "default"],
     default: false,
-    names: { flag: "temporal-call-graph-tracing" },
+    names: { flag: "scout-temporal-call-graph-tracing" },
   },
 } as const;
 

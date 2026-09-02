@@ -17,6 +17,8 @@ const { checkFliptFlagInventory } =
     },
   });
 
-export async function runFliptFlagInventory(): Promise<FliptFlagInventoryResult> {
+export async function runFliptFlagInventory(): Promise<
+  FliptFlagInventoryResult[]
+> {
   return await checkFliptFlagInventory();
 }

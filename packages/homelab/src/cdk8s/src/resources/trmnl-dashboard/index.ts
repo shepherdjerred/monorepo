@@ -99,6 +99,7 @@ export function createTrmnlDashboardDeployment(chart: Chart) {
         }),
         DISPLAY_TIME_ZONE: EnvValue.fromValue("America/Los_Angeles"),
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
+        FLIPT_NAMESPACE: EnvValue.fromValue("trmnl-dashboard"),
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),

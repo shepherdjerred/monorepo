@@ -6,7 +6,8 @@ import {
 } from "../packages/feature-flags/src/managed-flag-drift.ts";
 import {
   managedFlagInventory,
-  materializeManagedEnvironment,
+  managedFlagNamespaces,
+  materializeManagedNamespaceEnvironment,
 } from "../packages/feature-flags/src/managed-flag-inventory.ts";
 
 function argument(name: string): string | undefined {
@@ -38,63 +39,82 @@ export function selectedManagedEnvironments(
   return [environmentFilter];
 }
 
+export function selectedManagedNamespaces(
+  namespaceFilter: string | undefined,
+): string[] {
+  if (namespaceFilter === undefined) return managedFlagNamespaces;
+  if (!managedFlagNamespaces.includes(namespaceFilter)) {
+    throw new Error(`unknown managed namespace filter: ${namespaceFilter}`);
+  }
+  return [namespaceFilter];
+}
+
 export type SnapshotLoader = (
-  namespace: string,
   environment: string,
+  namespace: string,
 ) => Promise<unknown>;
 
-export async function checkManagedEnvironments(options: {
-  namespace: string;
+export async function checkManagedFlagMatrix(options: {
+  namespaceFilter?: string | undefined;
   environmentFilter?: string | undefined;
   loadSnapshot: SnapshotLoader;
 }): Promise<string[]> {
   const messages: string[] = [];
+  const failures: string[] = [];
   for (const environment of selectedManagedEnvironments(
     options.environmentFilter,
   )) {
-    const expectedFlags = materializeManagedEnvironment(
-      managedFlagInventory,
-      environment,
-    );
-    let snapshot: Awaited<ReturnType<typeof fetchFliptSnapshot>>;
-    try {
-      snapshot = FliptSnapshotSchema.parse(
-        await options.loadSnapshot(options.namespace, environment),
+    for (const namespace of selectedManagedNamespaces(
+      options.namespaceFilter,
+    )) {
+      const expectedFlags = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        namespace,
       );
-    } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Flipt snapshot validation failed in ${options.namespace}/${environment}: ${detail}`,
-        { cause: error },
+      let snapshot: Awaited<ReturnType<typeof fetchFliptSnapshot>>;
+      try {
+        snapshot = FliptSnapshotSchema.parse(
+          await options.loadSnapshot(environment, namespace),
+        );
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        failures.push(
+          `Flipt snapshot validation failed in ${environment}/${namespace}: ${detail}`,
+        );
+        continue;
+      }
+      const errors = formatManagedFlagDrift(
+        compareManagedFlagInventory(snapshot, expectedFlags),
+      );
+      if (errors.length > 0) {
+        failures.push(
+          `Flipt managed-flag drift detected in ${environment}/${namespace}:\n  - ${errors.join("\n  - ")}`,
+        );
+        continue;
+      }
+      messages.push(
+        `Flipt managed-flag inventory is aligned: ${expectedFlags.length.toString()} keys in ${environment}/${namespace}`,
       );
     }
-    const errors = formatManagedFlagDrift(
-      compareManagedFlagInventory(snapshot, expectedFlags),
-    );
-    if (errors.length > 0) {
-      throw new Error(
-        `Flipt managed-flag drift detected in ${options.namespace}/${environment}:\n- ${errors.join("\n- ")}`,
-      );
-    }
-    messages.push(
-      `Flipt managed-flag inventory is aligned: ${expectedFlags.length.toString()} keys in ${options.namespace}/${environment}`,
+  }
+  if (failures.length > 0) {
+    throw new Error(
+      `Flipt managed-flag matrix check failed:\n- ${failures.join("\n- ")}`,
     );
   }
   return messages;
 }
 
 async function main(): Promise<void> {
-  const namespace =
-    argument("--namespace") ??
-    Bun.env["FLIPT_NAMESPACE"] ??
-    managedFlagInventory.namespace;
+  const namespaceFilter = argument("--namespace") ?? Bun.env["FLIPT_NAMESPACE"];
   const environmentFilter =
     argument("--environment") ?? Bun.env["FLIPT_ENVIRONMENT"];
   const url = requiredUrl();
-  const messages = await checkManagedEnvironments({
-    namespace,
+  const messages = await checkManagedFlagMatrix({
+    namespaceFilter,
     environmentFilter,
-    loadSnapshot: (selectedNamespace, environment) =>
+    loadSnapshot: (environment, selectedNamespace) =>
       fetchFliptSnapshot({ url, namespace: selectedNamespace, environment }),
   });
   for (const message of messages) {

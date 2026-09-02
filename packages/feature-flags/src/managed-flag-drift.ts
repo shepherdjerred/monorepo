@@ -1,8 +1,5 @@
 import { z } from "zod";
-import {
-  managedFlagInventory,
-  type ManagedFlag,
-} from "./managed-flag-inventory.ts";
+import type { ManagedFlag } from "./managed-flag-inventory.ts";
 
 const SegmentConstraintSchema = z.object({
   type: z.string().min(1),
@@ -78,7 +75,7 @@ export type FliptFetcher = (
 
 export type FetchFliptSnapshotOptions = {
   readonly url: string;
-  readonly namespace?: string;
+  readonly namespace: string;
   readonly environment: string;
   readonly fetcher?: FliptFetcher;
 };
@@ -194,7 +191,7 @@ function contractErrors(expected: ManagedFlag, actual: SnapshotFlag): string[] {
 
 export function compareManagedFlagInventory(
   snapshot: FliptSnapshot,
-  expectedFlags: readonly ManagedFlag[] = managedFlagInventory.flags,
+  expectedFlags: readonly ManagedFlag[],
 ): ManagedFlagDrift {
   const expectedByKey = new Map(expectedFlags.map((flag) => [flag.key, flag]));
   const actualByKey = new Map(snapshot.flags.map((flag) => [flag.key, flag]));
@@ -230,7 +227,7 @@ export function formatManagedFlagDrift(drift: ManagedFlagDrift): string[] {
 export async function fetchFliptSnapshot(
   options: FetchFliptSnapshotOptions,
 ): Promise<FliptSnapshot> {
-  const namespace = options.namespace ?? managedFlagInventory.namespace;
+  const namespace = options.namespace;
   const environment = options.environment;
   const url = `${options.url.replace(/\/$/u, "")}/internal/v1/evaluation/snapshot/namespace/${encodeURIComponent(namespace)}`;
   const fetcher: FliptFetcher =

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
 import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flipt.ts";
-import { createEnvironmentValidationScript } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import { createEnvironmentInitializationScript } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 const ManifestSchema = z
   .object({
@@ -77,11 +77,6 @@ function findManifest(
   return manifest;
 }
 
-async function run(command: string[]): Promise<number> {
-  const subprocess = Bun.spawn(command, { stdout: "ignore", stderr: "ignore" });
-  return subprocess.exited;
-}
-
 describe("Flipt chart", () => {
   it("emits the namespace, deployment, config, storage, service, and policy resources", () => {
     const manifests = synthesize();
@@ -95,6 +90,7 @@ describe("Flipt chart", () => {
     expect(names).toContain("Namespace/flipt");
     expect(names).toContain("Deployment/flipt");
     expect(names).toContain("ConfigMap/flipt-flipt-config");
+    expect(names).toContain("ConfigMap/flipt-flipt-seed");
     expect(names).toContain("PersistentVolumeClaim/flipt-data");
     expect(names).toContain("Service/flipt-flipt-service");
     expect(names).toContain("NetworkPolicy/flipt-ingress-netpol");
@@ -141,8 +137,10 @@ describe("Flipt chart", () => {
     expect(yaml).toContain('version: "2.0"');
     expect(yaml).toContain("type: local");
     expect(yaml).not.toContain("path: /var/opt/flipt/data\n");
-    expect(yaml).toContain("path: /var/opt/flipt/data-beta");
-    expect(yaml).toContain("path: /var/opt/flipt/data-prod");
+    expect(yaml).not.toContain("path: /var/opt/flipt/data-beta");
+    expect(yaml).not.toContain("path: /var/opt/flipt/data-prod");
+    expect(yaml).toContain("path: /var/opt/flipt/environments/beta");
+    expect(yaml).toContain("path: /var/opt/flipt/environments/prod");
     expect(yaml).toContain("name: beta");
     expect(yaml).toContain("name: prod");
     expect(yaml).toMatch(/prod:\n {4}name: prod\n {4}default: true/);
@@ -160,52 +158,66 @@ describe("Flipt chart", () => {
     ).toMatch(/^[a-f\d]{12}$/);
   });
 
-  it("validates beta and prod without referencing the legacy repository", () => {
+  it("validates and initializes both environments without overwriting repositories", () => {
     const deployment = DeploymentSchema.parse(
       findManifest(synthesize(), "Deployment", "flipt"),
     );
-    const validator = deployment.spec.template.spec.initContainers.find(
-      (container) => container.name === "validate-environments",
+    const initializer = deployment.spec.template.spec.initContainers.find(
+      (container) => container.name === "initialize-environments",
     );
-    expect(validator?.command).toEqual(["/bin/sh", "-c"]);
-    const script = validator?.args?.[0] ?? "";
-    expect(script).toContain('validate_repo "/var/opt/flipt/data-beta"');
-    expect(script).toContain('validate_repo "/var/opt/flipt/data-prod"');
-    expect(script).not.toContain("cp -a");
-    expect(script).not.toContain('validate_repo "/var/opt/flipt/data"');
-    expect(validator?.volumeMounts?.map((mount) => mount.mountPath)).toContain(
-      "/var/opt/flipt",
+    expect(initializer?.command).toEqual(["/bin/sh", "-c"]);
+    const script = initializer?.args?.[0] ?? "";
+    expect(script).toContain('/flipt validate --work-dir "$seed"');
+    expect(script).toContain('repo="/var/opt/flipt/environments/$environment"');
+    expect(script).toContain(
+      'cp "/etc/flipt-seed/beta.scout.yaml" "$work_root/beta/scout/features.yaml"',
+    );
+    expect(script).toContain('if [ ! -e "$repo" ]');
+    expect(script).not.toContain("data-beta");
+    expect(script).not.toContain("data-prod");
+    expect(initializer?.volumeMounts?.map((mount) => mount.mountPath)).toEqual(
+      expect.arrayContaining(["/var/opt/flipt", "/etc/flipt-seed", "/tmp"]),
     );
   });
 
-  it("fails fast for missing or partial managed repositories", async () => {
-    const root = `/tmp/flipt-validation-test-${crypto.randomUUID()}`;
-    expect(await run(["mkdir", "-p", root])).toBe(0);
-    expect(
-      await run(["/bin/sh", "-c", createEnvironmentValidationScript(root)]),
-    ).not.toBe(0);
+  it("seeds every product namespace into both environments", () => {
+    const seed = ConfigMapSchema.parse(
+      findManifest(synthesize(), "ConfigMap", "flipt-flipt-seed"),
+    );
+    expect(Object.keys(seed.data).toSorted()).toEqual(
+      ["beta", "prod"]
+        .flatMap((environment) =>
+          [
+            "scout",
+            "birmel",
+            "streambot",
+            "starlight-karma-bot",
+            "trmnl-dashboard",
+            "temporal",
+          ].map((namespace) => `${environment}.${namespace}.yaml`),
+        )
+        .toSorted(),
+    );
+    for (const [filename, yaml] of Object.entries(seed.data)) {
+      const namespace = filename.split(".")[1];
+      if (namespace === undefined) {
+        throw new Error(`seed filename has no namespace: ${filename}`);
+      }
+      expect(yaml).toContain(`key: ${namespace}`);
+      expect(yaml).not.toContain("key: default");
+    }
+  });
 
-    expect(
-      await run([
-        "mkdir",
-        "-p",
-        `${root}/data-beta/objects`,
-        `${root}/data-prod`,
-      ]),
-    ).toBe(0);
-    await Bun.write(`${root}/data-beta/HEAD`, "ref: refs/heads/main\n");
-    await Bun.write(`${root}/data-beta/config`, "[core]\n\tbare = true\n");
-    expect(
-      await run(["/bin/sh", "-c", createEnvironmentValidationScript(root)]),
-    ).not.toBe(0);
-
-    expect(await run(["mkdir", "-p", `${root}/data-prod/objects`])).toBe(0);
-    await Bun.write(`${root}/data-prod/HEAD`, "ref: refs/heads/main\n");
-    await Bun.write(`${root}/data-prod/config`, "[core]\n\tbare = true\n");
-    expect(
-      await run(["/bin/sh", "-c", createEnvironmentValidationScript(root)]),
-    ).toBe(0);
-    expect(await run(["rm", "-rf", root])).toBe(0);
+  it("generates a fail-fast initialization script", () => {
+    const script = createEnvironmentInitializationScript("/data", ["scout"]);
+    expect(script).toContain('validate_repo "$repo"');
+    expect(script).toContain('/flipt validate --work-dir "$repo"');
+    expect(script).toContain('repo="/data/environments/$environment"');
+    expect(script).toContain(
+      'cp "/etc/flipt-seed/prod.scout.yaml" "$work_root/prod/scout/features.yaml"',
+    );
+    expect(script).not.toContain("data-beta");
+    expect(script).not.toContain("data-prod");
   });
 
   it("restricts egress to DNS only", () => {

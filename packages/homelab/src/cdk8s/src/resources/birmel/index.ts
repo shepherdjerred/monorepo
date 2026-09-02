@@ -145,6 +145,7 @@ export function createBirmelDeployment(chart: Chart) {
         // Bootstrap for the flag client — these cannot come from a flag.
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue("prod"),
+        FLIPT_NAMESPACE: EnvValue.fromValue("birmel"),
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),

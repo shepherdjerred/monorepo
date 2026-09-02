@@ -134,6 +134,7 @@ export function createStarlightKarmaBotDeployment(chart: Chart, stage: Stage) {
         // Bootstrap for the flag client itself — it cannot come from a flag.
         FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
         FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
+        FLIPT_NAMESPACE: EnvValue.fromValue("starlight-karma-bot"),
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),

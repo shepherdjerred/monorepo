@@ -222,6 +222,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // Bootstrap for the flag client — these cannot come from a flag.
     FEATURE_FLAGS_MODE: EnvValue.fromValue("flipt"),
     FLIPT_ENVIRONMENT: EnvValue.fromValue(stage),
+    FLIPT_NAMESPACE: EnvValue.fromValue("scout"),
     TEMPORAL_NAMESPACE: EnvValue.fromValue(stage),
     // No TEMPORAL_LEGACY_NAMESPACE: the `default` drain is retired.
     // The legacy namespace holds no Scout execution this backend can finish,

@@ -739,6 +739,7 @@
       "dependencies": {
         "@flipt-io/flipt-client-js": "^0.5.0",
         "@openfeature/server-sdk": "^1.23.0",
+        "yaml": "^2.8.3",
         "zod": "^4.4.3",
       },
       "devDependencies": {
@@ -840,6 +841,7 @@
       "name": "@homelab/cdk8s",
       "dependencies": {
         "@grafana/grafana-foundation-sdk": "11.6.0-cogv0.0.x.1769699379",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/helm-types": "workspace:*",
         "@shepherdjerred/version-catalog": "workspace:*",
         "cdk8s": "^2.70.58",

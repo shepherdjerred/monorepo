@@ -3,7 +3,10 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 
 export function createFliptApp(chart: Chart) {
   return new Application(chart, "flipt-app", {
-    metadata: { name: "flipt" },
+    metadata: {
+      name: "flipt",
+      annotations: { "argocd.argoproj.io/sync-wave": "-2" },
+    },
     spec: {
       revisionHistoryLimit: 5,
       project: "default",

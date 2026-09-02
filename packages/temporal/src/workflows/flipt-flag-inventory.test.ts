@@ -34,13 +34,16 @@ describe("runFliptFlagInventory", () => {
     const observed: unknown[] = [];
     const activities = {
       checkFliptFlagInventory: async () => {
-        const result = {
-          namespace: "default",
-          environment: "default",
-          missingInFlipt: [],
-          undeclaredInInventory: [],
-          observedAt: "2026-08-28T15:00:00.000Z",
-        };
+        const result = [
+          {
+            namespace: "scout",
+            environment: "beta",
+            missingInFlipt: [],
+            undeclaredInInventory: [],
+            contractMismatches: [],
+            observedAt: "2026-08-28T15:00:00.000Z",
+          },
+        ];
         observed.push(result);
         return result;
       },

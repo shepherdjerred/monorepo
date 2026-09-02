@@ -24,10 +24,12 @@ ramp, then remove the flag. That is the default path, not an exception.
 
 1. Is it a secret? → 1Password → Kubernetes Secret.
 2. Is it needed before the flag client exists? → **bootstrap env**
-   (`FLIPT_URL`, `FLIPT_ENVIRONMENT`, application `ENVIRONMENT`, `PORT`,
-   `DATABASE_URL`, `TEMPORAL_WORKER_ROLE`). `ENVIRONMENT` describes the
-   application deployment; `FLIPT_ENVIRONMENT` selects Flipt's isolated
-   storage environment and is required whenever `FEATURE_FLAGS_MODE=flipt`.
+   (`FLIPT_URL`, `FLIPT_ENVIRONMENT`, `FLIPT_NAMESPACE`, application
+   `ENVIRONMENT`, `PORT`, `DATABASE_URL`, `TEMPORAL_WORKER_ROLE`).
+   `ENVIRONMENT` describes the application deployment;
+   `FLIPT_ENVIRONMENT` selects Flipt's isolated stage repository and
+   `FLIPT_NAMESPACE` selects the product flag keyspace inside it. Both Flipt
+   selectors are required whenever `FEATURE_FLAGS_MODE=flipt`.
 3. Does an end user own it? → a database row.
 4. Shared across packages or languages? → JSON catalog + JSON Schema.
 5. Changes only when code changes? → a constant.
@@ -61,8 +63,8 @@ Flags of your own also need:
 - the consuming namespace added to `CONSUMER_NAMESPACES` in
   `packages/homelab/src/cdk8s/src/cdk8s-charts/flipt.ts` — Flipt has no auth, so
   that list is the access control;
-- `FEATURE_FLAGS_MODE`, `FLIPT_URL`, and `FLIPT_ENVIRONMENT` on the service's
-  cdk8s Deployment when the mode is `flipt`;
+- `FEATURE_FLAGS_MODE`, `FLIPT_URL`, `FLIPT_ENVIRONMENT`, and the exact product
+  `FLIPT_NAMESPACE` on the service's cdk8s Deployment when the mode is `flipt`;
 - `FEATURE_FLAGS_MODE=disabled` wherever tests run.
 
 ## Rules
@@ -108,6 +110,10 @@ values, refreshed in the background, never empty before the first refresh.
 
 ## Flipt gotchas (learned by running it, not from docs)
 
+- **Environment and namespace are separate selectors.** Environments isolate
+  stage repositories (`beta`, `prod`); namespaces isolate product flag catalogs
+  (`scout`, `temporal`, and so on). A Flipt namespace is unrelated to a
+  Kubernetes namespace.
 - **v2 defaults to IN-MEMORY storage.** Without an explicit local backend it
   accepts writes and loses them on restart.
 - **`enabled` is the flag's default; rollouts override it.** A 30% rollout to

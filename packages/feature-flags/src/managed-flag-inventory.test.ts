@@ -2,13 +2,20 @@ import { describe, expect, test } from "vitest";
 import {
   ManagedFlagInventorySchema,
   managedFlagInventory,
-  materializeManagedEnvironment,
+  managedFlagNamespaces,
+  materializeManagedNamespaceEnvironment,
 } from "@shepherdjerred/feature-flags/managed-flag-inventory.ts";
 
 function inventory(overrides: unknown[] = []) {
   return {
-    version: 2,
-    namespace: "default",
+    version: 3,
+    namespaces: [
+      {
+        key: "test",
+        name: "Test",
+        description: "Test namespace.",
+      },
+    ],
     environments: [
       { key: "beta", overrides },
       { key: "prod", overrides: [] },
@@ -17,6 +24,7 @@ function inventory(overrides: unknown[] = []) {
       {
         key: "example",
         owner: "test",
+        namespace: "test",
         source: "test",
         purpose: "Exercise environment overrides.",
         type: "variant",
@@ -40,9 +48,11 @@ const fullOverride = {
 };
 
 function exploreModel(environment: string) {
-  return materializeManagedEnvironment(managedFlagInventory, environment).find(
-    (flag) => flag.key === "scout-explore-model",
-  )?.default;
+  return materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    environment,
+    "scout",
+  ).find((flag) => flag.key === "scout-explore-model")?.default;
 }
 
 describe("ManagedFlagInventorySchema", () => {
@@ -50,18 +60,73 @@ describe("ManagedFlagInventorySchema", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
     expect(exploreModel("prod")).toBe("gpt-5.6-luna");
     expect(() =>
-      materializeManagedEnvironment(managedFlagInventory, "default"),
+      materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "default",
+        "scout",
+      ),
     ).toThrow(/unknown managed environment/);
+    expect(managedFlagNamespaces).toEqual([
+      "scout",
+      "birmel",
+      "streambot",
+      "starlight-karma-bot",
+      "trmnl-dashboard",
+      "temporal",
+    ]);
+    expect(
+      materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        "scout",
+      ).map((flag) => flag.key),
+    ).toContain("scout-temporal-call-graph-tracing");
+    expect(
+      materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        "prod",
+        "temporal",
+      ).map((flag) => flag.key),
+    ).toContain("temporal-call-graph-tracing");
   });
 
   test("materializes a full-state environment override", () => {
     const parsed = ManagedFlagInventorySchema.parse(inventory([fullOverride]));
-    expect(materializeManagedEnvironment(parsed, "beta")[0]?.default).toBe(
-      "luna",
-    );
-    expect(materializeManagedEnvironment(parsed, "prod")[0]?.default).toBe(
-      "sol",
-    );
+    expect(
+      materializeManagedNamespaceEnvironment(parsed, "beta", "test")[0]
+        ?.default,
+    ).toBe("luna");
+    expect(
+      materializeManagedNamespaceEnvironment(parsed, "prod", "test")[0]
+        ?.default,
+    ).toBe("sol");
+    expect(() =>
+      materializeManagedNamespaceEnvironment(parsed, "prod", "unknown"),
+    ).toThrow(/unknown managed namespace/);
+  });
+
+  test("rejects duplicate, unknown, and empty namespaces", () => {
+    const duplicate = inventory();
+    duplicate.namespaces.push({
+      key: "test",
+      name: "Duplicate",
+      description: "Duplicate namespace.",
+    });
+    expect(ManagedFlagInventorySchema.safeParse(duplicate).success).toBe(false);
+
+    const unknown = inventory();
+    const unknownFlag = unknown.flags[0];
+    if (unknownFlag === undefined) throw new Error("test inventory is empty");
+    unknownFlag.namespace = "unknown";
+    expect(ManagedFlagInventorySchema.safeParse(unknown).success).toBe(false);
+
+    const empty = inventory();
+    empty.namespaces.push({
+      key: "empty",
+      name: "Empty",
+      description: "Empty namespace.",
+    });
+    expect(ManagedFlagInventorySchema.safeParse(empty).success).toBe(false);
   });
 
   test("rejects duplicate environments", () => {

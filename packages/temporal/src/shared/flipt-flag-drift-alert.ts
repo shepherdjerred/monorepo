@@ -7,6 +7,7 @@ export type FliptFlagDriftAlertInput = {
   readonly environment: string;
   readonly missingInFlipt: readonly string[];
   readonly undeclaredInInventory: readonly string[];
+  readonly contractMismatches: readonly string[];
 };
 
 function formatKeys(keys: readonly string[]): string {
@@ -18,19 +19,22 @@ export function buildFliptFlagDriftAlert(
   now: Date,
 ): AlertmanagerAlert {
   const hasDrift =
-    input.missingInFlipt.length > 0 || input.undeclaredInInventory.length > 0;
+    input.missingInFlipt.length > 0 ||
+    input.undeclaredInInventory.length > 0 ||
+    input.contractMismatches.length > 0;
   const startsAt = now.toISOString();
   const summary = hasDrift
-    ? `Flipt managed flag inventory drift in ${input.namespace}/${input.environment}`
-    : `Flipt managed flag inventory aligned in ${input.namespace}/${input.environment}`;
+    ? `Flipt managed flag inventory drift in ${input.environment}/${input.namespace}`
+    : `Flipt managed flag inventory aligned in ${input.environment}/${input.namespace}`;
   const description = hasDrift
     ? [
-        `The repository inventory and Flipt differ in ${input.namespace}/${input.environment}.`,
+        `The repository inventory and Flipt differ in ${input.environment}/${input.namespace}.`,
         `Declared keys missing from Flipt: ${formatKeys(input.missingInFlipt)}`,
         `Flipt keys absent from the inventory: ${formatKeys(input.undeclaredInInventory)}`,
+        `Behavior contract mismatches: ${formatKeys(input.contractMismatches)}`,
         "Reconcile the reviewed inventory and Flipt state, then run the operator check again.",
       ].join("\n")
-    : `The repository inventory and Flipt are aligned in ${input.namespace}/${input.environment}.`;
+    : `The repository inventory and Flipt are aligned in ${input.environment}/${input.namespace}.`;
 
   return {
     labels: {

@@ -194,7 +194,7 @@ function createScoutTemporalTracing(
   const tracingRuntime = getTracingRuntime();
   if (tracingRuntime === undefined && callGraphTracing) {
     throw new Error(
-      "temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
+      "scout-temporal-call-graph-tracing requires TELEMETRY_ENABLED=true",
     );
   }
   return tracingRuntime !== undefined && callGraphTracing
