@@ -119,7 +119,7 @@ async function fetchPagedResults<RESULT extends z.ZodType>(input: {
   readonly cancellationSignal: AbortSignal | undefined;
 }): Promise<z.infer<RESULT>[]> {
   const results: z.infer<RESULT>[] = [];
-  const pageSchema = usagePageSchema(input.schema);
+  const PageSchema = usagePageSchema(input.schema);
   let cursor: string | undefined;
   do {
     const url = new URL(`https://api.openai.com/v1/organization/${input.path}`);
@@ -132,7 +132,7 @@ async function fetchPagedResults<RESULT extends z.ZodType>(input: {
     }
     url.searchParams.set("limit", String(input.limit));
     if (cursor !== undefined) url.searchParams.set("page", cursor);
-    const page = pageSchema.parse(
+    const page = PageSchema.parse(
       await fetchPage({
         url,
         adminKey: input.adminKey,
