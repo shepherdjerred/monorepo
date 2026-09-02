@@ -165,7 +165,9 @@ export function prepareDareDraftV2(
   const calloutPreview = dareV2CalloutContent({
     id: BUCKS_INT32_MAX,
     challengerDiscordId: "9".repeat(20),
+    openingStake: BUCKS_INT32_MAX,
     potTotal: BUCKS_INT32_MAX,
+    contributions: [],
     targetAliases: targets.map((target) => target.alias),
     revision: BUCKS_INT32_MAX,
     plainLanguage,

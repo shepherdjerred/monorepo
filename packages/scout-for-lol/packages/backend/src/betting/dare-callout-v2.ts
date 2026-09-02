@@ -65,6 +65,7 @@ export type DareV2CalloutState = {
   revision: number;
   challengerDiscordId: string;
   targetDiscordIds: string[];
+  contributorDiscordIds: string[];
   content: string;
 };
 
@@ -77,6 +78,10 @@ export async function loadDareV2CalloutState(
     include: {
       revisions: { orderBy: { revision: "asc" } },
       targets: { orderBy: { id: "asc" } },
+      contributions: {
+        orderBy: { id: "asc" },
+        select: { discordId: true, amount: true },
+      },
       _count: { select: { evidence: true } },
     },
   });
@@ -91,6 +96,11 @@ export async function loadDareV2CalloutState(
     );
   }
   const state = BucksDareV2StateSchema.parse(dare.dareState);
+  const contributorDiscordIds = [
+    ...new Set(
+      dare.contributions.slice(1).map((contribution) => contribution.discordId),
+    ),
+  ];
   return {
     id: dare.id,
     serverId: dare.serverId,
@@ -101,10 +111,13 @@ export async function loadDareV2CalloutState(
     revision: revisionNumber,
     challengerDiscordId: dare.challengerDiscordId,
     targetDiscordIds: dare.targets.map((target) => target.discordId),
+    contributorDiscordIds,
     content: dareV2CalloutContent({
       id: dare.id,
       challengerDiscordId: dare.challengerDiscordId,
+      openingStake: dare.openingStake,
       potTotal: dare.potTotal,
+      contributions: dare.contributions,
       targetAliases: dare.targets.map((target) => target.alias),
       revision: revisionNumber,
       plainLanguage: revision.plainLanguage,
@@ -228,7 +241,13 @@ export async function postDareV2Callout(
                 }),
                 allowedMentions: {
                   parse: [],
-                  users: [state.challengerDiscordId, ...state.targetDiscordIds],
+                  users: [
+                    ...new Set([
+                      state.challengerDiscordId,
+                      ...state.targetDiscordIds,
+                      ...state.contributorDiscordIds,
+                    ]),
+                  ],
                 },
               },
               DiscordChannelIdSchema.parse(state.channelId),
@@ -286,7 +305,15 @@ export async function refreshDareV2Callout(
                 dareId: state.id,
                 revision: state.revision,
               }),
-              allowedMentions: { parse: [] },
+              allowedMentions: {
+                parse: [],
+                users: [
+                  ...new Set([
+                    state.challengerDiscordId,
+                    ...state.contributorDiscordIds,
+                  ]),
+                ],
+              },
             },
           });
         },

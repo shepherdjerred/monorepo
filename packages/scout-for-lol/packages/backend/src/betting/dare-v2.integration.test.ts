@@ -303,6 +303,30 @@ async function consume(intentId: string, actor: DiscordAccountId) {
   );
 }
 
+async function makeContribution(
+  dareId: number,
+  actor: DiscordAccountId,
+  amount: number,
+  key: string,
+): Promise<void> {
+  const result = await createDareV2ConfirmationIntent(
+    {
+      dareId,
+      serverId: SERVER,
+      actorDiscordId: actor,
+      expectedRevision: 1,
+      payload: { action: "contribute", amount },
+      idempotencyKey: key,
+    },
+    deps,
+    T0,
+  );
+  if (result.kind !== "intent_created") {
+    throw new Error("Expected contribution intent.");
+  }
+  await consume(result.intentId, actor);
+}
+
 async function expectChallengerBalance(balance: number): Promise<void> {
   const wallet = await db.bucksAccount.findUniqueOrThrow({
     where: {
@@ -1394,6 +1418,61 @@ describe("Dare v2 callout delivery", () => {
       messageRef: JSON.stringify({
         channelId: CHANNEL,
         messageId: "retried-callout-message",
+      }),
+    });
+  });
+});
+
+describe("Dare v2 callout contributor delivery", () => {
+  test("renders pile-ons and allows contributor mentions on post and refresh", async () => {
+    const dareId = await makeDraft({ openingStake: 10 });
+    const fundIntent = await intent({
+      dareId,
+      actor: CHALLENGER,
+      action: "fund",
+      key: "fund-callout-contributor",
+    });
+    await consume(fundIntent, CHALLENGER);
+    await makeContribution(dareId, CONTRIBUTOR, 5, "contributor-callout-first");
+
+    const sendMessage = vi.fn(() =>
+      Promise.resolve({
+        channelId: CHANNEL,
+        id: "contributor-callout-message",
+      }),
+    );
+    const editMessage = vi.fn(() => Promise.resolve());
+    const dependencies = { prismaClient: db, sendMessage, editMessage };
+
+    await postDareV2Callout(dareId, dependencies);
+    expect(sendMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: expect.stringContaining(`<@${CONTRIBUTOR}> — **5 BB**`),
+        allowedMentions: expect.objectContaining({
+          users: expect.arrayContaining([CONTRIBUTOR]),
+        }),
+      }),
+      CHANNEL,
+      SERVER,
+    );
+
+    await makeContribution(
+      dareId,
+      CONTRIBUTOR,
+      5,
+      "contributor-callout-second",
+    );
+    await refreshDareV2Callout(dareId, dependencies);
+
+    expect(editMessage).toHaveBeenCalledWith({
+      channelId: CHANNEL,
+      messageId: "contributor-callout-message",
+      options: expect.objectContaining({
+        content: expect.stringContaining(`<@${CONTRIBUTOR}> — **10 BB**`),
+        allowedMentions: {
+          parse: [],
+          users: expect.arrayContaining([CONTRIBUTOR]),
+        },
       }),
     });
   });
