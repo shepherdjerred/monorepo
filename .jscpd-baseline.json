@@ -357,20 +357,16 @@
       "tokens": 71
     },
     "packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts": {
-      "clones": 6,
-      "tokens": 565
+      "clones": 2,
+      "tokens": 143
     },
     "packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-controller-interact.test.ts": {
       "clones": 1,
       "tokens": 98
     },
-    "packages/discord-plays-pokemon/packages/backend/src/goal/game-battle-control.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-controller.test.ts": {
-      "clones": 1,
-      "tokens": 125
-    },
     "packages/discord-plays-pokemon/packages/backend/src/goal/game-controller.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-controller.test.ts": {
-      "clones": 9,
-      "tokens": 1148
+      "clones": 1,
+      "tokens": 72
     },
     "packages/discord-plays-pokemon/packages/backend/src/goal/game-exit-navigation-blocks.ts|packages/discord-plays-pokemon/packages/backend/src/goal/game-exit-navigation.ts": {
       "clones": 1,
@@ -383,10 +379,6 @@
     "packages/discord-plays-pokemon/packages/backend/src/goal/goal-input-lease.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
       "clones": 1,
       "tokens": 129
-    },
-    "packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.test.ts": {
-      "clones": 4,
-      "tokens": 391
     },
     "packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.test.ts|packages/discord-plays-pokemon/packages/backend/src/goal/knowledge.test.ts": {
       "clones": 2,

@@ -30,6 +30,68 @@ type BattlePortOptions = Readonly<{
   runAllowed?: boolean;
 }>;
 
+const DEFAULT_MOVES: BattleState["moves"] = [
+  {
+    slot: 1,
+    moveId: 33,
+    move: "TACKLE",
+    currentPp: 35,
+    maxPp: 35,
+    usable: true,
+  },
+];
+
+const DEFAULT_BATTLERS: BattleState["battlers"] = [
+  {
+    battler: 0,
+    side: "player",
+    position: 0,
+    active: true,
+    speciesId: 258,
+    species: "Mudkip",
+    hp: 20,
+    maxHp: 20,
+    partyIndex: 0,
+    status: 0,
+  },
+  {
+    battler: 1,
+    side: "opponent",
+    position: 1,
+    active: true,
+    speciesId: 263,
+    species: "Zigzagoon",
+    hp: 15,
+    maxHp: 15,
+    partyIndex: 0,
+    status: 0,
+  },
+  {
+    battler: 2,
+    side: "player",
+    position: 2,
+    active: true,
+    speciesId: 252,
+    species: "Treecko",
+    hp: 19,
+    maxHp: 19,
+    partyIndex: 1,
+    status: 0,
+  },
+  {
+    battler: 3,
+    side: "opponent",
+    position: 3,
+    active: true,
+    speciesId: 261,
+    species: "Poochyena",
+    hp: 14,
+    maxHp: 14,
+    partyIndex: 1,
+    status: 0,
+  },
+];
+
 function observation(input: BattleInput): GameObservationV2 {
   return {
     schemaVersion: 2,
@@ -68,44 +130,10 @@ function observation(input: BattleInput): GameObservationV2 {
       currentMove: 0,
       chosenMove: 0,
       switchAllowed: input.switchAllowed ?? true,
-      moves: input.moves ?? [
-        {
-          slot: 1,
-          moveId: 33,
-          move: "TACKLE",
-          currentPp: 35,
-          maxPp: 35,
-          usable: true,
-        },
-      ],
+      moves: input.moves ?? DEFAULT_MOVES,
       bag: input.bag ?? null,
       party: input.battleParty ?? null,
-      battlers: input.battlers ?? [
-        {
-          battler: 0,
-          side: "player",
-          position: 0,
-          active: true,
-          speciesId: 258,
-          species: "Mudkip",
-          hp: 20,
-          maxHp: 20,
-          partyIndex: 0,
-          status: 0,
-        },
-        {
-          battler: 1,
-          side: "opponent",
-          position: 1,
-          active: true,
-          speciesId: 263,
-          species: "Zigzagoon",
-          hp: 15,
-          maxHp: 15,
-          partyIndex: 0,
-          status: 0,
-        },
-      ],
+      battlers: input.battlers ?? DEFAULT_BATTLERS.slice(0, 2),
     },
     world: null,
     game: {
@@ -266,6 +294,29 @@ const X_ATTACK_INVENTORY: GameState["inventory"] = [
   { itemId: 75, item: "X ATTACK", quantity: 1, pocket: "items" },
 ];
 
+function twoMonParty(leadHp = 20): GameState["party"] {
+  return [
+    {
+      speciesId: 258,
+      species: "Mudkip",
+      nickname: "Mudkip",
+      level: 5,
+      hp: leadHp,
+      maxHp: 20,
+      isEgg: false,
+    },
+    {
+      speciesId: 252,
+      species: "Treecko",
+      nickname: "Treecko",
+      level: 5,
+      hp: 19,
+      maxHp: 19,
+      isEgg: false,
+    },
+  ];
+}
+
 describe("GameBattleControl move actions", () => {
   test("selects an ordinary first-turn move before opening Fight", async () => {
     const port = new BattlePort(observation({ frame: 10, actionCursor: 1 }), [
@@ -385,44 +436,7 @@ describe("GameBattleControl move actions", () => {
         frame: 10,
         menu: "target",
         typeFlags: 1,
-        battlers: [
-          {
-            battler: 0,
-            side: "player",
-            position: 0,
-            active: true,
-            speciesId: 258,
-            species: "Mudkip",
-            hp: 20,
-            maxHp: 20,
-            partyIndex: 0,
-            status: 0,
-          },
-          {
-            battler: 1,
-            side: "opponent",
-            position: 1,
-            active: true,
-            speciesId: 263,
-            species: "Zigzagoon",
-            hp: 15,
-            maxHp: 15,
-            partyIndex: 0,
-            status: 0,
-          },
-          {
-            battler: 2,
-            side: "player",
-            position: 2,
-            active: true,
-            speciesId: 252,
-            species: "Treecko",
-            hp: 19,
-            maxHp: 19,
-            partyIndex: 1,
-            status: 0,
-          },
-        ],
+        battlers: DEFAULT_BATTLERS.slice(0, 3),
       }),
       [],
     );
@@ -661,56 +675,7 @@ describe("GameBattleControl forced replacement settlement", () => {
 });
 
 describe("GameBattleControl target navigation", () => {
-  const battlers: BattleState["battlers"] = [
-    {
-      battler: 0,
-      side: "player",
-      position: 0,
-      active: true,
-      speciesId: 258,
-      species: "Mudkip",
-      hp: 20,
-      maxHp: 20,
-      partyIndex: 0,
-      status: 0,
-    },
-    {
-      battler: 1,
-      side: "opponent",
-      position: 1,
-      active: true,
-      speciesId: 263,
-      species: "Zigzagoon",
-      hp: 15,
-      maxHp: 15,
-      partyIndex: 0,
-      status: 0,
-    },
-    {
-      battler: 2,
-      side: "player",
-      position: 2,
-      active: true,
-      speciesId: 252,
-      species: "Treecko",
-      hp: 19,
-      maxHp: 19,
-      partyIndex: 1,
-      status: 0,
-    },
-    {
-      battler: 3,
-      side: "opponent",
-      position: 3,
-      active: true,
-      speciesId: 261,
-      species: "Poochyena",
-      hp: 14,
-      maxHp: 14,
-      partyIndex: 1,
-      status: 0,
-    },
-  ];
+  const battlers = DEFAULT_BATTLERS;
 
   async function expectTargetNavigation(
     targetBattler: number,
@@ -763,26 +728,7 @@ describe("GameBattleControl target navigation", () => {
 
 describe("GameBattleControl party actions", () => {
   test("rejects a trapped switch before sending input", async () => {
-    const gameParty: GameState["party"] = [
-      {
-        speciesId: 258,
-        species: "Mudkip",
-        nickname: "Mudkip",
-        level: 5,
-        hp: 20,
-        maxHp: 20,
-        isEgg: false,
-      },
-      {
-        speciesId: 252,
-        species: "Treecko",
-        nickname: "Treecko",
-        level: 5,
-        hp: 19,
-        maxHp: 19,
-        isEgg: false,
-      },
-    ];
+    const gameParty = twoMonParty();
     const port = new BattlePort(
       observation({ frame: 10, gameParty, switchAllowed: false }),
       [],
@@ -795,26 +741,7 @@ describe("GameBattleControl party actions", () => {
   });
 
   test("selects an input-ready forced replacement without reopening the party", async () => {
-    const gameParty: GameState["party"] = [
-      {
-        speciesId: 258,
-        species: "Mudkip",
-        nickname: "Mudkip",
-        level: 5,
-        hp: 0,
-        maxHp: 20,
-        isEgg: false,
-      },
-      {
-        speciesId: 252,
-        species: "Treecko",
-        nickname: "Treecko",
-        level: 5,
-        hp: 19,
-        maxHp: 19,
-        isEgg: false,
-      },
-    ];
+    const gameParty = twoMonParty(0);
     const initial = observation({
       frame: 10,
       menu: "party",
@@ -885,26 +812,7 @@ describe("GameBattleControl party actions", () => {
   });
 
   test("confirms Shift after selecting a voluntary switch target", async () => {
-    const gameParty: GameState["party"] = [
-      {
-        speciesId: 258,
-        species: "Mudkip",
-        nickname: "Mudkip",
-        level: 5,
-        hp: 20,
-        maxHp: 20,
-        isEgg: false,
-      },
-      {
-        speciesId: 252,
-        species: "Treecko",
-        nickname: "Treecko",
-        level: 5,
-        hp: 19,
-        maxHp: 19,
-        isEgg: false,
-      },
-    ];
+    const gameParty = twoMonParty();
     const port = new BattlePort(observation({ frame: 10, gameParty }), [
       observation({ frame: 12, actionCursor: 2, gameParty }),
       observation({

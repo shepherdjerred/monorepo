@@ -68,6 +68,64 @@ async function noopSendMessage(): Promise<void> {
   await Bun.sleep(0);
 }
 
+type GoalManagerOptions = ConstructorParameters<typeof GoalManager>[0];
+
+async function managerHarness(
+  overrides: Partial<GoalManagerOptions> = {},
+): Promise<{
+  manager: GoalManager;
+  messages: GoalDiscordMessage[];
+  process: ReturnType<typeof makeProcess>;
+  runtimeDirectory: string;
+}> {
+  const runtimeDirectory = await createRuntimeDirectory();
+  const process = makeProcess();
+  const messages: GoalDiscordMessage[] = [];
+  const manager = new GoalManager({
+    config: makeGoalConfig(runtimeDirectory),
+    controlToken: "token",
+    spawner: () => process,
+    sendMessage: async (message) => {
+      messages.push(message);
+    },
+    now: () => new Date("2026-06-13T00:00:00.000Z"),
+    ...overrides,
+  });
+  return { manager, messages, process, runtimeDirectory };
+}
+
+async function waitForMessage(
+  messages: readonly GoalDiscordMessage[],
+): Promise<void> {
+  for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
+    await Bun.sleep(1);
+  }
+}
+
+async function environmentHarness(): Promise<{
+  environment: () => Record<string, string> | undefined;
+  manager: GoalManager;
+}> {
+  const process = makeProcess();
+  let spawnedEnvironment: Record<string, string> | undefined;
+  const { manager } = await managerHarness({
+    spawner: (_args, options) => {
+      spawnedEnvironment = options.env;
+      return process;
+    },
+    sendMessage: noopSendMessage,
+  });
+  return { environment: () => spawnedEnvironment, manager };
+}
+
+function startDefaultGoal(manager: GoalManager) {
+  return manager.startGoal({
+    goal: "Reach Petalburg",
+    requesterId: "user-a",
+    channelId: "channel",
+  });
+}
+
 function codePointLength(value: string): number {
   let length = 0;
   for (const _codePoint of value) {
@@ -163,30 +221,14 @@ describe("GoalManager", () => {
   });
 
   test("passes the Codex access token to the SDK runtime", async () => {
-    const runtimeDirectory = await createRuntimeDirectory();
-    const process = makeProcess();
-    let spawnedEnvironment: Record<string, string> | undefined;
-    const manager = new GoalManager({
-      config: makeGoalConfig(runtimeDirectory),
-      controlToken: "token",
-      spawner: (_args, options) => {
-        spawnedEnvironment = options.env;
-        return process;
-      },
-      sendMessage: noopSendMessage,
-      now: () => new Date("2026-06-13T00:00:00.000Z"),
-    });
+    const { environment, manager } = await environmentHarness();
 
-    const result = await manager.startGoal({
-      goal: "Reach Petalburg",
-      requesterId: "user-a",
-      channelId: "channel",
-    });
+    const result = await startDefaultGoal(manager);
 
     expect(result.kind).toBe("started");
-    expect(spawnedEnvironment?.CODEX_ACCESS_TOKEN).toBe("test-key");
-    expect(spawnedEnvironment?.CODEX_API_KEY).toBeUndefined();
-    expect(spawnedEnvironment?.OPENAI_API_KEY).toBeUndefined();
+    expect(environment()?.CODEX_ACCESS_TOKEN).toBe("test-key");
+    expect(environment()?.CODEX_API_KEY).toBeUndefined();
+    expect(environment()?.OPENAI_API_KEY).toBeUndefined();
     await manager.shutdown();
   });
 
@@ -194,31 +236,15 @@ describe("GoalManager", () => {
     const originalDiscordToken = Bun.env.DISCORD_TOKEN;
     Bun.env.DISCORD_TOKEN = "super-secret-discord-token";
     try {
-      const runtimeDirectory = await createRuntimeDirectory();
-      const process = makeProcess();
-      let spawnedEnvironment: Record<string, string> | undefined;
-      const manager = new GoalManager({
-        config: makeGoalConfig(runtimeDirectory),
-        controlToken: "token",
-        spawner: (_args, options) => {
-          spawnedEnvironment = options.env;
-          return process;
-        },
-        sendMessage: noopSendMessage,
-        now: () => new Date("2026-06-13T00:00:00.000Z"),
-      });
+      const { environment, manager } = await environmentHarness();
 
-      const result = await manager.startGoal({
-        goal: "Reach Petalburg",
-        requesterId: "user-a",
-        channelId: "channel",
-      });
+      const result = await startDefaultGoal(manager);
 
       expect(result.kind).toBe("started");
       // The credential the SDK runtime legitimately needs is still present.
-      expect(spawnedEnvironment?.CODEX_ACCESS_TOKEN).toBe("test-key");
+      expect(environment()?.CODEX_ACCESS_TOKEN).toBe("test-key");
       // The bot token (and any other non-allowlisted secret) must not leak.
-      expect(spawnedEnvironment?.DISCORD_TOKEN).toBeUndefined();
+      expect(environment()?.DISCORD_TOKEN).toBeUndefined();
       await manager.shutdown();
     } finally {
       if (originalDiscordToken === undefined) {
@@ -388,18 +414,8 @@ describe("GoalManager final report", () => {
   });
 
   test("checkpoints the game save when a goal finishes", async () => {
-    const runtimeDirectory = await createRuntimeDirectory();
-    const process = makeProcess();
-    const messages: GoalDiscordMessage[] = [];
     let checkpoints = 0;
-    const manager = new GoalManager({
-      config: makeGoalConfig(runtimeDirectory),
-      controlToken: "token",
-      spawner: () => process,
-      sendMessage: async (message) => {
-        messages.push(message);
-      },
-      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    const { manager, messages, process } = await managerHarness({
       checkpointGame: async () => {
         checkpoints += 1;
         await Bun.sleep(0);
@@ -414,9 +430,7 @@ describe("GoalManager final report", () => {
     expect(start.kind).toBe("started");
 
     process.finish(0);
-    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
-      await Bun.sleep(1);
-    }
+    await waitForMessage(messages);
 
     expect(messages).toHaveLength(1);
     expect(checkpoints).toBe(1);
@@ -424,22 +438,12 @@ describe("GoalManager final report", () => {
   });
 
   test("holds the input lease until the checkpoint save completes", async () => {
-    const runtimeDirectory = await createRuntimeDirectory();
-    const process = makeProcess();
-    const messages: GoalDiscordMessage[] = [];
     let leaseReleased = false;
     let leaseHeldAtCheckpoint: boolean | undefined;
     const releaseInputLease = () => {
       leaseReleased = true;
     };
-    const manager = new GoalManager({
-      config: makeGoalConfig(runtimeDirectory),
-      controlToken: "token",
-      spawner: () => process,
-      sendMessage: async (message) => {
-        messages.push(message);
-      },
-      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    const { manager, messages, process } = await managerHarness({
       acquireInputLease: () => releaseInputLease,
       checkpointGame: () => {
         leaseHeldAtCheckpoint = !leaseReleased;
@@ -455,9 +459,7 @@ describe("GoalManager final report", () => {
     expect(start.kind).toBe("started");
 
     process.finish(0);
-    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
-      await Bun.sleep(1);
-    }
+    await waitForMessage(messages);
 
     expect(leaseHeldAtCheckpoint).toBe(true);
     expect(leaseReleased).toBe(true);
@@ -465,18 +467,8 @@ describe("GoalManager final report", () => {
   });
 
   test("still finishes a goal when the checkpoint save fails", async () => {
-    const runtimeDirectory = await createRuntimeDirectory();
-    const process = makeProcess();
-    const messages: GoalDiscordMessage[] = [];
     let checkpoints = 0;
-    const manager = new GoalManager({
-      config: makeGoalConfig(runtimeDirectory),
-      controlToken: "token",
-      spawner: () => process,
-      sendMessage: async (message) => {
-        messages.push(message);
-      },
-      now: () => new Date("2026-06-13T00:00:00.000Z"),
+    const { manager, messages, process } = await managerHarness({
       // Emerald rejects a save outside the overworld/battle — teardown must not
       // fail because of it, but it should retry to let a transient state clear.
       checkpointGame: () => {
@@ -494,9 +486,7 @@ describe("GoalManager final report", () => {
     expect(start.kind).toBe("started");
 
     process.finish(0);
-    for (let attempt = 0; attempt < 50 && messages.length === 0; attempt += 1) {
-      await Bun.sleep(1);
-    }
+    await waitForMessage(messages);
 
     // Retried the configured number of times, then finished teardown anyway.
     expect(checkpoints).toBe(3);
