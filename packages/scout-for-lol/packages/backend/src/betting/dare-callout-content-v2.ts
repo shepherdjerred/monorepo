@@ -54,7 +54,15 @@ function renderPileOnLines(
 function renderWithinDiscordLimit(input: {
   baseLines: readonly string[];
   pileOns: readonly DareV2CalloutContribution[];
-}): string {
+  enforceDiscordLimit: boolean;
+}): { content: string; visibleCount: number } {
+  const fullContent = [
+    ...input.baseLines,
+    ...renderPileOnLines(input.pileOns, input.pileOns.length),
+  ].join("\n");
+  if (!input.enforceDiscordLimit) {
+    return { content: fullContent, visibleCount: input.pileOns.length };
+  }
   for (
     let visibleCount = input.pileOns.length;
     visibleCount >= 0;
@@ -64,12 +72,33 @@ function renderWithinDiscordLimit(input: {
       ...input.baseLines,
       ...renderPileOnLines(input.pileOns, visibleCount),
     ].join("\n");
-    if (content.length <= DARE_CALLOUT_MAX_LENGTH) return content;
+    if (content.length <= DARE_CALLOUT_MAX_LENGTH) {
+      return { content, visibleCount };
+    }
   }
   throw new Error(
     `Dare v2 callout exceeds Discord's ${DARE_CALLOUT_MAX_LENGTH.toString()}-character limit.`,
   );
 }
+
+export type DareV2CalloutInput = {
+  id: number;
+  challengerDiscordId: string;
+  openingStake: number;
+  potTotal: number;
+  contributions: readonly DareV2CalloutContribution[];
+  targetAliases: readonly string[];
+  revision: number;
+  plainLanguage: string;
+  evidenceCount: number;
+  state: BucksDareV2State;
+  targets: readonly DareV2CalloutTarget[];
+  acceptDeadline: Date | null;
+  deadlineAt: Date | null;
+  finalValue: boolean | null;
+  voidReason: string | null;
+  enforceDiscordLimit?: boolean;
+};
 
 function statusText(input: {
   state: BucksDareV2State;
@@ -117,24 +146,12 @@ function statusText(input: {
   return input.finalValue === null ? input.state : String(input.finalValue);
 }
 
-export function dareV2CalloutContent(input: {
-  id: number;
-  challengerDiscordId: string;
-  openingStake: number;
-  potTotal: number;
-  contributions: readonly DareV2CalloutContribution[];
-  targetAliases: readonly string[];
-  revision: number;
-  plainLanguage: string;
-  evidenceCount: number;
-  state: BucksDareV2State;
-  targets: readonly DareV2CalloutTarget[];
-  acceptDeadline: Date | null;
-  deadlineAt: Date | null;
-  finalValue: boolean | null;
-  voidReason: string | null;
-}): string {
-  return renderWithinDiscordLimit({
+export function renderDareV2Callout(input: DareV2CalloutInput): {
+  content: string;
+  contributorDiscordIds: string[];
+} {
+  const pileOns = pileOnContributions(input.contributions);
+  const rendered = renderWithinDiscordLimit({
     baseLines: [
       `🎯 **Scout Dare #${input.id.toString()}**`,
       `<@${input.challengerDiscordId}> put **${formatInteger(input.openingStake)} BB** on ${input.targetAliases.join(", ")}.`,
@@ -146,6 +163,17 @@ export function dareV2CalloutContent(input: {
       `**Progress** · ${formatInteger(input.evidenceCount)} evidence games`,
       `**Status** · ${statusText(input)}`,
     ],
-    pileOns: pileOnContributions(input.contributions),
+    pileOns,
+    enforceDiscordLimit: input.enforceDiscordLimit ?? true,
   });
+  return {
+    content: rendered.content,
+    contributorDiscordIds: pileOns
+      .slice(0, rendered.visibleCount)
+      .map((contribution) => contribution.discordId),
+  };
+}
+
+export function dareV2CalloutContent(input: DareV2CalloutInput): string {
+  return renderDareV2Callout(input).content;
 }

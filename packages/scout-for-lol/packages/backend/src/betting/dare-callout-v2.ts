@@ -10,7 +10,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { dareV2CalloutComponents } from "#src/betting/dare-components-v2.ts";
-import { dareV2CalloutContent } from "#src/betting/dare-callout-content-v2.ts";
+import { renderDareV2Callout } from "#src/betting/dare-callout-content-v2.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -20,6 +20,7 @@ import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-dare-callout-v2");
 const CALLOUT_CLAIM_STALE_MS = 10 * 60 * 1000;
+const MAX_ALLOWED_MENTION_USERS = 100;
 
 export type DareV2MessageSender = (
   options: MessageCreateOptions,
@@ -69,6 +70,19 @@ export type DareV2CalloutState = {
   content: string;
 };
 
+function allowedMentionUsers(
+  state: DareV2CalloutState,
+  includeTargets: boolean,
+): string[] {
+  return [
+    ...new Set([
+      state.challengerDiscordId,
+      ...state.contributorDiscordIds,
+      ...(includeTargets ? state.targetDiscordIds : []),
+    ]),
+  ].slice(0, MAX_ALLOWED_MENTION_USERS);
+}
+
 export async function loadDareV2CalloutState(
   dareId: number,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -96,11 +110,23 @@ export async function loadDareV2CalloutState(
     );
   }
   const state = BucksDareV2StateSchema.parse(dare.dareState);
-  const contributorDiscordIds = [
-    ...new Set(
-      dare.contributions.slice(1).map((contribution) => contribution.discordId),
-    ),
-  ];
+  const rendered = renderDareV2Callout({
+    id: dare.id,
+    challengerDiscordId: dare.challengerDiscordId,
+    openingStake: dare.openingStake,
+    potTotal: dare.potTotal,
+    contributions: dare.contributions,
+    targetAliases: dare.targets.map((target) => target.alias),
+    revision: revisionNumber,
+    plainLanguage: revision.plainLanguage,
+    evidenceCount: dare._count.evidence,
+    state,
+    targets: dare.targets,
+    acceptDeadline: dare.acceptDeadline,
+    deadlineAt: dare.deadlineAt,
+    finalValue: dare.finalValue,
+    voidReason: dare.voidReason,
+  });
   return {
     id: dare.id,
     serverId: dare.serverId,
@@ -111,24 +137,8 @@ export async function loadDareV2CalloutState(
     revision: revisionNumber,
     challengerDiscordId: dare.challengerDiscordId,
     targetDiscordIds: dare.targets.map((target) => target.discordId),
-    contributorDiscordIds,
-    content: dareV2CalloutContent({
-      id: dare.id,
-      challengerDiscordId: dare.challengerDiscordId,
-      openingStake: dare.openingStake,
-      potTotal: dare.potTotal,
-      contributions: dare.contributions,
-      targetAliases: dare.targets.map((target) => target.alias),
-      revision: revisionNumber,
-      plainLanguage: revision.plainLanguage,
-      evidenceCount: dare._count.evidence,
-      state,
-      targets: dare.targets,
-      acceptDeadline: dare.acceptDeadline,
-      deadlineAt: dare.deadlineAt,
-      finalValue: dare.finalValue,
-      voidReason: dare.voidReason,
-    }),
+    contributorDiscordIds: rendered.contributorDiscordIds,
+    content: rendered.content,
   };
 }
 
@@ -241,13 +251,7 @@ export async function postDareV2Callout(
                 }),
                 allowedMentions: {
                   parse: [],
-                  users: [
-                    ...new Set([
-                      state.challengerDiscordId,
-                      ...state.targetDiscordIds,
-                      ...state.contributorDiscordIds,
-                    ]),
-                  ],
+                  users: allowedMentionUsers(state, true),
                 },
               },
               DiscordChannelIdSchema.parse(state.channelId),
@@ -307,12 +311,7 @@ export async function refreshDareV2Callout(
               }),
               allowedMentions: {
                 parse: [],
-                users: [
-                  ...new Set([
-                    state.challengerDiscordId,
-                    ...state.contributorDiscordIds,
-                  ]),
-                ],
+                users: allowedMentionUsers(state, false),
               },
             },
           });
