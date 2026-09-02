@@ -788,14 +788,6 @@
       "clones": 1,
       "tokens": 237
     },
-    "packages/llm-observability/src/archive-uploader.ts|packages/llm-observability/test/e2e/signed-fetch.ts": {
-      "clones": 1,
-      "tokens": 91
-    },
-    "packages/llm-observability/src/archive-uploader.ts|packages/temporal/src/shared/s3.ts": {
-      "clones": 4,
-      "tokens": 447
-    },
     "packages/llm-observability/src/span-helpers.ts|packages/temporal/src/observability/tracing.ts": {
       "clones": 1,
       "tokens": 91

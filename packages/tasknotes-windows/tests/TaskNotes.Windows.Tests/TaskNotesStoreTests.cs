@@ -210,13 +210,14 @@ namespace TaskNotes.Windows.Tests
                 },
                 TestContext.CancellationToken
             );
+            TaskItem[] visibleTasks = [.. store.State.VisibleTasks];
             Assert.AreSequenceEqual(
                 ["Beta task", "Alpha task"],
-                [.. store.State.VisibleTasks.Select(task => task.Title)]
+                [.. visibleTasks.Select(task => task.Title)]
             );
-            Assert.IsTrue(store.State.VisibleTasks.All(task => task.GroupLabel == "Windows"));
+            Assert.IsTrue(visibleTasks.All(task => task.GroupLabel == "Windows"));
 
-            string[] ids = [.. store.State.VisibleTasks.Select(task => task.Id)];
+            string[] ids = [.. visibleTasks.Select(task => task.Id)];
             await store.CompleteTasksAsync(ids, TestContext.CancellationToken);
             Assert.IsTrue(
                 ids.All(id => store.State.AllTasks.Single(task => task.Id == id).IsCompleted)

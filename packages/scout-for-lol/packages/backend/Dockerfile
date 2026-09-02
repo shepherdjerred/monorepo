@@ -89,6 +89,7 @@ COPY --parents \
   packages/feature-flags \
   packages/llm-models \
   packages/llm-observability \
+  packages/s3-signed-request \
   packages/llm-runtime \
   packages/temporal-observability \
   ./

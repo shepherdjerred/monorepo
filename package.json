@@ -141,6 +141,7 @@
     "packages/scout-for-lol/packages/report",
     "packages/scout-for-lol/packages/temporal",
     "packages/scout-for-lol/packages/ui",
+    "packages/s3-signed-request",
     "packages/sjer.red",
     "packages/starlight-karma-bot",
     "packages/stocks-sjer-red",

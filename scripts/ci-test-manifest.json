@@ -341,6 +341,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/s3-signed-request",
+      "directory": "packages/s3-signed-request",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/openrouter-broadcast-ingest",
       "directory": "packages/openrouter-broadcast-ingest",
       "steps": [

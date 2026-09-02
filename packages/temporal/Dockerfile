@@ -417,6 +417,7 @@ COPY --parents \
   packages/home-assistant \
   packages/llm-models \
   packages/llm-observability \
+  packages/s3-signed-request \
   packages/llm-runtime \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \

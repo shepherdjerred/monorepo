@@ -1522,6 +1522,7 @@ steps:
         - "patches/**"
         - "turbo.json"
         - "packages/llm-observability/**"
+        - "packages/s3-signed-request/**"
         - "packages/eslint-config/**"
     cancel_on_build_failing: true
     command: |
@@ -2521,6 +2522,7 @@ steps:
         - "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts"
         - "packages/llm-models/**"
         - "packages/llm-observability/**"
+        - "packages/s3-signed-request/**"
         - "packages/scout-for-lol/packages/backend/**"
         - "packages/scout-for-lol/packages/data/**"
         - "packages/scout-for-lol/packages/report/**"

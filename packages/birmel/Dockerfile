@@ -132,6 +132,7 @@ COPY --parents \
   packages/feature-flags \
   packages/llm-models \
   packages/llm-observability \
+  packages/s3-signed-request \
   packages/llm-runtime \
   ./
 # Bake Prisma's migration engines into the production dependency tree. Bun's

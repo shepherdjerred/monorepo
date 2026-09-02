@@ -1,5 +1,6 @@
-import { createHash, createHmac } from "node:crypto";
+import { createHash } from "node:crypto";
 import { gunzipSync, gzipSync } from "node:zlib";
+import { createSignedS3Request } from "@shepherdjerred/s3-signed-request";
 
 export type ArchiveConfig = {
   bucket: string;
@@ -101,7 +102,7 @@ export async function archiveObjectExists(
   config: ArchiveConfig,
   key: string,
 ): Promise<boolean> {
-  const response = await signedS3Request(config, key, "HEAD");
+  const response = await signedS3Request(config, { key, method: "HEAD" });
   if (response.ok) return true;
   if (response.status === 404) return false;
   throw new Error(
@@ -120,7 +121,7 @@ export async function readArchiveObject(
   config: ArchiveConfig,
   key: string,
 ): Promise<string | undefined> {
-  const response = await signedS3Request(config, key, "GET");
+  const response = await signedS3Request(config, { key, method: "GET" });
   if (response.status === 404) return undefined;
   if (!response.ok) {
     throw new Error(
@@ -134,39 +135,12 @@ function sha256Hex(value: string | Uint8Array): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function hmacSha256(key: Uint8Array | string, value: string): Buffer {
-  return createHmac("sha256", key).update(value).digest();
-}
-
-function formatAmzDate(date: Date): string {
-  return date.toISOString().replaceAll(/[:-]|\.\d{3}/g, "");
-}
-
-function buildS3Url(config: ArchiveConfig, key: string): URL {
-  const endpointUrl = new URL(config.endpoint);
-  const basePath = endpointUrl.pathname.replace(/\/$/, "");
-  const encodedKey = key
-    .split("/")
-    .map((segment) => encodeURIComponent(segment))
-    .join("/");
-
-  if (config.forcePathStyle) {
-    return new URL(
-      `${endpointUrl.origin}${basePath}/${config.bucket}/${encodedKey}`,
-    );
-  }
-
-  const url = new URL(`${endpointUrl.origin}${basePath}/${encodedKey}`);
-  url.hostname = `${config.bucket}.${endpointUrl.hostname}`;
-  return url;
-}
-
 async function putS3Object(
   config: ArchiveConfig,
   key: string,
   body: Buffer,
 ): Promise<void> {
-  const response = await signedS3Request(config, key, "PUT", body);
+  const response = await signedS3Request(config, { key, method: "PUT", body });
 
   if (!response.ok) {
     const responseBody = await response.text();
@@ -176,85 +150,36 @@ async function putS3Object(
   }
 }
 
+type ArchiveRequestInput =
+  | { key: string; method: "GET" | "HEAD" }
+  | { key: string; method: "PUT"; body: Buffer };
+
 async function signedS3Request(
   config: ArchiveConfig,
-  key: string,
-  method: "GET" | "HEAD" | "PUT",
-  body?: Buffer,
+  input: ArchiveRequestInput,
 ): Promise<Response> {
-  const url = buildS3Url(config, key);
-  const payloadHash = sha256Hex(body ?? "");
-  const amzDate = formatAmzDate(new Date());
-  const dateStamp = amzDate.slice(0, 8);
-
-  const headers: Record<string, string> = {
-    host: url.host,
-    "x-amz-content-sha256": payloadHash,
-    "x-amz-date": amzDate,
-  };
-
-  if (config.sessionToken !== undefined && config.sessionToken !== "") {
-    headers["x-amz-security-token"] = config.sessionToken;
+  // A hung S3 endpoint must not stall span export or Broadcast ingestion
+  // indefinitely: the span processor awaits uploads before forwarding, and
+  // ingest awaits receipt reads in its request handler. Upload callers treat
+  // the abort as a failed (best-effort) upload; exists/read callers let it
+  // propagate so "unavailable" is never read as "missing".
+  const signal = AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS);
+  if (input.method === "PUT") {
+    return fetch(
+      createSignedS3Request(config, {
+        method: input.method,
+        key: input.key,
+        body: new Uint8Array(input.body),
+        contentType: "application/gzip",
+        signal,
+      }),
+    );
   }
-
-  const sortedHeaderEntries = Object.entries(headers).toSorted(
-    ([left], [right]) => left.localeCompare(right),
+  return fetch(
+    createSignedS3Request(config, {
+      method: input.method,
+      key: input.key,
+      signal,
+    }),
   );
-  const canonicalHeaders = sortedHeaderEntries
-    .map(([k, v]) => `${k}:${v}\n`)
-    .join("");
-  const signedHeaders = sortedHeaderEntries.map(([k]) => k).join(";");
-  const canonicalRequest = [
-    method,
-    url.pathname,
-    url.searchParams.toString(),
-    canonicalHeaders,
-    signedHeaders,
-    payloadHash,
-  ].join("\n");
-
-  const credentialScope = `${dateStamp}/${config.region}/s3/aws4_request`;
-  const stringToSign = [
-    "AWS4-HMAC-SHA256",
-    amzDate,
-    credentialScope,
-    sha256Hex(canonicalRequest),
-  ].join("\n");
-
-  const signingKey = hmacSha256(
-    hmacSha256(
-      hmacSha256(
-        hmacSha256(`AWS4${config.secretAccessKey}`, dateStamp),
-        config.region,
-      ),
-      "s3",
-    ),
-    "aws4_request",
-  );
-  const signature = createHmac("sha256", signingKey)
-    .update(stringToSign)
-    .digest("hex");
-
-  const authorization = [
-    `AWS4-HMAC-SHA256 Credential=${config.accessKeyId}/${credentialScope}`,
-    `SignedHeaders=${signedHeaders}`,
-    `Signature=${signature}`,
-  ].join(", ");
-
-  const response = await fetch(url, {
-    method,
-    headers: {
-      ...headers,
-      Authorization: authorization,
-      ...(body === undefined ? {} : { "Content-Type": "application/gzip" }),
-    },
-    ...(body === undefined ? {} : { body: new Uint8Array(body) }),
-    // A hung S3 endpoint must not stall span export or Broadcast ingestion
-    // indefinitely: the span processor awaits uploads before forwarding, and
-    // ingest awaits receipt reads in its request handler. Upload callers treat
-    // the abort as a failed (best-effort) upload; exists/read callers let it
-    // propagate so "unavailable" is never read as "missing".
-    signal: AbortSignal.timeout(S3_REQUEST_TIMEOUT_MS),
-  });
-  return response;
 }
