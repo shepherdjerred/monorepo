@@ -1,6 +1,9 @@
 import { z } from "zod";
+import {
+  TemporalNamespaceSchema,
+  type TemporalNamespace,
+} from "./temporal-namespace.ts";
 
-const NamespaceSchema = z.string().trim().min(1).max(255);
 const WorkerDeploymentNameSchema = z.string().trim().min(1).max(127);
 export const WorkerBuildIdSchema = z
   .string()
@@ -8,7 +11,7 @@ export const WorkerBuildIdSchema = z
 
 const TemporalBootstrapEnvironmentSchema = z
   .object({
-    TEMPORAL_NAMESPACE: NamespaceSchema.optional(),
+    TEMPORAL_NAMESPACE: TemporalNamespaceSchema,
     TEMPORAL_WORKER_DEPLOYMENT_NAME: WorkerDeploymentNameSchema.optional(),
     TEMPORAL_WORKER_BUILD_ID: WorkerBuildIdSchema.optional(),
     GIT_SHA: WorkerBuildIdSchema.or(z.literal("unknown")).optional(),
@@ -35,7 +38,7 @@ const TemporalBootstrapEnvironmentSchema = z
   });
 
 export type TemporalBootstrap = {
-  namespace: string;
+  namespace: TemporalNamespace;
   workerDeployment: { deploymentName: string; buildId: string } | undefined;
 };
 
@@ -50,7 +53,7 @@ export function parseTemporalBootstrap(
       ? undefined
       : parsed.GIT_SHA);
   return {
-    namespace: parsed.TEMPORAL_NAMESPACE ?? "default",
+    namespace: parsed.TEMPORAL_NAMESPACE,
     workerDeployment:
       deploymentName === undefined || buildId === undefined
         ? undefined

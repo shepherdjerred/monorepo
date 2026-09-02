@@ -1,7 +1,4 @@
-import type {
-  LegacyTemporalNamespace,
-  TemporalNamespace,
-} from "./temporal-namespace.ts";
+import type { TemporalNamespace } from "./temporal-namespace.ts";
 import { TASK_QUEUES, type TaskQueue } from "./task-queues.ts";
 import type { WorkerRole } from "./worker-role.ts";
 
@@ -21,16 +18,11 @@ export function workerNamespaces(input: {
   queueRole: WorkerRole;
   taskQueue: TaskQueue;
   activeNamespace: TemporalNamespace;
-  legacyNamespace: LegacyTemporalNamespace | undefined;
-}): readonly (TemporalNamespace | LegacyTemporalNamespace)[] {
-  const activeNamespaces: readonly TemporalNamespace[] =
-    (input.queueRole === "scout" ||
-      (input.queueRole === "workflows" &&
-        input.taskQueue === TASK_QUEUES.WORKFLOWS)) &&
+}): readonly TemporalNamespace[] {
+  return (input.queueRole === "scout" ||
+    (input.queueRole === "workflows" &&
+      input.taskQueue === TASK_QUEUES.WORKFLOWS)) &&
     input.activeNamespace === "prod"
-      ? ["prod", "beta"]
-      : [input.activeNamespace];
-  return input.legacyNamespace === undefined
-    ? activeNamespaces
-    : [...activeNamespaces, input.legacyNamespace];
+    ? ["prod", "beta"]
+    : [input.activeNamespace];
 }

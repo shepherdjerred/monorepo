@@ -1,8 +1,5 @@
 import type { AlertmanagerAlert } from "#lib/alertmanager.ts";
-import type {
-  LegacyTemporalNamespace,
-  TemporalNamespace,
-} from "#shared/temporal-namespace.ts";
+import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
 
 // Kept in sync manually with the Temporal Web UI Tailscale hostname
 // documented in this package's CLAUDE.md (schedule pause instructions).
@@ -12,7 +9,7 @@ const MAX_SUMMARY_MESSAGE_CHARS = 200;
 const MAX_STACK_EXCERPT_CHARS = 800;
 
 export type FailedWorkflowExecution = {
-  temporalNamespace: TemporalNamespace | LegacyTemporalNamespace;
+  temporalNamespace: TemporalNamespace;
   workflowId: string;
   runId: string;
   workflowType: string;
@@ -51,7 +48,7 @@ function truncate(value: string, maxChars: number): string {
 
 /** Direct link to the failed run's history in the Temporal UI — not just "check the UI". */
 export function temporalUiExecutionUrl(
-  namespace: TemporalNamespace | LegacyTemporalNamespace,
+  namespace: TemporalNamespace,
   workflowId: string,
   runId: string,
 ): string {

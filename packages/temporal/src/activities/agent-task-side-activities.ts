@@ -40,7 +40,7 @@ import {
   type ReportEnvelopeV1,
 } from "#shared/report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { parseAnyTemporalNamespace } from "#shared/temporal-namespace.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 const COMPONENT = "agent-task";
 
@@ -443,7 +443,7 @@ export async function pauseSchedule(
   input: PauseAgentTaskScheduleInput,
 ): Promise<void> {
   const client = await createTemporalClient(
-    parseAnyTemporalNamespace(activityInfo().namespace),
+    parseTemporalNamespace(activityInfo().namespace),
   );
   const handle = client.schedule.getHandle(input.scheduleId);
   await handle.pause(input.reason);

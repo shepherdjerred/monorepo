@@ -145,7 +145,6 @@ export class ScoutTemporalSupervisor {
     logger.info("Temporal workers connected", {
       address: this.#options.address,
       namespace: this.#options.namespace,
-      legacyNamespace: this.#options.legacyNamespace,
       stage: this.#options.stage,
       workerCount: runtime.workers.length,
       discordWorkersEnabled: this.#discordWorkersEnabled,
@@ -172,7 +171,6 @@ export class ScoutTemporalSupervisor {
         attempt: this.#attempt,
         consecutiveFailures: this.#consecutiveFailures,
         namespace: this.#options.namespace,
-        legacyNamespace: this.#options.legacyNamespace,
       },
     });
     setScoutTemporalHealth({

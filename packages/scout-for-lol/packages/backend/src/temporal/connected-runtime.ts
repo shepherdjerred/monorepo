@@ -6,10 +6,7 @@ import {
   Runtime,
   Worker,
 } from "@temporalio/worker";
-import type {
-  ScoutStage,
-  TemporalLegacyNamespace,
-} from "@scout-for-lol/temporal";
+import type { ScoutStage } from "@scout-for-lol/temporal";
 import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import { createLogger } from "#src/logger.ts";
@@ -146,7 +143,6 @@ export type ScoutTemporalActivityGroups = {
 export type ScoutTemporalSupervisorOptions = {
   readonly address: string | undefined;
   readonly namespace: ScoutStage;
-  readonly legacyNamespace: TemporalLegacyNamespace | undefined;
   readonly stage: ScoutStage;
   readonly activities: ScoutTemporalActivityGroups;
   readonly callGraphTracing: boolean;
@@ -286,66 +282,6 @@ export async function createConnectedRuntime(
           maxConcurrentActivityTaskExecutions: 1,
         }),
       );
-    }
-    if (options.legacyNamespace !== undefined) {
-      const legacyOptions = {
-        ...commonOptions,
-        namespace: options.legacyNamespace,
-      };
-      // The legacy pollers exist only to let pre-cutover histories in the
-      // retired namespace finish. They are best-effort: a drain worker that
-      // cannot be created must not take the live namespace's workers down
-      // with it, which is what turned one failure here into a permanent
-      // reconnect loop that left Scout with no pollers at all.
-      try {
-        workers.push(
-          await Worker.create({
-            ...legacyOptions,
-            taskQueue: queues.workflow,
-            workflowsPath: workflowsPath(),
-            maxConcurrentWorkflowTaskExecutions: 1,
-          }),
-        );
-        workers.push(
-          await Worker.create({
-            ...legacyOptions,
-            taskQueue: queues.interactive,
-            activities: options.activities.interactive,
-            maxConcurrentActivityTaskExecutions: 1,
-          }),
-        );
-        workers.push(
-          await Worker.create({
-            ...legacyOptions,
-            taskQueue: queues.lake,
-            activities: options.activities.lake,
-            maxConcurrentActivityTaskExecutions: 1,
-          }),
-        );
-        if (discordWorkersEnabled) {
-          workers.push(
-            await Worker.create({
-              ...legacyOptions,
-              taskQueue: queues.realtime,
-              activities: options.activities.realtime,
-              maxConcurrentActivityTaskExecutions: 1,
-            }),
-          );
-          workers.push(
-            await Worker.create({
-              ...legacyOptions,
-              taskQueue: queues.background,
-              activities: options.activities.background,
-              maxConcurrentActivityTaskExecutions: 1,
-            }),
-          );
-        }
-      } catch (error: unknown) {
-        logger.warn("Legacy Temporal drain workers unavailable; continuing", {
-          namespace: options.legacyNamespace,
-          error,
-        });
-      }
     }
     return {
       workers,

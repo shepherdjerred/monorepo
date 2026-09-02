@@ -17,26 +17,14 @@ describe("workerNamespaces", () => {
     );
   });
 
-  test("polls active and legacy namespaces for owned queues during drain", () => {
+  test("polls the active namespace for owned queues", () => {
     expect(
       workerNamespaces({
         queueRole: "reports",
         taskQueue: "reports",
         activeNamespace: "prod",
-        legacyNamespace: "default",
       }),
-    ).toEqual(["prod", "default"]);
-  });
-
-  test("uses only the active namespace after the drain", () => {
-    expect(
-      workerNamespaces({
-        queueRole: "reports",
-        taskQueue: "reports",
-        activeNamespace: "beta",
-        legacyNamespace: undefined,
-      }),
-    ).toEqual(["beta"]);
+    ).toEqual(["prod"]);
   });
 
   test("keeps the existing central Scout queue available to beta-owned schedules", () => {
@@ -45,9 +33,8 @@ describe("workerNamespaces", () => {
         queueRole: "scout",
         taskQueue: "scout",
         activeNamespace: "prod",
-        legacyNamespace: "default",
       }),
-    ).toEqual(["prod", "beta", "default"]);
+    ).toEqual(["prod", "beta"]);
   });
 
   test("keeps the central Workflow queue available to beta-owned schedules", () => {
@@ -56,19 +43,17 @@ describe("workerNamespaces", () => {
         queueRole: "workflows",
         taskQueue: "monorepo-workflows",
         activeNamespace: "prod",
-        legacyNamespace: "default",
       }),
-    ).toEqual(["prod", "beta", "default"]);
+    ).toEqual(["prod", "beta"]);
   });
 
-  test("does not add beta pollers for legacy workflow queues", () => {
+  test("does not add beta pollers for activity queues", () => {
     expect(
       workerNamespaces({
         queueRole: "workflows",
         taskQueue: TASK_QUEUES.HOME,
         activeNamespace: "prod",
-        legacyNamespace: "default",
       }),
-    ).toEqual(["prod", "default"]);
+    ).toEqual(["prod"]);
   });
 });

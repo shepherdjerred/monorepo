@@ -7,11 +7,8 @@ import {
 const SHA = "a".repeat(40);
 
 describe("Temporal bootstrap configuration", () => {
-  test("keeps the current default namespace without enabling versioning", () => {
-    expect(parseTemporalBootstrap({})).toEqual({
-      namespace: "default",
-      workerDeployment: undefined,
-    });
+  test("requires an active namespace", () => {
+    expect(() => parseTemporalBootstrap({})).toThrow();
   });
 
   test("parses an exact deployment identity", () => {
@@ -33,6 +30,7 @@ describe("Temporal bootstrap configuration", () => {
   test("uses immutable image provenance for a configured Workflow Deployment", () => {
     expect(
       parseTemporalBootstrap({
+        TEMPORAL_NAMESPACE: "prod",
         TEMPORAL_WORKER_DEPLOYMENT_NAME: "monorepo-central-workflows",
         GIT_SHA: SHA,
       }).workerDeployment,
@@ -43,9 +41,10 @@ describe("Temporal bootstrap configuration", () => {
   });
 
   test("does not opt Activity workers into versioning from image provenance", () => {
-    expect(parseTemporalBootstrap({ GIT_SHA: SHA }).workerDeployment).toBe(
-      undefined,
-    );
+    expect(
+      parseTemporalBootstrap({ TEMPORAL_NAMESPACE: "prod", GIT_SHA: SHA })
+        .workerDeployment,
+    ).toBe(undefined);
   });
 
   test.each([
@@ -60,12 +59,16 @@ describe("Temporal bootstrap configuration", () => {
       TEMPORAL_WORKER_BUILD_ID: "release-42",
     },
   ])("rejects partial or non-SHA identity: %o", (environment) => {
-    expect(() => parseTemporalBootstrap(environment)).toThrow();
+    expect(() =>
+      parseTemporalBootstrap({ TEMPORAL_NAMESPACE: "prod", ...environment }),
+    ).toThrow();
   });
 
   test("requires deployment identity only at the workflow-worker boundary", () => {
-    expect(() => requireWorkerDeployment(parseTemporalBootstrap({}))).toThrow(
-      "Workflow workers require",
-    );
+    expect(() =>
+      requireWorkerDeployment(
+        parseTemporalBootstrap({ TEMPORAL_NAMESPACE: "prod" }),
+      ),
+    ).toThrow("Workflow workers require");
   });
 });

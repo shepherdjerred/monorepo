@@ -269,7 +269,7 @@ Flag: projects with no recent releases (SDK may not be reporting), large gap bet
 
 ## Section 10: Temporal Workflows
 
-Temporal runs in the `temporal` namespace (server + UI + canonical workers + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`). The retired `default` worker is intentionally absent after the retention gate.
+Temporal runs in the Kubernetes `temporal` namespace (server + UI + canonical workers + PostgreSQL). The UI is at `https://temporal-ui.tailnet-1a49.ts.net`. Workflow source is in `packages/temporal/` (`good-night`, `good-morning`, `golink-sync`, `fetcher`, `dns-audit`, `deps-summary`). Application workloads use the Temporal `beta` and `prod` namespaces.
 
 The scheduled audit worker has the Temporal CLI installed and `TEMPORAL_ADDRESS`
 points at `temporal-temporal-server-service:7233`, so run Temporal commands
@@ -290,10 +290,10 @@ Flag: any pod not Running/Ready, `CreateContainerConfigError` (missing secret â€
 
 ```bash
 toolkit temporal operator cluster health                          # gRPC ping to frontend (expect SERVING)
-toolkit temporal operator namespace list                          # expected namespaces (default)
+toolkit temporal operator namespace list                          # expected: beta, prod, temporal-system
 ```
 
-Flag: non-SERVING status, gRPC connection error despite server pods Running (NetworkPolicy change, service endpoint mismatch), missing `default` namespace.
+Flag: non-SERVING status, gRPC connection error despite server pods Running (NetworkPolicy change, service endpoint mismatch), or any namespace outside `beta`, `prod`, and `temporal-system`.
 
 ### Failed or stuck workflow executions
 
@@ -381,8 +381,8 @@ The removed `agent-task-timeout-watch` aggregate alert must not be used as a
 health signal. Query the SDK metrics instead:
 
 ```bash
-toolkit prom query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="default",task_queue="agent-task",poller_type="workflow_task"}'
-toolkit prom query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="default",task_queue="agent-task"}[5m])))'
+toolkit prom query 'temporal_worker_num_pollers{namespace="temporal",exported_namespace="prod",task_queue="monorepo-workflows",poller_type="workflow_task"}'
+toolkit prom query 'histogram_quantile(0.95, sum by (le) (rate(temporal_worker_workflow_task_schedule_to_start_latency_seconds_bucket{namespace="temporal",exported_namespace="prod",task_queue="monorepo-workflows"}[5m])))'
 toolkit prom query 'up{namespace="temporal",service=~".*temporal.*worker.*metrics.*|temporal-worker-app-metrics"}'
 ```
 

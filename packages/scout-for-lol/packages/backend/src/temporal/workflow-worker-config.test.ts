@@ -10,13 +10,14 @@ describe("parseScoutWorkflowWorkerConfiguration", () => {
         ENVIRONMENT: "beta",
         GIT_SHA: SHA,
         TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_NAMESPACE: "beta",
         TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-beta-workflows",
       }),
     ).toEqual({
       stage: "beta",
       address: "temporal:7233",
       metricsAddress: "0.0.0.0:9464",
-      namespace: "default",
+      namespace: "beta",
       deploymentName: "scout-beta-workflows",
       buildId: SHA,
     });
@@ -28,6 +29,7 @@ describe("parseScoutWorkflowWorkerConfiguration", () => {
         ENVIRONMENT: "prod",
         GIT_SHA: SHA,
         TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_NAMESPACE: "prod",
         TEMPORAL_WORKER_BUILD_ID: SHA,
         TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-prod-workflows",
       }).buildId,
@@ -40,6 +42,7 @@ describe("parseScoutWorkflowWorkerConfiguration", () => {
         ENVIRONMENT: "prod",
         GIT_SHA: SHA,
         TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_NAMESPACE: "prod",
         TEMPORAL_WORKER_BUILD_ID: "b".repeat(40),
         TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-prod-workflows",
       }),
@@ -52,9 +55,33 @@ describe("parseScoutWorkflowWorkerConfiguration", () => {
         ENVIRONMENT: "beta",
         GIT_SHA: SHA,
         TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_NAMESPACE: "beta",
         TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-prod-workflows",
       }),
     ).toThrow("must use deployment scout-beta-workflows");
+  });
+
+  test("rejects a namespace that does not match the stage", () => {
+    expect(() =>
+      parseScoutWorkflowWorkerConfiguration({
+        ENVIRONMENT: "beta",
+        GIT_SHA: SHA,
+        TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_NAMESPACE: "prod",
+        TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-beta-workflows",
+      }),
+    ).toThrow("must match ENVIRONMENT");
+  });
+
+  test("requires an explicit namespace", () => {
+    expect(() =>
+      parseScoutWorkflowWorkerConfiguration({
+        ENVIRONMENT: "beta",
+        GIT_SHA: SHA,
+        TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-beta-workflows",
+      }),
+    ).toThrow();
   });
 
   test("rejects a non-exact image Git SHA", () => {
@@ -63,6 +90,7 @@ describe("parseScoutWorkflowWorkerConfiguration", () => {
         ENVIRONMENT: "beta",
         GIT_SHA: "unknown",
         TEMPORAL_ADDRESS: "temporal:7233",
+        TEMPORAL_NAMESPACE: "beta",
         TEMPORAL_WORKER_DEPLOYMENT_NAME: "scout-beta-workflows",
       }),
     ).toThrow("exact lowercase Git SHA");

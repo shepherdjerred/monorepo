@@ -10,21 +10,16 @@ homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces
 without a task queue. The credentialless `workflows` role owns deterministic
-Workflow execution on `monorepo-workflows` and temporarily polls the remaining
-legacy central queues so open histories can finish where they started. The domain
-roles own only Activity Workers, with separate registries, credentials, service
-accounts, and concurrency budgets. The default `all` role composes every role in
-one process for local development.
+Workflow execution on `monorepo-workflows`. The domain roles own only Activity
+Workers, with separate registries, credentials, service accounts, and
+concurrency budgets. The explicit `all` role composes every role in one process
+for local development.
 
 Temporal namespaces are environment-scoped: local servers use `dev`, Scout
 beta uses `beta`, and production plus shared control-plane jobs use `prod`.
-The `default` namespace is retired. During the migration
-`TEMPORAL_LEGACY_NAMESPACE=default` added bounded worker-only pollers so
-existing histories could finish without allowing new starts there; the
-cutover completed on 2026-08-31 and the drain was removed once `default` held
-no running executions. The namespace itself stays registered but empty, and
-`TemporalDefaultNamespaceStartAttempted` alerts if anything tries to start
-work there.
+The shared cluster contains only the active `beta` and `prod` namespaces plus
+Temporal's internal `temporal-system` namespace. Unexpected workflow starts in
+any other namespace raise `TemporalUnexpectedNamespaceStartAttempted`.
 
 The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned weekly parlay and Bryan Bucks analytics schedules; all other
@@ -56,7 +51,7 @@ above describes the final topology.
 Run from `packages/temporal`:
 
 ```bash
-TEMPORAL_NAMESPACE=dev bun run start # start the local worker
+TEMPORAL_NAMESPACE=dev TEMPORAL_WORKER_ROLE=all bun run start # start the local worker
 bun run typecheck    # tsc --noEmit (stubs the HA schema first)
 bun run test         # unit tests, including the workflow-bundle smoke test
 bun run lint         # eslint

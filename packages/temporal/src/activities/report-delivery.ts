@@ -28,7 +28,7 @@ import {
   type ReportEnvelopeV1,
 } from "#shared/report.ts";
 import { temporalUiExecutionUrl } from "#shared/workflow-failure-alert.ts";
-import { parseAnyTemporalNamespace } from "#shared/temporal-namespace.ts";
+import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
 
 export const ReportDeliveryReceiptV1Schema = z.object({
   schemaVersion: z.literal(1),
@@ -331,7 +331,7 @@ export function createActivityReportEnvelope(
       workflowId: execution.workflowId,
       runId: execution.runId,
       temporalUrl: temporalUiExecutionUrl(
-        parseAnyTemporalNamespace(info.namespace),
+        parseTemporalNamespace(info.namespace),
         execution.workflowId,
         execution.runId,
       ),

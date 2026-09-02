@@ -3,10 +3,7 @@ import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
-import {
-  ScoutStageSchema,
-  TemporalLegacyNamespaceSchema,
-} from "@scout-for-lol/temporal";
+import { ScoutStageSchema } from "@scout-for-lol/temporal";
 
 const logger = createLogger("config");
 
@@ -191,9 +188,6 @@ function computeConfiguration() {
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     temporalNamespace,
     temporalScheduleReconciliation,
-    temporalLegacyNamespace: TemporalLegacyNamespaceSchema.optional().parse(
-      getOptionalEnvVar("TEMPORAL_LEGACY_NAMESPACE"),
-    ),
     discordToken: getRequiredEnvVar("DISCORD_TOKEN"),
     applicationId: getRequiredEnvVar("APPLICATION_ID"),
     discordClientSecret: getOptionalEnvVar("DISCORD_CLIENT_SECRET"),
@@ -333,9 +327,6 @@ const configuration: Configuration = {
       );
     }
     return current.temporalNamespace;
-  },
-  get temporalLegacyNamespace() {
-    return getConfiguration().temporalLegacyNamespace;
   },
   get temporalScheduleReconciliation() {
     return getConfiguration().temporalScheduleReconciliation;

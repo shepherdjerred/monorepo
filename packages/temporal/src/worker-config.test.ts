@@ -3,7 +3,6 @@ import { agentActivities, reportActivities } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
 import {
   getWorkerRoleContract,
-  LEGACY_WORKFLOW_TASK_QUEUES,
   QUEUE_WORKER_DEFINITIONS,
   type QueueWorkerRole,
 } from "./worker-config.ts";
@@ -50,14 +49,14 @@ describe("Temporal worker role contracts", () => {
     );
   });
 
-  it("polls the canonical and remaining legacy Workflow queues", () => {
+  it("polls only the canonical Workflow queue", () => {
     const workflowDefinitions = getWorkerRoleContract("workflows").workers;
     expect(
       workflowDefinitions.every((definition) => definition.kind === "workflow"),
     ).toBe(true);
     expect(
       workflowDefinitions.map((definition) => definition.taskQueue),
-    ).toEqual([TASK_QUEUES.WORKFLOWS, ...LEGACY_WORKFLOW_TASK_QUEUES]);
+    ).toEqual([TASK_QUEUES.WORKFLOWS]);
   });
 
   it("preserves the Glitter alias", () => {
@@ -98,9 +97,7 @@ describe("Temporal worker role contracts", () => {
 
   it("runs every canonical queue and control surface locally", () => {
     const contract = getWorkerRoleContract("all");
-    expect(contract.workers).toHaveLength(
-      ACTIVITY_TASK_QUEUES.length + LEGACY_WORKFLOW_TASK_QUEUES.length + 1,
-    );
+    expect(contract.workers).toHaveLength(ACTIVITY_TASK_QUEUES.length + 1);
     expect(contract.runsGateway).toBe(true);
     expect(contract.validatesScheduleEnvironmentLocally).toBe(true);
     expect(contract.runsEventBridge).toBe(true);

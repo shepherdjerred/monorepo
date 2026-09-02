@@ -1,8 +1,8 @@
 import { Client, Connection } from "@temporalio/client";
 import { createTemporalClientTracingInterceptor } from "@shepherdjerred/temporal-observability/interceptors";
 import {
-  type AnyTemporalNamespace,
-  parseAnyTemporalNamespace,
+  type TemporalNamespace,
+  parseTemporalNamespace,
 } from "#shared/temporal-namespace.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import { parseTemporalBootstrapMetadata } from "./shared/execution-metadata.ts";
@@ -10,11 +10,11 @@ import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-cli
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 
-const cachedClients = new Map<AnyTemporalNamespace, Client>();
-const cachedVisibilityClients = new Map<AnyTemporalNamespace, Client>();
+const cachedClients = new Map<TemporalNamespace, Client>();
+const cachedVisibilityClients = new Map<TemporalNamespace, Client>();
 
 export async function createTemporalClient(
-  namespace: AnyTemporalNamespace = parseAnyTemporalNamespace(
+  namespace: TemporalNamespace = parseTemporalNamespace(
     Bun.env["TEMPORAL_NAMESPACE"],
   ),
 ): Promise<Client> {
@@ -50,14 +50,14 @@ export async function createTemporalClient(
 }
 
 export async function createTemporalVisibilityClient(
-  namespace: AnyTemporalNamespace,
+  namespace: TemporalNamespace,
 ): Promise<WorkflowVisibilityClient> {
   const client = await createTemporalReadClient(namespace);
   return { workflow: client.workflow };
 }
 
 export async function createTemporalReadClient(
-  namespace: AnyTemporalNamespace,
+  namespace: TemporalNamespace,
 ): Promise<Client> {
   const cachedClient = cachedVisibilityClients.get(namespace);
   if (cachedClient !== undefined) {

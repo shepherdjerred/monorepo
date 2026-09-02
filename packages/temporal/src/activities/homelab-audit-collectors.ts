@@ -1,10 +1,9 @@
 import { z } from "zod/v4";
 import { createTemporalReadClient } from "#client";
 import {
-  parseLegacyTemporalNamespace,
   parseTemporalNamespace,
   temporalNamespacesForMonitoring,
-  type AnyTemporalNamespace,
+  type TemporalNamespace,
 } from "#shared/temporal-namespace.ts";
 import type {
   ReportCheckV1,
@@ -256,21 +255,21 @@ export function temporalHealthQueries(now: Date): {
 }
 
 type TemporalExecutionSummary = {
-  namespace: AnyTemporalNamespace;
+  namespace: TemporalNamespace;
   workflowId: string;
   runId: string;
   startedAt: string;
 };
 
 type TemporalNamespaceHealth = {
-  namespace: AnyTemporalNamespace;
+  namespace: TemporalNamespace;
   failed: TemporalExecutionSummary[];
   stalled: TemporalExecutionSummary[];
   scheduleCount: number;
 };
 
 async function collectTemporalNamespace(
-  namespace: AnyTemporalNamespace,
+  namespace: TemporalNamespace,
   queries: ReturnType<typeof temporalHealthQueries>,
 ): Promise<TemporalNamespaceHealth> {
   const client = await createTemporalReadClient(namespace);
@@ -329,7 +328,6 @@ async function collectTemporal(): Promise<CollectorResult> {
   try {
     const namespaces = temporalNamespacesForMonitoring(
       parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]),
-      parseLegacyTemporalNamespace(Bun.env["TEMPORAL_LEGACY_NAMESPACE"]),
     );
     const namespaceHealth = await Promise.all(
       namespaces.map(

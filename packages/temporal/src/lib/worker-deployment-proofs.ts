@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
-import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
+import { WORKFLOW_TASK_QUEUES } from "#worker-config";
 
 const PrometheusResponseSchema = z.object({
   status: z.literal("success"),
@@ -150,9 +150,9 @@ export function rolloutPoller(
     ...options,
     ...(currentBuildId === undefined ? {} : { currentBuildId }),
     taskQueue: options.taskQueue,
-    ...(options.taskQueue === RETAINED_WORKFLOW_TASK_QUEUES[0]
+    ...(options.taskQueue === WORKFLOW_TASK_QUEUES[0]
       ? {
-          taskQueues: RETAINED_WORKFLOW_TASK_QUEUES,
+          taskQueues: WORKFLOW_TASK_QUEUES,
         }
       : {}),
   };

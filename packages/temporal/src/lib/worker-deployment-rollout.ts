@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { RETAINED_WORKFLOW_TASK_QUEUES } from "#worker-config";
+import { WORKFLOW_TASK_QUEUES } from "#worker-config";
 import {
   prepareStablePinPromotion,
   prepareStablePinStatePromotion,
@@ -119,7 +119,7 @@ function requiredWorkflowQueues(
   options: WorkerDeploymentRolloutOptions,
 ): readonly string[] {
   return options.taskQueue === TASK_QUEUES.WORKFLOWS
-    ? RETAINED_WORKFLOW_TASK_QUEUES
+    ? WORKFLOW_TASK_QUEUES
     : [options.taskQueue];
 }
 export async function readWorkerDeploymentRolloutStatus(

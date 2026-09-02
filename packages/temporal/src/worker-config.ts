@@ -117,29 +117,6 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
   },
 ];
 
-/**
- * Existing executions never change task queues. Keep credentialless Workflow
- * pollers on every old central queue until live visibility reports no open
- * executions, while every new execution starts on WORKFLOWS.
- */
-export const LEGACY_WORKFLOW_TASK_QUEUES = [
-  TASK_QUEUES.HOME,
-  TASK_QUEUES.REPORTS,
-  TASK_QUEUES.INFRA,
-  TASK_QUEUES.REPO_AUTOMATION,
-  TASK_QUEUES.SCOUT,
-  TASK_QUEUES.AGENT_TASK,
-  TASK_QUEUES.GLITTER_CORPUS,
-  TASK_QUEUES.GLITTER_CONTEXT,
-  TASK_QUEUES.MAINTENANCE,
-  TASK_QUEUES.BACKUP,
-] as const;
-
-export const RETAINED_WORKFLOW_TASK_QUEUES = [
-  TASK_QUEUES.WORKFLOWS,
-  ...LEGACY_WORKFLOW_TASK_QUEUES,
-] as const;
-
 const WORKFLOW_WORKER_DEFINITIONS: readonly WorkflowWorkerDefinition[] = [
   {
     kind: "workflow",
@@ -147,13 +124,9 @@ const WORKFLOW_WORKER_DEFINITIONS: readonly WorkflowWorkerDefinition[] = [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     maxConcurrentWorkflowTaskExecutions: 8,
   },
-  ...LEGACY_WORKFLOW_TASK_QUEUES.map((taskQueue) => ({
-    kind: "workflow" as const,
-    role: "workflows" as const,
-    taskQueue,
-    maxConcurrentWorkflowTaskExecutions: 2,
-  })),
 ];
+
+export const WORKFLOW_TASK_QUEUES = [TASK_QUEUES.WORKFLOWS] as const;
 
 export const QUEUE_WORKER_DEFINITIONS: readonly QueueWorkerDefinition[] = [
   ...ACTIVITY_WORKER_DEFINITIONS,
