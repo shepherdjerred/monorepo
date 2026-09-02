@@ -96,8 +96,19 @@ continue read-only and ask for the missing authority rather than guessing.
 - All recurring work belongs in `packages/temporal` as a Workflow plus a
   declarative Schedule; do not add Kubernetes CronJobs, host crontabs, or
   in-process recurring timers.
+- Repository clients and Workers require an explicit `TEMPORAL_NAMESPACE`:
+  local development uses `dev`, Scout beta uses `beta`, and production plus
+  shared control-plane jobs use `prod`. The shared cluster otherwise contains
+  only Temporal's internal `temporal-system` namespace.
+- Central Workflow tasks use `monorepo-workflows`; Scout Workflow tasks use the
+  stage-bound `scout-beta` or `scout-prod` queue. `TEMPORAL_WORKER_ROLE=all` is
+  an explicit local-development mode, never a production fallback.
 - Existing executions stay on their recorded Task Queue. A new queue does not
-  migrate them; retain old pollers or use a deliberate migration/versioning path.
+  move them; preserve compatible pollers or use Worker Versioning.
+- For Workflow code changes, replay retained histories and roll out the central
+  Worker Deployment first, then Scout beta, then Scout production. Require
+  queue canaries, clean alert windows, and the 24-hour observation gate before
+  promotion.
 - Use Bun for repository scripts and ordinary tests. Preserve authentic Node for
   native Workflow Worker, time-skipping, bundle, and replay acceptance.
 - Keep the full `@temporalio/*` package family on one exact version. Confirm

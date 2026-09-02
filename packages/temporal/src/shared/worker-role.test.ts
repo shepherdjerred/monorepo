@@ -7,8 +7,8 @@ import {
 } from "./worker-role.ts";
 
 describe("Temporal worker role", () => {
-  it("defaults to the backward-compatible all role", () => {
-    expect(parseWorkerRole(undefined)).toBe("all");
+  it("requires an explicit role", () => {
+    expect(() => parseWorkerRole(undefined)).toThrow();
   });
 
   it.each([

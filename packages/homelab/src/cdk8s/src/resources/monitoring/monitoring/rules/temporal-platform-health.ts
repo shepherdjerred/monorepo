@@ -92,8 +92,8 @@ export function getTemporalPlatformHealthRuleGroup(): PrometheusRuleSpecGroups {
         // scout.ts). It comes from the Temporal server, so `namespace` is the
         // *Kubernetes* namespace it was scraped in ("temporal") and the
         // Temporal namespace is `exported_namespace` — the same shape as
-        // approximate_backlog_count. Selecting namespace="default" matched no
-        // series at all, so this alert could never fire.
+        // approximate_backlog_count. Select the active Temporal namespaces,
+        // not the Kubernetes namespace label.
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
           'increase(activity_task_fail{exported_namespace=~"prod|beta"}[15m]) > 0',
         ),

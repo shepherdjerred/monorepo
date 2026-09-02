@@ -20,7 +20,7 @@ export const WorkerRoleSchema = z.enum([
 export type WorkerRole = z.infer<typeof WorkerRoleSchema>;
 
 export function parseWorkerRole(value: string | undefined): WorkerRole {
-  return WorkerRoleSchema.parse(value ?? "all");
+  return WorkerRoleSchema.parse(value);
 }
 
 export function workerRoleRunsAgent(role: WorkerRole): boolean {

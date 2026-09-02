@@ -93,9 +93,6 @@ describe("Scout competition Temporal boundary", () => {
         "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       );
       expect(env.get("TEMPORAL_NAMESPACE")).toBe(stage);
-      // The `default` drain is retired for Scout, and with no legacy namespace
-      // configured `auto` resolves to enabled — the settled post-cutover state.
-      expect(env.has("TEMPORAL_LEGACY_NAMESPACE")).toBe(false);
       expect(env.get("TEMPORAL_SCHEDULE_RECONCILIATION")).toBe("auto");
 
       const egressPolicy = synthesized.find(
@@ -158,10 +155,6 @@ describe("Scout competition Temporal boundary", () => {
       expect(serialized, name).toContain(
         '"name":"TEMPORAL_NAMESPACE","value":"prod"',
       );
-      // The `default` drain is retired. No central worker may poll it: the
-      // namespace is empty and guarded against new starts, so a poller there
-      // would find nothing and mask a misrouted deployment.
-      expect(serialized, name).not.toContain("TEMPORAL_LEGACY_NAMESPACE");
       if (name === "temporal-temporal-gateway") {
         expect(serialized, name).toContain(
           '"name":"TEMPORAL_SCHEDULE_RECONCILIATION","value":"auto"',
@@ -214,7 +207,6 @@ describe("Scout beta workflow candidate", () => {
           "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
       },
       { name: "TEMPORAL_METRICS_ADDRESS", value: "0.0.0.0:9464" },
-      // The stage's own namespace — never the retired `default` drain.
       { name: "TEMPORAL_NAMESPACE", value: "beta" },
       {
         name: "TEMPORAL_WORKER_DEPLOYMENT_NAME",

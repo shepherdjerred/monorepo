@@ -77,9 +77,10 @@ Check the native server surfaces before considering the release complete:
 
 ```sh
 toolkit temporal operator cluster health
-toolkit temporal operator namespace describe --namespace default
-toolkit temporal schedule list
-toolkit temporal workflow list --query "ExecutionStatus='Running'"
+toolkit temporal operator namespace describe --namespace beta
+toolkit temporal operator namespace describe --namespace prod
+toolkit temporal --namespace prod schedule list
+toolkit temporal --namespace prod workflow list --query "ExecutionStatus='Running'"
 ```
 
 Then verify all of the following:

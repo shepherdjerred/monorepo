@@ -39,12 +39,9 @@ central queues are `prod` only.
 | `maintenance`     | `maintenance`           |                    1 |
 | `workflows`       | `monorepo-workflows`    |                 none |
 
-The production manifests land in layers. In the Glitter layer, the existing
-legacy core and agent Deployments remain in place while the combined Glitter
-Deployment is replaced by `temporal-glitter-corpus-worker` and
-`temporal-glitter-context-worker`. The gateway, home, reports, infra, repo, and
-Scout Deployments arrive in the later ingress and operations layers; the table
-above describes the final topology.
+The production manifests land in layers. The gateway, Workflow worker, and
+domain Activity Workers deploy independently so each queue has its own
+credentials, concurrency, health, and metrics boundary.
 
 ## Quick start
 
@@ -89,43 +86,6 @@ credentialless stable poller. A later distinct candidate pin creates the ramp
 target, and `start --stable-build-id` establishes stable before sending 10% to
 candidate. The embedded poller remains only to drain old unversioned histories.
 Production remains embedded until beta acceptance completes.
-
-During the namespace migration, inventory and prepare schedules before
-cutover. The gateway uses `TEMPORAL_SCHEDULE_RECONCILIATION=auto`: it checks
-that all schedules in the legacy `default` namespace are paused, then
-reconciles only `prod` and `beta` on its next restart. After the cutover
-command succeeds, restart the gateway so it observes the drained source.
-
-```bash
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
-  bun run migrate:namespaces -- prepare
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
-  bun run migrate:namespaces -- prepare --confirm
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
-  bun run migrate:namespaces -- cutover --confirm
-```
-
-Record the cutover timestamp. **Run `migrate:namespaces -- audit` with it
-before restarting the gateway**, not later:
-
-```bash
-TEMPORAL_ADDRESS=<private-temporal-host>:443 TEMPORAL_TLS=true TEMPORAL_NAMESPACE=prod \
-  bun run migrate:namespaces -- audit --cutover-at <recorded-timestamp>
-```
-
-The audit compares each target against its source byte for byte. The gateway's
-first reconciliation adds `Environment`, `Domain`, `Trigger`, and
-`ReleaseCommit` search attributes plus static summaries to every target, which
-the frozen sources never had, so that comparison can never match again once the
-gateway has run. Auditing after the restart reports `does not match source` for
-a migration that was in fact correct.
-
-After the restart, the remaining invariants are still checkable directly:
-every source paused, every target carrying the recorded `cutoverAt`, and no
-executions or new starts in the legacy namespace.
-
-Rollback is allowed only before a target workflow starts; after that, recover
-forward.
 
 ## Documentation
 

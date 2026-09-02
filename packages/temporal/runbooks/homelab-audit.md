@@ -339,16 +339,6 @@ toolkit prom query 'up{namespace="temporal",service=~".*temporal-(gateway|home-w
 
 Flag: non-zero failure rate, scrape target down.
 
-### Default-queue retirement acceptance
-
-Before applying the cleanup revision, confirm there are no running
-default-queue workflows, no pending default-queue activity or workflow tasks,
-and no schedules or event-start surfaces targeting `default`. Historical
-default-bound executions are intentionally unsupported by this cleanup. After
-ArgoCD reconciliation, verify that the legacy
-Deployment, Services, ServiceMonitors, NetworkPolicies, and ServiceAccount
-bindings are absent and that each canonical worker has a healthy metrics target.
-
 ### Agent-task execution hardening signals
 
 The `temporal-failure-watch` schedule is the sole per-execution workflow-failure
