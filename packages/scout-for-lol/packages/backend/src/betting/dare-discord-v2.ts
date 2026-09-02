@@ -21,8 +21,6 @@ import type { DareButtonInteractionBase } from "#src/betting/dare-button-interac
 
 const logger = createLogger("betting-dare-discord-v2");
 
-type DareV2ButtonInteraction = DareButtonInteractionBase;
-
 export type DareV2DiscordDependencies = DareV2CalloutDependencies & {
   createIntent: typeof createDareV2ConfirmationIntent;
   consumeIntent: typeof consumeDareV2ConfirmationIntent;
@@ -51,7 +49,7 @@ function actionPayload(parsed: Extract<DareV2CustomId, { kind: "prepare" }>) {
 }
 
 type DareV2DiscordContext = {
-  interaction: DareV2ButtonInteraction;
+  interaction: DareButtonInteractionBase;
   serverId: ReturnType<typeof DiscordGuildIdSchema.parse>;
   actorDiscordId: ReturnType<typeof DiscordAccountIdSchema.parse>;
   dependencies: DareV2DiscordDependencies;
@@ -178,7 +176,7 @@ async function deleteDraft(
 }
 
 export async function handleDareV2Button(
-  interaction: DareV2ButtonInteraction,
+  interaction: DareButtonInteractionBase,
   dependencies: DareV2DiscordDependencies = defaultDareV2DiscordDependencies,
 ): Promise<void> {
   const parsed = parseDareV2CustomId(interaction.customId);

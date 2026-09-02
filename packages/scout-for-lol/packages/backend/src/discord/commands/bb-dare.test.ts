@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   DiscordAccountIdSchema,
+  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
@@ -15,6 +16,7 @@ import {
   describeDareTranslationFailure,
   replyBbDare,
 } from "#src/discord/commands/bb-dare.ts";
+import { replyBbDareV2 } from "#src/discord/commands/bb-dare-v2.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 import { bbInteractionAckMocks } from "#src/testing/bb-interaction-mocks.ts";
 
@@ -315,5 +317,70 @@ describe("/bb dare", () => {
       "at least 7 games where Virmel wins on Warwick",
     );
     expect(serialized).toContain("Confirm before");
+  });
+});
+
+describe("/bb dare v2 routing", () => {
+  test("routes the command through the persisted Explore Dare v2 flow", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+    const replyDareV2 = vi.fn(() => Promise.resolve());
+    const translate = vi.fn();
+    await replyBbDare(interaction, SERVER, CHALLENGER, {
+      isDareV2PolicyEnabled: () => Promise.resolve(true),
+      isDaresPolicyEnabled: () => Promise.resolve(false),
+      loadDareBalance: () => Promise.resolve(100),
+      replyDareV2,
+      translate,
+    });
+
+    expect(replyDareV2).toHaveBeenCalledWith(
+      interaction,
+      {
+        serverId: SERVER,
+        channelId: DiscordChannelIdSchema.parse(CHANNEL),
+        challengerDiscordId: CHALLENGER,
+        text: "I bet Virmel can't win 7 games on Warwick",
+        amount: 20,
+      },
+      undefined,
+    );
+    expect(translate).not.toHaveBeenCalled();
+  });
+
+  test("does not route to Dare v2 without relational ScoutQL", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+    const replyDareV2 = vi.fn(() => Promise.resolve());
+    await replyBbDare(interaction, SERVER, CHALLENGER, {
+      isDareV2PolicyEnabled: (flag) => Promise.resolve(flag === "dare_v2"),
+      isDaresPolicyEnabled: () => Promise.resolve(false),
+      replyDareV2,
+    });
+
+    expect(replyDareV2).not.toHaveBeenCalled();
+    expect(interaction.editReply).toHaveBeenCalledWith({
+      content: "🚫 Bryan Bucks dares aren't enabled in this server.",
+    });
+  });
+});
+
+describe("/bb dare Explore access", () => {
+  test("refuses Dare v2 before creating a turn in an ineligible guild", async () => {
+    const interaction = fakeInteraction({ amount: 20 });
+
+    await replyBbDareV2(
+      interaction,
+      {
+        serverId: SERVER,
+        channelId: DiscordChannelIdSchema.parse(CHANNEL),
+        challengerDiscordId: CHALLENGER,
+        text: "I bet Virmel can't win 7 games on Warwick",
+        amount: 20,
+      },
+      { isExploreGuildAllowed: () => false },
+    );
+
+    expect(interaction.editReply).toHaveBeenCalledWith({
+      content: "Scout Explore is not enabled in this server.",
+    });
   });
 });

@@ -13,6 +13,7 @@ import {
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
   type ExploreAnswer,
+  type DiscordChannelId,
   type ExploreMessage,
   type ExploreStreamEvent,
   type ReportAiPreviewSummary,
@@ -25,6 +26,10 @@ import {
   createBucksExploreTools,
   resolveBucksCapability,
 } from "#src/explore/bucks-tools.ts";
+import {
+  createDareExploreTools,
+  dareExploreEnabled,
+} from "#src/explore/dare-tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
@@ -58,6 +63,7 @@ const logger = createLogger("explore-agent");
 
 export type ExploreAgentParams = {
   runId: string;
+  conversationId: string;
   /**
    * Who this turn is being answered for. Required rather than optional: an
    * Explore turn always has an asker, and an optional field would quietly
@@ -78,6 +84,8 @@ export type ExploreAgentParams = {
    * structurally scoped to the requester's own balance.
    */
   requesterId: DiscordAccountId;
+  /** Discord-originated dare drafts keep the invoking channel as metadata. */
+  originChannelId: DiscordChannelId | null;
   abortSignal: AbortSignal;
   emit: (event: ExploreStreamEvent) => void | Promise<void>;
 };
@@ -128,6 +136,7 @@ async function streamExploreAgentInternal(
   // revocation both re-evaluate; a guild losing `betting_enabled` loses the
   // tools on its very next turn.
   const bucksCapability = await resolveBucksCapability(params.guildIds);
+  const daresEnabled = await dareExploreEnabled(bucksCapability);
 
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
@@ -136,9 +145,10 @@ async function streamExploreAgentInternal(
         bucksCapability === null
           ? null
           : { currentTime: new Date().toISOString() },
+      dares: daresEnabled,
     }),
     model: runtime.languageModel(model, ["tools"]),
-    tools: createExploreTools(params, state, bucksCapability),
+    tools: createExploreTools(params, state, bucksCapability, daresEnabled),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
     // supportsTemperature: false, and the runtime asks OpenRouter for
@@ -228,6 +238,7 @@ function createExploreTools(
   params: ExploreAgentParams,
   state: RunState,
   bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>,
+  daresEnabled: boolean,
 ) {
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
@@ -367,6 +378,15 @@ function createExploreTools(
       : createBucksExploreTools({
           capability: bucksCapability,
           requesterId: params.requesterId,
+          track,
+        })),
+    ...(bucksCapability === null || !daresEnabled
+      ? {}
+      : createDareExploreTools({
+          capability: bucksCapability,
+          requesterId: params.requesterId,
+          conversationId: params.conversationId,
+          originChannelId: params.originChannelId,
           track,
         })),
   };

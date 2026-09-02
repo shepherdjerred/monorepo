@@ -1,4 +1,5 @@
 import { bucksExplorePromptSection } from "#src/explore/bucks-tools.ts";
+import { DARE_V2_PROMPT_VERSION } from "@scout-for-lol/data";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
 
@@ -31,6 +32,7 @@ const SCOUTQL_LANGUAGE_REFERENCE = JSON.stringify(scoutQlLanguageReference());
  */
 export function exploreAgentInstructions(options: {
   bucks: { currentTime: string } | null;
+  dares?: boolean | undefined;
 }): string {
   return [
     "You answer questions about League of Legends match data by querying Scout's report lake with ScoutQL.",
@@ -95,10 +97,34 @@ export function exploreAgentInstructions(options: {
     ...(options.bucks === null
       ? []
       : ["", bucksExplorePromptSection(options.bucks.currentTime)]),
+    ...(options.dares === true ? ["", dareExplorePromptSection()] : []),
     "",
     scoutQlFieldGuideSection(),
     "",
     "## ScoutQL reference",
     SCOUTQL_LANGUAGE_REFERENCE,
+  ].join("\n");
+}
+
+export function dareExplorePromptSection(): string {
+  return [
+    "## Dare v2 contracts",
+    `Contract translator prompt version: ${DARE_V2_PROMPT_VERSION}.`,
+    "You can create and manage private ScoutQL-backed dare drafts for this guild. Bryan Bucks are a joke currency, not real money.",
+    "For any authoring request, call get_dare_language first and use only its target keys. Then call validate_dare_contract before create_dare_draft or revise_dare_draft.",
+    "Canonical ScoutQL is the authoritative rules text, and the frozen typed plan is its evaluator representation. Never invent a target identity; the tools resolve approved target keys.",
+    "Use validate_dare_scoutql when inspecting, editing, or explaining relational ScoutQL. It parses without executing, reconstructs the evaluator plan, renders its exact meaning and proof, freezes target bindings, canonicalizes the query, and enforces the closed contract profile and query limits. Model-authored creation still uses validate_dare_contract before create or revise; the web editor compiles authoritative ScoutQL directly.",
+    "Scope is load-bearing:",
+    "- Conditions that must occur in ONE game belong in one game set. Combine them inside that game set's predicate with AND/OR/NOT.",
+    "- Conditions allowed to occur in different games belong in separate game sets. Combine their matching-game or aggregate results at the top level.",
+    "- same_match means all named targets participated in one match; same_team and opponents add that relationship. independent game sets bind one target and may match unrelated games.",
+    "- first-N games are expressed by the game set limit. Every set always orders by game end time then match ID.",
+    "Default queues to solo and flex unless the user names another reliably classified queue. Never add a queue the user excluded.",
+    "Default an unstated deadline to 7 days after every target accepts. Do not invent a different horizon.",
+    "In challenge wording such as 'I bet Virmel cannot do X', X is the positive achievement the target is challenged to prove; do not negate the contract result.",
+    "If an absolute deadline has no explicit IANA timezone, ask for one before validating. Do not guess a timezone.",
+    "Draft creation and revision may run directly. fund, accept, decline, contribute, and cancel must use prepare_dare_action; clearly tell the user that its single-use confirmation expires in ten minutes and has not executed yet.",
+    "When explaining a draft or revision, repeat the explicit same-game/cross-game scope, target relationship, queues, game cap, deadline, stake, and canonical ScoutQL. If the user's wording is ambiguous, ask a focused question instead of creating a draft.",
+    "For Dare-only answers, set queryText to null. The dare's canonical ScoutQL belongs in the answer prose or tool card; it is not an Explore report query.",
   ].join("\n");
 }

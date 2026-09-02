@@ -21,6 +21,7 @@ import { InteractiveVisualization } from "#src/components/interactive-visualizat
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
+import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import {
@@ -175,6 +176,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
       {props.pendingAnswer !== null && (
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
+      {props.showRawTrace && <ExploreDareCards trace={props.trace} />}
       {props.activity !== null && props.trace.length === 0 && (
         <p className="flex items-center gap-2 text-sm text-scout-subtle">
           <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
@@ -298,6 +300,8 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
   return (
     <div className="space-y-3">
       <MarkdownAnswer>{message.content}</MarkdownAnswer>
+
+      {props.showRawTrace && <ExploreDareCards trace={message.trace} />}
 
       {chart !== null && (
         // Not `compact` — that pins the chart to 180px, which is a preview

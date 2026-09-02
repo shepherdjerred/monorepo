@@ -31,6 +31,7 @@ import {
   renderDarePlanV2,
   renderDareProofPlanV2,
 } from "#src/betting/dare-render-v2.ts";
+import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
 import { dareValueNeedsTimeline } from "#src/betting/dare-value-v2.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -204,12 +205,43 @@ export function prepareDareDraftV2(
   };
 }
 
-function revisionData(draft: PreparedDareDraftV2, revision: number) {
+type CompiledScoutQlArtifacts = {
+  scoutQlImmutableAst: string;
+  scoutQlPlanHash: string;
+};
+
+async function compileDraftScoutQl(
+  draft: PreparedDareDraftV2,
+): Promise<
+  | { kind: "valid"; artifacts: CompiledScoutQlArtifacts }
+  | { kind: "invalid"; issues: string[] }
+> {
+  const validation = await compileDareScoutQlPlanV2({
+    queryText: draft.canonicalScoutQl,
+    targets: draft.targets,
+  });
+  if (validation.kind === "invalid") return validation;
+  return {
+    kind: "valid",
+    artifacts: {
+      scoutQlImmutableAst: validation.compilation.immutableAst,
+      scoutQlPlanHash: validation.compilation.planHash,
+    },
+  };
+}
+
+function revisionData(
+  draft: PreparedDareDraftV2,
+  artifacts: CompiledScoutQlArtifacts,
+  revision: number,
+) {
   return {
     revision,
     originalText: draft.originalText,
     canonicalScoutQl: draft.canonicalScoutQl,
     compiledPlan: JSON.stringify(draft.plan),
+    scoutQlImmutableAst: artifacts.scoutQlImmutableAst,
+    scoutQlPlanHash: artifacts.scoutQlPlanHash,
     compilerVersion: DARE_SCOUTQL_COMPILER_VERSION,
     evaluatorVersion: DARE_EVALUATOR_V2_VERSION,
     targetsJson: JSON.stringify(draft.targets),
@@ -231,6 +263,8 @@ export async function createDareDraftV2(
   }
   const prepared = prepareDareDraftV2(input, now);
   if (prepared.kind === "invalid") return prepared;
+  const compiled = await compileDraftScoutQl(prepared.draft);
+  if (compiled.kind === "invalid") return compiled;
   const created = await dependencies.prismaClient.bucksDareV2.create({
     data: {
       serverId: input.serverId,
@@ -238,7 +272,9 @@ export async function createDareDraftV2(
       challengerDiscordId: input.challengerDiscordId,
       originConversationId: input.originConversationId ?? null,
       openingStake: prepared.draft.openingStake,
-      revisions: { create: revisionData(prepared.draft, 1) },
+      revisions: {
+        create: revisionData(prepared.draft, compiled.artifacts, 1),
+      },
     },
     select: { id: true, currentRevision: true },
   });
@@ -266,6 +302,8 @@ export async function reviseDareDraftV2(
   }
   const prepared = prepareDareDraftV2(input.definition, now);
   if (prepared.kind === "invalid") return prepared;
+  const compiled = await compileDraftScoutQl(prepared.draft);
+  if (compiled.kind === "invalid") return compiled;
   return await dependencies.prismaClient.$transaction(async (tx) => {
     const updated = await tx.bucksDareV2.updateManyAndReturn({
       where: {
@@ -305,7 +343,11 @@ export async function reviseDareDraftV2(
     await tx.bucksDareV2Revision.create({
       data: {
         dareId: input.dareId,
-        ...revisionData(prepared.draft, row.currentRevision),
+        ...revisionData(
+          prepared.draft,
+          compiled.artifacts,
+          row.currentRevision,
+        ),
       },
     });
     return {

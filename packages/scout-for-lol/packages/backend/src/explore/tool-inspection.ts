@@ -17,6 +17,17 @@ import {
   ScoutQlQueryToolInputSchema,
   ValidationToolOutputSchema,
 } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  DareActionToolInputSchema,
+  DareDefinitionToolInputSchema,
+  DareDeleteToolInputSchema,
+  DareInspectToolInputSchema,
+  DareListToolInputSchema,
+  DarePreviewToolInputSchema,
+  DareScoutQlToolInputSchema,
+  DareToolResultSchema,
+  ReviseDareToolInputSchema,
+} from "#src/explore/dare-tool-schemas.ts";
 
 /**
  * The Bryan Bucks tools' validated shapes, keyed by tool name. They carry no
@@ -43,6 +54,52 @@ const BUCKS_TOOL_SCHEMAS = new Map<
   [
     "query_bucks_bets",
     { input: BucksBetQuerySchema, output: BucksBetQueryResultSchema },
+  ],
+]);
+
+const DARE_TOOL_SCHEMAS = new Map<
+  string,
+  { input: z.ZodType; output: z.ZodType }
+>([
+  [
+    "get_dare_language",
+    { input: EmptyToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "validate_dare_contract",
+    { input: DareDefinitionToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "validate_dare_scoutql",
+    { input: DareScoutQlToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "preview_dare_contract",
+    { input: DarePreviewToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "create_dare_draft",
+    { input: DareDefinitionToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "revise_dare_draft",
+    { input: ReviseDareToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "list_dares",
+    { input: DareListToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "inspect_dare",
+    { input: DareInspectToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "prepare_dare_action",
+    { input: DareActionToolInputSchema, output: DareToolResultSchema },
+  ],
+  [
+    "delete_dare_draft",
+    { input: DareDeleteToolInputSchema, output: DareToolResultSchema },
   ],
 ]);
 
@@ -117,6 +174,13 @@ export function inspectExploreToolCall(
       details: null,
     };
   }
+  const dare = DARE_TOOL_SCHEMAS.get(toolName);
+  if (dare !== undefined) {
+    return {
+      rawInput: JsonValueSchema.parse(dare.input.parse(input)),
+      details: null,
+    };
+  }
   return { details: null, rawInput: null };
 }
 
@@ -186,6 +250,23 @@ export function inspectExploreToolResult(
     return {
       succeeded: true,
       rawOutput: JsonValueSchema.parse(bucks.output.parse(output)),
+      details: null,
+    };
+  }
+  const dare = DARE_TOOL_SCHEMAS.get(toolName);
+  if (dare !== undefined) {
+    dare.input.parse(input);
+    const parsed = DareToolResultSchema.parse(dare.output.parse(output));
+    return {
+      succeeded: ![
+        "invalid",
+        "not_found",
+        "not_editable",
+        "forbidden",
+        "feature_disabled",
+        "stale_revision",
+      ].includes(parsed.kind),
+      rawOutput: JsonValueSchema.parse(parsed),
       details: null,
     };
   }

@@ -25,6 +25,66 @@ conveniences layered on top: `AVG(win)` is an error in DuckDB and an error
 here, aggregates are always written out, and a name in `WITH (...)` has to be a
 name the `SELECT` produced.
 
+## Report ScoutQL and contract ScoutQL
+
+The editor syntax documented on this page is report ScoutQL: one bounded data
+source plus grouping, aggregation, ordering, and rendering. Dare v2 contracts
+use a relational profile of ScoutQL with qualified columns, aliases,
+non-recursive CTEs, bounded joins, scalar subqueries, and deterministic first-N
+game sets. Explore can parse, validate, canonically format, explain, and
+historically preview that profile without executing submitted SQL. Model-based
+authoring generates the query and typed evaluator plan together; the advanced
+draft editor instead compiles edited ScoutQL back into that same versioned plan
+before it can save a new revision.
+
+Contract ScoutQL always returns exactly one nullable Boolean named `achieved`:
+`true` means proven, `false` means conclusively not achieved, and `null` means
+the bounded evidence is insufficient. Its compiler accepts only the closed
+match and timeline catalog, freezes every `dare_target('Tn')` binding at
+funding, parameterizes values, and rejects wall-clock or dynamic player
+resolution. Validation first serializes the DuckDB AST, then applies Scout's
+closed-world source, function, target, statement, and complexity policy. A
+successful compilation returns canonical text plus the hash of its immutable
+AST, the reconstructed evaluator plan, and its exact plain-language meaning; it
+never runs the submitted query. Only a canonical query that round-trips to the
+same immutable AST is accepted. The ordinary report editor does not accept this
+relational profile; inspect and revise contracts through Explore.
+
+An arbitrary relational query is limited to 20 CTEs, 8 joined relations, 60
+predicates, and expression depth 12. Canonical Dare text contains mechanical
+candidate, eligibility, and bounded-set CTEs and joins. The compiler allows
+that exact physical envelope only long enough to reverse-compile it, then
+requires an immutable-AST round trip and enforces the semantic limits: at most
+20 game sets, 8 joined relations within each game set, 60 predicates across the
+contract, and expression depth 12. Renaming the supporting structure or using
+the wider envelope for another SQL shape is rejected.
+
+The contract profile keeps participant columns qualified (`p0.kills`) and uses
+a small closed set of Dare functions for semantics that must round-trip without
+ambiguity:
+
+- `dare_target('T1')` binds the frozen accounts for target `T1`.
+- `dare_rate('T1', 'cs_per_minute')` computes a supported participant rate.
+- `dare_related_participant_count(...)` expresses ally or opponent context.
+- `dare_timeline_event_count(...)` counts covered timeline evidence, including
+  optional roles, time bounds, and item IDs.
+- `dare_matching_games(...)` and `dare_aggregate(...)` produce the final
+  three-valued `achieved` result from bounded game sets.
+
+These are contract compiler primitives, not executable user-defined functions.
+The closed compiler recognizes their AST shapes and turns them into evaluator
+nodes; adding an unrecognized function or rearranging deterministic ordering is
+rejected.
+
+This separation is deliberate. A contract must remain reproducible after a
+player rename, prompt change, or compiler upgrade, while an interactive report
+is allowed to resolve today's player aliases and render rows for exploration.
+Each saved revision records the compiler and evaluator versions. Compiler v2
+also stores the immutable DuckDB AST and its SHA-256 plan hash; activation copies
+those artifacts into the funded contract, and settlement records the same
+identity in evidence rows and the final proof. Compiler v1 contracts remain
+readable so funded work never depends on a rollout flag or migration rewrite.
+
 ## Clause order
 
 ```text

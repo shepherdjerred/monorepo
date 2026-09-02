@@ -5,6 +5,7 @@ import type { ExploreConversation } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreComposer } from "#src/components/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore-header.tsx";
+import { ExploreDaresDrawer } from "#src/components/explore-dares-drawer.tsx";
 import { ExploreShareRow } from "#src/components/explore-share.tsx";
 import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
 import {
@@ -62,6 +63,7 @@ export function Explore() {
     status,
     enabled,
     quota,
+    daresEnabled,
     conversations,
     transcript,
     messages,
@@ -311,6 +313,7 @@ export function Explore() {
           drawerOpen={drawerOpen}
           onDrawerOpenChange={setDrawerOpen}
           sidebar={sidebar}
+          extraActions={daresEnabled ? <ExploreDaresDrawer /> : undefined}
           {...(headerActions === undefined ? {} : { actions: headerActions })}
         />
 
@@ -457,6 +460,7 @@ function useExploreConversation(conversationId: string | null) {
   const trpc = useTRPC();
   const status = useQuery(trpc.explore.status.queryOptions());
   const enabled = status.data?.enabled === true;
+  const daresEnabled = status.data?.daresEnabled === true;
   const conversations = useQuery({
     ...trpc.explore.list.queryOptions(),
     enabled,
@@ -469,6 +473,7 @@ function useExploreConversation(conversationId: string | null) {
   return {
     status,
     enabled,
+    daresEnabled,
     quota: status.data?.quota ?? [],
     conversations,
     transcript,

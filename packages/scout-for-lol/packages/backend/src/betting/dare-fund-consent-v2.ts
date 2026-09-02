@@ -21,6 +21,36 @@ import {
 } from "#src/betting/dare-v2-common.ts";
 import type { Db } from "#src/database/index.ts";
 
+function contractCompilerVersion(revision: {
+  compilerVersion: string;
+  scoutQlImmutableAst: string | null;
+  scoutQlPlanHash: string | null;
+}): "dare-scoutql-1" | "dare-scoutql-2" {
+  if (revision.compilerVersion === "dare-scoutql-1") {
+    return "dare-scoutql-1";
+  }
+  if (revision.compilerVersion !== "dare-scoutql-2") {
+    throw new Error(
+      `Unknown Dare ScoutQL compiler ${revision.compilerVersion}.`,
+    );
+  }
+  if (
+    revision.scoutQlImmutableAst === null &&
+    revision.scoutQlPlanHash === null
+  ) {
+    return "dare-scoutql-2";
+  }
+  if (
+    revision.scoutQlImmutableAst === null ||
+    revision.scoutQlPlanHash === null
+  ) {
+    throw new Error(
+      "Dare ScoutQL compiler v2 revision has an incomplete immutable artifact.",
+    );
+  }
+  return "dare-scoutql-2";
+}
+
 export async function fundDareV2InTransaction(
   tx: Db,
   input: {
@@ -209,7 +239,7 @@ export async function acceptDareV2InTransaction(
     version: DARE_CONTRACT_VERSION,
     canonicalScoutQl: revision.canonicalScoutQl,
     compiledPlan: plan,
-    compilerVersion: revision.compilerVersion,
+    compilerVersion: contractCompilerVersion(revision),
     evaluatorVersion: revision.evaluatorVersion,
     targets,
     openingStake: revision.openingStake,

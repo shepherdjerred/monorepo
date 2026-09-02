@@ -70,6 +70,10 @@ export function readableDareV2Contract(
   }
 }
 
+export function dareV2ScoutQlPlanHash(contract: DareContractV2): string | null {
+  return "scoutQlPlanHash" in contract ? contract.scoutQlPlanHash : null;
+}
+
 export async function currentDareV2State(
   reader: {
     bucksDareV2: {

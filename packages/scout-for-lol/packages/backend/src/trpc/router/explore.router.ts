@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { User } from "#generated/prisma/client/index.js";
 import {
   DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
   type DiscordAccountId,
   ExploreConversationIdSchema,
   ExploreConversationTitleSchema,
@@ -11,6 +12,14 @@ import {
   ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
 } from "@scout-for-lol/data";
+import {
+  inspectVisibleDareV2,
+  listVisibleDaresV2,
+} from "#src/betting/dare-view-v2.ts";
+import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
+import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
+import { DareV2IntentActionSchema } from "#src/betting/dare-intent-v2.ts";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
@@ -36,6 +45,13 @@ import {
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
+import {
+  DareDraftEditorInputSchema,
+  DareDraftPreviewInputSchema,
+  previewDareDraftEditorV2,
+  reviseDareDraftEditorV2,
+  validateDareDraftEditorV2,
+} from "#src/explore/dare-editor-v2.ts";
 import {
   protectedProcedure,
   router,
@@ -81,6 +97,50 @@ async function requireExploreUserAndGuilds(
   };
 }
 
+async function dareSurfaceEnabled(
+  userId: DiscordAccountId,
+  guildIds: string[],
+): Promise<boolean> {
+  const [enabledByGuild, existingDare] = await Promise.all([
+    Promise.all(
+      guildIds.map(async (guildId) => {
+        const serverId = DiscordGuildIdSchema.parse(guildId);
+        const [dareEnabled, relationalEnabled] = await Promise.all([
+          isPolicyEnabled("dare_v2", { server: serverId }),
+          isPolicyEnabled("scoutql_relational_enabled", { server: serverId }),
+        ]);
+        return dareEnabled && relationalEnabled;
+      }),
+    ),
+    prisma.bucksDareV2.findFirst({
+      where: {
+        serverId: { in: guildIds },
+        dareState: { not: "deleted" },
+        OR: [{ dareState: { not: "draft" } }, { challengerDiscordId: userId }],
+      },
+      select: { id: true },
+    }),
+  ]);
+  return enabledByGuild.some(Boolean) || existingDare !== null;
+}
+
+async function requireGuildDareIntent(intentId: string, guildIds: string[]) {
+  const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
+    where: { id: intentId },
+    include: { dare: { select: { serverId: true } } },
+  });
+  if (!guildIds.includes(intent?.dare.serverId ?? "")) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "Confirmation not found.",
+    });
+  }
+  if (intent === null) {
+    throw new Error("A visible Dare confirmation unexpectedly disappeared.");
+  }
+  return intent;
+}
+
 const exploreProcedure = protectedProcedure;
 
 export const exploreRouter = router({
@@ -91,17 +151,18 @@ export const exploreRouter = router({
    */
   status: exploreProcedure.query(async ({ ctx }) => {
     if (!isExploreConfigured()) {
-      return { enabled: false, quota: [] };
+      return { enabled: false, daresEnabled: false, quota: [] };
     }
     try {
-      const userId = await requireExploreUser(ctx.user);
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
       return {
         enabled: true,
+        daresEnabled: await dareSurfaceEnabled(userId, guildIds),
         quota: getExploreQuotaStatus({ userId }).quota,
       };
     } catch (error) {
       if (error instanceof TRPCError && error.code === "FORBIDDEN") {
-        return { enabled: false, quota: [] };
+        return { enabled: false, daresEnabled: false, quota: [] };
       }
       throw error;
     }
@@ -111,6 +172,125 @@ export const exploreRouter = router({
     const userId = await requireExploreUser(ctx.user);
     return await listExploreConversations(prisma, userId);
   }),
+
+  dareList: exploreProcedure
+    .input(
+      z.strictObject({
+        scope: z.enum(["mine", "guild"]),
+        search: z.string().min(1).max(100).optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const pages = await Promise.all(
+        guildIds.map(
+          async (guildId) =>
+            await listVisibleDaresV2(
+              {
+                serverId: DiscordGuildIdSchema.parse(guildId),
+                viewerDiscordId: userId,
+                scope: input.scope,
+                ...(input.search === undefined ? {} : { search: input.search }),
+              },
+              prisma,
+            ),
+        ),
+      );
+      return pages
+        .flat()
+        .toSorted((left, right) =>
+          right.updatedAt.localeCompare(left.updatedAt),
+        )
+        .slice(0, 100);
+    }),
+
+  dareInspect: exploreProcedure
+    .input(z.strictObject({ dareId: z.number().int().positive() }))
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      for (const guildId of guildIds) {
+        const dare = await inspectVisibleDareV2(
+          {
+            dareId: input.dareId,
+            serverId: DiscordGuildIdSchema.parse(guildId),
+            viewerDiscordId: userId,
+          },
+          prisma,
+        );
+        if (dare !== null) return dare;
+      }
+      throw new TRPCError({ code: "NOT_FOUND", message: "Dare not found." });
+    }),
+
+  dareValidateDraft: exploreProcedure
+    .input(DareDraftEditorInputSchema)
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      return await validateDareDraftEditorV2(input, userId, guildIds);
+    }),
+
+  darePreviewDraft: exploreProcedure
+    .input(DareDraftPreviewInputSchema)
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      return await previewDareDraftEditorV2(input, userId, guildIds);
+    }),
+
+  dareReviseDraft: webMutationProcedure
+    .input(DareDraftEditorInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      return await reviseDareDraftEditorV2(input, userId, guildIds);
+    }),
+
+  dareIntentStatus: exploreProcedure
+    .input(z.strictObject({ intentId: z.uuid() }))
+    .query(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const intent = await requireGuildDareIntent(input.intentId, guildIds);
+      if (intent.actorDiscordId !== userId) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Confirmation not found.",
+        });
+      }
+      return {
+        state:
+          intent.consumedAt === null
+            ? intent.expiresAt.getTime() <= Date.now()
+              ? ("expired" as const)
+              : ("pending" as const)
+            : ("consumed" as const),
+        action: DareV2IntentActionSchema.parse(intent.action),
+        expiresAt: intent.expiresAt.toISOString(),
+        result:
+          intent.resultJson === null
+            ? null
+            : z.json().parse(JSON.parse(intent.resultJson)),
+      };
+    }),
+
+  confirmDareIntent: webMutationProcedure
+    .input(z.strictObject({ intentId: z.uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const intent = await requireGuildDareIntent(input.intentId, guildIds);
+      const outcome = await consumeDareV2ConfirmationIntent({
+        intentId: input.intentId,
+        serverId: DiscordGuildIdSchema.parse(intent.dare.serverId),
+        actorDiscordId: userId,
+      });
+      const callout = [
+        "not_found",
+        "forbidden",
+        "intent_expired",
+        "feature_disabled",
+        "insufficient",
+      ].includes(outcome.kind)
+        ? null
+        : await tryEnsureDareV2Callout(intent.dareId);
+      return { ...outcome, callout };
+    }),
 
   activeRuns: exploreProcedure.query(async ({ ctx }) => {
     const userId = await requireExploreUser(ctx.user);

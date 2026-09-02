@@ -3,9 +3,12 @@ import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
 
 export const DARE_CONTRACT_VERSION = 2;
-export const DARE_SCOUTQL_COMPILER_VERSIONS = ["dare-scoutql-1"] as const;
+export const DARE_SCOUTQL_COMPILER_VERSIONS = [
+  "dare-scoutql-1",
+  "dare-scoutql-2",
+] as const;
 export const DARE_EVALUATOR_V2_VERSIONS = ["dare-evaluator-2"] as const;
-export const DARE_SCOUTQL_COMPILER_VERSION = DARE_SCOUTQL_COMPILER_VERSIONS[0];
+export const DARE_SCOUTQL_COMPILER_VERSION = "dare-scoutql-2" as const;
 export const DARE_EVALUATOR_V2_VERSION = DARE_EVALUATOR_V2_VERSIONS[0];
 export const DareScoutQlCompilerVersionSchema = z.enum(
   DARE_SCOUTQL_COMPILER_VERSIONS,
@@ -72,6 +75,36 @@ export const DareParticipantValueFieldV2Schema = z.enum([
   "penta_kills",
 ]);
 
+export const DareParticipantRateFieldV2Schema = z.enum([
+  "cs_per_minute",
+  "damage_per_minute",
+  "kda",
+]);
+
+export const DareComparisonOperatorV2Schema = z.enum([
+  "eq",
+  "neq",
+  "gte",
+  "lte",
+  "gt",
+  "lt",
+]);
+
+export const DareResultOperatorV2Schema = z.enum([
+  "eq",
+  "gte",
+  "lte",
+  "gt",
+  "lt",
+]);
+
+export const DareAggregateFunctionV2Schema = z.enum([
+  "sum",
+  "average",
+  "minimum",
+  "maximum",
+]);
+
 export type DareValueV2 =
   | {
       kind: "participant";
@@ -81,7 +114,7 @@ export type DareValueV2 =
   | {
       kind: "participant_rate";
       target: string;
-      field: "cs_per_minute" | "damage_per_minute" | "kda";
+      field: z.infer<typeof DareParticipantRateFieldV2Schema>;
     }
   | { kind: "game"; field: "duration_seconds" | "queue" }
   | {
@@ -120,7 +153,7 @@ export const DareValueV2Schema: z.ZodType<DareValueV2> = z.lazy(() =>
     z.strictObject({
       kind: z.literal("participant_rate"),
       target: z.string().min(1),
-      field: z.enum(["cs_per_minute", "damage_per_minute", "kda"]),
+      field: DareParticipantRateFieldV2Schema,
     }),
     z.strictObject({
       kind: z.literal("game"),
@@ -173,7 +206,7 @@ export const DareBooleanExpressionV2Schema: z.ZodType<DareBooleanExpressionV2> =
       z.strictObject({
         kind: z.literal("comparison"),
         value: DareValueV2Schema,
-        operator: z.enum(["eq", "neq", "gte", "lte", "gt", "lt"]),
+        operator: DareComparisonOperatorV2Schema,
         threshold: z.union([z.string(), z.number(), z.boolean()]),
       }),
       z.strictObject({
@@ -227,7 +260,7 @@ export const DareResultExpressionV2Schema: z.ZodType<DareResultExpressionV2> =
       z.strictObject({
         kind: z.literal("matching_games"),
         gameSet: z.string().min(1),
-        operator: z.enum(["eq", "gte", "lte", "gt", "lt"]),
+        operator: DareResultOperatorV2Schema,
         threshold: z
           .number()
           .int()
@@ -238,8 +271,8 @@ export const DareResultExpressionV2Schema: z.ZodType<DareResultExpressionV2> =
         kind: z.literal("aggregate"),
         gameSet: z.string().min(1),
         projection: z.string().min(1),
-        function: z.enum(["sum", "average", "minimum", "maximum"]),
-        operator: z.enum(["eq", "gte", "lte", "gt", "lt"]),
+        function: DareAggregateFunctionV2Schema,
+        operator: DareResultOperatorV2Schema,
         threshold: z.number(),
       }),
       z.strictObject({
@@ -405,11 +438,10 @@ export const DareDeadlineSpecV2Schema = z.union([
 ]);
 export type DareDeadlineSpecV2 = z.infer<typeof DareDeadlineSpecV2Schema>;
 
-export const DareContractV2Schema = z.strictObject({
+const DareContractV2BaseSchema = z.strictObject({
   version: z.literal(DARE_CONTRACT_VERSION),
   canonicalScoutQl: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   compiledPlan: DareCompiledPlanV2Schema,
-  compilerVersion: DareScoutQlCompilerVersionSchema,
   evaluatorVersion: DareEvaluatorV2VersionSchema,
   targets: z.array(DareTargetBindingV2Schema).min(1).max(DARE_V2_MAX_TARGETS),
   openingStake: BucksStakeSchema,
@@ -422,4 +454,18 @@ export const DareContractV2Schema = z.strictObject({
   plainLanguage: z.string().min(1),
   semanticProofPlan: z.string().min(1),
 });
+
+export const DareContractV2Schema = z.union([
+  DareContractV2BaseSchema.extend({
+    compilerVersion: z.literal("dare-scoutql-1"),
+  }),
+  DareContractV2BaseSchema.extend({
+    compilerVersion: z.literal("dare-scoutql-2"),
+  }),
+  DareContractV2BaseSchema.extend({
+    compilerVersion: z.literal("dare-scoutql-2"),
+    scoutQlImmutableAst: z.string().min(1),
+    scoutQlPlanHash: z.string().regex(/^[a-f\d]{64}$/),
+  }),
+]);
 export type DareContractV2 = z.infer<typeof DareContractV2Schema>;

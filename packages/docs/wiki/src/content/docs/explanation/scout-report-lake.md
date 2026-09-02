@@ -29,7 +29,7 @@ lake is the wrong place to look.
 ```mermaid
 flowchart LR
   accTitle: Scout report lake read and write flow
-  accDescr: Live ingest crons write raw JSON to S3 and stage lake rows as best effort. A quiet first-run import snapshots twenty Match-V5 IDs and requires both writes before checkpointing. A fold compaction every fifteen minutes and a nightly rebuild from S3 both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see a match seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
+  accDescr: Live ingest crons write raw JSON to S3 and stage match and supported timeline rows as best effort. A quiet first-run import snapshots twenty Match-V5 IDs and requires both match writes before checkpointing. A fold compaction every fifteen minutes and a nightly rebuild from already-retained S3 objects both publish immutable Parquet builds behind a CURRENT pointer. Readers union the published Parquet with the staging files, so DuckDB queries see evidence seconds after ingest. Competition standings bypass the lake and read raw match JSON and leaderboard snapshots from S3 directly.
 
   I[Ingest crons] -->|must succeed| S3[(S3 durable objects)]
   I -->|best effort| ST[NDJSON staging]
@@ -53,8 +53,9 @@ Raw match, timeline, prematch, and leaderboard JSON lands in S3
 That store is append-only and authoritative.
 
 The lake is a directory on the pod's own volume: Hive-partitioned Parquet
-(`month=YYYY-MM/`) for four tables — matches, prematch, accounts, and
-competition rank history — laid out per
+(`month=YYYY-MM/`) for matches, prematch, accounts, competition rank history,
+timeline events, timeline event participants, timeline participant frames, and
+timeline coverage — laid out per
 [paths.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/paths.ts).
 It is derived data. Losing the volume costs one nightly rebuild, not any
 history.
@@ -67,9 +68,9 @@ raw JSON, so the new column simply appears the next morning.
 
 Ingest makes two writes with deliberately different contracts, spelled out in
 [store.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-store/store.ts).
-The S3 put throws on failure, because raw data is unrecoverable. The lake
-staging write never throws, because a lost staging row is re-derived from S3
-that night anyway.
+The S3 put throws on failure, because raw data is unrecoverable. Match and
+timeline lake staging writes never throw, because a lost staging row is
+re-derived from S3 that night anyway.
 
 The quiet first-run import tightens that contract. It snapshots exactly 20
 Match-V5 IDs once, imports newest first, and checkpoints a match only when the
@@ -113,8 +114,20 @@ failure mid-write can leave a truncated file on disk. That is why compaction
 validates every staged line and skips the whole file when one fails, and why
 the nightly rebuild re-derives the row from S3 regardless.
 
-Timelines go to S3 only. No query surface reads them, so flattening them into
-the lake would be pure cost.
+Supported timelines are normalized into four relations. `timeline_events` gives
+each event a stable ID; `timeline_event_participants` records semantic roles;
+`timeline_participant_frames` records participant snapshots; and
+`timeline_coverage` marks a retained, supported timeline as completely
+normalized. Absence of that marker is missing evidence, while unsupported queue
+choices are rejected before a timeline contract can be funded. That last
+relation is essential for contracts: no event in a complete timeline is false
+evidence, while a timeline Scout never retained must remain unknown.
+
+Live ingest stages all four relations next to the match. Rebuild enumerates only
+timeline objects already retained in S3; it does not call Riot or expand the raw
+history solely to backfill a dare. Event and frame IDs are derived from match,
+frame, event, participant, and role coordinates so replaying the same raw object
+is idempotent.
 
 All row shapes come from one place:
 [flatten.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/flatten.ts)
@@ -128,7 +141,7 @@ and DuckDB never infers types from a sparse first line.
 ```mermaid
 flowchart TB
   accTitle: Two compaction tiers, one publish protocol
-  accDescr: The fold tier hardlinks the previous build's files and converts staged NDJSON into small per-month Parquet files. The nightly rebuild flattens every raw object in S3 into a fresh build. Both tiers produce an immutable build directory, atomically swap the CURRENT pointer to it, and then garbage collection keeps only the two newest builds.
+  accDescr: The fold tier hardlinks the previous build's files and converts staged match and timeline NDJSON into small per-month Parquet files. The nightly rebuild flattens every retained raw match and timeline object in S3 into a fresh build. Both tiers produce an immutable build directory, atomically swap the CURRENT pointer to it, and then garbage collection keeps only the two newest builds.
 
   subgraph fold ["Fold — every 15 minutes"]
     PB[Previous build] -->|hardlink files| NB[New build]
@@ -149,8 +162,9 @@ the staged NDJSON into small per-month Parquet files, and deletes only the
 staging files it provably folded. Hardlinking makes fold cost proportional to
 the backlog, not to the size of the lake.
 
-A rebuild runs nightly. It enumerates all of S3, streams every raw document
-through the same flatteners, and writes each table fresh. The rebuild is
+A rebuild runs nightly. It enumerates the supported raw prefixes in S3, streams
+every retained match and timeline through the same flatteners, and writes each
+table fresh. The rebuild is
 simultaneously the defragmenter (folds leave one small file per touched
 month), the backfill mechanism, and the recovery path.
 

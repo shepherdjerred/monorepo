@@ -1513,22 +1513,24 @@ model BucksDareV2 {
 // Immutable history of draft iterations. Replacing a draft appends a revision;
 // it never mutates the ScoutQL/plan the challenger previously reviewed.
 model BucksDareV2Revision {
-  id                Int         @id @default(autoincrement())
-  dareId            Int
-  dare              BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  revision          Int
-  originalText      String
-  canonicalScoutQl  String
-  compiledPlan      String
-  compilerVersion   String
-  evaluatorVersion  String
-  targetsJson       String
-  deadlineSpecJson  String
-  openingStake      Int
-  plainLanguage     String
-  semanticProofPlan String
-  translationJson   String?
-  createdAt         DateTime    @default(now())
+  id                  Int         @id @default(autoincrement())
+  dareId              Int
+  dare                BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision            Int
+  originalText        String
+  canonicalScoutQl    String
+  compiledPlan        String
+  scoutQlImmutableAst String?
+  scoutQlPlanHash     String?
+  compilerVersion     String
+  evaluatorVersion    String
+  targetsJson         String
+  deadlineSpecJson    String
+  openingStake        Int
+  plainLanguage       String
+  semanticProofPlan   String
+  translationJson     String?
+  createdAt           DateTime    @default(now())
 
   @@unique([dareId, revision])
 }

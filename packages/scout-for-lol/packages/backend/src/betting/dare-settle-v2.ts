@@ -22,6 +22,7 @@ import type {
 import { collectDareV2Batch } from "#src/betting/dare-settle-batch-v2.ts";
 import {
   dareV2EvidenceCreateData,
+  dareV2EvidencePlanVersion,
   storedDareV2Evidence,
 } from "#src/betting/dare-settle-evidence-v2.ts";
 import {
@@ -35,6 +36,7 @@ import {
   loadDareTimelineEvidenceV2,
 } from "#src/betting/dare-timeline-evidence-v2.ts";
 import {
+  dareV2ScoutQlPlanHash,
   parseDareV2Contract,
   readableDareV2Contract,
 } from "#src/betting/dare-v2-common.ts";
@@ -170,7 +172,7 @@ async function captureOneDareV2(
       dareV2EvidenceCreateData(
         input.dare.id,
         input.matchEvidence,
-        `${input.contract.compilerVersion}:${input.contract.evaluatorVersion}`,
+        dareV2EvidencePlanVersion(input.contract),
       ),
     ],
     skipDuplicates: true,
@@ -196,6 +198,9 @@ async function captureOneDareV2(
           evidence,
           value: finality.value,
           settledAt: input.now.toISOString(),
+          compilerVersion: input.contract.compilerVersion,
+          evaluatorVersion: input.contract.evaluatorVersion,
+          scoutQlPlanHash: dareV2ScoutQlPlanHash(input.contract),
         })
       : null;
   const resolution = finality.final
@@ -465,6 +470,9 @@ export async function settleActiveDareV2AtBound(
                 evidence,
                 value: finality.value,
                 settledAt: now.toISOString(),
+                compilerVersion: contract.compilerVersion,
+                evaluatorVersion: contract.evaluatorVersion,
+                scoutQlPlanHash: dareV2ScoutQlPlanHash(contract),
               });
         const resolution = await resolveFinalDareV2(tx, {
           dare,

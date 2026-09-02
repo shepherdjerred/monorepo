@@ -23,6 +23,9 @@ export type DareFinalityV2 = {
 
 export type DareProofV2 = {
   planVersion: number;
+  compilerVersion: string;
+  evaluatorVersion: string;
+  scoutQlPlanHash: string | null;
   value: boolean;
   booleanBranch: string;
   decisiveAt: string;
@@ -301,6 +304,9 @@ export function buildDareProofV2(input: {
   evidence: readonly DareMatchEvidenceV2[];
   value: boolean;
   settledAt: string;
+  compilerVersion: string;
+  evaluatorVersion: string;
+  scoutQlPlanHash: string | null;
 }): DareProofV2 {
   const evidence = orderedEvidence(input.plan, input.evidence);
   const part = proofPart(
@@ -315,6 +321,9 @@ export function buildDareProofV2(input: {
   );
   return {
     planVersion: input.plan.version,
+    compilerVersion: input.compilerVersion,
+    evaluatorVersion: input.evaluatorVersion,
+    scoutQlPlanHash: input.scoutQlPlanHash,
     value: input.value,
     booleanBranch: part.branch,
     decisiveAt: part.decisiveAt,

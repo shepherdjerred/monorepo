@@ -208,6 +208,21 @@ function boundedRawValue(
   return { kind: "value", value, byteLength };
 }
 
+const DARE_TOOL_CALL_MESSAGES = new Map([
+  ["get_dare_language", "Reading Dare v2 rules."],
+  ["validate_dare_contract", "Checking the dare contract."],
+  ["validate_dare_scoutql", "Compiling the dare ScoutQL."],
+  ["preview_dare_contract", "Backtesting the dare contract."],
+  ["create_dare_draft", "Saving the dare draft."],
+  ["revise_dare_draft", "Saving a draft revision."],
+  ["list_dares", "Loading visible dares."],
+  ["inspect_dare", "Loading the dare contract."],
+  ["prepare_dare_action", "Preparing a confirmation."],
+  ["delete_dare_draft", "Deleting the dare draft."],
+]);
+
+const DARE_RESULT_TOOL_NAMES = new Set(DARE_TOOL_CALL_MESSAGES.keys());
+
 function toolCallMessage(toolName: string): string {
   if (toolName === "get_report_language") {
     return "Reading the ScoutQL reference.";
@@ -234,6 +249,8 @@ function toolCallMessage(toolName: string): string {
   ) {
     return "Querying Bryan Bucks records.";
   }
+  const dareMessage = DARE_TOOL_CALL_MESSAGES.get(toolName);
+  if (dareMessage !== undefined) return dareMessage;
   return `Running ${toolName}.`;
 }
 
@@ -260,6 +277,9 @@ function toolResultMessage(toolName: string, ok: boolean): string {
     toolName === "query_bucks_bets"
   ) {
     return "Got Bryan Bucks results.";
+  }
+  if (DARE_RESULT_TOOL_NAMES.has(toolName)) {
+    return "Dare action completed.";
   }
   return `${toolName} completed.`;
 }

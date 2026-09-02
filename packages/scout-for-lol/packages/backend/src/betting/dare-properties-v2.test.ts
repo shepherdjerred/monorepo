@@ -15,6 +15,11 @@ import {
 } from "#src/betting/dare-proof-v2.ts";
 
 const VALUES: readonly DareTruthValue[] = [false, null, true];
+const PROOF_ARTIFACT = {
+  compilerVersion: "dare-scoutql-2",
+  evaluatorVersion: "dare-evaluator-2",
+  scoutQlPlanHash: "0".repeat(64),
+};
 
 function gameSet(name: string, target: string, limit = 100) {
   return {
@@ -181,6 +186,7 @@ describe("Dare v2 evaluator properties", () => {
 
     expect(
       buildDareProofV2({
+        ...PROOF_ARTIFACT,
         plan: bounded,
         evidence: [],
         value: false,
@@ -205,6 +211,7 @@ describe("Dare v2 evaluator properties", () => {
     ];
     expect(
       buildDareProofV2({
+        ...PROOF_ARTIFACT,
         plan: orPlan,
         evidence: earlierB,
         value: true,
@@ -215,6 +222,7 @@ describe("Dare v2 evaluator properties", () => {
     const tied = [evidence({ id: "AB", endSecond: 1, a: true, b: true })];
     expect(
       buildDareProofV2({
+        ...PROOF_ARTIFACT,
         plan: orPlan,
         evidence: tied,
         value: true,
@@ -231,6 +239,7 @@ describe("Dare v2 proof bounds", () => {
 
     expect(
       buildDareProofV2({
+        ...PROOF_ARTIFACT,
         plan: notPlan,
         evidence: [],
         value: true,
@@ -284,6 +293,7 @@ describe("Dare v2 proof bounds", () => {
 
     expect(
       buildDareProofV2({
+        ...PROOF_ARTIFACT,
         plan: aggregateOrPlan,
         evidence: rows,
         value: true,
@@ -311,6 +321,7 @@ describe("Dare v2 proof bounds", () => {
       ).toBe(true);
       expect(
         buildDareProofV2({
+          ...PROOF_ARTIFACT,
           plan: bounded,
           evidence: candidate,
           value: true,

@@ -58,3 +58,21 @@ export function dareV2EvidenceCreateData(
     planVersion,
   };
 }
+
+type DareV2EvidenceVersionContract =
+  | { compilerVersion: "dare-scoutql-1"; evaluatorVersion: string }
+  | { compilerVersion: "dare-scoutql-2"; evaluatorVersion: string }
+  | {
+      compilerVersion: "dare-scoutql-2";
+      evaluatorVersion: string;
+      scoutQlPlanHash: string;
+    };
+
+export function dareV2EvidencePlanVersion(
+  contract: DareV2EvidenceVersionContract,
+): string {
+  const versions = `${contract.compilerVersion}:${contract.evaluatorVersion}`;
+  return "scoutQlPlanHash" in contract
+    ? `${versions}:${contract.scoutQlPlanHash}`
+    : versions;
+}
