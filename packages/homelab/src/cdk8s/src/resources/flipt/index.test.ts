@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { z } from "zod";
 import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flipt.ts";
-import { createEnvironmentInitializationScript } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import {
+  createRepositoryInitializationScript,
+  createSeedValidationScript,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 
 const ManifestSchema = z
   .object({
@@ -77,6 +83,25 @@ function findManifest(
   return manifest;
 }
 
+async function run(command: readonly string[], cwd?: string): Promise<string> {
+  const subprocess = Bun.spawn([...command], {
+    cwd,
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const [stdout, stderr, exitCode] = await Promise.all([
+    new Response(subprocess.stdout).text(),
+    new Response(subprocess.stderr).text(),
+    subprocess.exited,
+  ]);
+  if (exitCode !== 0) {
+    throw new Error(
+      `${command.join(" ")} failed (${exitCode.toString()}): ${stderr}`,
+    );
+  }
+  return stdout.trim();
+}
+
 describe("Flipt chart", () => {
   it("emits the namespace, deployment, config, storage, service, and policy resources", () => {
     const manifests = synthesize();
@@ -139,8 +164,11 @@ describe("Flipt chart", () => {
     expect(yaml).not.toContain("path: /var/opt/flipt/data\n");
     expect(yaml).not.toContain("path: /var/opt/flipt/data-beta");
     expect(yaml).not.toContain("path: /var/opt/flipt/data-prod");
-    expect(yaml).toContain("path: /var/opt/flipt/environments/beta");
-    expect(yaml).toContain("path: /var/opt/flipt/environments/prod");
+    expect(yaml).not.toContain("path: /var/opt/flipt/environments/beta");
+    expect(yaml).not.toContain("path: /var/opt/flipt/environments/prod");
+    expect(yaml).toContain("path: /var/opt/flipt/repositories/beta");
+    expect(yaml).toContain("path: /var/opt/flipt/repositories/prod");
+    expect(yaml.match(/branch: main/g)).toHaveLength(2);
     expect(yaml).toContain("name: beta");
     expect(yaml).toContain("name: prod");
     expect(yaml).toMatch(/prod:\n {4}name: prod\n {4}default: true/);
@@ -158,25 +186,50 @@ describe("Flipt chart", () => {
     ).toMatch(/^[a-f\d]{12}$/);
   });
 
-  it("validates and initializes both environments without overwriting repositories", () => {
+  it("validates seeds before initializing committed repositories", () => {
     const deployment = DeploymentSchema.parse(
       findManifest(synthesize(), "Deployment", "flipt"),
     );
-    const initializer = deployment.spec.template.spec.initContainers.find(
-      (container) => container.name === "initialize-environments",
+    const validator = deployment.spec.template.spec.initContainers.find(
+      (container) => container.name === "validate-environment-seeds",
     );
-    expect(initializer?.command).toEqual(["/bin/sh", "-c"]);
-    const script = initializer?.args?.[0] ?? "";
-    expect(script).toContain('/flipt validate --work-dir "$seed"');
-    expect(script).toContain('repo="/var/opt/flipt/environments/$environment"');
-    expect(script).toContain(
+    const initializer = deployment.spec.template.spec.initContainers.find(
+      (container) => container.name === "initialize-environment-repositories",
+    );
+    expect(
+      deployment.spec.template.spec.initContainers.map(({ name }) => name),
+    ).toEqual([
+      "validate-environment-seeds",
+      "initialize-environment-repositories",
+    ]);
+    expect(validator?.command).toEqual(["/bin/sh", "-c"]);
+    const validationScript = validator?.args?.[0] ?? "";
+    expect(validationScript).toContain('/flipt validate --work-dir "$seed"');
+    expect(validationScript).toContain(
       'cp "/etc/flipt-seed/beta.scout.yaml" "$work_root/beta/scout/features.yaml"',
     );
-    expect(script).toContain('if [ ! -e "$repo" ]');
-    expect(script).not.toContain("data-beta");
-    expect(script).not.toContain("data-prod");
+    expect(initializer?.command).toEqual(["/bin/sh", "-c"]);
+    expect(initializer?.image).toMatch(
+      /^docker\.io\/alpine\/git:2\.54\.0@sha256:[a-f\d]{64}$/,
+    );
+    const initializationScript = initializer?.args?.[0] ?? "";
+    expect(initializationScript).toContain(
+      'repo="/var/opt/flipt/repositories/$environment"',
+    );
+    expect(initializationScript).toContain(
+      'git -C "$staging" init --initial-branch=main',
+    );
+    expect(initializationScript).toContain(
+      'git -C "$staging" add -- "scout/features.yaml"',
+    );
+    expect(initializationScript).toContain('if [ -e "$repo" ]');
+    expect(initializationScript).not.toContain("data-beta");
+    expect(initializationScript).not.toContain("data-prod");
+    expect(validator?.volumeMounts?.map((mount) => mount.mountPath)).toEqual(
+      expect.arrayContaining(["/etc/flipt-seed", "/tmp"]),
+    );
     expect(initializer?.volumeMounts?.map((mount) => mount.mountPath)).toEqual(
-      expect.arrayContaining(["/var/opt/flipt", "/etc/flipt-seed", "/tmp"]),
+      expect.arrayContaining(["/var/opt/flipt", "/tmp"]),
     );
   });
 
@@ -207,19 +260,74 @@ describe("Flipt chart", () => {
       expect(yaml).not.toContain("key: default");
     }
   });
+});
 
-  it("generates a fail-fast initialization script", () => {
-    const script = createEnvironmentInitializationScript("/data", ["scout"]);
-    expect(script).toContain('validate_repo "$repo"');
-    expect(script).toContain('/flipt validate --work-dir "$repo"');
-    expect(script).toContain('repo="/data/environments/$environment"');
-    expect(script).toContain(
+describe("Flipt repository initialization", () => {
+  it("generates fail-fast seed validation and repository initialization scripts", () => {
+    const validationScript = createSeedValidationScript(["scout"]);
+    expect(validationScript).toContain('/flipt validate --work-dir "$seed"');
+    expect(validationScript).toContain(
       'cp "/etc/flipt-seed/prod.scout.yaml" "$work_root/prod/scout/features.yaml"',
     );
-    expect(script).not.toContain("data-beta");
-    expect(script).not.toContain("data-prod");
+    const initializationScript = createRepositoryInitializationScript("/data", [
+      "scout",
+    ]);
+    expect(initializationScript).toContain('validate_repository "$repo"');
+    expect(initializationScript).toContain(
+      'repo="/data/repositories/$environment"',
+    );
+    expect(initializationScript).toContain(
+      "git -C \"$candidate\" cat-file -e 'refs/heads/main^{commit}'",
+    );
+    expect(initializationScript).toContain(
+      'git -C "$staging" add -- "scout/features.yaml"',
+    );
+    expect(initializationScript).not.toContain("data-beta");
+    expect(initializationScript).not.toContain("data-prod");
   });
 
+  it("creates a normal repository whose main commit contains the namespace seeds", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "flipt-repository-init-"));
+    try {
+      const workRoot = path.join(root, "seed");
+      const dataPath = path.join(root, "data");
+      for (const environment of ["beta", "prod"]) {
+        const namespacePath = path.join(workRoot, environment, "scout");
+        await mkdir(namespacePath, { recursive: true });
+        await Bun.write(
+          path.join(namespacePath, "features.yaml"),
+          `version: "1.2"\nnamespace:\n  key: scout\n`,
+        );
+      }
+
+      await run([
+        "/bin/sh",
+        "-c",
+        createRepositoryInitializationScript(dataPath, ["scout"], workRoot),
+      ]);
+
+      for (const environment of ["beta", "prod"]) {
+        const repository = path.join(dataPath, "repositories", environment);
+        expect(await run(["git", "branch", "--show-current"], repository)).toBe(
+          "main",
+        );
+        expect(
+          await run(
+            ["git", "ls-tree", "-r", "--name-only", "refs/heads/main"],
+            repository,
+          ),
+        ).toBe("scout/features.yaml");
+        expect(await run(["git", "log", "-1", "--format=%s"], repository)).toBe(
+          "Seed managed feature flags",
+        );
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe("Flipt network policy", () => {
   it("restricts egress to DNS only", () => {
     const policy = z
       .object({
