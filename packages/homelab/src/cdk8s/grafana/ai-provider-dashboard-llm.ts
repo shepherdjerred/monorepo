@@ -260,6 +260,83 @@ export function addLlmPanels(
 
   builder.withPanel(createSubjectTokenPanel());
   builder.withPanel(createSubjectCallPanel());
+
+  builder.withRow(
+    new dashboard.RowBuilder("OpenAI Complimentary Inference").gridPos({
+      x: 0,
+      y: 100,
+      w: 24,
+      h: 1,
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "OpenRouter BYOK Request Rate",
+      description:
+        "Successful OpenRouter language requests by provider-reported BYOK state. Scout reviews should remain byok=true.",
+      targets: [
+        {
+          query:
+            "sum by (service, workload, model, upstream_provider, byok) (rate(llm_openrouter_byok_requests_total[5m])) or on() vector(0)",
+          legend:
+            "{{service}} {{workload}} {{model}} {{upstream_provider}} byok={{byok}}",
+        },
+      ],
+      gridPos: { x: 0, y: 101, w: 12, h: 8 },
+      unit: "reqps",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Official OpenAI Tokens by Service Tier",
+      description:
+        "Current UTC-day tokens from OpenAI's organization Usage API after the ingestion cutoff.",
+      targets: [
+        {
+          query:
+            "sum by (model, service_tier, type) (openai_project_usage_tokens) or on() vector(0)",
+          legend: "{{model}} {{service_tier}} {{type}}",
+        },
+      ],
+      gridPos: { x: 12, y: 101, w: 12, h: 8 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Official OpenAI Project Cost",
+      description:
+        "Current UTC-day cost from OpenAI's organization Costs API; this is the billing authority.",
+      targets: [
+        {
+          query: "max(openai_project_cost_usd) or on() vector(0)",
+          legend: "official cost",
+        },
+      ],
+      gridPos: { x: 0, y: 109, w: 12, h: 8 },
+      unit: "currencyUSD",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "OpenAI Reconciliation Freshness",
+      description:
+        "Seconds since the last complete Usage, Costs, metrics, and Alertmanager reconciliation.",
+      targets: [
+        {
+          query:
+            "time() - max(openai_usage_reconciliation_last_success_timestamp_seconds)",
+          legend: "last success age",
+        },
+      ],
+      gridPos: { x: 12, y: 109, w: 12, h: 8 },
+      unit: "s",
+    }),
+  );
 }
 
 /**

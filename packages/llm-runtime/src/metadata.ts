@@ -26,6 +26,7 @@ const RouterMetadataSchema = z
     region: z.string().nullable().optional(),
     attempt: z.number().int().nonnegative().optional(),
     attempts: z.array(RouterAttemptSchema).optional(),
+    is_byok: z.boolean().optional(),
   })
   .loose();
 
@@ -184,6 +185,7 @@ function routingFields(input: {
   OpenRouterCallMetadata,
   | "requestedModel"
   | "upstreamProvider"
+  | "isByok"
   | "route"
   | "region"
   | "fallbackAttempts"
@@ -198,6 +200,7 @@ function routingFields(input: {
       nonEmpty(input.provider?.provider) ??
       nonEmpty(input.responseProvider) ??
       nonEmpty(attempts.at(-1)?.provider),
+    isByok: input.router?.is_byok,
     route: nonEmpty(input.router?.strategy),
     region: nonEmpty(input.router?.region ?? undefined),
     fallbackAttempts: Math.max(

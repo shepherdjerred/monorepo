@@ -12,6 +12,7 @@ const ObservationSchema = z.object({
   responseBody: z.object({
     openrouter_metadata: z.object({
       requested: z.string(),
+      is_byok: z.boolean().optional(),
       attempts: z.array(z.object({ provider: z.string() }).loose()),
     }),
   }),
@@ -56,6 +57,7 @@ test("captures router metadata from a JSON response without consuming it", async
     id: "generation-json",
     openrouter_metadata: {
       requested: "openai/gpt-5.6-luna",
+      is_byok: true,
       attempts: [
         {
           provider: "Provider A",
@@ -91,7 +93,7 @@ test("captures router metadata from the final additive SSE chunk", async () => {
   const observations: AttributedResponseObservation[] = [];
   const sse = [
     'data: {"id":"generation-sse","choices":[{"delta":{"content":"ok"}}]}',
-    'data: {"id":"generation-sse","openrouter_metadata":{"requested":"openai/gpt-5.6-luna","attempts":[{"provider":"Provider B","model":"openai/gpt-5.6-luna","status":200}],"future":{"accepted":true}}}',
+    'data: {"id":"generation-sse","openrouter_metadata":{"requested":"openai/gpt-5.6-luna","is_byok":true,"attempts":[{"provider":"Provider B","model":"openai/gpt-5.6-luna","status":200}],"future":{"accepted":true}}}',
     "data: [DONE]",
     "",
   ].join("\n\n");
@@ -118,6 +120,7 @@ test("captures router metadata from the final additive SSE chunk", async () => {
   expect(
     observation.responseBody.openrouter_metadata.attempts[0]?.provider,
   ).toBe("Provider B");
+  expect(observation.responseBody.openrouter_metadata.is_byok).toBe(true);
 });
 
 test("keeps the final SSE metadata event without buffering the whole stream", async () => {
@@ -209,6 +212,7 @@ test("records stable model ids, upstream attempts, and missing metadata", async 
     endpoint: "language",
     responseBody: {
       openrouter_metadata: {
+        is_byok: false,
         attempts: [
           {
             provider: "Provider A",
@@ -243,6 +247,9 @@ test("records stable model ids, upstream attempts, and missing metadata", async 
     'upstream_provider="Provider B",outcome="success"',
   );
   expect(exposition).toContain('workload="missing-metadata"');
+  expect(exposition).toContain(
+    'llm_openrouter_byok_requests_total{service="test-service",workload="test-workload",model="gpt-5.6-luna",upstream_provider="Provider B",byok="false"} 1',
+  );
 });
 
 test("does not double-count language calls the AI SDK telemetry already recorded", async () => {

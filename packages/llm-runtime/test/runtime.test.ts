@@ -58,6 +58,7 @@ function openRouterResponse(
     },
     openrouter_metadata: {
       requested: "openai/gpt-5.6-luna",
+      is_byok: true,
       strategy: "direct",
       region: "iad",
       attempt: 2,
@@ -206,6 +207,7 @@ describe("catalog-aware runtime", () => {
       model: "gpt-5.6-luna",
       resolvedModel: "openai/gpt-5.6-luna",
       upstreamProvider: "Provider B",
+      isByok: true,
       generationId: "gen-test",
       fallbackAttempts: 1,
       inputTokens: 12,
@@ -253,6 +255,7 @@ describe("OpenRouter metadata", () => {
         model: "openai/gpt-5.6-luna",
         openrouter_metadata: {
           requested: "openai/gpt-5.6-luna",
+          is_byok: true,
           strategy: "direct",
           region: "iad",
           attempt: 2,
@@ -274,10 +277,26 @@ describe("OpenRouter metadata", () => {
     });
     expect(metadata.fallbackAttempts).toBe(1);
     expect(metadata.upstreamProvider).toBe("Provider B");
+    expect(metadata.isByok).toBe(true);
     expect(metadata.region).toBe("iad");
     expect(metadata.actualCostUsd).toBe(0.0001);
     expect(metadata.upstreamCostUsd).toBe(0.00008);
     expect(metadata.routerMetadataPresent).toBe(true);
+  });
+
+  test("preserves false and absent BYOK metadata", () => {
+    expect(
+      parseOpenRouterMetadata({
+        requestedModel: "gpt-5.6-luna",
+        responseBody: { openrouter_metadata: { is_byok: false } },
+      }).isByok,
+    ).toBe(false);
+    expect(
+      parseOpenRouterMetadata({
+        requestedModel: "gpt-5.6-luna",
+        responseBody: { openrouter_metadata: {} },
+      }).isByok,
+    ).toBeUndefined();
   });
 
   test("uses raw OpenRouter token details when AI SDK usage is unavailable", () => {

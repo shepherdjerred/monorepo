@@ -22,6 +22,10 @@ Take the per-series maximum of `actual` and `upstream`, not `actual` alone: a BY
 route bills nothing through OpenRouter and reads as `$0` under an actual-only query
 while still costing real money upstream.
 
+For OpenAI complimentary-token traffic, this is intentionally conservative and
+does not answer what was paid. Use the official reconciliation below before
+treating `upstream` as an OpenAI charge.
+
 The inner `sum` must stay inside the `max`. These series carry `pod`, so a deploy
 inside the window leaves two counter series per workload, and taking the maximum
 first would keep only the longer-lived pod's spend.
@@ -73,6 +77,49 @@ Workloads with no requester declare `system` on purpose — scheduled betting ru
 and match reviews are not made on behalf of a person who asked. Those are
 attributed, just not to a human. A span with _no_ subject attributes at all is an
 unwrapped call site.
+
+## Verify Scout's complimentary OpenAI inference
+
+First confirm that successful Scout reviews used the configured provider key:
+
+```bash
+toolkit prom query 'sum by (model, upstream_provider, byok) (increase(llm_openrouter_byok_requests_total{service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?"}[1h]))'
+```
+
+`byok="true"` is necessary but not sufficient. Trigger the
+`openai-complimentary-usage-hourly` Temporal schedule after waiting at least 15
+minutes from the request, then query the official provider reconciliation:
+
+```bash
+toolkit prom query 'sum by (model, service_tier, type) (openai_project_usage_tokens)'
+toolkit prom query 'max(openai_project_cost_usd)'
+toolkit prom query 'time() - max(openai_usage_reconciliation_last_success_timestamp_seconds)'
+```
+
+The request is confirmed complimentary only when its tokens appear under
+`incentivized-tier` and official current-day Costs remain zero. A request that
+crosses OpenAI's daily allowance can be billed in full, so any `default`-tier
+tokens are actionable even when BYOK is still healthy.
+
+The alerts divide failures by evidence layer:
+
+- `ScoutOpenAiNotByok` means OpenRouter reported shared capacity for a
+  successful Scout review.
+- `LlmOpenRouterMetadataMissing` means the request-level credential evidence is
+  absent.
+- `OpenAiComplimentaryPaidTokens` means the official Usage API reported
+  `default`-tier tokens.
+- `OpenAiOpenRouterProjectCost` means official current-day Costs reached one
+  cent.
+- `OpenAiComplimentaryMonitorStale` means no complete reconciliation succeeded
+  for two hours after the billing worker started.
+
+To rotate the monitor credential, create a new organization admin key named
+`openai-usage-monitor`, replace only the `OPENAI_ADMIN_KEY` field in the
+dedicated 1Password item, restart `temporal-billing-worker`, and run the
+schedule once. Delete the prior OpenAI admin key only after Usage, Costs,
+metrics, and both Alertmanager resolutions succeed. Never move this key into
+the shared Temporal item: OpenAI admin keys are organization-wide credentials.
 
 ## Related
 

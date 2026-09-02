@@ -112,6 +112,33 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
       interval: "30s",
       rules: [
         {
+          alert: "ScoutOpenAiNotByok",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'sum(increase(llm_openrouter_byok_requests_total{service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?",byok="false"}[15m])) > 0',
+          ),
+          labels: { severity: "warning", category: "llm" },
+          annotations: {
+            summary: "Scout review reached OpenAI without BYOK",
+            description: escapePrometheusTemplate(
+              "At least one successful Scout review used OpenRouter shared capacity instead of the configured OpenAI key. Check the OpenRouter BYOK key state and shared-capacity fallback setting before relying on complimentary OpenAI tokens.",
+            ),
+          },
+        },
+        {
+          alert: "OpenAiComplimentaryMonitorStale",
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            '(time() - max(temporal_worker_app_process_start_time_seconds{namespace="temporal",pod=~"temporal-billing-worker-.*"})) > 7200 and ((time() - max(openai_usage_reconciliation_last_success_timestamp_seconds{namespace="temporal"})) > 7200 or absent(openai_usage_reconciliation_last_success_timestamp_seconds{namespace="temporal"}))',
+          ),
+          for: "5m",
+          labels: { severity: "warning", category: "llm" },
+          annotations: {
+            summary: "OpenAI complimentary-token reconciliation is stale",
+            description: escapePrometheusTemplate(
+              "The isolated billing worker has been running for more than two hours without a successful OpenAI Usage and Costs reconciliation. Check its Temporal poller, admin key, OpenAI project scope, and API errors.",
+            ),
+          },
+        },
+        {
           alert: "LlmOpenRouterMetadataMissing",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
             "sum(increase(llm_openrouter_metadata_missing_total[15m])) > 0",

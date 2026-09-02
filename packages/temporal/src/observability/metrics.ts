@@ -19,6 +19,25 @@ export const register = new Registry();
 register.setDefaultLabels({ component: "temporal-worker" });
 collectDefaultMetrics({ register, prefix: "temporal_worker_app_" });
 
+export const openAiProjectUsageTokens = new Gauge({
+  name: "openai_project_usage_tokens",
+  help: "Official OpenAI current-day project usage by model, service tier, and token type",
+  labelNames: ["model", "service_tier", "type"] as const,
+  registers: [register],
+});
+
+export const openAiProjectCostUsd = new Gauge({
+  name: "openai_project_cost_usd",
+  help: "Official OpenAI current-day cost for the monitored OpenRouter project",
+  registers: [register],
+});
+
+export const openAiUsageReconciliationLastSuccessTimestampSeconds = new Gauge({
+  name: "openai_usage_reconciliation_last_success_timestamp_seconds",
+  help: "Unix timestamp of the last successful official OpenAI usage and cost reconciliation",
+  registers: [register],
+});
+
 // ---------------------------------------------------------------------------
 // GitHub webhook metrics (merge-conflict check + PR-closed build cancel). The
 // webhook server is the ingress for those two features; the PR review /

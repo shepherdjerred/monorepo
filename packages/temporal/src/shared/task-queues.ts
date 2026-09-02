@@ -17,6 +17,8 @@ export const TASK_QUEUES = {
   MAINTENANCE: "maintenance",
   /** Serial object-level SeaweedFS backup and retention work. */
   BACKUP: "backup",
+  /** Official provider usage and cost reconciliation with isolated credentials. */
+  BILLING: "billing",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
   SCOUT_BETA: "scout-beta",
   /** Scout production activity worker, co-located with its database and Discord bot. */
@@ -48,6 +50,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.REPO_AUTOMATION,
   TASK_QUEUES.SCOUT,
   TASK_QUEUES.MAINTENANCE,
+  TASK_QUEUES.BILLING,
   TASK_QUEUES.SCOUT_BETA,
   TASK_QUEUES.SCOUT_PROD,
   TASK_QUEUES.AGENT_TASK,

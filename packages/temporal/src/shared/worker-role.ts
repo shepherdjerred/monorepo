@@ -4,6 +4,7 @@ export const WorkerRoleSchema = z.enum([
   "all",
   "agent",
   "backup",
+  "billing",
   "control",
   "glitter",
   "glitter-context",
