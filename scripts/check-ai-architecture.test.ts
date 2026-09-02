@@ -137,4 +137,25 @@ describe("AI architecture guard", () => {
       "direct-provider-endpoint",
     ]);
   });
+
+  test("allows only the official OpenAI billing reconciliation endpoint", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/src/shared/openai-complimentary-usage.ts",
+          contents:
+            'const usage = "https://api.openai.com/v1/organization/usage/completions";\nconst costs = "https://api.openai.com/v1/organization/costs";',
+        },
+      ]),
+    ).toEqual([]);
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/src/shared/openai-usage.ts",
+          contents:
+            'const usage = "https://api.openai.com/v1/organization/usage/completions";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["direct-provider-endpoint"]);
+  });
 });

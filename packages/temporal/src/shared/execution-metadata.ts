@@ -52,6 +52,7 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.MAINTENANCE:
       return "maintenance";
     case TASK_QUEUES.BACKUP:
+    case TASK_QUEUES.BILLING:
       return "platform";
     case TASK_QUEUES.WORKFLOWS:
       return "platform";
@@ -97,6 +98,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   fetchSkillCappedManifest: "repo",
   runFreshRssSyncWorkflow: "repo",
   runFliptFlagInventory: "repo",
+  runOpenAiComplimentaryUsageReconciliation: "platform",
   generateDependencySummary: "repo",
   runProtobufWatch: "repo",
   runPokeemeraldDataRefresh: "repo",

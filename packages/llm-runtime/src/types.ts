@@ -16,6 +16,7 @@ export type OpenRouterRuntimeLogRecord = {
   model: string;
   resolvedModel?: string | undefined;
   upstreamProvider?: string | undefined;
+  isByok?: boolean | undefined;
   generationId?: string | undefined;
   route?: string | undefined;
   region?: string | undefined;
@@ -116,6 +117,7 @@ export type OpenRouterCallMetadata = {
   requestedModel: string;
   resolvedModel?: string | undefined;
   upstreamProvider?: string | undefined;
+  isByok?: boolean | undefined;
   route?: string | undefined;
   region?: string | undefined;
   fallbackAttempts: number;

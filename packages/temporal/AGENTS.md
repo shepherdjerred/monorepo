@@ -16,7 +16,7 @@ files sequentially: each file owns a native time-skipping server and authentic
 Node worker threads, and concurrent environments exhaust the bounded CI agent.
 `bun run test` runs both phases through the stable package interface.
 
-Production uses the same Bun image in twelve single-replica Kubernetes
+Production uses the same Bun image in thirteen single-replica Kubernetes
 Deployments selected by `TEMPORAL_WORKER_ROLE`. `control` owns schedule
 reconciliation and public HTTP/event surfaces without a task queue. The
 credentialless `workflows` role runs as stable and candidate Deployments on
@@ -30,6 +30,9 @@ After rollback and candidate-history drain, rerun `rollback` with no active ramp
 to copy stable back to candidate before the next CI image release may advance
 it; review and commit both the catalog and pin-state changes through the normal
 PR flow.
+The isolated `billing` role polls only the `billing` Activity queue and owns the
+OpenAI organization Usage/Costs credential; it has no Flipt access or service
+account token.
 Domain roles are Activity-only and own their registries in the typed contract
 in `src/worker-config.ts`. The explicit local `all` role preserves the
 single-process development behavior. Keep new queue ownership and capabilities in that contract so a

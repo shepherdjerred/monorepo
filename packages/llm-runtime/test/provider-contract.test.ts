@@ -39,7 +39,7 @@ describe("AI SDK 7 and OpenRouter provider contracts", () => {
     let body: unknown;
     const sse = [
       'data: {"id":"gen-stream","model":"openai/gpt-5.6-luna","provider":"Provider A","choices":[{"index":0,"delta":{"role":"assistant","content":"hel"},"finish_reason":null}]}',
-      'data: {"id":"gen-stream","model":"openai/gpt-5.6-luna","provider":"Provider A","choices":[{"index":0,"delta":{"content":"lo"},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":2,"total_tokens":5,"cost":0.00005,"cost_details":{"upstream_inference_cost":0.00004}},"openrouter_metadata":{"requested":"openai/gpt-5.6-luna","attempt":1,"attempts":[{"provider":"Provider A","model":"openai/gpt-5.6-luna","status":200}]}}',
+      'data: {"id":"gen-stream","model":"openai/gpt-5.6-luna","provider":"Provider A","choices":[{"index":0,"delta":{"content":"lo"},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":2,"total_tokens":5,"cost":0.00005,"cost_details":{"upstream_inference_cost":0.00004}},"openrouter_metadata":{"requested":"openai/gpt-5.6-luna","is_byok":true,"attempt":1,"attempts":[{"provider":"Provider A","model":"openai/gpt-5.6-luna","status":200}]}}',
       "data: [DONE]",
       "",
     ].join("\n\n");

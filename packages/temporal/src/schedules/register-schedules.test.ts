@@ -290,6 +290,17 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
   });
 });
 
+test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue", () => {
+  expect(findScheduleById("openai-complimentary-usage-hourly")).toMatchObject({
+    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    args: [],
+    timing: { kind: "cron", expression: "17 * * * *", timezone: "UTC" },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "10 minutes",
+  });
+});
+
 test("protobuf watch timeout covers collection and both delivery paths", () => {
   const timeout = findScheduleById(
     "protobufjs-v8-watch-weekly",
@@ -366,6 +377,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
+  "runOpenAiComplimentaryUsageReconciliation",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

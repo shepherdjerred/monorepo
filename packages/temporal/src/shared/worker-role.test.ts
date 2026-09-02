@@ -15,6 +15,7 @@ describe("Temporal worker role", () => {
     "all",
     "agent",
     "backup",
+    "billing",
     "control",
     "glitter",
     "glitter-context",

@@ -60,6 +60,7 @@ export type TemporalOperationsWorkerProps = {
   freshRssManifestVolume: Volume;
   freshRssCredentialVolume: Volume;
   backupSecret: ISecret;
+  billingSecret: ISecret;
 };
 
 export function createTemporalOperationsWorkers(
@@ -102,6 +103,41 @@ export function createTemporalOperationsWorkers(
         readOnly: true,
       },
     ],
+  });
+
+  const billingDeployment = createTemporalDomainWorker(chart, {
+    name: "temporal-billing-worker",
+    component: "billing-worker",
+    featureFlagsEnabled: false,
+    automountServiceAccountToken: false,
+    cpuRequest: Cpu.millis(100),
+    cpuLimit: Cpu.millis(500),
+    memoryRequest: Size.mebibytes(256),
+    memoryLimit: Size.mebibytes(512),
+    envVariables: {
+      TEMPORAL_ADDRESS: EnvValue.fromValue(`${props.serverServiceName}:7233`),
+      TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
+      TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
+      TEMPORAL_WORKER_ROLE: EnvValue.fromValue("billing"),
+      FEATURE_FLAGS_MODE: EnvValue.fromValue("disabled"),
+      ENVIRONMENT: EnvValue.fromValue("production"),
+      TELEMETRY_ENABLED: EnvValue.fromValue("true"),
+      OTLP_ENDPOINT: EnvValue.fromValue(
+        "http://tempo.tempo.svc.cluster.local:4318",
+      ),
+      TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-billing-worker"),
+      OPENAI_ADMIN_KEY: EnvValue.fromSecretValue({
+        secret: props.billingSecret,
+        key: "OPENAI_ADMIN_KEY",
+      }),
+      OPENAI_OPENROUTER_PROJECT_ID: EnvValue.fromSecretValue({
+        secret: props.billingSecret,
+        key: "OPENAI_OPENROUTER_PROJECT_ID",
+      }),
+      ALERTMANAGER_URL: EnvValue.fromValue(
+        "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
+      ),
+    },
   });
 
   const repoDeployment = createTemporalDomainWorker(chart, {
@@ -244,5 +280,6 @@ export function createTemporalOperationsWorkers(
     repoDeployment,
     scoutDeployment,
     backupDeployment,
+    billingDeployment,
   };
 }

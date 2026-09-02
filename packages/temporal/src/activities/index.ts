@@ -45,6 +45,7 @@ import { scoutWeeklyParlayActivities } from "./scout-weekly-parlay.ts";
 import { scoutBryanBucksActivities } from "./scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./seaweedfs-backup.ts";
+import { openAiComplimentaryUsageActivities } from "./openai-complimentary-usage.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -120,4 +121,8 @@ export const maintenanceWorkerActivities = {
 };
 export const backupWorkerActivities = {
   ...seaweedFsBackupActivities,
+};
+
+export const billingActivities = {
+  ...openAiComplimentaryUsageActivities,
 };

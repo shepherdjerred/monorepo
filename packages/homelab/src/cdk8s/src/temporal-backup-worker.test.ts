@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
   findTemporalResource,
+  findTemporalWorkerContainer,
   synthesizeTemporalResources,
 } from "./temporal-test-resources.ts";
 
@@ -12,43 +13,10 @@ function resources() {
 describe("Temporal SeaweedFS backup boundary", () => {
   test("uses one dedicated secret and no Kubernetes token", () => {
     const synthesized = resources();
-    const deployment = findTemporalResource(
+    const { pod, container } = findTemporalWorkerContainer(
       synthesized,
-      "Deployment",
       "temporal-temporal-backup-worker",
     );
-    const pod = z
-      .object({
-        template: z.object({
-          metadata: z.object({ labels: z.record(z.string(), z.string()) }),
-          spec: z.object({
-            automountServiceAccountToken: z.literal(false),
-            containers: z.array(
-              z.object({
-                env: z.array(
-                  z.object({
-                    name: z.string(),
-                    value: z.string().optional(),
-                    valueFrom: z
-                      .object({
-                        secretKeyRef: z.object({
-                          key: z.string(),
-                          name: z.string(),
-                        }),
-                      })
-                      .optional(),
-                  }),
-                ),
-              }),
-            ),
-          }),
-        }),
-      })
-      .parse(deployment.spec).template;
-    const container = pod.spec.containers[0];
-    if (container === undefined) {
-      throw new Error("Temporal backup container is missing");
-    }
     expect(pod.metadata.labels).toMatchObject({
       app: "temporal-worker",
       component: "backup-worker",

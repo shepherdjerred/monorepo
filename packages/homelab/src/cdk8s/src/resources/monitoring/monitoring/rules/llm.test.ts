@@ -13,6 +13,16 @@ test("keeps LLM recording and Broadcast alert coverage together", () => {
   expect(serialized).toContain("llm:requests:rate5m");
   expect(serialized).toContain("llm:request_duration:p95_5m");
   expect(serialized).toContain("LlmOpenRouterMetadataMissing");
+  expect(serialized).toContain("ScoutOpenAiNotByok");
+  expect(serialized).toContain("OpenAiComplimentaryMonitorStale");
+  expect(serialized).toContain("llm_openrouter_byok_requests_total");
+  const scoutByokAlert = groups
+    .flatMap(({ rules: groupRules }) => groupRules)
+    .find((rule) => rule?.alert === "ScoutOpenAiNotByok");
+  expect(scoutByokAlert?.expr?.value).toContain('byok=~"false|unknown"');
+  expect(serialized).toContain(
+    "openai_usage_reconciliation_last_success_timestamp_seconds",
+  );
   expect(serialized).toContain("LlmStructuredOutputExhausted");
   expect(serialized).toContain("birmel_admission_classifier_total");
   expect(serialized).toContain("birmel_memory_extraction_total");

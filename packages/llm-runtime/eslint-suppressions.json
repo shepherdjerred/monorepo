@@ -1,9 +1,4 @@
 {
-  "src/metrics.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/validated-object.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

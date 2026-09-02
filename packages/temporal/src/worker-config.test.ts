@@ -119,6 +119,7 @@ describe("Temporal worker role contracts", () => {
     const serialRoles: Exclude<QueueWorkerRole, "workflows">[] = [
       "agent",
       "backup",
+      "billing",
       "glitter-context",
       "glitter-corpus",
       "infra",

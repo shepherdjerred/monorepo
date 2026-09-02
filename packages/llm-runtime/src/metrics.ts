@@ -23,6 +23,9 @@ type RuntimeMetrics = CommonLlmMetrics & {
     "service" | "workload" | "model" | "upstream_provider" | "outcome"
   >;
   metadataMissing: Counter<"service" | "workload" | "model">;
+  byokRequests: Counter<
+    "service" | "workload" | "model" | "upstream_provider" | "byok"
+  >;
   structuredAttempts: Counter<"service" | "workload" | "model" | "outcome">;
 };
 
@@ -30,6 +33,54 @@ const metricsByRegister = new WeakMap<Registry, RuntimeMetrics>();
 
 function stableModelId(modelId: string): string {
   return modelIdForOpenRouterRoute(modelId) ?? modelId;
+}
+
+function recordByokResponse(
+  metrics: RuntimeMetrics,
+  input: {
+    readonly service: string;
+    readonly workload: string;
+    readonly model: string;
+    readonly upstreamProvider: string | undefined;
+    readonly isByok: boolean | undefined;
+  },
+): void {
+  metrics.byokRequests.inc({
+    service: input.service,
+    workload: input.workload,
+    model: input.model,
+    upstream_provider: input.upstreamProvider ?? "unknown",
+    byok: input.isByok === undefined ? "unknown" : String(input.isByok),
+  });
+}
+
+function recordLanguageRouterMetadata(
+  metrics: RuntimeMetrics,
+  input: {
+    readonly successful: boolean;
+    readonly endpoint: "language" | "embedding" | "image" | "unknown";
+    readonly service: string;
+    readonly workload: string;
+    readonly model: string;
+    readonly metadata: ReturnType<typeof parseOpenRouterMetadata>;
+  },
+): void {
+  if (!input.successful || input.endpoint !== "language") return;
+  if (!input.metadata.routerMetadataPresent) {
+    metrics.metadataMissing.inc({
+      service: input.service,
+      workload: input.workload,
+      model: input.model,
+    });
+    return;
+  }
+  recordByokResponse(metrics, {
+    service: input.service,
+    workload: input.workload,
+    model: input.model,
+    upstreamProvider: input.metadata.upstreamProvider,
+    isByok: input.metadata.isByok,
+  });
 }
 
 export function recordRouterResponse(
@@ -56,17 +107,14 @@ export function recordRouterResponse(
     input.responseStatus < 400;
   // OpenRouter currently emits router metadata only on completion routes, not
   // embeddings or images. Do not turn unsupported endpoints into false alerts.
-  if (
-    successful &&
-    input.endpoint === "language" &&
-    !metadata.routerMetadataPresent
-  ) {
-    metrics.metadataMissing.inc({
-      service: input.service,
-      workload: input.workload,
-      model,
-    });
-  }
+  recordLanguageRouterMetadata(metrics, {
+    successful,
+    endpoint: input.endpoint,
+    service: input.service,
+    workload: input.workload,
+    model,
+    metadata,
+  });
   for (const attempt of metadata.attempts) {
     metrics.routerAttempts.inc({
       service: input.service,
@@ -150,6 +198,12 @@ export function runtimeMetrics(
       name: "llm_openrouter_metadata_missing_total",
       help: "Successful OpenRouter calls without router metadata.",
       labelNames: ["service", "workload", "model"],
+      registers: [register],
+    }),
+    byokRequests: new Counter({
+      name: "llm_openrouter_byok_requests_total",
+      help: "Successful OpenRouter language calls by BYOK status.",
+      labelNames: ["service", "workload", "model", "upstream_provider", "byok"],
       registers: [register],
     }),
     structuredAttempts: new Counter({

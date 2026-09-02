@@ -127,6 +127,10 @@ const STREAMBOT_VOICE_TTS_PATHS = new Set([
 ]);
 const SUBSCRIPTION_QUOTA_ENDPOINTS =
   "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/ProviderEndpoints.swift";
+// The billing monitor uses OpenAI's official organization Usage and Costs APIs
+// as the payment authority; this is not an inference path.
+const OPENAI_BILLING_RECONCILIATION_PATH =
+  "packages/temporal/src/shared/openai-complimentary-usage.ts";
 const NATIVE_SDK_CONTRACT_TEST = "scripts/release-agent-sdk-contract.test.ts";
 
 function isTestOrFixture(filePath: string): boolean {
@@ -167,7 +171,8 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
   if (rule.id === "direct-provider-endpoint") {
     return (
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-      filePath === SUBSCRIPTION_QUOTA_ENDPOINTS
+      filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
+      filePath === OPENAI_BILLING_RECONCILIATION_PATH
     );
   }
 

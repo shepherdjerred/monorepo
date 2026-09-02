@@ -50,6 +50,7 @@ export function logOpenRouterResponse(input: {
     model: metadata.requestedModel,
     resolvedModel: metadata.resolvedModel,
     upstreamProvider: metadata.upstreamProvider,
+    isByok: metadata.isByok,
     generationId: metadata.generationId,
     route: metadata.route,
     region: metadata.region,

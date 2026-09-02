@@ -72,6 +72,26 @@ question, waiting on the correlated OpenRouter Broadcast record to settle it;
 until then the spend ceilings take the per-series maximum of `actual` and
 `upstream`, because an alert should err toward firing.
 
+For OpenAI BYOK traffic, none of those three gateway figures proves what OpenAI
+charged. Complimentary input/output sharing creates a fourth case: OpenRouter's
+`actual` cost is zero, `upstream` is an estimate of ordinary provider cost, and
+OpenAI may still charge zero because the request used its `incentivized-tier`.
+The evidence therefore has a strict order:
+
+1. `openrouter_metadata.is_byok` proves which credential path one request used.
+2. OpenAI's organization Usage API proves which `service_tier` received its
+   tokens after the provider's ingestion delay.
+3. OpenAI's organization Costs API is the billing authority for money charged.
+4. OpenRouter actual, upstream, and catalog cost remain routing and estimation
+   diagnostics, not proof of an OpenAI payment.
+
+The `temporal-billing-worker` reconciles the OpenRouter OpenAI project hourly,
+with a 15-minute ingestion cutoff. It is a single-purpose Activity Worker: it
+has one organization admin key, Temporal and telemetry access, HTTPS egress,
+and Alertmanager access, but no Flipt reachability or Kubernetes service-account
+token. The privileged admin key remains organization-wide at OpenAI despite
+that runtime isolation.
+
 ## Attribution
 
 Spans carry who a call was made on behalf of, as a `(kind, id)` pair over
@@ -112,7 +132,10 @@ would need its own store, which is deliberately not built until a chargeback or
 quota requirement justifies it.
 
 Structured-output attempts, router attempts, and missing router metadata have
-separate counters. Existing `ai_provider_errors_total` and
+separate counters. BYOK status is a bounded per-request counter; official
+current-day OpenAI tokens, cost, and reconciliation freshness are gauges.
+Project IDs, generation IDs, user IDs, prompts, and responses never become
+labels. Existing `ai_provider_errors_total` and
 `ai_provider_issue_active` series remain queryable across the cutover.
 
 ## Deployment acceptance

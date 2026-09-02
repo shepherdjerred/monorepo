@@ -129,6 +129,8 @@ import {
   runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
 } from "./seaweedfs-backup.ts";
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
+import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
+import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -423,4 +425,8 @@ export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
   candidateObjects: number;
 }> {
   return _runSeaweedFsBackupRetentionAndGcWorkflow();
+}
+
+export async function runOpenAiComplimentaryUsageReconciliation(): Promise<OpenAiComplimentaryUsageResult> {
+  return _runOpenAiComplimentaryUsageReconciliation();
 }

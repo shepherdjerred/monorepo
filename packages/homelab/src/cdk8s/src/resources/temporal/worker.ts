@@ -99,6 +99,19 @@ export function createTemporalWorkerDeployment(
     "temporal-seaweedfs-backup-secret",
     backupCredentialItem.name,
   );
+  const openAiUsageMonitorItem = new OnePasswordItem(
+    chart,
+    "temporal-openai-usage-monitor-1p",
+    {
+      metadata: { name: "temporal-openai-usage-monitor" },
+      spec: { itemPath: vaultItemPath("openai-usage-monitor") },
+    },
+  );
+  const openAiUsageMonitorSecret = Secret.fromSecretName(
+    chart,
+    "temporal-openai-usage-monitor-secret",
+    openAiUsageMonitorItem.name,
+  );
   const freshRssManifest = new ConfigMap(chart, "temporal-freshrss-manifest", {
     metadata: { name: "temporal-freshrss-manifest" },
     data: { "desired.json": FRESHRSS_DESIRED_JSON },
@@ -259,18 +272,24 @@ export function createTemporalWorkerDeployment(
       defaultMode: 0o400,
     },
   );
-  const { infraDeployment, repoDeployment, scoutDeployment, backupDeployment } =
-    createTemporalOperationsWorkers(chart, {
-      serverServiceName: props.serverServiceName,
-      secret,
-      scoutWeeklyParlaySecret,
-      infraServiceAccount,
-      homelabAuditEnvironment: homelabAuditEnv(secret),
-      talosConfigVolume,
-      freshRssManifestVolume,
-      freshRssCredentialVolume,
-      backupSecret,
-    });
+  const {
+    infraDeployment,
+    repoDeployment,
+    scoutDeployment,
+    backupDeployment,
+    billingDeployment,
+  } = createTemporalOperationsWorkers(chart, {
+    serverServiceName: props.serverServiceName,
+    secret,
+    scoutWeeklyParlaySecret,
+    infraServiceAccount,
+    homelabAuditEnvironment: homelabAuditEnv(secret),
+    talosConfigVolume,
+    freshRssManifestVolume,
+    freshRssCredentialVolume,
+    backupSecret,
+    billingSecret: openAiUsageMonitorSecret,
+  });
 
   return {
     agentDeployment,
@@ -283,6 +302,7 @@ export function createTemporalWorkerDeployment(
     repoDeployment,
     scoutDeployment,
     backupDeployment,
+    billingDeployment,
     glitterCorpusDeployment: corpusDeployment,
     glitterContextDeployment: contextDeployment,
   };

@@ -9,6 +9,7 @@ import {
   scoutActivities,
   maintenanceWorkerActivities,
   backupWorkerActivities,
+  billingActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
 import type { WorkerRole } from "./shared/worker-role.ts";
@@ -16,6 +17,7 @@ import type { WorkerRole } from "./shared/worker-role.ts";
 export type QueueWorkerRole =
   | "agent"
   | "backup"
+  | "billing"
   | "glitter-context"
   | "glitter-corpus"
   | "home"
@@ -45,6 +47,13 @@ export type QueueWorkerDefinition =
   ActivityWorkerDefinition | WorkflowWorkerDefinition;
 
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
+  {
+    kind: "activity",
+    role: "billing",
+    taskQueue: TASK_QUEUES.BILLING,
+    activities: billingActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
   {
     kind: "activity",
     role: "backup",

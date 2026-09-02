@@ -138,6 +138,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     "glitter-corpus-worker",
     "glitter-context-worker",
     "backup-worker",
+    "billing-worker",
   ]) {
     new KubeNetworkPolicy(chart, `${component}-network-policy`, {
       metadata: { name: `temporal-${component}-netpol` },
@@ -173,6 +174,17 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           ],
           ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
         },
+      ],
+    },
+  });
+
+  new KubeNetworkPolicy(chart, "temporal-billing-alertmanager-netpol", {
+    metadata: { name: "temporal-billing-alertmanager-netpol" },
+    spec: {
+      podSelector: { matchLabels: { component: "billing-worker" } },
+      policyTypes: ["Egress"],
+      egress: [
+        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
       ],
     },
   });

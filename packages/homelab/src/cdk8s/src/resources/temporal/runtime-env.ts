@@ -1,7 +1,14 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
 
 export type TemporalRuntimeRole =
-  "backup" | "control" | "home" | "reports" | "infra" | "repo" | "scout";
+  | "backup"
+  | "billing"
+  | "control"
+  | "home"
+  | "reports"
+  | "infra"
+  | "repo"
+  | "scout";
 
 export function temporalRuntimeEnv(
   serverServiceName: string,

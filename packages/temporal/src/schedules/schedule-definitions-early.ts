@@ -4,6 +4,20 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
+    id: "openai-complimentary-usage-hourly",
+    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "17 * * * *",
+      timezone: "UTC",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "10 minutes",
+    memo: "Hourly official OpenAI complimentary-token usage and cost reconciliation",
+  },
+  {
     id: "report-freshness-monitor",
     workflowType: "monitorReportFreshness",
     args: [],
