@@ -1132,14 +1132,6 @@
       "clones": 1,
       "tokens": 117
     },
-    "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts": {
-      "clones": 13,
-      "tokens": 1304
-    },
-    "packages/scout-for-lol/packages/backend/src/league/competition/processors/processors.test.ts|packages/scout-for-lol/packages/backend/src/testing/riot-mocks.ts": {
-      "clones": 2,
-      "tokens": 242
-    },
     "packages/scout-for-lol/packages/backend/src/league/competition/snapshots.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/snapshots.integration.test.ts": {
       "clones": 1,
       "tokens": 76
