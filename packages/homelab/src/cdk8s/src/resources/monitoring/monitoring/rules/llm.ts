@@ -114,13 +114,13 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutOpenAiNotByok",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum(increase(llm_openrouter_byok_requests_total{service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?",byok="false"}[15m])) > 0',
+            'sum(increase(llm_openrouter_byok_requests_total{service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?",byok=~"false|unknown"}[15m])) > 0',
           ),
           labels: { severity: "warning", category: "llm" },
           annotations: {
             summary: "Scout review reached OpenAI without BYOK",
             description: escapePrometheusTemplate(
-              "At least one successful Scout review used OpenRouter shared capacity instead of the configured OpenAI key. Check the OpenRouter BYOK key state and shared-capacity fallback setting before relying on complimentary OpenAI tokens.",
+              "At least one successful Scout review used OpenRouter shared capacity or lacked BYOK metadata. Check the OpenRouter key state and shared-capacity fallback before relying on complimentary OpenAI tokens.",
             ),
           },
         },

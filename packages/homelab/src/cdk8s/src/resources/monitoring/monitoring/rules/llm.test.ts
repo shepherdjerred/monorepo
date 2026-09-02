@@ -16,6 +16,7 @@ test("keeps LLM recording and Broadcast alert coverage together", () => {
   expect(serialized).toContain("ScoutOpenAiNotByok");
   expect(serialized).toContain("OpenAiComplimentaryMonitorStale");
   expect(serialized).toContain("llm_openrouter_byok_requests_total");
+  expect(serialized).toContain('byok=~\\"false|unknown\\"');
   expect(serialized).toContain(
     "openai_usage_reconciliation_last_success_timestamp_seconds",
   );

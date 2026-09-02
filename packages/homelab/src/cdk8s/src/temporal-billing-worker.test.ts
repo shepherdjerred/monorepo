@@ -21,6 +21,7 @@ describe("Temporal OpenAI billing boundary", () => {
     expect(container.env.map((entry) => entry.name).sort()).toEqual([
       "ALERTMANAGER_URL",
       "ENVIRONMENT",
+      "FEATURE_FLAGS_MODE",
       "OPENAI_ADMIN_KEY",
       "OPENAI_OPENROUTER_PROJECT_ID",
       "OTLP_ENDPOINT",

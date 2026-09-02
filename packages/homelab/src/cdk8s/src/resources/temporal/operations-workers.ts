@@ -119,6 +119,7 @@ export function createTemporalOperationsWorkers(
       TEMPORAL_NAMESPACE: EnvValue.fromValue("prod"),
       TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
       TEMPORAL_WORKER_ROLE: EnvValue.fromValue("billing"),
+      FEATURE_FLAGS_MODE: EnvValue.fromValue("disabled"),
       ENVIRONMENT: EnvValue.fromValue("production"),
       TELEMETRY_ENABLED: EnvValue.fromValue("true"),
       OTLP_ENDPOINT: EnvValue.fromValue(

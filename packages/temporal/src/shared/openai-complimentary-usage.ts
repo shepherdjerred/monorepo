@@ -58,6 +58,7 @@ export type OpenAiUsageClientInput = {
   readonly adminKey: string;
   readonly projectId: string;
   readonly now: Date;
+  readonly cancellationSignal?: AbortSignal;
   readonly fetcher?: OpenAiUsageFetch;
 };
 
@@ -88,9 +89,16 @@ async function fetchPage(input: {
   readonly url: URL;
   readonly adminKey: string;
   readonly fetcher: OpenAiUsageFetch;
+  readonly cancellationSignal?: AbortSignal;
 }): Promise<unknown> {
+  const timeoutSignal = AbortSignal.timeout(30_000);
+  const signal =
+    input.cancellationSignal === undefined
+      ? timeoutSignal
+      : AbortSignal.any([input.cancellationSignal, timeoutSignal]);
   const response = await input.fetcher(input.url, {
     headers: { authorization: `Bearer ${input.adminKey}` },
+    signal,
   });
   if (!response.ok) {
     throw new Error(
@@ -106,6 +114,7 @@ async function fetchCompletions(input: {
   readonly adminKey: string;
   readonly projectId: string;
   readonly fetcher: OpenAiUsageFetch;
+  readonly cancellationSignal?: AbortSignal;
 }): Promise<z.infer<typeof CompletionResultSchema>[]> {
   const results: z.infer<typeof CompletionResultSchema>[] = [];
   let cursor: string | undefined;
@@ -126,6 +135,7 @@ async function fetchCompletions(input: {
         url,
         adminKey: input.adminKey,
         fetcher: input.fetcher,
+        cancellationSignal: input.cancellationSignal,
       }),
     );
     for (const bucket of page.data) results.push(...bucket.results);
@@ -140,6 +150,7 @@ async function fetchCosts(input: {
   readonly adminKey: string;
   readonly projectId: string;
   readonly fetcher: OpenAiUsageFetch;
+  readonly cancellationSignal?: AbortSignal;
 }): Promise<z.infer<typeof CostResultSchema>[]> {
   const results: z.infer<typeof CostResultSchema>[] = [];
   let cursor: string | undefined;
@@ -157,6 +168,7 @@ async function fetchCosts(input: {
         url,
         adminKey: input.adminKey,
         fetcher: input.fetcher,
+        cancellationSignal: input.cancellationSignal,
       }),
     );
     for (const bucket of page.data) results.push(...bucket.results);
@@ -200,6 +212,7 @@ export async function fetchOpenAiComplimentaryUsage(
     adminKey: input.adminKey,
     projectId: input.projectId,
     fetcher,
+    cancellationSignal: input.cancellationSignal,
   };
   const [completions, costs] = await Promise.all([
     fetchCompletions(common),

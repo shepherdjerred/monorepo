@@ -28,9 +28,12 @@ const malformedPaginationFetcher: OpenAiUsageFetch = () =>
 describe("OpenAI complimentary usage", () => {
   test("paginates, applies the ingestion cutoff, and aggregates tiers and cost", async () => {
     const urls: URL[] = [];
-    const fetcher: OpenAiUsageFetch = (request) => {
+    const signals: (AbortSignal | null | undefined)[] = [];
+    const cancellationController = new AbortController();
+    const fetcher: OpenAiUsageFetch = (request, init) => {
       const url = requestUrl(request);
       urls.push(url);
+      signals.push(init?.signal);
       if (url.pathname.endsWith("/usage/completions")) {
         const second = url.searchParams.get("page") === "completion-next";
         return Promise.resolve(
@@ -66,6 +69,7 @@ describe("OpenAI complimentary usage", () => {
       projectId: "project-openrouter",
       now: new Date("2026-09-01T08:17:00.000Z"),
       fetcher,
+      cancellationSignal: cancellationController.signal,
     });
 
     expect(result.windowStart).toBe("2026-09-01T00:00:00.000Z");
@@ -89,6 +93,8 @@ describe("OpenAI complimentary usage", () => {
       ]),
     );
     expect(urls).toHaveLength(3);
+    expect(signals).toHaveLength(3);
+    expect(signals.every((signal) => signal instanceof AbortSignal)).toBe(true);
     for (const url of urls) {
       expect(url.searchParams.get("end_time")).toBe("1788249720");
       expect(url.searchParams.get("project_ids")).toBe("project-openrouter");

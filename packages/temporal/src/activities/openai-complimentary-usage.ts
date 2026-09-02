@@ -1,4 +1,5 @@
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
+import { Context } from "@temporalio/activity";
 import {
   openAiProjectCostUsd,
   openAiProjectUsageTokens,
@@ -28,6 +29,7 @@ export const openAiComplimentaryUsageActivities = {
       adminKey: requiredEnvironment("OPENAI_ADMIN_KEY"),
       projectId: requiredEnvironment("OPENAI_OPENROUTER_PROJECT_ID"),
       now,
+      cancellationSignal: Context.current().cancellationSignal,
     });
     openAiProjectUsageTokens.reset();
     for (const row of result.tokenRows) {
