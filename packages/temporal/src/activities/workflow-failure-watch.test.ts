@@ -13,6 +13,7 @@ import {
   buildVisibilityQuery,
   parseAlertTtlMs,
   pollWorkflowFailuresOnce,
+  type PollWorkflowFailuresOptions,
 } from "./workflow-failure-watch.ts";
 import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
 import {
@@ -201,6 +202,39 @@ function capturingPoster(): {
     return Promise.resolve();
   };
   return { poster, calls };
+}
+
+function pollingScenario(client: WorkflowVisibilityClient) {
+  const { poster, calls } = capturingPoster();
+  return {
+    calls,
+    run: (
+      options: Pick<
+        PollWorkflowFailuresOptions,
+        "checkpoint" | "onCheckpoint"
+      > = {},
+    ) =>
+      pollWorkflowFailuresOnce(client, poster, {
+        now: NOW,
+        lookbackMs: LOOKBACK_MS,
+        ttlMs: TTL_MS,
+        ...options,
+      }),
+  };
+}
+
+async function runCheckpointRecovery(
+  executions: ExecutionInfo[],
+  resolverFor: (index: number) => () => Promise<unknown>,
+) {
+  const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
+  const scenario = pollingScenario(
+    clientForExecutions(executions, resolverFor),
+  );
+  const result = await scenario.run({
+    onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
+  });
+  return { result, calls: scenario.calls, checkpoints };
 }
 
 async function captureFirstFailureDescription(
@@ -1047,13 +1081,9 @@ describe("pollWorkflowFailuresOnce", () => {
       ],
       {},
     );
-    const { poster, calls } = capturingPoster();
+    const scenario = pollingScenario(client);
 
-    const result = await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const result = await scenario.run();
 
     expect(result).toEqual({
       scanned: 0,
@@ -1061,7 +1091,7 @@ describe("pollWorkflowFailuresOnce", () => {
       errored: 0,
       overflowed: false,
     });
-    expect(calls.length).toBe(0);
+    expect(scenario.calls.length).toBe(0);
   });
 });
 
@@ -1091,13 +1121,9 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
         "wf-2/run-2": rejectWithApplicationFailure("golink 500"),
       },
     );
-    const { poster, calls } = capturingPoster();
+    const scenario = pollingScenario(client);
 
-    const result = await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const result = await scenario.run();
 
     expect(result).toEqual({
       scanned: 2,
@@ -1105,8 +1131,8 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
       errored: 1,
       overflowed: false,
     });
-    expect(calls[0]?.alerts.length).toBe(1);
-    expect(calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-2");
+    expect(scenario.calls[0]?.alerts.length).toBe(1);
+    expect(scenario.calls[0]?.alerts[0]?.labels["workflowId"]).toBe("wf-2");
   });
 
   it("throws when every execution in a non-empty batch fails detail extraction", async () => {
@@ -1125,27 +1151,17 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
         "wf-1/run-1": () => Promise.reject(new Error("gRPC unavailable")),
       },
     );
-    const { poster, calls } = capturingPoster();
+    const scenario = pollingScenario(client);
 
-    await expect(
-      pollWorkflowFailuresOnce(client, poster, {
-        now: NOW,
-        lookbackMs: LOOKBACK_MS,
-        ttlMs: TTL_MS,
-      }),
-    ).rejects.toThrow(/systematic failure/);
-    expect(calls.length).toBe(0);
+    await expect(scenario.run()).rejects.toThrow(/systematic failure/);
+    expect(scenario.calls.length).toBe(0);
   });
 
   it("does not call the poster when nothing failed", async () => {
     const client = fakeClient([], {});
-    const { poster, calls } = capturingPoster();
+    const scenario = pollingScenario(client);
 
-    const result = await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-    });
+    const result = await scenario.run();
 
     expect(result).toEqual({
       scanned: 0,
@@ -1153,7 +1169,7 @@ describe("pollWorkflowFailuresOnce failure handling", () => {
       errored: 0,
       overflowed: false,
     });
-    expect(calls.length).toBe(0);
+    expect(scenario.calls.length).toBe(0);
   });
 });
 
@@ -1274,61 +1290,43 @@ describe("workflow failure overflow", () => {
 });
 
 describe("bounded workflow failure recovery", () => {
-  it("posts a bounded batch before requesting the rest of the visibility scan", async () => {
-    const executions = closedExecutions(25);
+  it.each([
+    {
+      name: "posts a bounded batch before requesting the rest of the visibility scan",
+      executionCount: 25,
+      expectedBatchSizes: [16, 9],
+    },
+    {
+      name: "posts a partial batch before propagating a visibility scan error",
+      executionCount: 3,
+      expectedBatchSizes: [3],
+    },
+  ])("$name", async ({ executionCount, expectedBatchSizes }) => {
+    const executions = closedExecutions(executionCount);
     const client = clientForExecutions(executions, () =>
       rejectWithApplicationFailure("recovery failure"),
     );
     failListAfterCurrentPage(client, "next visibility page timed out");
-    const { poster, calls } = capturingPoster();
+    const scenario = pollingScenario(client);
 
-    await expect(
-      pollWorkflowFailuresOnce(client, poster, {
-        now: NOW,
-        lookbackMs: LOOKBACK_MS,
-        ttlMs: TTL_MS,
-      }),
-    ).rejects.toThrow("next visibility page timed out");
-
-    expect(calls.map((call) => call.alerts.length)).toEqual([16, 9]);
-  });
-
-  it("posts a partial batch before propagating a visibility scan error", async () => {
-    const executions = closedExecutions(3);
-    const client = clientForExecutions(executions, () =>
-      rejectWithApplicationFailure("recovery failure"),
+    await expect(scenario.run()).rejects.toThrow(
+      "next visibility page timed out",
     );
-    failListAfterCurrentPage(client, "next visibility page timed out");
-    const { poster, calls } = capturingPoster();
 
-    await expect(
-      pollWorkflowFailuresOnce(client, poster, {
-        now: NOW,
-        lookbackMs: LOOKBACK_MS,
-        ttlMs: TTL_MS,
-      }),
-    ).rejects.toThrow("next visibility page timed out");
-
-    expect(calls.length).toBe(1);
-    expect(calls[0]?.alerts.length).toBe(3);
+    expect(scenario.calls.map((call) => call.alerts.length)).toEqual(
+      expectedBatchSizes,
+    );
   });
 
   it("does not checkpoint past an unresolved detail extraction", async () => {
     const executions = closedExecutions(26);
-    const client = clientForExecutions(executions, (index) =>
-      index === 0
-        ? () => Promise.reject(new Error("detail extraction failed"))
-        : rejectWithApplicationFailure("recovery failure"),
+    const { result, calls, checkpoints } = await runCheckpointRecovery(
+      executions,
+      (index) =>
+        index === 0
+          ? () => Promise.reject(new Error("detail extraction failed"))
+          : rejectWithApplicationFailure("recovery failure"),
     );
-    const { poster, calls } = capturingPoster();
-    const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
-
-    const result = await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-      onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
-    });
 
     expect(result).toEqual({
       scanned: 26,
@@ -1345,20 +1343,13 @@ describe("bounded workflow failure recovery", () => {
       workflowIdPrefix: "wf-chunk",
       runIdPrefix: "run-chunk",
     });
-    const client = clientForExecutions(executions, (index) =>
-      index === 20
-        ? () => Promise.reject(new Error("detail extraction failed"))
-        : rejectWithApplicationFailure("recovery failure"),
+    const { result, calls, checkpoints } = await runCheckpointRecovery(
+      executions,
+      (index) =>
+        index === 20
+          ? () => Promise.reject(new Error("detail extraction failed"))
+          : rejectWithApplicationFailure("recovery failure"),
     );
-    const { poster, calls } = capturingPoster();
-    const checkpoints: WorkflowFailureWatchCheckpoint[] = [];
-
-    const result = await pollWorkflowFailuresOnce(client, poster, {
-      now: NOW,
-      lookbackMs: LOOKBACK_MS,
-      ttlMs: TTL_MS,
-      onCheckpoint: (checkpoint) => checkpoints.push(checkpoint),
-    });
 
     expect(result).toEqual({
       scanned: 25,

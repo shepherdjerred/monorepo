@@ -10,6 +10,7 @@ import { runWithReportWorker } from "./test-support.ts";
 
 const COMMIT_SHA = "a".repeat(40);
 const HEAD_SHA = "b".repeat(40);
+const TASK_QUEUE = TASK_QUEUES.REPO_AUTOMATION;
 
 const CHANGE: DependencyChange = {
   name: "owner/tool",
@@ -36,6 +37,25 @@ const COLLECTION: DependencyCollectionResult = {
   changes: [CHANGE],
 };
 
+const COMPLETE_RELEASE_NOTES = {
+  notes: [
+    {
+      dependency: CHANGE.name,
+      version: CHANGE.newVersion,
+      notes: "Authoritative release notes",
+      url: "https://github.com/owner/tool/releases/tag/2.0.0",
+      source: "github-release",
+    },
+  ],
+  missing: [],
+} as const;
+
+type DependencySummaryTestActivities = {
+  fetchDependencyReleaseNotes: () => unknown;
+  deliverActivityReport: (input: never) => unknown;
+  advanceDependencySummaryCheckpoint: () => unknown;
+};
+
 let testEnvironment: TestWorkflowEnvironment;
 
 beforeAll(async () => {
@@ -46,10 +66,43 @@ afterAll(async () => {
   await testEnvironment.teardown();
 });
 
+async function runDependencySummaryScenario(
+  workflowIdPrefix: string,
+  activities: DependencySummaryTestActivities,
+): Promise<unknown> {
+  const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
+  const worker = await Worker.create({
+    connection: testEnvironment.nativeConnection,
+    taskQueue: TASK_QUEUE,
+    workflowsPath: new URL("index.ts", import.meta.url).pathname,
+    activities: {
+      collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
+      fetchDependencyReleaseNotes: activities.fetchDependencyReleaseNotes,
+      synthesizeDependencyChanges: (): undefined => undefined,
+      deliverActivityReport: activities.deliverActivityReport,
+      advanceDependencySummaryCheckpoint:
+        activities.advanceDependencySummaryCheckpoint,
+    },
+  });
+
+  return await runWithReportWorker(
+    testEnvironment,
+    worker,
+    activities.deliverActivityReport,
+    {
+      reportTaskQueue,
+      runWorkflow: () =>
+        testEnvironment.client.workflow.execute(generateDependencySummary, {
+          args: [7, reportTaskQueue],
+          taskQueue: TASK_QUEUE,
+          workflowId: `${workflowIdPrefix}-${crypto.randomUUID()}`,
+        }),
+    },
+  );
+}
+
 describe("dependency summary delivery checkpoint", () => {
   test("reports missing notes as partial before advancing the checkpoint", async () => {
-    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
-    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     const reports: ActivityReportInput[] = [];
     const events: string[] = [];
     const deliverActivityReport = (report: ActivityReportInput) => {
@@ -62,57 +115,40 @@ describe("dependency summary delivery checkpoint", () => {
         acceptedAt: "2026-08-10T16:01:00.000Z",
       };
     };
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
-        fetchDependencyReleaseNotes: () => ({
-          notes: [],
-          missing: [
-            {
-              dependency: CHANGE.name,
-              commitSha: CHANGE.commitSha,
-              attempts: [
-                {
-                  source: "merged-pr",
-                  url: "https://api.github.com/example",
-                  outcome: "unavailable",
-                  detail: "No associated merged PR",
-                },
-                {
-                  source: "github-release",
-                  url: "https://github.com/owner/tool/releases",
-                  outcome: "unavailable",
-                  detail: "No release body",
-                },
-                {
-                  source: "catalog-override",
-                  url: undefined,
-                  outcome: "unavailable",
-                  detail: "No explicit override",
-                },
-              ],
-            },
-          ],
-        }),
-        synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
-        advanceDependencySummaryCheckpoint: (): void => {
-          events.push("checkpoint");
-        },
+    await runDependencySummaryScenario("dependency-summary-partial", {
+      fetchDependencyReleaseNotes: () => ({
+        notes: [],
+        missing: [
+          {
+            dependency: CHANGE.name,
+            commitSha: CHANGE.commitSha,
+            attempts: [
+              {
+                source: "merged-pr",
+                url: "https://api.github.com/example",
+                outcome: "unavailable",
+                detail: "No associated merged PR",
+              },
+              {
+                source: "github-release",
+                url: "https://github.com/owner/tool/releases",
+                outcome: "unavailable",
+                detail: "No release body",
+              },
+              {
+                source: "catalog-override",
+                url: undefined,
+                outcome: "unavailable",
+                detail: "No explicit override",
+              },
+            ],
+          },
+        ],
+      }),
+      deliverActivityReport,
+      advanceDependencySummaryCheckpoint: (): void => {
+        events.push("checkpoint");
       },
-    });
-
-    await runWithReportWorker(testEnvironment, worker, deliverActivityReport, {
-      reportTaskQueue,
-      runWorkflow: () =>
-        testEnvironment.client.workflow.execute(generateDependencySummary, {
-          args: [7, reportTaskQueue],
-          taskQueue: taskQueue,
-          workflowId: `dependency-summary-partial-${crypto.randomUUID()}`,
-        }),
     });
 
     expect(events).toEqual(["deliver-partial", "checkpoint"]);
@@ -125,53 +161,21 @@ describe("dependency summary delivery checkpoint", () => {
   }, 30_000);
 
   test("does not advance the checkpoint when delivery is not accepted", async () => {
-    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
-    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     const events: string[] = [];
     const deliverActivityReport = (): never => {
       events.push("deliver-failed");
       throw new Error("Postal unavailable");
     };
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
-        fetchDependencyReleaseNotes: () => ({
-          notes: [
-            {
-              dependency: CHANGE.name,
-              version: CHANGE.newVersion,
-              notes: "Authoritative release notes",
-              url: "https://github.com/owner/tool/releases/tag/2.0.0",
-              source: "github-release",
-            },
-          ],
-          missing: [],
-        }),
-        synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
-        advanceDependencySummaryCheckpoint: (): void => {
-          events.push("checkpoint");
-        },
-      },
-    });
-
     let failure: unknown;
     try {
-      await runWithReportWorker(
-        testEnvironment,
-        worker,
-        deliverActivityReport,
+      await runDependencySummaryScenario(
+        "dependency-summary-delivery-failure",
         {
-          reportTaskQueue,
-          runWorkflow: () =>
-            testEnvironment.client.workflow.execute(generateDependencySummary, {
-              args: [7, reportTaskQueue],
-              taskQueue: taskQueue,
-              workflowId: `dependency-summary-delivery-failure-${crypto.randomUUID()}`,
-            }),
+          fetchDependencyReleaseNotes: () => COMPLETE_RELEASE_NOTES,
+          deliverActivityReport,
+          advanceDependencySummaryCheckpoint: (): void => {
+            events.push("checkpoint");
+          },
         },
       );
     } catch (error: unknown) {
@@ -184,8 +188,6 @@ describe("dependency summary delivery checkpoint", () => {
   }, 30_000);
 
   test("retries checkpoint persistence without redelivering the report", async () => {
-    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
-    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     let deliveryCalls = 0;
     let checkpointCalls = 0;
     const deliverActivityReport = () => {
@@ -197,43 +199,15 @@ describe("dependency summary delivery checkpoint", () => {
         acceptedAt: "2026-08-10T16:01:00.000Z",
       };
     };
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
-        fetchDependencyReleaseNotes: () => ({
-          notes: [
-            {
-              dependency: CHANGE.name,
-              version: CHANGE.newVersion,
-              notes: "Authoritative release notes",
-              url: "https://github.com/owner/tool/releases/tag/2.0.0",
-              source: "github-release",
-            },
-          ],
-          missing: [],
-        }),
-        synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
-        advanceDependencySummaryCheckpoint: (): void => {
-          checkpointCalls += 1;
-          if (checkpointCalls < 3) {
-            throw new Error("temporary checkpoint storage failure");
-          }
-        },
+    await runDependencySummaryScenario("dependency-summary-checkpoint-retry", {
+      fetchDependencyReleaseNotes: () => COMPLETE_RELEASE_NOTES,
+      deliverActivityReport,
+      advanceDependencySummaryCheckpoint: (): void => {
+        checkpointCalls += 1;
+        if (checkpointCalls < 3) {
+          throw new Error("temporary checkpoint storage failure");
+        }
       },
-    });
-
-    await runWithReportWorker(testEnvironment, worker, deliverActivityReport, {
-      reportTaskQueue,
-      runWorkflow: () =>
-        testEnvironment.client.workflow.execute(generateDependencySummary, {
-          args: [7, reportTaskQueue],
-          taskQueue: taskQueue,
-          workflowId: `dependency-summary-checkpoint-retry-${crypto.randomUUID()}`,
-        }),
     });
 
     expect(deliveryCalls).toBe(1);
@@ -243,8 +217,6 @@ describe("dependency summary delivery checkpoint", () => {
 
 describe("dependency summary checkpoint failure reporting", () => {
   test("reports a distinct failure after accepted delivery when checkpoint retries exhaust", async () => {
-    const taskQueue = TASK_QUEUES.REPO_AUTOMATION;
-    const reportTaskQueue = `dependency-summary-test-reports-${crypto.randomUUID()}`;
     const reports: ActivityReportInput[] = [];
     let checkpointCalls = 0;
     const deliverActivityReport = (report: ActivityReportInput) => {
@@ -259,47 +231,17 @@ describe("dependency summary checkpoint failure reporting", () => {
         acceptedAt: "2026-08-10T16:01:00.000Z",
       };
     };
-    const worker = await Worker.create({
-      connection: testEnvironment.nativeConnection,
-      taskQueue: taskQueue,
-      workflowsPath: new URL("index.ts", import.meta.url).pathname,
-      activities: {
-        collectDependencyChanges: (): DependencyCollectionResult => COLLECTION,
-        fetchDependencyReleaseNotes: () => ({
-          notes: [
-            {
-              dependency: CHANGE.name,
-              version: CHANGE.newVersion,
-              notes: "Authoritative release notes",
-              url: "https://github.com/owner/tool/releases/tag/2.0.0",
-              source: "github-release",
-            },
-          ],
-          missing: [],
-        }),
-        synthesizeDependencyChanges: (): undefined => undefined,
-        deliverActivityReport,
-        advanceDependencySummaryCheckpoint: (): never => {
-          checkpointCalls += 1;
-          throw new Error("persistent checkpoint storage failure");
-        },
-      },
-    });
-
     let failure: unknown;
     try {
-      await runWithReportWorker(
-        testEnvironment,
-        worker,
-        deliverActivityReport,
+      await runDependencySummaryScenario(
+        "dependency-summary-checkpoint-exhausted",
         {
-          reportTaskQueue,
-          runWorkflow: () =>
-            testEnvironment.client.workflow.execute(generateDependencySummary, {
-              args: [7, reportTaskQueue],
-              taskQueue: taskQueue,
-              workflowId: `dependency-summary-checkpoint-exhausted-${crypto.randomUUID()}`,
-            }),
+          fetchDependencyReleaseNotes: () => COMPLETE_RELEASE_NOTES,
+          deliverActivityReport,
+          advanceDependencySummaryCheckpoint: (): never => {
+            checkpointCalls += 1;
+            throw new Error("persistent checkpoint storage failure");
+          },
         },
       );
     } catch (error: unknown) {
