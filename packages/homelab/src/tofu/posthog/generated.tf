@@ -1476,7 +1476,7 @@ resource "posthog_insight" "insight_11297203" {
     kind    = "DataVisualizationNode"
     source = {
       kind  = "HogQLQuery"
-      query = "SELECT day, sum(-delta) AS stake_volume FROM (SELECT uuid, toStartOfDay(timestamp) AS day, argMax(toFloat(properties[delta_bucks]), timestamp) AS delta FROM events WHERE event = bryan_bucks_economy AND properties[movement] IN (bet_stake, parlay_stake) GROUP BY uuid, day) GROUP BY day ORDER BY day"
+      query = "SELECT day, sum(-delta) AS stake_volume FROM (SELECT uuid, toStartOfDay(timestamp) AS day, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND properties.movement IN ('bet_stake', 'parlay_stake') AND {filters} GROUP BY uuid, day) GROUP BY day ORDER BY day"
     }
   })
   query_sql = null
@@ -2821,7 +2821,7 @@ resource "posthog_insight" "insight_11297206" {
     kind    = "DataVisualizationNode"
     source = {
       kind  = "HogQLQuery"
-      query = "SELECT day, sumIf(delta, movement IN (earn_game, earn_win, earn_mvp, earn_ranked_5s_bonus)) AS earnings, sumIf(delta, movement IN (bet_payout, parlay_payout)) AS payouts FROM (SELECT uuid, toStartOfDay(timestamp) AS day, properties[movement] AS movement, argMax(toFloat(properties[delta_bucks]), timestamp) AS delta FROM events WHERE event = bryan_bucks_economy GROUP BY uuid, day, movement) GROUP BY day ORDER BY day"
+      query = "SELECT day, sumIf(delta, movement IN ('earn_game', 'earn_win', 'earn_mvp', 'earn_ranked_5s_bonus')) AS earnings, sumIf(delta, movement IN ('bet_payout', 'parlay_payout')) AS payouts FROM (SELECT uuid, toStartOfDay(timestamp) AS day, properties.movement AS movement, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND {filters} GROUP BY uuid, day, movement) GROUP BY day ORDER BY day"
     }
   })
   query_sql = null
