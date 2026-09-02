@@ -4,7 +4,6 @@ import type {
   CompetitionCriteria,
   LeaguePuuid,
   RawMatch,
-  RawPerks,
   Rank,
   Ranks,
 } from "@scout-for-lol/data";
@@ -17,54 +16,37 @@ import {
 import { processCriteria } from "#src/league/competition/processors/index.ts";
 import type { PlayerWithAccounts } from "#src/league/competition/processors/types.ts";
 
+import { makeTestParticipant } from "#src/testing/riot-mocks.ts";
 import { testAccountId, testPuuid } from "#src/testing/test-ids.ts";
 // ============================================================================
-// Test Fixtures - Players
+// Test Fixtures
 // ============================================================================
 
-const playerA: PlayerWithAccounts = {
-  id: PlayerIdSchema.parse(1),
-  alias: "PlayerA",
-  discordId: testAccountId("00000000"),
-  accounts: [
-    {
-      id: AccountIdSchema.parse(1),
-      alias: "PlayerA",
-      puuid: testPuuid("a"),
-      region: "AMERICA_NORTH",
-    },
-  ],
-};
+function createPlayer(
+  id: number,
+  alias: string,
+  puuidSuffix: string,
+): PlayerWithAccounts {
+  return {
+    id: PlayerIdSchema.parse(id),
+    alias,
+    discordId: testAccountId(String(id)),
+    accounts: [
+      {
+        id: AccountIdSchema.parse(id),
+        alias,
+        puuid: testPuuid(puuidSuffix),
+        region: "AMERICA_NORTH",
+      },
+    ],
+  };
+}
 
-const playerB: PlayerWithAccounts = {
-  id: PlayerIdSchema.parse(2),
-  alias: "PlayerB",
-  discordId: testAccountId("00000000"),
-  accounts: [
-    {
-      id: AccountIdSchema.parse(2),
-      alias: "PlayerB",
-      puuid: testPuuid("b"),
-      region: "AMERICA_NORTH",
-    },
-  ],
-};
-
-const playerC: PlayerWithAccounts = {
-  id: PlayerIdSchema.parse(3),
-  alias: "PlayerC",
-  discordId: testAccountId("00000000"),
-  accounts: [
-    {
-      id: AccountIdSchema.parse(3),
-      alias: "PlayerC",
-      puuid: testPuuid("c"),
-      region: "AMERICA_NORTH",
-    },
-  ],
-};
-
+const playerA = createPlayer(1, "PlayerA", "a");
+const playerB = createPlayer(2, "PlayerB", "b");
+const playerC = createPlayer(3, "PlayerC", "c");
 const allParticipants = [playerA, playerB, playerC];
+
 const mostSoloGamesCriteria: CompetitionCriteria = {
   type: "MOST_GAMES_PLAYED",
   queues: ["solo"],
@@ -89,329 +71,36 @@ const highestSoloWinRateCriteria: CompetitionCriteria = {
   queues: ["solo"],
 };
 
-// ============================================================================
-// Test Fixtures - Match Factory
-// ============================================================================
+type MatchParticipant = {
+  puuid: LeaguePuuid;
+  championId: ChampionId;
+  win: boolean;
+};
 
-/**
- * Create a default challenges object with all required fields set to 0
- */
-function createDefaultChallenges() {
-  return {
-    "12AssistStreakCount": 0,
-    HealFromMapSources: 0,
-    InfernalScalePickup: 0,
-    SWARM_DefeatAatrox: 0,
-    SWARM_DefeatBriar: 0,
-    SWARM_DefeatMiniBosses: 0,
-    SWARM_EvolveWeapon: 0,
-    SWARM_Have3Passives: 0,
-    SWARM_KillEnemy: 0,
-    SWARM_PickupGold: 0,
-    SWARM_ReachLevel50: 0,
-    SWARM_Survive15Min: 0,
-    SWARM_WinWith5EvolvedWeapons: 0,
-    abilityUses: 0,
-    acesBefore15Minutes: 0,
-    alliedJungleMonsterKills: 0,
-    baronTakedowns: 0,
-    blastConeOppositeOpponentCount: 0,
-    bountyGold: 0,
-    buffsStolen: 0,
-    completeSupportQuestInTime: 0,
-    controlWardsPlaced: 0,
-    damagePerMinute: 0,
-    damageTakenOnTeamPercentage: 0,
-    dancedWithRiftHerald: 0,
-    deathsByEnemyChamps: 0,
-    dodgeSkillShotsSmallWindow: 0,
-    doubleAces: 0,
-    dragonTakedowns: 0,
-    effectiveHealAndShielding: 0,
-    elderDragonKillsWithOpposingSoul: 0,
-    elderDragonMultikills: 0,
-    enemyChampionImmobilizations: 0,
-    enemyJungleMonsterKills: 0,
-    epicMonsterKillsNearEnemyJungler: 0,
-    epicMonsterKillsWithin30SecondsOfSpawn: 0,
-    epicMonsterSteals: 0,
-    epicMonsterStolenWithoutSmite: 0,
-    firstTurretKilled: 0,
-    fistBumpParticipation: 0,
-    flawlessAces: 0,
-    fullTeamTakedown: 0,
-    gameLength: 0,
-    goldPerMinute: 0,
-    hadOpenNexus: 0,
-    immobilizeAndKillWithAlly: 0,
-    initialBuffCount: 0,
-    initialCrabCount: 0,
-    jungleCsBefore10Minutes: 0,
-    junglerTakedownsNearDamagedEpicMonster: 0,
-    kTurretsDestroyedBeforePlatesFall: 0,
-    kda: 0,
-    killAfterHiddenWithAlly: 0,
-    killParticipation: 0,
-    killedChampTookFullTeamDamageSurvived: 0,
-    killingSprees: 0,
-    killsNearEnemyTurret: 0,
-    killsOnOtherLanesEarlyJungleAsLaner: 0,
-    killsOnRecentlyHealedByAramPack: 0,
-    killsUnderOwnTurret: 0,
-    killsWithHelpFromEpicMonster: 0,
-    knockEnemyIntoTeamAndKill: 0,
-    landSkillShotsEarlyGame: 0,
-    laneMinionsFirst10Minutes: 0,
-    legendaryCount: 0,
-    legendaryItemUsed: [],
-    lostAnInhibitor: 0,
-    maxKillDeficit: 0,
-    mejaisFullStackInTime: 0,
-    moreEnemyJungleThanOpponent: 0,
-    multiKillOneSpell: 0,
-    multiTurretRiftHeraldCount: 0,
-    multikills: 0,
-    multikillsAfterAggressiveFlash: 0,
-    outerTurretExecutesBefore10Minutes: 0,
-    outnumberedKills: 0,
-    outnumberedNexusKill: 0,
-    perfectDragonSoulsTaken: 0,
-    perfectGame: 0,
-    pickKillWithAlly: 0,
-    poroExplosions: 0,
-    quickCleanse: 0,
-    quickFirstTurret: 0,
-    quickSoloKills: 0,
-    riftHeraldTakedowns: 0,
-    saveAllyFromDeath: 0,
-    scuttleCrabKills: 0,
-    skillshotsDodged: 0,
-    skillshotsHit: 0,
-    snowballsHit: 0,
-    soloBaronKills: 0,
-    soloKills: 0,
-    stealthWardsPlaced: 0,
-    survivedSingleDigitHpCount: 0,
-    survivedThreeImmobilizesInFight: 0,
-    takedownOnFirstTurret: 0,
-    takedowns: 0,
-    takedownsAfterGainingLevelAdvantage: 0,
-    takedownsBeforeJungleMinionSpawn: 0,
-    takedownsFirstXMinutes: 0,
-    takedownsInAlcove: 0,
-    takedownsInEnemyFountain: 0,
-    teamBaronKills: 0,
-    teamDamagePercentage: 0,
-    teamElderDragonKills: 0,
-    teamRiftHeraldKills: 0,
-    tookLargeDamageSurvived: 0,
-    turretPlatesTaken: 0,
-    turretTakedowns: 0,
-    turretsTakenWithRiftHerald: 0,
-    twentyMinionsIn3SecondsCount: 0,
-    twoWardsOneSweeperCount: 0,
-    unseenRecalls: 0,
-    visionScorePerMinute: 0,
-    voidMonsterKill: 0,
-    wardTakedowns: 0,
-    wardTakedownsBefore20M: 0,
-    wardsGuarded: 0,
-  };
-}
+const defaultChampionId = ChampionIdSchema.parse(1);
+const opponentChampionId = ChampionIdSchema.parse(2);
 
-function createParticipant(
-  puuid: LeaguePuuid,
-  championId: ChampionId,
+function matchParticipant(
+  puuidSuffix: string,
   win: boolean,
-  participantId: number,
-) {
+  championId = defaultChampionId,
+): MatchParticipant {
   return {
-    puuid,
+    puuid: testPuuid(puuidSuffix),
     championId,
     win,
-    teamId: win ? 100 : 200,
-    kills: 5,
-    deaths: 3,
-    assists: 7,
-    allInPings: 0,
-    assistMePings: 0,
-    baitPings: 0,
-    baronKills: 0,
-    basicPings: 0,
-    bountyLevel: 0,
-    challenges: createDefaultChallenges(),
-    champExperience: 10_000,
-    champLevel: 18,
-    championName: "TestChampion",
-    championTransform: 0,
-    commandPings: 0,
-    consumablesPurchased: 0,
-    damageDealtToBuildings: 0,
-    damageDealtToObjectives: 0,
-    damageDealtToTurrets: 0,
-    damageSelfMitigated: 0,
-    dangerPings: 0,
-    detectorWardsPlaced: 0,
-    doubleKills: 0,
-    dragonKills: 0,
-    eligibleForProgression: true,
-    enemyMissingPings: 0,
-    enemyVisionPings: 0,
-    firstBloodAssist: false,
-    firstBloodKill: false,
-    firstTowerAssist: false,
-    firstTowerKill: false,
-    gameEndedInEarlySurrender: false,
-    gameEndedInSurrender: false,
-    getBackPings: 0,
-    goldEarned: 10_000,
-    goldSpent: 9000,
-    holdPings: 0,
-    individualPosition: "TOP" as const,
-    inhibitorKills: 0,
-    inhibitorTakedowns: 0,
-    inhibitorsLost: 0,
-    item0: 0,
-    item1: 0,
-    item2: 0,
-    item3: 0,
-    item4: 0,
-    item5: 0,
-    item6: 0,
-    itemsPurchased: 10,
-    killingSprees: 0,
-    largestCriticalStrike: 0,
-    largestKillingSpree: 0,
-    largestMultiKill: 0,
-    longestTimeSpentLiving: 0,
-    magicDamageDealt: 0,
-    magicDamageDealtToChampions: 0,
-    magicDamageTaken: 0,
-    needVisionPings: 0,
-    neutralMinionsKilled: 0,
-    nexusKills: 0,
-    nexusLost: 0,
-    nexusTakedowns: 0,
-    objectivesStolen: 0,
-    objectivesStolenAssists: 0,
-    onMyWayPings: 0,
-    participantId,
-    pentaKills: 0,
-    profileIcon: 1,
-    physicalDamageDealt: 0,
-    physicalDamageDealtToChampions: 0,
-    physicalDamageTaken: 0,
-    placement: 0,
-    playerAugment1: 0,
-    playerAugment2: 0,
-    playerAugment3: 0,
-    playerAugment4: 0,
-    playerScore0: 0,
-    playerScore1: 0,
-    playerScore2: 0,
-    playerScore3: 0,
-    playerScore4: 0,
-    playerScore5: 0,
-    playerScore6: 0,
-    playerScore7: 0,
-    playerScore8: 0,
-    playerScore9: 0,
-    playerSubteamId: 0,
-    pushPings: 0,
-    quadraKills: 0,
-    riotIdGameName: "",
-    riotIdName: "",
-    riotIdTagline: "",
-    role: "SOLO" as const,
-    sightWardsBoughtInGame: 0,
-    spell1Casts: 0,
-    spell2Casts: 0,
-    spell3Casts: 0,
-    spell4Casts: 0,
-    subteamPlacement: 0,
-    summoner1Casts: 0,
-    summoner1Id: 0,
-    summoner2Casts: 0,
-    summoner2Id: 0,
-    summonerId: "",
-    summonerLevel: 30,
-    summonerName: "",
-    teamEarlySurrendered: false,
-    teamPosition: "TOP" as const,
-    timeCCingOthers: 0,
-    timePlayed: 1800,
-    totalAllyJungleMinionsKilled: 0,
-    totalDamageDealt: 100_000,
-    totalDamageDealtToChampions: 15_000,
-    totalDamageShieldedOnTeammates: 0,
-    totalDamageTaken: 20_000,
-    totalEnemyJungleMinionsKilled: 0,
-    totalHeal: 5000,
-    totalHealsOnTeammates: 0,
-    totalMinionsKilled: 200,
-    totalTimeCCDealt: 100,
-    totalTimeSpentDead: 60,
-    totalUnitsHealed: 1,
-    tripleKills: 0,
-    trueDamageDealt: 0,
-    trueDamageDealtToChampions: 0,
-    trueDamageTaken: 0,
-    turretKills: 0,
-    turretTakedowns: 0,
-    turretsLost: 0,
-    unrealKills: 0,
-    visionClearedPings: 0,
-    visionScore: 50,
-    visionWardsBoughtInGame: 5,
-    wardsKilled: 10,
-    wardsPlaced: 15,
-    lane: "MIDDLE" as const,
-    missions: {
-      playerScore0: 0,
-      playerScore1: 0,
-      playerScore2: 0,
-      playerScore3: 0,
-      playerScore4: 0,
-      playerScore5: 0,
-      playerScore6: 0,
-      playerScore7: 0,
-      playerScore8: 0,
-      playerScore9: 0,
-      playerScore10: 0,
-      playerScore11: 0,
-    },
-    perks: {
-      statPerks: {
-        defense: 0,
-        flex: 0,
-        offense: 0,
-      },
-      styles: [],
-    } satisfies RawPerks,
-    retreatPings: 0,
-    totalDamageDealtToBuildings: 0,
-    totalDamageTakenFromAllSources: 0,
-    totalHealsForAlly: 0,
-    totalHealsTaken: 0,
-    totalMinionsKilledInEnemyJungle: 0,
-    totalMinionsKilledInNeutralJungle: 0,
-    totalMinionsKilledInTeamJungle: 0,
   };
 }
 
 function createMatch(
   queueId: number,
-  participants: {
-    puuid: LeaguePuuid;
-    championId: ChampionId;
-    win: boolean;
-  }[],
+  participants: MatchParticipant[],
 ): RawMatch {
   return {
     metadata: {
       dataVersion: "2",
-      matchId: `TEST_${Date.now().toString()}`,
-      participants: participants.map((p) => p.puuid),
+      matchId: `TEST_${crypto.randomUUID()}`,
+      participants: participants.map((participant) => participant.puuid),
     },
     info: {
       gameCreation: Date.now(),
@@ -423,8 +112,35 @@ function createMatch(
       gameStartTimestamp: Date.now(),
       gameType: "MATCHED_GAME",
       mapId: 11,
-      participants: participants.map((p, index) =>
-        createParticipant(p.puuid, p.championId, p.win, index + 1),
+      participants: participants.map((participant, index) =>
+        makeTestParticipant({
+          puuid: participant.puuid,
+          championId: participant.championId,
+          win: participant.win,
+          teamId: participant.win ? 100 : 200,
+          participantId: index + 1,
+          championName: "TestChampion",
+          individualPosition: "TOP",
+          role: "SOLO",
+          teamPosition: "TOP",
+          lane: "MIDDLE",
+          kills: 5,
+          deaths: 3,
+          assists: 7,
+          goldEarned: 10_000,
+          goldSpent: 9000,
+          totalDamageDealt: 100_000,
+          totalDamageDealtToChampions: 15_000,
+          totalDamageTaken: 20_000,
+          totalHeal: 5000,
+          totalMinionsKilled: 200,
+          totalTimeCCDealt: 100,
+          totalTimeSpentDead: 60,
+          visionScore: 50,
+          visionWardsBoughtInGame: 5,
+          wardsKilled: 10,
+          wardsPlaced: 15,
+        }),
       ),
       platformId: "NA1",
       queueId,
@@ -434,6 +150,41 @@ function createMatch(
       gameVersion: "13.1.1",
     },
   };
+}
+
+function createPlayerMatch(
+  queueId: number,
+  puuidSuffix: string,
+  win: boolean,
+  championId = defaultChampionId,
+): RawMatch {
+  return createMatch(queueId, [
+    matchParticipant(puuidSuffix, win, championId),
+    matchParticipant("other", !win, opponentChampionId),
+  ]);
+}
+
+function createDuelMatch(
+  queueId: number,
+  firstPuuidSuffix: string,
+  secondPuuidSuffix: string,
+  firstWins: boolean,
+): RawMatch {
+  return createMatch(queueId, [
+    matchParticipant(firstPuuidSuffix, firstWins),
+    matchParticipant(secondPuuidSuffix, !firstWins, opponentChampionId),
+  ]);
+}
+
+function repeatPlayerMatches(
+  count: number,
+  puuidSuffix: string,
+  win: boolean,
+  championId = defaultChampionId,
+): RawMatch[] {
+  return Array.from({ length: count }, () =>
+    createPlayerMatch(420, puuidSuffix, win, championId),
+  );
 }
 
 // ============================================================================
@@ -512,6 +263,28 @@ const platinumIV: Rank = {
   losses: 65,
 };
 
+type RankScenario = {
+  criteria: CompetitionCriteria;
+  participants: PlayerWithAccounts[];
+  currentRanks?: Record<number, Ranks>;
+  startSnapshots?: Record<number, Ranks>;
+  endSnapshots?: Record<number, Ranks>;
+};
+
+function processRankScenario({
+  criteria,
+  participants,
+  currentRanks = {},
+  startSnapshots = {},
+  endSnapshots = {},
+}: RankScenario) {
+  return processCriteria(criteria, [], participants, {
+    currentRanks,
+    startSnapshots,
+    endSnapshots,
+  });
+}
+
 // ============================================================================
 // Tests: Most Games Played
 // ============================================================================
@@ -519,110 +292,27 @@ const platinumIV: Rank = {
 describe("processMostGamesPlayed", () => {
   it("should count games in SOLO queue only", () => {
     const matches = [
-      // SOLO queue matches
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      // ARENA matches
-      createMatch(1700, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(1700, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
+      createPlayerMatch(420, "a", true),
+      createPlayerMatch(420, "a", true),
+      createDuelMatch(1700, "a", "b", true),
+      createPlayerMatch(1700, "b", true),
     ];
 
-    const result = processCriteria(mostSoloGamesCriteria, matches, [
-      playerA,
-      playerB,
-    ]);
+    const scores = new Map(
+      processCriteria(mostSoloGamesCriteria, matches, [playerA, playerB]).map(
+        (entry) => [entry.playerId, entry.score],
+      ),
+    );
 
-    const playerAEntry = result.find((e) => e.playerId === playerA.id);
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
-
-    expect(playerAEntry?.score).toBe(2); // 2 solo games
-    expect(playerBEntry?.score).toBe(0); // 0 solo games
+    expect(scores.get(playerA.id)).toBe(2);
+    expect(scores.get(playerB.id)).toBe(0);
   });
 
   it("should count games in ARENA queue only", () => {
     const matches = [
-      // SOLO queue matches
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      // ARENA matches
-      createMatch(1700, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(1700, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
+      createPlayerMatch(420, "a", true),
+      createDuelMatch(1700, "a", "b", true),
+      createPlayerMatch(1700, "b", true),
     ];
 
     const result = processCriteria(
@@ -631,68 +321,21 @@ describe("processMostGamesPlayed", () => {
       [playerA, playerB],
     );
 
-    const playerAEntry = result.find((e) => e.playerId === playerA.id);
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
+    const playerAEntry = result.find((entry) => entry.playerId === playerA.id);
+    const playerBEntry = result.find((entry) => entry.playerId === playerB.id);
 
-    expect(playerAEntry?.score).toBe(1); // 1 arena game
-    expect(playerBEntry?.score).toBe(2); // 2 arena games
+    expect(playerAEntry?.score).toBe(1);
+    expect(playerBEntry?.score).toBe(2);
   });
 });
 
 describe("processMostGamesPlayed across queue selections", () => {
   it("should count games across selected Solo and Flex queues", () => {
     const matches = [
-      // SOLO queue
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      // FLEX queue
-      createMatch(440, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      // ARENA (should not count)
-      createMatch(1700, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
+      createPlayerMatch(420, "a", true),
+      createPlayerMatch(420, "a", true),
+      createPlayerMatch(440, "a", true),
+      createPlayerMatch(1700, "b", true),
     ];
 
     const result = processCriteria(
@@ -701,28 +344,18 @@ describe("processMostGamesPlayed across queue selections", () => {
       [playerA, playerB],
     );
 
-    const playerAEntry = result.find((e) => e.playerId === playerA.id);
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
+    const playerAEntry = result.find((entry) => entry.playerId === playerA.id);
+    const playerBEntry = result.find((entry) => entry.playerId === playerB.id);
 
-    expect(playerAEntry?.score).toBe(3); // 2 solo + 1 flex
-    expect(playerBEntry?.score).toBe(0); // 0 ranked games
+    expect(playerAEntry?.score).toBe(3);
+    expect(playerBEntry?.score).toBe(0);
   });
 
   it("interprets ALL within the selected game variant", () => {
     const matches = [
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-      ]),
+      createMatch(420, [matchParticipant("a", true)]),
       createMatch(4310, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(60_001),
-          win: true,
-        },
+        matchParticipant("a", true, ChampionIdSchema.parse(60_001)),
       ]),
     ];
 
@@ -758,16 +391,11 @@ describe("processHighestRank", () => {
       [playerC.id]: { solo: diamondIII },
     };
 
-    const result = processCriteria(
-      highestSoloRankCriteria,
-      [],
-      allParticipants,
-      {
-        currentRanks,
-        startSnapshots: {},
-        endSnapshots: {},
-      },
-    );
+    const result = processRankScenario({
+      criteria: highestSoloRankCriteria,
+      participants: allParticipants,
+      currentRanks,
+    });
 
     // Check that all players are included
     expect(result.length).toBe(3);
@@ -793,49 +421,35 @@ describe("processHighestRank", () => {
     );
   });
 
-  it("should skip players absent from the ranks map (fetch failed or unranked)", () => {
-    const currentRanks: Record<number, Ranks> = {
-      [playerA.id]: { solo: diamondII },
-      // playerB has no rank entry at all
-    };
-
-    const result = processCriteria(
-      highestSoloRankCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks,
-        startSnapshots: {},
-        endSnapshots: {},
+  const missingRankScenarios: {
+    name: string;
+    currentRanks: Record<number, Ranks>;
+  }[] = [
+    {
+      name: "players absent from the ranks map",
+      currentRanks: { [playerA.id]: { solo: diamondII } },
+    },
+    {
+      name: "players whose ranks entry is missing the requested queue",
+      currentRanks: {
+        [playerA.id]: { solo: diamondII },
+        [playerB.id]: { flex: platinumI },
       },
-    );
+    },
+  ];
+
+  it.each(missingRankScenarios)("should skip $name", ({ currentRanks }) => {
+    const result = processRankScenario({
+      criteria: highestSoloRankCriteria,
+      participants: [playerA, playerB],
+      currentRanks,
+    });
 
     expect(result.length).toBe(1);
     expect(result[0]?.playerId).toBe(playerA.id);
-    expect(result.find((e) => e.playerId === playerB.id)).toBeUndefined();
-  });
-
-  it("should skip players whose ranks entry is missing the requested queue", () => {
-    const currentRanks: Record<number, Ranks> = {
-      [playerA.id]: { solo: diamondII },
-      // playerB has a ranks entry but no SOLO rank (flex-only)
-      [playerB.id]: { flex: platinumI },
-    };
-
-    const result = processCriteria(
-      highestSoloRankCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks,
-        startSnapshots: {},
-        endSnapshots: {},
-      },
-    );
-
-    expect(result.length).toBe(1);
-    expect(result[0]?.playerId).toBe(playerA.id);
-    expect(result.find((e) => e.playerId === playerB.id)).toBeUndefined();
+    expect(
+      result.find((entry) => entry.playerId === playerB.id),
+    ).toBeUndefined();
   });
 
   it("should not fabricate Iron IV 0 LP entries for any participant", () => {
@@ -843,16 +457,11 @@ describe("processHighestRank", () => {
       [playerA.id]: { solo: diamondII },
     };
 
-    const result = processCriteria(
-      highestSoloRankCriteria,
-      [],
-      [playerA, playerB, playerC],
-      {
-        currentRanks,
-        startSnapshots: {},
-        endSnapshots: {},
-      },
-    );
+    const result = processRankScenario({
+      criteria: highestSoloRankCriteria,
+      participants: allParticipants,
+      currentRanks,
+    });
 
     const ironIvShape = {
       tier: "iron",
@@ -883,16 +492,12 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { solo: platinumI }, // Platinum II → Platinum I = +100 LP
     };
 
-    const result = processCriteria(
-      soloRankClimbCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks: {},
-        startSnapshots,
-        endSnapshots,
-      },
-    );
+    const result = processRankScenario({
+      criteria: soloRankClimbCriteria,
+      participants: [playerA, playerB],
+      startSnapshots,
+      endSnapshots,
+    });
 
     const playerAEntry = result.find((e) => e.playerId === playerA.id);
     const playerBEntry = result.find((e) => e.playerId === playerB.id);
@@ -918,16 +523,12 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { solo: goldI }, // PlayerB got ranked later
     };
 
-    const result = processCriteria(
-      soloRankClimbCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks: {},
-        startSnapshots,
-        endSnapshots,
-      },
-    );
+    const result = processRankScenario({
+      criteria: soloRankClimbCriteria,
+      participants: [playerA, playerB],
+      startSnapshots,
+      endSnapshots,
+    });
 
     // Only playerA should be in the result
     expect(result.length).toBe(1);
@@ -945,16 +546,12 @@ describe("processMostRankClimb", () => {
       // PlayerB has no END snapshot
     };
 
-    const result = processCriteria(
-      soloRankClimbCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks: {},
-        startSnapshots,
-        endSnapshots,
-      },
-    );
+    const result = processRankScenario({
+      criteria: soloRankClimbCriteria,
+      participants: [playerA, playerB],
+      startSnapshots,
+      endSnapshots,
+    });
 
     // Only playerA should be in the result
     expect(result.length).toBe(1);
@@ -972,16 +569,12 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { flex: goldI },
     };
 
-    const result = processCriteria(
-      soloRankClimbCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks: {},
-        startSnapshots,
-        endSnapshots,
-      },
-    );
+    const result = processRankScenario({
+      criteria: soloRankClimbCriteria,
+      participants: [playerA, playerB],
+      startSnapshots,
+      endSnapshots,
+    });
 
     // Only playerA should be in the result (has solo rank)
     expect(result.length).toBe(1);
@@ -999,16 +592,12 @@ describe("processMostRankClimb", () => {
       [playerB.id]: { solo: platinumIV }, // PlayerB climbed after placement
     };
 
-    const result = processCriteria(
-      soloRankClimbCriteria,
-      [],
-      [playerA, playerB],
-      {
-        currentRanks: {},
-        startSnapshots,
-        endSnapshots,
-      },
-    );
+    const result = processRankScenario({
+      criteria: soloRankClimbCriteria,
+      participants: [playerA, playerB],
+      startSnapshots,
+      endSnapshots,
+    });
 
     // Both players should be in the result
     expect(result.length).toBe(2);
@@ -1037,80 +626,9 @@ describe("processMostRankClimb", () => {
 describe("processMostWinsPlayer", () => {
   it("should count total wins for each player", () => {
     const matches = [
-      // PlayerA: 2 wins
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: false,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: true,
-        },
-      ]),
-      // PlayerB: 3 wins
-      createMatch(420, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
+      ...repeatPlayerMatches(2, "a", true),
+      ...repeatPlayerMatches(1, "a", false),
+      ...repeatPlayerMatches(3, "b", true),
     ];
 
     const result = processCriteria(mostSoloWinsCriteria, matches, [
@@ -1118,8 +636,8 @@ describe("processMostWinsPlayer", () => {
       playerB,
     ]);
 
-    const playerAEntry = result.find((e) => e.playerId === playerA.id);
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
+    const playerAEntry = result.find((entry) => entry.playerId === playerA.id);
+    const playerBEntry = result.find((entry) => entry.playerId === playerB.id);
 
     expect(playerAEntry?.score).toBe(2);
     expect(playerBEntry?.score).toBe(3);
@@ -1136,115 +654,32 @@ describe("processMostWinsPlayer", () => {
 
 describe("processMostWinsChampion", () => {
   it("should count wins with specific champion only", () => {
-    const yasuoId = 157;
+    const yasuoId = ChampionIdSchema.parse(157);
     const matches = [
-      // PlayerA: 2 Yasuo wins, 1 Yasuo loss
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(yasuoId),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(yasuoId),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(yasuoId),
-          win: false,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: true,
-        },
-      ]),
-      // PlayerA with other champion (should not count)
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      // PlayerB: 1 Yasuo win
-      createMatch(420, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(yasuoId),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      // PlayerB with other champion (should not count)
-      createMatch(420, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
-      createMatch(420, [
-        {
-          puuid: testPuuid("b"),
-          championId: ChampionIdSchema.parse(1),
-          win: true,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: false,
-        },
-      ]),
+      ...repeatPlayerMatches(2, "a", true, yasuoId),
+      ...repeatPlayerMatches(1, "a", false, yasuoId),
+      createPlayerMatch(420, "a", true),
+      createPlayerMatch(420, "b", true, yasuoId),
+      ...repeatPlayerMatches(2, "b", true),
     ];
 
     const result = processCriteria(
       {
         type: "MOST_WINS_CHAMPION",
-        championId: ChampionIdSchema.parse(yasuoId),
+        championId: yasuoId,
         queues: ["solo"],
       },
       matches,
       [playerA, playerB],
     );
 
-    const playerAEntry = result.find((e) => e.playerId === playerA.id);
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
+    const playerAEntry = result.find((entry) => entry.playerId === playerA.id);
+    const playerBEntry = result.find((entry) => entry.playerId === playerB.id);
 
-    expect(playerAEntry?.score).toBe(2); // 2 Yasuo wins
-    expect(playerBEntry?.score).toBe(1); // 1 Yasuo win
-    expect(playerAEntry?.metadata?.["championId"]).toBe(yasuoId);
-    expect(playerAEntry?.metadata?.["games"]).toBe(3); // 3 Yasuo games total
+    expect(playerAEntry?.score).toBe(2);
+    expect(playerBEntry?.score).toBe(1);
+    expect(playerAEntry?.metadata?.["championId"]).toBe(157);
+    expect(playerAEntry?.metadata?.["games"]).toBe(3);
   });
 });
 
@@ -1255,93 +690,12 @@ describe("processMostWinsChampion", () => {
 describe("processHighestWinRate", () => {
   it("should calculate win rate with minimum games threshold", () => {
     const matches = [
-      // PlayerA: 15 wins, 5 losses (75% win rate, 20 games)
-      ...Array.from({ length: 15 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("a"),
-            championId: ChampionIdSchema.parse(1),
-            win: true,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: false,
-          },
-        ]),
-      ),
-      ...Array.from({ length: 5 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("a"),
-            championId: ChampionIdSchema.parse(1),
-            win: false,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: true,
-          },
-        ]),
-      ),
-      // PlayerB: 8 wins, 2 losses (80% win rate, but only 10 games - exactly at threshold)
-      ...Array.from({ length: 8 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("b"),
-            championId: ChampionIdSchema.parse(1),
-            win: true,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: false,
-          },
-        ]),
-      ),
-      ...Array.from({ length: 2 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("b"),
-            championId: ChampionIdSchema.parse(1),
-            win: false,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: true,
-          },
-        ]),
-      ),
-      // PlayerC: 10 wins, 10 losses (50% win rate, 20 games)
-      ...Array.from({ length: 10 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("c"),
-            championId: ChampionIdSchema.parse(1),
-            win: true,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: false,
-          },
-        ]),
-      ),
-      ...Array.from({ length: 10 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("c"),
-            championId: ChampionIdSchema.parse(1),
-            win: false,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: true,
-          },
-        ]),
-      ),
+      ...repeatPlayerMatches(15, "a", true),
+      ...repeatPlayerMatches(5, "a", false),
+      ...repeatPlayerMatches(8, "b", true),
+      ...repeatPlayerMatches(2, "b", false),
+      ...repeatPlayerMatches(10, "c", true),
+      ...repeatPlayerMatches(10, "c", false),
     ];
 
     const result = processCriteria(
@@ -1350,62 +704,22 @@ describe("processHighestWinRate", () => {
       allParticipants,
     );
 
-    // All players should be included (all have >= 10 games)
     expect(result.length).toBe(3);
 
-    const playerAEntry = result.find((e) => e.playerId === playerA.id);
-    const playerBEntry = result.find((e) => e.playerId === playerB.id);
-    const playerCEntry = result.find((e) => e.playerId === playerC.id);
+    const playerAEntry = result.find((entry) => entry.playerId === playerA.id);
+    const playerBEntry = result.find((entry) => entry.playerId === playerB.id);
+    const playerCEntry = result.find((entry) => entry.playerId === playerC.id);
 
-    expect(playerAEntry?.score).toBe(0.75); // 75%
-    expect(playerBEntry?.score).toBe(0.8); // 80%
-    expect(playerCEntry?.score).toBe(0.5); // 50%
+    expect(playerAEntry?.score).toBe(0.75);
+    expect(playerBEntry?.score).toBe(0.8);
+    expect(playerCEntry?.score).toBe(0.5);
   });
 
   it("should exclude players below minimum games", () => {
     const matches = [
-      // PlayerA: 8 wins, 1 loss (only 9 games, below min of 10)
-      ...Array.from({ length: 8 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("a"),
-            championId: ChampionIdSchema.parse(1),
-            win: true,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: false,
-          },
-        ]),
-      ),
-      createMatch(420, [
-        {
-          puuid: testPuuid("a"),
-          championId: ChampionIdSchema.parse(1),
-          win: false,
-        },
-        {
-          puuid: testPuuid("other"),
-          championId: ChampionIdSchema.parse(2),
-          win: true,
-        },
-      ]),
-      // PlayerB: 10 wins, 0 losses (exactly 10 games, should be included)
-      ...Array.from({ length: 10 }, () =>
-        createMatch(420, [
-          {
-            puuid: testPuuid("b"),
-            championId: ChampionIdSchema.parse(1),
-            win: true,
-          },
-          {
-            puuid: testPuuid("other"),
-            championId: ChampionIdSchema.parse(2),
-            win: false,
-          },
-        ]),
-      ),
+      ...repeatPlayerMatches(8, "a", true),
+      ...repeatPlayerMatches(1, "a", false),
+      ...repeatPlayerMatches(10, "b", true),
     ];
 
     const result = processCriteria(highestSoloWinRateCriteria, matches, [
@@ -1413,10 +727,9 @@ describe("processHighestWinRate", () => {
       playerB,
     ]);
 
-    // Only PlayerB should be included (PlayerA has < 10 games)
     expect(result.length).toBe(1);
     expect(result[0]?.playerId).toBe(playerB.id);
-    expect(result[0]?.score).toBe(1); // 100% win rate
+    expect(result[0]?.score).toBe(1);
   });
 });
 
