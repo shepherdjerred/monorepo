@@ -35,9 +35,6 @@ function usagePageSchema<RESULT extends z.ZodType>(result: RESULT) {
     .loose();
 }
 
-const CompletionPageSchema = usagePageSchema(CompletionResultSchema);
-const CostPageSchema = usagePageSchema(CostResultSchema);
-
 export type OpenAiUsageTokenRow = {
   readonly model: string;
   readonly serviceTier: string;
@@ -108,62 +105,34 @@ async function fetchPage(input: {
   return await response.json();
 }
 
-async function fetchCompletions(input: {
+async function fetchPagedResults<RESULT extends z.ZodType>(input: {
+  readonly path: string;
+  readonly bucketWidth: string;
+  readonly limit: number;
+  readonly groupBy: readonly string[];
+  readonly schema: RESULT;
   readonly startTime: number;
   readonly endTime: number;
   readonly adminKey: string;
   readonly projectId: string;
   readonly fetcher: OpenAiUsageFetch;
   readonly cancellationSignal: AbortSignal | undefined;
-}): Promise<z.infer<typeof CompletionResultSchema>[]> {
-  const results: z.infer<typeof CompletionResultSchema>[] = [];
+}): Promise<z.infer<RESULT>[]> {
+  const results: z.infer<RESULT>[] = [];
+  const pageSchema = usagePageSchema(input.schema);
   let cursor: string | undefined;
   do {
-    const url = new URL(
-      "https://api.openai.com/v1/organization/usage/completions",
-    );
+    const url = new URL(`https://api.openai.com/v1/organization/${input.path}`);
     url.searchParams.set("start_time", String(input.startTime));
     url.searchParams.set("end_time", String(input.endTime));
-    url.searchParams.set("bucket_width", "1h");
+    url.searchParams.set("bucket_width", input.bucketWidth);
     url.searchParams.append("project_ids", input.projectId);
-    url.searchParams.append("group_by", "model");
-    url.searchParams.append("group_by", "service_tier");
-    url.searchParams.set("limit", "24");
+    for (const groupBy of input.groupBy) {
+      url.searchParams.append("group_by", groupBy);
+    }
+    url.searchParams.set("limit", String(input.limit));
     if (cursor !== undefined) url.searchParams.set("page", cursor);
-    const page = CompletionPageSchema.parse(
-      await fetchPage({
-        url,
-        adminKey: input.adminKey,
-        fetcher: input.fetcher,
-        cancellationSignal: input.cancellationSignal,
-      }),
-    );
-    for (const bucket of page.data) results.push(...bucket.results);
-    cursor = pageCursor(page);
-  } while (cursor !== undefined);
-  return results;
-}
-
-async function fetchCosts(input: {
-  readonly startTime: number;
-  readonly endTime: number;
-  readonly adminKey: string;
-  readonly projectId: string;
-  readonly fetcher: OpenAiUsageFetch;
-  readonly cancellationSignal: AbortSignal | undefined;
-}): Promise<z.infer<typeof CostResultSchema>[]> {
-  const results: z.infer<typeof CostResultSchema>[] = [];
-  let cursor: string | undefined;
-  do {
-    const url = new URL("https://api.openai.com/v1/organization/costs");
-    url.searchParams.set("start_time", String(input.startTime));
-    url.searchParams.set("end_time", String(input.endTime));
-    url.searchParams.set("bucket_width", "1d");
-    url.searchParams.append("project_ids", input.projectId);
-    url.searchParams.append("group_by", "project_id");
-    url.searchParams.set("limit", "31");
-    if (cursor !== undefined) url.searchParams.set("page", cursor);
-    const page = CostPageSchema.parse(
+    const page = pageSchema.parse(
       await fetchPage({
         url,
         adminKey: input.adminKey,
@@ -215,8 +184,22 @@ export async function fetchOpenAiComplimentaryUsage(
     cancellationSignal: input.cancellationSignal,
   };
   const [completions, costs] = await Promise.all([
-    fetchCompletions(common),
-    fetchCosts(common),
+    fetchPagedResults({
+      ...common,
+      path: "usage/completions",
+      bucketWidth: "1h",
+      limit: 24,
+      groupBy: ["model", "service_tier"],
+      schema: CompletionResultSchema,
+    }),
+    fetchPagedResults({
+      ...common,
+      path: "costs",
+      bucketWidth: "1d",
+      limit: 31,
+      groupBy: ["project_id"],
+      schema: CostResultSchema,
+    }),
   ]);
   const tokenRows = aggregateTokenRows(completions);
   return {
