@@ -1,5 +1,12 @@
 import { memo, useEffect, useState } from "react";
-import { Check, ChevronDown, Copy, Pencil, RefreshCw } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+} from "lucide-react";
 import { ReportOutputFormatSchema } from "@scout-for-lol/data";
 import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
 import type {
@@ -16,6 +23,14 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@scout-for-lol/design-system/components/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@scout-for-lol/design-system/components/dropdown-menu";
 import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
@@ -66,11 +81,14 @@ export function ExploreTranscript(props: {
   /** Owner-only raw tool payloads are never offered on the shared route. */
   showRawTrace?: boolean;
   actions?: ExploreTranscriptActions;
+  hasError?: boolean;
 }) {
   const actions = props.actions ?? EMPTY_ACTIONS;
   const turnActive = props.turnActive ?? false;
   const latestMessageId = props.messages.at(-1)?.id ?? null;
-  const stranded = strandedQuestion(props.messages, turnActive);
+  const stranded = props.hasError
+    ? null
+    : strandedQuestion(props.messages, turnActive);
   return (
     <div role="log" aria-label="Conversation">
       {/* Spacing carries the grouping: an answer sits close to the question it
@@ -120,7 +138,7 @@ export function ExploreTranscript(props: {
  * being broken rather than as an interruption. Switching conversations
  * mid-turn is the ordinary way to reach it.
  */
-function strandedQuestion(
+export function strandedQuestion(
   messages: ExploreMessage[],
   turnActive: boolean,
 ): ExploreMessage | null {
@@ -296,6 +314,22 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
 }) {
   const { message, actions } = props;
   const chart = chartableSnapshot(message.visualization);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timer = setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [copied]);
+
+  const handleCopy = () => {
+    void navigator.clipboard.writeText(message.content);
+    setCopied(true);
+  };
 
   return (
     <div className="space-y-3">
@@ -337,46 +371,119 @@ const AssistantTurn = memo(function AssistantTurnView(props: {
         </ul>
       )}
 
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex items-center gap-1 pt-1 text-scout-subtle">
+        <time
+          dateTime={message.createdAt}
+          title={TIME_FULL.format(new Date(message.createdAt))}
+          className="sr-only"
+        >
+          {TIME_SHORT.format(new Date(message.createdAt))}
+        </time>
         <ExploreVersionSwitcher
           message={message}
           onSelectVersion={actions.onSelectVersion}
         />
-        <CopyButton content={message.content} />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="size-7 text-scout-subtle hover:text-scout-ink"
+          aria-label={copied ? "Copied" : "Copy"}
+          title={copied ? "Copied" : "Copy"}
+          onClick={handleCopy}
+        >
+          {copied ? (
+            <Check className="size-3.5 text-scout-success" />
+          ) : (
+            <Copy className="size-3.5" />
+          )}
+        </Button>
         {actions.onRegenerate !== undefined && (
           <Button
             variant="ghost"
-            size="sm"
-            className="gap-1.5"
+            size="icon-sm"
+            className="size-7 text-scout-subtle hover:text-scout-ink"
+            aria-label="Answer again"
+            title="Answer again"
             onClick={() => {
               actions.onRegenerate?.(message);
             }}
           >
             <RefreshCw className="size-3.5" />
-            Answer again
           </Button>
         )}
-        <time
-          dateTime={message.createdAt}
-          title={TIME_FULL.format(new Date(message.createdAt))}
-          className="ml-auto text-xs text-scout-subtle"
-        >
-          {TIME_SHORT.format(new Date(message.createdAt))}
-        </time>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              className="size-7 text-scout-subtle hover:text-scout-ink"
+              aria-label="More options"
+              title="More options"
+            >
+              <MoreHorizontal className="size-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="min-w-44">
+            <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-scout-subtle">
+              <time dateTime={message.createdAt}>
+                {TIME_FULL.format(new Date(message.createdAt))}
+              </time>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="gap-2 text-xs" onClick={handleCopy}>
+              <Copy className="size-3.5" />
+              Copy
+            </DropdownMenuItem>
+            {actions.onRegenerate !== undefined && (
+              <DropdownMenuItem
+                className="gap-2 text-xs"
+                onClick={() => {
+                  actions.onRegenerate?.(message);
+                }}
+              >
+                <RefreshCw className="size-3.5" />
+                Answer again
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {message.queryText !== null && (
-        <Disclosure label="ScoutQL query">
-          <ScoutQlCode queryText={message.queryText} />
-        </Disclosure>
-      )}
-
-      {message.trace.length > 0 && (
-        <Disclosure label={`Steps (${String(message.trace.length)})`}>
-          <ExploreToolTrace
-            trace={message.trace}
-            showRaw={props.showRawTrace}
-          />
+      {(message.queryText !== null || message.trace.length > 0) && (
+        <Disclosure
+          label={
+            message.queryText !== null && message.trace.length > 0
+              ? `ScoutQL query & Steps (${String(message.trace.length)})`
+              : message.queryText !== null
+                ? "ScoutQL query"
+                : `Steps (${String(message.trace.length)})`
+          }
+        >
+          <div className="space-y-3 pt-1">
+            {message.queryText !== null && (
+              <div className="space-y-1">
+                {message.trace.length > 0 && (
+                  <h4 className="text-xs font-medium text-scout-subtle">
+                    ScoutQL query
+                  </h4>
+                )}
+                <ScoutQlCode queryText={message.queryText} />
+              </div>
+            )}
+            {message.trace.length > 0 && (
+              <div className="space-y-1">
+                {message.queryText !== null && (
+                  <h4 className="text-xs font-medium text-scout-subtle">
+                    Steps ({String(message.trace.length)})
+                  </h4>
+                )}
+                <ExploreToolTrace
+                  trace={message.trace}
+                  showRaw={props.showRawTrace}
+                />
+              </div>
+            )}
+          </div>
         </Disclosure>
       )}
 
@@ -423,47 +530,19 @@ function Disclosure(props: { label: string; children: React.ReactNode }) {
   return (
     <Collapsible className="space-y-2">
       <CollapsibleTrigger asChild>
-        <Button variant="ghost" size="sm" className="group gap-1">
-          {props.label}
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-surface transition-colors group"
+        >
+          <span>{props.label}</span>
           <ChevronDown
-            className="size-3.5 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
+            className="size-3 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
             aria-hidden="true"
           />
-        </Button>
+        </button>
       </CollapsibleTrigger>
       <CollapsibleContent>{props.children}</CollapsibleContent>
     </Collapsible>
-  );
-}
-
-/** Copy with an inline state change; no toast system is needed for feedback. */
-function CopyButton(props: { content: string }) {
-  const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    if (!copied) {
-      return;
-    }
-    const timer = setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [copied]);
-
-  return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="gap-1.5"
-      onClick={() => {
-        void navigator.clipboard.writeText(props.content);
-        setCopied(true);
-      }}
-    >
-      {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
-      {copied ? "Copied" : "Copy"}
-    </Button>
   );
 }
 

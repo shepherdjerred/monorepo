@@ -1,31 +1,28 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router";
-import type { ExploreConversation } from "@scout-for-lol/data";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@scout-for-lol/design-system/components/collapsible";
 import { ExploreComposer } from "#src/components/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore-share.tsx";
-import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
 import {
   ExploreTranscript,
   type ExploreTranscriptActions,
 } from "#src/components/explore-transcript.tsx";
-import { ConfirmDeleteDialog } from "#src/components/confirm-delete-dialog.tsx";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
-import { RenameConversationDialog } from "#src/components/rename-conversation-dialog.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
-import {
-  conversationToMarkdown,
-  downloadMarkdown,
-  exportFilename,
-} from "#src/lib/explore-export.ts";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
   visiblePending,
 } from "#src/lib/explore-turn-state.ts";
-import { analyticsMeta, track } from "#src/lib/analytics.ts";
+import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreRuns } from "#src/components/explore-runs-context.ts";
@@ -53,21 +50,10 @@ export function Explore() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [restoredDraft, setRestoredDraft] = useState<string | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [renaming, setRenaming] = useState<ExploreConversation | null>(null);
-  const [deleting, setDeleting] = useState<ExploreConversation | null>(null);
   const runs = useExploreRuns();
 
-  const {
-    status,
-    enabled,
-    quota,
-    conversations,
-    transcript,
-    messages,
-    title,
-    shared,
-  } = useExploreConversation(conversationId);
+  const { status, enabled, quota, transcript, messages, title, shared } =
+    useExploreConversation(conversationId);
 
   const pendingTurn = runs.pendingTurn(conversationId);
   const turnActive = exploreTurnIsActive(pendingTurn, runs.discoverySettled);
@@ -84,17 +70,6 @@ export function Explore() {
       meta: analyticsMeta("explore_branch_selected"),
     }),
   );
-  const deleteMutation = useMutation(
-    trpc.explore.delete.mutationOptions({
-      meta: analyticsMeta("explore_conversation_deleted"),
-    }),
-  );
-  const renameMutation = useMutation(
-    trpc.explore.rename.mutationOptions({
-      meta: analyticsMeta("explore_conversation_renamed"),
-    }),
-  );
-
   const refreshList = useCallback(async (): Promise<void> => {
     await queryClient.invalidateQueries({
       queryKey: trpc.explore.list.queryKey(),
@@ -137,62 +112,6 @@ export function Explore() {
     [conversationId, refreshConversation, setLeafMutation],
   );
 
-  const handleRename = useCallback(
-    async (conversation: ExploreConversation, nextTitle: string) => {
-      setError(null);
-      try {
-        await renameMutation.mutateAsync({
-          conversationId: conversation.id,
-          title: nextTitle,
-        });
-        // Close only on success — a stuck-open dialog with an error banner
-        // beats one that swallowed the failure.
-        setRenaming(null);
-        await refreshConversation(conversation.id);
-      } catch (mutationError) {
-        setError(errorText(mutationError));
-      }
-    },
-    [refreshConversation, renameMutation],
-  );
-
-  const handleDelete = useCallback(
-    async (conversation: ExploreConversation) => {
-      setError(null);
-      try {
-        await deleteMutation.mutateAsync({ conversationId: conversation.id });
-        setDeleting(null);
-        queryClient.removeQueries({
-          queryKey: trpc.explore.get.queryKey({
-            conversationId: conversation.id,
-          }),
-        });
-        if (conversation.id === conversationId) {
-          void navigate("/explore", { replace: true });
-        }
-        await refreshList();
-      } catch (mutationError) {
-        setError(errorText(mutationError));
-      }
-    },
-    [
-      conversationId,
-      deleteMutation,
-      navigate,
-      queryClient,
-      refreshList,
-      trpc.explore.get,
-    ],
-  );
-
-  const openConversation = useCallback(
-    (id: string | null) => {
-      void navigate(id === null ? "/explore" : `/explore/${id}`);
-      setDrawerOpen(false);
-    },
-    [navigate],
-  );
-
   const transcriptActions = useMemo<ExploreTranscriptActions>(
     () => ({
       onFollowUp: ask,
@@ -205,6 +124,20 @@ export function Explore() {
     }),
     [ask, handleEdit, handleRegenerate, handleRetry, handleSelectVersion],
   );
+
+  const retryTarget = useMemo(() => {
+    const last = messages.at(-1);
+    return last?.role === "user" ? last : null;
+  }, [messages]);
+
+  const onRetryError = useCallback(() => {
+    runs.clearError(conversationId);
+    if (retryTarget !== null) {
+      handleRetry(retryTarget);
+    } else if (conversationId !== null) {
+      void refreshConversation(conversationId);
+    }
+  }, [conversationId, handleRetry, refreshConversation, retryTarget, runs]);
 
   const {
     pendingQuestion,
@@ -267,99 +200,126 @@ export function Explore() {
           shared: shared !== null,
           sharing: share.sharing,
           revoking: share.revoking,
-          onExport: () => {
-            track("explore_exported");
-            downloadMarkdown(
-              exportFilename(title),
-              conversationToMarkdown(title, messages),
-            );
-          },
           onShare: share.share,
           onRevoke: share.revoke,
         }
       : undefined;
 
-  const sidebar = (
-    <ExploreSidebar
-      conversations={conversations.data ?? []}
-      activeId={conversationId}
-      onSelect={openConversation}
-      onNew={() => {
-        openConversation(null);
-      }}
-      onRename={setRenaming}
-      onDelete={setDeleting}
-      statusForConversation={runs.status}
-    />
-  );
-
   return (
-    // The page needs its own container: RootLayout provides none, and without
-    // one the transcript ran edge-to-edge at the viewport's full width — the
-    // same conversation the shared page renders at `max-w-3xl`.
-    <div className="mx-auto flex min-h-screen max-w-6xl gap-6 px-4 py-8 sm:px-6 sm:py-10">
-      {/* Sticky because the document is the scroll container: the sidebar's
-          own `h-full`/`overflow-y-auto` are inert against a page that scrolls
-          as a whole, so the conversation list scrolled away with the content. */}
-      <aside className="sticky top-8 hidden h-[calc(100vh-6rem)] w-60 shrink-0 md:block">
-        {sidebar}
-      </aside>
+    <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col gap-4 px-4 py-8 sm:px-6 sm:py-10 [overscroll-behavior:none]">
+      <ExploreHeader
+        title={conversationId === null ? "Explore" : title}
+        {...(headerActions === undefined ? {} : { actions: headerActions })}
+      />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        <ExploreHeader
-          title={conversationId === null ? "Explore" : title}
-          drawerOpen={drawerOpen}
-          onDrawerOpenChange={setDrawerOpen}
-          sidebar={sidebar}
-          {...(headerActions === undefined ? {} : { actions: headerActions })}
+      {messages.length === 0 && pendingQuestion === null && (
+        <div className="space-y-2 rounded-lg border border-dashed p-6">
+          <p className="text-sm">
+            Ask about champions, queues, positions, patches, or players across
+            every match Scout has ingested.
+          </p>
+          <p className="text-xs text-scout-subtle">
+            This is not the whole League ladder — it is the games of tracked
+            players and everyone who was in them.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-2">
+            {EXAMPLES.map((example) => (
+              <Button
+                key={example}
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  ask(example);
+                }}
+              >
+                {example}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="min-h-0 flex-1 space-y-4 pb-4">
+        <ExploreTranscript
+          messages={messages}
+          pendingQuestion={pendingQuestion}
+          pendingAnswer={pendingAnswer}
+          activity={activity}
+          pendingTrace={pendingTrace}
+          turnActive={turnActive}
+          showRawTrace
+          actions={transcriptActions}
+          hasError={pageError !== null}
         />
 
-        {messages.length === 0 && pendingQuestion === null && (
-          <div className="space-y-2 rounded-lg border border-dashed p-6">
-            <p className="text-sm">
-              Ask about champions, queues, positions, patches, or players across
-              every match Scout has ingested.
-            </p>
-            <p className="text-xs text-scout-subtle">
-              This is not the whole League ladder — it is the games of tracked
-              players and everyone who was in them.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              {EXAMPLES.map((example) => (
-                <Button
-                  key={example}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    ask(example);
-                  }}
-                >
-                  {example}
-                </Button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Capped independently of the page: a chat is read line by line, and
-            the 6xl page width is a ~150-character measure. */}
-        <div className="max-w-3xl">
-          <ExploreTranscript
-            messages={messages}
-            pendingQuestion={pendingQuestion}
-            pendingAnswer={pendingAnswer}
-            activity={activity}
-            pendingTrace={pendingTrace}
-            turnActive={turnActive}
-            showRawTrace
-            actions={transcriptActions}
-          />
-        </div>
-
         {pageError !== null && (
-          <p className="rounded-md border border-scout-danger/40 bg-scout-danger/10 px-3 py-2 text-sm">
-            {pageError}
-          </p>
+          <div className="rounded-md border border-scout-danger/40 bg-scout-danger/10 p-3 text-sm text-scout-ink space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-medium">{pageError}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0"
+                onClick={onRetryError}
+              >
+                Retry
+              </Button>
+            </div>
+            <Collapsible className="space-y-1.5 pt-0.5">
+              <CollapsibleTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger/10 transition-colors group"
+                >
+                  <span>Technical details</span>
+                  <ChevronDown
+                    className="size-3 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
+                    aria-hidden="true"
+                  />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="rounded border border-scout-border/60 bg-scout-surface p-2.5 text-xs font-mono space-y-1 overflow-x-auto select-text">
+                  <div>
+                    <span className="text-scout-subtle">Error: </span>
+                    <span className="text-scout-danger font-semibold">
+                      {pageError}
+                    </span>
+                  </div>
+                  {conversationId !== null && (
+                    <div>
+                      <span className="text-scout-subtle">
+                        Conversation ID:{" "}
+                      </span>
+                      <span>{conversationId}</span>
+                    </div>
+                  )}
+                  {pendingTurn?.runId !== undefined &&
+                    pendingTurn.runId !== null && (
+                      <div>
+                        <span className="text-scout-subtle">Run ID: </span>
+                        <span>{pendingTurn.runId}</span>
+                      </div>
+                    )}
+                  {retryTarget !== null && (
+                    <div>
+                      <span className="text-scout-subtle">Question ID: </span>
+                      <span>{retryTarget.id}</span>
+                    </div>
+                  )}
+                  {pendingTrace.length > 0 && (
+                    <div>
+                      <span className="text-scout-subtle">
+                        Executed steps:{" "}
+                      </span>
+                      <span>{pendingTrace.length}</span>
+                    </div>
+                  )}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
         )}
 
         {share.showShareLink && share.shareLink !== null && (
@@ -367,10 +327,12 @@ export function Explore() {
         )}
 
         <div ref={bottomRef} />
+      </div>
 
-        {/* Pinned to the bottom of the viewport: scrolling up to re-read an
-            earlier answer used to take the ask box off screen entirely. */}
-        <div className="sticky bottom-0 max-w-3xl bg-background pt-2 pb-4">
+      {/* Pinned to the bottom of the viewport with a translucent gradient fade:
+          allows chat text to remain visible below the composer through the fade effect. */}
+      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 bg-gradient-to-t from-scout-canvas/80 via-scout-canvas/30 via-40% to-transparent dark:from-black/75 dark:via-black/30 dark:via-40% dark:to-transparent">
+        <div className="pointer-events-auto">
           <ExploreComposer
             active={pendingTurn !== null}
             disabled={!runs.discoverySettled}
@@ -383,28 +345,6 @@ export function Explore() {
           <ExploreQuota quota={quota} />
         </div>
       </div>
-
-      <RenameConversationDialog
-        conversation={renaming}
-        pending={renameMutation.isPending}
-        onClose={() => {
-          setRenaming(null);
-        }}
-        onRename={(conversation, nextTitle) => {
-          void handleRename(conversation, nextTitle);
-        }}
-      />
-
-      <ConfirmDeleteDialog
-        conversation={deleting}
-        pending={deleteMutation.isPending}
-        onClose={() => {
-          setDeleting(null);
-        }}
-        onConfirm={(conversation) => {
-          void handleDelete(conversation);
-        }}
-      />
     </div>
   );
 }
@@ -457,10 +397,6 @@ function useExploreConversation(conversationId: string | null) {
   const trpc = useTRPC();
   const status = useQuery(trpc.explore.status.queryOptions());
   const enabled = status.data?.enabled === true;
-  const conversations = useQuery({
-    ...trpc.explore.list.queryOptions(),
-    enabled,
-  });
   const transcript = useQuery({
     ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
     enabled: enabled && conversationId !== null,
@@ -470,7 +406,6 @@ function useExploreConversation(conversationId: string | null) {
     status,
     enabled,
     quota: status.data?.quota ?? [],
-    conversations,
     transcript,
     messages: transcript.data?.messages ?? [],
     title: transcript.data?.conversation.title ?? "Explore",

@@ -30,8 +30,10 @@ export function ThemeMenu() {
       </PopoverTrigger>
       <PopoverContent align="end">
         <div className="scout-theme-menu">
-          <div className="scout-field">
-            <span className="scout-label">Skin</span>
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-scout-subtle">
+              Skin
+            </span>
             <div className="scout-segmented">
               {skins.map((skin) => (
                 <button
@@ -47,8 +49,10 @@ export function ThemeMenu() {
               ))}
             </div>
           </div>
-          <div className="scout-field">
-            <span className="scout-label">Appearance</span>
+          <div className="space-y-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-scout-subtle">
+              Appearance
+            </span>
             <div className="scout-segmented">
               {modes.map((mode) => {
                 const Icon = mode.icon;

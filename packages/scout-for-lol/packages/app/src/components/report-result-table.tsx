@@ -65,20 +65,32 @@ export function ReportResultTable(props: {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {props.rows.map((row, rowIndex) => (
-              <TableRow key={`${row.label}-${rowIndex.toString()}`}>
-                {props.columns.map((column) => (
-                  <TableCell
-                    key={column.key}
-                    className={
-                      column.key === "label" ? "font-medium" : undefined
-                    }
-                  >
-                    {formatCell(column, row, props.evidence?.[rowIndex])}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {(() => {
+              const hasGamesColumn = props.columns.some(
+                (column) =>
+                  column.key === "games" ||
+                  column.label.toLowerCase().includes("game"),
+              );
+              return props.rows.map((row, rowIndex) => (
+                <TableRow key={`${row.label}-${rowIndex.toString()}`}>
+                  {props.columns.map((column) => (
+                    <TableCell
+                      key={column.key}
+                      className={
+                        column.key === "label" ? "font-medium" : undefined
+                      }
+                    >
+                      {formatCell(
+                        column,
+                        row,
+                        props.evidence?.[rowIndex],
+                        hasGamesColumn,
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ));
+            })()}
           </TableBody>
         </Table>
       </div>
@@ -161,6 +173,7 @@ function formatCell(
   column: ReportResultColumn,
   row: PreviewRow,
   evidenceRow: PreviewEvidence | undefined,
+  hasGamesColumn: boolean,
 ): string {
   if (column.key === "label") {
     return row.label;
@@ -169,7 +182,17 @@ function formatCell(
   if (result?.value === undefined || result.value === null) return "—";
   const details: string[] = [];
   const games = evidenceRow?.games ?? row.games;
-  if (games !== undefined && column.key !== "games") {
+  const isIdentifier =
+    column.key.endsWith("_id") ||
+    column.key === "id" ||
+    column.key === "key" ||
+    column.key === "slug";
+  if (
+    !hasGamesColumn &&
+    !isIdentifier &&
+    games !== undefined &&
+    column.key !== "games"
+  ) {
     details.push(`Based on ${games.toString()} games`);
   }
   if (result.absoluteDelta !== undefined && result.absoluteDelta !== null) {

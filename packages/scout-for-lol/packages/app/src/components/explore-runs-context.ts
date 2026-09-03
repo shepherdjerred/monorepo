@@ -12,3 +12,7 @@ export function useExploreRuns(): ExploreRunsContextValue {
   }
   return value;
 }
+
+export function useOptionalExploreRuns(): ExploreRunsContextValue | null {
+  return useContext(ExploreRunsContext);
+}

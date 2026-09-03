@@ -49,32 +49,35 @@ export function UserMenu(props: { username: string }) {
           <ChevronDown className="h-4 w-4 opacity-60" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={8} className="w-56">
-        <DropdownMenuLabel className="font-normal">
-          <span className="block text-sm font-medium">@{props.username}</span>
-          <span className="block text-xs text-scout-subtle">
+      <DropdownMenuContent align="end" sideOffset={8} className="w-52">
+        <DropdownMenuLabel className="font-normal !text-left !block px-2 py-1.5">
+          <span className="block text-xs font-semibold text-scout-ink">
+            @{props.username}
+          </span>
+          <span className="block text-[11px] text-scout-subtle">
             Signed in with Discord
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className="gap-2 text-xs">
           <a href={SUPPORT_URL} target="_blank" rel="noreferrer">
-            <Bug className="h-4 w-4" aria-hidden="true" />
-            Report a bug
+            <Bug className="size-3.5 text-scout-subtle" aria-hidden="true" />
+            <span>Report a bug</span>
             <ExternalLink
-              className="ml-auto h-3 w-3 opacity-60"
+              className="ml-auto size-3 opacity-60"
               aria-hidden="true"
             />
           </a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
+          className="gap-2 text-xs text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
           onSelect={() => {
             void logout();
           }}
         >
-          <LogOut className="h-4 w-4" aria-hidden="true" />
-          Sign out
+          <LogOut className="size-3.5" aria-hidden="true" />
+          <span>Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

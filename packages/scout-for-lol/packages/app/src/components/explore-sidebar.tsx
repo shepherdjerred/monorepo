@@ -1,8 +1,15 @@
 import { memo, useMemo, useState } from "react";
-import { LoaderCircle, MoreHorizontal, Plus, Search } from "lucide-react";
+import { Link } from "react-router";
+import {
+  LoaderCircle,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import type { ExploreConversation } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { Input } from "@scout-for-lol/design-system/components/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,7 +35,9 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
   statusForConversation: (
     conversationId: string,
   ) => "running" | "completed" | "failed" | null;
+  showNewButton?: boolean;
 }) {
+  const { showNewButton = true } = props;
   const [search, setSearch] = useState("");
 
   const groups = useMemo(
@@ -37,25 +46,27 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
   );
 
   return (
-    <div className="flex h-full flex-col gap-3">
-      <Button
-        variant="outline"
-        size="sm"
-        className="w-full justify-start gap-2"
-        onClick={props.onNew}
-      >
-        <Plus className="size-4" />
-        New conversation
-      </Button>
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      {showNewButton && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2"
+          onClick={props.onNew}
+        >
+          <Plus className="size-4" />
+          New conversation
+        </Button>
+      )}
 
       {props.conversations.length > 4 && (
-        <div className="relative">
-          <Search className="absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-scout-subtle" />
-          <Input
+        <div className="relative px-0.5">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-scout-subtle" />
+          <input
+            type="search"
             value={search}
-            placeholder="Search"
-            className="h-8 text-sm"
-            style={{ paddingInlineStart: "2.25rem" }}
+            placeholder="Search chats…"
+            className="h-6 w-full rounded-md border border-transparent bg-scout-hover/50 px-2 pl-6 text-[12px] text-scout-ink placeholder:text-scout-subtle !outline-none transition-colors hover:bg-scout-hover/80 focus:border-scout-border/70 focus:bg-scout-surface focus:!outline-none focus-visible:!outline-none"
             onChange={(event) => {
               setSearch(event.target.value);
             }}
@@ -63,59 +74,69 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
         </div>
       )}
 
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-0.5">
         {groups.map((group) => (
-          <div key={group.label} className="space-y-1">
-            <p className="px-2 text-xs font-medium text-scout-subtle">
+          <div key={group.label} className="space-y-0.5">
+            <p className="px-2 pt-1 text-[11px] font-medium text-scout-subtle">
               {group.label}
             </p>
             <ul className="space-y-0.5">
               {group.conversations.map((conversation) => (
-                <li key={conversation.id} className="group flex items-center">
-                  <button
-                    type="button"
-                    className={`flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm hover:bg-scout-hover ${
-                      conversation.id === props.activeId ? "bg-scout-hover" : ""
-                    }`}
+                <li
+                  key={conversation.id}
+                  className={`group relative flex items-center rounded-md transition-colors ${
+                    conversation.id === props.activeId
+                      ? "bg-scout-hover font-medium text-scout-ink"
+                      : "text-scout-ink/85 hover:bg-scout-hover hover:text-scout-ink"
+                  }`}
+                >
+                  <Link
+                    to={`/explore/${conversation.id}`}
+                    className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left text-[13px] text-inherit no-underline outline-none"
                     onClick={() => {
                       props.onSelect(conversation.id);
                     }}
                   >
-                    <span className="min-w-0 flex-1 truncate">
+                    <span className="min-w-0 flex-1 truncate pr-5">
                       {conversation.title}
                     </span>
                     <ConversationRunStatus
                       status={props.statusForConversation(conversation.id)}
                     />
-                  </button>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="size-7 shrink-0 p-0"
-                        aria-label={`Actions for ${conversation.title}`}
-                      >
-                        <MoreHorizontal className="size-3.5" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          props.onRename(conversation);
-                        }}
-                      >
-                        Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={() => {
-                          props.onDelete(conversation);
-                        }}
-                      >
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  </Link>
+                  <div className="absolute right-1 flex items-center opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex size-5 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus:outline-none"
+                          aria-label={`Actions for ${conversation.title}`}
+                        >
+                          <MoreHorizontal className="size-3.5" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-32">
+                        <DropdownMenuItem
+                          className="gap-2 text-xs"
+                          onSelect={() => {
+                            props.onRename(conversation);
+                          }}
+                        >
+                          <Pencil className="size-3.5 text-scout-subtle" />
+                          <span>Rename</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="gap-2 text-xs text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
+                          onSelect={() => {
+                            props.onDelete(conversation);
+                          }}
+                        >
+                          <Trash2 className="size-3.5 text-scout-danger" />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </li>
               ))}
             </ul>

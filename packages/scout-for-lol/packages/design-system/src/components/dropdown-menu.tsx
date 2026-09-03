@@ -100,7 +100,7 @@ export const DropdownMenuLabel = forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownPrimitive.Label
     ref={ref}
-    className={cn("scout-menu-item", className)}
+    className={cn("scout-menu-label", className)}
     {...props}
   />
 ));

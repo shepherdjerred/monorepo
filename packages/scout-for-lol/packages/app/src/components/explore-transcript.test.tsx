@@ -2,7 +2,10 @@ import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
-import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
+import {
+  ExploreTranscript,
+  strandedQuestion,
+} from "#src/components/explore-transcript.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 
 const QUESTION_ID = "33333333-3333-4333-8333-333333333333";
@@ -144,7 +147,7 @@ describe("ExploreTranscript", () => {
     expect(queryMarkup).toContain('data-scoutql-token="keyword"');
   });
 
-  test("shows labeled answer actions instead of unexplained icons", () => {
+  test("shows accessible answer actions for copy, regenerate, and more options", () => {
     const markup = renderToStaticMarkup(
       <ExploreTranscript
         messages={[assistantMessage({})]}
@@ -152,8 +155,9 @@ describe("ExploreTranscript", () => {
       />,
     );
 
-    expect(markup).toContain(">Copy<");
-    expect(markup).toContain(">Answer again<");
+    expect(markup).toContain('aria-label="Copy"');
+    expect(markup).toContain('aria-label="Answer again"');
+    expect(markup).toContain('aria-label="More options"');
   });
 
   test("hides suggested responses as soon as a new turn starts", () => {
@@ -304,5 +308,41 @@ describe("Explore Dare transcript cards", () => {
     expect(ownerStreaming).toContain("Dare #42 draft");
     expect(ownerPersisted).toContain("One game: Virmel gets 8 CS/min");
     expect(shared).not.toContain("Dare #42 draft");
+  });
+
+  test("suppresses interrupted turn banner when an error is already present", () => {
+    const userMsg = ExploreMessageSchema.parse({
+      id: QUESTION_ID,
+      role: "user",
+      parentId: null,
+      content: "Why did we lose?",
+      createdAt: "2026-08-14T12:00:00.000Z",
+    });
+
+    expect(strandedQuestion([userMsg], false)).toEqual(userMsg);
+    expect(strandedQuestion([userMsg], true)).toBeNull();
+
+    const withError = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[userMsg]}
+        hasError
+        actions={{ onRetry: () => {} }}
+      />,
+    );
+    expect(withError).not.toContain(
+      "This question was interrupted before it was answered.",
+    );
+
+    const withoutError = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[userMsg]}
+        hasError={false}
+        actions={{ onRetry: () => {} }}
+      />,
+    );
+    expect(withoutError).toContain(
+      "This question was interrupted before it was answered.",
+    );
+    expect(withoutError).toContain("Answer it");
   });
 });

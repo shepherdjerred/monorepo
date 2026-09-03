@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router";
 import { ExploreConversationSchema } from "@scout-for-lol/data";
 import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
 
@@ -19,15 +20,17 @@ function ignore(): void {
 describe("ExploreSidebar", () => {
   test("labels a running conversation accessibly", () => {
     const html = renderToStaticMarkup(
-      <ExploreSidebar
-        conversations={[conversation]}
-        activeId={null}
-        onSelect={ignore}
-        onNew={ignore}
-        onRename={ignore}
-        onDelete={ignore}
-        statusForConversation={() => "running"}
-      />,
+      <MemoryRouter>
+        <ExploreSidebar
+          conversations={[conversation]}
+          activeId={null}
+          onSelect={ignore}
+          onNew={ignore}
+          onRename={ignore}
+          onDelete={ignore}
+          statusForConversation={() => "running"}
+        />
+      </MemoryRouter>,
     );
 
     expect(html).toContain("Champion win rates");
@@ -36,26 +39,30 @@ describe("ExploreSidebar", () => {
 
   test("labels unread completion and failure markers", () => {
     const completed = renderToStaticMarkup(
-      <ExploreSidebar
-        conversations={[conversation]}
-        activeId={null}
-        onSelect={ignore}
-        onNew={ignore}
-        onRename={ignore}
-        onDelete={ignore}
-        statusForConversation={() => "completed"}
-      />,
+      <MemoryRouter>
+        <ExploreSidebar
+          conversations={[conversation]}
+          activeId={null}
+          onSelect={ignore}
+          onNew={ignore}
+          onRename={ignore}
+          onDelete={ignore}
+          statusForConversation={() => "completed"}
+        />
+      </MemoryRouter>,
     );
     const failed = renderToStaticMarkup(
-      <ExploreSidebar
-        conversations={[conversation]}
-        activeId={null}
-        onSelect={ignore}
-        onNew={ignore}
-        onRename={ignore}
-        onDelete={ignore}
-        statusForConversation={() => "failed"}
-      />,
+      <MemoryRouter>
+        <ExploreSidebar
+          conversations={[conversation]}
+          activeId={null}
+          onSelect={ignore}
+          onNew={ignore}
+          onRename={ignore}
+          onDelete={ignore}
+          statusForConversation={() => "failed"}
+        />
+      </MemoryRouter>,
     );
 
     expect(completed).toContain('aria-label="New answer available"');

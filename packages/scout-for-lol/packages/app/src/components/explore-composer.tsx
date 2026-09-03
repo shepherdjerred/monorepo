@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useSelector } from "@tanstack/react-form";
-import { Square } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   focusFirstInvalid,
@@ -56,6 +56,7 @@ export function ExploreComposer(props: {
     if (textarea === null) {
       return;
     }
+    textarea.style.minHeight = "24px";
     textarea.style.height = "auto";
     textarea.style.height = `${String(
       Math.min(textarea.scrollHeight, MAX_COMPOSER_HEIGHT_PX),
@@ -112,7 +113,7 @@ export function ExploreComposer(props: {
     <form.AppForm>
       <form
         ref={formElement}
-        className="flex items-end gap-2"
+        className="flex w-full items-end gap-2 rounded-2xl border border-scout-border bg-scout-surface p-1.5 pl-3.5 shadow-sm transition-all focus-within:border-scout-primary focus-within:ring-1 focus-within:ring-scout-primary"
         aria-busy={active}
         onSubmit={(event) => {
           handleFormSubmit(event, () => form.handleSubmit());
@@ -123,11 +124,11 @@ export function ExploreComposer(props: {
             <field.TextareaField
               id="explore-question"
               label={<span className="sr-only">Question</span>}
-              fieldClassName="min-w-0 flex-1"
+              fieldClassName="min-w-0 flex-1 py-1 !gap-0"
               ref={textareaRef}
               rows={1}
               maxLength={2000}
-              className="max-h-[200px] min-h-[42px] resize-none"
+              className="max-h-[200px] !min-h-[24px] w-full !resize-none !border-0 !bg-transparent !p-0 text-sm sm:text-base leading-6 !shadow-none !outline-none focus:!border-0 focus:!outline-none focus:!ring-0 focus-visible:!ring-0"
               onKeyDown={(event) => {
                 // Committing an IME candidate fires Enter with isComposing set;
                 // sending then would submit half-converted text.
@@ -144,22 +145,33 @@ export function ExploreComposer(props: {
             />
           )}
         </form.AppField>
-        {active ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-1.5"
-            title="Stop (Esc)"
-            onClick={onStop}
-          >
-            <Square className="size-3.5" />
-            Stop
-          </Button>
-        ) : (
-          <Button type="submit" disabled={disabled}>
-            Ask
-          </Button>
-        )}
+
+        <div className="shrink-0 pb-0.5">
+          {active ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              className="size-8 !rounded-full border-scout-border hover:bg-scout-hover"
+              title="Stop (Esc)"
+              aria-label="Stop (Esc)"
+              onClick={onStop}
+            >
+              <Square className="size-3.5 fill-current" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon-sm"
+              className="size-8 !rounded-full bg-scout-primary text-scout-brand-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
+              disabled={disabled || question.trim().length === 0}
+              aria-label="Send question"
+              title="Send"
+            >
+              <ArrowUp className="size-4" />
+            </Button>
+          )}
+        </div>
       </form>
     </form.AppForm>
   );

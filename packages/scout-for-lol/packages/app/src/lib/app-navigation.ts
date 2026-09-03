@@ -98,3 +98,15 @@ export function resolveAppShellMode(
 export function guildIdFromAppPath(pathname: string): string | undefined {
   return /^\/g\/([^/]+)/.exec(pathname)?.[1];
 }
+
+export function isExplorePath(pathname: string): boolean {
+  return (
+    pathname === "/explore" ||
+    pathname.startsWith("/explore/") ||
+    pathname.startsWith("/app/explore")
+  );
+}
+
+export function shouldRenderGlobalFooter(pathname: string): boolean {
+  return !isExplorePath(pathname);
+}
