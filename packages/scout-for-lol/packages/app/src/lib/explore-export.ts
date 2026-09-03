@@ -64,6 +64,12 @@ function previewTable(
     labelColumn?.label ?? "Row",
     ...metricColumns.map((column) => column.label),
   ].map((header) => escapeCell(header));
+  const hasGamesColumn = preview.columns.some(
+    (column) =>
+      column.key === "games" ||
+      column.label.toLowerCase() === "games" ||
+      column.label.toLowerCase() === "game count",
+  );
   const rows = preview.rows.map((row) => [
     escapeCell(row.label),
     ...metricColumns.map((column) => {
@@ -72,8 +78,16 @@ function previewTable(
       )?.value;
       if (value === undefined || value === null) return "";
       const formatted = formatReportDisplayValue(column, value);
+      const isIdentifier =
+        column.key.endsWith("_id") ||
+        column.key === "id" ||
+        column.key === "key" ||
+        column.key === "slug";
       return escapeCell(
-        column.key === "games" || row.games === undefined
+        hasGamesColumn ||
+          isIdentifier ||
+          column.key === "games" ||
+          row.games === undefined
           ? formatted
           : `${formatted} (Based on ${row.games.toString()} games)`,
       );

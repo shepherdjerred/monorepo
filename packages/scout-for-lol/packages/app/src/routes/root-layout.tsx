@@ -21,7 +21,11 @@ import { UserMenu } from "#src/components/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
 import { docsOrigin, marketingOrigin } from "#src/lib/surface-origins.ts";
 import { AppNavigation } from "#src/components/app-navigation.tsx";
-import { resolveAppShellMode } from "#src/lib/app-navigation.ts";
+import {
+  resolveAppShellMode,
+  shouldRenderGlobalFooter,
+} from "#src/lib/app-navigation.ts";
+import { ExploreRunsProvider } from "#src/components/explore-runs-provider.tsx";
 
 /**
  * Top-level chrome shared by every route (login included): the contract
@@ -71,35 +75,56 @@ export function RootLayout() {
     trackPageview(normalizePath(location.pathname));
   }, [ready, location.pathname]);
 
+  // Disable viewport overscroll / rubber-banding and snapping on Explore
+  // routes so gestures scroll the conversation cleanly without bouncing the window.
+  useEffect(() => {
+    const isExplore = !shouldRenderGlobalFooter(location.pathname);
+    if (!isExplore) return;
+    const root = document.documentElement;
+    const body = document.body;
+    const previousRoot = root.style.overscrollBehavior;
+    const previousBody = body.style.overscrollBehavior;
+    root.style.overscrollBehavior = "none";
+    body.style.overscrollBehavior = "none";
+    return () => {
+      root.style.overscrollBehavior = previousRoot;
+      body.style.overscrollBehavior = previousBody;
+    };
+  }, [location.pathname]);
+
   return (
-    <AppWorkspaceFrame
-      header={
-        <AppHeader
-          accountMenu={
-            username === undefined ? undefined : (
-              <UserMenu username={username} />
-            )
-          }
-          mobileNavigation={navigation}
-          origins={{ marketing: marketingOrigin, docs: docsOrigin }}
-        />
-      }
-      notice={
-        <>
-          <ContractMismatchBanner />
-          <FeedbackPrompt />
-        </>
-      }
-      sidebar={navigation}
-      footer={
-        <GlobalFooter
-          release={buildInfo.version}
-          commit={buildInfo.gitSha}
-          origins={{ marketing: marketingOrigin, docs: docsOrigin }}
-        />
-      }
-    >
-      <Outlet />
-    </AppWorkspaceFrame>
+    <ExploreRunsProvider>
+      <AppWorkspaceFrame
+        header={
+          <AppHeader
+            accountMenu={
+              username === undefined ? undefined : (
+                <UserMenu username={username} />
+              )
+            }
+            mobileNavigation={navigation}
+            origins={{ marketing: marketingOrigin, docs: docsOrigin }}
+          />
+        }
+        notice={
+          <>
+            <ContractMismatchBanner />
+            <FeedbackPrompt />
+          </>
+        }
+        sidebar={navigation}
+        footer={
+          shouldRenderGlobalFooter(location.pathname) ? (
+            <GlobalFooter
+              release={buildInfo.version}
+              commit={buildInfo.gitSha}
+              origins={{ marketing: marketingOrigin, docs: docsOrigin }}
+            />
+          ) : undefined
+        }
+      >
+        <Outlet />
+      </AppWorkspaceFrame>
+    </ExploreRunsProvider>
   );
 }

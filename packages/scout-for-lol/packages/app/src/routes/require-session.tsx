@@ -7,7 +7,6 @@ import {
 } from "@scout-for-lol/design-system/domain/states";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
-import { ExploreRunsProvider } from "#src/components/explore-runs-provider.tsx";
 import {
   resolveSessionGuardState,
   SESSION_QUERY_OPTIONS,
@@ -63,9 +62,7 @@ export function RequireSession() {
 
   return (
     <Suspense fallback={<SectionSkeleton />}>
-      <ExploreRunsProvider>
-        <Outlet />
-      </ExploreRunsProvider>
+      <Outlet />
     </Suspense>
   );
 }
