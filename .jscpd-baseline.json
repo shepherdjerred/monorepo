@@ -1640,10 +1640,6 @@
       "clones": 1,
       "tokens": 75
     },
-    "packages/temporal/src/activities/data-dragon-shell.ts|packages/temporal/src/activities/scout-season-refresh-git.ts": {
-      "clones": 1,
-      "tokens": 232
-    },
     "packages/temporal/src/activities/data-dragon.ts|packages/temporal/src/activities/lane-prior-refresh.ts": {
       "clones": 1,
       "tokens": 71

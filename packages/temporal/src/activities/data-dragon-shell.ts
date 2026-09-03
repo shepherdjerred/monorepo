@@ -1,3 +1,5 @@
+import { captureCommand } from "./command-runner.ts";
+
 export async function runCommand(
   command: string[],
   options: {
@@ -7,35 +9,7 @@ export async function runCommand(
     trimStdout?: boolean;
   },
 ): Promise<string> {
-  const clearedEnvKeys = new Set(
-    Object.entries(options.env ?? {})
-      .filter(([, value]) => value === undefined)
-      .map(([key]) => key),
-  );
-  const childEnv: Record<string, string> = {};
-  for (const [key, value] of Object.entries(Bun.env)) {
-    if (value !== undefined && !clearedEnvKeys.has(key)) {
-      childEnv[key] = value;
-    }
-  }
-  for (const [key, value] of Object.entries(options.env ?? {})) {
-    if (value !== undefined) {
-      childEnv[key] = value;
-    }
-  }
-
-  const proc = Bun.spawn(command, {
-    cwd: options.cwd,
-    env: childEnv,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  const { stdout, stderr, exitCode } = await captureCommand(command, options);
 
   if (exitCode !== 0) {
     const output =
