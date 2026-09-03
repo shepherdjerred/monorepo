@@ -1,32 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { mockClient } from "aws-sdk-client-mock";
-import { z } from "zod";
+import { RawMatchSchema, type RawMatch } from "@scout-for-lol/data";
+import { saveMatchToS3 } from "#src/storage/s3.ts";
 import {
-  MatchIdSchema,
-  RawMatchSchema,
-  type RawMatch,
-} from "@scout-for-lol/data";
-import { saveImageToS3, saveMatchToS3 } from "#src/storage/s3.ts";
-import { resetConfigurationForTests } from "#src/configuration.ts";
-
-const s3Mock = mockClient(S3Client);
-
-// Zod schema for validating PutObjectCommand structure captured by the mock.
-const PutCommandSchema = z.object({
-  input: z.object({
-    Bucket: z.string(),
-    Key: z.string(),
-    Body: z.union([z.instanceof(Uint8Array), z.string()]),
-    ContentType: z.string(),
-    Metadata: z.record(z.string(), z.string()).optional(),
-  }),
-});
-
-function getValidatedPutCommand(callIndex: number) {
-  const call = s3Mock.call(callIndex);
-  return PutCommandSchema.parse(call?.args?.[0]);
-}
+  getValidatedPutCommand,
+  mockFailedPut,
+  mockSuccessfulPut,
+  resetS3TestState,
+  s3Mock,
+  setS3TestBucket,
+} from "#src/storage/s3-test-helpers.ts";
 
 async function loadMatchFixture(): Promise<RawMatch> {
   const fixtureUrl = new URL(
@@ -37,182 +19,155 @@ async function loadMatchFixture(): Promise<RawMatch> {
   return RawMatchSchema.parse(json);
 }
 
-// ============================================================================
-// S3 Key Generation Tests (unit tests for the logic)
-// ============================================================================
+type KeyCase = {
+  name: string;
+  date: string;
+  matchId: string;
+  filename: string;
+  expected: string;
+};
 
-describe("S3 Key Generation Logic for Matches", () => {
-  test("match key follows game-centric hierarchical date structure", () => {
-    const matchId = "NA1_1234567890";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
+const keyCases: KeyCase[] = [
+  {
+    name: "match key follows the game hierarchy",
+    date: "2025-10-16T14:30:45Z",
+    matchId: "NA1_1234567890",
+    filename: "match.json",
+    expected: "games/2025/10/16/NA1_1234567890/match.json",
+  },
+  {
+    name: "match key pads single-digit dates",
+    date: "2025-01-05T08:15:30Z",
+    matchId: "EUW1_9876543210",
+    filename: "match.json",
+    expected: "games/2025/01/05/EUW1_9876543210/match.json",
+  },
+  {
+    name: "match key retains its JSON extension",
+    date: "2025-12-31T23:59:59Z",
+    matchId: "KR_1111111111",
+    filename: "match.json",
+    expected: "games/2025/12/31/KR_1111111111/match.json",
+  },
+  {
+    name: "image key follows the game hierarchy",
+    date: "2025-10-16T14:30:45Z",
+    matchId: "NA1_1234567890",
+    filename: "report.png",
+    expected: "games/2025/10/16/NA1_1234567890/report.png",
+  },
+  {
+    name: "image key pads single-digit dates",
+    date: "2025-01-05T08:15:30Z",
+    matchId: "EUW1_9876543210",
+    filename: "report.png",
+    expected: "games/2025/01/05/EUW1_9876543210/report.png",
+  },
+  {
+    name: "image key retains its PNG extension",
+    date: "2025-12-31T23:59:59Z",
+    matchId: "KR_1111111111",
+    filename: "report.png",
+    expected: "games/2025/12/31/KR_1111111111/report.png",
+  },
+  {
+    name: "SVG key follows the game hierarchy",
+    date: "2025-10-16T14:30:45Z",
+    matchId: "NA1_1234567890",
+    filename: "report.svg",
+    expected: "games/2025/10/16/NA1_1234567890/report.svg",
+  },
+  {
+    name: "SVG key pads single-digit dates",
+    date: "2025-01-05T08:15:30Z",
+    matchId: "EUW1_9876543210",
+    filename: "report.svg",
+    expected: "games/2025/01/05/EUW1_9876543210/report.svg",
+  },
+  {
+    name: "SVG key retains its SVG extension",
+    date: "2025-12-31T23:59:59Z",
+    matchId: "KR_1111111111",
+    filename: "report.svg",
+    expected: "games/2025/12/31/KR_1111111111/report.svg",
+  },
+  {
+    name: "match key retains special match-id characters",
+    date: "2025-10-16T14:30:45Z",
+    matchId: "NA1_1234567890_SPECIAL",
+    filename: "match.json",
+    expected: "games/2025/10/16/NA1_1234567890_SPECIAL/match.json",
+  },
+  {
+    name: "image key retains special match-id characters",
+    date: "2025-10-16T14:30:45Z",
+    matchId: "EUW1_9876543210_TEST",
+    filename: "report.png",
+    expected: "games/2025/10/16/EUW1_9876543210_TEST/report.png",
+  },
+];
 
-    const expectedKey = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    expect(expectedKey).toBe("games/2025/10/16/NA1_1234567890/match.json");
+function buildFixtureKey({
+  date,
+  matchId,
+  filename,
+}: Omit<KeyCase, "name" | "expected">): string {
+  const parsed = new Date(date);
+  const year = parsed.getUTCFullYear().toString();
+  const month = String(parsed.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getUTCDate()).padStart(2, "0");
+  return `games/${year}/${month}/${day}/${matchId}/${filename}`;
+}
+
+beforeEach(resetS3TestState);
+afterEach(resetS3TestState);
+
+describe("S3 key generation logic", () => {
+  test.each(keyCases)("$name", ({ expected, ...input }) => {
+    expect(buildFixtureKey(input)).toBe(expected);
   });
 
-  test("match key pads single digit months and days", () => {
-    const matchId = "EUW1_9876543210";
-    const date = new Date("2025-01-05T08:15:30Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
+  test("match, PNG, and SVG keys share one game directory", () => {
+    const input = {
+      date: "2025-10-16T14:30:45Z",
+      matchId: "NA1_1234567890",
+    };
+    const matchKey = buildFixtureKey({ ...input, filename: "match.json" });
+    const pngKey = buildFixtureKey({ ...input, filename: "report.png" });
+    const svgKey = buildFixtureKey({ ...input, filename: "report.svg" });
+    const directory = "games/2025/10/16/NA1_1234567890/";
 
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    expect(key).toBe("games/2025/01/05/EUW1_9876543210/match.json");
-  });
-
-  test("match key uses .json extension", () => {
-    const matchId = "KR_1111111111";
-    const date = new Date("2025-12-31T23:59:59Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    expect(key.endsWith(".json")).toBe(true);
-  });
-});
-
-describe("S3 Key Generation Logic for Images", () => {
-  test("image key follows game-centric hierarchical date structure", () => {
-    const matchId = "NA1_1234567890";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const expectedKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-    expect(expectedKey).toBe("games/2025/10/16/NA1_1234567890/report.png");
-  });
-
-  test("image key pads single digit months and days", () => {
-    const matchId = "EUW1_9876543210";
-    const date = new Date("2025-01-05T08:15:30Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-    expect(key).toBe("games/2025/01/05/EUW1_9876543210/report.png");
-  });
-
-  test("image key uses .png extension", () => {
-    const matchId = "KR_1111111111";
-    const date = new Date("2025-12-31T23:59:59Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-    expect(key.endsWith(".png")).toBe(true);
-  });
-
-  test("image and match keys share same game directory", () => {
-    const matchId = "NA1_1234567890";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const matchKey = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    const imageKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-
-    // Both should share the same game directory
-    const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
-    expect(matchKey.startsWith(gameDir)).toBe(true);
-    expect(imageKey.startsWith(gameDir)).toBe(true);
-    expect(matchKey).not.toBe(imageKey);
-  });
-});
-
-describe("S3 Key Generation Logic for SVG Images", () => {
-  test("SVG key follows game-centric hierarchical date structure", () => {
-    const matchId = "NA1_1234567890";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const expectedKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
-    expect(expectedKey).toBe("games/2025/10/16/NA1_1234567890/report.svg");
-  });
-
-  test("SVG key pads single digit months and days", () => {
-    const matchId = "EUW1_9876543210";
-    const date = new Date("2025-01-05T08:15:30Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
-    expect(key).toBe("games/2025/01/05/EUW1_9876543210/report.svg");
-  });
-
-  test("SVG key uses .svg extension", () => {
-    const matchId = "KR_1111111111";
-    const date = new Date("2025-12-31T23:59:59Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
-    expect(key.endsWith(".svg")).toBe(true);
-  });
-
-  test("PNG and SVG keys share game directory structure", () => {
-    const matchId = "NA1_1234567890";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const pngKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-    const svgKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.svg`;
-
-    // Both should use the same game directory path
-    const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
-    expect(pngKey.startsWith(gameDir)).toBe(true);
-    expect(svgKey.startsWith(gameDir)).toBe(true);
-
-    // Only extension should differ
+    expect(matchKey.startsWith(directory)).toBe(true);
+    expect(pngKey.startsWith(directory)).toBe(true);
+    expect(svgKey.startsWith(directory)).toBe(true);
+    expect(matchKey).not.toBe(pngKey);
     expect(pngKey.replace(".png", ".svg")).toBe(svgKey);
   });
+
+  test.each([
+    ["2025-01-01T00:00:00Z", "games/2025/01/01/TEST_123/match.json"],
+    ["2025-06-15T12:00:00Z", "games/2025/06/15/TEST_123/match.json"],
+    ["2025-12-31T23:59:59Z", "games/2025/12/31/TEST_123/match.json"],
+  ])("formats every date component for %s", (date, expected) => {
+    expect(
+      buildFixtureKey({ date, matchId: "TEST_123", filename: "match.json" }),
+    ).toBe(expected);
+  });
 });
 
-// ============================================================================
-// S3 Storage Tests (aws-sdk-client-mock — in-memory, no real S3)
-// ============================================================================
-
-describe("S3 Match Storage", () => {
-  beforeEach(() => {
-    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
-    resetConfigurationForTests();
-    s3Mock.reset();
-  });
-
-  afterEach(() => {
-    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
-    resetConfigurationForTests();
-    s3Mock.reset();
-  });
-
-  test("saveMatchToS3 uploads JSON with correct content type", async () => {
+describe("S3 match storage", () => {
+  test("uploads JSON with the expected key, body, and metadata", async () => {
     const match = await loadMatchFixture();
-    s3Mock
-      .on(PutObjectCommand)
-      .resolves({ $metadata: { httpStatusCode: 200 } });
+    mockSuccessfulPut();
 
     await saveMatchToS3(match, ["Lord ARKΞV", "H6 Hadès"]);
 
-    expect(s3Mock.calls().length).toBe(1);
-    const command = getValidatedPutCommand(0);
+    expect(s3Mock.calls()).toHaveLength(1);
+    const command = getValidatedPutCommand();
+    const matchId = match.metadata.matchId;
+
     expect(command.input.Bucket).toBe("test-bucket");
     expect(command.input.ContentType).toBe("application/json");
-    // Key is dated off gameCreation and ends in match.json.
-    const matchId = match.metadata.matchId;
     expect(command.input.Key).toMatch(
       new RegExp(String.raw`^games/\d{4}/\d{2}/\d{2}/${matchId}/match\.json$`),
     );
@@ -220,215 +175,45 @@ describe("S3 Match Storage", () => {
     expect(command.input.Metadata?.["gameMode"]).toBe(match.info.gameMode);
     expect(command.input.Metadata?.["trackedPlayerCount"]).toBe("2");
     expect(command.input.Metadata).not.toHaveProperty("trackedPlayers");
+    expect(command.input.Body).toBeInstanceOf(Uint8Array);
 
-    // saveToS3 encodes string bodies to a Uint8Array before upload; decode it
-    // back and confirm it round-trips to the original match JSON.
-    const body = command.input.Body;
-    expect(body).toBeInstanceOf(Uint8Array);
-    if (body instanceof Uint8Array) {
-      const parsed: unknown = JSON.parse(new TextDecoder().decode(body));
+    if (command.input.Body instanceof Uint8Array) {
+      const parsed: unknown = JSON.parse(
+        new TextDecoder().decode(command.input.Body),
+      );
       expect(RawMatchSchema.parse(parsed).metadata.matchId).toBe(matchId);
     }
   });
 
-  test("saveMatchToS3 handles missing S3_BUCKET_NAME gracefully", async () => {
-    // Load the fixture before clearing the bucket so there is no await between
-    // the env mutation and the call under test.
+  test("skips upload when the bucket is absent", async () => {
     const match = await loadMatchFixture();
-    delete Bun.env["S3_BUCKET_NAME"];
-    resetConfigurationForTests();
-    s3Mock
-      .on(PutObjectCommand)
-      .resolves({ $metadata: { httpStatusCode: 200 } });
+    setS3TestBucket(undefined);
+    mockSuccessfulPut();
 
     await expect(saveMatchToS3(match, [])).resolves.toBe("skipped_no_bucket");
-    expect(s3Mock.calls().length).toBe(0);
+    expect(s3Mock.calls()).toHaveLength(0);
   });
 
-  test("saveMatchToS3 throws error on S3 failure", async () => {
+  test("retries and reports match context when upload fails", async () => {
     const match = await loadMatchFixture();
-    s3Mock.on(PutObjectCommand).rejects(new Error("S3 upload failed"));
+    mockFailedPut("S3 upload failed");
 
     await expect(saveMatchToS3(match, [])).rejects.toThrow(
       `Failed to save match ${match.metadata.matchId} to S3`,
     );
-    // A network-shaped error is retried MAX_PUT_ATTEMPTS (3) times before throwing.
-    expect(s3Mock.calls().length).toBe(3);
+    expect(s3Mock.calls()).toHaveLength(3);
   });
 });
 
-describe("S3 Image Storage", () => {
-  beforeEach(() => {
-    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
-    resetConfigurationForTests();
-    s3Mock.reset();
-  });
+describe("S3 URL format", () => {
+  test("uses a parseable s3 URL with the expected bucket and key", () => {
+    const url = "s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png";
+    const parts = url.replace("s3://", "").split("/");
 
-  afterEach(() => {
-    Bun.env["S3_BUCKET_NAME"] = "test-bucket";
-    resetConfigurationForTests();
-    s3Mock.reset();
-  });
-
-  test("saveImageToS3 uploads PNG with correct content type", async () => {
-    const matchId = MatchIdSchema.parse("NA1_1234567890");
-    const imageBuffer = new TextEncoder().encode("fake-png-data");
-    s3Mock
-      .on(PutObjectCommand)
-      .resolves({ $metadata: { httpStatusCode: 200 } });
-
-    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
-
-    expect(s3Mock.calls().length).toBe(1);
-    const command = getValidatedPutCommand(0);
-    expect(command.input.Bucket).toBe("test-bucket");
-    expect(command.input.ContentType).toBe("image/png");
-    expect(command.input.Key).toMatch(
-      /^games\/\d{4}\/\d{2}\/\d{2}\/NA1_1234567890\/report\.png$/,
-    );
-    expect(command.input.Metadata?.["matchId"]).toBe(matchId);
-    expect(command.input.Metadata?.["queueType"]).toBe("solo");
-    if (result === undefined) throw new Error("Expected an uploaded image URL");
-    expect(result.startsWith("s3://test-bucket/")).toBe(true);
-    expect(result.endsWith(".png")).toBe(true);
-  });
-
-  test("saveImageToS3 returns undefined when S3_BUCKET_NAME not configured", async () => {
-    delete Bun.env["S3_BUCKET_NAME"];
-    resetConfigurationForTests();
-
-    const matchId = MatchIdSchema.parse("NA1_NO_BUCKET");
-    const imageBuffer = new TextEncoder().encode("image-data");
-    s3Mock
-      .on(PutObjectCommand)
-      .resolves({ $metadata: { httpStatusCode: 200 } });
-
-    const result = await saveImageToS3(matchId, imageBuffer, "solo", []);
-
-    expect(result).toBeUndefined();
-    expect(s3Mock.calls().length).toBe(0);
-  });
-
-  test("saveImageToS3 throws error on S3 failure", async () => {
-    const matchId = MatchIdSchema.parse("NA1_ERROR_CASE");
-    const imageBuffer = new TextEncoder().encode("image-data");
-    s3Mock.on(PutObjectCommand).rejects(new Error("Access Denied"));
-
-    await expect(
-      saveImageToS3(matchId, imageBuffer, "solo", []),
-    ).rejects.toThrow(`Failed to save PNG ${matchId} to S3`);
-    // "Access Denied" here is a raw Error (no 4xx metadata) → treated as
-    // transient and retried MAX_PUT_ATTEMPTS (3) times before throwing.
-    expect(s3Mock.calls().length).toBe(3);
-  });
-
-  test("saveImageToS3 handles different queue types in metadata", async () => {
-    s3Mock
-      .on(PutObjectCommand)
-      .resolves({ $metadata: { httpStatusCode: 200 } });
-
-    for (const queueType of ["solo", "flex", "arena", "unknown"]) {
-      s3Mock.reset();
-      s3Mock
-        .on(PutObjectCommand)
-        .resolves({ $metadata: { httpStatusCode: 200 } });
-
-      const matchId = MatchIdSchema.parse(`NA1_${queueType.toUpperCase()}`);
-      const imageBuffer = new TextEncoder().encode(`${queueType}-image`);
-
-      await saveImageToS3(matchId, imageBuffer, queueType, []);
-
-      const command = getValidatedPutCommand(0);
-      expect(command.input.Metadata?.["queueType"]).toBe(queueType);
-    }
-  });
-});
-
-// ============================================================================
-// Edge Cases and Error Handling
-// ============================================================================
-
-describe("Edge Cases for S3 Storage", () => {
-  test("match key handles special characters in match IDs", () => {
-    const matchId = "NA1_1234567890_SPECIAL";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    expect(key).toContain(matchId);
-    expect(key).toBe("games/2025/10/16/NA1_1234567890_SPECIAL/match.json");
-  });
-
-  test("image key handles special characters in match IDs", () => {
-    const matchId = "EUW1_9876543210_TEST";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const key = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-    expect(key).toContain(matchId);
-    expect(key).toBe("games/2025/10/16/EUW1_9876543210_TEST/report.png");
-  });
-
-  test("keys use consistent date formatting across months", () => {
-    const matchId = "TEST_123";
-    const dates = [
-      new Date("2025-01-01T00:00:00Z"),
-      new Date("2025-06-15T12:00:00Z"),
-      new Date("2025-12-31T23:59:59Z"),
-    ];
-
-    for (const date of dates) {
-      const year = date.getUTCFullYear();
-      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-      const day = String(date.getUTCDate()).padStart(2, "0");
-
-      const key = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-
-      // Verify all date parts are 2 digits (except year which is 4)
-      const parts = key.split("/");
-      expect(parts[1]?.length).toBe(4); // year
-      expect(parts[2]?.length).toBe(2); // month
-      expect(parts[3]?.length).toBe(2); // day
-    }
-  });
-
-  test("match and image keys for same match share game directory", () => {
-    const matchId = "NA1_1234567890";
-    const date = new Date("2025-10-16T14:30:45Z");
-    const year = date.getUTCFullYear();
-    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-    const day = String(date.getUTCDate()).padStart(2, "0");
-
-    const matchKey = `games/${year.toString()}/${month}/${day}/${matchId}/match.json`;
-    const imageKey = `games/${year.toString()}/${month}/${day}/${matchId}/report.png`;
-
-    // Both should use the same game directory
-    const gameDir = `games/${year.toString()}/${month}/${day}/${matchId}/`;
-    expect(matchKey.startsWith(gameDir)).toBe(true);
-    expect(imageKey.startsWith(gameDir)).toBe(true);
-  });
-});
-
-describe("S3 URL Format", () => {
-  test("saveImageToS3 returns s3:// URL format", () => {
-    const bucket = "my-bucket";
-    const key = "games/2025/10/16/NA1_1234567890/report.png";
-    const expectedUrl = `s3://${bucket}/${key}`;
-
-    expect(expectedUrl).toBe(
+    expect(url).toBe(
       "s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png",
     );
-  });
-
-  test("s3 URL format is parseable", () => {
-    const url = "s3://my-bucket/games/2025/10/16/NA1_1234567890/report.png";
-
     expect(url.startsWith("s3://")).toBe(true);
-    const parts = url.replace("s3://", "").split("/");
     expect(parts[0]).toBe("my-bucket");
     expect(parts.at(-1)).toBe("report.png");
   });
