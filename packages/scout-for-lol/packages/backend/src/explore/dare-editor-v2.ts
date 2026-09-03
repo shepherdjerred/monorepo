@@ -9,6 +9,10 @@ import {
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import {
+  prepareDareDraftV3,
+  reviseDareDraftV3,
+} from "#src/betting/dare-draft-v3.ts";
+import {
   prepareDareDraftV2,
   reviseDareDraftV2,
 } from "#src/betting/dare-draft-v2.ts";
@@ -20,6 +24,7 @@ export const DareDraftEditorInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
   expectedRevision: z.number().int().positive(),
   originalText: z.string().min(1).max(4000),
+  plainLanguage: z.string().min(1).max(4000),
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
@@ -68,9 +73,24 @@ async function loadOwnedDraft(input: {
   }
   return {
     dare,
+    revision,
     targets: DareTargetBindingV2Schema.array().parse(
       JSON.parse(revision.targetsJson),
     ),
+  };
+}
+
+function v3Definition(
+  input: EditorInput,
+  owned: Awaited<ReturnType<typeof loadOwnedDraft>>,
+) {
+  return {
+    originalText: input.originalText,
+    queryText: input.queryText,
+    plainLanguage: input.plainLanguage,
+    targets: owned.targets,
+    deadlineSpec: input.deadlineSpec,
+    openingStake: input.openingStake,
   };
 }
 
@@ -135,6 +155,26 @@ export async function validateDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
+  const owned = await loadOwnedDraft({
+    dareId: input.dareId,
+    expectedRevision: input.expectedRevision,
+    userId,
+    guildIds,
+  });
+  if (owned.revision.compilerVersion === "dare-sql-3") {
+    const prepared = await prepareDareDraftV3(v3Definition(input, owned));
+    return prepared.kind === "invalid"
+      ? { kind: "invalid" as const, issues: prepared.issues }
+      : {
+          kind: "valid" as const,
+          canonicalScoutQl: prepared.draft.compilation.canonicalSql,
+          scoutQlPlanHash: prepared.draft.compilation.queryHash,
+          scoutQlFacts: prepared.draft.compilation.facts,
+          plainLanguage: prepared.draft.plainLanguage,
+          semanticProofPlan:
+            "The canonical SQL is binding and executes over normalized report-lake relations.",
+        };
+  }
   const result = await prepareEditorDraft(input, userId, guildIds);
   if (result.kind === "invalid") {
     return { kind: "invalid" as const, issues: result.issues };
@@ -157,6 +197,29 @@ export async function previewDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
+  const ownedDraft = await loadOwnedDraft({
+    dareId: input.dareId,
+    expectedRevision: input.expectedRevision,
+    userId,
+    guildIds,
+  });
+  if (ownedDraft.revision.compilerVersion === "dare-sql-3") {
+    const prepared = await prepareDareDraftV3({
+      ...v3Definition(input, ownedDraft),
+      historyDays: input.historyDays,
+    });
+    if (prepared.kind === "invalid") {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: prepared.issues.join(" "),
+      });
+    }
+    return {
+      achieved: prepared.draft.preview.achieved,
+      eligibleGames: prepared.draft.preview.sourceMatchIds.length,
+      coverageComplete: prepared.draft.preview.coverage !== "missing_timeline",
+    };
+  }
   const { owned, prepared } = await prepareValidEditorDraft(
     input,
     userId,
@@ -176,6 +239,21 @@ export async function reviseDareDraftEditorV2(
   userId: DiscordAccountId,
   guildIds: string[],
 ) {
+  const ownedDraft = await loadOwnedDraft({
+    dareId: input.dareId,
+    expectedRevision: input.expectedRevision,
+    userId,
+    guildIds,
+  });
+  if (ownedDraft.revision.compilerVersion === "dare-sql-3") {
+    return await reviseDareDraftV3({
+      dareId: input.dareId,
+      serverId: DiscordGuildIdSchema.parse(ownedDraft.dare.serverId),
+      challengerDiscordId: userId,
+      expectedRevision: input.expectedRevision,
+      definition: v3Definition(input, ownedDraft),
+    });
+  }
   const { owned, prepared } = await prepareValidEditorDraft(
     input,
     userId,

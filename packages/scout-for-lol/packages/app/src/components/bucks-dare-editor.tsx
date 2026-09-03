@@ -25,6 +25,7 @@ type EditorDare = {
   openingStake: number;
   canonicalScoutQl: string;
   plainLanguage: string;
+  compilerVersion: string;
 };
 
 type ValidatedDraft = {
@@ -43,11 +44,34 @@ type ValidatedDraft = {
   };
 };
 
+function ReadableSummaryField(props: {
+  id: string;
+  value: string;
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <label htmlFor={props.id} className="space-y-1 text-sm lg:col-span-2">
+      <span className="font-medium">Readable summary</span>
+      <Textarea
+        id={props.id}
+        value={props.value}
+        onChange={(event) => {
+          props.onValueChange(event.target.value);
+        }}
+      />
+      <span className="block text-xs text-scout-subtle">
+        Explanatory only. The canonical SQL below remains binding.
+      </span>
+    </label>
+  );
+}
+
 export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [originalText, setOriginalText] = useState(props.dare.originalText);
+  const [plainLanguage, setPlainLanguage] = useState(props.dare.plainLanguage);
   const [queryText, setQueryText] = useState(props.dare.canonicalScoutQl);
   const [deadlineText, setDeadlineText] = useState(
     JSON.stringify(props.dare.deadlineSpec, null, 2),
@@ -72,6 +96,7 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   const revise = useMutation(trpc.bucks.dareReviseDraft.mutationOptions());
   const fieldId = (name: string) =>
     `dare-${props.dare.id.toString()}-editor-${name}`;
+  const sqlV3 = props.dare.compilerVersion === "dare-sql-3";
 
   function changed(): void {
     inputVersion.current += 1;
@@ -94,7 +119,7 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
     const deadlineSpec = DareDeadlineSpecV2Schema.safeParse(rawDeadline);
     const openingStake = Number(stakeText);
     if (!deadlineSpec.success) {
-      setError("The deadline does not match the Dare v2 contract schema.");
+      setError("The deadline does not match the Dare contract schema.");
       return null;
     }
     if (!Number.isSafeInteger(openingStake) || openingStake <= 0) {
@@ -105,6 +130,7 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
       dareId: props.dare.id,
       expectedRevision: props.dare.currentRevision,
       originalText,
+      plainLanguage,
       queryText,
       deadlineSpec: deadlineSpec.data,
       openingStake,
@@ -246,9 +272,10 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
         <DialogHeader>
           <DialogTitle>Edit Dare #{props.dare.id.toString()}</DialogTitle>
           <DialogDescription>
-            Edit the authoritative ScoutQL contract; Scout validates, formats,
-            explains, and backtests it before replacing this private draft. No
-            funded contract can enter this editor.
+            Edit the authoritative {sqlV3 ? "standard SQL" : "ScoutQL"}{" "}
+            contract; Scout validates, formats, explains, and backtests it
+            before replacing this private draft. No funded contract can enter
+            this editor.
           </DialogDescription>
         </DialogHeader>
         <fieldset disabled={revise.isPending} className="space-y-4">
@@ -267,8 +294,20 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
                 }}
               />
             </label>
+            {sqlV3 && (
+              <ReadableSummaryField
+                id={fieldId("summary")}
+                value={plainLanguage}
+                onValueChange={(value) => {
+                  changed();
+                  setPlainLanguage(value);
+                }}
+              />
+            )}
             <label htmlFor={fieldId("scoutql")} className="space-y-1 text-sm">
-              <span className="font-medium">ScoutQL contract</span>
+              <span className="font-medium">
+                {sqlV3 ? "Binding SQL contract" : "ScoutQL contract"}
+              </span>
               <Textarea
                 id={fieldId("scoutql")}
                 className="min-h-80 font-mono text-xs"
@@ -348,7 +387,9 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
           </div>
           {validated !== null && (
             <section className="space-y-3">
-              <h3 className="font-medium">Generated ScoutQL</h3>
+              <h3 className="font-medium">
+                {sqlV3 ? "Canonical binding SQL" : "Generated ScoutQL"}
+              </h3>
               <ScoutQlCode queryText={validated.canonicalScoutQl} />
               <p className="whitespace-pre-wrap text-sm">
                 {validated.plainLanguage}

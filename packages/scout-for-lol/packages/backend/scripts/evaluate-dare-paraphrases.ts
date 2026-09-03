@@ -11,7 +11,7 @@ import {
   canonicalDarePlanV2,
 } from "#src/betting/dare-plan-canonical-v2.ts";
 import { renderDarePlanV2 } from "#src/betting/dare-render-v2.ts";
-import { DareDefinitionToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
+import { DareDefinitionV2ToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
 import {
   DARE_V2_EVAL_MODEL,
   DareModelEvalReportSchema,
@@ -80,11 +80,11 @@ async function evaluateParaphrase(
         targetAliases: entry.targetAliases,
         openingStake: entry.openingStake,
       }),
-      output: Output.object({ schema: DareDefinitionToolInputSchema }),
+      output: Output.object({ schema: DareDefinitionV2ToolInputSchema }),
       maxOutputTokens: 8000,
       ...runtime.callOptions({ workload: "scout.dare-v2-eval" }),
     });
-    const output = DareDefinitionToolInputSchema.parse(result.output);
+    const output = DareDefinitionV2ToolInputSchema.parse(result.output);
     const resolvedTargets = resolveDareModelEvalTargets({
       targetKeys: output.targetKeys,
       targetAliases: entry.targetAliases,

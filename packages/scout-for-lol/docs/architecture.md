@@ -188,6 +188,18 @@ leaderboard history, and archived visualization artifacts; every Parquet lake
 source can be rebuilt. Official competition standings remain competition-to-date.
 Selected-period analysis recomputes the criterion without mutating that cache.
 
+### Relational Dare contracts
+
+New Bryan Bucks Dares compile one read-only standard-SQL statement against a
+closed report-lake catalog. `T1` through `T5` are ordinary participant relations
+bound to the contract's frozen accounts; team-relative conditions join them to
+`match_teams` by `match_id` and `team_id`. Historical preview and post-match
+settlement use the same canonical SQL and immutable AST. Evidence records retain
+the result, game-set projections, target dependencies, timeline coverage,
+source match IDs, and query hash. Only structurally monotone counts can settle
+early; rates, averages, equality, and upper bounds wait for the deadline or game
+cap. Existing v1 and v2 contracts continue through their frozen evaluators.
+
 ## Component Responsibilities
 
 ### Backend Service

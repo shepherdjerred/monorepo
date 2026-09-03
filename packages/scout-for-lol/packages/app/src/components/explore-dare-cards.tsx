@@ -19,6 +19,8 @@ const DraftDataSchema = z.strictObject({
   semanticProofPlan: z.string().min(1),
   openingStake: z.number().int().positive(),
   targetAliases: z.array(z.string()),
+  originalText: z.string().min(1).optional(),
+  sqlIsBinding: z.boolean().optional(),
 });
 
 const IntentDataSchema = z.strictObject({
@@ -27,6 +29,10 @@ const IntentDataSchema = z.strictObject({
   expiresAt: z.iso.datetime(),
   dareId: z.number().int().positive(),
   revision: z.number().int().positive(),
+  originalText: z.string().min(1).optional(),
+  plainLanguage: z.string().min(1).optional(),
+  canonicalScoutQl: z.string().min(1).optional(),
+  sqlIsBinding: z.boolean().optional(),
 });
 
 const DareToolOutputSchema = z.strictObject({
@@ -88,6 +94,11 @@ function DraftCard(props: { draft: z.infer<typeof DraftDataSchema> }) {
         </h3>
       </div>
       <p className="whitespace-pre-wrap text-sm">{props.draft.plainLanguage}</p>
+      {props.draft.originalText !== undefined && (
+        <p className="text-xs text-scout-subtle">
+          Original wording: {props.draft.originalText}
+        </p>
+      )}
       <dl className="grid gap-1 text-xs text-scout-subtle sm:grid-cols-2">
         <div>
           <dt className="inline font-medium">Targets: </dt>
@@ -106,9 +117,20 @@ function DraftCard(props: { draft: z.infer<typeof DraftDataSchema> }) {
           setShowQuery((shown) => !shown);
         }}
       >
-        {showQuery ? "Hide ScoutQL" : "Show ScoutQL"}
+        {showQuery
+          ? `Hide ${props.draft.sqlIsBinding === true ? "binding SQL" : "ScoutQL"}`
+          : `Show ${props.draft.sqlIsBinding === true ? "binding SQL" : "ScoutQL"}`}
       </Button>
-      {showQuery && <ScoutQlCode queryText={props.draft.canonicalScoutQl} />}
+      {showQuery && (
+        <div className="space-y-2">
+          {props.draft.sqlIsBinding === true && (
+            <p className="text-xs font-medium text-scout-primary">
+              This canonical SQL is the binding Dare contract.
+            </p>
+          )}
+          <ScoutQlCode queryText={props.draft.canonicalScoutQl} />
+        </div>
+      )}
     </section>
   );
 }
@@ -199,6 +221,23 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
         {props.intent.revision.toString()}. This single-use confirmation expires{" "}
         {expires.toLocaleTimeString()}.
       </p>
+      {props.intent.originalText !== undefined && (
+        <div className="space-y-2 rounded-md border border-scout-border bg-scout-surface p-3 text-sm">
+          <p>
+            <span className="font-medium">Original wording:</span>{" "}
+            {props.intent.originalText}
+          </p>
+          <p>{props.intent.plainLanguage}</p>
+          {props.intent.sqlIsBinding === true && (
+            <p className="text-xs font-medium text-scout-primary">
+              The canonical SQL below is the binding contract.
+            </p>
+          )}
+          {props.intent.canonicalScoutQl !== undefined && (
+            <ScoutQlCode queryText={props.intent.canonicalScoutQl} />
+          )}
+        </div>
+      )}
       {displayedOutcome === null || displayedOutcome.retryable ? (
         <div className="flex gap-2">
           <Button

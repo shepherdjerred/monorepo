@@ -76,22 +76,27 @@ async function dareManagementAvailable(
   guildId: DiscordGuildId,
   viewerDiscordId: DiscordAccountId,
 ): Promise<boolean> {
-  const [dareEnabled, relationalEnabled, existingDare] = await Promise.all([
-    isPolicyEnabled("dare_v2", { server: guildId }),
-    isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
-    prisma.bucksDareV2.findFirst({
-      where: {
-        serverId: guildId,
-        dareState: { not: "deleted" },
-        OR: [
-          { dareState: { not: "draft" } },
-          { challengerDiscordId: viewerDiscordId },
-        ],
-      },
-      select: { id: true },
-    }),
-  ]);
-  return (dareEnabled && relationalEnabled) || existingDare !== null;
+  const [dareEnabled, sqlV3Enabled, relationalEnabled, existingDare] =
+    await Promise.all([
+      isPolicyEnabled("dare_v2", { server: guildId }),
+      isPolicyEnabled("dare_sql_v3", { server: guildId }),
+      isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
+      prisma.bucksDareV2.findFirst({
+        where: {
+          serverId: guildId,
+          dareState: { not: "deleted" },
+          OR: [
+            { dareState: { not: "draft" } },
+            { challengerDiscordId: viewerDiscordId },
+          ],
+        },
+        select: { id: true },
+      }),
+    ]);
+  return (
+    ((dareEnabled || sqlV3Enabled) && relationalEnabled) ||
+    existingDare !== null
+  );
 }
 
 /**
