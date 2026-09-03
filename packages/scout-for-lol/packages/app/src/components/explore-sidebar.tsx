@@ -93,7 +93,17 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                   <Link
                     to={`/explore/${conversation.id}`}
                     className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left text-[13px] text-inherit no-underline outline-none"
-                    onClick={() => {
+                    onClick={(event) => {
+                      if (
+                        event.defaultPrevented ||
+                        event.button !== 0 ||
+                        event.metaKey ||
+                        event.altKey ||
+                        event.ctrlKey ||
+                        event.shiftKey
+                      ) {
+                        return;
+                      }
                       props.onSelect(conversation.id);
                     }}
                   >

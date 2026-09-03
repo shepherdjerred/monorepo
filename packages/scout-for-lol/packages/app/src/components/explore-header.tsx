@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link2Off, Menu, Share2 } from "lucide-react";
+import { Download, Link2Off, Menu, Share2 } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Sheet,
@@ -73,6 +73,17 @@ export function ExploreHeader(props: {
           {props.extraActions}
           {props.actions !== undefined && (
             <>
+              {props.actions.onExport !== undefined && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={props.actions.onExport}
+                >
+                  <Download className="size-4" />
+                  Export
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"

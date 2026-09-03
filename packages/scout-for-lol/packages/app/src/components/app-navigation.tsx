@@ -72,6 +72,9 @@ function ExploreNavigationSection(props: { activeId: string | null }) {
     }),
   );
 
+  const [renameError, setRenameError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
   const handleSelect = (id: string) => {
     void navigate(`/explore/${id}`);
   };
@@ -80,37 +83,64 @@ function ExploreNavigationSection(props: { activeId: string | null }) {
     void navigate("/explore");
   };
 
-  const handleRename = async (
+  const handleStartRename = (conversation: ExploreConversation) => {
+    setRenameError(null);
+    setRenaming(conversation);
+  };
+
+  const handleStartDelete = (conversation: ExploreConversation) => {
+    setDeleteError(null);
+    setDeleting(conversation);
+  };
+
+  const handleRename = (
     conversation: ExploreConversation,
     nextTitle: string,
   ) => {
-    try {
-      await renameMutation.mutateAsync({
+    setRenameError(null);
+    renameMutation.mutate(
+      {
         conversationId: conversation.id,
         title: nextTitle,
-      });
-      setRenaming(null);
-      await queryClient.invalidateQueries({
-        queryKey: trpc.explore.list.queryKey(),
-      });
-    } catch {
-      // dialog remains open on error
-    }
+      },
+      {
+        onSuccess: () => {
+          setRenaming(null);
+          void queryClient.invalidateQueries({
+            queryKey: trpc.explore.list.queryKey(),
+          });
+        },
+        onError: (err: unknown) => {
+          setRenameError(err instanceof Error ? err.message : String(err));
+        },
+      },
+    );
   };
 
-  const handleDelete = async (conversation: ExploreConversation) => {
-    try {
-      await deleteMutation.mutateAsync({ conversationId: conversation.id });
-      setDeleting(null);
-      await queryClient.invalidateQueries({
-        queryKey: trpc.explore.list.queryKey(),
-      });
-      if (props.activeId === conversation.id) {
-        void navigate("/explore");
-      }
-    } catch {
-      // dialog remains open on error
-    }
+  const handleDelete = (conversation: ExploreConversation) => {
+    setDeleteError(null);
+    deleteMutation.mutate(
+      { conversationId: conversation.id },
+      {
+        onSuccess: () => {
+          setDeleting(null);
+          queryClient.removeQueries({
+            queryKey: trpc.explore.get.queryKey({
+              conversationId: conversation.id,
+            }),
+          });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.explore.list.queryKey(),
+          });
+          if (props.activeId === conversation.id) {
+            void navigate("/explore", { replace: true });
+          }
+        },
+        onError: (err: unknown) => {
+          setDeleteError(err instanceof Error ? err.message : String(err));
+        },
+      },
+    );
   };
 
   const statusForConversation = runs?.status ?? (() => null);
@@ -122,8 +152,8 @@ function ExploreNavigationSection(props: { activeId: string | null }) {
         activeId={props.activeId}
         onSelect={handleSelect}
         onNew={handleNew}
-        onRename={setRenaming}
-        onDelete={setDeleting}
+        onRename={handleStartRename}
+        onDelete={handleStartDelete}
         statusForConversation={statusForConversation}
         showNewButton={false}
       />
@@ -131,20 +161,26 @@ function ExploreNavigationSection(props: { activeId: string | null }) {
       <RenameConversationDialog
         conversation={renaming}
         pending={renameMutation.isPending}
+        error={renameError}
         onClose={() => {
           setRenaming(null);
+          setRenameError(null);
         }}
-        onRename={handleRename}
+        onRename={(conversation, nextTitle) => {
+          handleRename(conversation, nextTitle);
+        }}
       />
 
       <ConfirmDeleteDialog
         conversation={deleting}
         pending={deleteMutation.isPending}
+        error={deleteError}
         onClose={() => {
           setDeleting(null);
+          setDeleteError(null);
         }}
         onConfirm={(conversation) => {
-          void handleDelete(conversation);
+          handleDelete(conversation);
         }}
       />
     </>

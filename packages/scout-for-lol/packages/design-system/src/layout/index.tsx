@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import type { HTMLAttributes, ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScoutMark } from "#src/brand/index.tsx";
 import { Button } from "#src/components/button.tsx";
 import {
@@ -12,6 +12,10 @@ import {
 import { ThemeMenu } from "#src/runtime/theme-menu.tsx";
 import { cn } from "#src/lib/cn.ts";
 import { surfaceHref as joinSurfaceHref } from "#src/layout/origins.ts";
+import {
+  SidebarResizer,
+  useSidebarResize,
+} from "#src/layout/sidebar-resizer.tsx";
 
 export type ScoutSurfaceOrigins = {
   readonly app?: string | undefined;
@@ -394,33 +398,6 @@ export function GlobalFooter(props: {
   );
 }
 
-const DEFAULT_SIDEBAR_WIDTH_PX = 256;
-const MIN_SIDEBAR_WIDTH_PX = 200;
-const MAX_SIDEBAR_WIDTH_PX = 480;
-const SIDEBAR_STORAGE_KEY = "scout:sidebar-width";
-
-function getInitialSidebarWidth(): number {
-  if (typeof window === "undefined") {
-    return DEFAULT_SIDEBAR_WIDTH_PX;
-  }
-  try {
-    const stored = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
-    if (stored !== null) {
-      const parsed = Number.parseInt(stored, 10);
-      if (
-        !Number.isNaN(parsed) &&
-        parsed >= MIN_SIDEBAR_WIDTH_PX &&
-        parsed <= MAX_SIDEBAR_WIDTH_PX
-      ) {
-        return parsed;
-      }
-    }
-  } catch {
-    // Ignore restricted access
-  }
-  return DEFAULT_SIDEBAR_WIDTH_PX;
-}
-
 export function AppWorkspaceFrame(props: {
   header: ReactNode;
   notice?: ReactNode | undefined;
@@ -428,100 +405,8 @@ export function AppWorkspaceFrame(props: {
   children: ReactNode;
   footer?: ReactNode | undefined;
 }) {
-  const [sidebarWidth, setSidebarWidth] = useState<number>(
-    getInitialSidebarWidth,
-  );
-  const [isResizing, setIsResizing] = useState(false);
   const layoutRef = useRef<HTMLDivElement>(null);
-  const widthRef = useRef(sidebarWidth);
-
-  useEffect(() => {
-    widthRef.current = sidebarWidth;
-    layoutRef.current?.style.setProperty(
-      "--scout-sidebar-width",
-      `${sidebarWidth}px`,
-    );
-  }, [sidebarWidth]);
-
-  const startResizing = useCallback((event: React.MouseEvent) => {
-    event.preventDefault();
-    setIsResizing(true);
-    const startX = event.clientX;
-    const startWidth = widthRef.current;
-
-    const onMouseMove = (moveEvent: MouseEvent) => {
-      const delta = moveEvent.clientX - startX;
-      const nextWidth = Math.max(
-        MIN_SIDEBAR_WIDTH_PX,
-        Math.min(MAX_SIDEBAR_WIDTH_PX, startWidth + delta),
-      );
-      widthRef.current = nextWidth;
-      setSidebarWidth(nextWidth);
-      layoutRef.current?.style.setProperty(
-        "--scout-sidebar-width",
-        `${nextWidth}px`,
-      );
-    };
-
-    const onMouseUp = () => {
-      setIsResizing(false);
-      document.body.style.removeProperty("cursor");
-      document.body.style.removeProperty("user-select");
-      globalThis.removeEventListener("mousemove", onMouseMove);
-      globalThis.removeEventListener("mouseup", onMouseUp);
-      try {
-        window.localStorage.setItem(
-          SIDEBAR_STORAGE_KEY,
-          String(widthRef.current),
-        );
-      } catch {
-        // Ignore
-      }
-    };
-
-    document.body.style.setProperty("cursor", "col-resize");
-    document.body.style.setProperty("user-select", "none");
-    globalThis.addEventListener("mousemove", onMouseMove);
-    globalThis.addEventListener("mouseup", onMouseUp);
-  }, []);
-
-  const resetSidebarWidth = useCallback(() => {
-    setSidebarWidth(DEFAULT_SIDEBAR_WIDTH_PX);
-    widthRef.current = DEFAULT_SIDEBAR_WIDTH_PX;
-    layoutRef.current?.style.setProperty(
-      "--scout-sidebar-width",
-      `${DEFAULT_SIDEBAR_WIDTH_PX}px`,
-    );
-    try {
-      window.localStorage.removeItem(SIDEBAR_STORAGE_KEY);
-    } catch {
-      // Ignore
-    }
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        const next = Math.max(MIN_SIDEBAR_WIDTH_PX, sidebarWidth - 16);
-        setSidebarWidth(next);
-        try {
-          window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
-        } catch {}
-      } else if (event.key === "ArrowRight") {
-        event.preventDefault();
-        const next = Math.min(MAX_SIDEBAR_WIDTH_PX, sidebarWidth + 16);
-        setSidebarWidth(next);
-        try {
-          window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
-        } catch {}
-      } else if (event.key === "Home" || event.key === "Enter") {
-        event.preventDefault();
-        resetSidebarWidth();
-      }
-    },
-    [sidebarWidth, resetSidebarWidth],
-  );
+  const resize = useSidebarResize(layoutRef);
 
   return (
     <div
@@ -546,22 +431,12 @@ export function AppWorkspaceFrame(props: {
               aria-label="Workspace navigation"
             >
               {props.sidebar}
-              <div
-                role="separator"
-                aria-orientation="vertical"
-                aria-label="Resize sidebar"
-                aria-valuenow={sidebarWidth}
-                aria-valuemin={MIN_SIDEBAR_WIDTH_PX}
-                aria-valuemax={MAX_SIDEBAR_WIDTH_PX}
-                tabIndex={0}
-                className={cn(
-                  "scout-sidebar-resizer",
-                  isResizing && "scout-sidebar-resizer--active",
-                )}
-                onMouseDown={startResizing}
-                onDoubleClick={resetSidebarWidth}
-                onKeyDown={handleKeyDown}
-                title="Drag to resize sidebar (double-click to reset)"
+              <SidebarResizer
+                sidebarWidth={resize.sidebarWidth}
+                isResizing={resize.isResizing}
+                onMouseDown={resize.startResizing}
+                onDoubleClick={resize.resetSidebarWidth}
+                onKeyDown={resize.handleKeyDown}
               />
             </aside>
           )}

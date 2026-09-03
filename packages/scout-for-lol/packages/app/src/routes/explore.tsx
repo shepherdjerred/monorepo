@@ -22,7 +22,12 @@ import {
   exploreTurnIsActive,
   visiblePending,
 } from "#src/lib/explore-turn-state.ts";
-import { analyticsMeta } from "#src/lib/analytics.ts";
+import {
+  conversationToMarkdown,
+  downloadMarkdown,
+  exportFilename,
+} from "#src/lib/explore-export.ts";
+import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreRuns } from "#src/components/explore-runs-context.ts";
@@ -96,16 +101,20 @@ export function Explore() {
       navigate,
     });
 
+  const lastFailedVersionRef = useRef<string | null>(null);
+
   const handleSelectVersion = useCallback(
     async (messageId: string): Promise<void> => {
       if (conversationId === null) {
         return;
       }
       setError(null);
+      lastFailedVersionRef.current = null;
       try {
         await setLeafMutation.mutateAsync({ conversationId, messageId });
         await refreshConversation(conversationId);
       } catch (mutationError) {
+        lastFailedVersionRef.current = messageId;
         setError(errorText(mutationError));
       }
     },
@@ -131,13 +140,39 @@ export function Explore() {
   }, [messages]);
 
   const onRetryError = useCallback(() => {
-    runs.clearError(conversationId);
-    if (retryTarget !== null) {
-      handleRetry(retryTarget);
-    } else if (conversationId !== null) {
-      void refreshConversation(conversationId);
+    if (runs.error(conversationId) !== null) {
+      runs.clearError(conversationId);
+      if (retryTarget !== null) {
+        handleRetry(retryTarget);
+      } else if (conversationId !== null) {
+        void refreshConversation(conversationId);
+      }
+    } else if (error !== null) {
+      setError(null);
+      const failedVersion = lastFailedVersionRef.current;
+      if (failedVersion !== null) {
+        void handleSelectVersion(failedVersion);
+      } else if (conversationId !== null) {
+        void refreshConversation(conversationId);
+      }
+    } else if (share.error !== null) {
+      if (shared === null) {
+        share.share();
+      } else {
+        share.revoke();
+      }
     }
-  }, [conversationId, handleRetry, refreshConversation, retryTarget, runs]);
+  }, [
+    conversationId,
+    error,
+    handleRetry,
+    handleSelectVersion,
+    refreshConversation,
+    retryTarget,
+    runs,
+    share,
+    shared,
+  ]);
 
   const {
     pendingQuestion,
@@ -200,6 +235,13 @@ export function Explore() {
           shared: shared !== null,
           sharing: share.sharing,
           revoking: share.revoking,
+          onExport: () => {
+            track("explore_exported");
+            downloadMarkdown(
+              exportFilename(title),
+              conversationToMarkdown(title, messages),
+            );
+          },
           onShare: share.share,
           onRevoke: share.revoke,
         }
@@ -253,73 +295,14 @@ export function Explore() {
         />
 
         {pageError !== null && (
-          <div className="rounded-md border border-scout-danger/40 bg-scout-danger/10 p-3 text-sm text-scout-ink space-y-2">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-medium">{pageError}</span>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0"
-                onClick={onRetryError}
-              >
-                Retry
-              </Button>
-            </div>
-            <Collapsible className="space-y-1.5 pt-0.5">
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger/10 transition-colors group"
-                >
-                  <span>Technical details</span>
-                  <ChevronDown
-                    className="size-3 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
-                    aria-hidden="true"
-                  />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="rounded border border-scout-border/60 bg-scout-surface p-2.5 text-xs font-mono space-y-1 overflow-x-auto select-text">
-                  <div>
-                    <span className="text-scout-subtle">Error: </span>
-                    <span className="text-scout-danger font-semibold">
-                      {pageError}
-                    </span>
-                  </div>
-                  {conversationId !== null && (
-                    <div>
-                      <span className="text-scout-subtle">
-                        Conversation ID:{" "}
-                      </span>
-                      <span>{conversationId}</span>
-                    </div>
-                  )}
-                  {pendingTurn?.runId !== undefined &&
-                    pendingTurn.runId !== null && (
-                      <div>
-                        <span className="text-scout-subtle">Run ID: </span>
-                        <span>{pendingTurn.runId}</span>
-                      </div>
-                    )}
-                  {retryTarget !== null && (
-                    <div>
-                      <span className="text-scout-subtle">Question ID: </span>
-                      <span>{retryTarget.id}</span>
-                    </div>
-                  )}
-                  {pendingTrace.length > 0 && (
-                    <div>
-                      <span className="text-scout-subtle">
-                        Executed steps:{" "}
-                      </span>
-                      <span>{pendingTrace.length}</span>
-                    </div>
-                  )}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
+          <ExploreErrorBanner
+            pageError={pageError}
+            conversationId={conversationId}
+            runId={pendingTurn?.runId}
+            retryTargetId={retryTarget?.id}
+            executedSteps={pendingTrace.length}
+            onRetry={onRetryError}
+          />
         )}
 
         {share.showShareLink && share.shareLink !== null && (
@@ -418,3 +401,78 @@ const EXAMPLES = [
   "How does KDA differ by position?",
   "What is the most played queue this month?",
 ];
+
+function ExploreErrorBanner(props: {
+  readonly pageError: string;
+  readonly conversationId: string | null;
+  readonly runId?: string | null | undefined;
+  readonly retryTargetId?: string | null | undefined;
+  readonly executedSteps: number;
+  readonly onRetry: () => void;
+}) {
+  return (
+    <div className="rounded-md border border-scout-danger/40 bg-scout-danger/10 p-3 text-sm text-scout-ink space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-medium">{props.pageError}</span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="shrink-0"
+          onClick={props.onRetry}
+        >
+          Retry
+        </Button>
+      </div>
+      <Collapsible className="space-y-1.5 pt-0.5">
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 rounded py-0.5 px-1.5 text-xs text-scout-subtle hover:text-scout-ink hover:bg-scout-danger/10 transition-colors group"
+          >
+            <span>Technical details</span>
+            <ChevronDown
+              className="size-3 text-scout-subtle transition-transform group-data-[state=open]:rotate-180"
+              aria-hidden="true"
+            />
+          </button>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <div className="rounded border border-scout-border/60 bg-scout-surface p-2.5 text-xs font-mono space-y-1 overflow-x-auto select-text">
+            <div>
+              <span className="text-scout-subtle">Error: </span>
+              <span className="text-scout-danger font-semibold">
+                {props.pageError}
+              </span>
+            </div>
+            {props.conversationId !== null && (
+              <div>
+                <span className="text-scout-subtle">Conversation ID: </span>
+                <span>{props.conversationId}</span>
+              </div>
+            )}
+            {props.runId !== undefined && props.runId !== null && (
+              <div>
+                <span className="text-scout-subtle">Run ID: </span>
+                <span>{props.runId}</span>
+              </div>
+            )}
+            {props.retryTargetId !== undefined &&
+              props.retryTargetId !== null && (
+                <div>
+                  <span className="text-scout-subtle">Question ID: </span>
+                  <span>{props.retryTargetId}</span>
+                </div>
+              )}
+            {props.executedSteps > 0 && (
+              <div>
+                <span className="text-scout-subtle">Executed steps: </span>
+                <span>{props.executedSteps.toString()}</span>
+              </div>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}

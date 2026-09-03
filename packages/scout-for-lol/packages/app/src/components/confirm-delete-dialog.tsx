@@ -19,6 +19,7 @@ import { DialogFormFooter } from "#src/components/dialog-form.tsx";
 export function ConfirmDeleteDialog(props: {
   conversation: ExploreConversation | null;
   pending?: boolean;
+  error?: string | null | undefined;
   onClose: () => void;
   onConfirm: (conversation: ExploreConversation) => void;
 }) {
@@ -49,6 +50,11 @@ export function ConfirmDeleteDialog(props: {
                 : `“${conversation.title}” and every branch in it will be removed. This cannot be undone.`}
             </DialogDescription>
           </DialogHeader>
+          {props.error !== undefined && props.error !== null && (
+            <p className="rounded-md border border-scout-danger/40 bg-scout-danger/10 px-3 py-2 text-sm text-scout-danger my-2">
+              {props.error}
+            </p>
+          )}
           <DialogFormFooter
             pending={props.pending ?? false}
             submitLabel="Delete"
