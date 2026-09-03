@@ -83,7 +83,7 @@ unwrapped call site.
 First confirm that successful Scout reviews used the configured provider key:
 
 ```bash
-toolkit prom query 'sum by (model, upstream_provider, byok) (increase(llm_openrouter_byok_requests_total{service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?"}[1h]))'
+toolkit prom query 'sum by (model, upstream_provider, byok) (increase(llm_openrouter_byok_requests_total{exported_service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?"}[1h]))'
 ```
 
 `byok="true"` is necessary but not sufficient. Trigger the
@@ -102,6 +102,9 @@ crosses OpenAI's daily allowance can be billed in full, so any `default`-tier
 tokens are actionable even when BYOK is still healthy.
 
 The alerts divide failures by evidence layer:
+
+For the full worker rollout, schedule, and alert acceptance procedure, use the
+[Temporal worker deployment rollout guide](/how-to/roll-out-a-temporal-worker-deployment/).
 
 - `ScoutOpenAiNotByok` means OpenRouter reported shared capacity for a
   successful Scout review.
