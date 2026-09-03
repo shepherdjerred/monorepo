@@ -333,6 +333,21 @@ function semanticIssues(
   }
   if (
     profile === "dare-sql-v3" &&
+    new Set(targetKeys).size !== allowedTargetKeys.size
+  ) {
+    issues.push(
+      "A Dare SQL contract must reference exactly the target relations frozen in its bindings.",
+    );
+  } else if (
+    profile === "dare-sql-v3" &&
+    [...allowedTargetKeys].some((key) => !targetKeys.includes(key))
+  ) {
+    issues.push(
+      "A Dare SQL contract must reference exactly the target relations frozen in its bindings.",
+    );
+  }
+  if (
+    profile === "dare-sql-v3" &&
     physicalSources.some(
       (source) =>
         source.startsWith("timeline_") && source !== "timeline_coverage",

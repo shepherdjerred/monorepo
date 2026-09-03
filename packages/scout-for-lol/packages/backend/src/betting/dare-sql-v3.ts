@@ -294,6 +294,11 @@ async function createLakeRelations(
      FROM _dare_match_window
      WHERE ${targetMembership.join(" OR ")}
      GROUP BY match_id
+     HAVING SUM(CASE WHEN end_of_game_result = 'GameComplete'
+       AND game_duration_seconds >= 300
+       AND NOT game_ended_in_early_surrender
+       AND NOT team_early_surrendered
+       THEN 0 ELSE 1 END) = 0
      ORDER BY MIN(game_end_at), match_id
      LIMIT ?`,
     bindParams(session, [...targetParams, scalarParam(input.maxEligibleGames)]),

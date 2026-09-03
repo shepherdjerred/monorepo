@@ -118,7 +118,9 @@ describe("Dare SQL v3", () => {
           },
         }),
       ).rejects.toThrow("does not match its immutable AST");
-      expect(compilation.finality).toBe("monotone_true");
+      // The filtered count is conservatively deadline-only until the
+      // append-monotonicity of its CTE predicate can be proven.
+      expect(compilation.finality).toBe("deadline_only");
       expect(compilation.maxEligibleGames).toBe(100);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });

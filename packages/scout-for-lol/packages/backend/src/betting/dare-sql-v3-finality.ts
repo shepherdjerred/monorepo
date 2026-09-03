@@ -38,6 +38,23 @@ function containsSubquery(value: JsonValue | undefined): boolean {
   );
 }
 
+function containsFilter(value: JsonValue | undefined): boolean {
+  if (Array.isArray(value)) {
+    return value.some((child) => containsFilter(child));
+  }
+  const object = objectValue(value);
+  if (object === null) return false;
+  if (
+    Object.entries(object).some(
+      ([key, child]) =>
+        key.toLowerCase() === "filter" && child !== null && child !== undefined,
+    )
+  ) {
+    return true;
+  }
+  return Object.values(object).some((child) => containsFilter(child));
+}
+
 function sourceTargets(
   value: JsonValue,
   targets: ReadonlySet<string>,
@@ -123,10 +140,23 @@ export function dareSqlV3FinalityFromAst(
   if (achieved === null || !isCount(achieved["left"])) {
     return "deadline_only";
   }
+  // CTEs can derive row predicates from aggregates over the full target
+  // history. A later game may therefore change whether an earlier row is
+  // counted, so proving COUNT itself is increasing is insufficient.
+  const cteMap = objectValue(node?.["cte_map"]);
+  if (arrayValue(cteMap?.["map"]).length > 0) {
+    return "deadline_only";
+  }
   // A correlated or scalar subquery can change the predicate as later games
   // arrive (for example, comparing each game to the current AVG). Such a
   // count is not append-monotone even though COUNT itself is increasing.
   if (containsSubquery(achieved["left"])) {
+    return "deadline_only";
+  }
+  // FILTER predicates are part of the counted relation. Without a separate
+  // append-monotonicity proof, a later row can change that predicate (or its
+  // NULL semantics), so defer settlement to the deadline.
+  if (containsFilter(achieved["left"])) {
     return "deadline_only";
   }
   const threshold = nonnegativeIntegerConstant(achieved["right"]);
