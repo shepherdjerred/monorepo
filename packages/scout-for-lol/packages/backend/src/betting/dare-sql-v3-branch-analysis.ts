@@ -2,7 +2,10 @@ import type {
   DareSqlV3Compilation,
   DareTargetBindingV2,
 } from "@scout-for-lol/data";
-import { dareSqlV3CteTargetDependenciesFromAst } from "#src/betting/dare-sql-v3-finality.ts";
+import {
+  dareSqlV3CteColumnTargetDependenciesFromAst,
+  dareSqlV3CteTargetDependenciesFromAst,
+} from "#src/betting/dare-sql-v3-finality.ts";
 import { relationalScoutQlStatementFromImmutableAst } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
   relationalScoutQlArrayValue as arrayValue,
@@ -112,6 +115,67 @@ function aliasesFromAst(
   }
 }
 
+function containsTargetSource(
+  value: JsonValue,
+  targetKeys: readonly string[],
+): boolean {
+  if (Array.isArray(value)) {
+    return value.some((child) => containsTargetSource(child, targetKeys));
+  }
+  const object = objectValue(value);
+  if (object === null) return false;
+  if (targetKeys.includes(stringValue(object["table_name"]) ?? "")) return true;
+  return Object.values(object).some((child) =>
+    containsTargetSource(child, targetKeys),
+  );
+}
+
+function containsAggregate(value: JsonValue): boolean {
+  if (Array.isArray(value)) {
+    return value.some((child) => containsAggregate(child));
+  }
+  const object = objectValue(value);
+  if (object === null) return false;
+  const name = stringValue(object["function_name"]);
+  if (
+    name !== null &&
+    /^(?:avg|bool_and|bool_or|count|count_star|max|min|sum)$/iu.test(name)
+  ) {
+    return true;
+  }
+  return Object.values(object).some((child) => containsAggregate(child));
+}
+
+function containsUnsafeScalarSubquery(
+  value: JsonValue,
+  targetKeys: readonly string[],
+): boolean {
+  if (Array.isArray(value)) {
+    return value.some((child) =>
+      containsUnsafeScalarSubquery(child, targetKeys),
+    );
+  }
+  const object = objectValue(value);
+  if (object === null) return false;
+  if (
+    stringValue(object["class"]) === "SUBQUERY" &&
+    stringValue(object["subquery_type"]) === "SCALAR"
+  ) {
+    const subquery = objectValue(object["subquery"]);
+    const node = objectValue(subquery?.["node"]);
+    if (
+      node !== null &&
+      !containsAggregate(node) &&
+      containsTargetSource(node, targetKeys)
+    ) {
+      return true;
+    }
+  }
+  return Object.values(object).some((child) =>
+    containsUnsafeScalarSubquery(child, targetKeys),
+  );
+}
+
 export function rootQueryParts(canonicalSql: string) {
   const lower = canonicalSql.toLowerCase();
   let depth = 0;
@@ -136,7 +200,11 @@ export function rootQueryParts(canonicalSql: string) {
   };
 }
 
-export function rootHasMultipleRows(canonicalSql: string): boolean {
+export function rootHasMultipleRows(
+  canonicalSql: string,
+  immutableAst?: string,
+  targetKeys: readonly string[] = [],
+): boolean {
   const parts = rootQueryParts(canonicalSql);
   if (parts === null) return true;
   if (
@@ -149,7 +217,12 @@ export function rootHasMultipleRows(canonicalSql: string): boolean {
     /\b(?:AVG|BOOL_AND|BOOL_OR|COUNT(?:_STAR)?|MAX|MIN|SUM)\s*\(/iu.test(
       parts.expression,
     );
-  return hasFrom && !hasAggregate;
+  if (hasFrom && !hasAggregate) return true;
+  if (immutableAst !== undefined && targetKeys.length > 0) {
+    const statement = relationalScoutQlStatementFromImmutableAst(immutableAst);
+    if (containsUnsafeScalarSubquery(statement, targetKeys)) return true;
+  }
+  return false;
 }
 
 function targetDependenciesIn(
@@ -164,6 +237,24 @@ function targetDependenciesIn(
         target === key && new RegExp(String.raw`\b${alias}\b`, "iu").test(text),
     );
   });
+}
+
+function columnDependenciesIn(
+  text: string,
+  columns: ReadonlyMap<string, readonly string[]>,
+): string[] {
+  return [...columns.entries()]
+    .filter(([column]) => {
+      const [name, field] = column.split(".");
+      return (
+        name !== undefined &&
+        field !== undefined &&
+        new RegExp(String.raw`\b${name}\s*\.\s*${field}\b`, "iu").test(text)
+      );
+    })
+    .flatMap(([, dependencies]) => dependencies)
+    .toSorted()
+    .filter((key, index, keys) => keys[index - 1] !== key);
 }
 
 export async function decisiveTargetDependenciesV3(input: {
@@ -209,44 +300,83 @@ async function decisiveOrBranchDependencies(
     input.compilation.immutableAst,
     input.compilation.facts.targetKeys,
   );
+  const cteColumnDependencies = dareSqlV3CteColumnTargetDependenciesFromAst(
+    input.compilation.immutableAst,
+    input.compilation.facts.targetKeys,
+  );
   for (const branch of branches) {
-    const branchTargetKeys = targetDependenciesIn(
-      `${parts.prefix} ${branch}`,
-      input.compilation.facts.targetKeys,
+    const dependencies = await evaluateOrBranch({
+      input,
+      parts,
+      branch,
       aliases,
-    );
-    const compilation = await input.compile({
-      queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved${parts.suffix}`,
-      targetKeys:
-        branchTargetKeys.length > 0
-          ? branchTargetKeys
-          : input.targets.map((target) => target.key),
+      cteTargetDependencies,
+      cteColumnDependencies,
     });
-    const evidence = await input.execute({
-      compilation,
-      targets: input.targets,
-      start: input.start,
-      end: input.end,
-      ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
-    });
-    if (evidence.achieved === true) {
-      const direct = targetDependenciesIn(
-        branch,
-        input.compilation.facts.targetKeys,
-        aliases,
-      );
-      if (direct.length > 0) return direct;
-      const inherited = [...cteTargetDependencies.entries()]
-        .filter(([name]) =>
-          new RegExp(String.raw`\b${name}\b`, "iu").test(branch),
-        )
-        .flatMap(([, dependencies]) => dependencies)
-        .toSorted()
-        .filter((key, index, keys) => keys[index - 1] !== key);
-      return inherited.length > 0
-        ? inherited
-        : input.compilation.facts.targetKeys;
-    }
+    if (dependencies !== null) return dependencies;
   }
   return input.compilation.facts.targetKeys;
+}
+
+async function evaluateOrBranch(options: {
+  input: {
+    compilation: DareSqlV3Compilation;
+    targets: readonly DareTargetBindingV2[];
+    start: Date;
+    end: Date;
+    lakeDir?: string | undefined;
+    compile: CompileDareSqlV3;
+    execute: ExecuteDareSqlV3;
+  };
+  parts: { prefix: string; suffix: string };
+  branch: string;
+  aliases: ReadonlyMap<string, string>;
+  cteTargetDependencies: ReadonlyMap<string, readonly string[]>;
+  cteColumnDependencies: ReadonlyMap<string, readonly string[]>;
+}): Promise<string[] | null> {
+  const {
+    input,
+    parts,
+    branch,
+    aliases,
+    cteTargetDependencies,
+    cteColumnDependencies,
+  } = options;
+  const branchTargetKeys = targetDependenciesIn(
+    `${parts.prefix} ${branch}`,
+    input.compilation.facts.targetKeys,
+    aliases,
+  );
+  const compilation = await input.compile({
+    queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved${parts.suffix}`,
+    targetKeys:
+      branchTargetKeys.length > 0
+        ? branchTargetKeys
+        : input.targets.map((target) => target.key),
+  });
+  const evidence = await input.execute({
+    compilation,
+    targets: input.targets,
+    start: input.start,
+    end: input.end,
+    ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
+  });
+  if (evidence.achieved !== true) return null;
+  const direct = targetDependenciesIn(
+    branch,
+    input.compilation.facts.targetKeys,
+    aliases,
+  );
+  if (direct.length > 0) return direct;
+  const inherited = [...cteTargetDependencies.entries()]
+    .filter(([name]) => new RegExp(String.raw`\b${name}\b`, "iu").test(branch))
+    .flatMap(([, dependencies]) => dependencies)
+    .toSorted()
+    .filter((key, index, keys) => keys[index - 1] !== key);
+  const projected = columnDependenciesIn(branch, cteColumnDependencies);
+  return projected.length > 0
+    ? projected
+    : inherited.length > 0
+      ? inherited
+      : input.compilation.facts.targetKeys;
 }

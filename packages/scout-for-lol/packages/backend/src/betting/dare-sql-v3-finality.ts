@@ -136,6 +136,38 @@ export function dareSqlV3CteTargetDependenciesFromAst(
   return resolved;
 }
 
+/** Resolve projected CTE columns to the target relations used to compute them. */
+export function dareSqlV3CteColumnTargetDependenciesFromAst(
+  immutableAst: string,
+  targetKeys: readonly string[],
+): ReadonlyMap<string, readonly string[]> {
+  const statement = objectValue(
+    relationalScoutQlStatementFromImmutableAst(immutableAst),
+  );
+  const node = objectValue(statement?.["node"]);
+  const cteMap = objectValue(node?.["cte_map"]);
+  const result = new Map<string, readonly string[]>();
+  for (const entryValue of arrayValue(cteMap?.["map"])) {
+    const entry = objectValue(entryValue);
+    const name = stringValue(entry?.["key"]);
+    const query = objectValue(objectValue(entry?.["value"])?.["query"]);
+    const cteNode = objectValue(query?.["node"]);
+    if (name === null || cteNode === null) continue;
+    for (const column of arrayValue(cteNode["select_list"])) {
+      const selected = objectValue(column);
+      const alias = stringValue(selected?.["alias"]);
+      if (alias === null || alias.length === 0) continue;
+      const dependencies = new Set<string>();
+      sourceTargets(column, new Set(targetKeys), dependencies);
+      result.set(
+        `${name}.${alias}`.toLowerCase(),
+        [...dependencies].toSorted(),
+      );
+    }
+  }
+  return result;
+}
+
 function selectedColumnName(value: JsonValue): string | null {
   const expression = objectValue(value);
   if (expression === null) return null;

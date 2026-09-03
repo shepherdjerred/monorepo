@@ -318,7 +318,7 @@ describe("Dare SQL v3 compilation", () => {
       const targets = targetsForMatch(match);
       const compilation = await compileDareSqlV3({
         queryText:
-          "WITH flags AS (SELECT EXISTS (SELECT 1 FROM T1) AS t1_hit, EXISTS (SELECT 1 FROM T2) AS t2_hit) SELECT BOOL_OR(t1_hit OR t2_hit) AS achieved FROM flags",
+          "WITH flags AS (SELECT EXISTS (SELECT 1 FROM T1) AS t1_hit, EXISTS (SELECT 1 FROM T2) AS t2_hit) SELECT MAX(CASE WHEN t1_hit OR t2_hit THEN 1 ELSE 0 END) = 1 AS achieved FROM flags",
         targetKeys: ["T1", "T2"],
       });
       await expect(

@@ -208,7 +208,13 @@ export async function compileDareSqlV3(input: {
     ),
     finality: dareSqlV3FinalityFromAst(validated.compilation.immutableAst),
   });
-  if (rootHasMultipleRows(compilation.canonicalSql)) {
+  if (
+    rootHasMultipleRows(
+      compilation.canonicalSql,
+      compilation.immutableAst,
+      input.targetKeys,
+    )
+  ) {
     throw new Error(
       "Dare SQL root query must be structurally scalar (no GROUP BY, HAVING, QUALIFY, or UNION).",
     );
