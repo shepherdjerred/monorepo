@@ -48,6 +48,9 @@ const CoverageRowSchema = z.strictObject({
 });
 const SqlRowSchema = z.strictObject({ sql: z.string() });
 const AstTextRowSchema = z.strictObject({ ast: z.string() });
+const DescribeRowSchema = z
+  .object({ column_name: z.string(), column_type: z.string() })
+  .loose();
 const GameSetRowSchema = z
   .object({
     match_id: z.string(),
@@ -56,6 +59,16 @@ const GameSetRowSchema = z
   })
   .loose();
 const TARGET_KEY = /^T[1-5]$/u;
+const COMPILE_RELATIONS = [
+  ["match_participants", MATCH_LAKE_COLUMNS],
+  ["matches", MATCH_LAKE_COLUMNS],
+  ["match_teams", MATCH_TEAM_LAKE_COLUMNS],
+  ["match_team_bans", MATCH_TEAM_BAN_LAKE_COLUMNS],
+  ["timeline_events", TIMELINE_EVENT_LAKE_COLUMNS],
+  ["timeline_event_participants", TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS],
+  ["timeline_participant_frames", TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS],
+  ["timeline_coverage", TIMELINE_COVERAGE_LAKE_COLUMNS],
+] as const;
 
 function bindParams(session: DuckDBSession, params: BoundParam[]) {
   return params.map((param) =>
@@ -91,6 +104,77 @@ async function verifiedCanonicalSql(
   return canonicalSql;
 }
 
+function isNumericDuckDbType(columnType: string): boolean {
+  const normalized = columnType.toUpperCase();
+  return /(BIGINT|DECIMAL|DOUBLE|FLOAT|HUGEINT|INTEGER|NUMERIC|REAL|SMALLINT|TINYINT|UBIGINT|UINTEGER|USMALLINT|UTINYINT)/u.test(
+    normalized,
+  );
+}
+
+async function validateGameSetTypes(
+  canonicalSql: string,
+  gameSets: DareSqlV3Compilation["resultStructure"]["gameSets"],
+  targetKeys: readonly string[],
+): Promise<void> {
+  if (gameSets.length === 0) return;
+  const parts = rootQueryParts(canonicalSql);
+  if (parts === null) {
+    throw new Error("Dare SQL canonical root could not be separated.");
+  }
+  await withDuckDBConnection(async (session) => {
+    for (const [relation, columns] of COMPILE_RELATIONS) {
+      await session.run(
+        `CREATE TEMP TABLE ${relation} AS ${duckDbEmptySelect(columns)}`,
+      );
+    }
+    for (const targetKey of targetKeys) {
+      await session.run(
+        `CREATE TEMP TABLE ${targetKey} AS ${duckDbEmptySelect(MATCH_LAKE_COLUMNS)}`,
+      );
+    }
+    for (const gameSet of gameSets) {
+      const rows = await session.run(
+        `DESCRIBE SELECT * FROM (${parts.prefix}SELECT * FROM ${gameSet.name}) AS _dare_game_set`,
+      );
+      const columns = new Map(
+        rows.map((row) => {
+          const parsed = DescribeRowSchema.parse(row);
+          return [parsed.column_name.toLowerCase(), parsed.column_type];
+        }),
+      );
+      const matchIdType = columns.get("match_id");
+      const gameEndType = columns.get("game_end_at");
+      const matchedType = columns.get("matched");
+      if (matchIdType !== "VARCHAR") {
+        throw new Error(
+          `Dare SQL game set ${gameSet.name} match_id must be VARCHAR, got ${matchIdType ?? "missing"}.`,
+        );
+      }
+      if (gameEndType !== "TIMESTAMP") {
+        throw new Error(
+          `Dare SQL game set ${gameSet.name} game_end_at must be TIMESTAMP, got ${gameEndType ?? "missing"}.`,
+        );
+      }
+      if (matchedType !== "BOOLEAN") {
+        throw new Error(
+          `Dare SQL game set ${gameSet.name} matched must be BOOLEAN, got ${matchedType ?? "missing"}.`,
+        );
+      }
+      for (const projection of gameSet.projectionColumns) {
+        const projectionType = columns.get(projection.toLowerCase());
+        if (
+          projectionType === undefined ||
+          !isNumericDuckDbType(projectionType)
+        ) {
+          throw new Error(
+            `Dare SQL game set ${gameSet.name} projection ${projection} must be numeric, got ${projectionType ?? "missing"}.`,
+          );
+        }
+      }
+    }
+  });
+}
+
 export async function compileDareSqlV3(input: {
   queryText: string;
   targetKeys: readonly string[];
@@ -106,7 +190,7 @@ export async function compileDareSqlV3(input: {
   if (validated.kind === "invalid") {
     throw new Error(validated.issues.join(" "));
   }
-  return DareSqlV3CompilationSchema.parse({
+  const compilation = DareSqlV3CompilationSchema.parse({
     compilerVersion: DARE_SQL_V3_COMPILER_VERSION,
     canonicalSql: validated.compilation.canonicalScoutQl,
     immutableAst: validated.compilation.immutableAst,
@@ -119,6 +203,12 @@ export async function compileDareSqlV3(input: {
     ),
     finality: dareSqlV3FinalityFromAst(validated.compilation.immutableAst),
   });
+  await validateGameSetTypes(
+    compilation.canonicalSql,
+    compilation.resultStructure.gameSets,
+    input.targetKeys,
+  );
+  return compilation;
 }
 
 async function materialize(
@@ -177,8 +267,9 @@ async function createLakeRelations(
 ): Promise<void> {
   const files = await resolveLakeFiles(input.lakeDir);
   const windowPredicate = {
-    sql: "epoch_ms(game_end_at) BETWEEN ? AND ?",
+    sql: "epoch_ms(game_start_at) >= ? AND epoch_ms(game_end_at) BETWEEN ? AND ?",
     params: [
+      scalarParam(input.start.getTime()),
       scalarParam(input.start.getTime()),
       scalarParam(input.end.getTime()),
     ],

@@ -35,7 +35,11 @@ async function loadMatchFixture(): Promise<RawMatch> {
     import.meta.url,
   );
   const json: unknown = await Bun.file(fixtureUrl).json();
-  return RawMatchSchema.parse(json);
+  const match = RawMatchSchema.parse(json);
+  return RawMatchSchema.parse({
+    ...match,
+    info: { ...match.info, queueId: 420, gameMode: "CLASSIC", mapId: 11 },
+  });
 }
 
 function targetForMatch(match: RawMatch): DareTargetBindingV2 {

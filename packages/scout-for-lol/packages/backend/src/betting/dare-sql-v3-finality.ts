@@ -21,6 +21,23 @@ function isCount(value: JsonValue | undefined): boolean {
   return name === "count" || name === "count_star";
 }
 
+function containsSubquery(value: JsonValue | undefined): boolean {
+  if (Array.isArray(value)) {
+    return value.some((child) => containsSubquery(child));
+  }
+  const object = objectValue(value);
+  if (object === null) return false;
+  const expressionClass = stringValue(object["class"]);
+  const expressionType = stringValue(object["type"]);
+  if (expressionClass === "SUBQUERY" || expressionType === "SUBQUERY") {
+    return true;
+  }
+  return Object.entries(object).some(
+    ([key, child]) =>
+      key.toLowerCase().includes("subquery") || containsSubquery(child),
+  );
+}
+
 function sourceTargets(
   value: JsonValue,
   targets: ReadonlySet<string>,
@@ -104,6 +121,12 @@ export function dareSqlV3FinalityFromAst(
   const node = objectValue(statement?.["node"]);
   const achieved = objectValue(arrayValue(node?.["select_list"])[0]);
   if (achieved === null || !isCount(achieved["left"])) {
+    return "deadline_only";
+  }
+  // A correlated or scalar subquery can change the predicate as later games
+  // arrive (for example, comparing each game to the current AVG). Such a
+  // count is not append-monotone even though COUNT itself is increasing.
+  if (containsSubquery(achieved["left"])) {
     return "deadline_only";
   }
   const threshold = nonnegativeIntegerConstant(achieved["right"]);
