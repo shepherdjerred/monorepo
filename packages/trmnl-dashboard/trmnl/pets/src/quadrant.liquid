@@ -1,0 +1,25 @@
+<div class="layout layout--col gap--small">
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content"><span class="title">{{ status | upcase }}</span><span class="value value--small">{{ summary }}</span></div>
+  </div>
+
+  <div class="grid grid--cols-3 gap--small">
+    <div class="item"><div class="content"><span class="title">Problems</span><span class="value">{{ problems.size }}</span></div></div>
+    <div class="item"><div class="content"><span class="title">Water</span><span class="value">{{ fountain.water_percent | default: "n/a" }}%</span></div></div>
+    <div class="item"><div class="content"><span class="title">Litter</span><span class="value">{% if litter_robot %}{{ litter_robot.litter_percent }}%{% else %}n/a{% endif %}</span></div></div>
+  </div>
+
+  <div>
+    <span class="label label--underline">Highest priority</span>
+    {% if problems.size > 0 %}
+      {% for problem in problems limit: 1 %}<div>{{ problem.severity | upcase }} · {{ problem.summary }}</div>{% endfor %}
+    {% elsif status == "ok" %}
+      <div>All clear</div>
+    {% else %}
+      <div>{{ status | upcase }} · diagnostics incomplete</div>
+    {% endif %}
+  </div>
+</div>
+
+{{ dashboard_title_bar }}

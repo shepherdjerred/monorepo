@@ -59,11 +59,12 @@ bun run smoke         # boots the trmnl-dashboard:dev image and asserts a clean 
 
 ## Private plugins as code
 
-The two existing private plugins are complete
+The three existing private plugins are complete
 [`trmnlp`](https://github.com/usetrmnl/trmnlp/blob/main/README.md) projects:
 
 - `trmnl/home-assistant` — plugin ID `303046`
 - `trmnl/homelab` — plugin ID `303047`
+- `trmnl/pets` — plugin ID `464652`
 
 Their IDs are immutable deployment targets. Do not run `trmnlp init` or push a
 project without its committed ID: that would create a new remote plugin and
@@ -73,7 +74,7 @@ The repository pins both the `trmnlp` image and TRMNL framework version. Local
 and CI rendering uses deterministic synthetic JSON from `trmnl/fixtures`; it
 does not call the production dashboard or need its polling key.
 
-From the repository root, validate all four layouts for both plugins:
+From the repository root, validate all four layouts for all three plugins:
 
 ```bash
 docker run --rm --entrypoint sh \
@@ -88,13 +89,13 @@ Preview one plugin at `http://localhost:4567`:
 docker run --rm --entrypoint sh -p 4567:4567 \
   -v "$(pwd):/workspace" -w /workspace \
   trmnl/trmnlp:v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973 \
-  packages/trmnl-dashboard/scripts/trmnlp-ci.sh serve home-assistant
+  packages/trmnl-dashboard/scripts/trmnlp-ci.sh serve pets
 ```
 
 Buildkite runs the same validation without secrets on pull requests. On main,
-the path-selected `trmnl` lane validates both projects before publishing either
-one, then pushes plugin `303046` followed by `303047`. The publisher uses the
-dedicated account-level `TRMNL_API_KEY` from
+the path-selected `trmnl` lane validates all three projects before publishing
+any of them, then pushes plugin `303046`, `303047`, and `464652` in that order.
+The publisher uses the dedicated account-level `TRMNL_API_KEY` from
 `buildkite-trmnl-credentials`; this is intentionally separate from the
 dashboard service's polling key.
 
@@ -104,12 +105,17 @@ through the environment and pull each existing ID explicitly:
 ```bash
 trmnlp pull --id 303046 --dir packages/trmnl-dashboard/trmnl/home-assistant
 trmnlp pull --id 303047 --dir packages/trmnl-dashboard/trmnl/homelab
+trmnlp pull --id 464652 --dir packages/trmnl-dashboard/trmnl/pets
 ```
 
-Review every resulting diff before committing. Hosted custom-field values are
-instance state and must not be copied into Git. The `api_key` field is a
-password whose value remains stored only in TRMNL; `settings.yml` commits only
-the field definition and encoded header template.
+Review every resulting diff before committing. A pull replaces the local
+archive files, so repository review remains the boundary for accepting remote
+markup or settings changes. Hosted custom-field values are instance state and
+must not be copied into Git. The `api_key` field is a password whose value
+remains stored only in TRMNL; preserving that keyname lets publication retain
+the existing hosted value. `settings.yml` commits only the field definition and
+encoded header template, while `.trmnlp.yml` contains synthetic local preview
+values and is never uploaded.
 
 Playlist membership and ordering, schedules, mashups, and device settings
 remain managed in the TRMNL UI because the hosted API does not expose their

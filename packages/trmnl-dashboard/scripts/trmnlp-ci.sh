@@ -17,6 +17,7 @@ check_plugin_ids() {
     expected = {
       "home-assistant" => 303046,
       "homelab" => 303047,
+      "pets" => 464652,
     }
     settings = expected.to_h do |slug, _expected_id|
       path = File.join(ARGV.fetch(0), slug, "src", "settings.yml")
@@ -73,9 +74,15 @@ start_fixture_server() {
   while [ "$attempt" -lt 30 ]; do
     if ruby -rsocket -e '
       begin
-        socket = TCPSocket.new("127.0.0.1", 4568)
-        socket.write "GET /home-assistant.json HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
-        exit(socket.read.start_with?("HTTP/1.1 200") ? 0 : 1)
+        paths = %w[home-assistant.json homelab.json pets.json]
+        ready = paths.all? do |path|
+          socket = TCPSocket.new("127.0.0.1", 4568)
+          socket.write "GET /#{path} HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n"
+          response = socket.read
+          socket.close
+          response.start_with?("HTTP/1.1 200")
+        end
+        exit(ready ? 0 : 1)
       rescue SystemCallError
         exit 1
       end
@@ -138,6 +145,7 @@ validate_all() {
   start_fixture_server
   validate_project "$trmnl_root/home-assistant"
   validate_project "$trmnl_root/homelab"
+  validate_project "$trmnl_root/pets"
 }
 
 self_test() {
@@ -146,6 +154,7 @@ self_test() {
   cp -R "$trmnl_root/fixtures" "$self_test_dir/trmnl/fixtures"
   cp -R "$trmnl_root/home-assistant" "$self_test_dir/trmnl/home-assistant"
   cp -R "$trmnl_root/homelab" "$self_test_dir/trmnl/homelab"
+  cp -R "$trmnl_root/pets" "$self_test_dir/trmnl/pets"
 
   ruby -ryaml -e '
     path = ARGV.fetch(0)
@@ -240,6 +249,23 @@ SCRIPT
     echo "the Selenium timeout did not trigger exactly one retry" >&2
     exit 1
   fi
+
+  : >"$publish_log"
+  TRMNL_ROOT="$self_test_dir/trmnl" \
+    TRMNLP_COMMAND="$fake_trmnlp" \
+    TRMNLP_TEST_LOG="$publish_log" \
+    TRMNL_API_KEY=self-test \
+    "$0" publish
+  expected_publish_log="$self_test_dir/expected-push.log"
+  printf '%s\n' \
+    "$self_test_dir/trmnl/home-assistant" \
+    "$self_test_dir/trmnl/homelab" \
+    "$self_test_dir/trmnl/pets" >"$expected_publish_log"
+  if ! cmp -s "$expected_publish_log" "$publish_log"; then
+    echo "plugins were not published exactly once in deterministic order" >&2
+    diff -u "$expected_publish_log" "$publish_log"
+    exit 1
+  fi
 }
 
 check_plugin_ids
@@ -261,16 +287,18 @@ case "$mode" in
     validate_all
     "$trmnlp_command" push --force --dir "$trmnl_root/home-assistant"
     "$trmnlp_command" push --force --dir "$trmnl_root/homelab"
+    "$trmnlp_command" push --force --dir "$trmnl_root/pets"
     git -C "$repo_root" diff --exit-code -- \
       packages/trmnl-dashboard/trmnl/home-assistant \
-      packages/trmnl-dashboard/trmnl/homelab
+      packages/trmnl-dashboard/trmnl/homelab \
+      packages/trmnl-dashboard/trmnl/pets
     ;;
   serve)
     case "$plugin_slug" in
-      home-assistant | homelab)
+      home-assistant | homelab | pets)
         ;;
       *)
-        echo "serve requires home-assistant or homelab" >&2
+        echo "serve requires home-assistant, homelab, or pets" >&2
         exit 1
         ;;
     esac
@@ -278,7 +306,7 @@ case "$mode" in
     "$trmnlp_command" serve --bind 0.0.0.0 --dir "$trmnl_root/$plugin_slug"
     ;;
   *)
-    echo "usage: $0 {check-ids|self-test|validate|publish|serve <home-assistant|homelab>}" >&2
+    echo "usage: $0 {check-ids|self-test|validate|publish|serve <home-assistant|homelab|pets>}" >&2
     exit 1
     ;;
 esac

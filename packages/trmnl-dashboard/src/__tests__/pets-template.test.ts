@@ -2,29 +2,78 @@ import { describe, expect, it } from "vitest";
 import { Liquid } from "liquidjs";
 import type { PetCarePayload, PetProblem } from "../types.ts";
 
-const templatePath = new URL("../../trmnl/pets.liquid", import.meta.url)
+const templateDirectory = new URL("../../trmnl/pets/src/", import.meta.url)
   .pathname;
 const liquid = new Liquid({ strictVariables: true, strictFilters: true });
+const layouts = [
+  "full",
+  "half_horizontal",
+  "half_vertical",
+  "quadrant",
+] as const;
+const statuses = ["ok", "warning", "error"] as const;
 
-describe("pets.liquid", () => {
-  it.each([
-    ["healthy", fixture("ok")],
-    ["warning", fixture("warning")],
-    ["critical", fixture("error")],
-  ])("renders the %s fixture", async (_name, payload) => {
-    const template = await Bun.file(templatePath).text();
-    const html = await liquid.parseAndRender(template, payload);
+describe("Pets TRMNL layouts", () => {
+  it.each(
+    statuses.flatMap((status) => layouts.map((layout) => ({ layout, status }))),
+  )("renders $layout with a $status payload", async ({ layout, status }) => {
+    const shared = await Bun.file(`${templateDirectory}shared.liquid`).text();
+    const template = await Bun.file(
+      `${templateDirectory}${layout}.liquid`,
+    ).text();
+    const payload = fixture(status);
+    const html = await liquid.parseAndRender(`${shared}\n${template}`, payload);
 
     expect(html).toContain("Pet Care");
-    expect(html).toContain("Globe litter");
-    expect(html).toContain("Hopper");
-    expect(html).toContain("Roborock Fleet");
-    expect(html).toContain("Litter cycles");
-    if (payload.status === "ok") {
-      expect(html).not.toContain("ACTIVE PROBLEMS");
-    } else {
-      expect(html).toContain("ACTIVE PROBLEMS");
+    expect(html).toContain(status.toUpperCase());
+
+    switch (layout) {
+      case "full": {
+        expect(html).toContain("Globe litter");
+        expect(html).toContain("Hopper");
+        expect(html).toContain("Roborock Fleet");
+        expect(html).toContain("Litter cycles");
+        break;
+      }
+      case "half_horizontal": {
+        expect(html).toContain("Pet devices");
+        expect(html).toContain("Vacuum fleet");
+        expect(html).toContain("Litter cycles");
+        break;
+      }
+      case "half_vertical": {
+        expect(html).toContain("Fountain water");
+        expect(html).toContain("Litter / waste");
+        expect(html).toContain("Vacuum fleet");
+        break;
+      }
+      case "quadrant": {
+        expect(html).toContain("Highest priority");
+        expect(html).toContain("Water");
+        expect(html).toContain("Litter");
+        break;
+      }
     }
+
+    if (payload.status !== "ok") {
+      expect(html).toContain(payload.problems[0]?.summary);
+    }
+  });
+
+  it("does not report all clear when diagnostics are incomplete", async () => {
+    const shared = await Bun.file(`${templateDirectory}shared.liquid`).text();
+    const template = await Bun.file(
+      `${templateDirectory}quadrant.liquid`,
+    ).text();
+    const payload = fixture("ok");
+    payload.status = "unknown";
+    payload.summary = "Pet diagnostics incomplete";
+    payload.errors = ["Alertmanager alerts: request failed"];
+
+    const html = await liquid.parseAndRender(`${shared}\n${template}`, payload);
+
+    expect(html).toContain("UNKNOWN · diagnostics incomplete");
+    expect(html).not.toContain("All clear");
   });
 });
 
