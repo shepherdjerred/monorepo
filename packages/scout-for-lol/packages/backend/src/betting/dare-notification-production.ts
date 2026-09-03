@@ -1,8 +1,9 @@
-import type { DareContractV2 } from "@scout-for-lol/data";
+import type { DareContractV2, DareContractV3 } from "@scout-for-lol/data";
 import type { DareMatchEvidenceV2 } from "#src/betting/dare-evidence-v2.ts";
 import type { DareFinalityV2 } from "#src/betting/dare-proof-v2.ts";
 import { enqueueDareNotificationInTransaction } from "#src/betting/dare-notification-outbox.ts";
 import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
 import type { Db } from "#src/database/index.ts";
 
 type TerminalResolution = "achieved" | "unachieved" | "voided";
@@ -82,6 +83,57 @@ export async function enqueueMaterialDareProgressNotification(
     revision: input.contract.revision,
     category: "progress",
     kind,
+    matchId: input.matchId,
+    summary: progress.summary,
+    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.contract.revision.toString()}:progress:${input.matchId}`,
+    occurredAt: input.now,
+  });
+}
+
+export async function enqueueMaterialDareProgressNotificationV3(
+  tx: Db,
+  input: {
+    dareId: number;
+    contract: DareContractV3;
+    evidence: readonly {
+      matchId: string;
+      gameEndAt: Date;
+      evaluationOutput: string;
+      sourceReferences: string;
+      coverageState: string;
+    }[];
+    matchId: string;
+    finality: DareFinalityV2;
+    now: Date;
+  },
+): Promise<void> {
+  const progress = deriveDareProgressV3({
+    compilation: {
+      compilerVersion: input.contract.compilerVersion,
+      canonicalSql: input.contract.canonicalSql,
+      immutableAst: input.contract.immutableAst,
+      queryHash: input.contract.queryHash,
+      maxEligibleGames: input.contract.maxEligibleGames,
+      facts: input.contract.facts,
+      resultStructure: input.contract.resultStructure,
+      finality: input.contract.finality,
+    },
+    evidence: input.evidence,
+    targetKeys: input.contract.targets.map((target) => target.key),
+    final: false,
+    finalityReason: input.finality.reason,
+  });
+  if (
+    progress.latestMaterialChange?.matchId !== input.matchId ||
+    progress.latestMaterialChange.kind === "coverage"
+  ) {
+    return;
+  }
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: input.dareId,
+    revision: input.contract.revision,
+    category: "progress",
+    kind: "advanced",
     matchId: input.matchId,
     summary: progress.summary,
     deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.contract.revision.toString()}:progress:${input.matchId}`,

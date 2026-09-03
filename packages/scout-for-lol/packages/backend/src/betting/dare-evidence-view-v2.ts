@@ -115,7 +115,7 @@ export async function listDareEvidenceV2(
           .parse(JSON.parse(revision.targetsJson))
           .map((target) => target.key)
       : dare.targets.map((target) => target.targetKey);
-  if (revision.compilerVersion === "dare-sql-3") {
+  if (revision.compilerVersion === "dare-scoutql-3") {
     const compilation = DareSqlV3CompilationSchema.parse(rawPlan);
     const rows = dare.evidence.map((row, index) => {
       const evaluated = DareSqlV3EvidenceSchema.parse(

@@ -233,7 +233,7 @@ describe("Dare SQL v3 compilation", () => {
           queryText: `SELECT COUNT(*) ${operator} 0 AS achieved FROM T1`,
           targetKeys: ["T1"],
         }),
-      ).resolves.toMatchObject({ compilerVersion: "dare-sql-3" });
+      ).resolves.toMatchObject({ compilerVersion: "dare-scoutql-3" });
     },
   );
 

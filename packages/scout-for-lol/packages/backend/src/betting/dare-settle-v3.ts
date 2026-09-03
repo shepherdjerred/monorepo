@@ -18,6 +18,10 @@ import {
   decisiveTargetDependenciesV3,
   executeDareSqlV3,
 } from "#src/betting/dare-sql-v3.ts";
+import {
+  enqueueMaterialDareProgressNotificationV3,
+  enqueueTerminalDareNotification,
+} from "#src/betting/dare-notification-production.ts";
 import type {
   DareProofV3,
   DareV2SettlementSummary,
@@ -148,6 +152,14 @@ async function resolveV3(
       ...(value === null ? { voidReason: "missing_evidence" } : {}),
     });
   }
+  await enqueueTerminalDareNotification(tx, {
+    dareId: input.dare.id,
+    revision: input.contract.revision,
+    potTotal: input.dare.potTotal,
+    resolution,
+    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
+    now: input.now,
+  });
   return resolution;
 }
 
@@ -173,7 +185,7 @@ function evidenceCreateData(
     evaluationTrace: JSON.stringify([
       `Executed immutable Dare SQL ${evidence.queryHash}.`,
     ]),
-    planVersion: "dare-sql-evaluator-3",
+    planVersion: "dare-evaluator-3",
   };
 }
 
@@ -237,6 +249,10 @@ export async function captureDareSqlV3ForMatch(input: {
       skipDuplicates: true,
     });
     if (captured.count !== 1) return;
+    const rows = await tx.bucksDareV2Evidence.findMany({
+      where: { dareId: dare.id },
+      orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
+    });
     const resolution = finality.final
       ? await resolveV3(tx, {
           dare,
@@ -248,6 +264,16 @@ export async function captureDareSqlV3ForMatch(input: {
           matchId: matchData.metadata.matchId,
         })
       : "captured";
+    if (resolution === "captured") {
+      await enqueueMaterialDareProgressNotificationV3(tx, {
+        dareId: dare.id,
+        contract,
+        evidence: rows,
+        matchId: matchData.metadata.matchId,
+        finality,
+        now,
+      });
+    }
     return {
       contractVersion: 3,
       dareId: dare.id,

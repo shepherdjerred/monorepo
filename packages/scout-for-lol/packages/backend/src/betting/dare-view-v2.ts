@@ -111,7 +111,7 @@ function terminalState(state: BucksDareV2State): boolean {
 
 function parsedRevisionPlan(revision: VisibleDareRow["revisions"][number]) {
   const rawPlan: unknown = JSON.parse(revision.compiledPlan);
-  return revision.compilerVersion === "dare-sql-3"
+  return revision.compilerVersion === "dare-scoutql-3"
     ? DareSqlV3CompilationSchema.parse(rawPlan)
     : DareCompiledPlanV2Schema.parse(rawPlan);
 }
@@ -157,7 +157,7 @@ function listItem(
       : row.targets.map((target) => target.targetKey);
   const viewer = dareViewerFactsV2(row, viewerDiscordId);
   return DareV2ListItemSchema.parse({
-    contractVersion: revision.compilerVersion === "dare-sql-3" ? 3 : 2,
+    contractVersion: revision.compilerVersion === "dare-scoutql-3" ? 3 : 2,
     id: row.id,
     serverId: row.serverId,
     state,
@@ -202,7 +202,7 @@ function inspection(
     channelId: row.channelId,
     originConversationId: row.originConversationId,
     canonicalScoutQl:
-      revision.compilerVersion === "dare-sql-3"
+      revision.compilerVersion === "dare-scoutql-3"
         ? revision.canonicalScoutQl
         : visibleDareScoutQlV2({
             state,

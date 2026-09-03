@@ -30,18 +30,18 @@ function contractCompilerVersion(revision: {
   compilerVersion: string;
   scoutQlImmutableAst: string | null;
   scoutQlPlanHash: string | null;
-}): "dare-scoutql-1" | "dare-scoutql-2" | "dare-sql-3" {
+}): "dare-scoutql-1" | "dare-scoutql-2" | "dare-scoutql-3" {
   if (revision.compilerVersion === "dare-scoutql-1") {
     return "dare-scoutql-1";
   }
-  if (revision.compilerVersion === "dare-sql-3") {
+  if (revision.compilerVersion === "dare-scoutql-3") {
     if (
       revision.scoutQlImmutableAst === null ||
       revision.scoutQlPlanHash === null
     ) {
       throw new Error("Dare SQL v3 revision has no immutable artifact.");
     }
-    return "dare-sql-3";
+    return "dare-scoutql-3";
   }
   if (revision.compilerVersion !== "dare-scoutql-2") {
     throw new Error(
@@ -289,7 +289,7 @@ export async function acceptDareV2InTransaction(
     plainLanguage: revision.plainLanguage,
   };
   const contract =
-    compilerVersion === "dare-sql-3"
+    compilerVersion === "dare-scoutql-3"
       ? (() => {
           const compilation = DareSqlV3CompilationSchema.parse(
             JSON.parse(revision.compiledPlan),

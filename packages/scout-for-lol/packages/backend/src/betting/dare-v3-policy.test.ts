@@ -12,10 +12,20 @@ describe("Dare SQL v3 rollout policy", () => {
         Promise.resolve(flag === "betting_enabled"),
     };
     await expect(
-      relationalDareActionEnabled(serverId, "dare-sql-3", true, dependencies),
+      relationalDareActionEnabled(
+        serverId,
+        "dare-scoutql-3",
+        true,
+        dependencies,
+      ),
     ).resolves.toBe(false);
     await expect(
-      relationalDareActionEnabled(serverId, "dare-sql-3", false, dependencies),
+      relationalDareActionEnabled(
+        serverId,
+        "dare-scoutql-3",
+        false,
+        dependencies,
+      ),
     ).resolves.toBe(true);
   });
 });

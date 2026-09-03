@@ -65,7 +65,7 @@ export async function relationalDareActionEnabled(
   initialFunding: boolean,
   dependencies: DareV2Dependencies,
 ): Promise<boolean> {
-  if (compilerVersion !== "dare-sql-3") {
+  if (compilerVersion !== "dare-scoutql-3") {
     return await dareV2FundingEnabled(serverId, dependencies);
   }
   if (initialFunding) {

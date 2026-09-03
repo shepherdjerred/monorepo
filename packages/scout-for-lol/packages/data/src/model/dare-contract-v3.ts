@@ -7,8 +7,8 @@ import {
 } from "#src/model/dare-contract-v2.ts";
 
 export const DARE_CONTRACT_V3_VERSION = 3;
-export const DARE_SQL_V3_COMPILER_VERSION = "dare-sql-3" as const;
-export const DARE_SQL_V3_EVALUATOR_VERSION = "dare-sql-evaluator-3" as const;
+export const DARE_SQL_V3_COMPILER_VERSION = "dare-scoutql-3" as const;
+export const DARE_SQL_V3_EVALUATOR_VERSION = "dare-evaluator-3" as const;
 
 export const DareSqlV3FactsSchema = z.strictObject({
   cteCount: z.number().int().nonnegative(),
