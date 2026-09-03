@@ -54,6 +54,7 @@ export const DmKindSchema = z.enum([
   "data_validation",
   "betting_settlement_receipt",
   "betting_player_bet_outcome",
+  "dare_notification",
 ]);
 export type DmKind = z.infer<typeof DmKindSchema>;
 
@@ -104,6 +105,7 @@ const CORE_DM_KINDS: ReadonlySet<string> = new Set([
   "data_validation",
   "betting_settlement_receipt",
   "betting_player_bet_outcome",
+  "dare_notification",
 ]);
 
 export type SendDmOptions = {

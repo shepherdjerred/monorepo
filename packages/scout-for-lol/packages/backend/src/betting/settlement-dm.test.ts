@@ -403,6 +403,8 @@ describe("Bryan Bucks settlement DM notification hint", () => {
             {
               ownBetSettlementDms: true,
               betsOnPlayerSettlementDms: true,
+              dareLifecycleDms: true,
+              dareProgressDms: true,
               settlementDmHintShownAt: hintShownAt,
             },
           ],
@@ -450,6 +452,8 @@ describe("Bryan Bucks settlement DM notification hint", () => {
             {
               ownBetSettlementDms: true,
               betsOnPlayerSettlementDms: true,
+              dareLifecycleDms: true,
+              dareProgressDms: true,
               settlementDmHintShownAt: null,
             },
           ],
@@ -487,6 +491,8 @@ describe("Bryan Bucks settlement DM notification hint", () => {
               {
                 ownBetSettlementDms: true,
                 betsOnPlayerSettlementDms: true,
+                dareLifecycleDms: true,
+                dareProgressDms: true,
                 settlementDmHintShownAt: new Date(0),
               },
             ],

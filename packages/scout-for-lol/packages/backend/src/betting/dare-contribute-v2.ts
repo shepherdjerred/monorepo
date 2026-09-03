@@ -8,6 +8,7 @@ import {
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import { stakeDareV2ContributionInTransaction } from "#src/betting/dare-ledger-v2.ts";
 import type { Db } from "#src/database/index.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dare-notification-outbox.ts";
 
 const OPEN_DARE_STATES: ReadonlySet<BucksDareV2State> = new Set(
   OPEN_BUCKS_DARE_V2_STATES,
@@ -98,6 +99,16 @@ export async function contributeToDareV2InTransaction(
     bucksAccountId: input.bucksAccountId,
     discordId: input.actorDiscordId,
     amount: input.amount,
+  });
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: dare.id,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "contributed",
+    actorDiscordId: input.actorDiscordId,
+    summary: `A ${input.amount.toString()} Bryan Bucks contribution raised the pot to ${dare.potTotal.toString()}.`,
+    deduplicationKey: `dare:${dare.id.toString()}:revision:${input.revision.toString()}:contribution:${input.actorDiscordId}:${input.now.toISOString()}`,
+    occurredAt: input.now,
   });
   return {
     kind: "contributed",

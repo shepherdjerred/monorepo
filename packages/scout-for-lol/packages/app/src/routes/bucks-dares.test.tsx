@@ -1,6 +1,7 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
+import { DareProgressSchema } from "@scout-for-lol/data";
 import {
   DareDetail,
   DareList,
@@ -8,6 +9,43 @@ import {
 } from "#src/routes/bucks-dares.tsx";
 
 const noAction = vi.fn();
+const progress = DareProgressSchema.parse({
+  value: false,
+  final: false,
+  finalityReason: "in_progress",
+  matchedGames: 2,
+  eligibleGames: 3,
+  evidenceGames: 3,
+  conditions: [
+    {
+      key: "0",
+      kind: "matching_games",
+      label: "wins: gte 3 matching games",
+      targetKeys: ["virmel"],
+      gameSet: "wins",
+      operator: "gte",
+      current: 2,
+      target: 3,
+      remaining: 1,
+      matchedGames: 2,
+      eligibleGames: 3,
+      unknownGames: 0,
+      value: false,
+    },
+  ],
+  targets: [
+    {
+      targetKey: "virmel",
+      conditionKeys: ["0"],
+      matchedGames: 2,
+      eligibleGames: 3,
+      value: false,
+    },
+  ],
+  coverageGaps: [],
+  latestMaterialChange: null,
+  summary: "1 remaining for wins: gte 3 matching games.",
+});
 
 describe("parseBucksDareId", () => {
   test("selects the list when the optional route segment is absent", () => {
@@ -77,6 +115,8 @@ describe("DareList", () => {
             potTotal: 40,
             evidenceGames: 2,
             updatedAt: "2026-09-01T00:00:00.000Z",
+            progress,
+            requiresViewerAction: true,
           },
         ]}
         onRetry={noAction}
@@ -120,6 +160,19 @@ describe("DareDetail", () => {
             finalValue: true,
             proof: { eligibleGames: 3 },
             voidReason: null,
+            progress: { ...progress, value: true, final: true },
+            viewerRoles: ["challenger"],
+            availableActions: [],
+            requiresViewerAction: false,
+            processingHealth: {
+              status: "healthy",
+              pollStartedAt: "2026-09-01T00:00:00.000Z",
+              pollCompletedAt: "2026-09-01T00:00:30.000Z",
+              evidenceWatermarkAt: "2026-09-01T00:00:00.000Z",
+              lastSuccessfulProcessingAt: "2026-09-01T00:00:30.000Z",
+              failureReason: null,
+              incompleteReasons: [],
+            },
           }}
         />
       </MemoryRouter>,

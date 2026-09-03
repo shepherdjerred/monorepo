@@ -7,60 +7,20 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { z } from "zod";
+import type { z } from "zod";
 import { formatDareScoutQlV2 } from "#src/betting/dare-contract-compiler-v2.ts";
+import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-
-const StoredTargetSchema = DareTargetBindingV2Schema.omit({
-  accounts: true,
-}).extend({
-  acceptedAt: z.iso.datetime().nullable(),
-  declinedAt: z.iso.datetime().nullable(),
-  payout: z.number().int().nullable(),
-  fee: z.number().int().nullable(),
-});
-
-export const DareV2ListItemSchema = z.strictObject({
-  id: z.number().int().positive(),
-  serverId: z.string().min(1),
-  state: BucksDareV2StateSchema,
-  currentRevision: z.number().int().positive(),
-  fundedRevision: z.number().int().positive().nullable(),
-  challengerDiscordId: z.string().min(1),
-  targetAliases: z.array(z.string().min(1)),
-  plainLanguage: z.string().min(1),
-  openingStake: z.number().int().positive(),
-  potTotal: z.number().int().nonnegative(),
-  evidenceGames: z.number().int().nonnegative(),
-  proposalExpiresAt: z.iso.datetime().nullable(),
-  acceptDeadline: z.iso.datetime().nullable(),
-  activatedAt: z.iso.datetime().nullable(),
-  deadlineAt: z.iso.datetime().nullable(),
-  settledAt: z.iso.datetime().nullable(),
-  finalValue: z.boolean().nullable(),
-  updatedAt: z.iso.datetime(),
-});
-export type DareV2ListItem = z.infer<typeof DareV2ListItemSchema>;
-
-export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
-  channelId: z.string().min(1),
-  originConversationId: z.string().min(1).nullable(),
-  canonicalScoutQl: z.string().min(1),
-  plan: DareCompiledPlanV2Schema,
-  semanticProofPlan: z.string().min(1),
-  originalText: z.string().min(1),
-  deadlineSpec: DareDeadlineSpecV2Schema,
-  compilerVersion: z.string().min(1),
-  scoutQlPlanHash: z
-    .string()
-    .regex(/^[a-f\d]{64}$/)
-    .nullable(),
-  evaluatorVersion: z.string().min(1),
-  targets: z.array(StoredTargetSchema),
-  proof: z.json().nullable(),
-  voidReason: z.string().nullable(),
-});
-export type DareV2Inspection = z.infer<typeof DareV2InspectionSchema>;
+import { darePollHealth } from "#src/betting/dare-poll-health.ts";
+import {
+  DareV2InspectionSchema,
+  DareV2ListItemSchema,
+  DareV2ListPageSchema,
+  type DareV2Inspection,
+  type DareV2ListItem,
+  type DareV2ListPage,
+} from "#src/betting/dare-view-model-v2.ts";
 
 type VisibleDareRow = {
   id: number;
@@ -106,6 +66,19 @@ type VisibleDareRow = {
     fee: number | null;
   }[];
   _count: { evidence: number };
+  evidence: {
+    matchId: string;
+    gameStartAt: Date;
+    gameEndAt: Date;
+    queueType: string;
+    candidateMembership: string;
+    evaluationOutput: string;
+    coverageState: string;
+    targetDependencies: string;
+    sourceReferences: string;
+    evaluationTrace: string;
+  }[];
+  contributions: { discordId: string }[];
 };
 
 function iso(value: Date | null): string | null {
@@ -125,15 +98,65 @@ function activeRevision(row: VisibleDareRow) {
   return revision;
 }
 
-function listItem(row: VisibleDareRow): DareV2ListItem {
+function terminalState(state: BucksDareV2State): boolean {
+  return !["draft", "pending_accept", "active"].includes(state);
+}
+
+function viewerFacts(row: VisibleDareRow, viewerDiscordId: DiscordAccountId) {
+  const state = BucksDareV2StateSchema.parse(row.dareState);
+  const challenger = row.challengerDiscordId === viewerDiscordId;
+  const target = row.targets.find(
+    (candidate) => candidate.discordId === viewerDiscordId,
+  );
+  const contributor = row.contributions.some(
+    (candidate) => candidate.discordId === viewerDiscordId,
+  );
+  const roles = [
+    "member" as const,
+    ...(challenger ? (["challenger"] as const) : []),
+    ...(target === undefined ? [] : (["target"] as const)),
+    ...(contributor ? (["contributor"] as const) : []),
+  ];
+  const awaitingTarget =
+    state === "pending_accept" &&
+    target?.acceptedAt === null &&
+    target.declinedAt === null;
+  const actions = [
+    ...(state === "draft" && challenger
+      ? (["fund", "delete_draft"] as const)
+      : []),
+    ...(awaitingTarget ? (["accept", "decline"] as const) : []),
+    ...(state === "pending_accept" && challenger ? (["cancel"] as const) : []),
+    ...(target === undefined &&
+    (state === "pending_accept" || state === "active")
+      ? (["contribute"] as const)
+      : []),
+  ];
+  return {
+    roles,
+    actions,
+    requiresViewerAction: (state === "draft" && challenger) || awaitingTarget,
+  };
+}
+
+function listItem(
+  row: VisibleDareRow,
+  viewerDiscordId: DiscordAccountId,
+): DareV2ListItem {
   const revision = activeRevision(row);
+  const state = BucksDareV2StateSchema.parse(row.dareState);
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
+  const targetKeys =
+    row.targets.length === 0
+      ? draftTargets.map((target) => target.key)
+      : row.targets.map((target) => target.targetKey);
+  const viewer = viewerFacts(row, viewerDiscordId);
   return DareV2ListItemSchema.parse({
     id: row.id,
     serverId: row.serverId,
-    state: BucksDareV2StateSchema.parse(row.dareState),
+    state,
     currentRevision: row.currentRevision,
     fundedRevision: row.fundedRevision,
     challengerDiscordId: row.challengerDiscordId,
@@ -145,6 +168,16 @@ function listItem(row: VisibleDareRow): DareV2ListItem {
     openingStake: row.openingStake,
     potTotal: row.potTotal,
     evidenceGames: row._count.evidence,
+    progress: deriveDareProgressV2({
+      plan: DareCompiledPlanV2Schema.parse(JSON.parse(revision.compiledPlan)),
+      evidence: row.evidence.map((evidence) => storedDareV2Evidence(evidence)),
+      targetKeys,
+      final: terminalState(state),
+      finalityReason: terminalState(state) ? state : "in_progress",
+    }),
+    viewerRoles: viewer.roles,
+    availableActions: viewer.actions,
+    requiresViewerAction: viewer.requiresViewerAction,
     proposalExpiresAt: iso(row.proposalExpiresAt),
     acceptDeadline: iso(row.acceptDeadline),
     activatedAt: iso(row.activatedAt),
@@ -155,7 +188,11 @@ function listItem(row: VisibleDareRow): DareV2ListItem {
   });
 }
 
-function inspection(row: VisibleDareRow): DareV2Inspection {
+function inspection(
+  row: VisibleDareRow,
+  viewerDiscordId: DiscordAccountId,
+  processingHealth: ReturnType<typeof darePollHealth>,
+): DareV2Inspection {
   const revision = activeRevision(row);
   const state = BucksDareV2StateSchema.parse(row.dareState);
   const plan = DareCompiledPlanV2Schema.parse(
@@ -165,7 +202,7 @@ function inspection(row: VisibleDareRow): DareV2Inspection {
     JSON.parse(revision.targetsJson),
   );
   return DareV2InspectionSchema.parse({
-    ...listItem(row),
+    ...listItem(row, viewerDiscordId),
     channelId: row.channelId,
     originConversationId: row.originConversationId,
     canonicalScoutQl: visibleDareScoutQlV2({
@@ -206,6 +243,7 @@ function inspection(row: VisibleDareRow): DareV2Inspection {
           })),
     proof: row.proofJson === null ? null : JSON.parse(row.proofJson),
     voidReason: row.voidReason,
+    processingHealth,
   });
 }
 
@@ -222,10 +260,14 @@ export function visibleDareScoutQlV2(input: {
 const includeVisibleDare = {
   revisions: { orderBy: { revision: "asc" as const } },
   targets: { orderBy: { id: "asc" as const } },
+  contributions: { select: { discordId: true } },
+  evidence: {
+    orderBy: [{ gameEndAt: "asc" as const }, { matchId: "asc" as const }],
+  },
   _count: { select: { evidence: true } },
 };
 
-const VISIBLE_DARE_PAGE_SIZE = 100;
+const VISIBLE_DARE_PAGE_SIZE = 25;
 
 function matchesVisibleDareSearch(
   row: VisibleDareRow,
@@ -246,15 +288,114 @@ function matchesVisibleDareSearch(
 function matchingVisibleDareItems(
   rows: VisibleDareRow[],
   search: string | undefined,
+  viewerDiscordId: DiscordAccountId,
 ): DareV2ListItem[] {
   return rows
-    .map((row) => ({ row, item: listItem(row) }))
+    .map((row) => ({ row, item: listItem(row, viewerDiscordId) }))
     .filter(({ row, item }) => matchesVisibleDareSearch(row, item, search))
     .map(({ item }) => item);
 }
 
+function sortVisibleDareItems(
+  items: DareV2ListItem[],
+  sort: "needs_action" | "deadline" | "updated",
+): DareV2ListItem[] {
+  return items.toSorted((left, right) => {
+    if (sort === "needs_action") {
+      const action =
+        Number(right.requiresViewerAction) - Number(left.requiresViewerAction);
+      if (action !== 0) return action;
+    }
+    if (sort === "deadline") {
+      const leftDeadline = left.deadlineAt ?? left.acceptDeadline;
+      const rightDeadline = right.deadlineAt ?? right.acceptDeadline;
+      if (leftDeadline !== rightDeadline) {
+        if (leftDeadline === null) return 1;
+        if (rightDeadline === null) return -1;
+        return leftDeadline.localeCompare(rightDeadline);
+      }
+    }
+    const updated = right.updatedAt.localeCompare(left.updatedAt);
+    return updated === 0 ? right.id - left.id : updated;
+  });
+}
+
+function hasViewerRole(
+  item: DareV2ListItem,
+  role: "challenger" | "target" | "contributor" | "involved" | undefined,
+): boolean {
+  if (role === undefined) return true;
+  if (role === "involved") {
+    return item.viewerRoles.some((candidate) => candidate !== "member");
+  }
+  return item.viewerRoles.includes(role);
+}
+
 function visibleState(state: BucksDareV2State): boolean {
   return state !== "draft" && state !== "deleted";
+}
+
+export async function listVisibleDarePageV2(
+  input: {
+    serverId: DiscordGuildId;
+    viewerDiscordId: DiscordAccountId;
+    scope: "mine" | "guild" | "needs_action";
+    search?: string | undefined;
+    states?: BucksDareV2State[] | undefined;
+    role?: "challenger" | "target" | "contributor" | "involved" | undefined;
+    sort?: "needs_action" | "deadline" | "updated" | undefined;
+    cursor?: string | undefined;
+    limit?: number | undefined;
+  },
+  prisma: ExtendedPrismaClient,
+): Promise<DareV2ListPage> {
+  const search = input.search?.trim();
+  const rows = await prisma.bucksDareV2.findMany({
+    where: {
+      serverId: input.serverId,
+      AND: [
+        input.scope === "guild"
+          ? { dareState: { notIn: ["draft", "deleted"] } }
+          : {
+              dareState: { not: "deleted" },
+              OR: [
+                { challengerDiscordId: input.viewerDiscordId },
+                { targets: { some: { discordId: input.viewerDiscordId } } },
+                {
+                  contributions: {
+                    some: { discordId: input.viewerDiscordId },
+                  },
+                },
+              ],
+            },
+      ],
+    },
+    include: includeVisibleDare,
+  });
+  const matches = sortVisibleDareItems(
+    matchingVisibleDareItems(rows, search, input.viewerDiscordId).filter(
+      (item) =>
+        (input.states === undefined || input.states.includes(item.state)) &&
+        hasViewerRole(item, input.role) &&
+        (input.scope !== "needs_action" || item.requiresViewerAction),
+    ),
+    input.sort ?? (input.scope === "needs_action" ? "needs_action" : "updated"),
+  );
+  const cursorIndex =
+    input.cursor === undefined
+      ? -1
+      : matches.findIndex((item) => item.id.toString() === input.cursor);
+  const start = cursorIndex + 1;
+  const limit = input.limit ?? VISIBLE_DARE_PAGE_SIZE;
+  const items = matches.slice(start, start + limit);
+  const last = items.at(-1);
+  return DareV2ListPageSchema.parse({
+    items,
+    nextCursor:
+      last !== undefined && start + items.length < matches.length
+        ? last.id.toString()
+        : null,
+  });
 }
 
 export async function listVisibleDaresV2(
@@ -266,46 +407,8 @@ export async function listVisibleDaresV2(
   },
   prisma: ExtendedPrismaClient,
 ): Promise<DareV2ListItem[]> {
-  const search = input.search?.trim();
-  const matches: DareV2ListItem[] = [];
-  let cursorId: number | undefined;
-  while (matches.length < VISIBLE_DARE_PAGE_SIZE) {
-    const rows = await prisma.bucksDareV2.findMany({
-      where: {
-        serverId: input.serverId,
-        AND: [
-          input.scope === "guild"
-            ? { dareState: { notIn: ["draft", "deleted"] } }
-            : {
-                dareState: { not: "deleted" },
-                OR: [
-                  { challengerDiscordId: input.viewerDiscordId },
-                  { targets: { some: { discordId: input.viewerDiscordId } } },
-                  {
-                    contributions: {
-                      some: { discordId: input.viewerDiscordId },
-                    },
-                  },
-                ],
-              },
-        ],
-      },
-      include: includeVisibleDare,
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      take: VISIBLE_DARE_PAGE_SIZE,
-      ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
-    });
-    matches.push(...matchingVisibleDareItems(rows, search));
-    if (matches.length >= VISIBLE_DARE_PAGE_SIZE) {
-      return matches.slice(0, VISIBLE_DARE_PAGE_SIZE);
-    }
-    const lastRow = rows.at(-1);
-    if (lastRow === undefined || rows.length < VISIBLE_DARE_PAGE_SIZE) {
-      return matches;
-    }
-    cursorId = lastRow.id;
-  }
-  return matches;
+  const page = await listVisibleDarePageV2({ ...input, limit: 100 }, prisma);
+  return page.items;
 }
 
 export async function inspectVisibleDareV2(
@@ -316,10 +419,13 @@ export async function inspectVisibleDareV2(
   },
   prisma: ExtendedPrismaClient,
 ): Promise<DareV2Inspection | null> {
-  const row = await prisma.bucksDareV2.findFirst({
-    where: { id: input.dareId, serverId: input.serverId },
-    include: includeVisibleDare,
-  });
+  const [row, botState] = await Promise.all([
+    prisma.bucksDareV2.findFirst({
+      where: { id: input.dareId, serverId: input.serverId },
+      include: includeVisibleDare,
+    }),
+    prisma.botState.findUnique({ where: { id: 1 } }),
+  ]);
   if (row === null) return null;
   const state = BucksDareV2StateSchema.parse(row.dareState);
   if (
@@ -328,5 +434,5 @@ export async function inspectVisibleDareV2(
   ) {
     return null;
   }
-  return inspection(row);
+  return inspection(row, input.viewerDiscordId, darePollHealth(botState));
 }

@@ -1,11 +1,9 @@
 import {
   DareCompiledPlanV2Schema,
-  resolveQueueTypeFromGame,
   type DareContractV2,
   type RawMatch,
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
-import { isRemakeMatch } from "#src/betting/outcome.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import type { DareTimelineEvidenceV2 } from "#src/betting/dare-evaluator-v2.ts";
 import { dareEvaluatorImplementationV2 } from "#src/betting/dare-evaluator-registry-v2.ts";
@@ -41,6 +39,14 @@ import {
   readableDareV2Contract,
 } from "#src/betting/dare-v2-common.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
+import {
+  enqueueMaterialDareProgressNotification,
+  enqueueTerminalDareNotification,
+} from "#src/betting/dare-notification-production.ts";
+import {
+  dareV2MatchSettlementContext,
+  matchTouchesDareContractV2,
+} from "#src/betting/dare-settle-match-v2.ts";
 import {
   prisma,
   type Db,
@@ -147,6 +153,14 @@ async function resolveFinalDareV2(
       ...(value === null ? { voidReason: "missing_evidence" } : {}),
     });
   }
+  await enqueueTerminalDareNotification(tx, {
+    dareId: input.dare.id,
+    revision: input.contract.revision,
+    potTotal: input.dare.potTotal,
+    resolution,
+    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
+    now: input.now,
+  });
   return resolution;
 }
 
@@ -213,6 +227,16 @@ async function captureOneDareV2(
         now: input.now,
       })
     : "captured";
+  if (resolution === "captured") {
+    await enqueueMaterialDareProgressNotification(tx, {
+      dareId: input.dare.id,
+      contract: input.contract,
+      evidence,
+      matchId: input.matchEvidence.matchId,
+      finality,
+      now: input.now,
+    });
+  }
   return {
     contractVersion: 2,
     dareId: input.dare.id,
@@ -224,18 +248,6 @@ async function captureOneDareV2(
     finality,
     proof,
   };
-}
-
-function matchTouchesContract(
-  matchData: RawMatch,
-  contract: DareContractV2,
-): boolean {
-  const puuids = new Set(
-    matchData.info.participants.map((participant) => participant.puuid),
-  );
-  return contract.targets.some((target) =>
-    target.accounts.some((account) => puuids.has(account.puuid)),
-  );
 }
 
 async function inspectStoredContract(
@@ -271,21 +283,6 @@ async function inspectStoredContract(
   };
 }
 
-function matchSettlementContext(matchData: RawMatch) {
-  if (isRemakeMatch(matchData)) return null;
-  const queue = resolveQueueTypeFromGame(
-    matchData.info.queueId,
-    matchData.info.gameMode,
-    matchData.info.gameType,
-  );
-  if (queue === undefined) return null;
-  return {
-    queue,
-    gameStartAt: new Date(matchData.info.gameStartTimestamp),
-    gameEndAt: new Date(matchData.info.gameEndTimestamp),
-  };
-}
-
 export async function settleDaresV2ForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -295,7 +292,7 @@ export async function settleDaresV2ForMatch(
   } = {},
 ): Promise<DareV2SettlementSummary[]> {
   const now = options.now ?? new Date();
-  const context = matchSettlementContext(matchData);
+  const context = dareV2MatchSettlementContext(matchData);
   if (context === null) return [];
   const rows = await prismaClient.bucksDareV2.findMany({
     where: {
@@ -331,7 +328,7 @@ export async function settleDaresV2ForMatch(
     }
   }
   const relevant = contracts.filter(({ contract }) =>
-    matchTouchesContract(matchData, contract),
+    matchTouchesDareContractV2(matchData, contract),
   );
   if (relevant.length === 0) {
     if (inspected.firstFailure !== null) {
@@ -412,7 +409,7 @@ export async function dareV2MatchNeedsTimeline(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<boolean> {
-  const context = matchSettlementContext(matchData);
+  const context = dareV2MatchSettlementContext(matchData);
   if (context === null) return false;
   const rows = await prismaClient.bucksDareV2.findMany({
     where: {
@@ -427,7 +424,7 @@ export async function dareV2MatchNeedsTimeline(
     const contract = readableDareV2Contract(row.contractJson);
     return (
       contract !== null &&
-      matchTouchesContract(matchData, contract) &&
+      matchTouchesDareContractV2(matchData, contract) &&
       darePlanNeedsTimeline(contract.compiledPlan)
     );
   });

@@ -1,0 +1,134 @@
+import { z } from "zod";
+import { TRPCError } from "@trpc/server";
+import {
+  DiscordAccountIdSchema,
+  DiscordGuildIdSchema,
+} from "@scout-for-lol/data";
+import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
+import { deleteDareDraftV2 } from "#src/betting/dare-draft-v2.ts";
+import { listDareEvidenceV2 } from "#src/betting/dare-evidence-view-v2.ts";
+import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
+import {
+  createDareV2ConfirmationIntent,
+  DareV2IntentPayloadSchema,
+} from "#src/betting/dare-intent-v2.ts";
+import { assertBucksScope } from "#src/consumer/bucks-access.ts";
+import { prisma } from "#src/database/index.ts";
+import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
+
+const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
+const DareInput = GuildInput.extend({ dareId: z.number().int().positive() });
+const DareEvidenceInput = DareInput.extend({
+  cursor: z.string().min(1).optional(),
+  limit: z.number().int().min(1).max(25).optional(),
+});
+const DarePrepareActionInput = DareInput.extend({
+  expectedRevision: z.number().int().positive(),
+  payload: DareV2IntentPayloadSchema,
+  idempotencyKey: z.uuid(),
+});
+const DareConfirmActionInput = GuildInput.extend({ intentId: z.uuid() });
+const DareDeleteDraftInput = DareInput.extend({
+  expectedRevision: z.number().int().positive(),
+});
+
+export const bucksDareActionProcedures = {
+  dareEvidence: webProcedure
+    .input(DareEvidenceInput)
+    .query(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const page = await listDareEvidenceV2(
+        {
+          dareId: input.dareId,
+          serverId: input.guildId,
+          viewerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+          ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
+          ...(input.limit === undefined ? {} : { limit: input.limit }),
+        },
+        prisma,
+      );
+      if (page === null) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Dare not found." });
+      }
+      return page;
+    }),
+
+  darePrepareAction: webMutationProcedure
+    .input(DarePrepareActionInput)
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const outcome = await createDareV2ConfirmationIntent({
+        dareId: input.dareId,
+        serverId: input.guildId,
+        actorDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+        expectedRevision: input.expectedRevision,
+        payload: input.payload,
+        idempotencyKey: input.idempotencyKey,
+      });
+      if (outcome.kind !== "intent_created") return outcome;
+      const dare = await prisma.bucksDareV2.findUniqueOrThrow({
+        where: { id: input.dareId },
+        select: {
+          openingStake: true,
+          potTotal: true,
+          targets: { orderBy: { id: "asc" }, select: { alias: true } },
+        },
+      });
+      const amount =
+        input.payload.action === "contribute"
+          ? `${input.payload.amount.toString()} BB to a ${dare.potTotal.toString()} BB pot`
+          : input.payload.action === "fund"
+            ? `${dare.openingStake.toString()} BB`
+            : null;
+      return {
+        ...outcome,
+        confirmation: {
+          action: input.payload.action,
+          amount,
+          targets: dare.targets.map((target) => target.alias),
+          irreversible: ["fund", "accept", "contribute"].includes(
+            input.payload.action,
+          ),
+        },
+      };
+    }),
+
+  dareConfirmAction: webMutationProcedure
+    .input(DareConfirmActionInput)
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
+        where: { id: input.intentId },
+        select: { dareId: true },
+      });
+      const outcome = await consumeDareV2ConfirmationIntent({
+        intentId: input.intentId,
+        serverId: input.guildId,
+        actorDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+      });
+      const failed = [
+        "not_found",
+        "forbidden",
+        "intent_expired",
+        "feature_disabled",
+        "insufficient",
+      ].includes(outcome.kind);
+      const callout =
+        intent === null || failed
+          ? null
+          : await tryEnsureDareV2Callout(intent.dareId);
+      return { ...outcome, callout };
+    }),
+
+  dareDeleteDraft: webMutationProcedure
+    .input(DareDeleteDraftInput)
+    .mutation(async ({ ctx, input }) => {
+      await assertBucksScope(ctx.user, input.guildId);
+      return await deleteDareDraftV2({
+        dareId: input.dareId,
+        serverId: input.guildId,
+        challengerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
+        expectedRevision: input.expectedRevision,
+      });
+    }),
+};

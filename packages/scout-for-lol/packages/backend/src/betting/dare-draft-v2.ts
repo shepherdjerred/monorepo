@@ -175,6 +175,7 @@ export function prepareDareDraftV2(
     revision: BUCKS_INT32_MAX,
     plainLanguage,
     evidenceCount: BUCKS_INT32_MAX,
+    progressSummary: "Waiting for more eligible match evidence.",
     state: "pending_accept",
     targets: targets.map((target) => ({
       alias: target.alias,

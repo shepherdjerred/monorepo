@@ -15,6 +15,11 @@ import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { deliverPendingDareNotifications } from "#src/betting/dare-notification-delivery.ts";
+import {
+  markPostMatchPollCompleted,
+  markPostMatchPollFailed,
+} from "#src/league/tasks/recovery/app-state.ts";
 
 const logger = createLogger("tasks-postmatch");
 
@@ -119,6 +124,12 @@ export async function runPostMatchMaintenance(options?: {
         }
       },
     },
+    {
+      name: "dare notification delivery",
+      run: async () => {
+        await deliverPendingDareNotifications();
+      },
+    },
   ];
   if (!bettingHardDisabled) {
     steps.push(
@@ -155,7 +166,17 @@ export async function runPostMatchMaintenance(options?: {
   }
   // Isolated per step, then re-thrown: a persistently failing recovery path
   // cannot starve the remaining clocks while money stays escrowed.
-  await runMaintenanceSteps("post-match maintenance", steps);
+  try {
+    await runMaintenanceSteps("post-match maintenance", steps);
+    await markPostMatchPollCompleted({
+      completedAt: new Date(),
+      evidenceComplete: settleDareV2Deadlines,
+      evidenceWatermark: options?.dareEvidenceWatermark,
+    });
+  } catch (error) {
+    await markPostMatchPollFailed(error, new Date());
+    throw error;
+  }
   return { dareSummaries };
 }
 
