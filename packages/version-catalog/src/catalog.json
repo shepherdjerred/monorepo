@@ -650,7 +650,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13758@sha256:be25d11ac10b412b0b1875114d03af91b82073d995e6a277d3b2a2e3467324cd",
+      "value": "2.0.0-13769@sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04",
       "notes": [
         "not managed by renovate — beta updated by version-commit-back",
         "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
@@ -714,7 +714,8 @@
         "database contract: postgresql sha256:63092770261ffe4f834692eceb512e726c0b1ca248dae29d2b0ba54de598f837",
         "database contract: postgresql sha256:9e08c1b66540ce369b68e5076e16110e0aac2a4eeecadf75201348a21304db2b",
         "database contract: postgresql sha256:864a6082cd5619abbe7b306bde184a8a28caca1ed4b6d9187eeed72fcd9c6b13",
-        "database contract: postgresql sha256:be25d11ac10b412b0b1875114d03af91b82073d995e6a277d3b2a2e3467324cd"
+        "database contract: postgresql sha256:be25d11ac10b412b0b1875114d03af91b82073d995e6a277d3b2a2e3467324cd",
+        "database contract: postgresql sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04"
       ]
     },
     {
@@ -1459,7 +1460,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13744@sha256:d480cb6c85d7abf97b38ad72dbe3b312718740ea8435dba9b60217dec3895c0b",
+      "value": "2.0.0-13769@sha256:3e3d71a7bdd8cb04b9ad919ddab59240b9d62852be9c5be5c8710f5d7e512de3",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
