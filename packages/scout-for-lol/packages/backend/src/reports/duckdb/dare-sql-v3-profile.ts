@@ -69,6 +69,19 @@ function orderedColumns(node: Record<string, JsonValue>): Set<string> {
   return names;
 }
 
+function containsTargetRelation(value: JsonValue): boolean {
+  if (Array.isArray(value)) {
+    return value.some((child) => containsTargetRelation(child));
+  }
+  const object = objectValue(value);
+  if (object === null) return false;
+  if (stringValue(object["type"]) === "BASE_TABLE") {
+    const table = stringValue(object["table_name"]);
+    if (table !== null && /^T[1-5]$/u.test(table)) return true;
+  }
+  return Object.values(object).some((child) => containsTargetRelation(child));
+}
+
 export function appendDareSqlV3DeterminismIssues(
   value: JsonValue,
   issues: string[],
@@ -112,6 +125,11 @@ function appendSelectDeterminismIssues(
   if (!columns.has("game_end_at") || !columns.has("match_id")) {
     issues.push(
       "Every Dare SQL LIMIT must be ordered by game_end_at and match_id.",
+    );
+  }
+  if (containsTargetRelation(object) && !columns.has("puuid")) {
+    issues.push(
+      "Every Dare SQL LIMIT over a target relation must include puuid as a tie-breaker.",
     );
   }
 }
