@@ -751,7 +751,6 @@ button.scout-control > span:first-child {
   justify-content: space-between;
   gap: 1rem;
 }
-.scout-navbar__inner > a,
 .scout-app-header__brand {
   display: inline-flex;
   align-items: center;
@@ -1038,7 +1037,7 @@ button.scout-control > span:first-child {
   outline-offset: -1px;
 }
 
-.scout-segmented button:hover {
+.scout-segmented button:hover:not([aria-pressed="true"]) {
   color: var(--scout-color-text);
 }
 
