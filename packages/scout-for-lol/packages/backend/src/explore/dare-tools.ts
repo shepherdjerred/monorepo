@@ -386,7 +386,19 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     revise: (raw: unknown) =>
       input.track("revise_dare_draft", async () => {
         const parsed = ReviseDareToolInputSchema.parse(raw);
-        const resolved = await definition(parsed);
+        const resolved = await definition({
+          originalText: parsed.originalText,
+          targetKeys: parsed.targetKeys,
+          ...(parsed.plan === undefined ? {} : { plan: parsed.plan }),
+          ...(parsed.queryText === undefined
+            ? {}
+            : { queryText: parsed.queryText }),
+          ...(parsed.plainLanguage === undefined
+            ? {}
+            : { plainLanguage: parsed.plainLanguage }),
+          deadlineSpec: parsed.deadlineSpec,
+          openingStake: parsed.openingStake,
+        });
         if (resolved.version === 3) {
           const revised = await reviseDareDraftV3({
             dareId: parsed.dareId,
