@@ -79,6 +79,9 @@ export function appendDareSqlV3DeterminismIssues(
   }
   const object = objectValue(value);
   if (object === null) return;
+  if (object["sample"] !== null && object["sample"] !== undefined) {
+    issues.push("Dare SQL sampling is not deterministic and is not supported.");
+  }
   if (stringValue(object["type"]) === "SELECT_NODE") {
     appendSelectDeterminismIssues(object, issues);
   }

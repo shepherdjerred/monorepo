@@ -232,8 +232,16 @@ export function rootHasMultipleRows(
     /\b(?:AVG|BOOL_AND|BOOL_OR|COUNT(?:_STAR)?|MAX|MIN|SUM)\s*\(/iu.test(
       parts.expression,
     );
+  const hasScalarSubquery = /\(\s*SELECT\b/iu.test(parts.expression);
+  const hasWrappedOr =
+    hasScalarSubquery &&
+    /\bOR\b/iu.test(parts.expression) &&
+    immutableAst !== undefined &&
+    !rootExpressionIsOr(immutableAst);
   if (hasFrom && !hasAggregate) return true;
-  if (hasFrom && /\(\s*SELECT\b/iu.test(parts.expression)) return true;
+  if (hasFrom && hasScalarSubquery) return true;
+  if (hasWrappedOr) return true;
+  if (hasFrom && /\bOVER\b/iu.test(parts.expression)) return true;
   if (immutableAst !== undefined && targetKeys.length > 0) {
     const statement = relationalScoutQlStatementFromImmutableAst(immutableAst);
     if (containsUnsafeScalarSubquery(statement, targetKeys)) return true;
