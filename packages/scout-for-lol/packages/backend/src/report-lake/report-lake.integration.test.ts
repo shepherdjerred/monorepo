@@ -110,6 +110,15 @@ const ManifestSchema = z.object({
   skippedPrematches: z.number(),
 });
 
+async function expectCurrentSchemaFingerprint(lakeDir: string): Promise<void> {
+  const buildDir = await readCurrentBuildDir(lakeDir);
+  if (buildDir === undefined) throw new Error("no build dir");
+  const manifest = ManifestFingerprintSchema.parse(
+    await Bun.file(path.join(buildDir, "manifest.json")).json(),
+  );
+  expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+}
+
 async function loadMatchFixture(): Promise<RawMatch> {
   const fixtureUrl = new URL(
     "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
@@ -592,14 +601,7 @@ describe("compactor idempotency and schema transitions", () => {
     const lakeDir = await makeLakeDir();
     try {
       await runReportLakeRebuild({ prisma, lakeDir });
-      const buildDir = await readCurrentBuildDir(lakeDir);
-      if (buildDir === undefined) {
-        throw new Error("no build dir");
-      }
-      const manifest = ManifestFingerprintSchema.parse(
-        await Bun.file(path.join(buildDir, "manifest.json")).json(),
-      );
-      expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+      await expectCurrentSchemaFingerprint(lakeDir);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }
@@ -623,14 +625,7 @@ describe("compactor idempotency and schema transitions", () => {
 
       // And the rebuilt build is recorded at the current schema, so the next
       // fold proceeds normally rather than rebuilding forever.
-      const buildDir = await readCurrentBuildDir(lakeDir);
-      if (buildDir === undefined) {
-        throw new Error("no build dir");
-      }
-      const manifest = ManifestFingerprintSchema.parse(
-        await Bun.file(path.join(buildDir, "manifest.json")).json(),
-      );
-      expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+      await expectCurrentSchemaFingerprint(lakeDir);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }
