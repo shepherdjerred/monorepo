@@ -205,6 +205,15 @@ multiple workspaces at once. Rebuilds read raw match JSON from the BETA S3
 bucket and write the lake, so compaction is an explicit operator action rather
 than part of ordinary UI development.
 
+### Explore in local development
+
+Explore (`/app/explore`) runs conversational ScoutQL analysis across the lake:
+- Coordinate via local Temporal (`dev:web` registers search attributes `Environment`,
+  `Domain`, `Trigger`, `ReleaseCommit` via `temporal server start-dev`).
+- Requires `DEV_USER_GUILDS` and `EXPLORE_GUILD_ALLOWLIST` (derived automatically
+  by `dev:web` from `SCOUT_DEV_CONSUMER_GUILD_ID`).
+- Sign in via `http://localhost:5180/api/dev/login?returnTo=/app/explore`.
+
 ## Snapshot BETA state safely
 
 BETA application state is the `scout` database in the `scout-beta-postgresql`

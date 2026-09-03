@@ -346,6 +346,25 @@ denies everyone.
 - The gate conditions are unit-tested in `src/lib/discord-rest.test.ts`,
   including each refusal — an accept-only test would not catch the fail-open.
 
+#### Running Explore in local development
+
+Explore requires three coordinated systems locally:
+
+1. **Temporal dev server with search attributes**: Temporal coordinates durable
+   turn execution (`scoutInteractiveRunWorkflow` on task queue
+   `scout-dev-interactive`). Starts attach `Environment`, `Domain`, `Trigger`,
+   and `ReleaseCommit` search attributes, which `scripts/dev-web-temporal.ts`
+   registers automatically via `--search-attribute KEY=Keyword` flags on
+   `temporal server start-dev`.
+2. **Report lake compatibility**: Queries compile to DuckDB SQL over Parquet
+   lake files in `REPORT_LAKE_DIR` (`~/.local/share/scout-for-lol/dev-seed/report-lake`).
+   Parquet builds must match current `MATCH_LAKE_COLUMNS` and carry a valid
+   `schemaFingerprint` in `manifest.json`.
+3. **Model execution & auth**: OpenRouter credentials (`OPENROUTER_API_KEY`)
+   power query formulation and synthesis. Sign in via
+   `http://localhost:5180/api/dev/login?returnTo=/app/explore` to inherit
+   `DEV_USER_GUILDS` and `EXPLORE_GUILD_ALLOWLIST`.
+
 This does not, by itself, reproduce every possible backend-driven state —
 see the `screenshot` skill's Limitations section (no network-response
 mocking in v1).
