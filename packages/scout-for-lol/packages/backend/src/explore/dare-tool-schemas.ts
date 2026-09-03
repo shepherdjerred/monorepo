@@ -16,7 +16,7 @@ export const DareToolResultSchema = z.strictObject({
 });
 export type DareToolResult = z.infer<typeof DareToolResultSchema>;
 
-export const DareDefinitionToolInputSchema = z.strictObject({
+export const DareDefinitionV2ToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
   targetKeys: z
     .array(z.string().regex(/^T\d{1,2}$/))
@@ -27,6 +27,23 @@ export const DareDefinitionToolInputSchema = z.strictObject({
   openingStake: BucksStakeSchema,
 });
 
+export const DareDefinitionV3ToolInputSchema = z.strictObject({
+  originalText: z.string().min(1).max(4000),
+  targetKeys: z
+    .array(z.string().regex(/^T[1-5]$/))
+    .min(1)
+    .max(DARE_V2_MAX_TARGETS),
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
+  plainLanguage: z.string().min(1).max(4000),
+  deadlineSpec: DareDeadlineSpecV2Schema,
+  openingStake: BucksStakeSchema,
+});
+
+export const DareDefinitionToolInputSchema = z.union([
+  DareDefinitionV3ToolInputSchema,
+  DareDefinitionV2ToolInputSchema,
+]);
+
 export const DareScoutQlToolInputSchema = z.strictObject({
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   targetKeys: z
@@ -35,19 +52,29 @@ export const DareScoutQlToolInputSchema = z.strictObject({
     .max(DARE_V2_MAX_TARGETS),
 });
 
-export const ReviseDareToolInputSchema = DareDefinitionToolInputSchema.extend({
+const RevisionFields = {
   dareId: z.number().int().positive(),
   expectedRevision: z.number().int().positive(),
-});
+};
 
-export const DarePreviewToolInputSchema = DareDefinitionToolInputSchema.extend({
+export const ReviseDareToolInputSchema = z.union([
+  DareDefinitionV3ToolInputSchema.extend(RevisionFields),
+  DareDefinitionV2ToolInputSchema.extend(RevisionFields),
+]);
+
+const PreviewFields = {
   historyDays: z
     .number()
     .int()
     .min(1)
     .max(DARE_V2_MAX_HORIZON_DAYS)
     .default(30),
-});
+};
+
+export const DarePreviewToolInputSchema = z.union([
+  DareDefinitionV3ToolInputSchema.extend(PreviewFields),
+  DareDefinitionV2ToolInputSchema.extend(PreviewFields),
+]);
 
 export const DareListToolInputSchema = z.strictObject({
   scope: z.enum(["mine", "guild"]),

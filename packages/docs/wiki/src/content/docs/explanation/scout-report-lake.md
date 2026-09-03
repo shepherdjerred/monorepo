@@ -1,6 +1,6 @@
 ---
 title: Scout's report lake
-description: Why Scout keeps raw match JSON in S3 as the record and treats its DuckDB Parquet lake as a disposable cache it can rebuild every night.
+description: Why Scout keeps raw match JSON in S3 as the record, treats its DuckDB Parquet lake as disposable, and runs bounded Dare SQL over normalized relations.
 sidebar:
   order: 5
 ---
@@ -53,9 +53,9 @@ Raw match, timeline, prematch, and leaderboard JSON lands in S3
 That store is append-only and authoritative.
 
 The lake is a directory on the pod's own volume: Hive-partitioned Parquet
-(`month=YYYY-MM/`) for matches, prematch, accounts, competition rank history,
-timeline events, timeline event participants, timeline participant frames, and
-timeline coverage — laid out per
+(`month=YYYY-MM/`) for match participants, match teams, team bans, prematch,
+accounts, competition rank history, timeline events, timeline event
+participants, timeline participant frames, and timeline coverage — laid out per
 [paths.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/paths.ts).
 It is derived data. Losing the volume costs one nightly rebuild, not any
 history.
@@ -135,6 +135,35 @@ produces every lake row, and the Zod schemas plus DuckDB column types in
 [schema.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/schema.ts)
 are imported by both the writer and the reader. The two sides cannot drift,
 and DuckDB never infers types from a sparse first line.
+
+## Match relations and the Dare boundary
+
+The match payload becomes several relations rather than one target-player row.
+`match_participants` contains all ten participants. `matches` projects the
+match-level columns once per match. `match_teams` contains one row for each team,
+including its win state, objective counts, and first-objective flags, while
+`match_team_bans` contains one row per normalized ban. That shape makes a
+team-relative statistic ordinary SQL: a target row joins its team row on
+`match_id` and `team_id`, and an opponent comparison joins the other team.
+
+Version-three Bryan Bucks Dares expose those relations, the four timeline
+relations, and `T1` through `T5`. Each target relation is an ordinary filtered
+view of `match_participants`, bound to the contract's frozen Riot accounts and
+tracking dates. The canonical SQL is the contract; generated prose only explains
+it. Both historical preview and live settlement deserialize the same immutable
+AST, verify its hash, and execute it over the same bounded catalog. The profile
+permits one deterministic read-only `SELECT` with standard joins, CTEs,
+aggregates, arithmetic, `CASE`, and Boolean expressions. It rejects mutation,
+external table functions, wall-clock values, recursion, unbound targets,
+nondeterministic limits, and timeline reads without a coverage relation.
+
+Timeline absence and a complete timeline with no matching events are distinct.
+Likewise, a zero denominator stays `NULL` through `NULLIF`; it is never silently
+turned into zero or false. Evidence retains game-set results and numeric
+projections, target dependencies, coverage, ordered source match IDs, and the
+contract hash. Only a structurally proven monotone count can settle before the
+deadline or game cap. Existing funded Dare contract versions remain on their
+original evaluators rather than being migrated to the new SQL meaning.
 
 ## Two compaction tiers, one publish protocol
 

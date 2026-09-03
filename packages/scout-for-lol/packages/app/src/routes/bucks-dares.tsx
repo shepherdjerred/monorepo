@@ -407,6 +407,9 @@ export function DareDetail(props: {
       <p className="whitespace-pre-wrap text-sm">{props.dare.plainLanguage}</p>
       <DareProgressPanel progress={props.dare.progress} />
       <DareProcessingHealthPanel health={props.dare.processingHealth} />
+      <p className="text-xs text-scout-subtle">
+        Original wording: {props.dare.originalText}
+      </p>
       <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <Fact label="Revision" value={revision.toString()} />
         <Fact
@@ -432,7 +435,17 @@ export function DareDetail(props: {
         )}
       </dl>
       <section className="space-y-2">
-        <h2 className="text-sm font-medium">ScoutQL</h2>
+        <h2 className="text-sm font-medium">
+          {props.dare.compilerVersion === "dare-scoutql-3"
+            ? "Binding SQL contract"
+            : "ScoutQL"}
+        </h2>
+        {props.dare.compilerVersion === "dare-scoutql-3" && (
+          <p className="text-xs text-scout-subtle">
+            This canonical SQL is authoritative; the readable summary is
+            explanatory.
+          </p>
+        )}
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
         {props.dare.scoutQlPlanHash !== null && (
           <p className="font-mono text-xs text-scout-subtle">

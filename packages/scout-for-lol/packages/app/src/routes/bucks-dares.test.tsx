@@ -185,4 +185,55 @@ describe("DareDetail", () => {
     expect(html).toContain("eligibleGames");
     expect(html).not.toContain("Revise in Explore");
   });
+
+  test("identifies canonical standard SQL as the binding v3 contract", () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter>
+        <DareDetail
+          guildId="100000000000000061"
+          dare={{
+            id: 43,
+            state: "active",
+            originConversationId: "conversation-43",
+            currentRevision: 1,
+            fundedRevision: 1,
+            plainLanguage: "Virmel reaches at least 70% kill participation.",
+            canonicalScoutQl:
+              "SELECT COUNT(*) FILTER (WHERE matched) >= 1 AS achieved FROM games",
+            semanticProofPlan: "The canonical SQL is binding.",
+            compilerVersion: "dare-scoutql-3",
+            evaluatorVersion: "dare-evaluator-3",
+            scoutQlPlanHash: "b".repeat(64),
+            originalText: "Virmel gets 70% KP in one game",
+            deadlineSpec: { kind: "relative", days: 7 },
+            targetAliases: ["Virmel"],
+            openingStake: 20,
+            potTotal: 40,
+            evidenceGames: 1,
+            acceptDeadline: null,
+            deadlineAt: "2026-09-08T00:00:00.000Z",
+            finalValue: null,
+            proof: null,
+            voidReason: null,
+            progress,
+            viewerRoles: ["target"],
+            availableActions: [],
+            requiresViewerAction: false,
+            processingHealth: {
+              status: "healthy",
+              pollStartedAt: "2026-09-01T00:00:00.000Z",
+              pollCompletedAt: "2026-09-01T00:00:30.000Z",
+              evidenceWatermarkAt: "2026-09-01T00:00:00.000Z",
+              lastSuccessfulProcessingAt: "2026-09-01T00:00:30.000Z",
+              failureReason: null,
+              incompleteReasons: [],
+            },
+          }}
+        />
+      </MemoryRouter>,
+    );
+    expect(html).toContain("Original wording: Virmel gets 70% KP in one game");
+    expect(html).toContain("Binding SQL contract");
+    expect(html).toContain("canonical SQL is authoritative");
+  });
 });
