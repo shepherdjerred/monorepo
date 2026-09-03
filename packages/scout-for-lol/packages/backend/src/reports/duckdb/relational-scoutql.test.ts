@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { validateRelationalScoutQl } from "#src/reports/duckdb/relational-scoutql.ts";
+import {
+  validateDareSqlV3,
+  validateRelationalScoutQl,
+} from "#src/reports/duckdb/relational-scoutql.ts";
 
 const TARGETS = ["virmel"];
 
@@ -121,6 +124,20 @@ describe("relational ScoutQL compiler", () => {
     if (result.kind !== "invalid") return;
     expect(result.issues).toContain(
       "A Dare contract query must return exactly one achieved column.",
+    );
+  });
+
+  test("rejects target relations hidden in unreachable CTEs", async () => {
+    const result = await validateDareSqlV3({
+      queryText:
+        "WITH unused AS (SELECT * FROM T2) SELECT COUNT(*) > 0 AS achieved FROM T1",
+      allowedTargetKeys: ["T1", "T2"],
+    });
+
+    expect(result.kind).toBe("invalid");
+    if (result.kind !== "invalid") return;
+    expect(result.issues).toContain(
+      "Dare SQL target relations must be reachable from the root query.",
     );
   });
 

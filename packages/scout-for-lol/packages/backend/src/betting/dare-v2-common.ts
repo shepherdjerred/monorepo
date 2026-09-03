@@ -60,18 +60,12 @@ export async function dareSqlV3FundingEnabled(
 export async function relationalDareActionEnabled(
   serverId: DiscordGuildId,
   compilerVersion: string,
-  initialFunding: boolean,
   dependencies: DareV2Dependencies,
 ): Promise<boolean> {
   if (compilerVersion !== "dare-sql-3") {
     return await dareV2FundingEnabled(serverId, dependencies);
   }
-  if (initialFunding) {
-    return await dareSqlV3FundingEnabled(serverId, dependencies);
-  }
-  return await dependencies.isPolicyEnabled("betting_enabled", {
-    server: serverId,
-  });
+  return await dareSqlV3FundingEnabled(serverId, dependencies);
 }
 
 export async function dareV2FundingEnabled(

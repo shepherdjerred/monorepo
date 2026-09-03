@@ -21,6 +21,7 @@ export type DareSqlV3ExecutionSummary = {
 type CompileDareSqlV3 = (input: {
   queryText: string;
   targetKeys: readonly string[];
+  validateTargetCteReachability?: boolean | undefined;
 }) => Promise<DareSqlV3Compilation>;
 
 type ExecuteDareSqlV3 = (input: {
@@ -232,6 +233,7 @@ export function rootHasMultipleRows(
       parts.expression,
     );
   if (hasFrom && !hasAggregate) return true;
+  if (hasFrom && /\(\s*SELECT\b/iu.test(parts.expression)) return true;
   if (immutableAst !== undefined && targetKeys.length > 0) {
     const statement = relationalScoutQlStatementFromImmutableAst(immutableAst);
     if (containsUnsafeScalarSubquery(statement, targetKeys)) return true;
@@ -383,6 +385,7 @@ async function evaluateOrBranch(options: {
       branchTargetKeys.length > 0
         ? branchTargetKeys
         : input.targets.map((target) => target.key),
+    validateTargetCteReachability: false,
   });
   const evidence = await input.execute({
     compilation,

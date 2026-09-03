@@ -116,7 +116,6 @@ export async function createDareV2ConfirmationIntent(
     !(await relationalDareActionEnabled(
       input.serverId,
       revision.compilerVersion,
-      payload.action === "fund",
       dependencies,
     ))
   ) {

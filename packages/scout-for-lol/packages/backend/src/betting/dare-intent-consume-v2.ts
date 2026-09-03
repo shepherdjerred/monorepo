@@ -242,7 +242,6 @@ export async function consumeDareV2ConfirmationIntent(
     !(await relationalDareActionEnabled(
       input.serverId,
       revision.compilerVersion,
-      payload.action === "fund",
       dependencies,
     ))
   ) {

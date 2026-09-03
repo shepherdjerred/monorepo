@@ -27,6 +27,7 @@ import {
   appendTimelineCoverageIssues,
   appendWallClockIssues,
 } from "#src/reports/duckdb/relational-scoutql-target-policy.ts";
+import { appendUnreachableTargetCteIssues } from "#src/reports/duckdb/relational-scoutql-cte-policy.ts";
 
 const RELATIONAL_SCOUTQL_SOURCES = new Set([
   "match_participants",
@@ -380,6 +381,7 @@ async function validateRelationalScoutQlWithLimits(
   input: {
     queryText: string;
     allowedTargetKeys: readonly string[];
+    validateTargetCteReachability?: boolean | undefined;
   },
   limits: RelationalScoutQlComplexityLimits,
   profile: "relational-v2" | "dare-sql-v3" = "relational-v2",
@@ -420,6 +422,16 @@ async function validateRelationalScoutQlWithLimits(
     limits,
     profile,
   );
+  if (
+    profile === "dare-sql-v3" &&
+    input.validateTargetCteReachability !== false
+  ) {
+    appendUnreachableTargetCteIssues(
+      statement,
+      new Set(input.allowedTargetKeys),
+      analysis.issues,
+    );
+  }
   if (analysis.issues.length > 0) {
     return { kind: "invalid", issues: analysis.issues };
   }
@@ -467,6 +479,7 @@ export async function validateCanonicalDareScoutQl(input: {
 export async function validateDareSqlV3(input: {
   queryText: string;
   allowedTargetKeys: readonly string[];
+  validateTargetCteReachability?: boolean | undefined;
 }): Promise<RelationalScoutQlValidation> {
   return await validateRelationalScoutQlWithLimits(
     input,

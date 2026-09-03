@@ -183,6 +183,7 @@ async function validateGameSetTypes(
 export async function compileDareSqlV3(input: {
   queryText: string;
   targetKeys: readonly string[];
+  validateTargetCteReachability?: boolean | undefined;
 }): Promise<DareSqlV3Compilation> {
   const invalidKey = input.targetKeys.find((key) => !TARGET_KEY.test(key));
   if (invalidKey !== undefined) {
@@ -191,6 +192,7 @@ export async function compileDareSqlV3(input: {
   const validated = await validateDareSqlV3({
     queryText: input.queryText,
     allowedTargetKeys: input.targetKeys,
+    validateTargetCteReachability: input.validateTargetCteReachability,
   });
   if (validated.kind === "invalid") {
     throw new Error(validated.issues.join(" "));
