@@ -18,6 +18,7 @@ export type DareFinalityV2 = {
     | "game_cap"
     | "game_sets_full"
     | "reversible"
+    | "evidence_watermark"
     | "contract_error";
 };
 

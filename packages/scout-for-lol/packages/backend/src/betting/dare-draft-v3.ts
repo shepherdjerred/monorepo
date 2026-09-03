@@ -7,6 +7,8 @@ import {
   DareTargetBindingV2Schema,
   type DareDeadlineSpecV2,
   type DareSqlV3Compilation,
+  type DareSqlV3Competition,
+  type DareActivationV3,
   type DareSqlV3Evidence,
   type DareTargetBindingV2,
   type DiscordAccountId,
@@ -33,6 +35,8 @@ export type DareDraftV3Definition = {
   deadlineSpec: DareDeadlineSpecV2;
   openingStake: number;
   historyDays?: number | undefined;
+  competition?: DareSqlV3Competition | undefined;
+  activation?: DareActivationV3 | undefined;
 };
 
 export type PreparedDareDraftV3 = {
@@ -123,6 +127,8 @@ export async function prepareDareDraftV3(
     compilation = await compileDareSqlV3({
       queryText: definition.queryText,
       targetKeys: targets.map((target) => target.key),
+      competition: definition.competition,
+      activation: definition.activation,
     });
   } catch (error) {
     return {

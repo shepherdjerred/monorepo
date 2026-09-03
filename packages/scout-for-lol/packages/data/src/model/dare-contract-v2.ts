@@ -22,11 +22,16 @@ export const DARE_V2_MAX_EXPRESSION_DEPTH = 12;
 export const DARE_V2_MAX_QUERY_LENGTH = 16_000;
 export const DARE_V2_MAX_ELIGIBLE_GAMES = 100;
 export const DARE_V2_MAX_HORIZON_DAYS = 90;
-export const OPEN_BUCKS_DARE_V2_STATES = ["pending_accept", "active"] as const;
+export const OPEN_BUCKS_DARE_V2_STATES = [
+  "pending_accept",
+  "activating",
+  "active",
+] as const;
 
 export const BucksDareV2StateSchema = z.enum([
   "draft",
   "pending_accept",
+  "activating",
   "active",
   "achieved",
   "unachieved",

@@ -35,7 +35,11 @@ async function loadMatchFixture(): Promise<RawMatch> {
     import.meta.url,
   );
   const json: unknown = await Bun.file(fixtureUrl).json();
-  return RawMatchSchema.parse(json);
+  const match = RawMatchSchema.parse(json);
+  return RawMatchSchema.parse({
+    ...match,
+    info: { ...match.info, queueId: 420, gameMode: "CLASSIC" },
+  });
 }
 
 function targetForMatch(match: RawMatch): DareTargetBindingV2 {
@@ -85,6 +89,8 @@ describe("Dare SQL v3", () => {
 
       expect(evidence).toEqual({
         achieved: true,
+        rank: null,
+        improvement: null,
         results: [
           {
             gameSet: "games",
@@ -103,6 +109,8 @@ describe("Dare SQL v3", () => {
         coverage: "not_required",
         sourceMatchIds: [match.metadata.matchId],
         queryHash: compilation.queryHash,
+        timelineEvents: [],
+        race: null,
       });
       await expect(executeDareSqlV3(execution)).resolves.toEqual(evidence);
       await expect(

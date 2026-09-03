@@ -5,10 +5,12 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
   type LeaguePuuid,
+  type Player,
   type PlayerConfigEntry,
   type RawMatch,
   type RawTimeline,
 } from "@scout-for-lol/data";
+import type { PostmatchRankChanges } from "#src/betting/dare-rank-capture-v3.ts";
 import { uniqueBy } from "remeda";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { getChannelsSubscribedToPlayers } from "#src/database/index.ts";
@@ -31,6 +33,8 @@ export async function deliverPostmatchReport(input: {
   matchData: RawMatch;
   trackedPlayers: PlayerConfigEntry[];
   prefetchedTimeline?: RawTimeline | null;
+  prefetchedPlayers?: Player[] | undefined;
+  prefetchedRankChanges?: PostmatchRankChanges | undefined;
 }): Promise<Map<DiscordChannelId, string>> {
   const matchId = MatchIdSchema.parse(input.matchData.metadata.matchId);
   const playersInMatch = input.trackedPlayers.filter((player) =>
@@ -76,6 +80,12 @@ export async function deliverPostmatchReport(input: {
       ...(input.prefetchedTimeline === undefined
         ? {}
         : { prefetchedTimeline: input.prefetchedTimeline }),
+      ...(input.prefetchedPlayers === undefined
+        ? {}
+        : { prefetchedPlayers: input.prefetchedPlayers }),
+      ...(input.prefetchedRankChanges === undefined
+        ? {}
+        : { prefetchedRankChanges: input.prefetchedRankChanges }),
     },
   );
   if (!message) {

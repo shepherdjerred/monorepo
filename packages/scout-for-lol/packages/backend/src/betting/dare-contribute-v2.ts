@@ -31,6 +31,7 @@ export async function contributeToDareV2InTransaction(
       fundedRevision: input.revision,
       OR: [
         { dareState: "pending_accept" },
+        { dareState: "activating" },
         { dareState: "active", deadlineAt: { gt: input.now } },
       ],
       potTotal: { lte: BUCKS_INT32_MAX - input.amount },

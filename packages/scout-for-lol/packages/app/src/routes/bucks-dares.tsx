@@ -13,9 +13,15 @@ import { BucksDareActions } from "#src/components/bucks-dare-actions.tsx";
 import { FilterSelect } from "#src/components/filter-select.tsx";
 import {
   DareEvidencePanel,
+  DareActivationHealthPanel,
   DareProcessingHealthPanel,
   DareProgressPanel,
 } from "#src/components/bucks-dare-progress.tsx";
+import {
+  DareFact as Fact,
+  DareStatePill as StatePill,
+  isNonterminalDareState,
+} from "#src/components/bucks-dare-display.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -81,6 +87,7 @@ function DareListPage(props: { guildId: string; guildName: string }) {
     | "all"
     | "draft"
     | "pending_accept"
+    | "activating"
     | "active"
     | "achieved"
     | "unachieved"
@@ -169,6 +176,7 @@ function DareListPage(props: { guildId: string; guildName: string }) {
             "all",
             "draft",
             "pending_accept",
+            "activating",
             "active",
             "achieved",
             "unachieved",
@@ -373,6 +381,15 @@ export function DareDetail(props: {
     availableActions: string[];
     requiresViewerAction: boolean;
     processingHealth: DarePollHealth;
+    activationHealth: {
+      status: "pending" | "retrying" | "complete";
+      requestedAt: string;
+      attemptCount: number;
+      lastAttemptAt: string | null;
+      nextAttemptAt: string;
+      errorCode: string | null;
+      completedAt: string | null;
+    } | null;
   };
 }) {
   const revision = props.dare.fundedRevision ?? props.dare.currentRevision;
@@ -406,6 +423,7 @@ export function DareDetail(props: {
       )}
       <p className="whitespace-pre-wrap text-sm">{props.dare.plainLanguage}</p>
       <DareProgressPanel progress={props.dare.progress} />
+      <DareActivationHealthPanel health={props.dare.activationHealth} />
       <DareProcessingHealthPanel health={props.dare.processingHealth} />
       <p className="text-xs text-scout-subtle">
         Original wording: {props.dare.originalText}
@@ -473,26 +491,5 @@ export function DareDetail(props: {
         </p>
       )}
     </div>
-  );
-}
-
-function isNonterminalDareState(state: string): boolean {
-  return state === "draft" || state === "pending_accept" || state === "active";
-}
-
-function Fact(props: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-scout-subtle">{props.label}</dt>
-      <dd>{props.value}</dd>
-    </div>
-  );
-}
-
-function StatePill(props: { state: string }) {
-  return (
-    <span className="rounded-full border border-scout-border px-2 py-0.5 text-xs capitalize">
-      {props.state.replaceAll("_", " ")}
-    </span>
   );
 }

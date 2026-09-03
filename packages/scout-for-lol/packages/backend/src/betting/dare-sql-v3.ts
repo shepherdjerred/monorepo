@@ -4,42 +4,27 @@ import {
   DARE_V2_MAX_ELIGIBLE_GAMES,
   DareSqlV3CompilationSchema,
   DareSqlV3EvidenceSchema,
-  MATCH_LAKE_COLUMNS,
-  MATCH_TEAM_BAN_LAKE_COLUMNS,
-  MATCH_TEAM_LAKE_COLUMNS,
-  TIMELINE_COVERAGE_LAKE_COLUMNS,
-  TIMELINE_EVENT_LAKE_COLUMNS,
-  TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
-  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
   type DareSqlV3Compilation,
+  type DareSqlV3Competition,
+  type DareActivationV3,
   type DareSqlV3Evidence,
   type DareTargetBindingV2,
-  type DuckDbColumnType,
 } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { duckDbEmptySelect } from "#src/report-lake/schema.ts";
 import {
   withDuckDBConnection,
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
-import {
-  buildMatchesSource,
-  buildMatchTeamBansSource,
-  buildMatchTeamsSource,
-  buildTimelineCoverageSource,
-  buildTimelineEventParticipantsSource,
-  buildTimelineEventsSource,
-  buildTimelineParticipantFramesSource,
-  resolveLakeFiles,
-  scalarParam,
-  type BoundParam,
-  type SqlFragment,
-} from "#src/reports/duckdb/lake.ts";
 import { validateDareSqlV3 } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
   dareSqlV3FinalityFromAst,
   dareSqlV3ResultStructureFromAst,
 } from "#src/betting/dare-sql-v3-finality.ts";
+import {
+  createDareSqlV3LakeRelations,
+  dareSqlV3ComparesOpponentTeams,
+} from "#src/betting/dare-sql-v3-lake.ts";
+import { relevantDareTimelineEvents } from "#src/betting/dare-sql-v3-evidence.ts";
 
 const RootRowSchema = z.strictObject({ achieved: z.boolean().nullable() });
 const MatchIdRowSchema = z.strictObject({ match_id: z.string() });
@@ -56,12 +41,6 @@ const GameSetRowSchema = z
   })
   .loose();
 const TARGET_KEY = /^T[1-5]$/u;
-
-function bindParams(session: DuckDBSession, params: BoundParam[]) {
-  return params.map((param) =>
-    param.kind === "list" ? session.list(param.values) : param.value,
-  );
-}
 
 async function verifiedCanonicalSql(
   session: DuckDBSession,
@@ -94,6 +73,8 @@ async function verifiedCanonicalSql(
 export async function compileDareSqlV3(input: {
   queryText: string;
   targetKeys: readonly string[];
+  competition?: DareSqlV3Competition | undefined;
+  activation?: DareActivationV3 | undefined;
 }): Promise<DareSqlV3Compilation> {
   const invalidKey = input.targetKeys.find((key) => !TARGET_KEY.test(key));
   if (invalidKey !== undefined) {
@@ -106,6 +87,19 @@ export async function compileDareSqlV3(input: {
   if (validated.kind === "invalid") {
     throw new Error(validated.issues.join(" "));
   }
+  const resultStructure = dareSqlV3ResultStructureFromAst(
+    validated.compilation.immutableAst,
+    input.targetKeys,
+  );
+  validateCompetition(input.competition ?? { kind: "standard" }, {
+    targetKeys: input.targetKeys,
+    gameSets: resultStructure.gameSets,
+  });
+  validateActivation(input.activation ?? { kind: "immediate" }, {
+    targetKeys: input.targetKeys,
+    gameSets: resultStructure.gameSets,
+    competition: input.competition ?? { kind: "standard" },
+  });
   return DareSqlV3CompilationSchema.parse({
     compilerVersion: DARE_SQL_V3_COMPILER_VERSION,
     canonicalSql: validated.compilation.canonicalScoutQl,
@@ -113,147 +107,121 @@ export async function compileDareSqlV3(input: {
     queryHash: validated.compilation.planHash,
     maxEligibleGames: DARE_V2_MAX_ELIGIBLE_GAMES,
     facts: validated.compilation.facts,
-    resultStructure: dareSqlV3ResultStructureFromAst(
-      validated.compilation.immutableAst,
-      input.targetKeys,
-    ),
+    resultStructure,
     finality: dareSqlV3FinalityFromAst(validated.compilation.immutableAst),
+    competition: input.competition ?? { kind: "standard" },
+    activation: input.activation ?? { kind: "immediate" },
   });
 }
 
-async function materialize(
-  session: DuckDBSession,
-  table: string,
-  source: SqlFragment | undefined,
-  columns: Record<string, DuckDbColumnType>,
-): Promise<void> {
-  const body = source?.sql ?? duckDbEmptySelect(columns);
-  await session.run(
-    `CREATE TEMP TABLE ${table} AS ${body}`,
-    source === undefined ? [] : bindParams(session, source.params),
-  );
-}
-
-function targetPredicate(target: DareTargetBindingV2): SqlFragment {
-  const clauses: string[] = [];
-  const params: BoundParam[] = [];
-  for (const account of target.accounts) {
-    clauses.push("(puuid = ? AND epoch_ms(game_end_at) >= ?)");
-    params.push(
-      scalarParam(account.puuid),
-      scalarParam(new Date(account.trackingStartedAt).getTime()),
+function validateActivation(
+  activation: DareActivationV3,
+  input: {
+    targetKeys: readonly string[];
+    gameSets: DareSqlV3Compilation["resultStructure"]["gameSets"];
+    competition: DareSqlV3Competition;
+  },
+): void {
+  if (activation.kind === "immediate") return;
+  if (input.competition.kind !== "standard") {
+    throw new Error(
+      "Race contracts cannot also use rank or improvement activation.",
     );
   }
-  return { sql: clauses.join(" OR "), params };
+  if (activation.kind === "rank") return;
+  if (
+    input.targetKeys.length !== 1 ||
+    input.targetKeys[0] !== activation.targetKey
+  ) {
+    throw new Error(
+      "An improvement contract must bind exactly its one target.",
+    );
+  }
+  const gameSet = input.gameSets.find(
+    (candidate) => candidate.name === activation.gameSet,
+  );
+  if (gameSet === undefined) {
+    throw new Error(
+      `Improvement baseline ${activation.gameSet} is not a game-set CTE.`,
+    );
+  }
+  if (!gameSet.projectionColumns.includes(activation.projection)) {
+    throw new Error(
+      `Improvement baseline projection ${activation.projection} is not emitted by ${activation.gameSet}.`,
+    );
+  }
 }
 
-async function createTargetRelations(
-  session: DuckDBSession,
-  targets: readonly DareTargetBindingV2[],
-): Promise<void> {
-  for (const target of targets) {
-    if (!TARGET_KEY.test(target.key)) {
+function validateCompetition(
+  competition: DareSqlV3Competition,
+  input: {
+    targetKeys: readonly string[];
+    gameSets: DareSqlV3Compilation["resultStructure"]["gameSets"];
+  },
+): void {
+  if (competition.kind === "standard") return;
+  const laneTargets = competition.lanes.map((lane) => lane.targetKey);
+  const laneSets = competition.lanes.map((lane) => lane.gameSet);
+  if (
+    new Set(laneTargets).size !== laneTargets.length ||
+    new Set(laneSets).size !== laneSets.length
+  ) {
+    throw new Error("Each race target and game set must appear exactly once.");
+  }
+  if (
+    laneTargets.toSorted().join("|") !== input.targetKeys.toSorted().join("|")
+  ) {
+    throw new Error("A race must define exactly one lane for every target.");
+  }
+  for (const lane of competition.lanes) {
+    const gameSet = input.gameSets.find(
+      (candidate) => candidate.name === lane.gameSet,
+    );
+    if (gameSet === undefined) {
+      throw new Error(`Race lane ${lane.gameSet} is not a game-set CTE.`);
+    }
+    if (
+      gameSet.targetDependencies.length !== 1 ||
+      gameSet.targetDependencies[0] !== lane.targetKey
+    ) {
       throw new Error(
-        `Dare SQL target key ${target.key} must be T1 through T5.`,
+        `Race lane ${lane.gameSet} must depend only on ${lane.targetKey}.`,
       );
     }
-    const predicate = targetPredicate(target);
-    await session.run(
-      `CREATE TEMP TABLE ${target.key} AS SELECT * FROM match_participants WHERE ${predicate.sql}`,
-      bindParams(session, predicate.params),
-    );
   }
 }
 
-async function createLakeRelations(
-  session: DuckDBSession,
-  input: {
-    targets: readonly DareTargetBindingV2[];
-    start: Date;
-    end: Date;
-    lakeDir: string;
-    maxEligibleGames: number;
-  },
-): Promise<void> {
-  const files = await resolveLakeFiles(input.lakeDir);
-  const windowPredicate = {
-    sql: "epoch_ms(game_end_at) BETWEEN ? AND ?",
-    params: [
-      scalarParam(input.start.getTime()),
-      scalarParam(input.end.getTime()),
-    ],
+export function dareSqlV3RaceEvidence(
+  competition: DareSqlV3Competition,
+  results: DareSqlV3Evidence["results"],
+): DareSqlV3Evidence["race"] {
+  if (competition.kind === "standard") return null;
+  const finishes = competition.lanes.flatMap((lane) => {
+    const first = results
+      .filter(
+        (result) => result.gameSet === lane.gameSet && result.matched === true,
+      )
+      .toSorted((left, right) => {
+        const time = left.gameEndAt.localeCompare(right.gameEndAt);
+        return time === 0 ? left.matchId.localeCompare(right.matchId) : time;
+      })[0];
+    return first === undefined
+      ? []
+      : [{ targetKey: lane.targetKey, gameEndAt: first.gameEndAt }];
+  });
+  const qualifyingGameEndAt = finishes
+    .map((finish) => finish.gameEndAt)
+    .toSorted()[0];
+  return {
+    leaders:
+      qualifyingGameEndAt === undefined
+        ? []
+        : finishes
+            .filter((finish) => finish.gameEndAt === qualifyingGameEndAt)
+            .map((finish) => finish.targetKey)
+            .toSorted(),
+    qualifyingGameEndAt: qualifyingGameEndAt ?? null,
   };
-  await materialize(
-    session,
-    "_dare_match_window",
-    buildMatchesSource(files, windowPredicate),
-    MATCH_LAKE_COLUMNS,
-  );
-  const allTargetAccounts = input.targets.flatMap((target) => target.accounts);
-  const targetMembership = allTargetAccounts.map(
-    () => "(puuid = ? AND epoch_ms(game_end_at) >= ?)",
-  );
-  const targetParams = allTargetAccounts.flatMap((account) => [
-    scalarParam(account.puuid),
-    scalarParam(new Date(account.trackingStartedAt).getTime()),
-  ]);
-  await session.run(
-    `CREATE TEMP TABLE _dare_match_ids AS
-     SELECT match_id
-     FROM _dare_match_window
-     WHERE ${targetMembership.join(" OR ")}
-     GROUP BY match_id
-     ORDER BY MIN(game_end_at), match_id
-     LIMIT ?`,
-    bindParams(session, [...targetParams, scalarParam(input.maxEligibleGames)]),
-  );
-  await session.run(
-    "CREATE TEMP TABLE match_participants AS SELECT * FROM _dare_match_window WHERE match_id IN (SELECT match_id FROM _dare_match_ids)",
-  );
-  await session.run(
-    "CREATE TEMP VIEW matches AS SELECT DISTINCT match_id, game_id, platform_id, month, game_creation_at, game_start_at, game_end_at, game_duration_seconds, queue_id, queue, game_mode, game_type, game_version, end_of_game_result, map_id FROM match_participants",
-  );
-  const matchFilter = {
-    sql: "match_id IN (SELECT match_id FROM _dare_match_ids)",
-    params: [],
-  };
-  await materialize(
-    session,
-    "match_teams",
-    buildMatchTeamsSource(files, matchFilter),
-    MATCH_TEAM_LAKE_COLUMNS,
-  );
-  await materialize(
-    session,
-    "match_team_bans",
-    buildMatchTeamBansSource(files, matchFilter),
-    MATCH_TEAM_BAN_LAKE_COLUMNS,
-  );
-  await materialize(
-    session,
-    "timeline_events",
-    buildTimelineEventsSource(files, matchFilter),
-    TIMELINE_EVENT_LAKE_COLUMNS,
-  );
-  await materialize(
-    session,
-    "timeline_event_participants",
-    buildTimelineEventParticipantsSource(files, matchFilter),
-    TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
-  );
-  await materialize(
-    session,
-    "timeline_participant_frames",
-    buildTimelineParticipantFramesSource(files, matchFilter),
-    TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
-  );
-  await materialize(
-    session,
-    "timeline_coverage",
-    buildTimelineCoverageSource(files, matchFilter),
-    TIMELINE_COVERAGE_LAKE_COLUMNS,
-  );
-  await createTargetRelations(session, input.targets);
 }
 
 function numericProjection(value: unknown, column: string): number | null {
@@ -312,12 +280,13 @@ export async function executeDareSqlV3(input: {
   const compilation = DareSqlV3CompilationSchema.parse(input.compilation);
   return await withDuckDBConnection(async (session) => {
     const canonicalSql = await verifiedCanonicalSql(session, compilation);
-    await createLakeRelations(session, {
+    await createDareSqlV3LakeRelations(session, {
       targets: input.targets,
       start: input.start,
       end: input.end,
       lakeDir: input.lakeDir ?? resolveLakeDir(),
       maxEligibleGames: compilation.maxEligibleGames,
+      excludeMultiTeamGames: dareSqlV3ComparesOpponentTeams(canonicalSql),
     });
     const resultRows = await session.run(canonicalSql);
     if (resultRows.length !== 1) {
@@ -325,6 +294,7 @@ export async function executeDareSqlV3(input: {
     }
     const result = RootRowSchema.parse(resultRows[0]);
     const results = await executeGameSetRows(session, compilation);
+    const race = dareSqlV3RaceEvidence(compilation.competition, results);
     const matchRows = await session.run(
       "SELECT i.match_id FROM _dare_match_ids AS i JOIN matches AS m USING (match_id) ORDER BY m.game_end_at, i.match_id",
     );
@@ -345,13 +315,31 @@ export async function executeDareSqlV3(input: {
           ? "complete"
           : "missing_timeline";
     }
+    const timelineEvents = needsTimeline
+      ? await relevantDareTimelineEvents(session, compilation)
+      : [];
+    const evaluatedAchievement =
+      race === null ? result.achieved : race.leaders.length > 0;
+    if (
+      coverage !== "missing_timeline" &&
+      result.achieved !== evaluatedAchievement
+    ) {
+      throw new Error(
+        "Dare SQL race root must be true exactly when at least one lane qualifies.",
+      );
+    }
     return DareSqlV3EvidenceSchema.parse({
-      achieved: coverage === "missing_timeline" ? null : result.achieved,
+      achieved: coverage === "missing_timeline" ? null : evaluatedAchievement,
       results,
-      targetDependencies: compilation.facts.targetKeys,
+      targetDependencies:
+        race === null || race.leaders.length === 0
+          ? compilation.facts.targetKeys
+          : race.leaders,
       coverage,
       sourceMatchIds,
       queryHash: compilation.queryHash,
+      timelineEvents,
+      race,
     });
   });
 }

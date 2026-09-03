@@ -21,6 +21,8 @@ export async function saveMatchRankHistory(params: {
   rankAfter: Rank | undefined;
   matchGameCreationTimestamp: number | undefined;
   matchGameEndTimestamp: number | undefined;
+  prismaClient?: ExtendedPrismaClient | undefined;
+  capturedAt?: Date | undefined;
 }): Promise<void> {
   const {
     matchId,
@@ -30,6 +32,8 @@ export async function saveMatchRankHistory(params: {
     rankAfter,
     matchGameCreationTimestamp,
     matchGameEndTimestamp,
+    prismaClient = prisma,
+    capturedAt = new Date(),
   } = params;
   const matchGameCreationAt =
     matchGameCreationTimestamp === undefined
@@ -40,7 +44,7 @@ export async function saveMatchRankHistory(params: {
       ? null
       : new Date(matchGameEndTimestamp);
 
-  await prisma.matchRankHistory.upsert({
+  await prismaClient.matchRankHistory.upsert({
     where: {
       matchId_puuid_queueType: { matchId, puuid, queueType },
     },
@@ -52,14 +56,14 @@ export async function saveMatchRankHistory(params: {
       rankAfter: rankAfter ? JSON.stringify(rankAfter) : null,
       matchGameCreationAt,
       matchGameEndAt,
-      capturedAt: new Date(),
+      capturedAt,
     },
     update: {
       rankBefore: rankBefore ? JSON.stringify(rankBefore) : null,
       rankAfter: rankAfter ? JSON.stringify(rankAfter) : null,
       matchGameCreationAt,
       matchGameEndAt,
-      capturedAt: new Date(),
+      capturedAt,
     },
   });
 
@@ -75,9 +79,10 @@ export async function getLatestRankBefore(
   puuid: LeaguePuuid,
   queueType: RankedQueueType,
   beforeTimestamp: number,
+  prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Rank | undefined> {
   const before = new Date(beforeTimestamp);
-  const records = await prisma.matchRankHistory.findMany({
+  const records = await prismaClient.matchRankHistory.findMany({
     where: {
       puuid,
       queueType,

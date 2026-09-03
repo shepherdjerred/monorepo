@@ -4,6 +4,7 @@ import {
   BucksDareV2StateSchema,
   BucksMessageRefSchema,
   DareCompiledPlanV2Schema,
+  DareSqlV3CompilationSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type BucksDareV2State,
@@ -13,6 +14,7 @@ import {
 import { dareV2CalloutComponents } from "#src/betting/dare-components-v2.ts";
 import { renderDareV2Callout } from "#src/betting/dare-callout-content-v2.ts";
 import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
 import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
@@ -116,13 +118,30 @@ export async function loadDareV2CalloutState(
     );
   }
   const state = BucksDareV2StateSchema.parse(dare.dareState);
-  const progress = deriveDareProgressV2({
-    plan: DareCompiledPlanV2Schema.parse(JSON.parse(revision.compiledPlan)),
-    evidence: dare.evidence.map((row) => storedDareV2Evidence(row)),
-    targetKeys: dare.targets.map((target) => target.targetKey),
-    final: !["draft", "pending_accept", "active"].includes(state),
-    finalityReason: state,
-  });
+  const targetKeys = dare.targets.map((target) => target.targetKey);
+  const final = !["draft", "pending_accept", "activating", "active"].includes(
+    state,
+  );
+  const progress =
+    revision.compilerVersion === "dare-scoutql-3"
+      ? deriveDareProgressV3({
+          compilation: DareSqlV3CompilationSchema.parse(
+            JSON.parse(revision.compiledPlan),
+          ),
+          evidence: dare.evidence,
+          targetKeys,
+          final,
+          finalityReason: state,
+        })
+      : deriveDareProgressV2({
+          plan: DareCompiledPlanV2Schema.parse(
+            JSON.parse(revision.compiledPlan),
+          ),
+          evidence: dare.evidence.map((row) => storedDareV2Evidence(row)),
+          targetKeys,
+          final,
+          finalityReason: state,
+        });
   const rendered = renderDareV2Callout({
     id: dare.id,
     challengerDiscordId: dare.challengerDiscordId,

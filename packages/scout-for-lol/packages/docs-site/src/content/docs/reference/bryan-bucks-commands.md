@@ -92,6 +92,22 @@ and NOT expressions, count matching games, aggregate projected values, bind a
 queue, select the first N games, and require targets to play in the same match,
 on the same team, or against one another.
 
+Extended contracts can also express races between two to five targets, eligible-
+game streaks, distinct champions or other projected values, and ordered item or
+Q/W/E/R skill sequences. Item and skill order can be an ordered subsequence or
+exact within its event family; Scout asks for clarification when wording such as
+"X then Y" does not identify which meaning is intended. Team conditions can use
+the target's team or the opponent team and expose wins, objective counts, and
+first-objective flags. Opponent conditions exclude Arena and any other match
+without exactly two teams.
+
+Rank and improvement contracts enter **Activating** after every target accepts.
+Scout first freezes the selected solo/flex rank or the explicit last-N-games or
+last-N-days baseline. Eligibility and the deadline begin only after that
+snapshot succeeds. Every target must be ranked in the selected rank queue;
+personal-best ties do not qualify. Activation source errors retry visibly, and
+a snapshot that cannot complete in 24 hours voids with a full refund.
+
 If Scout cannot represent the request without guessing—most importantly an
 absolute deadline without an IANA timezone—the draft stays private so it can be
 clarified in Explore. Nothing is debited until a ten-minute confirmation intent

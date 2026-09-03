@@ -7,6 +7,7 @@ import {
   DareList,
   parseBucksDareId,
 } from "#src/routes/bucks-dares.tsx";
+import { formatDareEvidenceJson } from "#src/components/bucks-dare-progress.tsx";
 
 const noAction = vi.fn();
 const progress = DareProgressSchema.parse({
@@ -61,6 +62,15 @@ describe("parseBucksDareId", () => {
     (value) => {
       expect(parseBucksDareId(value)).toEqual({ kind: "invalid" });
     },
+  );
+});
+
+test("renders skill sequence slots as Q W E R", () => {
+  expect(
+    formatDareEvidenceJson({ steps: [{ skill_slot: 1 }, { skill_slot: 4 }] }),
+  ).toContain('"skill_slot": "Q"');
+  expect(formatDareEvidenceJson({ skillSlot: 3 })).toContain(
+    '"skillSlot": "E"',
   );
 });
 
@@ -173,6 +183,7 @@ describe("DareDetail", () => {
               failureReason: null,
               incompleteReasons: [],
             },
+            activationHealth: null,
           }}
         />
       </MemoryRouter>,
@@ -228,6 +239,7 @@ describe("DareDetail", () => {
               failureReason: null,
               incompleteReasons: [],
             },
+            activationHealth: null,
           }}
         />
       </MemoryRouter>,

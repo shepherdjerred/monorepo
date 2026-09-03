@@ -84,5 +84,16 @@ export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   proof: z.json().nullable(),
   voidReason: z.string().nullable(),
   processingHealth: DarePollHealthSchema,
+  activationHealth: z
+    .strictObject({
+      status: z.enum(["pending", "retrying", "complete"]),
+      requestedAt: z.iso.datetime(),
+      attemptCount: z.number().int().nonnegative(),
+      lastAttemptAt: z.iso.datetime().nullable(),
+      nextAttemptAt: z.iso.datetime(),
+      errorCode: z.string().nullable(),
+      completedAt: z.iso.datetime().nullable(),
+    })
+    .nullable(),
 });
 export type DareV2Inspection = z.infer<typeof DareV2InspectionSchema>;

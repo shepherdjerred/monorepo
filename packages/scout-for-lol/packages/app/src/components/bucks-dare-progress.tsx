@@ -78,6 +78,38 @@ export function DareProcessingHealthPanel(props: { health: DarePollHealth }) {
   );
 }
 
+export function DareActivationHealthPanel(props: {
+  health: {
+    status: "pending" | "retrying" | "complete";
+    requestedAt: string;
+    attemptCount: number;
+    lastAttemptAt: string | null;
+    nextAttemptAt: string;
+    errorCode: string | null;
+    completedAt: string | null;
+  } | null;
+}) {
+  if (props.health === null) return null;
+  const detail =
+    props.health.status === "complete"
+      ? `Snapshot frozen ${new Date(props.health.completedAt ?? props.health.requestedAt).toLocaleString()}`
+      : props.health.errorCode === null
+        ? "Waiting for source coverage and a valid snapshot."
+        : `${props.health.errorCode.replaceAll("_", " ")}; retrying ${new Date(props.health.nextAttemptAt).toLocaleString()}.`;
+  return (
+    <section className="rounded-md border border-scout-border bg-scout-surface p-3 text-sm">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-medium">Activation snapshot</h2>
+        <span className="capitalize">{props.health.status}</span>
+      </div>
+      <p className="mt-1 text-xs text-scout-subtle">{detail}</p>
+      <p className="mt-1 text-xs text-scout-subtle">
+        {props.health.attemptCount.toString()} attempt(s)
+      </p>
+    </section>
+  );
+}
+
 export function DareEvidencePanel(props: {
   guildId: string;
   dareId: number;
@@ -186,8 +218,25 @@ function EvidenceJson(props: { label: string; value: unknown }) {
     <div className="min-w-0">
       <h3 className="text-xs font-medium">{props.label}</h3>
       <pre className="mt-1 max-h-64 overflow-auto rounded-md bg-scout-surface p-2 text-xs whitespace-pre-wrap">
-        {JSON.stringify(props.value, null, 2)}
+        {formatDareEvidenceJson(props.value)}
       </pre>
     </div>
   );
+}
+
+export function formatDareEvidenceJson(value: unknown): string {
+  const serialized = JSON.stringify(
+    value,
+    (key, current: unknown) => {
+      if (
+        typeof current === "number" &&
+        (key === "skill_slot" || key === "skillSlot")
+      ) {
+        return ["Q", "W", "E", "R"][current - 1] ?? current;
+      }
+      return current;
+    },
+    2,
+  );
+  return serialized;
 }

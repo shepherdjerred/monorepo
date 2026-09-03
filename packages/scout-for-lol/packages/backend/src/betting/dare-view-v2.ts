@@ -86,6 +86,14 @@ type VisibleDareRow = {
     evaluationTrace: string;
   }[];
   contributions: { discordId: string }[];
+  activation: {
+    requestedAt: Date;
+    nextAttemptAt: Date;
+    attemptCount: number;
+    lastAttemptAt: Date | null;
+    errorCode: string | null;
+    completedAt: Date | null;
+  } | null;
 };
 
 function iso(value: Date | null): string | null {
@@ -106,7 +114,7 @@ function activeRevision(row: VisibleDareRow) {
 }
 
 function terminalState(state: BucksDareV2State): boolean {
-  return !["draft", "pending_accept", "active"].includes(state);
+  return !["draft", "pending_accept", "activating", "active"].includes(state);
 }
 
 function parsedRevisionPlan(revision: VisibleDareRow["revisions"][number]) {
@@ -243,6 +251,23 @@ function inspection(
     proof: row.proofJson === null ? null : JSON.parse(row.proofJson),
     voidReason: row.voidReason,
     processingHealth,
+    activationHealth:
+      row.activation === null
+        ? null
+        : {
+            status:
+              row.activation.completedAt === null
+                ? row.activation.errorCode === null
+                  ? "pending"
+                  : "retrying"
+                : "complete",
+            requestedAt: row.activation.requestedAt.toISOString(),
+            attemptCount: row.activation.attemptCount,
+            lastAttemptAt: iso(row.activation.lastAttemptAt),
+            nextAttemptAt: row.activation.nextAttemptAt.toISOString(),
+            errorCode: row.activation.errorCode,
+            completedAt: iso(row.activation.completedAt),
+          },
   });
 }
 
@@ -264,6 +289,7 @@ const includeVisibleDare = {
     orderBy: [{ gameEndAt: "asc" as const }, { matchId: "asc" as const }],
   },
   _count: { select: { evidence: true } },
+  activation: true,
 };
 
 const VISIBLE_DARE_PAGE_SIZE = 25;

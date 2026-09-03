@@ -47,5 +47,7 @@ export function definitionV3FromTool(
     targets: resolveTargets(input.targetKeys, targets),
     deadlineSpec: input.deadlineSpec,
     openingStake: input.openingStake,
+    competition: input.competition,
+    activation: input.activation,
   };
 }

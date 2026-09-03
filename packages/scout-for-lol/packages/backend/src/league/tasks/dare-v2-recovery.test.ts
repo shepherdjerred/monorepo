@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   abandonExpiredDareProposals: vi.fn(async () => []),
+  activatePendingDaresV3: vi.fn(() => Promise.resolve()),
   activatePendingParlayMarkets: vi.fn(() => Promise.resolve()),
   announceSettlements: vi.fn(() => Promise.resolve()),
   checkActiveGames: vi.fn(() => Promise.resolve()),
@@ -23,6 +24,7 @@ const mocks = vi.hoisted(() => ({
   retryPendingBucksEarnings: vi.fn(() => Promise.resolve()),
   settleEndedDareV2Windows: vi.fn(async () => []),
   settleEndedDareWindows: vi.fn(async () => []),
+  settleMatureDareSqlV3Races: vi.fn(() => Promise.resolve()),
   voidStaleBettingPools: vi.fn(async () => ({
     closures: [],
     settlements: [],
@@ -44,12 +46,14 @@ vi.mock("#src/betting/dare-sweep.ts", () => ({
 vi.mock("#src/betting/dare-delivery.ts", () => ({
   deliverDareSummaries: mocks.deliverDareSummaries,
 }));
+vi.mock("#src/betting/dare-activation-v3.ts", () => ({
+  activatePendingDaresV3: mocks.activatePendingDaresV3,
+}));
+vi.mock("#src/betting/dare-settle-v3.ts", () => ({
+  settleMatureDareSqlV3Races: mocks.settleMatureDareSqlV3Races,
+}));
 vi.mock("#src/betting/dare-notification-delivery.ts", () => ({
   deliverPendingDareNotifications: mocks.deliverPendingDareNotifications,
-}));
-vi.mock("#src/league/tasks/recovery/app-state.ts", () => ({
-  markPostMatchPollCompleted: mocks.markPostMatchPollCompleted,
-  markPostMatchPollFailed: mocks.markPostMatchPollFailed,
 }));
 vi.mock("#src/betting/dare-sweep-v2.ts", () => ({
   expireDareV2AcceptWindows: mocks.expireDareV2AcceptWindows,
@@ -85,6 +89,10 @@ vi.mock("#src/betting/void-stale.ts", () => ({
 }));
 vi.mock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
   getPostmatchMessageIdsForMatchIdOrEmpty: mocks.getPostmatchMessageIds,
+}));
+vi.mock("#src/league/tasks/recovery/app-state.ts", () => ({
+  markPostMatchPollCompleted: mocks.markPostMatchPollCompleted,
+  markPostMatchPollFailed: mocks.markPostMatchPollFailed,
 }));
 vi.mock("#src/configuration/flags.ts", () => ({
   isFeatureHardDisabled: () => true,

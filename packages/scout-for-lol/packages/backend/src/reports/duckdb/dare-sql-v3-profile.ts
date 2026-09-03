@@ -42,6 +42,7 @@ export const DARE_SQL_V3_FUNCTIONS = new Set([
   "min",
   "nullif",
   "round",
+  "row_number",
   "sum",
   "upper",
 ]);

@@ -60,7 +60,7 @@ const MatchInput = GuildInput.extend({
 const DareListInput = GuildInput.extend({
   scope: z.enum(["mine", "guild", "needs_action"]),
   search: z.string().min(1).max(100).optional(),
-  states: z.array(BucksDareV2StateSchema).max(9).optional(),
+  states: z.array(BucksDareV2StateSchema).max(10).optional(),
   role: z.enum(["challenger", "target", "contributor", "involved"]).optional(),
   sort: z.enum(["needs_action", "deadline", "updated"]).optional(),
   cursor: z.string().min(1).optional(),

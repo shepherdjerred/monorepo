@@ -17,13 +17,15 @@ export async function voidDareV2WithFullRefund(
     | "invalid_contract"
     | "unknown_evaluator"
     | "storage_overflow"
-    | "target_unavailable",
+    | "target_unavailable"
+    | "activation_timeout"
+    | "insufficient_baseline",
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<boolean> {
   return await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksDareV2.updateMany({
-      where: { id: dare.id, dareState: "active" },
+      where: { id: dare.id, dareState: { in: ["active", "activating"] } },
       data: {
         dareState: "voided",
         settledAt: now,

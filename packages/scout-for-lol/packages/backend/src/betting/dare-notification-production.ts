@@ -7,6 +7,14 @@ import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
 import type { Db } from "#src/database/index.ts";
 
 type TerminalResolution = "achieved" | "unachieved" | "voided";
+type ProgressNotificationKind =
+  | "advanced"
+  | "new_best"
+  | "race_leader_changed"
+  | "rank_changed"
+  | "regressed"
+  | "sequence_changed"
+  | "streak_changed";
 
 function terminalKind(resolution: TerminalResolution) {
   if (resolution === "achieved") return "achieved" as const;
@@ -90,6 +98,25 @@ export async function enqueueMaterialDareProgressNotification(
   });
 }
 
+function specializedProgressKind(
+  contract: DareContractV3,
+): ProgressNotificationKind | null {
+  if (contract.activation.kind === "rank") return "rank_changed";
+  if (
+    contract.activation.kind === "improvement" &&
+    contract.activation.goal.kind === "personal_best"
+  ) {
+    return "new_best";
+  }
+  if (contract.competition.kind === "race") return "race_leader_changed";
+  const names = contract.resultStructure.gameSets
+    .map((gameSet) => gameSet.name)
+    .join(" ");
+  if (names.includes("streak")) return "streak_changed";
+  if (names.includes("sequence")) return "sequence_changed";
+  return null;
+}
+
 export async function enqueueMaterialDareProgressNotificationV3(
   tx: Db,
   input: {
@@ -117,6 +144,8 @@ export async function enqueueMaterialDareProgressNotificationV3(
       facts: input.contract.facts,
       resultStructure: input.contract.resultStructure,
       finality: input.contract.finality,
+      competition: input.contract.competition,
+      activation: input.contract.activation,
     },
     evidence: input.evidence,
     targetKeys: input.contract.targets.map((target) => target.key),
@@ -129,11 +158,16 @@ export async function enqueueMaterialDareProgressNotificationV3(
   ) {
     return;
   }
+  const kind =
+    specializedProgressKind(input.contract) ??
+    (progress.latestMaterialChange.kind === "regression"
+      ? "regressed"
+      : "advanced");
   await enqueueDareNotificationInTransaction(tx, {
     dareId: input.dareId,
     revision: input.contract.revision,
     category: "progress",
-    kind: "advanced",
+    kind,
     matchId: input.matchId,
     summary: progress.summary,
     deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.contract.revision.toString()}:progress:${input.matchId}`,

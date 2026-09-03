@@ -6,6 +6,8 @@ import {
   DARE_V2_MAX_TARGETS,
   DareCompiledPlanV2Schema,
   DareDeadlineSpecV2Schema,
+  DareSqlV3CompetitionSchema,
+  DareActivationV3Schema,
 } from "@scout-for-lol/data";
 import { DareV2IntentPayloadSchema } from "#src/betting/dare-intent-v2.ts";
 
@@ -37,6 +39,8 @@ export const DareDefinitionV3ToolInputSchema = z.strictObject({
   plainLanguage: z.string().min(1).max(4000),
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
+  competition: DareSqlV3CompetitionSchema.default({ kind: "standard" }),
+  activation: DareActivationV3Schema.default({ kind: "immediate" }),
 });
 
 export const DareDefinitionToolInputSchema = z.union([
