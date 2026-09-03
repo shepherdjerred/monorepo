@@ -293,23 +293,41 @@ describe("flatten", () => {
 
   test("flattens normalized teams and bans for ordinary SQL joins", async () => {
     const match = await loadMatchFixture();
-    const teams = flattenMatchTeams(match);
-    const bans = flattenMatchTeamBans(match);
+    const ordinaryMatch = RawMatchSchema.parse({
+      ...match,
+      info: { ...match.info, queueId: 420, gameMode: "CLASSIC", mapId: 11 },
+    });
+    const teams = flattenMatchTeams(ordinaryMatch);
+    const bans = flattenMatchTeamBans(ordinaryMatch);
 
-    expect(teams).toHaveLength(match.info.teams.length);
+    expect(teams).toHaveLength(ordinaryMatch.info.teams.length);
     expect(teams.map((team) => team.team_id)).toEqual(
-      match.info.teams.map((team) => team.teamId),
+      ordinaryMatch.info.teams.map((team) => team.teamId),
     );
     expect(teams[0]?.champion_kills).toBe(
-      match.info.teams[0]?.objectives.champion.kills,
+      ordinaryMatch.info.teams[0]?.objectives.champion.kills,
     );
     expect(bans).toHaveLength(
-      match.info.teams.reduce((total, team) => total + team.bans.length, 0),
+      ordinaryMatch.info.teams.reduce(
+        (total, team) => total + team.bans.length,
+        0,
+      ),
     );
     expect(bans[0]).toMatchObject({
-      match_id: match.metadata.matchId,
-      team_id: match.info.teams[0]?.teamId,
+      match_id: ordinaryMatch.metadata.matchId,
+      team_id: ordinaryMatch.info.teams[0]?.teamId,
     });
+  });
+
+  test("omits Arena team aggregates that cannot join player subteams", async () => {
+    const match = await loadMatchFixture();
+    const arenaMatch = RawMatchSchema.parse({
+      ...match,
+      info: { ...match.info, queueId: 1700 },
+    });
+
+    expect(flattenMatchTeams(arenaMatch)).toEqual([]);
+    expect(flattenMatchTeamBans(arenaMatch)).toEqual([]);
   });
 
   test("flattenPrematch skips privacy-scrubbed (null puuid) participants", () => {
@@ -497,7 +515,7 @@ describe("compactor", () => {
       const fold = await runReportLakeFold({ prisma, lakeDir });
       expect(fold?.tier).toBe("fold");
       expect(fold?.matchRows).toBe(match.info.participants.length);
-      expect(fold?.matchTeamRows).toBe(match.info.teams.length);
+      expect(fold?.matchTeamRows).toBe(0);
 
       const buildDir = await readCurrentBuildDir(lakeDir);
       if (buildDir === undefined) {
@@ -513,17 +531,16 @@ describe("compactor", () => {
         sql: "",
         params: [],
       });
-      if (teamSource === undefined || banSource === undefined) {
-        throw new Error("missing normalized team lake sources");
-      }
       const [teamRows, banRows] = await Promise.all([
-        countSourceRows(teamSource),
-        countSourceRows(banSource),
+        teamSource === undefined
+          ? Promise.resolve(0)
+          : countSourceRows(teamSource),
+        banSource === undefined
+          ? Promise.resolve(0)
+          : countSourceRows(banSource),
       ]);
-      expect(teamRows).toBe(match.info.teams.length);
-      expect(banRows).toBe(
-        match.info.teams.reduce((total, team) => total + team.bans.length, 0),
-      );
+      expect(teamRows).toBe(0);
+      expect(banRows).toBe(0);
       // Folded staging file was deleted.
       const remainingFiles = await listStagingFiles(lakeDir, "matches");
       expect(remainingFiles.length).toBe(0);
