@@ -73,9 +73,14 @@
       "buildNumber": 13412
     },
     "shepherdjerred/temporal-worker": {
-      "version": "2.0.0-13769",
-      "digest": "sha256:3e3d71a7bdd8cb04b9ad919ddab59240b9d62852be9c5be5c8710f5d7e512de3",
-      "buildNumber": 13769
+      "buildNumber": 13792,
+      "version": "2.0.0-13792",
+      "digest": "sha256:9d65ed0bb72513ac998aa82f0e32cda50f9ca9553cb7ae30ac51660d0a737a26"
+    },
+    "shepherdjerred/temporal-worker/workflows/candidate": {
+      "buildNumber": 13792,
+      "version": "2.0.0-13792",
+      "digest": "sha256:9d65ed0bb72513ac998aa82f0e32cda50f9ca9553cb7ae30ac51660d0a737a26"
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-13290",
@@ -84,9 +89,9 @@
       "gitSha": "f23505a7251c5029e01d8157e31800e89cec8298"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 13785,
       "version": "2.0.0-13785",
-      "digest": "sha256:5bd6d224e06dcf9d14f0dd34ee59656219a8dd082c77f9a9c28a8c757f986ae0"
+      "digest": "sha256:5bd6d224e06dcf9d14f0dd34ee59656219a8dd082c77f9a9c28a8c757f986ae0",
+      "buildNumber": 13785
     }
   }
 }
