@@ -61,6 +61,20 @@ function targetForMatch(match: RawMatch): DareTargetBindingV2 {
   };
 }
 
+function targetsForMatch(match: RawMatch): DareTargetBindingV2[] {
+  const first = targetForMatch(match);
+  return [
+    first,
+    {
+      ...first,
+      key: "T2",
+      discordId: "100000000000000002",
+      playerId: 2,
+      alias: "Other target",
+    },
+  ];
+}
+
 describe("Dare SQL v3", () => {
   test("runs ordinary SQL over target, participant, and team relations", async () => {
     const match = await loadMatchFixture();
@@ -276,17 +290,7 @@ describe("Dare SQL v3 compilation", () => {
     const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
     try {
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const first = targetForMatch(match);
-      const targets = [
-        first,
-        {
-          ...first,
-          key: "T2",
-          discordId: "100000000000000002",
-          playerId: 2,
-          alias: "Other target",
-        },
-      ];
+      const targets = targetsForMatch(match);
       const compilation = await compileDareSqlV3({
         queryText:
           "WITH first_branch AS (SELECT COUNT(*) > 0 AS matched FROM T1), second_branch AS (SELECT COUNT(*) > 0 AS matched FROM T2) SELECT (SELECT matched FROM first_branch) OR (SELECT matched FROM second_branch) AS achieved",
@@ -311,17 +315,7 @@ describe("Dare SQL v3 compilation", () => {
     const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
     try {
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const first = targetForMatch(match);
-      const targets = [
-        first,
-        {
-          ...first,
-          key: "T2",
-          discordId: "100000000000000002",
-          playerId: 2,
-          alias: "Other target",
-        },
-      ];
+      const targets = targetsForMatch(match);
       const compilation = await compileDareSqlV3({
         queryText:
           "WITH flags AS (SELECT EXISTS (SELECT 1 FROM T1) AS t1_hit, EXISTS (SELECT 1 FROM T2) AS t2_hit) SELECT t1_hit OR t2_hit AS achieved FROM flags",
