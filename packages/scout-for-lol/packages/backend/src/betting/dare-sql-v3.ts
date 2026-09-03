@@ -204,6 +204,11 @@ export async function compileDareSqlV3(input: {
     ),
     finality: dareSqlV3FinalityFromAst(validated.compilation.immutableAst),
   });
+  if (rootHasMultipleRows(compilation.canonicalSql)) {
+    throw new Error(
+      "Dare SQL root query must be structurally scalar (no GROUP BY, HAVING, QUALIFY, or UNION).",
+    );
+  }
   await validateGameSetTypes(
     compilation.canonicalSql,
     compilation.resultStructure.gameSets,
@@ -264,11 +269,12 @@ async function createLakeRelations(
     end: Date;
     lakeDir: string;
     maxEligibleGames: number;
+    excludeArena: boolean;
   },
 ): Promise<void> {
   const files = await resolveLakeFiles(input.lakeDir);
   const windowPredicate = {
-    sql: "queue IS NOT NULL AND epoch_ms(game_start_at) >= ? AND epoch_ms(game_end_at) BETWEEN ? AND ?",
+    sql: `${input.excludeArena ? "queue <> 'arena' AND " : ""}queue IS NOT NULL AND epoch_ms(game_start_at) >= ? AND epoch_ms(game_end_at) BETWEEN ? AND ?`,
     params: [
       scalarParam(input.start.getTime()),
       scalarParam(input.start.getTime()),
@@ -415,6 +421,10 @@ export async function executeDareSqlV3(input: {
       end: input.end,
       lakeDir: input.lakeDir ?? resolveLakeDir(),
       maxEligibleGames: compilation.maxEligibleGames,
+      excludeArena: compilation.facts.physicalSources.some(
+        (source) =>
+          source.startsWith("timeline_") && source !== "timeline_coverage",
+      ),
     });
     const resultRows = await session.run(canonicalSql);
     if (resultRows.length !== 1) {
@@ -519,6 +529,13 @@ function rootQueryParts(canonicalSql: string) {
       achievedIndex,
     ),
   };
+}
+
+function rootHasMultipleRows(canonicalSql: string): boolean {
+  const achievedIndex = canonicalSql.toLowerCase().lastIndexOf(" as achieved");
+  if (achievedIndex < 0) return true;
+  const suffix = canonicalSql.slice(achievedIndex);
+  return /\b(?:GROUP\s+BY|HAVING|QUALIFY|UNION(?:\s+ALL)?)\b/iu.test(suffix);
 }
 
 function targetDependenciesIn(text: string, targetKeys: readonly string[]) {

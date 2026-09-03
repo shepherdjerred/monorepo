@@ -218,7 +218,7 @@ export function dareSqlV3FinalityFromAst(
   // A correlated or scalar subquery can change the predicate as later games
   // arrive (for example, comparing each game to the current AVG). Such a
   // count is not append-monotone even though COUNT itself is increasing.
-  if (containsSubquery(achieved["left"])) {
+  if (containsSubquery(node)) {
     return "deadline_only";
   }
   // FILTER predicates are part of the counted relation. Without a separate

@@ -216,6 +216,17 @@ export async function captureDareSqlV3ForMatch(input: {
   // been staged successfully; otherwise a best-effort ingest failure could
   // settle against an older lake snapshot.
   if (!(await writeMatchStagingFile(resolveLakeDir(), matchData))) {
+    throw new Error(
+      `Dare v3 match ${matchData.metadata.matchId} could not be staged for settlement.`,
+    );
+  }
+  if (
+    queue === "arena" &&
+    contract.facts.physicalSources.some(
+      (source) =>
+        source.startsWith("timeline_") && source !== "timeline_coverage",
+    )
+  ) {
     return undefined;
   }
   const evidence = await evaluateContract(
