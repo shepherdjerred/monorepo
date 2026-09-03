@@ -24,7 +24,12 @@ import {
   runReportLakeFold,
   runReportLakeRebuild,
 } from "#src/report-lake/compactor.ts";
-import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
+import {
+  flattenMatch,
+  flattenMatchTeamBans,
+  flattenMatchTeams,
+  flattenPrematch,
+} from "#src/report-lake/flatten.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
@@ -38,7 +43,10 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
+  buildMatchTeamBansSource,
+  buildMatchTeamsSource,
   resolveLakeFiles,
+  type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 
 const { prisma } = createTestDatabase("report-lake-test");
@@ -185,6 +193,18 @@ async function countParquetRows(glob: string): Promise<number> {
   });
 }
 
+async function countSourceRows(source: SqlFragment): Promise<number> {
+  return await withDuckDBConnection(async (session) => {
+    const rows = await session.run(
+      `SELECT COUNT(*)::BIGINT AS n FROM (${source.sql})`,
+      source.params.map((param) =>
+        param.kind === "list" ? session.list(param.values) : param.value,
+      ),
+    );
+    return CountRowSchema.parse(rows[0]).n;
+  });
+}
+
 beforeEach(async () => {
   Bun.env["S3_BUCKET_NAME"] = "test-bucket";
   resetConfigurationForTests();
@@ -269,6 +289,27 @@ describe("flatten", () => {
         new Date(match.info.gameCreation).toISOString().slice(0, 7),
       );
     }
+  });
+
+  test("flattens normalized teams and bans for ordinary SQL joins", async () => {
+    const match = await loadMatchFixture();
+    const teams = flattenMatchTeams(match);
+    const bans = flattenMatchTeamBans(match);
+
+    expect(teams).toHaveLength(match.info.teams.length);
+    expect(teams.map((team) => team.team_id)).toEqual(
+      match.info.teams.map((team) => team.teamId),
+    );
+    expect(teams[0]?.champion_kills).toBe(
+      match.info.teams[0]?.objectives.champion.kills,
+    );
+    expect(bans).toHaveLength(
+      match.info.teams.reduce((total, team) => total + team.bans.length, 0),
+    );
+    expect(bans[0]).toMatchObject({
+      match_id: match.metadata.matchId,
+      team_id: match.info.teams[0]?.teamId,
+    });
   });
 
   test("flattenPrematch skips privacy-scrubbed (null puuid) participants", () => {
@@ -456,6 +497,7 @@ describe("compactor", () => {
       const fold = await runReportLakeFold({ prisma, lakeDir });
       expect(fold?.tier).toBe("fold");
       expect(fold?.matchRows).toBe(match.info.participants.length);
+      expect(fold?.matchTeamRows).toBe(match.info.teams.length);
 
       const buildDir = await readCurrentBuildDir(lakeDir);
       if (buildDir === undefined) {
@@ -465,6 +507,23 @@ describe("compactor", () => {
         path.join(buildDir, "matches", "**", "*.parquet"),
       );
       expect(rows).toBe(match.info.participants.length);
+      const files = await resolveLakeFiles(lakeDir);
+      const teamSource = buildMatchTeamsSource(files, { sql: "", params: [] });
+      const banSource = buildMatchTeamBansSource(files, {
+        sql: "",
+        params: [],
+      });
+      if (teamSource === undefined || banSource === undefined) {
+        throw new Error("missing normalized team lake sources");
+      }
+      const [teamRows, banRows] = await Promise.all([
+        countSourceRows(teamSource),
+        countSourceRows(banSource),
+      ]);
+      expect(teamRows).toBe(match.info.teams.length);
+      expect(banRows).toBe(
+        match.info.teams.reduce((total, team) => total + team.bans.length, 0),
+      );
       // Folded staging file was deleted.
       const remainingFiles = await listStagingFiles(lakeDir, "matches");
       expect(remainingFiles.length).toBe(0);

@@ -3,6 +3,8 @@ import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
 } from "@scout-for-lol/data";
 import {
@@ -51,6 +53,10 @@ export type SqlFragment = {
 export type LakeFiles = {
   matchesParquet: string[];
   matchesStaging: string[];
+  matchTeamsParquet: string[];
+  matchTeamsStaging: string[];
+  matchTeamBansParquet: string[];
+  matchTeamBansStaging: string[];
   prematchParquet: string[];
   prematchStaging: string[];
   accountsParquet: string | undefined;
@@ -79,6 +85,8 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
   const buildDir = await readCurrentBuildDir(lakeDir);
   const [
     matchesStaging,
+    matchTeamsStaging,
+    matchTeamBansStaging,
     prematchStaging,
     competitionRankHistoryStaging,
     timelineEventsStaging,
@@ -87,6 +95,8 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
     timelineCoverageStaging,
   ] = await Promise.all([
     listStagingFiles(lakeDir, "matches"),
+    listStagingFiles(lakeDir, "match_teams"),
+    listStagingFiles(lakeDir, "match_team_bans"),
     listStagingFiles(lakeDir, "prematch"),
     listStagingFiles(lakeDir, "competition_rank_history"),
     listStagingFiles(lakeDir, "timeline_events"),
@@ -98,6 +108,10 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
     return {
       matchesParquet: [],
       matchesStaging,
+      matchTeamsParquet: [],
+      matchTeamsStaging,
+      matchTeamBansParquet: [],
+      matchTeamBansStaging,
       prematchParquet: [],
       prematchStaging,
       accountsParquet: undefined,
@@ -115,6 +129,8 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
   }
   const [
     matchesParquet,
+    matchTeamsParquet,
+    matchTeamBansParquet,
     prematchParquet,
     competitionRankHistoryParquet,
     timelineEventsParquet,
@@ -123,6 +139,8 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
     timelineCoverageParquet,
   ] = await Promise.all([
     globParquet(buildDir, "matches"),
+    globParquet(buildDir, "match_teams"),
+    globParquet(buildDir, "match_team_bans"),
     globParquet(buildDir, "prematch"),
     globParquet(buildDir, "competition_rank_history"),
     globParquet(buildDir, "timeline_events"),
@@ -137,6 +155,10 @@ export async function resolveLakeFiles(lakeDir: string): Promise<LakeFiles> {
   return {
     matchesParquet,
     matchesStaging,
+    matchTeamsParquet,
+    matchTeamsStaging,
+    matchTeamBansParquet,
+    matchTeamBansStaging,
     prematchParquet,
     prematchStaging,
     accountsParquet,
@@ -167,6 +189,8 @@ type UnionSourceInput = {
   >;
   dedupe:
     | "matches"
+    | "match-teams"
+    | "match-team-bans"
     | "prematch"
     | "competition-rank-daily-snapshot"
     | "timeline-events"
@@ -215,6 +239,10 @@ export function buildUnionSource(
     switch (input.dedupe) {
       case "matches":
         return "match_id, puuid";
+      case "match-teams":
+        return "match_id, team_id";
+      case "match-team-bans":
+        return "match_id, team_id, pick_turn";
       case "prematch":
         return "dedupe_key, puuid";
       case "timeline-events":
@@ -256,6 +284,32 @@ export function buildPrematchSource(
     stagingFiles: files.prematchStaging,
     columns: PREMATCH_LAKE_COLUMNS,
     dedupe: "prematch",
+    predicate,
+  });
+}
+
+export function buildMatchTeamsSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.matchTeamsParquet,
+    stagingFiles: files.matchTeamsStaging,
+    columns: MATCH_TEAM_LAKE_COLUMNS,
+    dedupe: "match-teams",
+    predicate,
+  });
+}
+
+export function buildMatchTeamBansSource(
+  files: LakeFiles,
+  predicate: SqlFragment,
+): SqlFragment | undefined {
+  return buildUnionSource({
+    parquetFiles: files.matchTeamBansParquet,
+    stagingFiles: files.matchTeamBansStaging,
+    columns: MATCH_TEAM_BAN_LAKE_COLUMNS,
+    dedupe: "match-team-bans",
     predicate,
   });
 }

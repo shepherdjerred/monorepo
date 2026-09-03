@@ -27,7 +27,12 @@ import {
   readCurrentBuildDir,
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
-import { MATCH_LAKE_COLUMNS, PREMATCH_LAKE_COLUMNS } from "@scout-for-lol/data";
+import {
+  MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
+  PREMATCH_LAKE_COLUMNS,
+} from "@scout-for-lol/data";
 import {
   duckDbColumnsSpec,
   lakeSchemaFingerprint,
@@ -130,6 +135,16 @@ export async function runReportLakeFold(
       "prematch",
       options.onProgress,
     );
+    const stagedMatchTeams = await readStagingRows(
+      lakeDir,
+      "match_teams",
+      options.onProgress,
+    );
+    const stagedMatchTeamBans = await readStagingRows(
+      lakeDir,
+      "match_team_bans",
+      options.onProgress,
+    );
     const stagedRankHistory = await readStagingRows(
       lakeDir,
       "competition_rank_history",
@@ -156,6 +171,13 @@ export async function runReportLakeFold(
       options.onProgress,
     );
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
+    await writeFoldParquet(buildDir, buildId, "match_teams", stagedMatchTeams);
+    await writeFoldParquet(
+      buildDir,
+      buildId,
+      "match_team_bans",
+      stagedMatchTeamBans,
+    );
     await writeFoldParquet(buildDir, buildId, "prematch", stagedPrematches);
     await writeFoldParquet(
       buildDir,
@@ -194,6 +216,8 @@ export async function runReportLakeFold(
       buildId,
       tier: "fold" as const,
       matchRows: stagedMatches.rows,
+      matchTeamRows: stagedMatchTeams.rows,
+      matchTeamBanRows: stagedMatchTeamBans.rows,
       prematchRows: stagedPrematches.rows,
       accountRows,
       competitionRankHistoryRows: stagedRankHistory.rows,
@@ -214,6 +238,16 @@ export async function runReportLakeFold(
     await publishBuild(lakeDir, buildId);
     publishCompactionMetrics(summary);
     await removeFoldedStagingFiles(lakeDir, "matches", stagedMatches.foldedIds);
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "match_teams",
+      stagedMatchTeams.foldedIds,
+    );
+    await removeFoldedStagingFiles(
+      lakeDir,
+      "match_team_bans",
+      stagedMatchTeamBans.foldedIds,
+    );
     await removeFoldedStagingFiles(
       lakeDir,
       "prematch",
@@ -286,6 +320,10 @@ async function rebuildLocked(
 
   const matchesTmp = path.join(buildDir, "matches.ndjson.tmp");
   const matchWriter = new NdjsonFileWriter(matchesTmp);
+  const matchTeamsTmp = path.join(buildDir, "match-teams.ndjson.tmp");
+  const matchTeamWriter = new NdjsonFileWriter(matchTeamsTmp);
+  const matchTeamBansTmp = path.join(buildDir, "match-team-bans.ndjson.tmp");
+  const matchTeamBanWriter = new NdjsonFileWriter(matchTeamBansTmp);
   const foldedMatchIds = new Set<string>();
   const prematchTmp = path.join(buildDir, "prematch.ndjson.tmp");
   const prematchWriter = new NdjsonFileWriter(prematchTmp);
@@ -303,6 +341,8 @@ async function rebuildLocked(
     client,
     bucket,
     writer: matchWriter,
+    teamWriter: matchTeamWriter,
+    teamBanWriter: matchTeamBanWriter,
     foldedIds: foldedMatchIds,
     abortSignal: deadline,
     onProgress: (progress) => {
@@ -335,6 +375,8 @@ async function rebuildLocked(
   });
   deadline.throwIfAborted();
   await matchWriter.close();
+  await matchTeamWriter.close();
+  await matchTeamBanWriter.close();
   await prematchWriter.close();
   onProgress?.({
     phase: "writing-parquet",
@@ -353,6 +395,18 @@ async function rebuildLocked(
             [matchesTmp],
           );
         }
+        if (matchTeamWriter.rows > 0) {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_teams")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+            [matchTeamsTmp],
+          );
+        }
+        if (matchTeamBanWriter.rows > 0) {
+          await session.run(
+            `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(MATCH_TEAM_BAN_LAKE_COLUMNS)})) TO '${path.join(buildDir, "match_team_bans")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
+            [matchTeamBansTmp],
+          );
+        }
         if (prematchWriter.rows > 0) {
           await session.run(
             `COPY (SELECT * FROM read_json($1, format='newline_delimited', columns=${duckDbColumnsSpec(PREMATCH_LAKE_COLUMNS)})) TO '${path.join(buildDir, "prematch")}' (FORMAT PARQUET, PARTITION_BY (month), OVERWRITE_OR_IGNORE)`,
@@ -364,6 +418,8 @@ async function rebuildLocked(
     );
   } finally {
     await unlink(matchesTmp);
+    await unlink(matchTeamsTmp);
+    await unlink(matchTeamBansTmp);
     await unlink(prematchTmp);
   }
 
@@ -390,6 +446,8 @@ async function rebuildLocked(
     buildId,
     tier: "rebuild" as const,
     matchRows: matchWriter.rows,
+    matchTeamRows: matchTeamWriter.rows,
+    matchTeamBanRows: matchTeamBanWriter.rows,
     prematchRows: prematchWriter.rows,
     accountRows,
     competitionRankHistoryRows: rankHistory.rows,
@@ -406,6 +464,8 @@ async function rebuildLocked(
   await publishBuild(lakeDir, buildId);
   publishCompactionMetrics(summary);
   await removeFoldedStagingFiles(lakeDir, "matches", foldedMatchIds);
+  await removeFoldedStagingFiles(lakeDir, "match_teams", foldedMatchIds);
+  await removeFoldedStagingFiles(lakeDir, "match_team_bans", foldedMatchIds);
   await removeFoldedStagingFiles(lakeDir, "prematch", foldedPrematchIds);
   await removeFoldedStagingFiles(
     lakeDir,

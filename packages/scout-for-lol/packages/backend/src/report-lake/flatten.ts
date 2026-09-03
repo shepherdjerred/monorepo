@@ -3,6 +3,8 @@ import type {
   CachedLeaderboard,
   CompetitionRankHistoryLakeRow,
   MatchLakeRow,
+  MatchTeamBanLakeRow,
+  MatchTeamLakeRow,
   PrematchLakeRow,
   RawCurrentGameInfo,
   RawMatch,
@@ -152,6 +154,50 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     subteam_placement: participant.subteamPlacement ?? null,
     player_subteam_id: participant.playerSubteamId ?? null,
   }));
+}
+
+export function flattenMatchTeams(match: RawMatch): MatchTeamLakeRow[] {
+  const matchId = match.metadata.matchId;
+  const month = lakeMonth(match.info.gameCreation);
+  return match.info.teams.map((team) => ({
+    match_id: matchId,
+    month,
+    team_id: team.teamId,
+    win: team.win,
+    baron_kills: team.objectives.baron.kills,
+    first_baron: team.objectives.baron.first,
+    champion_kills: team.objectives.champion.kills,
+    first_champion_kill: team.objectives.champion.first,
+    dragon_kills: team.objectives.dragon.kills,
+    first_dragon: team.objectives.dragon.first,
+    inhibitor_kills: team.objectives.inhibitor.kills,
+    first_inhibitor: team.objectives.inhibitor.first,
+    rift_herald_kills: team.objectives.riftHerald.kills,
+    first_rift_herald: team.objectives.riftHerald.first,
+    tower_kills: team.objectives.tower.kills,
+    first_tower: team.objectives.tower.first,
+    void_grub_kills: team.objectives.horde?.kills ?? null,
+    first_void_grub: team.objectives.horde?.first ?? null,
+    atakhan_kills: team.objectives.atakhan?.kills ?? null,
+    first_atakhan: team.objectives.atakhan?.first ?? null,
+    epic_monster_feat_state: team.feats?.EPIC_MONSTER_KILL.featState ?? null,
+    first_blood_feat_state: team.feats?.FIRST_BLOOD.featState ?? null,
+    first_turret_feat_state: team.feats?.FIRST_TURRET.featState ?? null,
+  }));
+}
+
+export function flattenMatchTeamBans(match: RawMatch): MatchTeamBanLakeRow[] {
+  const matchId = match.metadata.matchId;
+  const month = lakeMonth(match.info.gameCreation);
+  return match.info.teams.flatMap((team) =>
+    team.bans.map((ban) => ({
+      match_id: matchId,
+      month,
+      team_id: team.teamId,
+      pick_turn: ban.pickTurn,
+      champion_id: ban.championId,
+    })),
+  );
 }
 
 /**

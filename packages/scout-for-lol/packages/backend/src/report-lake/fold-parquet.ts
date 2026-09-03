@@ -4,6 +4,8 @@ import { NdjsonFileWriter } from "#src/report-lake/ndjson-writer.ts";
 import {
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
@@ -27,6 +29,10 @@ function columnsForTable(table: ReportLakeStagingTable) {
   switch (table) {
     case "matches":
       return MATCH_LAKE_COLUMNS;
+    case "match_teams":
+      return MATCH_TEAM_LAKE_COLUMNS;
+    case "match_team_bans":
+      return MATCH_TEAM_BAN_LAKE_COLUMNS;
     case "prematch":
       return PREMATCH_LAKE_COLUMNS;
     case "competition_rank_history":
