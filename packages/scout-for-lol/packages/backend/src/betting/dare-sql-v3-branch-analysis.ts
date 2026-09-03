@@ -3,6 +3,13 @@ import type {
   DareTargetBindingV2,
 } from "@scout-for-lol/data";
 import { dareSqlV3CteTargetDependenciesFromAst } from "#src/betting/dare-sql-v3-finality.ts";
+import { relationalScoutQlStatementFromImmutableAst } from "#src/reports/duckdb/relational-scoutql.ts";
+import {
+  relationalScoutQlArrayValue as arrayValue,
+  relationalScoutQlObjectValue as objectValue,
+  relationalScoutQlStringValue as stringValue,
+  type RelationalScoutQlJsonValue as JsonValue,
+} from "#src/reports/duckdb/relational-scoutql-json.ts";
 
 export type DareSqlV3ExecutionSummary = {
   achieved: boolean | null;
@@ -67,6 +74,44 @@ function topLevelOrBranches(expression: string): string[] {
   return branches;
 }
 
+function rootExpressionIsOr(immutableAst: string): boolean {
+  const statement = objectValue(
+    relationalScoutQlStatementFromImmutableAst(immutableAst),
+  );
+  const node = objectValue(statement?.["node"]);
+  const select = objectValue(arrayValue(node?.["select_list"])[0]);
+  return (
+    stringValue(select?.["class"]) === "CONJUNCTION" &&
+    stringValue(select?.["type"]) === "CONJUNCTION_OR"
+  );
+}
+
+function aliasesFromAst(
+  value: JsonValue,
+  targetKeys: readonly string[],
+  aliases: Map<string, string>,
+): void {
+  if (Array.isArray(value)) {
+    for (const child of value) aliasesFromAst(child, targetKeys, aliases);
+    return;
+  }
+  const object = objectValue(value);
+  if (object === null) return;
+  const table = stringValue(object["table_name"]);
+  const alias = stringValue(object["alias"]);
+  if (
+    table !== null &&
+    alias !== null &&
+    alias.length > 0 &&
+    targetKeys.includes(table)
+  ) {
+    aliases.set(alias.toLowerCase(), table);
+  }
+  for (const child of Object.values(object)) {
+    aliasesFromAst(child, targetKeys, aliases);
+  }
+}
+
 export function rootQueryParts(canonicalSql: string) {
   const lower = canonicalSql.toLowerCase();
   let depth = 0;
@@ -92,16 +137,33 @@ export function rootQueryParts(canonicalSql: string) {
 }
 
 export function rootHasMultipleRows(canonicalSql: string): boolean {
-  const achievedIndex = canonicalSql.toLowerCase().lastIndexOf(" as achieved");
-  if (achievedIndex === -1) return true;
-  const suffix = canonicalSql.slice(achievedIndex);
-  return /\b(?:GROUP\s+BY|HAVING|QUALIFY|UNION(?:\s+ALL)?)\b/iu.test(suffix);
+  const parts = rootQueryParts(canonicalSql);
+  if (parts === null) return true;
+  if (
+    /\b(?:GROUP\s+BY|HAVING|QUALIFY|UNION(?:\s+ALL)?)\b/iu.test(parts.suffix)
+  ) {
+    return true;
+  }
+  const hasFrom = /\bFROM\b/iu.test(parts.suffix);
+  const hasAggregate =
+    /\b(?:AVG|BOOL_AND|BOOL_OR|COUNT(?:_STAR)?|MAX|MIN|SUM)\s*\(/iu.test(
+      parts.expression,
+    );
+  return hasFrom && !hasAggregate;
 }
 
-function targetDependenciesIn(text: string, targetKeys: readonly string[]) {
-  return targetKeys.filter((key) =>
-    new RegExp(String.raw`\b${key}\b`, "iu").test(text),
-  );
+function targetDependenciesIn(
+  text: string,
+  targetKeys: readonly string[],
+  aliases: ReadonlyMap<string, string>,
+) {
+  return targetKeys.filter((key) => {
+    if (new RegExp(String.raw`\b${key}\b`, "iu").test(text)) return true;
+    return [...aliases.entries()].some(
+      ([alias, target]) =>
+        target === key && new RegExp(String.raw`\b${alias}\b`, "iu").test(text),
+    );
+  });
 }
 
 export async function decisiveTargetDependenciesV3(input: {
@@ -115,8 +177,34 @@ export async function decisiveTargetDependenciesV3(input: {
 }): Promise<string[]> {
   const parts = rootQueryParts(input.compilation.canonicalSql);
   if (parts === null) return input.compilation.facts.targetKeys;
+  if (!rootExpressionIsOr(input.compilation.immutableAst)) {
+    return input.compilation.facts.targetKeys;
+  }
   const branches = topLevelOrBranches(parts.expression);
   if (branches.length < 2) return input.compilation.facts.targetKeys;
+  const aliases = new Map<string, string>();
+  aliasesFromAst(
+    relationalScoutQlStatementFromImmutableAst(input.compilation.immutableAst),
+    input.compilation.facts.targetKeys,
+    aliases,
+  );
+  return await decisiveOrBranchDependencies(input, parts, branches, aliases);
+}
+
+async function decisiveOrBranchDependencies(
+  input: {
+    compilation: DareSqlV3Compilation;
+    targets: readonly DareTargetBindingV2[];
+    start: Date;
+    end: Date;
+    lakeDir?: string | undefined;
+    compile: CompileDareSqlV3;
+    execute: ExecuteDareSqlV3;
+  },
+  parts: { prefix: string; expression: string; suffix: string },
+  branches: readonly string[],
+  aliases: ReadonlyMap<string, string>,
+): Promise<string[]> {
   const cteTargetDependencies = dareSqlV3CteTargetDependenciesFromAst(
     input.compilation.immutableAst,
     input.compilation.facts.targetKeys,
@@ -125,6 +213,7 @@ export async function decisiveTargetDependenciesV3(input: {
     const branchTargetKeys = targetDependenciesIn(
       `${parts.prefix} ${branch}`,
       input.compilation.facts.targetKeys,
+      aliases,
     );
     const compilation = await input.compile({
       queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved${parts.suffix}`,
@@ -144,6 +233,7 @@ export async function decisiveTargetDependenciesV3(input: {
       const direct = targetDependenciesIn(
         branch,
         input.compilation.facts.targetKeys,
+        aliases,
       );
       if (direct.length > 0) return direct;
       const inherited = [...cteTargetDependencies.entries()]

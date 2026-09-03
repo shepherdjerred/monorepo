@@ -303,9 +303,9 @@ async function createLakeRelations(
     `CREATE TEMP TABLE _dare_match_ids AS
      SELECT match_id
      FROM _dare_match_window
-     WHERE ${targetMembership.join(" OR ")}
      GROUP BY match_id
-     HAVING SUM(CASE WHEN end_of_game_result = 'GameComplete'
+     HAVING MAX(CASE WHEN ${targetMembership.join(" OR ")} THEN 1 ELSE 0 END) = 1
+       AND SUM(CASE WHEN end_of_game_result = 'GameComplete'
        AND game_duration_seconds >= 300
        AND NOT game_ended_in_early_surrender
        AND NOT team_early_surrendered

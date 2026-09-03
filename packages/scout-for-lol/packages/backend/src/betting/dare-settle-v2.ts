@@ -343,13 +343,22 @@ export async function settleDaresV2ForMatch(
     relevant,
     async ({ row, contract }) => {
       if (contract.version === 3) {
-        return await captureDareSqlV3ForMatch({
-          dare: row,
-          contract,
-          matchData,
-          prismaClient,
-          now,
-        });
+        return await settleDareV2OrVoidOnStorageOverflow(
+          {
+            dare: row,
+            prismaClient,
+            now,
+            matchId: matchData.metadata.matchId,
+          },
+          async () =>
+            await captureDareSqlV3ForMatch({
+              dare: row,
+              contract,
+              matchData,
+              prismaClient,
+              now,
+            }),
+        );
       }
       const plan = DareCompiledPlanV2Schema.parse(contract.compiledPlan);
       const evaluator = dareEvaluatorImplementationV2(
