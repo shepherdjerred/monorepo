@@ -16,12 +16,18 @@ export const DareToolResultSchema = z.strictObject({
 });
 export type DareToolResult = z.infer<typeof DareToolResultSchema>;
 
+const ShortlistTargetKeysSchema = z
+  .array(z.string().regex(/^T\d{1,2}$/))
+  .min(1)
+  .max(DARE_V2_MAX_TARGETS);
+const ProviderTargetKeysSchema = z
+  .array(z.string())
+  .min(1)
+  .max(DARE_V2_MAX_TARGETS);
+
 export const DareDefinitionV2ToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
-  targetKeys: z
-    .array(z.string().regex(/^T\d{1,2}$/))
-    .min(1)
-    .max(DARE_V2_MAX_TARGETS),
+  targetKeys: ShortlistTargetKeysSchema,
   plan: DareCompiledPlanV2Schema,
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
@@ -29,10 +35,7 @@ export const DareDefinitionV2ToolInputSchema = z.strictObject({
 
 export const DareDefinitionV3ToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
-  targetKeys: z
-    .array(z.string().regex(/^T\d{1,2}$/))
-    .min(1)
-    .max(DARE_V2_MAX_TARGETS),
+  targetKeys: ShortlistTargetKeysSchema,
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   plainLanguage: z.string().min(1).max(4000),
   deadlineSpec: DareDeadlineSpecV2Schema,
@@ -45,7 +48,7 @@ export const DareDefinitionV3ToolInputSchema = z.strictObject({
 // `anyOf`.
 export const DareDefinitionToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
-  targetKeys: z.array(z.string()).min(1).max(DARE_V2_MAX_TARGETS),
+  targetKeys: ProviderTargetKeysSchema,
   plan: DareCompiledPlanV2Schema.optional(),
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
   plainLanguage: z.string().min(1).max(4000).optional(),
@@ -55,10 +58,7 @@ export const DareDefinitionToolInputSchema = z.strictObject({
 
 export const DareScoutQlToolInputSchema = z.strictObject({
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
-  targetKeys: z
-    .array(z.string().regex(/^T\d{1,2}$/))
-    .min(1)
-    .max(DARE_V2_MAX_TARGETS),
+  targetKeys: ShortlistTargetKeysSchema,
 });
 
 const RevisionFields = {
@@ -69,7 +69,7 @@ const RevisionFields = {
 export const ReviseDareToolInputSchema = z.strictObject({
   ...RevisionFields,
   originalText: z.string().min(1).max(4000),
-  targetKeys: z.array(z.string()).min(1).max(DARE_V2_MAX_TARGETS),
+  targetKeys: ProviderTargetKeysSchema,
   plan: DareCompiledPlanV2Schema.optional(),
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
   plainLanguage: z.string().min(1).max(4000).optional(),
@@ -89,7 +89,7 @@ const PreviewFields = {
 export const DarePreviewToolInputSchema = z.strictObject({
   ...PreviewFields,
   originalText: z.string().min(1).max(4000),
-  targetKeys: z.array(z.string()).min(1).max(DARE_V2_MAX_TARGETS),
+  targetKeys: ProviderTargetKeysSchema,
   plan: DareCompiledPlanV2Schema.optional(),
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
   plainLanguage: z.string().min(1).max(4000).optional(),
