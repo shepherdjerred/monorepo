@@ -4,6 +4,7 @@ import {
   prepareCandidatePinStateReset,
 } from "./worker-deployment-catalog.ts";
 import { verifyCandidateImageBuildId } from "./worker-deployment-proofs.ts";
+import { temporalCommand } from "./worker-deployment-commands.ts";
 
 type RollbackOptions = {
   address: string;
@@ -47,32 +48,21 @@ function parseJson(raw: string): unknown {
   }
 }
 
-function temporalPrefix(options: RollbackOptions): string[] {
-  return [
-    "toolkit",
-    "temporal",
-    "--address",
-    options.address,
-    "--namespace",
-    options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
-  ];
-}
-
 export async function removeWorkerDeploymentRampingVersion(
   options: RollbackOptions,
   run: RolloutCommandRunner,
 ): Promise<void> {
-  const description = await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "describe",
-    "--name",
-    options.deploymentName,
-    "--output",
-    "json",
-  ]);
+  const description = await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "describe",
+      "--name",
+      options.deploymentName,
+      "--output",
+      "json",
+    ]),
+  );
   const routing = DeploymentRoutingSchema.parse(parseJson(description.stdout));
   if (
     routing.routingConfig.rampingVersionBuildID !== options.buildId ||
@@ -82,18 +72,19 @@ export async function removeWorkerDeploymentRampingVersion(
       `Rollback target ${options.buildId} is no longer the active ramp`,
     );
   }
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-ramping-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--delete",
-    "--yes",
-    "--output",
-    "json",
-  ]);
+  await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "set-ramping-version",
+      "--deployment-name",
+      options.deploymentName,
+      "--delete",
+      "--yes",
+      "--output",
+      "json",
+    ]),
+  );
 }
 
 export async function executeWorkerDeploymentRollback(

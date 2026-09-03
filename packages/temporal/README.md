@@ -80,6 +80,18 @@ checks or alert windows are failing.
 The target defaults to `central`; `--target scout-beta` and `--target
 scout-prod` select the stage-local Scout deployment, queue, replay bundle,
 pinned canary, image repository, and catalog pins.
+
+The hourly `openai-complimentary-usage-hourly` schedule starts
+`runOpenAiComplimentaryUsageReconciliation` on `monorepo-workflows`. Pause it
+before repairing or replacing the Workflow bundle, then resume it only after a
+pinned canary and one bounded scheduled run complete. The Workflow delegates
+the OpenAI Usage and Costs calls to the isolated `billing` Activity queue. Live
+acceptance requires current `openai_project_usage_tokens`, zero official
+`openai_project_cost_usd`, a fresh reconciliation timestamp, and Scout review
+requests with `byok="true"`. The Prometheus rules use
+`exported_service="scout-for-lol-backend"` for Scout telemetry and
+`container="temporal-billing-worker"` for worker freshness; these labels are
+stable across pod recreations.
 Scout extraction uses two capable image releases. The pre-entrypoint pin creates
 no pod. Copy the first capable candidate pin to stable; that creates only the
 credentialless stable poller. A later distinct candidate pin creates the ramp

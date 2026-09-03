@@ -195,11 +195,6 @@ export async function requireAcceptedWorkerDeployment(
   const result = await run([
     "toolkit",
     "temporal",
-    "--address",
-    options.address,
-    "--namespace",
-    options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
     "worker",
     "deployment",
     "describe",
@@ -207,6 +202,11 @@ export async function requireAcceptedWorkerDeployment(
     options.deploymentName,
     "--output",
     "json",
+    "--address",
+    options.address,
+    "--namespace",
+    options.namespace,
+    ...(options.tls === true ? ["--tls"] : []),
   ]);
   const deployment = AcceptedDeploymentSchema.parse(
     parseJson(result.stdout, "acceptance prerequisite deployment describe"),

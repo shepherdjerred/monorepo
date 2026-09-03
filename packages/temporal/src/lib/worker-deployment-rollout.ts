@@ -36,7 +36,7 @@ import {
   setCurrentVersion,
   parseTemporalJson,
   setRampingVersion,
-  temporalPrefix,
+  temporalCommand,
 } from "./worker-deployment-commands.ts";
 export type WorkerDeploymentRolloutOptions = {
   action: "inspect" | "status" | "start" | "advance" | "promote" | "rollback";
@@ -76,16 +76,17 @@ async function describeDeployment(
   options: WorkerDeploymentRolloutOptions,
   run: RolloutCommandRunner,
 ): Promise<z.infer<typeof DeploymentDescriptionSchema>> {
-  const result = await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "describe",
-    "--name",
-    options.deploymentName,
-    "--output",
-    "json",
-  ]);
+  const result = await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "describe",
+      "--name",
+      options.deploymentName,
+      "--output",
+      "json",
+    ]),
+  );
   return DeploymentDescriptionSchema.parse(
     parseTemporalJson(result.stdout, "worker deployment describe"),
   );
@@ -95,19 +96,20 @@ async function describeVersion(
   buildId: string,
   run: RolloutCommandRunner,
 ): Promise<z.infer<typeof VersionDescriptionSchema>> {
-  const result = await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "describe-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    buildId,
-    "--report-task-queue-stats",
-    "--output",
-    "json",
-  ]);
+  const result = await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "describe-version",
+      "--deployment-name",
+      options.deploymentName,
+      "--build-id",
+      buildId,
+      "--report-task-queue-stats",
+      "--output",
+      "json",
+    ]),
+  );
   return VersionDescriptionSchema.parse(
     parseTemporalJson(result.stdout, "worker deployment describe-version"),
   );

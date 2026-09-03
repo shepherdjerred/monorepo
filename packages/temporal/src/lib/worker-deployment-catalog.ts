@@ -25,6 +25,10 @@ const PinStateSchema = z
         version: z.string().min(1),
         digest: z.string().regex(/^sha256:[0-9a-f]{64}$/),
         buildNumber: z.number().int().positive(),
+        gitSha: z
+          .string()
+          .regex(/^[0-9a-f]{40}$/)
+          .optional(),
       }),
     ),
   })
@@ -33,6 +37,33 @@ const PinStateSchema = z
 type PinStateEntry = z.infer<typeof PinStateSchema>["pins"][string];
 type PinState = z.infer<typeof PinStateSchema>;
 type CatalogEntry = z.infer<typeof CatalogSchema>["entries"][number];
+
+function replaceCatalogPinValue(
+  raw: string,
+  pinName: string,
+  value: string,
+): string {
+  const namePattern = new RegExp(
+    String.raw`"name"\s*:\s*${JSON.stringify(pinName)}`,
+  );
+  const nameMatch = namePattern.exec(raw);
+  if (nameMatch === null) {
+    throw new Error(`Temporal version catalog pin is missing: ${pinName}`);
+  }
+  const nameStart = nameMatch.index;
+  const nextEntry = raw.indexOf("\n    {\n", nameStart + nameMatch[0].length);
+  const entryEnd = nextEntry === -1 ? raw.length : nextEntry;
+  const entry = raw.slice(nameStart, entryEnd);
+  const valuePattern = /"value":\s*"[^"]*"/;
+  if (!valuePattern.test(entry)) {
+    throw new Error(`Temporal version catalog pin has no value: ${pinName}`);
+  }
+  return (
+    raw.slice(0, nameStart) +
+    entry.replace(valuePattern, `"value": ${JSON.stringify(value)}`) +
+    raw.slice(entryEnd)
+  );
+}
 
 export type StablePinPromotion = {
   candidateImage: string;
@@ -72,7 +103,8 @@ function pinStateEntriesEqual(
   return (
     left.buildNumber === right.buildNumber &&
     left.version === right.version &&
-    left.digest === right.digest
+    left.digest === right.digest &&
+    left.gitSha === right.gitSha
   );
 }
 
@@ -107,7 +139,8 @@ export async function prepareStablePinPromotion(
   stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
   imageRepository = "ghcr.io/shepherdjerred/temporal-worker",
 ): Promise<StablePinPromotion> {
-  const catalog = parseCatalog(await Bun.file(catalogPath).text());
+  const raw = await Bun.file(catalogPath).text();
+  const catalog = parseCatalog(raw);
   const { candidate, stable } = findWorkflowPins(
     catalog,
     candidatePinName,
@@ -118,10 +151,9 @@ export async function prepareStablePinPromotion(
   );
   const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
   const alreadyPromoted = candidateValue === stableValue;
-  stable.value = candidate.value;
   return {
     candidateImage: `${imageRepository}:${candidateValue}`,
-    contents: `${JSON.stringify(catalog, null, 2)}\n`,
+    contents: replaceCatalogPinValue(raw, stablePinName, candidate.value),
     alreadyPromoted,
   };
 }
@@ -131,7 +163,8 @@ export async function prepareCandidatePinReset(
   candidatePinName = "shepherdjerred/temporal-worker/workflows/candidate",
   stablePinName = "shepherdjerred/temporal-worker/workflows/stable",
 ): Promise<CandidatePinReset> {
-  const catalog = parseCatalog(await Bun.file(catalogPath).text());
+  const raw = await Bun.file(catalogPath).text();
+  const catalog = parseCatalog(raw);
   const { candidate, stable } = findWorkflowPins(
     catalog,
     candidatePinName,
@@ -142,9 +175,8 @@ export async function prepareCandidatePinReset(
   );
   const stableValue = TemporalWorkflowImageValueSchema.parse(stable.value);
   const changed = candidate.value !== stableValue;
-  candidate.value = stableValue;
   return {
-    contents: `${JSON.stringify(catalog, null, 2)}\n`,
+    contents: replaceCatalogPinValue(raw, candidatePinName, stableValue),
     changed,
     candidateValue,
   };

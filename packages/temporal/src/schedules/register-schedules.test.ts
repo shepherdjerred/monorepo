@@ -24,6 +24,7 @@ import {
   buildExecutionStartMetadata,
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
+import * as workflowEntrypoint from "#workflows/index.ts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -82,6 +83,19 @@ function findScheduleById(id: string) {
   }
   return schedule;
 }
+
+test("every declared schedule workflow is exported by the workflow bundle", () => {
+  const exportedWorkflowTypes = new Set(Object.keys(workflowEntrypoint));
+  const missingWorkflowTypes = [
+    ...new Set(
+      SCHEDULES.filter(
+        (schedule) => schedule.taskQueue === TASK_QUEUES.WORKFLOWS,
+      ).map((schedule) => schedule.workflowType),
+    ),
+  ].filter((workflowType) => !exportedWorkflowTypes.has(workflowType));
+
+  expect(missingWorkflowTypes).toEqual([]);
+});
 
 describe("central Workflow schedule routing", () => {
   const definitions = [

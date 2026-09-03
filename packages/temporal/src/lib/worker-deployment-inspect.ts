@@ -4,6 +4,7 @@ import {
   DeploymentNameSchema,
 } from "./worker-deployment-schemas.ts";
 import type { RolloutCommandRunner } from "./worker-deployment-proofs.ts";
+import { temporalCommand } from "./worker-deployment-commands.ts";
 
 type WorkerDeploymentInspectionOptions = {
   address: string;
@@ -37,26 +38,18 @@ export async function inspectWorkerDeploymentRollout(
   run: RolloutCommandRunner,
 ): Promise<WorkerDeploymentRolloutInspection> {
   const deploymentName = DeploymentNameSchema.parse(options.deploymentName);
-  const prefix = [
-    "toolkit",
-    "temporal",
-    "--address",
-    options.address,
-    "--namespace",
-    options.namespace,
-    ...(options.tls === true ? ["--tls"] : []),
-  ];
   const [deploymentResult, rolloutLockObject] = await Promise.all([
-    run([
-      ...prefix,
-      "worker",
-      "deployment",
-      "describe",
-      "--name",
-      deploymentName,
-      "--output",
-      "json",
-    ]),
+    run(
+      temporalCommand(options, [
+        "worker",
+        "deployment",
+        "describe",
+        "--name",
+        deploymentName,
+        "--output",
+        "json",
+      ]),
+    ),
     readWorkerDeploymentLock(options.rolloutLockName ?? deploymentName, run),
   ]);
   const deployment = DeploymentDescriptionSchema.parse(
