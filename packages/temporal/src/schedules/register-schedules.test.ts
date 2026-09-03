@@ -24,7 +24,7 @@ import {
   buildExecutionStartMetadata,
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
-import * as workflowEntrypoint from "../workflows/index.ts";
+import * as workflowEntrypoint from "#workflows/index.ts";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,

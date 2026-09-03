@@ -43,9 +43,11 @@ function replaceCatalogPinValue(
   pinName: string,
   value: string,
 ): string {
-  const namePattern = new RegExp(`"name"\\s*:\\s*${JSON.stringify(pinName)}`);
+  const namePattern = new RegExp(
+    String.raw`"name"\s*:\s*${JSON.stringify(pinName)}`,
+  );
   const nameMatch = namePattern.exec(raw);
-  if (nameMatch === null || nameMatch.index === undefined) {
+  if (nameMatch === null) {
     throw new Error(`Temporal version catalog pin is missing: ${pinName}`);
   }
   const nameStart = nameMatch.index;

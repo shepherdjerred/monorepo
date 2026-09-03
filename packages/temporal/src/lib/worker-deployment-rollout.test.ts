@@ -738,7 +738,9 @@ describe("Worker Deployment rollback and rejection", () => {
       ),
     ).rejects.toThrow("was not built from");
   });
+});
 
+describe("Worker Deployment rollout safety", () => {
   test("allows the exact active ramp to roll back after a newer build registers", async () => {
     const commands: string[][] = [];
     await executeWorkerDeploymentRollout(
