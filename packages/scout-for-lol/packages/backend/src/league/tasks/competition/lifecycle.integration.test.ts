@@ -1,22 +1,17 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import {
-  createCompetition,
-  type CreateCompetitionInput,
-} from "#src/database/competition/queries.ts";
 import type {
   CompetitionCriteria,
-  CompetitionId,
   LeaguePuuid,
-  PlayerId,
   Region,
 } from "@scout-for-lol/data";
-import {
-  testGuildId,
-  testAccountId,
-  testChannelId,
-  testPuuid,
-} from "#src/testing/test-ids.ts";
+import { testPuuid } from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  addCompetitionParticipantFixture,
+  createCompetitionFixture,
+  createCompetitionPlayerFixture,
+  resetCompetitionFixtures,
+} from "#src/testing/competition-fixtures.ts";
 
 let sendShouldFail = false;
 let sentMessages: { channelId: string; content: string }[] = [];
@@ -57,24 +52,12 @@ async function createTestCompetition(
   criteria: CompetitionCriteria,
   startDate: Date,
   endDate: Date,
-): Promise<{ competitionId: CompetitionId }> {
-  const input: CreateCompetitionInput = {
-    serverId: testGuildId("123456789012345678"),
-    ownerId: testAccountId("987654321098765432"),
-    channelId: testChannelId("111222333444555666"),
-    title: "Test Competition",
-    description: "Test Description",
-    visibility: "OPEN",
-    maxParticipants: 50,
-    dates: {
-      type: "FIXED_DATES",
-      startDate,
-      endDate,
-    },
+) {
+  const competition = await createCompetitionFixture(prisma, {
     criteria,
-  };
-
-  const competition = await createCompetition(prisma, input);
+    startDate,
+    endDate,
+  });
   return { competitionId: competition.id };
 }
 
@@ -82,58 +65,71 @@ async function createTestPlayer(
   alias: string,
   puuid: LeaguePuuid,
   region: Region,
-): Promise<{ playerId: PlayerId }> {
-  const now = new Date();
-  const player = await prisma.player.create({
-    data: {
-      alias,
-      discordId: null,
-      serverId: testGuildId("123456789012345678"),
-      creatorDiscordId: testAccountId("987654321098765432"),
-      createdTime: now,
-      updatedTime: now,
-      accounts: {
-        create: [
-          {
-            alias,
-            puuid,
-            region,
-            serverId: testGuildId("123456789012345678"),
-            creatorDiscordId: testAccountId("987654321098765432"),
-            createdTime: now,
-            updatedTime: now,
-          },
-        ],
-      },
-    },
+) {
+  const player = await createCompetitionPlayerFixture(prisma, {
+    alias,
+    puuid,
+    region,
   });
   return { playerId: player.id };
 }
 
 async function addTestParticipant(
-  competitionId: CompetitionId,
-  playerId: PlayerId,
+  competitionId: Parameters<typeof addCompetitionParticipantFixture>[1],
+  playerId: Parameters<typeof addCompetitionParticipantFixture>[2],
 ): Promise<void> {
-  const now = new Date();
-  await prisma.competitionParticipant.create({
+  await addCompetitionParticipantFixture(prisma, competitionId, playerId);
+}
+
+function findCompetitionsToStart(now: Date) {
+  return prisma.competition.findMany({
+    where: {
+      isCancelled: false,
+      startDate: { lte: now },
+      snapshots: { none: { snapshotType: "START" } },
+    },
+  });
+}
+
+function findCompetitionsToEnd(now: Date) {
+  return prisma.competition.findMany({
+    where: {
+      isCancelled: false,
+      endDate: { lte: now },
+      snapshots: { some: { snapshotType: "START" } },
+      NOT: { snapshots: { some: { snapshotType: "END" } } },
+    },
+  });
+}
+
+async function createStartedCompetition(startDate: Date, endDate: Date) {
+  const { competitionId } = await createTestCompetition(
+    mostSoloGamesCriteria,
+    startDate,
+    endDate,
+  );
+  const { playerId } = await createTestPlayer(
+    "Player1",
+    testPuuid("lifecycle-player1"),
+    "AMERICA_NORTH",
+  );
+  await addTestParticipant(competitionId, playerId);
+  await prisma.competitionSnapshot.create({
     data: {
       competitionId,
       playerId,
-      status: "JOINED",
-      joinedAt: now,
+      snapshotType: "START",
+      snapshotData: JSON.stringify({ soloGames: 10 }),
+      snapshotTime: startDate,
     },
   });
+  return { competitionId, playerId };
 }
 
 beforeEach(async () => {
   sendShouldFail = false;
   sentMessages = [];
-  // Clean up before each test
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
+  await resetCompetitionFixtures(prisma);
 });
 afterAll(async () => {
   await prisma.$disconnect();
@@ -157,20 +153,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
       endDate,
     );
 
-    // Query for competitions to start
-    const competitionsToStart = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        startDate: {
-          lte: now,
-        },
-        snapshots: {
-          none: {
-            snapshotType: "START",
-          },
-        },
-      },
-    });
+    const competitionsToStart = await findCompetitionsToStart(now);
 
     expect(competitionsToStart.length).toBe(1);
     expect(competitionsToStart[0]?.id).toBe(competitionId);
@@ -185,20 +168,7 @@ describe("Competition Lifecycle - Query for Starting", () => {
 
     await createTestCompetition(criteria, startDate, endDate);
 
-    // Query for competitions to start
-    const competitionsToStart = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        startDate: {
-          lte: now,
-        },
-        snapshots: {
-          none: {
-            snapshotType: "START",
-          },
-        },
-      },
-    });
+    const competitionsToStart = await findCompetitionsToStart(now);
 
     expect(competitionsToStart.length).toBe(0);
   });
@@ -222,69 +192,19 @@ describe("Competition Lifecycle - Query for Starting", () => {
       data: { isCancelled: true },
     });
 
-    // Query for competitions to start
-    const competitionsToStart = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        startDate: {
-          lte: now,
-        },
-        snapshots: {
-          none: {
-            snapshotType: "START",
-          },
-        },
-      },
-    });
+    const competitionsToStart = await findCompetitionsToStart(now);
 
     expect(competitionsToStart.length).toBe(0);
   });
 
   test("does not find competition that already has START snapshots", async () => {
-    const criteria = mostSoloGamesCriteria;
-
     const now = new Date("2025-01-15T12:00:00Z");
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T12:00:00Z");
 
-    const { competitionId } = await createTestCompetition(
-      criteria,
-      startDate,
-      endDate,
-    );
+    await createStartedCompetition(startDate, endDate);
 
-    // Add a player and create START snapshot
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
-    await addTestParticipant(competitionId, playerId);
-
-    await prisma.competitionSnapshot.create({
-      data: {
-        competitionId,
-        playerId,
-        snapshotType: "START",
-        snapshotData: JSON.stringify({ soloGames: 10 }),
-        snapshotTime: startDate,
-      },
-    });
-
-    // Query for competitions to start
-    const competitionsToStart = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        startDate: {
-          lte: now,
-        },
-        snapshots: {
-          none: {
-            snapshotType: "START",
-          },
-        },
-      },
-    });
+    const competitionsToStart = await findCompetitionsToStart(now);
 
     expect(competitionsToStart.length).toBe(0);
   });
@@ -366,84 +286,20 @@ describe("Competition Lifecycle - Query for Ending", () => {
       },
     });
 
-    // Query for competitions to end
-    const competitionsToEnd = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        endDate: {
-          lte: now,
-        },
-        snapshots: {
-          some: {
-            snapshotType: "START",
-          },
-        },
-        NOT: {
-          snapshots: {
-            some: {
-              snapshotType: "END",
-            },
-          },
-        },
-      },
-    });
+    const competitionsToEnd = await findCompetitionsToEnd(now);
 
     expect(competitionsToEnd.length).toBe(1);
     expect(competitionsToEnd[0]?.id).toBe(competitionId);
   });
 
   test("does not find competition with future end date", async () => {
-    const criteria = mostSoloGamesCriteria;
-
     const now = new Date("2025-01-18T12:00:00Z");
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T10:00:00Z"); // Future
 
-    const { competitionId } = await createTestCompetition(
-      criteria,
-      startDate,
-      endDate,
-    );
+    await createStartedCompetition(startDate, endDate);
 
-    // Add START snapshot
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
-    await addTestParticipant(competitionId, playerId);
-
-    await prisma.competitionSnapshot.create({
-      data: {
-        competitionId,
-        playerId,
-        snapshotType: "START",
-        snapshotData: JSON.stringify({ soloGames: 10 }),
-        snapshotTime: startDate,
-      },
-    });
-
-    // Query for competitions to end
-    const competitionsToEnd = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        endDate: {
-          lte: now,
-        },
-        snapshots: {
-          some: {
-            snapshotType: "START",
-          },
-        },
-        NOT: {
-          snapshots: {
-            some: {
-              snapshotType: "END",
-            },
-          },
-        },
-      },
-    });
+    const competitionsToEnd = await findCompetitionsToEnd(now);
 
     expect(competitionsToEnd.length).toBe(0);
   });
@@ -457,61 +313,20 @@ describe("Competition Lifecycle - Query for Ending", () => {
 
     await createTestCompetition(criteria, startDate, endDate);
 
-    // Query for competitions to end (no START snapshot exists)
-    const competitionsToEnd = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        endDate: {
-          lte: now,
-        },
-        snapshots: {
-          some: {
-            snapshotType: "START",
-          },
-        },
-        NOT: {
-          snapshots: {
-            some: {
-              snapshotType: "END",
-            },
-          },
-        },
-      },
-    });
+    const competitionsToEnd = await findCompetitionsToEnd(now);
 
     expect(competitionsToEnd.length).toBe(0);
   });
 
   test("does not find competition that already has END snapshots", async () => {
-    const criteria = mostSoloGamesCriteria;
-
     const now = new Date("2025-01-20T12:00:00Z");
     const startDate = new Date("2025-01-15T10:00:00Z");
     const endDate = new Date("2025-01-20T10:00:00Z");
 
-    const { competitionId } = await createTestCompetition(
-      criteria,
+    const { competitionId, playerId } = await createStartedCompetition(
       startDate,
       endDate,
     );
-
-    // Add START and END snapshots
-    const { playerId } = await createTestPlayer(
-      "Player1",
-      testPuuid("lifecycle-player1"),
-      "AMERICA_NORTH",
-    );
-    await addTestParticipant(competitionId, playerId);
-
-    await prisma.competitionSnapshot.create({
-      data: {
-        competitionId,
-        playerId,
-        snapshotType: "START",
-        snapshotData: JSON.stringify({ soloGames: 10 }),
-        snapshotTime: startDate,
-      },
-    });
 
     await prisma.competitionSnapshot.create({
       data: {
@@ -523,27 +338,7 @@ describe("Competition Lifecycle - Query for Ending", () => {
       },
     });
 
-    // Query for competitions to end
-    const competitionsToEnd = await prisma.competition.findMany({
-      where: {
-        isCancelled: false,
-        endDate: {
-          lte: now,
-        },
-        snapshots: {
-          some: {
-            snapshotType: "START",
-          },
-        },
-        NOT: {
-          snapshots: {
-            some: {
-              snapshotType: "END",
-            },
-          },
-        },
-      },
-    });
+    const competitionsToEnd = await findCompetitionsToEnd(now);
 
     expect(competitionsToEnd.length).toBe(0);
   });

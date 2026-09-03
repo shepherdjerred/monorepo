@@ -1,10 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { PermissionsBitField, PermissionFlagsBits } from "discord.js";
 import {
-  createCompetition,
-  type CreateCompetitionInput,
-} from "#src/database/competition/queries.ts";
-import {
   addParticipant,
   getParticipantStatus,
 } from "#src/database/competition/participants.ts";
@@ -24,15 +20,13 @@ import type {
   PlayerId,
 } from "@scout-for-lol/data";
 
+import { testGuildId, testAccountId } from "#src/testing/test-ids.ts";
+import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
-  testGuildId,
-  testAccountId,
-  testChannelId,
-} from "#src/testing/test-ids.ts";
-import {
-  createTestDatabase,
-  deleteIfExists,
-} from "#src/testing/test-database.ts";
+  createCompetitionFixture,
+  createCompetitionPlayerFixture,
+  resetCompetitionFixtures,
+} from "#src/testing/competition-fixtures.ts";
 
 // ============================================================================
 // Test Database Setup
@@ -41,14 +35,7 @@ import {
 const { prisma } = createTestDatabase("competition-business-logic-test");
 
 beforeEach(async () => {
-  // Clean up database before each test
-  await deleteIfExists(() => prisma.competitionSnapshot.deleteMany());
-  await deleteIfExists(() => prisma.competitionParticipant.deleteMany());
-  await deleteIfExists(() => prisma.competition.deleteMany());
-  await deleteIfExists(() => prisma.serverPermission.deleteMany());
-  await deleteIfExists(() => prisma.subscription.deleteMany());
-  await deleteIfExists(() => prisma.account.deleteMany());
-  await deleteIfExists(() => prisma.player.deleteMany());
+  await resetCompetitionFixtures(prisma);
   clearAllRateLimits();
 });
 afterAll(async () => {
@@ -64,16 +51,11 @@ async function createTestPlayer(
   discordId: DiscordAccountId,
   alias: string,
 ): Promise<{ playerId: PlayerId }> {
-  const now = new Date();
-  const player = await prisma.player.create({
-    data: {
-      alias,
-      discordId,
-      serverId,
-      creatorDiscordId: discordId,
-      createdTime: now,
-      updatedTime: now,
-    },
+  const player = await createCompetitionPlayerFixture(prisma, {
+    alias,
+    discordId,
+    serverId,
+    creatorDiscordId: discordId,
   });
   return { playerId: player.id };
 }
@@ -95,36 +77,79 @@ async function createTestCompetition(
   const nextWeek = new Date(now);
   nextWeek.setDate(nextWeek.getDate() + 7);
 
-  const input: CreateCompetitionInput = {
+  const competition = await createCompetitionFixture(prisma, {
     serverId,
     ownerId,
-    channelId: testChannelId("123456789012345678"),
     title: "Test Competition",
     description: "A test competition",
-    visibility: options?.visibility ?? "OPEN",
-    maxParticipants: options?.maxParticipants ?? 50,
-    dates: {
-      type: "FIXED_DATES",
-      startDate: options?.startDate ?? tomorrow,
-      endDate: options?.endDate ?? nextWeek,
-    },
-    criteria: {
-      type: "MOST_GAMES_PLAYED",
-      queues: ["solo"],
-    },
-  };
-
-  const competition = await createCompetition(prisma, input);
-
-  // If cancelled, update it
-  if (options?.isCancelled) {
-    await prisma.competition.update({
-      where: { id: competition.id },
-      data: { isCancelled: true },
-    });
-  }
+    ...(options?.visibility === undefined
+      ? {}
+      : { visibility: options.visibility }),
+    ...(options?.maxParticipants === undefined
+      ? {}
+      : { maxParticipants: options.maxParticipants }),
+    startDate: options?.startDate ?? tomorrow,
+    endDate: options?.endDate ?? nextWeek,
+    ...(options?.isCancelled === undefined
+      ? {}
+      : { cancelled: options.isCancelled }),
+  });
 
   return { competitionId: competition.id };
+}
+
+async function createCompetitionAtLimit() {
+  const serverId = testGuildId("123456789012345678");
+  const ownerId = testAccountId("12300000123");
+  const { competitionId } = await createTestCompetition(serverId, ownerId, {
+    maxParticipants: 2,
+  });
+  const { playerId: player1Id } = await createTestPlayer(
+    serverId,
+    testAccountId("100000000010"),
+    "Player1",
+  );
+  const { playerId: player2Id } = await createTestPlayer(
+    serverId,
+    testAccountId("200000000020"),
+    "Player2",
+  );
+  await addParticipant({
+    prisma,
+    competitionId,
+    playerId: player1Id,
+    status: "JOINED",
+  });
+  await addParticipant({
+    prisma,
+    competitionId,
+    playerId: player2Id,
+    status: "JOINED",
+  });
+  return { serverId, ownerId, competitionId, player1Id };
+}
+
+async function createJoinedParticipantScenario() {
+  const serverId = testGuildId("123456789012345678");
+  const ownerId = testAccountId("12300000123");
+  const { competitionId } = await createTestCompetition(serverId, ownerId);
+  const { playerId } = await createTestPlayer(
+    serverId,
+    testAccountId("456000004560"),
+    "TestPlayer",
+  );
+  await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
+  return { competitionId, playerId };
+}
+
+async function markParticipantLeft(
+  competitionId: Parameters<typeof getParticipantStatus>[1],
+  playerId: Parameters<typeof getParticipantStatus>[2],
+): Promise<void> {
+  await prisma.competitionParticipant.update({
+    where: { competitionId_playerId: { competitionId, playerId } },
+    data: { status: "LEFT", leftAt: new Date() },
+  });
 }
 
 // ============================================================================
@@ -200,35 +225,7 @@ describe("Participant Management - Cannot join inactive competition", () => {
 
 describe("Participant Management - Participant limit enforcement", () => {
   test("cannot join when participant limit is reached", async () => {
-    const serverId = testGuildId("123456789012345678");
-    const ownerId = testAccountId("12300000123");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, {
-      maxParticipants: 2,
-    });
-
-    // Add 2 participants (reaches limit)
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
-    const { playerId: player2Id } = await createTestPlayer(
-      serverId,
-      testAccountId("200000000020"),
-      "Player2",
-    );
-    await addParticipant({
-      prisma,
-      competitionId,
-      playerId: player1Id,
-      status: "JOINED",
-    });
-    await addParticipant({
-      prisma,
-      competitionId,
-      playerId: player2Id,
-      status: "JOINED",
-    });
+    const { serverId, competitionId } = await createCompetitionAtLimit();
 
     // Try to add 3rd participant
     const { playerId: player3Id } = await createTestPlayer(
@@ -282,49 +279,11 @@ describe("Participant Management - Participant limit enforcement", () => {
   });
 
   test("LEFT participants do not count toward limit", async () => {
-    const serverId = testGuildId("123456789012345678");
-    const ownerId = testAccountId("12300000123");
-    const { competitionId } = await createTestCompetition(serverId, ownerId, {
-      maxParticipants: 2,
-    });
-
-    // Add 2 participants
-    const { playerId: player1Id } = await createTestPlayer(
-      serverId,
-      testAccountId("100000000010"),
-      "Player1",
-    );
-    const { playerId: player2Id } = await createTestPlayer(
-      serverId,
-      testAccountId("200000000020"),
-      "Player2",
-    );
-    await addParticipant({
-      prisma,
-      competitionId,
-      playerId: player1Id,
-      status: "JOINED",
-    });
-    await addParticipant({
-      prisma,
-      competitionId,
-      playerId: player2Id,
-      status: "JOINED",
-    });
+    const { serverId, competitionId, player1Id } =
+      await createCompetitionAtLimit();
 
     // Player1 leaves
-    await prisma.competitionParticipant.update({
-      where: {
-        competitionId_playerId: {
-          competitionId,
-          playerId: player1Id,
-        },
-      },
-      data: {
-        status: "LEFT",
-        leftAt: new Date(),
-      },
-    });
+    await markParticipantLeft(competitionId, player1Id);
 
     // Now player3 can join (only 1 active participant)
     const { playerId: player3Id } = await createTestPlayer(
@@ -344,29 +303,8 @@ describe("Participant Management - Participant limit enforcement", () => {
 
 describe("Participant Management - Cannot rejoin after leaving", () => {
   test("cannot rejoin competition after leaving", async () => {
-    const serverId = testGuildId("123456789012345678");
-    const ownerId = testAccountId("12300000123");
-    const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId } = await createTestPlayer(
-      serverId,
-      testAccountId("456000004560"),
-      "TestPlayer",
-    );
-
-    // Join and then leave
-    await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
-    await prisma.competitionParticipant.update({
-      where: {
-        competitionId_playerId: {
-          competitionId,
-          playerId,
-        },
-      },
-      data: {
-        status: "LEFT",
-        leftAt: new Date(),
-      },
-    });
+    const { competitionId, playerId } = await createJoinedParticipantScenario();
+    await markParticipantLeft(competitionId, playerId);
 
     // Try to rejoin
     await expect(
@@ -375,28 +313,8 @@ describe("Participant Management - Cannot rejoin after leaving", () => {
   });
 
   test("participant status is LEFT after leaving", async () => {
-    const serverId = testGuildId("123456789012345678");
-    const ownerId = testAccountId("12300000123");
-    const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId } = await createTestPlayer(
-      serverId,
-      testAccountId("456000004560"),
-      "TestPlayer",
-    );
-
-    await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
-    await prisma.competitionParticipant.update({
-      where: {
-        competitionId_playerId: {
-          competitionId,
-          playerId,
-        },
-      },
-      data: {
-        status: "LEFT",
-        leftAt: new Date(),
-      },
-    });
+    const { competitionId, playerId } = await createJoinedParticipantScenario();
+    await markParticipantLeft(competitionId, playerId);
 
     const status = await getParticipantStatus(prisma, competitionId, playerId);
     expect(status).toBe("LEFT");
@@ -483,16 +401,7 @@ describe("Participant Management - Invitation system", () => {
   });
 
   test("cannot add duplicate participant", async () => {
-    const serverId = testGuildId("123456789012345678");
-    const ownerId = testAccountId("12300000123");
-    const { competitionId } = await createTestCompetition(serverId, ownerId);
-    const { playerId } = await createTestPlayer(
-      serverId,
-      testAccountId("456000004560"),
-      "TestPlayer",
-    );
-
-    await addParticipant({ prisma, competitionId, playerId, status: "JOINED" });
+    const { competitionId, playerId } = await createJoinedParticipantScenario();
 
     // Try to add same participant again
     await expect(

@@ -24,6 +24,10 @@ import {
   testPuuid,
 } from "#src/testing/test-ids.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  createCompetitionPlayerFixture,
+  resetCompetitionFixtures,
+} from "#src/testing/competition-fixtures.ts";
 
 // ============================================================================
 // S3 Mock Setup
@@ -48,13 +52,7 @@ afterAll(async () => {
 
 // Helper to reset database between tests
 async function resetDatabase() {
-  await prisma.competitionSnapshot.deleteMany();
-  await prisma.competitionParticipant.deleteMany();
-  await prisma.competition.deleteMany();
-  await prisma.serverPermission.deleteMany();
-  await prisma.subscription.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.player.deleteMany();
+  await resetCompetitionFixtures(prisma);
 }
 
 // Helper to create active competition dates
@@ -74,29 +72,20 @@ async function createTestPlayer(
   serverId: DiscordGuildId,
   puuid: string,
 ) {
-  return prisma.player.create({
-    data: {
-      discordId: testAccountId(discordId),
-      alias,
-      serverId,
-      creatorDiscordId: testAccountId(discordId),
-      createdTime: new Date(),
-      updatedTime: new Date(),
-      accounts: {
-        create: [
-          {
-            puuid: testPuuid(puuid),
-            alias,
-            region: "AMERICA_NORTH",
-            serverId,
-            creatorDiscordId: testAccountId(discordId),
-            createdTime: new Date(),
-            updatedTime: new Date(),
-          },
-        ],
-      },
-    },
+  return createCompetitionPlayerFixture(prisma, {
+    discordId: testAccountId(discordId),
+    alias,
+    serverId,
+    creatorDiscordId: testAccountId(discordId),
+    puuid: testPuuid(puuid),
   });
+}
+
+async function createLeaderboardPlayers() {
+  const serverId = testGuildId("000000");
+  const player1 = await createTestPlayer("100000000", "Player1", serverId, "1");
+  const player2 = await createTestPlayer("200000000", "Player2", serverId, "2");
+  return { player1, player2 };
 }
 
 beforeEach(async () => {
@@ -188,54 +177,7 @@ describe("calculateLeaderboard integration tests", () => {
 
 describe("calculateLeaderboard integration tests - Scoring", () => {
   test("should calculate leaderboard with participants but no matches", async () => {
-    // Create players
-    const player1 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("100000000"),
-        alias: "Player1",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("100000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("1"),
-              alias: "Player1",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("100000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    const player2 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("200000000"),
-        alias: "Player2",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("200000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("2"),
-              alias: "Player2",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("200000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
+    const { player1, player2 } = await createLeaderboardPlayers();
 
     // Create competition with current dates (active)
     const now = new Date();
@@ -399,54 +341,7 @@ describe("calculateLeaderboard - HIGHEST_RANK Criteria", () => {
 
 describe("calculateLeaderboard - MOST_RANK_CLIMB Criteria", () => {
   test("should handle MOST_RANK_CLIMB criteria with START and END snapshots", async () => {
-    // Create players
-    const player1 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("100000000"),
-        alias: "Player1",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("100000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("1"),
-              alias: "Player1",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("100000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    const player2 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("200000000"),
-        alias: "Player2",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("200000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("2"),
-              alias: "Player2",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("200000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
+    const { player1, player2 } = await createLeaderboardPlayers();
 
     // Create competition with MOST_RANK_CLIMB criteria
     const competition = await createCompetition(prisma, {
@@ -634,78 +529,13 @@ describe("calculateLeaderboard integration tests - rank history", () => {
 
 describe("calculateLeaderboard integration tests - Filters", () => {
   test("should include ever-joined participants and exclude invited-never-joined players", async () => {
-    // Create players
-    const player1 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("100000000"),
-        alias: "Player1",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("100000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("1"),
-              alias: "Player1",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("100000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    const player2 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("200000000"),
-        alias: "Player2",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("200000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("2"),
-              alias: "Player2",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("200000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
-
-    const player3 = await prisma.player.create({
-      data: {
-        discordId: testAccountId("300000000"),
-        alias: "Player3",
-        serverId: testGuildId("000000"),
-        creatorDiscordId: testAccountId("300000000"),
-        createdTime: new Date(),
-        updatedTime: new Date(),
-        accounts: {
-          create: [
-            {
-              puuid: testPuuid("3"),
-              alias: "Player3",
-              region: "AMERICA_NORTH",
-              serverId: testGuildId("000000"),
-              creatorDiscordId: testAccountId("300000000"),
-              createdTime: new Date(),
-              updatedTime: new Date(),
-            },
-          ],
-        },
-      },
-    });
+    const { player1, player2 } = await createLeaderboardPlayers();
+    const player3 = await createTestPlayer(
+      "300000000",
+      "Player3",
+      testGuildId("000000"),
+      "3",
+    );
 
     // Create competition
     const dates = getActiveCompetitionDates();
