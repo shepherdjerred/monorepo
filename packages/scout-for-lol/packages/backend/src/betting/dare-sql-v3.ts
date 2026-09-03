@@ -37,10 +37,14 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 import { validateDareSqlV3 } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
-  dareSqlV3CteTargetDependenciesFromAst,
   dareSqlV3FinalityFromAst,
   dareSqlV3ResultStructureFromAst,
 } from "#src/betting/dare-sql-v3-finality.ts";
+import {
+  decisiveTargetDependenciesV3 as analyzeDecisiveTargetDependenciesV3,
+  rootHasMultipleRows,
+  rootQueryParts,
+} from "#src/betting/dare-sql-v3-branch-analysis.ts";
 
 const RootRowSchema = z.strictObject({ achieved: z.boolean().nullable() });
 const MatchIdRowSchema = z.strictObject({ match_id: z.string() });
@@ -107,7 +111,7 @@ async function verifiedCanonicalSql(
 
 function isNumericDuckDbType(columnType: string): boolean {
   const normalized = columnType.toUpperCase();
-  return /(BIGINT|DECIMAL|DOUBLE|FLOAT|HUGEINT|INTEGER|NUMERIC|REAL|SMALLINT|TINYINT|UBIGINT|UINTEGER|USMALLINT|UTINYINT)/u.test(
+  return /BIGINT|DECIMAL|DOUBLE|FLOAT|HUGEINT|INTEGER|NUMERIC|REAL|SMALLINT|TINYINT|UBIGINT|UINTEGER|USMALLINT|UTINYINT/u.test(
     normalized,
   );
 }
@@ -463,94 +467,6 @@ export async function executeDareSqlV3(input: {
   });
 }
 
-function outerParenthesesWrap(expression: string): boolean {
-  let depth = 0;
-  for (let index = 0; index < expression.length; index += 1) {
-    const character = expression[index];
-    if (character === "(") depth += 1;
-    if (character === ")") depth -= 1;
-    if (depth === 0 && index < expression.length - 1) return false;
-  }
-  return true;
-}
-
-function stripOuterParentheses(expression: string): string {
-  let current = expression.trim();
-  while (
-    current.startsWith("(") &&
-    current.endsWith(")") &&
-    outerParenthesesWrap(current)
-  ) {
-    current = current.slice(1, -1).trim();
-  }
-  return current;
-}
-
-function topLevelOrBranches(expression: string): string[] {
-  const normalized = stripOuterParentheses(expression);
-  const branches: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let index = 0; index < normalized.length; index += 1) {
-    const character = normalized[index];
-    if (character === "(") depth += 1;
-    if (character === ")") depth -= 1;
-    if (
-      depth === 0 &&
-      normalized.slice(index, index + 4).toUpperCase() === " OR "
-    ) {
-      branches.push(normalized.slice(start, index).trim());
-      start = index + 4;
-      index += 3;
-    }
-  }
-  branches.push(normalized.slice(start).trim());
-  return branches;
-}
-
-function rootQueryParts(canonicalSql: string) {
-  const lower = canonicalSql.toLowerCase();
-  let depth = 0;
-  let selectIndex = -1;
-  for (let index = 0; index < lower.length; index += 1) {
-    const character = lower[index];
-    if (character === "(") depth += 1;
-    if (character === ")") depth -= 1;
-    if (depth === 0 && lower.slice(index, index + 7) === "select ") {
-      selectIndex = index;
-    }
-  }
-  const achievedIndex = lower.lastIndexOf(" as achieved");
-  if (selectIndex < 0 || achievedIndex <= selectIndex) return null;
-  return {
-    prefix: canonicalSql.slice(0, selectIndex),
-    expression: canonicalSql.slice(
-      selectIndex + "select ".length,
-      achievedIndex,
-    ),
-    suffix: canonicalSql.slice(achievedIndex + " as achieved".length),
-  };
-}
-
-function rootHasMultipleRows(canonicalSql: string): boolean {
-  const achievedIndex = canonicalSql.toLowerCase().lastIndexOf(" as achieved");
-  if (achievedIndex < 0) return true;
-  const suffix = canonicalSql.slice(achievedIndex);
-  return /\b(?:GROUP\s+BY|HAVING|QUALIFY|UNION(?:\s+ALL)?)\b/iu.test(suffix);
-}
-
-function targetDependenciesIn(text: string, targetKeys: readonly string[]) {
-  return targetKeys.filter((key) =>
-    new RegExp(String.raw`\b${key}\b`, "iu").test(text),
-  );
-}
-
-/**
- * Preserve v2's decisive-branch payout rule for an ordinary SQL OR. The SQL
- * remains authoritative: each root branch is executed as a scalar Boolean,
- * then the first true branch in canonical order supplies its target lineage.
- * More complex Boolean shapes conservatively retain every dependency.
- */
 export async function decisiveTargetDependenciesV3(input: {
   compilation: DareSqlV3Compilation;
   targets: readonly DareTargetBindingV2[];
@@ -558,50 +474,9 @@ export async function decisiveTargetDependenciesV3(input: {
   end: Date;
   lakeDir?: string | undefined;
 }): Promise<string[]> {
-  const parts = rootQueryParts(input.compilation.canonicalSql);
-  if (parts === null) return input.compilation.facts.targetKeys;
-  const branches = topLevelOrBranches(parts.expression);
-  if (branches.length < 2) return input.compilation.facts.targetKeys;
-  const cteTargetDependencies = dareSqlV3CteTargetDependenciesFromAst(
-    input.compilation.immutableAst,
-    input.compilation.facts.targetKeys,
-  );
-  for (const branch of branches) {
-    const branchTargetKeys = targetDependenciesIn(
-      `${parts.prefix} ${branch}`,
-      input.compilation.facts.targetKeys,
-    );
-    const compilation = await compileDareSqlV3({
-      queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved${parts.suffix}`,
-      targetKeys:
-        branchTargetKeys.length > 0
-          ? branchTargetKeys
-          : input.targets.map((target) => target.key),
-    });
-    const evidence = await executeDareSqlV3({
-      compilation,
-      targets: input.targets,
-      start: input.start,
-      end: input.end,
-      ...(input.lakeDir === undefined ? {} : { lakeDir: input.lakeDir }),
-    });
-    if (evidence.achieved === true) {
-      const direct = targetDependenciesIn(
-        branch,
-        input.compilation.facts.targetKeys,
-      );
-      if (direct.length > 0) return direct;
-      const inherited = [...cteTargetDependencies.entries()]
-        .filter(([name]) =>
-          new RegExp(String.raw`\b${name}\b`, "iu").test(branch),
-        )
-        .flatMap(([, dependencies]) => dependencies)
-        .toSorted()
-        .filter((key, index, keys) => keys[index - 1] !== key);
-      return inherited.length > 0
-        ? inherited
-        : input.compilation.facts.targetKeys;
-    }
-  }
-  return input.compilation.facts.targetKeys;
+  return analyzeDecisiveTargetDependenciesV3({
+    ...input,
+    compile: compileDareSqlV3,
+    execute: executeDareSqlV3,
+  });
 }

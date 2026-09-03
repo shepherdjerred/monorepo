@@ -46,8 +46,7 @@ function containsFilter(value: JsonValue | undefined): boolean {
   if (object === null) return false;
   if (
     Object.entries(object).some(
-      ([key, child]) =>
-        key.toLowerCase() === "filter" && child !== null && child !== undefined,
+      ([key, child]) => key.toLowerCase() === "filter" && child !== null,
     )
   ) {
     return true;
@@ -99,17 +98,13 @@ export function dareSqlV3CteTargetDependenciesFromAst(
   );
   const node = objectValue(statement?.["node"]);
   const cteMap = objectValue(node?.["cte_map"]);
-  const entries = arrayValue(cteMap?.["map"])
-    .map((entryValue) => {
-      const entry = objectValue(entryValue);
-      const name = stringValue(entry?.["key"]);
-      const value = objectValue(entry?.["value"]);
-      return name === null || value === null ? null : { name, value };
-    })
-    .filter(
-      (entry): entry is { name: string; value: Record<string, JsonValue> } =>
-        entry !== null,
-    );
+  const entries: { name: string; value: Record<string, JsonValue> }[] = [];
+  for (const entryValue of arrayValue(cteMap?.["map"])) {
+    const entry = objectValue(entryValue);
+    const name = stringValue(entry?.["key"]);
+    const value = objectValue(entry?.["value"]);
+    if (name !== null && value !== null) entries.push({ name, value });
+  }
   const names = new Set(entries.map((entry) => entry.name));
   const direct = new Map<string, Set<string>>();
   const references = new Map<string, Set<string>>();
@@ -128,7 +123,7 @@ export function dareSqlV3CteTargetDependenciesFromAst(
     if (cached !== undefined) return cached;
     if (visiting.has(name)) return [];
     visiting.add(name);
-    const values = new Set(direct.get(name) ?? []);
+    const values = new Set(direct.get(name));
     for (const reference of references.get(name) ?? []) {
       for (const target of resolve(reference)) values.add(target);
     }

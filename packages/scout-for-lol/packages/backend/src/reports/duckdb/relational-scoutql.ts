@@ -22,6 +22,11 @@ import {
   appendRelationalScoutQlCatalogIssues,
   appendRelationalScoutQlLimitIssues,
 } from "#src/reports/duckdb/relational-scoutql-policy.ts";
+import {
+  appendTargetBindingIssues,
+  appendTimelineCoverageIssues,
+  appendWallClockIssues,
+} from "#src/reports/duckdb/relational-scoutql-target-policy.ts";
 
 const RELATIONAL_SCOUTQL_SOURCES = new Set([
   "match_participants",
@@ -298,11 +303,7 @@ function semanticIssues(
   if (mutableFacts.recursive) {
     issues.push("Recursive CTEs are not supported in ScoutQL.");
   }
-  for (const wallClock of uniqueSorted(mutableFacts.wallClockReferences)) {
-    issues.push(
-      `ScoutQL wall-clock reference ${wallClock} is not allowed; use immutable bound parameters.`,
-    );
-  }
+  appendWallClockIssues(mutableFacts.wallClockReferences, issues);
   appendRelationalScoutQlLimitIssues(mutableFacts, limits, issues);
   appendRelationalScoutQlCatalogIssues({
     physicalSources,
@@ -319,45 +320,14 @@ function semanticIssues(
         : RELATIONAL_SCOUTQL_FUNCTIONS,
     issues,
   });
-  if (profile === "relational-v2" && mutableFacts.invalidTargetCalls > 0) {
-    issues.push(
-      "Every dare_target(...) call must contain exactly one string literal target key.",
-    );
-  }
-  if (targetKeys.length === 0) {
-    issues.push(
-      profile === "dare-sql-v3"
-        ? "A Dare SQL contract must reference at least one target relation (T1 through T5)."
-        : "A Dare contract query must bind at least one dare_target(...).",
-    );
-  }
-  if (
-    profile === "dare-sql-v3" &&
-    new Set(targetKeys).size !== allowedTargetKeys.size
-  ) {
-    issues.push(
-      "A Dare SQL contract must reference exactly the target relations frozen in its bindings.",
-    );
-  } else if (
-    profile === "dare-sql-v3" &&
-    [...allowedTargetKeys].some((key) => !targetKeys.includes(key))
-  ) {
-    issues.push(
-      "A Dare SQL contract must reference exactly the target relations frozen in its bindings.",
-    );
-  }
-  if (
-    profile === "dare-sql-v3" &&
-    physicalSources.some(
-      (source) =>
-        source.startsWith("timeline_") && source !== "timeline_coverage",
-    ) &&
-    !physicalSources.includes("timeline_coverage")
-  ) {
-    issues.push(
-      "Dare SQL that reads timeline rows must also read timeline_coverage so missing data cannot be treated as zero.",
-    );
-  }
+  appendTargetBindingIssues({
+    profile,
+    targetKeys,
+    allowedTargetKeys,
+    invalidTargetCalls: mutableFacts.invalidTargetCalls,
+    issues,
+  });
+  appendTimelineCoverageIssues(profile, physicalSources, issues);
   if (profile === "dare-sql-v3") {
     appendDareSqlV3DeterminismIssues(statement, issues);
   }
