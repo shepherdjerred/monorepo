@@ -109,6 +109,11 @@ function ExploreNavigationSection(props: { activeId: string | null }) {
           void queryClient.invalidateQueries({
             queryKey: trpc.explore.list.queryKey(),
           });
+          void queryClient.invalidateQueries({
+            queryKey: trpc.explore.get.queryKey({
+              conversationId: conversation.id,
+            }),
+          });
         },
         onError: (err: unknown) => {
           setRenameError(err instanceof Error ? err.message : String(err));

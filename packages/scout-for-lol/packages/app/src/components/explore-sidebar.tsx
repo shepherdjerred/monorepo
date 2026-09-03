@@ -104,6 +104,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                       ) {
                         return;
                       }
+                      event.preventDefault();
                       props.onSelect(conversation.id);
                     }}
                   >

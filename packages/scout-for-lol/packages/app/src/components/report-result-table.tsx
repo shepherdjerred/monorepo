@@ -69,7 +69,8 @@ export function ReportResultTable(props: {
               const hasGamesColumn = props.columns.some(
                 (column) =>
                   column.key === "games" ||
-                  column.label.toLowerCase().includes("game"),
+                  column.label.toLowerCase() === "games" ||
+                  column.label.toLowerCase() === "game count",
               );
               return props.rows.map((row, rowIndex) => (
                 <TableRow key={`${row.label}-${rowIndex.toString()}`}>

@@ -138,18 +138,18 @@ export function Explore() {
   }, [messages]);
 
   const onRetryError = useCallback(() => {
-    if (runs.error(conversationId) !== null) {
-      runs.clearError(conversationId);
-      if (retryTarget !== null) {
-        handleRetry(retryTarget);
-      } else if (conversationId !== null) {
-        void refreshConversation(conversationId);
-      }
-    } else if (error !== null) {
+    if (error !== null) {
       setError(null);
       const failedVersion = lastFailedVersionRef.current;
       if (failedVersion !== null) {
         void handleSelectVersion(failedVersion);
+      } else if (conversationId !== null) {
+        void refreshConversation(conversationId);
+      }
+    } else if (runs.error(conversationId) !== null) {
+      runs.clearError(conversationId);
+      if (retryTarget !== null) {
+        handleRetry(retryTarget);
       } else if (conversationId !== null) {
         void refreshConversation(conversationId);
       }

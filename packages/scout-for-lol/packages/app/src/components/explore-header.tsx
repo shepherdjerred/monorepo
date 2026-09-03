@@ -23,7 +23,7 @@ export function ExploreHeader(props: {
     shared: boolean;
     sharing: boolean;
     revoking: boolean;
-    onExport?: () => void;
+    onExport: () => void;
     onShare: () => void;
     onRevoke: () => void;
   };
@@ -73,17 +73,14 @@ export function ExploreHeader(props: {
           {props.extraActions}
           {props.actions !== undefined && (
             <>
-              {props.actions.onExport !== undefined && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={props.actions.onExport}
-                >
-                  <Download className="size-4" />
-                  Export
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Export as markdown"
+                onClick={props.actions.onExport}
+              >
+                <Download className="size-4" />
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

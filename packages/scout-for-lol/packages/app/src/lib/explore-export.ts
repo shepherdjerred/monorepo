@@ -66,7 +66,9 @@ function previewTable(
   ].map((header) => escapeCell(header));
   const hasGamesColumn = preview.columns.some(
     (column) =>
-      column.key === "games" || column.label.toLowerCase().includes("game"),
+      column.key === "games" ||
+      column.label.toLowerCase() === "games" ||
+      column.label.toLowerCase() === "game count",
   );
   const rows = preview.rows.map((row) => [
     escapeCell(row.label),
