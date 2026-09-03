@@ -1,6 +1,7 @@
 import {
   BucksDareV2StateSchema,
   DareCompiledPlanV2Schema,
+  DareSqlV3CompilationSchema,
   DareDeadlineSpecV2Schema,
   DareTargetBindingV2Schema,
   type BucksDareV2State,
@@ -21,6 +22,7 @@ const StoredTargetSchema = DareTargetBindingV2Schema.omit({
 });
 
 export const DareV2ListItemSchema = z.strictObject({
+  contractVersion: z.union([z.literal(2), z.literal(3)]),
   id: z.number().int().positive(),
   serverId: z.string().min(1),
   state: BucksDareV2StateSchema,
@@ -46,7 +48,7 @@ export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   channelId: z.string().min(1),
   originConversationId: z.string().min(1).nullable(),
   canonicalScoutQl: z.string().min(1),
-  plan: DareCompiledPlanV2Schema,
+  plan: z.union([DareCompiledPlanV2Schema, DareSqlV3CompilationSchema]),
   semanticProofPlan: z.string().min(1),
   originalText: z.string().min(1),
   deadlineSpec: DareDeadlineSpecV2Schema,
@@ -131,6 +133,7 @@ function listItem(row: VisibleDareRow): DareV2ListItem {
     JSON.parse(revision.targetsJson),
   );
   return DareV2ListItemSchema.parse({
+    contractVersion: revision.compilerVersion === "dare-sql-3" ? 3 : 2,
     id: row.id,
     serverId: row.serverId,
     state: BucksDareV2StateSchema.parse(row.dareState),
@@ -158,9 +161,11 @@ function listItem(row: VisibleDareRow): DareV2ListItem {
 function inspection(row: VisibleDareRow): DareV2Inspection {
   const revision = activeRevision(row);
   const state = BucksDareV2StateSchema.parse(row.dareState);
-  const plan = DareCompiledPlanV2Schema.parse(
-    JSON.parse(revision.compiledPlan),
-  );
+  const rawPlan: unknown = JSON.parse(revision.compiledPlan);
+  const plan =
+    revision.compilerVersion === "dare-sql-3"
+      ? DareSqlV3CompilationSchema.parse(rawPlan)
+      : DareCompiledPlanV2Schema.parse(rawPlan);
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
@@ -168,11 +173,14 @@ function inspection(row: VisibleDareRow): DareV2Inspection {
     ...listItem(row),
     channelId: row.channelId,
     originConversationId: row.originConversationId,
-    canonicalScoutQl: visibleDareScoutQlV2({
-      state,
-      plan,
-      storedCanonicalScoutQl: revision.canonicalScoutQl,
-    }),
+    canonicalScoutQl:
+      revision.compilerVersion === "dare-sql-3"
+        ? revision.canonicalScoutQl
+        : visibleDareScoutQlV2({
+            state,
+            plan: DareCompiledPlanV2Schema.parse(plan),
+            storedCanonicalScoutQl: revision.canonicalScoutQl,
+          }),
     plan,
     semanticProofPlan: revision.semanticProofPlan,
     originalText: revision.originalText,

@@ -1,10 +1,12 @@
 import {
   BucksDareV2StateSchema,
   DareContractV2Schema,
+  DareContractV3Schema,
   DareDeadlineSpecV2Schema,
   DareTargetBindingV2Schema,
   type BucksDareV2State,
   type DareContractV2,
+  type DareContractV3,
   type DareDeadlineSpecV2,
   type DareTargetBindingV2,
   type DiscordGuildId,
@@ -27,6 +29,47 @@ export async function dareV2DraftsEnabled(
   dependencies: DareV2Dependencies,
 ): Promise<boolean> {
   return await dependencies.isPolicyEnabled("dare_v2", {
+    server: serverId,
+  });
+}
+
+export async function dareSqlV3DraftsEnabled(
+  serverId: DiscordGuildId,
+  dependencies: DareV2Dependencies,
+): Promise<boolean> {
+  const [sqlV3, relational] = await Promise.all([
+    dependencies.isPolicyEnabled("dare_sql_v3", { server: serverId }),
+    dependencies.isPolicyEnabled("scoutql_relational_enabled", {
+      server: serverId,
+    }),
+  ]);
+  return sqlV3 && relational;
+}
+
+export async function dareSqlV3FundingEnabled(
+  serverId: DiscordGuildId,
+  dependencies: DareV2Dependencies,
+): Promise<boolean> {
+  const [betting, authoring] = await Promise.all([
+    dependencies.isPolicyEnabled("betting_enabled", { server: serverId }),
+    dareSqlV3DraftsEnabled(serverId, dependencies),
+  ]);
+  return betting && authoring;
+}
+
+export async function relationalDareActionEnabled(
+  serverId: DiscordGuildId,
+  compilerVersion: string,
+  initialFunding: boolean,
+  dependencies: DareV2Dependencies,
+): Promise<boolean> {
+  if (compilerVersion !== "dare-sql-3") {
+    return await dareV2FundingEnabled(serverId, dependencies);
+  }
+  if (initialFunding) {
+    return await dareSqlV3FundingEnabled(serverId, dependencies);
+  }
+  return await dependencies.isPolicyEnabled("betting_enabled", {
     server: serverId,
   });
 }
@@ -65,6 +108,32 @@ export function readableDareV2Contract(
   if (raw === null) return null;
   try {
     return DareContractV2Schema.safeParse(JSON.parse(raw)).data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export type RelationalDareContract = DareContractV2 | DareContractV3;
+
+export function parseRelationalDareContract(
+  raw: string,
+): RelationalDareContract {
+  const value: unknown = JSON.parse(raw);
+  const v3 = DareContractV3Schema.safeParse(value);
+  return v3.success ? v3.data : DareContractV2Schema.parse(value);
+}
+
+export function readableRelationalDareContract(
+  raw: string | null,
+): RelationalDareContract | null {
+  if (raw === null) return null;
+  try {
+    const value: unknown = JSON.parse(raw);
+    return (
+      DareContractV3Schema.safeParse(value).data ??
+      DareContractV2Schema.safeParse(value).data ??
+      null
+    );
   } catch {
     return null;
   }

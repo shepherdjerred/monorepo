@@ -1,5 +1,4 @@
 import type { Prisma } from "#generated/prisma/client/index.js";
-import { DareContractV2Schema } from "@scout-for-lol/data";
 import { DARE_WINDOW_INGESTION_GRACE_MS } from "#src/betting/constants.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
@@ -13,6 +12,7 @@ import {
 } from "#src/betting/dare-settle-types-v2.ts";
 import { collectDareV2Batch } from "#src/betting/dare-settle-batch-v2.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
+import { readableRelationalDareContract } from "#src/betting/dare-v2-common.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -23,12 +23,7 @@ type PendingDareV2 = Prisma.BucksDareV2GetPayload<{
 }>;
 
 function hasReadableContract(raw: string | null): boolean {
-  if (raw === null) return false;
-  try {
-    return DareContractV2Schema.safeParse(JSON.parse(raw)).success;
-  } catch {
-    return false;
-  }
+  return readableRelationalDareContract(raw) !== null;
 }
 
 async function expireOne(

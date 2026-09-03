@@ -145,6 +145,7 @@ export type FlagName =
   | "betting_enabled"
   | "bucks_dares_enabled"
   | "dare_v2"
+  | "dare_sql_v3"
   | "bucks_transfers_enabled"
   | "weekly_parlays_enabled"
   | "betting_player_bet_outcome_dm_enabled"
@@ -174,6 +175,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "betting_enabled",
     "bucks_dares_enabled",
     "dare_v2",
+    "dare_sql_v3",
     "bucks_transfers_enabled",
     "weekly_parlays_enabled",
     "betting_player_bet_outcome_dm_enabled",
@@ -267,6 +269,12 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // ScoutQL-backed Dare v2 creation. Settlement and refunds never consult
   // this flag; revoking it only stops new drafts from being funded.
   dare_v2: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
+  // Standard-SQL Dare v3 authoring and initial funding. Funded contracts keep
+  // settling when this is revoked; the settlement path never reads flags.
+  dare_sql_v3: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },

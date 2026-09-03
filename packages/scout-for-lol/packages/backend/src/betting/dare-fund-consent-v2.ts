@@ -1,7 +1,11 @@
 import {
   DARE_CONTRACT_VERSION,
+  DARE_CONTRACT_V3_VERSION,
+  DARE_SQL_V3_EVALUATOR_VERSION,
   DareCompiledPlanV2Schema,
+  DareSqlV3CompilationSchema,
   DareContractV2Schema,
+  DareContractV3Schema,
   DiscordAccountIdSchema,
   PlayerIdSchema,
   type DiscordAccountId,
@@ -25,9 +29,18 @@ function contractCompilerVersion(revision: {
   compilerVersion: string;
   scoutQlImmutableAst: string | null;
   scoutQlPlanHash: string | null;
-}): "dare-scoutql-1" | "dare-scoutql-2" {
+}): "dare-scoutql-1" | "dare-scoutql-2" | "dare-sql-3" {
   if (revision.compilerVersion === "dare-scoutql-1") {
     return "dare-scoutql-1";
+  }
+  if (revision.compilerVersion === "dare-sql-3") {
+    if (
+      revision.scoutQlImmutableAst === null ||
+      revision.scoutQlPlanHash === null
+    ) {
+      throw new Error("Dare SQL v3 revision has no immutable artifact.");
+    }
+    return "dare-sql-3";
   }
   if (revision.compilerVersion !== "dare-scoutql-2") {
     throw new Error(
@@ -200,9 +213,7 @@ export async function acceptDareV2InTransaction(
       },
     }),
   ]);
-  const plan = DareCompiledPlanV2Schema.parse(
-    JSON.parse(revision.compiledPlan),
-  );
+  const compilerVersion = contractCompilerVersion(revision);
   const targets = parseDareV2Targets(revision.targetsJson);
   const deadlineSpec = parseDareV2Deadline(revision.deadlineSpecJson);
   const deadlineAt = bindDareV2Deadline(deadlineSpec, input.now);
@@ -235,12 +246,7 @@ export async function acceptDareV2InTransaction(
     });
     return { kind: "accept_window_expired", dareState: "expired" } as const;
   }
-  const contract = DareContractV2Schema.parse({
-    version: DARE_CONTRACT_VERSION,
-    canonicalScoutQl: revision.canonicalScoutQl,
-    compiledPlan: plan,
-    compilerVersion: contractCompilerVersion(revision),
-    evaluatorVersion: revision.evaluatorVersion,
+  const sharedContract = {
     targets,
     openingStake: revision.openingStake,
     serverId: dare.serverId,
@@ -250,8 +256,39 @@ export async function acceptDareV2InTransaction(
     deadlineAt: deadlineAt.toISOString(),
     deadlineSpec,
     plainLanguage: revision.plainLanguage,
-    semanticProofPlan: revision.semanticProofPlan,
-  });
+  };
+  const contract =
+    compilerVersion === "dare-sql-3"
+      ? (() => {
+          const compilation = DareSqlV3CompilationSchema.parse(
+            JSON.parse(revision.compiledPlan),
+          );
+          return DareContractV3Schema.parse({
+            version: DARE_CONTRACT_V3_VERSION,
+            canonicalSql: revision.canonicalScoutQl,
+            immutableAst: revision.scoutQlImmutableAst,
+            queryHash: revision.scoutQlPlanHash,
+            maxEligibleGames: compilation.maxEligibleGames,
+            compilerVersion,
+            evaluatorVersion: DARE_SQL_V3_EVALUATOR_VERSION,
+            finality: compilation.finality,
+            facts: compilation.facts,
+            resultStructure: compilation.resultStructure,
+            originalText: revision.originalText,
+            ...sharedContract,
+          });
+        })()
+      : DareContractV2Schema.parse({
+          version: DARE_CONTRACT_VERSION,
+          canonicalScoutQl: revision.canonicalScoutQl,
+          compiledPlan: DareCompiledPlanV2Schema.parse(
+            JSON.parse(revision.compiledPlan),
+          ),
+          compilerVersion,
+          evaluatorVersion: revision.evaluatorVersion,
+          semanticProofPlan: revision.semanticProofPlan,
+          ...sharedContract,
+        });
   const activated = await tx.bucksDareV2.updateMany({
     where: { id: input.dareId, dareState: "pending_accept" },
     data: {

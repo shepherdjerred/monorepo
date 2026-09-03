@@ -13,6 +13,15 @@ import {
   type RelationalScoutQlComplexityLimits,
 } from "#src/reports/duckdb/relational-scoutql-limits.ts";
 import { relationalScoutQlOutputIssues } from "#src/reports/duckdb/relational-scoutql-output.ts";
+import {
+  appendDareSqlV3DeterminismIssues,
+  DARE_SQL_V3_FUNCTIONS,
+  DARE_SQL_V3_SOURCES,
+} from "#src/reports/duckdb/dare-sql-v3-profile.ts";
+import {
+  appendRelationalScoutQlCatalogIssues,
+  appendRelationalScoutQlLimitIssues,
+} from "#src/reports/duckdb/relational-scoutql-policy.ts";
 
 const RELATIONAL_SCOUTQL_SOURCES = new Set([
   "match_participants",
@@ -104,7 +113,7 @@ export type RelationalScoutQlValidation =
 
 export function relationalScoutQlStatementFromImmutableAst(
   immutableAst: string,
-): unknown {
+): JsonValue {
   const parsedJson: unknown = JSON.parse(immutableAst);
   const envelope = SerializedSqlSchema.parse(parsedJson);
   if (envelope.error) {
@@ -258,76 +267,11 @@ function uniqueSorted(values: readonly string[]): string[] {
   return [...new Set(values)].toSorted();
 }
 
-function appendLimitIssues(
-  facts: AstFacts,
-  limits: RelationalScoutQlComplexityLimits,
-  issues: string[],
-): void {
-  const measuredLimits = [
-    {
-      actual: facts.cteCount,
-      maximum: limits.ctes,
-      label: "CTEs",
-    },
-    {
-      actual: facts.joinedRelations,
-      maximum: limits.joinedRelations,
-      label: "joined relations",
-    },
-    {
-      actual: facts.predicates,
-      maximum: limits.predicates,
-      label: "predicates",
-    },
-  ];
-  for (const limit of measuredLimits) {
-    if (limit.actual > limit.maximum) {
-      issues.push(
-        `ScoutQL may contain at most ${limit.maximum.toString()} ${limit.label}.`,
-      );
-    }
-  }
-  if (facts.maxExpressionDepth > limits.expressionDepth) {
-    issues.push(
-      `ScoutQL expressions may be at most ${limits.expressionDepth.toString()} levels deep.`,
-    );
-  }
-}
-
-function appendCatalogIssues(input: {
-  physicalSources: readonly string[];
-  functions: readonly string[];
-  targetKeys: readonly string[];
-  allowedTargetKeys: ReadonlySet<string>;
-  issues: string[];
-}): void {
-  for (const source of input.physicalSources) {
-    if (!RELATIONAL_SCOUTQL_SOURCES.has(source)) {
-      input.issues.push(
-        `ScoutQL source ${source} is not in the closed source catalog.`,
-      );
-    }
-  }
-  for (const functionName of input.functions) {
-    if (!RELATIONAL_SCOUTQL_FUNCTIONS.has(functionName)) {
-      input.issues.push(
-        `ScoutQL function ${functionName} is not in the closed function catalog.`,
-      );
-    }
-  }
-  for (const targetKey of input.targetKeys) {
-    if (!input.allowedTargetKeys.has(targetKey)) {
-      input.issues.push(
-        `ScoutQL target ${targetKey} is not a frozen dare target.`,
-      );
-    }
-  }
-}
-
 function semanticIssues(
   statement: JsonValue,
   allowedTargetKeys: ReadonlySet<string>,
   limits: RelationalScoutQlComplexityLimits,
+  profile: "relational-v2" | "dare-sql-v3",
 ): { issues: string[]; facts: RelationalScoutQlFacts } {
   const mutableFacts: AstFacts = {
     cteNames: new Set(),
@@ -346,7 +290,10 @@ function semanticIssues(
   collectAstFacts(statement, mutableFacts, 0);
   const physicalSources = uniqueSorted(mutableFacts.physicalSources);
   const functions = uniqueSorted(mutableFacts.functions);
-  const targetKeys = uniqueSorted(mutableFacts.targetKeys);
+  const targetKeys =
+    profile === "dare-sql-v3"
+      ? physicalSources.filter((source) => /^T[1-5]$/u.test(source))
+      : uniqueSorted(mutableFacts.targetKeys);
   const issues = relationalScoutQlOutputIssues(statement);
   if (mutableFacts.recursive) {
     issues.push("Recursive CTEs are not supported in ScoutQL.");
@@ -356,23 +303,48 @@ function semanticIssues(
       `ScoutQL wall-clock reference ${wallClock} is not allowed; use immutable bound parameters.`,
     );
   }
-  appendLimitIssues(mutableFacts, limits, issues);
-  appendCatalogIssues({
+  appendRelationalScoutQlLimitIssues(mutableFacts, limits, issues);
+  appendRelationalScoutQlCatalogIssues({
     physicalSources,
     functions,
     targetKeys,
     allowedTargetKeys,
+    allowedSources:
+      profile === "dare-sql-v3"
+        ? DARE_SQL_V3_SOURCES
+        : RELATIONAL_SCOUTQL_SOURCES,
+    allowedFunctions:
+      profile === "dare-sql-v3"
+        ? DARE_SQL_V3_FUNCTIONS
+        : RELATIONAL_SCOUTQL_FUNCTIONS,
     issues,
   });
-  if (mutableFacts.invalidTargetCalls > 0) {
+  if (profile === "relational-v2" && mutableFacts.invalidTargetCalls > 0) {
     issues.push(
       "Every dare_target(...) call must contain exactly one string literal target key.",
     );
   }
   if (targetKeys.length === 0) {
     issues.push(
-      "A Dare contract query must bind at least one dare_target(...).",
+      profile === "dare-sql-v3"
+        ? "A Dare SQL contract must reference at least one target relation (T1 through T5)."
+        : "A Dare contract query must bind at least one dare_target(...).",
     );
+  }
+  if (
+    profile === "dare-sql-v3" &&
+    physicalSources.some(
+      (source) =>
+        source.startsWith("timeline_") && source !== "timeline_coverage",
+    ) &&
+    !physicalSources.includes("timeline_coverage")
+  ) {
+    issues.push(
+      "Dare SQL that reads timeline rows must also read timeline_coverage so missing data cannot be treated as zero.",
+    );
+  }
+  if (profile === "dare-sql-v3") {
+    appendDareSqlV3DeterminismIssues(statement, issues);
   }
   return {
     issues,
@@ -425,6 +397,7 @@ async function validateRelationalScoutQlWithLimits(
     allowedTargetKeys: readonly string[];
   },
   limits: RelationalScoutQlComplexityLimits,
+  profile: "relational-v2" | "dare-sql-v3" = "relational-v2",
 ): Promise<RelationalScoutQlValidation> {
   if (input.queryText.length > DARE_V2_MAX_QUERY_LENGTH) {
     return {
@@ -460,6 +433,7 @@ async function validateRelationalScoutQlWithLimits(
     statement,
     new Set(input.allowedTargetKeys),
     limits,
+    profile,
   );
   if (analysis.issues.length > 0) {
     return { kind: "invalid", issues: analysis.issues };
@@ -502,5 +476,16 @@ export async function validateCanonicalDareScoutQl(input: {
   return await validateRelationalScoutQlWithLimits(
     input,
     CANONICAL_DARE_SCOUTQL_LIMITS,
+  );
+}
+
+export async function validateDareSqlV3(input: {
+  queryText: string;
+  allowedTargetKeys: readonly string[];
+}): Promise<RelationalScoutQlValidation> {
+  return await validateRelationalScoutQlWithLimits(
+    input,
+    RAW_RELATIONAL_SCOUTQL_LIMITS,
+    "dare-sql-v3",
   );
 }
