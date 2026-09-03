@@ -141,6 +141,7 @@ function progressForRow(
         ...common,
         compilation: plan,
         evidence: row.evidence,
+        settledValue: row.finalValue,
       })
     : deriveDareProgressV2({
         ...common,

@@ -3,12 +3,15 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  RawMatchSchema,
-  RawTimelineSchema,
+  DareSqlV3CompilationSchema,
   type DareSqlV3Evidence,
-  type DareTargetBindingV2,
   type RawMatch,
 } from "@scout-for-lol/data";
+import {
+  dareSqlV3TargetForMatch as targetForMatch,
+  dareSqlV3TimelineForMatch,
+  loadDareSqlV3MatchFixture as loadMatchFixture,
+} from "#src/betting/dare-sql-v3-test-fixture.ts";
 import {
   compileDareSqlV3,
   executeDareSqlV3,
@@ -27,38 +30,6 @@ beforeEach(async () => {
 afterEach(async () => {
   await rm(lakeDir, { recursive: true, force: true });
 });
-
-async function loadMatchFixture(): Promise<RawMatch> {
-  const fixtureUrl = new URL(
-    "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
-    import.meta.url,
-  );
-  const json: unknown = await Bun.file(fixtureUrl).json();
-  const match = RawMatchSchema.parse(json);
-  return RawMatchSchema.parse({
-    ...match,
-    info: { ...match.info, queueId: 420, gameMode: "CLASSIC" },
-  });
-}
-
-function targetForMatch(match: RawMatch): DareTargetBindingV2 {
-  const participant = match.info.participants[0];
-  if (participant === undefined) throw new Error("fixture participant missing");
-  return {
-    key: "T1",
-    discordId: "100000000000000001",
-    playerId: 1,
-    alias: "Target",
-    accounts: [
-      {
-        puuid: participant.puuid,
-        trackingStartedAt: new Date(
-          match.info.gameStartTimestamp - 60_000,
-        ).toISOString(),
-      },
-    ],
-  };
-}
 
 function matchAt(
   base: RawMatch,
@@ -204,8 +175,10 @@ describe("Dare SQL v3 extended match semantics", () => {
     if (lastGame === undefined) throw new Error("streak fixture is empty");
     const queryText = `WITH ordered AS (
       SELECT match_id, game_end_at, champion_id, win,
-        ROW_NUMBER() OVER (ORDER BY game_end_at, match_id)
-        - ROW_NUMBER() OVER (PARTITION BY win ORDER BY game_end_at, match_id) AS run_id
+        SUM(CASE WHEN win IS FALSE THEN 1 ELSE 0 END) OVER (
+          ORDER BY game_end_at, match_id
+          ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS run_id
       FROM T1 WHERE queue_id = 420
     ), streak_games AS (
       SELECT match_id, game_end_at, win AS matched, champion_id FROM ordered
@@ -242,71 +215,56 @@ describe("Dare SQL v3 extended match semantics", () => {
     if (participant === undefined)
       throw new Error("fixture participant missing");
     expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-    const timeline = RawTimelineSchema.parse({
-      metadata: {
-        dataVersion: "2",
-        matchId: match.metadata.matchId,
-        participants: match.info.participants.map((row) => row.puuid),
-      },
-      info: {
-        frameInterval: 60_000,
-        gameId: match.info.gameId,
-        participants: match.info.participants.map((row) => ({
-          participantId: row.participantId,
-          puuid: row.puuid,
-        })),
-        frames: [
+    const timeline = dareSqlV3TimelineForMatch(match, [
+      {
+        timestamp: 60_000,
+        participantFrames: null,
+        events: [
           {
-            timestamp: 60_000,
-            participantFrames: null,
-            events: [
-              {
-                timestamp: 1000,
-                type: "ITEM_PURCHASED",
-                participantId: participant.participantId,
-                itemId: 1001,
-              },
-              {
-                timestamp: 1000,
-                type: "ITEM_PURCHASED",
-                participantId: participant.participantId,
-                itemId: 9999,
-              },
-              {
-                timestamp: 1000,
-                type: "ITEM_SOLD",
-                participantId: participant.participantId,
-                itemId: 1001,
-              },
-              {
-                timestamp: 1000,
-                type: "ITEM_PURCHASED",
-                participantId: participant.participantId,
-                itemId: 1002,
-              },
-              {
-                timestamp: 2000,
-                type: "SKILL_LEVEL_UP",
-                participantId: participant.participantId,
-                skillSlot: 1,
-              },
-              {
-                timestamp: 2000,
-                type: "SKILL_LEVEL_UP",
-                participantId: participant.participantId,
-                skillSlot: 2,
-              },
-              {
-                timestamp: 2000,
-                type: "SKILL_LEVEL_UP",
-                participantId: participant.participantId,
-                skillSlot: 4,
-              },
-            ],
+            timestamp: 1000,
+            type: "ITEM_PURCHASED",
+            participantId: participant.participantId,
+            itemId: 1001,
+          },
+          {
+            timestamp: 1000,
+            type: "ITEM_PURCHASED",
+            participantId: participant.participantId,
+            itemId: 9999,
+          },
+          {
+            timestamp: 1000,
+            type: "ITEM_SOLD",
+            participantId: participant.participantId,
+            itemId: 1001,
+          },
+          {
+            timestamp: 1000,
+            type: "ITEM_PURCHASED",
+            participantId: participant.participantId,
+            itemId: 1002,
+          },
+          {
+            timestamp: 2000,
+            type: "SKILL_LEVEL_UP",
+            participantId: participant.participantId,
+            skillSlot: 1,
+          },
+          {
+            timestamp: 2000,
+            type: "SKILL_LEVEL_UP",
+            participantId: participant.participantId,
+            skillSlot: 2,
+          },
+          {
+            timestamp: 2000,
+            type: "SKILL_LEVEL_UP",
+            participantId: participant.participantId,
+            skillSlot: 4,
           },
         ],
       },
-    });
+    ]);
     expect(await writeTimelineStagingFiles(lakeDir, timeline, new Date())).toBe(
       true,
     );
@@ -355,7 +313,9 @@ describe("Dare SQL v3 extended match semantics", () => {
       ],
     });
   });
+});
 
+describe("Dare SQL v3 eligibility boundaries", () => {
   test("opponent-team comparisons exclude multi-team matches", async () => {
     const match = structuredClone(await loadMatchFixture());
     const firstTeam = match.info.teams[0];
@@ -364,7 +324,7 @@ describe("Dare SQL v3 extended match semantics", () => {
     expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
     const compilation = await compileDareSqlV3({
       queryText:
-        "SELECT EXISTS (SELECT 1 FROM T1 p JOIN match_teams o ON o.match_id = p.match_id AND o.team_id <> p.team_id WHERE o.dragon_kills > 0) AS achieved",
+        "SELECT EXISTS (SELECT 1 FROM T1 p JOIN match_teams o ON o.match_id = p.match_id AND NOT (o.team_id = p.team_id) WHERE o.dragon_kills > 0) AS achieved",
       targetKeys: ["T1"],
     });
     const evidence = await executeDareSqlV3({
@@ -375,5 +335,124 @@ describe("Dare SQL v3 extended match semantics", () => {
       lakeDir,
     });
     expect(evidence).toMatchObject({ achieved: false, sourceMatchIds: [] });
+  });
+
+  test("excludes a match that started before activation", async () => {
+    const match = await loadMatchFixture();
+    expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+    const compilation = await compileDareSqlV3({
+      queryText: "SELECT COUNT(*) >= 1 AS achieved FROM T1",
+      targetKeys: ["T1"],
+    });
+
+    await expect(
+      executeDareSqlV3({
+        compilation,
+        targets: [targetForMatch(match)],
+        start: new Date(match.info.gameStartTimestamp + 60_000),
+        end: new Date(match.info.gameEndTimestamp + 60_000),
+        lakeDir,
+      }),
+    ).resolves.toMatchObject({ achieved: false, sourceMatchIds: [] });
+  });
+
+  test("selects the newest games for a last-games baseline", async () => {
+    const base = await loadMatchFixture();
+    const games = [
+      matchAt(base, 0, true, 1),
+      matchAt(base, 1, true, 2),
+      matchAt(base, 2, true, 3),
+    ];
+    for (const game of games)
+      expect(await writeMatchStagingFile(lakeDir, game)).toBe(true);
+    const compiled = await compileDareSqlV3({
+      queryText: "SELECT COUNT(*) >= 1 AS achieved FROM T1",
+      targetKeys: ["T1"],
+    });
+    const compilation = DareSqlV3CompilationSchema.parse({
+      ...compiled,
+      maxEligibleGames: 2,
+    });
+    const last = games.at(-1);
+    if (last === undefined) throw new Error("newest-game fixture is empty");
+
+    await expect(
+      executeDareSqlV3({
+        compilation,
+        targets: [targetForMatch(base)],
+        start: new Date(base.info.gameStartTimestamp - 60_000),
+        end: new Date(last.info.gameEndTimestamp + 60_000),
+        lakeDir,
+        matchOrder: "newest",
+      }),
+    ).resolves.toMatchObject({
+      sourceMatchIds: ["NA1_STREAK_1", "NA1_STREAK_2"],
+    });
+  });
+
+  test("applies the game cap after excluding multi-team matches", async () => {
+    const base = await loadMatchFixture();
+    const unsupported = matchAt(base, 0, true, 1);
+    const firstTeam = unsupported.info.teams[0];
+    if (firstTeam === undefined) throw new Error("fixture team missing");
+    unsupported.info.teams.push({
+      ...structuredClone(firstTeam),
+      teamId: 300,
+    });
+    const supported = matchAt(base, 1, true, 2);
+    expect(await writeMatchStagingFile(lakeDir, unsupported)).toBe(true);
+    expect(await writeMatchStagingFile(lakeDir, supported)).toBe(true);
+    const compiled = await compileDareSqlV3({
+      queryText:
+        "SELECT COUNT(*) >= 1 AS achieved FROM T1 p JOIN match_teams o ON o.match_id = p.match_id AND o.team_id <> p.team_id",
+      targetKeys: ["T1"],
+    });
+    const compilation = DareSqlV3CompilationSchema.parse({
+      ...compiled,
+      maxEligibleGames: 1,
+    });
+
+    await expect(
+      executeDareSqlV3({
+        compilation,
+        targets: [targetForMatch(base)],
+        start: new Date(base.info.gameStartTimestamp - 60_000),
+        end: new Date(supported.info.gameEndTimestamp + 60_000),
+        lakeDir,
+      }),
+    ).resolves.toMatchObject({
+      achieved: true,
+      sourceMatchIds: ["NA1_STREAK_1"],
+    });
+  });
+
+  test("applies the game cap after excluding remakes", async () => {
+    const base = await loadMatchFixture();
+    const remake = matchAt(base, 0, true, 1);
+    remake.info.gameDuration = 120;
+    const completed = matchAt(base, 1, true, 2);
+    expect(await writeMatchStagingFile(lakeDir, remake)).toBe(true);
+    expect(await writeMatchStagingFile(lakeDir, completed)).toBe(true);
+    const compiled = await compileDareSqlV3({
+      queryText: "SELECT COUNT(*) >= 1 AS achieved FROM T1",
+      targetKeys: ["T1"],
+    });
+    const compilation = DareSqlV3CompilationSchema.parse({
+      ...compiled,
+      maxEligibleGames: 1,
+    });
+
+    await expect(
+      executeDareSqlV3({
+        compilation,
+        targets: [targetForMatch(base)],
+        start: new Date(base.info.gameStartTimestamp - 60_000),
+        end: new Date(completed.info.gameEndTimestamp + 60_000),
+        lakeDir,
+      }),
+    ).resolves.toMatchObject({
+      achieved: true,
+      sourceMatchIds: ["NA1_STREAK_1"],
+    });
   });
 });

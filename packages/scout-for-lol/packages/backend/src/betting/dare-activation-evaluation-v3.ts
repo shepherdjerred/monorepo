@@ -1,6 +1,7 @@
 import {
   DareActivationSnapshotV3Schema,
   rankToLeaguePoints,
+  tierToOrdinal,
   type DareContractV3,
   type DareActivationSnapshotV3,
   type DareActivationV3,
@@ -28,6 +29,10 @@ export function improvementBaselineSnapshotV3(input: {
         ? left.result.matchId.localeCompare(right.result.matchId)
         : time;
     });
+  const uniqueMatchIds = new Set(available.map(({ result }) => result.matchId));
+  if (uniqueMatchIds.size !== available.length) {
+    throw new Error("A baseline game set must emit exactly one row per match.");
+  }
   const selected =
     input.activation.window.kind === "last_games"
       ? available.slice(-input.activation.window.count)
@@ -46,11 +51,20 @@ export function improvementBaselineSnapshotV3(input: {
   if (first === undefined || last === undefined) {
     throw new Error("Baseline selection unexpectedly became empty.");
   }
+  const baselineAggregation =
+    input.activation.goal.kind === "personal_best"
+      ? input.activation.direction === "higher"
+        ? "maximum"
+        : "minimum"
+      : input.activation.aggregation;
   const baselineValue = aggregate(
     selected.map((entry) => entry.value),
-    input.activation.aggregation,
+    baselineAggregation,
   );
   if (baselineValue === null) throw new Error("Baseline selection is empty.");
+  if (baselineValue === 0 && input.activation.goal.kind === "percentage") {
+    throw new Error("A percentage improvement requires a nonzero baseline.");
+  }
   return DareActivationSnapshotV3Schema.parse({
     version: 1,
     activatedAt: input.now.toISOString(),
@@ -59,7 +73,7 @@ export function improvementBaselineSnapshotV3(input: {
         kind: "improvement",
         targetKey: input.activation.targetKey,
         baselineValue,
-        aggregation: input.activation.aggregation,
+        aggregation: baselineAggregation,
         direction: input.activation.direction,
         sampleCount: selected.length,
         dateSpan: {
@@ -134,6 +148,13 @@ export function evaluateImprovementEvidenceV3(
       ? []
       : [{ value, matchId: result.matchId }];
   });
+  if (
+    new Set(attempts.map((attempt) => attempt.matchId)).size !== attempts.length
+  ) {
+    throw new Error(
+      "An improvement game set must emit exactly one row per match.",
+    );
+  }
   const values = attempts.map((attempt) => attempt.value);
   const currentValue = aggregate(values, activation.aggregation);
   const bestAttempt =
@@ -198,14 +219,7 @@ export function evaluateRankEvidenceV3(
     const goalMet =
       activation.goal.kind === "gain"
         ? currentLp - baselineLp >= activation.goal.normalizedLp
-        : currentLp >=
-          rankToLeaguePoints({
-            tier: activation.goal.tier,
-            division: activation.goal.division,
-            lp: activation.goal.lp ?? 0,
-            wins: 0,
-            losses: 0,
-          });
+        : rankReachesGoal(current, activation.goal);
     return {
       targetKey: target.key,
       baseline: snapshot.baseline,
@@ -220,4 +234,28 @@ export function evaluateRankEvidenceV3(
     targetDependencies: rows.map((row) => row.targetKey),
     rank: { queue: activation.queue, targets: rows },
   };
+}
+
+function rankReachesGoal(
+  current: Rank,
+  goal: Extract<DareActivationV3, { kind: "rank" }>["goal"] & {
+    kind: "reach";
+  },
+): boolean {
+  const currentTier = tierToOrdinal(current.tier);
+  const goalTier = tierToOrdinal(goal.tier);
+  if (currentTier !== goalTier) return currentTier > goalTier;
+  if (currentTier >= tierToOrdinal("master")) {
+    return current.lp >= (goal.lp ?? 0);
+  }
+  return (
+    rankToLeaguePoints(current) >=
+    rankToLeaguePoints({
+      tier: goal.tier,
+      division: goal.division,
+      lp: goal.lp ?? 0,
+      wins: 0,
+      losses: 0,
+    })
+  );
 }

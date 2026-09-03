@@ -55,6 +55,7 @@ async function expireOne(
       },
     });
     const facts = await dareV2MoneyFactsInTransaction(tx, {
+      contractVersion: 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,

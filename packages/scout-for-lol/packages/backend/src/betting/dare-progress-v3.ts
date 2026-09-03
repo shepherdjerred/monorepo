@@ -371,6 +371,7 @@ export function deriveDareProgressV3(input: {
   targetKeys: readonly string[];
   final: boolean;
   finalityReason: string;
+  settledValue?: boolean | null | undefined;
 }): DareProgress {
   const ordered = orderedEvidence(input.evidence);
   const latestRow = ordered.at(-1);
@@ -395,7 +396,10 @@ export function deriveDareProgressV3(input: {
     change,
     conditionKeys: conditions.map((condition) => condition.key),
   });
-  const value = latest?.achieved ?? null;
+  const value =
+    input.final && input.settledValue !== undefined
+      ? input.settledValue
+      : (latest?.achieved ?? null);
   const matchedGames = distinctMatchCount(matchedIds);
   const eligibleGames = distinctMatchCount(eligibleIds);
   return DareProgressSchema.parse({

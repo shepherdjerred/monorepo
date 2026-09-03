@@ -19,12 +19,14 @@ import { validateDareSqlV3 } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
   dareSqlV3FinalityFromAst,
   dareSqlV3ResultStructureFromAst,
+  validateDareSqlV3RaceRootFromAst,
 } from "#src/betting/dare-sql-v3-finality.ts";
 import {
   createDareSqlV3LakeRelations,
   dareSqlV3ComparesOpponentTeams,
 } from "#src/betting/dare-sql-v3-lake.ts";
 import { relevantDareTimelineEvents } from "#src/betting/dare-sql-v3-evidence.ts";
+import { dareSqlV3CteTargetDependencies } from "#src/betting/dare-sql-v3-lineage.ts";
 
 const RootRowSchema = z.strictObject({ achieved: z.boolean().nullable() });
 const MatchIdRowSchema = z.strictObject({ match_id: z.string() });
@@ -94,6 +96,7 @@ export async function compileDareSqlV3(input: {
   validateCompetition(input.competition ?? { kind: "standard" }, {
     targetKeys: input.targetKeys,
     gameSets: resultStructure.gameSets,
+    immutableAst: validated.compilation.immutableAst,
   });
   validateActivation(input.activation ?? { kind: "immediate" }, {
     targetKeys: input.targetKeys,
@@ -157,6 +160,7 @@ function validateCompetition(
   input: {
     targetKeys: readonly string[];
     gameSets: DareSqlV3Compilation["resultStructure"]["gameSets"];
+    immutableAst: string;
   },
 ): void {
   if (competition.kind === "standard") return;
@@ -189,6 +193,10 @@ function validateCompetition(
       );
     }
   }
+  validateDareSqlV3RaceRootFromAst(
+    input.immutableAst,
+    competition.lanes.map((lane) => lane.gameSet),
+  );
 }
 
 export function dareSqlV3RaceEvidence(
@@ -276,6 +284,7 @@ export async function executeDareSqlV3(input: {
   start: Date;
   end: Date;
   lakeDir?: string | undefined;
+  matchOrder?: "oldest" | "newest" | undefined;
 }): Promise<DareSqlV3Evidence> {
   const compilation = DareSqlV3CompilationSchema.parse(input.compilation);
   return await withDuckDBConnection(async (session) => {
@@ -286,7 +295,10 @@ export async function executeDareSqlV3(input: {
       end: input.end,
       lakeDir: input.lakeDir ?? resolveLakeDir(),
       maxEligibleGames: compilation.maxEligibleGames,
-      excludeMultiTeamGames: dareSqlV3ComparesOpponentTeams(canonicalSql),
+      excludeMultiTeamGames: dareSqlV3ComparesOpponentTeams(
+        compilation.immutableAst,
+      ),
+      matchOrder: input.matchOrder ?? "oldest",
     });
     const resultRows = await session.run(canonicalSql);
     if (resultRows.length !== 1) {
@@ -453,25 +465,15 @@ export async function decisiveTargetDependenciesV3(input: {
         input.compilation.facts.targetKeys,
       );
       if (direct.length > 0) return direct;
-      const referencedCtes = parts.prefix
-        .split(/\),\s*/u)
-        .filter((cte) => {
-          const name = /^(?:WITH\s+)?([a-z_]\w*)\s+AS\s*\(/iu.exec(
-            cte.trim(),
-          )?.[1];
-          return (
-            name !== undefined &&
-            new RegExp(String.raw`\b${name}\b`, "iu").test(branch)
-          );
-        })
-        .join(" ");
-      const inherited = targetDependenciesIn(
-        referencedCtes,
+      const inherited = dareSqlV3CteTargetDependencies(
+        input.compilation.immutableAst,
+        branch,
         input.compilation.facts.targetKeys,
       );
-      return inherited.length > 0
-        ? inherited
-        : input.compilation.facts.targetKeys;
+      if (inherited.length > 0) return [...new Set(inherited)].toSorted();
+      throw new Error(
+        "Could not establish decisive Dare target lineage from the immutable SQL AST.",
+      );
     }
   }
   return input.compilation.facts.targetKeys;

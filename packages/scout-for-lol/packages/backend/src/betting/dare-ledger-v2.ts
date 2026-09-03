@@ -19,6 +19,7 @@ import type { Db } from "#src/database/index.ts";
 import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting.ts";
 
 export type DareV2LedgerFacts = {
+  contractVersion: 2 | 3;
   dareId: number;
   serverId: string;
   potTotal: number;
@@ -58,7 +59,7 @@ function contextBase(
 ) {
   return {
     type: "dare" as const,
-    contractVersion: 2 as const,
+    contractVersion: facts.contractVersion,
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,

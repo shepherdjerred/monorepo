@@ -3,11 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  RawMatchSchema,
-  RawTimelineSchema,
-  type DareTargetBindingV2,
-  type RawMatch,
-} from "@scout-for-lol/data";
+  dareSqlV3TargetForMatch as targetForMatch,
+  dareSqlV3TimelineForMatch,
+  loadDareSqlV3MatchFixture as loadMatchFixture,
+} from "#src/betting/dare-sql-v3-test-fixture.ts";
 import {
   compileDareSqlV3,
   decisiveTargetDependenciesV3,
@@ -28,38 +27,6 @@ const KILL_PARTICIPATION_SQL = `WITH games AS (
   LIMIT 100
 )
 SELECT COUNT(*) FILTER (WHERE matched IS TRUE) >= 1 AS achieved FROM games`;
-
-async function loadMatchFixture(): Promise<RawMatch> {
-  const fixtureUrl = new URL(
-    "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
-    import.meta.url,
-  );
-  const json: unknown = await Bun.file(fixtureUrl).json();
-  const match = RawMatchSchema.parse(json);
-  return RawMatchSchema.parse({
-    ...match,
-    info: { ...match.info, queueId: 420, gameMode: "CLASSIC" },
-  });
-}
-
-function targetForMatch(match: RawMatch): DareTargetBindingV2 {
-  const participant = match.info.participants[0];
-  if (participant === undefined) throw new Error("fixture participant missing");
-  return {
-    key: "T1",
-    discordId: "100000000000000001",
-    playerId: 1,
-    alias: "Target",
-    accounts: [
-      {
-        puuid: participant.puuid,
-        trackingStartedAt: new Date(
-          match.info.gameStartTimestamp - 1000,
-        ).toISOString(),
-      },
-    ],
-  };
-}
 
 describe("Dare SQL v3", () => {
   test("runs ordinary SQL over target, participant, and team relations", async () => {
@@ -122,7 +89,7 @@ describe("Dare SQL v3", () => {
           },
         }),
       ).rejects.toThrow("does not match its immutable AST");
-      expect(compilation.finality).toBe("monotone_true");
+      expect(compilation.finality).toBe("deadline_only");
       expect(compilation.maxEligibleGames).toBe(100);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
@@ -158,22 +125,7 @@ describe("Dare SQL v3", () => {
     const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
     try {
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const timeline = RawTimelineSchema.parse({
-        metadata: {
-          dataVersion: "2",
-          matchId: match.metadata.matchId,
-          participants: match.info.participants.map((row) => row.puuid),
-        },
-        info: {
-          frameInterval: 60_000,
-          gameId: match.info.gameId,
-          participants: match.info.participants.map((row) => ({
-            participantId: row.participantId,
-            puuid: row.puuid,
-          })),
-          frames: [],
-        },
-      });
+      const timeline = dareSqlV3TimelineForMatch(match, []);
       expect(
         await writeTimelineStagingFiles(lakeDir, timeline, new Date()),
       ).toBe(true);

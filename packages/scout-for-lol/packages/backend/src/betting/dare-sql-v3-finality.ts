@@ -21,13 +21,14 @@ function isCount(value: JsonValue | undefined): boolean {
   return name === "count" || name === "count_star";
 }
 
-function sourceTargets(
+export function dareSqlV3SourceTargetsFromAst(
   value: JsonValue,
   targets: ReadonlySet<string>,
   found: Set<string>,
 ): void {
   if (Array.isArray(value)) {
-    for (const child of value) sourceTargets(child, targets, found);
+    for (const child of value)
+      dareSqlV3SourceTargetsFromAst(child, targets, found);
     return;
   }
   const object = objectValue(value);
@@ -35,7 +36,7 @@ function sourceTargets(
   const table = stringValue(object["table_name"]);
   if (table !== null && targets.has(table)) found.add(table);
   for (const child of Object.values(object)) {
-    sourceTargets(child, targets, found);
+    dareSqlV3SourceTargetsFromAst(child, targets, found);
   }
 }
 
@@ -46,6 +47,72 @@ function selectedColumnName(value: JsonValue): string | null {
   if (alias !== null && alias.length > 0) return alias.toLowerCase();
   const names = arrayValue(expression["column_names"]);
   return stringValue(names.at(-1))?.toLowerCase() ?? null;
+}
+
+function matchedColumn(value: JsonValue | undefined): boolean {
+  const expression = objectValue(value);
+  if (
+    expression === null ||
+    stringValue(expression["class"]) !== "COLUMN_REF"
+  ) {
+    return false;
+  }
+  const names = arrayValue(expression["column_names"]);
+  return stringValue(names.at(-1))?.toLowerCase() === "matched";
+}
+
+function raceLaneForExists(value: JsonValue): string | null {
+  const expression = objectValue(value);
+  if (
+    expression === null ||
+    stringValue(expression["class"]) !== "SUBQUERY" ||
+    stringValue(expression["subquery_type"]) !== "EXISTS"
+  ) {
+    return null;
+  }
+  const subquery = objectValue(expression["subquery"]);
+  const node = objectValue(subquery?.["node"]);
+  const from = objectValue(node?.["from_table"]);
+  if (
+    node === null ||
+    from === null ||
+    stringValue(node["type"]) !== "SELECT_NODE" ||
+    stringValue(from["type"]) !== "BASE_TABLE" ||
+    arrayValue(node["modifiers"]).length > 0 ||
+    !matchedColumn(node["where_clause"])
+  ) {
+    return null;
+  }
+  return stringValue(from["table_name"]);
+}
+
+export function validateDareSqlV3RaceRootFromAst(
+  immutableAst: string,
+  laneGameSets: readonly string[],
+): void {
+  const statement = objectValue(
+    relationalScoutQlStatementFromImmutableAst(immutableAst),
+  );
+  const node = objectValue(statement?.["node"]);
+  const achieved = objectValue(arrayValue(node?.["select_list"])[0]);
+  const branches = arrayValue(achieved?.["children"]);
+  const lanes = branches.map((branch) => raceLaneForExists(branch));
+  const expected = laneGameSets.toSorted((left, right) =>
+    left.localeCompare(right),
+  );
+  if (
+    achieved === null ||
+    stringValue(achieved["class"]) !== "CONJUNCTION" ||
+    stringValue(achieved["type"]) !== "CONJUNCTION_OR" ||
+    lanes.includes(null) ||
+    lanes
+      .toSorted((left, right) => (left ?? "").localeCompare(right ?? ""))
+      .join("|") !== expected.join("|")
+  ) {
+    throw new Error(
+      "A race root must be exactly the OR of EXISTS checks for every declared lane's matched games.",
+    );
+  }
 }
 
 export function dareSqlV3ResultStructureFromAst(
@@ -84,7 +151,11 @@ export function dareSqlV3ResultStructureFromAst(
       throw new Error(`Dare SQL game set ${name} has duplicate projections.`);
     }
     const dependencies = new Set<string>();
-    sourceTargets(entryValue, new Set(targetKeys), dependencies);
+    dareSqlV3SourceTargetsFromAst(
+      entryValue,
+      new Set(targetKeys),
+      dependencies,
+    );
     gameSets.push({
       name,
       projectionColumns,
@@ -92,6 +163,29 @@ export function dareSqlV3ResultStructureFromAst(
     });
   }
   return { gameSets };
+}
+
+function directlyCountsAppendOnlyTargetRows(
+  node: Record<string, JsonValue> | null,
+): boolean {
+  if (node === null || stringValue(node["type"]) !== "SELECT_NODE") {
+    return false;
+  }
+  const from = objectValue(node["from_table"]);
+  const cteMap = objectValue(node["cte_map"]);
+  return (
+    from !== null &&
+    stringValue(from["type"]) === "BASE_TABLE" &&
+    /^T[1-5]$/u.test(stringValue(from["table_name"]) ?? "") &&
+    arrayValue(cteMap?.["map"]).length === 0 &&
+    arrayValue(node["modifiers"]).length === 0 &&
+    node["where_clause"] === null &&
+    arrayValue(node["group_expressions"]).length === 0 &&
+    arrayValue(node["group_sets"]).length === 0 &&
+    node["having"] === null &&
+    node["sample"] === null &&
+    node["qualify"] === null
+  );
 }
 
 /** A deliberately narrow proof: COUNT can only increase as evidence grows. */
@@ -109,9 +203,10 @@ export function dareSqlV3FinalityFromAst(
   const threshold = nonnegativeIntegerConstant(achieved["right"]);
   const comparison = stringValue(achieved["type"]);
   const proven =
-    (comparison === "COMPARE_GREATERTHAN" && threshold !== null) ||
-    (comparison === "COMPARE_GREATERTHANOREQUALTO" &&
-      threshold !== null &&
-      threshold > 0);
+    directlyCountsAppendOnlyTargetRows(node) &&
+    ((comparison === "COMPARE_GREATERTHAN" && threshold !== null) ||
+      (comparison === "COMPARE_GREATERTHANOREQUALTO" &&
+        threshold !== null &&
+        threshold > 0));
   return proven ? "monotone_true" : "deadline_only";
 }

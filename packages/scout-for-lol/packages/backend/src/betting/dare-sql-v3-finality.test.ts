@@ -22,5 +22,12 @@ describe("Dare SQL v3 finality", () => {
         targetKeys: ["T1"],
       }),
     ).resolves.toMatchObject({ finality: "deadline_only" });
+    await expect(
+      compileDareSqlV3({
+        queryText:
+          "WITH total AS (SELECT COUNT(*) AS n FROM T1) SELECT COUNT(*) >= 1 AS achieved FROM total WHERE n = 1",
+        targetKeys: ["T1"],
+      }),
+    ).resolves.toMatchObject({ finality: "deadline_only" });
   });
 });

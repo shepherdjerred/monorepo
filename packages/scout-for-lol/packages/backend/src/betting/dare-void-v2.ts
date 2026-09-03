@@ -45,6 +45,7 @@ export async function voidDareV2WithFullRefund(
       select: { plainLanguage: true },
     });
     const facts = await dareV2MoneyFactsInTransaction(tx, {
+      contractVersion: 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,

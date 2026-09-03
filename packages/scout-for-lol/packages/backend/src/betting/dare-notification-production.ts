@@ -58,6 +58,29 @@ export async function enqueueTerminalDareNotification(
   });
 }
 
+async function enqueueProgressNotification(
+  tx: Db,
+  input: {
+    dareId: number;
+    revision: number;
+    kind: ProgressNotificationKind;
+    matchId: string;
+    summary: string;
+    now: Date;
+  },
+): Promise<void> {
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: input.dareId,
+    revision: input.revision,
+    category: "progress",
+    kind: input.kind,
+    matchId: input.matchId,
+    summary: input.summary,
+    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:progress:${input.matchId}`,
+    occurredAt: input.now,
+  });
+}
+
 export async function enqueueMaterialDareProgressNotification(
   tx: Db,
   input: {
@@ -86,15 +109,13 @@ export async function enqueueMaterialDareProgressNotification(
     progress.latestMaterialChange.kind === "regression"
       ? "regressed"
       : "advanced";
-  await enqueueDareNotificationInTransaction(tx, {
+  await enqueueProgressNotification(tx, {
     dareId: input.dareId,
     revision: input.contract.revision,
-    category: "progress",
     kind,
     matchId: input.matchId,
     summary: progress.summary,
-    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.contract.revision.toString()}:progress:${input.matchId}`,
-    occurredAt: input.now,
+    now: input.now,
   });
 }
 
@@ -163,14 +184,12 @@ export async function enqueueMaterialDareProgressNotificationV3(
     (progress.latestMaterialChange.kind === "regression"
       ? "regressed"
       : "advanced");
-  await enqueueDareNotificationInTransaction(tx, {
+  await enqueueProgressNotification(tx, {
     dareId: input.dareId,
     revision: input.contract.revision,
-    category: "progress",
     kind,
     matchId: input.matchId,
     summary: progress.summary,
-    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.contract.revision.toString()}:progress:${input.matchId}`,
-    occurredAt: input.now,
+    now: input.now,
   });
 }

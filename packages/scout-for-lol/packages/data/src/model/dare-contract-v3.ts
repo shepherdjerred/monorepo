@@ -1,12 +1,10 @@
 import { z } from "zod";
-import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { DivisionSchema } from "#src/model/division.ts";
 import { RankSchema, RankedQueueTypeSchema } from "#src/model/rank.ts";
 import { TierSchema } from "#src/model/tier.ts";
 import {
   DARE_V2_MAX_ELIGIBLE_GAMES,
-  DareDeadlineSpecV2Schema,
-  DareTargetBindingV2Schema,
+  DareRelationalContractRuntimeSchema,
 } from "#src/model/dare-contract-v2.ts";
 
 export const DARE_CONTRACT_V3_VERSION = 3;
@@ -152,31 +150,29 @@ export const DareSqlV3CompilationSchema = z.strictObject({
 });
 export type DareSqlV3Compilation = z.infer<typeof DareSqlV3CompilationSchema>;
 
-export const DareContractV3Schema = z.strictObject({
-  version: z.literal(DARE_CONTRACT_V3_VERSION),
-  canonicalSql: z.string().min(1).max(16_000),
-  immutableAst: z.string().min(1),
-  queryHash: z.string().regex(/^[a-f\d]{64}$/u),
-  maxEligibleGames: z.number().int().positive().max(DARE_V2_MAX_ELIGIBLE_GAMES),
-  compilerVersion: z.literal(DARE_SQL_V3_COMPILER_VERSION),
-  evaluatorVersion: z.literal(DARE_SQL_V3_EVALUATOR_VERSION),
-  finality: z.enum(["monotone_true", "deadline_only"]),
-  facts: DareSqlV3FactsSchema,
-  resultStructure: DareSqlV3ResultStructureSchema,
-  competition: DareSqlV3CompetitionSchema.default({ kind: "standard" }),
-  activation: DareActivationV3Schema.default({ kind: "immediate" }),
-  activationSnapshot: DareActivationSnapshotV3Schema.nullable().default(null),
-  targets: z.array(DareTargetBindingV2Schema).min(1).max(5),
-  openingStake: BucksStakeSchema,
-  serverId: z.string().min(1),
-  channelId: z.string().min(1),
-  revision: z.number().int().positive(),
-  activationAt: z.iso.datetime(),
-  deadlineAt: z.iso.datetime(),
-  deadlineSpec: DareDeadlineSpecV2Schema,
-  originalText: z.string().min(1),
-  plainLanguage: z.string().min(1),
-});
+export const DareContractV3Schema = z
+  .strictObject({
+    version: z.literal(DARE_CONTRACT_V3_VERSION),
+    canonicalSql: z.string().min(1).max(16_000),
+    immutableAst: z.string().min(1),
+    queryHash: z.string().regex(/^[a-f\d]{64}$/u),
+    maxEligibleGames: z
+      .number()
+      .int()
+      .positive()
+      .max(DARE_V2_MAX_ELIGIBLE_GAMES),
+    compilerVersion: z.literal(DARE_SQL_V3_COMPILER_VERSION),
+    evaluatorVersion: z.literal(DARE_SQL_V3_EVALUATOR_VERSION),
+    finality: z.enum(["monotone_true", "deadline_only"]),
+    facts: DareSqlV3FactsSchema,
+    resultStructure: DareSqlV3ResultStructureSchema,
+    competition: DareSqlV3CompetitionSchema.default({ kind: "standard" }),
+    activation: DareActivationV3Schema.default({ kind: "immediate" }),
+    activationSnapshot: DareActivationSnapshotV3Schema.nullable().default(null),
+    originalText: z.string().min(1),
+    plainLanguage: z.string().min(1),
+  })
+  .extend(DareRelationalContractRuntimeSchema.shape);
 export type DareContractV3 = z.infer<typeof DareContractV3Schema>;
 
 export const DareSqlV3EvidenceSchema = z.strictObject({

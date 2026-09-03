@@ -87,6 +87,22 @@ function evidence(input: {
 }
 
 describe("Dare progress v3", () => {
+  test("uses the persisted terminal result when no deadline evidence row exists", () => {
+    const progress = deriveDareProgressV3({
+      compilation: compilation("wins"),
+      evidence: [],
+      targetKeys: ["T1"],
+      final: true,
+      finalityReason: "achieved",
+      settledValue: true,
+    });
+    expect(progress).toMatchObject({
+      value: true,
+      final: true,
+      summary: "Dare achieved.",
+    });
+  });
+
   test("does not report an eligible miss as material SQL progress", () => {
     const firstAt = "2026-09-01T00:00:00.000Z";
     const secondAt = "2026-09-02T00:00:00.000Z";

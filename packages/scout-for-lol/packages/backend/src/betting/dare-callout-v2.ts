@@ -132,6 +132,7 @@ export async function loadDareV2CalloutState(
           targetKeys,
           final,
           finalityReason: state,
+          settledValue: dare.finalValue,
         })
       : deriveDareProgressV2({
           plan: DareCompiledPlanV2Schema.parse(

@@ -28,6 +28,7 @@ import {
   type DareV2SettlementSummary,
 } from "#src/betting/dare-settle-types-v2.ts";
 import { settleDareV2OrVoidOnStorageOverflow } from "#src/betting/dare-settle-overflow-v2.ts";
+import { claimActiveDareV2Settlement } from "#src/betting/dare-settlement-claim-v2.ts";
 import {
   captureDareSqlV3ForMatch,
   settleDareSqlV3AtDeadline,
@@ -72,6 +73,7 @@ async function freshFacts(
   },
 ) {
   return await dareV2MoneyFactsInTransaction(tx, {
+    contractVersion: 2,
     dareId: input.dareId,
     ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
     serverId: input.serverId,
@@ -105,23 +107,14 @@ async function resolveFinalDareV2(
   },
 ): Promise<"achieved" | "unachieved" | "voided"> {
   const value = input.finality.value;
-  const resolution =
-    value === true ? "achieved" : value === false ? "unachieved" : "voided";
-  const settled = await tx.bucksDareV2.updateMany({
-    where: { id: input.dare.id, dareState: "active" },
-    data: {
-      dareState: resolution,
-      settledAt: input.now,
-      finalValue: value,
-      proofJson: input.proof === null ? null : JSON.stringify(input.proof),
-      voidReason: value === null ? "missing_evidence" : null,
-    },
+  const resolution = await claimActiveDareV2Settlement(tx, {
+    dareId: input.dare.id,
+    value,
+    proof: input.proof,
+    now: input.now,
+    contractVersion: "v2",
+    refreshCallout: false,
   });
-  if (settled.count !== 1) {
-    throw new Error(
-      `Dare v2 ${input.dare.id.toString()} lost its settlement claim.`,
-    );
-  }
   const facts = await freshFacts(tx, {
     dareId: input.dare.id,
     matchId: input.matchId,

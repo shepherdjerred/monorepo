@@ -151,6 +151,64 @@ describe("Dare v3 activation evaluation", () => {
     ).toMatchObject({ baselineValue: 4, sampleCount: 1 });
   });
 
+  test("rejects duplicate match rows and zero percentage baselines", () => {
+    const duplicateEvidence = evidence([2, 4]);
+    const first = duplicateEvidence.results[0];
+    const second = duplicateEvidence.results[1];
+    if (first === undefined || second === undefined) {
+      throw new Error("test evidence is incomplete");
+    }
+    second.matchId = first.matchId;
+    const common = {
+      kind: "improvement",
+      targetKey: "T1",
+      gameSet: "attempts",
+      projection: "score",
+      aggregation: "average",
+      direction: "higher",
+      window: { kind: "last_games", count: 2 },
+    } as const;
+    expect(() =>
+      improvementBaselineSnapshotV3({
+        activation: { ...common, goal: { kind: "absolute", delta: 1 } },
+        evidence: duplicateEvidence,
+        now: new Date("2026-02-10T00:00:00.000Z"),
+      }),
+    ).toThrow("exactly one row per match");
+    expect(() =>
+      improvementBaselineSnapshotV3({
+        activation: { ...common, goal: { kind: "percentage", percent: 10 } },
+        evidence: evidence([0, 0]),
+        now: new Date("2026-02-10T00:00:00.000Z"),
+      }),
+    ).toThrow("requires a nonzero baseline");
+  });
+});
+
+describe("Dare v3 rank and improvement evaluation", () => {
+  test("freezes personal-best baselines by direction rather than average", () => {
+    const snapshot = improvementBaselineSnapshotV3({
+      activation: {
+        kind: "improvement",
+        targetKey: "T1",
+        gameSet: "attempts",
+        projection: "score",
+        aggregation: "average",
+        direction: "higher",
+        window: { kind: "last_games", count: 3 },
+        goal: { kind: "personal_best" },
+      },
+      evidence: evidence([2, 8, 5]),
+      now: new Date("2026-02-10T00:00:00.000Z"),
+    });
+
+    expect(snapshot.targets[0]).toMatchObject({
+      baselineValue: 8,
+      aggregation: "maximum",
+      direction: "higher",
+    });
+  });
+
   test("normalizes rank gain across a tier boundary and preserves losses", () => {
     const dare = contract(
       { kind: "rank", queue: "solo", goal: { kind: "gain", normalizedLp: 30 } },
@@ -300,4 +358,35 @@ describe("Dare v3 activation evaluation", () => {
       sourceMatchIds: ["match-0", "match-1"],
     });
   });
+});
+
+test("treats every Master-plus tier as above lower tiers regardless of LP", () => {
+  const dare = contract(
+    {
+      kind: "rank",
+      queue: "solo",
+      goal: { kind: "reach", tier: "grandmaster", division: 1, lp: 500 },
+    },
+    {
+      version: 1,
+      activatedAt: "2026-02-01T00:00:00.000Z",
+      targets: [
+        {
+          kind: "rank",
+          targetKey: "T1",
+          queue: "solo",
+          sourcePuuid: "puuid-1",
+          baseline: BASELINE,
+        },
+      ],
+    },
+  );
+  const result = evaluateRankEvidenceV3(
+    dare,
+    evidence([]),
+    new Map([
+      ["T1", { tier: "challenger", division: 1, lp: 0, wins: 1, losses: 2 }],
+    ]),
+  );
+  expect(result.achieved).toBe(true);
 });

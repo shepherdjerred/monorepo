@@ -31,6 +31,7 @@ const IntentDataSchema = z.strictObject({
   revision: z.number().int().positive(),
   originalText: z.string().min(1).optional(),
   plainLanguage: z.string().min(1).optional(),
+  semanticProofPlan: z.string().min(1).optional(),
   canonicalScoutQl: z.string().min(1).optional(),
   sqlIsBinding: z.boolean().optional(),
 });
@@ -228,6 +229,11 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
             {props.intent.originalText}
           </p>
           <p>{props.intent.plainLanguage}</p>
+          {props.intent.semanticProofPlan !== undefined && (
+            <p className="whitespace-pre-wrap text-xs text-scout-subtle">
+              {props.intent.semanticProofPlan}
+            </p>
+          )}
           {props.intent.sqlIsBinding === true && (
             <p className="text-xs font-medium text-scout-primary">
               The canonical SQL below is the binding contract.

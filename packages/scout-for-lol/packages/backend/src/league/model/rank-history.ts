@@ -111,6 +111,71 @@ export async function getLatestRankBefore(
     : undefined;
 }
 
+async function latestRankInRange(
+  puuid: LeaguePuuid,
+  queueType: RankedQueueType,
+  range: { afterTimestamp?: number; timestamp: number },
+  prismaClient: ExtendedPrismaClient,
+): Promise<Rank | undefined> {
+  const boundary = new Date(range.timestamp);
+  const after =
+    range.afterTimestamp === undefined
+      ? undefined
+      : new Date(range.afterTimestamp);
+  const [matched, legacy] = await Promise.all([
+    prismaClient.matchRankHistory.findFirst({
+      where: {
+        puuid,
+        queueType,
+        matchGameEndAt: {
+          ...(after === undefined ? {} : { gt: after }),
+          lte: boundary,
+        },
+        ...(after === undefined ? {} : { matchGameCreationAt: { gt: after } }),
+        ...(after === undefined ? {} : { capturedAt: { lte: boundary } }),
+      },
+      orderBy: { matchGameEndAt: "desc" },
+    }),
+    prismaClient.matchRankHistory.findFirst({
+      where: {
+        puuid,
+        queueType,
+        matchGameEndAt: null,
+        capturedAt: {
+          ...(after === undefined ? {} : { gt: after }),
+          lte: boundary,
+        },
+      },
+      orderBy: { capturedAt: "desc" },
+    }),
+  ]);
+  const matchedTime = matched?.matchGameEndAt?.getTime() ?? -Infinity;
+  const legacyTime = legacy?.capturedAt.getTime() ?? -Infinity;
+  return parseStoredRank(
+    matchedTime >= legacyTime
+      ? (matched?.rankAfter ?? null)
+      : (legacy?.rankAfter ?? null),
+  );
+}
+
+export async function getLatestRankAtOrBefore(
+  puuid: LeaguePuuid,
+  queueType: RankedQueueType,
+  timestamp: number,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Rank | undefined> {
+  return await latestRankInRange(puuid, queueType, { timestamp }, prismaClient);
+}
+
+export async function getLatestRankAfterAndAtOrBefore(
+  puuid: LeaguePuuid,
+  queueType: RankedQueueType,
+  range: { afterTimestamp: number; timestamp: number },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Rank | undefined> {
+  return await latestRankInRange(puuid, queueType, range, prismaClient);
+}
+
 function maxRank(
   left: Rank | undefined,
   right: Rank | undefined,

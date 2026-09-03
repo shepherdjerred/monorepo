@@ -97,6 +97,11 @@ export function appendDareSqlV3DeterminismIssues(
     }
   }
   const functionName = stringValue(object["function_name"]);
+  if (functionName === "row_number") {
+    issues.push(
+      "Dare SQL row_number is not permitted because its window ordering cannot be proven deterministic.",
+    );
+  }
   if (functionName === "/") {
     const denominator = objectValue(arrayValue(object["children"])[1]);
     if (stringValue(denominator?.["function_name"]) !== "nullif") {

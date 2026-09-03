@@ -35,12 +35,14 @@ export type DareActivationV3Dependencies = {
   prismaClient: ExtendedPrismaClient;
   getRank: typeof getRankByPuuid;
   executeSql: typeof executeDareSqlV3;
+  clock: () => Date;
 };
 
 const DEFAULT_DEPENDENCIES: DareActivationV3Dependencies = {
   prismaClient: prisma,
   getRank: getRankByPuuid,
   executeSql: executeDareSqlV3,
+  clock: () => new Date(),
 };
 
 class TransientActivationError extends Error {}
@@ -93,17 +95,25 @@ async function rankSnapshot(
   if (compilation.activation.kind !== "rank") {
     throw new Error("Rank snapshot requested for a non-rank activation.");
   }
+  const frozenPuuids = targets.flatMap((target) =>
+    target.accounts.map((account) => account.puuid),
+  );
   const accounts = await dependencies.prismaClient.account.findMany({
     where: {
       serverId: row.serverId,
       playerId: { in: targets.map((target) => target.playerId) },
+      puuid: { in: frozenPuuids },
     },
     select: { playerId: true, puuid: true, region: true },
   });
   const snapshots: DareActivationSnapshotV3["targets"] = [];
   for (const target of targets) {
+    const targetPuuids = new Set(
+      target.accounts.map((account) => account.puuid),
+    );
     const targetAccounts = accounts.filter(
-      (account) => account.playerId === target.playerId,
+      (account) =>
+        account.playerId === target.playerId && targetPuuids.has(account.puuid),
     );
     if (targetAccounts.length === 0) {
       throw new Error(`Target ${target.key} has no persisted Riot account.`);
@@ -175,8 +185,17 @@ async function improvementSnapshot(
     targets,
     start,
     end: now,
+    matchOrder: activation.window.kind === "last_games" ? "newest" : "oldest",
   });
   try {
+    if (
+      activation.window.kind === "last_days" &&
+      evidence.sourceMatchIds.length >= compilation.maxEligibleGames
+    ) {
+      throw new InsufficientBaselineError(
+        "The requested day window reaches the compiled eligible-game cap.",
+      );
+    }
     return improvementBaselineSnapshotV3({ activation, evidence, now });
   } catch (error) {
     if (
@@ -239,14 +258,15 @@ async function activateOne(
       dependencies,
       now,
     });
+    const activationAt = dependencies.clock();
     const built = buildDareContractV3({
       dare: row,
       revision,
       targets,
-      activationAt: now,
+      activationAt,
       activationSnapshot: snapshot,
     });
-    if (built.deadlineAt <= now) {
+    if (built.deadlineAt <= activationAt) {
       await voidDareV2WithFullRefund(
         row,
         "activation_timeout",
@@ -261,7 +281,7 @@ async function activateOne(
           where: { id: row.id, dareState: "activating" },
           data: {
             dareState: "active",
-            activatedAt: now,
+            activatedAt: activationAt,
             deadlineAt: built.deadlineAt,
             contractJson: JSON.stringify(built.contract),
             ...pendingDareV2CalloutRefresh(),
@@ -270,7 +290,10 @@ async function activateOne(
         if (claim.count !== 1) return "activated";
         await tx.bucksDareV2Activation.update({
           where: { dareId: row.id },
-          data: { snapshotJson: JSON.stringify(snapshot), completedAt: now },
+          data: {
+            snapshotJson: JSON.stringify(snapshot),
+            completedAt: activationAt,
+          },
         });
         await enqueueDareNotificationInTransaction(tx, {
           dareId: row.id,
@@ -279,7 +302,7 @@ async function activateOne(
           kind: "activated",
           summary: `The activation snapshot is frozen; the Dare is active until ${built.deadlineAt.toISOString()}.`,
           deduplicationKey: `dare:${row.id.toString()}:revision:${revision.revision.toString()}:activated`,
-          occurredAt: now,
+          occurredAt: activationAt,
         });
         return "activated";
       },

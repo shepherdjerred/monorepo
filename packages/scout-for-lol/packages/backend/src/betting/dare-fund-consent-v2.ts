@@ -130,6 +130,7 @@ export async function fundDareV2InTransaction(
   });
   const balance = await stakeDareV2ContributionInTransaction(tx, {
     facts: {
+      contractVersion: revision.compilerVersion === "dare-scoutql-3" ? 3 : 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: revision.openingStake,
@@ -252,6 +253,7 @@ export async function acceptDareV2InTransaction(
       } as const;
     }
     const facts = await dareV2MoneyFactsInTransaction(tx, {
+      contractVersion: 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,

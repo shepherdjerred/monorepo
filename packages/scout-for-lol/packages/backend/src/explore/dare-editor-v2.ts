@@ -10,6 +10,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   prepareDareDraftV3,
+  retainedDareDraftV3Semantics,
   reviseDareDraftV3,
 } from "#src/betting/dare-draft-v3.ts";
 import {
@@ -18,6 +19,7 @@ import {
 } from "#src/betting/dare-draft-v2.ts";
 import { historicallyPreviewDareV2 } from "#src/betting/dare-preview-v2.ts";
 import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
+import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
 import { prisma } from "#src/database/index.ts";
 
 export const DareDraftEditorInputSchema = z.strictObject({
@@ -91,6 +93,7 @@ function v3Definition(
     targets: owned.targets,
     deadlineSpec: input.deadlineSpec,
     openingStake: input.openingStake,
+    ...retainedDareDraftV3Semantics(owned.revision.compiledPlan),
   };
 }
 
@@ -171,8 +174,9 @@ export async function validateDareDraftEditorV2(
           scoutQlPlanHash: prepared.draft.compilation.queryHash,
           scoutQlFacts: prepared.draft.compilation.facts,
           plainLanguage: prepared.draft.plainLanguage,
-          semanticProofPlan:
-            "The canonical SQL is binding and executes over normalized report-lake relations.",
+          semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+            prepared.draft.compilation,
+          ),
         };
   }
   const result = await prepareEditorDraft(input, userId, guildIds);

@@ -1,7 +1,7 @@
 import {
   DareContractV3Schema,
   DareSqlV3CompilationSchema,
-  RankSchema,
+  LeaguePuuidSchema,
   resolveQueueTypeFromGame,
   type DareContractV3,
   type DareSqlV3Evidence,
@@ -17,6 +17,7 @@ import { matchTouchesRelationalDare } from "#src/betting/dare-match-eligibility.
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import { dareV2MoneyFactsInTransaction } from "#src/betting/dare-ledger-v2.ts";
 import { distributeDareResolutionV3 } from "#src/betting/dare-resolution-v3.ts";
+import { claimActiveDareV2Settlement } from "#src/betting/dare-settlement-claim-v2.ts";
 import {
   decisiveTargetDependenciesV3,
   executeDareSqlV3,
@@ -31,6 +32,7 @@ import type {
 } from "#src/betting/dare-settle-types-v2.ts";
 import type { DareFinalityV2 } from "#src/betting/dare-proof-v2.ts";
 import { type Db, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { getLatestRankAfterAndAtOrBefore } from "#src/league/model/rank-history.ts";
 
 type ActiveRelationalDareRow = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
@@ -51,8 +53,11 @@ function compilationForContract(contract: DareContractV3) {
   });
 }
 
-function finalityForEvidence(
-  contract: DareContractV3,
+export function dareFinalityForEvidenceV3(
+  contract: Pick<
+    DareContractV3,
+    "competition" | "finality" | "maxEligibleGames"
+  > & { activation?: DareContractV3["activation"] },
   evidence: DareSqlV3Evidence,
   deadlineReached: boolean,
   evidenceWatermark?: Date,
@@ -63,10 +68,11 @@ function finalityForEvidence(
   if (contract.competition.kind === "race") {
     return dareRaceFinalityV3(evidence, evidenceWatermark);
   }
-  if (contract.activation.kind !== "immediate" && evidence.achieved === true) {
-    return { value: true, final: true, reason: "monotone_success" };
-  }
-  if (contract.finality === "monotone_true" && evidence.achieved === true) {
+  if (
+    contract.activation?.kind !== "rank" &&
+    contract.finality === "monotone_true" &&
+    evidence.achieved === true
+  ) {
     return { value: true, final: true, reason: "monotone_success" };
   }
   if (evidence.sourceMatchIds.length >= contract.maxEligibleGames) {
@@ -126,31 +132,22 @@ async function resolveV3(
   },
 ): Promise<"achieved" | "unachieved" | "voided"> {
   const value = input.finality.value;
-  const resolution =
-    value === true ? "achieved" : value === false ? "unachieved" : "voided";
-  const settled = await tx.bucksDareV2.updateMany({
-    where: { id: input.dare.id, dareState: "active" },
-    data: {
-      dareState: resolution,
-      settledAt: input.now,
-      finalValue: value,
-      proofJson: input.proof === null ? null : JSON.stringify(input.proof),
-      voidReason: value === null ? "missing_evidence" : null,
-      ...pendingDareV2CalloutRefresh(),
-    },
+  const resolution = await claimActiveDareV2Settlement(tx, {
+    dareId: input.dare.id,
+    value,
+    proof: input.proof,
+    now: input.now,
+    contractVersion: "v3",
+    refreshCallout: true,
   });
-  if (settled.count !== 1) {
-    throw new Error(
-      `Dare v3 ${input.dare.id.toString()} lost its settlement claim.`,
-    );
-  }
   const facts = await dareV2MoneyFactsInTransaction(tx, {
+    contractVersion: 3,
     dareId: input.dare.id,
     ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
     serverId: input.dare.serverId,
     potTotal: input.dare.potTotal,
     targetAliases: input.dare.targets.map((target) => target.alias),
-    conditionSummary: input.contract.plainLanguage,
+    conditionSummary: `${input.contract.queryHash}: ${input.contract.canonicalSql}`,
   });
   await distributeDareResolutionV3(tx, {
     dare: input.dare,
@@ -218,22 +215,56 @@ async function evaluateContract(
   if (snapshots?.length !== contract.targets.length) {
     throw new Error("Rank Dare is missing activation snapshots.");
   }
-  const stored = await prismaClient.currentRankSnapshot.findMany({
-    where: { puuid: { in: snapshots.map((snapshot) => snapshot.sourcePuuid) } },
-  });
-  const ranks = new Map<string, ReturnType<typeof RankSchema.parse>>();
+  const ranks = new Map<string, (typeof snapshots)[number]["baseline"]>();
   for (const snapshot of snapshots) {
-    const row = stored.find(
-      (candidate) => candidate.puuid === snapshot.sourcePuuid,
+    const current = await getLatestRankAfterAndAtOrBefore(
+      LeaguePuuidSchema.parse(snapshot.sourcePuuid),
+      contract.activation.queue,
+      {
+        afterTimestamp: new Date(contract.activationAt).getTime(),
+        timestamp: end.getTime(),
+      },
+      prismaClient,
     );
-    if (row === undefined) continue;
-    const serialized =
-      contract.activation.queue === "solo" ? row.soloRank : row.flexRank;
-    if (serialized !== null) {
-      ranks.set(snapshot.targetKey, RankSchema.parse(JSON.parse(serialized)));
-    }
+    ranks.set(snapshot.targetKey, current ?? snapshot.baseline);
   }
   return evaluateRankEvidenceV3(contract, sqlEvidence, ranks);
+}
+
+export function dareSqlV3UsesEvidenceTargetDependencies(
+  contract: Pick<DareContractV3, "activation" | "competition">,
+  evidence: Pick<DareSqlV3Evidence, "achieved">,
+): boolean {
+  return (
+    evidence.achieved !== true ||
+    contract.activation.kind !== "immediate" ||
+    contract.competition.kind === "race"
+  );
+}
+
+async function settlementTargetKeys(
+  contract: DareContractV3,
+  evidence: DareSqlV3Evidence,
+  end: Date,
+): Promise<string[]> {
+  if (dareSqlV3UsesEvidenceTargetDependencies(contract, evidence)) {
+    return evidence.targetDependencies;
+  }
+  return await decisiveTargetDependenciesV3({
+    compilation: compilationForContract(contract),
+    targets: contract.targets,
+    start: new Date(contract.activationAt),
+    end,
+  });
+}
+
+export function dareRaceEvaluationEndV3(
+  deadlineAt: string,
+  evidenceWatermark: Date,
+): Date {
+  return new Date(
+    Math.min(evidenceWatermark.getTime(), new Date(deadlineAt).getTime()),
+  );
 }
 
 export async function captureDareSqlV3ForMatch(input: {
@@ -261,16 +292,12 @@ export async function captureDareSqlV3ForMatch(input: {
     new Date(matchData.info.gameEndTimestamp),
     prismaClient,
   );
-  const finality = finalityForEvidence(contract, evidence, false);
-  const targetKeys =
-    evidence.achieved === true && contract.activation.kind === "immediate"
-      ? await decisiveTargetDependenciesV3({
-          compilation: compilationForContract(contract),
-          targets: contract.targets,
-          start: new Date(contract.activationAt),
-          end: new Date(matchData.info.gameEndTimestamp),
-        })
-      : evidence.targetDependencies;
+  const finality = dareFinalityForEvidenceV3(contract, evidence, false);
+  const targetKeys = await settlementTargetKeys(
+    contract,
+    evidence,
+    new Date(matchData.info.gameEndTimestamp),
+  );
   const proof = finality.final
     ? proofForEvidence(contract, evidence, targetKeys, now)
     : null;
@@ -335,16 +362,12 @@ export async function settleDareSqlV3AtDeadline(
     new Date(contract.deadlineAt),
     prismaClient,
   );
-  const finality = finalityForEvidence(contract, evidence, true);
-  const targetKeys =
-    evidence.achieved === true && contract.activation.kind === "immediate"
-      ? await decisiveTargetDependenciesV3({
-          compilation: compilationForContract(contract),
-          targets: contract.targets,
-          start: new Date(contract.activationAt),
-          end: new Date(contract.deadlineAt),
-        })
-      : evidence.targetDependencies;
+  const finality = dareFinalityForEvidenceV3(contract, evidence, true);
+  const targetKeys = await settlementTargetKeys(
+    contract,
+    evidence,
+    new Date(contract.deadlineAt),
+  );
   const proof = proofForEvidence(contract, evidence, targetKeys, now);
   return await prismaClient.$transaction(async (tx) => {
     const resolution = await resolveV3(tx, {
@@ -390,12 +413,16 @@ export async function settleMatureDareSqlV3Races(
       const parsed = DareContractV3Schema.safeParse(raw);
       if (!parsed.success || parsed.data.competition.kind !== "race") continue;
       const contract = parsed.data;
+      const evaluationEnd = dareRaceEvaluationEndV3(
+        contract.deadlineAt,
+        evidenceWatermark,
+      );
       const evidence = await evaluateContract(
         contract,
-        evidenceWatermark,
+        evaluationEnd,
         prismaClient,
       );
-      const finality = finalityForEvidence(
+      const finality = dareFinalityForEvidenceV3(
         contract,
         evidence,
         false,

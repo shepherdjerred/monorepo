@@ -28,11 +28,16 @@ export async function persistAuthoritativeMatch(input: {
     });
     if (claim !== "execute") return;
     claimed = true;
-    await recordMatchForReportStore({
+    const ingest = await recordMatchForReportStore({
       match: input.matchData,
       source: input.silent ? "postmatch_silent_backfill" : "postmatch_live",
       trackedPlayerAliases: input.trackedPlayers.map((player) => player.alias),
     });
+    if (!ingest.staged) {
+      throw new Error(
+        `Report lake staging failed for ${input.matchId}; cursor advancement is blocked.`,
+      );
+    }
     await completeScoutEffect(effectKey);
   } catch (error) {
     if (claimed) await recordScoutEffectFailure(effectKey, error);

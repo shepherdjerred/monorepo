@@ -46,7 +46,11 @@ async function rankRequiredPuuids(
   prismaClient: ExtendedPrismaClient,
 ): Promise<Set<string>> {
   const rows = await prismaClient.bucksDareV2.findMany({
-    where: { dareState: "active", contractJson: { not: null } },
+    where: {
+      dareState: "active",
+      contractJson: { not: null },
+      deadlineAt: { gte: new Date(matchData.info.gameEndTimestamp) },
+    },
     select: { contractJson: true },
   });
   return rankRequiredPuuidsV3(

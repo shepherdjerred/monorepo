@@ -9,7 +9,12 @@ import {
   dareSqlV3RaceEvidence,
 } from "#src/betting/dare-sql-v3.ts";
 import { allocateDareV2TargetPayouts } from "#src/betting/dare-ledger-v2.ts";
-import { dareRaceFinalityV3 } from "#src/betting/dare-settle-v3.ts";
+import {
+  dareFinalityForEvidenceV3,
+  dareRaceEvaluationEndV3,
+  dareRaceFinalityV3,
+  dareSqlV3UsesEvidenceTargetDependencies,
+} from "#src/betting/dare-settle-v3.ts";
 
 const RACE: DareSqlV3Competition = {
   kind: "race",
@@ -107,6 +112,44 @@ describe("Dare v3 races", () => {
     ).toMatchObject({ final: true, reason: "evidence_watermark" });
   });
 
+  test("clamps mature race evaluation to the deadline and preserves tied leaders", () => {
+    const deadlineAt = "2026-09-02T18:05:00.000Z";
+    expect(
+      dareRaceEvaluationEndV3(
+        deadlineAt,
+        new Date("2026-09-02T18:10:00.000Z"),
+      ).toISOString(),
+    ).toBe(deadlineAt);
+    expect(
+      dareSqlV3UsesEvidenceTargetDependencies(
+        { activation: { kind: "immediate" }, competition: RACE },
+        { achieved: true },
+      ),
+    ).toBe(true);
+  });
+
+  test("keeps deadline-only improvement success reversible", () => {
+    const evidence = DareSqlV3EvidenceSchema.parse({
+      achieved: true,
+      results: [],
+      targetDependencies: ["T1"],
+      coverage: "not_required",
+      sourceMatchIds: ["NA1_transient_best"],
+      queryHash: "a".repeat(64),
+    });
+    expect(
+      dareFinalityForEvidenceV3(
+        {
+          competition: { kind: "standard" },
+          finality: "deadline_only",
+          maxEligibleGames: 100,
+        },
+        evidence,
+        false,
+      ),
+    ).toMatchObject({ value: true, final: false, reason: "reversible" });
+  });
+
   test("requires one target-only game-set lane for every target", async () => {
     const queryText = `WITH t1_lane AS (
       SELECT match_id, game_end_at, win AS matched FROM T1
@@ -135,11 +178,32 @@ describe("Dare v3 races", () => {
         },
       }),
     ).rejects.toThrow("exactly once");
+    await expect(
+      compileDareSqlV3({
+        queryText: queryText.replace(
+          /SELECT EXISTS[\s\S]* AS achieved$/u,
+          "SELECT FALSE AS achieved",
+        ),
+        targetKeys: ["T1", "T2"],
+        competition: RACE,
+      }),
+    ).rejects.toThrow("exactly the OR of EXISTS checks");
+    await expect(
+      compileDareSqlV3({
+        queryText: queryText.replace(
+          "SELECT 1 FROM t1_lane WHERE matched",
+          "SELECT 1 FROM t1_lane WHERE matched ORDER BY game_end_at, match_id LIMIT 0",
+        ),
+        targetKeys: ["T1", "T2"],
+        competition: RACE,
+      }),
+    ).rejects.toThrow("exactly the OR of EXISTS checks");
   });
 
   test("assigns an indivisible tied-race remainder to the selected target", () => {
     const { payouts, remainder } = allocateDareV2TargetPayouts({
       facts: {
+        contractVersion: 3,
         dareId: 1,
         serverId: "guild",
         potTotal: 5,

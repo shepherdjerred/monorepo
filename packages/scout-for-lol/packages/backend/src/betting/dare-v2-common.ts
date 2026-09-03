@@ -2,6 +2,7 @@ import {
   BucksDareV2StateSchema,
   DareContractV2Schema,
   DareContractV3Schema,
+  DARE_V2_MAX_HORIZON_DAYS,
   DareDeadlineSpecV2Schema,
   DareTargetBindingV2Schema,
   type BucksDareV2State,
@@ -9,10 +10,17 @@ import {
   type DareContractV3,
   type DareDeadlineSpecV2,
   type DareTargetBindingV2,
+  type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type DareV2Dependencies = {
   prismaClient: ExtendedPrismaClient;
@@ -23,6 +31,56 @@ export const defaultDareV2Dependencies: DareV2Dependencies = {
   prismaClient: prisma,
   isPolicyEnabled,
 };
+
+export function dareDraftDeadlineIssues(
+  spec: DareDeadlineSpecV2,
+  now: Date,
+): string[] {
+  if (spec.kind === "relative") return [];
+  const deadline = new Date(spec.deadlineAt);
+  const issues: string[] = [];
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: spec.timezone }).format();
+  } catch {
+    issues.push(`${spec.timezone} is not an IANA timezone.`);
+  }
+  if (deadline.getTime() <= now.getTime()) {
+    issues.push("An absolute dare deadline must be in the future.");
+  }
+  if (deadline.getTime() > now.getTime() + DARE_V2_MAX_HORIZON_DAYS * DAY_MS) {
+    issues.push(
+      `A dare deadline may be at most ${DARE_V2_MAX_HORIZON_DAYS.toString()} days away.`,
+    );
+  }
+  return issues;
+}
+
+export async function claimDareDraftRevision(
+  tx: Db,
+  input: {
+    dareId: number;
+    serverId: DiscordGuildId;
+    challengerDiscordId: DiscordAccountId;
+    expectedRevision: number;
+    openingStake: number;
+  },
+): Promise<number | undefined> {
+  const updated = await tx.bucksDareV2.updateManyAndReturn({
+    where: {
+      id: input.dareId,
+      serverId: input.serverId,
+      challengerDiscordId: input.challengerDiscordId,
+      dareState: "draft",
+      currentRevision: input.expectedRevision,
+    },
+    data: {
+      currentRevision: { increment: 1 },
+      openingStake: input.openingStake,
+    },
+    select: { currentRevision: true },
+  });
+  return updated.length === 1 ? updated[0]?.currentRevision : undefined;
+}
 
 export async function dareV2DraftsEnabled(
   serverId: DiscordGuildId,

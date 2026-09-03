@@ -25,6 +25,7 @@ const CHANNEL = testChannelId("732");
 const CHALLENGER = bucksTestDiscordId(71);
 const TARGET = bucksTestDiscordId(72);
 const PUUID = bucksTestPuuid(71);
+const LATER_PUUID = bucksTestPuuid(72);
 const NOW = new Date("2026-09-03T12:00:00.000Z");
 const HASH = "b".repeat(64);
 
@@ -146,29 +147,50 @@ describe("Dare v3 activation worker", () => {
       queue: "solo",
       goal: { kind: "gain", normalizedLp: 100 },
     });
+    const target = await db.bucksDareV2Target.findFirstOrThrow({
+      where: { dareId: dare.id, targetKey: "T1" },
+    });
+    await db.account.create({
+      data: {
+        alias: "Linked after funding",
+        puuid: LATER_PUUID,
+        region: "AMERICA_NORTH",
+        playerId: target.playerId,
+        serverId: SERVER,
+        creatorDiscordId: CHALLENGER,
+        createdTime: NOW,
+        updatedTime: NOW,
+      },
+    });
+    const requestedPuuids: string[] = [];
     await expect(
       activatePendingDaresV3(
         {
           prismaClient: db,
-          getRank: async () => ({
-            status: "available",
-            ranks: {
-              solo: {
-                tier: "gold",
-                division: 4,
-                lp: 20,
-                wins: 4,
-                losses: 3,
+          getRank: async (puuid) => {
+            requestedPuuids.push(puuid);
+            return {
+              status: "available",
+              ranks: {
+                solo: {
+                  tier: "gold",
+                  division: 4,
+                  lp: 20,
+                  wins: 4,
+                  losses: 3,
+                },
+                flex: undefined,
+                ranked5s: undefined,
               },
-              flex: undefined,
-              ranked5s: undefined,
-            },
-          }),
+            };
+          },
           executeSql: async () => NO_SQL_EVIDENCE,
+          clock: () => NOW,
         },
         NOW,
       ),
     ).resolves.toEqual({ activated: 1, voided: 0, retrying: 0 });
+    expect(requestedPuuids).toEqual([PUUID]);
     const stored = await db.bucksDareV2.findUniqueOrThrow({
       where: { id: dare.id },
       include: { activation: true },
@@ -199,6 +221,7 @@ describe("Dare v3 activation worker", () => {
           prismaClient: db,
           getRank: async () => ({ status: "error" }),
           executeSql: async () => NO_SQL_EVIDENCE,
+          clock: () => NOW,
         },
         NOW,
       ),
@@ -233,6 +256,7 @@ describe("Dare v3 activation worker", () => {
           ranks: { solo: undefined, flex: undefined, ranked5s: undefined },
         }),
         executeSql: async () => NO_SQL_EVIDENCE,
+        clock: () => NOW,
       },
       NOW,
     );
@@ -255,6 +279,7 @@ describe("Dare v3 activation worker", () => {
         prismaClient: db,
         getRank: async () => ({ status: "error" }),
         executeSql: async () => NO_SQL_EVIDENCE,
+        clock: () => NOW,
       },
       NOW,
     );

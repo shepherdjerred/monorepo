@@ -16,6 +16,7 @@ import {
 } from "#src/betting/dare-draft-v3.ts";
 import { dareSqlV3Catalog } from "#src/betting/dare-sql-v3-catalog.ts";
 import { compileDareSqlV3 } from "#src/betting/dare-sql-v3.ts";
+import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
 import {
   createDareDraftV2,
   deleteDareDraftV2,
@@ -62,7 +63,6 @@ import {
 
 const result = dareToolResult;
 const safeDomainResult = dareDomainResult;
-
 function createDareReadExecutors(input: DareExploreToolsInput) {
   return {
     list: (raw: unknown) =>
@@ -100,7 +100,6 @@ function createDareReadExecutors(input: DareExploreToolsInput) {
       }),
   };
 }
-
 export function createDareToolExecutors(input: DareExploreToolsInput) {
   let shortlistPromise: ReturnType<typeof buildDareShortlist> | undefined;
   const shortlist = () => {
@@ -111,12 +110,10 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     );
     return shortlistPromise;
   };
-
   const sqlV3Enabled = async () =>
     await isPolicyEnabled("dare_extended_contracts_enabled", {
       server: input.capability.serverId,
     });
-
   const definition = async (raw: unknown) => {
     const parsed = DareDefinitionToolInputSchema.parse(raw);
     const v3 = await sqlV3Enabled();
@@ -143,7 +140,6 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
       definition: definitionFromTool(typedDefinition.data, await shortlist()),
     };
   };
-
   const resolvedTargets = async (requestedKeys: readonly string[]) => {
     const available = await shortlist();
     return [...new Set(requestedKeys)].map((key) => {
@@ -257,6 +253,9 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
                 facts: prepared.draft.compilation.facts,
                 finality: prepared.draft.compilation.finality,
                 plainLanguage: prepared.draft.plainLanguage,
+                semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+                  prepared.draft.compilation,
+                ),
                 preview: prepared.draft.preview,
               })
             : result("invalid", "The dare contract needs revision.", {
@@ -357,8 +356,9 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             queryHash: created.draft.compilation.queryHash,
             originalText: created.draft.originalText,
             plainLanguage: created.draft.plainLanguage,
-            semanticProofPlan:
-              "The canonical SQL is the binding contract and runs directly over normalized lake relations.",
+            semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+              created.draft.compilation,
+            ),
             preview: created.draft.preview,
             sqlIsBinding: true,
             openingStake: created.draft.openingStake,
@@ -407,8 +407,9 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             queryHash: revised.draft.compilation.queryHash,
             originalText: revised.draft.originalText,
             plainLanguage: revised.draft.plainLanguage,
-            semanticProofPlan:
-              "The canonical SQL is the binding contract and runs directly over normalized lake relations.",
+            semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+              revised.draft.compilation,
+            ),
             preview: revised.draft.preview,
             sqlIsBinding: true,
           });
@@ -472,6 +473,7 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
                       originalText: dare.originalText,
                       plainLanguage: dare.plainLanguage,
                       canonicalScoutQl: dare.canonicalScoutQl,
+                      semanticProofPlan: dare.semanticProofPlan,
                       sqlIsBinding: dare.contractVersion === 3,
                     }),
               },
