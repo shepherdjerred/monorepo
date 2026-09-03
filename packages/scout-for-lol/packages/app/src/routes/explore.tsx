@@ -11,10 +11,8 @@ import {
 import { ExploreComposer } from "#src/components/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore-share.tsx";
-import {
-  ExploreTranscript,
-  type ExploreTranscriptActions,
-} from "#src/components/explore-transcript.tsx";
+import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
+import type { ExploreTranscriptActions } from "#src/components/explore-transcript-actions.ts";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";

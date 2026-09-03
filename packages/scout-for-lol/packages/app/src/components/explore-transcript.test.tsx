@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
@@ -326,7 +326,7 @@ describe("Explore Dare transcript cards", () => {
       <ExploreTranscript
         messages={[userMsg]}
         hasError
-        actions={{ onRetry: () => {} }}
+        actions={{ onRetry: vi.fn() }}
       />,
     );
     expect(withError).not.toContain(
@@ -337,7 +337,7 @@ describe("Explore Dare transcript cards", () => {
       <ExploreTranscript
         messages={[userMsg]}
         hasError={false}
-        actions={{ onRetry: () => {} }}
+        actions={{ onRetry: vi.fn() }}
       />,
     );
     expect(withoutError).toContain(
