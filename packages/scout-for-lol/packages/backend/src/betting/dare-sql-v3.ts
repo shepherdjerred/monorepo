@@ -37,6 +37,7 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 import { validateDareSqlV3 } from "#src/reports/duckdb/relational-scoutql.ts";
 import {
+  dareSqlV3CteTargetDependenciesFromAst,
   dareSqlV3FinalityFromAst,
   dareSqlV3ResultStructureFromAst,
 } from "#src/betting/dare-sql-v3-finality.ts";
@@ -267,7 +268,7 @@ async function createLakeRelations(
 ): Promise<void> {
   const files = await resolveLakeFiles(input.lakeDir);
   const windowPredicate = {
-    sql: "epoch_ms(game_start_at) >= ? AND epoch_ms(game_end_at) BETWEEN ? AND ?",
+    sql: "queue IS NOT NULL AND epoch_ms(game_start_at) >= ? AND epoch_ms(game_end_at) BETWEEN ? AND ?",
     params: [
       scalarParam(input.start.getTime()),
       scalarParam(input.start.getTime()),
@@ -543,6 +544,10 @@ export async function decisiveTargetDependenciesV3(input: {
   if (parts === null) return input.compilation.facts.targetKeys;
   const branches = topLevelOrBranches(parts.expression);
   if (branches.length < 2) return input.compilation.facts.targetKeys;
+  const cteTargetDependencies = dareSqlV3CteTargetDependenciesFromAst(
+    input.compilation.immutableAst,
+    input.compilation.facts.targetKeys,
+  );
   for (const branch of branches) {
     const branchTargetKeys = targetDependenciesIn(
       `${parts.prefix} ${branch}`,
@@ -568,22 +573,13 @@ export async function decisiveTargetDependenciesV3(input: {
         input.compilation.facts.targetKeys,
       );
       if (direct.length > 0) return direct;
-      const referencedCtes = parts.prefix
-        .split(/\),\s*/u)
-        .filter((cte) => {
-          const name = /^(?:WITH\s+)?([a-z_]\w*)\s+AS\s*\(/iu.exec(
-            cte.trim(),
-          )?.[1];
-          return (
-            name !== undefined &&
-            new RegExp(String.raw`\b${name}\b`, "iu").test(branch)
-          );
-        })
-        .join(" ");
-      const inherited = targetDependenciesIn(
-        referencedCtes,
-        input.compilation.facts.targetKeys,
-      );
+      const inherited = [...cteTargetDependencies.entries()]
+        .filter(([name]) =>
+          new RegExp(String.raw`\b${name}\b`, "iu").test(branch),
+        )
+        .flatMap(([, dependencies]) => dependencies)
+        .toSorted()
+        .filter((key, index, keys) => keys[index - 1] !== key);
       return inherited.length > 0
         ? inherited
         : input.compilation.facts.targetKeys;

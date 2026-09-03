@@ -73,6 +73,74 @@ function sourceTargets(
   }
 }
 
+function sourceCtes(
+  value: JsonValue,
+  cteNames: ReadonlySet<string>,
+  found: Set<string>,
+): void {
+  if (Array.isArray(value)) {
+    for (const child of value) sourceCtes(child, cteNames, found);
+    return;
+  }
+  const object = objectValue(value);
+  if (object === null) return;
+  const table = stringValue(object["table_name"]);
+  if (table !== null && cteNames.has(table)) found.add(table);
+  for (const child of Object.values(object)) sourceCtes(child, cteNames, found);
+}
+
+/** Resolve each CTE's target lineage, including CTEs referenced by CTEs. */
+export function dareSqlV3CteTargetDependenciesFromAst(
+  immutableAst: string,
+  targetKeys: readonly string[],
+): ReadonlyMap<string, readonly string[]> {
+  const statement = objectValue(
+    relationalScoutQlStatementFromImmutableAst(immutableAst),
+  );
+  const node = objectValue(statement?.["node"]);
+  const cteMap = objectValue(node?.["cte_map"]);
+  const entries = arrayValue(cteMap?.["map"])
+    .map((entryValue) => {
+      const entry = objectValue(entryValue);
+      const name = stringValue(entry?.["key"]);
+      const value = objectValue(entry?.["value"]);
+      return name === null || value === null ? null : { name, value };
+    })
+    .filter(
+      (entry): entry is { name: string; value: Record<string, JsonValue> } =>
+        entry !== null,
+    );
+  const names = new Set(entries.map((entry) => entry.name));
+  const direct = new Map<string, Set<string>>();
+  const references = new Map<string, Set<string>>();
+  for (const entry of entries) {
+    const targets = new Set<string>();
+    sourceTargets(entry.value, new Set(targetKeys), targets);
+    direct.set(entry.name, targets);
+    const ctes = new Set<string>();
+    sourceCtes(entry.value, names, ctes);
+    references.set(entry.name, ctes);
+  }
+  const resolved = new Map<string, readonly string[]>();
+  const visiting = new Set<string>();
+  const resolve = (name: string): readonly string[] => {
+    const cached = resolved.get(name);
+    if (cached !== undefined) return cached;
+    if (visiting.has(name)) return [];
+    visiting.add(name);
+    const values = new Set(direct.get(name) ?? []);
+    for (const reference of references.get(name) ?? []) {
+      for (const target of resolve(reference)) values.add(target);
+    }
+    visiting.delete(name);
+    const result = [...values].toSorted();
+    resolved.set(name, result);
+    return result;
+  };
+  for (const name of names) resolve(name);
+  return resolved;
+}
+
 function selectedColumnName(value: JsonValue): string | null {
   const expression = objectValue(value);
   if (expression === null) return null;

@@ -8,6 +8,8 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { isRemakeMatch } from "#src/betting/outcome.ts";
 import { matchTouchesRelationalDare } from "#src/betting/dare-match-eligibility.ts";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { writeMatchStagingFile } from "#src/report-lake/staging.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
@@ -209,6 +211,13 @@ export async function captureDareSqlV3ForMatch(input: {
     matchData.info.gameType,
   );
   if (queue === undefined) return undefined;
+  // The report lake is the durable source used by both historical preview and
+  // settlement. Refuse to record evidence until the triggering match has
+  // been staged successfully; otherwise a best-effort ingest failure could
+  // settle against an older lake snapshot.
+  if (!(await writeMatchStagingFile(resolveLakeDir(), matchData))) {
+    return undefined;
+  }
   const evidence = await evaluateContract(
     contract,
     new Date(matchData.info.gameEndTimestamp),
