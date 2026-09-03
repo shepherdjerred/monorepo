@@ -39,10 +39,19 @@ export const DareDefinitionV3ToolInputSchema = z.strictObject({
   openingStake: BucksStakeSchema,
 });
 
-export const DareDefinitionToolInputSchema = z.union([
-  DareDefinitionV3ToolInputSchema,
-  DareDefinitionV2ToolInputSchema,
-]);
+// Keep the provider-facing schema object-rooted. The two strict schemas above
+// remain the semantic alternatives and are selected after parsing, while this
+// superset prevents OpenAI-style tool schemas from serializing as top-level
+// `anyOf`.
+export const DareDefinitionToolInputSchema = z.strictObject({
+  originalText: z.string().min(1).max(4000),
+  targetKeys: z.array(z.string()).min(1).max(DARE_V2_MAX_TARGETS),
+  plan: DareCompiledPlanV2Schema.optional(),
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
+  plainLanguage: z.string().min(1).max(4000).optional(),
+  deadlineSpec: DareDeadlineSpecV2Schema,
+  openingStake: BucksStakeSchema,
+});
 
 export const DareScoutQlToolInputSchema = z.strictObject({
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
@@ -57,10 +66,16 @@ const RevisionFields = {
   expectedRevision: z.number().int().positive(),
 };
 
-export const ReviseDareToolInputSchema = z.union([
-  DareDefinitionV3ToolInputSchema.extend(RevisionFields),
-  DareDefinitionV2ToolInputSchema.extend(RevisionFields),
-]);
+export const ReviseDareToolInputSchema = z.strictObject({
+  ...RevisionFields,
+  originalText: z.string().min(1).max(4000),
+  targetKeys: z.array(z.string()).min(1).max(DARE_V2_MAX_TARGETS),
+  plan: DareCompiledPlanV2Schema.optional(),
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
+  plainLanguage: z.string().min(1).max(4000).optional(),
+  deadlineSpec: DareDeadlineSpecV2Schema,
+  openingStake: BucksStakeSchema,
+});
 
 const PreviewFields = {
   historyDays: z
@@ -71,10 +86,16 @@ const PreviewFields = {
     .default(30),
 };
 
-export const DarePreviewToolInputSchema = z.union([
-  DareDefinitionV3ToolInputSchema.extend(PreviewFields),
-  DareDefinitionV2ToolInputSchema.extend(PreviewFields),
-]);
+export const DarePreviewToolInputSchema = z.strictObject({
+  ...PreviewFields,
+  originalText: z.string().min(1).max(4000),
+  targetKeys: z.array(z.string()).min(1).max(DARE_V2_MAX_TARGETS),
+  plan: DareCompiledPlanV2Schema.optional(),
+  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
+  plainLanguage: z.string().min(1).max(4000).optional(),
+  deadlineSpec: DareDeadlineSpecV2Schema,
+  openingStake: BucksStakeSchema,
+});
 
 export const DareListToolInputSchema = z.strictObject({
   scope: z.enum(["mine", "guild"]),

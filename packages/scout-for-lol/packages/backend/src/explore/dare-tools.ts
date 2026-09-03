@@ -354,12 +354,10 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             dareId: created.dareId,
             revision: created.revision,
             canonicalScoutQl: created.draft.compilation.canonicalSql,
-            queryHash: created.draft.compilation.queryHash,
             originalText: created.draft.originalText,
             plainLanguage: created.draft.plainLanguage,
             semanticProofPlan:
               "The canonical SQL is the binding contract and runs directly over normalized lake relations.",
-            preview: created.draft.preview,
             sqlIsBinding: true,
             openingStake: created.draft.openingStake,
             targetAliases: created.draft.targets.map((target) => target.alias),
@@ -404,13 +402,13 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             dareId: revised.dareId,
             revision: revised.revision,
             canonicalScoutQl: revised.draft.compilation.canonicalSql,
-            queryHash: revised.draft.compilation.queryHash,
             originalText: revised.draft.originalText,
             plainLanguage: revised.draft.plainLanguage,
             semanticProofPlan:
               "The canonical SQL is the binding contract and runs directly over normalized lake relations.",
-            preview: revised.draft.preview,
             sqlIsBinding: true,
+            openingStake: revised.draft.openingStake,
+            targetAliases: revised.draft.targets.map((target) => target.alias),
           });
         }
         const revised = await reviseDareDraftV2({
