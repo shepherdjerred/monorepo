@@ -46,7 +46,7 @@ export const DareDefinitionV3ToolInputSchema = z.strictObject({
 // remain the semantic alternatives and are selected after parsing, while this
 // superset prevents OpenAI-style tool schemas from serializing as top-level
 // `anyOf`.
-export const DareDefinitionToolInputSchema = z.strictObject({
+const DareProviderContentFields = {
   originalText: z.string().min(1).max(4000),
   targetKeys: ProviderTargetKeysSchema,
   plan: DareCompiledPlanV2Schema.optional(),
@@ -54,6 +54,10 @@ export const DareDefinitionToolInputSchema = z.strictObject({
   plainLanguage: z.string().min(1).max(4000).optional(),
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
+};
+
+export const DareDefinitionToolInputSchema = z.strictObject({
+  ...DareProviderContentFields,
 });
 
 export const DareScoutQlToolInputSchema = z.strictObject({
@@ -68,13 +72,7 @@ const RevisionFields = {
 
 export const ReviseDareToolInputSchema = z.strictObject({
   ...RevisionFields,
-  originalText: z.string().min(1).max(4000),
-  targetKeys: ProviderTargetKeysSchema,
-  plan: DareCompiledPlanV2Schema.optional(),
-  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
-  plainLanguage: z.string().min(1).max(4000).optional(),
-  deadlineSpec: DareDeadlineSpecV2Schema,
-  openingStake: BucksStakeSchema,
+  ...DareProviderContentFields,
 });
 
 const PreviewFields = {
@@ -88,13 +86,7 @@ const PreviewFields = {
 
 export const DarePreviewToolInputSchema = z.strictObject({
   ...PreviewFields,
-  originalText: z.string().min(1).max(4000),
-  targetKeys: ProviderTargetKeysSchema,
-  plan: DareCompiledPlanV2Schema.optional(),
-  queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH).optional(),
-  plainLanguage: z.string().min(1).max(4000).optional(),
-  deadlineSpec: DareDeadlineSpecV2Schema,
-  openingStake: BucksStakeSchema,
+  ...DareProviderContentFields,
 });
 
 export const DareListToolInputSchema = z.strictObject({
