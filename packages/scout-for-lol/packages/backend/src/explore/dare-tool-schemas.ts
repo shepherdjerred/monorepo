@@ -30,7 +30,7 @@ export const DareDefinitionV2ToolInputSchema = z.strictObject({
 export const DareDefinitionV3ToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
   targetKeys: z
-    .array(z.string().regex(/^T[1-5]$/))
+    .array(z.string().regex(/^T\d{1,2}$/))
     .min(1)
     .max(DARE_V2_MAX_TARGETS),
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),

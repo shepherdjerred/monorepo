@@ -127,8 +127,10 @@ function activeRevision(row: VisibleDareRow) {
   return revision;
 }
 
-function listItem(row: VisibleDareRow): DareV2ListItem {
-  const revision = activeRevision(row);
+function listItem(
+  row: VisibleDareRow,
+  revision: VisibleDareRow["revisions"][number] = activeRevision(row),
+): DareV2ListItem {
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
@@ -158,8 +160,10 @@ function listItem(row: VisibleDareRow): DareV2ListItem {
   });
 }
 
-function inspection(row: VisibleDareRow): DareV2Inspection {
-  const revision = activeRevision(row);
+function inspection(
+  row: VisibleDareRow,
+  revision: VisibleDareRow["revisions"][number] = activeRevision(row),
+): DareV2Inspection {
   const state = BucksDareV2StateSchema.parse(row.dareState);
   const rawPlan: unknown = JSON.parse(revision.compiledPlan);
   const plan =
@@ -321,6 +325,7 @@ export async function inspectVisibleDareV2(
     dareId: number;
     serverId: DiscordGuildId;
     viewerDiscordId: DiscordAccountId;
+    revision?: number;
   },
   prisma: ExtendedPrismaClient,
 ): Promise<DareV2Inspection | null> {
@@ -336,5 +341,16 @@ export async function inspectVisibleDareV2(
   ) {
     return null;
   }
-  return inspection(row);
+  const revision =
+    input.revision === undefined
+      ? activeRevision(row)
+      : row.revisions.find(
+          (candidate) => candidate.revision === input.revision,
+        );
+  if (revision === undefined) {
+    throw new Error(
+      `Dare v2 ${row.id.toString()} is missing revision ${(input.revision ?? 0).toString()}.`,
+    );
+  }
+  return inspection(row, revision);
 }

@@ -277,12 +277,19 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     preview: (raw: unknown) =>
       input.track("preview_dare_contract", async () => {
         const parsed = DarePreviewToolInputSchema.parse(raw);
-        if ("queryText" in parsed) {
+        if (parsed.queryText !== undefined) {
           if (!(await sqlV3Enabled())) {
             return result("feature_disabled", "Dare SQL v3 is disabled.", null);
           }
+          const sqlDefinition =
+            DareDefinitionV3ToolInputSchema.safeParse(parsed);
+          if (!sqlDefinition.success) {
+            return result("invalid", "The dare contract needs revision.", {
+              issues: sqlDefinition.error.issues.map((issue) => issue.message),
+            });
+          }
           const prepared = await prepareDareDraftV3({
-            ...definitionV3FromTool(parsed, await shortlist()),
+            ...definitionV3FromTool(sqlDefinition.data, await shortlist()),
             historyDays: parsed.historyDays,
           });
           if (prepared.kind === "invalid") {
@@ -304,8 +311,15 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             },
           );
         }
+        const typedDefinition =
+          DareDefinitionV2ToolInputSchema.safeParse(parsed);
+        if (!typedDefinition.success) {
+          return result("invalid", "The dare contract needs revision.", {
+            issues: typedDefinition.error.issues.map((issue) => issue.message),
+          });
+        }
         const prepared = prepareDareDraftV2(
-          definitionFromTool(parsed, await shortlist()),
+          definitionFromTool(typedDefinition.data, await shortlist()),
         );
         if (prepared.kind !== "valid") {
           return result("invalid", "The dare contract needs revision.", {
@@ -462,6 +476,7 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
                   dareId: parsed.dareId,
                   serverId: input.capability.serverId,
                   viewerDiscordId: input.requesterId,
+                  revision: parsed.expectedRevision,
                 },
                 prisma,
               )

@@ -40,11 +40,25 @@ export function definitionV3FromTool(
   input: z.infer<typeof DareDefinitionV3ToolInputSchema>,
   targets: readonly DareTargetBindingV2[],
 ): DareDraftV3Definition {
+  const resolvedTargets = resolveTargets(input.targetKeys, targets);
+  const targetKeyMap = new Map(
+    resolvedTargets.map((target, index) => [
+      target.key,
+      `T${(index + 1).toString()}`,
+    ]),
+  );
+  const queryText = input.queryText.replace(
+    /\bT\d{1,2}\b/g,
+    (key) => targetKeyMap.get(key) ?? key,
+  );
   return {
     originalText: input.originalText,
-    queryText: input.queryText,
+    queryText,
     plainLanguage: input.plainLanguage,
-    targets: resolveTargets(input.targetKeys, targets),
+    targets: resolvedTargets.map((target, index) => ({
+      ...target,
+      key: `T${(index + 1).toString()}`,
+    })),
     deadlineSpec: input.deadlineSpec,
     openingStake: input.openingStake,
   };
