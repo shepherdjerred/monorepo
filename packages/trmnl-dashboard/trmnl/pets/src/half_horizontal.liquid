@@ -1,0 +1,35 @@
+<div class="layout layout--col gap--small">
+  <div class="grid grid--cols-4 gap--small">
+    <div class="item"><div class="content"><span class="title">Problems</span><span class="value value--small">{{ problems.size }}</span></div></div>
+    <div class="item"><div class="content"><span class="title">Water</span><span class="value value--small">{{ fountain.water_percent | default: "n/a" }}%</span></div></div>
+    <div class="item"><div class="content"><span class="title">Food</span><span class="value value--small">{{ activity.food_grams | default: "n/a" }}g</span></div></div>
+    <div class="item"><div class="content"><span class="title">Litter cycles</span><span class="value value--small">{{ activity.litter_cycles | default: "n/a" }}</span></div></div>
+  </div>
+
+  <div class="grid grid--cols-2 gap--medium">
+    <div>
+      <span class="label label--underline">Pet devices</span>
+      <table class="table table--condensed">
+        <tbody>
+          <tr><td>Fountain</td><td class="text--right">{{ fountain.status | upcase }} · {{ fountain.cleaning_days | default: "n/a" }}d clean</td></tr>
+          {% for feeder in feeders %}<tr><td>{{ feeder.label }} feeder</td><td class="text--right">{{ feeder.status | upcase }} · {{ feeder.food_grams_today | default: "n/a" }}g</td></tr>{% endfor %}
+          {% if litter_robot %}<tr><td>{{ litter_robot.name }} LR5</td><td class="text--right">{{ litter_robot.status | upcase }} · {{ litter_robot.waste_percent }}% waste</td></tr>{% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <span class="label label--underline">Vacuum fleet</span>
+      <table class="table table--condensed">
+        <tbody>
+          {% for vacuum in vacuums %}
+            <tr><td>{{ vacuum.label }}</td><td class="text--right">{{ vacuum.status | upcase }} · {{ vacuum.battery_percent | default: "n/a" }}%</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% for problem in problems limit: 1 %}<div class="label">{{ problem.severity | upcase }} · {{ problem.summary }}</div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+{{ dashboard_title_bar }}

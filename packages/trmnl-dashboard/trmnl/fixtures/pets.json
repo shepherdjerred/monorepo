@@ -1,0 +1,126 @@
+{
+  "screen": "pets",
+  "generated_at": "2026-09-02T15:30:00.000Z",
+  "generated_time": "8:30 AM",
+  "status": "warning",
+  "summary": "2 active pet-care problems",
+  "problems": [
+    {
+      "severity": "critical",
+      "alert": "LitterRobotWasteCritical",
+      "summary": "Storage LR5 waste drawer critical"
+    },
+    {
+      "severity": "warning",
+      "alert": "RoborockConsumableDue",
+      "summary": "2nd Floor dock strainer due"
+    }
+  ],
+  "fountain": {
+    "status": "warning",
+    "water_percent": 28,
+    "water_ounces": 24,
+    "cleaning_days": 2,
+    "filter_days": 4,
+    "dispensing": true,
+    "dispensing_mode": "Flowing Water (Constant)",
+    "wifi": true,
+    "drinking_ounces_today": 4.1,
+    "drinking_visits_today": 9
+  },
+  "feeders": [
+    {
+      "id": "living-room",
+      "label": "Living Room",
+      "status": "ok",
+      "food_low": false,
+      "dispenser_problem": false,
+      "battery_problem": false,
+      "wifi": true,
+      "desiccant_days": 9,
+      "last_feed_at": "2026-09-02T14:00:10Z",
+      "feedings_today": 2,
+      "food_grams_today": 20
+    },
+    {
+      "id": "guest-room",
+      "label": "Guest Room",
+      "status": "warning",
+      "food_low": true,
+      "dispenser_problem": false,
+      "battery_problem": false,
+      "wifi": true,
+      "desiccant_days": 3,
+      "last_feed_at": "2026-09-02T14:01:20Z",
+      "feedings_today": 2,
+      "food_grams_today": 20
+    }
+  ],
+  "litter_robot": {
+    "status": "error",
+    "name": "Storage",
+    "online": true,
+    "ready": true,
+    "litter_percent": 72.5,
+    "waste_percent": 84,
+    "hopper_status": "Ready",
+    "hopper_level_raw": 1,
+    "hopper_installed": true,
+    "hopper_enabled": true,
+    "last_seen_at": "2026-09-02T15:21:53Z",
+    "filter_due_at": "2026-09-26T03:00:32Z",
+    "cycles_today": 2
+  },
+  "vacuums": [
+    {
+      "id": "1st-floor",
+      "label": "1st Floor",
+      "status": "ok",
+      "state": "docked",
+      "battery_percent": 100,
+      "last_clean_at": "2026-09-01T22:29:17Z",
+      "consumable_hours": 40,
+      "clean_water_empty": false,
+      "dirty_water_full": false,
+      "cleaning_fluid_low": false,
+      "water_shortage": false,
+      "dust_bag": null
+    },
+    {
+      "id": "2nd-floor",
+      "label": "2nd Floor",
+      "status": "warning",
+      "state": "docked",
+      "battery_percent": 87,
+      "last_clean_at": "2026-09-01T23:12:44Z",
+      "consumable_hours": 0,
+      "clean_water_empty": false,
+      "dirty_water_full": false,
+      "cleaning_fluid_low": true,
+      "water_shortage": false,
+      "dust_bag": null
+    },
+    {
+      "id": "3rd-floor",
+      "label": "3rd Floor",
+      "status": "ok",
+      "state": "charging",
+      "battery_percent": 64,
+      "last_clean_at": "2026-09-01T20:05:30Z",
+      "consumable_hours": 18,
+      "clean_water_empty": false,
+      "dirty_water_full": false,
+      "cleaning_fluid_low": false,
+      "water_shortage": false,
+      "dust_bag": null
+    }
+  ],
+  "activity": {
+    "drinking_ounces": 4.1,
+    "drinking_visits": 9,
+    "feedings": 4,
+    "food_grams": 40,
+    "litter_cycles": 2
+  },
+  "errors": []
+}

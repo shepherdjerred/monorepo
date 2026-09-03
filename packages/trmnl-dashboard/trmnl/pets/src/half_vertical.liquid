@@ -1,0 +1,28 @@
+<div class="layout layout--col gap--small">
+  <div class="item">
+    <div class="meta"></div>
+    <div class="content"><span class="title">{{ status | upcase }}</span><span class="value value--small">{{ summary }}</span></div>
+  </div>
+
+  {% if problems.size > 0 %}
+    <div>
+      <span class="label label--underline">Problems</span>
+      {% for problem in problems limit: 2 %}<div>{{ problem.severity | upcase }} · {{ problem.summary }}</div>{% endfor %}
+    </div>
+  {% endif %}
+
+  <table class="table table--condensed">
+    <tbody>
+      <tr><td>Fountain water</td><td class="text--right">{{ fountain.water_percent | default: "n/a" }}% · {{ fountain.status | upcase }}</td></tr>
+      <tr><td>Feeders / food</td><td class="text--right">{{ feeders.size }} · {{ activity.food_grams | default: "n/a" }}g</td></tr>
+      {% if litter_robot %}<tr><td>Litter / waste</td><td class="text--right">{{ litter_robot.litter_percent }}% / {{ litter_robot.waste_percent }}%</td></tr>{% else %}<tr><td>LR5 diagnostics</td><td class="text--right">Unavailable</td></tr>{% endif %}
+    </tbody>
+  </table>
+
+  <div>
+    <span class="label label--underline">Vacuum fleet</span>
+    {% for vacuum in vacuums %}<div class="flex flex--row flex--between"><span>{{ vacuum.label }}</span><span>{{ vacuum.status | upcase }} · {{ vacuum.battery_percent | default: "n/a" }}%</span></div>{% endfor %}
+  </div>
+</div>
+
+{{ dashboard_title_bar }}

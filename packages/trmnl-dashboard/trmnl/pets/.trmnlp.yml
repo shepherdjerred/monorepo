@@ -1,0 +1,11 @@
+---
+watch:
+  - .trmnlp.yml
+  - src
+custom_fields:
+  api_key: preview-only
+time_zone: America/Los_Angeles
+variables:
+  trmnl:
+    plugin_settings:
+      polling_url: http://127.0.0.1:4568/pets.json
