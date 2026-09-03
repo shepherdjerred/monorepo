@@ -3,8 +3,20 @@ import type {
   DareProofV2,
 } from "#src/betting/dare-proof-v2.ts";
 
+export type DareProofV3 = {
+  planVersion: 3;
+  compilerVersion: "dare-sql-3";
+  evaluatorVersion: "dare-sql-evaluator-3";
+  queryHash: string;
+  value: boolean;
+  decisiveAt: string;
+  qualifyingMatchIds: string[];
+  targetKeys: string[];
+  coverage: "complete" | "not_required";
+};
+
 export type DareV2SettlementSummary = {
-  contractVersion: 2;
+  contractVersion: 2 | 3;
   dareId: number;
   serverId: string;
   channelId: string;
@@ -12,7 +24,7 @@ export type DareV2SettlementSummary = {
   resolution: "captured" | "achieved" | "unachieved" | "voided";
   value: boolean | null;
   finality: DareFinalityV2;
-  proof: DareProofV2 | null;
+  proof: DareProofV2 | DareProofV3 | null;
 };
 
 export class DareV2PartialSettlementError extends Error {

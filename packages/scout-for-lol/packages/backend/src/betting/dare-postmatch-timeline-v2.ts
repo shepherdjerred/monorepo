@@ -5,7 +5,7 @@ import {
   type RawTimeline,
 } from "@scout-for-lol/data";
 import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
-import { dareV2MatchNeedsTimeline } from "#src/betting/dare-settle-v2.ts";
+import { dareV2MatchNeedsTimeline } from "#src/betting/dare-match-timeline-need.ts";
 import { dareTimelineEvidenceFromRawV2 } from "#src/betting/dare-timeline-evidence-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { fetchTimelineForDareV2 } from "#src/league/tasks/postmatch/match-report-standard.ts";

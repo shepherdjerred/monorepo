@@ -28,6 +28,14 @@ import {
   type DareV2SettlementSummary,
 } from "#src/betting/dare-settle-types-v2.ts";
 import { settleDareV2OrVoidOnStorageOverflow } from "#src/betting/dare-settle-overflow-v2.ts";
+import {
+  captureDareSqlV3ForMatch,
+  settleDareSqlV3AtDeadline,
+} from "#src/betting/dare-settle-v3.ts";
+import {
+  matchTouchesRelationalDare,
+  relationalDareMatchContext,
+} from "#src/betting/dare-match-eligibility.ts";
 import { reportDareV2BatchFailure } from "#src/betting/dare-settle-report-v2.ts";
 import {
   darePlanNeedsTimeline,
@@ -35,18 +43,15 @@ import {
 } from "#src/betting/dare-timeline-evidence-v2.ts";
 import {
   dareV2ScoutQlPlanHash,
-  parseDareV2Contract,
-  readableDareV2Contract,
+  parseRelationalDareContract,
+  readableRelationalDareContract,
+  type RelationalDareContract,
 } from "#src/betting/dare-v2-common.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
 import {
   enqueueMaterialDareProgressNotification,
   enqueueTerminalDareNotification,
 } from "#src/betting/dare-notification-production.ts";
-import {
-  dareV2MatchSettlementContext,
-  matchTouchesDareContractV2,
-} from "#src/betting/dare-settle-match-v2.ts";
 import {
   prisma,
   type Db,
@@ -255,10 +260,10 @@ async function inspectStoredContract(
   prismaClient: ExtendedPrismaClient,
   now: Date,
 ): Promise<
-  | { kind: "valid"; contract: DareContractV2 }
+  | { kind: "valid"; contract: RelationalDareContract }
   | { kind: "invalid"; summary: DareV2SettlementSummary | null }
 > {
-  const contract = readableDareV2Contract(row.contractJson);
+  const contract = readableRelationalDareContract(row.contractJson);
   if (contract !== null) return { kind: "valid", contract };
   const voided = await voidDareV2WithFullRefund(
     row,
@@ -292,7 +297,7 @@ export async function settleDaresV2ForMatch(
   } = {},
 ): Promise<DareV2SettlementSummary[]> {
   const now = options.now ?? new Date();
-  const context = dareV2MatchSettlementContext(matchData);
+  const context = relationalDareMatchContext(matchData);
   if (context === null) return [];
   const rows = await prismaClient.bucksDareV2.findMany({
     where: {
@@ -304,7 +309,10 @@ export async function settleDaresV2ForMatch(
     orderBy: { id: "asc" },
   });
   const summaries: DareV2SettlementSummary[] = [];
-  const contracts: { row: ActiveDareV2Row; contract: DareContractV2 }[] = [];
+  const contracts: {
+    row: ActiveDareV2Row;
+    contract: RelationalDareContract;
+  }[] = [];
   const inspected = await collectDareV2Batch(
     rows,
     async (row) => ({
@@ -328,7 +336,7 @@ export async function settleDaresV2ForMatch(
     }
   }
   const relevant = contracts.filter(({ contract }) =>
-    matchTouchesDareContractV2(matchData, contract),
+    matchTouchesRelationalDare(matchData, contract),
   );
   if (relevant.length === 0) {
     if (inspected.firstFailure !== null) {
@@ -339,8 +347,9 @@ export async function settleDaresV2ForMatch(
     }
     return summaries;
   }
-  const needsTimeline = relevant.some(({ contract }) =>
-    darePlanNeedsTimeline(contract.compiledPlan),
+  const needsTimeline = relevant.some(
+    ({ contract }) =>
+      contract.version === 2 && darePlanNeedsTimeline(contract.compiledPlan),
   );
   let timeline: DareTimelineEvidenceV2;
   try {
@@ -355,6 +364,15 @@ export async function settleDaresV2ForMatch(
   const captured = await collectDareV2Batch(
     relevant,
     async ({ row, contract }) => {
+      if (contract.version === 3) {
+        return await captureDareSqlV3ForMatch({
+          dare: row,
+          contract,
+          matchData,
+          prismaClient,
+          now,
+        });
+      }
       const plan = DareCompiledPlanV2Schema.parse(contract.compiledPlan);
       const evaluator = dareEvaluatorImplementationV2(
         contract.evaluatorVersion,
@@ -405,31 +423,6 @@ export async function settleDaresV2ForMatch(
   return summaries;
 }
 
-export async function dareV2MatchNeedsTimeline(
-  matchData: RawMatch,
-  prismaClient: ExtendedPrismaClient = prisma,
-): Promise<boolean> {
-  const context = dareV2MatchSettlementContext(matchData);
-  if (context === null) return false;
-  const rows = await prismaClient.bucksDareV2.findMany({
-    where: {
-      dareState: "active",
-      activatedAt: { lt: context.gameStartAt },
-      deadlineAt: { gte: context.gameEndAt },
-    },
-    select: { contractJson: true },
-    orderBy: { id: "asc" },
-  });
-  return rows.some((row) => {
-    const contract = readableDareV2Contract(row.contractJson);
-    return (
-      contract !== null &&
-      matchTouchesDareContractV2(matchData, contract) &&
-      darePlanNeedsTimeline(contract.compiledPlan)
-    );
-  });
-}
-
 export async function settleActiveDareV2AtBound(
   dare: ActiveDareV2Row,
   prismaClient: ExtendedPrismaClient = prisma,
@@ -438,7 +431,14 @@ export async function settleActiveDareV2AtBound(
   if (dare.contractJson === null) {
     throw new Error(`Active Dare v2 ${dare.id.toString()} has no contract.`);
   }
-  const contract = parseDareV2Contract(dare.contractJson);
+  const contract = parseRelationalDareContract(dare.contractJson);
+  if (contract.version === 3) {
+    return await settleDareV2OrVoidOnStorageOverflow(
+      { dare, prismaClient, now },
+      async () =>
+        await settleDareSqlV3AtDeadline(dare, contract, prismaClient, now),
+    );
+  }
   const evaluator = dareEvaluatorImplementationV2(contract.evaluatorVersion);
   return await settleDareV2OrVoidOnStorageOverflow(
     { dare, prismaClient, now },

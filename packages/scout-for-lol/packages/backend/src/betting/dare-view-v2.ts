@@ -1,6 +1,7 @@
 import {
   BucksDareV2StateSchema,
   DareCompiledPlanV2Schema,
+  DareSqlV3CompilationSchema,
   DareDeadlineSpecV2Schema,
   DareTargetBindingV2Schema,
   type BucksDareV2State,
@@ -10,6 +11,7 @@ import {
 import type { z } from "zod";
 import { formatDareScoutQlV2 } from "#src/betting/dare-contract-compiler-v2.ts";
 import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
 import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { darePollHealth } from "#src/betting/dare-poll-health.ts";
@@ -107,6 +109,39 @@ function terminalState(state: BucksDareV2State): boolean {
   return !["draft", "pending_accept", "active"].includes(state);
 }
 
+function parsedRevisionPlan(revision: VisibleDareRow["revisions"][number]) {
+  const rawPlan: unknown = JSON.parse(revision.compiledPlan);
+  return revision.compilerVersion === "dare-sql-3"
+    ? DareSqlV3CompilationSchema.parse(rawPlan)
+    : DareCompiledPlanV2Schema.parse(rawPlan);
+}
+
+function progressForRow(
+  row: VisibleDareRow,
+  revision: VisibleDareRow["revisions"][number],
+  targetKeys: readonly string[],
+  state: BucksDareV2State,
+) {
+  const common = {
+    targetKeys,
+    final: terminalState(state),
+    finalityReason: terminalState(state) ? state : "in_progress",
+  };
+  const plan = parsedRevisionPlan(revision);
+  return "compilerVersion" in plan
+    ? deriveDareProgressV3({
+        ...common,
+        compilation: plan,
+        evidence: row.evidence,
+      })
+    : deriveDareProgressV2({
+        ...common,
+        plan,
+        evidence: row.evidence.map((evidence) =>
+          storedDareV2Evidence(evidence),
+        ),
+      });
+}
 function listItem(
   row: VisibleDareRow,
   viewerDiscordId: DiscordAccountId,
@@ -122,6 +157,7 @@ function listItem(
       : row.targets.map((target) => target.targetKey);
   const viewer = dareViewerFactsV2(row, viewerDiscordId);
   return DareV2ListItemSchema.parse({
+    contractVersion: revision.compilerVersion === "dare-sql-3" ? 3 : 2,
     id: row.id,
     serverId: row.serverId,
     state,
@@ -136,13 +172,7 @@ function listItem(
     openingStake: row.openingStake,
     potTotal: row.potTotal,
     evidenceGames: row._count.evidence,
-    progress: deriveDareProgressV2({
-      plan: DareCompiledPlanV2Schema.parse(JSON.parse(revision.compiledPlan)),
-      evidence: row.evidence.map((evidence) => storedDareV2Evidence(evidence)),
-      targetKeys,
-      final: terminalState(state),
-      finalityReason: terminalState(state) ? state : "in_progress",
-    }),
+    progress: progressForRow(row, revision, targetKeys, state),
     viewerRoles: viewer.roles,
     availableActions: viewer.actions,
     requiresViewerAction: viewer.requiresViewerAction,
@@ -163,9 +193,7 @@ function inspection(
 ): DareV2Inspection {
   const revision = activeRevision(row);
   const state = BucksDareV2StateSchema.parse(row.dareState);
-  const plan = DareCompiledPlanV2Schema.parse(
-    JSON.parse(revision.compiledPlan),
-  );
+  const plan = parsedRevisionPlan(revision);
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
@@ -173,11 +201,14 @@ function inspection(
     ...listItem(row, viewerDiscordId),
     channelId: row.channelId,
     originConversationId: row.originConversationId,
-    canonicalScoutQl: visibleDareScoutQlV2({
-      state,
-      plan,
-      storedCanonicalScoutQl: revision.canonicalScoutQl,
-    }),
+    canonicalScoutQl:
+      revision.compilerVersion === "dare-sql-3"
+        ? revision.canonicalScoutQl
+        : visibleDareScoutQlV2({
+            state,
+            plan: DareCompiledPlanV2Schema.parse(plan),
+            storedCanonicalScoutQl: revision.canonicalScoutQl,
+          }),
     plan,
     semanticProofPlan: revision.semanticProofPlan,
     originalText: revision.originalText,

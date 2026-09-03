@@ -4,6 +4,7 @@ import {
   DareDeadlineSpecV2Schema,
   DarePollHealthSchema,
   DareProgressSchema,
+  DareSqlV3CompilationSchema,
   DareTargetBindingV2Schema,
 } from "@scout-for-lol/data";
 import { z } from "zod";
@@ -33,6 +34,7 @@ export const DareAvailableActionSchema = z.enum([
 ]);
 
 export const DareV2ListItemSchema = z.strictObject({
+  contractVersion: z.union([z.literal(2), z.literal(3)]),
   id: z.number().int().positive(),
   serverId: z.string().min(1),
   state: BucksDareV2StateSchema,
@@ -68,7 +70,7 @@ export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   channelId: z.string().min(1),
   originConversationId: z.string().min(1).nullable(),
   canonicalScoutQl: z.string().min(1),
-  plan: DareCompiledPlanV2Schema,
+  plan: z.union([DareCompiledPlanV2Schema, DareSqlV3CompilationSchema]),
   semanticProofPlan: z.string().min(1),
   originalText: z.string().min(1),
   deadlineSpec: DareDeadlineSpecV2Schema,

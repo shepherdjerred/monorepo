@@ -2,6 +2,8 @@ import {
   BucksDareV2StateSchema,
   DareCompiledPlanV2Schema,
   DareProgressSchema,
+  DareSqlV3CompilationSchema,
+  DareSqlV3EvidenceSchema,
   DareTargetBindingV2Schema,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -9,6 +11,7 @@ import {
 import { z } from "zod";
 import { DareEvidenceDiagnosticsV2Schema } from "#src/betting/dare-evidence-v2.ts";
 import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
 import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
@@ -38,6 +41,12 @@ export const DareEvidencePageSchema = z.strictObject({
 export type DareEvidencePage = z.infer<typeof DareEvidencePageSchema>;
 
 const DEFAULT_PAGE_SIZE = 10;
+const V3SourceReferencesSchema = z.array(
+  z.union([
+    z.string().min(1),
+    z.object({ matchId: z.string().min(1) }).transform((row) => row.matchId),
+  ]),
+);
 
 function cursorFor(row: { gameEndAt: string; matchId: string }): string {
   return `${row.gameEndAt}|${row.matchId}`;
@@ -73,7 +82,12 @@ export async function listDareEvidenceV2(
       fundedRevision: true,
       targets: { select: { targetKey: true } },
       revisions: {
-        select: { revision: true, compiledPlan: true, targetsJson: true },
+        select: {
+          revision: true,
+          compiledPlan: true,
+          targetsJson: true,
+          compilerVersion: true,
+        },
       },
       evidence: {
         orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
@@ -94,15 +108,77 @@ export async function listDareEvidenceV2(
       `Dare v2 ${input.dareId.toString()} is missing revision ${revisionNumber.toString()}.`,
     );
   }
-  const plan = DareCompiledPlanV2Schema.parse(
-    JSON.parse(revision.compiledPlan),
-  );
+  const rawPlan: unknown = JSON.parse(revision.compiledPlan);
   const targetKeys =
     dare.targets.length === 0
       ? DareTargetBindingV2Schema.array()
           .parse(JSON.parse(revision.targetsJson))
           .map((target) => target.key)
       : dare.targets.map((target) => target.targetKey);
+  if (revision.compilerVersion === "dare-sql-3") {
+    const compilation = DareSqlV3CompilationSchema.parse(rawPlan);
+    const rows = dare.evidence.map((row, index) => {
+      const evaluated = DareSqlV3EvidenceSchema.parse(
+        JSON.parse(row.evaluationOutput),
+      );
+      const matchResults = evaluated.results.filter(
+        (result) => result.matchId === row.matchId,
+      );
+      return DareEvidenceInspectionSchema.parse({
+        matchId: row.matchId,
+        gameStartAt: row.gameStartAt.toISOString(),
+        gameEndAt: row.gameEndAt.toISOString(),
+        queue: row.queueType,
+        candidateMembership: Object.fromEntries(
+          compilation.resultStructure.gameSets.map((gameSet) => [
+            gameSet.name,
+            matchResults.some((result) => result.gameSet === gameSet.name),
+          ]),
+        ),
+        actualValues: Object.fromEntries(
+          matchResults.map((result) => [result.gameSet, result.projections]),
+        ),
+        setResults: Object.fromEntries(
+          matchResults.map((result) => [result.gameSet, result.matched]),
+        ),
+        coverageState:
+          evaluated.coverage === "missing_timeline"
+            ? "missing"
+            : evaluated.coverage,
+        targetDependencies: Object.fromEntries(
+          matchResults.map((result) => [
+            result.gameSet,
+            result.targetDependencies,
+          ]),
+        ),
+        sourceReferences: V3SourceReferencesSchema.parse(
+          JSON.parse(row.sourceReferences),
+        ),
+        evaluationTrace: z
+          .string()
+          .array()
+          .parse(JSON.parse(row.evaluationTrace)),
+        planVersion: row.planVersion,
+        progressBefore: deriveDareProgressV3({
+          compilation,
+          evidence: dare.evidence.slice(0, index),
+          targetKeys,
+          final: false,
+          finalityReason: "evidence_snapshot",
+        }),
+        progressAfter: deriveDareProgressV3({
+          compilation,
+          evidence: dare.evidence.slice(0, index + 1),
+          targetKeys,
+          final: false,
+          finalityReason: "evidence_snapshot",
+        }),
+        raw: evaluated,
+      });
+    });
+    return evidencePage(rows, input.cursor, input.limit);
+  }
+  const plan = DareCompiledPlanV2Schema.parse(rawPlan);
   const evidence = dare.evidence.map((row) => storedDareV2Evidence(row));
   const rows = evidence.map((row, index) => {
     const common = {
@@ -135,14 +211,22 @@ export async function listDareEvidenceV2(
       raw: row,
     });
   });
+  return evidencePage(rows, input.cursor, input.limit);
+}
+
+function evidencePage(
+  rows: z.infer<typeof DareEvidenceInspectionSchema>[],
+  cursor: string | undefined,
+  requestedLimit: number | undefined,
+): DareEvidencePage {
   const start =
-    input.cursor === undefined
+    cursor === undefined
       ? 0
-      : rows.findIndex((row) => cursorFor(row) === input.cursor) + 1;
-  if (start === 0 && input.cursor !== undefined) {
+      : rows.findIndex((row) => cursorFor(row) === cursor) + 1;
+  if (start === 0 && cursor !== undefined) {
     throw new Error("Dare evidence cursor does not belong to this Dare.");
   }
-  const limit = input.limit ?? DEFAULT_PAGE_SIZE;
+  const limit = requestedLimit ?? DEFAULT_PAGE_SIZE;
   const page = rows.slice(start, start + limit);
   const last = page.at(-1);
   return DareEvidencePageSchema.parse({
