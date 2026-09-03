@@ -544,9 +544,16 @@ export async function decisiveTargetDependenciesV3(input: {
   const branches = topLevelOrBranches(parts.expression);
   if (branches.length < 2) return input.compilation.facts.targetKeys;
   for (const branch of branches) {
+    const branchTargetKeys = targetDependenciesIn(
+      `${parts.prefix} ${branch}`,
+      input.compilation.facts.targetKeys,
+    );
     const compilation = await compileDareSqlV3({
       queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved`,
-      targetKeys: input.targets.map((target) => target.key),
+      targetKeys:
+        branchTargetKeys.length > 0
+          ? branchTargetKeys
+          : input.targets.map((target) => target.key),
     });
     const evidence = await executeDareSqlV3({
       compilation,
