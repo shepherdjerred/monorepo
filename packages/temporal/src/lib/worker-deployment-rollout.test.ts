@@ -669,12 +669,18 @@ describe("Worker Deployment rollback and rejection", () => {
       ),
     );
     expect(commands.some((command) => command.includes("--delete"))).toBe(true);
+    const temporalCommands = commands.filter(
+      (command) => command[0] === "toolkit" && command[1] === "temporal",
+    );
     expect(
-      commands
-        .filter(
-          (command) => command[0] === "toolkit" && command[1] === "temporal",
-        )
-        .every((command) => command.includes("--tls")),
+      temporalCommands.every(
+        (command) =>
+          command.includes("--address") &&
+          command.includes("temporal.test:7233") &&
+          command.includes("--namespace") &&
+          command.includes("prod") &&
+          command.includes("--tls"),
+      ),
     ).toBe(true);
     const resetOptions = await options("rollback");
     const resetCommands: string[][] = [];
@@ -708,9 +714,14 @@ describe("Worker Deployment rollback and rejection", () => {
       fixtureRunner({}, commands),
     );
     const catalog = await Bun.file(rolloutOptions.catalogPath).text();
-    expect(catalog).toContain(
-      `"name": "shepherdjerred/temporal-worker/workflows/candidate",\n      "value": "2.0.0-1@sha256:${STABLE_DIGEST}"`,
-    );
+    expect(JSON.parse(catalog)).toMatchObject({
+      entries: expect.arrayContaining([
+        {
+          name: "shepherdjerred/temporal-worker/workflows/candidate",
+          value: `2.0.0-1@sha256:${STABLE_DIGEST}`,
+        },
+      ]),
+    });
     expect(commands.some((command) => command.includes("--delete"))).toBe(
       false,
     );

@@ -20,6 +20,24 @@ test("keeps LLM recording and Broadcast alert coverage together", () => {
     .flatMap(({ rules: groupRules }) => groupRules)
     .find((rule) => rule?.alert === "ScoutOpenAiNotByok");
   expect(scoutByokAlert?.expr?.value).toContain('byok=~"false|unknown"');
+  expect(scoutByokAlert?.expr?.value).toContain(
+    'exported_service="scout-for-lol-backend"',
+  );
+  expect(scoutByokAlert?.expr?.value).not.toContain(
+    '{service="scout-for-lol-backend"',
+  );
+  expect(scoutByokAlert?.expr?.value).toContain(
+    'workload=~"scout[.]review([.]text)?"',
+  );
+  const staleAlert = groups
+    .flatMap(({ rules: groupRules }) => groupRules)
+    .find((rule) => rule?.alert === "OpenAiComplimentaryMonitorStale");
+  expect(staleAlert?.expr?.value).toContain(
+    'namespace="temporal",container="temporal-billing-worker"',
+  );
+  expect(staleAlert?.expr?.value).not.toContain(
+    'pod=~"temporal-billing-worker-.*"',
+  );
   expect(serialized).toContain(
     "openai_usage_reconciliation_last_success_timestamp_seconds",
   );

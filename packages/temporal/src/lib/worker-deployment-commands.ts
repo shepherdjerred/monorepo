@@ -8,14 +8,17 @@ export function parseTemporalJson(raw: string, label: string): unknown {
   }
 }
 
-export function temporalPrefix(options: {
-  address: string;
-  namespace: string;
-  tls?: boolean;
-}): string[] {
+export function temporalCommand(
+  options: { address: string; namespace: string; tls?: boolean },
+  args: readonly string[],
+): string[] {
+  // Temporal CLI connection flags must follow the subcommand when invoked
+  // through toolkit's passthrough. Keep the operator-selected endpoint
+  // explicit instead of relying on a local profile or environment defaults.
   return [
     "toolkit",
     "temporal",
+    ...args,
     "--address",
     options.address,
     "--namespace",
@@ -35,21 +38,22 @@ export async function setRampingVersion(
   percentage: number,
   run: RolloutCommandRunner,
 ): Promise<void> {
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-ramping-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    options.buildId,
-    "--percentage",
-    String(percentage),
-    "--yes",
-    "--output",
-    "json",
-  ]);
+  await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "set-ramping-version",
+      "--deployment-name",
+      options.deploymentName,
+      "--build-id",
+      options.buildId,
+      "--percentage",
+      String(percentage),
+      "--yes",
+      "--output",
+      "json",
+    ]),
+  );
 }
 
 export async function setCurrentVersion(
@@ -62,17 +66,18 @@ export async function setCurrentVersion(
   buildId: string,
   run: RolloutCommandRunner,
 ): Promise<void> {
-  await run([
-    ...temporalPrefix(options),
-    "worker",
-    "deployment",
-    "set-current-version",
-    "--deployment-name",
-    options.deploymentName,
-    "--build-id",
-    buildId,
-    "--yes",
-    "--output",
-    "json",
-  ]);
+  await run(
+    temporalCommand(options, [
+      "worker",
+      "deployment",
+      "set-current-version",
+      "--deployment-name",
+      options.deploymentName,
+      "--build-id",
+      buildId,
+      "--yes",
+      "--output",
+      "json",
+    ]),
+  );
 }

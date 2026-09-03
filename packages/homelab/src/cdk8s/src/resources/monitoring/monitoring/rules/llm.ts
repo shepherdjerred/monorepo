@@ -114,7 +114,7 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "ScoutOpenAiNotByok",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'sum(increase(llm_openrouter_byok_requests_total{service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?",byok=~"false|unknown"}[15m])) > 0',
+            'sum(increase(llm_openrouter_byok_requests_total{exported_service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?",byok=~"false|unknown"}[15m])) > 0',
           ),
           labels: { severity: "warning", category: "llm" },
           annotations: {
@@ -127,7 +127,7 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           alert: "OpenAiComplimentaryMonitorStale",
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            '(time() - max(temporal_worker_app_process_start_time_seconds{namespace="temporal",pod=~"temporal-billing-worker-.*"})) > 7200 and ((time() - max(openai_usage_reconciliation_last_success_timestamp_seconds{namespace="temporal"})) > 7200 or absent(openai_usage_reconciliation_last_success_timestamp_seconds{namespace="temporal"}))',
+            '(time() - max(temporal_worker_app_process_start_time_seconds{namespace="temporal",container="temporal-billing-worker"})) > 7200 and ((time() - max(openai_usage_reconciliation_last_success_timestamp_seconds{namespace="temporal",container="temporal-billing-worker"})) > 7200 or absent(openai_usage_reconciliation_last_success_timestamp_seconds{namespace="temporal",container="temporal-billing-worker"}))',
           ),
           for: "5m",
           labels: { severity: "warning", category: "llm" },
