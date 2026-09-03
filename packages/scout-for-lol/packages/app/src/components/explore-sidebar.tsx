@@ -105,7 +105,8 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                         return;
                       }
                       event.preventDefault();
-                      props.onSelect(conversation.id);
+                      const targetId = conversation.id;
+                      props.onSelect(targetId);
                     }}
                   >
                     <span className="min-w-0 flex-1 truncate pr-5">

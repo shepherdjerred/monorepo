@@ -66,12 +66,14 @@ export function ReportResultTable(props: {
           </TableHeader>
           <TableBody>
             {(() => {
-              const hasGamesColumn = props.columns.some(
-                (column) =>
-                  column.key === "games" ||
-                  column.label.toLowerCase() === "games" ||
-                  column.label.toLowerCase() === "game count",
-              );
+              const hasGamesColumn = props.columns.some((col) => {
+                const label = col.label.toLowerCase();
+                return (
+                  col.key === "games" ||
+                  label === "games" ||
+                  label === "game count"
+                );
+              });
               return props.rows.map((row, rowIndex) => (
                 <TableRow key={`${row.label}-${rowIndex.toString()}`}>
                   {props.columns.map((column) => (

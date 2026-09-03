@@ -1034,7 +1034,7 @@ button.scout-control > span:first-child {
 
 .scout-segmented button:focus-visible {
   outline: 2px solid var(--scout-color-primary);
-  outline-offset: -1px;
+  outline-offset: 1px;
 }
 
 .scout-segmented button:hover:not([aria-pressed="true"]) {

@@ -99,7 +99,7 @@ export function RenameConversationDialog(props: {
               </p>
             )}
             <FormPendingStatus pending={props.pending ?? false}>
-              Renaming conversation…
+              {"Renaming conversation…"}
             </FormPendingStatus>
             <DialogFormFooter
               pending={props.pending ?? false}
