@@ -37,4 +37,22 @@ export function bucksStakeFormSchema(balance: number) {
 
 export type BucksStakeFormValues = { side: string; stake: string };
 
+export const BucksContributionFormSchema = z.object({
+  contributionAmount: z
+    .string()
+    .trim()
+    .min(1, "Enter a contribution")
+    .transform((value, context) => {
+      const parsed = Number(value);
+      if (!Number.isSafeInteger(parsed) || parsed < 1) {
+        context.addIssue({
+          code: "custom",
+          message: "Contribution must be a whole number of at least 1 BB",
+        });
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+});
+
 export const BUCKS_QUICK_STAKES = [1, 5] as const;

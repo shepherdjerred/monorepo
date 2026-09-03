@@ -7,30 +7,29 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { z } from "zod";
+import { DareEvidenceDiagnosticsV2Schema } from "#src/betting/dare-evidence-v2.ts";
 import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
 import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 
-export const DareEvidenceInspectionSchema = z.strictObject({
-  matchId: z.string().min(1),
-  gameStartAt: z.iso.datetime(),
-  gameEndAt: z.iso.datetime(),
-  queue: z.string().min(1),
-  candidateMembership: z.record(z.string(), z.boolean()),
-  actualValues: z.record(
-    z.string(),
-    z.record(z.string(), z.number().nullable()),
-  ),
-  setResults: z.record(z.string(), z.boolean().nullable()),
-  coverageState: z.enum(["complete", "missing", "not_required"]),
-  targetDependencies: z.record(z.string(), z.array(z.string().min(1))),
-  sourceReferences: z.array(z.string().min(1)),
-  evaluationTrace: z.array(z.string()),
-  planVersion: z.string().min(1),
-  progressBefore: DareProgressSchema,
-  progressAfter: DareProgressSchema,
-  raw: z.json(),
-});
+export const DareEvidenceInspectionSchema = z
+  .strictObject({
+    matchId: z.string().min(1),
+    gameStartAt: z.iso.datetime(),
+    gameEndAt: z.iso.datetime(),
+    queue: z.string().min(1),
+    candidateMembership: z.record(z.string(), z.boolean()),
+    actualValues: z.record(
+      z.string(),
+      z.record(z.string(), z.number().nullable()),
+    ),
+    setResults: z.record(z.string(), z.boolean().nullable()),
+    planVersion: z.string().min(1),
+    progressBefore: DareProgressSchema,
+    progressAfter: DareProgressSchema,
+    raw: z.json(),
+  })
+  .extend(DareEvidenceDiagnosticsV2Schema.shape);
 
 export const DareEvidencePageSchema = z.strictObject({
   items: z.array(DareEvidenceInspectionSchema),

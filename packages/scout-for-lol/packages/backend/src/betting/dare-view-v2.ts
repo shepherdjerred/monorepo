@@ -14,6 +14,11 @@ import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { darePollHealth } from "#src/betting/dare-poll-health.ts";
 import {
+  dareViewerFactsV2,
+  indexVisibleDaresV2,
+  visibleDareIndexSelectionV2,
+} from "#src/betting/dare-view-index-v2.ts";
+import {
   DareV2InspectionSchema,
   DareV2ListItemSchema,
   DareV2ListPageSchema,
@@ -102,43 +107,6 @@ function terminalState(state: BucksDareV2State): boolean {
   return !["draft", "pending_accept", "active"].includes(state);
 }
 
-function viewerFacts(row: VisibleDareRow, viewerDiscordId: DiscordAccountId) {
-  const state = BucksDareV2StateSchema.parse(row.dareState);
-  const challenger = row.challengerDiscordId === viewerDiscordId;
-  const target = row.targets.find(
-    (candidate) => candidate.discordId === viewerDiscordId,
-  );
-  const contributor = row.contributions.some(
-    (candidate) => candidate.discordId === viewerDiscordId,
-  );
-  const roles = [
-    "member" as const,
-    ...(challenger ? (["challenger"] as const) : []),
-    ...(target === undefined ? [] : (["target"] as const)),
-    ...(contributor ? (["contributor"] as const) : []),
-  ];
-  const awaitingTarget =
-    state === "pending_accept" &&
-    target?.acceptedAt === null &&
-    target.declinedAt === null;
-  const actions = [
-    ...(state === "draft" && challenger
-      ? (["fund", "delete_draft"] as const)
-      : []),
-    ...(awaitingTarget ? (["accept", "decline"] as const) : []),
-    ...(state === "pending_accept" && challenger ? (["cancel"] as const) : []),
-    ...(target === undefined &&
-    (state === "pending_accept" || state === "active")
-      ? (["contribute"] as const)
-      : []),
-  ];
-  return {
-    roles,
-    actions,
-    requiresViewerAction: (state === "draft" && challenger) || awaitingTarget,
-  };
-}
-
 function listItem(
   row: VisibleDareRow,
   viewerDiscordId: DiscordAccountId,
@@ -152,7 +120,7 @@ function listItem(
     row.targets.length === 0
       ? draftTargets.map((target) => target.key)
       : row.targets.map((target) => target.targetKey);
-  const viewer = viewerFacts(row, viewerDiscordId);
+  const viewer = dareViewerFactsV2(row, viewerDiscordId);
   return DareV2ListItemSchema.parse({
     id: row.id,
     serverId: row.serverId,
@@ -269,68 +237,6 @@ const includeVisibleDare = {
 
 const VISIBLE_DARE_PAGE_SIZE = 25;
 
-function matchesVisibleDareSearch(
-  row: VisibleDareRow,
-  item: DareV2ListItem,
-  search: string | undefined,
-): boolean {
-  if (search === undefined || search.length === 0) return true;
-  const normalizedSearch = search.toLocaleLowerCase();
-  const revision = activeRevision(row);
-  return (
-    revision.originalText.toLocaleLowerCase().includes(normalizedSearch) ||
-    item.targetAliases.some((alias) =>
-      alias.toLocaleLowerCase().includes(normalizedSearch),
-    )
-  );
-}
-
-function matchingVisibleDareItems(
-  rows: VisibleDareRow[],
-  search: string | undefined,
-  viewerDiscordId: DiscordAccountId,
-): DareV2ListItem[] {
-  return rows
-    .map((row) => ({ row, item: listItem(row, viewerDiscordId) }))
-    .filter(({ row, item }) => matchesVisibleDareSearch(row, item, search))
-    .map(({ item }) => item);
-}
-
-function sortVisibleDareItems(
-  items: DareV2ListItem[],
-  sort: "needs_action" | "deadline" | "updated",
-): DareV2ListItem[] {
-  return items.toSorted((left, right) => {
-    if (sort === "needs_action") {
-      const action =
-        Number(right.requiresViewerAction) - Number(left.requiresViewerAction);
-      if (action !== 0) return action;
-    }
-    if (sort === "deadline") {
-      const leftDeadline = left.deadlineAt ?? left.acceptDeadline;
-      const rightDeadline = right.deadlineAt ?? right.acceptDeadline;
-      if (leftDeadline !== rightDeadline) {
-        if (leftDeadline === null) return 1;
-        if (rightDeadline === null) return -1;
-        return leftDeadline.localeCompare(rightDeadline);
-      }
-    }
-    const updated = right.updatedAt.localeCompare(left.updatedAt);
-    return updated === 0 ? right.id - left.id : updated;
-  });
-}
-
-function hasViewerRole(
-  item: DareV2ListItem,
-  role: "challenger" | "target" | "contributor" | "involved" | undefined,
-): boolean {
-  if (role === undefined) return true;
-  if (role === "involved") {
-    return item.viewerRoles.some((candidate) => candidate !== "member");
-  }
-  return item.viewerRoles.includes(role);
-}
-
 function visibleState(state: BucksDareV2State): boolean {
   return state !== "draft" && state !== "deleted";
 }
@@ -370,25 +276,41 @@ export async function listVisibleDarePageV2(
             },
       ],
     },
-    include: includeVisibleDare,
+    select: visibleDareIndexSelectionV2,
   });
-  const matches = sortVisibleDareItems(
-    matchingVisibleDareItems(rows, search, input.viewerDiscordId).filter(
-      (item) =>
-        (input.states === undefined || input.states.includes(item.state)) &&
-        hasViewerRole(item, input.role) &&
-        (input.scope !== "needs_action" || item.requiresViewerAction),
-    ),
-    input.sort ?? (input.scope === "needs_action" ? "needs_action" : "updated"),
-  );
+  const matches = indexVisibleDaresV2({
+    rows,
+    viewerDiscordId: input.viewerDiscordId,
+    search,
+    states: input.states,
+    role: input.role,
+    needsAction: input.scope === "needs_action",
+    sort:
+      input.sort ??
+      (input.scope === "needs_action" ? "needs_action" : "updated"),
+  });
   const cursorIndex =
     input.cursor === undefined
       ? -1
       : matches.findIndex((item) => item.id.toString() === input.cursor);
   const start = cursorIndex + 1;
   const limit = input.limit ?? VISIBLE_DARE_PAGE_SIZE;
-  const items = matches.slice(start, start + limit);
-  const last = items.at(-1);
+  const pageIndex = matches.slice(start, start + limit);
+  const pageRows = await prisma.bucksDareV2.findMany({
+    where: { id: { in: pageIndex.map((item) => item.id) } },
+    include: includeVisibleDare,
+  });
+  const pageRowsById = new Map(pageRows.map((row) => [row.id, row]));
+  const items = pageIndex.map((item) => {
+    const row = pageRowsById.get(item.id);
+    if (row === undefined) {
+      throw new Error(
+        `Dare v2 ${item.id.toString()} disappeared while paging.`,
+      );
+    }
+    return listItem(row, input.viewerDiscordId);
+  });
+  const last = pageIndex.at(-1);
   return DareV2ListPageSchema.parse({
     items,
     nextCursor:

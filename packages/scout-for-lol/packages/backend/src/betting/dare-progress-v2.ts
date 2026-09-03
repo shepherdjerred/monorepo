@@ -184,43 +184,107 @@ function progressSignature(
       key: condition.key,
       current: condition.current,
       value: condition.value,
-      eligibleGames: condition.eligibleGames,
       unknownGames: condition.unknownGames,
     })),
   );
+}
+
+function changedConditionKeys(
+  before: readonly DareProgressCondition[],
+  after: readonly DareProgressCondition[],
+): string[] {
+  return after
+    .filter((condition, index) => {
+      const previous = before[index];
+      return (
+        previous === undefined ||
+        progressSignature([previous]) !== progressSignature([condition])
+      );
+    })
+    .map((condition) => condition.key);
+}
+
+function conditionRegressed(
+  previous: DareProgressCondition | undefined,
+  current: DareProgressCondition,
+): boolean {
+  if (previous === undefined) return false;
+  if (previous.value === true && current.value === false) return true;
+  return (
+    previous.remaining !== null &&
+    current.remaining !== null &&
+    current.remaining > previous.remaining
+  );
+}
+
+function conditionAdvanced(
+  previous: DareProgressCondition | undefined,
+  current: DareProgressCondition,
+): boolean {
+  if (previous === undefined) return false;
+  if (previous.value === false && current.value === true) return true;
+  return (
+    previous.remaining !== null &&
+    current.remaining !== null &&
+    current.remaining < previous.remaining
+  );
+}
+
+function progressChangeKind(
+  beforeValue: DareTruthValue,
+  afterValue: DareTruthValue,
+  before: readonly DareProgressCondition[],
+  after: readonly DareProgressCondition[],
+): "advance" | "regression" | "evidence" {
+  if (beforeValue === true && afterValue === false) return "regression";
+  if (beforeValue === false && afterValue === true) return "advance";
+  const regressed = after.some((condition, index) =>
+    conditionRegressed(before[index], condition),
+  );
+  const advanced = after.some((condition, index) =>
+    conditionAdvanced(before[index], condition),
+  );
+  if (regressed && !advanced) return "regression";
+  return advanced ? "advance" : "evidence";
 }
 
 function latestMaterialChange(
   plan: DareCompiledPlanV2,
   evidence: readonly DareMatchEvidenceV2[],
 ) {
-  let previous = progressSignature(progressConditions(plan, []));
+  let previousConditions = progressConditions(plan, []);
+  let previous = progressSignature(previousConditions);
+  let previousValue = evaluateDareEvidenceV2({ plan, evidence: [] });
   let latest: DareProgress["latestMaterialChange"] = null;
   for (const [index, row] of evidence.entries()) {
-    const conditions = progressConditions(plan, evidence.slice(0, index + 1));
+    const currentEvidence = evidence.slice(0, index + 1);
+    const conditions = progressConditions(plan, currentEvidence);
     const signature = progressSignature(conditions);
     if (signature === previous) continue;
     const coverage = row.coverageState === "missing";
+    const value = evaluateDareEvidenceV2({ plan, evidence: currentEvidence });
+    const kind = coverage
+      ? "coverage"
+      : progressChangeKind(
+          previousValue,
+          value,
+          previousConditions,
+          conditions,
+        );
     latest = {
-      kind: coverage ? "coverage" : "advance",
+      kind,
       matchId: row.matchId,
       occurredAt: row.gameEndAt,
       summary: coverage
         ? `Match ${row.matchId} has incomplete evidence.`
-        : `Progress changed after match ${row.matchId}.`,
-      conditionKeys: conditions
-        .filter((condition, conditionIndex) => {
-          const before = progressConditions(plan, evidence.slice(0, index))[
-            conditionIndex
-          ];
-          return (
-            before === undefined ||
-            progressSignature([before]) !== progressSignature([condition])
-          );
-        })
-        .map((condition) => condition.key),
+        : kind === "regression"
+          ? `Progress regressed after match ${row.matchId}.`
+          : `Progress changed after match ${row.matchId}.`,
+      conditionKeys: changedConditionKeys(previousConditions, conditions),
     };
     previous = signature;
+    previousConditions = conditions;
+    previousValue = value;
   }
   return latest;
 }
@@ -243,27 +307,56 @@ function progressConditions(
   );
 }
 
+type ProgressSummaryContext = {
+  plan: DareCompiledPlanV2;
+  evidence: readonly DareMatchEvidenceV2[];
+  conditions: ReadonlyMap<string, DareProgressCondition>;
+};
+
+function falseExpressionSummary(
+  context: ProgressSummaryContext,
+  expression: DareResultExpressionV2,
+  path: readonly number[],
+): string {
+  if (expression.kind === "not") {
+    return "The excluded condition is currently satisfied; it must become false.";
+  }
+  if (expression.kind === "or") {
+    return "At least one alternative must still be satisfied.";
+  }
+  if (expression.kind === "and") {
+    const index = expression.operands.findIndex(
+      (operand) =>
+        evaluateDareEvidenceV2({
+          plan: { ...context.plan, result: operand },
+          evidence: context.evidence,
+        }) !== true,
+    );
+    const selected = expression.operands[index];
+    return selected === undefined
+      ? "Waiting for more eligible match evidence."
+      : falseExpressionSummary(context, selected, [...path, index]);
+  }
+  const condition = context.conditions.get(path.join("."));
+  if (condition?.remaining === undefined || condition.remaining === null) {
+    return "Waiting for more eligible match evidence.";
+  }
+  return condition.remaining === 0
+    ? `${condition.label} is currently satisfied.`
+    : `${condition.remaining.toString()} remaining for ${condition.label}.`;
+}
+
 function progressSummary(
+  context: ProgressSummaryContext,
   value: DareTruthValue,
   final: boolean,
-  conditions: readonly DareProgressCondition[],
 ): string {
   if (final) return value === true ? "Dare achieved." : "Dare not achieved.";
-  const next = conditions.find(
-    (condition) => condition.value !== true && condition.remaining !== null,
-  );
-  if (next === undefined) {
-    return value === true
-      ? "All current conditions are satisfied; awaiting finality."
-      : "Waiting for more eligible match evidence.";
+  if (value === true) {
+    return "All current conditions are satisfied; awaiting finality.";
   }
-  const remaining = next.remaining;
-  if (remaining === null) {
-    throw new Error("A selected Dare progress condition has no remainder.");
-  }
-  return remaining === 0
-    ? `${next.label} is currently satisfied.`
-    : `${remaining.toString()} remaining for ${next.label}.`;
+  if (value === null) return "Waiting for more eligible match evidence.";
+  return falseExpressionSummary(context, context.plan.result, [0]);
 }
 
 export function deriveDareProgressV2(input: {
@@ -338,6 +431,16 @@ export function deriveDareProgressV2(input: {
         reason: "Required match evidence is incomplete.",
       })),
     latestMaterialChange: latestMaterialChange(input.plan, evidence),
-    summary: progressSummary(value, input.final, conditions),
+    summary: progressSummary(
+      {
+        plan: input.plan,
+        evidence,
+        conditions: new Map(
+          conditions.map((condition) => [condition.key, condition]),
+        ),
+      },
+      value,
+      input.final,
+    ),
   });
 }

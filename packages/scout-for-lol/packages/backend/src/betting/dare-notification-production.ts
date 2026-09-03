@@ -69,15 +69,19 @@ export async function enqueueMaterialDareProgressNotification(
   });
   if (
     progress.latestMaterialChange?.matchId !== input.matchId ||
-    progress.latestMaterialChange.kind === "coverage"
+    !["advance", "regression"].includes(progress.latestMaterialChange.kind)
   ) {
     return;
   }
+  const kind =
+    progress.latestMaterialChange.kind === "regression"
+      ? "regressed"
+      : "advanced";
   await enqueueDareNotificationInTransaction(tx, {
     dareId: input.dareId,
     revision: input.contract.revision,
     category: "progress",
-    kind: "advanced",
+    kind,
     matchId: input.matchId,
     summary: progress.summary,
     deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.contract.revision.toString()}:progress:${input.matchId}`,

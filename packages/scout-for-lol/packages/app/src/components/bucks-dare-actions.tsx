@@ -1,7 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import {
+  focusFirstInvalid,
+  handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
+import { BucksContributionFormSchema } from "#src/lib/bucks-forms.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 type PreparedAction = {
@@ -13,6 +19,13 @@ type PreparedAction = {
   irreversible: boolean;
 };
 
+function contributionPayload(amount: number | undefined) {
+  if (amount === undefined) {
+    throw new Error("A contribution action requires an amount.");
+  }
+  return { action: "contribute" as const, amount };
+}
+
 export function BucksDareActions(props: {
   guildId: string;
   dareId: number;
@@ -21,12 +34,24 @@ export function BucksDareActions(props: {
 }) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
-  const [contribution, setContribution] = useState("10");
   const [prepared, setPrepared] = useState<PreparedAction | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const prepare = useMutation(trpc.bucks.darePrepareAction.mutationOptions());
   const confirm = useMutation(trpc.bucks.dareConfirmAction.mutationOptions());
   const deleteDraft = useMutation(trpc.bucks.dareDeleteDraft.mutationOptions());
+  const contributionFormElement = useRef<HTMLFormElement>(null);
+  const contributionForm = useScoutForm({
+    defaultValues: { contributionAmount: "10" },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: BucksContributionFormSchema },
+    onSubmit: ({ value }) => {
+      const parsed = BucksContributionFormSchema.parse(value);
+      prepareAction("contribute", parsed.contributionAmount);
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(contributionFormElement.current);
+    },
+  });
 
   if (props.availableActions.length === 0) return null;
 
@@ -42,11 +67,10 @@ export function BucksDareActions(props: {
     });
   }
 
-  function prepareAction(action: string): void {
-    const amount = Number.parseInt(contribution, 10);
+  function prepareAction(action: string, contributionAmount?: number): void {
     const payload =
       action === "contribute"
-        ? { action: "contribute" as const, amount }
+        ? contributionPayload(contributionAmount)
         : action === "fund"
           ? ({ action: "fund" } as const)
           : action === "accept"
@@ -109,27 +133,41 @@ export function BucksDareActions(props: {
       <div className="flex flex-wrap items-center gap-2">
         {props.availableActions.map((action) =>
           action === "contribute" ? (
-            <div key={action} className="flex items-center gap-2">
-              <Input
-                aria-label="Contribution amount"
-                inputMode="numeric"
-                className="w-24"
-                value={contribution}
-                onChange={(event) => {
-                  setContribution(event.target.value);
-                }}
-              />
-              <Button
-                type="button"
-                variant="outline"
-                disabled={prepare.isPending || !/^\d+$/.test(contribution)}
-                onClick={() => {
-                  prepareAction(action);
+            <contributionForm.AppForm key={action}>
+              <form
+                ref={contributionFormElement}
+                className="flex items-end gap-2"
+                onSubmit={(event) => {
+                  handleFormSubmit(event, () =>
+                    contributionForm.handleSubmit(),
+                  );
                 }}
               >
-                Contribute BB
-              </Button>
-            </div>
+                <fieldset
+                  disabled={prepare.isPending}
+                  className="flex items-end gap-2"
+                >
+                  <contributionForm.AppField name="contributionAmount">
+                    {(field) => (
+                      <field.TextField
+                        id={`dare-${props.dareId.toString()}-contribution`}
+                        label="Contribution (BB)"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        step={1}
+                        required
+                        autoComplete="off"
+                        fieldClassName="w-28"
+                      />
+                    )}
+                  </contributionForm.AppField>
+                  <Button type="submit" variant="outline">
+                    Contribute BB
+                  </Button>
+                </fieldset>
+              </form>
+            </contributionForm.AppForm>
           ) : (
             <Button
               key={action}

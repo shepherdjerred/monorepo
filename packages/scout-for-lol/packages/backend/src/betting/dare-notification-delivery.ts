@@ -263,9 +263,17 @@ export async function deliverPendingDareNotifications(
       await deliverOne(row, prismaClient, dependencies, now);
     }),
   );
+  const failures: unknown[] = [];
   for (const outcome of outcomes) {
     if (outcome.status === "rejected") {
       logger.error("Dare notification delivery failed:", outcome.reason);
+      failures.push(outcome.reason);
     }
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures,
+      `${failures.length.toString()} Dare notification delivery operation(s) failed.`,
+    );
   }
 }

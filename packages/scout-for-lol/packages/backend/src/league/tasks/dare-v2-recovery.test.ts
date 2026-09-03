@@ -11,9 +11,12 @@ const mocks = vi.hoisted(() => ({
   closeExpiredBettingWindows: vi.fn(async () => []),
   closeExpiredParlayWindows: vi.fn(async () => []),
   deliverDareSummaries: vi.fn(() => Promise.resolve()),
+  deliverPendingDareNotifications: vi.fn(() => Promise.resolve()),
   expireDareAcceptWindows: vi.fn(async () => []),
   expireDareV2AcceptWindows: vi.fn(async () => [17]),
   getPostmatchMessageIds: vi.fn(async () => new Map<string, string>()),
+  markPostMatchPollCompleted: vi.fn(() => Promise.resolve()),
+  markPostMatchPollFailed: vi.fn(() => Promise.resolve()),
   refreshClosedBucksMessages: vi.fn(() => Promise.resolve()),
   refreshClosedParlayMessages: vi.fn(() => Promise.resolve()),
   refreshPendingDareV2Callouts: vi.fn(() => Promise.resolve([])),
@@ -40,6 +43,13 @@ vi.mock("#src/betting/dare-sweep.ts", () => ({
 }));
 vi.mock("#src/betting/dare-delivery.ts", () => ({
   deliverDareSummaries: mocks.deliverDareSummaries,
+}));
+vi.mock("#src/betting/dare-notification-delivery.ts", () => ({
+  deliverPendingDareNotifications: mocks.deliverPendingDareNotifications,
+}));
+vi.mock("#src/league/tasks/recovery/app-state.ts", () => ({
+  markPostMatchPollCompleted: mocks.markPostMatchPollCompleted,
+  markPostMatchPollFailed: mocks.markPostMatchPollFailed,
 }));
 vi.mock("#src/betting/dare-sweep-v2.ts", () => ({
   expireDareV2AcceptWindows: mocks.expireDareV2AcceptWindows,
@@ -78,6 +88,7 @@ vi.mock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
 }));
 vi.mock("#src/configuration/flags.ts", () => ({
   isFeatureHardDisabled: () => true,
+  isPolicyEnabled: () => Promise.resolve(false),
 }));
 vi.mock("#src/logger.ts", () => ({
   createLogger: () => ({ info: vi.fn(), error: vi.fn() }),
@@ -107,6 +118,9 @@ describe("Dare v2 recovery", () => {
     expect(mocks.checkMatchHistory).toHaveBeenCalledOnce();
     expect(mocks.settleEndedDareV2Windows).toHaveBeenCalledOnce();
     expect(mocks.refreshPendingDareV2Callouts).toHaveBeenCalledOnce();
+    expect(mocks.deliverPendingDareNotifications).toHaveBeenCalledOnce();
+    expect(mocks.markPostMatchPollCompleted).toHaveBeenCalledOnce();
+    expect(mocks.markPostMatchPollFailed).not.toHaveBeenCalled();
     expect(mocks.retryPendingBucksEarnings).not.toHaveBeenCalled();
     expect(mocks.settleEndedDareWindows).not.toHaveBeenCalled();
     expect(mocks.voidStaleBettingPools).not.toHaveBeenCalled();

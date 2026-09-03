@@ -157,4 +157,29 @@ describe("Dare notification outbox", () => {
       }),
     ).resolves.toBe(2);
   });
+
+  test("isolates recipients but propagates unexpected delivery failures", async () => {
+    const dareId = await seedDare();
+    await enqueue(dareId);
+    const getPreferences = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("preference store unavailable"))
+      .mockImplementation(getBucksNotificationPreferences);
+    const sendDm = vi.fn(async () => "sent" as const);
+
+    await expect(
+      deliverPendingDareNotifications(
+        db,
+        {
+          client,
+          isPolicyEnabled: async () => true,
+          getPreferences,
+          sendDm,
+        },
+        NOW,
+      ),
+    ).rejects.toThrow("1 Dare notification delivery operation(s) failed.");
+    expect(getPreferences).toHaveBeenCalledTimes(2);
+    expect(sendDm).toHaveBeenCalledTimes(1);
+  });
 });

@@ -162,3 +162,134 @@ describe("Dare progress v2", () => {
     expect(progress.matchedGames).toBe(1);
   });
 });
+
+describe("Dare progress v2 Boolean and change semantics", () => {
+  test("summarizes the Boolean result instead of an unsatisfied OR leaf", () => {
+    const plan = DareCompiledPlanV2Schema.parse({
+      ...PLAN,
+      result: {
+        kind: "or",
+        operands: [
+          {
+            kind: "matching_games",
+            gameSet: "wins",
+            operator: "gte",
+            threshold: 1,
+          },
+          {
+            kind: "matching_games",
+            gameSet: "wins",
+            operator: "gte",
+            threshold: 2,
+          },
+        ],
+      },
+    });
+    const progress = deriveDareProgressV2({
+      plan,
+      evidence: [
+        evidence({
+          matchId: "one-win",
+          gameEndAt: "2026-01-01T00:00:00.000Z",
+          result: true,
+        }),
+      ],
+      targetKeys: ["target"],
+      final: false,
+      finalityReason: "reversible",
+    });
+
+    expect(progress.value).toBe(true);
+    expect(progress.summary).toBe(
+      "All current conditions are satisfied; awaiting finality.",
+    );
+  });
+
+  test("explains a false NOT expression without reversing its leaf meaning", () => {
+    const plan = DareCompiledPlanV2Schema.parse({
+      ...PLAN,
+      result: {
+        kind: "not",
+        operand: {
+          kind: "matching_games",
+          gameSet: "wins",
+          operator: "gte",
+          threshold: 1,
+        },
+      },
+    });
+    const progress = deriveDareProgressV2({
+      plan,
+      evidence: [
+        evidence({
+          matchId: "excluded-win",
+          gameEndAt: "2026-01-01T00:00:00.000Z",
+          result: true,
+        }),
+      ],
+      targetKeys: ["target"],
+      final: false,
+      finalityReason: "reversible",
+    });
+
+    expect(progress.value).toBe(false);
+    expect(progress.summary).toBe(
+      "The excluded condition is currently satisfied; it must become false.",
+    );
+  });
+
+  test("labels increasing remaining work as a regression", () => {
+    const plan = DareCompiledPlanV2Schema.parse({
+      ...PLAN,
+      result: {
+        kind: "matching_games",
+        gameSet: "wins",
+        operator: "lte",
+        threshold: 1,
+      },
+    });
+    const progress = deriveDareProgressV2({
+      plan,
+      evidence: [
+        evidence({
+          matchId: "first-win",
+          gameEndAt: "2026-01-01T00:00:00.000Z",
+          result: true,
+        }),
+        evidence({
+          matchId: "second-win",
+          gameEndAt: "2026-01-02T00:00:00.000Z",
+          result: true,
+        }),
+      ],
+      targetKeys: ["target"],
+      final: false,
+      finalityReason: "reversible",
+    });
+
+    expect(progress.latestMaterialChange).toMatchObject({
+      matchId: "second-win",
+      kind: "regression",
+      summary: "Progress regressed after match second-win.",
+    });
+  });
+
+  test("does not treat an ordinary eligible miss as material progress", () => {
+    const progress = deriveDareProgressV2({
+      plan: PLAN,
+      evidence: [
+        evidence({
+          matchId: "ordinary-miss",
+          gameEndAt: "2026-01-01T00:00:00.000Z",
+          result: false,
+        }),
+      ],
+      targetKeys: ["target"],
+      final: false,
+      finalityReason: "reversible",
+    });
+
+    expect(progress.eligibleGames).toBe(1);
+    expect(progress.latestMaterialChange).toBeNull();
+  });
+});
