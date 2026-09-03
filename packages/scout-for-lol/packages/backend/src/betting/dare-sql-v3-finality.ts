@@ -54,6 +54,14 @@ function containsFilter(value: JsonValue | undefined): boolean {
   return Object.values(object).some((child) => containsFilter(child));
 }
 
+function containsJoin(value: JsonValue | undefined): boolean {
+  if (Array.isArray(value)) return value.some((child) => containsJoin(child));
+  const object = objectValue(value);
+  if (object === null) return false;
+  if (stringValue(object["type"]) === "JOIN") return true;
+  return Object.values(object).some((child) => containsJoin(child));
+}
+
 function sourceTargets(
   value: JsonValue,
   targets: ReadonlySet<string>,
@@ -248,6 +256,7 @@ export function dareSqlV3FinalityFromAst(
   if (containsSubquery(node)) {
     return "deadline_only";
   }
+  if (containsJoin(node)) return "deadline_only";
   // FILTER predicates are part of the counted relation. Without a separate
   // append-monotonicity proof, a later row can change that predicate (or its
   // NULL semantics), so defer settlement to the deadline.

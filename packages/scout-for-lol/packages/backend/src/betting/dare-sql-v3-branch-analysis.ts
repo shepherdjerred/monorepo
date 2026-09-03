@@ -108,7 +108,11 @@ function aliasesFromAst(
     alias.length > 0 &&
     targetKeys.includes(table)
   ) {
-    aliases.set(alias.toLowerCase(), table);
+    const normalized = alias.toLowerCase();
+    const existing = aliases.get(normalized);
+    if (existing !== undefined && existing !== table)
+      aliases.delete(normalized);
+    else aliases.set(normalized, table);
   }
   for (const child of Object.values(object)) {
     aliasesFromAst(child, targetKeys, aliases);
@@ -146,6 +150,16 @@ function containsAggregate(value: JsonValue): boolean {
   return Object.values(object).some((child) => containsAggregate(child));
 }
 
+function containsGrouping(value: JsonValue): boolean {
+  if (Array.isArray(value))
+    return value.some((child) => containsGrouping(child));
+  const object = objectValue(value);
+  if (object === null) return false;
+  if (Object.keys(object).some((key) => key.toLowerCase().includes("group")))
+    return true;
+  return Object.values(object).some((child) => containsGrouping(child));
+}
+
 function containsUnsafeScalarSubquery(
   value: JsonValue,
   targetKeys: readonly string[],
@@ -165,7 +179,7 @@ function containsUnsafeScalarSubquery(
     const node = objectValue(subquery?.["node"]);
     if (
       node !== null &&
-      !containsAggregate(node) &&
+      (!containsAggregate(node) || containsGrouping(node)) &&
       containsTargetSource(node, targetKeys)
     ) {
       return true;
@@ -243,7 +257,7 @@ function columnDependenciesIn(
   text: string,
   columns: ReadonlyMap<string, readonly string[]>,
 ): string[] {
-  return [...columns.entries()]
+  const qualified = [...columns.entries()]
     .filter(([column]) => {
       const [name, field] = column.split(".");
       return (
@@ -252,6 +266,22 @@ function columnDependenciesIn(
         new RegExp(String.raw`\b${name}\s*\.\s*${field}\b`, "iu").test(text)
       );
     })
+    .flatMap(([, dependencies]) => dependencies)
+    .toSorted()
+    .filter((key, index, keys) => keys[index - 1] !== key);
+  if (qualified.length > 0) return qualified;
+  const fields = new Map<string, readonly string[]>();
+  for (const [column, dependencies] of columns) {
+    const field = column.split(".")[1];
+    if (field === undefined) continue;
+    const existing = fields.get(field);
+    fields.set(
+      field,
+      existing === undefined ? dependencies : [...existing, ...dependencies],
+    );
+  }
+  return [...fields.entries()]
+    .filter(([field]) => new RegExp(String.raw`\b${field}\b`, "iu").test(text))
     .flatMap(([, dependencies]) => dependencies)
     .toSorted()
     .filter((key, index, keys) => keys[index - 1] !== key);
