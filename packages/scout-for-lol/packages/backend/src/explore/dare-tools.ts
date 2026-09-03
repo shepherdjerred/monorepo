@@ -18,11 +18,9 @@ import { dareSqlV3Catalog } from "#src/betting/dare-sql-v3-catalog.ts";
 import { compileDareSqlV3 } from "#src/betting/dare-sql-v3.ts";
 import {
   createDareDraftV2,
-  deleteDareDraftV2,
   prepareDareDraftV2,
   reviseDareDraftV2,
 } from "#src/betting/dare-draft-v2.ts";
-import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import {
   inspectVisibleDareV2,
   listVisibleDaresV2,
@@ -36,11 +34,9 @@ import {
 import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import {
-  DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
   DareDefinitionV2ToolInputSchema,
   DareDefinitionV3ToolInputSchema,
-  DareDeleteToolInputSchema,
   DareInspectToolInputSchema,
   DareListToolInputSchema,
   DarePreviewToolInputSchema,
@@ -59,6 +55,7 @@ import {
   dareDomainResult,
   dareToolResult,
 } from "#src/explore/dare-tool-result.ts";
+import { createDareActionExecutors } from "#src/explore/dare-tool-action-executors.ts";
 
 const result = dareToolResult;
 const safeDomainResult = dareDomainResult;
@@ -458,66 +455,6 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
         });
       }),
     ...createDareReadExecutors(input),
-    prepareAction: (raw: unknown) =>
-      input.track("prepare_dare_action", async () => {
-        const parsed = DareActionToolInputSchema.parse(raw);
-        const intent = await createDareV2ConfirmationIntent({
-          dareId: parsed.dareId,
-          serverId: input.capability.serverId,
-          actorDiscordId: input.requesterId,
-          expectedRevision: parsed.expectedRevision,
-          payload: parsed.payload,
-          idempotencyKey: globalThis.crypto.randomUUID(),
-        });
-        const dare =
-          intent.kind === "intent_created"
-            ? await inspectVisibleDareV2(
-                {
-                  dareId: parsed.dareId,
-                  serverId: input.capability.serverId,
-                  viewerDiscordId: input.requesterId,
-                  revision: parsed.expectedRevision,
-                },
-                prisma,
-              )
-            : null;
-        return intent.kind === "intent_created"
-          ? result(
-              "confirmation_required",
-              "The action is ready for explicit confirmation and expires in ten minutes.",
-              {
-                intentId: intent.intentId,
-                action: intent.action,
-                expiresAt: intent.expiresAt.toISOString(),
-                dareId: parsed.dareId,
-                revision: parsed.expectedRevision,
-                ...(dare === null
-                  ? {}
-                  : {
-                      originalText: dare.originalText,
-                      plainLanguage: dare.plainLanguage,
-                      canonicalScoutQl: dare.canonicalScoutQl,
-                      sqlIsBinding: dare.contractVersion === 3,
-                    }),
-              },
-            )
-          : safeDomainResult(intent, "The action could not be prepared.");
-      }),
-    deleteDraft: (raw: unknown) =>
-      input.track("delete_dare_draft", async () => {
-        const parsed = DareDeleteToolInputSchema.parse(raw);
-        const deleted = await deleteDareDraftV2({
-          dareId: parsed.dareId,
-          serverId: input.capability.serverId,
-          challengerDiscordId: input.requesterId,
-          expectedRevision: parsed.expectedRevision,
-        });
-        return safeDomainResult(
-          deleted,
-          deleted.kind === "deleted"
-            ? "The private draft was deleted."
-            : "That draft cannot be deleted.",
-        );
-      }),
+    ...createDareActionExecutors(input),
   };
 }

@@ -47,7 +47,7 @@ export function definitionV3FromTool(
       `T${(index + 1).toString()}`,
     ]),
   );
-  const queryText = input.queryText.replace(
+  const queryText = input.queryText.replaceAll(
     /\bT\d{1,2}\b/g,
     (key) => targetKeyMap.get(key) ?? key,
   );
