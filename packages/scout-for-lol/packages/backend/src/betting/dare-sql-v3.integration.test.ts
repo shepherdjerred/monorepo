@@ -24,7 +24,7 @@ const KILL_PARTICIPATION_SQL = `WITH games AS (
     (p.kills + p.assists) * 1.0 / NULLIF(t.champion_kills, 0) >= 0 AS matched
   FROM T1 AS p
   JOIN match_teams AS t ON t.match_id = p.match_id AND t.team_id = p.team_id
-  ORDER BY p.game_end_at ASC, p.match_id ASC
+    ORDER BY p.game_end_at ASC, p.match_id ASC, p.puuid ASC
   LIMIT 100
 )
 SELECT COUNT(*) FILTER (WHERE matched IS TRUE) >= 1 AS achieved FROM games`;
