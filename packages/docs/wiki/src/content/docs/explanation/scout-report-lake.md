@@ -136,6 +136,15 @@ produces every lake row, and the Zod schemas plus DuckDB column types in
 are imported by both the writer and the reader. The two sides cannot drift,
 and DuckDB never infers types from a sparse first line.
 
+The Dare SQL engine is deliberately a consumer of this lake boundary, not a
+second statistics implementation. Its compiler validates one bounded,
+read-only DuckDB `SELECT` against the generated relation catalog and stores the
+canonical text, immutable AST, and hash. Preview and post-match settlement then
+execute that same compiled contract over the historical or newly staged lake
+relations. Evidence is immutable and carries the source matches and coverage
+used for each result, so adding a lake column extends what SQL can express
+without adding Dare-specific vocabulary or evaluator branches.
+
 ## Two compaction tiers, one publish protocol
 
 ```mermaid
