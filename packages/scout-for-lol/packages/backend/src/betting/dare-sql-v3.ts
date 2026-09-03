@@ -528,6 +528,7 @@ function rootQueryParts(canonicalSql: string) {
       selectIndex + "select ".length,
       achievedIndex,
     ),
+    suffix: canonicalSql.slice(achievedIndex + " as achieved".length),
   };
 }
 
@@ -571,7 +572,7 @@ export async function decisiveTargetDependenciesV3(input: {
       input.compilation.facts.targetKeys,
     );
     const compilation = await compileDareSqlV3({
-      queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved`,
+      queryText: `${parts.prefix}SELECT (${branch}) = TRUE AS achieved${parts.suffix}`,
       targetKeys:
         branchTargetKeys.length > 0
           ? branchTargetKeys

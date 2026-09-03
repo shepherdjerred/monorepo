@@ -306,6 +306,41 @@ describe("Dare SQL v3 compilation", () => {
     }
   });
 
+  test("preserves the root FROM clause while evaluating CTE-backed OR branches", async () => {
+    const match = await loadMatchFixture();
+    const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
+    try {
+      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
+      const first = targetForMatch(match);
+      const targets = [
+        first,
+        {
+          ...first,
+          key: "T2",
+          discordId: "100000000000000002",
+          playerId: 2,
+          alias: "Other target",
+        },
+      ];
+      const compilation = await compileDareSqlV3({
+        queryText:
+          "WITH flags AS (SELECT EXISTS (SELECT 1 FROM T1) AS t1_hit, EXISTS (SELECT 1 FROM T2) AS t2_hit) SELECT t1_hit OR t2_hit AS achieved FROM flags",
+        targetKeys: ["T1", "T2"],
+      });
+      await expect(
+        decisiveTargetDependenciesV3({
+          compilation,
+          targets,
+          start: new Date(match.info.gameStartTimestamp - 1000),
+          end: new Date(match.info.gameEndTimestamp + 1000),
+          lakeDir,
+        }),
+      ).resolves.toEqual(["T1", "T2"]);
+    } finally {
+      await rm(lakeDir, { recursive: true, force: true });
+    }
+  });
+
   test.each([
     [
       "custom Dare function",
