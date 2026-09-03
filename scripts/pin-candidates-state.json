@@ -47,9 +47,9 @@
       "buildNumber": 13744
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 13769,
       "version": "2.0.0-13769",
-      "digest": "sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04"
+      "digest": "sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04",
+      "buildNumber": 13769
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -73,9 +73,9 @@
       "buildNumber": 13412
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 13769,
       "version": "2.0.0-13769",
-      "digest": "sha256:3e3d71a7bdd8cb04b9ad919ddab59240b9d62852be9c5be5c8710f5d7e512de3"
+      "digest": "sha256:3e3d71a7bdd8cb04b9ad919ddab59240b9d62852be9c5be5c8710f5d7e512de3",
+      "buildNumber": 13769
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13384",
@@ -89,9 +89,9 @@
       "gitSha": "f23505a7251c5029e01d8157e31800e89cec8298"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "version": "2.0.0-13704",
-      "digest": "sha256:bec972d9ee2f19c8e2dff8d587dc804cb100385aa4f65500c973d85b25577855",
-      "buildNumber": 13704
+      "buildNumber": 13785,
+      "version": "2.0.0-13785",
+      "digest": "sha256:5bd6d224e06dcf9d14f0dd34ee59656219a8dd082c77f9a9c28a8c757f986ae0"
     }
   }
 }
