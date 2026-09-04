@@ -130,7 +130,7 @@ type BackgroundActivities = Pick<
 };
 type LakeActivities = Pick<
   ScoutTemporalActivities,
-  "runReportLakeJob" | "runDetachedLakeWork" | "probeQueue"
+  "runReportLakeJob" | "runDetachedLakeWork" | "runHallBaseline" | "probeQueue"
 >;
 
 export type ScoutTemporalActivityGroups = {

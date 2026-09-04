@@ -13,6 +13,9 @@ import {
   scoutMatchWorkflowId,
   scoutReportScheduleReconcilerWorkflowId,
   scoutQueueCanaryWorkflowId,
+  scoutHallBaselineWorkflowId,
+  scoutChallengeRunRecomputeWorkflowId,
+  scoutDuelSeriesWorkflowId,
   scoutTaskQueues,
   type ScoutInitialHistoryInput,
   type ScoutDetachedWorkInput,
@@ -21,7 +24,11 @@ import {
   type ScoutReportRunInput,
   type ScoutQueueCanaryInput,
   type ScoutStage,
+  type ScoutHallBaselineInput,
+  type ScoutChallengeRunRecomputeInput,
+  type ScoutDuelSeriesInput,
 } from "@scout-for-lol/temporal";
+import { duelSeriesChangedSignal } from "@scout-for-lol/temporal/signals";
 import { reconcileReportSchedulesSignal } from "@scout-for-lol/temporal/signals";
 import { requestInitialHistoryRunSignal } from "@scout-for-lol/temporal/signals";
 import {
@@ -216,6 +223,97 @@ export async function signalScoutReportReconciliation(
         "workflow",
         "Reconcile Scout report schedules",
         "Reconciles database-owned Scout report schedules with Temporal.",
+      ),
+    },
+  );
+}
+
+export async function startScoutHallBaseline(
+  client: Client,
+  input: ScoutHallBaselineInput,
+): Promise<WorkflowHandle> {
+  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.hallBaseline, {
+    ...RESTART_FAILED_START_POLICIES,
+    workflowId: scoutHallBaselineWorkflowId(
+      input.stage,
+      input.guildId,
+      input.revision,
+    ),
+    taskQueue: scoutTaskQueues(input.stage).workflow,
+    args: [input],
+    ...startMetadata(
+      input.stage,
+      "api",
+      "Build Scout Hall of Fame baseline",
+      "Builds every requested Hall record from eligible Scout-known match evidence.",
+    ),
+  });
+}
+
+export async function startScoutChallengeRunRecompute(
+  client: Client,
+  input: ScoutChallengeRunRecomputeInput,
+): Promise<WorkflowHandle> {
+  return await client.workflow.start(
+    SCOUT_WORKFLOW_NAMES.challengeRunRecompute,
+    {
+      ...IDEMPOTENT_START_POLICIES,
+      workflowId: scoutChallengeRunRecomputeWorkflowId(
+        input.stage,
+        input.runId,
+        input.revision,
+      ),
+      taskQueue: scoutTaskQueues(input.stage).workflow,
+      args: [input],
+      ...startMetadata(
+        input.stage,
+        "api",
+        "Recompute Scout challenge run",
+        "Pages through Scout evidence and atomically replaces one challenge-run revision.",
+      ),
+    },
+  );
+}
+
+export async function startScoutDuelSeries(
+  client: Client,
+  input: ScoutDuelSeriesInput,
+): Promise<WorkflowHandle> {
+  return await client.workflow.start(SCOUT_WORKFLOW_NAMES.duelSeries, {
+    ...IDEMPOTENT_START_POLICIES,
+    workflowId: scoutDuelSeriesWorkflowId(input.stage, input.seriesId),
+    taskQueue: scoutTaskQueues(input.stage).workflow,
+    args: [input],
+    ...startMetadata(
+      input.stage,
+      "api",
+      "Coordinate Scout duel series",
+      "Owns readiness coordination and the durable series deadline.",
+    ),
+  });
+}
+
+export async function signalScoutDuelSeriesChanged(
+  client: Client,
+  input: ScoutDuelSeriesInput & { readonly requestId: string },
+): Promise<WorkflowHandle> {
+  return await client.workflow.signalWithStart(
+    SCOUT_WORKFLOW_NAMES.duelSeries,
+    {
+      // Organizer replay decisions can arrive after the original deadline or
+      // review workflow has closed. Reuse the stable series ID for an open run,
+      // and begin a new run only when the prior execution is already closed.
+      ...RESTART_CLOSED_START_POLICIES,
+      workflowId: scoutDuelSeriesWorkflowId(input.stage, input.seriesId),
+      taskQueue: scoutTaskQueues(input.stage).workflow,
+      args: [input],
+      signal: duelSeriesChangedSignal,
+      signalArgs: [{ requestId: input.requestId }],
+      ...startMetadata(
+        input.stage,
+        "api",
+        "Update Scout duel series",
+        "Reconciles an accepted or readiness change against the durable series deadline.",
       ),
     },
   );

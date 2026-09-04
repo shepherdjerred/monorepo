@@ -14,6 +14,9 @@ import type {
   ScoutReportRunInput,
   ScoutReportScheduleReconcilerInput,
   ScoutWorkflowStatus,
+  ScoutHallBaselineInput,
+  ScoutChallengeRunRecomputeInput,
+  ScoutDuelSeriesInput,
 } from "#src/contracts.ts";
 import { scoutRealtimePollWorkflow as realtimePoll } from "./realtime.ts";
 import { scoutMatchIngestionWorkflow as matchIngestion } from "./realtime.ts";
@@ -27,6 +30,11 @@ import { scoutReportRunWorkflow as reportRun } from "./reports.ts";
 import { scoutReportScheduleReconcilerWorkflow as reportScheduleReconciler } from "./reports.ts";
 import { scoutInteractiveRunWorkflow as interactiveRun } from "./interactive.ts";
 import { scoutQueueCanaryWorkflow as queueCanary } from "./canary.ts";
+import {
+  scoutChallengeRunRecomputeWorkflow as challengeRunRecompute,
+  scoutDuelSeriesWorkflow as duelSeries,
+  scoutHallBaselineWorkflow as hallBaseline,
+} from "./progression.ts";
 
 export async function scoutRealtimePollWorkflow(
   input: ScoutRealtimePollInput,
@@ -98,4 +106,22 @@ export async function scoutQueueCanaryWorkflow(
   input: ScoutQueueCanaryInput,
 ): Promise<ScoutQueueCanaryProbeResult[]> {
   return await queueCanary(input);
+}
+
+export async function scoutHallBaselineWorkflow(
+  input: ScoutHallBaselineInput,
+): Promise<ScoutWorkflowStatus> {
+  return await hallBaseline(input);
+}
+
+export async function scoutChallengeRunRecomputeWorkflow(
+  input: ScoutChallengeRunRecomputeInput,
+): Promise<ScoutWorkflowStatus> {
+  return await challengeRunRecompute(input);
+}
+
+export async function scoutDuelSeriesWorkflow(
+  input: ScoutDuelSeriesInput,
+): Promise<ScoutWorkflowStatus> {
+  return await duelSeries(input);
 }

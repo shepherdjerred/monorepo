@@ -1,11 +1,10 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import type {
-  DiscordAccountId,
-  DiscordChannelId,
-  LeaguePuuid,
-  PlayerId,
+import {
+  COMPETITIVE_PROGRESSION_CATALOG_VERSION,
+  type DiscordChannelId,
+  type LeaguePuuid,
+  type PlayerId,
 } from "@scout-for-lol/data";
-import type { User } from "#generated/prisma/client/index.js";
 import {
   createTestDatabase,
   deleteIfExists,
@@ -16,6 +15,7 @@ import {
   testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
+import { createTestUser } from "#src/testing/test-user.ts";
 
 const { prisma } = createTestDatabase("player-admin-mutations");
 
@@ -35,11 +35,12 @@ const { deletePlayer, linkDiscord, mergePlayers, renamePlayer, unlinkDiscord } =
 const guildId = testGuildId("9901");
 const actorDiscordId = testAccountId("9902");
 const ctx = {
-  user: createUser(actorDiscordId),
+  user: createTestUser(actorDiscordId),
   webSession: { ipAddress: "127.0.0.1", userAgent: "bun-test" },
 };
 
 beforeEach(async () => {
+  await deleteIfExists(() => prisma.hallSettings.deleteMany());
   await deleteIfExists(() => prisma.auditLog.deleteMany());
   await deleteIfExists(() => prisma.subscription.deleteMany());
   await deleteIfExists(() => prisma.account.deleteMany());
@@ -127,6 +128,29 @@ describe("player admin mutations", () => {
     ]);
   });
 
+  test("rolls back deletion when its Hall re-baseline cannot be persisted", async () => {
+    const player = await createPlayer("KeepMe");
+    await prisma.hallSettings.create({
+      data: {
+        guildId,
+        catalogVersion: COMPETITIVE_PROGRESSION_CATALOG_VERSION,
+        channelId: null,
+        enabledQueueFamilies: '["unknown-family"]',
+        enabledRecords: '["kills"]',
+        updatedByDiscordId: actorDiscordId,
+      },
+    });
+
+    await expect(
+      deletePlayer(ctx, { guildId, alias: player.alias }),
+    ).rejects.toThrow();
+
+    expect(
+      await prisma.player.findUnique({ where: { id: player.id } }),
+    ).not.toBeNull();
+    expect(await prisma.auditLog.count()).toBe(0);
+  });
+
   test("merges accounts and non-duplicate subscriptions into the target player", async () => {
     const source = await createPlayer("Source");
     const target = await createPlayer("Target");
@@ -171,21 +195,6 @@ describe("player admin mutations", () => {
     ]);
   });
 });
-
-function createUser(discordId: DiscordAccountId): User {
-  return {
-    discordId,
-    discordUsername: "Test Admin",
-    discordAvatar: null,
-    discordAccessToken: "access",
-    discordRefreshToken: "refresh",
-    tokenExpiresAt: null,
-    analyticsUserId: `analytics-${discordId}`,
-    lastSeenAt: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-  };
-}
 
 async function createPlayer(alias: string) {
   const now = new Date();

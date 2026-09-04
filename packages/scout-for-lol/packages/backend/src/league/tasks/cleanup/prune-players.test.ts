@@ -111,6 +111,53 @@ function setupTestDatabase(): {
   return { prisma, testDir, testDbPath };
 }
 
+async function seedConflictingHallBaseline(
+  prisma: ExtendedPrismaClient,
+  now: Date,
+) {
+  const guildId = testGuildId("1000000001");
+  const actorId = testAccountId("1000000000000");
+  await prisma.player.create({
+    data: {
+      alias: "hall-holder",
+      serverId: guildId,
+      creatorDiscordId: actorId,
+      createdTime: now,
+      updatedTime: now,
+    },
+  });
+  await prisma.hallSettings.create({
+    data: {
+      guildId,
+      catalogVersion: 1,
+      enabledQueueFamilies: '["aram"]',
+      enabledRecords: '["kills"]',
+      updatedByDiscordId: actorId,
+    },
+  });
+  await prisma.hallBaselineRun.create({
+    data: {
+      guildId,
+      revision: 1,
+      baselineState: "ready",
+      requestedByDiscordId: actorId,
+      workflowId: "conflicting-hall-baseline",
+    },
+  });
+  return guildId;
+}
+
+async function expectHallIntentFailureRollsBack(
+  prisma: ExtendedPrismaClient,
+): Promise<void> {
+  const guildId = await seedConflictingHallBaseline(prisma, new Date());
+  await expect(pruneOrphanedPlayers(prisma, false, null)).rejects.toThrow();
+  expect(await prisma.player.count({ where: { serverId: guildId } })).toBe(1);
+  expect(
+    await prisma.hallSettings.findUniqueOrThrow({ where: { guildId } }),
+  ).toMatchObject({ baselineRevision: 0 });
+}
+
 describe("pruneOrphanedPlayers", () => {
   let prisma: ExtendedPrismaClient;
   let testDir: string;
@@ -286,6 +333,10 @@ describe("pruneOrphanedPlayers", () => {
     expect(result.totalAccountsDeleted).toBe(2);
     const afterAccountCount = await prisma.account.count();
     expect(afterAccountCount).toBe(0);
+  });
+
+  it("rolls back player deletion when the Hall rebuild intent cannot persist", async () => {
+    await expectHallIntentFailureRollsBack(prisma);
   });
 
   it("should handle mixed scenarios correctly", async () => {

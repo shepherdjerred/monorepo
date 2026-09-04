@@ -209,6 +209,14 @@ export async function processMatchAndUpdatePlayers(
   // therefore leaves the cursors in place and retries the same match.
   await finalizeAndPublishTournamentResult(prisma, matchData);
 
+  const { processCompetitiveProgressionMatch } =
+    await import("#src/progression/postmatch.ts");
+  await processCompetitiveProgressionMatch({
+    match: matchData,
+    timeline: prefetchedTimeline,
+    trackedPlayers: allTrackedPlayers,
+  });
+
   // Mark as processed
   processedMatchIds.add(matchId);
 

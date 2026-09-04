@@ -110,6 +110,7 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "custom-nights-expiry",
     "prediction-ingest",
     "legacy-backfill",
+    "progression-outbox",
   ]),
 });
 export type ScoutBackgroundJobInput = z.infer<
@@ -193,6 +194,62 @@ export const ScoutQueueCanaryProbeResultSchema =
 export type ScoutQueueCanaryProbeResult = z.infer<
   typeof ScoutQueueCanaryProbeResultSchema
 >;
+
+export const ScoutHallBaselineInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  guildId: OpaqueIdentifierSchema,
+  revision: z.number().int().positive(),
+});
+export type ScoutHallBaselineInput = z.infer<
+  typeof ScoutHallBaselineInputSchema
+>;
+
+export const ScoutChallengeRunRecomputeInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  runId: z.uuid(),
+  revision: z.number().int().positive(),
+  cursor: z
+    .strictObject({
+      gameEndMs: z.number().int().nonnegative(),
+      matchId: OpaqueIdentifierSchema,
+      puuid: OpaqueIdentifierSchema,
+    })
+    .optional(),
+  pagesProcessed: z.number().int().nonnegative().default(0),
+});
+export type ScoutChallengeRunRecomputeInput = z.infer<
+  typeof ScoutChallengeRunRecomputeInputSchema
+>;
+
+export const ScoutChallengeRunRecomputePageResultSchema = z.strictObject({
+  complete: z.boolean(),
+  nextCursor: ScoutChallengeRunRecomputeInputSchema.shape.cursor,
+  evaluatedMatches: z.number().int().nonnegative(),
+});
+export type ScoutChallengeRunRecomputePageResult = z.infer<
+  typeof ScoutChallengeRunRecomputePageResultSchema
+>;
+
+export const ScoutDuelSeriesInputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  seriesId: z.uuid(),
+  deadlineAt: IsoInstantSchema,
+});
+export type ScoutDuelSeriesInput = z.infer<typeof ScoutDuelSeriesInputSchema>;
+
+export const ScoutDuelSeriesRefreshResultSchema = z.strictObject({
+  terminal: z.boolean(),
+  status: z.string().min(1),
+  deadlineAt: IsoInstantSchema,
+});
+export type ScoutDuelSeriesRefreshResult = z.infer<
+  typeof ScoutDuelSeriesRefreshResultSchema
+>;
+
+export const ScoutDuelSeriesChangeSchema = z.strictObject({
+  requestId: OpaqueIdentifierSchema,
+});
+export type ScoutDuelSeriesChange = z.infer<typeof ScoutDuelSeriesChangeSchema>;
 
 export const InitialHistoryPageResultSchema = z.object({
   nextCursor: z.string().min(1).max(512).optional(),

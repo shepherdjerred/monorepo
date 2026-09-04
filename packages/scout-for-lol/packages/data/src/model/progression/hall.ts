@@ -114,7 +114,12 @@ export function isHallEligibleMatch(
   match: HallEligibleMatch,
   trackingStartedAt: Date,
 ): boolean {
-  const gameEndAt = Date.parse(`${match.game_end_at.replace(" ", "T")}Z`);
+  const normalizedGameEndAt = match.game_end_at.replace(" ", "T");
+  const gameEndAt = Date.parse(
+    /(?:Z|[+-]\d{2}:\d{2})$/u.test(normalizedGameEndAt)
+      ? normalizedGameEndAt
+      : `${normalizedGameEndAt}Z`,
+  );
   return (
     match.end_of_game_result === "GameComplete" &&
     !match.early_surrendered &&
