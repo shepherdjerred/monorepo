@@ -358,6 +358,7 @@ export function syncAnalyticsIdentity(session: {
 export function analyticsContextRoute(pathname: string): string | undefined {
   return (
     /^\/g\/[^/]+/.exec(pathname)?.[0] ??
+    /^\/(?:halls|duels)\/[^/]+/.exec(pathname)?.[0] ??
     /^\/bucks\b/.exec(pathname)?.[0] ??
     undefined
   );
@@ -449,6 +450,22 @@ export function normalizePath(pathname: string): string {
       "/players/:playerId/matches/:matchId",
     )
     .replace(/^\/champions\/[^/]+/, "/champions/:championId")
+    .replace(/^\/halls\/[^/]+/, "/halls/:guildId")
+    .replace(/^\/challenge-runs\/[^/]+/, "/challenge-runs/:runId")
+    .replace(/^\/challenges\/drafts\/[^/]+/, "/challenges/drafts/:draftId")
+    .replace(
+      /^\/challenges\/(?!drafts(?:\/|$))[^/]+/,
+      "/challenges/:templateId",
+    )
+    .replace(/^\/duels\/[^/]+/, "/duels/:guildId")
+    .replace(
+      /^\/duels\/:guildId\/events\/[^/]+/,
+      "/duels/:guildId/events/:eventId",
+    )
+    .replace(
+      /^\/duels\/:guildId\/series\/[^/]+/,
+      "/duels/:guildId/series/:seriesId",
+    )
     .replace(/^\/g\/[^/]+/, "/g/:guildId")
     .replace(/^\/g\/:guildId\/players\/[^/]+/, "/g/:guildId/players/:alias")
     .replace(
@@ -466,7 +483,7 @@ export function normalizePath(pathname: string): string {
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
     .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

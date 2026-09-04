@@ -175,6 +175,22 @@ describe("normalizePath", () => {
       "/players/:playerId/matches/:matchId",
     );
     expect(normalizePath("/champions/22")).toBe("/champions/:championId");
+    expect(normalizePath("/halls/123")).toBe("/halls/:guildId");
+    expect(normalizePath("/challenges/template-123")).toBe(
+      "/challenges/:templateId",
+    );
+    expect(normalizePath("/challenges/drafts/draft-123")).toBe(
+      "/challenges/drafts/:draftId",
+    );
+    expect(normalizePath("/challenge-runs/run-123")).toBe(
+      "/challenge-runs/:runId",
+    );
+    expect(normalizePath("/duels/123/events/event-123/standings")).toBe(
+      "/duels/:guildId/events/:eventId/standings",
+    );
+    expect(normalizePath("/duels/123/series/series-123")).toBe(
+      "/duels/:guildId/series/:seriesId",
+    );
   });
 
   test("preserves known static routes and rejects unknown routes", () => {
@@ -444,6 +460,10 @@ describe("route analytics context", () => {
   test("identifies the routes that carry context beyond identity", () => {
     expect(analyticsContextRoute("/g/123")).toBe("/g/123");
     expect(analyticsContextRoute("/g/123/players/Someone")).toBe("/g/123");
+    expect(analyticsContextRoute("/halls/123")).toBe("/halls/123");
+    expect(analyticsContextRoute("/duels/123/events/event-1")).toBe(
+      "/duels/123",
+    );
     expect(analyticsContextRoute("/bucks")).toBe("/bucks");
     expect(analyticsContextRoute("/bucks/history")).toBe("/bucks");
     expect(analyticsContextRoute("/bucksomething")).toBeUndefined();
