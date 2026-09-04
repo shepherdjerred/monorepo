@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { dareSqlV3DomainIssues } from "#src/betting/dare-sql-v3-domains.ts";
 import {
   DARE_SQL_V3_COMPILER_VERSION,
   DARE_V2_MAX_ELIGIBLE_GAMES,
@@ -88,6 +89,15 @@ export async function compileDareSqlV3(input: {
   });
   if (validated.kind === "invalid") {
     throw new Error(validated.issues.join(" "));
+  }
+  // The frozen SQL is the contract, so an out-of-domain literal has to be
+  // refused here: v3 keeps no typed plan for darePlanSemanticIssues to inspect,
+  // and an unsatisfiable comparison would otherwise settle as a real loss.
+  const domainIssues = dareSqlV3DomainIssues(
+    validated.compilation.immutableAst,
+  );
+  if (domainIssues.length > 0) {
+    throw new Error(domainIssues.join(" "));
   }
   const resultStructure = dareSqlV3ResultStructureFromAst(
     validated.compilation.immutableAst,
