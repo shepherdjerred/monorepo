@@ -50,6 +50,8 @@
     "@vitest/coverage-istanbul": "4.1.10"
   },
   "imports": {
+    "#competitive-progression-catalog": "./competitive-progression-catalog.json",
+    "#competitive-progression-catalog-schema": "./competitive-progression-catalog.schema.json",
     "#generated/*": "./generated/*",
     "#src/*": "./src/*"
   }

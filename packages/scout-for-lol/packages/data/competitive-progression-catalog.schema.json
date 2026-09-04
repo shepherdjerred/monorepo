@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Scout competitive progression catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "hall"],
+  "properties": {
+    "version": { "const": 1 },
+    "hall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["queueFamilies", "records"],
+      "properties": {
+        "queueFamilies": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "defaultEnabled", "queues"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+              "label": { "type": "string", "minLength": 1 },
+              "defaultEnabled": { "type": "boolean" },
+              "queues": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": { "type": "string", "minLength": 1 }
+              }
+            }
+          }
+        },
+        "records": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "unit", "precision"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+              "label": { "type": "string", "minLength": 1 },
+              "unit": { "type": "string", "minLength": 1 },
+              "precision": { "type": "integer", "minimum": 0, "maximum": 6 }
+            }
+          }
+        }
+      }
+    }
+  }
+}

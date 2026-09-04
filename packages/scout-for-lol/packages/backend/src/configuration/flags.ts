@@ -152,8 +152,11 @@ export type FlagName =
   | "betting_player_bet_outcome_dm_enabled"
   | "betting_settlement_dm_enabled"
   | "competition_builder_v2_enabled"
+  | "challenge_runs_enabled"
   | "custom_nights_enabled"
   | "debug"
+  | "duels_enabled"
+  | "hall_of_fame_enabled"
   | "initial_match_history_import_enabled"
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
@@ -182,8 +185,11 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "weekly_parlays_enabled",
     "betting_player_bet_outcome_dm_enabled",
     "betting_settlement_dm_enabled",
+    "challenge_runs_enabled",
     "competition_builder_v2_enabled",
     "custom_nights_enabled",
+    "duels_enabled",
+    "hall_of_fame_enabled",
     "tournament_lobbies_enabled",
     "scoutql_relational_enabled",
   ],
@@ -199,6 +205,22 @@ export function isFeatureHardDisabled(name: FlagName): boolean {
  * Central registry for all boolean flags
  */
 const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
+  hall_of_fame_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
+  challenge_runs_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+  },
+  // Direct duels and structured events stay disabled in beta and production
+  // until Riot's written approval for classic objective rules and sub-20
+  // events is recorded. Pure domain behavior remains available to dev/stub
+  // tests while this rollout flag has no enabled compatibility override.
+  duels_enabled: {
+    default: false,
+    overrides: [],
+  },
   custom_nights_enabled: {
     default: false,
     overrides: [{ value: true, attributes: { server: MY_SERVER } }],
