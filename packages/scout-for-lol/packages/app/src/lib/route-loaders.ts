@@ -67,6 +67,9 @@ export function consumerPlayersLoader(): null {
   void preloadQuery(
     queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),
   );
+  void preloadQuery(
+    queryClient.query(trpcOptions.consumerPlayer.home.queryOptions()),
+  );
   return null;
 }
 

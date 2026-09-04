@@ -444,6 +444,11 @@ export function stopAnalyticsCapture(): void {
 export function normalizePath(pathname: string): string {
   const normalized = pathname
     .replace(/^\/players\/[^/]+/, "/players/:playerId")
+    .replace(
+      /^\/players\/:playerId\/matches\/[^/]+/,
+      "/players/:playerId/matches/:matchId",
+    )
+    .replace(/^\/champions\/[^/]+/, "/champions/:championId")
     .replace(/^\/g\/[^/]+/, "/g/:guildId")
     .replace(/^\/g\/:guildId\/players\/[^/]+/, "/g/:guildId/players/:alias")
     .replace(
@@ -461,7 +466,7 @@ export function normalizePath(pathname: string): string {
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
     .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId)?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

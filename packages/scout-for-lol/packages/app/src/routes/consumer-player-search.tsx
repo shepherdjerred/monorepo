@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
+import { PageSectionHeading } from "#src/components/page-section-heading.tsx";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
@@ -48,6 +49,10 @@ type SearchResult = {
   }[];
 };
 
+export type HomePlayer = SearchResult & {
+  lastMatchTime: Date | string | null;
+};
+
 export function ConsumerPlayerSearch() {
   const trpc = useTRPC();
   const navigate = useNavigate();
@@ -72,6 +77,12 @@ export function ConsumerPlayerSearch() {
         ...PROTECTED_CONSUMER_SEARCH_QUERY_OPTIONS,
       },
     ),
+  );
+  const homeQuery = useQuery(
+    trpc.consumerPlayer.home.queryOptions(undefined, {
+      enabled: statusQuery.data?.state === "available",
+      ...PROTECTED_CONSUMER_SEARCH_QUERY_OPTIONS,
+    }),
   );
   const suggestionsHidden = shouldHideConsumerSuggestions({
     query,
@@ -136,6 +147,16 @@ export function ConsumerPlayerSearch() {
         renderStatusContent(
           statusQuery.data.state,
           <>
+            <PlayerHome
+              yourProfiles={homeQuery.data?.yourProfiles}
+              recentPlayers={homeQuery.data?.recentPlayers}
+              pending={homeQuery.isPending || homeQuery.isFetching}
+              error={homeQuery.isError}
+              onRetry={() => {
+                void homeQuery.refetch();
+              }}
+            />
+
             <div className="space-y-2">
               <label
                 className="text-sm font-medium"
@@ -182,6 +203,106 @@ export function ConsumerPlayerSearch() {
         )
       )}
     </div>
+  );
+}
+
+export function PlayerHome(props: {
+  yourProfiles: HomePlayer[] | undefined;
+  recentPlayers: HomePlayer[] | undefined;
+  pending: boolean;
+  error: boolean;
+  onRetry: () => void;
+}) {
+  if (props.pending) {
+    return (
+      <p className="text-sm text-scout-subtle" aria-live="polite">
+        Loading your player hub…
+      </p>
+    );
+  }
+  if (props.error) {
+    return (
+      <RetryCard
+        title="Your player hub didn't load"
+        description="Scout rechecks your shared servers for this list. Retry without reloading the page."
+        onRetry={props.onRetry}
+      />
+    );
+  }
+  return (
+    <div className="space-y-6">
+      <PlayerHomeSection
+        title="Your profiles"
+        description="Every Scout profile linked to your Discord account across enabled shared servers."
+        players={props.yourProfiles ?? []}
+        empty="No Scout player is linked to your Discord account yet. You can still search everyone you share access to."
+      />
+      <PlayerHomeSection
+        title="Recently active"
+        description="Six other players with the newest matches Scout recorded."
+        players={props.recentPlayers ?? []}
+        empty="No other recently active players are in Scout's stored coverage yet."
+      />
+    </div>
+  );
+}
+
+function PlayerHomeSection(props: {
+  title: string;
+  description: string;
+  players: HomePlayer[];
+  empty: string;
+}) {
+  return (
+    <section className="space-y-3">
+      <PageSectionHeading title={props.title} description={props.description} />
+      {props.players.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-sm text-scout-subtle">
+            {props.empty}
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {props.players.map((player) => (
+            <Card key={player.playerId}>
+              <CardHeader className="pb-3">
+                <div className="flex items-start gap-3">
+                  <ConsumerGuildAvatar
+                    name={player.guild.name}
+                    size="compact"
+                  />
+                  <div className="min-w-0">
+                    <CardTitle className="truncate text-base">
+                      <Link
+                        className="underline-offset-4 hover:underline"
+                        to={`/players/${player.playerId.toString()}`}
+                        state={{ entrySurface: "direct_link" }}
+                      >
+                        {player.alias}
+                      </Link>
+                    </CardTitle>
+                    <CardDescription className="truncate">
+                      {player.guild.name}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="text-xs text-scout-subtle">
+                {player.accounts
+                  .map((account) => formatRiotId(account, "Riot ID pending"))
+                  .join(" · ") || "No Riot ID observed yet"}
+                {player.lastMatchTime === null ? null : (
+                  <span className="mt-2 block">
+                    Last game {new Date(player.lastMatchTime).toLocaleString()}
+                  </span>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

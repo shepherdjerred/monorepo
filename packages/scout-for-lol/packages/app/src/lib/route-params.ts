@@ -2,7 +2,9 @@ import { useParams } from "react-router";
 import { z } from "zod";
 import {
   CompetitionIdSchema,
+  ChampionIdSchema,
   ExploreConversationIdSchema,
+  MatchIdSchema,
   PlayerIdSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
@@ -24,6 +26,15 @@ export const PlayerParamsSchema = z.object({
 
 export const ConsumerPlayerParamsSchema = z.object({
   playerId: z.coerce.number().pipe(PlayerIdSchema),
+});
+
+export const ConsumerChampionParamsSchema = z.object({
+  championId: z.coerce.number().pipe(ChampionIdSchema),
+});
+
+export const ConsumerMatchParamsSchema = z.object({
+  playerId: z.coerce.number().pipe(PlayerIdSchema),
+  matchId: MatchIdSchema,
 });
 
 export const CompetitionParamsSchema = z.object({
@@ -76,6 +87,18 @@ export function useConsumerPlayerParams(): z.infer<
   typeof ConsumerPlayerParamsSchema
 > {
   return parseRouteParams(ConsumerPlayerParamsSchema, useParams());
+}
+
+export function useConsumerChampionParams(): z.infer<
+  typeof ConsumerChampionParamsSchema
+> {
+  return parseRouteParams(ConsumerChampionParamsSchema, useParams());
+}
+
+export function useConsumerMatchParams(): z.infer<
+  typeof ConsumerMatchParamsSchema
+> {
+  return parseRouteParams(ConsumerMatchParamsSchema, useParams());
 }
 
 export function useCompetitionParams(): z.infer<

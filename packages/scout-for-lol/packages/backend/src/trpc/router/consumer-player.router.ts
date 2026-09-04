@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { DiscordGuildIdSchema, PlayerIdSchema } from "@scout-for-lol/data";
+import {
+  DiscordGuildIdSchema,
+  PlayerIdSchema,
+  PlayerProfileGameWindowSchema,
+  PlayerProfileQueueSelectionSchema,
+} from "@scout-for-lol/data";
 import { Prisma } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -17,13 +22,15 @@ const ConsumerPlayerInput = z.object({
   playerId: PlayerIdSchema,
 });
 
-const QueueInput = z.object({
-  queue: z.string().trim().min(1).max(50).optional(),
+const FilterInput = z.object({
+  games: PlayerProfileGameWindowSchema.default(20),
+  queues: PlayerProfileQueueSelectionSchema.optional(),
 });
 
 const MatchHistoryCursorSchema = z.object({
   gameCreationMs: z.number().int(),
   matchId: z.string().min(1),
+  consumed: z.number().int().nonnegative().optional(),
 });
 
 const SearchInput = z.object({
@@ -139,6 +146,45 @@ function guildDisplay(
   };
 }
 
+type HomePlayer = {
+  id: number;
+  alias: string;
+  serverId: string;
+  discordId: string | null;
+  accounts: {
+    riotGameName: string | null;
+    riotTagLine: string | null;
+    region: string;
+    lastMatchTime: Date | null;
+  }[];
+};
+
+function latestMatch(player: HomePlayer): Date | null {
+  return player.accounts.reduce<Date | null>((latest, account) => {
+    if (account.lastMatchTime === null) return latest;
+    return latest === null || account.lastMatchTime > latest
+      ? account.lastMatchTime
+      : latest;
+  }, null);
+}
+
+function homePlayer(
+  player: HomePlayer,
+  guilds: { id: string; name: string; icon: string | null }[],
+) {
+  return {
+    playerId: player.id,
+    alias: player.alias,
+    guild: guildDisplay(guilds, player.serverId),
+    lastMatchTime: latestMatch(player),
+    accounts: player.accounts.map((account) => ({
+      gameName: account.riotGameName,
+      tagLine: account.riotTagLine,
+      region: account.region,
+    })),
+  };
+}
+
 export const consumerPlayerRouter = router({
   status: protectedProcedure.query(async ({ ctx }) => {
     const scope = await resolveConsumerPlayerScope(ctx.user);
@@ -153,6 +199,59 @@ export const consumerPlayerRouter = router({
       return { state: scope.reason } as const;
     }
     return { state: "available", guildCount: scope.guilds.length } as const;
+  }),
+
+  home: protectedProcedure.query(async ({ ctx }) => {
+    const guilds = await assertConsumerPlayerScope(ctx.user);
+    const guildIds = guilds.map((guild) =>
+      DiscordGuildIdSchema.parse(guild.id),
+    );
+    const players = await prisma.player.findMany({
+      where: { serverId: { in: guildIds } },
+      select: {
+        id: true,
+        alias: true,
+        serverId: true,
+        discordId: true,
+        accounts: {
+          select: {
+            riotGameName: true,
+            riotTagLine: true,
+            region: true,
+            lastMatchTime: true,
+          },
+        },
+      },
+    });
+    const yourProfiles = players
+      .filter((player) => player.discordId === ctx.user.discordId)
+      .toSorted((left, right) => {
+        const recent =
+          (latestMatch(right)?.getTime() ?? 0) -
+          (latestMatch(left)?.getTime() ?? 0);
+        return recent === 0 ? left.alias.localeCompare(right.alias) : recent;
+      })
+      .map((player) => homePlayer(player, guilds));
+    const recentPlayers = players
+      .filter(
+        (player) =>
+          player.discordId !== ctx.user.discordId &&
+          latestMatch(player) !== null,
+      )
+      .toSorted((left, right) => {
+        const leftMatch = latestMatch(left);
+        const rightMatch = latestMatch(right);
+        if (leftMatch === null || rightMatch === null) {
+          throw new Error("Recently active player is missing activity");
+        }
+        const recent = rightMatch.getTime() - leftMatch.getTime();
+        if (recent !== 0) return recent;
+        const alias = left.alias.localeCompare(right.alias);
+        return alias === 0 ? left.id - right.id : alias;
+      })
+      .slice(0, 6)
+      .map((player) => homePlayer(player, guilds));
+    return { yourProfiles, recentPlayers };
   }),
 
   search: protectedProcedure
@@ -212,13 +311,14 @@ export const consumerPlayerRouter = router({
     }),
 
   profileSummary: protectedProcedure
-    .input(ConsumerPlayerInput.extend(QueueInput.shape))
+    .input(ConsumerPlayerInput.extend(FilterInput.shape))
     .query(async ({ ctx, input }) => {
       const guilds = await assertConsumerPlayerScope(ctx.user);
       const summary = await getConsumerPlayerProfileSummary({
         playerId: input.playerId,
         guildIds: guilds.map((guild) => DiscordGuildIdSchema.parse(guild.id)),
-        ...(input.queue === undefined ? {} : { queue: input.queue }),
+        games: input.games,
+        ...(input.queues === undefined ? {} : { queues: input.queues }),
       });
       const { guildId, ...profile } = summary;
       return { ...profile, guild: guildDisplay(guilds, guildId) };
@@ -226,7 +326,7 @@ export const consumerPlayerRouter = router({
 
   matchHistory: protectedProcedure
     .input(
-      ConsumerPlayerInput.extend(QueueInput.shape).extend({
+      ConsumerPlayerInput.extend(FilterInput.shape).extend({
         limit: z.number().int().min(1).max(50).default(20),
         cursor: MatchHistoryCursorSchema.optional(),
       }),
@@ -237,8 +337,9 @@ export const consumerPlayerRouter = router({
         playerId: input.playerId,
         guildIds: guilds.map((guild) => DiscordGuildIdSchema.parse(guild.id)),
         limit: input.limit,
+        games: input.games,
         ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
-        ...(input.queue === undefined ? {} : { queue: input.queue }),
+        ...(input.queues === undefined ? {} : { queues: input.queues }),
       });
     }),
 });

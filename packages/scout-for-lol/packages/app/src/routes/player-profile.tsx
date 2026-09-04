@@ -54,6 +54,7 @@ export function PlayerProfile() {
         <ChampionPoolTable
           rows={summary.championPool}
           minGamesForRate={summary.minGamesForRate}
+          profileSearch=""
         />
       </Section>
 
@@ -65,7 +66,10 @@ export function PlayerProfile() {
             Couldn&apos;t load match history.
           </p>
         ) : (
-          <MatchHistoryList entries={historyQuery.data.entries} />
+          <MatchHistoryList
+            entries={historyQuery.data.entries}
+            profileSearch=""
+          />
         )}
       </Section>
     </div>

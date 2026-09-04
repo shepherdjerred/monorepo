@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { rankToString, type Rank } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -18,18 +17,23 @@ import {
   ChampionPoolTable,
   MatchHistoryList,
   PlayerSummaryCards,
+  RankValue,
 } from "#src/components/player-profile-sections.tsx";
-import { LoadMore } from "#src/components/load-more.tsx";
+import { PlayerProfileFilterBar } from "#src/components/player-profile-filter-bar.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
 import { useConsumerPlayerParams } from "#src/lib/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
+import {
+  filterKey,
+  playerProfileSearch,
+  type PlayerProfileFilters,
+} from "#src/lib/player-profile-filters.ts";
+import { usePlayerProfileUrlState } from "#src/lib/use-player-profile-url-state.ts";
 
 const EntryStateSchema = z.object({
   entrySurface: z.enum(["search_results", "direct_link"]),
 });
-
-type QueueFilter = "all" | "solo" | "flex";
 
 export const PROTECTED_CONSUMER_PROFILE_QUERY_OPTIONS = {
   staleTime: 0,
@@ -45,16 +49,45 @@ export function isFreshConsumerProfileAccess(
   return isSuccess && !isFetching && state === "available";
 }
 
-export function queueValue(queue: QueueFilter): string | undefined {
-  if (queue === "solo") return "solo";
-  if (queue === "flex") return "flex";
-  return undefined;
+function playerProfileOutcome(options: {
+  summarySuccess: boolean;
+  summaryError: boolean;
+  accessError: boolean;
+  accessSuccess: boolean;
+  accessState: "available" | "feature_disabled" | "no_shared_guild" | undefined;
+}): "succeeded" | "failed" | null {
+  if (options.summarySuccess) return "succeeded";
+  if (
+    options.summaryError ||
+    options.accessError ||
+    (options.accessSuccess && options.accessState !== "available")
+  ) {
+    return "failed";
+  }
+  return null;
 }
 
-function queueLabel(queue: QueueFilter): string {
-  if (queue === "solo") return "Solo / duo";
-  if (queue === "flex") return "Flex";
-  return "All queues";
+function profileFilterInput(filters: PlayerProfileFilters) {
+  return {
+    games: filters.games,
+    ...(filters.queues === undefined ? {} : { queues: filters.queues }),
+  };
+}
+
+function shouldLoadHistory(
+  accessIsFresh: boolean,
+  summarySuccess: boolean,
+  summaryFetching: boolean,
+): boolean {
+  return accessIsFresh && summarySuccess && !summaryFetching;
+}
+
+function profileUnavailable(
+  accessError: boolean,
+  accessState: "available" | "feature_disabled" | "no_shared_guild" | undefined,
+  summaryError: boolean,
+): boolean {
+  return accessError || accessState !== "available" || summaryError;
 }
 
 function observedAt(value: Date | string | null): string {
@@ -62,11 +95,37 @@ function observedAt(value: Date | string | null): string {
   return new Date(value).toLocaleString();
 }
 
-function rankLabel(rank: Rank | undefined): string {
-  return rank === undefined ? "Unranked" : rankToString(rank);
+export function ConsumerPlayerProfile() {
+  const { filters, setFilters } = usePlayerProfileUrlState();
+  return (
+    <ConsumerPlayerProfileContent
+      key={filterKey(filters)}
+      filters={filters}
+      onFiltersChange={(nextFilters, kind) => {
+        setFilters(nextFilters);
+        track("player_profile_filter_changed", {
+          kind,
+          action:
+            nextFilters.queues === undefined ? "all" : "explicit_selection",
+        });
+      }}
+    />
+  );
 }
 
-export function ConsumerPlayerProfile() {
+type HistoryCursor = {
+  gameCreationMs: number;
+  matchId: string;
+  consumed?: number | undefined;
+};
+
+function ConsumerPlayerProfileContent(props: {
+  filters: PlayerProfileFilters;
+  onFiltersChange: (
+    filters: PlayerProfileFilters,
+    kind: "games" | "queues",
+  ) => void;
+}) {
   const { playerId } = useConsumerPlayerParams();
   const trpc = useTRPC();
   const location = useLocation();
@@ -74,10 +133,12 @@ export function ConsumerPlayerProfile() {
   const entrySurface = parsedEntry.success
     ? parsedEntry.data.entrySurface
     : "direct_link";
-  const [queue, setQueue] = useState<QueueFilter>("all");
-  const selectedQueue = queueValue(queue);
-  const queueInput =
-    selectedQueue === undefined ? {} : { queue: selectedQueue };
+  const [historyCursors, setHistoryCursors] = useState<
+    (HistoryCursor | undefined)[]
+  >([undefined]);
+  const [historyPage, setHistoryPage] = useState(0);
+  const currentHistoryCursor = historyCursors[historyPage];
+  const filterInput = profileFilterInput(props.filters);
   const trackedOutcome = useRef<string | null>(null);
 
   const accessQuery = useQuery(
@@ -91,11 +152,12 @@ export function ConsumerPlayerProfile() {
     accessQuery.isSuccess,
     accessQuery.isFetching,
   );
+  const accessState = accessQuery.data?.state;
   const summaryQuery = useQuery(
     trpc.consumerPlayer.profileSummary.queryOptions(
       {
         playerId,
-        ...queueInput,
+        ...filterInput,
       },
       {
         enabled: accessIsFresh,
@@ -103,14 +165,23 @@ export function ConsumerPlayerProfile() {
       },
     ),
   );
-  const historyQuery = useInfiniteQuery(
-    trpc.consumerPlayer.matchHistory.infiniteQueryOptions(
-      { playerId, limit: 20, ...queueInput },
+  const historyQuery = useQuery(
+    trpc.consumerPlayer.matchHistory.queryOptions(
       {
-        enabled:
-          accessIsFresh && summaryQuery.isSuccess && !summaryQuery.isFetching,
+        playerId,
+        limit: 20,
+        ...filterInput,
+        ...(currentHistoryCursor === undefined
+          ? {}
+          : { cursor: currentHistoryCursor }),
+      },
+      {
+        enabled: shouldLoadHistory(
+          accessIsFresh,
+          summaryQuery.isSuccess,
+          summaryQuery.isFetching,
+        ),
         ...PROTECTED_CONSUMER_PROFILE_QUERY_OPTIONS,
-        getNextPageParam: (lastPage) => lastPage.nextCursor,
       },
     ),
   );
@@ -120,13 +191,13 @@ export function ConsumerPlayerProfile() {
   }, [playerId]);
 
   useEffect(() => {
-    const outcome = summaryQuery.isSuccess
-      ? "succeeded"
-      : summaryQuery.isError ||
-          accessQuery.isError ||
-          (accessQuery.isSuccess && accessQuery.data.state !== "available")
-        ? "failed"
-        : null;
+    const outcome = playerProfileOutcome({
+      summarySuccess: summaryQuery.isSuccess,
+      summaryError: summaryQuery.isError,
+      accessError: accessQuery.isError,
+      accessSuccess: accessQuery.isSuccess,
+      accessState,
+    });
     if (outcome === null || trackedOutcome.current === outcome) return;
     trackedOutcome.current = outcome;
     track("player_profile_opened", {
@@ -134,7 +205,7 @@ export function ConsumerPlayerProfile() {
       surface: entrySurface,
     });
   }, [
-    accessQuery.data,
+    accessState,
     accessQuery.isError,
     accessQuery.isSuccess,
     entrySurface,
@@ -151,9 +222,7 @@ export function ConsumerPlayerProfile() {
   }
 
   if (
-    accessQuery.isError ||
-    accessQuery.data.state !== "available" ||
-    summaryQuery.isError
+    profileUnavailable(accessQuery.isError, accessState, summaryQuery.isError)
   ) {
     return (
       <ProfileShell>
@@ -169,10 +238,7 @@ export function ConsumerPlayerProfile() {
           <CardContent className="flex flex-wrap gap-2">
             <Button
               onClick={() => {
-                if (
-                  accessQuery.isError ||
-                  accessQuery.data.state !== "available"
-                ) {
+                if (accessState !== "available" || accessQuery.isError) {
                   void accessQuery.refetch();
                 } else {
                   void summaryQuery.refetch();
@@ -199,8 +265,11 @@ export function ConsumerPlayerProfile() {
   }
 
   const summary = summaryQuery.data;
-  const entries =
-    historyQuery.data?.pages.flatMap((page) => page.entries) ?? [];
+  if (summary === undefined) {
+    throw new Error("Successful player profile query returned no summary");
+  }
+  const entries = historyQuery.data?.entries ?? [];
+  const profileSearch = playerProfileSearch(props.filters);
 
   return (
     <ProfileShell>
@@ -226,8 +295,10 @@ export function ConsumerPlayerProfile() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        {summary.accounts.map((account) => (
-          <Card key={`${account.region}:${account.gameName ?? "pending"}`}>
+        {summary.accounts.map((account, index) => (
+          <Card
+            key={`${account.region}:${account.gameName ?? "pending"}:${account.tagLine ?? "pending"}:${index.toString()}`}
+          >
             <CardHeader className="pb-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <CardTitle className="text-lg">
@@ -241,21 +312,25 @@ export function ConsumerPlayerProfile() {
                 Last checked by Scout: {observedAt(account.lastCheckedAt)}
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-3 text-sm">
+            <CardContent className="grid gap-3 text-sm sm:grid-cols-3">
               <div>
                 <p className="text-scout-subtle">Solo / duo</p>
-                <p className="font-medium">{rankLabel(account.ranks.solo)}</p>
+                <RankValue rank={account.ranks.solo} compact />
               </div>
               <div>
                 <p className="text-scout-subtle">Flex</p>
-                <p className="font-medium">{rankLabel(account.ranks.flex)}</p>
+                <RankValue rank={account.ranks.flex} compact />
+              </div>
+              <div>
+                <p className="text-scout-subtle">Ranked 5s</p>
+                <RankValue rank={account.ranks.ranked5s} compact />
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
         <div>
           <h2 className="text-xl font-semibold">Combined performance</h2>
           <p className="text-sm text-scout-subtle">
@@ -263,22 +338,12 @@ export function ConsumerPlayerProfile() {
             Scout player.
           </p>
         </div>
-        <div className="flex gap-2" role="group" aria-label="Queue filter">
-          {(["all", "solo", "flex"] as const).map((value) => (
-            <Button
-              key={value}
-              type="button"
-              size="sm"
-              variant={queue === value ? "default" : "outline"}
-              onClick={() => {
-                setQueue(value);
-              }}
-            >
-              {queueLabel(value)}
-            </Button>
-          ))}
-        </div>
       </div>
+
+      <PlayerProfileFilterBar
+        filters={props.filters}
+        onChange={props.onFiltersChange}
+      />
 
       <PlayerSummaryCards
         ranks={summary.ranks}
@@ -287,8 +352,10 @@ export function ConsumerPlayerProfile() {
 
       <Section title="Champion performance">
         <ChampionPoolTable
+          key={filterKey(props.filters)}
           rows={summary.championPool}
           minGamesForRate={summary.minGamesForRate}
+          profileSearch={profileSearch}
         />
       </Section>
 
@@ -316,14 +383,49 @@ export function ConsumerPlayerProfile() {
           </div>
         ) : (
           <div className="space-y-3">
-            <MatchHistoryList entries={entries} />
-            <LoadMore
-              hasNextPage={historyQuery.hasNextPage}
-              isFetchingNextPage={historyQuery.isFetchingNextPage}
-              onLoadMore={() => {
-                void historyQuery.fetchNextPage();
-              }}
+            <MatchHistoryList
+              entries={entries}
+              playerId={playerId}
+              profileSearch={profileSearch}
             />
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-scout-subtle">
+                Page {(historyPage + 1).toString()}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={historyPage === 0 || historyQuery.isFetching}
+                  onClick={() => {
+                    setHistoryPage((page) => page - 1);
+                  }}
+                >
+                  Previous
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={
+                    historyQuery.data.nextCursor === null ||
+                    historyQuery.isFetching
+                  }
+                  onClick={() => {
+                    const next = historyQuery.data.nextCursor;
+                    if (next === null) return;
+                    setHistoryCursors((cursors) => [
+                      ...cursors.slice(0, historyPage + 1),
+                      next,
+                    ]);
+                    setHistoryPage((page) => page + 1);
+                  }}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </Section>

@@ -45,6 +45,10 @@ const SCOUT_ANALYTICS_EVENTS = [
   "player_deleted",
   "player_search_performed",
   "player_profile_opened",
+  "player_profile_filter_changed",
+  "champion_comparison_opened",
+  "match_detail_opened",
+  "match_timeline_viewed",
   // Competitions
   "competition_created",
   "competition_edited",
