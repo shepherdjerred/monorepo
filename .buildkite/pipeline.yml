@@ -1044,26 +1044,6 @@ steps:
       bun --no-install run --cwd packages/tasknotes-macos mac:analyze
       bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
     retry: *retry
-    # Temporarily non-blocking, but no longer for the reason first recorded
-    # here. The runner starts on the agent and six of the seven UI flows pass;
-    # the automation-mode timeout that justified this does not appear in any
-    # completed run. What fails is one flow,
-    # InspectorEditingUITests.testSchedulingRecurrenceNotesAndUndoSurviveLifecycleChanges,
-    # which never sees the inspector after clicking a seeded task row. It has
-    # failed that way in every completed run since the suite was first
-    # bootstrapped in CI and has never passed there, so it is an environment
-    # difference rather than a regression some commit introduced. The step
-    # still runs and still reports red, so the signal stays visible; it just
-    # does not gate main.
-    #
-    # Granting TaskNotesUITests-Runner Accessibility on the agent therefore
-    # will NOT make this green, and removing soft_fail on that basis turns main
-    # red. Restore the gate only once that flow passes on the agent.
-    #
-    # Exemption is registered in SOFT_FAIL_EXEMPT_NATIVE_STEPS in
-    # validate-pipeline-step-structure.ts, which fails if this line is removed
-    # without also removing the entry; delete both together.
-    soft_fail: true
     agents:
       queue: macos
 

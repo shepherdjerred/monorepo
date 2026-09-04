@@ -10,6 +10,7 @@ MACOS_NATIVE_ENV="${SCRIPT_DIR}/macos-native-env.sh"
 REVIEW_GATE="${SCRIPT_DIR}/review-gate.sh"
 BUN_CACHE_GC="${SCRIPT_DIR}/../../packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite-bun-cache-gc.sh"
 MAC_CI_BOOTSTRAP="${SCRIPT_DIR}/../../packages/homelab/mac-ci/bootstrap.sh"
+MAC_CI_PROVISIONER="${SCRIPT_DIR}/../../packages/homelab/mac-ci/provision-host.sh"
 
 if ! awk '
   $0 ~ /^[[:space:]]*mise_ci install --yes[[:space:]]*$/ { install_line = NR }
@@ -110,6 +111,11 @@ if ! rg -Fq 'displaysleep 0' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'com.apple.screensaver idleTime -int 0' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'sysadminctl -screenLock off -password -' "$MAC_CI_BOOTSTRAP"; then
   echo "macOS bootstrap must keep the accepted CI GUI session unlocked" >&2
+  exit 1
+fi
+if ! rg -Fq 'sudo /usr/bin/automationmodetool enable-automationmode-without-authentication' "$MAC_CI_PROVISIONER" ||
+  ! rg -Fq '/usr/bin/automationmodetool' "$MAC_CI_PROVISIONER"; then
+  echo "macOS provisioner must configure passwordless Automation Mode" >&2
   exit 1
 fi
 

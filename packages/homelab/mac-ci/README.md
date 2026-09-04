@@ -116,13 +116,19 @@ xcodes install "$XCODE_VERSION" --architecture arm64
 xcodes select "$XCODE_VERSION"
 sudo xcodebuild -license accept
 sudo xcodebuild -runFirstLaunch
+sudo /usr/bin/automationmodetool enable-automationmode-without-authentication
 xcodes signout
 xcodebuild -version
 xcode-select -p
+/usr/bin/automationmodetool
 ```
 
-The last two commands must report the pinned version and a full
-`Xcode.app/Contents/Developer` path, not Command Line Tools.
+The final checks must report the pinned Xcode, a full
+`Xcode.app/Contents/Developer` path rather than Command Line Tools, and enabled
+an Automation Mode configuration that does not require user authentication.
+`automationmodetool` lets XCTest enable UI automation without an expiring
+password grant. This is separate from the UI runner's Accessibility grant
+below and from debugger authorization managed by `DevToolsSecurity`.
 
 ### 4. Enable FileVault and configure the login session
 
@@ -208,6 +214,7 @@ GUI session must satisfy the native preflight.
 - the Bun and Rust versions pinned by the root `.mise.toml`, selected through `mise`;
 - both Rust standard-library targets required by TaskNotes' universal macOS XCFramework;
 - XcodeGen and SwiftLint;
+- permission for XCTest to enable Automation Mode without authentication;
 - active FileVault and the Buildkite user as the console user;
 - at least 40 GiB free in the checkout filesystem;
 - for TaskNotes only, exactly one valid Apple Development identity.

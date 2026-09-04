@@ -14,29 +14,6 @@ export type StepStructureConfig = {
   globalIfChanged: readonly string[];
 };
 
-/**
- * Native steps are hard gates by default, and that is the point of the check
- * below: a macOS lane that can quietly stop blocking is a lane nobody notices
- * has stopped working.
- *
- * This set is the deliberate exception to that. Keeping it here rather than
- * allowing `soft_fail` on any native step means an exemption has to be argued
- * for in a diff, and it stays visible afterwards. Each entry needs a reason
- * and the condition that removes it again.
- *
- * tasknotes-native-main: one UI flow --
- *   InspectorEditingUITests.testSchedulingRecurrenceNotesAndUndoSurviveLifecycleChanges
- *   -- never sees the inspector after clicking a seeded task row on the agent,
- *   and has failed that way in every completed run since the suite was
- *   bootstrapped in CI. The runner itself starts and the other six flows pass,
- *   so the automation-mode TCC grant this entry once blamed is not the cause
- *   and approving TaskNotesUITests-Runner will not clear it. Remove this entry
- *   once that flow passes on the agent.
- */
-const SOFT_FAIL_EXEMPT_NATIVE_STEPS: ReadonlySet<string> = new Set([
-  "tasknotes-native-main",
-]);
-
 function checkNativeStepStructure(
   key: string,
   block: string,
@@ -51,19 +28,8 @@ function checkNativeStepStructure(
   if (/^ {4}plugins:/mu.test(block) || block.includes("kubernetes:")) {
     fail(`native step ${key} must be a hard step without plugins`);
   }
-  const declaresSoftFail = /^ {4}soft_fail:/mu.test(block);
-  const exempt = SOFT_FAIL_EXEMPT_NATIVE_STEPS.has(key);
-  if (declaresSoftFail && !exempt) {
-    fail(
-      `native step ${key} must be a hard step; add it to SOFT_FAIL_EXEMPT_NATIVE_STEPS with a reason if it genuinely cannot gate`,
-    );
-  }
-  // The exemption expires with the condition that justified it: once the step
-  // gates again, the entry has to go, or the next one inherits a silent pass.
-  if (!declaresSoftFail && exempt) {
-    fail(
-      `native step ${key} is listed in SOFT_FAIL_EXEMPT_NATIVE_STEPS but no longer declares soft_fail; drop the exemption`,
-    );
+  if (/^ {4}soft_fail:/mu.test(block)) {
+    fail(`native step ${key} must be a hard step`);
   }
   if (!/^ {4}depends_on: verify$/mu.test(block)) {
     fail(`native step ${key} must wait for verify`);
