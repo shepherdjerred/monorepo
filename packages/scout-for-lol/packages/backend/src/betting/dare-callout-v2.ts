@@ -3,7 +3,7 @@ import type { MessageCreateOptions, MessageEditOptions } from "discord.js";
 import {
   BucksDareV2StateSchema,
   BucksMessageRefSchema,
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareSqlV3CompilationSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -135,9 +135,7 @@ export async function loadDareV2CalloutState(
           settledValue: dare.finalValue,
         })
       : deriveDareProgressV2({
-          plan: DareCompiledPlanV2Schema.parse(
-            JSON.parse(revision.compiledPlan),
-          ),
+          plan: DareStoredPlanV2Schema.parse(JSON.parse(revision.compiledPlan)),
           evidence: dare.evidence.map((row) => storedDareV2Evidence(row)),
           targetKeys,
           final,

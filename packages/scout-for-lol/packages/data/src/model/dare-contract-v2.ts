@@ -331,7 +331,19 @@ function dareGameSetJoinedRelations(gameSet: DareGameSetV2): number {
   return gameSet.targetKeys.length + timelineRelations + relatedRelations;
 }
 
-export const DareCompiledPlanV2Schema = z
+/**
+ * A compiled plan as it is *stored*: shape, references, and complexity limits,
+ * but no value-domain check.
+ *
+ * Reading a frozen plan and authoring a new one are different questions. A
+ * revision written before a domain rule existed is still exactly what its
+ * participants agreed to, and its callout, progress view, and settlement must
+ * keep rendering it faithfully — so the domain rule, which only ever applies to
+ * a value someone is choosing right now, lives on `DareCompiledPlanV2Schema`
+ * below. Tightening the authoring schema must never retroactively make an
+ * already-funded dare unreadable.
+ */
+export const DareStoredPlanV2Schema = z
   .strictObject({
     version: z.literal(DARE_CONTRACT_VERSION),
     gameSets: z.array(DareGameSetV2Schema).min(1).max(DARE_V2_MAX_GAME_SETS),
@@ -342,13 +354,6 @@ export const DareCompiledPlanV2Schema = z
     const facts: DarePlanComplexityV2 = { predicates: 0, maxDepth: 0 };
     for (const [index, gameSet] of plan.gameSets.entries()) {
       inspectDareBooleanComplexity(gameSet.predicate, 1, facts);
-      for (const message of dareGameSetDomainIssuesV2(gameSet)) {
-        context.addIssue({
-          code: "custom",
-          message,
-          path: ["gameSets", index],
-        });
-      }
       if (dareGameSetJoinedRelations(gameSet) > DARE_V2_MAX_JOINED_RELATIONS) {
         context.addIssue({
           code: "custom",
@@ -371,6 +376,26 @@ export const DareCompiledPlanV2Schema = z
       });
     }
   });
+
+/**
+ * A compiled plan being authored. Everything `DareStoredPlanV2Schema` checks,
+ * plus the value domains: a threshold naming a lane, champion, or queue that
+ * does not exist produces a predicate no game can satisfy, which would settle as
+ * a real loss rather than an error.
+ */
+export const DareCompiledPlanV2Schema = DareStoredPlanV2Schema.superRefine(
+  (plan, context) => {
+    for (const [index, gameSet] of plan.gameSets.entries()) {
+      for (const message of dareGameSetDomainIssuesV2(gameSet)) {
+        context.addIssue({
+          code: "custom",
+          message,
+          path: ["gameSets", index],
+        });
+      }
+    }
+  },
+);
 export type DareCompiledPlanV2 = z.infer<typeof DareCompiledPlanV2Schema>;
 
 export const DareDeadlineSpecV2Schema = z.union([
@@ -401,7 +426,7 @@ const DareContractV2BaseSchema = z
   .strictObject({
     version: z.literal(DARE_CONTRACT_VERSION),
     canonicalScoutQl: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
-    compiledPlan: DareCompiledPlanV2Schema,
+    compiledPlan: DareStoredPlanV2Schema,
     evaluatorVersion: DareEvaluatorV2VersionSchema,
     plainLanguage: z.string().min(1),
     semanticProofPlan: z.string().min(1),

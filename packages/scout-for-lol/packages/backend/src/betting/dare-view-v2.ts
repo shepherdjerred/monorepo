@@ -1,6 +1,6 @@
 import {
   BucksDareV2StateSchema,
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareSqlV3CompilationSchema,
   DareDeadlineSpecV2Schema,
   DareTargetBindingV2Schema,
@@ -121,7 +121,7 @@ function parsedRevisionPlan(revision: VisibleDareRow["revisions"][number]) {
   const rawPlan: unknown = JSON.parse(revision.compiledPlan);
   return revision.compilerVersion === "dare-scoutql-3"
     ? DareSqlV3CompilationSchema.parse(rawPlan)
-    : DareCompiledPlanV2Schema.parse(rawPlan);
+    : DareStoredPlanV2Schema.parse(rawPlan);
 }
 
 function progressForRow(
@@ -215,7 +215,7 @@ function inspection(
         ? revision.canonicalScoutQl
         : visibleDareScoutQlV2({
             state,
-            plan: DareCompiledPlanV2Schema.parse(plan),
+            plan: DareStoredPlanV2Schema.parse(plan),
             storedCanonicalScoutQl: revision.canonicalScoutQl,
           }),
     plan,
@@ -274,7 +274,7 @@ function inspection(
 
 export function visibleDareScoutQlV2(input: {
   state: BucksDareV2State;
-  plan: z.infer<typeof DareCompiledPlanV2Schema>;
+  plan: z.infer<typeof DareStoredPlanV2Schema>;
   storedCanonicalScoutQl: string;
 }): string {
   return input.state === "draft"

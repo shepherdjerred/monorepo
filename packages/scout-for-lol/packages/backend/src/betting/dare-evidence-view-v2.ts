@@ -1,6 +1,6 @@
 import {
   BucksDareV2StateSchema,
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareProgressSchema,
   DareSqlV3CompilationSchema,
   DareSqlV3EvidenceSchema,
@@ -178,7 +178,7 @@ export async function listDareEvidenceV2(
     });
     return evidencePage(rows, input.cursor, input.limit);
   }
-  const plan = DareCompiledPlanV2Schema.parse(rawPlan);
+  const plan = DareStoredPlanV2Schema.parse(rawPlan);
   const evidence = dare.evidence.map((row) => storedDareV2Evidence(row));
   const rows = evidence.map((row, index) => {
     const common = {

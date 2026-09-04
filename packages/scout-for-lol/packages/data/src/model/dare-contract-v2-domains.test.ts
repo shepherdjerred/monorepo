@@ -3,7 +3,10 @@ import {
   DARE_V2_TEST_GAME_SET,
   DARE_V2_TEST_PLAN,
 } from "./dare-contract-v2.test-fixtures.ts";
-import { DareCompiledPlanV2Schema } from "./dare-contract-v2.ts";
+import {
+  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
+} from "./dare-contract-v2.ts";
 import type { DareBooleanExpressionV2 } from "./dare-expression-v2.ts";
 import { DARE_TEAM_POSITIONS } from "./dare-domains.ts";
 
@@ -145,5 +148,30 @@ describe("Dare v2 contract value domains", () => {
         threshold: 10,
       }).success,
     ).toBe(true);
+  });
+});
+
+describe("Dare v2 stored plans stay readable", () => {
+  // Tightening the authoring schema must not retroactively break dares already
+  // funded against a plan written before the rule existed. Both active dares on
+  // beta hold `team_position = 'SUPPORT'`; their callout, progress view, and
+  // settlement all re-parse that stored revision.
+  const legacyPlan = planWithPredicate(
+    participantComparison("team_position", "SUPPORT"),
+  );
+
+  test("reads a stored plan whose value predates the domain rule", () => {
+    expect(DareStoredPlanV2Schema.safeParse(legacyPlan).success).toBe(true);
+  });
+
+  test("still refuses to author that same plan", () => {
+    expect(DareCompiledPlanV2Schema.safeParse(legacyPlan).success).toBe(false);
+  });
+
+  test("still enforces structural limits when reading a stored plan", () => {
+    expect(
+      DareStoredPlanV2Schema.safeParse({ ...DARE_V2_TEST_PLAN, gameSets: [] })
+        .success,
+    ).toBe(false);
   });
 });
