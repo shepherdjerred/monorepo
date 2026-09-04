@@ -1,6 +1,10 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { MemoryRouter } from "react-router";
 import {
   isConsumerTypeaheadReady,
+  PlayerHome,
   PROTECTED_CONSUMER_SEARCH_QUERY_OPTIONS,
   shouldHideConsumerSuggestions,
 } from "#src/routes/consumer-player-search.tsx";
@@ -37,6 +41,48 @@ describe("consumer player typeahead", () => {
         isPlaceholderData: false,
       }),
     ).toBe(false);
+  });
+});
+
+describe("consumer player hub states", () => {
+  test("renders loading, error, and both empty explanations", () => {
+    const loading = renderToStaticMarkup(
+      createElement(PlayerHome, {
+        yourProfiles: undefined,
+        recentPlayers: undefined,
+        pending: true,
+        error: false,
+        onRetry: vi.fn(),
+      }),
+    );
+    expect(loading).toContain("Loading your player hub");
+
+    const error = renderToStaticMarkup(
+      createElement(PlayerHome, {
+        yourProfiles: undefined,
+        recentPlayers: undefined,
+        pending: false,
+        error: true,
+        onRetry: vi.fn(),
+      }),
+    );
+    expect(error).toContain("didn&#x27;t load");
+
+    const empty = renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        undefined,
+        createElement(PlayerHome, {
+          yourProfiles: [],
+          recentPlayers: [],
+          pending: false,
+          error: false,
+          onRetry: vi.fn(),
+        }),
+      ),
+    );
+    expect(empty).toContain("No Scout player is linked");
+    expect(empty).toContain("No other recently active players");
   });
 });
 

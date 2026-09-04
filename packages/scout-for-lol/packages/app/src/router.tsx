@@ -25,6 +25,8 @@ import { Explore } from "#src/routes/explore.tsx";
 import { ExploreShared } from "#src/routes/explore-shared.tsx";
 import { ConsumerPlayerSearch } from "#src/routes/consumer-player-search.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
+import { ConsumerChampion } from "#src/routes/consumer-champion.tsx";
+import { ConsumerMatch } from "#src/routes/consumer-match.tsx";
 import { ConsumerWorkspace } from "#src/routes/consumer-workspace.tsx";
 import { BucksWorkspace } from "#src/routes/bucks-workspace.tsx";
 import { BucksOverview } from "#src/routes/bucks-overview.tsx";
@@ -216,6 +218,16 @@ export const routes: RouteObject[] = [
                 path: "players/:playerId",
                 element: <ConsumerPlayerProfile />,
                 loader: consumerPlayerLoader,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "players/:playerId/matches/:matchId",
+                element: <ConsumerMatch />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "champions/:championId",
+                element: <ConsumerChampion />,
                 errorElement: <RouteErrorPanel />,
               },
               {

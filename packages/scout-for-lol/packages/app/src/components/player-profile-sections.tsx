@@ -1,9 +1,13 @@
 import {
   championNameToDisplayName,
-  rankToString,
+  divisionToString,
   type Rank,
 } from "@scout-for-lol/data";
+import { SCOUT_RANKS } from "@scout-for-lol/design-system/assets";
+import { useState } from "react";
+import { Link } from "react-router";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
   CardContent,
@@ -20,6 +24,7 @@ import {
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/champion-icon.tsx";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
+import { RankDisplay } from "@scout-for-lol/design-system/domain/rank-display";
 
 export function formatPercent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100).toString()}%`;
@@ -47,11 +52,37 @@ export function RankCard(props: { label: string; rank: Rank | undefined }) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-lg font-semibold">
-          {props.rank === undefined ? "Unranked" : rankToString(props.rank)}
-        </p>
+        <RankValue rank={props.rank} />
       </CardContent>
     </Card>
+  );
+}
+
+function scoutRank(rank: Rank) {
+  const display = SCOUT_RANKS.find(
+    (candidate) => candidate.toLowerCase() === rank.tier,
+  );
+  if (display === undefined) {
+    throw new Error(`No crest exists for rank tier ${rank.tier}`);
+  }
+  return display;
+}
+
+export function RankValue(props: {
+  rank: Rank | undefined;
+  compact?: boolean;
+}) {
+  if (props.rank === undefined) {
+    return <p className="text-lg font-semibold">Unranked</p>;
+  }
+  return (
+    <RankDisplay
+      rank={scoutRank(props.rank)}
+      division={divisionToString(props.rank.division)}
+      leaguePoints={props.rank.lp}
+      {...(props.compact === undefined ? {} : { compact: props.compact })}
+      className="text-scout-ink"
+    />
   );
 }
 
@@ -120,7 +151,9 @@ type ChampionRow = {
 export function ChampionPoolTable(props: {
   rows: ChampionRow[];
   minGamesForRate: number;
+  profileSearch: string;
 }) {
+  const [page, setPage] = useState(0);
   if (props.rows.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -142,12 +175,17 @@ export function ChampionPoolTable(props: {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {props.rows.map((row) => (
+          {props.rows.slice(page * 10, page * 10 + 10).map((row) => (
             <TableRow key={row.championId}>
               <TableCell>
                 <span className="flex items-center gap-2">
                   <ChampionIcon championName={row.championName} decorative />
-                  {championNameToDisplayName(row.championName)}
+                  <Link
+                    className="font-medium underline-offset-4 hover:underline"
+                    to={`/champions/${row.championId.toString()}${props.profileSearch}`}
+                  >
+                    {championNameToDisplayName(row.championName)}
+                  </Link>
                 </span>
               </TableCell>
               <TableCell className="text-right">
@@ -172,6 +210,38 @@ export function ChampionPoolTable(props: {
           ))}
         </TableBody>
       </Table>
+      {props.rows.length > 10 && (
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            Page {(page + 1).toString()} of{" "}
+            {Math.ceil(props.rows.length / 10).toString()}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={page === 0}
+              onClick={() => {
+                setPage((current) => current - 1);
+              }}
+            >
+              Previous
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={(page + 1) * 10 >= props.rows.length}
+              onClick={() => {
+                setPage((current) => current + 1);
+              }}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
       {props.rows.some((row) => row.lowSample) && (
         <p className="text-xs text-muted-foreground">
           * Fewer than {props.minGamesForRate.toString()} games — treat the rate
@@ -225,7 +295,11 @@ function LeaguePointsBadge(props: { delta: number | null }) {
   );
 }
 
-export function MatchHistoryList(props: { entries: MatchEntry[] }) {
+export function MatchHistoryList(props: {
+  entries: MatchEntry[];
+  playerId?: number;
+  profileSearch: string;
+}) {
   if (props.entries.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -248,7 +322,20 @@ export function MatchHistoryList(props: { entries: MatchEntry[] }) {
           <ChampionIcon championName={entry.championName} size="md" />
           <div className="min-w-32">
             <p className="text-sm font-medium text-scout-ink">
-              {entry.win ? "Victory" : "Defeat"}
+              {props.playerId === undefined ? (
+                entry.win ? (
+                  "Victory"
+                ) : (
+                  "Defeat"
+                )
+              ) : (
+                <Link
+                  className="underline-offset-4 hover:underline"
+                  to={`/players/${props.playerId.toString()}/matches/${encodeURIComponent(entry.matchId)}${props.profileSearch}`}
+                >
+                  {entry.win ? "Victory" : "Defeat"}
+                </Link>
+              )}
             </p>
             <p className="text-xs text-scout-ink">
               {entry.queue ?? "Unknown queue"} ·{" "}

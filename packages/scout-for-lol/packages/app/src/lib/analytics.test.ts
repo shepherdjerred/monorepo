@@ -171,6 +171,10 @@ describe("normalizePath", () => {
       "/g/:guildId/competitions/:competitionId",
     );
     expect(normalizePath("/players/42")).toBe("/players/:playerId");
+    expect(normalizePath("/players/42/matches/NA1_123456789")).toBe(
+      "/players/:playerId/matches/:matchId",
+    );
+    expect(normalizePath("/champions/22")).toBe("/champions/:championId");
   });
 
   test("preserves known static routes and rejects unknown routes", () => {
@@ -509,6 +513,13 @@ describe("track", () => {
       outcome: "succeeded",
       surface: "search_results",
     });
+    track("player_profile_filter_changed", {
+      kind: "queues",
+      action: "explicit_selection",
+    });
+    track("champion_comparison_opened", { outcome: "succeeded" });
+    track("match_detail_opened", { outcome: "succeeded" });
+    track("match_timeline_viewed", { outcome: "not_captured" });
 
     expect(calls).toEqual([
       {
@@ -526,6 +537,43 @@ describe("track", () => {
         properties: {
           outcome: "succeeded",
           surface: "search_results",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "player_profile_filter_changed",
+        properties: {
+          kind: "queues",
+          action: "explicit_selection",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "champion_comparison_opened",
+        properties: {
+          outcome: "succeeded",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "match_detail_opened",
+        properties: {
+          outcome: "succeeded",
+          site_key: "scout-beta",
+          site_hostname: "beta.scout-for-lol.com",
+        },
+        options: undefined,
+      },
+      {
+        event: "match_timeline_viewed",
+        properties: {
+          outcome: "not_captured",
           site_key: "scout-beta",
           site_hostname: "beta.scout-for-lol.com",
         },

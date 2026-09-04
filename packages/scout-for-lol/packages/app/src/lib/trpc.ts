@@ -1,6 +1,12 @@
 import { createTRPCClient, httpBatchLink, splitLink } from "@trpc/client";
 import { createTRPCContext } from "@trpc/tanstack-react-query";
-import type { AppRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
+import type {
+  AppRouter,
+  AppRouterOutputs,
+} from "@scout-for-lol/backend/trpc/router/index.ts";
+
+type LocalType<T> = T;
+export type RouterOutputs = LocalType<AppRouterOutputs>;
 
 const CSRF_COOKIE = "scout_csrf";
 
