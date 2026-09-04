@@ -50,6 +50,7 @@ async function seedPlayer(options: {
   alias: string;
   discordId?: DiscordAccountId;
   puuids: LeaguePuuid[];
+  lastMatchTime?: Date | null;
 }) {
   const now = new Date();
   const player = await testPrisma.player.create({
@@ -75,7 +76,8 @@ async function seedPlayer(options: {
       riotGameName: `${options.alias} Riot ${index.toString()}`,
       riotTagLine: "NA1",
       riotIdUpdatedAt: now,
-      lastMatchTime: now,
+      lastMatchTime:
+        options.lastMatchTime === undefined ? now : options.lastMatchTime,
       lastCheckedAt: now,
       createdTime: now,
       updatedTime: now,
@@ -88,21 +90,22 @@ function matchFact(options: {
   matchId: string;
   puuid: string;
   playerId: number;
-  queue?: string;
+  queue?: string | null;
+  gameCreationAt?: Date;
 }) {
   return {
     playerId: options.playerId,
     playerAlias: "Consumer Player",
     matchId: options.matchId,
     puuid: options.puuid,
-    queue: options.queue ?? "solo",
+    queue: options.queue === undefined ? "solo" : options.queue,
     win: true,
     surrendered: false,
     kills: 7,
     deaths: 2,
     assists: 5,
     teamId: 100,
-    gameCreationAt: gameCreatedAt,
+    gameCreationAt: options.gameCreationAt ?? gameCreatedAt,
   };
 }
 
@@ -320,6 +323,61 @@ describe("consumerPlayer search and direct lookup", () => {
   });
 });
 
+describe("consumerPlayer.home", () => {
+  test("returns every viewer-linked profile and six newest non-self players", async () => {
+    enableProfiles(guildId, otherGuildId);
+    trpc.setMembership([
+      { guildId, asAdmin: false },
+      { guildId: otherGuildId, asAdmin: false },
+    ]);
+    const mineOne = await seedPlayer({
+      serverId: guildId,
+      alias: "Mine One",
+      discordId: actorDiscordId,
+      puuids: [testPuuid("home-mine-one")],
+    });
+    const mineTwo = await seedPlayer({
+      serverId: otherGuildId,
+      alias: "Mine Two",
+      discordId: actorDiscordId,
+      puuids: [testPuuid("home-mine-two")],
+    });
+    const recent: number[] = [];
+    for (let index = 0; index < 8; index += 1) {
+      const player = await seedPlayer({
+        serverId: guildId,
+        alias: `Recent ${index.toString()}`,
+        puuids: [testPuuid(`home-recent-${index.toString()}`)],
+        lastMatchTime: new Date(gameCreatedAt.getTime() - index * 60_000),
+      });
+      recent.push(player.id);
+    }
+    await seedPlayer({
+      serverId: guildId,
+      alias: "Never active",
+      puuids: [testPuuid("home-never")],
+      lastMatchTime: null,
+    });
+
+    const home = await trpc.authedCaller(actorDiscordId).consumerPlayer.home();
+    expect(
+      home.yourProfiles
+        .map((player) => player.playerId)
+        .toSorted((left, right) => left - right),
+    ).toEqual([mineOne.id, mineTwo.id].toSorted((left, right) => left - right));
+    expect(home.recentPlayers.map((player) => player.playerId)).toEqual(
+      recent.slice(0, 6),
+    );
+    expect(JSON.stringify(home)).not.toContain(actorDiscordId);
+  });
+
+  test("rechecks the feature flag for the home request", async () => {
+    await expect(trpc.authedCaller().consumerPlayer.home()).rejects.toThrow(
+      /not available/i,
+    );
+  });
+});
+
 describe("consumerPlayer combined profile", () => {
   test("returns safe account freshness, ranks, and match attribution", async () => {
     enableProfiles(guildId);
@@ -398,10 +456,65 @@ describe("consumerPlayer combined profile", () => {
     const flexHistory = await caller.consumerPlayer.matchHistory({
       playerId: player.id,
       limit: 20,
-      queue: "flex",
+      queues: ["flex"],
     });
     expect(flexHistory.entries.map((entry) => entry.matchId)).toEqual([
       "NA1_alt",
     ]);
+  });
+
+  test("combines queues, preserves all-game null queues, and stops at the selected window", async () => {
+    enableProfiles(guildId);
+    const player = await seedPlayer({
+      serverId: guildId,
+      alias: "Windowed Player",
+      puuids: [MAIN],
+    });
+    const facts = Array.from({ length: 55 }, (_, index) =>
+      matchFact({
+        matchId: `NA1_window_${index.toString().padStart(2, "0")}`,
+        puuid: MAIN,
+        playerId: player.id,
+        queue: index === 54 ? null : index % 2 === 0 ? "solo" : "flex",
+        gameCreationAt: new Date(gameCreatedAt.getTime() - index * 60_000),
+      }),
+    );
+    await writeTestLake(lakeDir, { serverId: guildId, matchFacts: facts });
+
+    const caller = trpc.authedCaller();
+    const lastTwenty = await caller.consumerPlayer.matchHistory({
+      playerId: player.id,
+      limit: 50,
+    });
+    expect(lastTwenty.entries).toHaveLength(20);
+    expect(lastTwenty.nextCursor).toBeNull();
+
+    const lastFifty = await caller.consumerPlayer.matchHistory({
+      playerId: player.id,
+      games: 50,
+      limit: 50,
+      queues: ["solo", "flex"],
+    });
+    expect(lastFifty.entries).toHaveLength(50);
+    expect(lastFifty.nextCursor).toBeNull();
+
+    const allTime = await caller.consumerPlayer.matchHistory({
+      playerId: player.id,
+      games: "all",
+      limit: 50,
+    });
+    expect(allTime.entries).toHaveLength(50);
+    expect(allTime.nextCursor).not.toBeNull();
+    if (allTime.nextCursor === null) {
+      throw new Error("All-time history should have another page");
+    }
+    const finalPage = await caller.consumerPlayer.matchHistory({
+      playerId: player.id,
+      games: "all",
+      limit: 50,
+      cursor: allTime.nextCursor,
+    });
+    expect(finalPage.entries).toHaveLength(5);
+    expect(finalPage.entries.at(-1)?.queue).toBeNull();
   });
 });

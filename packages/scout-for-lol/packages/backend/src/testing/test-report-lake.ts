@@ -5,6 +5,10 @@ import {
   type AccountLakeRow,
   type MatchLakeRow,
   type PrematchLakeRow,
+  type TimelineCoverageLakeRow,
+  type TimelineEventParticipantLakeRow,
+  type TimelineEventLakeRow,
+  type TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
 import {
   duckDbColumnsSpec,
@@ -19,6 +23,7 @@ import {
 import {
   matchStagingFilePath,
   prematchStagingFilePath,
+  timelineStagingFilePath,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 
@@ -223,29 +228,24 @@ export async function resetTestLake(lakeDir: string): Promise<void> {
   await ensureLakeScaffold(lakeDir);
 }
 
-export async function writeTestLake(
-  lakeDir: string,
-  input: {
-    serverId: string;
-    matchFacts?: TestLakeMatchFact[];
-    prematchFacts?: TestLakePrematchFact[];
-    /**
-     * Additional servers that also track every account above, producing a
-     * second accounts row per (server, account) exactly as the compactor does.
-     * This is the shape that makes an unscoped accounts join double-count, so
-     * global-scope tests need it to be meaningful.
-     */
-    alsoTrackedBy?: string[];
-    /**
-     * Match facts written to the lake but deliberately absent from the accounts
-     * dimension — the other nine participants of a game Scout ingested for one
-     * tracked player. Guild scope must not see them; global scope must.
-     */
-    untrackedMatchFacts?: TestLakeMatchFact[];
-  },
-): Promise<void> {
-  await ensureLakeScaffold(lakeDir);
+type TestLakeInput = {
+  serverId: string;
+  matchFacts?: TestLakeMatchFact[];
+  prematchFacts?: TestLakePrematchFact[];
+  /** Additional servers that also track every account above. */
+  alsoTrackedBy?: string[];
+  /** Full-match participants deliberately absent from the accounts dimension. */
+  untrackedMatchFacts?: TestLakeMatchFact[];
+  timelineEvents?: TimelineEventLakeRow[];
+  timelineEventParticipants?: TimelineEventParticipantLakeRow[];
+  timelineFrames?: TimelineParticipantFrameLakeRow[];
+  timelineCoverage?: TimelineCoverageLakeRow[];
+};
 
+async function writeTestAccounts(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
   // Accounts dimension: one account per distinct (server, playerId, puuid).
   const accountsByKey = new Map<string, AccountLakeRow>();
   const allFacts = [
@@ -289,7 +289,12 @@ export async function writeTestLake(
   });
   await rm(accountsNdjson);
   await publishBuild(lakeDir, buildId);
+}
 
+async function writeTestMatches(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
   // Match rows: one staging file per matchId (exercises the union path).
   // Untracked facts are written alongside tracked ones — the lake makes no
   // distinction; only the accounts dimension above does.
@@ -308,7 +313,12 @@ export async function writeTestLake(
       rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
     );
   }
+}
 
+async function writeTestPrematches(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
   const byPrematch = new Map<string, PrematchLakeRow[]>();
   for (const fact of input.prematchFacts ?? []) {
     const rows = byPrematch.get(fact.dedupeKey) ?? [];
@@ -321,4 +331,57 @@ export async function writeTestLake(
       rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
     );
   }
+}
+
+async function writeTestTimelineRows(
+  lakeDir: string,
+  table:
+    | "timeline_events"
+    | "timeline_event_participants"
+    | "timeline_participant_frames"
+    | "timeline_coverage",
+  rows: { match_id: string }[],
+): Promise<void> {
+  const rowsByMatch = new Map<string, { match_id: string }[]>();
+  for (const row of rows) {
+    const matchRows = rowsByMatch.get(row.match_id) ?? [];
+    matchRows.push(row);
+    rowsByMatch.set(row.match_id, matchRows);
+  }
+  for (const [matchId, matchRows] of rowsByMatch) {
+    await Bun.write(
+      timelineStagingFilePath(lakeDir, table, matchId),
+      matchRows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    );
+  }
+}
+
+export async function writeTestLake(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
+  await ensureLakeScaffold(lakeDir);
+  await writeTestAccounts(lakeDir, input);
+  await writeTestMatches(lakeDir, input);
+  await writeTestPrematches(lakeDir, input);
+  await writeTestTimelineRows(
+    lakeDir,
+    "timeline_events",
+    input.timelineEvents ?? [],
+  );
+  await writeTestTimelineRows(
+    lakeDir,
+    "timeline_event_participants",
+    input.timelineEventParticipants ?? [],
+  );
+  await writeTestTimelineRows(
+    lakeDir,
+    "timeline_participant_frames",
+    input.timelineFrames ?? [],
+  );
+  await writeTestTimelineRows(
+    lakeDir,
+    "timeline_coverage",
+    input.timelineCoverage ?? [],
+  );
 }

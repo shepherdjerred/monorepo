@@ -1,18 +1,25 @@
 import { z } from "zod";
 import {
   LOW_SAMPLE_GAME_THRESHOLD,
-  RankSchema,
+  PlayerProfileGameWindowSchema,
+  PlayerProfileQueueSelectionSchema,
+  QueueTypeSchema,
   leaguePointsDelta,
   type DiscordGuildId,
   type PlayerId,
-  type Rank,
+  type PlayerProfileGameWindow,
+  type QueueType,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
+import { PlayerLookupInput } from "#src/lib/player-admin/shared.ts";
 import {
-  PlayerLookupInput,
-  getPlayerOrThrow,
-  notFound,
-} from "#src/lib/player-admin/shared.ts";
+  latestRanks,
+  parseRank,
+  resolveConsumerPlayerPuuids,
+  resolveGuildPuuids,
+  type ProfileAccount,
+  type ResolvedPlayerProfile,
+} from "#src/lib/player-profile/profile-resolution.ts";
 import {
   fetchPlayerChampionPool,
   fetchPlayerMatchHistory,
@@ -44,149 +51,18 @@ const RECENT_FORM_GAMES = 20;
 const MatchHistoryCursorSchema = z.object({
   gameCreationMs: z.number().int(),
   matchId: z.string().min(1),
+  consumed: z.number().int().nonnegative().optional(),
 });
 
 export const PlayerProfileInput = PlayerLookupInput.extend({
-  queue: z.string().trim().min(1).max(50).optional(),
+  queue: QueueTypeSchema.optional(),
 });
 
 export const PlayerMatchHistoryInput = PlayerLookupInput.extend({
   limit: z.number().int().min(1).max(50).default(RECENT_FORM_GAMES),
   cursor: MatchHistoryCursorSchema.optional(),
-  queue: z.string().trim().min(1).max(50).optional(),
+  queue: QueueTypeSchema.optional(),
 });
-
-type ProfileAccount = {
-  puuid: string;
-  region: string;
-  riotGameName: string | null;
-  riotTagLine: string | null;
-  riotIdUpdatedAt: Date | null;
-  lastMatchTime: Date | null;
-  lastCheckedAt: Date | null;
-};
-
-type ResolvedPlayerProfile = {
-  playerId: number;
-  alias: string;
-  puuids: string[];
-  accounts: ProfileAccount[];
-};
-
-type ResolvedGuildPlayerProfile = ResolvedPlayerProfile & {
-  discordId: string | null;
-};
-
-function profileAccount(account: ProfileAccount): ProfileAccount {
-  return {
-    puuid: account.puuid,
-    region: account.region,
-    riotGameName: account.riotGameName,
-    riotTagLine: account.riotTagLine,
-    riotIdUpdatedAt: account.riotIdUpdatedAt,
-    lastMatchTime: account.lastMatchTime,
-    lastCheckedAt: account.lastCheckedAt,
-  };
-}
-
-async function resolveGuildPuuids(input: {
-  guildId: string;
-  alias: string;
-}): Promise<ResolvedGuildPlayerProfile> {
-  const player = await getPlayerOrThrow(input);
-  return {
-    playerId: player.id,
-    alias: player.alias,
-    discordId: player.discordId,
-    puuids: player.accounts.map((account) => account.puuid),
-    accounts: player.accounts.map((account) => profileAccount(account)),
-  };
-}
-
-async function resolveConsumerPlayerPuuids(input: {
-  playerId: PlayerId;
-  guildIds: DiscordGuildId[];
-}): Promise<ResolvedPlayerProfile & { guildId: string }> {
-  const player = await prisma.player.findFirst({
-    where: { id: input.playerId, serverId: { in: input.guildIds } },
-    include: { accounts: true },
-  });
-  if (player === null) {
-    throw notFound("Player was not found");
-  }
-  return {
-    playerId: player.id,
-    alias: player.alias,
-    guildId: player.serverId,
-    puuids: player.accounts.map((account) => account.puuid),
-    accounts: player.accounts.map((account) => profileAccount(account)),
-  };
-}
-
-function parseRank(serialized: string | null): Rank | undefined {
-  if (serialized === null) return undefined;
-  const parsed = RankSchema.safeParse(JSON.parse(serialized));
-  return parsed.success ? parsed.data : undefined;
-}
-
-/** Latest known rank per queue, newest game first. */
-async function latestRanks(puuids: string[]): Promise<{
-  solo: Rank | undefined;
-  flex: Rank | undefined;
-  ranked5s: Rank | undefined;
-}> {
-  const [rankHistory, current] = await Promise.all([
-    Promise.all(
-      (["solo", "flex", "ranked 5s"] as const).map(async (queueType) =>
-        prisma.matchRankHistory.findFirst({
-          where: {
-            puuid: { in: puuids },
-            queueType,
-            rankAfter: { not: null },
-          },
-          orderBy: [
-            { matchGameEndAt: { sort: "desc", nulls: "last" } },
-            { capturedAt: "desc" },
-          ],
-        }),
-      ),
-    ),
-    prisma.currentRankSnapshot.findMany({
-      where: { puuid: { in: puuids } },
-      orderBy: { fetchedAt: "desc" },
-    }),
-  ]);
-
-  function newestRank(
-    live: (typeof rankHistory)[number] | undefined,
-    queueType: "solo" | "flex" | "ranked 5s",
-  ): Rank | undefined {
-    const snapshot = current.find((entry) => {
-      if (queueType === "solo") return entry.soloRank !== null;
-      if (queueType === "flex") return entry.flexRank !== null;
-      return entry.ranked5sRank !== null;
-    });
-    const snapshotValue =
-      queueType === "solo"
-        ? snapshot?.soloRank
-        : queueType === "flex"
-          ? snapshot?.flexRank
-          : snapshot?.ranked5sRank;
-    if (
-      snapshot !== undefined &&
-      (live == null || snapshot.fetchedAt > live.capturedAt)
-    ) {
-      return parseRank(snapshotValue ?? null);
-    }
-    return parseRank(live?.rankAfter ?? null);
-  }
-
-  return {
-    solo: newestRank(rankHistory[0], "solo"),
-    flex: newestRank(rankHistory[1], "flex"),
-    ranked5s: newestRank(rankHistory[2], "ranked 5s"),
-  };
-}
 
 export type MatchHistoryEntry = {
   matchId: string;
@@ -311,6 +187,8 @@ async function matchHistoryForPlayer(
     limit: number;
     cursor?: MatchHistoryCursor;
     queue?: string;
+    queues?: QueueType[];
+    games?: PlayerProfileGameWindow;
   },
 ): Promise<{
   entries: MatchHistoryEntry[];
@@ -320,21 +198,41 @@ async function matchHistoryForPlayer(
     return { entries: [], nextCursor: null };
   }
 
+  const consumed = input.cursor?.consumed ?? 0;
+  const remaining =
+    input.games === 20 || input.games === 50
+      ? Math.max(0, input.games - consumed)
+      : input.limit;
+  if (remaining === 0) {
+    return { entries: [], nextCursor: null };
+  }
+  const pageLimit = Math.min(input.limit, remaining);
   const rows = await fetchPlayerMatchHistory({
     puuids: player.puuids,
-    limit: input.limit + 1,
+    limit: pageLimit + 1,
     ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
     ...(input.queue === undefined ? {} : { queue: input.queue }),
+    ...(input.queues === undefined ? {} : { queues: input.queues }),
   });
-  const page = rows.slice(0, input.limit);
-  const last = rows.length > input.limit ? page.at(-1) : undefined;
+  const page = rows.slice(0, pageLimit);
+  const last =
+    rows.length > pageLimit &&
+    (input.games === "all" ||
+      input.games === undefined ||
+      page.length < remaining)
+      ? page.at(-1)
+      : undefined;
 
   return {
     entries: await decorateHistoryRows(page, player.accounts),
     nextCursor:
       last === undefined
         ? null
-        : { gameCreationMs: last.game_creation_ms, matchId: last.match_id },
+        : {
+            gameCreationMs: last.game_creation_ms,
+            matchId: last.match_id,
+            consumed: consumed + page.length,
+          },
   };
 }
 
@@ -347,6 +245,7 @@ export async function getPlayerMatchHistory(
   const player = await resolveGuildPuuids(input);
   return matchHistoryForPlayer(player, {
     limit: input.limit,
+    games: "all",
     ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
     ...(input.queue === undefined ? {} : { queue: input.queue }),
   });
@@ -357,7 +256,8 @@ export async function getConsumerPlayerMatchHistory(input: {
   guildIds: DiscordGuildId[];
   limit: number;
   cursor?: MatchHistoryCursor;
-  queue?: string;
+  queues?: QueueType[];
+  games: PlayerProfileGameWindow;
 }) {
   const player = await resolveConsumerPlayerPuuids(input);
   return matchHistoryForPlayer(player, input);
@@ -391,7 +291,12 @@ async function accountSummaries(accounts: ProfileAccount[]) {
 
 async function profileSummaryForPlayer(
   player: ResolvedPlayerProfile,
-  queue: string | undefined,
+  filters: {
+    queue?: QueueType;
+    queues?: QueueType[];
+    games: PlayerProfileGameWindow;
+    championGames?: PlayerProfileGameWindow;
+  },
 ) {
   const accounts = await accountSummaries(player.accounts);
   if (player.puuids.length === 0) {
@@ -411,12 +316,15 @@ async function profileSummaryForPlayer(
     latestRanks(player.puuids),
     fetchPlayerMatchHistory({
       puuids: player.puuids,
-      limit: RECENT_FORM_GAMES,
-      ...(queue === undefined ? {} : { queue }),
+      ...(filters.games === "all" ? {} : { limit: filters.games }),
+      ...(filters.queue === undefined ? {} : { queue: filters.queue }),
+      ...(filters.queues === undefined ? {} : { queues: filters.queues }),
     }),
     fetchPlayerChampionPool({
       puuids: player.puuids,
-      ...(queue === undefined ? {} : { queue }),
+      games: filters.championGames ?? filters.games,
+      ...(filters.queue === undefined ? {} : { queue: filters.queue }),
+      ...(filters.queues === undefined ? {} : { queues: filters.queues }),
     }),
   ]);
 
@@ -475,7 +383,11 @@ export async function getPlayerProfileSummary(
   input: z.infer<typeof PlayerProfileInput>,
 ) {
   const player = await resolveGuildPuuids(input);
-  const summary = await profileSummaryForPlayer(player, input.queue);
+  const summary = await profileSummaryForPlayer(player, {
+    games: RECENT_FORM_GAMES,
+    championGames: "all",
+    ...(input.queue === undefined ? {} : { queue: input.queue }),
+  });
   return {
     discordId: player.discordId,
     ...summary,
@@ -485,11 +397,17 @@ export async function getPlayerProfileSummary(
 export async function getConsumerPlayerProfileSummary(input: {
   playerId: PlayerId;
   guildIds: DiscordGuildId[];
-  queue?: string;
+  queues?: QueueType[];
+  games: PlayerProfileGameWindow;
 }) {
   const player = await resolveConsumerPlayerPuuids(input);
   return {
     guildId: player.guildId,
-    ...(await profileSummaryForPlayer(player, input.queue)),
+    ...(await profileSummaryForPlayer(player, {
+      games: PlayerProfileGameWindowSchema.parse(input.games),
+      ...(input.queues === undefined
+        ? {}
+        : { queues: PlayerProfileQueueSelectionSchema.parse(input.queues) }),
+    })),
   };
 }

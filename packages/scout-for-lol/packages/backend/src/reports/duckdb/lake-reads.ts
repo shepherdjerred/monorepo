@@ -1,5 +1,7 @@
 import {
   CachedLeaderboardSchema,
+  type PlayerProfileGameWindow,
+  type QueueType,
   type CachedLeaderboard,
   type CompetitionId,
 } from "@scout-for-lol/data";
@@ -237,12 +239,17 @@ async function runLakeQuery<T>(options: {
 function playerPredicate(options: {
   puuids: string[];
   queue?: string;
+  queues?: QueueType[];
 }): SqlFragment {
   const sql = ["puuid IN (SELECT unnest(?))"];
   const params: BoundParam[] = [listParam(options.puuids)];
   if (options.queue !== undefined) {
     sql.push("queue = ?");
     params.push(scalarParam(options.queue));
+  }
+  if (options.queues !== undefined) {
+    sql.push("queue IN (SELECT unnest(?))");
+    params.push(listParam(options.queues));
   }
   return { sql: sql.join(" AND "), params };
 }
@@ -288,6 +295,7 @@ const DEDUPE_TO_ONE_ROW_PER_MATCH =
 export type MatchHistoryCursor = {
   gameCreationMs: number;
   matchId: string;
+  consumed?: number | undefined;
 };
 
 /**
@@ -303,9 +311,10 @@ export type MatchHistoryCursor = {
  */
 export async function fetchPlayerMatchHistory(options: {
   puuids: string[];
-  limit: number;
+  limit?: number;
   cursor?: MatchHistoryCursor;
   queue?: string;
+  queues?: QueueType[];
   lakeDir?: string;
 }): Promise<LakePlayerMatchHistoryRow[]> {
   if (options.puuids.length === 0) {
@@ -332,6 +341,7 @@ export async function fetchPlayerMatchHistory(options: {
   if (source === undefined) {
     return [];
   }
+  const limitSql = options.limit === undefined ? "" : "LIMIT ?";
   return await runLakeQuery({
     source,
     sql:
@@ -340,8 +350,11 @@ export async function fetchPlayerMatchHistory(options: {
       `team_position, team_id, win, kills, deaths, assists, creep_score, ` +
       `gold_earned, total_damage_dealt_to_champions, vision_score, time_played ` +
       `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
-      `ORDER BY game_creation_ms DESC, match_id DESC LIMIT ?`,
-    extraParams: [scalarParam(Math.floor(options.limit))],
+      `ORDER BY game_creation_ms DESC, match_id DESC ${limitSql}`,
+    extraParams:
+      options.limit === undefined
+        ? []
+        : [scalarParam(Math.floor(options.limit))],
     schema: PlayerMatchHistoryRowSchema,
   });
 }
@@ -372,6 +385,8 @@ export type LakeChampionPoolRow = z.infer<typeof ChampionPoolRowSchema>;
 export async function fetchPlayerChampionPool(options: {
   puuids: string[];
   queue?: string;
+  queues?: QueueType[];
+  games?: PlayerProfileGameWindow;
   lakeDir?: string;
 }): Promise<LakeChampionPoolRow[]> {
   if (options.puuids.length === 0) {
@@ -384,16 +399,25 @@ export async function fetchPlayerChampionPool(options: {
   if (source === undefined) {
     return [];
   }
+  const limitSql =
+    options.games === 20 || options.games === 50 ? "LIMIT ?" : "";
   return await runLakeQuery({
     source,
     sql:
+      `WITH player_matches AS (` +
+      `SELECT * FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
+      `ORDER BY game_creation_at DESC, match_id DESC ${limitSql}) ` +
       `SELECT champion_id, champion_name, count(*) AS games, ` +
       `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
       `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
       `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
       `sum(time_played)::BIGINT AS time_played ` +
-      `FROM (SELECT * FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH}) ` +
+      `FROM player_matches ` +
       `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
+    extraParams:
+      options.games === 20 || options.games === 50
+        ? [scalarParam(options.games)]
+        : [],
     schema: ChampionPoolRowSchema,
   });
 }
