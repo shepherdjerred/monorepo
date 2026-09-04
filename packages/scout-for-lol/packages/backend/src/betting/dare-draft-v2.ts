@@ -100,7 +100,14 @@ export function prepareDareDraftV2(
 ):
   | { kind: "valid"; draft: PreparedDareDraftV2 }
   | { kind: "invalid"; issues: string[] } {
-  const plan = DareCompiledPlanV2Schema.parse(definition.plan);
+  const planResult = DareCompiledPlanV2Schema.safeParse(definition.plan);
+  if (!planResult.success) {
+    return {
+      kind: "invalid",
+      issues: planResult.error.issues.map((issue) => issue.message),
+    };
+  }
+  const plan = planResult.data;
   const targets = DareTargetBindingV2Schema.array().parse(definition.targets);
   const deadlineSpec = DareDeadlineSpecV2Schema.parse(definition.deadlineSpec);
   const stake = BucksStakeSchema.safeParse(definition.openingStake);

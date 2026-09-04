@@ -11,8 +11,8 @@ import {
   DARE_V2_MAX_PREDICATES,
   DareCompiledPlanV2Schema,
   DareContractV2Schema,
-  type DareBooleanExpressionV2,
 } from "./dare-contract-v2.ts";
+import type { DareBooleanExpressionV2 } from "./dare-expression-v2.ts";
 
 const CONTRACT = {
   ...DARE_V2_TEST_CONTRACT_BASE,

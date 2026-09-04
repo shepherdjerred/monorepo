@@ -1,4 +1,4 @@
-import type { DareBooleanExpressionV2 } from "./dare-contract-v2.ts";
+import type { DareBooleanExpressionV2 } from "./dare-expression-v2.ts";
 
 export const DARE_V2_TEST_PREDICATE: DareBooleanExpressionV2 = {
   kind: "comparison",

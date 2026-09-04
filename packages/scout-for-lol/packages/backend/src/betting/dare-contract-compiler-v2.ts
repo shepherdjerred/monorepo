@@ -404,7 +404,15 @@ export function darePlanSemanticIssues(
   planInput: DareCompiledPlanV2,
   targets: readonly DareTargetBindingV2[],
 ): string[] {
-  const plan = DareCompiledPlanV2Schema.parse(planInput);
+  // safeParse, not parse: the schema's superRefine is the hard gate for plan
+  // limits and value domains, and this function's contract is to *return* the
+  // problems so the authoring loop can show them. Throwing here would turn a
+  // fixable contract into a provider error the model cannot act on.
+  const parsed = DareCompiledPlanV2Schema.safeParse(planInput);
+  if (!parsed.success) {
+    return parsed.error.issues.map((issue) => issue.message);
+  }
+  const plan = parsed.data;
   const issues: string[] = [];
   const targetKeys = new Set(targets.map((target) => target.key));
   if (targetKeys.size !== targets.length)

@@ -2,6 +2,7 @@ import {
   DareCompiledPlanV2Schema,
   RawMatchSchema,
   RawParticipantSchema,
+  type DareCompiledPlanV2,
   type DareTargetBindingV2,
   type DareValueV2,
   type RawMatch,
@@ -344,6 +345,91 @@ describe("Dare evaluator v2 arithmetic and aggregates", () => {
         evidence: [aggregateEvidence],
       }),
     ).toBe(false);
+  });
+});
+
+// Typed as a valid plan on purpose: `threshold: string` accepts "MID" at
+// the type level, and only the schema's runtime domain check rejects it.
+function positionPlanInput(threshold: string): DareCompiledPlanV2 {
+  return {
+    version: 2,
+    maxEligibleGames: 100,
+    gameSets: [
+      {
+        name: "qualifying_game",
+        targetKeys: ["virmel"],
+        relationship: "independent",
+        queues: ["solo"],
+        predicate: {
+          kind: "comparison",
+          value: {
+            kind: "participant",
+            target: "virmel",
+            field: "team_position",
+          },
+          operator: "eq",
+          threshold,
+        },
+        projections: [],
+        orderBy: "game_end_at_asc_match_id_asc",
+        limit: 100,
+      },
+    ],
+    result: {
+      kind: "matching_games",
+      gameSet: "qualifying_game",
+      operator: "gte",
+      threshold: 1,
+    },
+  };
+}
+
+function positionEvidence(threshold: string, teamPosition: string) {
+  const plan = DareCompiledPlanV2Schema.parse(positionPlanInput(threshold));
+  const match = makeTwistedFateMatch(fixture, {
+    matchId: "NA1_position",
+    timePlayed: 1800,
+    creepScore: 200,
+    teamPosition,
+  });
+  return evaluateDareEvidenceV2({
+    plan,
+    evidence: [
+      evaluateDareMatchV2({
+        plan,
+        targets: [TARGET],
+        matchData: match,
+        queue: "solo",
+        timeline: { coverage: "missing", events: [], participants: [] },
+      }),
+    ],
+  });
+}
+
+describe("Dare evaluator v2 team position", () => {
+  // The end-to-end half of the MID/MIDDLE regression: the schema now refuses to
+  // author "MID", and the value Riot actually writes has to evaluate true here,
+  // or rejecting the wrong spelling would just move the silent failure.
+  test("counts a mid-lane game against the position Riot records", () => {
+    expect(positionEvidence("MIDDLE", "MIDDLE")).toBe(true);
+  });
+
+  test("does not count a different lane", () => {
+    expect(positionEvidence("MIDDLE", "UTILITY")).toBe(false);
+  });
+
+  test("refuses to compile a plan using the invented MID spelling", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(positionPlanInput("MID")).success,
+    ).toBe(false);
+  });
+
+  // The authoring loop must receive this as a fixable issue, not an exception:
+  // darePlanSemanticIssues re-parses, so it has to convert the rejection into
+  // text the model can act on.
+  test("reports the illegal position as a semantic issue for the author", () => {
+    const issues = darePlanSemanticIssues(positionPlanInput("MID"), [TARGET]);
+    expect(issues.join(" ")).toContain("MIDDLE");
   });
 });
 

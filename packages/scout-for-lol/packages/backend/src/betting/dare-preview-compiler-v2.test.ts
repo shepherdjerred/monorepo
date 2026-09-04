@@ -29,7 +29,11 @@ describe("Dare v2 lake compiler", () => {
                   field: "champion_name",
                 },
                 operator: "eq",
-                threshold: hostile,
+                // A real champion: a hostile string can no longer reach the
+                // compiler through this field, because the contract schema now
+                // rejects an unresolvable champion at authoring time. Binding is
+                // still exercised below by the eventType and puuid values.
+                threshold: "Ahri",
               },
               {
                 kind: "comparison",
@@ -108,5 +112,42 @@ describe("Dare v2 lake compiler", () => {
     );
     expect(compiled.sql).not.toContain("tep.puuid");
     expect(compiled.sql).toContain("(p0.kills + p0.assists)");
+  });
+
+  test("rejects a hostile champion before it can reach the compiler", () => {
+    const hostile = "'); DROP TABLE timeline_events; --";
+    expect(
+      DareCompiledPlanV2Schema.safeParse({
+        version: 2,
+        maxEligibleGames: 100,
+        gameSets: [
+          {
+            name: "one_game",
+            targetKeys: ["target"],
+            relationship: "independent",
+            queues: ["solo"],
+            predicate: {
+              kind: "comparison",
+              value: {
+                kind: "participant",
+                target: "target",
+                field: "champion_name",
+              },
+              operator: "eq",
+              threshold: hostile,
+            },
+            projections: [],
+            orderBy: "game_end_at_asc_match_id_asc",
+            limit: 10,
+          },
+        ],
+        result: {
+          kind: "matching_games",
+          gameSet: "one_game",
+          operator: "gte",
+          threshold: 1,
+        },
+      }).success,
+    ).toBe(false);
   });
 });

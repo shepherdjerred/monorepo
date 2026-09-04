@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
+import { dareGameSetDomainIssuesV2 } from "#src/model/dare-domains.ts";
+import {
+  DareParticipantRateFieldV2Schema,
+  DareParticipantValueFieldV2Schema,
+  type DareBooleanExpressionV2,
+  type DareValueV2,
+} from "#src/model/dare-expression-v2.ts";
 
 export const DARE_CONTRACT_VERSION = 2;
 export const DARE_SCOUTQL_COMPILER_VERSIONS = [
@@ -59,33 +66,6 @@ export const DareTargetBindingV2Schema = z.strictObject({
 });
 export type DareTargetBindingV2 = z.infer<typeof DareTargetBindingV2Schema>;
 
-export const DareParticipantValueFieldV2Schema = z.enum([
-  "champion_name",
-  "team_position",
-  "team_id",
-  "win",
-  "kills",
-  "deaths",
-  "assists",
-  "creep_score",
-  "gold_earned",
-  "vision_score",
-  "time_played",
-  "total_damage_dealt_to_champions",
-  "wards_placed",
-  "wards_killed",
-  "double_kills",
-  "triple_kills",
-  "quadra_kills",
-  "penta_kills",
-]);
-
-export const DareParticipantRateFieldV2Schema = z.enum([
-  "cs_per_minute",
-  "damage_per_minute",
-  "kda",
-]);
-
 export const DareComparisonOperatorV2Schema = z.enum([
   "eq",
   "neq",
@@ -109,40 +89,6 @@ export const DareAggregateFunctionV2Schema = z.enum([
   "minimum",
   "maximum",
 ]);
-
-export type DareValueV2 =
-  | {
-      kind: "participant";
-      target: string;
-      field: z.infer<typeof DareParticipantValueFieldV2Schema>;
-    }
-  | {
-      kind: "participant_rate";
-      target: string;
-      field: z.infer<typeof DareParticipantRateFieldV2Schema>;
-    }
-  | { kind: "game"; field: "duration_seconds" | "queue" }
-  | {
-      kind: "related_participant_count";
-      target: string;
-      relationship: "ally" | "opponent";
-      championName: string | null;
-    }
-  | {
-      kind: "timeline_event_count";
-      eventType: string;
-      target: string | null;
-      role: "subject" | "killer" | "victim" | "assist" | "creator" | null;
-      afterMs: number | null;
-      beforeMs: number | null;
-      itemId: number | null;
-    }
-  | {
-      kind: "arithmetic";
-      operator: "add" | "subtract" | "multiply" | "divide";
-      left: DareValueV2;
-      right: DareValueV2;
-    };
 
 // `z.union` deliberately emits JSON Schema `anyOf`. OpenAI rejects `oneOf`,
 // which Zod emits for `discriminatedUnion`, for both structured responses and
@@ -194,16 +140,6 @@ export const DareProjectionV2Schema = z.strictObject({
   name: z.string().regex(/^[a-z][a-z0-9_]{0,39}$/),
   value: DareValueV2Schema,
 });
-
-export type DareBooleanExpressionV2 =
-  | {
-      kind: "comparison";
-      value: DareValueV2;
-      operator: "eq" | "neq" | "gte" | "lte" | "gt" | "lt";
-      threshold: string | number | boolean;
-    }
-  | { kind: "and" | "or"; operands: DareBooleanExpressionV2[] }
-  | { kind: "not"; operand: DareBooleanExpressionV2 };
 
 export const DareBooleanExpressionV2Schema: z.ZodType<DareBooleanExpressionV2> =
   z.lazy(() =>
@@ -406,6 +342,13 @@ export const DareCompiledPlanV2Schema = z
     const facts: DarePlanComplexityV2 = { predicates: 0, maxDepth: 0 };
     for (const [index, gameSet] of plan.gameSets.entries()) {
       inspectDareBooleanComplexity(gameSet.predicate, 1, facts);
+      for (const message of dareGameSetDomainIssuesV2(gameSet)) {
+        context.addIssue({
+          code: "custom",
+          message,
+          path: ["gameSets", index],
+        });
+      }
       if (dareGameSetJoinedRelations(gameSet) > DARE_V2_MAX_JOINED_RELATIONS) {
         context.addIssue({
           code: "custom",

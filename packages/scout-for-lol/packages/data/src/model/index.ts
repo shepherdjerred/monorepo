@@ -5,6 +5,8 @@ export * from "./competition-format.ts";
 export * from "./discord.ts";
 export * from "./division.ts";
 export * from "./dare-contract-v2.ts";
+export * from "./dare-domains.ts";
+export * from "./dare-expression-v2.ts";
 export * from "./dare-contract-v3.ts";
 export * from "./dare-progress.ts";
 export * from "./dare-paraphrase-corpus.ts";
