@@ -60,7 +60,8 @@ final class InspectorEditingUITests: XCTestCase {
             in: app
         ).click()
         element(AccessibilityIdentifier.Inspector.recurrenceApply, in: app).click()
-        try waitForVault(server, containing: "recurrence: FREQ=WEEKLY;BYDAY=")
+        try waitForVault(server, containing: "recurrence: DTSTART:")
+        try waitForVault(server, containing: ";FREQ=WEEKLY;BYDAY=")
         try waitForVault(server, containing: "recurrence_anchor: scheduled")
     }
 
@@ -76,7 +77,8 @@ final class InspectorEditingUITests: XCTestCase {
         // Selection changes commit and then restore the same stored body.
         selectTask("Selection target", id: "TaskNotes/Selection target.md", in: app)
         selectTask("Inspector journey", id: "TaskNotes/Inspector journey.md", in: app)
-        XCTAssertTrue(app.staticTexts["Saved through Done."].waitForExistence(timeout: 5))
+        openBodyEditor(in: app)
+        XCTAssertEqual(bodyEditor(in: app).value as? String, "Saved through Done.")
 
         // Inspector closure follows the same capture path.
         openBodyEditor(in: app)
@@ -94,22 +96,42 @@ final class InspectorEditingUITests: XCTestCase {
         ) { addTeardownBlock($0) }
         selectTask("Inspector journey", id: "TaskNotes/Inspector journey.md", in: app)
         openBodyEditor(in: app)
-        let editor = element(AccessibilityIdentifier.Inspector.detailsSource, in: app)
+        let editor = bodyEditor(in: app)
         editor.click()
-        editor.typeText(" shortcut")
+        app.typeText(" shortcut")
         app.typeKey("z", modifierFlags: [.command])
-        XCTAssertEqual(editor.value as? String, "Saved through inspector closure.")
+        XCTAssertEqual(
+            bodyEditor(in: app).value as? String,
+            "Saved through inspector closure."
+        )
 
-        editor.typeText(" menu")
-        app.menuBars.menuBarItems["Edit"].click()
-        app.menuItems.matching(NSPredicate(format: "label BEGINSWITH 'Undo'")).firstMatch.click()
-        XCTAssertEqual(editor.value as? String, "Saved through inspector closure.")
+        app.typeText(" menu")
+        let editMenuItem = app.menuBars.menuBarItems["Edit"]
+        editMenuItem.click()
+        let undoItem = editMenuItem.menus.menuItems
+            .matching(identifier: "undo:")
+            .firstMatch
+        XCTAssertTrue(undoItem.waitForExistence(timeout: 5))
+        undoItem.click()
+        XCTAssertEqual(
+            bodyEditor(in: app).value as? String,
+            "Saved through inspector closure."
+        )
     }
 
     private func selectTask(_ title: String, id: String, in app: XCUIApplication) {
         let row = element(AccessibilityIdentifier.TaskList.row(id), in: app)
         XCTAssertTrue(row.waitForExistence(timeout: 15), "missing row \(title)")
-        row.click()
+        // Clicking the contained accessibility group invokes its context-menu
+        // action under XCTest on macOS 26. Select through the native outline
+        // row instead, which is the table-row interaction a user performs.
+        let nativeRow = app.outlines[AccessibilityIdentifier.TaskList.list]
+            .outlineRows.containing(.staticText, identifier: title).firstMatch
+        XCTAssertTrue(nativeRow.waitForExistence(timeout: 5), "missing native row \(title)")
+        // `XCUIElement.click()` chooses the trailing edge of this outline row,
+        // where the hover actions live. The leading cell inset is owned by the
+        // native table and therefore exercises selection directly.
+        nativeRow.coordinate(withNormalizedOffset: CGVector(dx: 0.02, dy: 0.5)).click()
         XCTAssertTrue(
             element(AccessibilityIdentifier.Inspector.title, in: app).waitForExistence(timeout: 5))
     }
@@ -129,10 +151,21 @@ final class InspectorEditingUITests: XCTestCase {
     }
 
     private func replaceBody(with text: String, in app: XCUIApplication) {
-        let source = element(AccessibilityIdentifier.Inspector.detailsSource, in: app)
-        source.click()
+        let editor = bodyEditor(in: app)
+        editor.click()
         app.typeKey("a", modifierFlags: [.command])
-        source.typeText(text)
+        // The identifier belongs to the representable's scroll view. Clicking
+        // that wrapper leaves the task list as first responder, where typing
+        // performs row selection. Click its real NSTextView child, then send
+        // the keystrokes through the focused application responder.
+        app.typeText(text)
+    }
+
+    private func bodyEditor(in app: XCUIApplication) -> XCUIElement {
+        let source = element(AccessibilityIdentifier.Inspector.detailsSource, in: app)
+        let editor = source.descendants(matching: .textView).firstMatch
+        XCTAssertTrue(editor.waitForExistence(timeout: 5))
+        return editor
     }
 
     private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
