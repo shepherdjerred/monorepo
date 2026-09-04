@@ -1,5 +1,10 @@
 import { buildDareShortlist } from "#src/betting/dare-shortlist.ts";
 import {
+  createDarePreviewLedger,
+  DARE_PREVIEW_REQUIRED_ISSUE,
+  darePreviewSummary,
+} from "#src/explore/dare-draft-guardrails.ts";
+import {
   createDareDraftV3,
   prepareDareDraftV3,
   reviseDareDraftV3,
@@ -100,6 +105,13 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     );
     return shortlistPromise;
   };
+  // Which contracts this turn has actually previewed. `create` is gated on it:
+  // the historical preview is the only check that can catch a contract that is
+  // valid, in-domain, and still impossible — and it was optional, so the model
+  // could and did skip it. Keyed by canonical text so a revised contract has to
+  // be previewed again rather than riding on an earlier one's result.
+  const previewedContracts = createDarePreviewLedger();
+
   const sqlV3Enabled = async () =>
     await isPolicyEnabled("dare_extended_contracts_enabled", {
       server: input.capability.serverId,
@@ -289,11 +301,17 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
           start,
           end,
         });
+        // Lead with matched, not eligible. The old summary reported how many
+        // games were *considered*, so a predicate that could never be satisfied
+        // read as reassuringly as a hard one — "Historically evaluated 12
+        // eligible games" while every one of them failed.
+        const matched = preview.evidence.filter(
+          (row) => row.matched === true,
+        ).length;
+        previewedContracts.record(prepared.draft.canonicalScoutQl);
         return result(
           "previewed",
-          preview.eligibleGames === 0
-            ? "No retained eligible games were found in the preview window."
-            : `Historically evaluated ${preview.eligibleGames.toString()} eligible games.`,
+          darePreviewSummary(preview.eligibleGames, matched),
           {
             ...preview,
             start: start.toISOString(),
@@ -306,6 +324,23 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     create: (raw: unknown) =>
       input.track("create_dare_draft", async () => {
         const resolved = await definition(raw);
+        const canonical =
+          resolved.version === 3
+            ? null
+            : prepareDareDraftV2(resolved.definition);
+        if (
+          canonical !== null &&
+          canonical.kind === "valid" &&
+          !previewedContracts.has(canonical.draft.canonicalScoutQl)
+        ) {
+          return result(
+            "invalid",
+            "Preview this exact contract before creating it.",
+            {
+              issues: [DARE_PREVIEW_REQUIRED_ISSUE],
+            },
+          );
+        }
         if (resolved.version === 3) {
           const created = await createDareDraftV3({
             ...resolved.definition,
