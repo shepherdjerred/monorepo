@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
-import { dareGameSetDomainIssuesV2 } from "#src/model/dare-domains.ts";
+import {
+  dareGameSetDomainIssuesV2,
+  DareTimelineEventTypeSchema,
+} from "#src/model/dare-domains.ts";
 import {
   DareParticipantRateFieldV2Schema,
   DareParticipantValueFieldV2Schema,
@@ -118,7 +121,7 @@ export const DareValueV2Schema: z.ZodType<DareValueV2> = z.lazy(() =>
     }),
     z.strictObject({
       kind: z.literal("timeline_event_count"),
-      eventType: z.string().min(1).max(80),
+      eventType: DareTimelineEventTypeSchema,
       target: z.string().min(1).nullable(),
       role: z
         .enum(["subject", "killer", "victim", "assist", "creator"])

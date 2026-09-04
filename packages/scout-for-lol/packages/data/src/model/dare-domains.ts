@@ -29,6 +29,49 @@ export const DareTeamPositionSchema = z.enum(DARE_TEAM_POSITIONS);
 export type DareTeamPosition = z.infer<typeof DareTeamPositionSchema>;
 
 /**
+ * Riot timeline event types a Dare contract may count.
+ *
+ * Derived from the beta report lake — every distinct `event_type` across ~1.5M
+ * events — not from memory: `PAUSE_START` and `FEAT_UPDATE` are real and easy to
+ * omit, while `BUILDING_DESTROYED` (named in an old docs table) does not exist.
+ * `DRAGON_KILL` does not exist either; a dragon is an `ELITE_MONSTER_KILL`.
+ *
+ * This list is deliberately an authoring-side constraint only. The wire schema
+ * (`raw-timeline.schema.ts`) and the lake column stay open strings, because a
+ * new Riot event type modelled as an enum at ingestion would fail the parse and
+ * take down timeline processing entirely — the argument already written down for
+ * tournament lobby events in `raw-tournament.schema.ts`. Recognising an event is
+ * a decision one layer up; here, at the point someone writes a contract, an
+ * unrecognised type can only ever produce a count of zero, which settles as a
+ * real loss.
+ */
+export const DARE_TIMELINE_EVENT_TYPES = [
+  "BUILDING_KILL",
+  "CHAMPION_KILL",
+  "CHAMPION_SPECIAL_KILL",
+  "CHAMPION_TRANSFORM",
+  "DRAGON_SOUL_GIVEN",
+  "ELITE_MONSTER_KILL",
+  "FEAT_UPDATE",
+  "GAME_END",
+  "ITEM_DESTROYED",
+  "ITEM_PURCHASED",
+  "ITEM_SOLD",
+  "ITEM_UNDO",
+  "LEVEL_UP",
+  "OBJECTIVE_BOUNTY_FINISH",
+  "OBJECTIVE_BOUNTY_PRESTART",
+  "PAUSE_END",
+  "PAUSE_START",
+  "SKILL_LEVEL_UP",
+  "TURRET_PLATE_DESTROYED",
+  "WARD_KILL",
+  "WARD_PLACED",
+] as const;
+export const DareTimelineEventTypeSchema = z.enum(DARE_TIMELINE_EVENT_TYPES);
+export type DareTimelineEventType = z.infer<typeof DareTimelineEventTypeSchema>;
+
+/**
  * Lake columns whose values are drawn from a closed set.
  *
  * Keyed by column name so one table serves both contract shapes: a v2 contract
@@ -41,6 +84,7 @@ export const DARE_DOMAIN_COLUMNS = [
   "champion_name",
   "team_position",
   "queue",
+  "event_type",
 ] as const;
 export const DareDomainColumnSchema = z.enum(DARE_DOMAIN_COLUMNS);
 export type DareDomainColumn = z.infer<typeof DareDomainColumnSchema>;
@@ -87,6 +131,11 @@ export function dareDomainIssue(
     return QueueTypeSchema.safeParse(threshold).success
       ? null
       : `"${threshold}" is not a queue. Use one of ${QueueTypeSchema.options.join(", ")}.`;
+  }
+  if (column === "event_type") {
+    return DareTimelineEventTypeSchema.safeParse(threshold).success
+      ? null
+      : `"${threshold}" is not a timeline event type. Use one of ${DARE_TIMELINE_EVENT_TYPES.join(", ")}.`;
   }
   return championResolves(threshold)
     ? null

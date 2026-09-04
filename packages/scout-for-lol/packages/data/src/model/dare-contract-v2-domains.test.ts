@@ -175,3 +175,46 @@ describe("Dare v2 stored plans stay readable", () => {
     ).toBe(false);
   });
 });
+
+function timelinePlan(eventType: string) {
+  return planWithPredicate({
+    kind: "comparison",
+    value: {
+      kind: "timeline_event_count",
+      eventType,
+      target: "T1",
+      role: "killer",
+      afterMs: null,
+      beforeMs: null,
+      itemId: null,
+    },
+    operator: "gte",
+    threshold: 1,
+  });
+}
+
+describe("Dare v2 timeline event types", () => {
+  // An unrecognised event type counts zero rather than resolving unknown, so it
+  // reads as a definite failure and settles as a real loss.
+  test("rejects an event type Riot never emits", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(timelinePlan("DRAGON_KILL")).success,
+    ).toBe(false);
+  });
+
+  test("rejects BUILDING_DESTROYED, which an old docs table invented", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(timelinePlan("BUILDING_DESTROYED"))
+        .success,
+    ).toBe(false);
+  });
+
+  test.each(["CHAMPION_KILL", "ELITE_MONSTER_KILL", "ITEM_PURCHASED"])(
+    "accepts the real event type %s",
+    (eventType) => {
+      expect(
+        DareCompiledPlanV2Schema.safeParse(timelinePlan(eventType)).success,
+      ).toBe(true);
+    },
+  );
+});

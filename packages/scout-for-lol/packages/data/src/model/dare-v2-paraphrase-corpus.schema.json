@@ -339,7 +339,32 @@
           "type": "object",
           "properties": {
             "kind": { "type": "string", "const": "timeline_event_count" },
-            "eventType": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "eventType": {
+              "type": "string",
+              "enum": [
+                "BUILDING_KILL",
+                "CHAMPION_KILL",
+                "CHAMPION_SPECIAL_KILL",
+                "CHAMPION_TRANSFORM",
+                "DRAGON_SOUL_GIVEN",
+                "ELITE_MONSTER_KILL",
+                "FEAT_UPDATE",
+                "GAME_END",
+                "ITEM_DESTROYED",
+                "ITEM_PURCHASED",
+                "ITEM_SOLD",
+                "ITEM_UNDO",
+                "LEVEL_UP",
+                "OBJECTIVE_BOUNTY_FINISH",
+                "OBJECTIVE_BOUNTY_PRESTART",
+                "PAUSE_END",
+                "PAUSE_START",
+                "SKILL_LEVEL_UP",
+                "TURRET_PLATE_DESTROYED",
+                "WARD_KILL",
+                "WARD_PLACED"
+              ]
+            },
             "target": {
               "anyOf": [
                 { "type": "string", "minLength": 1 },

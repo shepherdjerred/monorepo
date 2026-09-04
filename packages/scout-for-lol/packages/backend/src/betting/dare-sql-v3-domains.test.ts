@@ -123,3 +123,46 @@ describe("Dare SQL v3 value domains", () => {
     ).rejects.toThrow("MIDDLE");
   });
 });
+
+// Timeline reads must also read timeline_coverage, so missing data cannot be
+// treated as zero — the same failure class this domain check exists for.
+function timelineContract(predicate: string): string {
+  return `SELECT EXISTS (
+      SELECT 1 FROM timeline_coverage c
+        JOIN T1 p USING (match_id)
+        JOIN timeline_events e USING (match_id)
+      WHERE ${predicate}
+    ) AS achieved`;
+}
+
+describe("Dare SQL v3 timeline event types", () => {
+  // v3 exposes timeline_events as a source table rather than a macro, so an
+  // invented event type is an ordinary column comparison — and one that returns
+  // a count of zero, which reads as a lost dare rather than a broken contract.
+  test("rejects an event type Riot never emits", async () => {
+    await expect(
+      compileDareSqlV3({
+        queryText: timelineContract("e.event_type = 'DRAGON_KILL'"),
+        targetKeys: ["T1"],
+      }),
+    ).rejects.toThrow("not a timeline event type");
+  });
+
+  test("rejects BUILDING_DESTROYED, which an old docs table invented", async () => {
+    await expect(
+      compileDareSqlV3({
+        queryText: timelineContract("e.event_type = 'BUILDING_DESTROYED'"),
+        targetKeys: ["T1"],
+      }),
+    ).rejects.toThrow("not a timeline event type");
+  });
+
+  test("accepts the event type a dragon kill actually uses", async () => {
+    await expect(
+      compileDareSqlV3({
+        queryText: timelineContract("e.event_type = 'ELITE_MONSTER_KILL'"),
+        targetKeys: ["T1"],
+      }),
+    ).resolves.toMatchObject({ compilerVersion: "dare-scoutql-3" });
+  });
+});
