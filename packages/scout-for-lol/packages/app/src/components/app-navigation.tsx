@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   SquarePen,
   Swords,
+  Target,
   Trophy,
   Users,
 } from "lucide-react";
@@ -229,6 +230,9 @@ export function AppNavigation() {
   const profilesQuery = useQuery(
     trpc.consumerPlayer.status.queryOptions(undefined, { retry: 2 }),
   );
+  const challengesQuery = useQuery(
+    trpc.challenge.status.queryOptions(undefined, { retry: 2 }),
+  );
   const bucksQuery = useQuery(
     trpc.bucks.status.queryOptions(undefined, { retry: 2 }),
   );
@@ -237,6 +241,7 @@ export function AppNavigation() {
   const tools = consumerNavigationItems({
     exploreAvailable: exploreQuery.data?.enabled === true,
     profilesAvailable: profilesQuery.data?.state === "available",
+    challengesAvailable: challengesQuery.data?.enabled === true,
     bucksAvailable: bucksQuery.data?.state === "available",
   });
   const selectedGuild = guildsQuery.data?.find((guild) => guild.id === guildId);
@@ -266,6 +271,9 @@ export function AppNavigation() {
               )}
               {item.to === "/players" && (
                 <Users className="size-4 shrink-0 text-scout-subtle" />
+              )}
+              {item.to === "/challenges" && (
+                <Target className="size-3.5 shrink-0 text-scout-subtle" />
               )}
               {item.to === "/bucks" && (
                 <Coins className="size-4 shrink-0 text-scout-subtle" />

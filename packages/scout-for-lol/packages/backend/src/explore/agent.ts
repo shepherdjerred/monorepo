@@ -28,6 +28,10 @@ import {
 } from "#src/explore/bucks-tools.ts";
 import { createDareExploreTools } from "#src/explore/dare-tool-definitions.ts";
 import { dareExploreEnabled } from "#src/explore/dare-tool-context.ts";
+import {
+  challengeExploreEnabled,
+  createChallengeExploreTools,
+} from "#src/explore/challenge-tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
@@ -135,6 +139,7 @@ async function streamExploreAgentInternal(
   // tools on its very next turn.
   const bucksCapability = await resolveBucksCapability(params.guildIds);
   const daresEnabled = await dareExploreEnabled(bucksCapability);
+  const challengesEnabled = await challengeExploreEnabled(params.guildIds);
 
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
@@ -144,9 +149,16 @@ async function streamExploreAgentInternal(
           ? null
           : { currentTime: new Date().toISOString() },
       dares: daresEnabled,
+      challenges: challengesEnabled,
     }),
     model: runtime.languageModel(model, ["tools"]),
-    tools: createExploreTools(params, state, bucksCapability, daresEnabled),
+    tools: createExploreTools({
+      params,
+      state,
+      bucksCapability,
+      daresEnabled,
+      challengesEnabled,
+    }),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
     // supportsTemperature: false, and the runtime asks OpenRouter for
@@ -232,12 +244,17 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
   return [...messages, { role: "user", content: params.question }];
 }
 
-function createExploreTools(
-  params: ExploreAgentParams,
-  state: RunState,
-  bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>,
-  daresEnabled: boolean,
-) {
+type ExploreToolsOptions = {
+  params: ExploreAgentParams;
+  state: RunState;
+  bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>;
+  daresEnabled: boolean;
+  challengesEnabled: boolean;
+};
+
+function createExploreTools(options: ExploreToolsOptions) {
+  const { params, state, bucksCapability, daresEnabled, challengesEnabled } =
+    options;
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
     if (state.toolCalls > EXPLORE_MAX_TOOL_CALLS) {
@@ -387,5 +404,11 @@ function createExploreTools(
           originChannelId: params.originChannelId,
           track,
         })),
+    ...(challengesEnabled
+      ? createChallengeExploreTools({
+          requesterId: params.requesterId,
+          track,
+        })
+      : {}),
   };
 }

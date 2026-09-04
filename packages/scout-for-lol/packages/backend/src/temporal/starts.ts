@@ -257,7 +257,7 @@ export async function startScoutChallengeRunRecompute(
   return await client.workflow.start(
     SCOUT_WORKFLOW_NAMES.challengeRunRecompute,
     {
-      ...IDEMPOTENT_START_POLICIES,
+      ...RESTART_CLOSED_START_POLICIES,
       workflowId: scoutChallengeRunRecomputeWorkflowId(
         input.stage,
         input.runId,
