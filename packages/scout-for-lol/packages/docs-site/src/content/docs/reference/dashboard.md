@@ -15,14 +15,17 @@ A beta deployment of the same dashboard runs at
 
 ## Top level
 
-| Route                  | Contents                                            |
-| ---------------------- | --------------------------------------------------- |
-| `/app/`                | Server picker — the servers you can manage          |
-| `/app/welcome`         | Guided onboarding wizard                            |
-| `/app/installed`       | Landing page after adding Scout to a server         |
-| `/app/explore`         | Persistent Explore conversations and Dare authoring |
-| `/app/bucks/dares`     | Dare discovery and management for Bryan Bucks       |
-| `/app/g/<server id>/…` | The workspace for one server                        |
+| Route                    | Contents                                                |
+| ------------------------ | ------------------------------------------------------- |
+| `/app/`                  | Server picker — the servers you can manage              |
+| `/app/welcome`           | Guided onboarding wizard                                |
+| `/app/installed`         | Landing page after adding Scout to a server             |
+| `/app/explore`           | Persistent Explore conversations and contract authoring |
+| `/app/challenges`        | Global community challenge catalog                      |
+| `/app/halls/<server id>` | Member-facing Hall of Fame                              |
+| `/app/duels/<server id>` | Direct duels, events, and rolling records               |
+| `/app/bucks/dares`       | Dare discovery and management for Bryan Bucks           |
+| `/app/g/<server id>/…`   | The management workspace for one server                 |
 
 ## Explore
 
@@ -71,6 +74,7 @@ read is not shown.
 | **Players**       | `players`       | Tracked players, their Riot accounts, and their Discord links          |
 | **Competitions**  | `competitions`  | Competitions, participants, and standings                              |
 | **Reports**       | `reports`       | Saved ScoutQL reports, schedules, and run history                      |
+| **Hall of Fame**  | `hall-of-fame`  | Enabled queue families, records, baseline state, and delivery channel  |
 | **Audit**         | `audit`         | Who changed what, and when                                             |
 | **Access**        | `access`        | Who has Scout access, and what they hold                               |
 
@@ -124,6 +128,21 @@ Creating and editing are gated on `competitions:create` and
 - Enable and disable without deleting.
 
 Creating and editing are gated on `reports:create` and `reports:update`.
+
+## Competitive progression
+
+- **Hall of Fame** groups records by comparable queue family and silently
+  baselines Scout-known eligible history before announcing future breaks.
+- **Challenges** turn explicitly confirmed Explore drafts into immutable,
+  deterministic progress contracts. Runs support a clean slate or retained
+  history import.
+- **Duels** cover direct 1v1 and 2v2 challenges, rolling records, and structured
+  events. Tournament codes remain in the authorized web view and every player
+  accepts the custom-match disclosure for themselves.
+
+See the [competitive progression
+reference](/docs/reference/competitive-progression/) for routes, records,
+reducers, formats, and limits.
 
 ## Audit
 

@@ -12,6 +12,10 @@ export const GUILD_ACTION_ROUTE_PERMISSIONS = {
     { resource: "reports", action: "update" },
     { resource: "reports", action: "read" },
   ],
+  hallSettings: [
+    { resource: "reports", action: "update" },
+    { resource: "reports", action: "read" },
+  ],
 } satisfies Record<string, readonly Permission[]>;
 
 const GUILD_ACTION_ROUTES: {
@@ -25,6 +29,10 @@ const GUILD_ACTION_ROUTES: {
   {
     path: "/g/:guildId/competitions/:competitionId/edit",
     permissions: GUILD_ACTION_ROUTE_PERMISSIONS.competitionEdit,
+  },
+  {
+    path: "/g/:guildId/hall-of-fame",
+    permissions: GUILD_ACTION_ROUTE_PERMISSIONS.hallSettings,
   },
   {
     path: "/g/:guildId/reports/new",

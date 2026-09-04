@@ -305,6 +305,7 @@ describe("cross-package facts the prose depends on", () => {
       "Players",
       "Competitions",
       "Reports",
+      "Hall settings",
       "Audit",
       "Access",
     ]);

@@ -152,6 +152,7 @@ export async function getDuelEvent(
     competitorKind: event.competitorKind,
     bestOf: event.bestOf,
     registrationMode: event.registrationMode,
+    isOrganizer,
     seedMethod: event.seedMethod,
     matchWindowHours: event.matchWindowHours,
     state: event.eventState,

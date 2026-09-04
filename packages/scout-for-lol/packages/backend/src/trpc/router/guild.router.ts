@@ -63,17 +63,16 @@ export const guildRouter = router({
       list.push(permission);
       grantsByGuild.set(row.serverId, list);
     }
-    const customsByGuild = new Map(
+    const featureAvailabilityByGuild = new Map(
       await Promise.all(
-        present.map(
-          async (guild) =>
-            [
-              DiscordGuildIdSchema.parse(guild.id),
-              await isPolicyEnabled("custom_nights_enabled", {
-                server: DiscordGuildIdSchema.parse(guild.id),
-              }),
-            ] as const,
-        ),
+        present.map(async (guild) => {
+          const guildId = DiscordGuildIdSchema.parse(guild.id);
+          const [customNightsEnabled, hallOfFameEnabled] = await Promise.all([
+            isPolicyEnabled("custom_nights_enabled", { server: guildId }),
+            isPolicyEnabled("hall_of_fame_enabled", { server: guildId }),
+          ]);
+          return [guildId, { customNightsEnabled, hallOfFameEnabled }] as const;
+        }),
       ),
     );
 
@@ -83,6 +82,12 @@ export const guildRouter = router({
         ? [...ALL_PERMISSIONS]
         : (grantsByGuild.get(g.id) ?? []);
       if (permissions.length === 0) return [];
+      const featureAvailability = featureAvailabilityByGuild.get(
+        DiscordGuildIdSchema.parse(g.id),
+      );
+      if (featureAvailability === undefined) {
+        throw new Error("Guild feature availability was not resolved");
+      }
       return [
         {
           id: g.id,
@@ -90,8 +95,7 @@ export const guildRouter = router({
           icon: g.icon,
           isOwner: g.owner,
           isDiscordAdmin,
-          customNightsEnabled:
-            customsByGuild.get(DiscordGuildIdSchema.parse(g.id)) ?? false,
+          ...featureAvailability,
           permissions,
         },
       ];

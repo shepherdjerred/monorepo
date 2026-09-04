@@ -31,7 +31,10 @@ import { ConsumerPlayerSearch } from "#src/routes/consumer-player-search.tsx";
 import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
 import { ConsumerChampion } from "#src/routes/consumer-champion.tsx";
 import { ConsumerMatch } from "#src/routes/consumer-match.tsx";
-import { ConsumerWorkspace } from "#src/routes/consumer-workspace.tsx";
+import {
+  ConsumerGuildWorkspace,
+  ConsumerWorkspace,
+} from "#src/routes/consumer-workspace.tsx";
 import { BucksWorkspace } from "#src/routes/bucks-workspace.tsx";
 import { BucksOverview } from "#src/routes/bucks-overview.tsx";
 import { BucksDares } from "#src/routes/bucks-dares.tsx";
@@ -42,11 +45,17 @@ import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
+import { HallOfFame } from "#src/routes/hall-of-fame.tsx";
+import { HallSettings } from "#src/routes/hall-settings.tsx";
 import { ChallengeCatalog } from "#src/routes/challenge-catalog.tsx";
 import { ChallengeTemplate } from "#src/routes/challenge-template.tsx";
 import { ChallengeDraft } from "#src/routes/challenge-draft.tsx";
 import { ChallengeRun } from "#src/routes/challenge-run.tsx";
+import { DuelOverview } from "#src/routes/duel-overview.tsx";
+import { DuelEvent } from "#src/routes/duel-event.tsx";
 import { DuelSeries } from "#src/routes/duel-series.tsx";
+import { DuelStandings } from "#src/routes/duel-standings.tsx";
+import { DuelHeadToHead } from "#src/routes/duel-head-to-head.tsx";
 import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 import {
@@ -176,6 +185,17 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
+    path: "hall-of-fame",
+    element: (
+      <GuildPermissionsGate
+        permissions={GUILD_ACTION_ROUTE_PERMISSIONS.hallSettings}
+      >
+        <HallSettings />
+      </GuildPermissionsGate>
+    ),
+    errorElement: <RouteErrorPanel />,
+  },
+  {
     path: "audit",
     element: <GuildAudit />,
     loader: auditLoader,
@@ -235,6 +255,18 @@ export const routes: RouteObject[] = [
                 errorElement: <RouteErrorPanel />,
               },
               {
+                path: "halls/:guildId",
+                element: <ConsumerGuildWorkspace />,
+                errorElement: <RouteErrorPanel />,
+                children: [
+                  {
+                    index: true,
+                    element: <HallOfFame />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                ],
+              },
+              {
                 path: "challenges",
                 element: <ChallengeCatalog />,
                 errorElement: <RouteErrorPanel />,
@@ -255,9 +287,36 @@ export const routes: RouteObject[] = [
                 errorElement: <RouteErrorPanel />,
               },
               {
-                path: "duels/:guildId/series/:seriesId",
-                element: <DuelSeries />,
+                path: "duels/:guildId",
+                element: <ConsumerGuildWorkspace />,
                 errorElement: <RouteErrorPanel />,
+                children: [
+                  {
+                    index: true,
+                    element: <DuelOverview />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "events/:eventId",
+                    element: <DuelEvent />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "events/:eventId/standings",
+                    element: <DuelStandings />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "series/:seriesId",
+                    element: <DuelSeries />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                  {
+                    path: "head-to-head",
+                    element: <DuelHeadToHead />,
+                    errorElement: <RouteErrorPanel />,
+                  },
+                ],
               },
               {
                 // Bryan Bucks is server-side gated by the bucks.status probe;

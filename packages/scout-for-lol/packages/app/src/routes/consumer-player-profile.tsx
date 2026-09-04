@@ -13,6 +13,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
 import { Section } from "#src/components/player-detail-sections.tsx";
+import { ConsumerPlayerChallengeRuns } from "#src/components/player-challenge-runs.tsx";
 import {
   ChampionPoolTable,
   MatchHistoryList,
@@ -329,6 +330,8 @@ function ConsumerPlayerProfileContent(props: {
           </Card>
         ))}
       </div>
+
+      <ConsumerPlayerChallengeRuns playerId={playerId} />
 
       <div>
         <div>

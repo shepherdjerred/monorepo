@@ -204,6 +204,7 @@ function guildNavIcon(to: string) {
     case "players":
       return Users;
     case "competitions":
+    case "hall-of-fame":
       return Trophy;
     case "reports":
       return FileBarChart;
@@ -248,6 +249,7 @@ export function AppNavigation() {
   const guildItems = visibleGuildNavigationItems(
     (permission) => perms.can(permission.resource, permission.action),
     selectedGuild?.customNightsEnabled === true,
+    selectedGuild?.hallOfFameEnabled === true,
   );
 
   const activeConversationId = getActiveConversationId(location.pathname);

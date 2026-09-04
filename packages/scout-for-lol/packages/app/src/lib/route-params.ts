@@ -52,11 +52,17 @@ export const ExploreParamsSchema = z.object({
   conversationId: ExploreConversationIdSchema.optional(),
 });
 
+export const HallParamsSchema = z.object({ guildId: z.string().min(1) });
 export const ChallengeTemplateParamsSchema = z.object({
   templateId: z.uuid(),
 });
 export const ChallengeDraftParamsSchema = z.object({ draftId: z.uuid() });
 export const ChallengeRunParamsSchema = z.object({ runId: z.uuid() });
+export const DuelGuildParamsSchema = z.object({ guildId: z.string().min(1) });
+export const DuelEventParamsSchema = z.object({
+  guildId: z.string().min(1),
+  eventId: z.uuid(),
+});
 export const DuelSeriesParamsSchema = z.object({
   guildId: z.string().min(1),
   seriesId: z.uuid(),
@@ -125,6 +131,10 @@ export function useExploreParams(): z.infer<typeof ExploreParamsSchema> {
   return parseRouteParams(ExploreParamsSchema, useParams());
 }
 
+export function useHallParams(): z.infer<typeof HallParamsSchema> {
+  return parseRouteParams(HallParamsSchema, useParams());
+}
+
 export function useChallengeTemplateParams(): z.infer<
   typeof ChallengeTemplateParamsSchema
 > {
@@ -141,6 +151,14 @@ export function useChallengeRunParams(): z.infer<
   typeof ChallengeRunParamsSchema
 > {
   return parseRouteParams(ChallengeRunParamsSchema, useParams());
+}
+
+export function useDuelGuildParams(): z.infer<typeof DuelGuildParamsSchema> {
+  return parseRouteParams(DuelGuildParamsSchema, useParams());
+}
+
+export function useDuelEventParams(): z.infer<typeof DuelEventParamsSchema> {
+  return parseRouteParams(DuelEventParamsSchema, useParams());
 }
 
 export function useDuelSeriesParams(): z.infer<typeof DuelSeriesParamsSchema> {
