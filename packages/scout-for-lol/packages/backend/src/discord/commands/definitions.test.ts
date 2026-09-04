@@ -147,7 +147,7 @@ describe("registered Discord commands", () => {
     expect(notifications).toEqual(
       expect.objectContaining({
         name: "notifications",
-        description: "Choose which Bryan Bucks settlement DMs you receive",
+        description: "Choose which Bryan Bucks DMs you receive",
       }),
     );
     expect(notifications.options).toEqual([
@@ -161,6 +161,22 @@ describe("registered Discord commands", () => {
       }),
       expect.objectContaining({
         name: "bets_on_you",
+        required: false,
+        choices: [
+          { name: "On", value: "on" },
+          { name: "Off", value: "off" },
+        ],
+      }),
+      expect.objectContaining({
+        name: "dare_lifecycle",
+        required: false,
+        choices: [
+          { name: "On", value: "on" },
+          { name: "Off", value: "off" },
+        ],
+      }),
+      expect.objectContaining({
+        name: "dare_progress",
         required: false,
         choices: [
           { name: "On", value: "on" },

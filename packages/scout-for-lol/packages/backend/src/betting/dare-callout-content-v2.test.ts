@@ -18,6 +18,7 @@ function content(input: {
     revision: 1,
     plainLanguage: "Virmel wins a game with at least 8 CS per minute.",
     evidenceCount: 0,
+    progressSummary: "Waiting for more eligible match evidence.",
     state: "pending_accept",
     targets: [{ alias: "Virmel", acceptedAt: null, declinedAt: null }],
     acceptDeadline: ACCEPT_DEADLINE,
@@ -38,6 +39,9 @@ describe("dareV2CalloutContent", () => {
     expect(rendered).toContain("<@100> put **10 BB** on Virmel.");
     expect(rendered).toContain("Pot: **10 BB**");
     expect(rendered).toContain("**Pile-ons:**\nNone yet.");
+    expect(rendered).toContain(
+      "**Progress** · Waiting for more eligible match evidence. (0 evidence games)",
+    );
   });
 
   test("shows a later contributor separately from the opening stake", () => {

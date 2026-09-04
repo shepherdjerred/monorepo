@@ -31,6 +31,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { captureWeeklyParlayContributions } from "#src/betting/weekly-parlay-contribution.ts";
 import { createLogger } from "#src/logger.ts";
+import { deliverPendingDareNotifications } from "#src/betting/dare-notification-delivery.ts";
 
 const logger = createLogger("betting-postmatch-hook");
 
@@ -160,6 +161,7 @@ export async function settleAndAwardBucks(
     ...defaultDareV2CalloutDependencies,
     prismaClient,
   });
+  await deliverPendingDareNotifications(prismaClient);
   let dareSettlements: DareSettlementSummary[];
   try {
     dareSettlements = await settleDaresForMatch(matchData, prismaClient);

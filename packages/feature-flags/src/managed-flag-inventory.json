@@ -250,6 +250,30 @@
       "thresholdRollouts": []
     },
     {
+      "key": "dare_extended_contracts_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable authoring extended Bryan Bucks Dare contracts.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "dare_notifications_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Bryan Bucks Dare lifecycle and progress DMs.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "scoutql_relational_enabled",
       "owner": "scout",
       "namespace": "scout",

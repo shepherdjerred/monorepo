@@ -34,6 +34,12 @@ export function formatBucksNotificationPreferences(
     updates.betsOnPlayerSettlementDms === undefined
       ? undefined
       : `bets on you ${updates.betsOnPlayerSettlementDms ? "on" : "off"}`,
+    updates.dareLifecycleDms === undefined
+      ? undefined
+      : `Dare lifecycle ${updates.dareLifecycleDms ? "on" : "off"}`,
+    updates.dareProgressDms === undefined
+      ? undefined
+      : `Dare progress ${updates.dareProgressDms ? "on" : "off"}`,
   ].filter((value) => value !== undefined);
   return [
     "🔔 **Bryan Bucks notifications**",
@@ -42,8 +48,10 @@ export function formatBucksNotificationPreferences(
       "Bets other users placed on me",
       preferences.betsOnPlayerSettlementDms,
     ),
+    notificationStatusLine("Dare lifecycle", preferences.dareLifecycleDms),
+    notificationStatusLine("Dare progress", preferences.dareProgressDms),
     changed.length === 0
-      ? "Use `your_bets` or `bets_on_you` with `on` or `off` to change these settings."
+      ? "Choose any notification option with `on` or `off` to change these settings."
       : `Updated: ${changed.join(", ")}.`,
   ].join("\n");
 }
@@ -60,14 +68,25 @@ export async function replyBbNotifications(
   const betsOnPlayerSettlementDms = notificationToggle(
     interaction.options.getString("bets_on_you"),
   );
+  const dareLifecycleDms = notificationToggle(
+    interaction.options.getString("dare_lifecycle"),
+  );
+  const dareProgressDms = notificationToggle(
+    interaction.options.getString("dare_progress"),
+  );
   const updates: BucksNotificationPreferenceUpdates = {
     ...(ownBetSettlementDms === undefined ? {} : { ownBetSettlementDms }),
     ...(betsOnPlayerSettlementDms === undefined
       ? {}
       : { betsOnPlayerSettlementDms }),
+    ...(dareLifecycleDms === undefined ? {} : { dareLifecycleDms }),
+    ...(dareProgressDms === undefined ? {} : { dareProgressDms }),
   };
   const preferences =
-    ownBetSettlementDms === undefined && betsOnPlayerSettlementDms === undefined
+    ownBetSettlementDms === undefined &&
+    betsOnPlayerSettlementDms === undefined &&
+    dareLifecycleDms === undefined &&
+    dareProgressDms === undefined
       ? await (
           dependencies.getNotificationPreferences ??
           getBucksNotificationPreferences

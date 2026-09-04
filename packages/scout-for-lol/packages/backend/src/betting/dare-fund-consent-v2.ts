@@ -20,6 +20,7 @@ import {
   parseDareV2Targets,
 } from "#src/betting/dare-v2-common.ts";
 import type { Db } from "#src/database/index.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dare-notification-outbox.ts";
 
 function contractCompilerVersion(revision: {
   compilerVersion: string;
@@ -128,6 +129,16 @@ export async function fundDareV2InTransaction(
     discordId: input.actorDiscordId,
     amount: revision.openingStake,
   });
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: dare.id,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "funded",
+    actorDiscordId: input.actorDiscordId,
+    summary: `Funded for ${revision.openingStake.toString()} Bryan Bucks and awaiting target acceptance.`,
+    deduplicationKey: `dare:${dare.id.toString()}:revision:${input.revision.toString()}:funded`,
+    occurredAt: input.now,
+  });
   return {
     kind: "funded",
     dareId: dare.id,
@@ -185,6 +196,16 @@ export async function acceptDareV2InTransaction(
     where: { dareId: input.dareId },
   });
   if (unaccepted > 0) {
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: input.dareId,
+      revision: input.revision,
+      category: "lifecycle",
+      kind: "accepted",
+      actorDiscordId: input.actorDiscordId,
+      summary: `${(targetCount - unaccepted).toString()} of ${targetCount.toString()} targets have accepted.`,
+      deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:accepted:${input.actorDiscordId}`,
+      occurredAt: input.now,
+    });
     return {
       kind: "accepted",
       activated: false,
@@ -233,6 +254,16 @@ export async function acceptDareV2InTransaction(
       resolution: "expired",
       withCut: false,
     });
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: input.dareId,
+      revision: input.revision,
+      category: "lifecycle",
+      kind: "expired",
+      actorDiscordId: input.actorDiscordId,
+      summary: `The acceptance window expired; ${facts.potTotal.toString()} Bryan Bucks were fully refunded.`,
+      deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:expired`,
+      occurredAt: input.now,
+    });
     return { kind: "accept_window_expired", dareState: "expired" } as const;
   }
   const contract = DareContractV2Schema.parse({
@@ -266,6 +297,26 @@ export async function acceptDareV2InTransaction(
       `Dare v2 ${input.dareId.toString()} lost its activation claim.`,
     );
   }
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: input.dareId,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "accepted",
+    actorDiscordId: input.actorDiscordId,
+    summary: `All ${targetCount.toString()} targets accepted.`,
+    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:accepted:${input.actorDiscordId}`,
+    occurredAt: input.now,
+  });
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: input.dareId,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "activated",
+    actorDiscordId: input.actorDiscordId,
+    summary: `The Dare is active until ${deadlineAt.toISOString()}.`,
+    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:activated`,
+    occurredAt: input.now,
+  });
   return {
     kind: "accepted",
     activated: true,

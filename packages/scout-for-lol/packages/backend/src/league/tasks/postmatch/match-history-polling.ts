@@ -22,7 +22,11 @@ import {
 import type { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
 import { settleBucksWithDareTimelineV2 } from "#src/betting/dare-postmatch-timeline-v2.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
-import { setLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
+import {
+  markPostMatchPollCompleted,
+  markPostMatchPollFailed,
+  markPostMatchPollStarted,
+} from "#src/league/tasks/recovery/app-state.ts";
 import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
@@ -399,6 +403,7 @@ export async function discoverPostMatchIntents(): Promise<{
   isPollingInProgress = true;
   pollingStartTime = Date.now();
   try {
+    await markPostMatchPollStarted(new Date(pollingStartTime));
     const discovery = await collectMatchDiscovery();
     if (!discovery.complete) {
       logger.warn(
@@ -406,12 +411,14 @@ export async function discoverPostMatchIntents(): Promise<{
       );
       return { matches: [], evidenceComplete: false };
     }
-    await setLastSuccessfulPollAt(new Date());
     return {
       matches: discovery.intents,
       evidenceComplete: true,
       evidenceWatermark: discovery.evidenceWatermark.toISOString(),
     };
+  } catch (error) {
+    await markPostMatchPollFailed(error, new Date());
+    throw error;
   } finally {
     isPollingInProgress = false;
     pollingStartTime = undefined;
@@ -437,11 +444,17 @@ export async function checkMatchHistory(): Promise<{
   const startTime = Date.now();
 
   try {
+    await markPostMatchPollStarted(new Date(pollingStartTime));
     const discovery = await collectMatchDiscovery();
     if (!discovery.complete) {
       logger.warn(
         "Match discovery evidence is incomplete; leaving ingestion cursors unchanged",
       );
+      await markPostMatchPollCompleted({
+        completedAt: new Date(),
+        evidenceComplete: false,
+        evidenceWatermark: discovery.evidenceWatermark,
+      });
       return { evidenceComplete: false };
     }
     if (discovery.intents.length === 0) {
@@ -450,7 +463,11 @@ export async function checkMatchHistory(): Promise<{
       logger.info(
         `⏱️  Match history check completed in ${totalTime.toString()}ms`,
       );
-      await setLastSuccessfulPollAt(new Date());
+      await markPostMatchPollCompleted({
+        completedAt: new Date(),
+        evidenceComplete: true,
+        evidenceWatermark: discovery.evidenceWatermark,
+      });
       return {
         evidenceComplete: true,
         evidenceWatermark: discovery.evidenceWatermark,
@@ -491,13 +508,18 @@ export async function checkMatchHistory(): Promise<{
       `📊 Processed ${processedMatchIds.size.toString()} unique match(es)`,
     );
 
-    await setLastSuccessfulPollAt(new Date());
+    await markPostMatchPollCompleted({
+      completedAt: new Date(),
+      evidenceComplete: true,
+      evidenceWatermark: discovery.evidenceWatermark,
+    });
     return {
       evidenceComplete: true,
       evidenceWatermark: discovery.evidenceWatermark,
     };
   } catch (error) {
     logger.error("❌ Error in match history check:", error);
+    await markPostMatchPollFailed(error, new Date());
     throw error;
   } finally {
     isPollingInProgress = false;

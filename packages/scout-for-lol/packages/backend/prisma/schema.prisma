@@ -701,6 +701,12 @@ model OutreachConversion {
 model BotState {
   id                   Int       @id @default(1)
   lastSuccessfulPollAt DateTime?
+  pollStartedAt        DateTime?
+  pollCompletedAt      DateTime?
+  evidenceWatermarkAt  DateTime?
+  pollEvidenceComplete Boolean?
+  pollFailureReason    String?
+  pollStatus           String    @default("never")
   updatedAt            DateTime  @updatedAt
 }
 
@@ -851,6 +857,8 @@ model BucksNotificationPreference {
   discordId                 String
   ownBetSettlementDms       Boolean   @default(true)
   betsOnPlayerSettlementDms Boolean   @default(true)
+  dareLifecycleDms          Boolean   @default(true)
+  dareProgressDms           Boolean   @default(true)
   settlementDmHintShownAt   DateTime?
   createdAt                 DateTime  @default(now())
   updatedAt                 DateTime  @updatedAt
@@ -1497,11 +1505,12 @@ model BucksDareV2 {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  revisions     BucksDareV2Revision[]
-  targets       BucksDareV2Target[]
-  contributions BucksDareV2Contribution[]
-  evidence      BucksDareV2Evidence[]
-  intents       BucksDareV2ConfirmationIntent[]
+  revisions          BucksDareV2Revision[]
+  targets            BucksDareV2Target[]
+  contributions      BucksDareV2Contribution[]
+  evidence           BucksDareV2Evidence[]
+  intents            BucksDareV2ConfirmationIntent[]
+  notificationEvents BucksDareNotificationEvent[]
 
   @@index([challengerDiscordId, dareState, updatedAt])
   @@index([serverId, dareState, updatedAt])
@@ -1610,6 +1619,46 @@ model BucksDareV2ConfirmationIntent {
   createdAt      DateTime    @default(now())
 
   @@index([dareId, expiresAt])
+}
+
+// Transactional outbox for Dare lifecycle and material-progress DMs. An event
+// freezes the recipients at occurrence time; delivery checks each recipient's
+// current preference so suppression remains an operator-controlled decision.
+model BucksDareNotificationEvent {
+  id               String      @id @default(uuid())
+  dareId           Int
+  dare             BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision         Int
+  category         String
+  kind             String
+  actorDiscordId   String?
+  matchId          String?
+  payload          String
+  deduplicationKey String      @unique
+  occurredAt       DateTime
+  createdAt        DateTime    @default(now())
+
+  deliveries BucksDareNotificationDelivery[]
+
+  @@index([dareId, occurredAt])
+}
+
+model BucksDareNotificationDelivery {
+  id            Int                        @id @default(autoincrement())
+  eventId       String
+  event         BucksDareNotificationEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  discordId     String
+  deliveryState String                     @default("pending")
+  attemptCount  Int                        @default(0)
+  nextAttemptAt DateTime?
+  lastAttemptAt DateTime?
+  lastError     String?
+  sentAt        DateTime?
+  createdAt     DateTime                   @default(now())
+  updatedAt     DateTime                   @updatedAt
+
+  @@unique([eventId, discordId])
+  @@index([deliveryState, nextAttemptAt, createdAt])
 }
 
 // Durable marker for Bucks EARNINGS on a (match, guild).

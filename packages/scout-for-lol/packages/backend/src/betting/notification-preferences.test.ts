@@ -33,6 +33,8 @@ describe("Bryan Bucks notification preferences", () => {
     ).resolves.toEqual({
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: null,
     });
   });
@@ -65,6 +67,8 @@ describe("Bryan Bucks notification preferences", () => {
     ).resolves.toEqual({
       ownBetSettlementDms: false,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: null,
     });
 
@@ -80,6 +84,8 @@ describe("Bryan Bucks notification preferences", () => {
     ).resolves.toEqual({
       ownBetSettlementDms: false,
       betsOnPlayerSettlementDms: false,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: null,
     });
   });
@@ -90,16 +96,20 @@ describe("Bryan Bucks notification preferences", () => {
         {
           ownBetSettlementDms: true,
           betsOnPlayerSettlementDms: false,
+          dareLifecycleDms: true,
+          dareProgressDms: true,
           settlementDmHintShownAt: null,
         },
         {},
       ),
-    ).toContain("Use `your_bets` or `bets_on_you`");
+    ).toContain("Choose any notification option");
     expect(
       formatBucksNotificationPreferences(
         {
           ownBetSettlementDms: false,
           betsOnPlayerSettlementDms: true,
+          dareLifecycleDms: true,
+          dareProgressDms: true,
           settlementDmHintShownAt: null,
         },
         { ownBetSettlementDms: false },
@@ -121,6 +131,8 @@ describe("Bryan Bucks notification preferences", () => {
       getNotificationPreferences: async () => ({
         ownBetSettlementDms: values.get("your_bets") ?? true,
         betsOnPlayerSettlementDms: values.get("bets_on_you") ?? true,
+        dareLifecycleDms: true,
+        dareProgressDms: true,
         settlementDmHintShownAt: null,
       }),
       updateNotificationPreferences: async ({ updates }) => {
@@ -133,6 +145,8 @@ describe("Bryan Bucks notification preferences", () => {
         return {
           ownBetSettlementDms: values.get("your_bets") ?? true,
           betsOnPlayerSettlementDms: values.get("bets_on_you") ?? true,
+          dareLifecycleDms: true,
+          dareProgressDms: true,
           settlementDmHintShownAt: null,
         };
       },
