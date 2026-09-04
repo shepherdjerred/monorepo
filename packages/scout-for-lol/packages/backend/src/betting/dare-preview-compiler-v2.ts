@@ -132,6 +132,12 @@ function timelineCount(
     ...(value.itemId === null
       ? []
       : [frag("te.item_id = ?", [scalarParam(value.itemId)])]),
+    ...(value.monsterType === null
+      ? []
+      : [frag("te.monster_type = ?", [scalarParam(value.monsterType)])]),
+    ...(value.buildingType === null
+      ? []
+      : [frag("te.building_type = ?", [scalarParam(value.buildingType)])]),
   ];
   return seq(
     "CASE WHEN EXISTS (SELECT 1 FROM timeline_coverage AS tc WHERE tc.match_id = p0.match_id AND tc.coverage_state = 'complete') THEN (SELECT COUNT(DISTINCT te.event_id) FROM timeline_events AS te",

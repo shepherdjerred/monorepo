@@ -515,6 +515,8 @@ describe("Dare evaluator v2 match and timeline context", () => {
             eventType: "ITEM_PURCHASED",
             timestampMs: 900_000,
             itemId: 3089,
+            monsterType: null,
+            buildingType: null,
           },
         ],
         participants: [
@@ -531,7 +533,7 @@ describe("Dare evaluator v2 match and timeline context", () => {
       evaluateDareEvidenceV2({ plan: itemPlan, evidence: [itemEvidence] }),
     ).toBe(true);
     expect(formatDareScoutQlV2(itemPlan)).toContain(
-      "dare_timeline_event_count('ITEM_PURCHASED', 'virmel', 'subject', NULL, NULL, 3089)",
+      "dare_timeline_event_count('ITEM_PURCHASED', 'virmel', 'subject', NULL, NULL, 3089, NULL, NULL)",
     );
   });
 
@@ -551,6 +553,8 @@ describe("Dare evaluator v2 match and timeline context", () => {
               afterMs: null,
               beforeMs: null,
               itemId: null,
+              monsterType: null,
+              buildingType: null,
             },
             operator: "eq",
             threshold: 1,
@@ -576,12 +580,16 @@ describe("Dare evaluator v2 match and timeline context", () => {
             eventType: "CHAMPION_KILL",
             timestampMs: 60_000,
             itemId: null,
+            monsterType: null,
+            buildingType: null,
           },
           {
             eventId: "NA1_ROLE:1:1",
             eventType: "CHAMPION_KILL",
             timestampMs: 90_000,
             itemId: null,
+            monsterType: null,
+            buildingType: null,
           },
         ],
         participants: [

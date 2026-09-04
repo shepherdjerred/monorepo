@@ -384,6 +384,18 @@
                 },
                 { "type": "null" }
               ]
+            },
+            "monsterType": {
+              "anyOf": [
+                { "type": "string", "minLength": 1, "maxLength": 80 },
+                { "type": "null" }
+              ]
+            },
+            "buildingType": {
+              "anyOf": [
+                { "type": "string", "minLength": 1, "maxLength": 80 },
+                { "type": "null" }
+              ]
             }
           },
           "required": [
@@ -393,7 +405,9 @@
             "role",
             "afterMs",
             "beforeMs",
-            "itemId"
+            "itemId",
+            "monsterType",
+            "buildingType"
           ],
           "additionalProperties": false
         },

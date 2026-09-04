@@ -21,6 +21,8 @@ const TimelineEventEvidenceRowSchema = z.object({
   event_type: z.string(),
   event_timestamp_ms: z.union([z.bigint(), z.number()]).transform(Number),
   item_id: z.number().nullable(),
+  monster_type: z.string().nullable(),
+  building_type: z.string().nullable(),
 });
 
 const TimelineParticipantEvidenceRowSchema = z.object({
@@ -66,6 +68,8 @@ export function dareTimelineEvidenceFromRawV2(
       eventType: event.event_type,
       timestampMs: event.event_timestamp_ms,
       itemId: event.item_id,
+      monsterType: event.monster_type,
+      buildingType: event.building_type,
     })),
     participants: flattened.eventParticipants.map((participant) => ({
       eventId: participant.event_id,
@@ -115,7 +119,7 @@ export async function loadDareTimelineEvidenceV2(
         ? []
         : TimelineEventEvidenceRowSchema.array().parse(
             await session.run(
-              `SELECT event_id, event_type, event_timestamp_ms, item_id FROM (${events.sql}) ORDER BY frame_index ASC, event_index ASC`,
+              `SELECT event_id, event_type, event_timestamp_ms, item_id, monster_type, building_type FROM (${events.sql}) ORDER BY frame_index ASC, event_index ASC`,
               bindParams(session, events.params),
             ),
           );
@@ -135,6 +139,8 @@ export async function loadDareTimelineEvidenceV2(
         eventType: row.event_type,
         timestampMs: row.event_timestamp_ms,
         itemId: row.item_id,
+        monsterType: row.monster_type,
+        buildingType: row.building_type,
       })),
       participants: participantRows.map((row) => ({
         eventId: row.event_id,

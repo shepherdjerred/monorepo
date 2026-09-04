@@ -103,12 +103,18 @@ tracked player per finished match.
 Dare v2's generated contract profile can additionally read four normalized
 relations that are not available as top-level report-editor sources:
 
-| Relation                      | Contents                                                                          |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| `timeline_events`             | Stable event IDs, match IDs, event types, timestamps, item IDs, and event context |
-| `timeline_event_participants` | A timeline event's participant PUUID and semantic role, such as killer or victim  |
-| `timeline_participant_frames` | Per-participant frame values at a timeline timestamp                              |
-| `timeline_coverage`           | A complete-coverage marker for each retained, supported match timeline            |
+| Relation                      | Contents                                                                                           |
+| ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| `timeline_events`             | Stable event IDs, match IDs, event types, timestamps, item IDs, objective types, and event context |
+| `timeline_event_participants` | A timeline event's participant PUUID and semantic role, such as killer or victim                   |
+| `timeline_participant_frames` | Per-participant frame values at a timeline timestamp                                               |
+| `timeline_coverage`           | A complete-coverage marker for each retained, supported match timeline                             |
+
+`timeline_events` carries `monster_type` and `building_type` alongside the event
+type, which is what lets a contract say "dragon" rather than "elite monster" and
+"inhibitor" rather than "structure". A v2 contract reaches them through the
+[`dare_timeline_event_count`](/docs/reference/scoutql/#counting-timeline-events)
+arguments of the same names; a v3 contract compares the columns directly.
 
 Coverage is evidence, not a convenience flag. A coverage row means Scout
 retained and completely normalized the supported timeline. No row means the

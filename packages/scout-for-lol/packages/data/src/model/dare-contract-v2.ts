@@ -132,6 +132,17 @@ export const DareValueV2Schema: z.ZodType<DareValueV2> = z.lazy(() =>
       afterMs: z.number().int().nonnegative().nullable(),
       beforeMs: z.number().int().nonnegative().nullable(),
       itemId: z.number().int().positive().nullable(),
+      // Narrows ELITE_MONSTER_KILL and BUILDING_KILL, which are otherwise
+      // indistinguishable: without these a dare cannot say "dragon" rather than
+      // "baron", or "inhibitor" rather than "tower".
+      //
+      // Bounded strings for the same reason as `eventType` above — Riot ships new
+      // elite monsters (Atakhan and Horde both arrived mid-contract-lifetime), and
+      // an enum on the shared value shape would make a dare funded against one of
+      // them unreadable the day it left the list. Both the allowlist and the
+      // event-type pairing are enforced in the authoring refinement.
+      monsterType: z.string().min(1).max(80).nullable(),
+      buildingType: z.string().min(1).max(80).nullable(),
     }),
     z.strictObject({
       kind: z.literal("arithmetic"),

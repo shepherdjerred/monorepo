@@ -86,6 +86,8 @@ export const DEATHCAP_TIMELINE_PLAN = DareCompiledPlanV2Schema.parse({
           afterMs: null,
           beforeMs: null,
           itemId: 3089,
+          monsterType: null,
+          buildingType: null,
         },
         operator: "gte",
         threshold: 1,
