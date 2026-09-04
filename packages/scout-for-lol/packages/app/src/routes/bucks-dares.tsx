@@ -1,10 +1,27 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 import { z } from "zod";
-import type { DareDeadlineSpecV2 } from "@scout-for-lol/data";
+import type {
+  DareDeadlineSpecV2,
+  DarePollHealth,
+  DareProgress,
+} from "@scout-for-lol/data";
 import { BucksDareEditor } from "#src/components/bucks-dare-editor.tsx";
+import { BucksDareActions } from "#src/components/bucks-dare-actions.tsx";
+import { FilterSelect } from "#src/components/filter-select.tsx";
+import {
+  DareEvidencePanel,
+  DareActivationHealthPanel,
+  DareProcessingHealthPanel,
+  DareProgressPanel,
+} from "#src/components/bucks-dare-progress.tsx";
+import {
+  DareFact as Fact,
+  DareStatePill as StatePill,
+  isNonterminalDareState,
+} from "#src/components/bucks-dare-display.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -64,16 +81,43 @@ export function BucksDares() {
 function DareListPage(props: { guildId: string; guildName: string }) {
   const trpc = useTRPC();
   const navigate = useNavigate();
-  const [scope, setScope] = useState<"mine" | "guild">("mine");
+  const [scope, setScope] = useState<"mine" | "guild" | "needs_action">("mine");
   const [search, setSearch] = useState("");
-  const trimmedSearch = search.trim();
-  const list = useQuery(
-    trpc.bucks.dareList.queryOptions({
-      guildId: props.guildId,
-      scope,
-      ...(trimmedSearch.length === 0 ? {} : { search: trimmedSearch }),
-    }),
+  const [stateFilter, setStateFilter] = useState<
+    | "all"
+    | "draft"
+    | "pending_accept"
+    | "activating"
+    | "active"
+    | "achieved"
+    | "unachieved"
+    | "declined"
+    | "expired"
+    | "voided"
+    | "cancelled"
+  >("all");
+  const [role, setRole] = useState<
+    "all" | "challenger" | "target" | "contributor" | "involved"
+  >("all");
+  const [sort, setSort] = useState<"needs_action" | "deadline" | "updated">(
+    "updated",
   );
+  const trimmedSearch = search.trim();
+  const list = useInfiniteQuery(
+    trpc.bucks.dareList.infiniteQueryOptions(
+      {
+        guildId: props.guildId,
+        scope,
+        sort,
+        limit: 25,
+        ...(trimmedSearch.length === 0 ? {} : { search: trimmedSearch }),
+        ...(stateFilter === "all" ? {} : { states: [stateFilter] }),
+        ...(role === "all" ? {} : { role }),
+      },
+      { getNextPageParam: (lastPage) => lastPage.nextCursor },
+    ),
+  );
+  const dares = list.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="space-y-6">
@@ -94,11 +138,19 @@ function DareListPage(props: { guildId: string; guildName: string }) {
         <Tabs
           value={scope}
           onValueChange={(next) => {
-            if (next === "mine" || next === "guild") setScope(next);
+            if (
+              next === "mine" ||
+              next === "guild" ||
+              next === "needs_action"
+            ) {
+              setScope(next);
+              if (next === "needs_action") setSort("needs_action");
+            }
           }}
         >
           <TabsList>
             <TabsTrigger value="mine">My Dares</TabsTrigger>
+            <TabsTrigger value="needs_action">Needs action</TabsTrigger>
             <TabsTrigger value="guild">Guild Dares</TabsTrigger>
           </TabsList>
         </Tabs>
@@ -116,10 +168,49 @@ function DareListPage(props: { guildId: string; guildName: string }) {
         </div>
       </div>
 
+      <div className="grid gap-3 sm:grid-cols-3">
+        <FilterSelect
+          label="State"
+          value={stateFilter}
+          options={[
+            "all",
+            "draft",
+            "pending_accept",
+            "activating",
+            "active",
+            "achieved",
+            "unachieved",
+            "declined",
+            "expired",
+            "voided",
+            "cancelled",
+          ]}
+          onChange={(value) => {
+            setStateFilter(value);
+          }}
+        />
+        <FilterSelect
+          label="Role"
+          value={role}
+          options={["all", "involved", "challenger", "target", "contributor"]}
+          onChange={(value) => {
+            setRole(value);
+          }}
+        />
+        <FilterSelect
+          label="Sort"
+          value={sort}
+          options={["updated", "needs_action", "deadline"]}
+          onChange={(value) => {
+            setSort(value);
+          }}
+        />
+      </div>
+
       <DareList
         loading={list.isPending}
         error={list.error}
-        dares={list.data ?? []}
+        dares={dares}
         onRetry={() => {
           void list.refetch();
         }}
@@ -127,6 +218,18 @@ function DareListPage(props: { guildId: string; guildName: string }) {
           void navigate(`/bucks/dares/${dareId.toString()}`);
         }}
       />
+      {list.hasNextPage && (
+        <Button
+          type="button"
+          variant="outline"
+          disabled={list.isFetchingNextPage}
+          onClick={() => {
+            void list.fetchNextPage();
+          }}
+        >
+          {list.isFetchingNextPage ? "Loading…" : "Load more dares"}
+        </Button>
+      )}
     </div>
   );
 }
@@ -142,6 +245,8 @@ export function DareList(props: {
     potTotal: number;
     evidenceGames: number;
     updatedAt: string;
+    progress: DareProgress;
+    requiresViewerAction: boolean;
   }[];
   onRetry: () => void;
   onSelect: (dareId: number) => void;
@@ -180,6 +285,14 @@ export function DareList(props: {
               {dare.targetAliases.join(", ")} · {dare.potTotal.toString()} BB ·{" "}
               {dare.evidenceGames.toString()} evidence games
             </p>
+            <div className="flex items-center justify-between gap-2 text-xs">
+              <span className="text-scout-subtle">{dare.progress.summary}</span>
+              {dare.requiresViewerAction && (
+                <span className="rounded-full bg-scout-warning/15 px-2 py-0.5 text-scout-warning">
+                  Needs action
+                </span>
+              )}
+            </div>
           </button>
         </li>
       ))}
@@ -190,10 +303,20 @@ export function DareList(props: {
 function DareDetailPage(props: { guildId: string; dareId: number }) {
   const trpc = useTRPC();
   const detail = useQuery(
-    trpc.bucks.dareInspect.queryOptions({
-      guildId: props.guildId,
-      dareId: props.dareId,
-    }),
+    trpc.bucks.dareInspect.queryOptions(
+      {
+        guildId: props.guildId,
+        dareId: props.dareId,
+      },
+      {
+        refetchInterval: (query) => {
+          const state = query.state.data?.state;
+          return state === undefined || isNonterminalDareState(state)
+            ? 30_000
+            : false;
+        },
+      },
+    ),
   );
   if (detail.isPending) return <LoadingState label="Loading dare…" />;
   if (detail.isError) {
@@ -206,7 +329,26 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
       />
     );
   }
-  return <DareDetail guildId={props.guildId} dare={detail.data} />;
+  return (
+    <>
+      <DareDetail guildId={props.guildId} dare={detail.data} />
+      <div className="mt-5">
+        <BucksDareActions
+          guildId={props.guildId}
+          dareId={detail.data.id}
+          revision={detail.data.fundedRevision ?? detail.data.currentRevision}
+          availableActions={detail.data.availableActions}
+        />
+      </div>
+      <div className="mt-5">
+        <DareEvidencePanel
+          guildId={props.guildId}
+          dareId={detail.data.id}
+          enabled={detail.data.evidenceGames > 0}
+        />
+      </div>
+    </>
+  );
 }
 
 export function DareDetail(props: {
@@ -234,6 +376,20 @@ export function DareDetail(props: {
     finalValue: boolean | null;
     proof: unknown;
     voidReason: string | null;
+    progress: DareProgress;
+    viewerRoles: string[];
+    availableActions: string[];
+    requiresViewerAction: boolean;
+    processingHealth: DarePollHealth;
+    activationHealth: {
+      status: "pending" | "retrying" | "complete";
+      requestedAt: string;
+      attemptCount: number;
+      lastAttemptAt: string | null;
+      nextAttemptAt: string;
+      errorCode: string | null;
+      completedAt: string | null;
+    } | null;
   };
 }) {
   const revision = props.dare.fundedRevision ?? props.dare.currentRevision;
@@ -266,6 +422,12 @@ export function DareDetail(props: {
         />
       )}
       <p className="whitespace-pre-wrap text-sm">{props.dare.plainLanguage}</p>
+      <DareProgressPanel progress={props.dare.progress} />
+      <DareActivationHealthPanel health={props.dare.activationHealth} />
+      <DareProcessingHealthPanel health={props.dare.processingHealth} />
+      <p className="text-xs text-scout-subtle">
+        Original wording: {props.dare.originalText}
+      </p>
       <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <Fact label="Revision" value={revision.toString()} />
         <Fact
@@ -291,7 +453,17 @@ export function DareDetail(props: {
         )}
       </dl>
       <section className="space-y-2">
-        <h2 className="text-sm font-medium">ScoutQL</h2>
+        <h2 className="text-sm font-medium">
+          {props.dare.compilerVersion === "dare-scoutql-3"
+            ? "Binding SQL contract"
+            : "ScoutQL"}
+        </h2>
+        {props.dare.compilerVersion === "dare-scoutql-3" && (
+          <p className="text-xs text-scout-subtle">
+            This canonical SQL is authoritative; the readable summary is
+            explanatory.
+          </p>
+        )}
         <ScoutQlCode queryText={props.dare.canonicalScoutQl} />
         {props.dare.scoutQlPlanHash !== null && (
           <p className="font-mono text-xs text-scout-subtle">
@@ -319,22 +491,5 @@ export function DareDetail(props: {
         </p>
       )}
     </div>
-  );
-}
-
-function Fact(props: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="text-xs text-scout-subtle">{props.label}</dt>
-      <dd>{props.value}</dd>
-    </div>
-  );
-}
-
-function StatePill(props: { state: string }) {
-  return (
-    <span className="rounded-full border border-scout-border px-2 py-0.5 text-xs capitalize">
-      {props.state.replaceAll("_", " ")}
-    </span>
   );
 }

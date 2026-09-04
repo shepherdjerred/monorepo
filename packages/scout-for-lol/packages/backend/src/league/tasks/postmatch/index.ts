@@ -1,6 +1,8 @@
 import { retryPendingBucksEarnings } from "#src/betting/earnings-retry.ts";
 import { settleEndedDareWindows } from "#src/betting/dare-sweep.ts";
 import { settleEndedDareV2Windows } from "#src/betting/dare-sweep-v2.ts";
+import { settleMatureDareSqlV3Races } from "#src/betting/dare-settle-v3.ts";
+import { activatePendingDaresV3 } from "#src/betting/dare-activation-v3.ts";
 import { refreshPendingDareV2Callouts } from "#src/betting/dare-callout-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dare-settle-types-v2.ts";
 import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
@@ -15,6 +17,12 @@ import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { runMaintenanceSteps } from "#src/league/tasks/maintenance-steps.ts";
 import { createLogger } from "#src/logger.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
+import { deliverPendingDareNotifications } from "#src/betting/dare-notification-delivery.ts";
+import {
+  markPostMatchPollCompleted,
+  markPostMatchPollFailed,
+} from "#src/league/tasks/recovery/app-state.ts";
+import { prisma } from "#src/database/index.ts";
 
 const logger = createLogger("tasks-postmatch");
 
@@ -101,6 +109,26 @@ export async function runPostMatchMaintenance(options?: {
   // behind the hard-disable policy.
   const steps = [
     {
+      name: "dare activation",
+      run: async () => {
+        await activatePendingDaresV3();
+      },
+    },
+    {
+      name: "dare race finality",
+      run: async () => {
+        if (
+          settleDareV2Deadlines &&
+          options?.dareEvidenceWatermark !== undefined
+        ) {
+          await settleMatureDareSqlV3Races(
+            prisma,
+            options.dareEvidenceWatermark,
+          );
+        }
+      },
+    },
+    {
       name: "dare v2 deadline settle",
       run: async () => {
         try {
@@ -117,6 +145,12 @@ export async function runPostMatchMaintenance(options?: {
           }
           throw error;
         }
+      },
+    },
+    {
+      name: "dare notification delivery",
+      run: async () => {
+        await deliverPendingDareNotifications();
       },
     },
   ];
@@ -155,7 +189,17 @@ export async function runPostMatchMaintenance(options?: {
   }
   // Isolated per step, then re-thrown: a persistently failing recovery path
   // cannot starve the remaining clocks while money stays escrowed.
-  await runMaintenanceSteps("post-match maintenance", steps);
+  try {
+    await runMaintenanceSteps("post-match maintenance", steps);
+    await markPostMatchPollCompleted({
+      completedAt: new Date(),
+      evidenceComplete: settleDareV2Deadlines,
+      evidenceWatermark: options?.dareEvidenceWatermark,
+    });
+  } catch (error) {
+    await markPostMatchPollFailed(error, new Date());
+    throw error;
+  }
   return { dareSummaries };
 }
 

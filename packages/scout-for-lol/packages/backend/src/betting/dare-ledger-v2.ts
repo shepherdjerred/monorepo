@@ -19,12 +19,20 @@ import type { Db } from "#src/database/index.ts";
 import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting.ts";
 
 export type DareV2LedgerFacts = {
+  contractVersion: 2 | 3;
   dareId: number;
   serverId: string;
   potTotal: number;
   targetAliases: readonly string[];
   conditionSummary: string;
   matchId?: string | undefined;
+};
+
+type DareV2PayoutTarget = {
+  id: number;
+  discordId: string;
+  alias: string;
+  bucksAccountId: number;
 };
 
 export async function dareV2MoneyFactsInTransaction(
@@ -51,7 +59,7 @@ function contextBase(
 ) {
   return {
     type: "dare" as const,
-    contractVersion: 2 as const,
+    contractVersion: facts.contractVersion,
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,
@@ -189,12 +197,8 @@ export async function payDareV2TargetsInTransaction(
   tx: Db,
   input: {
     facts: DareV2LedgerFacts;
-    targets: readonly {
-      id: number;
-      discordId: string;
-      alias: string;
-      bucksAccountId: number;
-    }[];
+    targets: readonly DareV2PayoutTarget[];
+    remainderTargetId?: number | undefined;
   },
 ): Promise<DareTargetPayout[]> {
   if (input.targets.length === 0) {
@@ -203,25 +207,7 @@ export async function payDareV2TargetsInTransaction(
     );
   }
   await contributionTotals(tx, input.facts);
-  const share = Math.floor(input.facts.potTotal / input.targets.length);
-  const remainder = input.facts.potTotal - share * input.targets.length;
-  const payouts = input.targets.map((target) => {
-    const fee = settlementHouseCut({ matchedProfit: share, isHouse: false });
-    return {
-      bucksAccountId: target.bucksAccountId,
-      discordId: target.discordId,
-      alias: target.alias,
-      grossShare: share,
-      fee,
-      net: share - fee,
-    };
-  });
-  assertConservation(
-    payouts.reduce((total, payout) => total + payout.grossShare, 0) +
-      remainder ===
-      input.facts.potTotal,
-    `Dare v2 ${input.facts.dareId.toString()} payout shares do not conserve the pot.`,
-  );
+  const { payouts, remainder } = allocateDareV2TargetPayouts(input);
   const house = await ensureHouseAccountInTransaction(
     tx,
     DiscordGuildIdSchema.parse(input.facts.serverId),
@@ -269,7 +255,7 @@ export async function payDareV2TargetsInTransaction(
       });
     }
   }
-  if (remainder > 0) {
+  if (remainder > 0 && input.remainderTargetId === undefined) {
     await applyBucksDelta(tx, {
       bucksAccountId: house.id,
       delta: remainder,
@@ -284,4 +270,47 @@ export async function payDareV2TargetsInTransaction(
     });
   }
   return payouts;
+}
+
+export function allocateDareV2TargetPayouts(input: {
+  facts: DareV2LedgerFacts;
+  targets: readonly DareV2PayoutTarget[];
+  remainderTargetId?: number | undefined;
+}): { payouts: DareTargetPayout[]; remainder: number } {
+  if (input.targets.length === 0) {
+    throw new Error(
+      `Achieved Dare v2 ${input.facts.dareId.toString()} has no proof targets.`,
+    );
+  }
+  const share = Math.floor(input.facts.potTotal / input.targets.length);
+  const remainder = input.facts.potTotal - share * input.targets.length;
+  if (
+    input.remainderTargetId !== undefined &&
+    !input.targets.some((target) => target.id === input.remainderTargetId)
+  ) {
+    throw new Error("Dare payout remainder target is not a payee.");
+  }
+  const payouts = input.targets.map((target) => {
+    const grossShare =
+      share + (target.id === input.remainderTargetId ? remainder : 0);
+    const fee = settlementHouseCut({
+      matchedProfit: grossShare,
+      isHouse: false,
+    });
+    return {
+      bucksAccountId: target.bucksAccountId,
+      discordId: target.discordId,
+      alias: target.alias,
+      grossShare,
+      fee,
+      net: grossShare - fee,
+    };
+  });
+  assertConservation(
+    payouts.reduce((total, payout) => total + payout.grossShare, 0) +
+      (input.remainderTargetId === undefined ? remainder : 0) ===
+      input.facts.potTotal,
+    `Dare v2 ${input.facts.dareId.toString()} payout shares do not conserve the pot.`,
+  );
+  return { payouts, remainder };
 }

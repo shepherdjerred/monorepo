@@ -250,29 +250,26 @@
       "thresholdRollouts": []
     },
     {
-      "key": "dare_sql_v3",
+      "key": "dare_extended_contracts_enabled",
       "owner": "scout",
       "namespace": "scout",
       "source": "scout-policy",
-      "purpose": "Enable authoring and initial funding of standard-SQL Bryan Bucks Dare v3 contracts.",
+      "purpose": "Enable authoring extended Bryan Bucks Dare contracts.",
       "type": "boolean",
       "default": false,
-      "rollouts": [
-        {
-          "segmentKey": "scout-guild-1337623164146155593",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "server",
-              "operator": "eq",
-              "value": "1337623164146155593"
-            }
-          ],
-          "result": true
-        }
-      ],
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "dare_notifications_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable Bryan Bucks Dare lifecycle and progress DMs.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
     },

@@ -9,6 +9,7 @@ import {
 import {
   DareCompiledPlanV2Schema,
   DareDeadlineSpecV2Schema,
+  DareSqlV3CompilationSchema,
   DareTargetBindingV2Schema,
   type DareCompiledPlanV2,
   type DiscordAccountId,
@@ -72,11 +73,70 @@ function deadlineText(raw: string): string {
 
 function questionForDare(text: string, amount: number): string {
   return [
-    "Create one private ScoutQL-backed Dare v2 draft from this exact request:",
+    "Create one private relational Dare draft from this exact request:",
     text,
     `Opening stake: ${amount.toString()} BB.`,
     "Preserve explicit same-game versus cross-game scope. Validate the contract, then save the draft. Do not prepare funding yet.",
   ].join("\n");
+}
+
+function contractFields(revision: {
+  compilerVersion: string;
+  compiledPlan: string;
+  originalText: string;
+  targetsJson: string;
+  deadlineSpecJson: string;
+  openingStake: number;
+}) {
+  const targets = DareTargetBindingV2Schema.array().parse(
+    JSON.parse(revision.targetsJson),
+  );
+  const common = [
+    {
+      name: "Original wording",
+      value: truncateEmbedFieldValue(revision.originalText),
+    },
+    {
+      name: "Targets",
+      value: targets.map((target) => target.alias).join(", "),
+    },
+  ];
+  if (revision.compilerVersion === "dare-scoutql-3") {
+    const compilation = DareSqlV3CompilationSchema.parse(
+      JSON.parse(revision.compiledPlan),
+    );
+    return [
+      ...common,
+      {
+        name: "Bounds",
+        value: `At most ${compilation.maxEligibleGames.toString()} eligible games · ${deadlineText(revision.deadlineSpecJson)}`,
+      },
+      {
+        name: "Economics",
+        value: `${revision.openingStake.toString()} BB debited when you confirm. Targets risk nothing and must all accept before it goes live.`,
+      },
+    ];
+  }
+  const plan = DareCompiledPlanV2Schema.parse(
+    JSON.parse(revision.compiledPlan),
+  );
+  const queues = [
+    ...new Set(plan.gameSets.flatMap((gameSet) => gameSet.queues)),
+  ];
+  return [
+    ...common,
+    { name: "Scope", value: scopeText(plan) },
+    { name: "Participation", value: relationshipText(plan) },
+    { name: "Queues", value: queues.join(", ") },
+    {
+      name: "Bounds",
+      value: `At most ${plan.maxEligibleGames.toString()} eligible games · ${deadlineText(revision.deadlineSpecJson)}`,
+    },
+    {
+      name: "Economics",
+      value: `${revision.openingStake.toString()} BB debited when you confirm. Targets risk nothing and must all accept before it goes live.`,
+    },
+  ];
 }
 
 function noDraftComponents(conversationId: string) {
@@ -240,43 +300,18 @@ export async function replyBbDareV2(
     if (intent.kind !== "intent_created") {
       throw new Error(`Dare v2 funding intent failed: ${intent.kind}`);
     }
-    const plan = DareCompiledPlanV2Schema.parse(
-      JSON.parse(draft.revision.compiledPlan),
-    );
-    const targets = DareTargetBindingV2Schema.array().parse(
-      JSON.parse(draft.revision.targetsJson),
-    );
-    const queues = [
-      ...new Set(plan.gameSets.flatMap((gameSet) => gameSet.queues)),
-    ];
+    const sqlV3 = draft.revision.compilerVersion === "dare-scoutql-3";
     const queryInline = draft.revision.canonicalScoutQl.length <= 900;
     const embed = new EmbedBuilder()
       .setTitle("🎯 Confirm your Scout dare")
       .setColor(BUCKS_COLOR)
       .setDescription(truncateEmbedFieldValue(draft.revision.plainLanguage))
-      .addFields(
-        { name: "Scope", value: scopeText(plan) },
-        { name: "Participation", value: relationshipText(plan) },
-        {
-          name: "Targets",
-          value: targets.map((target) => target.alias).join(", "),
-        },
-        { name: "Queues", value: queues.join(", ") },
-        {
-          name: "Bounds",
-          value: `At most ${plan.maxEligibleGames.toString()} eligible games · ${deadlineText(draft.revision.deadlineSpecJson)}`,
-        },
-        {
-          name: "Economics",
-          value: `${draft.revision.openingStake.toString()} BB debited when you confirm. Targets risk nothing and must all accept before it goes live.`,
-        },
-        {
-          name: "Generated ScoutQL",
-          value: queryInline
-            ? `\`\`\`sql\n${draft.revision.canonicalScoutQl}\n\`\`\``
-            : "Attached as `dare.scoutql`.",
-        },
-      )
+      .addFields(...contractFields(draft.revision), {
+        name: sqlV3 ? "Binding standard SQL" : "Generated ScoutQL",
+        value: queryInline
+          ? `\`\`\`sql\n${draft.revision.canonicalScoutQl}\n\`\`\``
+          : `Attached as \`${sqlV3 ? "dare.sql" : "dare.scoutql"}\`.`,
+      })
       .setFooter({
         text: `Draft #${draft.dare.id.toString()} · revision ${draft.dare.currentRevision.toString()} · confirmation expires in 10 minutes`,
       });
@@ -294,7 +329,7 @@ export async function replyBbDareV2(
             files: [
               new AttachmentBuilder(
                 Buffer.from(draft.revision.canonicalScoutQl, "utf8"),
-                { name: "dare.scoutql" },
+                { name: sqlV3 ? "dare.sql" : "dare.scoutql" },
               ),
             ],
           }),

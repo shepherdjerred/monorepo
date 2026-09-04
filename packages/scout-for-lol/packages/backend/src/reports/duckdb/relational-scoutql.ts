@@ -22,12 +22,6 @@ import {
   appendRelationalScoutQlCatalogIssues,
   appendRelationalScoutQlLimitIssues,
 } from "#src/reports/duckdb/relational-scoutql-policy.ts";
-import {
-  appendTargetBindingIssues,
-  appendTimelineCoverageIssues,
-  appendWallClockIssues,
-} from "#src/reports/duckdb/relational-scoutql-target-policy.ts";
-import { appendUnreachableTargetCteIssues } from "#src/reports/duckdb/relational-scoutql-cte-policy.ts";
 
 const RELATIONAL_SCOUTQL_SOURCES = new Set([
   "match_participants",
@@ -304,7 +298,11 @@ function semanticIssues(
   if (mutableFacts.recursive) {
     issues.push("Recursive CTEs are not supported in ScoutQL.");
   }
-  appendWallClockIssues(mutableFacts.wallClockReferences, issues);
+  for (const wallClock of uniqueSorted(mutableFacts.wallClockReferences)) {
+    issues.push(
+      `ScoutQL wall-clock reference ${wallClock} is not allowed; use immutable bound parameters.`,
+    );
+  }
   appendRelationalScoutQlLimitIssues(mutableFacts, limits, issues);
   appendRelationalScoutQlCatalogIssues({
     physicalSources,
@@ -321,14 +319,30 @@ function semanticIssues(
         : RELATIONAL_SCOUTQL_FUNCTIONS,
     issues,
   });
-  appendTargetBindingIssues({
-    profile,
-    targetKeys,
-    allowedTargetKeys,
-    invalidTargetCalls: mutableFacts.invalidTargetCalls,
-    issues,
-  });
-  appendTimelineCoverageIssues(profile, physicalSources, issues);
+  if (profile === "relational-v2" && mutableFacts.invalidTargetCalls > 0) {
+    issues.push(
+      "Every dare_target(...) call must contain exactly one string literal target key.",
+    );
+  }
+  if (targetKeys.length === 0) {
+    issues.push(
+      profile === "dare-sql-v3"
+        ? "A Dare SQL contract must reference at least one target relation (T1 through T5)."
+        : "A Dare contract query must bind at least one dare_target(...).",
+    );
+  }
+  if (
+    profile === "dare-sql-v3" &&
+    physicalSources.some(
+      (source) =>
+        source.startsWith("timeline_") && source !== "timeline_coverage",
+    ) &&
+    !physicalSources.includes("timeline_coverage")
+  ) {
+    issues.push(
+      "Dare SQL that reads timeline rows must also read timeline_coverage so missing data cannot be treated as zero.",
+    );
+  }
   if (profile === "dare-sql-v3") {
     appendDareSqlV3DeterminismIssues(statement, issues);
   }
@@ -381,7 +395,6 @@ async function validateRelationalScoutQlWithLimits(
   input: {
     queryText: string;
     allowedTargetKeys: readonly string[];
-    validateTargetCteReachability?: boolean | undefined;
   },
   limits: RelationalScoutQlComplexityLimits,
   profile: "relational-v2" | "dare-sql-v3" = "relational-v2",
@@ -422,16 +435,6 @@ async function validateRelationalScoutQlWithLimits(
     limits,
     profile,
   );
-  if (
-    profile === "dare-sql-v3" &&
-    input.validateTargetCteReachability !== false
-  ) {
-    appendUnreachableTargetCteIssues(
-      statement,
-      new Set(input.allowedTargetKeys),
-      analysis.issues,
-    );
-  }
   if (analysis.issues.length > 0) {
     return { kind: "invalid", issues: analysis.issues };
   }
@@ -479,7 +482,6 @@ export async function validateCanonicalDareScoutQl(input: {
 export async function validateDareSqlV3(input: {
   queryText: string;
   allowedTargetKeys: readonly string[];
-  validateTargetCteReachability?: boolean | undefined;
 }): Promise<RelationalScoutQlValidation> {
   return await validateRelationalScoutQlWithLimits(
     input,

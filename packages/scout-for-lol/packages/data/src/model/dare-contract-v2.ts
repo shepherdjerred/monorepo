@@ -22,11 +22,16 @@ export const DARE_V2_MAX_EXPRESSION_DEPTH = 12;
 export const DARE_V2_MAX_QUERY_LENGTH = 16_000;
 export const DARE_V2_MAX_ELIGIBLE_GAMES = 100;
 export const DARE_V2_MAX_HORIZON_DAYS = 90;
-export const OPEN_BUCKS_DARE_V2_STATES = ["pending_accept", "active"] as const;
+export const OPEN_BUCKS_DARE_V2_STATES = [
+  "pending_accept",
+  "activating",
+  "active",
+] as const;
 
 export const BucksDareV2StateSchema = z.enum([
   "draft",
   "pending_accept",
+  "activating",
   "active",
   "achieved",
   "unachieved",
@@ -438,11 +443,7 @@ export const DareDeadlineSpecV2Schema = z.union([
 ]);
 export type DareDeadlineSpecV2 = z.infer<typeof DareDeadlineSpecV2Schema>;
 
-const DareContractV2BaseSchema = z.strictObject({
-  version: z.literal(DARE_CONTRACT_VERSION),
-  canonicalScoutQl: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
-  compiledPlan: DareCompiledPlanV2Schema,
-  evaluatorVersion: DareEvaluatorV2VersionSchema,
+export const DareRelationalContractRuntimeSchema = z.strictObject({
   targets: z.array(DareTargetBindingV2Schema).min(1).max(DARE_V2_MAX_TARGETS),
   openingStake: BucksStakeSchema,
   serverId: z.string().min(1),
@@ -451,9 +452,18 @@ const DareContractV2BaseSchema = z.strictObject({
   activationAt: z.iso.datetime(),
   deadlineAt: z.iso.datetime(),
   deadlineSpec: DareDeadlineSpecV2Schema,
-  plainLanguage: z.string().min(1),
-  semanticProofPlan: z.string().min(1),
 });
+
+const DareContractV2BaseSchema = z
+  .strictObject({
+    version: z.literal(DARE_CONTRACT_VERSION),
+    canonicalScoutQl: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
+    compiledPlan: DareCompiledPlanV2Schema,
+    evaluatorVersion: DareEvaluatorV2VersionSchema,
+    plainLanguage: z.string().min(1),
+    semanticProofPlan: z.string().min(1),
+  })
+  .extend(DareRelationalContractRuntimeSchema.shape);
 
 export const DareContractV2Schema = z.union([
   DareContractV2BaseSchema.extend({

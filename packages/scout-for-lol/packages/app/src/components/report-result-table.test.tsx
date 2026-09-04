@@ -64,4 +64,39 @@ describe("ReportResultTable", () => {
     );
     expect(markup.match(/Fewer than 10 games/g)).toHaveLength(1);
   });
+
+  test("omits 'Based on X games' when a games column is present", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable
+        columns={[
+          { key: "label", label: "Champion", format: "text" },
+          { key: "games", label: "Games", format: "integer" },
+          { key: "win_rate", label: "Win rate", format: "percent" },
+        ]}
+        rows={[
+          {
+            label: "Ambessa",
+            games: 17,
+            values: [
+              { column: "games", value: 17 },
+              { column: "win_rate", value: 0.882 },
+            ],
+          },
+        ]}
+        evidence={[
+          {
+            label: "Ambessa",
+            games: 17,
+            values: [
+              { column: "games", sampleSize: 17 },
+              { column: "win_rate", sampleSize: 17 },
+            ],
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain("88.2%");
+    expect(markup).not.toContain("Based on 17 games");
+  });
 });

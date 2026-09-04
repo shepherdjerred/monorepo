@@ -10,7 +10,9 @@ import type {
   RawTimeline,
   Rank,
   DiscordGuildId,
+  Player,
 } from "@scout-for-lol/data/index.ts";
+import type { PostmatchRankChanges } from "#src/betting/dare-rank-capture-v3.ts";
 import {
   MatchIdSchema,
   queueTypeToDisplayString,
@@ -236,6 +238,7 @@ type StandardMatchContext = {
   timelineData: RawTimeline | undefined;
   /** Guild IDs that will receive this match report - used for feature flag checks */
   targetGuildIds: DiscordGuildId[];
+  prefetchedRankChanges?: PostmatchRankChanges | undefined;
 };
 
 /**
@@ -251,6 +254,7 @@ async function processStandardMatch(
     playersInMatch,
     timelineData,
     targetGuildIds,
+    prefetchedRankChanges,
   } = ctx;
   logger.info(`[generateMatchReport] ⚔️  Processing as standard match`);
   // Process match for all tracked players
@@ -272,9 +276,9 @@ async function processStandardMatch(
   const playerRanksMap = new Map<
     string,
     { before: Rank | undefined; after: Rank | undefined }
-  >();
+  >(prefetchedRankChanges);
 
-  if (queue) {
+  if (queue && prefetchedRankChanges === undefined) {
     await Promise.all(
       players.map(async (player) => {
         const puuid = player.config.league.leagueAccount.puuid;
@@ -374,6 +378,9 @@ export type GenerateMatchReportOptions = {
   targetGuildIds: DiscordGuildId[];
   /** A contract-required fetch already ran; null records a conclusive miss. */
   prefetchedTimeline?: RawTimeline | null | undefined;
+  /** Player/rank data captured before Dare settlement. */
+  prefetchedPlayers?: Player[] | undefined;
+  prefetchedRankChanges?: PostmatchRankChanges | undefined;
 };
 
 export type GenerateMatchReportDependencies = {
@@ -458,11 +465,13 @@ export async function generateMatchReport(
     }
 
     // Get full player data with ranks
-    const players = await Promise.all(
-      playersInMatch.map((playerConfig) =>
-        dependencies.getPlayer(playerConfig),
-      ),
-    );
+    const players =
+      options.prefetchedPlayers ??
+      (await Promise.all(
+        playersInMatch.map((playerConfig) =>
+          dependencies.getPlayer(playerConfig),
+        ),
+      ));
 
     // Fetch timeline data for standard matches (to provide game progression context for AI reviews)
     const timelineData =
@@ -492,6 +501,9 @@ export async function generateMatchReport(
           playersInMatch,
           timelineData,
           targetGuildIds: options.targetGuildIds,
+          ...(options.prefetchedRankChanges === undefined
+            ? {}
+            : { prefetchedRankChanges: options.prefetchedRankChanges }),
         });
 
     if (result === undefined) {

@@ -1,5 +1,3 @@
-import { tool } from "ai";
-import { z } from "zod";
 import {
   DARE_V2_MAX_ELIGIBLE_GAMES,
   DARE_V2_MAX_EXPRESSION_DEPTH,
@@ -9,18 +7,21 @@ import {
   DARE_V2_MAX_PREDICATES,
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
-  DiscordChannelIdSchema,
-  type DiscordAccountId,
-  type DiscordChannelId,
 } from "@scout-for-lol/data";
-import type { BucksExploreCapability } from "#src/explore/bucks-tools.ts";
 import { buildDareShortlist } from "#src/betting/dare-shortlist.ts";
+import {
+  createDareDraftV3,
+  prepareDareDraftV3,
+  reviseDareDraftV3,
+} from "#src/betting/dare-draft-v3.ts";
+import { dareSqlV3Catalog } from "#src/betting/dare-sql-v3-catalog.ts";
+import { compileDareSqlV3 } from "#src/betting/dare-sql-v3.ts";
+import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
 import {
   createDareDraftV2,
   deleteDareDraftV2,
   prepareDareDraftV2,
   reviseDareDraftV2,
-  type DareDraftV2Definition,
 } from "#src/betting/dare-draft-v2.ts";
 import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import {
@@ -35,84 +36,70 @@ import {
 } from "#src/betting/dare-render-v2.ts";
 import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
 import { prisma } from "#src/database/index.ts";
-import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
-import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 import {
   DareActionToolInputSchema,
   DareDefinitionToolInputSchema,
+  DareDefinitionV2ToolInputSchema,
+  DareDefinitionV3ToolInputSchema,
   DareDeleteToolInputSchema,
   DareInspectToolInputSchema,
   DareListToolInputSchema,
   DarePreviewToolInputSchema,
   DareScoutQlToolInputSchema,
-  DareToolResultSchema,
   ReviseDareToolInputSchema,
-  type DareToolResult,
 } from "#src/explore/dare-tool-schemas.ts";
+import {
+  definitionFromTool,
+  definitionV3FromTool,
+} from "#src/explore/dare-tool-definition-resolution.ts";
+import {
+  dareDraftChannel,
+  type DareExploreToolsInput,
+} from "#src/explore/dare-tool-context.ts";
+import {
+  dareDomainResult,
+  dareToolResult,
+} from "#src/explore/dare-tool-result.ts";
 
-export type DareExploreToolsInput = {
-  capability: BucksExploreCapability;
-  requesterId: DiscordAccountId;
-  conversationId: string;
-  originChannelId: DiscordChannelId | null;
-  track: ToolTracker;
-};
-
-export async function dareExploreEnabled(
-  capability: BucksExploreCapability | null,
-): Promise<boolean> {
-  if (capability === null) return false;
-  const [dareEnabled, relationalEnabled] = await Promise.all([
-    isPolicyEnabled("dare_v2", { server: capability.serverId }),
-    isPolicyEnabled("scoutql_relational_enabled", {
-      server: capability.serverId,
-    }),
-  ]);
-  return dareEnabled && relationalEnabled;
-}
-
-function result(kind: string, message: string, data: unknown): DareToolResult {
-  return DareToolResultSchema.parse({
-    kind,
-    message,
-    data: data === undefined ? null : data,
-  });
-}
-
-function safeDomainResult(value: { kind: string }, message: string) {
-  return result(value.kind, message, value);
-}
-
-function definitionFromTool(
-  input: z.infer<typeof DareDefinitionToolInputSchema>,
-  targets: Awaited<ReturnType<typeof buildDareShortlist>>,
-): DareDraftV2Definition {
-  const requested = new Set(input.targetKeys);
-  if (requested.size !== input.targetKeys.length) {
-    throw new Error("A dare target key may appear only once.");
-  }
-  const resolved = input.targetKeys.map((key) => {
-    const target = targets.find((candidate) => candidate.key === key);
-    if (target === undefined) {
-      throw new Error(`Dare target ${key} is not in the current shortlist.`);
-    }
-    return target;
-  });
+const result = dareToolResult;
+const safeDomainResult = dareDomainResult;
+function createDareReadExecutors(input: DareExploreToolsInput) {
   return {
-    originalText: input.originalText,
-    targets: resolved,
-    plan: input.plan,
-    deadlineSpec: input.deadlineSpec,
-    openingStake: input.openingStake,
+    list: (raw: unknown) =>
+      input.track("list_dares", async () => {
+        const parsed = DareListToolInputSchema.parse(raw);
+        const dares = await listVisibleDaresV2(
+          {
+            serverId: input.capability.serverId,
+            viewerDiscordId: input.requesterId,
+            scope: parsed.scope,
+            ...(parsed.search === undefined ? {} : { search: parsed.search }),
+          },
+          prisma,
+        );
+        return result(
+          "listed",
+          `Found ${dares.length.toString()} visible dares.`,
+          { dares },
+        );
+      }),
+    inspect: (raw: unknown) =>
+      input.track("inspect_dare", async () => {
+        const parsed = DareInspectToolInputSchema.parse(raw);
+        const dare = await inspectVisibleDareV2(
+          {
+            dareId: parsed.dareId,
+            serverId: input.capability.serverId,
+            viewerDiscordId: input.requesterId,
+          },
+          prisma,
+        );
+        return dare === null
+          ? result("not_found", "That dare is not visible to this user.", null)
+          : result("inspected", "Loaded the frozen dare contract.", { dare });
+      }),
   };
 }
-
-function draftChannel(input: DareExploreToolsInput): DiscordChannelId {
-  return DiscordChannelIdSchema.parse(
-    input.originChannelId ?? COMMON_DENOMINATOR_CHANNEL_ID,
-  );
-}
-
 export function createDareToolExecutors(input: DareExploreToolsInput) {
   let shortlistPromise: ReturnType<typeof buildDareShortlist> | undefined;
   const shortlist = () => {
@@ -123,15 +110,36 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     );
     return shortlistPromise;
   };
-
+  const sqlV3Enabled = async () =>
+    await isPolicyEnabled("dare_extended_contracts_enabled", {
+      server: input.capability.serverId,
+    });
   const definition = async (raw: unknown) => {
     const parsed = DareDefinitionToolInputSchema.parse(raw);
+    const v3 = await sqlV3Enabled();
+    if (v3) {
+      const sqlDefinition = DareDefinitionV3ToolInputSchema.safeParse(parsed);
+      if (!sqlDefinition.success) {
+        throw new Error(
+          "Dare v3 authoring requires canonical SQL, not a typed plan.",
+        );
+      }
+      return {
+        version: 3 as const,
+        parsed: sqlDefinition.data,
+        definition: definitionV3FromTool(sqlDefinition.data, await shortlist()),
+      };
+    }
+    const typedDefinition = DareDefinitionV2ToolInputSchema.safeParse(parsed);
+    if (!typedDefinition.success) {
+      throw new Error("Dare SQL v3 authoring is not enabled in this guild.");
+    }
     return {
-      parsed,
-      definition: definitionFromTool(parsed, await shortlist()),
+      version: 2 as const,
+      parsed: typedDefinition.data,
+      definition: definitionFromTool(typedDefinition.data, await shortlist()),
     };
   };
-
   const resolvedTargets = async (requestedKeys: readonly string[]) => {
     const available = await shortlist();
     return [...new Set(requestedKeys)].map((key) => {
@@ -147,12 +155,16 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     language: () =>
       input.track("get_dare_language", async () => {
         const targets = await shortlist();
+        const sqlV3 = await isPolicyEnabled("dare_extended_contracts_enabled", {
+          server: input.capability.serverId,
+        });
         return result(
           "language",
           targets.length === 0
             ? "No eligible targets are currently linked in this guild."
             : "Use only these target keys and the closed contract schema.",
           {
+            authoringVersion: sqlV3 ? 3 : 2,
             targets: targets.map((target) => ({
               key: target.key,
               alias: target.alias,
@@ -172,6 +184,7 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
               relativeDeadlineDays: 7,
               orderBy: "game_end_at_asc_match_id_asc",
             },
+            ...(sqlV3 ? { sql: dareSqlV3Catalog() } : {}),
           },
         );
       }),
@@ -179,6 +192,28 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
       input.track("validate_dare_scoutql", async () => {
         const parsed = DareScoutQlToolInputSchema.parse(raw);
         const targets = await resolvedTargets(parsed.targetKeys);
+        if (await sqlV3Enabled()) {
+          try {
+            const compilation = await compileDareSqlV3({
+              queryText: parsed.queryText,
+              targetKeys: targets.map((target) => target.key),
+            });
+            return result(
+              "valid_sql",
+              "The standard SQL Dare contract is valid and canonically formatted.",
+              {
+                canonicalSql: compilation.canonicalSql,
+                queryHash: compilation.queryHash,
+                facts: compilation.facts,
+                finality: compilation.finality,
+              },
+            );
+          } catch (error) {
+            return result("invalid_sql", "The Dare SQL is not valid.", {
+              issues: [error instanceof Error ? error.message : String(error)],
+            });
+          }
+        }
         const validation = await compileDareScoutQlPlanV2({
           queryText: parsed.queryText,
           targets,
@@ -209,6 +244,24 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     validate: (raw: unknown) =>
       input.track("validate_dare_contract", async () => {
         const resolved = await definition(raw);
+        if (resolved.version === 3) {
+          const prepared = await prepareDareDraftV3(resolved.definition);
+          return prepared.kind === "valid"
+            ? result("valid", "The standard SQL dare contract is valid.", {
+                canonicalSql: prepared.draft.compilation.canonicalSql,
+                queryHash: prepared.draft.compilation.queryHash,
+                facts: prepared.draft.compilation.facts,
+                finality: prepared.draft.compilation.finality,
+                plainLanguage: prepared.draft.plainLanguage,
+                semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+                  prepared.draft.compilation,
+                ),
+                preview: prepared.draft.preview,
+              })
+            : result("invalid", "The dare contract needs revision.", {
+                issues: prepared.issues,
+              });
+        }
         const prepared = prepareDareDraftV2(resolved.definition);
         return prepared.kind === "valid"
           ? result("valid", "The dare contract is valid.", {
@@ -223,6 +276,33 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     preview: (raw: unknown) =>
       input.track("preview_dare_contract", async () => {
         const parsed = DarePreviewToolInputSchema.parse(raw);
+        if ("queryText" in parsed) {
+          if (!(await sqlV3Enabled())) {
+            return result("feature_disabled", "Dare SQL v3 is disabled.", null);
+          }
+          const prepared = await prepareDareDraftV3({
+            ...definitionV3FromTool(parsed, await shortlist()),
+            historyDays: parsed.historyDays,
+          });
+          if (prepared.kind === "invalid") {
+            return result("invalid", "The dare contract needs revision.", {
+              issues: prepared.issues,
+            });
+          }
+          return result(
+            "previewed",
+            "Historically executed the canonical SQL.",
+            {
+              ...prepared.draft.preview,
+              start: new Date(
+                Date.now() - parsed.historyDays * 24 * 60 * 60 * 1000,
+              ).toISOString(),
+              end: new Date().toISOString(),
+              canonicalSql: prepared.draft.compilation.canonicalSql,
+              plainLanguage: prepared.draft.plainLanguage,
+            },
+          );
+        }
         const prepared = prepareDareDraftV2(
           definitionFromTool(parsed, await shortlist()),
         );
@@ -258,10 +338,37 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     create: (raw: unknown) =>
       input.track("create_dare_draft", async () => {
         const resolved = await definition(raw);
+        if (resolved.version === 3) {
+          const created = await createDareDraftV3({
+            ...resolved.definition,
+            serverId: input.capability.serverId,
+            channelId: dareDraftChannel(input),
+            challengerDiscordId: input.requesterId,
+            originConversationId: input.conversationId,
+          });
+          if (created.kind !== "created") {
+            return safeDomainResult(created, "The dare draft was not created.");
+          }
+          return result("created", "The private SQL dare draft was saved.", {
+            dareId: created.dareId,
+            revision: created.revision,
+            canonicalScoutQl: created.draft.compilation.canonicalSql,
+            queryHash: created.draft.compilation.queryHash,
+            originalText: created.draft.originalText,
+            plainLanguage: created.draft.plainLanguage,
+            semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+              created.draft.compilation,
+            ),
+            preview: created.draft.preview,
+            sqlIsBinding: true,
+            openingStake: created.draft.openingStake,
+            targetAliases: created.draft.targets.map((target) => target.alias),
+          });
+        }
         const created = await createDareDraftV2({
           ...resolved.definition,
           serverId: input.capability.serverId,
-          channelId: draftChannel(input),
+          channelId: dareDraftChannel(input),
           challengerDiscordId: input.requesterId,
           originConversationId: input.conversationId,
         });
@@ -282,6 +389,31 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
       input.track("revise_dare_draft", async () => {
         const parsed = ReviseDareToolInputSchema.parse(raw);
         const resolved = await definition(parsed);
+        if (resolved.version === 3) {
+          const revised = await reviseDareDraftV3({
+            dareId: parsed.dareId,
+            serverId: input.capability.serverId,
+            challengerDiscordId: input.requesterId,
+            expectedRevision: parsed.expectedRevision,
+            definition: resolved.definition,
+          });
+          if (revised.kind !== "revised") {
+            return safeDomainResult(revised, "The dare draft was not revised.");
+          }
+          return result("revised", "A new private SQL revision was saved.", {
+            dareId: revised.dareId,
+            revision: revised.revision,
+            canonicalScoutQl: revised.draft.compilation.canonicalSql,
+            queryHash: revised.draft.compilation.queryHash,
+            originalText: revised.draft.originalText,
+            plainLanguage: revised.draft.plainLanguage,
+            semanticProofPlan: renderDareSqlV3SemanticProofPlan(
+              revised.draft.compilation,
+            ),
+            preview: revised.draft.preview,
+            sqlIsBinding: true,
+          });
+        }
         const revised = await reviseDareDraftV2({
           dareId: parsed.dareId,
           serverId: input.capability.serverId,
@@ -302,39 +434,7 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
           targetAliases: revised.draft.targets.map((target) => target.alias),
         });
       }),
-    list: (raw: unknown) =>
-      input.track("list_dares", async () => {
-        const parsed = DareListToolInputSchema.parse(raw);
-        const dares = await listVisibleDaresV2(
-          {
-            serverId: input.capability.serverId,
-            viewerDiscordId: input.requesterId,
-            scope: parsed.scope,
-            ...(parsed.search === undefined ? {} : { search: parsed.search }),
-          },
-          prisma,
-        );
-        return result(
-          "listed",
-          `Found ${dares.length.toString()} visible dares.`,
-          { dares },
-        );
-      }),
-    inspect: (raw: unknown) =>
-      input.track("inspect_dare", async () => {
-        const parsed = DareInspectToolInputSchema.parse(raw);
-        const dare = await inspectVisibleDareV2(
-          {
-            dareId: parsed.dareId,
-            serverId: input.capability.serverId,
-            viewerDiscordId: input.requesterId,
-          },
-          prisma,
-        );
-        return dare === null
-          ? result("not_found", "That dare is not visible to this user.", null)
-          : result("inspected", "Loaded the frozen dare contract.", { dare });
-      }),
+    ...createDareReadExecutors(input),
     prepareAction: (raw: unknown) =>
       input.track("prepare_dare_action", async () => {
         const parsed = DareActionToolInputSchema.parse(raw);
@@ -346,6 +446,17 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
           payload: parsed.payload,
           idempotencyKey: globalThis.crypto.randomUUID(),
         });
+        const dare =
+          intent.kind === "intent_created"
+            ? await inspectVisibleDareV2(
+                {
+                  dareId: parsed.dareId,
+                  serverId: input.capability.serverId,
+                  viewerDiscordId: input.requesterId,
+                },
+                prisma,
+              )
+            : null;
         return intent.kind === "intent_created"
           ? result(
               "confirmation_required",
@@ -356,6 +467,15 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
                 expiresAt: intent.expiresAt.toISOString(),
                 dareId: parsed.dareId,
                 revision: parsed.expectedRevision,
+                ...(dare === null
+                  ? {}
+                  : {
+                      originalText: dare.originalText,
+                      plainLanguage: dare.plainLanguage,
+                      canonicalScoutQl: dare.canonicalScoutQl,
+                      semanticProofPlan: dare.semanticProofPlan,
+                      sqlIsBinding: dare.contractVersion === 3,
+                    }),
               },
             )
           : safeDomainResult(intent, "The action could not be prepared.");
@@ -376,81 +496,5 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             : "That draft cannot be deleted.",
         );
       }),
-  };
-}
-
-export function createDareExploreTools(input: DareExploreToolsInput) {
-  const executors = createDareToolExecutors(input);
-  return {
-    get_dare_language: tool({
-      description:
-        "Load Dare v2 target keys, defaults, and hard limits before validating, creating, or revising a dare. Call this first for any dare-authoring request.",
-      inputSchema: z.strictObject({}),
-      outputSchema: DareToolResultSchema,
-      execute: () => executors.language(),
-    }),
-    validate_dare_contract: tool({
-      description:
-        "Validate and canonically format a proposed Dare v2 plan without saving it. Returns generated ScoutQL, exact plain-language meaning, and the semantic proof plan. Call before create or revise.",
-      inputSchema: DareDefinitionToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.validate(raw),
-    }),
-    validate_dare_scoutql: tool({
-      description:
-        "Parse, validate, and canonically format relational ScoutQL for a Dare v2 contract. Enforces the closed source/function catalogs, frozen dare_target bindings, one achieved output, non-recursive CTEs, and all query limits without executing the query.",
-      inputSchema: DareScoutQlToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.validateScoutQl(raw),
-    }),
-    preview_dare_contract: tool({
-      description:
-        "Historically preview a valid Dare v2 plan against retained lake data. Returns true, false, or null, explicit timeline coverage, eligible-game count, and per-game-set evidence. A preview never creates or funds anything.",
-      inputSchema: DarePreviewToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.preview(raw),
-    }),
-    create_dare_draft: tool({
-      description:
-        "Save a new private, unfunded Dare v2 draft after validation. A same-game conjunction belongs in ONE game set with an AND predicate; separate game sets are allowed to match different games.",
-      inputSchema: DareDefinitionToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.create(raw),
-    }),
-    revise_dare_draft: tool({
-      description:
-        "Append a revision to a private, unfunded Dare v2 draft. Requires the exact current revision and never mutates a funded contract.",
-      inputSchema: ReviseDareToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.revise(raw),
-    }),
-    list_dares: tool({
-      description:
-        "List the requester's dares (authored, targeted, or funded) or every funded guild-visible dare, with status and progress.",
-      inputSchema: DareListToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.list(raw),
-    }),
-    inspect_dare: tool({
-      description:
-        "Inspect one visible dare, including its frozen ScoutQL, exact meaning, targets, acceptance, progress, result, and proof.",
-      inputSchema: DareInspectToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.inspect(raw),
-    }),
-    prepare_dare_action: tool({
-      description:
-        "Prepare a revision-bound confirmation intent for fund, accept, decline, contribute, or cancel. This does not perform the action; the user must confirm the returned single-use intent within ten minutes.",
-      inputSchema: DareActionToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.prepareAction(raw),
-    }),
-    delete_dare_draft: tool({
-      description:
-        "Delete the requester's own private unfunded draft. Funded or terminal dares cannot be deleted.",
-      inputSchema: DareDeleteToolInputSchema,
-      outputSchema: DareToolResultSchema,
-      execute: (raw) => executors.deleteDraft(raw),
-    }),
   };
 }

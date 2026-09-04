@@ -1,12 +1,14 @@
 import {
   BucksStakeSchema,
   DARE_SQL_V3_EVALUATOR_VERSION,
-  DARE_V2_MAX_HORIZON_DAYS,
   DARE_V2_MAX_TARGETS,
   DareDeadlineSpecV2Schema,
+  DareSqlV3CompilationSchema,
   DareTargetBindingV2Schema,
   type DareDeadlineSpecV2,
   type DareSqlV3Compilation,
+  type DareSqlV3Competition,
+  type DareActivationV3,
   type DareSqlV3Evidence,
   type DareTargetBindingV2,
   type DiscordAccountId,
@@ -18,10 +20,13 @@ import {
   executeDareSqlV3,
 } from "#src/betting/dare-sql-v3.ts";
 import {
+  claimDareDraftRevision,
+  dareDraftDeadlineIssues,
   dareSqlV3DraftsEnabled,
   defaultDareV2Dependencies,
   type DareV2Dependencies,
 } from "#src/betting/dare-v2-common.ts";
+import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -33,6 +38,8 @@ export type DareDraftV3Definition = {
   deadlineSpec: DareDeadlineSpecV2;
   openingStake: number;
   historyDays?: number | undefined;
+  competition?: DareSqlV3Competition | undefined;
+  activation?: DareActivationV3 | undefined;
 };
 
 export type PreparedDareDraftV3 = {
@@ -45,34 +52,18 @@ export type PreparedDareDraftV3 = {
   preview: DareSqlV3Evidence;
 };
 
-function isIanaTimezone(timezone: string): boolean {
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function deadlineIssues(spec: DareDeadlineSpecV2, now: Date): string[] {
-  if (spec.kind === "relative") return [];
-  const deadline = new Date(spec.deadlineAt);
-  const issues: string[] = [];
-  if (!isIanaTimezone(spec.timezone)) {
-    issues.push(`${spec.timezone} is not an IANA timezone.`);
-  }
-  if (deadline <= now)
-    issues.push("An absolute dare deadline must be in the future.");
-  if (deadline.getTime() > now.getTime() + DARE_V2_MAX_HORIZON_DAYS * DAY_MS) {
-    issues.push(
-      `A dare deadline may be at most ${DARE_V2_MAX_HORIZON_DAYS.toString()} days away.`,
-    );
-  }
-  return issues;
+export function retainedDareDraftV3Semantics(serializedCompilation: string) {
+  const compilation = DareSqlV3CompilationSchema.parse(
+    JSON.parse(serializedCompilation),
+  );
+  return {
+    competition: compilation.competition,
+    activation: compilation.activation,
+  };
 }
 
 function definitionIssues(input: DareDraftV3Definition, now: Date): string[] {
-  const issues = deadlineIssues(input.deadlineSpec, now);
+  const issues = dareDraftDeadlineIssues(input.deadlineSpec, now);
   if (
     input.targets.length === 0 ||
     input.targets.length > DARE_V2_MAX_TARGETS
@@ -123,6 +114,8 @@ export async function prepareDareDraftV3(
     compilation = await compileDareSqlV3({
       queryText: definition.queryText,
       targetKeys: targets.map((target) => target.key),
+      competition: definition.competition,
+      activation: definition.activation,
     });
   } catch (error) {
     return {
@@ -176,8 +169,7 @@ function revisionData(draft: PreparedDareDraftV3, revision: number) {
     deadlineSpecJson: JSON.stringify(draft.deadlineSpec),
     openingStake: draft.openingStake,
     plainLanguage: draft.plainLanguage,
-    semanticProofPlan:
-      "The canonical SQL is binding. Scout executes it over the frozen targets and normalized report-lake relations.",
+    semanticProofPlan: renderDareSqlV3SemanticProofPlan(draft.compilation),
     translationJson: null,
   };
 }
@@ -235,34 +227,23 @@ export async function reviseDareDraftV3(
   const prepared = await prepareDareDraftV3(input.definition, now, lakeDir);
   if (prepared.kind === "invalid") return prepared;
   return await dependencies.prismaClient.$transaction(async (tx) => {
-    const updated = await tx.bucksDareV2.updateManyAndReturn({
-      where: {
-        id: input.dareId,
-        serverId: input.serverId,
-        challengerDiscordId: input.challengerDiscordId,
-        dareState: "draft",
-        currentRevision: input.expectedRevision,
-      },
-      data: {
-        currentRevision: { increment: 1 },
-        openingStake: prepared.draft.openingStake,
-      },
-      select: { currentRevision: true },
+    const currentRevision = await claimDareDraftRevision(tx, {
+      ...input,
+      openingStake: prepared.draft.openingStake,
     });
-    const row = updated[0];
-    if (row === undefined || updated.length !== 1) {
+    if (currentRevision === undefined) {
       return { kind: "not_editable" } as const;
     }
     await tx.bucksDareV2Revision.create({
       data: {
         dareId: input.dareId,
-        ...revisionData(prepared.draft, row.currentRevision),
+        ...revisionData(prepared.draft, currentRevision),
       },
     });
     return {
       kind: "revised",
       dareId: input.dareId,
-      revision: row.currentRevision,
+      revision: currentRevision,
       draft: prepared.draft,
     } as const;
   });

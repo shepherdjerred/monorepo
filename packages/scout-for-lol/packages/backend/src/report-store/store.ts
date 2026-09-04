@@ -41,18 +41,9 @@ export async function ingestMatch(
 export async function ingestTimeline(
   timeline: RawTimeline,
   trackedPlayerAliases: string[],
-): Promise<void> {
+): Promise<boolean> {
   await saveTimelineToS3(timeline, trackedPlayerAliases);
-  const staged = await writeTimelineStagingFiles(
-    resolveLakeDir(),
-    timeline,
-    new Date(),
-  );
-  if (!staged) {
-    throw new Error(
-      `Timeline ${timeline.metadata.matchId} could not be staged in the report lake.`,
-    );
-  }
+  return writeTimelineStagingFiles(resolveLakeDir(), timeline, new Date());
 }
 
 export async function ingestPrematch(

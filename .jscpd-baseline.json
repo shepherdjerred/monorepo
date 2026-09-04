@@ -980,14 +980,6 @@
       "clones": 1,
       "tokens": 156
     },
-    "packages/scout-for-lol/packages/backend/src/betting/dare-draft-v2.ts|packages/scout-for-lol/packages/backend/src/betting/dare-draft-v3.ts": {
-      "clones": 2,
-      "tokens": 228
-    },
-    "packages/scout-for-lol/packages/backend/src/betting/dare-settle-v2.ts|packages/scout-for-lol/packages/backend/src/betting/dare-settle-v3.ts": {
-      "clones": 2,
-      "tokens": 221
-    },
     "packages/scout-for-lol/packages/backend/src/betting/earnings.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/earnings.integration.test.ts": {
       "clones": 1,
       "tokens": 97
@@ -1323,10 +1315,6 @@
     "packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/scout-for-lol/packages/data/src/model/dare-contract-v2.ts|packages/scout-for-lol/packages/data/src/model/dare-contract-v3.ts": {
-      "clones": 1,
-      "tokens": 72
     },
     "packages/scout-for-lol/packages/data/src/model/explore.ts|packages/scout-for-lol/packages/data/src/model/report-ai.ts": {
       "clones": 1,

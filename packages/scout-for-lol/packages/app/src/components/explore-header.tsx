@@ -15,9 +15,9 @@ import {
  */
 export function ExploreHeader(props: {
   title: string;
-  drawerOpen: boolean;
-  onDrawerOpenChange: (open: boolean) => void;
-  sidebar: ReactNode;
+  drawerOpen?: boolean;
+  onDrawerOpenChange?: (open: boolean) => void;
+  sidebar?: ReactNode;
   extraActions?: ReactNode;
   actions?: {
     shared: boolean;
@@ -31,32 +31,33 @@ export function ExploreHeader(props: {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex min-w-0 items-center gap-2">
-        {/* The wrapper owns responsive display. Button's design-system CSS
-            sets display directly, so putting md:hidden on the button itself
-            lets that later rule expose the mobile trigger on desktop. */}
-        <div className="md:hidden">
-          <Sheet
-            open={props.drawerOpen}
-            onOpenChange={props.onDrawerOpenChange}
-          >
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                aria-label="Conversations"
-                title="Conversations"
+        {props.sidebar !== undefined &&
+          props.drawerOpen !== undefined &&
+          props.onDrawerOpenChange !== undefined && (
+            <div className="md:hidden">
+              <Sheet
+                open={props.drawerOpen}
+                onOpenChange={props.onDrawerOpenChange}
               >
-                <Menu className="size-4" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent>
-              <SheetTitle className="text-sm font-medium">
-                Conversations
-              </SheetTitle>
-              {props.sidebar}
-            </SheetContent>
-          </Sheet>
-        </div>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label="Conversations"
+                    title="Conversations"
+                  >
+                    <Menu className="size-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetTitle className="text-sm font-medium">
+                    Conversations
+                  </SheetTitle>
+                  {props.sidebar}
+                </SheetContent>
+              </Sheet>
+            </div>
+          )}
         {/* The page's primary heading, so h1 — axe flagged both Explore routes
             for page-has-heading-one while this was an h2 and nothing else on
             the page claimed the top level. explore-shared.tsx already renders

@@ -113,12 +113,26 @@ describe("BucksLedgerContextSchema dare variant", () => {
     resolution: "cancelled",
   };
 
+  const achievedV3Payout: BucksLedgerContext = {
+    type: "dare",
+    dareId: 9,
+    contractVersion: 3,
+    role: "target",
+    targetAliases: ["virmel"],
+    conditionSummary: `${"a".repeat(64)}: SELECT TRUE AS achieved`,
+    potTotal: 20,
+    amount: 20,
+    payoutComponent: "share",
+    resolution: "achieved",
+  };
+
   test.each([
     ["contributor stake", contributorStake],
     ["target payout", targetPayout],
     ["house refund fee", houseRefundFee],
     ["voided refund", voidedRefund],
     ["cancelled v2 refund", cancelledV2Refund],
+    ["achieved v3 payout", achievedV3Payout],
   ])("round-trips a %s row through JSON", (_label, context) => {
     const stored = JSON.stringify(context);
     expect(BucksLedgerContextSchema.parse(JSON.parse(stored))).toEqual(context);

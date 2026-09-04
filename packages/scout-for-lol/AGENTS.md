@@ -346,6 +346,25 @@ denies everyone.
 - The gate conditions are unit-tested in `src/lib/discord-rest.test.ts`,
   including each refusal — an accept-only test would not catch the fail-open.
 
+#### Running Explore in local development
+
+Explore requires three coordinated systems locally:
+
+1. **Temporal dev server with search attributes**: Temporal coordinates durable
+   turn execution (`scoutInteractiveRunWorkflow` on task queue
+   `scout-dev-interactive`). Starts attach `Environment`, `Domain`, `Trigger`,
+   and `ReleaseCommit` search attributes, which `scripts/dev-web-temporal.ts`
+   registers automatically via `--search-attribute KEY=Keyword` flags on
+   `temporal server start-dev`.
+2. **Report lake compatibility**: Queries compile to DuckDB SQL over Parquet
+   lake files in `REPORT_LAKE_DIR` (`~/.local/share/scout-for-lol/dev-seed/report-lake`).
+   Parquet builds must match current `MATCH_LAKE_COLUMNS` and carry a valid
+   `schemaFingerprint` in `manifest.json`.
+3. **Model execution & auth**: OpenRouter credentials (`OPENROUTER_API_KEY`)
+   power query formulation and synthesis. Sign in via
+   `http://localhost:5180/api/dev/login?returnTo=/app/explore` to inherit
+   `DEV_USER_GUILDS` and `EXPLORE_GUILD_ALLOWLIST`.
+
 This does not, by itself, reproduce every possible backend-driven state —
 see the `screenshot` skill's Limitations section (no network-response
 mocking in v1).
@@ -1234,6 +1253,20 @@ Bryan Bucks AI analysis lives in `/scout ask`, not a `/bb` subcommand. Dare
 contract authoring is the narrow exception: `/bb dare` starts a fresh private,
 persisted Explore conversation and asks only the bounded Dare tools to create a
 draft for explicit confirmation; it does not answer Bucks analytics questions.
+New drafts use the version-three Dare contract when
+`dare_extended_contracts_enabled` is enabled.
+Its canonical standard SQL is authoritative and executes directly against the
+normalized report-lake relations: `matches`, `match_participants`,
+`match_teams`, `match_team_bans`, the timeline relations, and frozen target
+relations `T1` through `T5`. The original wording and generated summary are
+explanatory. The validator admits one deterministic read-only `SELECT`, rejects
+external reads and wall-clock or nondeterministic behavior, requires explicit
+timeline coverage, and preserves division-by-zero as `NULL`. Explicit one-game
+wording stays inside one game-set CTE; other conditions may aggregate across
+the bounded contract window. Version-one and version-two funded contracts keep
+their original evaluators and are never reinterpreted. Revoking
+`dare_extended_contracts_enabled`
+blocks new v3 drafts and funding but never settlement or refunds.
 In the one betting-enabled guild, the Explore agent gains four bounded, Zod-validated
 Bucks tools (`explore/bucks-tools.ts`) — never SQL or raw Prisma — alongside
 its ScoutQL tools; the model decides per question which to use. Capability is

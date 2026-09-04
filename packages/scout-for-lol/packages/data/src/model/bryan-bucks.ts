@@ -463,7 +463,7 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
   z.strictObject({
     type: z.literal("dare"),
     dareId: z.number().int().positive(),
-    contractVersion: z.literal(2).optional(),
+    contractVersion: z.union([z.literal(2), z.literal(3)]).optional(),
     /** Which side of the bounty this row belongs to. Contributors fund the
      * pot, targets are the payees, and the house takes the cut rows. */
     role: z.enum(["contributor", "target", "house"]),

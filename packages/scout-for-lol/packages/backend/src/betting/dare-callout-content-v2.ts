@@ -91,6 +91,7 @@ export type DareV2CalloutInput = {
   revision: number;
   plainLanguage: string;
   evidenceCount: number;
+  progressSummary: string;
   state: BucksDareV2State;
   targets: readonly DareV2CalloutTarget[];
   acceptDeadline: Date | null;
@@ -160,7 +161,7 @@ export function renderDareV2Callout(input: DareV2CalloutInput): {
       `**Contract · revision ${input.revision.toString()}**`,
       input.plainLanguage,
       "",
-      `**Progress** · ${formatInteger(input.evidenceCount)} evidence games`,
+      `**Progress** · ${input.progressSummary} (${formatInteger(input.evidenceCount)} evidence games)`,
       `**Status** · ${statusText(input)}`,
     ],
     pileOns,

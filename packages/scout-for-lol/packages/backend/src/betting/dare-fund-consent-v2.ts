@@ -1,11 +1,8 @@
 import {
   DARE_CONTRACT_VERSION,
-  DARE_CONTRACT_V3_VERSION,
-  DARE_SQL_V3_EVALUATOR_VERSION,
   DareCompiledPlanV2Schema,
   DareSqlV3CompilationSchema,
   DareContractV2Schema,
-  DareContractV3Schema,
   DiscordAccountIdSchema,
   PlayerIdSchema,
   type DiscordAccountId,
@@ -24,23 +21,25 @@ import {
   parseDareV2Targets,
 } from "#src/betting/dare-v2-common.ts";
 import type { Db } from "#src/database/index.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dare-notification-outbox.ts";
+import { buildDareContractV3 } from "#src/betting/dare-contract-v3-build.ts";
 
 function contractCompilerVersion(revision: {
   compilerVersion: string;
   scoutQlImmutableAst: string | null;
   scoutQlPlanHash: string | null;
-}): "dare-scoutql-1" | "dare-scoutql-2" | "dare-sql-3" {
+}): "dare-scoutql-1" | "dare-scoutql-2" | "dare-scoutql-3" {
   if (revision.compilerVersion === "dare-scoutql-1") {
     return "dare-scoutql-1";
   }
-  if (revision.compilerVersion === "dare-sql-3") {
+  if (revision.compilerVersion === "dare-scoutql-3") {
     if (
       revision.scoutQlImmutableAst === null ||
       revision.scoutQlPlanHash === null
     ) {
       throw new Error("Dare SQL v3 revision has no immutable artifact.");
     }
-    return "dare-sql-3";
+    return "dare-scoutql-3";
   }
   if (revision.compilerVersion !== "dare-scoutql-2") {
     throw new Error(
@@ -131,6 +130,7 @@ export async function fundDareV2InTransaction(
   });
   const balance = await stakeDareV2ContributionInTransaction(tx, {
     facts: {
+      contractVersion: revision.compilerVersion === "dare-scoutql-3" ? 3 : 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: revision.openingStake,
@@ -140,6 +140,16 @@ export async function fundDareV2InTransaction(
     bucksAccountId: input.bucksAccountId,
     discordId: input.actorDiscordId,
     amount: revision.openingStake,
+  });
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: dare.id,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "funded",
+    actorDiscordId: input.actorDiscordId,
+    summary: `Funded for ${revision.openingStake.toString()} Bryan Bucks and awaiting target acceptance.`,
+    deduplicationKey: `dare:${dare.id.toString()}:revision:${input.revision.toString()}:funded`,
+    occurredAt: input.now,
   });
   return {
     kind: "funded",
@@ -198,6 +208,16 @@ export async function acceptDareV2InTransaction(
     where: { dareId: input.dareId },
   });
   if (unaccepted > 0) {
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: input.dareId,
+      revision: input.revision,
+      category: "lifecycle",
+      kind: "accepted",
+      actorDiscordId: input.actorDiscordId,
+      summary: `${(targetCount - unaccepted).toString()} of ${targetCount.toString()} targets have accepted.`,
+      deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:accepted:${input.actorDiscordId}`,
+      occurredAt: input.now,
+    });
     return {
       kind: "accepted",
       activated: false,
@@ -233,6 +253,7 @@ export async function acceptDareV2InTransaction(
       } as const;
     }
     const facts = await dareV2MoneyFactsInTransaction(tx, {
+      contractVersion: 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,
@@ -243,6 +264,16 @@ export async function acceptDareV2InTransaction(
       facts,
       resolution: "expired",
       withCut: false,
+    });
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: input.dareId,
+      revision: input.revision,
+      category: "lifecycle",
+      kind: "expired",
+      actorDiscordId: input.actorDiscordId,
+      summary: `The acceptance window expired; ${facts.potTotal.toString()} Bryan Bucks were fully refunded.`,
+      deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:expired`,
+      occurredAt: input.now,
     });
     return { kind: "accept_window_expired", dareState: "expired" } as const;
   }
@@ -257,27 +288,60 @@ export async function acceptDareV2InTransaction(
     deadlineSpec,
     plainLanguage: revision.plainLanguage,
   };
+  const v3Compilation =
+    compilerVersion === "dare-scoutql-3"
+      ? DareSqlV3CompilationSchema.parse(JSON.parse(revision.compiledPlan))
+      : null;
+  if (v3Compilation !== null && v3Compilation.activation.kind !== "immediate") {
+    const activating = await tx.bucksDareV2.updateMany({
+      where: { id: input.dareId, dareState: "pending_accept" },
+      data: {
+        dareState: "activating",
+        activatedAt: null,
+        deadlineAt: null,
+        contractJson: null,
+        ...pendingDareV2CalloutRefresh(),
+      },
+    });
+    if (activating.count !== 1) {
+      throw new Error(
+        `Dare v3 ${input.dareId.toString()} lost its activation enqueue claim.`,
+      );
+    }
+    await tx.bucksDareV2Activation.create({
+      data: {
+        dareId: input.dareId,
+        revision: input.revision,
+        requestedAt: input.now,
+        nextAttemptAt: input.now,
+      },
+    });
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: input.dareId,
+      revision: input.revision,
+      category: "lifecycle",
+      kind: "accepted",
+      actorDiscordId: input.actorDiscordId,
+      summary: `All ${targetCount.toString()} targets accepted; Scout is freezing the activation snapshot.`,
+      deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:accepted:${input.actorDiscordId}`,
+      occurredAt: input.now,
+    });
+    return {
+      kind: "accepted",
+      activated: false,
+      acceptedCount: targetCount,
+      targetCount,
+    } as const;
+  }
   const contract =
-    compilerVersion === "dare-sql-3"
-      ? (() => {
-          const compilation = DareSqlV3CompilationSchema.parse(
-            JSON.parse(revision.compiledPlan),
-          );
-          return DareContractV3Schema.parse({
-            version: DARE_CONTRACT_V3_VERSION,
-            canonicalSql: revision.canonicalScoutQl,
-            immutableAst: revision.scoutQlImmutableAst,
-            queryHash: revision.scoutQlPlanHash,
-            maxEligibleGames: compilation.maxEligibleGames,
-            compilerVersion,
-            evaluatorVersion: DARE_SQL_V3_EVALUATOR_VERSION,
-            finality: compilation.finality,
-            facts: compilation.facts,
-            resultStructure: compilation.resultStructure,
-            originalText: revision.originalText,
-            ...sharedContract,
-          });
-        })()
+    compilerVersion === "dare-scoutql-3"
+      ? buildDareContractV3({
+          dare,
+          revision,
+          targets,
+          activationAt: input.now,
+          activationSnapshot: null,
+        }).contract
       : DareContractV2Schema.parse({
           version: DARE_CONTRACT_VERSION,
           canonicalScoutQl: revision.canonicalScoutQl,
@@ -303,6 +367,26 @@ export async function acceptDareV2InTransaction(
       `Dare v2 ${input.dareId.toString()} lost its activation claim.`,
     );
   }
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: input.dareId,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "accepted",
+    actorDiscordId: input.actorDiscordId,
+    summary: `All ${targetCount.toString()} targets accepted.`,
+    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:accepted:${input.actorDiscordId}`,
+    occurredAt: input.now,
+  });
+  await enqueueDareNotificationInTransaction(tx, {
+    dareId: input.dareId,
+    revision: input.revision,
+    category: "lifecycle",
+    kind: "activated",
+    actorDiscordId: input.actorDiscordId,
+    summary: `The Dare is active until ${deadlineAt.toISOString()}.`,
+    deduplicationKey: `dare:${input.dareId.toString()}:revision:${input.revision.toString()}:activated`,
+    occurredAt: input.now,
+  });
   return {
     kind: "accepted",
     activated: true,
