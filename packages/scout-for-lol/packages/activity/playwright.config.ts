@@ -35,17 +35,32 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    // --force discards the persisted dependency-optimizer cache. Turbo runs
-    // this package's `build` immediately before `test:e2e`, which leaves a
-    // populated node_modules/.vite; Vite's optimizer can then stall before it
-    // binds the port, and the server never comes up. --strictPort makes a
-    // port collision fail loudly instead of silently serving elsewhere.
-    command: "bun run dev -- --host 127.0.0.1 --port 5181 --force --strictPort",
+    // Serve the built `dist` rather than a dev server. `test:e2e` already
+    // dependsOn `build`, so the bundle exists; preview then just serves files
+    // and is ready in milliseconds.
+    //
+    // A dev server is what kept failing here. The browser-E2E lane runs
+    // `turbo run test:e2e --concurrency=2`, which pairs this package with the
+    // design-system workbench — 48 tests over six browser projects at three
+    // workers — inside one CPU-limited pod. Vite's dependency optimizer has to
+    // scan the whole graph (including design-system's source) before it binds,
+    // so it lost that race and the port never opened: build 13670 timed out at
+    // 60s, and after raising the budget to 120s and adding --force, build 13917
+    // timed out again at 120s having printed nothing at all. Raising it a third
+    // time treats a starvation symptom; not optimizing at all removes it.
+    //
+    // Nothing here needs a dev server: the flows stub every /api and /trpc call
+    // with page.route, so `server.proxy` is never exercised, and the shared
+    // Scout assets are served by scoutAssetsPlugin's configurePreviewServer
+    // hook — the same middleware it installs for dev — so /assets/scout/**
+    // resolves identically and the screenshot baselines still match.
+    //
+    // --strictPort makes a port collision fail loudly instead of silently
+    // serving somewhere else.
+    command: "bun run preview -- --host 127.0.0.1 --port 5181 --strictPort",
     url: "http://127.0.0.1:5181/customs/",
-    // Playwright defaults to 60s. This server shares the browser-E2E pod with
-    // the design-system workbench run, and timed out at exactly 60s on build
-    // 13670 without emitting an error. 120s matches every other Playwright
-    // web server in the repo.
+    // Generous headroom for a server that binds in milliseconds; matches
+    // sjer.red, alert-dashboard, evals, and design-system.
     timeout: 120_000,
     reuseExistingServer: !isCI,
   },
