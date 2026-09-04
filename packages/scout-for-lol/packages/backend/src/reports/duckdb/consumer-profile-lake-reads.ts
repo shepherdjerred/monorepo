@@ -1,9 +1,11 @@
 import { z } from "zod";
-import type {
-  PlayerProfileGameWindow,
-  QueueType,
-  TimelineEventLakeRow,
-  TimelineParticipantFrameLakeRow,
+import {
+  TimelineEventLakeRowSchema,
+  TimelineParticipantFrameLakeRowSchema,
+  type PlayerProfileGameWindow,
+  type QueueType,
+  type TimelineEventLakeRow,
+  type TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -231,13 +233,15 @@ export async function fetchTimelineCoverage(options: {
   return rows[0] ?? null;
 }
 
-const TimelineEventReadSchema = z.object({
-  event_id: z.string(),
+const TimelineEventReadSchema = TimelineEventLakeRowSchema.omit({
+  match_id: true,
+  month: true,
+  observed_at: true,
+}).extend({
   frame_index: LakeIntSchema,
   event_index: LakeIntSchema,
   frame_timestamp_ms: LakeIntSchema,
   event_timestamp_ms: LakeIntSchema,
-  event_type: z.string(),
   participant_id: LakeIntSchema.nullable(),
   killer_id: LakeIntSchema.nullable(),
   victim_id: LakeIntSchema.nullable(),
@@ -255,13 +259,6 @@ const TimelineEventReadSchema = z.object({
   gold_gain: LakeIntSchema.nullable(),
   position_x: LakeIntSchema.nullable(),
   position_y: LakeIntSchema.nullable(),
-  ward_type: z.string().nullable(),
-  building_type: z.string().nullable(),
-  lane_type: z.string().nullable(),
-  tower_type: z.string().nullable(),
-  monster_type: z.string().nullable(),
-  monster_sub_type: z.string().nullable(),
-  level_up_type: z.string().nullable(),
   winning_team_id: LakeIntSchema.nullable(),
   real_timestamp_ms: LakeIntSchema.nullable(),
 });
@@ -326,11 +323,14 @@ export async function fetchTimelineEventPage(options: {
   });
 }
 
-const TimelineFrameReadSchema = z.object({
+const TimelineFrameReadSchema = TimelineParticipantFrameLakeRowSchema.omit({
+  match_id: true,
+  month: true,
+  observed_at: true,
+}).extend({
   frame_index: LakeIntSchema,
   frame_timestamp_ms: LakeIntSchema,
   participant_id: LakeIntSchema,
-  puuid: z.string().nullable(),
   position_x: LakeIntSchema,
   position_y: LakeIntSchema,
   current_gold: LakeIntSchema,
@@ -340,21 +340,6 @@ const TimelineFrameReadSchema = z.object({
   jungle_minions_killed: LakeIntSchema,
   level: LakeIntSchema,
   xp: LakeIntSchema,
-  time_enemy_spent_controlled: z.number(),
-  ability_haste: z.number().nullable(),
-  ability_power: z.number().nullable(),
-  armor: z.number().nullable(),
-  attack_damage: z.number().nullable(),
-  attack_speed: z.number().nullable(),
-  health: z.number().nullable(),
-  health_max: z.number().nullable(),
-  magic_resist: z.number().nullable(),
-  movement_speed: z.number().nullable(),
-  power: z.number().nullable(),
-  power_max: z.number().nullable(),
-  total_damage_done: z.number().nullable(),
-  total_damage_done_to_champions: z.number().nullable(),
-  total_damage_taken: z.number().nullable(),
 });
 
 export type TimelineFrameRead = Omit<

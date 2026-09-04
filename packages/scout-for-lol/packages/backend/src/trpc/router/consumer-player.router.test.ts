@@ -1,11 +1,4 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "vitest";
+import { describe, expect, test } from "vitest";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -14,32 +7,24 @@ import {
   type LeaguePuuid,
 } from "@scout-for-lol/data";
 import {
-  initFeatureFlags,
-  shutdownFeatureFlags,
-} from "@shepherdjerred/feature-flags";
-import { resetConfigurationForTests } from "#src/configuration.ts";
-import {
-  addFlagOverride,
-  resetFlagOverrides,
-} from "#src/configuration/flags.ts";
-import { resolveLakeDir } from "#src/report-lake/paths.ts";
+  configureConsumerProfileFeatureTest,
+  registerConsumerProfileFeatureTestLifecycle,
+} from "#src/testing/consumer-profile-feature-test.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
-import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
-
-const originalEnvironment = Bun.env["ENVIRONMENT"];
-const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];
-Bun.env["ENVIRONMENT"] = "beta";
+import { writeTestLake } from "#src/testing/test-report-lake.ts";
 
 const guildId = DiscordGuildIdSchema.parse("100000000000000041");
 const otherGuildId = DiscordGuildIdSchema.parse("100000000000000042");
-Bun.env["EXPLORE_GUILD_ALLOWLIST"] = `${guildId},${otherGuildId}`;
-resetConfigurationForTests();
+const profileFeature = configureConsumerProfileFeatureTest([
+  guildId,
+  otherGuildId,
+]);
 
 const trpc = await createOfflineTrpcHarness("trpc-consumer-player-test");
 const { prisma: testPrisma } = trpc;
 const actorDiscordId = DiscordAccountIdSchema.parse("300000000000000041");
-const lakeDir = resolveLakeDir();
+const { lakeDir } = profileFeature;
 const MAIN = testPuuid("consumer-main");
 const ALT = testPuuid("consumer-alt");
 const OTHER = testPuuid("consumer-other");
@@ -110,43 +95,21 @@ function matchFact(options: {
 }
 
 function enableProfiles(...guildIds: DiscordGuildId[]): void {
-  for (const server of guildIds) {
-    addFlagOverride("scout-consumer-player-profiles-enabled", true, {
-      server,
-    });
-  }
+  profileFeature.enable(...guildIds);
 }
 
-beforeAll(async () => {
-  await initFeatureFlags({
-    environment: { FEATURE_FLAGS_MODE: "disabled" },
-  });
-});
-
-beforeEach(async () => {
-  resetFlagOverrides("scout-consumer-player-profiles-enabled");
-  trpc.setMembership([{ guildId, asAdmin: false }]);
-  await testPrisma.matchRankHistory.deleteMany();
-  await testPrisma.account.deleteMany();
-  await testPrisma.player.deleteMany();
-  await resetTestLake(lakeDir);
-});
-
-afterAll(async () => {
-  resetFlagOverrides("scout-consumer-player-profiles-enabled");
-  await shutdownFeatureFlags();
-  await testPrisma.$disconnect();
-  if (originalEnvironment === undefined) {
-    delete Bun.env["ENVIRONMENT"];
-  } else {
-    Bun.env["ENVIRONMENT"] = originalEnvironment;
-  }
-  if (originalAllowlist === undefined) {
-    delete Bun.env["EXPLORE_GUILD_ALLOWLIST"];
-  } else {
-    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = originalAllowlist;
-  }
-  resetConfigurationForTests();
+registerConsumerProfileFeatureTestLifecycle({
+  feature: profileFeature,
+  prepare: async () => {
+    trpc.setMembership([{ guildId, asAdmin: false }]);
+    await testPrisma.matchRankHistory.deleteMany();
+    await testPrisma.account.deleteMany();
+    await testPrisma.player.deleteMany();
+    await profileFeature.resetLake();
+  },
+  cleanup: async () => {
+    await testPrisma.$disconnect();
+  },
 });
 
 describe("consumerPlayer.status", () => {
