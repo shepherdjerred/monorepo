@@ -362,8 +362,18 @@ describe("Dare SQL v3 compilation", () => {
       "unique ordering columns: puuid",
     ],
     [
+      "CTE participant limit",
+      "WITH p AS (SELECT * FROM match_participants) SELECT (SELECT win FROM p ORDER BY game_end_at, match_id LIMIT 1) AND EXISTS (SELECT 1 FROM T1) AS achieved",
+      "unique ordering columns: puuid",
+    ],
+    [
       "integer overflow",
       "SELECT SUM(kills * 1000000000) > 0 AS achieved FROM T1",
+      "integer multiplication must use a decimal literal",
+    ],
+    [
+      "column multiplication overflow",
+      "SELECT SUM(total_damage_dealt * total_damage_dealt) > 0 AS achieved FROM T1",
       "integer multiplication must use a decimal literal",
     ],
   ])("rejects %s", async (_name, queryText, expected) => {
