@@ -16,6 +16,10 @@ import {
   fetchTimelineForProgression,
   persistTimelineForProgression,
 } from "#src/league/tasks/postmatch/match-report-standard.ts";
+import {
+  duelMatchNeedsTimeline,
+  processDuelResult,
+} from "#src/progression/duels/results.ts";
 
 /**
  * Last durable progression hook before account match cursors advance. Callers
@@ -40,18 +44,19 @@ export async function processCompetitiveProgressionMatch(input: {
     return prepared;
   }
   let timelinePersisted = false;
-  async function ensureChallengeTimeline(): Promise<void> {
+  const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
+  let timeline = input.timeline;
+  async function ensureProgressionTimeline(): Promise<void> {
     if (timelinePersisted) return;
-    const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
-    if (input.timeline === null || input.timeline === undefined) {
-      await fetchTimelineForProgression(
+    if (timeline === null || timeline === undefined) {
+      timeline = await fetchTimelineForProgression(
         input.match,
         matchId,
         input.trackedPlayers,
       );
     } else {
       await persistTimelineForProgression(
-        input.timeline,
+        timeline,
         input.trackedPlayers,
         matchId,
       );
@@ -59,10 +64,15 @@ export async function processCompetitiveProgressionMatch(input: {
     timelinePersisted = true;
   }
 
+  if (await duelMatchNeedsTimeline(input.match)) {
+    await ensureProgressionTimeline();
+  }
+  await processDuelResult(input.match, timeline, configuration.environment);
+
   await evaluateHallMatch(input.match);
   const initiallyPrepared = await prepareCurrentRuns();
   if (initiallyPrepared.some((revision) => revision.timelineRequired)) {
-    await ensureChallengeTimeline();
+    await ensureProgressionTimeline();
   }
   // Catch a run start or account edit that committed while evidence was being
   // staged. Preparing a match revision supersedes its independently launched
@@ -70,7 +80,7 @@ export async function processCompetitiveProgressionMatch(input: {
   // required timeline is durable.
   const rediscovered = await prepareCurrentRuns();
   if (rediscovered.some((revision) => revision.timelineRequired)) {
-    await ensureChallengeTimeline();
+    await ensureProgressionTimeline();
   }
   const challengeRevisions = [...preparedByRun.values()];
   await queuePreparedChallengeRuns(challengeRevisions);

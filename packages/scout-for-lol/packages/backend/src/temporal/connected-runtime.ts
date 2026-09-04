@@ -118,6 +118,8 @@ type BackgroundActivities = Pick<
   | "runDetachedBackgroundWork"
   | "drainReportScheduleOutbox"
   | "runReport"
+  | "refreshDuelSeries"
+  | "markDuelSeriesOverdue"
   | "probeQueue"
 > & {
   invokeScoutWeeklyParlayAction: (

@@ -25,6 +25,7 @@ const KNOWN_URLS = [
   "/challenges/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/challenges/drafts/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/challenge-runs/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
+  "/duels/1/series/1b4e28ba-2fa1-41d2-883f-0016d3cca427",
   "/bucks",
   "/bucks/dares",
   "/bucks/dares/42",

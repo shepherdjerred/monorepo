@@ -46,6 +46,7 @@ import { ChallengeCatalog } from "#src/routes/challenge-catalog.tsx";
 import { ChallengeTemplate } from "#src/routes/challenge-template.tsx";
 import { ChallengeDraft } from "#src/routes/challenge-draft.tsx";
 import { ChallengeRun } from "#src/routes/challenge-run.tsx";
+import { DuelSeries } from "#src/routes/duel-series.tsx";
 import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 import {
@@ -251,6 +252,11 @@ export const routes: RouteObject[] = [
               {
                 path: "challenge-runs/:runId",
                 element: <ChallengeRun />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "duels/:guildId/series/:seriesId",
+                element: <DuelSeries />,
                 errorElement: <RouteErrorPanel />,
               },
               {
