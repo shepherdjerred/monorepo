@@ -3,6 +3,8 @@ import {
   ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
@@ -34,6 +36,8 @@ describe("lakeSchemaFingerprint", () => {
   test("covers every lake table", () => {
     const independentSchema = [
       tableSignature("matches", MATCH_LAKE_COLUMNS),
+      tableSignature("match_teams", MATCH_TEAM_LAKE_COLUMNS),
+      tableSignature("match_team_bans", MATCH_TEAM_BAN_LAKE_COLUMNS),
       tableSignature("prematch", PREMATCH_LAKE_COLUMNS),
       tableSignature("accounts", ACCOUNT_LAKE_COLUMNS),
       tableSignature(

@@ -90,6 +90,10 @@ function mustCompile(input: PlanQueryInput) {
 const EMPTY_LAKE: LakeFiles = {
   matchesParquet: [],
   matchesStaging: [],
+  matchTeamsParquet: [],
+  matchTeamsStaging: [],
+  matchTeamBansParquet: [],
+  matchTeamBansStaging: [],
   prematchParquet: [],
   prematchStaging: [],
   accountsParquet: undefined,

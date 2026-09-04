@@ -24,7 +24,12 @@ import {
   runReportLakeFold,
   runReportLakeRebuild,
 } from "#src/report-lake/compactor.ts";
-import { flattenMatch, flattenPrematch } from "#src/report-lake/flatten.ts";
+import {
+  flattenMatch,
+  flattenMatchTeamBans,
+  flattenMatchTeams,
+  flattenPrematch,
+} from "#src/report-lake/flatten.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
 import { matchObjectKey } from "#src/report-store/s3-raw-source.ts";
@@ -38,7 +43,10 @@ import { resetConfigurationForTests } from "#src/configuration.ts";
 import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
+  buildMatchTeamBansSource,
+  buildMatchTeamsSource,
   resolveLakeFiles,
+  type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
 
 const { prisma } = createTestDatabase("report-lake-test");
@@ -101,6 +109,15 @@ const ManifestSchema = z.object({
   skippedMatches: z.number(),
   skippedPrematches: z.number(),
 });
+
+async function expectCurrentSchemaFingerprint(lakeDir: string): Promise<void> {
+  const buildDir = await readCurrentBuildDir(lakeDir);
+  if (buildDir === undefined) throw new Error("no build dir");
+  const manifest = ManifestFingerprintSchema.parse(
+    await Bun.file(path.join(buildDir, "manifest.json")).json(),
+  );
+  expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+}
 
 async function loadMatchFixture(): Promise<RawMatch> {
   const fixtureUrl = new URL(
@@ -180,6 +197,18 @@ async function countParquetRows(glob: string): Promise<number> {
     const rows = await session.run(
       `SELECT COUNT(*)::BIGINT AS n FROM read_parquet($1)`,
       [glob],
+    );
+    return CountRowSchema.parse(rows[0]).n;
+  });
+}
+
+async function countSourceRows(source: SqlFragment): Promise<number> {
+  return await withDuckDBConnection(async (session) => {
+    const rows = await session.run(
+      `SELECT COUNT(*)::BIGINT AS n FROM (${source.sql})`,
+      source.params.map((param) =>
+        param.kind === "list" ? session.list(param.values) : param.value,
+      ),
     );
     return CountRowSchema.parse(rows[0]).n;
   });
@@ -269,6 +298,45 @@ describe("flatten", () => {
         new Date(match.info.gameCreation).toISOString().slice(0, 7),
       );
     }
+  });
+
+  test("flattens normalized teams and bans for ordinary SQL joins", async () => {
+    const match = await loadMatchFixture();
+    const ordinaryMatch = RawMatchSchema.parse({
+      ...match,
+      info: { ...match.info, queueId: 420, gameMode: "CLASSIC", mapId: 11 },
+    });
+    const teams = flattenMatchTeams(ordinaryMatch);
+    const bans = flattenMatchTeamBans(ordinaryMatch);
+
+    expect(teams).toHaveLength(ordinaryMatch.info.teams.length);
+    expect(teams.map((team) => team.team_id)).toEqual(
+      ordinaryMatch.info.teams.map((team) => team.teamId),
+    );
+    expect(teams[0]?.champion_kills).toBe(
+      ordinaryMatch.info.teams[0]?.objectives.champion.kills,
+    );
+    expect(bans).toHaveLength(
+      ordinaryMatch.info.teams.reduce(
+        (total, team) => total + team.bans.length,
+        0,
+      ),
+    );
+    expect(bans[0]).toMatchObject({
+      match_id: ordinaryMatch.metadata.matchId,
+      team_id: ordinaryMatch.info.teams[0]?.teamId,
+    });
+  });
+
+  test("omits Arena team aggregates that cannot join player subteams", async () => {
+    const match = await loadMatchFixture();
+    const arenaMatch = RawMatchSchema.parse({
+      ...match,
+      info: { ...match.info, queueId: 1700 },
+    });
+
+    expect(flattenMatchTeams(arenaMatch)).toEqual([]);
+    expect(flattenMatchTeamBans(arenaMatch)).toEqual([]);
   });
 
   test("flattenPrematch skips privacy-scrubbed (null puuid) participants", () => {
@@ -456,6 +524,7 @@ describe("compactor", () => {
       const fold = await runReportLakeFold({ prisma, lakeDir });
       expect(fold?.tier).toBe("fold");
       expect(fold?.matchRows).toBe(match.info.participants.length);
+      expect(fold?.matchTeamRows).toBe(0);
 
       const buildDir = await readCurrentBuildDir(lakeDir);
       if (buildDir === undefined) {
@@ -465,6 +534,22 @@ describe("compactor", () => {
         path.join(buildDir, "matches", "**", "*.parquet"),
       );
       expect(rows).toBe(match.info.participants.length);
+      const files = await resolveLakeFiles(lakeDir);
+      const teamSource = buildMatchTeamsSource(files, { sql: "", params: [] });
+      const banSource = buildMatchTeamBansSource(files, {
+        sql: "",
+        params: [],
+      });
+      const [teamRows, banRows] = await Promise.all([
+        teamSource === undefined
+          ? Promise.resolve(0)
+          : countSourceRows(teamSource),
+        banSource === undefined
+          ? Promise.resolve(0)
+          : countSourceRows(banSource),
+      ]);
+      expect(teamRows).toBe(0);
+      expect(banRows).toBe(0);
       // Folded staging file was deleted.
       const remainingFiles = await listStagingFiles(lakeDir, "matches");
       expect(remainingFiles.length).toBe(0);
@@ -516,14 +601,7 @@ describe("compactor idempotency and schema transitions", () => {
     const lakeDir = await makeLakeDir();
     try {
       await runReportLakeRebuild({ prisma, lakeDir });
-      const buildDir = await readCurrentBuildDir(lakeDir);
-      if (buildDir === undefined) {
-        throw new Error("no build dir");
-      }
-      const manifest = ManifestFingerprintSchema.parse(
-        await Bun.file(path.join(buildDir, "manifest.json")).json(),
-      );
-      expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+      await expectCurrentSchemaFingerprint(lakeDir);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }
@@ -547,14 +625,7 @@ describe("compactor idempotency and schema transitions", () => {
 
       // And the rebuilt build is recorded at the current schema, so the next
       // fold proceeds normally rather than rebuilding forever.
-      const buildDir = await readCurrentBuildDir(lakeDir);
-      if (buildDir === undefined) {
-        throw new Error("no build dir");
-      }
-      const manifest = ManifestFingerprintSchema.parse(
-        await Bun.file(path.join(buildDir, "manifest.json")).json(),
-      );
-      expect(manifest.schemaFingerprint).toBe(lakeSchemaFingerprint());
+      await expectCurrentSchemaFingerprint(lakeDir);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }

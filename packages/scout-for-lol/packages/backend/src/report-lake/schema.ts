@@ -2,6 +2,8 @@ import {
   ACCOUNT_LAKE_COLUMNS as importedAccountLakeColumns,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS as importedCompetitionRankHistoryLakeColumns,
   MATCH_LAKE_COLUMNS as importedMatchLakeColumns,
+  MATCH_TEAM_BAN_LAKE_COLUMNS as importedMatchTeamBanLakeColumns,
+  MATCH_TEAM_LAKE_COLUMNS as importedMatchTeamLakeColumns,
   PREMATCH_LAKE_COLUMNS as importedPrematchLakeColumns,
   type DuckDbColumnType,
 } from "@scout-for-lol/data/model/lake-columns.ts";
@@ -16,6 +18,8 @@ const ACCOUNT_LAKE_COLUMNS = importedAccountLakeColumns;
 const COMPETITION_RANK_HISTORY_LAKE_COLUMNS =
   importedCompetitionRankHistoryLakeColumns;
 const MATCH_LAKE_COLUMNS = importedMatchLakeColumns;
+const MATCH_TEAM_BAN_LAKE_COLUMNS = importedMatchTeamBanLakeColumns;
+const MATCH_TEAM_LAKE_COLUMNS = importedMatchTeamLakeColumns;
 const PREMATCH_LAKE_COLUMNS = importedPrematchLakeColumns;
 const TIMELINE_COVERAGE_LAKE_COLUMNS = importedTimelineCoverageLakeColumns;
 const TIMELINE_EVENT_LAKE_COLUMNS = importedTimelineEventLakeColumns;
@@ -28,6 +32,8 @@ export {
   ACCOUNT_LAKE_COLUMNS,
   COMPETITION_RANK_HISTORY_LAKE_COLUMNS,
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   TIMELINE_COVERAGE_LAKE_COLUMNS,
   TIMELINE_EVENT_LAKE_COLUMNS,
@@ -105,6 +111,8 @@ export function duckDbEmptySelect(
 export function lakeSchemaFingerprint(): string {
   const tables: Record<string, Record<string, DuckDbColumnType>> = {
     matches: MATCH_LAKE_COLUMNS,
+    match_teams: MATCH_TEAM_LAKE_COLUMNS,
+    match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
     prematch: PREMATCH_LAKE_COLUMNS,
     accounts: ACCOUNT_LAKE_COLUMNS,
     competition_rank_history: COMPETITION_RANK_HISTORY_LAKE_COLUMNS,

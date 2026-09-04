@@ -42,7 +42,7 @@ import { truncateEmbedFieldValue } from "#src/discord/utils/message.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("command-bb");
-export function buildBbRulesEmbed(dareVersion: 1 | 2 = 1): EmbedBuilder {
+export function buildBbRulesEmbed(dareVersion: 1 | 2 | 3 = 1): EmbedBuilder {
   return createBbRulesEmbed(dareVersion);
 }
 

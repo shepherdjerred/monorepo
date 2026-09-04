@@ -94,15 +94,17 @@ export function describeDareTranslationFailure(
 async function enabledDareVersion(
   serverId: DiscordGuildId,
   dependencies: BbDareCommandDependencies,
-): Promise<1 | 2 | null> {
+): Promise<1 | 2 | 3 | null> {
   const v2Policy =
     dependencies.isDareV2PolicyEnabled ??
     (dependencies.isDaresPolicyEnabled === undefined ? isPolicyEnabled : null);
   if (v2Policy !== null) {
-    const [v2Enabled, relationalEnabled] = await Promise.all([
+    const [v3Enabled, v2Enabled, relationalEnabled] = await Promise.all([
+      v2Policy("dare_extended_contracts_enabled", { server: serverId }),
       v2Policy("dare_v2", { server: serverId }),
       v2Policy("scoutql_relational_enabled", { server: serverId }),
     ]);
+    if (v3Enabled && relationalEnabled) return 3;
     if (v2Enabled && relationalEnabled) return 2;
   }
   const v1Policy = dependencies.isDaresPolicyEnabled ?? isPolicyEnabled;
@@ -163,7 +165,7 @@ export async function replyBbDare(
     );
   }
 
-  if (dareVersion === 2) {
+  if (dareVersion === 2 || dareVersion === 3) {
     await (dependencies.replyDareV2 ?? replyBbDareV2)(
       interaction,
       {

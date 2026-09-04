@@ -9,6 +9,8 @@ export type CompactionSummary = {
   buildId: string;
   tier: "fold" | "rebuild";
   matchRows: number;
+  matchTeamRows: number;
+  matchTeamBanRows: number;
   prematchRows: number;
   accountRows: number;
   competitionRankHistoryRows: number;
@@ -46,6 +48,8 @@ export function publishCompactionMetrics(
 ): void {
   for (const [table, rows] of [
     ["matches", summary.matchRows],
+    ["match_teams", summary.matchTeamRows],
+    ["match_team_bans", summary.matchTeamBanRows],
     ["prematch", summary.prematchRows],
     ["accounts", summary.accountRows],
     ["competition_rank_history", summary.competitionRankHistoryRows],

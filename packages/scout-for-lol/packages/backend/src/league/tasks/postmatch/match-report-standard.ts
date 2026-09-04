@@ -12,6 +12,17 @@ import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("postmatch-match-report-standard");
 
+function requireTimelineStaging(
+  persistence: "best_effort" | "required",
+  staged: boolean,
+  matchId: MatchId,
+): void {
+  if (staged || persistence !== "required") return;
+  throw new Error(
+    `Timeline lake staging failed for ${matchId}; match processing must retry.`,
+  );
+}
+
 /**
  * Fetch timeline data for standard (non-arena) matches
  * Returns undefined for arena matches or if timeline fetch fails
@@ -87,7 +98,7 @@ async function fetchAndRecordTimeline(options: {
         const trackedPlayerAliases = options.playersInMatch.map(
           (player) => player.alias,
         );
-        await recordTimelineForReportStore({
+        const staged = await recordTimelineForReportStore({
           timeline: timelineData,
           source:
             options.persistence === "required"
@@ -95,6 +106,7 @@ async function fetchAndRecordTimeline(options: {
               : "timeline_live",
           trackedPlayerAliases,
         });
+        requireTimelineStaging(options.persistence, staged, options.matchId);
       } catch (error) {
         if (options.persistence === "required") throw error;
         logger.error(

@@ -11,12 +11,16 @@ import { reportLakeStagingWritesTotal } from "#src/metrics/report-lake.ts";
 import {
   flattenCompetitionRankHistory,
   flattenMatch,
+  flattenMatchTeamBans,
+  flattenMatchTeams,
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 import {
   competitionRankHistoryStagingDir,
   ensureLakeScaffold,
+  matchTeamBansStagingDir,
+  matchTeamsStagingDir,
   matchesStagingDir,
   prematchStagingDir,
   timelineCoverageStagingDir,
@@ -47,6 +51,8 @@ function sanitizeFileStem(stem: string): string {
 
 export type ReportLakeStagingTable =
   | "matches"
+  | "match_teams"
+  | "match_team_bans"
   | "prematch"
   | "competition_rank_history"
   | "timeline_events"
@@ -57,6 +63,26 @@ export type ReportLakeStagingTable =
 export function matchStagingFilePath(lakeDir: string, matchId: string): string {
   return path.join(
     matchesStagingDir(lakeDir),
+    `${sanitizeFileStem(matchId)}.jsonl`,
+  );
+}
+
+export function matchTeamStagingFilePath(
+  lakeDir: string,
+  matchId: string,
+): string {
+  return path.join(
+    matchTeamsStagingDir(lakeDir),
+    `${sanitizeFileStem(matchId)}.jsonl`,
+  );
+}
+
+export function matchTeamBanStagingFilePath(
+  lakeDir: string,
+  matchId: string,
+): string {
+  return path.join(
+    matchTeamBansStagingDir(lakeDir),
     `${sanitizeFileStem(matchId)}.jsonl`,
   );
 }
@@ -89,6 +115,10 @@ function stagingDirectory(
   switch (table) {
     case "matches":
       return matchesStagingDir(lakeDir);
+    case "match_teams":
+      return matchTeamsStagingDir(lakeDir);
+    case "match_team_bans":
+      return matchTeamBansStagingDir(lakeDir);
     case "prematch":
       return prematchStagingDir(lakeDir);
     case "competition_rank_history":
@@ -126,11 +156,27 @@ export async function writeMatchStagingFile(
   try {
     await ensureLakeScaffold(lakeDir);
     const rows = flattenMatch(match);
-    await Bun.write(
-      matchStagingFilePath(lakeDir, match.metadata.matchId),
-      toNdjson(rows),
-    );
+    const matchId = match.metadata.matchId;
+    await Promise.all([
+      Bun.write(matchStagingFilePath(lakeDir, matchId), toNdjson(rows)),
+      Bun.write(
+        matchTeamStagingFilePath(lakeDir, matchId),
+        toNdjson(flattenMatchTeams(match)),
+      ),
+      Bun.write(
+        matchTeamBanStagingFilePath(lakeDir, matchId),
+        toNdjson(flattenMatchTeamBans(match)),
+      ),
+    ]);
     reportLakeStagingWritesTotal.inc({ table: "matches", status: "success" });
+    reportLakeStagingWritesTotal.inc({
+      table: "match_teams",
+      status: "success",
+    });
+    reportLakeStagingWritesTotal.inc({
+      table: "match_team_bans",
+      status: "success",
+    });
     return true;
   } catch (error) {
     logger.warn(

@@ -188,6 +188,27 @@ leaderboard history, and archived visualization artifacts; every Parquet lake
 source can be rebuilt. Official competition standings remain competition-to-date.
 Selected-period analysis recomputes the criterion without mutating that cache.
 
+### Relational Dare contracts
+
+New Bryan Bucks Dares compile one read-only standard-SQL statement against a
+closed report-lake catalog. `T1` through `T5` are ordinary participant relations
+bound to the contract's frozen accounts; team-relative conditions join them to
+`match_teams` by `match_id` and `team_id`. Historical preview and post-match
+settlement use the same canonical SQL and immutable AST. Evidence records retain
+the result, game-set projections, target dependencies, timeline coverage,
+source match IDs, and query hash. Only structurally monotone counts can settle
+early; rates, averages, equality, and upper bounds wait for the deadline or game
+cap. Existing v1 and v2 contracts continue through their frozen evaluators.
+
+Evaluator 3 also supplies explicit competition and activation envelopes. Race
+lanes settle only after the evidence watermark passes the earliest qualifying
+`game_end_at`, which admits exact-timestamp ties from separately ingested
+matches. Rank and historical-improvement contracts first persist an activation
+job and enter `activating`; a frozen rank or report-lake baseline starts their
+eligibility window and deadline. Ranked post-match capture precedes Dare
+settlement and is reused by report generation, so a required Riot failure cannot
+advance either evidence or the match cursor.
+
 ## Component Responsibilities
 
 ### Backend Service

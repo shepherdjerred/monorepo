@@ -5,6 +5,7 @@ import {
   refundDareV2ContributionsInTransaction,
 } from "#src/betting/dare-ledger-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dare-notification-outbox.ts";
 
 export type RefundableDareV2Row = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
@@ -16,13 +17,15 @@ export async function voidDareV2WithFullRefund(
     | "invalid_contract"
     | "unknown_evaluator"
     | "storage_overflow"
-    | "target_unavailable",
+    | "target_unavailable"
+    | "activation_timeout"
+    | "insufficient_baseline",
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
 ): Promise<boolean> {
   return await prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksDareV2.updateMany({
-      where: { id: dare.id, dareState: "active" },
+      where: { id: dare.id, dareState: { in: ["active", "activating"] } },
       data: {
         dareState: "voided",
         settledAt: now,
@@ -42,6 +45,7 @@ export async function voidDareV2WithFullRefund(
       select: { plainLanguage: true },
     });
     const facts = await dareV2MoneyFactsInTransaction(tx, {
+      contractVersion: 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,
@@ -54,6 +58,15 @@ export async function voidDareV2WithFullRefund(
       resolution: "voided",
       withCut: false,
       voidReason: reason,
+    });
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: dare.id,
+      revision: dare.fundedRevision ?? dare.currentRevision,
+      category: "lifecycle",
+      kind: "voided",
+      summary: `The Dare was voided (${reason.replaceAll("_", " ")}); ${dare.potTotal.toString()} Bryan Bucks were fully refunded.`,
+      deduplicationKey: `dare:${dare.id.toString()}:revision:${(dare.fundedRevision ?? dare.currentRevision).toString()}:voided`,
+      occurredAt: now,
     });
     return true;
   });

@@ -350,7 +350,7 @@ describe("bucks reads", () => {
   test("Dare management is scoped to an explicit shared guild", async () => {
     await expect(
       caller().bucks.dareList({ guildId, scope: "mine" }),
-    ).resolves.toEqual([]);
+    ).resolves.toEqual({ items: [], nextCursor: null });
     await expect(
       caller().bucks.dareList({ guildId: otherGuildId, scope: "guild" }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
@@ -523,6 +523,8 @@ describe("bucks reads", () => {
     expect(defaults).toEqual({
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
     });
     const updated = await caller().bucks.setNotificationPreferences({
       guildId,
@@ -531,6 +533,8 @@ describe("bucks reads", () => {
     expect(updated).toEqual({
       ownBetSettlementDms: false,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
     });
     const reread = await caller().bucks.notificationPreferences({ guildId });
     expect(reread).toEqual(updated);

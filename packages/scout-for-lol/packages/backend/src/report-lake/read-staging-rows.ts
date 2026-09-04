@@ -1,6 +1,8 @@
 import {
   CompetitionRankHistoryLakeRowSchema,
   MatchLakeRowSchema,
+  MatchTeamBanLakeRowSchema,
+  MatchTeamLakeRowSchema,
   PrematchLakeRowSchema,
   TimelineCoverageLakeRowSchema,
   TimelineEventLakeRowSchema,
@@ -22,6 +24,10 @@ function schemaForTable(table: ReportLakeStagingTable) {
   switch (table) {
     case "matches":
       return MatchLakeRowSchema;
+    case "match_teams":
+      return MatchTeamLakeRowSchema;
+    case "match_team_bans":
+      return MatchTeamBanLakeRowSchema;
     case "prematch":
       return PrematchLakeRowSchema;
     case "competition_rank_history":

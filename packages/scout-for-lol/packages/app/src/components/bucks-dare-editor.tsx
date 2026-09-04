@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
 import {
   DareDeadlineSpecV2Schema,
   type DareDeadlineSpecV2,
@@ -14,8 +15,21 @@ import {
 } from "@scout-for-lol/design-system/components/dialog";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import { Textarea } from "@scout-for-lol/design-system/components/textarea";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import {
+  DareEditorReview,
+  type ValidatedDareDraft,
+} from "#src/components/bucks-dare-editor-review.tsx";
+import {
+  focusFirstInvalid,
+  handleFormSubmit,
+  submitThenChangeValidation,
+  useScoutForm,
+} from "#src/components/semantic-form.tsx";
 import { useTRPC } from "#src/lib/trpc.ts";
+
+const ReadableSummarySchema = z.strictObject({
+  plainLanguage: z.string().trim().min(1).max(4000),
+});
 
 type EditorDare = {
   id: number;
@@ -25,23 +39,33 @@ type EditorDare = {
   openingStake: number;
   canonicalScoutQl: string;
   plainLanguage: string;
+  compilerVersion: string;
 };
 
-type ValidatedDraft = {
-  canonicalScoutQl: string;
-  plainLanguage: string;
-  semanticProofPlan: string;
-  scoutQlPlanHash: string;
-  scoutQlFacts: {
-    cteCount: number;
-    joinedRelations: number;
-    predicates: number;
-    maxExpressionDepth: number;
-    physicalSources: string[];
-    functions: string[];
-    targetKeys: string[];
-  };
-};
+function ReadableSummaryField(props: {
+  id: string;
+  name: string;
+  value: string;
+  onValueChange: (value: string) => void;
+}) {
+  return (
+    <label htmlFor={props.id} className="space-y-1 text-sm lg:col-span-2">
+      <span className="font-medium">Readable summary</span>
+      <Textarea
+        id={props.id}
+        name={props.name}
+        required
+        value={props.value}
+        onChange={(event) => {
+          props.onValueChange(event.target.value);
+        }}
+      />
+      <span className="block text-xs text-scout-subtle">
+        Explanatory only. The canonical SQL below remains binding.
+      </span>
+    </label>
+  );
+}
 
 export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   const trpc = useTRPC();
@@ -57,7 +81,7 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   );
   const [historyDays, setHistoryDays] = useState("30");
   const [error, setError] = useState<string | null>(null);
-  const [validated, setValidated] = useState<ValidatedDraft | null>(null);
+  const [validated, setValidated] = useState<ValidatedDareDraft | null>(null);
   const [preview, setPreview] = useState<{
     achieved: boolean | null;
     eligibleGames: number;
@@ -69,9 +93,22 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
   const inputVersion = useRef(0);
   const validationRequest = useRef(0);
   const previewRequest = useRef(0);
+  const formElement = useRef<HTMLFormElement>(null);
   const revise = useMutation(trpc.bucks.dareReviseDraft.mutationOptions());
+  const summaryForm = useScoutForm({
+    defaultValues: { plainLanguage: props.dare.plainLanguage },
+    validationLogic: submitThenChangeValidation,
+    validators: { onDynamic: ReadableSummarySchema },
+    onSubmit: async () => {
+      await reviewOrSave();
+    },
+    onSubmitInvalid: () => {
+      focusFirstInvalid(formElement.current);
+    },
+  });
   const fieldId = (name: string) =>
     `dare-${props.dare.id.toString()}-editor-${name}`;
+  const sqlV3 = props.dare.compilerVersion === "dare-scoutql-3";
 
   function changed(): void {
     inputVersion.current += 1;
@@ -94,7 +131,7 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
     const deadlineSpec = DareDeadlineSpecV2Schema.safeParse(rawDeadline);
     const openingStake = Number(stakeText);
     if (!deadlineSpec.success) {
-      setError("The deadline does not match the Dare v2 contract schema.");
+      setError("The deadline does not match the Dare contract schema.");
       return null;
     }
     if (!Number.isSafeInteger(openingStake) || openingStake <= 0) {
@@ -105,13 +142,14 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
       dareId: props.dare.id,
       expectedRevision: props.dare.currentRevision,
       originalText,
+      plainLanguage: summaryForm.state.values.plainLanguage,
       queryText,
       deadlineSpec: deadlineSpec.data,
       openingStake,
     };
   }
 
-  async function validate(): Promise<ValidatedDraft | null> {
+  async function validate(): Promise<ValidatedDareDraft | null> {
     const input = editorInput();
     if (input === null) return null;
     const version = inputVersion.current;
@@ -246,195 +284,186 @@ export function BucksDareEditor(props: { dare: EditorDare; guildId: string }) {
         <DialogHeader>
           <DialogTitle>Edit Dare #{props.dare.id.toString()}</DialogTitle>
           <DialogDescription>
-            Edit the authoritative ScoutQL contract; Scout validates, formats,
-            explains, and backtests it before replacing this private draft. No
-            funded contract can enter this editor.
+            Edit the authoritative {sqlV3 ? "standard SQL" : "ScoutQL"}{" "}
+            contract; Scout validates, formats, explains, and backtests it
+            before replacing this private draft. No funded contract can enter
+            this editor.
           </DialogDescription>
         </DialogHeader>
-        <fieldset disabled={revise.isPending} className="space-y-4">
-          <div className="grid gap-4 lg:grid-cols-2">
-            <label
-              htmlFor={fieldId("request")}
-              className="space-y-1 text-sm lg:col-span-2"
-            >
-              <span className="font-medium">Original request</span>
-              <Textarea
-                id={fieldId("request")}
-                value={originalText}
-                onChange={(event) => {
-                  changed();
-                  setOriginalText(event.target.value);
-                }}
-              />
-            </label>
-            <label htmlFor={fieldId("scoutql")} className="space-y-1 text-sm">
-              <span className="font-medium">ScoutQL contract</span>
-              <Textarea
-                id={fieldId("scoutql")}
-                className="min-h-80 font-mono text-xs"
-                spellCheck={false}
-                value={queryText}
-                onChange={(event) => {
-                  changed();
-                  setQueryText(event.target.value);
-                }}
-              />
-            </label>
-            <div className="space-y-4">
-              <label
-                htmlFor={fieldId("deadline")}
-                className="space-y-1 text-sm"
-              >
-                <span className="font-medium">Deadline specification</span>
-                <Textarea
-                  id={fieldId("deadline")}
-                  className="font-mono text-xs"
-                  spellCheck={false}
-                  value={deadlineText}
-                  onChange={(event) => {
-                    changed();
-                    setDeadlineText(event.target.value);
-                  }}
-                />
-              </label>
-              <label htmlFor={fieldId("stake")} className="space-y-1 text-sm">
-                <span className="font-medium">Opening stake</span>
-                <Input
-                  id={fieldId("stake")}
-                  inputMode="numeric"
-                  value={stakeText}
-                  onChange={(event) => {
-                    changed();
-                    setStakeText(event.target.value);
-                  }}
-                />
-              </label>
-              <div className="flex items-end gap-2">
+        <summaryForm.AppForm>
+          <form
+            ref={formElement}
+            onSubmit={(event) => {
+              handleFormSubmit(event, () => summaryForm.handleSubmit());
+            }}
+          >
+            <fieldset disabled={revise.isPending} className="space-y-4">
+              <div className="grid gap-4 lg:grid-cols-2">
                 <label
-                  htmlFor={fieldId("history-days")}
-                  className="grow space-y-1 text-sm"
+                  htmlFor={fieldId("request")}
+                  className="space-y-1 text-sm lg:col-span-2"
                 >
-                  <span className="font-medium">Backtest days</span>
-                  <Input
-                    id={fieldId("history-days")}
-                    inputMode="numeric"
-                    value={historyDays}
+                  <span className="font-medium">Original request</span>
+                  <Textarea
+                    id={fieldId("request")}
+                    name="originalText"
+                    required
+                    value={originalText}
                     onChange={(event) => {
-                      previewRequest.current += 1;
-                      setPreviewPending(false);
-                      setPreview(null);
-                      setError(null);
-                      setHistoryDays(event.target.value);
+                      changed();
+                      setOriginalText(event.target.value);
                     }}
                   />
                 </label>
+                {sqlV3 && (
+                  <summaryForm.Field name="plainLanguage">
+                    {(field) => (
+                      <ReadableSummaryField
+                        id={fieldId("summary")}
+                        name={field.name}
+                        value={field.state.value}
+                        onValueChange={(value) => {
+                          changed();
+                          field.handleChange(value);
+                        }}
+                      />
+                    )}
+                  </summaryForm.Field>
+                )}
+                <label
+                  htmlFor={fieldId("scoutql")}
+                  className="space-y-1 text-sm"
+                >
+                  <span className="font-medium">
+                    {sqlV3 ? "Binding SQL contract" : "ScoutQL contract"}
+                  </span>
+                  <Textarea
+                    id={fieldId("scoutql")}
+                    name="queryText"
+                    required
+                    className="min-h-80 font-mono text-xs"
+                    spellCheck={false}
+                    value={queryText}
+                    onChange={(event) => {
+                      changed();
+                      setQueryText(event.target.value);
+                    }}
+                  />
+                </label>
+                <div className="space-y-4">
+                  <label
+                    htmlFor={fieldId("deadline")}
+                    className="space-y-1 text-sm"
+                  >
+                    <span className="font-medium">Deadline specification</span>
+                    <Textarea
+                      id={fieldId("deadline")}
+                      name="deadlineText"
+                      required
+                      className="font-mono text-xs"
+                      spellCheck={false}
+                      value={deadlineText}
+                      onChange={(event) => {
+                        changed();
+                        setDeadlineText(event.target.value);
+                      }}
+                    />
+                  </label>
+                  <label
+                    htmlFor={fieldId("stake")}
+                    className="space-y-1 text-sm"
+                  >
+                    <span className="font-medium">Opening stake</span>
+                    <Input
+                      id={fieldId("stake")}
+                      name="stakeText"
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      step={1}
+                      required
+                      value={stakeText}
+                      onChange={(event) => {
+                        changed();
+                        setStakeText(event.target.value);
+                      }}
+                    />
+                  </label>
+                  <div className="flex items-end gap-2">
+                    <label
+                      htmlFor={fieldId("history-days")}
+                      className="grow space-y-1 text-sm"
+                    >
+                      <span className="font-medium">Backtest days</span>
+                      <Input
+                        id={fieldId("history-days")}
+                        name="historyDays"
+                        type="number"
+                        inputMode="numeric"
+                        min={1}
+                        max={90}
+                        step={1}
+                        required
+                        value={historyDays}
+                        onChange={(event) => {
+                          previewRequest.current += 1;
+                          setPreviewPending(false);
+                          setPreview(null);
+                          setError(null);
+                          setHistoryDays(event.target.value);
+                        }}
+                      />
+                    </label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={previewPending}
+                      onClick={() => void runPreview()}
+                    >
+                      {previewPending ? "Previewing…" : "Preview history"}
+                    </Button>
+                  </div>
+                  {preview !== null && (
+                    <p className="rounded-md border border-scout-border p-3 text-sm">
+                      Historical result:{" "}
+                      <strong>{String(preview.achieved)}</strong> ·{" "}
+                      {preview.eligibleGames.toString()} eligible games ·
+                      timeline{" "}
+                      {preview.coverageComplete ? "complete" : "incomplete"}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <DareEditorReview
+                validated={validated}
+                reviewing={reviewing}
+                sqlV3={sqlV3}
+                currentRevision={props.dare.currentRevision}
+                previous={props.dare}
+                next={{ originalText, deadlineText, stakeText }}
+              />
+              {error !== null && (
+                <p role="alert" className="text-sm text-scout-danger">
+                  {error}
+                </p>
+              )}
+              <div className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={previewPending}
-                  onClick={() => void runPreview()}
+                  disabled={validationPending}
+                  onClick={() => void validate()}
                 >
-                  {previewPending ? "Previewing…" : "Preview history"}
+                  {validationPending ? "Validating…" : "Validate and format"}
+                </Button>
+                <Button type="submit" disabled={validationPending}>
+                  {reviewing ? "Save revision" : "Review diff"}
                 </Button>
               </div>
-              {preview !== null && (
-                <p className="rounded-md border border-scout-border p-3 text-sm">
-                  Historical result: <strong>{String(preview.achieved)}</strong>{" "}
-                  · {preview.eligibleGames.toString()} eligible games · timeline{" "}
-                  {preview.coverageComplete ? "complete" : "incomplete"}
-                </p>
-              )}
-            </div>
-          </div>
-          {validated !== null && (
-            <section className="space-y-3">
-              <h3 className="font-medium">Generated ScoutQL</h3>
-              <ScoutQlCode queryText={validated.canonicalScoutQl} />
-              <p className="whitespace-pre-wrap text-sm">
-                {validated.plainLanguage}
-              </p>
-              <p className="text-xs text-scout-muted-foreground">
-                Plan {validated.scoutQlPlanHash.slice(0, 12)} ·{" "}
-                {validated.scoutQlFacts.cteCount.toString()} CTEs ·{" "}
-                {validated.scoutQlFacts.joinedRelations.toString()} joins ·{" "}
-                {validated.scoutQlFacts.predicates.toString()} predicates ·
-                depth {validated.scoutQlFacts.maxExpressionDepth.toString()}
-              </p>
-            </section>
-          )}
-          {reviewing && validated !== null && (
-            <section className="grid gap-3 rounded-md border border-scout-border p-3 text-sm md:grid-cols-2">
-              <div>
-                <h3 className="font-medium">
-                  Before · revision {props.dare.currentRevision.toString()}
-                </h3>
-                <p className="mt-2 whitespace-pre-wrap">
-                  {props.dare.plainLanguage}
-                </p>
-                <ReviewValue
-                  label="Original request"
-                  value={props.dare.originalText}
-                />
-                <ReviewValue
-                  label="Deadline"
-                  value={JSON.stringify(props.dare.deadlineSpec, null, 2)}
-                />
-                <ReviewValue
-                  label="Opening stake"
-                  value={`${props.dare.openingStake.toString()} BB`}
-                />
-              </div>
-              <div>
-                <h3 className="font-medium">
-                  After · revision {(props.dare.currentRevision + 1).toString()}
-                </h3>
-                <p className="mt-2 whitespace-pre-wrap">
-                  {validated.plainLanguage}
-                </p>
-                <ReviewValue label="Original request" value={originalText} />
-                <ReviewValue label="Deadline" value={deadlineText} />
-                <ReviewValue
-                  label="Opening stake"
-                  value={`${Number(stakeText).toString()} BB`}
-                />
-              </div>
-            </section>
-          )}
-          {error !== null && (
-            <p role="alert" className="text-sm text-scout-danger">
-              {error}
-            </p>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={validationPending}
-              onClick={() => void validate()}
-            >
-              {validationPending ? "Validating…" : "Validate and format"}
-            </Button>
-            <Button
-              type="button"
-              disabled={validationPending}
-              onClick={() => void reviewOrSave()}
-            >
-              {reviewing ? "Save revision" : "Review diff"}
-            </Button>
-          </div>
-        </fieldset>
+            </fieldset>
+          </form>
+        </summaryForm.AppForm>
       </DialogContent>
     </Dialog>
-  );
-}
-
-function ReviewValue(props: { label: string; value: string }) {
-  return (
-    <div className="mt-3">
-      <h4 className="text-xs font-medium text-scout-subtle">{props.label}</h4>
-      <p className="mt-1 whitespace-pre-wrap font-mono text-xs">
-        {props.value}
-      </p>
-    </div>
   );
 }

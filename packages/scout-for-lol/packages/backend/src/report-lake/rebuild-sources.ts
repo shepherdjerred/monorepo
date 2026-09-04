@@ -10,6 +10,8 @@ import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
 import {
   flattenCompetitionRankHistory,
   flattenMatch,
+  flattenMatchTeamBans,
+  flattenMatchTeams,
   flattenPrematch,
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
@@ -50,8 +52,13 @@ type RebuildSourceOptions = {
   }) => void;
 };
 
+type MatchRebuildSourceOptions = RebuildSourceOptions & {
+  teamWriter: NdjsonFileWriter;
+  teamBanWriter: NdjsonFileWriter;
+};
+
 export async function populateMatchesFromS3(
-  options: RebuildSourceOptions,
+  options: MatchRebuildSourceOptions,
 ): Promise<number> {
   const { client, bucket, writer, foldedIds } = options;
   let skipped = 0;
@@ -81,6 +88,12 @@ export async function populateMatchesFromS3(
       }
       for (const row of flattenMatch(match)) {
         writer.write(row);
+      }
+      for (const row of flattenMatchTeams(match)) {
+        options.teamWriter.write(row);
+      }
+      for (const row of flattenMatchTeamBans(match)) {
+        options.teamBanWriter.write(row);
       }
       foldedIds.add(stagingIdForMatch(match.metadata.matchId));
     }

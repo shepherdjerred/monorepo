@@ -29,6 +29,8 @@ import configuration from "#src/configuration.ts";
 const CURRENT_POINTER = "CURRENT";
 const BUILDS_DIR = "builds";
 export const MATCHES_STAGING_DIR = "matches-recent";
+export const MATCH_TEAMS_STAGING_DIR = "match-teams-recent";
+export const MATCH_TEAM_BANS_STAGING_DIR = "match-team-bans-recent";
 export const PREMATCH_STAGING_DIR = "prematch-recent";
 export const COMPETITION_RANK_HISTORY_STAGING_DIR =
   "competition-rank-history-recent";
@@ -67,6 +69,14 @@ export function matchesStagingDir(lakeDir: string): string {
   return path.join(lakeDir, MATCHES_STAGING_DIR);
 }
 
+export function matchTeamsStagingDir(lakeDir: string): string {
+  return path.join(lakeDir, MATCH_TEAMS_STAGING_DIR);
+}
+
+export function matchTeamBansStagingDir(lakeDir: string): string {
+  return path.join(lakeDir, MATCH_TEAM_BANS_STAGING_DIR);
+}
+
 export function prematchStagingDir(lakeDir: string): string {
   return path.join(lakeDir, PREMATCH_STAGING_DIR);
 }
@@ -95,6 +105,8 @@ export function timelineCoverageStagingDir(lakeDir: string): string {
 export async function ensureLakeScaffold(lakeDir: string): Promise<void> {
   await mkdir(path.join(lakeDir, BUILDS_DIR), { recursive: true });
   await mkdir(matchesStagingDir(lakeDir), { recursive: true });
+  await mkdir(matchTeamsStagingDir(lakeDir), { recursive: true });
+  await mkdir(matchTeamBansStagingDir(lakeDir), { recursive: true });
   await mkdir(prematchStagingDir(lakeDir), { recursive: true });
   await mkdir(competitionRankHistoryStagingDir(lakeDir), { recursive: true });
   await mkdir(timelineEventsStagingDir(lakeDir), { recursive: true });

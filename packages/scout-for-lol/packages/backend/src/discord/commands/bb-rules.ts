@@ -72,7 +72,7 @@ function days(milliseconds: number): string {
   return Math.floor(milliseconds / 86_400_000).toString();
 }
 
-function dareRules(version: 1 | 2, cut: string): string[] {
+function dareRules(version: 1 | 2 | 3, cut: string): string[] {
   if (version === 1) {
     return [
       `\`/bb dare\` puts a one-sided bounty on up to **${DARE_MAX_TARGETS.toString()}** tracked players: contributors fund the pot, targets risk nothing.`,
@@ -82,8 +82,12 @@ function dareRules(version: 1 | 2, cut: string): string[] {
       `Achieved: the targets split the pot evenly, each share minus **${cut}%** (rounded down; any indivisible remainder goes to the house). Not achieved: each contributor gets their total back minus **${cut}%** (rounded to the nearest BB).`,
     ];
   }
+  const contractDescription =
+    version === 3
+      ? "Its canonical standard SQL is the binding contract; the wording and readable summary explain it."
+      : "Its preview explicitly states same-game/cross-game scope, target relationship, queues, bounds, and generated ScoutQL.";
   return [
-    `\`/bb dare\` creates a private Explore draft for **1-${DARE_V2_MAX_TARGETS.toString()}** frozen targets. Its preview explicitly states same-game/cross-game scope, target relationship, queues, bounds, and generated ScoutQL.`,
+    `\`/bb dare\` creates a private Explore draft for **1-${DARE_V2_MAX_TARGETS.toString()}** frozen targets. ${contractDescription}`,
     `Funding is a single-use **${minutes(DARE_V2_INTENT_TTL_MS)} minute** confirmation. It freezes the revision and opens a **${hours(DARE_ACCEPT_WINDOW_MS)} hour** acceptance window; decline, expiry, or challenger cancellation then refunds everyone free.`,
     `After every target accepts, the contract runs for at most **${DARE_V2_MAX_HORIZON_DAYS.toString()} days** and **${DARE_V2_MAX_ELIGIBLE_GAMES.toString()} eligible games**. Active terms and deadlines cannot be edited or cancelled.`,
     "Targets risk nothing. Missing required timeline evidence stays unknown; an unknowable final result voids with full refunds.",
@@ -91,7 +95,7 @@ function dareRules(version: 1 | 2, cut: string): string[] {
   ];
 }
 
-export function buildBbRulesEmbed(dareVersion: 1 | 2 = 1): EmbedBuilder {
+export function buildBbRulesEmbed(dareVersion: 1 | 2 | 3 = 1): EmbedBuilder {
   const outcomeWindow = minutes(BETTING_WINDOW_MS);
   const parlayWindow = minutes(PARLAY_BETTING_WINDOW_MS);
   const cut = HOUSE_CUT_PERCENT.toString();

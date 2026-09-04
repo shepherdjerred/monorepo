@@ -41,9 +41,9 @@ export async function ingestMatch(
 export async function ingestTimeline(
   timeline: RawTimeline,
   trackedPlayerAliases: string[],
-): Promise<void> {
+): Promise<boolean> {
   await saveTimelineToS3(timeline, trackedPlayerAliases);
-  await writeTimelineStagingFiles(resolveLakeDir(), timeline, new Date());
+  return writeTimelineStagingFiles(resolveLakeDir(), timeline, new Date());
 }
 
 export async function ingestPrematch(

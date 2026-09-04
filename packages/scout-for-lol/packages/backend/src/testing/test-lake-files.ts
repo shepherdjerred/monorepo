@@ -14,6 +14,14 @@ export const TEST_GUILD_ID = DiscordGuildIdSchema.parse("123456789012345678");
 export const TEST_LAKE_FILES: LakeFiles = {
   matchesParquet: ["/lake/builds/b1/matches/month=2026-07/data_0.parquet"],
   matchesStaging: ["/lake/matches-recent/NA1_1.jsonl"],
+  matchTeamsParquet: [
+    "/lake/builds/b1/match_teams/month=2026-07/data_0.parquet",
+  ],
+  matchTeamsStaging: ["/lake/match-teams-recent/NA1_1.jsonl"],
+  matchTeamBansParquet: [
+    "/lake/builds/b1/match_team_bans/month=2026-07/data_0.parquet",
+  ],
+  matchTeamBansStaging: ["/lake/match-team-bans-recent/NA1_1.jsonl"],
   prematchParquet: ["/lake/builds/b1/prematch/month=2026-07/data_0.parquet"],
   prematchStaging: [],
   accountsParquet: "/lake/builds/b1/accounts/accounts.parquet",

@@ -9,17 +9,23 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 export type BucksNotificationPreferences = {
   ownBetSettlementDms: boolean;
   betsOnPlayerSettlementDms: boolean;
+  dareLifecycleDms: boolean;
+  dareProgressDms: boolean;
   settlementDmHintShownAt: Date | null;
 };
 
 export type BucksNotificationPreferenceUpdates = {
   ownBetSettlementDms?: boolean;
   betsOnPlayerSettlementDms?: boolean;
+  dareLifecycleDms?: boolean;
+  dareProgressDms?: boolean;
 };
 
 const DEFAULT_PREFERENCES: BucksNotificationPreferences = {
   ownBetSettlementDms: true,
   betsOnPlayerSettlementDms: true,
+  dareLifecycleDms: true,
+  dareProgressDms: true,
   settlementDmHintShownAt: null,
 };
 
@@ -39,6 +45,8 @@ function preferencesFromRow(
   row: {
     ownBetSettlementDms: boolean;
     betsOnPlayerSettlementDms: boolean;
+    dareLifecycleDms: boolean;
+    dareProgressDms: boolean;
     settlementDmHintShownAt: Date | null;
   } | null,
 ): BucksNotificationPreferences {
@@ -47,6 +55,8 @@ function preferencesFromRow(
     : {
         ownBetSettlementDms: row.ownBetSettlementDms,
         betsOnPlayerSettlementDms: row.betsOnPlayerSettlementDms,
+        dareLifecycleDms: row.dareLifecycleDms,
+        dareProgressDms: row.dareProgressDms,
         settlementDmHintShownAt: row.settlementDmHintShownAt,
       };
 }
@@ -62,6 +72,8 @@ export async function getBucksNotificationPreferences(
     select: {
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: true,
     },
   });
@@ -83,6 +95,8 @@ export async function getBucksNotificationPreferencesForUsers(
       discordId: true,
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: true,
     },
   });
@@ -101,7 +115,9 @@ export async function updateBucksNotificationPreferences(
   const discordId = DiscordAccountIdSchema.parse(input.discordId);
   if (
     input.updates.ownBetSettlementDms === undefined &&
-    input.updates.betsOnPlayerSettlementDms === undefined
+    input.updates.betsOnPlayerSettlementDms === undefined &&
+    input.updates.dareLifecycleDms === undefined &&
+    input.updates.dareProgressDms === undefined
   ) {
     return await getBucksNotificationPreferences(
       { serverId, discordId },
@@ -117,6 +133,8 @@ export async function updateBucksNotificationPreferences(
       ownBetSettlementDms: input.updates.ownBetSettlementDms ?? true,
       betsOnPlayerSettlementDms:
         input.updates.betsOnPlayerSettlementDms ?? true,
+      dareLifecycleDms: input.updates.dareLifecycleDms ?? true,
+      dareProgressDms: input.updates.dareProgressDms ?? true,
     },
     update: {
       ...(input.updates.ownBetSettlementDms === undefined
@@ -127,10 +145,18 @@ export async function updateBucksNotificationPreferences(
         : {
             betsOnPlayerSettlementDms: input.updates.betsOnPlayerSettlementDms,
           }),
+      ...(input.updates.dareLifecycleDms === undefined
+        ? {}
+        : { dareLifecycleDms: input.updates.dareLifecycleDms }),
+      ...(input.updates.dareProgressDms === undefined
+        ? {}
+        : { dareProgressDms: input.updates.dareProgressDms }),
     },
     select: {
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: true,
     },
   });
@@ -150,6 +176,8 @@ export async function markBucksSettlementDmHintShown(
       discordId,
       ownBetSettlementDms: true,
       betsOnPlayerSettlementDms: true,
+      dareLifecycleDms: true,
+      dareProgressDms: true,
       settlementDmHintShownAt: new Date(),
     },
     update: { settlementDmHintShownAt: new Date() },
