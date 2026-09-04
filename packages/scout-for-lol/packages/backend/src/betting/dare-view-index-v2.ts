@@ -98,7 +98,7 @@ export function dareViewerFactsV2(
     ...(awaitingTarget ? (["accept", "decline"] as const) : []),
     ...(state === "pending_accept" && challenger ? (["cancel"] as const) : []),
     ...(target === undefined &&
-    (state === "pending_accept" || state === "active")
+    (state === "pending_accept" || state === "activating" || state === "active")
       ? (["contribute"] as const)
       : []),
   ];

@@ -44,6 +44,15 @@ its stable ID, revision, lifecycle state, explicit same-game or cross-game
 meaning, targets, queue and time bounds, current pot, evidence progress, and
 reproducible proof after settlement.
 
+Nonterminal details refresh every 30 seconds. Their progress view includes
+per-condition and per-target values, remaining work, race leaders, rank and
+normalized LP movement, frozen improvement baselines, streaks, and sequence
+steps when the contract uses them. The evidence list shows each evaluated match
+in chronological order with candidate membership, actual values, coverage,
+source references, progress before and after, and the structured raw trace.
+Processing health distinguishes complete, delayed, stale, and failed polling;
+an activating contract also shows snapshot attempts and the next retry.
+
 Draft owners can validate, historically preview, or revise a draft with the
 advanced editor, or return to Explore for conversational revision.
 The advanced editor exposes the typed contract plan and generated ScoutQL with

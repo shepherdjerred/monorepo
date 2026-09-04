@@ -26,10 +26,8 @@ import {
   createBucksExploreTools,
   resolveBucksCapability,
 } from "#src/explore/bucks-tools.ts";
-import {
-  createDareExploreTools,
-  dareExploreEnabled,
-} from "#src/explore/dare-tools.ts";
+import { createDareExploreTools } from "#src/explore/dare-tool-definitions.ts";
+import { dareExploreEnabled } from "#src/explore/dare-tool-context.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";

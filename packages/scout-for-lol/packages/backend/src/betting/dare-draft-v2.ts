@@ -1,7 +1,6 @@
 import {
   BUCKS_INT32_MAX,
   BucksStakeSchema,
-  DARE_V2_MAX_HORIZON_DAYS,
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
   DARE_EVALUATOR_V2_VERSION,
@@ -23,6 +22,8 @@ import {
 import { dareV2CalloutContent } from "#src/betting/dare-callout-content-v2.ts";
 import { DARE_CALLOUT_MAX_LENGTH } from "#src/betting/dare-copy.ts";
 import {
+  claimDareDraftRevision,
+  dareDraftDeadlineIssues,
   dareV2DraftsEnabled,
   defaultDareV2Dependencies,
   type DareV2Dependencies,
@@ -34,7 +35,6 @@ import {
 import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
 import { dareValueNeedsTimeline } from "#src/betting/dare-value-v2.ts";
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 const TIMELINE_UNSUPPORTED_QUEUES = new Set([
   "arena",
   "classic",
@@ -94,33 +94,6 @@ function gameSetNeedsTimeline(
   );
 }
 
-function isIanaTimezone(timezone: string): boolean {
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone: timezone }).format();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function deadlineIssues(spec: DareDeadlineSpecV2, now: Date): string[] {
-  if (spec.kind === "relative") return [];
-  const deadline = new Date(spec.deadlineAt);
-  const issues: string[] = [];
-  if (!isIanaTimezone(spec.timezone)) {
-    issues.push(`${spec.timezone} is not an IANA timezone.`);
-  }
-  if (deadline.getTime() <= now.getTime()) {
-    issues.push("An absolute dare deadline must be in the future.");
-  }
-  if (deadline.getTime() > now.getTime() + DARE_V2_MAX_HORIZON_DAYS * DAY_MS) {
-    issues.push(
-      `A dare deadline may be at most ${DARE_V2_MAX_HORIZON_DAYS.toString()} days away.`,
-    );
-  }
-  return issues;
-}
-
 export function prepareDareDraftV2(
   definition: DareDraftV2Definition,
   now: Date = new Date(),
@@ -154,7 +127,7 @@ export function prepareDareDraftV2(
       );
     }
   }
-  issues.push(...deadlineIssues(deadlineSpec, now));
+  issues.push(...dareDraftDeadlineIssues(deadlineSpec, now));
   const canonicalScoutQl = formatDareScoutQlV2(plan);
   if (canonicalScoutQl.length > DARE_V2_MAX_QUERY_LENGTH) {
     issues.push(
@@ -312,22 +285,11 @@ export async function reviseDareDraftV2(
   const compiled = await compileDraftScoutQl(prepared.draft);
   if (compiled.kind === "invalid") return compiled;
   return await dependencies.prismaClient.$transaction(async (tx) => {
-    const updated = await tx.bucksDareV2.updateManyAndReturn({
-      where: {
-        id: input.dareId,
-        serverId: input.serverId,
-        challengerDiscordId: input.challengerDiscordId,
-        dareState: "draft",
-        currentRevision: input.expectedRevision,
-      },
-      data: {
-        currentRevision: { increment: 1 },
-        openingStake: prepared.draft.openingStake,
-      },
-      select: { currentRevision: true },
+    const currentRevision = await claimDareDraftRevision(tx, {
+      ...input,
+      openingStake: prepared.draft.openingStake,
     });
-    const row = updated[0];
-    if (row === undefined || updated.length !== 1) {
+    if (currentRevision === undefined) {
       const current = await tx.bucksDareV2.findUnique({
         where: { id: input.dareId },
         select: {
@@ -350,17 +312,13 @@ export async function reviseDareDraftV2(
     await tx.bucksDareV2Revision.create({
       data: {
         dareId: input.dareId,
-        ...revisionData(
-          prepared.draft,
-          compiled.artifacts,
-          row.currentRevision,
-        ),
+        ...revisionData(prepared.draft, compiled.artifacts, currentRevision),
       },
     });
     return {
       kind: "revised",
       dareId: input.dareId,
-      revision: row.currentRevision,
+      revision: currentRevision,
       draft: prepared.draft,
     } as const;
   });

@@ -27,7 +27,6 @@ import {
   markPostMatchPollFailed,
   markPostMatchPollStarted,
 } from "#src/league/tasks/recovery/app-state.ts";
-import { recordMatchForReportStore } from "#src/report-store/live-ingest.ts";
 import { getPostmatchMessageIdsForMatchIdOrEmpty } from "#src/league/tasks/prematch/active-game-queries.ts";
 import { getPuuidsBlockedFromLivePolling } from "#src/league/initial-history/live-polling.ts";
 import {
@@ -36,14 +35,12 @@ import {
   type DiscoveredMatchIntent,
   type MatchDiscovery,
 } from "#src/league/tasks/postmatch/match-intents.ts";
-import {
-  claimScoutEffect,
-  completeScoutEffect,
-  recordScoutEffectFailure,
-} from "#src/temporal/effect-claims.ts";
 import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
-import { deliverPostmatchReport } from "#src/league/tasks/postmatch/match-report-delivery.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
+import {
+  deliverVisiblePostmatchReport,
+  persistAuthoritativeMatch,
+} from "#src/league/tasks/postmatch/match-history-polling-effects.ts";
 import { collectNewMatches } from "#src/league/tasks/postmatch/match-history-collection.ts";
 import {
   activeDareTargetPuuids,
@@ -140,68 +137,34 @@ export async function processMatchAndUpdatePlayers(
   // outage) — advancing the cursor past it would lose the match forever. On
   // failure we RETURN before marking processed / advancing the cursor, so the
   // next poll retries. `backfill-to-s3.ts` (Riot re-fetch) is the recovery net.
-  const aliases = allTrackedPlayers.map((p) => p.alias);
-  const rawMatchEffectKey = `raw-match-s3:${matchId}`;
-  let rawMatchClaimed = false;
-  try {
-    const claim = await claimScoutEffect({
-      key: rawMatchEffectKey,
-      kind: "raw-match-s3",
-    });
-    if (claim === "execute") {
-      rawMatchClaimed = true;
-      await recordMatchForReportStore({
-        match: matchData,
-        source: silent ? "postmatch_silent_backfill" : "postmatch_live",
-        trackedPlayerAliases: aliases,
-      });
-      await completeScoutEffect(rawMatchEffectKey);
-    }
-  } catch (error) {
-    if (rawMatchClaimed) {
-      await recordScoutEffectFailure(rawMatchEffectKey, error);
-    }
-    logger.error(
-      `[processMatch] ❌ Authoritative S3 ingest failed for ${matchId} — NOT advancing cursor; will retry next poll`,
-      error,
-    );
-    Sentry.captureException(error, {
-      tags: { source: "report-store-ingest-gate", matchId },
-    });
-    throw error;
-  }
+  await persistAuthoritativeMatch({
+    matchData,
+    matchId,
+    trackedPlayers: allTrackedPlayers,
+    silent,
+  });
 
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
   // when the ordinary match report is suppressed. See settleAndAwardBucks.
-  const { bucks, prefetchedTimeline } = await settleBucksWithDareTimelineV2({
+  const {
+    bucks,
+    prefetchedTimeline,
+    prefetchedPlayers,
+    prefetchedRankChanges,
+  } = await settleBucksWithDareTimelineV2({
     matchData,
     trackedPlayers: allTrackedPlayers,
     prismaClient: prisma,
   });
-  let postmatchMessageIds: ReadonlyMap<string, string> = new Map();
-
-  if (!silent) {
-    // Report generation runs only AFTER the durable copy succeeded. A
-    // downstream failure (satori render crash, model error, Discord send
-    // failure) still swallows + advances: the authoritative S3 write already
-    // succeeded, and these failures are deterministic — retrying every poll
-    // would re-run the whole AI pipeline and burn tokens for nothing.
-    try {
-      postmatchMessageIds = await deliverPostmatchReport({
-        matchData,
-        trackedPlayers: allTrackedPlayers,
-        ...(prefetchedTimeline === undefined ? {} : { prefetchedTimeline }),
-      });
-    } catch (error) {
-      logger.error(
-        `[processMatch] ❌ processMatch threw for ${matchId} — cursor will still advance (durable S3 copy already saved)`,
-        error,
-      );
-      Sentry.captureException(error, {
-        tags: { source: "process-match-throw", matchId },
-      });
-    }
-  }
+  let postmatchMessageIds = await deliverVisiblePostmatchReport({
+    silent,
+    matchId,
+    matchData,
+    trackedPlayers: allTrackedPlayers,
+    prefetchedTimeline,
+    prefetchedPlayers,
+    prefetchedRankChanges,
+  });
 
   if (shouldAnnounceBucks({ silent, bucks })) {
     // A silent match skips processMatch entirely, and a restart between the

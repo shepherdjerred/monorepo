@@ -31,6 +31,7 @@ export async function contributeToDareV2InTransaction(
       fundedRevision: input.revision,
       OR: [
         { dareState: "pending_accept" },
+        { dareState: "activating" },
         { dareState: "active", deadlineAt: { gt: input.now } },
       ],
       potTotal: { lte: BUCKS_INT32_MAX - input.amount },
@@ -85,11 +86,12 @@ export async function contributeToDareV2InTransaction(
       where: {
         dareId_revision: { dareId: dare.id, revision: input.revision },
       },
-      select: { plainLanguage: true },
+      select: { plainLanguage: true, compilerVersion: true },
     }),
   ]);
   const balance = await stakeDareV2ContributionInTransaction(tx, {
     facts: {
+      contractVersion: revision.compilerVersion === "dare-scoutql-3" ? 3 : 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,

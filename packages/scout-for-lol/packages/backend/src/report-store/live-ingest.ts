@@ -93,13 +93,17 @@ export async function recordMatchForReportStore(
 
 export async function recordTimelineForReportStore(
   options: TimelineIngestOptions,
-): Promise<void> {
+): Promise<boolean> {
   try {
-    await ingestTimeline(options.timeline, options.trackedPlayerAliases);
+    const staged = await ingestTimeline(
+      options.timeline,
+      options.trackedPlayerAliases,
+    );
     recordSuccess("timeline", options.source);
     logger.info(
       `[ReportStoreIngest] Stored timeline ${options.timeline.metadata.matchId} from ${options.source}`,
     );
+    return staged;
   } catch (error) {
     recordFailure("timeline", options.source, error);
     throw error;

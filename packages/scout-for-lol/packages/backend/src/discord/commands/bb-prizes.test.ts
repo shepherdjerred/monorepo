@@ -258,6 +258,13 @@ describe("/bb command contract", () => {
     expect(rendered).not.toContain("next-game dare");
   });
 
+  test("rules identify standard SQL as the binding v3 contract", () => {
+    const rendered = JSON.stringify(buildBbRulesEmbed(3).toJSON());
+    expect(rendered).toContain("canonical standard SQL");
+    expect(rendered).toContain("binding contract");
+    expect(rendered).not.toContain("next-game dare");
+  });
+
   // /bb rules used to say "no cash value" while /bb prizes printed CAD figures
   // up to $1,000,000 with no cross-reference.
   test("rules and prizes agree that the exchange rate is a joke", () => {

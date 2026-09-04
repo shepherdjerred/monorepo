@@ -6,8 +6,8 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import {
-  dareV2FundingEnabled,
   defaultDareV2Dependencies,
+  relationalDareActionEnabled,
   type DareV2Dependencies,
 } from "#src/betting/dare-v2-common.ts";
 import { DARE_V2_INTENT_TTL_MS } from "#src/betting/constants.ts";
@@ -87,21 +87,40 @@ export async function createDareV2ConfirmationIntent(
   now: Date = new Date(),
 ) {
   const payload = DareV2IntentPayloadSchema.parse(input.payload);
-  if (
-    actionNeedsFeature(payload.action) &&
-    !(await dareV2FundingEnabled(input.serverId, dependencies))
-  ) {
-    return { kind: "feature_disabled" } as const;
-  }
   const dare = await dependencies.prismaClient.bucksDareV2.findUnique({
     where: { id: input.dareId },
-    include: { targets: { select: { discordId: true } } },
+    include: {
+      targets: { select: { discordId: true } },
+      revisions: {
+        where: { revision: input.expectedRevision },
+        select: { compilerVersion: true },
+        take: 1,
+      },
+    },
   });
   if (dare?.serverId !== input.serverId) {
     return { kind: "not_found" } as const;
   }
   if (!actorAuthorized(payload.action, input.actorDiscordId, dare)) {
     return { kind: "forbidden" } as const;
+  }
+  const revision = dare.revisions[0];
+  if (revision === undefined) {
+    return {
+      kind: "stale_revision",
+      currentRevision: dare.currentRevision,
+    } as const;
+  }
+  if (
+    actionNeedsFeature(payload.action) &&
+    !(await relationalDareActionEnabled(
+      input.serverId,
+      revision.compilerVersion,
+      payload.action === "fund",
+      dependencies,
+    ))
+  ) {
+    return { kind: "feature_disabled" } as const;
   }
   const applicableRevision = dare.fundedRevision ?? dare.currentRevision;
   if (

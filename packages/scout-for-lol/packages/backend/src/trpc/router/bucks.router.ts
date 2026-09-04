@@ -60,7 +60,7 @@ const MatchInput = GuildInput.extend({
 const DareListInput = GuildInput.extend({
   scope: z.enum(["mine", "guild", "needs_action"]),
   search: z.string().min(1).max(100).optional(),
-  states: z.array(BucksDareV2StateSchema).max(9).optional(),
+  states: z.array(BucksDareV2StateSchema).max(10).optional(),
   role: z.enum(["challenger", "target", "contributor", "involved"]).optional(),
   sort: z.enum(["needs_action", "deadline", "updated"]).optional(),
   cursor: z.string().min(1).optional(),
@@ -80,22 +80,27 @@ async function dareManagementAvailable(
   guildId: DiscordGuildId,
   viewerDiscordId: DiscordAccountId,
 ): Promise<boolean> {
-  const [dareEnabled, relationalEnabled, existingDare] = await Promise.all([
-    isPolicyEnabled("dare_v2", { server: guildId }),
-    isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
-    prisma.bucksDareV2.findFirst({
-      where: {
-        serverId: guildId,
-        dareState: { not: "deleted" },
-        OR: [
-          { dareState: { not: "draft" } },
-          { challengerDiscordId: viewerDiscordId },
-        ],
-      },
-      select: { id: true },
-    }),
-  ]);
-  return (dareEnabled && relationalEnabled) || existingDare !== null;
+  const [dareEnabled, sqlV3Enabled, relationalEnabled, existingDare] =
+    await Promise.all([
+      isPolicyEnabled("dare_v2", { server: guildId }),
+      isPolicyEnabled("dare_extended_contracts_enabled", { server: guildId }),
+      isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
+      prisma.bucksDareV2.findFirst({
+        where: {
+          serverId: guildId,
+          dareState: { not: "deleted" },
+          OR: [
+            { dareState: { not: "draft" } },
+            { challengerDiscordId: viewerDiscordId },
+          ],
+        },
+        select: { id: true },
+      }),
+    ]);
+  return (
+    ((dareEnabled || sqlV3Enabled) && relationalEnabled) ||
+    existingDare !== null
+  );
 }
 
 /**

@@ -68,6 +68,10 @@ describe("Dare v2 post-match timeline ordering", () => {
         order.push("fetch");
         return timeline;
       },
+      captureRanks: async () => {
+        order.push("rank");
+        return { players: [], changes: new Map() };
+      },
       settleBucks: async (_match, _prisma, options) => {
         order.push("settle");
         expect(options?.dareTimeline?.coverage).toBe("complete");
@@ -80,7 +84,7 @@ describe("Dare v2 post-match timeline ordering", () => {
       dependencies,
     );
 
-    expect(order).toEqual(["fetch", "settle"]);
+    expect(order).toEqual(["fetch", "rank", "settle"]);
     expect(result.prefetchedTimeline).toBe(timeline);
   });
 
@@ -93,6 +97,7 @@ describe("Dare v2 post-match timeline ordering", () => {
         fetched = true;
         return timeline;
       },
+      captureRanks: async () => ({ players: [], changes: new Map() }),
       settleBucks: async (_match, _prisma, options) => {
         receivedTimeline = options?.dareTimeline !== undefined;
         return EMPTY_BUCKS_RESULT;
@@ -106,5 +111,27 @@ describe("Dare v2 post-match timeline ordering", () => {
     expect(fetched).toBe(false);
     expect(receivedTimeline).toBe(false);
     expect(result.prefetchedTimeline).toBeUndefined();
+  });
+
+  test("does not settle Dare evidence when required rank capture fails", async () => {
+    let settled = false;
+    const dependencies: DarePostmatchTimelineV2Dependencies = {
+      needsTimeline: async () => false,
+      fetchTimeline: async () => timeline,
+      captureRanks: async () => {
+        throw new Error("Riot unavailable");
+      },
+      settleBucks: async () => {
+        settled = true;
+        return EMPTY_BUCKS_RESULT;
+      },
+    };
+    await expect(
+      settleBucksWithDareTimelineV2(
+        { matchData, trackedPlayers: [] },
+        dependencies,
+      ),
+    ).rejects.toThrow("Riot unavailable");
+    expect(settled).toBe(false);
   });
 });

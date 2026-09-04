@@ -19,8 +19,8 @@ import {
   declineDareV2InTransaction,
 } from "#src/betting/dare-refund-v2.ts";
 import {
-  dareV2FundingEnabled,
   defaultDareV2Dependencies,
+  relationalDareActionEnabled,
   type DareV2Dependencies,
 } from "#src/betting/dare-v2-common.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
@@ -200,7 +200,9 @@ export async function consumeDareV2ConfirmationIntent(
   const intent =
     await dependencies.prismaClient.bucksDareV2ConfirmationIntent.findUnique({
       where: { id: input.intentId },
-      include: { dare: { select: { serverId: true } } },
+      include: {
+        dare: { select: { serverId: true } },
+      },
     });
   if (intent?.dare.serverId !== input.serverId) {
     return { kind: "not_found" } as const;
@@ -225,9 +227,24 @@ export async function consumeDareV2ConfirmationIntent(
   if (intent.expiresAt.getTime() <= now.getTime()) {
     return { kind: "intent_expired" } as const;
   }
+  const revision =
+    await dependencies.prismaClient.bucksDareV2Revision.findUniqueOrThrow({
+      where: {
+        dareId_revision: {
+          dareId: intent.dareId,
+          revision: intent.revision,
+        },
+      },
+      select: { compilerVersion: true },
+    });
   if (
     needsFeature(payload) &&
-    !(await dareV2FundingEnabled(input.serverId, dependencies))
+    !(await relationalDareActionEnabled(
+      input.serverId,
+      revision.compilerVersion,
+      payload.action === "fund",
+      dependencies,
+    ))
   ) {
     return { kind: "feature_disabled" } as const;
   }

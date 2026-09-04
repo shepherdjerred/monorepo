@@ -22,6 +22,7 @@ async function freshFacts(tx: Db, dareId: number) {
     },
   });
   return await dareV2MoneyFactsInTransaction(tx, {
+    contractVersion: 2,
     dareId,
     serverId: dare.serverId,
     potTotal: dare.potTotal,

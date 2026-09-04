@@ -1511,12 +1511,32 @@ model BucksDareV2 {
   evidence           BucksDareV2Evidence[]
   intents            BucksDareV2ConfirmationIntent[]
   notificationEvents BucksDareNotificationEvent[]
+  activation         BucksDareV2Activation?
 
   @@index([challengerDiscordId, dareState, updatedAt])
   @@index([serverId, dareState, updatedAt])
   @@index([dareState, acceptDeadline])
   @@index([dareState, deadlineAt])
   @@index([calloutRefreshPending, updatedAt])
+}
+
+// Durable activation queue for rank and historical-baseline contracts. The
+// frozen snapshot is copied into contractJson before the Dare becomes active.
+model BucksDareV2Activation {
+  dareId        Int         @id
+  dare          BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  revision      Int
+  requestedAt   DateTime
+  nextAttemptAt DateTime
+  attemptCount  Int         @default(0)
+  lastAttemptAt DateTime?
+  errorCode     String?
+  snapshotJson  String?
+  completedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([completedAt, nextAttemptAt, requestedAt])
 }
 
 // Immutable history of draft iterations. Replacing a draft appends a revision;
