@@ -110,15 +110,13 @@ function missingUniqueOrderingColumns(
 ): string[] {
   const fromTable = objectValue(object["from_table"]);
   if (fromTable === null) return [];
-  // The leftmost relation is the row-producing relation for the supported
-  // lake joins. Joined dimensions (for example match_teams alongside a
-  // participant) are functionally determined by that row's match key and do
-  // not need to add another tie-breaker.
-  const rowSource = baseTableNames(fromTable)[0];
-  if (rowSource === undefined) return [];
-  return (DARE_SQL_V3_UNIQUE_ORDERING_COLUMNS.get(rowSource) ?? []).filter(
-    (column) => !columns.has(column),
-  );
+  const required = new Set<string>();
+  for (const table of baseTableNames(fromTable)) {
+    for (const column of DARE_SQL_V3_UNIQUE_ORDERING_COLUMNS.get(table) ?? []) {
+      required.add(column);
+    }
+  }
+  return [...required].filter((column) => !columns.has(column));
 }
 
 export function appendDareSqlV3DeterminismIssues(
@@ -141,8 +139,37 @@ export function appendDareSqlV3DeterminismIssues(
   if (functionName === "/") {
     appendDivisionDeterminismIssue(object, issues);
   }
+  if (functionName === "*") {
+    appendIntegerArithmeticIssue(object, issues);
+  }
   for (const child of Object.values(object)) {
     appendDareSqlV3DeterminismIssues(child, issues);
+  }
+}
+
+function appendIntegerArithmeticIssue(
+  object: Record<string, JsonValue>,
+  issues: string[],
+): void {
+  const children = arrayValue(object["children"]);
+  if (children.length !== 2) return;
+  const hasIntegerConstant = children.some((child) => {
+    const constant = objectValue(child);
+    if (constant === null || stringValue(constant["class"]) !== "CONSTANT") {
+      return false;
+    }
+    const value = objectValue(constant["value"]);
+    const type = value === null ? null : objectValue(value["type"]);
+    return stringValue(type?.["id"]) === "INTEGER";
+  });
+  const hasNonConstant = children.some((child) => {
+    const value = objectValue(child);
+    return value !== null && stringValue(value["class"]) !== "CONSTANT";
+  });
+  if (hasIntegerConstant && hasNonConstant) {
+    issues.push(
+      "Dare SQL integer multiplication must use a decimal literal to widen operands safely.",
+    );
   }
 }
 

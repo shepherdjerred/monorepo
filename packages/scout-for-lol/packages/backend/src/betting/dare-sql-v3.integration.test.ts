@@ -24,7 +24,7 @@ const KILL_PARTICIPATION_SQL = `WITH games AS (
     (p.kills + p.assists) * 1.0 / NULLIF(t.champion_kills, 0) >= 0 AS matched
   FROM T1 AS p
   JOIN match_teams AS t ON t.match_id = p.match_id AND t.team_id = p.team_id
-    ORDER BY p.game_end_at ASC, p.match_id ASC, p.puuid ASC
+    ORDER BY p.game_end_at ASC, p.match_id ASC, p.puuid ASC, t.team_id ASC
   LIMIT 100
 )
 SELECT COUNT(*) FILTER (WHERE matched IS TRUE) >= 1 AS achieved FROM games`;
@@ -355,6 +355,16 @@ describe("Dare SQL v3 compilation", () => {
       "nondeterministic limit",
       "SELECT EXISTS (SELECT 1 FROM T1 LIMIT 1) AS achieved",
       "LIMIT must be ordered",
+    ],
+    [
+      "non-unique participant limit",
+      "SELECT EXISTS (SELECT 1 FROM match_participants ORDER BY game_end_at, match_id LIMIT 1) AND EXISTS (SELECT 1 FROM T1) AS achieved",
+      "unique ordering columns: puuid",
+    ],
+    [
+      "integer overflow",
+      "SELECT SUM(kills * 1000000000) > 0 AS achieved FROM T1",
+      "integer multiplication must use a decimal literal",
     ],
   ])("rejects %s", async (_name, queryText, expected) => {
     await expect(
