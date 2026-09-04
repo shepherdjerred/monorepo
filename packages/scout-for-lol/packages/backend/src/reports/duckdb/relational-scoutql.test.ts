@@ -127,6 +127,20 @@ describe("relational ScoutQL compiler", () => {
     );
   });
 
+  test("requires unique ordering columns for every limited lake relation", async () => {
+    const result = await validateDareSqlV3({
+      queryText:
+        "WITH first_participant AS (SELECT match_id, game_end_at, puuid FROM match_participants ORDER BY game_end_at, match_id LIMIT 1) SELECT EXISTS (SELECT 1 FROM first_participant) AND EXISTS (SELECT 1 FROM T1) AS achieved",
+      allowedTargetKeys: ["T1"],
+    });
+
+    expect(result.kind).toBe("invalid");
+    if (result.kind !== "invalid") return;
+    expect(result.issues).toContain(
+      "Every Dare SQL LIMIT must include unique ordering columns: puuid.",
+    );
+  });
+
   test("rejects target relations hidden in unreachable CTEs", async () => {
     const result = await validateDareSqlV3({
       queryText:

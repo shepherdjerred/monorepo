@@ -46,6 +46,28 @@ export const DARE_SQL_V3_FUNCTIONS = new Set([
   "upper",
 ]);
 
+const DARE_SQL_V3_UNIQUE_ORDERING_COLUMNS: ReadonlyMap<
+  string,
+  readonly string[]
+> = new Map([
+  ["matches", ["match_id"]],
+  ["match_participants", ["puuid"]],
+  ["match_teams", ["team_id"]],
+  ["match_team_bans", ["team_id", "pick_turn"]],
+  ["timeline_events", ["event_id"]],
+  [
+    "timeline_event_participants",
+    ["event_id", "participant_id", "role", "role_index"],
+  ],
+  ["timeline_participant_frames", ["frame_index", "participant_id"]],
+  ["timeline_coverage", []],
+  ["T1", ["puuid"]],
+  ["T2", ["puuid"]],
+  ["T3", ["puuid"]],
+  ["T4", ["puuid"]],
+  ["T5", ["puuid"]],
+]);
+
 function orderedColumns(node: Record<string, JsonValue>): Set<string> {
   const names = new Set<string>();
   for (const modifierValue of arrayValue(node["modifiers"])) {
@@ -69,17 +91,34 @@ function orderedColumns(node: Record<string, JsonValue>): Set<string> {
   return names;
 }
 
-function containsTargetRelation(value: JsonValue): boolean {
+function baseTableNames(value: JsonValue): string[] {
   if (Array.isArray(value)) {
-    return value.some((child) => containsTargetRelation(child));
+    return value.flatMap((child) => baseTableNames(child));
   }
   const object = objectValue(value);
-  if (object === null) return false;
+  if (object === null) return [];
   if (stringValue(object["type"]) === "BASE_TABLE") {
     const table = stringValue(object["table_name"]);
-    if (table !== null && /^T[1-5]$/u.test(table)) return true;
+    return table === null ? [] : [table];
   }
-  return Object.values(object).some((child) => containsTargetRelation(child));
+  return Object.values(object).flatMap((child) => baseTableNames(child));
+}
+
+function missingUniqueOrderingColumns(
+  object: Record<string, JsonValue>,
+  columns: ReadonlySet<string>,
+): string[] {
+  const fromTable = objectValue(object["from_table"]);
+  if (fromTable === null) return [];
+  // The leftmost relation is the row-producing relation for the supported
+  // lake joins. Joined dimensions (for example match_teams alongside a
+  // participant) are functionally determined by that row's match key and do
+  // not need to add another tie-breaker.
+  const rowSource = baseTableNames(fromTable)[0];
+  if (rowSource === undefined) return [];
+  return (DARE_SQL_V3_UNIQUE_ORDERING_COLUMNS.get(rowSource) ?? []).filter(
+    (column) => !columns.has(column),
+  );
 }
 
 export function appendDareSqlV3DeterminismIssues(
@@ -127,9 +166,10 @@ function appendSelectDeterminismIssues(
       "Every Dare SQL LIMIT must be ordered by game_end_at and match_id.",
     );
   }
-  if (containsTargetRelation(object) && !columns.has("puuid")) {
+  const missingUniqueColumns = missingUniqueOrderingColumns(object, columns);
+  if (missingUniqueColumns.length > 0) {
     issues.push(
-      "Every Dare SQL LIMIT over a target relation must include puuid as a tie-breaker.",
+      `Every Dare SQL LIMIT must include unique ordering columns: ${missingUniqueColumns.join(", ")}.`,
     );
   }
 }
