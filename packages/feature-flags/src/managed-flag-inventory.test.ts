@@ -55,6 +55,17 @@ function exploreModel(environment: string) {
   ).find((flag) => flag.key === "scout-explore-model")?.default;
 }
 
+function dareExtendedContractsFlag(environment: string) {
+  const flag = materializeManagedNamespaceEnvironment(
+    managedFlagInventory,
+    environment,
+    "scout",
+  ).find((candidate) => candidate.key === "dare_extended_contracts_enabled");
+  if (flag === undefined)
+    throw new Error("Dare extended contracts flag missing");
+  return flag;
+}
+
 describe("ManagedFlagInventorySchema", () => {
   test("uses Luna in both managed environments", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
@@ -88,6 +99,21 @@ describe("ManagedFlagInventorySchema", () => {
         "temporal",
       ).map((flag) => flag.key),
     ).toContain("temporal-call-graph-tracing");
+  });
+
+  test("enables extended Dare contracts only for the beta guild", () => {
+    const betaFlag = dareExtendedContractsFlag("beta");
+    expect(betaFlag.default).toBe(false);
+    expect(betaFlag.rollouts).toEqual([
+      expect.objectContaining({
+        segmentKey: "scout-guild-1337623164146155593",
+        result: true,
+      }),
+    ]);
+
+    const prodFlag = dareExtendedContractsFlag("prod");
+    expect(prodFlag.default).toBe(false);
+    expect(prodFlag.rollouts).toEqual([]);
   });
 
   test("materializes a full-state environment override", () => {
