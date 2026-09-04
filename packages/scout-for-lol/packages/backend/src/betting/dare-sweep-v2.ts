@@ -15,6 +15,7 @@ import { voidDareV2WithFullRefund } from "#src/betting/dare-void-v2.ts";
 import { readableRelationalDareContract } from "#src/betting/dare-v2-common.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dare-notification-outbox.ts";
 
 const logger = createLogger("betting-dare-sweep-v2");
 
@@ -54,6 +55,7 @@ async function expireOne(
       },
     });
     const facts = await dareV2MoneyFactsInTransaction(tx, {
+      contractVersion: 2,
       dareId: dare.id,
       serverId: dare.serverId,
       potTotal: dare.potTotal,
@@ -64,6 +66,15 @@ async function expireOne(
       facts,
       resolution: "expired",
       withCut: false,
+    });
+    await enqueueDareNotificationInTransaction(tx, {
+      dareId: dare.id,
+      revision: dare.fundedRevision ?? dare.currentRevision,
+      category: "lifecycle",
+      kind: "expired",
+      summary: `The acceptance window expired; ${dare.potTotal.toString()} Bryan Bucks were fully refunded.`,
+      deduplicationKey: `dare:${dare.id.toString()}:revision:${(dare.fundedRevision ?? dare.currentRevision).toString()}:expired`,
+      occurredAt: now,
     });
     return true;
   });

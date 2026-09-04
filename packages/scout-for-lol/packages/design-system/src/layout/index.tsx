@@ -1,6 +1,6 @@
 import { Menu } from "lucide-react";
 import type { HTMLAttributes, ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScoutMark } from "#src/brand/index.tsx";
 import { Button } from "#src/components/button.tsx";
 import {
@@ -12,6 +12,10 @@ import {
 import { ThemeMenu } from "#src/runtime/theme-menu.tsx";
 import { cn } from "#src/lib/cn.ts";
 import { surfaceHref as joinSurfaceHref } from "#src/layout/origins.ts";
+import {
+  SidebarResizer,
+  useSidebarResize,
+} from "#src/layout/sidebar-resizer.tsx";
 
 export type ScoutSurfaceOrigins = {
   readonly app?: string | undefined;
@@ -332,6 +336,7 @@ export function AppHeader(props: {
         <a
           href={surfaceHref(props.origins?.app, "/app/")}
           aria-label="Scout dashboard"
+          className="scout-app-header__brand"
         >
           <ScoutMark />
         </a>
@@ -398,14 +403,23 @@ export function AppWorkspaceFrame(props: {
   notice?: ReactNode | undefined;
   sidebar?: ReactNode | undefined;
   children: ReactNode;
-  footer: ReactNode;
+  footer?: ReactNode | undefined;
 }) {
+  const layoutRef = useRef<HTMLDivElement>(null);
+  const resize = useSidebarResize(layoutRef);
+
   return (
-    <div className="scout-page-frame">
+    <div
+      className={cn(
+        "scout-page-frame",
+        props.footer === undefined && "scout-page-frame--no-footer",
+      )}
+    >
       {props.header}
       <div className="scout-app-stage">
         {props.notice}
         <div
+          ref={layoutRef}
           className={cn(
             "scout-app-layout",
             props.sidebar === undefined && "scout-app-layout--focused",
@@ -413,10 +427,17 @@ export function AppWorkspaceFrame(props: {
         >
           {props.sidebar === undefined ? null : (
             <aside
-              className="scout-app-sidebar"
+              className="scout-app-sidebar relative"
               aria-label="Workspace navigation"
             >
               {props.sidebar}
+              <SidebarResizer
+                sidebarWidth={resize.sidebarWidth}
+                isResizing={resize.isResizing}
+                onMouseDown={resize.startResizing}
+                onDoubleClick={resize.resetSidebarWidth}
+                onKeyDown={resize.handleKeyDown}
+              />
             </aside>
           )}
           <main className="scout-app-content">{props.children}</main>

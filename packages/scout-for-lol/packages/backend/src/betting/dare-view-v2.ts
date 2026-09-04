@@ -8,61 +8,26 @@ import {
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { z } from "zod";
+import type { z } from "zod";
 import { formatDareScoutQlV2 } from "#src/betting/dare-contract-compiler-v2.ts";
+import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
+import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-
-const StoredTargetSchema = DareTargetBindingV2Schema.omit({
-  accounts: true,
-}).extend({
-  acceptedAt: z.iso.datetime().nullable(),
-  declinedAt: z.iso.datetime().nullable(),
-  payout: z.number().int().nullable(),
-  fee: z.number().int().nullable(),
-});
-
-export const DareV2ListItemSchema = z.strictObject({
-  contractVersion: z.union([z.literal(2), z.literal(3)]),
-  id: z.number().int().positive(),
-  serverId: z.string().min(1),
-  state: BucksDareV2StateSchema,
-  currentRevision: z.number().int().positive(),
-  fundedRevision: z.number().int().positive().nullable(),
-  challengerDiscordId: z.string().min(1),
-  targetAliases: z.array(z.string().min(1)),
-  plainLanguage: z.string().min(1),
-  openingStake: z.number().int().positive(),
-  potTotal: z.number().int().nonnegative(),
-  evidenceGames: z.number().int().nonnegative(),
-  proposalExpiresAt: z.iso.datetime().nullable(),
-  acceptDeadline: z.iso.datetime().nullable(),
-  activatedAt: z.iso.datetime().nullable(),
-  deadlineAt: z.iso.datetime().nullable(),
-  settledAt: z.iso.datetime().nullable(),
-  finalValue: z.boolean().nullable(),
-  updatedAt: z.iso.datetime(),
-});
-export type DareV2ListItem = z.infer<typeof DareV2ListItemSchema>;
-
-export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
-  channelId: z.string().min(1),
-  originConversationId: z.string().min(1).nullable(),
-  canonicalScoutQl: z.string().min(1),
-  plan: z.union([DareCompiledPlanV2Schema, DareSqlV3CompilationSchema]),
-  semanticProofPlan: z.string().min(1),
-  originalText: z.string().min(1),
-  deadlineSpec: DareDeadlineSpecV2Schema,
-  compilerVersion: z.string().min(1),
-  scoutQlPlanHash: z
-    .string()
-    .regex(/^[a-f\d]{64}$/)
-    .nullable(),
-  evaluatorVersion: z.string().min(1),
-  targets: z.array(StoredTargetSchema),
-  proof: z.json().nullable(),
-  voidReason: z.string().nullable(),
-});
-export type DareV2Inspection = z.infer<typeof DareV2InspectionSchema>;
+import { darePollHealth } from "#src/betting/dare-poll-health.ts";
+import {
+  dareViewerFactsV2,
+  indexVisibleDaresV2,
+  visibleDareIndexSelectionV2,
+} from "#src/betting/dare-view-index-v2.ts";
+import {
+  DareV2InspectionSchema,
+  DareV2ListItemSchema,
+  DareV2ListPageSchema,
+  type DareV2Inspection,
+  type DareV2ListItem,
+  type DareV2ListPage,
+} from "#src/betting/dare-view-model-v2.ts";
 
 type VisibleDareRow = {
   id: number;
@@ -108,6 +73,27 @@ type VisibleDareRow = {
     fee: number | null;
   }[];
   _count: { evidence: number };
+  evidence: {
+    matchId: string;
+    gameStartAt: Date;
+    gameEndAt: Date;
+    queueType: string;
+    candidateMembership: string;
+    evaluationOutput: string;
+    coverageState: string;
+    targetDependencies: string;
+    sourceReferences: string;
+    evaluationTrace: string;
+  }[];
+  contributions: { discordId: string }[];
+  activation: {
+    requestedAt: Date;
+    nextAttemptAt: Date;
+    attemptCount: number;
+    lastAttemptAt: Date | null;
+    errorCode: string | null;
+    completedAt: Date | null;
+  } | null;
 };
 
 function iso(value: Date | null): string | null {
@@ -127,18 +113,63 @@ function activeRevision(row: VisibleDareRow) {
   return revision;
 }
 
+function terminalState(state: BucksDareV2State): boolean {
+  return !["draft", "pending_accept", "activating", "active"].includes(state);
+}
+
+function parsedRevisionPlan(revision: VisibleDareRow["revisions"][number]) {
+  const rawPlan: unknown = JSON.parse(revision.compiledPlan);
+  return revision.compilerVersion === "dare-scoutql-3"
+    ? DareSqlV3CompilationSchema.parse(rawPlan)
+    : DareCompiledPlanV2Schema.parse(rawPlan);
+}
+
+function progressForRow(
+  row: VisibleDareRow,
+  revision: VisibleDareRow["revisions"][number],
+  targetKeys: readonly string[],
+  state: BucksDareV2State,
+) {
+  const common = {
+    targetKeys,
+    final: terminalState(state),
+    finalityReason: terminalState(state) ? state : "in_progress",
+  };
+  const plan = parsedRevisionPlan(revision);
+  return "compilerVersion" in plan
+    ? deriveDareProgressV3({
+        ...common,
+        compilation: plan,
+        evidence: row.evidence,
+        settledValue: row.finalValue,
+      })
+    : deriveDareProgressV2({
+        ...common,
+        plan,
+        evidence: row.evidence.map((evidence) =>
+          storedDareV2Evidence(evidence),
+        ),
+      });
+}
 function listItem(
   row: VisibleDareRow,
-  revision: VisibleDareRow["revisions"][number] = activeRevision(row),
+  viewerDiscordId: DiscordAccountId,
 ): DareV2ListItem {
+  const revision = activeRevision(row);
+  const state = BucksDareV2StateSchema.parse(row.dareState);
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
+  const targetKeys =
+    row.targets.length === 0
+      ? draftTargets.map((target) => target.key)
+      : row.targets.map((target) => target.targetKey);
+  const viewer = dareViewerFactsV2(row, viewerDiscordId);
   return DareV2ListItemSchema.parse({
-    contractVersion: revision.compilerVersion === "dare-sql-3" ? 3 : 2,
+    contractVersion: revision.compilerVersion === "dare-scoutql-3" ? 3 : 2,
     id: row.id,
     serverId: row.serverId,
-    state: BucksDareV2StateSchema.parse(row.dareState),
+    state,
     currentRevision: row.currentRevision,
     fundedRevision: row.fundedRevision,
     challengerDiscordId: row.challengerDiscordId,
@@ -150,6 +181,10 @@ function listItem(
     openingStake: row.openingStake,
     potTotal: row.potTotal,
     evidenceGames: row._count.evidence,
+    progress: progressForRow(row, revision, targetKeys, state),
+    viewerRoles: viewer.roles,
+    availableActions: viewer.actions,
+    requiresViewerAction: viewer.requiresViewerAction,
     proposalExpiresAt: iso(row.proposalExpiresAt),
     acceptDeadline: iso(row.acceptDeadline),
     activatedAt: iso(row.activatedAt),
@@ -162,23 +197,21 @@ function listItem(
 
 function inspection(
   row: VisibleDareRow,
-  revision: VisibleDareRow["revisions"][number] = activeRevision(row),
+  viewerDiscordId: DiscordAccountId,
+  processingHealth: ReturnType<typeof darePollHealth>,
 ): DareV2Inspection {
+  const revision = activeRevision(row);
   const state = BucksDareV2StateSchema.parse(row.dareState);
-  const rawPlan: unknown = JSON.parse(revision.compiledPlan);
-  const plan =
-    revision.compilerVersion === "dare-sql-3"
-      ? DareSqlV3CompilationSchema.parse(rawPlan)
-      : DareCompiledPlanV2Schema.parse(rawPlan);
+  const plan = parsedRevisionPlan(revision);
   const draftTargets = DareTargetBindingV2Schema.array().parse(
     JSON.parse(revision.targetsJson),
   );
   return DareV2InspectionSchema.parse({
-    ...listItem(row),
+    ...listItem(row, viewerDiscordId),
     channelId: row.channelId,
     originConversationId: row.originConversationId,
     canonicalScoutQl:
-      revision.compilerVersion === "dare-sql-3"
+      revision.compilerVersion === "dare-scoutql-3"
         ? revision.canonicalScoutQl
         : visibleDareScoutQlV2({
             state,
@@ -218,6 +251,24 @@ function inspection(
           })),
     proof: row.proofJson === null ? null : JSON.parse(row.proofJson),
     voidReason: row.voidReason,
+    processingHealth,
+    activationHealth:
+      row.activation === null
+        ? null
+        : {
+            status:
+              row.activation.completedAt === null
+                ? row.activation.errorCode === null
+                  ? "pending"
+                  : "retrying"
+                : "complete",
+            requestedAt: row.activation.requestedAt.toISOString(),
+            attemptCount: row.activation.attemptCount,
+            lastAttemptAt: iso(row.activation.lastAttemptAt),
+            nextAttemptAt: row.activation.nextAttemptAt.toISOString(),
+            errorCode: row.activation.errorCode,
+            completedAt: iso(row.activation.completedAt),
+          },
   });
 }
 
@@ -234,39 +285,97 @@ export function visibleDareScoutQlV2(input: {
 const includeVisibleDare = {
   revisions: { orderBy: { revision: "asc" as const } },
   targets: { orderBy: { id: "asc" as const } },
+  contributions: { select: { discordId: true } },
+  evidence: {
+    orderBy: [{ gameEndAt: "asc" as const }, { matchId: "asc" as const }],
+  },
   _count: { select: { evidence: true } },
+  activation: true,
 };
 
-const VISIBLE_DARE_PAGE_SIZE = 100;
-
-function matchesVisibleDareSearch(
-  row: VisibleDareRow,
-  item: DareV2ListItem,
-  search: string | undefined,
-): boolean {
-  if (search === undefined || search.length === 0) return true;
-  const normalizedSearch = search.toLocaleLowerCase();
-  const revision = activeRevision(row);
-  return (
-    revision.originalText.toLocaleLowerCase().includes(normalizedSearch) ||
-    item.targetAliases.some((alias) =>
-      alias.toLocaleLowerCase().includes(normalizedSearch),
-    )
-  );
-}
-
-function matchingVisibleDareItems(
-  rows: VisibleDareRow[],
-  search: string | undefined,
-): DareV2ListItem[] {
-  return rows
-    .map((row) => ({ row, item: listItem(row) }))
-    .filter(({ row, item }) => matchesVisibleDareSearch(row, item, search))
-    .map(({ item }) => item);
-}
+const VISIBLE_DARE_PAGE_SIZE = 25;
 
 function visibleState(state: BucksDareV2State): boolean {
   return state !== "draft" && state !== "deleted";
+}
+
+export async function listVisibleDarePageV2(
+  input: {
+    serverId: DiscordGuildId;
+    viewerDiscordId: DiscordAccountId;
+    scope: "mine" | "guild" | "needs_action";
+    search?: string | undefined;
+    states?: BucksDareV2State[] | undefined;
+    role?: "challenger" | "target" | "contributor" | "involved" | undefined;
+    sort?: "needs_action" | "deadline" | "updated" | undefined;
+    cursor?: string | undefined;
+    limit?: number | undefined;
+  },
+  prisma: ExtendedPrismaClient,
+): Promise<DareV2ListPage> {
+  const search = input.search?.trim();
+  const rows = await prisma.bucksDareV2.findMany({
+    where: {
+      serverId: input.serverId,
+      AND: [
+        input.scope === "guild"
+          ? { dareState: { notIn: ["draft", "deleted"] } }
+          : {
+              dareState: { not: "deleted" },
+              OR: [
+                { challengerDiscordId: input.viewerDiscordId },
+                { targets: { some: { discordId: input.viewerDiscordId } } },
+                {
+                  contributions: {
+                    some: { discordId: input.viewerDiscordId },
+                  },
+                },
+              ],
+            },
+      ],
+    },
+    select: visibleDareIndexSelectionV2,
+  });
+  const matches = indexVisibleDaresV2({
+    rows,
+    viewerDiscordId: input.viewerDiscordId,
+    search,
+    states: input.states,
+    role: input.role,
+    needsAction: input.scope === "needs_action",
+    sort:
+      input.sort ??
+      (input.scope === "needs_action" ? "needs_action" : "updated"),
+  });
+  const cursorIndex =
+    input.cursor === undefined
+      ? -1
+      : matches.findIndex((item) => item.id.toString() === input.cursor);
+  const start = cursorIndex + 1;
+  const limit = input.limit ?? VISIBLE_DARE_PAGE_SIZE;
+  const pageIndex = matches.slice(start, start + limit);
+  const pageRows = await prisma.bucksDareV2.findMany({
+    where: { id: { in: pageIndex.map((item) => item.id) } },
+    include: includeVisibleDare,
+  });
+  const pageRowsById = new Map(pageRows.map((row) => [row.id, row]));
+  const items = pageIndex.map((item) => {
+    const row = pageRowsById.get(item.id);
+    if (row === undefined) {
+      throw new Error(
+        `Dare v2 ${item.id.toString()} disappeared while paging.`,
+      );
+    }
+    return listItem(row, input.viewerDiscordId);
+  });
+  const last = pageIndex.at(-1);
+  return DareV2ListPageSchema.parse({
+    items,
+    nextCursor:
+      last !== undefined && start + items.length < matches.length
+        ? last.id.toString()
+        : null,
+  });
 }
 
 export async function listVisibleDaresV2(
@@ -278,46 +387,8 @@ export async function listVisibleDaresV2(
   },
   prisma: ExtendedPrismaClient,
 ): Promise<DareV2ListItem[]> {
-  const search = input.search?.trim();
-  const matches: DareV2ListItem[] = [];
-  let cursorId: number | undefined;
-  while (matches.length < VISIBLE_DARE_PAGE_SIZE) {
-    const rows = await prisma.bucksDareV2.findMany({
-      where: {
-        serverId: input.serverId,
-        AND: [
-          input.scope === "guild"
-            ? { dareState: { notIn: ["draft", "deleted"] } }
-            : {
-                dareState: { not: "deleted" },
-                OR: [
-                  { challengerDiscordId: input.viewerDiscordId },
-                  { targets: { some: { discordId: input.viewerDiscordId } } },
-                  {
-                    contributions: {
-                      some: { discordId: input.viewerDiscordId },
-                    },
-                  },
-                ],
-              },
-        ],
-      },
-      include: includeVisibleDare,
-      orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
-      take: VISIBLE_DARE_PAGE_SIZE,
-      ...(cursorId === undefined ? {} : { cursor: { id: cursorId }, skip: 1 }),
-    });
-    matches.push(...matchingVisibleDareItems(rows, search));
-    if (matches.length >= VISIBLE_DARE_PAGE_SIZE) {
-      return matches.slice(0, VISIBLE_DARE_PAGE_SIZE);
-    }
-    const lastRow = rows.at(-1);
-    if (lastRow === undefined || rows.length < VISIBLE_DARE_PAGE_SIZE) {
-      return matches;
-    }
-    cursorId = lastRow.id;
-  }
-  return matches;
+  const page = await listVisibleDarePageV2({ ...input, limit: 100 }, prisma);
+  return page.items;
 }
 
 export async function inspectVisibleDareV2(
@@ -325,14 +396,16 @@ export async function inspectVisibleDareV2(
     dareId: number;
     serverId: DiscordGuildId;
     viewerDiscordId: DiscordAccountId;
-    revision?: number;
   },
   prisma: ExtendedPrismaClient,
 ): Promise<DareV2Inspection | null> {
-  const row = await prisma.bucksDareV2.findFirst({
-    where: { id: input.dareId, serverId: input.serverId },
-    include: includeVisibleDare,
-  });
+  const [row, botState] = await Promise.all([
+    prisma.bucksDareV2.findFirst({
+      where: { id: input.dareId, serverId: input.serverId },
+      include: includeVisibleDare,
+    }),
+    prisma.botState.findUnique({ where: { id: 1 } }),
+  ]);
   if (row === null) return null;
   const state = BucksDareV2StateSchema.parse(row.dareState);
   if (
@@ -341,16 +414,5 @@ export async function inspectVisibleDareV2(
   ) {
     return null;
   }
-  const revision =
-    input.revision === undefined
-      ? activeRevision(row)
-      : row.revisions.find(
-          (candidate) => candidate.revision === input.revision,
-        );
-  if (revision === undefined) {
-    throw new Error(
-      `Dare v2 ${row.id.toString()} is missing revision ${(input.revision ?? 0).toString()}.`,
-    );
-  }
-  return inspection(row, revision);
+  return inspection(row, input.viewerDiscordId, darePollHealth(botState));
 }

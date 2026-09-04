@@ -20,12 +20,11 @@ export async function replyBbRules(
   serverId: DiscordGuildId,
   policy: typeof isPolicyEnabled = isPolicyEnabled,
 ): Promise<void> {
-  const [sqlV3, v2, relational] = await Promise.all([
-    policy("dare_sql_v3", { server: serverId }),
+  const [sqlV3, v2] = await Promise.all([
+    policy("dare_extended_contracts_enabled", { server: serverId }),
     policy("dare_v2", { server: serverId }),
-    policy("scoutql_relational_enabled", { server: serverId }),
   ]);
-  const dareVersion = sqlV3 && relational ? 3 : v2 ? 2 : 1;
+  const dareVersion = sqlV3 ? 3 : v2 ? 2 : 1;
   await interaction.editReply({ embeds: [buildBbRulesEmbed(dareVersion)] });
 }
 

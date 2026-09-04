@@ -206,6 +206,8 @@ describe("BucksNotificationPreferencesForm", () => {
         preferences={{
           ownBetSettlementDms: true,
           betsOnPlayerSettlementDms: false,
+          dareLifecycleDms: true,
+          dareProgressDms: false,
         }}
         pending={false}
         error={null}
@@ -215,6 +217,8 @@ describe("BucksNotificationPreferencesForm", () => {
     expect(html).toContain("<form");
     expect(html).toContain('name="ownBetSettlementDms"');
     expect(html).toContain('name="betsOnPlayerSettlementDms"');
+    expect(html).toContain('name="dareLifecycleDms"');
+    expect(html).toContain('name="dareProgressDms"');
     expect(html).toContain("DM me when my own bets settle");
     expect(html).toContain("DM me when bets on my games settle");
   });

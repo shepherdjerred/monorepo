@@ -56,11 +56,33 @@ describe("conversationToMarkdown", () => {
     expect(markdown).toContain("| Faker | 12 |");
   });
 
-  test("formats metric values through the display formatter", () => {
+  test("formats metric values through the display formatter and omits redundant game basis when games column exists", () => {
     const markdown = conversationToMarkdown("Wins", answerWithPreview(PREVIEW));
     expect(markdown).toContain("58.3%");
-    expect(markdown).toContain("(Based on 12 games)");
+    expect(markdown).not.toContain("(Based on 12 games)");
     expect(markdown).not.toContain("0.5833");
+  });
+
+  test("includes game basis when games column is absent", () => {
+    const previewWithoutGames = {
+      ...PREVIEW,
+      columns: [
+        { key: "label", label: "Player", format: "text" },
+        { key: "win_rate", label: "Win rate", format: "percent" },
+      ],
+      rows: [
+        {
+          label: "Faker",
+          games: 12,
+          values: [{ column: "win_rate", value: 0.5833 }],
+        },
+      ],
+    };
+    const markdown = conversationToMarkdown(
+      "Wins",
+      answerWithPreview(previewWithoutGames),
+    );
+    expect(markdown).toContain("58.3% (Based on 12 games)");
   });
 
   test("adds one plain-language note for thin rate rows", () => {

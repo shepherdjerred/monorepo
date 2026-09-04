@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { bucksStakeFormSchema } from "./bucks-forms.ts";
+import {
+  BucksContributionFormSchema,
+  bucksStakeFormSchema,
+} from "./bucks-forms.ts";
 
 describe("bucks stake form schema", () => {
   const schema = bucksStakeFormSchema(25);
@@ -32,5 +35,19 @@ describe("bucks stake form schema", () => {
 
   test("rejects a missing side", () => {
     expect(schema.safeParse({ side: "", stake: "5" }).success).toBe(false);
+  });
+});
+
+describe("BucksContributionFormSchema", () => {
+  test("accepts only positive whole BB amounts", () => {
+    expect(
+      BucksContributionFormSchema.parse({ contributionAmount: "10" }),
+    ).toEqual({ contributionAmount: 10 });
+    expect(() =>
+      BucksContributionFormSchema.parse({ contributionAmount: "1.5" }),
+    ).toThrow();
+    expect(() =>
+      BucksContributionFormSchema.parse({ contributionAmount: "0" }),
+    ).toThrow();
   });
 });

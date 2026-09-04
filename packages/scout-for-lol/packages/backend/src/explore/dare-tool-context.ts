@@ -22,7 +22,9 @@ export async function dareExploreEnabled(
   if (capability === null) return false;
   const [v2, v3, relational] = await Promise.all([
     isPolicyEnabled("dare_v2", { server: capability.serverId }),
-    isPolicyEnabled("dare_sql_v3", { server: capability.serverId }),
+    isPolicyEnabled("dare_extended_contracts_enabled", {
+      server: capability.serverId,
+    }),
     isPolicyEnabled("scoutql_relational_enabled", {
       server: capability.serverId,
     }),

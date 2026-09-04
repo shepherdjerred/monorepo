@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
   BucksParlaySideSchema,
+  BucksDareV2StateSchema,
   BucksPoolRosterSchema,
   BucksStakeSchema,
   DiscordAccountIdSchema,
@@ -21,15 +22,11 @@ import { cancelBet } from "#src/betting/cancel-bet.ts";
 import { bettingAnchor } from "#src/betting/components.ts";
 import {
   inspectVisibleDareV2,
-  listVisibleDaresV2,
+  listVisibleDarePageV2,
 } from "#src/betting/dare-view-v2.ts";
 import { cancellationHouseCut } from "#src/betting/house-cut.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { ledgerKindLabel } from "#src/betting/navigation.ts";
-import {
-  getBucksNotificationPreferences,
-  updateBucksNotificationPreferences,
-} from "#src/betting/notification-preferences.ts";
 import { getOpenMarketsView } from "#src/betting/open-market-view.ts";
 import { placeBet } from "#src/betting/place-bet.ts";
 import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
@@ -53,14 +50,21 @@ import {
   validateDareDraftEditorV2,
 } from "#src/explore/dare-editor-v2.ts";
 import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
+import { bucksDareActionProcedures } from "#src/trpc/router/bucks-dare-action-procedures.ts";
+import { bucksNotificationProcedures } from "#src/trpc/router/bucks-notification-procedures.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const MatchInput = GuildInput.extend({
   matchId: z.string().min(1).max(64),
 });
 const DareListInput = GuildInput.extend({
-  scope: z.enum(["mine", "guild"]),
+  scope: z.enum(["mine", "guild", "needs_action"]),
   search: z.string().min(1).max(100).optional(),
+  states: z.array(BucksDareV2StateSchema).max(10).optional(),
+  role: z.enum(["challenger", "target", "contributor", "involved"]).optional(),
+  sort: z.enum(["needs_action", "deadline", "updated"]).optional(),
+  cursor: z.string().min(1).optional(),
+  limit: z.number().int().min(1).max(50).optional(),
 });
 const DareInspectInput = GuildInput.extend({
   dareId: z.number().int().positive(),
@@ -79,7 +83,7 @@ async function dareManagementAvailable(
   const [dareEnabled, sqlV3Enabled, relationalEnabled, existingDare] =
     await Promise.all([
       isPolicyEnabled("dare_v2", { server: guildId }),
-      isPolicyEnabled("dare_sql_v3", { server: guildId }),
+      isPolicyEnabled("dare_extended_contracts_enabled", { server: guildId }),
       isPolicyEnabled("scoutql_relational_enabled", { server: guildId }),
       prisma.bucksDareV2.findFirst({
         where: {
@@ -121,19 +125,7 @@ async function captureWebActivity(
   });
 }
 
-/**
- * The Bryan Bucks web surface.
- *
- * Every read model and mutation delegates to the existing `src/betting/`
- * domain functions — the guarded-conditional-write transactions, post-commit
- * metrics, and ledger chokepoint all live there and are shared verbatim with
- * the Discord surface. Mutations additionally enqueue the same serialized
- * Discord market-message refresh the `/bb` handlers use, so the channel copy
- * never goes stale because a Buck moved from a browser.
- *
- * Every procedure except `status` takes an explicit `guildId` validated
- * against the caller's resolved scope; none of them trusts the client.
- */
+/** Bryan Bucks web reads and domain-backed mutations, scoped by guild. */
 export const bucksRouter = router({
   status: webProcedure.query(async ({ ctx }) => {
     const scope = await resolveBucksScope(ctx.user);
@@ -158,12 +150,17 @@ export const bucksRouter = router({
 
   dareList: webProcedure.input(DareListInput).query(async ({ ctx, input }) => {
     await assertBucksScope(ctx.user, input.guildId);
-    return await listVisibleDaresV2(
+    return await listVisibleDarePageV2(
       {
         serverId: input.guildId,
         viewerDiscordId: DiscordAccountIdSchema.parse(ctx.user.discordId),
         scope: input.scope,
         ...(input.search === undefined ? {} : { search: input.search }),
+        ...(input.states === undefined ? {} : { states: input.states }),
+        ...(input.role === undefined ? {} : { role: input.role }),
+        ...(input.sort === undefined ? {} : { sort: input.sort }),
+        ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
+        ...(input.limit === undefined ? {} : { limit: input.limit }),
       },
       prisma,
     );
@@ -186,6 +183,9 @@ export const bucksRouter = router({
       }
       return dare;
     }),
+
+  ...bucksDareActionProcedures,
+  ...bucksNotificationProcedures,
 
   dareValidateDraft: webProcedure
     .input(DareDraftInput)
@@ -308,51 +308,6 @@ export const bucksRouter = router({
       entries: snapshot.entries,
     } as const;
   }),
-
-  notificationPreferences: webProcedure
-    .input(GuildInput)
-    .query(async ({ ctx, input }) => {
-      await assertBucksScope(ctx.user, input.guildId);
-      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
-      const preferences = await getBucksNotificationPreferences({
-        serverId: input.guildId,
-        discordId,
-      });
-      return {
-        ownBetSettlementDms: preferences.ownBetSettlementDms,
-        betsOnPlayerSettlementDms: preferences.betsOnPlayerSettlementDms,
-      };
-    }),
-
-  setNotificationPreferences: webMutationProcedure
-    .input(
-      GuildInput.extend({
-        ownBetSettlementDms: z.boolean().optional(),
-        betsOnPlayerSettlementDms: z.boolean().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      await assertBucksScope(ctx.user, input.guildId);
-      const discordId = DiscordAccountIdSchema.parse(ctx.user.discordId);
-      const preferences = await updateBucksNotificationPreferences({
-        serverId: input.guildId,
-        discordId,
-        updates: {
-          ...(input.ownBetSettlementDms === undefined
-            ? {}
-            : { ownBetSettlementDms: input.ownBetSettlementDms }),
-          ...(input.betsOnPlayerSettlementDms === undefined
-            ? {}
-            : {
-                betsOnPlayerSettlementDms: input.betsOnPlayerSettlementDms,
-              }),
-        },
-      });
-      return {
-        ownBetSettlementDms: preferences.ownBetSettlementDms,
-        betsOnPlayerSettlementDms: preferences.betsOnPlayerSettlementDms,
-      };
-    }),
 
   placeOutcomeBet: webMutationProcedure
     .input(

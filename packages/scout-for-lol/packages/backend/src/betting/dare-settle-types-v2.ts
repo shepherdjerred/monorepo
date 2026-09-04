@@ -5,8 +5,8 @@ import type {
 
 export type DareProofV3 = {
   planVersion: 3;
-  compilerVersion: "dare-sql-3";
-  evaluatorVersion: "dare-sql-evaluator-3";
+  compilerVersion: "dare-scoutql-3";
+  evaluatorVersion: "dare-evaluator-3";
   queryHash: string;
   value: boolean;
   decisiveAt: string;

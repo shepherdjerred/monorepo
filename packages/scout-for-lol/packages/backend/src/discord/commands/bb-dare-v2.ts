@@ -101,7 +101,7 @@ function contractFields(revision: {
       value: targets.map((target) => target.alias).join(", "),
     },
   ];
-  if (revision.compilerVersion === "dare-sql-3") {
+  if (revision.compilerVersion === "dare-scoutql-3") {
     const compilation = DareSqlV3CompilationSchema.parse(
       JSON.parse(revision.compiledPlan),
     );
@@ -300,7 +300,7 @@ export async function replyBbDareV2(
     if (intent.kind !== "intent_created") {
       throw new Error(`Dare v2 funding intent failed: ${intent.kind}`);
     }
-    const sqlV3 = draft.revision.compilerVersion === "dare-sql-3";
+    const sqlV3 = draft.revision.compilerVersion === "dare-scoutql-3";
     const queryInline = draft.revision.canonicalScoutQl.length <= 900;
     const embed = new EmbedBuilder()
       .setTitle("🎯 Confirm your Scout dare")

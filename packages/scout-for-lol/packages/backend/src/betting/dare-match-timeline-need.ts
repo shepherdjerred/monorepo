@@ -13,7 +13,6 @@ export async function dareV2MatchNeedsTimeline(
 ): Promise<boolean> {
   const context = relationalDareMatchContext(matchData);
   if (context === null) return false;
-  if (context.queue === "arena") return false;
   const rows = await prismaClient.bucksDareV2.findMany({
     where: {
       dareState: "active",

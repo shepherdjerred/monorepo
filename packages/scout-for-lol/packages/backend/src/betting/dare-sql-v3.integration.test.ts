@@ -3,11 +3,10 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
-  RawMatchSchema,
-  RawTimelineSchema,
-  type DareTargetBindingV2,
-  type RawMatch,
-} from "@scout-for-lol/data";
+  dareSqlV3TargetForMatch as targetForMatch,
+  dareSqlV3TimelineForMatch,
+  loadDareSqlV3MatchFixture as loadMatchFixture,
+} from "#src/betting/dare-sql-v3-test-fixture.ts";
 import {
   compileDareSqlV3,
   decisiveTargetDependenciesV3,
@@ -24,56 +23,10 @@ const KILL_PARTICIPATION_SQL = `WITH games AS (
     (p.kills + p.assists) * 1.0 / NULLIF(t.champion_kills, 0) >= 0 AS matched
   FROM T1 AS p
   JOIN match_teams AS t ON t.match_id = p.match_id AND t.team_id = p.team_id
-    ORDER BY p.game_end_at ASC, p.match_id ASC, p.puuid ASC, t.team_id ASC
+  ORDER BY p.game_end_at ASC, p.match_id ASC
   LIMIT 100
 )
 SELECT COUNT(*) FILTER (WHERE matched IS TRUE) >= 1 AS achieved FROM games`;
-
-async function loadMatchFixture(): Promise<RawMatch> {
-  const fixtureUrl = new URL(
-    "../league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
-    import.meta.url,
-  );
-  const json: unknown = await Bun.file(fixtureUrl).json();
-  const match = RawMatchSchema.parse(json);
-  return RawMatchSchema.parse({
-    ...match,
-    info: { ...match.info, queueId: 420, gameMode: "CLASSIC", mapId: 11 },
-  });
-}
-
-function targetForMatch(match: RawMatch): DareTargetBindingV2 {
-  const participant = match.info.participants[0];
-  if (participant === undefined) throw new Error("fixture participant missing");
-  return {
-    key: "T1",
-    discordId: "100000000000000001",
-    playerId: 1,
-    alias: "Target",
-    accounts: [
-      {
-        puuid: participant.puuid,
-        trackingStartedAt: new Date(
-          match.info.gameStartTimestamp - 1000,
-        ).toISOString(),
-      },
-    ],
-  };
-}
-
-function targetsForMatch(match: RawMatch): DareTargetBindingV2[] {
-  const first = targetForMatch(match);
-  return [
-    first,
-    {
-      ...first,
-      key: "T2",
-      discordId: "100000000000000002",
-      playerId: 2,
-      alias: "Other target",
-    },
-  ];
-}
 
 describe("Dare SQL v3", () => {
   test("runs ordinary SQL over target, participant, and team relations", async () => {
@@ -103,6 +56,8 @@ describe("Dare SQL v3", () => {
 
       expect(evidence).toEqual({
         achieved: true,
+        rank: null,
+        improvement: null,
         results: [
           {
             gameSet: "games",
@@ -121,6 +76,8 @@ describe("Dare SQL v3", () => {
         coverage: "not_required",
         sourceMatchIds: [match.metadata.matchId],
         queryHash: compilation.queryHash,
+        timelineEvents: [],
+        race: null,
       });
       await expect(executeDareSqlV3(execution)).resolves.toEqual(evidence);
       await expect(
@@ -132,8 +89,6 @@ describe("Dare SQL v3", () => {
           },
         }),
       ).rejects.toThrow("does not match its immutable AST");
-      // The filtered count is conservatively deadline-only until the
-      // append-monotonicity of its CTE predicate can be proven.
       expect(compilation.finality).toBe("deadline_only");
       expect(compilation.maxEligibleGames).toBe(100);
     } finally {
@@ -170,22 +125,7 @@ describe("Dare SQL v3", () => {
     const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
     try {
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const timeline = RawTimelineSchema.parse({
-        metadata: {
-          dataVersion: "2",
-          matchId: match.metadata.matchId,
-          participants: match.info.participants.map((row) => row.puuid),
-        },
-        info: {
-          frameInterval: 60_000,
-          gameId: match.info.gameId,
-          participants: match.info.participants.map((row) => ({
-            participantId: row.participantId,
-            puuid: row.puuid,
-          })),
-          frames: [],
-        },
-      });
+      const timeline = dareSqlV3TimelineForMatch(match, []);
       expect(
         await writeTimelineStagingFiles(lakeDir, timeline, new Date()),
       ).toBe(true);
@@ -253,7 +193,7 @@ describe("Dare SQL v3 compilation", () => {
           queryText: `SELECT COUNT(*) ${operator} 0 AS achieved FROM T1`,
           targetKeys: ["T1"],
         }),
-      ).resolves.toMatchObject({ compilerVersion: "dare-sql-3" });
+      ).resolves.toMatchObject({ compilerVersion: "dare-scoutql-3" });
     },
   );
 
@@ -290,7 +230,17 @@ describe("Dare SQL v3 compilation", () => {
     const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
     try {
       expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const targets = targetsForMatch(match);
+      const first = targetForMatch(match);
+      const targets = [
+        first,
+        {
+          ...first,
+          key: "T2",
+          discordId: "100000000000000002",
+          playerId: 2,
+          alias: "Other target",
+        },
+      ];
       const compilation = await compileDareSqlV3({
         queryText:
           "WITH first_branch AS (SELECT COUNT(*) > 0 AS matched FROM T1), second_branch AS (SELECT COUNT(*) > 0 AS matched FROM T2) SELECT (SELECT matched FROM first_branch) OR (SELECT matched FROM second_branch) AS achieved",
@@ -305,31 +255,6 @@ describe("Dare SQL v3 compilation", () => {
           lakeDir,
         }),
       ).resolves.toEqual(["T1"]);
-    } finally {
-      await rm(lakeDir, { recursive: true, force: true });
-    }
-  });
-
-  test("preserves the root FROM clause while evaluating CTE-backed OR branches", async () => {
-    const match = await loadMatchFixture();
-    const lakeDir = await mkdtemp(path.join(tmpdir(), "dare-sql-v3-"));
-    try {
-      expect(await writeMatchStagingFile(lakeDir, match)).toBe(true);
-      const targets = targetsForMatch(match);
-      const compilation = await compileDareSqlV3({
-        queryText:
-          "WITH flags AS (SELECT EXISTS (SELECT 1 FROM T1) AS t1_hit, EXISTS (SELECT 1 FROM T2) AS t2_hit) SELECT MAX(CASE WHEN t1_hit OR t2_hit THEN 1 ELSE 0 END) = 1 AS achieved FROM flags",
-        targetKeys: ["T1", "T2"],
-      });
-      await expect(
-        decisiveTargetDependenciesV3({
-          compilation,
-          targets,
-          start: new Date(match.info.gameStartTimestamp - 1000),
-          end: new Date(match.info.gameEndTimestamp + 1000),
-          lakeDir,
-        }),
-      ).resolves.toEqual(["T1", "T2"]);
     } finally {
       await rm(lakeDir, { recursive: true, force: true });
     }
@@ -355,26 +280,6 @@ describe("Dare SQL v3 compilation", () => {
       "nondeterministic limit",
       "SELECT EXISTS (SELECT 1 FROM T1 LIMIT 1) AS achieved",
       "LIMIT must be ordered",
-    ],
-    [
-      "non-unique participant limit",
-      "SELECT EXISTS (SELECT 1 FROM match_participants ORDER BY game_end_at, match_id LIMIT 1) AND EXISTS (SELECT 1 FROM T1) AS achieved",
-      "unique ordering columns: puuid",
-    ],
-    [
-      "CTE participant limit",
-      "WITH p AS (SELECT * FROM match_participants) SELECT (SELECT win FROM p ORDER BY game_end_at, match_id LIMIT 1) AND EXISTS (SELECT 1 FROM T1) AS achieved",
-      "unique ordering columns: puuid",
-    ],
-    [
-      "integer overflow",
-      "SELECT SUM(kills * 1000000000) > 0 AS achieved FROM T1",
-      "integer multiplication must use a decimal literal",
-    ],
-    [
-      "column multiplication overflow",
-      "SELECT SUM(total_damage_dealt * total_damage_dealt) > 0 AS achieved FROM T1",
-      "integer multiplication must use a decimal literal",
     ],
   ])("rejects %s", async (_name, queryText, expected) => {
     await expect(

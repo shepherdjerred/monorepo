@@ -200,6 +200,15 @@ source match IDs, and query hash. Only structurally monotone counts can settle
 early; rates, averages, equality, and upper bounds wait for the deadline or game
 cap. Existing v1 and v2 contracts continue through their frozen evaluators.
 
+Evaluator 3 also supplies explicit competition and activation envelopes. Race
+lanes settle only after the evidence watermark passes the earliest qualifying
+`game_end_at`, which admits exact-timestamp ties from separately ingested
+matches. Rank and historical-improvement contracts first persist an activation
+job and enter `activating`; a frozen rank or report-lake baseline starts their
+eligibility window and deadline. Ranked post-match capture precedes Dare
+settlement and is reused by report generation, so a required Riot failure cannot
+advance either evidence or the match cursor.
+
 ## Component Responsibilities
 
 ### Backend Service

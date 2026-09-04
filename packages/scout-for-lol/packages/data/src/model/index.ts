@@ -6,6 +6,7 @@ export * from "./discord.ts";
 export * from "./division.ts";
 export * from "./dare-contract-v2.ts";
 export * from "./dare-contract-v3.ts";
+export * from "./dare-progress.ts";
 export * from "./dare-paraphrase-corpus.ts";
 export * from "./lake-columns.ts";
 export * from "./lane.ts";

@@ -11,6 +11,8 @@ import {
 export type BucksNotificationPreferencesView = {
   ownBetSettlementDms: boolean;
   betsOnPlayerSettlementDms: boolean;
+  dareLifecycleDms: boolean;
+  dareProgressDms: boolean;
 };
 
 /**
@@ -31,10 +33,26 @@ export function BucksNotificationPreferencesForm(props: {
       props.onSubmit(value);
     },
   });
-  const { ownBetSettlementDms, betsOnPlayerSettlementDms } = props.preferences;
+  const {
+    ownBetSettlementDms,
+    betsOnPlayerSettlementDms,
+    dareLifecycleDms,
+    dareProgressDms,
+  } = props.preferences;
   useEffect(() => {
-    form.reset({ ownBetSettlementDms, betsOnPlayerSettlementDms });
-  }, [form, ownBetSettlementDms, betsOnPlayerSettlementDms]);
+    form.reset({
+      ownBetSettlementDms,
+      betsOnPlayerSettlementDms,
+      dareLifecycleDms,
+      dareProgressDms,
+    });
+  }, [
+    form,
+    ownBetSettlementDms,
+    betsOnPlayerSettlementDms,
+    dareLifecycleDms,
+    dareProgressDms,
+  ]);
 
   return (
     <form
@@ -57,6 +75,36 @@ export function BucksNotificationPreferencesForm(props: {
                 }}
               />
               DM me when my own bets settle
+            </label>
+          )}
+        </form.Field>
+        <form.Field name="dareLifecycleDms">
+          {(field) => (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name={field.name}
+                checked={field.state.value}
+                onChange={(event) => {
+                  field.handleChange(event.target.checked);
+                }}
+              />
+              DM me about Dares being funded, accepted, settled, or cancelled
+            </label>
+          )}
+        </form.Field>
+        <form.Field name="dareProgressDms">
+          {(field) => (
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name={field.name}
+                checked={field.state.value}
+                onChange={(event) => {
+                  field.handleChange(event.target.checked);
+                }}
+              />
+              DM me when a Dare makes material progress
             </label>
           )}
         </form.Field>

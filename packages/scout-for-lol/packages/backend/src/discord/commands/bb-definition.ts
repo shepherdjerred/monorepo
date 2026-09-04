@@ -66,7 +66,7 @@ export const bbCommand = new SlashCommandBuilder()
   .addSubcommand((sub) =>
     sub
       .setName("notifications")
-      .setDescription("Choose which Bryan Bucks settlement DMs you receive")
+      .setDescription("Choose which Bryan Bucks DMs you receive")
       .addStringOption((option) =>
         option
           .setName("your_bets")
@@ -80,6 +80,24 @@ export const bbCommand = new SlashCommandBuilder()
         option
           .setName("bets_on_you")
           .setDescription("DMs about bets other users placed on you")
+          .addChoices(
+            { name: "On", value: "on" },
+            { name: "Off", value: "off" },
+          ),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("dare_lifecycle")
+          .setDescription("DMs when a Dare changes lifecycle state")
+          .addChoices(
+            { name: "On", value: "on" },
+            { name: "Off", value: "off" },
+          ),
+      )
+      .addStringOption((option) =>
+        option
+          .setName("dare_progress")
+          .setDescription("DMs when a Dare makes material progress")
           .addChoices(
             { name: "On", value: "on" },
             { name: "Off", value: "off" },

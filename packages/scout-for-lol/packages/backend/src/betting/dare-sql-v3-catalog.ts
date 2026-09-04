@@ -76,6 +76,17 @@ export function dareSqlV3Catalog() {
       "Any timeline query must join timeline_coverage.",
       "Every LIMIT must order by game_end_at and match_id.",
       "Use standard SQL comparisons, aggregates, CASE, AND, OR, and NOT.",
+      "Streaks use eligible rows only, ordered by game_end_at then match_id; every eligible miss resets the run.",
+      "Distinct streaks count a projected value such as champion_id inside a winning run.",
+      "Item and skill sequences order by event_timestamp_ms, frame_index, then event_index within one match.",
+      "Ordered-subsequence sequences allow unrelated family events; exact sequences reject intervening events of the same family.",
+      "ITEM_PURCHASED records purchase order; ITEM_SOLD and ITEM_UNDO do not erase purchases.",
+      "Skill slots 1, 2, 3, and 4 render as Q, W, E, and R.",
+      "Opponent-team joins use unequal team_id values and automatically exclude matches with other than two teams.",
+      "A race declares one game-set lane per target; earliest game_end_at wins and exact timestamp ties split the pot.",
+      "Rank activation supports solo or flex reach and normalized-LP-gain goals; every target must be ranked in the one selected queue.",
+      "Improvement activation freezes an explicit last-N-games or last-N-days numeric baseline and uses average, maximum, or minimum aggregation.",
+      "Personal best is strict; ties never qualify. Absolute and percentage improvement can move higher or lower.",
     ],
   };
 }

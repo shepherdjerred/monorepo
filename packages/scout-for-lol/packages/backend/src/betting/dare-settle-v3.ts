@@ -1,31 +1,38 @@
 import {
+  DareContractV3Schema,
   DareSqlV3CompilationSchema,
+  LeaguePuuidSchema,
   resolveQueueTypeFromGame,
   type DareContractV3,
   type DareSqlV3Evidence,
   type RawMatch,
 } from "@scout-for-lol/data";
+import {
+  evaluateImprovementEvidenceV3,
+  evaluateRankEvidenceV3,
+} from "#src/betting/dare-activation-evaluation-v3.ts";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { isRemakeMatch } from "#src/betting/outcome.ts";
 import { matchTouchesRelationalDare } from "#src/betting/dare-match-eligibility.ts";
-import { resolveLakeDir } from "#src/report-lake/paths.ts";
-import { writeMatchStagingFile } from "#src/report-lake/staging.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
-import {
-  dareV2MoneyFactsInTransaction,
-  payDareV2TargetsInTransaction,
-  refundDareV2ContributionsInTransaction,
-} from "#src/betting/dare-ledger-v2.ts";
+import { dareV2MoneyFactsInTransaction } from "#src/betting/dare-ledger-v2.ts";
+import { distributeDareResolutionV3 } from "#src/betting/dare-resolution-v3.ts";
+import { claimActiveDareV2Settlement } from "#src/betting/dare-settlement-claim-v2.ts";
 import {
   decisiveTargetDependenciesV3,
   executeDareSqlV3,
 } from "#src/betting/dare-sql-v3.ts";
+import {
+  enqueueMaterialDareProgressNotificationV3,
+  enqueueTerminalDareNotification,
+} from "#src/betting/dare-notification-production.ts";
 import type {
   DareProofV3,
   DareV2SettlementSummary,
 } from "#src/betting/dare-settle-types-v2.ts";
 import type { DareFinalityV2 } from "#src/betting/dare-proof-v2.ts";
 import { type Db, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { getLatestRankAfterAndAtOrBefore } from "#src/league/model/rank-history.ts";
 
 type ActiveRelationalDareRow = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
@@ -41,24 +48,53 @@ function compilationForContract(contract: DareContractV3) {
     facts: contract.facts,
     resultStructure: contract.resultStructure,
     finality: contract.finality,
+    competition: contract.competition,
+    activation: contract.activation,
   });
 }
 
-function finalityForEvidence(
-  contract: DareContractV3,
+export function dareFinalityForEvidenceV3(
+  contract: Pick<
+    DareContractV3,
+    "competition" | "finality" | "maxEligibleGames"
+  > & { activation?: DareContractV3["activation"] },
   evidence: DareSqlV3Evidence,
   deadlineReached: boolean,
+  evidenceWatermark?: Date,
 ): DareFinalityV2 {
   if (deadlineReached) {
     return { value: evidence.achieved, final: true, reason: "deadline" };
   }
-  if (contract.finality === "monotone_true" && evidence.achieved === true) {
+  if (contract.competition.kind === "race") {
+    return dareRaceFinalityV3(evidence, evidenceWatermark);
+  }
+  if (
+    contract.activation?.kind !== "rank" &&
+    contract.finality === "monotone_true" &&
+    evidence.achieved === true
+  ) {
     return { value: true, final: true, reason: "monotone_success" };
   }
   if (evidence.sourceMatchIds.length >= contract.maxEligibleGames) {
     return { value: evidence.achieved, final: true, reason: "game_cap" };
   }
   return { value: evidence.achieved, final: false, reason: "reversible" };
+}
+
+export function dareRaceFinalityV3(
+  evidence: DareSqlV3Evidence,
+  evidenceWatermark?: Date,
+): DareFinalityV2 {
+  const qualifyingAt = evidence.race?.qualifyingGameEndAt;
+  const final =
+    qualifyingAt != null &&
+    evidenceWatermark !== undefined &&
+    evidenceWatermark.getTime() > new Date(qualifyingAt).getTime();
+  return {
+    value: evidence.achieved,
+    final,
+    reason: final ? "evidence_watermark" : "reversible",
+  };
 }
 
 function proofForEvidence(
@@ -96,60 +132,38 @@ async function resolveV3(
   },
 ): Promise<"achieved" | "unachieved" | "voided"> {
   const value = input.finality.value;
-  const resolution =
-    value === true ? "achieved" : value === false ? "unachieved" : "voided";
-  const settled = await tx.bucksDareV2.updateMany({
-    where: { id: input.dare.id, dareState: "active" },
-    data: {
-      dareState: resolution,
-      settledAt: input.now,
-      finalValue: value,
-      proofJson: input.proof === null ? null : JSON.stringify(input.proof),
-      voidReason: value === null ? "missing_evidence" : null,
-      ...pendingDareV2CalloutRefresh(),
-    },
+  const resolution = await claimActiveDareV2Settlement(tx, {
+    dareId: input.dare.id,
+    value,
+    proof: input.proof,
+    now: input.now,
+    contractVersion: "v3",
+    refreshCallout: true,
   });
-  if (settled.count !== 1) {
-    throw new Error(
-      `Dare v3 ${input.dare.id.toString()} lost its settlement claim.`,
-    );
-  }
   const facts = await dareV2MoneyFactsInTransaction(tx, {
+    contractVersion: 3,
     dareId: input.dare.id,
     ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
     serverId: input.dare.serverId,
     potTotal: input.dare.potTotal,
     targetAliases: input.dare.targets.map((target) => target.alias),
-    conditionSummary: input.contract.plainLanguage,
+    conditionSummary: `${input.contract.queryHash}: ${input.contract.canonicalSql}`,
   });
-  if (value === true) {
-    if (input.proof === null)
-      throw new Error("An achieved Dare v3 has no proof.");
-    const payeeKeys = new Set(input.proof.targetKeys);
-    const payees = input.dare.targets
-      .filter((target) => payeeKeys.has(target.targetKey))
-      .map((target) => {
-        if (target.bucksAccountId === null || target.acceptedAt === null) {
-          throw new Error(
-            `Achieved Dare v3 target ${target.id.toString()} is not accepted.`,
-          );
-        }
-        return {
-          id: target.id,
-          discordId: target.discordId,
-          alias: target.alias,
-          bucksAccountId: target.bucksAccountId,
-        };
-      });
-    await payDareV2TargetsInTransaction(tx, { facts, targets: payees });
-  } else {
-    await refundDareV2ContributionsInTransaction(tx, {
-      facts,
-      resolution: value === null ? "voided" : "unachieved",
-      withCut: value === false,
-      ...(value === null ? { voidReason: "missing_evidence" } : {}),
-    });
-  }
+  await distributeDareResolutionV3(tx, {
+    dare: input.dare,
+    contract: input.contract,
+    proof: input.proof,
+    facts,
+    value,
+  });
+  await enqueueTerminalDareNotification(tx, {
+    dareId: input.dare.id,
+    revision: input.contract.revision,
+    potTotal: input.dare.potTotal,
+    resolution,
+    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
+    now: input.now,
+  });
   return resolution;
 }
 
@@ -174,21 +188,83 @@ function evidenceCreateData(
     targetDependencies: JSON.stringify(evidence.targetDependencies),
     evaluationTrace: JSON.stringify([
       `Executed immutable Dare SQL ${evidence.queryHash}.`,
+      `Resolved ${evidence.results.length.toString()} game-set rows and retained ${evidence.timelineEvents.length.toString()} relevant timeline events.`,
     ]),
-    planVersion: "dare-sql-evaluator-3",
+    planVersion: "dare-evaluator-3",
   };
 }
 
 async function evaluateContract(
   contract: DareContractV3,
   end: Date,
+  prismaClient: ExtendedPrismaClient,
 ): Promise<DareSqlV3Evidence> {
-  return await executeDareSqlV3({
+  const sqlEvidence = await executeDareSqlV3({
     compilation: compilationForContract(contract),
     targets: contract.targets,
     start: new Date(contract.activationAt),
     end,
   });
+  if (contract.activation.kind === "improvement") {
+    return evaluateImprovementEvidenceV3(contract, sqlEvidence);
+  }
+  if (contract.activation.kind !== "rank") return sqlEvidence;
+  const snapshots = contract.activationSnapshot?.targets.filter(
+    (target) => target.kind === "rank",
+  );
+  if (snapshots?.length !== contract.targets.length) {
+    throw new Error("Rank Dare is missing activation snapshots.");
+  }
+  const ranks = new Map<string, (typeof snapshots)[number]["baseline"]>();
+  for (const snapshot of snapshots) {
+    const current = await getLatestRankAfterAndAtOrBefore(
+      LeaguePuuidSchema.parse(snapshot.sourcePuuid),
+      contract.activation.queue,
+      {
+        afterTimestamp: new Date(contract.activationAt).getTime(),
+        timestamp: end.getTime(),
+      },
+      prismaClient,
+    );
+    ranks.set(snapshot.targetKey, current ?? snapshot.baseline);
+  }
+  return evaluateRankEvidenceV3(contract, sqlEvidence, ranks);
+}
+
+export function dareSqlV3UsesEvidenceTargetDependencies(
+  contract: Pick<DareContractV3, "activation" | "competition">,
+  evidence: Pick<DareSqlV3Evidence, "achieved">,
+): boolean {
+  return (
+    evidence.achieved !== true ||
+    contract.activation.kind !== "immediate" ||
+    contract.competition.kind === "race"
+  );
+}
+
+async function settlementTargetKeys(
+  contract: DareContractV3,
+  evidence: DareSqlV3Evidence,
+  end: Date,
+): Promise<string[]> {
+  if (dareSqlV3UsesEvidenceTargetDependencies(contract, evidence)) {
+    return evidence.targetDependencies;
+  }
+  return await decisiveTargetDependenciesV3({
+    compilation: compilationForContract(contract),
+    targets: contract.targets,
+    start: new Date(contract.activationAt),
+    end,
+  });
+}
+
+export function dareRaceEvaluationEndV3(
+  deadlineAt: string,
+  evidenceWatermark: Date,
+): Date {
+  return new Date(
+    Math.min(evidenceWatermark.getTime(), new Date(deadlineAt).getTime()),
+  );
 }
 
 export async function captureDareSqlV3ForMatch(input: {
@@ -211,38 +287,17 @@ export async function captureDareSqlV3ForMatch(input: {
     matchData.info.gameType,
   );
   if (queue === undefined) return undefined;
-  // The report lake is the durable source used by both historical preview and
-  // settlement. Refuse to record evidence until the triggering match has
-  // been staged successfully; otherwise a best-effort ingest failure could
-  // settle against an older lake snapshot.
-  if (!(await writeMatchStagingFile(resolveLakeDir(), matchData))) {
-    throw new Error(
-      `Dare v3 match ${matchData.metadata.matchId} could not be staged for settlement.`,
-    );
-  }
-  if (
-    queue === "arena" &&
-    contract.facts.physicalSources.some(
-      (source) =>
-        source.startsWith("timeline_") && source !== "timeline_coverage",
-    )
-  ) {
-    return undefined;
-  }
   const evidence = await evaluateContract(
     contract,
     new Date(matchData.info.gameEndTimestamp),
+    prismaClient,
   );
-  const finality = finalityForEvidence(contract, evidence, false);
-  const targetKeys =
-    evidence.achieved === true
-      ? await decisiveTargetDependenciesV3({
-          compilation: compilationForContract(contract),
-          targets: contract.targets,
-          start: new Date(contract.activationAt),
-          end: new Date(matchData.info.gameEndTimestamp),
-        })
-      : evidence.targetDependencies;
+  const finality = dareFinalityForEvidenceV3(contract, evidence, false);
+  const targetKeys = await settlementTargetKeys(
+    contract,
+    evidence,
+    new Date(matchData.info.gameEndTimestamp),
+  );
   const proof = finality.final
     ? proofForEvidence(contract, evidence, targetKeys, now)
     : null;
@@ -257,6 +312,10 @@ export async function captureDareSqlV3ForMatch(input: {
       skipDuplicates: true,
     });
     if (captured.count !== 1) return;
+    const rows = await tx.bucksDareV2Evidence.findMany({
+      where: { dareId: dare.id },
+      orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
+    });
     const resolution = finality.final
       ? await resolveV3(tx, {
           dare,
@@ -268,6 +327,16 @@ export async function captureDareSqlV3ForMatch(input: {
           matchId: matchData.metadata.matchId,
         })
       : "captured";
+    if (resolution === "captured") {
+      await enqueueMaterialDareProgressNotificationV3(tx, {
+        dareId: dare.id,
+        contract,
+        evidence: rows,
+        matchId: matchData.metadata.matchId,
+        finality,
+        now,
+      });
+    }
     return {
       contractVersion: 3,
       dareId: dare.id,
@@ -291,17 +360,14 @@ export async function settleDareSqlV3AtDeadline(
   const evidence = await evaluateContract(
     contract,
     new Date(contract.deadlineAt),
+    prismaClient,
   );
-  const finality = finalityForEvidence(contract, evidence, true);
-  const targetKeys =
-    evidence.achieved === true
-      ? await decisiveTargetDependenciesV3({
-          compilation: compilationForContract(contract),
-          targets: contract.targets,
-          start: new Date(contract.activationAt),
-          end: new Date(contract.deadlineAt),
-        })
-      : evidence.targetDependencies;
+  const finality = dareFinalityForEvidenceV3(contract, evidence, true);
+  const targetKeys = await settlementTargetKeys(
+    contract,
+    evidence,
+    new Date(contract.deadlineAt),
+  );
   const proof = proofForEvidence(contract, evidence, targetKeys, now);
   return await prismaClient.$transaction(async (tx) => {
     const resolution = await resolveV3(tx, {
@@ -323,4 +389,82 @@ export async function settleDareSqlV3AtDeadline(
       proof,
     };
   });
+}
+
+export async function settleMatureDareSqlV3Races(
+  prismaClient: ExtendedPrismaClient,
+  evidenceWatermark: Date,
+  now: Date = new Date(),
+): Promise<DareV2SettlementSummary[]> {
+  const rows = await prismaClient.bucksDareV2.findMany({
+    where: {
+      dareState: "active",
+      activatedAt: { lt: evidenceWatermark },
+    },
+    include: { targets: { orderBy: { id: "asc" } } },
+    orderBy: { id: "asc" },
+  });
+  const summaries: DareV2SettlementSummary[] = [];
+  const failures: unknown[] = [];
+  for (const row of rows) {
+    try {
+      if (row.contractJson === null) continue;
+      const raw: unknown = JSON.parse(row.contractJson);
+      const parsed = DareContractV3Schema.safeParse(raw);
+      if (!parsed.success || parsed.data.competition.kind !== "race") continue;
+      const contract = parsed.data;
+      const evaluationEnd = dareRaceEvaluationEndV3(
+        contract.deadlineAt,
+        evidenceWatermark,
+      );
+      const evidence = await evaluateContract(
+        contract,
+        evaluationEnd,
+        prismaClient,
+      );
+      const finality = dareFinalityForEvidenceV3(
+        contract,
+        evidence,
+        false,
+        evidenceWatermark,
+      );
+      if (!finality.final) continue;
+      const proof = proofForEvidence(
+        contract,
+        evidence,
+        evidence.targetDependencies,
+        now,
+      );
+      const summary = await prismaClient.$transaction(async (tx) => {
+        const resolution = await resolveV3(tx, {
+          dare: row,
+          contract,
+          evidence,
+          finality,
+          proof,
+          now,
+        });
+        return {
+          contractVersion: 3 as const,
+          dareId: row.id,
+          serverId: row.serverId,
+          channelId: row.channelId,
+          resolution,
+          value: finality.value,
+          finality,
+          proof,
+        };
+      });
+      summaries.push(summary);
+    } catch (error) {
+      failures.push(error);
+    }
+  }
+  if (failures.length > 0) {
+    throw new AggregateError(
+      failures,
+      `${failures.length.toString()} Dare v3 race settlements failed.`,
+    );
+  }
+  return summaries;
 }

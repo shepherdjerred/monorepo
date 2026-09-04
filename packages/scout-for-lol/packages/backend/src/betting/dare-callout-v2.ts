@@ -3,6 +3,8 @@ import type { MessageCreateOptions, MessageEditOptions } from "discord.js";
 import {
   BucksDareV2StateSchema,
   BucksMessageRefSchema,
+  DareCompiledPlanV2Schema,
+  DareSqlV3CompilationSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   type BucksDareV2State,
@@ -11,6 +13,9 @@ import {
 } from "@scout-for-lol/data";
 import { dareV2CalloutComponents } from "#src/betting/dare-components-v2.ts";
 import { renderDareV2Callout } from "#src/betting/dare-callout-content-v2.ts";
+import { deriveDareProgressV2 } from "#src/betting/dare-progress-v2.ts";
+import { deriveDareProgressV3 } from "#src/betting/dare-progress-v3.ts";
+import { storedDareV2Evidence } from "#src/betting/dare-settle-evidence-v2.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -96,6 +101,9 @@ export async function loadDareV2CalloutState(
         orderBy: { id: "asc" },
         select: { discordId: true, amount: true },
       },
+      evidence: {
+        orderBy: [{ gameEndAt: "asc" }, { matchId: "asc" }],
+      },
       _count: { select: { evidence: true } },
     },
   });
@@ -110,6 +118,31 @@ export async function loadDareV2CalloutState(
     );
   }
   const state = BucksDareV2StateSchema.parse(dare.dareState);
+  const targetKeys = dare.targets.map((target) => target.targetKey);
+  const final = !["draft", "pending_accept", "activating", "active"].includes(
+    state,
+  );
+  const progress =
+    revision.compilerVersion === "dare-scoutql-3"
+      ? deriveDareProgressV3({
+          compilation: DareSqlV3CompilationSchema.parse(
+            JSON.parse(revision.compiledPlan),
+          ),
+          evidence: dare.evidence,
+          targetKeys,
+          final,
+          finalityReason: state,
+          settledValue: dare.finalValue,
+        })
+      : deriveDareProgressV2({
+          plan: DareCompiledPlanV2Schema.parse(
+            JSON.parse(revision.compiledPlan),
+          ),
+          evidence: dare.evidence.map((row) => storedDareV2Evidence(row)),
+          targetKeys,
+          final,
+          finalityReason: state,
+        });
   const rendered = renderDareV2Callout({
     id: dare.id,
     challengerDiscordId: dare.challengerDiscordId,
@@ -120,6 +153,7 @@ export async function loadDareV2CalloutState(
     revision: revisionNumber,
     plainLanguage: revision.plainLanguage,
     evidenceCount: dare._count.evidence,
+    progressSummary: progress.summary,
     state,
     targets: dare.targets,
     acceptDeadline: dare.acceptDeadline,

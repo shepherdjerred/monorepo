@@ -136,15 +136,6 @@ produces every lake row, and the Zod schemas plus DuckDB column types in
 are imported by both the writer and the reader. The two sides cannot drift,
 and DuckDB never infers types from a sparse first line.
 
-The Dare SQL engine is deliberately a consumer of this lake boundary, not a
-second statistics implementation. Its compiler validates one bounded,
-read-only DuckDB `SELECT` against the generated relation catalog and stores the
-canonical text, immutable AST, and hash. Preview and post-match settlement then
-execute that same compiled contract over the historical or newly staged lake
-relations. Evidence is immutable and carries the source matches and coverage
-used for each result, so adding a lake column extends what SQL can express
-without adding Dare-specific vocabulary or evaluator branches.
-
 ## Match relations and the Dare boundary
 
 The match payload becomes several relations rather than one target-player row.
@@ -173,6 +164,25 @@ projections, target dependencies, coverage, ordered source match IDs, and the
 contract hash. Only a structurally proven monotone count can settle before the
 deadline or game cap. Existing funded Dare contract versions remain on their
 original evaluators rather than being migrated to the new SQL meaning.
+
+### Why rank and improvement Dares activate in two phases
+
+Rank and personal-improvement conditions need a fact that ordinary match
+conditions do not: an immutable starting point. Final acceptance therefore
+moves these contracts into `activating`, not directly into `active`. A durable
+activation row retries Riot rank reads or report-lake baseline reads, freezes
+the selected account, queue, value, sample count, date span, and source match
+IDs, then binds the contract's eligibility start and deadline to that instant.
+Pre-activation matches cannot leak into the result. An unranked target or an
+insufficient complete baseline voids the whole contract; transient source
+coverage remains visible and retries, with a full-refund timeout after 24 hours.
+
+For ranked matches, post-match rank capture runs after the authoritative raw
+match write but before Dare evidence and the match cursor. A rank lookup needed
+by an active contract must succeed before either can advance. The same captured
+player and before/after rank values are then reused by the ordinary report
+renderer, keeping the report and settlement on one observation rather than two
+Riot reads that could disagree.
 
 ## Two compaction tiers, one publish protocol
 
