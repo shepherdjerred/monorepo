@@ -1,3 +1,5 @@
+import { Loaded } from "@shepherdjerred/loaded";
+import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -133,6 +135,17 @@ export function ConsumerChampion() {
   );
   useComparisonOpenTracking(qualified.isSuccess, qualified.isError);
 
+  // Both cohorts use `keepPreviousData`, so a failed refetch usually still
+  // has a page in hand. Joining them separates "no comparison at all",
+  // which is the error card, from "the refresh failed", which keeps the
+  // previous page on screen behind a notice.
+  const qualifiedValue = Loaded.fromQuery(qualified, ["qualified"]);
+  const smallValue = Loaded.fromQuery(small, ["small"]);
+  const comparison = Loaded.all({
+    qualified: qualifiedValue,
+    small: smallValue,
+  });
+
   function resetPagination(): void {
     setQualifiedCursors([undefined]);
     setSmallCursors([undefined]);
@@ -140,7 +153,7 @@ export function ConsumerChampion() {
     setSmallPage(0);
   }
 
-  if (qualified.isError || small.isError) {
+  if (comparison.status === "error") {
     return (
       <PageShell>
         <Card>
@@ -163,16 +176,21 @@ export function ConsumerChampion() {
   }
 
   const { champion, availableGuilds, selectedGuilds } = comparisonHeader({
-    qualified: qualified.data,
-    small: small.data,
+    qualified: Loaded.getOrElse(qualifiedValue, undefined),
+    small: Loaded.getOrElse(smallValue, undefined),
     guildIds,
   });
-  const qualifiedResult = comparisonPage(qualified.data);
-  const smallResult = comparisonPage(small.data);
+  const qualifiedResult = comparisonPage(
+    Loaded.getOrElse(qualifiedValue, undefined),
+  );
+  const smallResult = comparisonPage(Loaded.getOrElse(smallValue, undefined));
   const profileSearch = playerProfileSearch(filters);
 
   return (
     <PageShell>
+      <StaleState
+        errors={comparison.status === "degraded" ? comparison.errors : []}
+      />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {champion === undefined ? null : (

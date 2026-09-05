@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Link,
@@ -164,14 +165,15 @@ export function BucksWorkspace() {
     resolvedGuildId,
   ]);
 
-  if (statusQuery.isPending) {
+  const statusValue = Loaded.fromQuery(statusQuery, ["bucks.status"]);
+  if (statusValue.status === "loading") {
     return (
       <BucksPage>
         <LoadingState label="Checking Bryan Bucks availability…" />
       </BucksPage>
     );
   }
-  if (statusQuery.isError) {
+  if (statusValue.status === "error") {
     return (
       <BucksPage>
         <ErrorState
@@ -184,7 +186,7 @@ export function BucksWorkspace() {
       </BucksPage>
     );
   }
-  const status = statusQuery.data;
+  const status = statusValue.data;
   if (status.state !== "available") {
     return (
       <BucksPage>
