@@ -9,16 +9,19 @@
 /**
  * POST JSON and read the SSE response, invoking `onEvent` per frame.
  *
- * `parseEvent` validates each frame. A frame that fails is a corrupted
- * stream — the server validates every event before emitting it — so the
- * caller's message is surfaced instead of a raw JSON or Zod error.
+ * `parseEvent` validates each frame. Throwing means a corrupted stream — the
+ * server validates every event before emitting it — so the caller's message is
+ * surfaced instead of a raw JSON or Zod error. Returning `null` instead means
+ * "this frame is not for me, carry on": the caller uses it for a frame a newer
+ * server sent that this bundle has no parser for, which must not kill a turn
+ * the server is answering correctly.
  */
 export async function postEventStream<Event>(params: {
   url: string;
   body: unknown;
   signal: AbortSignal;
   csrfToken: string | null;
-  parseEvent: (raw: unknown) => Event;
+  parseEvent: (raw: unknown) => Event | null;
   onEvent: (event: Event) => void;
   httpErrorMessage: (response: Response, text: string) => string;
   corruptedMessage: string;
@@ -51,12 +54,15 @@ export async function postEventStream<Event>(params: {
     if (dataLine === undefined) {
       return;
     }
-    let event: Event;
+    let event: Event | null;
     try {
       const raw: unknown = JSON.parse(dataLine.slice("data: ".length));
       event = params.parseEvent(raw);
     } catch {
       throw new Error(params.corruptedMessage);
+    }
+    if (event === null) {
+      return;
     }
     params.onEvent(event);
   });

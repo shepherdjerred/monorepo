@@ -546,6 +546,48 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
 
 export type ExploreStreamEvent = z.infer<typeof ExploreStreamEventSchema>;
 
+/**
+ * Every discriminator the union currently knows, derived from the union
+ * itself so the two cannot drift.
+ */
+const KNOWN_EXPLORE_STREAM_EVENT_TYPES: ReadonlySet<string> = new Set(
+  ExploreStreamEventSchema.options.map((option) => option.shape.type.value),
+);
+
+/** Just enough of a frame to tell "new member" from "corrupt payload". */
+const ExploreStreamEnvelopeSchema = z.looseObject({ type: z.string() });
+
+/**
+ * Parse one stream frame, tolerating a member this bundle has never heard of.
+ *
+ * A browser tab keeps its bundle for as long as it stays open, so a deploy
+ * that adds a stream event reaches tabs whose parser predates it. The union is
+ * `.strict()` and the SSE reader treats a parse failure as a corrupted stream,
+ * so without this an open tab would die mid-turn — showing a corruption error
+ * for a turn the server answered perfectly well.
+ *
+ * The tolerance is deliberately narrow. An **unrecognised discriminator** is
+ * skipped, because it can only mean a newer server. Anything else still
+ * throws: the server validates every event before emitting it, so a known type
+ * arriving in the wrong shape is real corruption and must not be swallowed.
+ */
+export function parseExploreStreamEvent(
+  raw: unknown,
+): ExploreStreamEvent | null {
+  const parsed = ExploreStreamEventSchema.safeParse(raw);
+  if (parsed.success) {
+    return parsed.data;
+  }
+  const envelope = ExploreStreamEnvelopeSchema.safeParse(raw);
+  if (
+    envelope.success &&
+    !KNOWN_EXPLORE_STREAM_EVENT_TYPES.has(envelope.data.type)
+  ) {
+    return null;
+  }
+  throw parsed.error;
+}
+
 export const ExploreHttpErrorSchema = z
   .object({
     error: z.string().trim().min(1).max(1000),

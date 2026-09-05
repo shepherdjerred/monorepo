@@ -254,6 +254,36 @@ describe("ExploreTranscript", () => {
   });
 });
 
+describe("Explore live progress", () => {
+  test("keeps the status line visible once tool steps have started", () => {
+    // The regression this pins: the status line used to render only while the
+    // trace was empty, so from the first tool call to the final answer — the
+    // longest stretch of a turn — the whole visible state was a collapsed
+    // `Steps (n)` counter, and the page read as an unexplained wait.
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[]}
+        activity="Querying match data."
+        pendingTrace={[
+          {
+            toolCallId: "call-live",
+            toolName: "run_report_query",
+            message: "Querying match data.",
+            status: "running",
+            durationMs: null,
+            details: null,
+            rawInput: null,
+            rawOutput: null,
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain("Querying match data.");
+    expect(markup).toContain("Steps (1)");
+  });
+});
+
 describe("Explore Dare transcript cards", () => {
   test("renders a private Dare draft card for persisted and streaming owner traces", () => {
     const trace = [
