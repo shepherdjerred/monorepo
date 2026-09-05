@@ -23,6 +23,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { exploreRunManager } from "#src/explore/run-manager.ts";
 import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
 import { loadExploreTranscript } from "#src/explore/store.ts";
+import { ExploreDurablePayloadSchema } from "#src/explore/durable-payload.ts";
 import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
@@ -31,21 +32,6 @@ import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
 import { getReportAiQuotaStatus } from "#src/reports/ai/rate-limit.ts";
 import { scoutTemporalInterruptedProviderAttempts } from "#src/metrics/temporal.ts";
 import type { ScoutInteractiveRun } from "#generated/prisma/client/index.js";
-
-const ExplorePayloadSchema = z.strictObject({
-  summary: z.looseObject({ runId: z.uuid() }),
-  started: z.strictObject({
-    conversationId: z.uuid(),
-    title: z.string(),
-    messageId: z.uuid(),
-    question: z.string(),
-    expectedCurrentLeafId: z.uuid().nullable(),
-    previousCurrentLeafId: z.uuid().nullable(),
-    createdConversation: z.boolean(),
-    createdQuestion: z.boolean(),
-  }),
-  guildIds: z.array(z.string()),
-});
 
 const ReportAiPayloadSchema = z.strictObject({
   edit: ReportAiEditRequestSchema,
@@ -72,7 +58,7 @@ async function salvageAmbiguousExploreRun(input: {
   database: ExtendedPrismaClient;
   run: ScoutInteractiveRun;
 }): Promise<InteractiveOutcome> {
-  const parsedPayload = ExplorePayloadSchema.parse(
+  const parsedPayload = ExploreDurablePayloadSchema.parse(
     JSON.parse(input.run.payload),
   );
   const trace = z
@@ -240,7 +226,7 @@ export async function executeRecoveredExplore(
   abortSignal: AbortSignal,
   database: ExtendedPrismaClient,
 ): Promise<ExploreRunOutcome> {
-  const payload = ExplorePayloadSchema.parse(JSON.parse(run.payload));
+  const payload = ExploreDurablePayloadSchema.parse(JSON.parse(run.payload));
   const transcript = await loadExploreTranscript(
     database,
     payload.started.conversationId,
@@ -290,6 +276,7 @@ export async function executeRecoveredExplore(
       ticket,
       identity: { userId: run.ownerId },
       guildIds: payload.guildIds,
+      surface: payload.surface,
       started: payload.started,
       history: transcript.messages,
       abortSignal,

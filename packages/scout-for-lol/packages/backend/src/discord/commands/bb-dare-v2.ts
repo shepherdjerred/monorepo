@@ -267,6 +267,10 @@ export async function replyBbDareV2(
       ticket,
       identity,
       guildIds: [input.serverId],
+      // `/bb dare` is a Discord command, and the user upserted above carries no
+      // OAuth token — so no creation tools, for the same reason `/scout ask`
+      // gets none.
+      surface: "discord",
       originChannelId: input.channelId,
       started: { ...created, question },
       history: transcript.messages,
