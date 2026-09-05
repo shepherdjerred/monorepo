@@ -224,16 +224,19 @@
   height: 100%;
 }
 
+.cook-editor-container .cm-content {
+  padding: var(--size-4-4) var(--size-4-6);
+}
+
+.cook-editor-container .cm-line {
+  padding: 0;
+}
+
 /* Preview container */
 .cook-preview-container {
   overflow-y: auto;
   height: 100%;
   padding: var(--size-4-2);
-}
-
-/* Nutrition section */
-.cook-section:has(.cook-section-header) {
-  /* Nutrition gets a subtle background */
 }
 
 /* Generic step text */

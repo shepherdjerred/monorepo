@@ -20,7 +20,8 @@ An [Obsidian](https://obsidian.md) plugin for previewing [Cooklang](https://cook
 ### From Obsidian Community Plugins
 
 1. Open Settings > Community plugins
-2. Search for "Cooklang Rich Preview"
+2. Install [Cooklang Rich Preview from the Obsidian Community Plugins
+   directory](https://community.obsidian.md/plugins/cooklang-rich-preview)
 3. Click Install, then Enable
 
 ### Manual Installation
