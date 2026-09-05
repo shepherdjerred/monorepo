@@ -454,6 +454,25 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
         },
       );
     },
+    recomputeChallengeRunPage: async (input) => {
+      return await heartbeatWhile(
+        {
+          runId: input.runId,
+          revision: input.revision,
+          phase: "evaluating-challenge-page",
+        },
+        async () => {
+          const { recomputeChallengeRunPage } =
+            await import("#src/progression/challenges/recompute.ts");
+          return await recomputeChallengeRunPage(input);
+        },
+      );
+    },
+    markChallengeRunRecomputeFailure: async (input) => {
+      const { markChallengeRunRecomputeFailure } =
+        await import("#src/progression/challenges/recompute.ts");
+      await markChallengeRunRecomputeFailure(input);
+    },
   };
 }
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {

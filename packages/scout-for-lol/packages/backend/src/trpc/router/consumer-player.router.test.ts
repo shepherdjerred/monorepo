@@ -10,6 +10,10 @@ import {
   configureConsumerProfileFeatureTest,
   registerConsumerProfileFeatureTestLifecycle,
 } from "#src/testing/consumer-profile-feature-test.ts";
+import {
+  addFlagOverride,
+  resetFlagOverrides,
+} from "#src/configuration/flags.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 import { writeTestLake } from "#src/testing/test-report-lake.ts";
@@ -98,9 +102,16 @@ function enableProfiles(...guildIds: DiscordGuildId[]): void {
   profileFeature.enable(...guildIds);
 }
 
+function enableChallenges(...guildIds: DiscordGuildId[]): void {
+  for (const server of guildIds) {
+    addFlagOverride("challenge_runs_enabled", true, { server });
+  }
+}
+
 registerConsumerProfileFeatureTestLifecycle({
   feature: profileFeature,
   prepare: async () => {
+    resetFlagOverrides("challenge_runs_enabled");
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await testPrisma.matchRankHistory.deleteMany();
     await testPrisma.account.deleteMany();
@@ -108,8 +119,45 @@ registerConsumerProfileFeatureTestLifecycle({
     await profileFeature.resetLake();
   },
   cleanup: async () => {
+    resetFlagOverrides("challenge_runs_enabled");
     await testPrisma.$disconnect();
   },
+});
+
+describe("consumer player challenge runs", () => {
+  test("uses the protected player id without exposing a guild id", async () => {
+    enableProfiles(guildId);
+    enableChallenges(guildId);
+    const linked = await seedPlayer({
+      serverId: guildId,
+      alias: "Challenge Runner",
+      discordId: actorDiscordId,
+      puuids: [MAIN],
+    });
+
+    await expect(
+      trpc
+        .authedCaller()
+        .challenge.profileRunsByPlayerId({ playerId: linked.id }),
+    ).resolves.toEqual([]);
+    await expect(
+      trpc
+        .anonCaller()
+        .challenge.profileRunsByPlayerId({ playerId: linked.id }),
+    ).rejects.toThrow();
+
+    const hidden = await seedPlayer({
+      serverId: otherGuildId,
+      alias: "Hidden Challenge Runner",
+      discordId: DiscordAccountIdSchema.parse("300000000000000099"),
+      puuids: [OTHER],
+    });
+    await expect(
+      trpc
+        .authedCaller()
+        .challenge.profileRunsByPlayerId({ playerId: hidden.id }),
+    ).rejects.toThrow("Player was not found");
+  });
 });
 
 describe("consumerPlayer.status", () => {

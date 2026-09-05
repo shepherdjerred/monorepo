@@ -42,6 +42,10 @@ import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
+import { ChallengeCatalog } from "#src/routes/challenge-catalog.tsx";
+import { ChallengeTemplate } from "#src/routes/challenge-template.tsx";
+import { ChallengeDraft } from "#src/routes/challenge-draft.tsx";
+import { ChallengeRun } from "#src/routes/challenge-run.tsx";
 import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
 import {
@@ -227,6 +231,26 @@ export const routes: RouteObject[] = [
               {
                 path: "champions/:championId",
                 element: <ConsumerChampion />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "challenges",
+                element: <ChallengeCatalog />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "challenges/drafts/:draftId",
+                element: <ChallengeDraft />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "challenges/:templateId",
+                element: <ChallengeTemplate />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "challenge-runs/:runId",
+                element: <ChallengeRun />,
                 errorElement: <RouteErrorPanel />,
               },
               {
