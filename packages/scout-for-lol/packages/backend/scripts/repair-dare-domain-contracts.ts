@@ -154,13 +154,27 @@ async function repairDare(
   }
 
   // Captured evidence was computed against the broken predicate and is never
-  // re-evaluated for a match already seen, so it has to go or the repair
-  // cannot change the outcome.
+  // re-evaluated for a match already seen, so it has to go or the repair cannot
+  // change the outcome.
+  //
+  // Only when there was something to repair. Once the contract is corrected, a
+  // later run's evidence was computed under the *correct* predicate — dropping
+  // it would discard the very rows that justify an achieved dare's settlement.
+  const repaired =
+    (contract?.replacements ?? 0) > 0 ||
+    revisions.some(
+      (revision) =>
+        revision.compiledPlan.replacements > 0 ||
+        revision.canonicalScoutQl.replacements > 0 ||
+        revision.plainLanguage.replacements > 0,
+    );
   console.log(
-    `  evidence rows to drop: ${dare.evidence.length.toString()} (${dare.evidence.map((row) => row.matchId).join(", ")})`,
+    repaired
+      ? `  evidence rows to drop: ${dare.evidence.length.toString()} (${dare.evidence.map((row) => row.matchId).join(", ")})`
+      : `  nothing to repair; keeping ${dare.evidence.length.toString()} evidence row(s)`,
   );
 
-  if (!apply) return;
+  if (!apply || !repaired) return;
 
   await prisma.$transaction(async (tx) => {
     if (contract !== null) {
@@ -253,6 +267,27 @@ async function planResettlement(
     };
   }
   if (dare.settledAt !== null) {
+    // A settled dare whose contract no longer holds the broken value has
+    // already been repaired and re-settled by an earlier run. Re-settling it
+    // again would reverse a *correct* settlement — and reversing a payout
+    // debits the winner, which fails outright once that balance has been spent
+    // down, leaving the ledger half-reversed. A second run does nothing rather
+    // than churn a result that is already right.
+    const repair = REPAIRS.find((candidate) => candidate.dareId === dareId);
+    const outstanding =
+      repair !== undefined &&
+      dare.contractJson !== null &&
+      repairDocument(dare.contractJson, repair.from, repair.to).replacements >
+        0;
+    if (!outstanding) {
+      return {
+        dareId,
+        matchId,
+        entries: [],
+        needsResettle: false,
+        reversalAlreadyCommitted: false,
+      };
+    }
     return {
       dareId,
       matchId,
@@ -396,7 +431,7 @@ async function main() {
       `\nRe-settlement for dare ${target.dareId.toString()} (${target.matchId}):`,
     );
     if (!target.needsResettle) {
-      console.log("  not settled; nothing to reverse");
+      console.log("  already repaired and settled; nothing to do");
       continue;
     }
     if (target.reversalAlreadyCommitted) {
