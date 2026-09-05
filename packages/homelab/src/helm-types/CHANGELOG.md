@@ -1,14 +1,5 @@
 # Changelog
 
-## [2.0.0] - Unreleased
-
-### Breaking changes
-
-- The published package now targets Node.js 24+ and Bun, with compiled ESM
-  exports instead of source-only TypeScript paths.
-- Helm repository fetches no longer mutate the caller's local Helm repository
-  configuration.
-
 ## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.6.0...helm-types-v1.7.0) (2026-08-25)
 
 No library behavior changes. The generator produces the same output as `1.6.0`; this release exists only because of repo-level housekeeping that release-please picked up.
