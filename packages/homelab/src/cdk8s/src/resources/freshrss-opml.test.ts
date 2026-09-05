@@ -10,11 +10,11 @@ const feedsOpml = await Bun.file(
 ).text();
 
 describe("FreshRSS OPML", () => {
-  test("extracts exactly 40 managed feeds and preserves prerelease filters", () => {
+  test("extracts exactly 44 managed feeds and preserves prerelease filters", () => {
     const manifest = parseFreshRssOpml(feedsOpml);
 
     expect(manifest.category).toBe("Repo Stack");
-    expect(manifest.feeds).toHaveLength(40);
+    expect(manifest.feeds).toHaveLength(44);
     expect(
       manifest.feeds.find((feed) => feed.title === "TypeScript Releases")
         ?.filtersActionRead,

@@ -56,7 +56,7 @@ describe("FreshRSS chart", () => {
     const desiredValue: unknown = JSON.parse(configMap.data["desired.json"]);
     const desired = FreshRssDesiredManifestSchema.parse(desiredValue);
 
-    expect(desired.feeds).toHaveLength(40);
+    expect(desired.feeds).toHaveLength(44);
     expect(configMap.data["config.custom.php"]).toContain(
       "'api_enabled' => true",
     );
