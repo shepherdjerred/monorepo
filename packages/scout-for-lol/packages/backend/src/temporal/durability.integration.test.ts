@@ -214,6 +214,47 @@ describe("durable interactive recovery", () => {
     ).toMatchObject({ state: "INTERRUPTED" });
   });
 
+  test("a settled run keeps no owner-only progress on its row", async () => {
+    // `activity` may name the person a turn looked up — that channel is the
+    // one place such text is allowed, precisely because it is never stored.
+    // These columns exist only so a durable observer can follow a *running*
+    // turn, and nothing deletes these rows, so a terminal state has to clear
+    // them or "never persisted" quietly becomes "persisted forever".
+    const runId = globalThis.crypto.randomUUID();
+    await prisma.scoutInteractiveRun.create({
+      data: {
+        id: runId,
+        kind: "explore",
+        ownerId: DiscordAccountIdSchema.parse("900000000000000201"),
+        payload: "{}",
+        state: "RUNNING",
+        partialOutput: "Jinx wins.",
+        activity: "Finding “Jerred#NA1”",
+        preview: JSON.stringify({ rows: [] }),
+      },
+    });
+
+    await persistScoutInteractiveOutcome(
+      {
+        stage: "dev",
+        kind: "explore",
+        databaseRunId: runId,
+        outcome: { status: "completed", partialOutputAvailable: true },
+      },
+      prisma,
+    );
+
+    const row = await prisma.scoutInteractiveRun.findUniqueOrThrow({
+      where: { id: runId },
+      select: { state: true, activity: true, preview: true },
+    });
+    expect(row).toEqual({
+      state: "COMPLETED",
+      activity: null,
+      preview: null,
+    });
+  });
+
   test("rebuilds a pending report-AI execution from its durable payload", async () => {
     const runId = globalThis.crypto.randomUUID();
     const guildId = DiscordGuildIdSchema.parse("900000000000000212");
