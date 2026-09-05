@@ -1396,7 +1396,7 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/streambot/src/index.ts|packages/streambot/test/config-dynamic.test.ts": {
+    "packages/streambot/src/index.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
       "clones": 1,
       "tokens": 73
     },
@@ -1416,45 +1416,45 @@
       "clones": 2,
       "tokens": 175
     },
-    "packages/streambot/test/command-handler.test.ts|packages/streambot/test/command-handler.test.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
-    "packages/streambot/test/config-dynamic.test.ts|packages/streambot/test/config-dynamic.test.ts": {
-      "clones": 1,
-      "tokens": 110
-    },
-    "packages/streambot/test/persistence.test.ts|packages/streambot/test/persistence.test.ts": {
-      "clones": 1,
-      "tokens": 71
-    },
-    "packages/streambot/test/player-card.test.ts|packages/streambot/test/player-controls.test.ts": {
+    "packages/streambot/test/media/player-card.test.ts|packages/streambot/test/media/player-controls.test.ts": {
       "clones": 1,
       "tokens": 118
     },
-    "packages/streambot/test/realtime-transport.test.ts|packages/streambot/test/realtime-transport.test.ts": {
-      "clones": 1,
-      "tokens": 89
-    },
-    "packages/streambot/test/realtime-transport.test.ts|packages/streambot/test/voice-audio-lifecycle.test.ts": {
-      "clones": 2,
-      "tokens": 154
-    },
-    "packages/streambot/test/session-manager.test.ts|packages/streambot/test/session-manager.test.ts": {
-      "clones": 4,
-      "tokens": 301
-    },
-    "packages/streambot/test/session-manager.test.ts|packages/streambot/test/userbot-pool.test.ts": {
-      "clones": 1,
-      "tokens": 91
-    },
-    "packages/streambot/test/streamer-position.test.ts|packages/streambot/test/streamer-position.test.ts": {
+    "packages/streambot/test/media/streamer-position.test.ts|packages/streambot/test/media/streamer-position.test.ts": {
       "clones": 1,
       "tokens": 104
     },
-    "packages/streambot/test/support/fake-realtime-transport.ts|packages/streambot/test/support/fake-realtime-transport.ts": {
+    "packages/streambot/test/session/command-handler.test.ts|packages/streambot/test/session/command-handler.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/streambot/test/session/persistence.test.ts|packages/streambot/test/session/persistence.test.ts": {
+      "clones": 1,
+      "tokens": 71
+    },
+    "packages/streambot/test/session/session-manager.test.ts|packages/streambot/test/session/session-manager.test.ts": {
+      "clones": 4,
+      "tokens": 301
+    },
+    "packages/streambot/test/session/session-manager.test.ts|packages/streambot/test/session/userbot-pool.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
+    "packages/streambot/test/unit/config-dynamic.test.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
+      "clones": 1,
+      "tokens": 110
+    },
+    "packages/streambot/test/voice/fake-realtime-transport.ts|packages/streambot/test/voice/fake-realtime-transport.ts": {
       "clones": 1,
       "tokens": 90
+    },
+    "packages/streambot/test/voice/realtime-transport.test.ts|packages/streambot/test/voice/realtime-transport.test.ts": {
+      "clones": 1,
+      "tokens": 89
+    },
+    "packages/streambot/test/voice/realtime-transport.test.ts|packages/streambot/test/voice/voice-audio-lifecycle.test.ts": {
+      "clones": 2,
+      "tokens": 154
     },
     "packages/tasknotes-core/ci/coverage-ratchet.ts|packages/tasknotes-windows/scripts/coverage-ratchet.ts": {
       "clones": 1,

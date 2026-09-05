@@ -22,7 +22,7 @@ import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken
 import {
   FakeRealtimeTransport,
   type FakeRealtimeToolCall,
-} from "./support/fake-realtime-transport.ts";
+} from "./fake-realtime-transport.ts";
 
 const USER = UserIdSchema.parse("100000000000000001");
 
