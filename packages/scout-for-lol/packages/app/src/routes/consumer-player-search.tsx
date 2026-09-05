@@ -149,7 +149,9 @@ export function ConsumerPlayerSearch() {
           statusQuery.data.state,
           <>
             <PlayerHome
-              home={Loaded.fromQuery(homeQuery, ["consumerPlayer.home"])}
+              home={Loaded.strict(
+                Loaded.fromQuery(homeQuery, ["consumerPlayer.home"]),
+              )}
               onRetry={() => {
                 void homeQuery.refetch();
               }}

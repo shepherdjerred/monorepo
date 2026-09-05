@@ -402,7 +402,10 @@ function useExploreConversation(conversationId: string | null) {
   });
 
   const conversation = Loaded.getOrElse(
-    Loaded.fromQuery(transcript, ["explore.get"]),
+    // The transcript is the owner-only content the status check guards, so it
+    // is `strict` for the same reason the check is: a retained conversation
+    // must not outlive the authorization that produced it.
+    Loaded.strict(Loaded.fromQuery(transcript, ["explore.get"])),
     undefined,
   );
   return {
