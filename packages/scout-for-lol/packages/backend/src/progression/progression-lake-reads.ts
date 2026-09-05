@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   QueueTypeSchema,
+  TimelineEventParticipantRoleSchema,
   type HallEligibleMatch,
   type HallRecordMatch,
 } from "@scout-for-lol/data";
@@ -10,6 +11,7 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import {
   buildMatchesSource,
   buildTimelineEventsSource,
+  buildTimelineEventParticipantsSource,
   buildTimelineCoverageSource,
   listParam,
   resolveLakeFiles,
@@ -116,33 +118,65 @@ function cursorPredicate(cursor: ProgressionMatchCursor | undefined): {
 
 const TimelineEventCountRowSchema = z.strictObject({
   match_id: z.string(),
+  puuid: z.string(),
   event_type: z.string(),
+  role: TimelineEventParticipantRoleSchema,
   event_count: LakeIntSchema,
 });
 
 export async function fetchTimelineEventCounts(options: {
-  readonly matchIds: string[];
+  readonly matchPuuids: readonly {
+    readonly matchId: string;
+    readonly puuid: string;
+  }[];
   readonly lakeDir?: string;
-}): Promise<ReadonlyMap<string, Readonly<Record<string, number>>>> {
-  if (options.matchIds.length === 0) return new Map();
+}): Promise<
+  ReadonlyMap<
+    string,
+    ReadonlyMap<
+      string,
+      Readonly<Record<string, Readonly<Record<string, number>>>>
+    >
+  >
+> {
+  if (options.matchPuuids.length === 0) return new Map();
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildTimelineEventsSource(files, {
+  const matchIds = [...new Set(options.matchPuuids.map((row) => row.matchId))];
+  const puuids = [...new Set(options.matchPuuids.map((row) => row.puuid))];
+  const events = buildTimelineEventsSource(files, {
     sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(options.matchIds)],
+    params: [listParam(matchIds)],
   });
-  if (source === undefined) return new Map();
+  const participants = buildTimelineEventParticipantsSource(files, {
+    sql: "match_id IN (SELECT unnest(?)) AND puuid IN (SELECT unnest(?))",
+    params: [listParam(matchIds), listParam(puuids)],
+  });
+  if (events === undefined || participants === undefined) return new Map();
   const rows = await withDuckDBConnection(async (session) => {
     const values = await session.run(
-      `SELECT match_id, event_type, count(*)::BIGINT AS event_count ` +
-        `FROM (${source.sql}) GROUP BY match_id, event_type`,
-      bindParams(session, source.params),
+      `SELECT events.match_id, participants.puuid, events.event_type, participants.role, ` +
+        `count(DISTINCT events.event_id)::BIGINT AS event_count ` +
+        `FROM (${events.sql}) AS events ` +
+        `INNER JOIN (${participants.sql}) AS participants ` +
+        `ON participants.match_id = events.match_id ` +
+        `AND participants.event_id = events.event_id ` +
+        `WHERE participants.puuid IS NOT NULL ` +
+        `GROUP BY events.match_id, participants.puuid, events.event_type, participants.role`,
+      bindParams(session, [...events.params, ...participants.params]),
     );
     return values.map((row) => TimelineEventCountRowSchema.parse(row));
   });
-  const counts = new Map<string, Record<string, number>>();
+  const counts = new Map<
+    string,
+    Map<string, Record<string, Record<string, number>>>
+  >();
   for (const row of rows) {
-    const matchCounts = counts.get(row.match_id) ?? {};
-    matchCounts[row.event_type] = row.event_count;
+    const matchCounts = counts.get(row.match_id) ?? new Map();
+    const puuidCounts = matchCounts.get(row.puuid) ?? {};
+    const eventCounts = puuidCounts[row.event_type] ?? {};
+    eventCounts[row.role] = row.event_count;
+    puuidCounts[row.event_type] = eventCounts;
+    matchCounts.set(row.puuid, puuidCounts);
     counts.set(row.match_id, matchCounts);
   }
   return counts;

@@ -17,6 +17,10 @@ export {
   visualizationSnapshotToImage,
   visualizationSnapshotToSvg,
 } from "./html/visualization-snapshot-image.ts";
+export {
+  VISUALIZATION_BODY_FONT,
+  VISUALIZATION_DISPLAY_FONT,
+} from "./html/visualization-snapshot-style.ts";
 export { visualizationSnapshotToOption } from "./html/visualization-snapshot-option.ts";
 export {
   discordScreenshotToImage,

@@ -34,10 +34,16 @@ export async function scoutChallengeRunRecomputeWorkflow(
   let input = ScoutChallengeRunRecomputeInputSchema.parse(rawInput);
   const activities = lakeActivities(input.stage);
   for (;;) {
-    setWorkflowPhase(
-      `**Phase:** evaluating challenge evidence page ${(input.pagesProcessed + 1).toString()}`,
-    );
-    const page = await activities.recomputeChallengeRunPage(input);
+    let page: Awaited<ReturnType<typeof activities.recomputeChallengeRunPage>>;
+    try {
+      setWorkflowPhase(
+        `**Phase:** evaluating challenge evidence page ${(input.pagesProcessed + 1).toString()}`,
+      );
+      page = await activities.recomputeChallengeRunPage(input);
+    } catch (error) {
+      await activities.markChallengeRunRecomputeFailure(input);
+      throw error;
+    }
     if (page.complete) {
       setWorkflowPhase("**Phase:** challenge recomputation complete");
       return "completed";

@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { parseYAMLComments } from "./yaml-comments.ts";
+import { parseYAMLComments } from "./yaml-comments.js";
 
 describe("YAML Comment Parsing - Basic Patterns", () => {
   test("should correctly associate comments with properties at different indent levels (minecraft tty bug)", () => {

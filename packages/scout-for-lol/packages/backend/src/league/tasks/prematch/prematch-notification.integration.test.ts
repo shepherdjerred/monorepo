@@ -68,7 +68,7 @@ vi.doMock("#src/analytics/guild-lifecycle.ts", async (importOriginal) => ({
   recordCoreOutputsDelivered: recordCoreOutputsDeliveredMock,
 }));
 
-vi.doMock("#src/betting/prematch-hook.ts", async (importOriginal) => ({
+vi.doMock("#src/betting/markets/prematch-hook.ts", async (importOriginal) => ({
   ...(await importOriginal()),
   prepareBucksPrematch: async () => ({
     bettingGuildIds: new Set(),

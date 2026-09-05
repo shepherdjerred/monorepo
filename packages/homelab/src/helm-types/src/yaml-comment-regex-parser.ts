@@ -1,4 +1,4 @@
-import type { CommentWithMetadata } from "./yaml-comments.ts";
+import type { CommentWithMetadata } from "./yaml-comments.js";
 
 /**
  * Regex-based fallback parser for comments that the YAML AST loses

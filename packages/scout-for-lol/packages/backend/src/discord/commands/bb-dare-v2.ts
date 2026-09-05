@@ -16,8 +16,8 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { dareV2DraftComponents } from "#src/betting/dare-components-v2.ts";
-import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
+import { dareV2DraftComponents } from "#src/betting/dares/presentation/dare-components-v2.ts";
+import { createDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";

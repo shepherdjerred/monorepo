@@ -11,7 +11,7 @@ import {
 import {
   BALANCE_CHART_ATTACHMENT_NAME,
   buildBalanceChartAttachment,
-} from "#src/betting/balance-chart.ts";
+} from "#src/betting/accounts/balance-chart.ts";
 import {
   BUCKS_GUILD_ONLY,
   BUCKS_NOT_ENABLED,

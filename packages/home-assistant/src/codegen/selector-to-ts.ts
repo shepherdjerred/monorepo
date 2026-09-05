@@ -1,10 +1,10 @@
 import { z } from "zod";
-import type { HaFieldType } from "#schema/types.ts";
+import type { HaFieldType } from "../schema/types.js";
 import type {
   ServiceFieldSelector,
   ServiceFieldSpec,
   ServiceTargetSpec,
-} from "./introspect.ts";
+} from "./introspect.js";
 
 /**
  * Translate an HA field spec (selector + metadata) into the structural shape

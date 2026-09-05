@@ -5,7 +5,7 @@ import {
   HaAuthError,
   HaNotFoundError,
   HomeAssistantRestClient,
-} from "#lib";
+} from "../src/index.ts";
 
 type FetchArgs = {
   url: string;

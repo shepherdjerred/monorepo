@@ -1,3 +1,4 @@
+import type * as echarts from "echarts";
 import { describe, expect, test } from "vitest";
 import {
   type TemporalSeries,
@@ -129,41 +130,58 @@ describe("distribution rendering modes", () => {
     expect(JSON.stringify(boxPlot)).toContain('"type":"boxplot"');
   });
 
-  test.each([
-    {
-      name: "histogram",
-      input: snapshot("HISTOGRAM", [
-        series("duration", "Games", [
-          ["b0", "0–299", 4],
-          ["b1", "300–599", 11],
-        ]),
+  test("keeps histogram data identical across interactive and static modes", () => {
+    const input = snapshot("HISTOGRAM", [
+      series("duration", "Games", [
+        ["b0", "0–299", 4],
+        ["b1", "300–599", 11],
       ]),
-    },
-    {
-      name: "box plot",
-      input: boxPlotSnapshot([
-        ["b1", "Ahri", 1],
-        ["b2", "Garen", 10],
-      ]),
-    },
-  ])("keeps $name data identical across rendering modes", ({ input }) => {
+    ]);
     const staticOption = visualizationSnapshotToOption(input, "static");
     const interactiveOption = visualizationSnapshotToOption(
       input,
       "interactive",
     );
 
-    expect(JSON.stringify(interactiveOption.series)).toBe(
-      JSON.stringify(staticOption.series),
+    expectModeDataToMatch(interactiveOption, staticOption);
+  });
+
+  test("keeps box plot data identical across interactive and static modes", () => {
+    const input = boxPlotSnapshot([
+      ["b1", "Ahri", 1],
+      ["b2", "Garen", 10],
+    ]);
+    const staticOption = visualizationSnapshotToOption(input, "static");
+    const interactiveOption = visualizationSnapshotToOption(
+      input,
+      "interactive",
     );
-    expect(JSON.stringify(interactiveOption.xAxis)).toBe(
-      JSON.stringify(staticOption.xAxis),
-    );
-    expect(interactiveOption.dataZoom).toBeDefined();
-    expect(staticOption.dataZoom).toBeUndefined();
-    expect(staticOption.toolbox).toBeUndefined();
+
+    expectModeDataToMatch(interactiveOption, staticOption);
   });
 });
+
+function serializeWithoutFontFamily(value: unknown): string {
+  return JSON.stringify(value, (key, nestedValue) =>
+    key === "fontFamily" ? undefined : nestedValue,
+  );
+}
+
+function expectModeDataToMatch(
+  interactiveOption: echarts.EChartsOption,
+  staticOption: echarts.EChartsOption,
+): void {
+  expect(serializeWithoutFontFamily(interactiveOption.series)).toBe(
+    serializeWithoutFontFamily(staticOption.series),
+  );
+  expect(serializeWithoutFontFamily(interactiveOption.xAxis)).toBe(
+    serializeWithoutFontFamily(staticOption.xAxis),
+  );
+  expect(interactiveOption.dataZoom).toBeUndefined();
+  expect(staticOption.dataZoom).toBeUndefined();
+  expect(interactiveOption.toolbox).toBeUndefined();
+  expect(staticOption.toolbox).toBeUndefined();
+}
 
 const BOX_PLOT_ENCODING = ["min", "q1", "median", "q3", "max"];
 

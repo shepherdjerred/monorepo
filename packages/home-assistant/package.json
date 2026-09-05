@@ -1,26 +1,51 @@
 {
   "name": "@shepherdjerred/home-assistant",
   "version": "0.1.0",
-  "private": true,
+  "description": "Type-safe Home Assistant REST and WebSocket client for Node.js and Bun",
+  "author": "Jerred Shepherd",
+  "license": "GPL-3.0-only",
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/home-assistant#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/monorepo.git",
+    "directory": "packages/home-assistant"
+  },
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
   "bin": {
-    "ha-codegen": "./src/codegen/cli.ts"
+    "ha-codegen": "./dist/codegen/cli.js"
   },
-  "imports": {
-    "#shared/*": "./src/shared/*",
-    "#schema/*": "./src/schema/*",
-    "#codegen/*": "./src/codegen/*",
-    "#rest/*": "./src/rest/*",
-    "#ws/*": "./src/ws/*",
-    "#lib": "./src/index.ts"
+  "files": [
+    "dist",
+    "examples",
+    "demos",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=24"
   },
   "scripts": {
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
+    "prepublishOnly": "bun run build",
+    "publish:npm": "bun ../../scripts/publish-npm.ts .",
     "test:ci": "bun ../../scripts/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
   },
@@ -33,6 +58,7 @@
     "@tsconfig/recommended": "^1.0.13",
     "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "1.4.0",
+    "@types/node": "^26.1.1",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",

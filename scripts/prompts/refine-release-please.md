@@ -73,24 +73,36 @@ that refiner commit), continue with the normal procedure below.
 
 ### 3. Identify what was bumped
 
-Read `/tmp/monorepo/.release-please-manifest.json` to see the new versions. The three published packages are:
+Read `/tmp/monorepo/.release-please-manifest.json` to see the new versions. The published packages are:
 
-| Package                      | Path                              | Tag prefix                          |
-| ---------------------------- | --------------------------------- | ----------------------------------- |
-| `astro-opengraph-images`     | `packages/astro-opengraph-images` | `astro-opengraph-images-v<version>` |
-| `webring`                    | `packages/webring`                | `webring-v<version>`                |
-| `@shepherdjerred/helm-types` | `packages/homelab/src/helm-types` | `helm-types-v<version>`             |
+| Package                          | Path                              | Tag prefix                          |
+| -------------------------------- | --------------------------------- | ----------------------------------- |
+| `astro-opengraph-images`         | `packages/astro-opengraph-images` | `astro-opengraph-images-v<version>` |
+| `webring`                        | `packages/webring`                | `webring-v<version>`                |
+| `@shepherdjerred/helm-types`     | `packages/homelab/src/helm-types` | `helm-types-v<version>`             |
+| `@shepherdjerred/home-assistant` | `packages/home-assistant`         | `home-assistant-v<version>`         |
 
-For each package, compare the new version in the manifest against the most recent tag (`git tag -l "<prefix>*" | sort -V | tail -1`). If the manifest version equals the latest tag, that package was not bumped — skip it.
+For each package, compare the new version in the manifest against the most recent tag (`git tag -l "<prefix>*" | sort -V | tail -1`). If the manifest version equals the latest tag, that package was not bumped — skip it. For an initial release with no matching tag, treat the empty Git tree as the baseline and inspect the package's complete history.
 
 ### 4. Inspect the real diff per bumped package
+
+When `<last-tag>` exists:
 
 ```bash
 git diff <last-tag>..origin/main -- <package-path>
 git diff --stat <last-tag>..origin/main -- <package-path>
 ```
 
-Read every non-trivial file change. Walk through the commits with `git log --oneline <last-tag>..origin/main -- <package-path>` to attribute changes accurately.
+When there is no `<last-tag>` (the initial release), use the empty tree and a history walk from the first package commit:
+
+```bash
+empty_tree=$(git hash-object -t tree /dev/null)
+git diff "$empty_tree"..origin/main -- <package-path>
+git diff --stat "$empty_tree"..origin/main -- <package-path>
+git log --reverse --oneline origin/main -- <package-path>
+```
+
+Read every non-trivial file change. For a tagged release, walk through the commits with `git log --oneline <last-tag>..origin/main -- <package-path>` to attribute changes accurately.
 
 ### 5. Library-consumer filter — match the release eligibility preflight
 
@@ -166,7 +178,8 @@ Otherwise:
 ```bash
 git add packages/astro-opengraph-images/CHANGELOG.md \
         packages/webring/CHANGELOG.md \
-        packages/homelab/src/helm-types/CHANGELOG.md
+        packages/homelab/src/helm-types/CHANGELOG.md \
+        packages/home-assistant/CHANGELOG.md
 # (Only `add` the files you actually edited; do not use `git add -A` or `git add .`.)
 git commit -m "chore(root): refine release notes for <YYYY-MM-DD>
 
@@ -207,6 +220,12 @@ cat > /tmp/pr-body.md <<'EOF'
 
 </details>
 
+<details><summary>home-assistant: <new-version></summary>
+
+<refined CHANGELOG section content here>
+
+</details>
+
 ---
 Originally generated with [Release Please](https://github.com/googleapis/release-please); release notes refined automatically in CI by `scripts/prompts/refine-release-please.md`.
 EOF
@@ -220,7 +239,7 @@ Only include `<details>` blocks for packages that were actually bumped.
 
 ```text
 <!-- release-refiner-result -->
-{"status":"refined","prNumber":<N>,"packagesRefined":["astro-opengraph-images","webring","helm-types"],"commitSha":"<full-sha>"}
+{"status":"refined","prNumber":<N>,"packagesRefined":["astro-opengraph-images","webring","helm-types","home-assistant"],"commitSha":"<full-sha>"}
 <!-- /release-refiner-result -->
 ```
 

@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
-import { parseYAMLComments } from "./yaml-comments.ts";
-import { convertToTypeScriptInterface } from "./type-converter.ts";
-import { generateTypeScriptCode } from "./interface-generator.ts";
+import { parseYAMLComments } from "./yaml-comments.js";
+import { convertToTypeScriptInterface } from "./type-converter.js";
+import { generateTypeScriptCode } from "./interface-generator.js";
 
 describe("Integration Tests - RBAC and Dotted Keys", () => {
   test("should handle argo-cd rbac config end-to-end with */ escaping and prose extraction", () => {

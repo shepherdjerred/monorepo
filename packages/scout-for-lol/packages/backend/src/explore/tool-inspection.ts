@@ -8,7 +8,7 @@ import {
   BucksBetQuerySchema,
   BucksLedgerQueryResultSchema,
   BucksLedgerQuerySchema,
-} from "#src/betting/ask-analytics-schema.ts";
+} from "#src/betting/analytics/ask-analytics-schema.ts";
 import {
   EmptyToolInputSchema,
   FormatToolOutputSchema,

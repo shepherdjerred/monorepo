@@ -8,6 +8,7 @@ declare module "@codemirror/view" {
       changes: { from: number; to: number; insert: string };
     }) => void;
     destroy: () => void;
+    requestMeasure: () => void;
     static updateListener: {
       of: (
         fn: (update: {
@@ -37,6 +38,13 @@ declare module "@codemirror/commands" {
 }
 
 declare module "@codemirror/language" {
+  type HighlightSpec = {
+    tag: unknown;
+    color?: string;
+    fontStyle?: string;
+    fontWeight?: string | number;
+  };
+
   type StreamParser<State> = {
     startState: () => State;
     token: (
@@ -50,5 +58,32 @@ declare module "@codemirror/language" {
   };
   export const StreamLanguage: {
     define: <State>(spec: StreamParser<State>) => unknown;
+  };
+
+  export const HighlightStyle: {
+    define: (specs: readonly HighlightSpec[]) => unknown;
+  };
+
+  export const defaultHighlightStyle: unknown;
+
+  export function syntaxHighlighting(
+    highlighter: unknown,
+    options?: { fallback?: boolean },
+  ): unknown;
+}
+
+declare module "@lezer/highlight" {
+  export const tags: {
+    variableName: unknown;
+    keyword: unknown;
+    number: unknown;
+    heading: unknown;
+    meta: unknown;
+    atom: unknown;
+    string: unknown;
+    docString: unknown;
+    operator: unknown;
+    url: unknown;
+    comment: unknown;
   };
 }

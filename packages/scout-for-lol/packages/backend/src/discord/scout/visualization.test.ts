@@ -56,6 +56,37 @@ const preview = ReportAiPreviewSummarySchema.parse({
   renderKind: "LEADERBOARD",
 });
 
+function oversizedFirstRowVisualization(kind: "LIST" | "TABLE") {
+  const columns = [
+    { key: "label", label: "Label", format: "text" as const },
+    ...Array.from({ length: 19 }, (_, index) => ({
+      key: `metric-${index.toString()}`,
+      label: "m".repeat(155),
+      format: "text" as const,
+    })),
+  ];
+  const snapshot = VisualizationSnapshotSchema.parse({
+    ...scoutTestVisualization,
+    kind,
+  });
+  const oversizedPreview = ReportAiPreviewSummarySchema.parse({
+    columns,
+    rows: [
+      {
+        label: "r".repeat(159),
+        values: Array.from({ length: 19 }, (_, index) => ({
+          column: `metric-${index.toString()}`,
+          value: "😀".repeat(80),
+        })),
+      },
+    ],
+    rowsReturned: 1,
+    rowsScanned: 1,
+    renderKind: kind,
+  });
+  return { oversizedPreview, snapshot };
+}
+
 describe("Scout Discord visualizations", () => {
   test("renders tables, leaderboards, and KPI cards as embeds", () => {
     expect(usesNativeDiscordVisualization(scoutTestVisualization)).toBe(true);
@@ -785,33 +816,7 @@ test("keeps native values visible when labels exceed the description budget", ()
 });
 
 test("truncates oversized first rows at grapheme boundaries", () => {
-  const columns = [
-    { key: "label", label: "Label", format: "text" as const },
-    ...Array.from({ length: 19 }, (_, index) => ({
-      key: `metric-${index.toString()}`,
-      label: "m".repeat(155),
-      format: "text" as const,
-    })),
-  ];
-  const snapshot = VisualizationSnapshotSchema.parse({
-    ...scoutTestVisualization,
-    kind: "LIST",
-  });
-  const oversizedPreview = ReportAiPreviewSummarySchema.parse({
-    columns,
-    rows: [
-      {
-        label: "r".repeat(159),
-        values: Array.from({ length: 19 }, (_, index) => ({
-          column: `metric-${index.toString()}`,
-          value: "😀".repeat(80),
-        })),
-      },
-    ],
-    rowsReturned: 1,
-    rowsScanned: 1,
-    renderKind: "LIST",
-  });
+  const { oversizedPreview, snapshot } = oversizedFirstRowVisualization("LIST");
 
   const description = visualizationToEmbed(snapshot, oversizedPreview)?.data
     .description;
@@ -821,33 +826,8 @@ test("truncates oversized first rows at grapheme boundaries", () => {
 });
 
 test("reserves a table row when long headers fill the embed", () => {
-  const columns = [
-    { key: "label", label: "Label", format: "text" as const },
-    ...Array.from({ length: 19 }, (_, index) => ({
-      key: `metric-${index.toString()}`,
-      label: "m".repeat(155),
-      format: "text" as const,
-    })),
-  ];
-  const snapshot = VisualizationSnapshotSchema.parse({
-    ...scoutTestVisualization,
-    kind: "TABLE",
-  });
-  const oversizedPreview = ReportAiPreviewSummarySchema.parse({
-    columns,
-    rows: [
-      {
-        label: "r".repeat(159),
-        values: Array.from({ length: 19 }, (_, index) => ({
-          column: `metric-${index.toString()}`,
-          value: "😀".repeat(80),
-        })),
-      },
-    ],
-    rowsReturned: 1,
-    rowsScanned: 1,
-    renderKind: "TABLE",
-  });
+  const { oversizedPreview, snapshot } =
+    oversizedFirstRowVisualization("TABLE");
 
   const description = visualizationToEmbed(snapshot, oversizedPreview)?.data
     .description;

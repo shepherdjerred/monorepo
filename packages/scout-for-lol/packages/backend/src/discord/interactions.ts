@@ -4,7 +4,7 @@ import { handleChatInputCommand } from "#src/discord/commands/index.ts";
 import {
   handleBetButton,
   type BetButtonInteraction,
-} from "#src/betting/bet-button.ts";
+} from "#src/betting/markets/bet-button.ts";
 import { isBucksCustomId, parseBucksCustomId } from "#src/betting/custom-id.ts";
 import {
   handleBucksNavigation,
@@ -15,26 +15,26 @@ import {
 import {
   isParlayCustomId,
   parseParlayCustomId,
-} from "#src/betting/parlay-custom-id.ts";
-import { handleParlayBetButton } from "#src/betting/parlay-bet-button.ts";
+} from "#src/betting/parlays/parlay-custom-id.ts";
+import { handleParlayBetButton } from "#src/betting/parlays/parlay-bet-button.ts";
 import {
   isWeeklyParlayCustomId,
   parseWeeklyParlayCustomId,
-} from "#src/betting/weekly-parlay-custom-id.ts";
-import { handleWeeklyParlayBetButton } from "#src/betting/weekly-parlay-bet-button.ts";
+} from "#src/betting/weekly/weekly-parlay-custom-id.ts";
+import { handleWeeklyParlayBetButton } from "#src/betting/weekly/weekly-parlay-bet-button.ts";
 import {
   isDareCustomId,
   parseDareCustomId,
-} from "#src/betting/dare-custom-id.ts";
+} from "#src/betting/dares/lifecycle/dare-custom-id.ts";
 import {
   handleDareButton,
   type DareButtonInteraction,
-} from "#src/betting/dare-discord.ts";
-import { handleDareV2Button } from "#src/betting/dare-discord-v2.ts";
+} from "#src/betting/dares/presentation/dare-discord.ts";
+import { handleDareV2Button } from "#src/betting/dares/presentation/dare-discord-v2.ts";
 import {
   isDareV2CustomId,
   parseDareV2CustomId,
-} from "#src/betting/dare-custom-id-v2.ts";
+} from "#src/betting/dares/lifecycle/dare-custom-id-v2.ts";
 import { createLogger } from "#src/logger.ts";
 import { discordComponentsTotal } from "#src/metrics/index.ts";
 import {

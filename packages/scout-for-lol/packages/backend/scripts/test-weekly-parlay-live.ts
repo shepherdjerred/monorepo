@@ -2,8 +2,8 @@ import { DiscordAccountIdSchema, LeaguePuuidSchema } from "@scout-for-lol/data";
 import {
   validateWeeklyParlayProposal,
   WeeklyParlaySubjectSchema,
-} from "#src/betting/weekly-parlay-criteria.ts";
-import { generateWeeklyParlayProposals } from "#src/betting/weekly-parlay-model.ts";
+} from "#src/betting/weekly/weekly-parlay-criteria.ts";
+import { generateWeeklyParlayProposals } from "#src/betting/weekly/weekly-parlay-model.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("test-weekly-parlay-live");

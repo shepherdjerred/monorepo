@@ -272,13 +272,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "bucks-reconciliation": {
             const { reconcileBucksBalances } =
-              await import("#src/betting/reconcile.ts");
+              await import("#src/betting/settlement/reconcile.ts");
             await reconcileBucksBalances();
             break;
           }
           case "weekly-bucks-leaderboard": {
             const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/weekly-leaderboard.ts");
+              await import("#src/betting/weekly/weekly-leaderboard.ts");
             await runWeeklyBucksLeaderboard();
             break;
           }
@@ -453,6 +453,25 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
           await runHallBaseline(input);
         },
       );
+    },
+    recomputeChallengeRunPage: async (input) => {
+      return await heartbeatWhile(
+        {
+          runId: input.runId,
+          revision: input.revision,
+          phase: "evaluating-challenge-page",
+        },
+        async () => {
+          const { recomputeChallengeRunPage } =
+            await import("#src/progression/challenges/recompute.ts");
+          return await recomputeChallengeRunPage(input);
+        },
+      );
+    },
+    markChallengeRunRecomputeFailure: async (input) => {
+      const { markChallengeRunRecomputeFailure } =
+        await import("#src/progression/challenges/recompute.ts");
+      await markChallengeRunRecomputeFailure(input);
     },
   };
 }

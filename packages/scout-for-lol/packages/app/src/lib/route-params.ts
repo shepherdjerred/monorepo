@@ -52,6 +52,12 @@ export const ExploreParamsSchema = z.object({
   conversationId: ExploreConversationIdSchema.optional(),
 });
 
+export const ChallengeTemplateParamsSchema = z.object({
+  templateId: z.uuid(),
+});
+export const ChallengeDraftParamsSchema = z.object({ draftId: z.uuid() });
+export const ChallengeRunParamsSchema = z.object({ runId: z.uuid() });
+
 /**
  * Marks validation failures that came specifically from parsing matched URL
  * parameters. The route error boundary suppresses these expected boundary
@@ -113,4 +119,22 @@ export function useReportParams(): z.infer<typeof ReportParamsSchema> {
 
 export function useExploreParams(): z.infer<typeof ExploreParamsSchema> {
   return parseRouteParams(ExploreParamsSchema, useParams());
+}
+
+export function useChallengeTemplateParams(): z.infer<
+  typeof ChallengeTemplateParamsSchema
+> {
+  return parseRouteParams(ChallengeTemplateParamsSchema, useParams());
+}
+
+export function useChallengeDraftParams(): z.infer<
+  typeof ChallengeDraftParamsSchema
+> {
+  return parseRouteParams(ChallengeDraftParamsSchema, useParams());
+}
+
+export function useChallengeRunParams(): z.infer<
+  typeof ChallengeRunParamsSchema
+> {
+  return parseRouteParams(ChallengeRunParamsSchema, useParams());
 }

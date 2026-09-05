@@ -1,4 +1,5 @@
-import type { ChartInfo } from "./types.ts";
+import { readFile } from "node:fs/promises";
+import type { ChartInfo } from "./types.js";
 
 /**
  * Parse chart information from versions.ts comments and values
@@ -6,7 +7,7 @@ import type { ChartInfo } from "./types.ts";
 export async function parseChartInfoFromVersions(
   versionsPath = "src/versions.ts",
 ): Promise<ChartInfo[]> {
-  const content = await Bun.file(versionsPath).text();
+  const content = await readFile(versionsPath, "utf8");
   const lines = content.split("\n");
   const charts: ChartInfo[] = [];
 

@@ -115,6 +115,20 @@
         "!**/node_modules/**"
       ]
     },
+    // Directory file-count governance. The check counts files per directory, so
+    // its result changes when a code file is added, deleted, or moved anywhere
+    // in the repository — the broad glob is the input, not a convenience.
+    // `sandbox/` is negated because the check itself ignores it.
+    "//#check-directory-file-counts": {
+      "inputs": [
+        "scripts/check-directory-file-counts.ts",
+        "scripts/lib/tracked-files.ts",
+        "scripts/lib/run.ts",
+        "**/*.{ts,tsx,js,jsx,mjs,cjs,rs,go,py,swift,cs,astro}",
+        "!**/node_modules/**",
+        "!sandbox/**"
+      ]
+    },
     "//#check-test-standardization": {
       "inputs": [
         "package.json",

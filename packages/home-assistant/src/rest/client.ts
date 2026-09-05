@@ -8,10 +8,10 @@ import type {
   HaSchema,
   Service,
   ServiceDataFor,
-} from "#schema/types.ts";
-import type { HomeAssistantConfig } from "#shared/config.ts";
-import { normalizeBaseUrl } from "#shared/config.ts";
-import { HaApiError, HaAuthError, HaNotFoundError } from "./errors.ts";
+} from "../schema/types.js";
+import type { HomeAssistantConfig } from "../shared/config.js";
+import { normalizeBaseUrl } from "../shared/config.js";
+import { HaApiError, HaAuthError, HaNotFoundError } from "./errors.js";
 import {
   EntityState,
   ConfigEntryDiagnostics,
@@ -19,7 +19,7 @@ import {
   HaConfig,
   HistoryResponse,
   ServiceCallResult,
-} from "./schemas.ts";
+} from "./schemas.js";
 
 export type CallServiceOptions = {
   returnResponse?: boolean;

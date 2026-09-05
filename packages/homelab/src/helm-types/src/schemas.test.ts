@@ -9,7 +9,7 @@ import {
   RecordSchema,
   StringBooleanSchema,
   HelmValueSchema,
-} from "./schemas.ts";
+} from "./schemas.js";
 
 describe("Schema Validation - StringSchema", () => {
   test("should validate strings", () => {

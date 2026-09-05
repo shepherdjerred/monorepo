@@ -5,6 +5,7 @@ import {
   ChallengeFrozenValueSchema,
   type ChallengeFrozenValue,
 } from "#src/model/progression/challenge.ts";
+import { TimelineEventParticipantRoleSchema } from "#src/model/timeline-lake-columns.ts";
 
 export const ChallengeTemplateVersionSchema = z.strictObject({
   id: z.uuid(),
@@ -111,7 +112,13 @@ export const ChallengeEvidenceMatchSchema = z.strictObject({
   longest_life: z.number().nonnegative(),
   total_time_dead: z.number().nonnegative(),
   timelineEvidenceAvailable: z.boolean(),
-  timelineEventCounts: z.record(z.string(), z.number().int().nonnegative()),
+  timelineEventCounts: z.record(
+    z.string(),
+    z.partialRecord(
+      TimelineEventParticipantRoleSchema,
+      z.number().int().nonnegative(),
+    ),
+  ),
 });
 export type ChallengeEvidenceMatch = z.infer<
   typeof ChallengeEvidenceMatchSchema

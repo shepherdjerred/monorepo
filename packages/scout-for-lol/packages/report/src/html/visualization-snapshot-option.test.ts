@@ -378,6 +378,14 @@ describe("archived chart presentation", () => {
       '"yAxis":{"type":"category","data":["Beta","Alpha"],"name":"Champion"',
     );
     expect(option).toContain('"label":{"show":true,"position":"right"}');
+    expect(option).not.toContain("Beaufort for LoL");
+    expect(option).not.toContain("Spiegel");
+
+    const interactiveOption = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "interactive"),
+    );
+    expect(interactiveOption).toContain("Beaufort for LoL");
+    expect(interactiveOption).toContain("Spiegel");
   });
 });
 

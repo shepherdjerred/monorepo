@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { convertToTypeScriptInterface } from "./type-converter.ts";
-import { generateTypeScriptCode } from "./interface-generator.ts";
+import { convertToTypeScriptInterface } from "./type-converter.js";
+import { generateTypeScriptCode } from "./interface-generator.js";
 
 describe("Snapshot Tests", () => {
   test("should generate consistent output for basic types with comments", () => {

@@ -10,7 +10,7 @@ import {
   resolveLedgerGameLabels,
   type BucksNavigationInteraction,
 } from "#src/betting/navigation.ts";
-import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
+import type { BucksButtonEditReplyOptions } from "#src/betting/markets/bet-button.ts";
 import { getLedgerPage } from "#src/betting/accounts.ts";
 import {
   bucksTestDiscordId,

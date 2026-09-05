@@ -28,6 +28,27 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/trmnl-dashboard'
 
+# ── build: Home Assistant's gitignored dist artifact ────────────────────────
+# The workspace package uses a dist-based export. Build it from a full install
+# and copy only the resulting artifact into the production runtime below.
+FROM base AS deps
+COPY --parents \
+  package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/*/package.json packages/*/packages/*/package.json \
+  packages/docs/wiki/package.json \
+  packages/homelab/src/cdk8s/package.json \
+  packages/homelab/src/helm-types/package.json \
+  packages/scout-for-lol/packages/desktop/src-tauri/package.json \
+  ./
+RUN bun install --frozen-lockfile --filter '@shepherdjerred/home-assistant'
+
+FROM deps AS build
+COPY --parents \
+  tsconfig.base.json \
+  packages/home-assistant \
+  ./
+RUN cd packages/home-assistant && bun run build
+
 # ── runtime: COPY-only — no install, no build tooling, no network ───────────
 FROM base AS runtime
 # The isolated-linker tree uses relative symlinks (store at node_modules/.bun),
@@ -43,6 +64,7 @@ COPY --parents \
   packages/feature-flags \
   packages/home-assistant \
   ./
+COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

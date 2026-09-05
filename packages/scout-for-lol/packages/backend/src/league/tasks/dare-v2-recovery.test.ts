@@ -38,53 +38,56 @@ vi.mock("#src/league/tasks/prematch/active-game-detection.ts", () => ({
 vi.mock("#src/league/tasks/postmatch/match-history-polling.ts", () => ({
   checkMatchHistory: mocks.checkMatchHistory,
 }));
-vi.mock("#src/betting/dare-sweep.ts", () => ({
+vi.mock("#src/betting/dares/settlement/dare-sweep.ts", () => ({
   abandonExpiredDareProposals: mocks.abandonExpiredDareProposals,
   expireDareAcceptWindows: mocks.expireDareAcceptWindows,
   settleEndedDareWindows: mocks.settleEndedDareWindows,
 }));
-vi.mock("#src/betting/dare-delivery.ts", () => ({
+vi.mock("#src/betting/dares/presentation/dare-delivery.ts", () => ({
   deliverDareSummaries: mocks.deliverDareSummaries,
 }));
-vi.mock("#src/betting/dare-activation-v3.ts", () => ({
+vi.mock("#src/betting/dares/lifecycle/dare-activation-v3.ts", () => ({
   activatePendingDaresV3: mocks.activatePendingDaresV3,
 }));
-vi.mock("#src/betting/dare-settle-v3.ts", () => ({
+vi.mock("#src/betting/dares/settlement/dare-settle-v3.ts", () => ({
   settleMatureDareSqlV3Races: mocks.settleMatureDareSqlV3Races,
 }));
-vi.mock("#src/betting/dare-notification-delivery.ts", () => ({
-  deliverPendingDareNotifications: mocks.deliverPendingDareNotifications,
-}));
-vi.mock("#src/betting/dare-sweep-v2.ts", () => ({
+vi.mock(
+  "#src/betting/dares/presentation/dare-notification-delivery.ts",
+  () => ({
+    deliverPendingDareNotifications: mocks.deliverPendingDareNotifications,
+  }),
+);
+vi.mock("#src/betting/dares/settlement/dare-sweep-v2.ts", () => ({
   expireDareV2AcceptWindows: mocks.expireDareV2AcceptWindows,
   settleEndedDareV2Windows: mocks.settleEndedDareV2Windows,
 }));
-vi.mock("#src/betting/dare-callout-v2.ts", () => ({
+vi.mock("#src/betting/dares/presentation/dare-callout-v2.ts", () => ({
   refreshPendingDareV2Callouts: mocks.refreshPendingDareV2Callouts,
 }));
-vi.mock("#src/betting/sweep.ts", () => ({
+vi.mock("#src/betting/settlement/sweep.ts", () => ({
   closeExpiredBettingWindows: mocks.closeExpiredBettingWindows,
 }));
-vi.mock("#src/betting/parlay-sweep.ts", () => ({
+vi.mock("#src/betting/parlays/parlay-sweep.ts", () => ({
   closeExpiredParlayWindows: mocks.closeExpiredParlayWindows,
   voidStaleParlayMarkets: mocks.voidStaleParlayMarkets,
 }));
-vi.mock("#src/betting/parlay-publish.ts", () => ({
+vi.mock("#src/betting/parlays/parlay-publish.ts", () => ({
   activatePendingParlayMarkets: mocks.activatePendingParlayMarkets,
 }));
-vi.mock("#src/betting/parlay-refresh.ts", () => ({
+vi.mock("#src/betting/parlays/parlay-refresh.ts", () => ({
   refreshClosedParlayMessages: mocks.refreshClosedParlayMessages,
 }));
 vi.mock("#src/betting/message-refresh.ts", () => ({
   refreshClosedBucksMessages: mocks.refreshClosedBucksMessages,
 }));
-vi.mock("#src/betting/earnings-retry.ts", () => ({
+vi.mock("#src/betting/accounts/earnings-retry.ts", () => ({
   retryPendingBucksEarnings: mocks.retryPendingBucksEarnings,
 }));
 vi.mock("#src/betting/announce.ts", () => ({
   announceSettlements: mocks.announceSettlements,
 }));
-vi.mock("#src/betting/void-stale.ts", () => ({
+vi.mock("#src/betting/settlement/void-stale.ts", () => ({
   voidStaleBettingPools: mocks.voidStaleBettingPools,
 }));
 vi.mock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
