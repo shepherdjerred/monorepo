@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Loaded } from "@shepherdjerred/loaded";
+import { Loaded, type LoadedErrors } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { ChampionSplashArt } from "#src/assets/index.tsx";
 import { Button } from "#src/components/button.tsx";
@@ -71,6 +71,16 @@ const reportRows = [
   { champion: "Ahri", result: "Victory", kda: "8 / 2 / 11" },
   { champion: "Aatrox", result: "Defeat", kda: "4 / 6 / 5" },
 ];
+
+const reportStates: {
+  fallback: React.ReactNode;
+  renderError: (errors: LoadedErrors) => React.ReactNode;
+} = {
+  fallback: <LoadingState label="Loading report…" />,
+  renderError: (errors) => (
+    <ErrorState message={Loaded.messageOf(errors[0].error)} />
+  ),
+};
 
 export function CatalogSamples() {
   const [formOpen, setFormOpen] = useState(false);
@@ -164,30 +174,18 @@ export function CatalogSamples() {
           error, and degraded surfaces.
         */}
         <Grid>
-          <LoadingBlock
-            values={{ report: Loaded.loading() }}
-            fallback={<LoadingState label="Loading report…" />}
-            renderError={(errors) => (
-              <ErrorState message={Loaded.messageOf(errors[0].error)} />
-            )}
-          >
+          <LoadingBlock values={{ report: Loaded.loading() }} {...reportStates}>
             {() => <Panel>unreachable</Panel>}
           </LoadingBlock>
           <LoadingBlock
             values={{ report: Loaded.failed(new Error("Report unavailable.")) }}
-            fallback={<LoadingState label="Loading report…" />}
-            renderError={(errors) => (
-              <ErrorState message={Loaded.messageOf(errors[0].error)} />
-            )}
+            {...reportStates}
           >
             {() => <Panel>unreachable</Panel>}
           </LoadingBlock>
           <LoadingBlock
             values={{ report: Loaded.done("Patch 26.17 · 12 matches") }}
-            fallback={<LoadingState label="Loading report…" />}
-            renderError={(errors) => (
-              <ErrorState message={Loaded.messageOf(errors[0].error)} />
-            )}
+            {...reportStates}
           >
             {(data, meta) => (
               <Panel>
@@ -202,10 +200,7 @@ export function CatalogSamples() {
                 { path: ["report"], error: new Error("Refresh failed.") },
               ]),
             }}
-            fallback={<LoadingState label="Loading report…" />}
-            renderError={(errors) => (
-              <ErrorState message={Loaded.messageOf(errors[0].error)} />
-            )}
+            {...reportStates}
           >
             {(data, meta) => (
               <Panel>
