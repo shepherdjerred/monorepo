@@ -163,6 +163,11 @@ export async function previewChallengeDraft(
   await db.challengeDraft.update({
     where: { id: draft.id },
     data: {
+      // Preview and publication must share the same resolved catalogs. In
+      // particular, current_champions is a moving registry: freezing only in
+      // the evaluator would let a later publication resolve a different
+      // target set than the one the user confirmed.
+      contractJson: JSON.stringify(contract),
       previewJson: JSON.stringify(preview),
       previewedAt: new Date(),
     },
