@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import React from "react";
 import { useContent } from "#src/hooks/use-content";
 
@@ -7,7 +8,7 @@ import { useContent } from "#src/hooks/use-content";
  * notes), so only the version number is trustworthy.
  */
 export function PatchIndicator(): React.ReactElement | null {
-  const { content } = useContent();
+  const content = Loaded.getOrElse(useContent().content, undefined);
   if (content === undefined) {
     return null;
   }

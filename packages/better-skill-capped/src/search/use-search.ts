@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { Content } from "#src/model/content";
 import { useContent } from "#src/hooks/use-content";
@@ -37,7 +38,8 @@ export type UseSearchResult = {
  * `keepPreviousData` prevents flicker while typing. No effects involved.
  */
 export function useSearch(params: SearchRunParams): UseSearchResult {
-  const { content, dataUpdatedAt } = useContent();
+  const { content: contentValue, dataUpdatedAt } = useContent();
+  const content = Loaded.getOrElse(contentValue, undefined);
   const { watchedUuids } = useWatchStatus();
   const { bookmarkedUuids } = useBookmarks();
 

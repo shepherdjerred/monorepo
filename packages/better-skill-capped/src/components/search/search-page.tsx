@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import React, { useDeferredValue, useMemo } from "react";
 import { getRouteApi } from "@tanstack/react-router";
 import { SearchBar } from "./search-bar.tsx";
@@ -38,16 +39,20 @@ const SORT_LABELS: Record<SortOption, string> = {
 export function SearchPage(): React.ReactElement {
   const search = routeApi.useSearch();
   const navigate = routeApi.useNavigate();
-  const { content, itemsByUuid, error } = useContent();
+  const { content: contentValue, itemsByUuid } = useContent();
   const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const { isWatched, toggle: toggleWatchStatus } = useWatchStatus();
 
-  // A failed manifest fetch/parse leaves `content` undefined, which would
-  // render as an empty catalog. Surface it to the route error boundary
-  // instead of presenting "no content" as a successful, empty result.
-  if (error !== null) {
-    throw error;
+  // A failed manifest fetch/parse leaves the catalog absent, which would
+  // render as an empty result set. Surface that to the route error boundary
+  // instead of presenting "no content" as a successful, empty search. A
+  // refetch that failed over a cached catalog is `degraded`, not `error`, and
+  // deliberately keeps rendering.
+  if (contentValue.status === "error") {
+    throw contentValue.errors[0].error;
   }
+
+  const content = Loaded.getOrElse(contentValue, undefined);
 
   // Defer the query so typing stays responsive; the search itself is an
   // in-memory pass over ~6.3k docs.
