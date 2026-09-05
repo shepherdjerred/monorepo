@@ -680,6 +680,36 @@ export function parseExploreStreamEvent(
   throw parsed.error;
 }
 
+/**
+ * One thing a reader can name in the composer with `@`.
+ *
+ * `insertText` is separate from `label` because the point of the picker is
+ * that what lands in the question is *unambiguous*: `resolvePlayerRefPuuids`
+ * throws on a name matching more than one player, and the model otherwise
+ * spends a `resolve_player` round trip guessing. The reader sees the alias;
+ * the question receives whichever form resolves to exactly one person.
+ *
+ * No PUUID appears here. It is the data-layer key and is deliberately never
+ * rendered nor written into query text.
+ */
+export const ExploreMentionCandidateSchema = z
+  .object({
+    kind: z.enum(["player", "champion", "queue"]),
+    label: z.string().trim().min(1).max(120),
+    insertText: z.string().trim().min(1).max(120),
+    /** Games seen in the lake, for ordering and for telling collisions apart. */
+    detail: z.string().trim().min(1).max(120).nullable().default(null),
+  })
+  .strict();
+
+export type ExploreMentionCandidate = z.infer<
+  typeof ExploreMentionCandidateSchema
+>;
+
+export const ExploreMentionSearchSchema = z
+  .object({ query: z.string().trim().min(1).max(100) })
+  .strict();
+
 export const ExploreHttpErrorSchema = z
   .object({
     error: z.string().trim().min(1).max(1000),
