@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowRightIcon } from "lucide-react";
 import { useState } from "react";
@@ -22,6 +23,8 @@ export function DatasetListPage(): React.JSX.Element {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const datasetsQuery = useQuery(trpc.datasets.list.queryOptions());
+  const datasets = Loaded.fromQuery(datasetsQuery, ["datasets"]);
+  const datasetRows = Loaded.getOrElse(datasets, undefined);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const createMutation = useMutation(
     trpc.datasets.create.mutationOptions({
@@ -64,24 +67,25 @@ export function DatasetListPage(): React.JSX.Element {
           </p>
 
           <div className="mt-6 grid gap-3">
-            {datasetsQuery.isPending ? (
+            {datasets.status === "loading" ? (
               <Card>
                 <CardContent className="py-8">Loading datasets...</CardContent>
               </Card>
             ) : null}
-            {datasetsQuery.isError ? (
+            {datasets.status === "error" ? (
               <p className="text-sm text-red-700" role="alert">
-                Could not load datasets: {datasetsQuery.error.message}
+                Could not load datasets:{" "}
+                {Loaded.messageOf(datasets.errors[0].error)}
               </p>
             ) : null}
-            {datasetsQuery.data?.length === 0 ? (
+            {datasetRows?.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="py-8 text-center text-slate-500">
                   No datasets yet.
                 </CardContent>
               </Card>
             ) : null}
-            {datasetsQuery.data?.map((dataset) => (
+            {datasetRows?.map((dataset) => (
               <Card className="border shadow-none" key={dataset.id}>
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">

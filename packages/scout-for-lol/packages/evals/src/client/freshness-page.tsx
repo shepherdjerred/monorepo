@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import {
   skipToken,
   useMutation,
@@ -54,7 +55,7 @@ export function FreshnessPage(): React.JSX.Element {
       <main className="mx-auto max-w-5xl p-8">Invalid freshness URL.</main>
     );
   }
-  if (batchQuery.isError) {
+  if (Loaded.fromQuery(batchQuery).status === "error") {
     return (
       <main className="mx-auto max-w-5xl p-8">Freshness batch not found.</main>
     );
