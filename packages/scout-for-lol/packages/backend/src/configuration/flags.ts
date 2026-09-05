@@ -156,6 +156,7 @@ export type FlagName =
   | "custom_nights_enabled"
   | "debug"
   | "duels_enabled"
+  | "explore_creation_enabled"
   | "hall_of_fame_enabled"
   | "initial_match_history_import_enabled"
   | "scoutql_relational_enabled"
@@ -344,6 +345,20 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
         attributes: { user: ME },
       },
     ],
+  },
+  /**
+   * Confirming an Explore-prepared report, subscription or competition.
+   *
+   * One flag covers all three kinds: which entities a given person may create
+   * is already decided by per-entity RBAC at confirm time, so a per-kind flag
+   * would only duplicate that. Deliberately absent from
+   * `PRODUCTION_HARD_DISABLED_FLAGS` — this is meant to ramp through Flipt
+   * rather than stay beta-only. It is re-read at confirm time, so revoking it
+   * blocks intents that were already prepared.
+   */
+  explore_creation_enabled: {
+    default: false,
+    overrides: [],
   },
   initial_match_history_import_enabled: {
     default: false,

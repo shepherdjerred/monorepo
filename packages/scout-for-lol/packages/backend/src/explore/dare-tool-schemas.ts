@@ -8,7 +8,7 @@ import {
   DareDeadlineSpecV2Schema,
   DareSqlV3CompetitionSchema,
   DareActivationV3Schema,
-  ConfirmationIntentPayloadSchema,
+  DareIntentPayloadSchema,
 } from "@scout-for-lol/data";
 
 export const DareToolResultSchema = z.strictObject({
@@ -96,10 +96,12 @@ export const DareInspectToolInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
 });
 
+// The dare-only payload union, so the Explore dare tool cannot mint a
+// creation intent — those have their own gate, RBAC and confirm procedure.
 export const DareActionToolInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
   expectedRevision: z.number().int().positive(),
-  payload: ConfirmationIntentPayloadSchema,
+  payload: DareIntentPayloadSchema,
 });
 
 export const DareDeleteToolInputSchema = z.strictObject({

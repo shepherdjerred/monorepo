@@ -59,6 +59,19 @@ export const LeaguePuuidSchema = z
 
 // https://developer.riotgames.com/docs/summoner-name-to-riot-id-faq
 // a riot ID looks like this: game_name#tag_line
+/**
+ * A Riot ID already split into its two parts.
+ *
+ * Named separately from {@link RiotIdSchema} because that schema's *input* is
+ * the `game_name#tag_line` string; anything that stores or transports the
+ * already-parsed value (a confirmation intent payload, for example) needs the
+ * object shape and would fail to re-parse the string form.
+ */
+export const RiotIdPartsSchema = z.object({
+  game_name: z.string().min(3).max(16),
+  tag_line: z.string().min(3).max(5),
+});
+
 export type RiotId = z.infer<typeof RiotIdSchema>;
 export const RiotIdSchema = z
   .string()
@@ -70,12 +83,7 @@ export const RiotIdSchema = z
     const [gameName, tagLine] = val.split("#");
     return { game_name: gameName, tag_line: tagLine };
   })
-  .pipe(
-    z.object({
-      game_name: z.string().min(3).max(16),
-      tag_line: z.string().min(3).max(5),
-    }),
-  );
+  .pipe(RiotIdPartsSchema);
 
 export type LeagueAccount = z.infer<typeof LeagueAccountSchema>;
 export const LeagueAccountSchema = z.strictObject({
