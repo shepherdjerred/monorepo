@@ -1,4 +1,4 @@
-import { runCommand } from "./data-dragon-shell.ts";
+import { runCommand } from "./data-dragon/data-dragon-shell.ts";
 
 export type BotCloneCommandRunner = typeof runCommand;
 

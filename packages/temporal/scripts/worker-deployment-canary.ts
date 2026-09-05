@@ -2,7 +2,7 @@ import { Client, Connection } from "@temporalio/client";
 import { z } from "zod";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
+import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
 import type { workerDeploymentCanaryWorkflow } from "#workflows/index.ts";
 import { requiredArgument, requiredEnvironment } from "./cli-arguments.ts";
 

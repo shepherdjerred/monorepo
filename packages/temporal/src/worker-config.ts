@@ -12,7 +12,7 @@ import {
   billingActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES, type TaskQueue } from "./shared/task-queues.ts";
-import type { WorkerRole } from "./shared/worker-role.ts";
+import type { WorkerRole } from "./shared/infra/worker-role.ts";
 
 export type QueueWorkerRole =
   | "agent"

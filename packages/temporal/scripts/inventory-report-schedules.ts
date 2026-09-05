@@ -2,9 +2,9 @@
 import { Client, Connection } from "@temporalio/client";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { SCHEDULES } from "#schedules/schedule-definitions.ts";
-import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
-import { REPORT_SCHEDULE_REGISTRY } from "#shared/report-registry.ts";
-import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
+import { REPORT_SCHEDULE_REGISTRY } from "#shared/reports/report-registry.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";

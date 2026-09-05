@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import type { EntityState } from "@shepherdjerred/home-assistant";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import { MOTION_LIGHT_ROOMS } from "#shared/motion-light.ts";
+import { MOTION_LIGHT_ROOMS } from "#shared/infra/motion-light.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { motionLight } from "./motion-light.ts";
 
