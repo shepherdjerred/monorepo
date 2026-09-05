@@ -182,7 +182,7 @@ test("a failed refresh keeps the alerts on screen behind a stale notice", async 
       status: 500,
       contentType: "application/json",
       body: JSON.stringify([
-        { error: { message: "upstream unavailable", code: -32603 } },
+        { error: { message: "upstream unavailable", code: -32_603 } },
       ]),
     });
   });
