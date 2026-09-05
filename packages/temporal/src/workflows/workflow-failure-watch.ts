@@ -20,7 +20,7 @@ const { pollWorkflowFailures } =
  * Polls the Temporal visibility API for workflow executions that failed or
  * timed out in the last 24 hours and notifies Alerts (via Alertmanager) with
  * the specific error for each one. See
- * src/activities/workflow-failure-watch-activity.ts.
+ * src/activities/maintenance/workflow-failure-watch-activity.ts.
  */
 export async function pollWorkflowFailuresWorkflow(): Promise<PollWorkflowFailuresResult> {
   return pollWorkflowFailures();

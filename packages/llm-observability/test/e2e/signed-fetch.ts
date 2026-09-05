@@ -12,7 +12,7 @@ export type SignedFetchParams = {
 
 /**
  * Minimal AWS SigV4 fetch helper for tests — same algorithm as
- * `packages/temporal/src/shared/s3.ts` and `archive-uploader.ts`, but supports
+ * `packages/temporal/src/shared/infra/s3.ts` and `archive-uploader.ts`, but supports
  * GET (no body) in addition to PUT.
  */
 export async function signedFetch(

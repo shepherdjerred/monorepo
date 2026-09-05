@@ -98,7 +98,7 @@ const EXCLUDED_FILES = [
   // "x-access-token" as the git username (with $GH_TOKEN as the password).
   // This is the recommended pattern that the AGENTS.md rule actually points
   // toward — the ban is on putting `x-access-token` in URLs, not in askpass.
-  "packages/temporal/src/activities/data-dragon.ts",
+  "packages/temporal/src/activities/data-dragon/data-dragon.ts",
   // Same pattern: GIT_ASKPASS script for the agent-task workdir clone
   // (lib/pr-review-workdir.ts — legacy name; now used by agent-task). The
   // literal "x-access-token" is the username GitHub's HTTPS clone expects
@@ -107,7 +107,7 @@ const EXCLUDED_FILES = [
   // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
   // git username for the bare blobless clone the ci/merge-conflict checker uses
   // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.
-  "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts",
+  "packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
   "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",

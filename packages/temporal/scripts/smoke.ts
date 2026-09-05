@@ -14,7 +14,7 @@
  * 2. CLIs: every operator CLI the scheduled workflows shell out to must be on
  *    PATH and runnable inside the image. Each CLI is exec'd with its cheapest
  *    no-credential invocation; a missing/broken binary fails the smoke. The list
- *    mirrors REQUIRED_AUDIT_BINARIES in src/activities/homelab-audit-preflight.ts
+ *    mirrors REQUIRED_AUDIT_BINARIES in src/activities/homelab/homelab-audit-preflight.ts
  *    plus github-mcp-server (used outside the audit preflight). Claude and Codex
  *    are package-local SDKs and are covered by typecheck/tests.
  *
