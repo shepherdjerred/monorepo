@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   dispatchDecision,
+  MAX_IDLE_DISPATCH_MS,
   parseNativeJobs,
   parseOtherRunningNativeJobs,
   type NativeJob,
@@ -103,6 +104,33 @@ describe("native macOS dispatch watch", () => {
         { idleSinceMs: null, nowMs: 10_000 },
       ),
     ).toEqual({ kind: "complete" });
+  });
+
+  /**
+   * `broken` is what Buildkite calls a job its `if_changed` excluded. It will
+   * never be scheduled, so it cannot be waited for. Treating it as pending made
+   * the watchdog burn its whole idle budget and then fail the build telling
+   * someone to go wake a Mac that had no work to do.
+   */
+  test("treats a job excluded by if_changed as settled, not pending", () => {
+    expect(
+      dispatchDecision(
+        [
+          job("tasknotes-native-pr", "passed", "2026-08-24T00:00:00Z"),
+          job("quotabar-macos-pr", "broken", null),
+          job("hkctl-native-pr", "broken", null),
+        ],
+        { idleSinceMs: null, nowMs: 10_000 },
+      ),
+    ).toEqual({ kind: "complete" });
+  });
+
+  test("still times out when a genuinely undispatched job is pending", () => {
+    const decision = dispatchDecision(
+      [job("quotabar-macos-pr", "scheduled", "2026-08-24T00:00:00Z")],
+      { idleSinceMs: 0, nowMs: MAX_IDLE_DISPATCH_MS + 1 },
+    );
+    expect(decision.kind).toBe("timed-out");
   });
 
   test("pauses the idle clock while the serial Mac is running another job", () => {

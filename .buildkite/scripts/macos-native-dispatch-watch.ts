@@ -15,7 +15,17 @@ const ALL_NATIVE_STEP_KEYS = new Set([
   "tasknotes-native-main",
 ]);
 const ACTIVE_STATES = new Set(["running"]);
-const SUCCESS_STATES = new Set(["passed", "skipped"]);
+/**
+ * States that mean a job needs no dispatch.
+ *
+ * `broken` is the state Buildkite gives a job its `if_changed` excluded — it
+ * will never be scheduled, so it is settled, not pending. Counting it as
+ * pending makes the watchdog wait out its idle budget and then fail the build
+ * claiming the macOS host is asleep, on a pull request whose macOS lanes were
+ * simply not selected. That is exactly backwards: the message sends someone to
+ * wake a machine that had no work to do.
+ */
+const SETTLED_STATES = new Set(["passed", "skipped", "broken"]);
 
 export const MAX_IDLE_DISPATCH_MS = 5 * 60 * 1000;
 const POLL_INTERVAL_MS = 15_000;
@@ -179,7 +189,7 @@ export function dispatchDecision(
   const maxIdleMs = context.maxIdleMs ?? MAX_IDLE_DISPATCH_MS;
   const { attempts, awaitingRetry } = currentAttempts(jobs);
   const pending = [
-    ...attempts.filter((job) => !SUCCESS_STATES.has(job.state)),
+    ...attempts.filter((job) => !SETTLED_STATES.has(job.state)),
     ...awaitingRetry,
   ];
   if (pending.length === 0) return { kind: "complete" };
