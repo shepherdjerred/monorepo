@@ -29,6 +29,7 @@ import {
   PlayerAccountsTable,
   Section,
 } from "#src/components/player-detail-sections.tsx";
+import { GuildPlayerStats } from "#src/components/guild-player-stats.tsx";
 import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
 import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";
 import { AddAccountDialog } from "#src/components/add-account-dialog.tsx";
@@ -192,6 +193,9 @@ export function PlayerDetail() {
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions({ guildId }),
   );
+  const consumerStatusQuery = useQuery(
+    trpc.consumerPlayer.status.queryOptions({ guildId }),
+  );
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: playerKey });
@@ -274,7 +278,10 @@ export function PlayerDetail() {
         <PlayerHeaderActions
           guildId={guildId}
           alias={alias}
-          playerId={player.id}
+          {...(consumerStatusQuery.data?.state === "available"
+            ? { playerId: player.id }
+            : {})}
+          showStats={consumerStatusQuery.data?.state === "available"}
           playerLoaded={true}
           permissions={perms}
           deletePending={deletePlayerMutation.isPending}
@@ -309,6 +316,8 @@ export function PlayerDetail() {
           unlinkMutation.mutate({ guildId, playerAlias: alias });
         }}
       />
+
+      <GuildPlayerStats guildId={guildId} alias={alias} />
 
       <Section
         title="Riot accounts"

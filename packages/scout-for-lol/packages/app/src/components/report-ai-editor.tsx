@@ -332,7 +332,7 @@ export function ReportAiEditor(props: {
   );
 }
 
-function selectBindingQuota(
+export function selectBindingQuota(
   snapshots: ReportAiEditStatus["quota"],
 ): ReportAiQuotaSnapshot | null {
   if (snapshots.length === 0) return null;
@@ -340,8 +340,8 @@ function selectBindingQuota(
   // 1. Any exhausted quota (0 remaining) is actively blocking
   const exhausted = snapshots.filter((s) => s.remaining === 0);
   if (exhausted.length > 0) {
-    return exhausted.reduce((earliest, s) =>
-      new Date(s.resetsAt) < new Date(earliest.resetsAt) ? s : earliest,
+    return exhausted.reduce((latest, s) =>
+      new Date(s.resetsAt) > new Date(latest.resetsAt) ? s : latest,
     );
   }
 
