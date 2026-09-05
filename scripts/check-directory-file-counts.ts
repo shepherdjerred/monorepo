@@ -17,7 +17,7 @@
 import { trackedExistingFiles } from "./lib/tracked-files.ts";
 
 /** Lowered by each reorganization PR until it reaches `TARGET`. */
-export const CEILING = 138;
+export const CEILING = 108;
 
 /** The permanent limit. When `CEILING` reaches this, the workstream is done. */
 export const TARGET = 50;
