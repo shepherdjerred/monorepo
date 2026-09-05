@@ -19,7 +19,7 @@
     "update-imports": "bun run scripts/update-imports.ts",
     "generate": "bun run generate-version-catalog-types",
     "generate-version-catalog-types": "bun run scripts/generate-version-map-schema.ts",
-    "generate-helm-types": "bun --no-install run scripts/generate-helm-types.ts",
+    "generate-helm-types": "bun --no-install run --cwd ../helm-types build && bun --no-install run scripts/generate-helm-types.ts",
     "format:generated-helm": "prettier --no-config",
     "up": "bun run build && bun run scripts/helm-render.ts --apply",
     "render": "bun run build && bun run scripts/helm-render.ts --render",

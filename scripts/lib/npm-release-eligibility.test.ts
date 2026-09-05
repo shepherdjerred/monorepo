@@ -188,6 +188,25 @@ describe("consumer file classification", () => {
   });
 });
 
+describe("initial package releases", () => {
+  test("classifies Home Assistant's configured first release", async () => {
+    const policy = NPM_PACKAGE_POLICIES.find(
+      (candidate) => candidate.name === "@shepherdjerred/home-assistant",
+    );
+    if (policy === undefined) {
+      throw new Error("Home Assistant policy is missing");
+    }
+
+    const decision = await classifyPackageRelease(process.cwd(), policy);
+
+    expect(decision).toMatchObject({
+      packageName: "@shepherdjerred/home-assistant",
+      latestTag: "initial release",
+      eligible: true,
+    });
+  });
+});
+
 describe("historical release regressions", () => {
   beforeAll(async () => {
     await fetchNpmPackageTags(process.cwd());

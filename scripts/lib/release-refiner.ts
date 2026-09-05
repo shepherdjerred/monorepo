@@ -28,7 +28,14 @@ const ReleaseRefinerResultSchema = z.discriminatedUnion("status", [
       status: z.literal("refined"),
       prNumber: z.number().int().positive(),
       packagesRefined: z
-        .array(z.enum(["astro-opengraph-images", "webring", "helm-types"]))
+        .array(
+          z.enum([
+            "astro-opengraph-images",
+            "webring",
+            "helm-types",
+            "home-assistant",
+          ]),
+        )
         .min(1)
         .refine(
           (packages) => new Set(packages).size === packages.length,
@@ -240,7 +247,8 @@ async function runCodexSdk(
 }
 
 function packageChangelog(
-  packageName: "astro-opengraph-images" | "webring" | "helm-types",
+  packageName:
+    "astro-opengraph-images" | "webring" | "helm-types" | "home-assistant",
 ): string {
   switch (packageName) {
     case "astro-opengraph-images":
@@ -249,6 +257,8 @@ function packageChangelog(
       return "packages/webring/CHANGELOG.md";
     case "helm-types":
       return "packages/homelab/src/helm-types/CHANGELOG.md";
+    case "home-assistant":
+      return "packages/home-assistant/CHANGELOG.md";
   }
 }
 

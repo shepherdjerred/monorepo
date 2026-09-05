@@ -1,11 +1,11 @@
 import { describe, test, expect, beforeEach, afterEach } from "vitest";
 import { parse as yamlParse } from "yaml";
-import { toPascalCase } from "./cli.ts";
-import { HelmValueSchema, RecordSchema } from "./schemas.ts";
-import { parseYAMLComments } from "./yaml-comments.ts";
-import { convertToTypeScriptInterface } from "./type-converter.ts";
-import { generateTypeScriptCode } from "./interface-generator.ts";
-import type { JSONSchemaProperty } from "./types.ts";
+import { toPascalCase } from "./cli.js";
+import { HelmValueSchema, RecordSchema } from "./schemas.js";
+import { parseYAMLComments } from "./yaml-comments.js";
+import { convertToTypeScriptInterface } from "./type-converter.js";
+import { generateTypeScriptCode } from "./interface-generator.js";
+import type { JSONSchemaProperty } from "./types.js";
 
 describe("CLI", () => {
   const CLI_PATH = `${import.meta.dir}/cli.ts`;

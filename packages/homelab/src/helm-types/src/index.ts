@@ -12,17 +12,22 @@
  * This is a general-purpose library that can be used with any Helm chart.
  * Application-specific logic should be kept in your application code.
  *
- * Import directly from submodules:
- * - ./types.ts - Core types (ChartInfo, JSONSchemaProperty, TypeScriptInterface, TypeProperty)
- * - ./schemas.ts - Zod schemas (HelmValueSchema, StringSchema, etc.)
- * - ./config.ts - Configuration (EXTENSIBLE_TYPE_PATTERNS, shouldAllowArbitraryProps)
- * - ./chart-info-parser.ts - Chart info parsing (parseChartInfoFromVersions)
- * - ./yaml-comments.ts - YAML comments (cleanYAMLComment, parseYAMLComments)
- * - ./chart-fetcher.ts - Chart fetching (fetchHelmChart)
- * - ./type-converter.ts - Type conversion (jsonSchemaToTypeScript, inferTypeFromValue, etc.)
- * - ./interface-generator.ts - Code generation (generateTypeScriptCode)
- * - ./utils.ts - Utilities (sanitizePropertyName, sanitizeTypeName, capitalizeFirst)
+ * The root export is the complete supported public API.
  */
-
-/** Version marker for the helm-types package. */
-export const HELM_TYPES_PACKAGE_VERSION = "1.1.0";
+export { fetchHelmChart } from "./chart-fetcher.js";
+export type { FetchedHelmChart } from "./chart-fetcher.js";
+export { parseChartInfoFromVersions } from "./chart-info-parser.js";
+export { generateTypeScriptCode } from "./interface-generator.js";
+export {
+  convertToTypeScriptInterface,
+  inferTypeFromValue,
+  jsonSchemaToTypeScript,
+} from "./type-converter.js";
+export type {
+  ChartInfo,
+  JSONSchemaProperty,
+  TypeProperty,
+  TypeScriptInterface,
+} from "./types.js";
+export { HelmValueSchema } from "./schemas.js";
+export type { HelmValue } from "./schemas.js";

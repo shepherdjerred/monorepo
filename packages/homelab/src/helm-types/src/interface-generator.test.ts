@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { generateTypeScriptCode } from "./interface-generator.ts";
-import type { TypeScriptInterface } from "./types.ts";
+import { generateTypeScriptCode } from "./interface-generator.js";
+import type { TypeScriptInterface } from "./types.js";
 
 describe("Code Generation", () => {
   test("should generate JSDoc comments", () => {

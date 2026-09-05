@@ -2041,6 +2041,7 @@ steps:
         - "packages/resume/**"
         - "packages/webring/**"
         - "packages/astro-opengraph-images/**"
+        - "packages/home-assistant/**"
         - "packages/llm-models/**"
         - "packages/cooklang-rich-preview/**"
         - "packages/stocks-sjer-red/**"
@@ -2750,7 +2751,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       filters=()
       if $$npm_changed; then
-        filters+=(--filter astro-opengraph-images --filter webring --filter '@shepherdjerred/helm-types')
+        filters+=(--filter astro-opengraph-images --filter webring --filter '@shepherdjerred/helm-types' --filter '@shepherdjerred/home-assistant')
       fi
       if $$cooklang_changed; then filters+=(--filter cooklang-for-obsidian); fi
       .buildkite/scripts/bun-install.sh --frozen-lockfile "$${filters[@]}"
@@ -2758,9 +2759,11 @@ steps:
         bun --no-install run --cwd packages/astro-opengraph-images publish:npm
         bun --no-install run --cwd packages/webring publish:npm
         bun --no-install run --cwd packages/homelab/src/helm-types publish:npm
+        bun --no-install run --cwd packages/home-assistant publish:npm
         bun --no-install scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"
+        bun --no-install scripts/publish-npm.ts packages/home-assistant --dev-suffix "$BUILDKITE_BUILD_NUMBER"
       fi
       if $$cooklang_changed; then
         bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin

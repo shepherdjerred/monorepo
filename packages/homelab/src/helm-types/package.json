@@ -1,13 +1,13 @@
 {
   "name": "@shepherdjerred/helm-types",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "description": "Generate TypeScript types from Helm chart values.yaml and values.schema.json",
   "type": "module",
   "main": "dist/index.js",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
@@ -16,12 +16,14 @@
   },
   "files": [
     "dist",
-    "src",
-    "!src/**/*.test.ts",
-    "!src/__snapshots__"
+    "examples",
+    "demos",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
-    "build": "bun build src/index.ts src/cli.ts --outdir dist --target node",
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc -p tsconfig.build.json",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:helm-types": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/helm-types.test.ts",
     "test:cli": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src/cli.test.ts",
@@ -43,7 +45,7 @@
     "k8s"
   ],
   "author": "Jerred Shepherd",
-  "license": "GPL-3.0",
+  "license": "GPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/shepherdjerred/monorepo.git",
@@ -57,7 +59,7 @@
     "access": "public"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "dependencies": {
     "yaml": "^2.8.3",
@@ -65,7 +67,10 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
+    "@tsconfig/node24": "^24.0.4",
+    "@tsconfig/strictest": "^2.0.8",
     "@types/bun": "1.4.0",
+    "@types/node": "^26.1.1",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "@typescript/native": "npm:typescript@7.0.2",

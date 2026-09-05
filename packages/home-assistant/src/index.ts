@@ -1,6 +1,6 @@
-export { HomeAssistantRestClient } from "./rest/client.ts";
-export type { CallServiceOptions, HistoryOptions } from "./rest/client.ts";
-export { HaApiError, HaAuthError, HaNotFoundError } from "./rest/errors.ts";
+export { HomeAssistantRestClient } from "./rest/client.js";
+export type { CallServiceOptions, HistoryOptions } from "./rest/client.js";
+export { HaApiError, HaAuthError, HaNotFoundError } from "./rest/errors.js";
 export type {
   EntityState,
   HaConfig,
@@ -10,7 +10,7 @@ export type {
   HistoryResponse,
   FireEventResponse,
   ConfigEntryDiagnostics,
-} from "./rest/schemas.ts";
+} from "./rest/schemas.js";
 export {
   EntityState as EntityStateSchema,
   HaConfig as HaConfigSchema,
@@ -20,29 +20,29 @@ export {
   HistoryResponse as HistoryResponseSchema,
   FireEventResponse as FireEventResponseSchema,
   ConfigEntryDiagnostics as ConfigEntryDiagnosticsSchema,
-} from "./rest/schemas.ts";
-export { HomeAssistantEventClient } from "./ws/client.ts";
+} from "./rest/schemas.js";
+export { HomeAssistantEventClient } from "./ws/client.js";
 export type {
   ConnectionStateListener,
   HomeAssistantEventClientOptions,
-} from "./ws/client.ts";
+} from "./ws/client.js";
 export {
   HaWebSocketError,
   HaWebSocketAuthError,
   HaWebSocketClosedError,
   HaWebSocketResultError,
-} from "./ws/errors.ts";
+} from "./ws/errors.js";
 export type {
   EntityRegistryEntry,
   EventEnvelope,
   EventMessage,
-} from "./ws/messages.ts";
+} from "./ws/messages.js";
 export {
   EntityRegistryEntry as EntityRegistryEntrySchema,
   StateChangedEventData as StateChangedEventDataSchema,
-} from "./ws/messages.ts";
-export type { EventHandler, Subscription } from "./ws/subscriptions.ts";
-export type { HomeAssistantConfig } from "./shared/config.ts";
+} from "./ws/messages.js";
+export type { EventHandler, Subscription } from "./ws/subscriptions.js";
+export type { HomeAssistantConfig } from "./shared/config.js";
 export type {
   Domain,
   EntityAttributesFor,
@@ -60,4 +60,4 @@ export type {
   DefaultHaSchema,
   Service,
   ServiceDataFor,
-} from "./schema/types.ts";
+} from "./schema/types.js";

@@ -1,0 +1,33 @@
+{
+  "states": [
+    {
+      "entity_id": "light.demo_lamp",
+      "state": "off",
+      "attributes": {
+        "friendly_name": "Demo lamp"
+      }
+    }
+  ],
+  "services": [
+    {
+      "domain": "light",
+      "services": {
+        "turn_on": {
+          "fields": {
+            "brightness": {
+              "required": false,
+              "selector": {
+                "number": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "event": "state_changed"
+    }
+  ]
+}

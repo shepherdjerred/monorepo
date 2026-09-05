@@ -7,7 +7,7 @@
  * so Vitest doesn't try to run it as a suite.
  */
 
-import type { HomeAssistantRestClient } from "#lib";
+import type { HomeAssistantRestClient } from "../src/index.ts";
 
 type DemoSchema = {
   entities: {

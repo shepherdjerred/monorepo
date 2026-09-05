@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { convertToTypeScriptInterface } from "./type-converter.ts";
-import type { JSONSchemaProperty } from "./types.ts";
+import { convertToTypeScriptInterface } from "./type-converter.js";
+import type { JSONSchemaProperty } from "./types.js";
 
 describe("JSON Schema to TypeScript Type Conversion", () => {
   test("should convert basic types", () => {

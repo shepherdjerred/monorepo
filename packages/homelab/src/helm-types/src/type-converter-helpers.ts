@@ -1,10 +1,10 @@
-import type { JSONSchemaProperty, TypeProperty } from "./types.ts";
+import type { JSONSchemaProperty, TypeProperty } from "./types.js";
 import {
   StringSchema,
   ActualNumberSchema,
   ActualBooleanSchema,
   StringBooleanSchema,
-} from "./schemas.ts";
+} from "./schemas.js";
 
 export type PropertyConversionContext = {
   value: unknown;

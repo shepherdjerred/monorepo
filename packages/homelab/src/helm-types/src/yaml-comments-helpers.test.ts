@@ -7,7 +7,7 @@ import {
   looksLikeProse,
   normalizeCommentLine,
   parseBitnamiParams,
-} from "./yaml-comments.ts";
+} from "./yaml-comments.js";
 
 describe("YAML Comment Helpers - Detection Functions", () => {
   describe("isYAMLKey", () => {

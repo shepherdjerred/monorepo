@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { parseYAMLComments } from "./yaml-comments.ts";
-import { preprocessYAMLComments } from "./yaml-preprocess.ts";
+import { parseYAMLComments } from "./yaml-comments.js";
+import { preprocessYAMLComments } from "./yaml-preprocess.js";
 
 describe("YAML Preprocessing - Preprocessor", () => {
   describe("preprocessYAMLComments", () => {

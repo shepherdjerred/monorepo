@@ -1,10 +1,10 @@
-import type { HaIntrospection } from "./introspect.ts";
-import { KNOWN_EVENT_DATA } from "./known-events.ts";
+import type { HaIntrospection } from "./introspect.js";
+import { KNOWN_EVENT_DATA } from "./known-events.js";
 import {
   fieldMetaFromSpec,
   targetDomainFromSpec,
   type FieldMeta,
-} from "./selector-to-ts.ts";
+} from "./selector-to-ts.js";
 
 export type EmitOptions = {
   schemaName: string;

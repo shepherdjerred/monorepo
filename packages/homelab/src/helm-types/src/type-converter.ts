@@ -2,8 +2,8 @@ import type {
   JSONSchemaProperty,
   TypeScriptInterface,
   TypeProperty,
-} from "./types.ts";
-import type { HelmValue } from "./schemas.ts";
+} from "./types.js";
+import type { HelmValue } from "./schemas.js";
 import {
   StringSchema,
   NullSchema,
@@ -13,21 +13,21 @@ import {
   ActualBooleanSchema,
   ActualNumberSchema,
   StringBooleanSchema,
-} from "./schemas.ts";
+} from "./schemas.js";
 import {
   shouldAllowArbitraryProps,
   getWellKnownK8sFieldType,
-} from "./config.ts";
+} from "./config.js";
 import {
   sanitizePropertyName,
   sanitizeTypeName,
   capitalizeFirst,
-} from "./utils.ts";
-import type { PropertyConversionContext } from "./type-converter-helpers.ts";
+} from "./utils.js";
+import type { PropertyConversionContext } from "./type-converter-helpers.js";
 import {
   mergeDescriptions,
   inferPrimitiveType,
-} from "./type-converter-helpers.ts";
+} from "./type-converter-helpers.js";
 
 /**
  * Convert JSON schema type to TypeScript type string

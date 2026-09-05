@@ -1,6 +1,6 @@
 import { describe, test, expect } from "vitest";
-import { sanitizePropertyName } from "./utils.ts";
-import { convertToTypeScriptInterface } from "./type-converter.ts";
+import { sanitizePropertyName } from "./utils.js";
+import { convertToTypeScriptInterface } from "./type-converter.js";
 
 describe("Sanitization", () => {
   test("should sanitize reserved keywords", () => {

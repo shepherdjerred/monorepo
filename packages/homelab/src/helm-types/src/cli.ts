@@ -1,24 +1,20 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 /**
- * CLI for @homelab/helm-types
+ * CLI for @shepherdjerred/helm-types
  *
  * Generate TypeScript types from Helm charts
  */
-import { z } from "zod";
-import { fetchHelmChart } from "./chart-fetcher.ts";
-import { convertToTypeScriptInterface } from "./type-converter.ts";
-import { generateTypeScriptCode } from "./interface-generator.ts";
-import type { ChartInfo } from "./types.ts";
-
-const ErrorSchema = z.object({
-  message: z.string(),
-});
+import { writeFile } from "node:fs/promises";
+import { fetchHelmChart } from "./chart-fetcher.js";
+import { convertToTypeScriptInterface } from "./type-converter.js";
+import { generateTypeScriptCode } from "./interface-generator.js";
+import type { ChartInfo } from "./types.js";
 
 const HELP_TEXT = String.raw`
 helm-types - Generate TypeScript types from Helm charts
 
 USAGE:
-  bunx @homelab/helm-types [options]
+  npx @shepherdjerred/helm-types [options]
 
 OPTIONS:
   --name, -n          Unique identifier for the chart (required)
@@ -31,24 +27,24 @@ OPTIONS:
 
 EXAMPLES:
   # Generate types for ArgoCD and print to stdout
-  bunx @homelab/helm-types \
+  npx @shepherdjerred/helm-types \
     --name argo-cd \
     --repo https://argoproj.github.io/argo-helm \
-    --version 8.3.1
+    --version 7.7.16
 
   # Generate types with custom output file
-  bunx @homelab/helm-types \
+  npx @shepherdjerred/helm-types \
     --name argo-cd \
     --repo https://argoproj.github.io/argo-helm \
-    --version 8.3.1 \
+    --version 7.7.16 \
     --output argo-cd.types.ts
 
   # Generate types with custom chart name and interface name
-  bunx @homelab/helm-types \
+  npx @shepherdjerred/helm-types \
     --name argocd \
     --chart argo-cd \
     --repo https://argoproj.github.io/argo-helm \
-    --version 8.3.1 \
+    --version 7.7.16 \
     --interface ArgocdHelmValues \
     --output argocd.types.ts
 `;
@@ -85,7 +81,7 @@ const FLAG_MAP: Record<string, StringCliArgsKey> = {
 const HELP_FLAGS = new Set(["--help", "-h"]);
 
 /**
- * Simple argument parser for Bun CLI
+ * Simple argument parser for the Node and Bun CLI.
  */
 function parseCliArgs(args: string[]): CliArgs {
   const result: CliArgs = {};
@@ -119,14 +115,14 @@ function parseCliArgs(args: string[]): CliArgs {
   return result;
 }
 
-async function main() {
+export async function main(argv = process.argv.slice(2)): Promise<void> {
   try {
-    const args = parseCliArgs(Bun.argv.slice(2));
+    const args = parseCliArgs(argv);
 
     // Show help
     if (args.help === true) {
       console.log(HELP_TEXT);
-      process.exit(0);
+      return;
     }
 
     // Validate required arguments
@@ -141,7 +137,8 @@ async function main() {
       console.error("Error: Missing required arguments");
       console.error("Required: --name, --repo, --version");
       console.error("\nRun with --help for usage information");
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
 
     // Build chart info
@@ -182,23 +179,17 @@ async function main() {
 
     // Write to file or stdout
     if (args.output != null && args.output !== "") {
-      await Bun.write(args.output, code);
+      await writeFile(args.output, code, "utf8");
       console.error("");
       console.error(`✅ Types written to: ${args.output}`);
     } else {
       // Write to stdout (so it can be piped)
       console.log(code);
     }
-
-    process.exit(0);
-  } catch (error) {
-    const parseResult = ErrorSchema.safeParse(error);
-    if (parseResult.success) {
-      console.error(`Error: ${parseResult.data.message}`);
-    } else {
-      console.error(`Error: ${String(error)}`);
-    }
-    process.exit(1);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Error: ${message}`);
+    process.exitCode = 1;
   }
 }
 
