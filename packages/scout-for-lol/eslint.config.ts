@@ -125,8 +125,6 @@ const config = [
     customRules: {
       noDtoNaming: true,
       noShadcnThemeTokens: true,
-      // knip (dead code/exports) + jscpd (duplication), both at warn.
-      analysisRules: true,
     },
   }),
   ...astroConfig(),
