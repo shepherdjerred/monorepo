@@ -1493,16 +1493,16 @@
       "tokens": 110
     },
     "packages/tasks-for-obsidian/src/data/api/TaskNotesClient.test.ts|packages/tasks-for-obsidian/src/data/api/TaskNotesClient.test.ts": {
-      "clones": 3,
-      "tokens": 305
+      "clones": 1,
+      "tokens": 87
     },
     "packages/tasks-for-obsidian/src/data/preferences/saved-view-repository.ts|packages/tasks-for-obsidian/src/data/store/TaskStore.ts": {
       "clones": 1,
       "tokens": 139
     },
     "packages/tasks-for-obsidian/src/data/store/TaskStore.test.ts|packages/tasks-for-obsidian/src/data/store/TaskStore.test.ts": {
-      "clones": 14,
-      "tokens": 1383
+      "clones": 5,
+      "tokens": 441
     },
     "packages/tasks-for-obsidian/src/data/sync/__tests__/harness.ts|packages/tasks-for-obsidian/src/data/sync/commands.test.ts": {
       "clones": 1,
