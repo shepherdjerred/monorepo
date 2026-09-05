@@ -2,13 +2,17 @@ import { evidenceGames, type VisualizationSnapshot } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts";
 import {
+  VISUALIZATION_BODY_FONT,
   visualizationSnapshotBaseOption,
+  visualizationSnapshotFont,
   visualizationSnapshotPresentation,
+  visualizationSnapshotScaleTextStyle,
+  type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
 export function calendarOption(
   snapshot: VisualizationSnapshot,
-  mode: "interactive" | "static",
+  mode: VisualizationRenderMode,
 ): echarts.EChartsOption {
   const points = snapshot.series[0]?.points ?? [];
   const values = points.flatMap((point) =>
@@ -16,16 +20,16 @@ export function calendarOption(
   );
   const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout calendar"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout calendar", mode),
     tooltip: { formatter: (input) => calendarTooltipText(snapshot, input) },
     visualMap: {
       min: Math.min(...values, 0),
       max: Math.max(...values, 1),
-      calculable: mode === "interactive",
+      calculable: false,
       orient: "horizontal",
       left: "center",
       bottom: 18,
-      textStyle: { color: presentation.theme.muted },
+      textStyle: visualizationSnapshotScaleTextStyle(presentation.theme, mode),
       inRange: { color: presentation.colors },
     },
     calendar: {
@@ -42,8 +46,14 @@ export function calendarOption(
         borderColor: presentation.theme.border,
         borderWidth: 3,
       },
-      dayLabel: { color: presentation.theme.muted },
-      monthLabel: { color: presentation.theme.text },
+      dayLabel: {
+        color: presentation.theme.muted,
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+      },
+      monthLabel: {
+        color: presentation.theme.text,
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+      },
       yearLabel: { show: false },
     },
     series: [

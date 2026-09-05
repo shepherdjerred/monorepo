@@ -9,29 +9,18 @@ import {
   formatSnapshotAxisValue,
   usesPercentageAxis,
 } from "#src/html/visualization-value-format.ts";
+import { visualizationSnapshotFixture as snapshotFixture } from "#src/html/visualization-snapshot-test-fixtures.ts";
 
 describe("visualizationSnapshotToOption", () => {
   test("does not add a baseline series without a comparison", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "LINE_CHART",
-      title: null,
       temporal: {
         window: { kind: "relative", days: 30 },
         bucket: "day",
         timezone: "UTC",
       },
       bucket: "day",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [
         {
           id: "games",
@@ -53,8 +42,6 @@ describe("visualizationSnapshotToOption", () => {
           ],
         },
       ],
-      annotations: [],
-      trends: [],
     });
 
     expect(
@@ -75,11 +62,8 @@ describe("visualizationSnapshotToOption", () => {
       evidence: { sampleSize: 2, confidenceInterval: null },
       comparisonEvidence: { sampleSize: 1, confidenceInterval: null },
     };
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "LINE_CHART",
-      title: null,
       temporal: {
         window: { kind: "relative", days: 30 },
         bucket: "day",
@@ -87,15 +71,6 @@ describe("visualizationSnapshotToOption", () => {
         timezone: "UTC",
       },
       bucket: "day",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [
         {
           id: "games",
@@ -112,8 +87,6 @@ describe("visualizationSnapshotToOption", () => {
           points: [point],
         },
       ],
-      annotations: [],
-      trends: [],
     });
 
     const option = JSON.stringify(
@@ -263,11 +236,8 @@ describe("temporal chart rendering", () => {
   });
 
   test("formats rate values and absolute deltas as percentages", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "LINE_CHART",
-      title: null,
       temporal: {
         window: { kind: "relative", days: 30 },
         bucket: "day",
@@ -275,15 +245,6 @@ describe("temporal chart rendering", () => {
         timezone: "UTC",
       },
       bucket: "day",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [
         {
           id: "win-rate",
@@ -310,8 +271,6 @@ describe("temporal chart rendering", () => {
           ],
         },
       ],
-      annotations: [],
-      trends: [],
     });
 
     const tooltip = tooltipText(snapshot, { dataIndex: 0 });
@@ -325,26 +284,14 @@ describe("temporal chart rendering", () => {
   });
 
   test("places annotations only in the bucket containing their timestamp", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "LINE_CHART",
-      title: null,
       temporal: {
         window: { kind: "relative", days: 2 },
         bucket: "day",
         timezone: "UTC",
       },
       bucket: "day",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [
         {
           id: "games",
@@ -368,7 +315,6 @@ describe("temporal chart rendering", () => {
           label: "Outside range",
         },
       ],
-      trends: [],
     });
 
     const option = JSON.stringify(
@@ -432,27 +378,21 @@ describe("archived chart presentation", () => {
       '"yAxis":{"type":"category","data":["Beta","Alpha"],"name":"Champion"',
     );
     expect(option).toContain('"label":{"show":true,"position":"right"}');
+    expect(option).not.toContain("Beaufort for LoL");
+    expect(option).not.toContain("Spiegel");
+
+    const interactiveOption = JSON.stringify(
+      visualizationSnapshotToOption(snapshot, "interactive"),
+    );
+    expect(interactiveOption).toContain("Beaufort for LoL");
+    expect(interactiveOption).toContain("Spiegel");
   });
 });
 
 describe("scatter chart rendering", () => {
   test("omits points whose configured x output is null or missing", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "SCATTER_CHART",
-      title: null,
-      temporal: null,
-      bucket: null,
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [
         {
           id: "damage",
@@ -466,8 +406,6 @@ describe("scatter chart rendering", () => {
           ],
         },
       ],
-      annotations: [],
-      trends: [],
     });
 
     const option = JSON.stringify(
@@ -479,22 +417,8 @@ describe("scatter chart rendering", () => {
   });
 
   test("resolves tooltips through the hovered series data order", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "SCATTER_CHART",
-      title: null,
-      temporal: null,
-      bucket: null,
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [
         {
           id: "alpha",
@@ -514,8 +438,6 @@ describe("scatter chart rendering", () => {
           ],
         },
       ],
-      annotations: [],
-      trends: [],
     });
 
     const tooltip = tooltipText(snapshot, {
@@ -544,22 +466,9 @@ test("adds a thin-data subtitle to rate charts", () => {
 });
 
 function rateSnapshot(games: number) {
-  return VisualizationSnapshotSchema.parse({
-    version: 1,
-    generatedAt: "2026-08-08T00:00:00.000Z",
+  return snapshotFixture({
     kind: "LINE_CHART",
     title: "Win rate",
-    temporal: null,
-    bucket: null,
-    display: {
-      theme: null,
-      palette: null,
-      smooth: false,
-      stack: "none",
-      rollingWindow: null,
-      cumulative: false,
-      sparkline: false,
-    },
     series: [
       {
         id: "win-rate",
@@ -578,8 +487,6 @@ function rateSnapshot(games: number) {
         ],
       },
     ],
-    annotations: [],
-    trends: [],
   });
 }
 
@@ -626,11 +533,9 @@ function patchSeries(id: string, labels: string[]) {
 
 describe("calendar visualization options", () => {
   test("uses the archived temporal range for an empty calendar", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
+    const snapshot = snapshotFixture({
       generatedAt: "2027-08-08T00:00:00.000Z",
       kind: "CALENDAR_HEATMAP",
-      title: null,
       temporal: {
         window: {
           kind: "calendar",
@@ -641,18 +546,7 @@ describe("calendar visualization options", () => {
         timezone: "UTC",
       },
       bucket: "day",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [],
-      annotations: [],
-      trends: [],
     });
 
     expect(
@@ -661,11 +555,8 @@ describe("calendar visualization options", () => {
   });
 
   test("shows calendar baselines and deltas in comparison tooltips", () => {
-    const snapshot = VisualizationSnapshotSchema.parse({
-      version: 1,
-      generatedAt: "2026-08-08T00:00:00.000Z",
+    const snapshot = snapshotFixture({
       kind: "CALENDAR_HEATMAP",
-      title: null,
       temporal: {
         window: { kind: "relative", days: 30 },
         bucket: "day",
@@ -673,18 +564,7 @@ describe("calendar visualization options", () => {
         timezone: "UTC",
       },
       bucket: "day",
-      display: {
-        theme: null,
-        palette: null,
-        smooth: false,
-        stack: "none",
-        rollingWindow: null,
-        cumulative: false,
-        sparkline: false,
-      },
       series: [],
-      annotations: [],
-      trends: [],
     });
 
     const tooltip = calendarTooltipText(snapshot, {

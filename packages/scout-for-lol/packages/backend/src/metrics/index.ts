@@ -8,6 +8,7 @@ import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
 import "#src/metrics/feature-flags.ts";
 import "#src/metrics/discord-gateway-health.ts";
+import "#src/metrics/progression.ts";
 
 const logger = createLogger("metrics");
 

@@ -1,10 +1,6 @@
 ---
 name: figma-use
-description: |
-  This skill should be used when the user asks to "create a Figma design", "design in Figma",
-  "make a Figma mockup", "create an app icon", "design UI", "render JSX to Figma",
-  "export from Figma", "modify Figma design", or mentions Figma design tasks.
-  Controls Figma desktop via CLI with imperative commands and declarative JSX rendering.
+description: "Use when the user asks to \"create a Figma design\", \"design in Figma\", \"mak…"
 ---
 
 # figma-use

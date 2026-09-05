@@ -3,6 +3,7 @@ export * from "./champion.ts";
 export * from "./competition.ts";
 export * from "./competition-format.ts";
 export * from "./competition-write.ts";
+export * from "./confirmation-intent.ts";
 export * from "./discord.ts";
 export * from "./division.ts";
 export * from "./dare-contract-v2.ts";

@@ -1,13 +1,6 @@
 ---
 name: deep-research
-description: >-
-  This skill should be used when the user asks to "deep research", "research this topic",
-  "investigate thoroughly", "do a deep dive on", "comprehensive research on",
-  "find everything about", "survey the landscape of", "compare approaches to",
-  "write a report on", "gather information about",
-  or wants multi-source investigation with synthesis and citations.
-  Also triggers on "what are the best practices for", "how do others solve",
-  or "state of the art in" when the user clearly wants breadth and depth beyond a simple answer.
+description: "Use when the user asks to \"deep research\", \"research this topic\", \"investi…"
 user-invocable: true
 allowed-tools:
   - Read

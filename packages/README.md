@@ -1,6 +1,7 @@
 # Packages
 
-One line per package. Each package's own README has the details; `AGENTS.md` files hold contributor/agent process notes.
+One line per package. Each package's README owns its details; `AGENTS.md` files
+hold only scoped invariants that agents must keep in context.
 
 ## Apps & services
 

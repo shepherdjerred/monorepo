@@ -1,115 +1,32 @@
-# TaskNotes Server
+# TaskNotes server constraints
 
-Hono HTTP server (Bun runtime) that reads/writes task markdown files and exposes the TaskNotes API. Designed to run alongside obsidian-headless (official Obsidian CLI) as a K8s sidecar sharing a vault volume.
+This Bun/Hono server exposes the TaskNotes plugin HTTP contract over a Markdown
+vault shared with Obsidian. `README.md` owns routes, configuration, and
+contributor reference.
 
-## Workspace member
-
-This package is a member of the root Bun workspace (one root `bun.lock`,
-isolated linker) — `bun install` at the repo root covers it. `cd
-packages/tasknotes-server` before running package-scoped commands like
-`bun run test` or `bunx eslint`.
-
-## Quick Reference
+- `@tasknotes/model` is the vault engine. Task IDs are URL-encoded
+  vault-relative paths.
+- Reads may tolerate individual malformed task files only by counting, logging,
+  and exposing them through engine status. Root filesystem errors throw.
+- Writes are read-modify-write from current disk bytes through model plan
+  builders so concurrent Obsidian edits and unknown frontmatter survive.
+- The only wire surface is `/api/*`. Request and response schemas come from
+  `tasknotes-types`; preserve upstream field names such as `details` and
+  snake_case recurrence data.
+- Mutation IDs provide restart-safe idempotency. Replays return the stored
+  response and never execute twice. Preserve atomic persistence, retention, and
+  response headers.
+- Watchers use debounce plus max-wait, re-arm after errors, and perform a safety
+  rescan. Do not trade missed external edits for lower filesystem activity.
+- Validate bearer auth and all boundary data. Do not log tokens or task content.
 
 ```bash
-bun install                          # Install deps
-bun run typecheck                    # Type check
-bun run test                             # Run tests
-bunx eslint . --max-warnings=0       # Lint
-bun run build                        # Compile to binary (dist/tasknotes-server)
-bun run dev                          # Dev mode (auto-reload)
-bun run start                        # Run directly
+bun run build
+bun run typecheck
+bun run test
+bun run lint
 ```
 
-## Architecture (P3 — @tasknotes/model engine)
-
-The vault layer is `@tasknotes/model` (the upstream plugin's own engine
-library, pinned exact in `tasknotes-types`). Task IDs are vault-relative
-paths (URL-encoded in routes). Reads are tolerant; every task-like file
-that fails to parse is counted, logged, and surfaced at
-`GET /api/engine-status` — never silently dropped. Writes are
-read-modify-write from disk through the model's plan builders +
-`applyFrontmatterPatch`, so concurrent Obsidian edits and unknown
-frontmatter keys survive byte-for-byte.
-
-```
-src/
-  engine/model-config.ts    # Load plugin data.json → TaskNotesModelConfig
-  engine/vault-files.ts     # Byte-level IO: walk, atomic write (root errors throw)
-  engine/task-repository.ts # THE store: parse/detect, plan-based mutations
-  engine/watcher.ts         # Debounce + max-wait, error re-arm, safety rescan
-  engine/query.ts           # Upstream FilterQuery tree evaluator
-  engine/stats.ts           # Config-driven stats + filter-options
-  engine/time-reports.ts    # /api/time summary + active (frontmatter entries)
-  engine/filename.ts        # Title-as-filename + " 1" dedup
-  v2/routes.ts              # Upstream plugin API surface (/api/*)
-  migration/migrate.ts      # Pure per-file legacy→plugin-format migration
-  middleware/               # auth, envelope, idempotency, logger, metrics
-  store/pomodoro-store.ts   # Ephemeral pomodoro state (/api/pomodoro/*)
-  nlp/parser.ts             # NLP: @context, p:project, #tag, !priority, dates
-scripts/
-  migrate-vault.ts          # P4: tag legacy files, fold time side-store, drop ids
-  vault-audit.ts            # P4 gate: parse-skips + round-trip byte-diffs must be 0
-```
-
-## API Surfaces
-
-All responses use envelope: `{ success: boolean, data: T, error?: string }`
-
-The server exposes a SINGLE surface: `/api/*`, the upstream TaskNotes plugin
-contract. The interim `/legacy/api/*` camelCase adapter was removed in P6.
-
-**`/api/*` — the upstream TaskNotes plugin contract (v2, the app target):**
-
-- Task CRUD: `GET/POST/PUT/DELETE /api/tasks[/:id]` (TaskInfo, snake_case
-  recurrence fields, pagination default 50 / cap 200, `DELETE → {message}`)
-- Status/Archive: `POST /api/tasks/:id/toggle-status` (no body; cycles the
-  configured workflow), `/archive` (returns the task), `/complete-instance`
-  (`{date?, completed?}` — `completed` = idempotent set-semantics)
-- Query: `POST /api/tasks/query` (upstream FilterQuery TREE; unknown
-  property/operator → 400); `GET /api/stats`, `/filter-options` (config
-  OBJECTS for statuses/priorities)
-- NLP: `POST /api/nlp/parse → {parsed, taskData}`, `/create → {task, parsed}`
-- Time: `POST /api/tasks/:id/time/start|stop`, `GET /api/time/active`,
-  `/summary` (upstream TimeSummaryResult)
-- Calendars: `GET /api/calendars/events` (task events + recurring expansion)
-- `GET /api/engine-status` (parse skips, config provenance), `/api/health`
-- Pomodoro: `POST /api/pomodoro/start|stop|pause`, `GET /api/pomodoro/status`
-  (ephemeral, vault-independent)
-
-### Complete-instance body (optional)
-
-`POST /api/tasks/:id/complete-instance` accepts `{date?: "YYYY-MM-DD", completed?: boolean,
-restore?: {scheduled: string | null, due: string | null, recurrence: string,
-skipped: boolean}}`: no body =
-legacy toggle of server-local today (upstream plugin parity); `date` targets the
-device-captured instance; `completed` gives idempotent SET semantics (required for safe
-offline-queue replay). `restore` is valid only with `completed: false` and atomically restores
-the schedule snapshot from before a completion advanced it. Non-recurring tasks are a 400
-(upstream parity).
-
-### Idempotent mutations
-
-Mutating `/api/` requests may carry an `X-Mutation-Id` header (the app's offline queue
-sends its command id). Replays of an already-executed mutation return the stored response
-with `X-Idempotent-Replay: true` instead of executing twice. Records persist at
-`<vault>/.tasknotes-server/idempotency.json` (7-day TTL, 500-record cap, atomic writes)
-so dedup survives restarts.
-
-## Environment Variables
-
-| Variable     | Required | Default | Description                           |
-| ------------ | -------- | ------- | ------------------------------------- |
-| `VAULT_PATH` | Yes      | —       | Path to synced vault directory        |
-| `TASKS_DIR`  | No       | `""`    | Subfolder within vault for task files |
-| `AUTH_TOKEN` | Yes      | —       | Bearer token for API auth             |
-| `PORT`       | No       | `3000`  | Server port                           |
-
-## Shared Types
-
-The `/api/*` contract types come from `tasknotes-types/v2` (the upstream
-plugin shapes, shared with the mobile app). Small server-internal shapes that
-are NOT part of the wire contract live in `src/domain/` — `types.ts` (the NLP
-parser output and ephemeral pomodoro status) and `schemas.ts`
-(`PomodoroStartSchema`). The `details` field (not `description`) holds the task
-body content. `TaskStats` uses upstream shape: `{ total, completed, active, overdue, archived, withTimeTracking }`.
+Also run the real-server contract suite in `tasks-for-obsidian` when changing
+wire behavior. Unit success, cross-package contract success, shared-volume
+behavior, and deployed health are separate acceptance layers.

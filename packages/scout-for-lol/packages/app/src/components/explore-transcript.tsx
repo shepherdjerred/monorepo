@@ -12,6 +12,8 @@ import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { AssistantTurn } from "#src/components/explore-assistant-turn.tsx";
+import { useNow } from "#src/hooks/use-now.ts";
+import { formatDuration } from "#src/lib/format-duration.ts";
 
 /**
  * Renders one path through an explore conversation.
@@ -37,6 +39,8 @@ export function ExploreTranscript(props: {
   pendingAnswer?: string | null;
   pendingQuestion?: string | null;
   activity?: string | null;
+  /** The status describes a deliberate stop, not work still in flight. */
+  stopping?: boolean;
   pendingTrace?: ExploreTraceEntry[];
   /** True while a turn is running, so a trailing question is not "interrupted". */
   turnActive?: boolean;
@@ -84,6 +88,7 @@ export function ExploreTranscript(props: {
         pendingQuestion={props.pendingQuestion ?? null}
         pendingAnswer={props.pendingAnswer ?? null}
         activity={props.activity ?? null}
+        stopping={props.stopping ?? false}
         trace={props.pendingTrace ?? []}
         showRawTrace={props.showRawTrace ?? false}
       />
@@ -146,9 +151,26 @@ const PendingTurn = memo(function PendingTurnView(props: {
   pendingQuestion: string | null;
   pendingAnswer: string | null;
   activity: string | null;
+  stopping: boolean;
   trace: ExploreTraceEntry[];
   showRawTrace: boolean;
 }) {
+  /**
+   * The status line describes work in flight, so it goes away once prose is
+   * arriving — the answer itself is then the progress.
+   *
+   * Without this the last tool's completion message ("Got results.") keeps
+   * pulsing and counting for the whole of answer generation, presenting a
+   * finished step as ongoing work and timing it from the wrong moment.
+   *
+   * Stopping is the exception, and the reason this is not simply "hide it once
+   * there is prose": a stop only ever salvages a turn that already streamed
+   * something, so "Stopped — saving the partial answer…" arrives precisely
+   * when prose exists. Hiding it there leaves the reader watching a frozen
+   * answer with nothing to say the stop is still landing.
+   */
+  const activity =
+    props.pendingAnswer === null || props.stopping ? props.activity : null;
   return (
     <div aria-live="polite" className="space-y-6">
       {props.pendingQuestion !== null && (
@@ -158,24 +180,74 @@ const PendingTurn = memo(function PendingTurnView(props: {
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
       {props.showRawTrace && <ExploreDareCards trace={props.trace} />}
-      {props.activity !== null && props.trace.length === 0 && (
-        <p className="flex items-center gap-2 text-sm text-scout-subtle">
-          <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
-          {props.activity}
-        </p>
-      )}
-      {props.trace.length > 0 && (
-        <Disclosure label={`Steps (${String(props.trace.length)})`}>
-          <ExploreToolTrace
-            trace={props.trace}
-            showRaw={props.showRawTrace}
-            live
-          />
-        </Disclosure>
+      {/* Status and steps are one unit — the line says what is happening now,
+          the disclosure holds how it got here — so they sit closer together
+          than the surrounding `space-y-6` rhythm. */}
+      {(activity !== null || props.trace.length > 0) && (
+        <div className="space-y-2">
+          {activity !== null && <ActivityLine activity={activity} />}
+          {props.trace.length > 0 && (
+            <Disclosure label={`Steps (${String(props.trace.length)})`}>
+              <ExploreToolTrace
+                trace={props.trace}
+                showRaw={props.showRawTrace}
+                live
+              />
+            </Disclosure>
+          )}
+        </div>
       )}
     </div>
   );
 });
+
+/**
+ * The one line that says what the turn is doing right now.
+ *
+ * It carries an elapsed counter because the wait it narrates is the longest
+ * part of a turn — a lake scan can run for tens of seconds — and a status that
+ * never changes reads as a hang. The clock is measured from when this text
+ * last changed, so it answers "how long has *this* step been going", not "how
+ * long has the turn been going"; two consecutive identical statuses therefore
+ * share one clock, which is the honest reading of them being one step.
+ *
+ * The timing lives here rather than in the reducer on purpose: the reducer is
+ * pure and tested without a DOM, and a `Date.now()` inside it would make every
+ * stream-folding test depend on the clock.
+ */
+function ActivityLine(props: { activity: string }) {
+  const [span, setSpan] = useState(() => ({
+    activity: props.activity,
+    startedAt: Date.now(),
+  }));
+  if (span.activity !== props.activity) {
+    setSpan({ activity: props.activity, startedAt: Date.now() });
+  }
+  const now = useNow(1000);
+  const elapsedMs = Math.max(0, now - span.startedAt);
+  return (
+    <p className="flex items-center gap-2 text-sm text-scout-subtle">
+      <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
+      <span>{props.activity}</span>
+      {elapsedMs >= ELAPSED_VISIBLE_AFTER_MS && (
+        // Hidden from the live region this sits inside: it changes every
+        // second, and a screen reader announcing "3.0 s", "4.0 s" … would
+        // talk over the streamed answer and the status text that actually
+        // says something.
+        <span aria-hidden="true" className="tabular-nums">
+          {formatDuration(elapsedMs)}
+        </span>
+      )}
+    </p>
+  );
+}
+
+/**
+ * Below this the counter is noise — every step shows "0 s" for a moment on the
+ * way past, and a number that flickers in and out draws the eye away from the
+ * text that actually says what is happening.
+ */
+const ELAPSED_VISIBLE_AFTER_MS = 2000;
 
 function UserBubble(props: { content: string }) {
   return (

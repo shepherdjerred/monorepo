@@ -16,8 +16,8 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { dareV2DraftComponents } from "#src/betting/dare-components-v2.ts";
-import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
+import { dareV2DraftComponents } from "#src/betting/dares/presentation/dare-components-v2.ts";
+import { createDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
@@ -287,7 +287,7 @@ export async function replyBbDareV2(
         serverId: input.serverId,
         actorDiscordId: input.challengerDiscordId,
         expectedRevision: draft.dare.currentRevision,
-        payload: { action: "fund" },
+        payload: { kind: "dare_fund" },
         idempotencyKey: `discord:${interaction.id}:fund`,
       },
       {

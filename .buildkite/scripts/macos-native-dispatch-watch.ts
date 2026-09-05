@@ -15,7 +15,10 @@ const ALL_NATIVE_STEP_KEYS = new Set([
   "tasknotes-native-main",
 ]);
 const ACTIVE_STATES = new Set(["running"]);
-const SUCCESS_STATES = new Set(["passed", "skipped"]);
+// Buildkite reports an `if_changed` step that was not selected as `broken`.
+// That is a terminal selector result, not a failed native test. Actual command
+// failures remain `failed` and therefore stay pending/blocking below.
+const SUCCESS_STATES = new Set(["passed", "skipped", "broken"]);
 
 export const MAX_IDLE_DISPATCH_MS = 5 * 60 * 1000;
 const POLL_INTERVAL_MS = 15_000;

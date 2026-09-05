@@ -3,6 +3,7 @@ import type { Permission } from "@scout-for-lol/data";
 export type ConsumerNavigationAvailability = {
   exploreAvailable: boolean;
   profilesAvailable: boolean;
+  challengesAvailable: boolean;
   bucksAvailable: boolean;
 };
 
@@ -12,6 +13,9 @@ export function consumerNavigationItems(
   return [
     ...(input.exploreAvailable ? [{ label: "Explore", to: "/explore" }] : []),
     ...(input.profilesAvailable ? [{ label: "Players", to: "/players" }] : []),
+    ...(input.challengesAvailable
+      ? [{ label: "Challenges", to: "/challenges" }]
+      : []),
     ...(input.bucksAvailable ? [{ label: "Bryan Bucks", to: "/bucks" }] : []),
   ];
 }

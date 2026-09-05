@@ -14,6 +14,52 @@ import {
   formatPercent,
   isPercentageSeries,
 } from "#src/html/visualization-value-format.ts";
+import { scoutThemes } from "@scout-for-lol/design-system/themes";
+
+const typography = scoutThemes["modern-light"].typography;
+const displayTokens = typography.display
+  .split(",")
+  .map((token) => token.trim());
+export const VISUALIZATION_DISPLAY_FONT = [
+  "Beaufort for LoL",
+  "Beaufort for LOL",
+  ...displayTokens.filter(
+    (token) => token !== "Beaufort for LoL" && token !== "Beaufort for LOL",
+  ),
+].join(", ");
+export const VISUALIZATION_BODY_FONT = typography.body;
+export const VISUALIZATION_MONO_FONT = typography.mono;
+
+export type VisualizationRenderMode = "interactive" | "static";
+
+export function visualizationSnapshotFont(
+  mode: VisualizationRenderMode,
+  family: string,
+) {
+  return mode === "interactive" ? { fontFamily: family } : {};
+}
+
+export function visualizationSnapshotScaleTextStyle(
+  theme: AnalyticsChartTheme,
+  mode: VisualizationRenderMode,
+) {
+  return {
+    color: theme.muted,
+    ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+  };
+}
+
+export function visualizationSnapshotValueAxisLabel(
+  theme: AnalyticsChartTheme,
+  mode: VisualizationRenderMode,
+  formatter: (value: number) => string,
+) {
+  return {
+    color: theme.muted,
+    ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+    formatter,
+  };
+}
 
 export type VisualizationSnapshotPresentation = {
   options: ReportChartOptions;
@@ -45,6 +91,7 @@ export function visualizationSnapshotPresentation(
 export function visualizationSnapshotBaseOption(
   snapshot: VisualizationSnapshot,
   defaultTitle: string,
+  mode: VisualizationRenderMode,
 ): echarts.EChartsOption {
   const { options, theme, colors } =
     visualizationSnapshotPresentation(snapshot);
@@ -76,14 +123,26 @@ export function visualizationSnapshotBaseOption(
     backgroundColor: theme.background,
     animation: false,
     color: colors,
-    textStyle: { color: theme.text },
+    textStyle: {
+      color: theme.text,
+      ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+    },
     title: {
       text: snapshot.title ?? defaultTitle,
       ...(subtitle.length === 0 ? {} : { subtext: subtitle }),
       left: 28,
       top: 18,
-      textStyle: { color: theme.accent, fontSize: 28 },
-      subtextStyle: { color: theme.muted, fontSize: 14 },
+      textStyle: {
+        color: theme.accent,
+        fontSize: 28,
+        ...visualizationSnapshotFont(mode, VISUALIZATION_DISPLAY_FONT),
+        ...(mode === "interactive" ? { fontWeight: 700 } : {}),
+      },
+      subtextStyle: {
+        color: theme.muted,
+        fontSize: 14,
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+      },
     },
   };
 }
@@ -91,6 +150,7 @@ export function visualizationSnapshotBaseOption(
 export function visualizationSnapshotLegend(
   presentation: VisualizationSnapshotPresentation,
   fallback: ReportChartLegend = "top",
+  mode: VisualizationRenderMode,
 ): echarts.LegendComponentOption {
   const position =
     presentation.options.legend === undefined ||
@@ -108,30 +168,49 @@ export function visualizationSnapshotLegend(
       : bottom
         ? { left: 68, right: 68, bottom: 18 }
         : { left: 68, right: 68, top: 62 }),
-    textStyle: { color: presentation.theme.muted },
+    textStyle: {
+      color: presentation.theme.muted,
+      ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+    },
   };
 }
 
 export function visualizationSnapshotAxis(
   theme: AnalyticsChartTheme,
   name: string | undefined,
+  mode: VisualizationRenderMode,
 ): object {
   return {
     ...(name === undefined
       ? {}
-      : { name, nameTextStyle: { color: theme.muted } }),
-    axisLabel: { color: theme.muted },
+      : {
+          name,
+          nameTextStyle: {
+            color: theme.muted,
+            ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+          },
+        }),
+    axisLabel: {
+      color: theme.muted,
+      ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+    },
     axisLine: { lineStyle: { color: theme.border } },
     splitLine: { lineStyle: { color: theme.grid } },
   };
 }
 
+type VisualizationLabelOptions = {
+  defaultShow?: boolean;
+  valueFormatter?: (input: unknown) => string;
+  mode?: VisualizationRenderMode;
+};
+
 export function visualizationSnapshotLabels(
   options: ReportChartOptions,
   horizontal: boolean,
-  defaultShow = false,
-  valueFormatter?: (input: unknown) => string,
+  labelOptions: VisualizationLabelOptions = {},
 ): object {
+  const { defaultShow = false, valueFormatter, mode = "static" } = labelOptions;
   return {
     show:
       options.labels === undefined || options.labels === "auto"
@@ -140,6 +219,7 @@ export function visualizationSnapshotLabels(
           options.labels === "value" ||
           options.labels === "percent",
     position: horizontal ? "right" : "top",
+    ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
     ...(options.labels === "percent"
       ? { formatter: percentLabel }
       : valueFormatter !== undefined && options.labels === "value"

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { dareV2DraftComponents } from "#src/betting/dare-components-v2.ts";
+import { dareV2DraftComponents } from "#src/betting/dares/presentation/dare-components-v2.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import {
   getDocsUrl,

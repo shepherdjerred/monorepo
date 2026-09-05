@@ -7,7 +7,7 @@ import {
 import { EditorView, keymap } from "@codemirror/view";
 import { EditorState } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
-import { cookLanguage } from "./syntax/cook-language.ts";
+import { cookHighlighting, cookLanguage } from "./syntax/cook-language.ts";
 import { parseRecipe } from "./cook-parser.ts";
 import { renderRecipe } from "./cook-renderer.ts";
 import type CooklangPlugin from "./main.ts";
@@ -119,6 +119,7 @@ export class CookView extends TextFileView {
       doc: content,
       extensions: [
         cookLanguage,
+        cookHighlighting,
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         updateListener,
@@ -155,6 +156,7 @@ export class CookView extends TextFileView {
     } else {
       this.editorEl.show();
       this.previewEl.hide();
+      this.editor?.requestMeasure();
     }
   }
 

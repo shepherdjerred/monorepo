@@ -1,21 +1,26 @@
 import type { VisualizationSnapshot } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import {
+  VISUALIZATION_BODY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
+  visualizationSnapshotFont,
   visualizationSnapshotLabels,
   visualizationSnapshotLegend,
   visualizationSnapshotPresentation,
+  visualizationSnapshotScaleTextStyle,
+  type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
 export function donutOption(
   snapshot: VisualizationSnapshot,
+  mode: VisualizationRenderMode = "static",
 ): echarts.EChartsOption {
   const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis", mode),
     tooltip: { trigger: "item" },
-    legend: visualizationSnapshotLegend(presentation, "right"),
+    legend: visualizationSnapshotLegend(presentation, "right", mode),
     series: [
       {
         type: "pie",
@@ -38,8 +43,12 @@ export function donutOption(
           ),
         ),
         label: {
-          ...visualizationSnapshotLabels(presentation.options, false, true),
+          ...visualizationSnapshotLabels(presentation.options, false, {
+            defaultShow: true,
+            mode,
+          }),
           color: presentation.theme.text,
+          ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
           ...(presentation.options.labels === "percent"
             ? { formatter: "{b}: {d}%" }
             : {}),
@@ -51,7 +60,7 @@ export function donutOption(
 
 export function heatmapOption(
   snapshot: VisualizationSnapshot,
-  interactive: boolean,
+  mode: VisualizationRenderMode = "static",
 ): echarts.EChartsOption {
   const xCategories = snapshot.series.map((series) => series.label);
   const yCategories = [
@@ -71,7 +80,7 @@ export function heatmapOption(
   const values = cells.map((cell) => cell[2] ?? 0);
   const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis", mode),
     tooltip: { position: "top" },
     grid: { left: 90, right: 48, top: 90, bottom: 86 },
     xAxis: {
@@ -81,6 +90,7 @@ export function heatmapOption(
       ...visualizationSnapshotAxis(
         presentation.theme,
         presentation.options.xAxisLabel,
+        mode,
       ),
     },
     yAxis: {
@@ -90,23 +100,27 @@ export function heatmapOption(
       ...visualizationSnapshotAxis(
         presentation.theme,
         presentation.options.yAxisLabel,
+        mode,
       ),
     },
     visualMap: {
       min: Math.min(...values, 0),
       max: Math.max(...values, 1),
-      calculable: interactive,
+      calculable: false,
       orient: "horizontal",
       left: "center",
       bottom: 18,
-      textStyle: { color: presentation.theme.muted },
+      textStyle: visualizationSnapshotScaleTextStyle(presentation.theme, mode),
       inRange: { color: presentation.colors },
     },
     series: [
       {
         type: "heatmap",
         data: cells,
-        label: visualizationSnapshotLabels(presentation.options, false, true),
+        label: visualizationSnapshotLabels(presentation.options, false, {
+          defaultShow: true,
+          mode,
+        }),
       },
     ],
   };
@@ -114,6 +128,7 @@ export function heatmapOption(
 
 export function radarOption(
   snapshot: VisualizationSnapshot,
+  mode: VisualizationRenderMode = "static",
 ): echarts.EChartsOption {
   const entities = [
     ...new Set(
@@ -127,9 +142,9 @@ export function radarOption(
   );
   const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis", mode),
     tooltip: {},
-    legend: visualizationSnapshotLegend(presentation),
+    legend: visualizationSnapshotLegend(presentation, "top", mode),
     radar: {
       center: ["50%", "57%"],
       radius: "62%",
@@ -137,7 +152,10 @@ export function radarOption(
         name: series.metric,
         max: maxima[index] ?? 1,
       })),
-      axisName: { color: presentation.theme.text },
+      axisName: {
+        color: presentation.theme.text,
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+      },
       splitLine: { lineStyle: { color: presentation.theme.border } },
     },
     series: [

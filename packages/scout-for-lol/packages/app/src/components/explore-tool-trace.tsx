@@ -6,6 +6,7 @@ import type {
   ExploreTraceStatus,
 } from "@scout-for-lol/data";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { formatDuration } from "#src/lib/format-duration.ts";
 
 export function ExploreToolTrace(props: {
   trace: ExploreTraceEntry[];
@@ -298,12 +299,6 @@ function statusLabel(status: ExploreTraceStatus): string {
     return "Failed";
   }
   return "Interrupted";
-}
-
-function formatDuration(durationMs: number): string {
-  return durationMs < 1000
-    ? `${durationMs.toString()} ms`
-    : `${(durationMs / 1000).toFixed(1)} s`;
 }
 
 function formatBytes(byteLength: number): string {

@@ -150,6 +150,13 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       every: "1 minute",
     }),
     intervalSchedule(stage, {
+      name: "progression-outbox",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "progression-outbox" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
       name: "report-lake-fold",
       workflowType: "scoutReportLakeWorkflow",
       args: [{ stage, kind: "fold" }],

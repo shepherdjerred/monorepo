@@ -113,8 +113,22 @@ are one-shot and each command starts a new saved conversation.
 - Docker image built and deployed from CI; beta deploys continuously and prod
   is promoted via a Renovate image-pin PR
 
-See [AGENTS.md](AGENTS.md) for the full architecture, deploy pipeline, and
-contributor/agent workflow notes.
+The [Scout explanation pages](../docs/wiki/src/content/docs/explanation/)
+describe the report lake, custom games, and Temporal analysis boundaries.
+[AGENTS.md](AGENTS.md) contains only the package invariants agents must always
+apply.
+
+**Domain boundaries:**
+
+- Explore owns saved conversational queries, including `/scout ask`.
+- Bryan Bucks owns Dare viewing and management while retaining links to the
+  authoring conversation.
+- Raw S3 match data is canonical; the local DuckDB/Parquet report lake is
+  derived and rebuildable.
+- Tournament-code games and ordinary Riot ingestion retain distinct
+  provenance.
+- Stored betting and Dare semantics are versioned so existing records do not
+  change meaning during a rollout.
 
 **Project Structure:**
 

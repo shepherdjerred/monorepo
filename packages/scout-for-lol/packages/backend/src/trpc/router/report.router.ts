@@ -6,6 +6,10 @@
  * Gated on `reports:<action>` permissions via `guildProcedure`/
  * `guildMutationProcedure` (Discord admins/owners hold all permissions).
  * System-managed reports are read-only (`assertReportMutable`).
+ *
+ * `create` is a thin caller: the pipeline lives in `#src/lib/reports/create.ts`
+ * so other surfaces run the same policy, and it commits with its
+ * `REPORT_CREATE` audit row in one transaction.
  */
 
 import { z } from "zod";

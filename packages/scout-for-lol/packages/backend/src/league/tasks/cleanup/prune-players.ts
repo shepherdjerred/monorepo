@@ -14,6 +14,8 @@ import {
 } from "@scout-for-lol/data";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { createLogger } from "#src/logger.ts";
+import configuration from "#src/configuration.ts";
+import { queueHallRosterRebaseline } from "#src/progression/hall/roster-change.ts";
 
 const logger = createLogger("cleanup-prune-players");
 
@@ -242,58 +244,6 @@ export async function pruneOrphanedPlayers(
       logger.info(`[PlayerPruning]   └─ Status: ELIGIBLE FOR PRUNING`);
     }
 
-    // Delete orphaned players and their related data
-    logger.info(`[PlayerPruning] 🗑️  Starting deletion process...`);
-    const playerIds = orphanedPlayers.map(
-      (player: PlayerWithRelations) => player.id,
-    );
-
-    // Delete in order: accounts first, then competition data, then players
-    const accountsDeleted = await prismaClient.account.deleteMany({
-      where: {
-        playerId: {
-          in: playerIds,
-        },
-      },
-    });
-    logger.info(
-      `[PlayerPruning]   ✓ Deleted ${accountsDeleted.count.toString()} accounts`,
-    );
-
-    const participantsDeleted =
-      await prismaClient.competitionParticipant.deleteMany({
-        where: {
-          playerId: {
-            in: playerIds,
-          },
-        },
-      });
-    logger.info(
-      `[PlayerPruning]   ✓ Deleted ${participantsDeleted.count.toString()} competition participants`,
-    );
-
-    const snapshotsDeleted = await prismaClient.competitionSnapshot.deleteMany({
-      where: {
-        playerId: {
-          in: playerIds,
-        },
-      },
-    });
-    logger.info(
-      `[PlayerPruning]   ✓ Deleted ${snapshotsDeleted.count.toString()} competition snapshots`,
-    );
-
-    const playersDeleted = await prismaClient.player.deleteMany({
-      where: {
-        id: {
-          in: playerIds,
-        },
-      },
-    });
-    logger.info(
-      `[PlayerPruning]   ✓ Deleted ${playersDeleted.count.toString()} players`,
-    );
-
     // Prepare server summaries
     const serverSummaries = Object.entries(playersByServer).map(
       ([serverId, players]) => {
@@ -322,6 +272,54 @@ export async function pruneOrphanedPlayers(
       },
     );
 
+    // Delete orphaned players and durably queue every affected Hall rebuild in
+    // one transaction. A committed roster change must never leave ready Hall
+    // cells pointing at an account that no longer exists.
+    logger.info(`[PlayerPruning] 🗑️  Starting deletion process...`);
+    const playerIds = orphanedPlayers.map(
+      (player: PlayerWithRelations) => player.id,
+    );
+    const deletion = await prismaClient.$transaction(async (tx) => {
+      const accountsDeleted = await tx.account.deleteMany({
+        where: { playerId: { in: playerIds } },
+      });
+      const participantsDeleted = await tx.competitionParticipant.deleteMany({
+        where: { playerId: { in: playerIds } },
+      });
+      const snapshotsDeleted = await tx.competitionSnapshot.deleteMany({
+        where: { playerId: { in: playerIds } },
+      });
+      const playersDeleted = await tx.player.deleteMany({
+        where: { id: { in: playerIds } },
+      });
+      for (const summary of serverSummaries) {
+        await queueHallRosterRebaseline({
+          guildId: summary.serverId,
+          actorDiscordId: "system:player-pruning",
+          stage: configuration.environment,
+          db: tx,
+        });
+      }
+      return {
+        accountsDeleted,
+        participantsDeleted,
+        snapshotsDeleted,
+        playersDeleted,
+      };
+    });
+    logger.info(
+      `[PlayerPruning]   ✓ Deleted ${deletion.accountsDeleted.count.toString()} accounts`,
+    );
+    logger.info(
+      `[PlayerPruning]   ✓ Deleted ${deletion.participantsDeleted.count.toString()} competition participants`,
+    );
+    logger.info(
+      `[PlayerPruning]   ✓ Deleted ${deletion.snapshotsDeleted.count.toString()} competition snapshots`,
+    );
+    logger.info(
+      `[PlayerPruning]   ✓ Deleted ${deletion.playersDeleted.count.toString()} players`,
+    );
+
     // Notify server owners
     if (notifyOwners && discordClient) {
       logger.info(
@@ -345,16 +343,16 @@ export async function pruneOrphanedPlayers(
     logger.info(`[PlayerPruning] ✅ PRUNING COMPLETE`);
     logger.info(`[PlayerPruning]   - Duration: ${duration.toString()}ms`);
     logger.info(
-      `[PlayerPruning]   - Players pruned: ${playersDeleted.count.toString()}`,
+      `[PlayerPruning]   - Players pruned: ${deletion.playersDeleted.count.toString()}`,
     );
     logger.info(
-      `[PlayerPruning]   - Accounts deleted: ${accountsDeleted.count.toString()}`,
+      `[PlayerPruning]   - Accounts deleted: ${deletion.accountsDeleted.count.toString()}`,
     );
     logger.info(
-      `[PlayerPruning]   - Participants deleted: ${participantsDeleted.count.toString()}`,
+      `[PlayerPruning]   - Participants deleted: ${deletion.participantsDeleted.count.toString()}`,
     );
     logger.info(
-      `[PlayerPruning]   - Snapshots deleted: ${snapshotsDeleted.count.toString()}`,
+      `[PlayerPruning]   - Snapshots deleted: ${deletion.snapshotsDeleted.count.toString()}`,
     );
     logger.info(
       `[PlayerPruning]   - Servers affected: ${serverSummaries.length.toString()}`,
@@ -365,10 +363,10 @@ export async function pruneOrphanedPlayers(
     logger.info(`[PlayerPruning] ============================================`);
 
     return {
-      totalPlayersPruned: playersDeleted.count,
-      totalAccountsDeleted: accountsDeleted.count,
-      totalParticipantsDeleted: participantsDeleted.count,
-      totalSnapshotsDeleted: snapshotsDeleted.count,
+      totalPlayersPruned: deletion.playersDeleted.count,
+      totalAccountsDeleted: deletion.accountsDeleted.count,
+      totalParticipantsDeleted: deletion.participantsDeleted.count,
+      totalSnapshotsDeleted: deletion.snapshotsDeleted.count,
       serverSummaries,
     };
   } catch (error) {

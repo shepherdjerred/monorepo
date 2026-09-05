@@ -14,7 +14,7 @@
  * It caught, and guards against recurrence of, the `@tasknotes/model` resolution
  * failure: `tasknotes-types/src/v2.ts` re-exports a dep that must be installed in
  * `packages/tasknotes-types/node_modules` for Metro to find it. See
- * `ios/ci_scripts/ci_post_clone.sh` and the `xcode-cloud-debug` skill.
+ * `ios/ci_scripts/ci_post_clone.sh` and the `tasknotes-development` skill.
  *
  * Runs the same bundle for every source-only dependency the app imports — any new
  * unresolvable import fails here regardless of which package introduced it. It
@@ -151,7 +151,7 @@ function runChecks(workDir: string): void {
         "UnableToResolveError above means a dependency is not installed where " +
         "Metro looks. If it names a package from a source-only `file:` workspace " +
         "dep (e.g. tasknotes-types), install that dep's node_modules in " +
-        "ios/ci_scripts/ci_post_clone.sh (see the xcode-cloud-debug skill).",
+        "ios/ci_scripts/ci_post_clone.sh (see the tasknotes-development skill).",
     );
   }
 

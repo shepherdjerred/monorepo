@@ -32,5 +32,25 @@ bun run docker:build  # Build the Docker image (pushed to GHCR by CI)
 bun run smoke         # Smoke-test the built image
 ```
 
-See [AGENTS.md](AGENTS.md) for the full API contract, engine architecture,
-environment variables, and migration tooling.
+## Engine and mutation contracts
+
+Task IDs are URL-encoded vault-relative paths. Every write starts from current
+disk bytes and applies the model's mutation plan so concurrent Obsidian edits
+and unknown frontmatter keys survive. Malformed task-like files are counted,
+logged, and exposed through `/api/engine-status`; root filesystem failures are
+fatal.
+
+Mutating requests may include `X-Mutation-Id`. The server persists the response
+in the vault and returns it with `X-Idempotent-Replay: true` on replay instead
+of executing the mutation twice.
+
+| Variable     | Required | Default | Purpose                            |
+| ------------ | -------- | ------- | ---------------------------------- |
+| `VAULT_PATH` | yes      | —       | shared vault directory             |
+| `TASKS_DIR`  | no       | empty   | task subdirectory within the vault |
+| `AUTH_TOKEN` | yes      | —       | bearer authentication token        |
+| `PORT`       | no       | `3000`  | HTTP port                          |
+
+Migration and audit utilities live in `scripts/`; read the script's help and
+run the vault audit before applying a migration. [AGENTS.md](AGENTS.md) contains
+only the invariants that must remain in agent context.

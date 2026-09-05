@@ -15,7 +15,7 @@ import {
   HOUSE_BANKROLL,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
-import { getOpenMarketAggregates } from "#src/betting/open-market.ts";
+import { getOpenMarketAggregates } from "#src/betting/markets/open-market.ts";
 import {
   bucksTestDiscordId,
   bucksTestPuuid,

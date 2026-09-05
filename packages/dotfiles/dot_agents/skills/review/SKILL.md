@@ -1,6 +1,6 @@
 ---
 name: review
-description: This skill should be used when the user asks to "review implementation", "compare to plan", "check what was missed", "audit the implementation", "verify completeness", "quality check", or mentions "plan vs implementation", "did we miss anything", "stretch goals", "code quality audit". Reviews completed work against the original plan for completeness, quality, and thoroughness.
+description: "Use when the user asks to \"review implementation\", \"compare to plan\", \"che…"
 user-invocable: true
 allowed-tools:
   - Read

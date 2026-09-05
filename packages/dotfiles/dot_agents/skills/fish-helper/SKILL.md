@@ -1,6 +1,6 @@
 ---
 name: fish-helper
-description: Current Fish shell scripting, functions, abbreviations, completions, variables, events, configuration, plugins, testing, and safety guidance. Use when writing or reviewing Fish config, `.fish` scripts, completions, functions, prompts, or plugin setup.
+description: "Use this skill for Current Fish shell scripting, functions, abbreviations, completions, variables, events, configur…"
 ---
 
 # Fish Helper

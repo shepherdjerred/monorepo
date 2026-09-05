@@ -24,6 +24,12 @@ export {
   ScoutStageSchema,
   TemporalNamespaceSchema,
   ScoutWorkflowStatusSchema,
+  ScoutHallBaselineInputSchema,
+  ScoutChallengeRunRecomputeInputSchema,
+  ScoutChallengeRunRecomputePageResultSchema,
+  ScoutDuelSeriesInputSchema,
+  ScoutDuelSeriesRefreshResultSchema,
+  ScoutDuelSeriesChangeSchema,
 } from "./contracts.ts";
 export type {
   InitialHistoryPageResult,
@@ -50,6 +56,12 @@ export type {
   ScoutStage,
   TemporalNamespace,
   ScoutWorkflowStatus,
+  ScoutHallBaselineInput,
+  ScoutChallengeRunRecomputeInput,
+  ScoutChallengeRunRecomputePageResult,
+  ScoutDuelSeriesInput,
+  ScoutDuelSeriesRefreshResult,
+  ScoutDuelSeriesChange,
 } from "./contracts.ts";
 export {
   SCOUT_WORKFLOW_NAMES,
@@ -63,4 +75,7 @@ export {
   scoutReportScheduleReconcilerWorkflowId,
   scoutSchedulePrefix,
   scoutTaskQueues,
+  scoutHallBaselineWorkflowId,
+  scoutChallengeRunRecomputeWorkflowId,
+  scoutDuelSeriesWorkflowId,
 } from "./identifiers.ts";

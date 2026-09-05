@@ -1,6 +1,6 @@
 ---
 name: modern-cli-tools
-description: Safe, current usage of ripgrep, fd, bat, eza, fzf, zoxide, sd, jq, yq, hyperfine, delta, bottom, dust, duf, procs, btop, and tldr. Use when selecting or invoking modern Unix CLI tools, especially instead of fragile shell pipelines.
+description: "Use this skill for Safe, current usage of ripgrep, fd, bat, eza, fzf, zoxide, sd, jq, yq, hyperfine, delta, bottom,…"
 ---
 
 # Modern CLI Tools

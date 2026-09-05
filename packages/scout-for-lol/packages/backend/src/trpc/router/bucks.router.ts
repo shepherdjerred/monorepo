@@ -18,23 +18,23 @@ import {
   getLedgerPage,
   getPersonalBucksView,
 } from "#src/betting/accounts.ts";
-import { cancelBet } from "#src/betting/cancel-bet.ts";
+import { cancelBet } from "#src/betting/markets/cancel-bet.ts";
 import { bettingAnchor } from "#src/betting/components.ts";
 import {
   inspectVisibleDareV2,
   listVisibleDarePageV2,
-} from "#src/betting/dare-view-v2.ts";
+} from "#src/betting/dares/presentation/dare-view-v2.ts";
 import { cancellationHouseCut } from "#src/betting/house-cut.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
 import { ledgerKindLabel } from "#src/betting/navigation.ts";
-import { getOpenMarketsView } from "#src/betting/open-market-view.ts";
-import { placeBet } from "#src/betting/place-bet.ts";
-import { placeParlayBet } from "#src/betting/parlay-place-bet.ts";
-import { refreshParlayMessages } from "#src/betting/parlay-refresh.ts";
+import { getOpenMarketsView } from "#src/betting/markets/open-market-view.ts";
+import { placeBet } from "#src/betting/markets/place-bet.ts";
+import { placeParlayBet } from "#src/betting/parlays/parlay-place-bet.ts";
+import { refreshParlayMessages } from "#src/betting/parlays/parlay-refresh.ts";
 import { subjectWinsForTeam } from "#src/betting/team.ts";
-import { placeWeeklyParlayBet } from "#src/betting/weekly-parlay-bet.ts";
-import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly-leaderboard-snapshot.ts";
-import { refreshWeeklyParlayMessage } from "#src/betting/weekly-parlay-refresh.ts";
+import { placeWeeklyParlayBet } from "#src/betting/weekly/weekly-parlay-bet.ts";
+import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly/weekly-leaderboard-snapshot.ts";
+import { refreshWeeklyParlayMessage } from "#src/betting/weekly/weekly-parlay-refresh.ts";
 import {
   assertBucksGuildMembership,
   assertBucksScope,

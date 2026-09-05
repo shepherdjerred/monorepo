@@ -159,7 +159,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     // Mon 10:00 PT — continues the weekly PR-job stagger (07/08/09). A
     // NoSuchKey failure means a manifest-referenced S3 object vanished
     // despite the scout-image-gc showcase exemption — re-curate the manifest
-    // (scout AGENTS.md runbook) rather than retrying.
+    // with `scripts/discover-marketing-showcase.ts` rather than retrying.
     timing: {
       kind: "cron",
       expression: "0 10 * * 1",

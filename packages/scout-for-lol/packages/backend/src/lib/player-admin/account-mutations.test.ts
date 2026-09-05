@@ -1,12 +1,10 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
-  DiscordAccountId,
   LeaguePuuid,
   PlayerId,
   Region,
   RiotId,
 } from "@scout-for-lol/data";
-import type { User } from "#generated/prisma/client/index.js";
 import {
   createTestDatabase,
   deleteIfExists,
@@ -16,6 +14,7 @@ import {
   testGuildId,
   testPuuid,
 } from "#src/testing/test-ids.ts";
+import { createTestUser } from "#src/testing/test-user.ts";
 import {
   addFlagOverride,
   resetFlagOverrides,
@@ -51,7 +50,7 @@ const { addAccount, deleteAccount, transferAccount } =
 const guildId = testGuildId("9931");
 const actorDiscordId = testAccountId("9932");
 const ctx = {
-  user: createUser(actorDiscordId),
+  user: createTestUser(actorDiscordId),
   webSession: { ipAddress: "127.0.0.1", userAgent: "bun-test" },
 };
 
@@ -152,21 +151,6 @@ describe("account admin mutations", () => {
     expect(await prisma.auditLog.count()).toBe(0);
   });
 });
-
-function createUser(discordId: DiscordAccountId): User {
-  return {
-    discordId,
-    discordUsername: "Test Admin",
-    discordAvatar: null,
-    discordAccessToken: "access",
-    discordRefreshToken: "refresh",
-    tokenExpiresAt: null,
-    analyticsUserId: `analytics-${discordId}`,
-    lastSeenAt: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-  };
-}
 
 async function createPlayer(alias: string) {
   const now = new Date();

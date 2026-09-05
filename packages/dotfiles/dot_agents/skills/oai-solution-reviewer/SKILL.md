@@ -1,12 +1,6 @@
 ---
 name: oai-solution-reviewer
-description: |
-  This skill should be used when the user asks to "grade my solution", "review my code",
-  "score this", "how did I do", "grade sheet", "review my OAI prep", "grade my practice problem",
-  "review my interview prep", "evaluate my solution", "how would this score",
-  or wants feedback on a coding interview practice solution.
-  Evaluates Java implementations against OpenAI interviewer grading criteria and produces
-  a comprehensive grade sheet with letter grades, numeric scores, pass/fail, and prose feedback.
+description: "Use when the user asks to \"grade my solution\", \"review my code\", \"score th…"
 ---
 
 # OAI Solution Reviewer

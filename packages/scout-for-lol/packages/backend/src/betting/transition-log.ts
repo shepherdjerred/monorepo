@@ -20,8 +20,8 @@ const logger = createLogger("betting-transition");
  * today; a clean `| json` needs a regex extraction, or a JSON stdout transport
  * that would change every log line in the service.
  *
- * Discord IDs are fine here. The prohibition in AGENTS.md is scoped to PostHog
- * captures and browser distinct ids, because a distinct id is a durable
+ * Discord IDs are fine in this private operational log, but not in PostHog
+ * captures or browser distinct IDs, because a distinct ID is a durable
  * cross-product join key; existing code already logs channel and guild IDs and
  * puts them in Sentry tags. `subjectPuuid` is deliberately omitted: `teamId` is
  * what the wager *is*, and the PUUID is a Riot identifier that adds nothing.

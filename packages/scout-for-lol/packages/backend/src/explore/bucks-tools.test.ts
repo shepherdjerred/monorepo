@@ -3,7 +3,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import type { BucksAskAnalyticsDataset } from "#src/betting/ask-analytics.ts";
+import type { BucksAskAnalyticsDataset } from "#src/betting/analytics/ask-analytics.ts";
 import type { LeaguePuuid } from "@scout-for-lol/data";
 import {
   addFlagOverride,

@@ -272,13 +272,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "bucks-reconciliation": {
             const { reconcileBucksBalances } =
-              await import("#src/betting/reconcile.ts");
+              await import("#src/betting/settlement/reconcile.ts");
             await reconcileBucksBalances();
             break;
           }
           case "weekly-bucks-leaderboard": {
             const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/weekly-leaderboard.ts");
+              await import("#src/betting/weekly/weekly-leaderboard.ts");
             await runWeeklyBucksLeaderboard();
             break;
           }
@@ -322,6 +322,18 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             const { expireCustomNights } =
               await import("#src/customs/expiry.ts");
             await expireCustomNights();
+            break;
+          }
+          case "progression-outbox": {
+            const [
+              { deliverHallRecordBreakOutbox },
+              { reconcileCompetitiveProgression },
+            ] = await Promise.all([
+              import("#src/progression/hall/outbox.ts"),
+              import("#src/progression/reconcile.ts"),
+            ]);
+            await reconcileCompetitiveProgression(input.stage);
+            await deliverHallRecordBreakOutbox();
             break;
           }
           case "prediction-ingest":
@@ -427,6 +439,39 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
         }
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
+    },
+    runHallBaseline: async (input) => {
+      await heartbeatWhile(
+        {
+          guildId: input.guildId,
+          revision: input.revision,
+          phase: "building-hall-baseline",
+        },
+        async () => {
+          const { runHallBaseline } =
+            await import("#src/progression/hall/baseline.ts");
+          await runHallBaseline(input);
+        },
+      );
+    },
+    recomputeChallengeRunPage: async (input) => {
+      return await heartbeatWhile(
+        {
+          runId: input.runId,
+          revision: input.revision,
+          phase: "evaluating-challenge-page",
+        },
+        async () => {
+          const { recomputeChallengeRunPage } =
+            await import("#src/progression/challenges/recompute.ts");
+          return await recomputeChallengeRunPage(input);
+        },
+      );
+    },
+    markChallengeRunRecomputeFailure: async (input) => {
+      const { markChallengeRunRecomputeFailure } =
+        await import("#src/progression/challenges/recompute.ts");
+      await markChallengeRunRecomputeFailure(input);
     },
   };
 }

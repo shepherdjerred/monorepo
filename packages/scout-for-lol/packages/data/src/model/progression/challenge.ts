@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getAllChampions } from "#src/model/champion-registry.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
+import { TimelineEventParticipantRoleSchema } from "#src/model/timeline-lake-columns.ts";
 import type {
   ChallengeCoverage,
   ChallengeEvidenceMatch,
@@ -59,6 +60,7 @@ export type ChallengeMatchPredicate =
   | {
       kind: "timeline_event_count";
       eventType: string;
+      role: z.infer<typeof TimelineEventParticipantRoleSchema>;
       operator: ChallengeComparisonOperator;
       threshold: number;
     }
@@ -94,6 +96,7 @@ export const ChallengeMatchPredicateSchema: z.ZodType<ChallengeMatchPredicate> =
       z.strictObject({
         kind: z.literal("timeline_event_count"),
         eventType: z.string().min(1).max(80),
+        role: TimelineEventParticipantRoleSchema,
         operator: ChallengeComparisonOperatorSchema,
         threshold: z.number().int().nonnegative(),
       }),
@@ -298,7 +301,7 @@ export function evaluateChallengePredicate(
       );
     case "timeline_event_count":
       return compare(
-        match.timelineEventCounts[predicate.eventType] ?? 0,
+        match.timelineEventCounts[predicate.eventType]?.[predicate.role] ?? 0,
         predicate.operator,
         predicate.threshold,
       );

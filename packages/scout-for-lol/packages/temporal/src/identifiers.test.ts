@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
 import {
+  scoutChallengeRunRecomputeWorkflowId,
+  scoutDuelSeriesWorkflowId,
+  scoutHallBaselineWorkflowId,
   scoutInitialHistoryWorkflowId,
   scoutInteractiveWorkflowId,
   scoutMatchWorkflowId,
@@ -34,6 +37,15 @@ describe("Scout Temporal identifiers", () => {
     );
     expect(scoutReportScheduleId("beta", "report_123")).toBe(
       "scout-beta-report-report_123",
+    );
+    expect(scoutHallBaselineWorkflowId("beta", "guild_123", 4)).toBe(
+      "scout-beta-hall-guild_123-4",
+    );
+    expect(scoutChallengeRunRecomputeWorkflowId("prod", "run_123", 7)).toBe(
+      "scout-prod-challenge-run_123-7",
+    );
+    expect(scoutDuelSeriesWorkflowId("dev", "series_123")).toBe(
+      "scout-dev-duel-series-series_123",
     );
   });
 });

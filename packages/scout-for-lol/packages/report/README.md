@@ -35,5 +35,6 @@ bun run lint                    # ESLint
 bun run verify:classic-visuals  # Classic renderer visual check
 ```
 
-See the Scout [AGENTS.md](../../AGENTS.md) for renderer routing details and
-satori constraints (enforced by the `satori-best-practices` ESLint rule).
+Load the repository `report-rendering` skill for Satori/Resvg workflow details.
+The `satori-best-practices` ESLint rule enforces the mechanical constraints;
+Scout's [AGENTS.md](../../AGENTS.md) contains product-level invariants.

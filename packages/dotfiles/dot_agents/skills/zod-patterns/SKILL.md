@@ -1,10 +1,6 @@
 ---
 name: zod-patterns
-description: |
-  Zod schema validation, type-safe development, and strict TypeScript patterns.
-  When user works with Zod, validates data, creates schemas, handles form validation,
-  mentions z.object/z.string patterns, needs runtime validation, type-safe code,
-  or strict TypeScript configuration.
+description: "Use this skill for Zod schema validation, type-safe development, and strict TypeScript patterns. When user works wi…"
 ---
 
 # Zod Patterns Agent

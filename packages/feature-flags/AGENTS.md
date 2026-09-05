@@ -1,104 +1,30 @@
-# AGENTS.md
+# Feature-flag constraints
 
-An OpenFeature client. It answers "what does the flag backend say about this
-key?" and nothing else — layering, precedence, and typed key registries belong
-to `@shepherdjerred/config`, which consumes this package as one source among
-several.
+This package is the OpenFeature/Flipt adapter for `@shepherdjerred/config`.
+Load the repository `feature-flags` skill for rollout procedure.
 
-## The contract that matters: absence vs. answer
+- Flipt absence or an evaluation failure means no answer; the layered resolver
+  may continue. A successful `false` is an answer and must never fall through.
+- Preserve the two failure classes: transport/evaluation failures degrade to
+  lower configuration layers, while malformed successful values fail loudly.
+- Keep the dependency direction from this package to `config`, never the
+  reverse.
+- Initialize one client per process and close it during shutdown. Do not create
+  a client per request.
+- Targeting context is typed and explicit. Never use guild, user, or entity IDs
+  as metric labels.
+- Flipt has no authentication; reachability is authorization. New consumers
+  require an intentional homelab NetworkPolicy change.
+- A new behavior flag defaults off, is enabled in beta, ramps deliberately, and
+  is removed after rollout. Defaults continue to represent safe production
+  behavior during a Flipt outage.
 
-Every evaluation returns `FlagResult<T>` = `{ value, reason, errorCode }`, and
-callers must distinguish two outcomes:
+Tests must cover absence, explicit false/zero, malformed values, evaluation
+errors, targeting, change observation, and shutdown.
 
-| Outcome                                 | `errorCode`                            | What the caller must do               |
-| --------------------------------------- | -------------------------------------- | ------------------------------------- |
-| **Absent** — the backend has no opinion | `FLAG_NOT_FOUND`, `PROVIDER_NOT_READY` | Fall through to the next config layer |
-| **Answered** — including `false`        | anything else, or `undefined`          | Stop. This is the value.              |
-
-`isAbsent()` in `src/flag-result.ts` is the only sanctioned test.
-
-**A flag that exists and evaluates to `false` is an answer.** If it were treated
-as absence, `@shepherdjerred/config` would descend to an env var still set to
-`true` and silently re-enable exactly the thing an operator just turned off.
-That failure is invisible in normal testing, so it has dedicated tests in
-`src/index.test.ts` — do not weaken them.
-
-A type mismatch is also **not** absence. A source that has an opinion it cannot
-express is a configuration bug that should surface, not get masked by a lower
-layer.
-
-## Two failure classes, deliberately different
-
-| Class                  | Examples                                                                                                                  | Behavior                                                         |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Config error**       | missing/unknown `FEATURE_FLAGS_MODE`, malformed `FLIPT_URL`, missing Flipt environment or namespace, non-scalar attribute | **Throws** from `initFeatureFlags`. A deploy bug should be loud. |
-| **Availability error** | backend unreachable, provider not ready, flag undefined                                                                   | **Never throws.** Returns the call-site default with a reason.   |
-
-This is a deliberate carve-out from the repo's fail-fast default, recorded here
-so review does not re-litigate it on every PR. A flag system that throws during
-a backend outage converts a degraded dependency into an outage of its own — and
-because every call-site default is current production behavior, degrading to
-defaults means behaving exactly as the service did before flags existed.
-
-`initFeatureFlags` does not throw when a provider fails to initialize, for the
-same reason: a flag backend must never stop a service from booting.
-
-## Rules
-
-- **The default is a required argument** at every call site, per the OpenFeature
-  spec. There is no registry of defaults. It must be current production
-  behavior, because it is what a cold start and an outage both resolve to.
-- **`targetingKey` is required.** It is Flipt's `entityId` and the bucketing key
-  for percentage rollouts; an optional one silently degrades every ramp into a
-  single bucket.
-- **`FEATURE_FLAGS_MODE` has no default and `NODE_ENV` is never sniffed.** A
-  hidden environment fork is the silent fallback this repo bans. Consumers set
-  `FEATURE_FLAGS_MODE=disabled` explicitly in test environments — including in
-  their `scripts/ci-test-manifest.json` entry.
-- **Flipt mode requires both `FLIPT_ENVIRONMENT` and `FLIPT_NAMESPACE`.** The
-  environment selects the stage repository; the namespace selects the product
-  flag catalog inside it. Neither selector has a fallback.
-- **Attributes are scalars only.** Flipt's evaluation context is
-  `Record<string, string>`; an object would target on `"[object Object]"`.
-- **No logging dependency.** `onInitializationFailure` is injected so each
-  consumer routes it through its own `createLogger`.
-- **Object flags are unsupported** and say so with `TYPE_MISMATCH` rather than
-  returning the default with a success reason.
-
-## Observability
-
-This package owns no metrics client. A Prometheus registry is per-process state,
-so a library that creates one forces its choice on every consumer. Hooks are
-injected — `onEvaluation`, `onInitializationFailure` — and each consumer wires
-its own counters through its own `createLogger`. What is shared is the
-**naming**, in `observability.ts`, so services cannot instrument the same thing
-three different ways.
-
-**`targetingKey` is never a metric label.** It is a guild or user id, so it
-would be unbounded cardinality.
-
-**Snapshot age is the outage signal, not per-evaluation reporting.** During a
-backend outage the client keeps serving its last good snapshot: evaluations
-still succeed, error rates stay flat, and nothing looks wrong. A rising
-`feature_flag_snapshot_age_seconds` is the only thing that moves. Reporting each
-evaluation instead would emit one Bugsink event per flag read and bury the
-signal. `FliptProvider.snapshotAgeSeconds()` exposes it; the homelab
-`FeatureFlagSnapshotStale` alert consumes it.
-
-## Flipt specifics
-
-Learned by running `flipt/flipt:v2.11.0`, not from documentation:
-
-- **An unknown flag key throws** from `evaluateBoolean`; it does not return a
-  not-found reason. And `reason` is `DEFAULT_EVALUATION_REASON` for a `true`, a
-  `false`, and a rollout miss alike — it discriminates nothing.
-  **`listFlags()` is the absence oracle**: synchronous, reads the same cached
-  snapshot, no string matching. A key it does not contain is `FLAG_NOT_FOUND`
-  without calling the engine; a throw on a key it _does_ contain is `GENERAL`,
-  never `FLAG_NOT_FOUND`, or the resolver would fall through on a real failure.
-- **`enabled` is the flag's default and rollouts override it.** A 30% rollout to
-  `true` on a flag whose `enabled` is already `true` is a no-op. Ramp-ups set
-  `enabled: false` with a rollout to `true`.
-- The vendored WASM glue emits a `console.warn` about deprecated init
-  parameters on every startup. It comes from inside the package and is
-  unavoidable from here.
+```bash
+bun run build
+bun run typecheck
+bun run test
+bun run lint
+```

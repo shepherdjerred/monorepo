@@ -1,6 +1,6 @@
 ---
 name: diataxis
-description: Author and restructure technical documentation with the Diátaxis framework — tutorials, how-to guides, reference, and explanation. Use when writing or reorganising docs, when a page mixes instruction with description or discussion, when deciding where a piece of content belongs, when a doc "reads badly" without an obvious cause, or when the user mentions Diátaxis, docs structure, or a documentation rewrite.
+description: "Use this skill for Author and restructure technical documentation with the Diátaxis framework — tutorials, how-to g…"
 user-invocable: true
 ---
 

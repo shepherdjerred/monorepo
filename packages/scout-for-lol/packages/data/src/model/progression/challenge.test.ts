@@ -125,6 +125,7 @@ describe("community challenge contracts", () => {
     const result = evaluateTimelineChallenge({
       kind: "timeline_event_count",
       eventType: "CHAMPION_KILL",
+      role: "killer",
       operator: "gte",
       threshold: 1,
     });
@@ -138,6 +139,7 @@ describe("community challenge contracts", () => {
       predicate: {
         kind: "timeline_event_count",
         eventType: "CHAMPION_KILL",
+        role: "killer",
         operator: "gte",
         threshold: 1,
       },

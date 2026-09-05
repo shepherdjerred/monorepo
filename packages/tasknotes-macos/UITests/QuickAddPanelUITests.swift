@@ -186,8 +186,8 @@ final class QuickAddPanelUITests: XCTestCase {
                 events are discarded and no global hotkey can be exercised. Approve \
                 TaskNotesUITests-Runner in System Settings ▸ Privacy & Security ▸ \
                 Accessibility. This is a one-time grant *provided* the runner is \
-                built with a stable signature — see AGENTS.md › Running the \
-                end-to-end tests; an ad-hoc runner is re-hashed on every build and \
+                built with a stable signature — see README.md › Signed UI \
+                tests; an ad-hoc runner is re-hashed on every build and \
                 the grant will not survive.
                 """
             )

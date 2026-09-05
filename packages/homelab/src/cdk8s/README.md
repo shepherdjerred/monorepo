@@ -43,4 +43,6 @@ bun run typecheck
 bun run lint
 ```
 
-See [../../AGENTS.md](../../AGENTS.md) for the add-a-service checklist, cluster topology, and testing notes.
+Load the repository `homelab-development` skill for the add-a-service workflow.
+See the [homelab overview](../../../docs/wiki/src/content/docs/explanation/homelab/overview.md)
+for topology and [../../AGENTS.md](../../AGENTS.md) for always-on constraints.

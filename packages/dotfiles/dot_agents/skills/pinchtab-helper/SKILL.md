@@ -1,8 +1,6 @@
 ---
 name: pinchtab-helper
-description: |
-  PinchTab browser automation - profiles, instances, multi-instance routing, tabs, actions, and anti-detection
-  When user mentions PinchTab, browser automation, pinchtab commands, headed/headless browser, or web scraping with Chrome
+description: "Use this skill for PinchTab browser automation - profiles, instances, multi-instance routing, tabs, actions, and an…"
 ---
 
 # PinchTab Browser Automation

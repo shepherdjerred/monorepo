@@ -14,13 +14,13 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
-import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
+import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
 import {
   voidDareV2WithFullRefund,
   type RefundableDareV2Row,
-} from "#src/betting/dare-void-v2.ts";
-import type { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
-import { settleBucksWithDareTimelineV2 } from "#src/betting/dare-postmatch-timeline-v2.ts";
+} from "#src/betting/dares/settlement/dare-void-v2.ts";
+import type { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
+import { settleBucksWithDareTimelineV2 } from "#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import {
   markPostMatchPollCompleted,
@@ -48,6 +48,7 @@ import {
   unavailableRequiredPuuids,
   type MatchPollAccount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
+import { withChallengeProgressionLock } from "#src/progression/challenges/locking.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -209,22 +210,35 @@ export async function processMatchAndUpdatePlayers(
   // therefore leaves the cursors in place and retries the same match.
   await finalizeAndPublishTournamentResult(prisma, matchData);
 
-  // Mark as processed
-  processedMatchIds.add(matchId);
+  const { processCompetitiveProgressionMatch } =
+    await import("#src/progression/postmatch.ts");
+  await withChallengeProgressionLock(
+    matchData.metadata.participants,
+    async () => {
+      await processCompetitiveProgressionMatch({
+        match: matchData,
+        timeline: prefetchedTimeline,
+        trackedPlayers: allTrackedPlayers,
+      });
 
-  // Update lastProcessedMatchId and lastMatchTime for all players in this match
-  // (single updateMany per player). Reached only after authoritative S3 ingest.
-  const matchCreationTime = new Date(matchData.info.gameCreation);
-  for (const trackedPlayer of allTrackedPlayers) {
-    const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
-    const brandedMatchId = MatchIdSchema.parse(matchId);
-    await updateLastProcessedMatch(
-      playerPuuid,
-      brandedMatchId,
-      undefined,
-      matchCreationTime,
-    );
-  }
+      // Mark as processed
+      processedMatchIds.add(matchId);
+
+      // Update lastProcessedMatchId and lastMatchTime for all players in this match
+      // (single updateMany per player). Reached only after authoritative S3 ingest.
+      const matchCreationTime = new Date(matchData.info.gameCreation);
+      for (const trackedPlayer of allTrackedPlayers) {
+        const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
+        const brandedMatchId = MatchIdSchema.parse(matchId);
+        await updateLastProcessedMatch(
+          playerPuuid,
+          brandedMatchId,
+          undefined,
+          matchCreationTime,
+        );
+      }
+    },
+  );
 }
 
 async function recoverUnavailableActiveDares(input: {

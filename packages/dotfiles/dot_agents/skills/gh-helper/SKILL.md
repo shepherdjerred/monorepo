@@ -1,8 +1,6 @@
 ---
 name: gh-helper
-description: |
-  Complete GitHub operations via gh CLI - repos, issues, PRs, code search, releases, file management
-  When user mentions GitHub, repositories, issues, PRs, gh command, code search, commits, file contents
+description: "Use this skill for Complete GitHub operations via gh CLI - repos, issues, PRs, code search, releases, file manageme…"
 ---
 
 # GitHub CLI Helper Agent
@@ -13,12 +11,12 @@ Complete GitHub operations via `gh` CLI and GitHub API. This skill replaces GitH
 
 ## Monorepo workflow guard
 
-In `shepherdjerred/monorepo`, `git-spice-helper` is authoritative for every
+In `shepherdjerred/monorepo`, `monorepo-delivery` is authoritative for every
 feature branch and PR. Use `toolkit gh` here for inspection, review comments,
 and other explicitly requested GitHub operations; it supplies this repository
 as the default and otherwise preserves native CLI behavior. Do not create
 branches, create feature PRs, or merge them with the generic `gh` examples
-below. Load `git-spice-helper` before any branch or feature-PR mutation.
+below. Load `monorepo-delivery` before any branch or feature-PR mutation.
 
 This monorepo uses Buildkite, not GitHub Actions. Use `toolkit bk` or
 `toolkit pr health` for CI. The generic Actions examples later in this skill

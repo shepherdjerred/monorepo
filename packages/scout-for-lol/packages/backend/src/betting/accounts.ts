@@ -16,9 +16,9 @@ import {
   applyBucksDelta,
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
-import { ParlaySubjectsSchema } from "#src/betting/parlay-criteria.ts";
-import type { PendingPosition } from "#src/betting/pending-position.ts";
-import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
+import { ParlaySubjectsSchema } from "#src/betting/parlays/parlay-criteria.ts";
+import type { PendingPosition } from "#src/betting/accounts/pending-position.ts";
+import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly/weekly-parlay-criteria.ts";
 import {
   hasTrackedPlayersOnBothTeams,
   outcomeLabel,

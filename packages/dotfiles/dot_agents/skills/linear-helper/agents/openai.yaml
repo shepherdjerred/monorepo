@@ -1,4 +1,0 @@
-interface:
-  display_name: "Linear CLI Helper"
-  short_description: "Manage Linear work with safe CLI and agent boundaries"
-  default_prompt: "Use $linear-helper to inspect Linear work, then make only explicitly authorized changes."

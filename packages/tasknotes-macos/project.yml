@@ -255,7 +255,7 @@ targets:
         # previously-green flows failed with *"Not authorized for performing UI
         # testing actions"* until this was changed back. Measured, not assumed.
         #
-        # See AGENTS.md › Running the end-to-end tests.
+        # The package README lists the signed CI command and required variable.
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "$(TASKNOTES_UITEST_IDENTITY:default=-)"
     info:

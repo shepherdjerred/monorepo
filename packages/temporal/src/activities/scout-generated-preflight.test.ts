@@ -81,6 +81,22 @@ describe("discardFormattingOnlyChanges", () => {
     };
   }
 
+  async function discardAndReadStatus(
+    repoDir: string,
+    changedFile: string,
+  ): Promise<{ reverted: string[]; status: string }> {
+    const reverted = await discardFormattingOnlyChanges({
+      repoDir,
+      changedFiles: [changedFile],
+      runCommand: commandRunner(repoDir),
+    });
+    const status = await shellRunCommand(
+      ["git", "status", "--porcelain", "--", changedFile],
+      { cwd: repoDir, trimStdout: false },
+    );
+    return { reverted, status };
+  }
+
   test("restores the exact formatting-only union change from PR #2434", async () => {
     const repoDir = await createRepository(
       [
@@ -151,57 +167,30 @@ describe("discardFormattingOnlyChanges", () => {
       ].join("\n"),
     );
 
-    const reverted = await discardFormattingOnlyChanges({
-      repoDir,
-      changedFiles: ["item.ts"],
-      runCommand: commandRunner(repoDir),
-    });
+    const { reverted, status } = await discardAndReadStatus(repoDir, "item.ts");
 
     expect(reverted).toEqual([]);
-    expect(
-      await shellRunCommand(["git", "status", "--porcelain", "--", "item.ts"], {
-        cwd: repoDir,
-        trimStdout: false,
-      }),
-    ).toContain("item.ts");
+    expect(status).toContain("item.ts");
   });
 
   test("does not suppress a new generated text file", async () => {
     const repoDir = await createRepository("export const baseline = true;\n");
     await Bun.write(`${repoDir}/new.ts`, "export   const generated = true;\n");
 
-    const reverted = await discardFormattingOnlyChanges({
-      repoDir,
-      changedFiles: ["new.ts"],
-      runCommand: commandRunner(repoDir),
-    });
+    const { reverted, status } = await discardAndReadStatus(repoDir, "new.ts");
 
     expect(reverted).toEqual([]);
-    expect(
-      await shellRunCommand(["git", "status", "--porcelain", "--", "new.ts"], {
-        cwd: repoDir,
-        trimStdout: false,
-      }),
-    ).toContain("new.ts");
+    expect(status).toContain("new.ts");
   });
 
   test("does not suppress a deleted generated file", async () => {
     const repoDir = await createRepository("export const baseline = true;\n");
     await shellRunCommand(["rm", "item.ts"], { cwd: repoDir });
 
-    const reverted = await discardFormattingOnlyChanges({
-      repoDir,
-      changedFiles: ["item.ts"],
-      runCommand: commandRunner(repoDir),
-    });
+    const { reverted, status } = await discardAndReadStatus(repoDir, "item.ts");
 
     expect(reverted).toEqual([]);
-    expect(
-      await shellRunCommand(["git", "status", "--porcelain", "--", "item.ts"], {
-        cwd: repoDir,
-        trimStdout: false,
-      }),
-    ).toContain("item.ts");
+    expect(status).toContain("item.ts");
   });
 
   test("does not suppress binary or unsupported files", async () => {
@@ -228,6 +217,14 @@ describe("discardFormattingOnlyChanges", () => {
 describe("runScoutGeneratedPreflight", () => {
   const temporaryDirectories: string[] = [];
 
+  async function preflightScenario() {
+    const calls: string[][] = [];
+    const repoDir = await mkdtemp(`${tmpdir()}/scout-preflight-`);
+    temporaryDirectories.push(repoDir);
+    await Bun.write(`${repoDir}/packages/data/generated.json`, "{}\n");
+    return { calls, repoDir };
+  }
+
   afterEach(async () => {
     await Promise.all(
       temporaryDirectories
@@ -237,10 +234,7 @@ describe("runScoutGeneratedPreflight", () => {
   });
 
   test("formats, checks, and validates before publication", async () => {
-    const calls: string[][] = [];
-    const repoDir = await mkdtemp(`${tmpdir()}/scout-preflight-`);
-    temporaryDirectories.push(repoDir);
-    await Bun.write(`${repoDir}/packages/data/generated.json`, "{}\n");
+    const { calls, repoDir } = await preflightScenario();
 
     await runScoutGeneratedPreflight({
       repoDir,
@@ -291,10 +285,7 @@ describe("runScoutGeneratedPreflight", () => {
   });
 
   test("stops before later checks when formatting fails", async () => {
-    const calls: string[][] = [];
-    const repoDir = await mkdtemp(`${tmpdir()}/scout-preflight-`);
-    temporaryDirectories.push(repoDir);
-    await Bun.write(`${repoDir}/packages/data/generated.json`, "{}\n");
+    const { calls, repoDir } = await preflightScenario();
 
     await expect(
       runScoutGeneratedPreflight({
@@ -311,10 +302,7 @@ describe("runScoutGeneratedPreflight", () => {
   });
 
   test("stops before focused validation when git diff check fails", async () => {
-    const calls: string[][] = [];
-    const repoDir = await mkdtemp(`${tmpdir()}/scout-preflight-`);
-    temporaryDirectories.push(repoDir);
-    await Bun.write(`${repoDir}/packages/data/generated.json`, "{}\n");
+    const { calls, repoDir } = await preflightScenario();
 
     await expect(
       runScoutGeneratedPreflight({

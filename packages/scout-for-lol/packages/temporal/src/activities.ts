@@ -18,6 +18,11 @@ import type {
   ScoutReportLakeInput,
   ScoutReportActivityInput,
   ScoutReportScheduleReconcilerInput,
+  ScoutHallBaselineInput,
+  ScoutChallengeRunRecomputeInput,
+  ScoutChallengeRunRecomputePageResult,
+  ScoutDuelSeriesInput,
+  ScoutDuelSeriesRefreshResult,
 } from "./contracts.ts";
 
 export type ScoutTemporalActivities = {
@@ -52,4 +57,15 @@ export type ScoutTemporalActivities = {
   persistInteractiveOutcome: (
     input: ScoutInteractiveRunInput & { outcome: InteractiveOutcome },
   ) => Promise<InteractiveOutcome>;
+  runHallBaseline: (input: ScoutHallBaselineInput) => Promise<void>;
+  recomputeChallengeRunPage: (
+    input: ScoutChallengeRunRecomputeInput,
+  ) => Promise<ScoutChallengeRunRecomputePageResult>;
+  markChallengeRunRecomputeFailure: (
+    input: ScoutChallengeRunRecomputeInput,
+  ) => Promise<void>;
+  refreshDuelSeries: (
+    input: ScoutDuelSeriesInput,
+  ) => Promise<ScoutDuelSeriesRefreshResult>;
+  markDuelSeriesOverdue: (input: ScoutDuelSeriesInput) => Promise<void>;
 };

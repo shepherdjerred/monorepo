@@ -1,4 +1,0 @@
-interface:
-  display_name: "Monorepo Docs"
-  short_description: "Maintain Jerred’s human-first systems wiki"
-  default_prompt: "Use $monorepo-docs to route work to Linear or maintain the monorepo wiki."

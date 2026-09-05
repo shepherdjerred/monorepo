@@ -181,6 +181,12 @@ describe("Hall of Fame domain", () => {
     expect(isHallEligibleMatch(match, new Date("2025-12-31T00:00:00Z"))).toBe(
       true,
     );
+    expect(
+      isHallEligibleMatch(
+        { ...match, game_end_at: "2026-01-01T00:30:00.000Z" },
+        new Date("2025-12-31T00:00:00Z"),
+      ),
+    ).toBe(true);
     expect(isHallEligibleMatch(match, new Date("2026-01-02T00:00:00Z"))).toBe(
       false,
     );

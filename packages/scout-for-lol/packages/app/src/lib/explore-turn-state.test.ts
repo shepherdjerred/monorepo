@@ -175,6 +175,7 @@ describe("visiblePending", () => {
       pendingQuestion: null,
       pendingAnswer: null,
       activity: null,
+      stopping: false,
       trace: [],
     });
   });
@@ -218,6 +219,7 @@ describe("visiblePending", () => {
       pendingQuestion: null,
       pendingAnswer: null,
       activity: null,
+      stopping: false,
       trace: [],
     });
   });

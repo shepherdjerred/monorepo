@@ -87,6 +87,48 @@
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },
+    "//#check-agent-guidance": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".agents/**",
+        ".claude/skills",
+        ".cursor/**",
+        ".opencode/**",
+        "packages/**/AGENTS.md",
+        "packages/**/CLAUDE.md",
+        "packages/**/.agents/**",
+        "packages/**/.cursor/**",
+        "packages/**/.opencode/**",
+        "packages/**/skills/**",
+        "packages/dotfiles/dot_agents/skills/**",
+        "packages/dotfiles/dot_claude/**",
+        "packages/dotfiles/dot_gemini/**",
+        "packages/dotfiles/private_dot_codex/**",
+        "packages/dotfiles/private_dot_cursor/**",
+        "sandbox/**/AGENTS.md",
+        "sandbox/**/CLAUDE.md",
+        "scripts/check-agent-guidance.ts",
+        "scripts/check-agent-guidance.test.ts",
+        "scripts/lib/agent-guidance-files.ts",
+        "!**/node_modules/**"
+      ]
+    },
+    // Directory file-count governance. The check counts files per directory, so
+    // its result changes when a code file is added, deleted, or moved anywhere
+    // in the repository — the broad glob is the input, not a convenience.
+    // `sandbox/` is negated because the check itself ignores it.
+    "//#check-directory-file-counts": {
+      "inputs": [
+        "scripts/check-directory-file-counts.ts",
+        "scripts/lib/tracked-files.ts",
+        "scripts/lib/run.ts",
+        "**/*.{ts,tsx,js,jsx,mjs,cjs,rs,go,py,swift,cs,astro}",
+        "!**/node_modules/**",
+        "!sandbox/**"
+      ]
+    },
     "//#check-test-standardization": {
       "inputs": [
         "package.json",

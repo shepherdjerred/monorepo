@@ -96,6 +96,7 @@ Riot API tokens are required; in test mode (`NODE_ENV=test`) placeholder values
 are used automatically. For a full local backend + web app, use
 `bun run dev:web` from the Scout package root (secrets via 1Password).
 
-See the parent [AGENTS.md](../../AGENTS.md) for architecture depth: the report
-lake layout, ScoutQL metric registry, deploy pipeline (beta continuous, prod
-promoted), DM budget invariants, and analytics rules.
+See the [report-lake explanation](../../../docs/wiki/src/content/docs/explanation/scout-report-lake.md)
+and the parent [README](../../README.md) for architecture. The parent
+[AGENTS.md](../../AGENTS.md) contains only always-on product and delivery
+constraints.

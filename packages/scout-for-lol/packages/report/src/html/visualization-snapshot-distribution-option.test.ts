@@ -1,6 +1,6 @@
+import type * as echarts from "echarts";
 import { describe, expect, test } from "vitest";
 import {
-  VisualizationSnapshotSchema,
   type TemporalSeries,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
@@ -9,6 +9,7 @@ import {
   histogramOption,
 } from "#src/html/visualization-snapshot-distribution-option.ts";
 import { visualizationSnapshotToOption } from "#src/html/visualization-snapshot-option.ts";
+import { visualizationSnapshotFixture } from "#src/html/visualization-snapshot-test-fixtures.ts";
 
 describe("histogram visualization options", () => {
   test("renders bucket labels and counts as gapless bars in query order", () => {
@@ -142,15 +143,7 @@ describe("distribution rendering modes", () => {
       "interactive",
     );
 
-    expect(JSON.stringify(interactiveOption.series)).toBe(
-      JSON.stringify(staticOption.series),
-    );
-    expect(JSON.stringify(interactiveOption.xAxis)).toBe(
-      JSON.stringify(staticOption.xAxis),
-    );
-    expect(interactiveOption.dataZoom).toBeDefined();
-    expect(staticOption.dataZoom).toBeUndefined();
-    expect(staticOption.toolbox).toBeUndefined();
+    expectModeDataToMatch(interactiveOption, staticOption);
   });
 
   test("keeps box plot data identical across interactive and static modes", () => {
@@ -164,16 +157,31 @@ describe("distribution rendering modes", () => {
       "interactive",
     );
 
-    expect(JSON.stringify(interactiveOption.series)).toBe(
-      JSON.stringify(staticOption.series),
-    );
-    expect(JSON.stringify(interactiveOption.xAxis)).toBe(
-      JSON.stringify(staticOption.xAxis),
-    );
-    expect(interactiveOption.dataZoom).toBeDefined();
-    expect(staticOption.dataZoom).toBeUndefined();
+    expectModeDataToMatch(interactiveOption, staticOption);
   });
 });
+
+function serializeWithoutFontFamily(value: unknown): string {
+  return JSON.stringify(value, (key, nestedValue) =>
+    key === "fontFamily" ? undefined : nestedValue,
+  );
+}
+
+function expectModeDataToMatch(
+  interactiveOption: echarts.EChartsOption,
+  staticOption: echarts.EChartsOption,
+): void {
+  expect(serializeWithoutFontFamily(interactiveOption.series)).toBe(
+    serializeWithoutFontFamily(staticOption.series),
+  );
+  expect(serializeWithoutFontFamily(interactiveOption.xAxis)).toBe(
+    serializeWithoutFontFamily(staticOption.xAxis),
+  );
+  expect(interactiveOption.dataZoom).toBeUndefined();
+  expect(staticOption.dataZoom).toBeUndefined();
+  expect(interactiveOption.toolbox).toBeUndefined();
+  expect(staticOption.toolbox).toBeUndefined();
+}
 
 const BOX_PLOT_ENCODING = ["min", "q1", "median", "q3", "max"];
 
@@ -205,29 +213,10 @@ function boxPlotSnapshot(
 }
 
 function snapshot(
-  kind: string,
+  kind: VisualizationSnapshot["kind"],
   seriesItems: TemporalSeries[],
 ): VisualizationSnapshot {
-  return VisualizationSnapshotSchema.parse({
-    version: 1,
-    generatedAt: "2026-08-08T00:00:00.000Z",
-    kind,
-    title: null,
-    temporal: null,
-    bucket: null,
-    display: {
-      theme: null,
-      palette: null,
-      smooth: false,
-      stack: "none",
-      rollingWindow: null,
-      cumulative: false,
-      sparkline: false,
-    },
-    series: seriesItems,
-    annotations: [],
-    trends: [],
-  });
+  return visualizationSnapshotFixture({ kind, series: seriesItems });
 }
 
 function series(

@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./browser": "./src/browser.ts",
     "./visualization": "./src/html/visualization-snapshot-option.ts",
+    "./visualization-style": "./src/html/visualization-snapshot-style.ts",
     "./html/arena/report": "./src/html/arena/report.tsx",
     "./*": "./src/*"
   },
