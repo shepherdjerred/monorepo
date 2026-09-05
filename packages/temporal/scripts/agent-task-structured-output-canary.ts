@@ -12,8 +12,8 @@ import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import {
   AgentTaskInputV2Schema,
   type AgentTaskStartResult,
-} from "#shared/agent-task.ts";
-import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
+} from "#shared/agent/agent-task.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =

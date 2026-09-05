@@ -66,10 +66,10 @@ from resellers. A change failing one is withheld rather than written, so a run
 that withholds everything produces no diff and no PR.
 
 That silence is the problem it has to solve.
-[`llm-catalog-refresh.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/llm-catalog-refresh.ts)
+[`llm-catalog-refresh.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/agent/llm-catalog-refresh.ts)
 publishes an `LlmCatalogDriftWithheld` occurrence instead, because a withheld
 repricing otherwise looks exactly like a clean week.
-[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/d29a823aaa0606544af7da21fb60280738208efb/packages/temporal/src/shared/llm-catalog-alert.ts)
+[`llm-catalog-alert.ts`](https://github.com/shepherdjerred/monorepo/blob/d29a823aaa0606544af7da21fb60280738208efb/packages/temporal/src/shared/alerts/llm-catalog-alert.ts)
 derives the firing and the resolving occurrence from one label set, so the next
 run that withholds nothing closes the alert instead of leaving a fixed finding
 to expire on its own.

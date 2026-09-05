@@ -2,8 +2,8 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   GlitterContextAuditInput,
   GlitterContextAuditResult,
-} from "#activities/glitter-context-audit-schema.ts";
-import type { glitterContextAuditActivities } from "#activities/glitter-context-audit.ts";
+} from "#activities/glitter/context/glitter-context-audit-schema.ts";
+import type { glitterContextAuditActivities } from "#activities/glitter/context/glitter-context-audit.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { auditGlitterContext } = proxyActivities<

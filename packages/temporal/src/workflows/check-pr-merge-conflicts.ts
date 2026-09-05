@@ -1,5 +1,5 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { CheckPrMergeConflictsActivities } from "#activities/check-pr-merge-conflicts.ts";
+import type { CheckPrMergeConflictsActivities } from "#activities/maintenance/check-pr-merge-conflicts.ts";
 import type {
   CheckPrMergeConflictsInput,
   // imported only for the inferred return type's reach

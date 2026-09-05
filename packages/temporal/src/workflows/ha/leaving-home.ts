@@ -9,7 +9,7 @@ import {
   verifyState,
   verifyStartedVacuums,
 } from "./util.ts";
-import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
+import { PRESENCE_COOLDOWN_SECONDS } from "#shared/infra/presence.ts";
 
 export async function leavingHome(): Promise<void> {
   // HA presence routinely emits a brief not_home blip while the user is

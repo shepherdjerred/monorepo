@@ -1,0 +1,453 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
+import { simpleGit } from "simple-git";
+import {
+  scoutSeasonRefreshDurationSeconds,
+  scoutSeasonRefreshRunsTotal,
+} from "#observability/metrics.ts";
+import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
+import {
+  installScoutWorkspace,
+  rootInstallWithoutHooks,
+} from "#activities/bot-clone.ts";
+import {
+  runSeasonAgent,
+  type SeasonAgentRunResult,
+} from "./scout-season-refresh-codex.ts";
+import {
+  changedFilesInPaths,
+  getUnifiedDiff,
+  openSeasonRefreshPr,
+  runCommand,
+} from "./scout-season-refresh-git.ts";
+import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
+import {
+  assessSeasonEvidence,
+  type SeasonEvidenceAssessment,
+} from "./scout-season-evidence.ts";
+import { createActivityObservability } from "#activities/activity-observability.ts";
+
+const COMPONENT = "scout-season-refresh";
+
+const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
+const REPO_SLUG = "shepherdjerred/monorepo";
+const MAIN_BRANCH = "main";
+export const SEASONS_FILE =
+  "packages/scout-for-lol/packages/data/src/seasons.ts";
+const SEASONS_TEST_FILE =
+  "packages/scout-for-lol/packages/data/src/seasons.test.ts";
+// Keep marketing changelog edits inside the same staged change set.
+export const CHANGELOG_FILE =
+  "packages/scout-for-lol/packages/frontend/src/data/changelog.tsx";
+const SEASON_PATHS = [SEASONS_FILE, SEASONS_TEST_FILE, CHANGELOG_FILE] as const;
+
+const HEARTBEAT_INTERVAL_MS = 10_000;
+
+const NO_DRIFT_SENTINEL = "NO_DRIFT";
+const DRIFTED_SENTINEL = "DRIFTED";
+
+const { jsonLog, captureWithContext, safeHeartbeat } =
+  createActivityObservability(COMPONENT, "scoutSeasonRefresh");
+
+export type ScoutSeasonRefreshInput = {
+  dryRun?: boolean;
+  workdir?: string;
+  model?: string;
+  maxTurns?: number;
+};
+
+export type ScoutSeasonRefreshOutcome =
+  "no-drift" | "pr-created" | "pr-skipped-dry-run" | "partial" | "failed";
+
+export type ScoutSeasonRefreshResult = {
+  outcome: ScoutSeasonRefreshOutcome;
+  reason: string;
+  changedFiles: string[];
+  branchName: string | undefined;
+  commitHash: string | undefined;
+  prUrl: string | undefined;
+  diff: string | undefined;
+  durationSeconds: number;
+  costUsd: number | undefined;
+  numTurns: number | undefined;
+  sourceUrls: string[];
+  requiredDates: string[];
+  unsupportedDates: string[];
+  sourceEvidenceComplete: boolean;
+  sentinelAgreement: boolean;
+  validationPassed: boolean;
+};
+
+function branchNameFor(id: string): string {
+  const date = new Date().toISOString().slice(0, 10);
+  return `scout-season-refresh/${date}-${id.slice(0, 8)}`;
+}
+
+function logSentinelDisagreement(
+  filesChanged: number,
+  sentinelText: string,
+): void {
+  const drifted = sentinelText.includes(DRIFTED_SENTINEL);
+  const noDrift = sentinelText.includes(NO_DRIFT_SENTINEL);
+  if (filesChanged === 0 && drifted) {
+    jsonLog("warning", "Sentinel reported DRIFTED but no files changed", {
+      sentinelText: sentinelText.slice(0, 200),
+    });
+  }
+  if (noDrift && filesChanged > 0) {
+    jsonLog("warning", "Sentinel reported NO_DRIFT but files changed");
+  }
+}
+
+function noDriftResult(
+  agent: SeasonAgentRunResult,
+  durationSeconds: number,
+  assessment: SeasonEvidenceAssessment,
+): ScoutSeasonRefreshResult {
+  scoutSeasonRefreshRunsTotal.inc({ outcome: "no-drift" });
+  scoutSeasonRefreshDurationSeconds.observe(
+    { outcome: "no-drift" },
+    durationSeconds,
+  );
+  jsonLog("info", "Season refresh detected no drift", {
+    durationSeconds,
+    costUsd: agent.costUsd,
+    numTurns: agent.numTurns,
+  });
+  return {
+    ...assessment,
+    outcome: "no-drift",
+    reason: "no-diff",
+    changedFiles: [],
+    branchName: undefined,
+    commitHash: undefined,
+    prUrl: undefined,
+    diff: undefined,
+    durationSeconds,
+    costUsd: agent.costUsd,
+    numTurns: agent.numTurns,
+  };
+}
+
+async function dryRunResult(args: {
+  agent: SeasonAgentRunResult;
+  files: string[];
+  diff: string;
+  id: string;
+  durationSeconds: number;
+  assessment: SeasonEvidenceAssessment;
+}): Promise<ScoutSeasonRefreshResult> {
+  const { agent, files, diff, id, durationSeconds, assessment } = args;
+  scoutSeasonRefreshRunsTotal.inc({ outcome: "pr-created" });
+  scoutSeasonRefreshDurationSeconds.observe(
+    { outcome: "pr-created" },
+    durationSeconds,
+  );
+  const diffPath = `/tmp/scout-season-refresh-${id}.diff`;
+  await Bun.write(diffPath, diff);
+  jsonLog("info", "Season refresh DRY_RUN — diff written, no PR opened", {
+    diffPath,
+    changedFiles: files,
+    durationSeconds,
+  });
+  return {
+    ...assessment,
+    outcome: "pr-skipped-dry-run",
+    reason: "dry-run",
+    changedFiles: files,
+    branchName: undefined,
+    commitHash: undefined,
+    prUrl: undefined,
+    diff,
+    durationSeconds,
+    costUsd: agent.costUsd,
+    numTurns: agent.numTurns,
+  };
+}
+
+async function realPrResult(args: {
+  agent: SeasonAgentRunResult;
+  files: string[];
+  diff: string;
+  id: string;
+  durationSeconds: number;
+  repoDir: string;
+  tempDir: string;
+  ghToken: string;
+  sentinelText: string;
+  assessment: SeasonEvidenceAssessment;
+}): Promise<ScoutSeasonRefreshResult> {
+  const branch = branchNameFor(args.id);
+  const title = "chore(scout-for-lol): refresh LoL season dates";
+  const body = [
+    "Automated weekly refresh of the LoL season schedule by the temporal",
+    "`scout-season-refresh-weekly` workflow.",
+    "",
+    `Changed files: ${String(args.files.length)}`,
+    "",
+    "## Agent notes",
+    "",
+    args.sentinelText.length > 0 ? args.sentinelText : "(no notes; see diff)",
+  ].join("\n");
+
+  const { commitHash, prUrl } = await openSeasonRefreshPr({
+    repoDir: args.repoDir,
+    tempDir: args.tempDir,
+    branch,
+    title,
+    body,
+    files: SEASON_PATHS,
+    ghToken: args.ghToken,
+    repoSlug: REPO_SLUG,
+    mainBranch: MAIN_BRANCH,
+  });
+
+  scoutSeasonRefreshRunsTotal.inc({ outcome: "pr-created" });
+  scoutSeasonRefreshDurationSeconds.observe(
+    { outcome: "pr-created" },
+    args.durationSeconds,
+  );
+  jsonLog("info", "Season refresh opened PR (awaiting human review)", {
+    prUrl,
+    branch,
+    commitHash,
+    changedFiles: args.files,
+    durationSeconds: args.durationSeconds,
+  });
+
+  return {
+    ...args.assessment,
+    outcome: "pr-created",
+    reason: "drift-detected",
+    changedFiles: args.files,
+    branchName: branch,
+    commitHash,
+    prUrl,
+    diff: args.diff,
+    durationSeconds: args.durationSeconds,
+    costUsd: args.agent.costUsd,
+    numTurns: args.agent.numTurns,
+  };
+}
+
+function partialResult(args: {
+  agent: SeasonAgentRunResult;
+  files: string[];
+  diff: string;
+  durationSeconds: number;
+  assessment: SeasonEvidenceAssessment;
+}): ScoutSeasonRefreshResult {
+  scoutSeasonRefreshRunsTotal.inc({ outcome: "partial" });
+  scoutSeasonRefreshDurationSeconds.observe(
+    { outcome: "partial" },
+    args.durationSeconds,
+  );
+  return {
+    ...args.assessment,
+    outcome: "partial",
+    reason: args.assessment.reason ?? "incomplete evidence",
+    changedFiles: args.files,
+    branchName: undefined,
+    commitHash: undefined,
+    prUrl: undefined,
+    diff: args.diff === "" ? undefined : args.diff,
+    durationSeconds: args.durationSeconds,
+    costUsd: args.agent.costUsd,
+    numTurns: args.agent.numTurns,
+  };
+}
+
+async function prepareWorkdir(input: ScoutSeasonRefreshInput): Promise<{
+  tempDir: string;
+  repoDir: string;
+  ownedByUs: boolean;
+}> {
+  if (input.workdir !== undefined) {
+    return { tempDir: input.workdir, repoDir: input.workdir, ownedByUs: false };
+  }
+  const tempDir = await mkdtemp(
+    nodePath.join(tmpdir(), "scout-season-refresh-"),
+  );
+  const repoDir = `${tempDir}/monorepo`;
+  await simpleGit().clone(REPO_URL, repoDir, [
+    "--branch",
+    MAIN_BRANCH,
+    "--single-branch",
+    "--depth",
+    "1",
+  ]);
+  // Pre-install the scout workspace (with the llm-models producer built) so
+  // the agent's verification step (`bun run test -- src/seasons.test.ts`) works on the
+  // first try — otherwise the agent improvises its own installs, and a root
+  // install would arm lefthook hooks in the clone.
+  await installScoutWorkspace(repoDir);
+  return { tempDir, repoDir, ownedByUs: true };
+}
+
+async function dispatchOutcome(args: {
+  agent: SeasonAgentRunResult;
+  files: string[];
+  diff: string;
+  id: string;
+  durationSeconds: number;
+  repoDir: string;
+  tempDir: string;
+  dryRun: boolean;
+  ghToken: string;
+  sentinelText: string;
+  assessment: SeasonEvidenceAssessment;
+}): Promise<ScoutSeasonRefreshResult> {
+  if (
+    !args.assessment.sourceEvidenceComplete ||
+    !args.assessment.sentinelAgreement ||
+    !args.assessment.validationPassed
+  ) {
+    return partialResult(args);
+  }
+  if (args.files.length === 0) {
+    return noDriftResult(args.agent, args.durationSeconds, args.assessment);
+  }
+  if (args.dryRun) {
+    return await dryRunResult({
+      agent: args.agent,
+      files: args.files,
+      diff: args.diff,
+      id: args.id,
+      durationSeconds: args.durationSeconds,
+      assessment: args.assessment,
+    });
+  }
+  return await realPrResult({
+    agent: args.agent,
+    files: args.files,
+    diff: args.diff,
+    id: args.id,
+    durationSeconds: args.durationSeconds,
+    repoDir: args.repoDir,
+    tempDir: args.tempDir,
+    ghToken: args.ghToken,
+    sentinelText: args.sentinelText,
+    assessment: args.assessment,
+  });
+}
+
+async function run(
+  input: ScoutSeasonRefreshInput,
+): Promise<ScoutSeasonRefreshResult> {
+  const start = Date.now();
+  const id = crypto.randomUUID();
+  const dryRun = input.dryRun === true;
+
+  const envHeartbeat = setInterval(() => {
+    safeHeartbeat({ phase: "envelope", elapsedMs: Date.now() - start });
+  }, HEARTBEAT_INTERVAL_MS);
+
+  const workdir = await prepareWorkdir(input);
+
+  try {
+    const agent = await runSeasonAgent({
+      workdir: workdir.repoDir,
+      model: input.model ?? "gpt-5.6-luna",
+      maxTurns: input.maxTurns ?? 40,
+      seasonsFile: SEASONS_FILE,
+      seasonsTestFile: SEASONS_TEST_FILE,
+      changelogFile: CHANGELOG_FILE,
+      noDriftSentinel: NO_DRIFT_SENTINEL,
+      driftedSentinel: DRIFTED_SENTINEL,
+    });
+
+    const sentinelText = agent.resultText.trim();
+    let files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
+    if (files.includes(CHANGELOG_FILE)) {
+      // The prettier gate covers changelog.tsx, so normalize the agent's edit or
+      // the PR fails CI (same pattern as llm-catalog-refresh.ts). Only
+      // runs on the rare new-season drift, so the frozen install is negligible.
+      // Hook-free: a plain root install would run `lefthook install` and arm
+      // the dev pre-commit suite for the later bot commit (the June/July 2026
+      // weekly failures).
+      await rootInstallWithoutHooks(workdir.repoDir);
+      await runCommand(["bunx", "prettier", "--write", CHANGELOG_FILE], {
+        cwd: workdir.repoDir,
+      });
+      files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
+    }
+    await discardFormattingOnlyChanges({
+      repoDir: workdir.repoDir,
+      changedFiles: files,
+      component: "scout-season-refresh",
+    });
+    files = await changedFilesInPaths(workdir.repoDir, SEASON_PATHS);
+    const diff =
+      files.length > 0
+        ? await getUnifiedDiff(workdir.repoDir, SEASON_PATHS)
+        : "";
+    const durationSeconds = (Date.now() - start) / 1000;
+
+    logSentinelDisagreement(files.length, sentinelText);
+    const assessment = await assessSeasonEvidence({
+      resultText: sentinelText,
+      filesChanged: files.length,
+      repoDir: workdir.repoDir,
+      diff,
+      seasonsFile: SEASONS_FILE,
+    });
+    const tokenResult =
+      dryRun || files.length === 0
+        ? undefined
+        : await createGitHubAppInstallationToken();
+    const ghToken = tokenResult?.token ?? "";
+
+    return await dispatchOutcome({
+      agent,
+      files,
+      diff,
+      id,
+      durationSeconds,
+      repoDir: workdir.repoDir,
+      tempDir: workdir.tempDir,
+      dryRun,
+      ghToken,
+      sentinelText,
+      assessment,
+    });
+  } catch (error) {
+    const durationSeconds = (Date.now() - start) / 1000;
+    scoutSeasonRefreshRunsTotal.inc({ outcome: "failed" });
+    scoutSeasonRefreshDurationSeconds.observe(
+      { outcome: "failed" },
+      durationSeconds,
+    );
+    captureWithContext(error, { durationSeconds });
+    jsonLog("error", "Season refresh failed", {
+      durationSeconds,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  } finally {
+    clearInterval(envHeartbeat);
+    if (workdir.ownedByUs) {
+      try {
+        await rm(workdir.tempDir, { recursive: true, force: true });
+      } catch (cleanupError) {
+        jsonLog("warning", "Failed to clean up workdir", {
+          tempDir: workdir.tempDir,
+          error:
+            cleanupError instanceof Error
+              ? cleanupError.message
+              : String(cleanupError),
+        });
+      }
+    }
+  }
+}
+
+export type ScoutSeasonRefreshActivities = typeof scoutSeasonRefreshActivities;
+
+export const scoutSeasonRefreshActivities = {
+  async runScoutSeasonRefresh(
+    input: ScoutSeasonRefreshInput,
+  ): Promise<ScoutSeasonRefreshResult> {
+    return run(input);
+  },
+};

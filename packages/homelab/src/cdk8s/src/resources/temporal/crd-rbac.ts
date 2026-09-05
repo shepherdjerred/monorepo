@@ -9,7 +9,7 @@ import {
  * Read-only CRD access for the homelab-crd-imports-daily schedule: its
  * activity runs `kubectl get crds -o json | cdk8s import /dev/stdin` in the
  * bot clone to regenerate generated/imports (see
- * packages/temporal/src/activities/homelab-crd-imports-refresh.ts).
+ * packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts).
  *
  * Strictly read-only — CRD definitions only, no write verbs.
  */
