@@ -87,6 +87,9 @@
       "entry": ["test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
+    "packages/loaded": {
+      "project": ["src/**/*.{ts,tsx}"]
+    },
     "packages/starlight-karma-bot": {
       "entry": ["src/index.ts", "scripts/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
