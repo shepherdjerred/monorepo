@@ -520,3 +520,42 @@ describe("streamed query results", () => {
     expect(visiblePending(turn, CONVERSATION, [persisted]).preview).toBeNull();
   });
 });
+
+describe("the status line and the step list are separate concerns", () => {
+  test("only an activity event moves the status line", () => {
+    // They used to be updated on adjacent lines of one branch, which is how
+    // the generic, share-safe trace string ended up being what the reader saw
+    // as live status. A tool event now builds the timeline and nothing else.
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "activity",
+      text: "Finding “Jerred#NA1”",
+      toolCallId: "call-1",
+    });
+    expect(turn.activity).toBe("Finding “Jerred#NA1”");
+
+    turn = applyStreamEvent(turn, {
+      type: "tool_call",
+      toolCallId: "call-1",
+      toolName: "resolve_player",
+      message: "Looking up who that is.",
+      details: null,
+      rawInput: null,
+    });
+    expect(turn.activity).toBe("Finding “Jerred#NA1”");
+    expect(turn.trace).toHaveLength(1);
+    expect(turn.trace[0]?.message).toBe("Looking up who that is.");
+
+    turn = applyStreamEvent(turn, {
+      type: "tool_result",
+      toolCallId: "call-1",
+      toolName: "resolve_player",
+      status: "succeeded",
+      message: "Identified the player.",
+      durationMs: 12,
+      details: null,
+      rawOutput: null,
+    });
+    expect(turn.activity).toBe("Finding “Jerred#NA1”");
+    expect(turn.trace[0]?.status).toBe("succeeded");
+  });
+});
