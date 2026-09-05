@@ -2759,7 +2759,21 @@ steps:
         bun --no-install run --cwd packages/astro-opengraph-images publish:npm
         bun --no-install run --cwd packages/webring publish:npm
         bun --no-install run --cwd packages/homelab/src/helm-types publish:npm
-        bun --no-install run --cwd packages/home-assistant publish:npm
+        home_assistant_release_state=published
+        if home_assistant_tags=$$(git ls-remote --exit-code --refs origin 'refs/tags/home-assistant-v*'); then
+          echo "Home Assistant release tag(s): $$home_assistant_tags"
+        else
+          home_assistant_lookup_status=$$?
+          if [ "$$home_assistant_lookup_status" -ne 2 ]; then
+            echo "failed to inspect Home Assistant release tags (status $$home_assistant_lookup_status)"
+            exit "$$home_assistant_lookup_status"
+          fi
+          home_assistant_release_state=pending
+          echo "Home Assistant has no release tag; deferring latest publish until its initial release is merged"
+        fi
+        if [ "$$home_assistant_release_state" = published ]; then
+          bun --no-install run --cwd packages/home-assistant publish:npm
+        fi
         bun --no-install scripts/publish-npm.ts packages/astro-opengraph-images --dev-suffix "$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/publish-npm.ts packages/webring --dev-suffix "$BUILDKITE_BUILD_NUMBER"
         bun --no-install scripts/publish-npm.ts packages/homelab/src/helm-types --dev-suffix "$BUILDKITE_BUILD_NUMBER"

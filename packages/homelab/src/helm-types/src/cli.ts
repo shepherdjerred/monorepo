@@ -4,8 +4,8 @@
  *
  * Generate TypeScript types from Helm charts
  */
-import { writeFile } from "node:fs/promises";
-import { pathToFileURL } from "node:url";
+import { realpath, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import { fetchHelmChart } from "./chart-fetcher.js";
 import { convertToTypeScriptInterface } from "./type-converter.js";
 import { generateTypeScriptCode } from "./interface-generator.js";
@@ -204,14 +204,15 @@ export function toPascalCase(str: string): string {
     .join("");
 }
 
-function isMainModule(): boolean {
+async function isMainModule(): Promise<boolean> {
   const entrypoint = process.argv[1];
+  if (entrypoint === undefined) return false;
   return (
-    entrypoint !== undefined &&
-    import.meta.url === pathToFileURL(entrypoint).href
+    (await realpath(entrypoint)) ===
+    (await realpath(fileURLToPath(import.meta.url)))
   );
 }
 
-if (isMainModule()) {
+if (await isMainModule()) {
   void main();
 }

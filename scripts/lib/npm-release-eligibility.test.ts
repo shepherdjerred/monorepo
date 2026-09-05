@@ -1,3 +1,6 @@
+import { mkdtemp, mkdir, rm } from "node:fs/promises";
+import path from "node:path";
+import { tmpdir } from "node:os";
 import { beforeAll, describe, expect, test } from "vitest";
 
 import {
@@ -189,7 +192,7 @@ describe("consumer file classification", () => {
 });
 
 describe("initial package releases", () => {
-  test("classifies Home Assistant's configured first release", async () => {
+  test("classifies Home Assistant's configured first release in a tagless repo", async () => {
     const policy = NPM_PACKAGE_POLICIES.find(
       (candidate) => candidate.name === "@shepherdjerred/home-assistant",
     );
@@ -197,13 +200,35 @@ describe("initial package releases", () => {
       throw new Error("Home Assistant policy is missing");
     }
 
-    const decision = await classifyPackageRelease(process.cwd(), policy);
+    const root = await mkdtemp(path.join(tmpdir(), "npm-release-eligibility-"));
+    const packagePath = path.join(root, policy.path, "package.json");
+    try {
+      await mkdir(path.join(root, policy.path), { recursive: true });
+      await Bun.write(
+        packagePath,
+        JSON.stringify(
+          {
+            name: policy.name,
+            version: policy.initialVersion,
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+      await Bun.$`git -C ${root} init --quiet`;
+      await Bun.$`git -C ${root} add ${path.join(policy.path, "package.json")}`;
+      await Bun.$`git -C ${root} -c user.name=eligibility-test -c user.email=eligibility-test@example.com commit --quiet -m initial`;
 
-    expect(decision).toMatchObject({
-      packageName: "@shepherdjerred/home-assistant",
-      latestTag: "initial release",
-      eligible: true,
-    });
+      const decision = await classifyPackageRelease(root, policy);
+
+      expect(decision).toMatchObject({
+        packageName: "@shepherdjerred/home-assistant",
+        latestTag: "initial release",
+        eligible: true,
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 });
 
