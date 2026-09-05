@@ -184,6 +184,10 @@ export const exploreRouter = router({
       const identities = await resolvePlayerIdentities({
         query: input.query,
         guildIds,
+        // A typeahead has to answer before the reader has finished typing.
+        // `player('…')` resolution keeps the default exact rule, where a
+        // widened match would turn "one person" into "ambiguous".
+        match: "prefix",
       });
       return identities.slice(0, MENTION_RESULT_LIMIT).map((identity) =>
         ExploreMentionCandidateSchema.parse({

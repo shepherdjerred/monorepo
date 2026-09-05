@@ -92,9 +92,17 @@ export function ExploreComposer(props: {
   );
   // Static catalogs answer on the first keystroke while the player lookup is
   // still in flight, so the list is never empty while it waits.
+  // Player results are dropped while they belong to an older query: the
+  // debounce leaves `debouncedQuery` behind for 250ms and `keepPreviousData`
+  // keeps serving the previous response after that, so merging them
+  // unconditionally let the picker highlight — and insert — a player unrelated
+  // to the text currently after the `@`. The static catalogs are derived from
+  // `rawQuery` and are always current, so the list does not go empty.
+  const playersAreCurrent =
+    rawQuery === debouncedQuery && !playerSearch.isPlaceholderData;
   const candidates = open
     ? mergeMentionCandidates(
-        playerSearch.data ?? [],
+        playersAreCurrent ? (playerSearch.data ?? []) : [],
         staticMentionCandidates(rawQuery),
         MAX_MENTION_SUGGESTIONS,
       )

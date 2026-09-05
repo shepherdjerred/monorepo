@@ -118,3 +118,26 @@ describe("applyMention", () => {
     );
   });
 });
+
+describe("editing an existing mention", () => {
+  test("the span covers the whole token, not just what is behind the caret", () => {
+    // Caret inside `@jerred`, between "jer" and "red". Ending the span at the
+    // caret left the suffix behind, so picking a suggestion produced
+    // "Jerred#NA1 red" and the question carried a word nobody wrote.
+    const text = "how does @jerred do";
+    const span = activeMentionSpan(text, 13);
+    if (span === null) throw new Error("expected a span");
+    expect(span.query).toBe("jer");
+    expect(text.slice(span.start, span.end)).toBe("@jerred");
+    expect(applyMention(text, span, "Jerred#NA1").text).toBe(
+      "how does Jerred#NA1 do",
+    );
+  });
+
+  test("a caret at the end of a token behaves as before", () => {
+    const text = "how does @jer";
+    const span = activeMentionSpan(text, 13);
+    if (span === null) throw new Error("expected a span");
+    expect(span.end).toBe(13);
+  });
+});
