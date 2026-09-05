@@ -35,12 +35,14 @@ const PERSONAL_SKILLS_PATH = "packages/dotfiles/dot_agents/skills";
 const gitPath = path.posix;
 const CLIENT_SKILL_DIRECTORIES = new Set(
   [
-    ".claude .codex .cursor .opencode",
+    ".claude .codex .cursor .opencode .gemini",
     "dot_claude dot_codex dot_cursor dot_opencode",
     "private_dot_claude private_dot_codex private_dot_cursor private_dot_opencode",
   ].flatMap((group) => group.split(" ")),
 );
-const GEMINI_SKILL_DIRECTORIES = new Set(["dot_gemini", "private_dot_gemini"]);
+const GEMINI_SKILL_DIRECTORIES = new Set(
+  ".gemini dot_gemini private_dot_gemini".split(" "),
+);
 const CURSOR_ADAPTER_PATH =
   "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc";
 const GEMINI_SOURCE_ADAPTER_PATH =
@@ -150,12 +152,12 @@ function hasPathOrDescendant(
   entries: ReadonlyMap<string, GuidanceEntry>,
   entryPath: string,
 ): boolean {
-  if (entries.has(entryPath)) return true;
-  const prefix = `${entryPath}/`;
-  for (const candidate of entries.keys()) {
-    if (candidate.startsWith(prefix)) return true;
-  }
-  return false;
+  return (
+    entries.has(entryPath) ||
+    [...entries.keys()].some((candidate) =>
+      candidate.startsWith(`${entryPath}/`),
+    )
+  );
 }
 function validateSymlink(
   entries: ReadonlyMap<string, GuidanceEntry>,
@@ -491,9 +493,7 @@ export async function checkAgentGuidance(
         .join("\n")}`,
     );
   }
-  console.log(
-    `Agent guidance: ${entries.length.toString()} active files valid`,
-  );
+  console.log("Agent guidance valid:", entries.length);
 }
 if (import.meta.main) {
   const readMode = process.argv.includes("--staged") ? "index" : "worktree";

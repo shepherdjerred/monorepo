@@ -240,13 +240,14 @@ describe("agent guidance guard", () => {
         "packages/dotfiles/private_dot_codex/skills/codex-copy/SKILL.md",
         "codex-copy",
       ),
+      skill(".gemini/config/skills/literal-copy/SKILL.md", "literal-copy"),
     );
     const found = rules(entries);
     expect(found).toEqual(expect.arrayContaining(["repository-cursor-rule"]));
     expect(found).toContain("repository-gemini-guidance");
     expect(
       found.filter((rule) => rule === "duplicate-client-skill"),
-    ).toHaveLength(5);
+    ).toHaveLength(6);
   });
 
   test("rejects policy appended to the Cursor adapter", () => {
