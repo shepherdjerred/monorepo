@@ -407,6 +407,7 @@ describe("challenge timeline durability", () => {
       matchPredicate: {
         kind: "timeline_event_count",
         eventType: "CHAMPION_KILL",
+        role: "killer",
         operator: "gte",
         threshold: 1,
       },
