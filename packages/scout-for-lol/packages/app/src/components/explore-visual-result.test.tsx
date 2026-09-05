@@ -8,6 +8,7 @@ import {
 import {
   ExploreVisualResult,
   initialChartKind,
+  initialMetricKey,
 } from "#src/components/explore-visual-result.tsx";
 
 function createMessage(overrides: Record<string, unknown>): ExploreMessage {
@@ -105,6 +106,12 @@ describe("ExploreVisualResult", () => {
         renderKind: "DONUT_CHART",
       }),
     ).toBe("DONUT_CHART");
+  });
+
+  test("uses the persisted metric when it is present in the preview", () => {
+    expect(initialMetricKey(persistedLineChart, chartablePreview.columns)).toBe(
+      "win_rate",
+    );
   });
 
   test("renders both Chart and Table tab controls for chartable results", () => {

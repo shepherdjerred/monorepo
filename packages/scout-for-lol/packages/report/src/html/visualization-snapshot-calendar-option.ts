@@ -5,11 +5,12 @@ import {
   VISUALIZATION_BODY_FONT,
   visualizationSnapshotBaseOption,
   visualizationSnapshotPresentation,
+  type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
 export function calendarOption(
   snapshot: VisualizationSnapshot,
-  _mode?: "interactive" | "static",
+  mode: VisualizationRenderMode,
 ): echarts.EChartsOption {
   const points = snapshot.series[0]?.points ?? [];
   const values = points.flatMap((point) =>
@@ -17,7 +18,7 @@ export function calendarOption(
   );
   const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout calendar"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout calendar", mode),
     tooltip: { formatter: (input) => calendarTooltipText(snapshot, input) },
     visualMap: {
       min: Math.min(...values, 0),
@@ -28,7 +29,9 @@ export function calendarOption(
       bottom: 18,
       textStyle: {
         color: presentation.theme.muted,
-        fontFamily: VISUALIZATION_BODY_FONT,
+        ...(mode === "interactive"
+          ? { fontFamily: VISUALIZATION_BODY_FONT }
+          : {}),
       },
       inRange: { color: presentation.colors },
     },
@@ -48,11 +51,15 @@ export function calendarOption(
       },
       dayLabel: {
         color: presentation.theme.muted,
-        fontFamily: VISUALIZATION_BODY_FONT,
+        ...(mode === "interactive"
+          ? { fontFamily: VISUALIZATION_BODY_FONT }
+          : {}),
       },
       monthLabel: {
         color: presentation.theme.text,
-        fontFamily: VISUALIZATION_BODY_FONT,
+        ...(mode === "interactive"
+          ? { fontFamily: VISUALIZATION_BODY_FONT }
+          : {}),
       },
       yearLabel: { show: false },
     },

@@ -30,6 +30,12 @@ export const VISUALIZATION_DISPLAY_FONT = [
 export const VISUALIZATION_BODY_FONT = typography.body;
 export const VISUALIZATION_MONO_FONT = typography.mono;
 
+export type VisualizationRenderMode = "interactive" | "static";
+
+function interactiveFont(mode: VisualizationRenderMode, family: string) {
+  return mode === "interactive" ? { fontFamily: family } : {};
+}
+
 export type VisualizationSnapshotPresentation = {
   options: ReportChartOptions;
   theme: AnalyticsChartTheme;
@@ -60,6 +66,7 @@ export function visualizationSnapshotPresentation(
 export function visualizationSnapshotBaseOption(
   snapshot: VisualizationSnapshot,
   defaultTitle: string,
+  mode: VisualizationRenderMode,
 ): echarts.EChartsOption {
   const { options, theme, colors } =
     visualizationSnapshotPresentation(snapshot);
@@ -91,7 +98,10 @@ export function visualizationSnapshotBaseOption(
     backgroundColor: theme.background,
     animation: false,
     color: colors,
-    textStyle: { color: theme.text, fontFamily: VISUALIZATION_BODY_FONT },
+    textStyle: {
+      color: theme.text,
+      ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+    },
     title: {
       text: snapshot.title ?? defaultTitle,
       ...(subtitle.length === 0 ? {} : { subtext: subtitle }),
@@ -100,13 +110,13 @@ export function visualizationSnapshotBaseOption(
       textStyle: {
         color: theme.accent,
         fontSize: 28,
-        fontFamily: VISUALIZATION_DISPLAY_FONT,
-        fontWeight: 700,
+        ...interactiveFont(mode, VISUALIZATION_DISPLAY_FONT),
+        ...(mode === "interactive" ? { fontWeight: 700 } : {}),
       },
       subtextStyle: {
         color: theme.muted,
         fontSize: 14,
-        fontFamily: VISUALIZATION_BODY_FONT,
+        ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
       },
     },
   };
@@ -115,6 +125,7 @@ export function visualizationSnapshotBaseOption(
 export function visualizationSnapshotLegend(
   presentation: VisualizationSnapshotPresentation,
   fallback: ReportChartLegend = "top",
+  mode: VisualizationRenderMode,
 ): echarts.LegendComponentOption {
   const position =
     presentation.options.legend === undefined ||
@@ -134,7 +145,7 @@ export function visualizationSnapshotLegend(
         : { left: 68, right: 68, top: 62 }),
     textStyle: {
       color: presentation.theme.muted,
-      fontFamily: VISUALIZATION_BODY_FONT,
+      ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
     },
   };
 }
@@ -142,6 +153,7 @@ export function visualizationSnapshotLegend(
 export function visualizationSnapshotAxis(
   theme: AnalyticsChartTheme,
   name: string | undefined,
+  mode: VisualizationRenderMode,
 ): object {
   return {
     ...(name === undefined
@@ -150,24 +162,30 @@ export function visualizationSnapshotAxis(
           name,
           nameTextStyle: {
             color: theme.muted,
-            fontFamily: VISUALIZATION_BODY_FONT,
+            ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
           },
         }),
     axisLabel: {
       color: theme.muted,
-      fontFamily: VISUALIZATION_BODY_FONT,
+      ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
     },
     axisLine: { lineStyle: { color: theme.border } },
     splitLine: { lineStyle: { color: theme.grid } },
   };
 }
 
+type VisualizationLabelOptions = {
+  defaultShow?: boolean;
+  valueFormatter?: (input: unknown) => string;
+  mode?: VisualizationRenderMode;
+};
+
 export function visualizationSnapshotLabels(
   options: ReportChartOptions,
   horizontal: boolean,
-  defaultShow = false,
-  valueFormatter?: (input: unknown) => string,
+  labelOptions: VisualizationLabelOptions = {},
 ): object {
+  const { defaultShow = false, valueFormatter, mode = "static" } = labelOptions;
   return {
     show:
       options.labels === undefined || options.labels === "auto"
@@ -176,7 +194,7 @@ export function visualizationSnapshotLabels(
           options.labels === "value" ||
           options.labels === "percent",
     position: horizontal ? "right" : "top",
-    fontFamily: VISUALIZATION_BODY_FONT,
+    ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
     ...(options.labels === "percent"
       ? { formatter: percentLabel }
       : valueFormatter !== undefined && options.labels === "value"

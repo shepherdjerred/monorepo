@@ -104,20 +104,26 @@ async function renderFixture(
   );
   expect(svg).toContain("<svg");
   expect(image.length).toBeGreaterThan(4096);
-  expect(JSON.stringify(interactiveOption.series)).toBe(
-    JSON.stringify(staticOption.series),
+  expect(serializeWithoutFontFamily(interactiveOption.series)).toBe(
+    serializeWithoutFontFamily(staticOption.series),
   );
-  expect(JSON.stringify(interactiveOption.xAxis)).toBe(
-    JSON.stringify(staticOption.xAxis),
+  expect(serializeWithoutFontFamily(interactiveOption.xAxis)).toBe(
+    serializeWithoutFontFamily(staticOption.xAxis),
   );
   expect(JSON.stringify(interactiveOption)).not.toContain("95% CI");
   expect(JSON.stringify(interactiveOption)).not.toContain("confidenceInterval");
-  expect(JSON.stringify(interactiveOption.yAxis)).toBe(
-    JSON.stringify(staticOption.yAxis),
+  expect(serializeWithoutFontFamily(interactiveOption.yAxis)).toBe(
+    serializeWithoutFontFamily(staticOption.yAxis),
   );
   const output = path.join(OUTPUT_DIR, filename);
   await Bun.write(output, image);
   writtenFiles.push(output);
+}
+
+function serializeWithoutFontFamily(value: unknown): string {
+  return JSON.stringify(value, (key, nestedValue) =>
+    key === "fontFamily" ? undefined : nestedValue,
+  );
 }
 
 test("renders comparison evidence, annotations, trend, and sparkline metadata", async () => {

@@ -12,16 +12,18 @@ export type ExportableRow = {
   }[];
 };
 
-function escapeCsvField(value: string): string {
+function escapeCsvField(value: string, protectFormula = false): string {
+  const safeValue =
+    protectFormula && /^[=+\-@]/u.test(value) ? `'${value}` : value;
   if (
-    value.includes(",") ||
-    value.includes('"') ||
-    value.includes("\n") ||
-    value.includes("\r")
+    safeValue.includes(",") ||
+    safeValue.includes('"') ||
+    safeValue.includes("\n") ||
+    safeValue.includes("\r")
   ) {
-    return `"${value.replaceAll('"', '""')}"`;
+    return `"${safeValue.replaceAll('"', '""')}"`;
   }
-  return value;
+  return safeValue;
 }
 
 export function tableToCsv(
@@ -37,13 +39,16 @@ export function tableToCsv(
   for (const row of rows) {
     const cells = columns.map((column) => {
       if (column.key === "label") {
-        return escapeCsvField(row.label);
+        return escapeCsvField(row.label, true);
       }
       const entry = row.values.find((val) => val.column === column.key);
       if (entry?.value == null) {
         return "";
       }
-      return escapeCsvField(formatReportDisplayValue(column, entry.value));
+      return escapeCsvField(
+        formatReportDisplayValue(column, entry.value),
+        column.format === "text",
+      );
     });
     lines.push(cells.join(","));
   }

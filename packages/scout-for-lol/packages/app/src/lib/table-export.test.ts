@@ -39,4 +39,27 @@ describe("table-export", () => {
     const csv = tableToCsv(columns, []);
     expect(csv).toBe("Player,Win rate,Total Games");
   });
+
+  test("neutralizes spreadsheet formulas in text fields", () => {
+    const csv = tableToCsv(
+      [
+        { key: "label", label: "Player", format: "text" },
+        { key: "notes", label: "Notes", format: "text" },
+        { key: "games", label: "Games", format: "integer" },
+      ],
+      [
+        {
+          label: '=HYPERLINK("https://example.com")',
+          values: [
+            { column: "notes", value: "+attacker-controlled" },
+            { column: "games", value: -1 },
+          ],
+        },
+      ],
+    );
+
+    expect(csv).toBe(
+      'Player,Notes,Games\n"\'=HYPERLINK(""https://example.com"")",\'+attacker-controlled,-1',
+    );
+  });
 });

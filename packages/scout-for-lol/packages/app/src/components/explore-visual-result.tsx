@@ -70,6 +70,20 @@ function initialChartOrientation(
   return rawChart.display.options?.orientation ?? "vertical";
 }
 
+export function initialMetricKey(
+  rawChart: VisualizationSnapshot | null,
+  plottableCols: ReportResultColumn[],
+): string | undefined {
+  const persistedMetric = rawChart?.series[0]?.metric;
+  if (
+    persistedMetric !== undefined &&
+    plottableCols.some((column) => column.key === persistedMetric)
+  ) {
+    return persistedMetric;
+  }
+  return plottableCols[0]?.key;
+}
+
 export type ExploreVisualResultProps = {
   readonly message: ExploreMessage;
   readonly onFollowUp?: ((text: string) => void) | undefined;
@@ -343,7 +357,7 @@ export function ExploreVisualResult(props: {
 
   const [selectedMetricKey, setSelectedMetricKey] = useState<
     string | undefined
-  >(plottableCols[0]?.key);
+  >(() => initialMetricKey(rawChart, plottableCols));
 
   const [selectedChartKind, setSelectedChartKind] =
     useState<ReportOutputFormat>(() => initialChartKind(rawChart, preview));

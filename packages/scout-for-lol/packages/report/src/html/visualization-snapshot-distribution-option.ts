@@ -17,6 +17,7 @@ import {
   visualizationSnapshotLabels,
   visualizationSnapshotLegend,
   visualizationSnapshotPresentation,
+  type VisualizationRenderMode,
   type VisualizationSnapshotPresentation,
 } from "#src/html/visualization-snapshot-style.ts";
 
@@ -61,8 +62,9 @@ export function histogramOption(
     xAxis: distributionCategoryAxis(
       presentation,
       points.map((point) => point.label),
+      mode,
     ),
-    yAxis: distributionValueAxis(snapshot, presentation),
+    yAxis: distributionValueAxis(snapshot, presentation, mode),
     series:
       distribution === undefined
         ? []
@@ -78,12 +80,11 @@ export function histogramOption(
                 borderColor: presentation.theme.border,
                 borderWidth: 1,
               },
-              label: visualizationSnapshotLabels(
-                presentation.options,
-                false,
-                false,
-                (input) => seriesValueLabel(snapshot, distribution, input),
-              ),
+              label: visualizationSnapshotLabels(presentation.options, false, {
+                valueFormatter: (input) =>
+                  seriesValueLabel(snapshot, distribution, input),
+                mode,
+              }),
             },
           ],
   };
@@ -115,8 +116,9 @@ export function boxPlotOption(
     xAxis: distributionCategoryAxis(
       presentation,
       rows.map((row) => row.label),
+      mode,
     ),
-    yAxis: distributionValueAxis(snapshot, presentation),
+    yAxis: distributionValueAxis(snapshot, presentation, mode),
     series: [
       {
         name: "Distribution",
@@ -152,6 +154,7 @@ function boxPlotRows(snapshot: VisualizationSnapshot): BoxPlotRow[] {
 function distributionCategoryAxis(
   presentation: VisualizationSnapshotPresentation,
   categories: string[],
+  mode: VisualizationRenderMode,
 ): echarts.XAXisComponentOption {
   return {
     type: "category",
@@ -159,6 +162,7 @@ function distributionCategoryAxis(
     ...visualizationSnapshotAxis(
       presentation.theme,
       presentation.options.xAxisLabel,
+      mode,
     ),
   };
 }
@@ -166,16 +170,20 @@ function distributionCategoryAxis(
 function distributionValueAxis(
   snapshot: VisualizationSnapshot,
   presentation: VisualizationSnapshotPresentation,
+  mode: VisualizationRenderMode,
 ): echarts.YAXisComponentOption {
   return {
     type: "value",
     ...visualizationSnapshotAxis(
       presentation.theme,
       presentation.options.yAxisLabel,
+      mode,
     ),
     axisLabel: {
       color: presentation.theme.muted,
-      fontFamily: VISUALIZATION_BODY_FONT,
+      ...(mode === "interactive"
+        ? { fontFamily: VISUALIZATION_BODY_FONT }
+        : {}),
       formatter: (value: number) => formatSnapshotAxisValue(snapshot, value),
     },
     splitLine: { lineStyle: { color: presentation.theme.grid } },
@@ -185,11 +193,11 @@ function distributionValueAxis(
 function distributionFrame(
   snapshot: VisualizationSnapshot,
   presentation: VisualizationSnapshotPresentation,
-  _mode?: "interactive" | "static",
+  mode: VisualizationRenderMode,
 ): echarts.EChartsOption {
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
-    legend: visualizationSnapshotLegend(presentation),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis", mode),
+    legend: visualizationSnapshotLegend(presentation, "top", mode),
     grid: {
       left: 68,
       right: presentation.options.legend === "right" ? 220 : 36,
