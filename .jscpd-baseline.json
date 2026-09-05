@@ -992,7 +992,7 @@
       "clones": 1,
       "tokens": 80
     },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-period.ts|packages/temporal/src/activities/scout-weekly-parlay.ts": {
+    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-period.ts|packages/temporal/src/activities/scout/scout-weekly-parlay.ts": {
       "clones": 3,
       "tokens": 329
     },
@@ -1552,75 +1552,75 @@
       "clones": 1,
       "tokens": 158
     },
-    "packages/temporal/src/activities/agent-task-env.ts|packages/temporal/src/activities/agent-task-env.ts": {
+    "packages/temporal/src/activities/agent/agent-task-env.ts|packages/temporal/src/activities/agent/agent-task-env.ts": {
       "clones": 1,
       "tokens": 71
     },
-    "packages/temporal/src/activities/agent-task-env.ts|scripts/lib/release-refiner.ts": {
+    "packages/temporal/src/activities/agent/agent-task-env.ts|scripts/lib/release-refiner.ts": {
       "clones": 1,
       "tokens": 75
     },
-    "packages/temporal/src/activities/agent-task-report-delivery.test.ts|packages/temporal/src/workflows/agent-task.test.ts": {
+    "packages/temporal/src/activities/agent/agent-task-report-delivery.test.ts|packages/temporal/src/workflows/agent-task.test.ts": {
       "clones": 1,
       "tokens": 90
     },
-    "packages/temporal/src/activities/agent-task.test.ts|packages/temporal/src/activities/agent-task.test.ts": {
+    "packages/temporal/src/activities/agent/agent-task.test.ts|packages/temporal/src/activities/agent/agent-task.test.ts": {
       "clones": 1,
       "tokens": 75
     },
-    "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/data-dragon.ts": {
-      "clones": 1,
-      "tokens": 76
-    },
-    "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/scout-season-refresh-git.ts": {
-      "clones": 1,
-      "tokens": 75
-    },
-    "packages/temporal/src/activities/data-dragon.ts|packages/temporal/src/activities/lane-prior-refresh.ts": {
+    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/lane-prior-refresh.ts": {
       "clones": 1,
       "tokens": 71
     },
-    "packages/temporal/src/activities/deps-summary.ts|packages/version-catalog/src/index.ts": {
+    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/maintenance/check-pr-merge-conflicts-git.ts": {
       "clones": 1,
-      "tokens": 79
+      "tokens": 76
     },
-    "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab-crd-imports-refresh.ts": {
+    "packages/temporal/src/activities/data-dragon/data-dragon.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.ts": {
+      "clones": 1,
+      "tokens": 75
+    },
+    "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts": {
       "clones": 2,
       "tokens": 161
     },
-    "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/scout-showcase-refresh.ts": {
+    "packages/temporal/src/activities/dpp-pokeemerald-data-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
       "clones": 1,
       "tokens": 103
     },
-    "packages/temporal/src/activities/glitter-corpus-recovery.ts|packages/temporal/src/activities/glitter-corpus-snapshot.ts": {
+    "packages/temporal/src/activities/glitter/corpus/glitter-corpus-recovery.ts|packages/temporal/src/activities/glitter/corpus/glitter-corpus-snapshot.ts": {
       "clones": 2,
       "tokens": 194
     },
-    "packages/temporal/src/activities/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab-audit-collectors.ts": {
+    "packages/temporal/src/activities/homelab/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab/homelab-audit-collectors.ts": {
       "clones": 1,
       "tokens": 78
     },
-    "packages/temporal/src/activities/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
+    "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
       "tokens": 127
     },
-    "packages/temporal/src/activities/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout-showcase-refresh.ts": {
+    "packages/temporal/src/activities/homelab/homelab-crd-imports-refresh.ts|packages/temporal/src/activities/scout/scout-showcase-refresh.ts": {
       "clones": 1,
       "tokens": 95
     },
-    "packages/temporal/src/activities/report-delivery.test.ts|packages/temporal/src/activities/report-delivery.test.ts": {
+    "packages/temporal/src/activities/maintenance/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
-      "tokens": 70
+      "tokens": 79
     },
-    "packages/temporal/src/activities/report-freshness.ts|packages/temporal/src/activities/tasknotes-canary.ts": {
+    "packages/temporal/src/activities/maintenance/tasknotes-canary.ts|packages/temporal/src/activities/reports/report-freshness.ts": {
       "clones": 1,
       "tokens": 105
     },
-    "packages/temporal/src/activities/scout-generated-preflight.test.ts|packages/temporal/src/activities/scout-generated-preflight.test.ts": {
+    "packages/temporal/src/activities/reports/report-delivery.test.ts|packages/temporal/src/activities/reports/report-delivery.test.ts": {
+      "clones": 1,
+      "tokens": 70
+    },
+    "packages/temporal/src/activities/scout/scout-generated-preflight.test.ts|packages/temporal/src/activities/scout/scout-generated-preflight.test.ts": {
       "clones": 2,
       "tokens": 158
     },
-    "packages/temporal/src/activities/scout-season-refresh-git.integration.test.ts|packages/temporal/src/activities/scout-season-refresh-git.integration.test.ts": {
+    "packages/temporal/src/activities/scout/scout-season-refresh-git.integration.test.ts|packages/temporal/src/activities/scout/scout-season-refresh-git.integration.test.ts": {
       "clones": 1,
       "tokens": 100
     },
@@ -1636,15 +1636,15 @@
       "clones": 1,
       "tokens": 74
     },
-    "packages/temporal/src/shared/agent-task-output.ts|packages/temporal/src/shared/agent-task-output.ts": {
+    "packages/temporal/src/shared/agent/agent-task-output.ts|packages/temporal/src/shared/agent/agent-task-output.ts": {
       "clones": 1,
       "tokens": 141
     },
-    "packages/temporal/src/shared/agent-task.ts|packages/temporal/src/shared/agent-task.ts": {
+    "packages/temporal/src/shared/agent/agent-task.ts|packages/temporal/src/shared/agent/agent-task.ts": {
       "clones": 1,
       "tokens": 143
     },
-    "packages/temporal/src/shared/llm-catalog-alert.test.ts|packages/temporal/src/shared/llm-catalog-alert.test.ts": {
+    "packages/temporal/src/shared/alerts/llm-catalog-alert.test.ts|packages/temporal/src/shared/alerts/llm-catalog-alert.test.ts": {
       "clones": 1,
       "tokens": 91
     },

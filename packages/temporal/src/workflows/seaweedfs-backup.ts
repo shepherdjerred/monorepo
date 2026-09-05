@@ -1,6 +1,6 @@
 import { proxyActivities } from "@temporalio/workflow";
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
-import type { SeaweedFsBackupActivities } from "#activities/seaweedfs-backup.ts";
+import type { SeaweedFsBackupActivities } from "#activities/homelab/seaweedfs-backup.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const activities = proxyActivities<SeaweedFsBackupActivities>({

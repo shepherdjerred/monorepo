@@ -4,7 +4,7 @@ import { buildAgentTaskApiApp } from "./agent-task-api.ts";
 import type {
   AgentTaskInput,
   AgentTaskStartResult,
-} from "#shared/agent-task.ts";
+} from "#shared/agent/agent-task.ts";
 
 const TOKEN = "test-agent-task-token";
 

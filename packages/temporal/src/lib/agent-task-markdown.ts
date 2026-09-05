@@ -1,7 +1,7 @@
 import {
   AgentTaskInputV2Schema,
   type AgentTaskInput,
-} from "#shared/agent-task.ts";
+} from "#shared/agent/agent-task.ts";
 
 const BLOCK_START = "<!-- temporal-agent-task";
 const BLOCK_END = "-->";

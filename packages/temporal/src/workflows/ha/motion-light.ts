@@ -7,7 +7,7 @@ import {
 import {
   MOTION_LIGHT_ROOMS,
   type MotionLightRoom,
-} from "#shared/motion-light.ts";
+} from "#shared/infra/motion-light.ts";
 
 const INACTIVITY_TIMEOUT = "5 minutes" as const;
 

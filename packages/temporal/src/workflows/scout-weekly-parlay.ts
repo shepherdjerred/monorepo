@@ -14,7 +14,7 @@ import {
 import type {
   ScoutWeeklyParlayActivities,
   ScoutWeeklyParlayTimeline,
-} from "#activities/scout-weekly-parlay.ts";
+} from "#activities/scout/scout-weekly-parlay.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const EMBEDDED_SCOUT_ACTIVITY_PATCH =

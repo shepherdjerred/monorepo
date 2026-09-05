@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { MainVulnScanResult } from "#activities/main-vuln-scan.ts";
+import type { MainVulnScanResult } from "#activities/maintenance/main-vuln-scan.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runMainVulnScanWorkflow } from "./main-vuln-scan.ts";
 import * as scannerTest from "./scanner-workflow-test-support.ts";

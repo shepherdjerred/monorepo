@@ -5,7 +5,7 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import {
   assertRemoteBranchIsOurs,
   writeGitAskpass,
-} from "./scout-season-refresh-git.ts";
+} from "./scout/scout-season-refresh-git.ts";
 import {
   LANE_PRIOR_ARTIFACT_PATH,
   LANE_PRIOR_EVAL_REPORT_PATH,
@@ -16,20 +16,23 @@ import {
   lanePriorPrTitle,
   revertGeneratedAtOnlyLanePriorChanges,
   updateLanePriors,
-} from "./data-dragon-lane-priors.ts";
+} from "./data-dragon/data-dragon-lane-priors.ts";
 import {
   createGeneratedPr,
   ensureGeneratedPrAutoMerge,
   findOpenGeneratedPrUrl,
   type OpenPrListItem,
-} from "./data-dragon-pr.ts";
-import { parseGitStatusLine, type GitStatusEntry } from "./data-dragon-diff.ts";
-import { runCommand } from "./data-dragon-shell.ts";
+} from "./data-dragon/data-dragon-pr.ts";
+import {
+  parseGitStatusLine,
+  type GitStatusEntry,
+} from "./data-dragon/data-dragon-diff.ts";
+import { runCommand } from "./data-dragon/data-dragon-shell.ts";
 import { disarmGitHooks, installScoutWorkspace } from "./bot-clone.ts";
 import {
   discardFormattingOnlyChanges,
   runScoutGeneratedPreflight,
-} from "./scout-generated-preflight.ts";
+} from "./scout/scout-generated-preflight.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";

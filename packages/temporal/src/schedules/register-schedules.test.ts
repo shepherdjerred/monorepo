@@ -5,7 +5,7 @@ import {
   type ScheduleUpdateOptions,
 } from "@temporalio/client";
 import { LanePriorWorkflowInputSchema } from "#activities/lane-prior-refresh.ts";
-import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
 import {
   DELETED_SCHEDULE_IDS,
   buildSchedulePolicies,
