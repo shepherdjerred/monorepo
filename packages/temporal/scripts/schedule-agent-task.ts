@@ -11,10 +11,10 @@ import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import {
   AgentTaskInputV2Schema,
   type AgentTaskInput,
-} from "#shared/agent-task.ts";
+} from "#shared/agent/agent-task.ts";
 import { parseAgentTaskInputsFromMarkdown } from "#lib/agent-task-markdown.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
-import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";

@@ -124,9 +124,9 @@ export function hasSuppressionPattern(line: string): boolean {
 }
 
 const POSTAL_BOUNDARY_FILES = new Set([
-  "packages/temporal/src/activities/report-delivery.ts",
-  "packages/temporal/src/shared/postal.test.ts",
-  "packages/temporal/src/shared/postal.ts",
+  "packages/temporal/src/activities/reports/report-delivery.ts",
+  "packages/temporal/src/shared/infra/postal.test.ts",
+  "packages/temporal/src/shared/infra/postal.ts",
 ]);
 
 export function isPostalBoundaryViolation(

@@ -1,5 +1,5 @@
 import { ApplicationFailure, workflowInfo } from "@temporalio/workflow";
-import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
+import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
 
 export type WorkerDeploymentCanaryInput = {
   deploymentName: string;

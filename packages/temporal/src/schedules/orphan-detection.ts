@@ -1,11 +1,11 @@
 import type { Client } from "@temporalio/client";
-import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent-task-identifiers.ts";
+import { DYNAMIC_AGENT_TASK_MEMO_KEY } from "#shared/agent/agent-task-identifiers.ts";
 import { scheduleOrphans } from "#observability/metrics.ts";
 import {
   ScoutScheduleOwnershipMemoSchema,
   scoutReportScheduleId,
 } from "@scout-for-lol/temporal";
-import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
+import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 // Gauge value written when `scheduleClient.list()` itself fails. Distinct from
 // 0 ("detection ran cleanly, found no orphans") so a monitoring rule can tell a

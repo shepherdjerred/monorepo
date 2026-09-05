@@ -5,13 +5,16 @@
  * scheduled workflow. DRY_RUN=1 writes compact report artifacts to /tmp;
  * otherwise delivery still goes through the shared report sender.
  */
-import { collectHomelabAuditEvidence } from "#activities/homelab-audit-collectors.ts";
-import { buildHomelabAuditReport } from "#activities/homelab-audit-report.ts";
-import { synthesizeHomelabAuditEvidence } from "#activities/homelab-audit-synthesis.ts";
-import { deliverReport } from "#activities/report-delivery.ts";
-import { reportSubject } from "#shared/report-presentation.ts";
-import { renderReportHtml, renderReportText } from "#shared/report-renderer.ts";
-import { ReportEnvelopeV1Schema } from "#shared/report.ts";
+import { collectHomelabAuditEvidence } from "#activities/homelab/homelab-audit-collectors.ts";
+import { buildHomelabAuditReport } from "#activities/homelab/homelab-audit-report.ts";
+import { synthesizeHomelabAuditEvidence } from "#activities/homelab/homelab-audit-synthesis.ts";
+import { deliverReport } from "#activities/reports/report-delivery.ts";
+import { reportSubject } from "#shared/reports/report-presentation.ts";
+import {
+  renderReportHtml,
+  renderReportText,
+} from "#shared/reports/report-renderer.ts";
+import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 
 function parseDate(argv: readonly string[]): string {
   let date = new Date().toISOString().slice(0, 10);

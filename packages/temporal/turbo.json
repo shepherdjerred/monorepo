@@ -31,8 +31,8 @@
         "scripts/check-schedule-rehearsal.ts",
         "scripts/rehearse-bot-clone.ts",
         "src/activities/bot-clone.ts",
-        "src/activities/data-dragon-shell.ts",
-        "src/activities/scout-season-refresh.ts"
+        "src/activities/data-dragon/data-dragon-shell.ts",
+        "src/activities/scout/scout-season-refresh.ts"
       ],
       "cache": false
     }

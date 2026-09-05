@@ -2,11 +2,11 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutQueueWindowsActivities,
   ScoutQueueWindowsResult,
-} from "#activities/scout-queue-windows.ts";
+} from "#activities/scout/scout-queue-windows.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
-} from "#activities/report-delivery.ts";
+} from "#activities/reports/report-delivery.ts";
 import { SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS } from "#shared/scout-queue-windows-lookback.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";

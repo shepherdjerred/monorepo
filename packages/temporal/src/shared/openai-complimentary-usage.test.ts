@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { buildOpenAiComplimentaryAlerts } from "./openai-complimentary-alerts.ts";
+import { buildOpenAiComplimentaryAlerts } from "./alerts/openai-complimentary-alerts.ts";
 import {
   fetchOpenAiComplimentaryUsage,
   type OpenAiUsageFetch,

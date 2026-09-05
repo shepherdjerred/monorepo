@@ -7,7 +7,7 @@ import {
   shouldStopVacuum,
   VACUUMS,
 } from "./util.ts";
-import { PRESENCE_COOLDOWN_SECONDS } from "#shared/presence.ts";
+import { PRESENCE_COOLDOWN_SECONDS } from "#shared/infra/presence.ts";
 
 const LIVING_ROOM_SCENE = "scene.living_room_bright" as const;
 const ENTRYWAY_LIGHT = "switch.light_2" as const;

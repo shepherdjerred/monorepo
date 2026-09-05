@@ -36,19 +36,19 @@ describe("isPostalBoundaryViolation", () => {
   test("permits the shared sender and Postal adapter tests", () => {
     expect(
       isPostalBoundaryViolation(
-        "packages/temporal/src/activities/report-delivery.ts",
+        "packages/temporal/src/activities/reports/report-delivery.ts",
         "sendPostalEmail({})",
       ),
     ).toBe(false);
     expect(
       isPostalBoundaryViolation(
-        "packages/temporal/src/shared/postal.test.ts",
+        "packages/temporal/src/shared/infra/postal.test.ts",
         "sendPostalEmail({})",
       ),
     ).toBe(false);
     expect(
       isPostalBoundaryViolation(
-        String.raw`packages\temporal\src\shared\postal.ts`,
+        String.raw`packages\temporal\src\shared\infra\postal.ts`,
         "sendPostalEmail({})",
       ),
     ).toBe(false);
