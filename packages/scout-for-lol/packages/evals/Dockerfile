@@ -43,9 +43,13 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --filter '@scout-for-lol/evals'
 # The evals tsconfig extends scout's own tsconfig.base.json (not the root one).
+# `@shepherdjerred/loaded` exports TypeScript source rather than a built dist,
+# so its `package.json` being present for the install above is not enough —
+# vite has to be able to read the files the export map points at.
 COPY --parents \
   packages/scout-for-lol/tsconfig.base.json \
   packages/scout-for-lol/packages/evals \
+  packages/loaded \
   ./
 RUN cd packages/scout-for-lol/packages/evals && bun run build
 
@@ -55,9 +59,12 @@ FROM base AS runtime
 # so copying the whole install root between same-rooted stages is safe. Kept
 # BEFORE the source COPY so a source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
+# `packages/loaded` is a production dependency exporting source, so the prod
+# install symlinks it; without the source here that symlink dangles.
 COPY --parents \
   packages/scout-for-lol/tsconfig.base.json \
   packages/scout-for-lol/packages/evals \
+  packages/loaded \
   ./
 COPY --from=build \
   /app/packages/scout-for-lol/packages/evals/dist/client \
