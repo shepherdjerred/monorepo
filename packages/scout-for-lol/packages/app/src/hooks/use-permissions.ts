@@ -28,8 +28,9 @@ export type GuildPermissions = {
    * describing one state machine, and nothing stopped a consumer from reading
    * one without the other — `isLoading` false with `error` set reads as
    * "loaded" to anyone who only checked the first. As a `Loaded` it is one
-   * value with one answer, and a `listManageable` refetch that fails over a
-   * cached entry reports `degraded` rather than tearing down a working page.
+   * value with one answer. It never reports `degraded`: a `listManageable`
+   * refetch that fails over a cached entry is an authorization the server
+   * declined to reconfirm, so it fails closed.
    */
   access: Loaded<PermissionSet>;
   /** True once loaded if the caller holds any permission in this guild. */
@@ -108,7 +109,11 @@ function permissionAccess(args: {
   if (args.staleError === null) {
     return Loaded.done(args.perms);
   }
-  return Loaded.degraded(args.perms, [
-    { path: ["permissions"], error: args.staleError },
-  ]);
+  // Deliberately `error`, not `degraded`. This hook is the gate for the whole
+  // `/g/:guildId` subtree, and its consumers branch on `loading` and `error`
+  // only — so a `degraded` here would fall through and render the permission-
+  // gated workspace on permissions the server just failed to reconfirm. A
+  // permission model has to fail closed; the cost is that a transient blip
+  // closes the workspace until the next successful read.
+  return Loaded.failed(args.staleError, ["permissions"]);
 }
