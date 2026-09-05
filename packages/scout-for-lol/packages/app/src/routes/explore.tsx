@@ -58,6 +58,7 @@ export function Explore() {
 
   const {
     status,
+    conversationState,
     statusQuery,
     enabled,
     quota,
@@ -195,6 +196,35 @@ export function Explore() {
 
   if (status.status === "loading") {
     return <SectionSkeleton />;
+  }
+
+  // `strict` above turns a failed transcript refetch into `error`, and
+  // `getOrElse` then hands the page `undefined` — which is indistinguishable
+  // from "new conversation". Without this branch an existing conversation URL
+  // renders as an empty composer, silently discarding the thread.
+  if (conversationId !== null && conversationState.status === "error") {
+    return (
+      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
+        <h2 className="text-base font-semibold text-scout-danger">
+          This conversation couldn&apos;t load
+        </h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
+          {Loaded.messageOf(conversationState.errors[0].error)}
+        </p>
+        <div className="mt-4 flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void transcript.refetch();
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (status.status === "error") {
@@ -401,15 +431,16 @@ function useExploreConversation(conversationId: string | null) {
     enabled: enabled && conversationId !== null,
   });
 
-  const conversation = Loaded.getOrElse(
-    // The transcript is the owner-only content the status check guards, so it
-    // is `strict` for the same reason the check is: a retained conversation
-    // must not outlive the authorization that produced it.
-    Loaded.strict(Loaded.fromQuery(transcript, ["explore.get"])),
-    undefined,
+  // The transcript is the owner-only content the status check guards, so it is
+  // `strict` for the same reason the check is: a retained conversation must not
+  // outlive the authorization that produced it.
+  const conversationState = Loaded.strict(
+    Loaded.fromQuery(transcript, ["explore.get"]),
   );
+  const conversation = Loaded.getOrElse(conversationState, undefined);
   return {
     status,
+    conversationState,
     statusQuery,
     enabled,
     quota: availability?.quota ?? [],
