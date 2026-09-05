@@ -48,8 +48,16 @@ export function usePinnedScroll(): {
     // middle of a conversation both land here already scrolled away.
     measure();
     window.addEventListener("scroll", measure, { passive: true });
+    // Explore changes the document's height without necessarily scrolling it:
+    // switching from a long conversation to a short one reuses this component
+    // and leaves `scrollY` where it was, so no scroll event fires even though
+    // the whole page may now fit. Without this the pill would linger on a page
+    // that is already at its bottom.
+    const observer = new ResizeObserver(measure);
+    observer.observe(document.documentElement);
     return () => {
       window.removeEventListener("scroll", measure);
+      observer.disconnect();
     };
   }, []);
 
@@ -62,10 +70,19 @@ export function usePinnedScroll(): {
   }, []);
 
   const scrollToBottom = useCallback((): void => {
-    // Smooth here, unlike `scrollIfPinned`: this is one deliberate jump the
-    // reader asked for, not a per-token correction whose animation would
-    // restart on every delta.
-    bottomRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
+    // The document, not `bottomRef`. That anchor sits *above* the sticky
+    // composer, which is still in normal flow and carries the pill, the box
+    // and the page padding — so aligning it with the viewport can leave more
+    // than the 120px slack below, finishing the scroll still un-pinned with
+    // the pill still showing.
+    //
+    // Smooth here, unlike `scrollIfPinned`: one deliberate jump the reader
+    // asked for, not a per-token correction whose animation would restart on
+    // every delta.
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
   }, []);
 
   return { bottomRef, scrollIfPinned, pinned, scrollToBottom };
