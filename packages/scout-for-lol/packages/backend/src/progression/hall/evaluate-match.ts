@@ -185,6 +185,18 @@ export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
     include: { player: true },
   });
   if (accounts.length === 0) return;
+  const enabledGuildIds = new Set<DiscordGuildId>();
+  for (const account of accounts) {
+    const guildId = DiscordGuildIdSchema.parse(account.serverId);
+    if (
+      await isPolicyEnabled("hall_of_fame_enabled", {
+        server: guildId,
+      })
+    ) {
+      enabledGuildIds.add(guildId);
+    }
+  }
+  if (enabledGuildIds.size === 0) return;
   const earliest = accounts.reduce(
     (minimum, account) =>
       new Date(Math.min(account.createdTime.getTime(), minimum.getTime())),
@@ -196,21 +208,14 @@ export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
     matchId,
   });
   const byPuuid = new Map(rows.map((row) => [row.puuid, row]));
-  const guildIds = new Set<string>();
+  const guildIds = new Set<DiscordGuildId>();
   for (const account of accounts) {
     const row = byPuuid.get(account.puuid);
     if (row === undefined) continue;
-    guildIds.add(account.serverId);
+    const guildId = DiscordGuildIdSchema.parse(account.serverId);
+    if (enabledGuildIds.has(guildId)) guildIds.add(guildId);
   }
   for (const guildId of guildIds) {
-    const parsedGuildId = DiscordGuildIdSchema.parse(guildId);
-    if (
-      !(await isPolicyEnabled("hall_of_fame_enabled", {
-        server: parsedGuildId,
-      }))
-    ) {
-      continue;
-    }
-    await evaluateGuild(parsedGuildId, matchId, byPuuid);
+    await evaluateGuild(guildId, matchId, byPuuid);
   }
 }
