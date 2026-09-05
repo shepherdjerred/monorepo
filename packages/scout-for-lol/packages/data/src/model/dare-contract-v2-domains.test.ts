@@ -175,3 +175,110 @@ describe("Dare v2 stored plans stay readable", () => {
     ).toBe(false);
   });
 });
+
+function timelinePlan(eventType: string) {
+  return planWithPredicate({
+    kind: "comparison",
+    value: {
+      kind: "timeline_event_count",
+      eventType,
+      target: "T1",
+      role: "killer",
+      afterMs: null,
+      beforeMs: null,
+      itemId: null,
+    },
+    operator: "gte",
+    threshold: 1,
+  });
+}
+
+describe("Dare v2 timeline event types", () => {
+  // An unrecognised event type counts zero rather than resolving unknown, so it
+  // reads as a definite failure and settles as a real loss.
+  test("rejects an event type Riot never emits", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(timelinePlan("DRAGON_KILL")).success,
+    ).toBe(false);
+  });
+
+  test("rejects BUILDING_DESTROYED, which an old docs table invented", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(timelinePlan("BUILDING_DESTROYED"))
+        .success,
+    ).toBe(false);
+  });
+
+  test.each(["CHAMPION_KILL", "ELITE_MONSTER_KILL", "ITEM_PURCHASED"])(
+    "accepts the real event type %s",
+    (eventType) => {
+      expect(
+        DareCompiledPlanV2Schema.safeParse(timelinePlan(eventType)).success,
+      ).toBe(true);
+    },
+  );
+
+  // The allowlist belongs to the authoring schema, never to the shared value
+  // shape: an enum on `eventType` would reach `DareStoredPlanV2Schema` too, and
+  // a funded dare naming a type we later drop — or that Riot renames — would
+  // stop parsing in settlement, callouts, and progress views instead of paying
+  // out.
+  test("reads a stored plan whose event type is outside the allowlist", () => {
+    expect(
+      DareStoredPlanV2Schema.safeParse(timelinePlan("DRAGON_KILL")).success,
+    ).toBe(true);
+  });
+
+  test("still refuses to author that same event type", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(timelinePlan("DRAGON_KILL")).success,
+    ).toBe(false);
+  });
+
+  // The bound survives the move: an unbounded event type is a shape violation,
+  // not a domain one, so it must fail on the stored side as well.
+  test("still refuses a stored event type past the length bound", () => {
+    expect(
+      DareStoredPlanV2Schema.safeParse(timelinePlan("E".repeat(81))).success,
+    ).toBe(false);
+  });
+
+  test("names the legal event types when refusing one", () => {
+    const result = DareCompiledPlanV2Schema.safeParse(
+      timelinePlan("BUILDING_DESTROYED"),
+    );
+    expect(
+      result.error?.issues.map((issue) => issue.message).join(" "),
+    ).toContain("BUILDING_KILL");
+  });
+
+  // The event type is a filter the value applies, not a comparison threshold,
+  // so it is invisible to the column-resolving predicate walk. A projection has
+  // no threshold at all, which is where that gap shows up first.
+  test("rejects an unknown event type on a projection", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse({
+        ...DARE_V2_TEST_PLAN,
+        gameSets: [
+          {
+            ...DARE_V2_TEST_GAME_SET,
+            projections: [
+              {
+                name: "dragons",
+                value: {
+                  kind: "timeline_event_count",
+                  eventType: "DRAGON_KILL",
+                  target: "T1",
+                  role: "killer",
+                  afterMs: null,
+                  beforeMs: null,
+                  itemId: null,
+                },
+              },
+            ],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+});

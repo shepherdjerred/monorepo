@@ -29,6 +29,49 @@ export const DareTeamPositionSchema = z.enum(DARE_TEAM_POSITIONS);
 export type DareTeamPosition = z.infer<typeof DareTeamPositionSchema>;
 
 /**
+ * Riot timeline event types a Dare contract may count.
+ *
+ * Derived from the beta report lake — every distinct `event_type` across ~1.5M
+ * events — not from memory: `PAUSE_START` and `FEAT_UPDATE` are real and easy to
+ * omit, while `BUILDING_DESTROYED` (named in an old docs table) does not exist.
+ * `DRAGON_KILL` does not exist either; a dragon is an `ELITE_MONSTER_KILL`.
+ *
+ * This list is deliberately an authoring-side constraint only. The wire schema
+ * (`raw-timeline.schema.ts`) and the lake column stay open strings, because a
+ * new Riot event type modelled as an enum at ingestion would fail the parse and
+ * take down timeline processing entirely — the argument already written down for
+ * tournament lobby events in `raw-tournament.schema.ts`. Recognising an event is
+ * a decision one layer up; here, at the point someone writes a contract, an
+ * unrecognised type can only ever produce a count of zero, which settles as a
+ * real loss.
+ */
+export const DARE_TIMELINE_EVENT_TYPES = [
+  "BUILDING_KILL",
+  "CHAMPION_KILL",
+  "CHAMPION_SPECIAL_KILL",
+  "CHAMPION_TRANSFORM",
+  "DRAGON_SOUL_GIVEN",
+  "ELITE_MONSTER_KILL",
+  "FEAT_UPDATE",
+  "GAME_END",
+  "ITEM_DESTROYED",
+  "ITEM_PURCHASED",
+  "ITEM_SOLD",
+  "ITEM_UNDO",
+  "LEVEL_UP",
+  "OBJECTIVE_BOUNTY_FINISH",
+  "OBJECTIVE_BOUNTY_PRESTART",
+  "PAUSE_END",
+  "PAUSE_START",
+  "SKILL_LEVEL_UP",
+  "TURRET_PLATE_DESTROYED",
+  "WARD_KILL",
+  "WARD_PLACED",
+] as const;
+export const DareTimelineEventTypeSchema = z.enum(DARE_TIMELINE_EVENT_TYPES);
+export type DareTimelineEventType = z.infer<typeof DareTimelineEventTypeSchema>;
+
+/**
  * Lake columns whose values are drawn from a closed set.
  *
  * Keyed by column name so one table serves both contract shapes: a v2 contract
@@ -41,6 +84,7 @@ export const DARE_DOMAIN_COLUMNS = [
   "champion_name",
   "team_position",
   "queue",
+  "event_type",
 ] as const;
 export const DareDomainColumnSchema = z.enum(DARE_DOMAIN_COLUMNS);
 export type DareDomainColumn = z.infer<typeof DareDomainColumnSchema>;
@@ -88,6 +132,11 @@ export function dareDomainIssue(
       ? null
       : `"${threshold}" is not a queue. Use one of ${QueueTypeSchema.options.join(", ")}.`;
   }
+  if (column === "event_type") {
+    return DareTimelineEventTypeSchema.safeParse(threshold).success
+      ? null
+      : `"${threshold}" is not a timeline event type. Use one of ${DARE_TIMELINE_EVENT_TYPES.join(", ")}.`;
+  }
   return championResolves(threshold)
     ? null
     : `"${threshold}" is not a known champion.`;
@@ -107,7 +156,20 @@ function dareDomainColumnForValue(value: DareValueV2): DareDomainColumn | null {
   return value.kind === "game" && value.field === "queue" ? "queue" : null;
 }
 
-/** Domain issues carried by a value itself, independent of any threshold. */
+function issueList(issue: string | null): string[] {
+  return issue === null ? [] : [issue];
+}
+
+/**
+ * Domain issues carried by a value itself, independent of any threshold.
+ *
+ * A closed-domain field that lives *on* a value never reaches
+ * `dareBooleanDomainIssuesV2`: that walk resolves a column from what the
+ * comparison reads, so it only ever inspects the comparison's own threshold.
+ * `related_participant_count.championName` and `timeline_event_count.eventType`
+ * are filters the value applies before it produces a number, so they have to be
+ * checked here or they are not checked at all.
+ */
 export function dareValueDomainIssuesV2(value: DareValueV2): string[] {
   if (value.kind === "arithmetic") {
     return [
@@ -115,14 +177,15 @@ export function dareValueDomainIssuesV2(value: DareValueV2): string[] {
       ...dareValueDomainIssuesV2(value.right),
     ];
   }
-  if (
-    value.kind !== "related_participant_count" ||
-    value.championName === null
-  ) {
-    return [];
+  if (value.kind === "related_participant_count") {
+    return value.championName === null
+      ? []
+      : issueList(dareDomainIssue("champion_name", value.championName));
   }
-  const issue = dareDomainIssue("champion_name", value.championName);
-  return issue === null ? [] : [issue];
+  if (value.kind === "timeline_event_count") {
+    return issueList(dareDomainIssue("event_type", value.eventType));
+  }
+  return [];
 }
 
 /**

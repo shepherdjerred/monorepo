@@ -2,12 +2,14 @@ import {
   DARE_CONTRACT_VERSION,
   DareStoredPlanV2Schema,
   DareSqlV3CompilationSchema,
+  DareCompiledPlanV2Schema,
   DareContractV2Schema,
   DiscordAccountIdSchema,
   PlayerIdSchema,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { DARE_ACCEPT_WINDOW_MS } from "#src/betting/constants.ts";
+import { dareSqlV3DomainIssues } from "#src/betting/dare-sql-v3-domains.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dare-callout-refresh-state-v2.ts";
 import {
   dareV2MoneyFactsInTransaction,
@@ -63,6 +65,34 @@ function contractCompilerVersion(revision: {
   return "dare-scoutql-2";
 }
 
+/**
+ * Domain problems that must stop a draft before it takes a stake.
+ *
+ * Draft-to-funded is the last moment a contract can still be fixed. Authoring
+ * enforces the value domains while stored plans read permissively so an
+ * already-funded dare stays readable — which leaves this transition as the only
+ * place a draft written before a rule existed can still be caught. Both contract
+ * versions need it: v3's domain check lives in its compiler, which is a drafting
+ * step, and activation re-runs neither.
+ */
+function fundingContractIssues(revision: {
+  compilerVersion: string;
+  compiledPlan: string;
+  scoutQlImmutableAst: string | null;
+}): string[] {
+  if (revision.compilerVersion === "dare-scoutql-3") {
+    return revision.scoutQlImmutableAst === null
+      ? []
+      : dareSqlV3DomainIssues(revision.scoutQlImmutableAst);
+  }
+  const authored = DareCompiledPlanV2Schema.safeParse(
+    JSON.parse(revision.compiledPlan),
+  );
+  return authored.success
+    ? []
+    : authored.error.issues.map((issue) => issue.message);
+}
+
 export async function fundDareV2InTransaction(
   tx: Db,
   input: {
@@ -79,6 +109,16 @@ export async function fundDareV2InTransaction(
     },
   });
   if (revision === null) return { kind: "stale_revision" } as const;
+  // Draft-to-funded is the last moment a contract can still be fixed, and the
+  // only place the authoring rules can still be applied to a draft that predates
+  // them. Activation deliberately parses with the permissive stored schema so an
+  // already-funded dare stays readable, and this transition is what would
+  // otherwise let a stale draft holding a value the allowlist now refuses take a
+  // stake and settle as a real loss.
+  const contractIssues = fundingContractIssues(revision);
+  if (contractIssues.length > 0) {
+    return { kind: "contract_invalid", issues: contractIssues } as const;
+  }
   const targets = parseDareV2Targets(revision.targetsJson);
   const deadlineSpec = parseDareV2Deadline(revision.deadlineSpecJson);
   const absoluteDeadline =

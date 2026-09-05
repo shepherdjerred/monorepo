@@ -39,7 +39,11 @@ describe("Dare v2 lake compiler", () => {
                 kind: "comparison",
                 value: {
                   kind: "timeline_event_count",
-                  eventType: hostile,
+                  // A real event type: the contract schema now constrains this
+                  // to the types Riot emits, so a hostile string cannot reach
+                  // the compiler here either. The puuid below still carries it,
+                  // which is what the binding assertions exercise.
+                  eventType: "ITEM_PURCHASED",
                   target: null,
                   role: "killer",
                   afterMs: 1000,
@@ -112,6 +116,47 @@ describe("Dare v2 lake compiler", () => {
     );
     expect(compiled.sql).not.toContain("tep.puuid");
     expect(compiled.sql).toContain("(p0.kills + p0.assists)");
+  });
+
+  test("rejects a hostile event type before it can reach the compiler", () => {
+    const hostile = "'); DROP TABLE timeline_events; --";
+    expect(
+      DareCompiledPlanV2Schema.safeParse({
+        version: 2,
+        maxEligibleGames: 100,
+        gameSets: [
+          {
+            name: "one_game",
+            targetKeys: ["target"],
+            relationship: "independent",
+            queues: ["solo"],
+            predicate: {
+              kind: "comparison",
+              value: {
+                kind: "timeline_event_count",
+                eventType: hostile,
+                target: "target",
+                role: "subject",
+                afterMs: null,
+                beforeMs: null,
+                itemId: null,
+              },
+              operator: "gte",
+              threshold: 1,
+            },
+            projections: [],
+            orderBy: "game_end_at_asc_match_id_asc",
+            limit: 10,
+          },
+        ],
+        result: {
+          kind: "matching_games",
+          gameSet: "one_game",
+          operator: "gte",
+          threshold: 1,
+        },
+      }).success,
+    ).toBe(false);
   });
 
   test("rejects a hostile champion before it can reach the compiler", () => {
