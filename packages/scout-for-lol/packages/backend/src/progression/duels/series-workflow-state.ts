@@ -1,10 +1,13 @@
 import {
+  DUEL_DISCLOSURE_VERSION,
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   DuelSeriesStatusSchema,
+  PlayerIdSchema,
   RegionSchema,
   type DiscordChannelId,
+  type DiscordGuildId,
 } from "@scout-for-lol/data";
 import type {
   ScoutDuelSeriesInput,
@@ -96,6 +99,74 @@ async function transitionSeries(options: {
   }
   recordTransition(options.currentState, options.nextState);
   return refreshResult(options.nextState, options.deadlineAt);
+}
+
+async function participantsHaveCurrentConsent(
+  guildId: DiscordGuildId,
+  participants: readonly {
+    readonly playerId: number;
+    readonly discordId: string;
+  }[],
+): Promise<boolean> {
+  const playerIds = participants.map((participant) =>
+    PlayerIdSchema.parse(participant.playerId),
+  );
+  const [players, disclosures] = await Promise.all([
+    prisma.player.findMany({
+      where: { id: { in: playerIds }, serverId: guildId },
+      select: { id: true, discordId: true },
+    }),
+    prisma.duelDisclosureAcceptance.findMany({
+      where: {
+        guildId,
+        playerId: { in: playerIds },
+        disclosureVersion: DUEL_DISCLOSURE_VERSION,
+      },
+      select: { playerId: true, discordId: true },
+    }),
+  ]);
+  const currentDiscordIdByPlayer = new Map(
+    players.map((player) => [player.id, player.discordId]),
+  );
+  const disclosureKeys = new Set(
+    disclosures.map(
+      (disclosure) =>
+        `${disclosure.playerId.toString()}:${disclosure.discordId}`,
+    ),
+  );
+  return participants.every(
+    (participant) =>
+      currentDiscordIdByPlayer.get(
+        PlayerIdSchema.parse(participant.playerId),
+      ) === participant.discordId &&
+      disclosureKeys.has(
+        `${participant.playerId.toString()}:${participant.discordId}`,
+      ),
+  );
+}
+
+async function resetStaleParticipantConsent(options: {
+  readonly seriesId: string;
+  readonly currentState: string;
+  readonly deadlineAt: Date;
+}): Promise<ScoutDuelSeriesRefreshResult> {
+  const reset = await prisma.$transaction(async (tx) => {
+    const updated = await tx.duelSeries.updateMany({
+      where: { id: options.seriesId, seriesState: options.currentState },
+      data: { seriesState: "awaiting_acceptance" },
+    });
+    if (updated.count === 0) return false;
+    await tx.duelSeriesParticipant.updateMany({
+      where: { seriesId: options.seriesId },
+      data: { acceptedAt: null, readyAt: null },
+    });
+    return true;
+  });
+  if (!reset) {
+    return await currentRefreshResult(options.seriesId, options.deadlineAt);
+  }
+  recordTransition(options.currentState, "awaiting_acceptance");
+  return refreshResult("awaiting_acceptance", options.deadlineAt);
 }
 
 async function claimGameProvisioning(options: {
@@ -246,6 +317,13 @@ export async function refreshDuelSeriesWorkflowState(
   const guildId = DiscordGuildIdSchema.parse(series.guildId);
   if (!(await duelRolloutAllowed(prisma, guildId, input.stage))) {
     return refreshResult("awaiting_readiness", deadlineAt);
+  }
+  if (!(await participantsHaveCurrentConsent(guildId, series.participants))) {
+    return await resetStaleParticipantConsent({
+      seriesId: series.id,
+      currentState,
+      deadlineAt,
+    });
   }
   const gameNumber = existingGame?.gameNumber ?? 1;
   const game = await claimGameProvisioning({

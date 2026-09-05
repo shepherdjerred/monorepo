@@ -64,9 +64,11 @@ export async function registerDuelEventEntrant(
     });
     assertSingleRiotRegion([
       ...competitor.accounts.map((account) => account.region),
-      ...existingEntrants.flatMap((entrant) =>
-        entrant.competitor.members.map((member) => member.region),
-      ),
+      ...existingEntrants
+        .filter((entrant) => entrant.registrationState === "accepted")
+        .flatMap((entrant) =>
+          entrant.competitor.members.map((member) => member.region),
+        ),
     ]);
     const registeredPlayerIds = new Set(
       existingEntrants.flatMap((entrant) =>
@@ -140,6 +142,20 @@ export async function acceptDuelEventRegistration(
     ) {
       throw new Error("Registration has closed");
     }
+    const acceptedEntrants = await tx.duelEventEntrant.findMany({
+      where: {
+        eventId: entrant.eventId,
+        registrationState: "accepted",
+        competitorId: { not: entrant.competitorId },
+      },
+      include: { competitor: { include: { members: true } } },
+    });
+    assertSingleRiotRegion([
+      ...entrant.competitor.members.map((member) => member.region),
+      ...acceptedEntrants.flatMap((acceptedEntrant) =>
+        acceptedEntrant.competitor.members.map((member) => member.region),
+      ),
+    ]);
     const maximum = entrant.event.format === "round_robin" ? 16 : 64;
     const acceptedCompetitors = await tx.duelEventEntrant.count({
       where: {

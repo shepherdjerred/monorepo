@@ -258,7 +258,7 @@ export function effectiveParticipantDiscordId(
 ): string | null | undefined {
   return current.has(participant.playerId)
     ? current.get(participant.playerId)
-    : participant.discordId;
+    : null;
 }
 
 export function duelSeriesVisibleTo(
@@ -344,7 +344,7 @@ export async function acceptDuelChallenge(
       seriesId,
       playerId: { in: participants.map((participant) => participant.playerId) },
     },
-    data: { discordId, acceptedAt: new Date() },
+    data: { discordId, acceptedAt: new Date(), readyAt: null },
   });
   return { deadlineAt: series.deadlineAt ?? new Date() };
 }

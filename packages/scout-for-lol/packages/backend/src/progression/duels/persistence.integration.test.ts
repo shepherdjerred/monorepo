@@ -475,6 +475,9 @@ describe("duel persistence", () => {
     });
     await expect(
       getDuelSeries(db, duel.seriesId, outsider, GUILD_ID),
+    ).rejects.toThrow("private until every participant accepts");
+    await expect(
+      getDuelSeries(db, duel.seriesId, ORGANIZER_ID, GUILD_ID),
     ).resolves.toMatchObject({
       competitorOne: {
         accounts: [{ playerAlias: "Duel Player 1" }],
@@ -657,7 +660,7 @@ describe("duel event registration", () => {
       organizerDiscordId: ORGANIZER_ID,
       roundOverrides: [],
     });
-    await registerDuelEventEntrant(db, {
+    const firstEntrant = await registerDuelEventEntrant(db, {
       guildId: GUILD_ID,
       eventId: event.id,
       actorDiscordId: ORGANIZER_ID,
@@ -665,18 +668,40 @@ describe("duel event registration", () => {
       source: "invitation",
     });
 
+    const secondEntrant = await registerDuelEventEntrant(db, {
+      guildId: GUILD_ID,
+      eventId: event.id,
+      actorDiscordId: ORGANIZER_ID,
+      selection: { accountIds: [second.accountId] },
+      source: "invitation",
+    });
+    await acceptDuelDisclosure(db, {
+      guildId: GUILD_ID,
+      playerId: first.playerId,
+      discordId: first.discordId,
+    });
+    await acceptDuelEventRegistration(db, {
+      guildId: GUILD_ID,
+      eventId: event.id,
+      competitorId: firstEntrant.competitorId,
+      actorDiscordId: first.discordId,
+    });
+    await acceptDuelDisclosure(db, {
+      guildId: GUILD_ID,
+      playerId: second.playerId,
+      discordId: second.discordId,
+    });
     await expect(
-      registerDuelEventEntrant(db, {
+      acceptDuelEventRegistration(db, {
         guildId: GUILD_ID,
         eventId: event.id,
-        actorDiscordId: ORGANIZER_ID,
-        selection: { accountIds: [second.accountId] },
-        source: "invitation",
+        competitorId: secondEntrant.competitorId,
+        actorDiscordId: second.discordId,
       }),
     ).rejects.toThrow("one Riot region");
     expect(
       await db.duelEventEntrant.count({ where: { eventId: event.id } }),
-    ).toBe(1);
+    ).toBe(2);
   });
 
   test("requires disclosure from the player's current Discord identity", async () => {
