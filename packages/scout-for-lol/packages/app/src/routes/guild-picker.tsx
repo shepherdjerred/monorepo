@@ -36,8 +36,12 @@ export function GuildPicker() {
   // neither check produced an answer; if one succeeded and the other's refresh
   // failed, the join is `degraded` and the card stays usable.
   const member = Loaded.all({
-    explore: Loaded.fromQuery(exploreQuery, ["explore.status"]),
-    profiles: Loaded.fromQuery(profilesQuery, ["consumerPlayer.status"]),
+    // Both are access checks, so `strict`: a stale "available" would offer the
+    // member destination on the strength of a recheck that failed.
+    explore: Loaded.strict(Loaded.fromQuery(exploreQuery, ["explore.status"])),
+    profiles: Loaded.strict(
+      Loaded.fromQuery(profilesQuery, ["consumerPlayer.status"]),
+    ),
   });
   const memberPending = member.status === "loading";
   const memberError = member.status === "error";

@@ -386,7 +386,14 @@ function ExploreQuota(props: {
 function useExploreConversation(conversationId: string | null) {
   const trpc = useTRPC();
   const statusQuery = useQuery(trpc.explore.status.queryOptions());
-  const status = Loaded.fromQuery(statusQuery, ["explore.status"]);
+  // `strict` because `enabled` is the authorization for this page: a stale
+  // `enabled: true` read through `getOrElse` would keep the owner-only
+  // transcript on screen precisely when Scout could not reverify guild
+  // membership. Collapsing `degraded` to `error` makes the recheck failure
+  // close the page instead of failing open.
+  const status = Loaded.strict(
+    Loaded.fromQuery(statusQuery, ["explore.status"]),
+  );
   const availability = Loaded.getOrElse(status, undefined);
   const enabled = availability?.enabled === true;
   const transcript = useQuery({

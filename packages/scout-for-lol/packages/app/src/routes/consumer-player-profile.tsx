@@ -280,7 +280,12 @@ function ConsumerPlayerProfileContent(props: {
   if (summary === undefined) {
     throw new Error("Successful player profile query returned no summary");
   }
-  const history = Loaded.fromQuery(historyQuery, ["matchHistory"]);
+  // Consumer-scoped, so `strict`. Its PROTECTED options set `gcTime: 0`, which
+  // means there is no cache to go stale today — this states the requirement
+  // rather than depending on that option staying put.
+  const history = Loaded.strict(
+    Loaded.fromQuery(historyQuery, ["matchHistory"]),
+  );
   // One fallback instead of two optional chains and two `??`s: the component
   // was already at the cyclomatic limit, and "absent history" has one shape.
   const { entries, nextCursor } = Loaded.getOrElse(history, EMPTY_HISTORY);
