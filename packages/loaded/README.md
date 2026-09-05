@@ -106,10 +106,14 @@ pending child resolves.
 - `Loaded.fromQuery`'s optional `path` is for a value that will _not_ travel
   through a keyed join. `Loaded.all` prefixes its own key, so passing
   `["user"]` and then joining under `user` yields `["user", "user"]`.
-- The package contains two type assertions, both in `src/index.ts`: one in
-  `Loaded.all`, where the checker cannot connect the loop's proof to the mapped
-  result type, and one in `Loaded.fromQuery`, where it cannot reduce `Exclude`
-  over an unresolved generic after the `data !== undefined` guard.
+- The package contains exactly one type assertion, in `Loaded.all`, where the
+  checker cannot connect the loop's proof to the mapped result type.
+  `Loaded.fromQuery` needs none: `QueryData<Q>` is written as
+  `Q["data"] & (Defined | null)` — definitionally what TypeScript produces when
+  it narrows `data !== undefined` — so the guard proves the return type on its
+  own. The equivalent `Exclude<Q["data"], undefined>` describes the same set but
+  cannot be related to the narrowing over an unresolved generic, and needed an
+  assertion.
 
 ## When not to use this
 

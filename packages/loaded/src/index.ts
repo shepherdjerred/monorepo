@@ -100,14 +100,31 @@ export type LoadedData<T extends LoadedRecord> = {
  * with {@link QueryData} is immune to that, because an indexed access
  * distributes over the union rather than racing its members.
  */
+/**
+ * Everything except `null` and `undefined`. Spelled through `NonNullable`
+ * rather than as a bare `{}` so it reads as the intent — "a value is
+ * present" — instead of the empty-object type, which is also what
+ * `no-empty-object-type` is there to discourage.
+ */
+type Defined = NonNullable<unknown>;
+
 export type QueryLike = {
   readonly data: unknown;
   readonly error: unknown;
   readonly isFetching: boolean;
 };
 
-/** The renderable data type behind a query result: its `data`, minus absence. */
-export type QueryData<Q extends QueryLike> = Exclude<Q["data"], undefined>;
+/**
+ * The renderable data type behind a query result: its `data`, minus absence.
+ *
+ * Written as an intersection rather than `Exclude<Q["data"], undefined>` on
+ * purpose. Both describe the same set, but this one is *definitionally* what
+ * TypeScript produces when it narrows `query.data !== undefined`, so the guard
+ * inside `fromQuery` proves the return type on its own. With `Exclude` the
+ * checker cannot relate the two over an unresolved generic and the projection
+ * needs a type assertion; this way it needs none.
+ */
+export type QueryData<Q extends QueryLike> = Q["data"] & (Defined | null);
 
 /**
  * `available` covers `degraded | done` — the two variants that can be
@@ -459,11 +476,7 @@ function fromQuery<Q extends QueryLike>(
       : [{ path, error: query.error }];
 
   if (query.data !== undefined) {
-    // The guard removed `undefined` from `Q["data"]`, which leaves exactly
-    // `QueryData<Q>`. TS cannot reduce `Exclude` over an unresolved generic, so
-    // it cannot see that the narrowing already produced that type.
-    // eslint-disable-next-line custom-rules/no-type-assertions -- proven by the guard above
-    const data = query.data as QueryData<Q>;
+    const { data } = query;
     return errors === undefined
       ? { status: "done", fetching: query.isFetching, data }
       : {
