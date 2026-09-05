@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   type ReportAiPreviewSummary,
   UNGROUPED_LABEL_COLUMN_LABEL,
+  VisualizationSnapshotSchema,
 } from "@scout-for-lol/data";
 import {
   isChartablePreview,
@@ -96,5 +97,78 @@ describe("preview-to-visualization", () => {
     expect(snapshot?.series[0]?.points[1]?.label).toBe("Jinx");
     expect(snapshot?.series[0]?.points[1]?.value).toBe(40);
     expect(snapshot?.display.options?.orientation).toBe("horizontal");
+  });
+
+  test("preview-built metrics do not retain stale persisted chart metadata", () => {
+    const persisted = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-14T12:00:30.000Z",
+      kind: "LINE_CHART",
+      title: "Win rate by patch",
+      temporal: {
+        window: { kind: "relative", days: 30 },
+        bucket: "patch",
+        timezone: "UTC",
+      },
+      bucket: "patch",
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+        options: null,
+      },
+      series: [
+        {
+          id: "win_rate",
+          label: "Win rate",
+          metric: "win_rate",
+          displayKind: "percent",
+          additive: false,
+          points: [
+            {
+              key: "26.15",
+              label: "26.15",
+              start: "2026-08-01T00:00:00.000Z",
+              end: "2026-08-14T00:00:00.000Z",
+              value: 0.54,
+              evidence: { sampleSize: 25 },
+            },
+          ],
+        },
+      ],
+      annotations: [
+        {
+          id: "patch-transition",
+          kind: "patch_transition",
+          timestamp: "2026-08-01T00:00:00.000Z",
+          label: "Patch 26.15",
+        },
+      ],
+      trends: [
+        {
+          seriesId: "win_rate",
+          slope: 0.01,
+          rSquared: 0.5,
+          values: [0.54],
+        },
+      ],
+    });
+
+    const snapshot = previewToVisualizationSnapshot(samplePreview, {
+      baseSnapshot: persisted,
+      metricKey: "games",
+      preferredKind: "LINE_CHART",
+    });
+
+    expect(snapshot?.title).toBe("Games");
+    expect(snapshot?.temporal).toBeNull();
+    expect(snapshot?.bucket).toBeNull();
+    expect(snapshot?.annotations).toEqual([]);
+    expect(snapshot?.trends).toEqual([]);
+    expect(snapshot?.series[0]?.metric).toBe("games");
   });
 });

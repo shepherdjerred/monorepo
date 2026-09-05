@@ -72,17 +72,27 @@ export function previewToVisualizationSnapshot(
   }
 
   const baseSnapshot = options?.baseSnapshot;
+  const persistedSeries = baseSnapshot?.series.find(
+    (item) => item.metric === selectedMetric.key,
+  );
   const series =
-    baseSnapshot?.series.find((item) => item.metric === selectedMetric.key) ??
-    previewMetricSeries(preview, selectedMetric);
+    persistedSeries ?? previewMetricSeries(preview, selectedMetric);
   const targetKind = targetVisualizationKind(preview, options?.preferredKind);
-  const snapshot = baseSnapshot ?? emptyVisualizationSnapshot();
+  // A preview-built series has no relationship to the persisted chart's
+  // temporal bounds, comparison fields, annotations, or trends. Reusing those
+  // fields makes a newly selected metric look like the old one, so only retain
+  // persisted snapshot metadata when its series is the one being displayed.
+  const snapshot =
+    persistedSeries === undefined
+      ? emptyVisualizationSnapshot()
+      : (baseSnapshot ?? emptyVisualizationSnapshot());
   const withControls = visualizationSnapshotWithControls(snapshot, {
     preferredKind: targetKind,
     orientation: options?.orientation,
   });
   return VisualizationSnapshotSchema.parse({
     ...withControls,
+    ...(persistedSeries === undefined ? { title: series.label } : {}),
     series: [series],
   });
 }

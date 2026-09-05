@@ -7,6 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   ExploreVisualResult,
+  describeSelectedPoint,
   initialChartKind,
   initialMetricKey,
   resolveActiveSnapshot,
@@ -141,6 +142,16 @@ describe("ExploreVisualResult", () => {
       persistedLineChart.series[0]?.points[0]?.start,
     );
     expect(snapshot?.series[0]?.displayKind).toBe("percent");
+  });
+
+  test("includes the clicked series and value in drill-down context", () => {
+    expect(
+      describeSelectedPoint({
+        label: "26.15",
+        seriesName: "Games",
+        value: 12,
+      }),
+    ).toBe("Games for 26.15 (12)");
   });
 
   test("renders both Chart and Table tab controls for chartable results", () => {

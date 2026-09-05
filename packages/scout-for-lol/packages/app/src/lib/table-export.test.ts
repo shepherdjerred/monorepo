@@ -62,4 +62,14 @@ describe("table-export", () => {
       'Player,Notes,Games\n"\'=HYPERLINK(""https://example.com"")",\'+attacker-controlled,-1',
     );
   });
+
+  test("includes a disclosure row for limited preview exports", () => {
+    const csv = tableToCsv(columns, rows, {
+      notice: "NOTICE: Limited preview export; 2 of 42 total rows were loaded.",
+    });
+
+    expect(csv).toBe(
+      `NOTICE: Limited preview export; 2 of 42 total rows were loaded.,,\nPlayer,Win rate,Total Games\n"Faker, The GOAT",65.0%,100\n"Gumayusi ""Guma""",58.0%,85`,
+    );
+  });
 });

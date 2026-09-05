@@ -52,6 +52,7 @@ type PreviewEvidence = {
 export function ReportResultTable(props: {
   columns: ReportResultColumn[];
   rows: PreviewRow[];
+  rowsReturned?: number | undefined;
   visualization?: VisualizationSnapshot | null;
   evidence?: PreviewEvidence[];
   interactive?: boolean;
@@ -63,6 +64,11 @@ export function ReportResultTable(props: {
   const [copied, setCopied] = useState(false);
 
   const isInteractive = props.interactive === true;
+  const isLimitedPreview =
+    props.rowsReturned !== undefined && props.rowsReturned > props.rows.length;
+  const exportNotice = isLimitedPreview
+    ? `NOTICE: Limited preview export; ${props.rows.length.toString()} of ${props.rowsReturned?.toString() ?? "0"} total rows were loaded. The complete result was not loaded.`
+    : undefined;
 
   const handleSort = (columnKey: string) => {
     if (!isInteractive) return;
@@ -151,6 +157,7 @@ export function ReportResultTable(props: {
     const csv = tableToCsv(
       props.columns,
       indexedRows.map((r) => r.row),
+      { notice: exportNotice },
     );
     await navigator.clipboard.writeText(csv);
     setCopied(true);
@@ -163,8 +170,12 @@ export function ReportResultTable(props: {
     const csv = tableToCsv(
       props.columns,
       indexedRows.map((r) => r.row),
+      { notice: exportNotice },
     );
-    downloadCsv("scout-report-data", csv);
+    downloadCsv(
+      isLimitedPreview ? "scout-report-data-preview" : "scout-report-data",
+      csv,
+    );
   };
 
   if (props.rows.length === 0) {
@@ -224,6 +235,13 @@ export function ReportResultTable(props: {
             </Button>
           </div>
         </div>
+      )}
+      {isLimitedPreview && (
+        <p className="text-xs text-scout-subtle">
+          Showing {props.rows.length.toString()} of{" "}
+          {props.rowsReturned?.toLocaleString() ?? "0"} rows. CSV exports are
+          limited to this loaded preview.
+        </p>
       )}
 
       <div className="overflow-x-auto rounded-md border border-border">

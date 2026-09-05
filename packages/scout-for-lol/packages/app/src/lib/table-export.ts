@@ -12,6 +12,10 @@ export type ExportableRow = {
   }[];
 };
 
+export type TableCsvOptions = {
+  notice?: string | undefined;
+};
+
 function escapeCsvField(value: string, protectFormula = false): string {
   const safeValue =
     protectFormula && /^[=+\-@]/u.test(value) ? `'${value}` : value;
@@ -29,12 +33,21 @@ function escapeCsvField(value: string, protectFormula = false): string {
 export function tableToCsv(
   columns: ReportResultColumn[],
   rows: ExportableRow[],
+  options?: TableCsvOptions,
 ): string {
   const header = columns
     .map((column) => escapeCsvField(column.label))
     .join(",");
 
-  const lines = [header];
+  const lines =
+    options?.notice === undefined
+      ? [header]
+      : [
+          [options.notice, ...columns.slice(1).map(() => "")]
+            .map((value) => escapeCsvField(value))
+            .join(","),
+          header,
+        ];
 
   for (const row of rows) {
     const cells = columns.map((column) => {

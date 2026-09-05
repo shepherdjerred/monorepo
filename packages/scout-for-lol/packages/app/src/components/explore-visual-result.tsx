@@ -225,10 +225,11 @@ function ExploreDrillDownBar(props: {
   readonly onDismiss: () => void;
 }) {
   const { selectedPoint, onFollowUp, onDismiss } = props;
+  const pointContext = describeSelectedPoint(selectedPoint);
 
   return (
     <div className="flex flex-wrap items-center gap-2 rounded-md border border-scout-border bg-scout-surface p-2.5 text-xs animate-in fade-in-50">
-      <span className="font-medium text-scout-ink">{selectedPoint.label}</span>
+      <span className="font-medium text-scout-ink">{pointContext}</span>
       {onFollowUp !== undefined && (
         <div className="flex flex-wrap items-center gap-1.5">
           <Button
@@ -236,17 +237,17 @@ function ExploreDrillDownBar(props: {
             size="sm"
             className="h-6 px-2 text-xs"
             onClick={() => {
-              onFollowUp(`Tell me more about ${selectedPoint.label}`);
+              onFollowUp(`Tell me more about ${pointContext}`);
             }}
           >
-            Ask about {selectedPoint.label}
+            Ask about {pointContext}
           </Button>
           <Button
             variant="outline"
             size="sm"
             className="h-6 px-2 text-xs"
             onClick={() => {
-              onFollowUp(`How has ${selectedPoint.label} performed over time?`);
+              onFollowUp(`How has ${pointContext} performed over time?`);
             }}
           >
             Trend over time
@@ -257,7 +258,7 @@ function ExploreDrillDownBar(props: {
             className="h-6 px-2 text-xs"
             onClick={() => {
               onFollowUp(
-                `What are the best builds or matchups for ${selectedPoint.label}?`,
+                `What are the best builds or matchups for ${pointContext}?`,
               );
             }}
           >
@@ -276,6 +277,17 @@ function ExploreDrillDownBar(props: {
       </Button>
     </div>
   );
+}
+
+export function describeSelectedPoint(point: SelectedDataPoint): string {
+  const series = point.seriesName?.trim();
+  const value =
+    point.value === null ? "value unavailable" : point.value.toLocaleString();
+  const label =
+    series === undefined || series === ""
+      ? point.label
+      : `${series} for ${point.label}`;
+  return `${label} (${value})`;
 }
 
 export function resolveActiveSnapshot(options: {
@@ -442,6 +454,7 @@ export function ExploreVisualResult(props: {
         <ReportResultTable
           columns={preview.columns}
           rows={preview.rows}
+          rowsReturned={preview.rowsReturned}
           visualization={message.visualization}
           interactive={true}
           onRowClick={(row) => {
