@@ -46,7 +46,7 @@ async function seedUsers(): Promise<void> {
 }
 
 beforeEach(async () => {
-  await trpc.prisma.bucksDareV2ConfirmationIntent.deleteMany();
+  await trpc.prisma.confirmationIntent.deleteMany();
   await trpc.prisma.bucksDareV2.deleteMany();
   await trpc.prisma.exploreMessage.deleteMany();
   await trpc.prisma.exploreConversation.deleteMany();
@@ -103,13 +103,14 @@ describe("explore router", () => {
         openingStake: 20,
       },
     });
-    const intent = await trpc.prisma.bucksDareV2ConfirmationIntent.create({
+    const intent = await trpc.prisma.confirmationIntent.create({
       data: {
+        kind: "dare_fund",
+        serverId: ALLOWED_GUILD,
         dareId: dare.id,
-        revision: 1,
+        expectedRevision: 1,
         actorDiscordId: OWNER,
-        action: "fund",
-        actionPayload: JSON.stringify({ action: "fund" }),
+        payload: JSON.stringify({ kind: "dare_fund" }),
         idempotencyKey: "explore-router-durable-intent",
         expiresAt: new Date(Date.now() + 60_000),
       },
@@ -117,10 +118,10 @@ describe("explore router", () => {
     const owner = trpc.authedCaller(OWNER);
 
     expect(
-      await owner.explore.dareIntentStatus({ intentId: intent.id }),
-    ).toMatchObject({ state: "pending", action: "fund", result: null });
+      await owner.explore.intentStatus({ intentId: intent.id }),
+    ).toMatchObject({ state: "pending", kind: "dare_fund", result: null });
 
-    await trpc.prisma.bucksDareV2ConfirmationIntent.update({
+    await trpc.prisma.confirmationIntent.update({
       where: { id: intent.id },
       data: {
         consumedAt: new Date(),
@@ -128,16 +129,14 @@ describe("explore router", () => {
       },
     });
     expect(
-      await owner.explore.dareIntentStatus({ intentId: intent.id }),
+      await owner.explore.intentStatus({ intentId: intent.id }),
     ).toMatchObject({
       state: "consumed",
-      action: "fund",
+      kind: "dare_fund",
       result: { kind: "funded" },
     });
     await expect(
-      trpc
-        .authedCaller(STRANGER)
-        .explore.dareIntentStatus({ intentId: intent.id }),
+      trpc.authedCaller(STRANGER).explore.intentStatus({ intentId: intent.id }),
     ).rejects.toThrow(/not found/i);
   });
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
+  BucksStakeSchema,
+  ConfirmationIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -10,11 +12,53 @@ import { listDareEvidenceV2 } from "#src/betting/dare-evidence-view-v2.ts";
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
 import {
   createDareV2ConfirmationIntent,
-  DareV2IntentPayloadSchema,
+  dareV2IntentAction,
 } from "#src/betting/dare-intent-v2.ts";
 import { assertBucksScope } from "#src/consumer/bucks-access.ts";
 import { prisma } from "#src/database/index.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
+
+/**
+ * Dare action payloads accepted from the management app.
+ *
+ * Confirmation intents used to discriminate on `action` (`{action: "fund"}`)
+ * and now discriminate on `kind`. A tab loaded before that deployment is still
+ * running the old client, so rejecting its shape would take every Dare action
+ * in that tab out of service until the user happened to reload. Both shapes
+ * are accepted for one release; delete the legacy branch after stale clients
+ * have aged out.
+ *
+ * The new shape is tried first, and the legacy objects are strict, so this
+ * widens what is accepted without loosening validation of either form.
+ */
+const LEGACY_ACTION_KINDS = {
+  fund: "dare_fund",
+  accept: "dare_accept",
+  decline: "dare_decline",
+  cancel: "dare_cancel",
+  contribute: "dare_contribute",
+} as const;
+
+const LegacyDarePayloadSchema = z
+  .union([
+    z.strictObject({
+      action: z.enum(["fund", "accept", "decline", "cancel"]),
+    }),
+    z.strictObject({
+      action: z.literal("contribute"),
+      amount: BucksStakeSchema,
+    }),
+  ])
+  .transform((legacy) =>
+    legacy.action === "contribute"
+      ? { kind: LEGACY_ACTION_KINDS.contribute, amount: legacy.amount }
+      : { kind: LEGACY_ACTION_KINDS[legacy.action] },
+  );
+
+export const DarePayloadInputSchema = z.union([
+  ConfirmationIntentPayloadSchema,
+  LegacyDarePayloadSchema.pipe(ConfirmationIntentPayloadSchema),
+]);
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const DareInput = GuildInput.extend({ dareId: z.number().int().positive() });
@@ -24,7 +68,7 @@ const DareEvidenceInput = DareInput.extend({
 });
 const DarePrepareActionInput = DareInput.extend({
   expectedRevision: z.number().int().positive(),
-  payload: DareV2IntentPayloadSchema,
+  payload: DarePayloadInputSchema,
   idempotencyKey: z.uuid(),
 });
 const DareConfirmActionInput = GuildInput.extend({ intentId: z.uuid() });
@@ -75,20 +119,19 @@ export const bucksDareActionProcedures = {
         },
       });
       const amount =
-        input.payload.action === "contribute"
+        input.payload.kind === "dare_contribute"
           ? `${input.payload.amount.toString()} BB to a ${dare.potTotal.toString()} BB pot`
-          : input.payload.action === "fund"
+          : input.payload.kind === "dare_fund"
             ? `${dare.openingStake.toString()} BB`
             : null;
+      const action = dareV2IntentAction(input.payload.kind);
       return {
         ...outcome,
         confirmation: {
-          action: input.payload.action,
+          action,
           amount,
           targets: dare.targets.map((target) => target.alias),
-          irreversible: ["fund", "accept", "contribute"].includes(
-            input.payload.action,
-          ),
+          irreversible: ["fund", "accept", "contribute"].includes(action),
         },
       };
     }),
@@ -97,7 +140,7 @@ export const bucksDareActionProcedures = {
     .input(DareConfirmActionInput)
     .mutation(async ({ ctx, input }) => {
       await assertBucksScope(ctx.user, input.guildId);
-      const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
+      const intent = await prisma.confirmationIntent.findUnique({
         where: { id: input.intentId },
         select: { dareId: true },
       });
@@ -113,10 +156,9 @@ export const bucksDareActionProcedures = {
         "feature_disabled",
         "insufficient",
       ].includes(outcome.kind);
+      const dareId = intent?.dareId ?? null;
       const callout =
-        intent === null || failed
-          ? null
-          : await tryEnsureDareV2Callout(intent.dareId);
+        dareId === null || failed ? null : await tryEnsureDareV2Callout(dareId);
       return { ...outcome, callout };
     }),
 

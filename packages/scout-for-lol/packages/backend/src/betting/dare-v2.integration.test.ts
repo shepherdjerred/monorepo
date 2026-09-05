@@ -145,7 +145,7 @@ const deps = {
 };
 
 async function clearAll(): Promise<void> {
-  await db.bucksDareV2ConfirmationIntent.deleteMany();
+  await db.confirmationIntent.deleteMany();
   await db.bucksDareV2Evidence.deleteMany();
   await db.bucksDareV2Contribution.deleteMany();
   await db.bucksDareV2Target.deleteMany();
@@ -278,13 +278,21 @@ async function intent(input: {
   action: "fund" | "accept" | "decline" | "cancel";
   key: string;
 }) {
+  const payload =
+    input.action === "fund"
+      ? ({ kind: "dare_fund" } as const)
+      : input.action === "accept"
+        ? ({ kind: "dare_accept" } as const)
+        : input.action === "decline"
+          ? ({ kind: "dare_decline" } as const)
+          : ({ kind: "dare_cancel" } as const);
   const result = await createDareV2ConfirmationIntent(
     {
       dareId: input.dareId,
       serverId: SERVER,
       actorDiscordId: input.actor,
       expectedRevision: 1,
-      payload: { action: input.action },
+      payload,
       idempotencyKey: input.key,
     },
     deps,
@@ -315,7 +323,7 @@ async function makeContribution(
       serverId: SERVER,
       actorDiscordId: actor,
       expectedRevision: 1,
-      payload: { action: "contribute", amount },
+      payload: { kind: "dare_contribute", amount },
       idempotencyKey: key,
     },
     deps,
@@ -701,7 +709,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { action: "fund" },
+        payload: { kind: "dare_fund" },
         idempotencyKey: "stale-fund",
       },
       deps,
@@ -718,7 +726,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 5 },
+        payload: { kind: "dare_contribute", amount: 5 },
         idempotencyKey: "contribute-payload",
       },
       deps,
@@ -732,7 +740,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 10 },
+        payload: { kind: "dare_contribute", amount: 10 },
         idempotencyKey: "contribute-payload",
       },
       deps,
@@ -748,7 +756,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
       serverId: SERVER,
       actorDiscordId: CHALLENGER,
       expectedRevision: 1,
-      payload: { action: "fund" } as const,
+      payload: { kind: "dare_fund" } as const,
       idempotencyKey: "concurrent-fund-intent",
     };
 
@@ -764,7 +772,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
     }
     expect(second.intentId).toBe(first.intentId);
     expect(
-      await db.bucksDareV2ConfirmationIntent.count({
+      await db.confirmationIntent.count({
         where: { idempotencyKey: input.idempotencyKey },
       }),
     ).toBe(1);
@@ -806,7 +814,7 @@ describe("Dare v2 funded lifecycle", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 5 },
+        payload: { kind: "dare_contribute", amount: 5 },
         idempotencyKey: "contribution-after-deadline",
       },
       deps,
@@ -980,7 +988,7 @@ describe("Dare v2 partial settlement", () => {
         serverId: SERVER,
         actorDiscordId: CONTRIBUTOR,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 15 },
+        payload: { kind: "dare_contribute", amount: 15 },
         idempotencyKey: "contribute-first-fifteen",
       },
       deps,
@@ -992,7 +1000,7 @@ describe("Dare v2 partial settlement", () => {
         serverId: SERVER,
         actorDiscordId: CONTRIBUTOR,
         expectedRevision: 1,
-        payload: { action: "contribute", amount: 15 },
+        payload: { kind: "dare_contribute", amount: 15 },
         idempotencyKey: "contribute-second-fifteen",
       },
       deps,

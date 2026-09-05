@@ -198,7 +198,7 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
     trpc.explore.confirmDareIntent.mutationOptions(),
   );
   const persisted = useQuery(
-    trpc.explore.dareIntentStatus.queryOptions({
+    trpc.explore.intentStatus.queryOptions({
       intentId: props.intent.intentId,
     }),
   );
@@ -268,7 +268,7 @@ function IntentCard(props: { intent: z.infer<typeof IntentDataSchema> }) {
                       queryKey: trpc.bucks.dareInspect.pathKey(),
                     });
                     void queryClient.invalidateQueries({
-                      queryKey: trpc.explore.dareIntentStatus.queryKey({
+                      queryKey: trpc.explore.intentStatus.queryKey({
                         intentId: props.intent.intentId,
                       }),
                     });
