@@ -530,6 +530,7 @@ describe("the status line and the step list are separate concerns", () => {
       type: "activity",
       text: "Finding “Jerred#NA1”",
       toolCallId: "call-1",
+      ignorable: true,
     });
     expect(turn.activity).toBe("Finding “Jerred#NA1”");
 

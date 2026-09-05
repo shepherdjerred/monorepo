@@ -37,6 +37,21 @@ export type ExploreStreamState = {
   now: () => number;
 };
 
+/**
+ * Build the ephemeral status event.
+ *
+ * Exists so `ignorable` is set in one place: the marker is what lets a client
+ * too old to know this member drop it instead of treating the stream as
+ * corrupt, and an emit site that forgot it would fail that client at runtime
+ * rather than here.
+ */
+function activityEvent(
+  text: string,
+  toolCallId: string | null,
+): ExploreStreamEvent {
+  return { type: "activity", text, toolCallId, ignorable: true };
+}
+
 export function createExploreStreamState(
   now: () => number = Date.now,
 ): ExploreStreamState {
@@ -132,11 +147,12 @@ export async function emitExploreStreamChunk(
       // `state.toolStartedAt` — starting the clock here would redefine the
       // trace's `durationMs` from execution time to argument generation plus
       // execution.
-      await emit({
-        type: "activity",
-        text: toolStartActivity(toolCallMessage(chunk.toolName)),
-        toolCallId: chunk.toolCallId,
-      });
+      await emit(
+        activityEvent(
+          toolStartActivity(toolCallMessage(chunk.toolName)),
+          chunk.toolCallId,
+        ),
+      );
       break;
     }
     case "text-delta": {
@@ -154,11 +170,7 @@ export async function emitExploreStreamChunk(
       // status over a tool that is still running.
       if (!state.answerNarrated && state.toolStartedAt.size === 0) {
         state.answerNarrated = true;
-        await emit({
-          type: "activity",
-          text: "Writing the answer…",
-          toolCallId: null,
-        });
+        await emit(activityEvent("Writing the answer…", null));
       }
       break;
     }
@@ -166,15 +178,16 @@ export async function emitExploreStreamChunk(
       // Emitted before `inspectExploreToolCall`, which parses strictly and can
       // throw: a malformed input should still have narrated, and the throw
       // behaviour is unchanged.
-      await emit({
-        type: "activity",
-        text: toolCallActivity(
-          chunk.toolName,
-          chunk.input,
-          toolCallMessage(chunk.toolName),
+      await emit(
+        activityEvent(
+          toolCallActivity(
+            chunk.toolName,
+            chunk.input,
+            toolCallMessage(chunk.toolName),
+          ),
+          chunk.toolCallId,
         ),
-        toolCallId: chunk.toolCallId,
-      });
+      );
       const inspection = inspectExploreToolCall(chunk.toolName, chunk.input);
       state.toolStartedAt.set(chunk.toolCallId, state.now());
       await emit({
@@ -205,16 +218,17 @@ export async function emitExploreStreamChunk(
       });
       // After the tool_result, so the step in the panel has already flipped to
       // its final status by the time the status line describes the outcome.
-      await emit({
-        type: "activity",
-        text: toolResultActivity(
-          chunk.toolName,
-          chunk.input,
-          inspection,
-          toolResultMessage(chunk.toolName, inspection.succeeded),
+      await emit(
+        activityEvent(
+          toolResultActivity(
+            chunk.toolName,
+            chunk.input,
+            inspection,
+            toolResultMessage(chunk.toolName, inspection.succeeded),
+          ),
+          chunk.toolCallId,
         ),
-        toolCallId: chunk.toolCallId,
-      });
+      );
       break;
     }
     case "tool-error": {
@@ -237,11 +251,12 @@ export async function emitExploreStreamChunk(
         details: inspectExploreToolCall(chunk.toolName, chunk.input).details,
         rawOutput: null,
       });
-      await emit({
-        type: "activity",
-        text: toolResultMessage(chunk.toolName, false),
-        toolCallId: chunk.toolCallId,
-      });
+      await emit(
+        activityEvent(
+          toolResultMessage(chunk.toolName, false),
+          chunk.toolCallId,
+        ),
+      );
       break;
     }
   }

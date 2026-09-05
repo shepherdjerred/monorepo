@@ -172,6 +172,7 @@ describe("the activity channel cannot reach a persisted trace", () => {
       type: "activity",
       text: "Finding “Jerred#NA1”",
       toolCallId: "call-1",
+      ignorable: true,
     });
     expect(trace).toEqual([]);
   });
@@ -183,6 +184,7 @@ describe("the activity channel cannot reach a persisted trace", () => {
         type: "activity" as const,
         text: "Finding “Jerred#NA1”",
         toolCallId: "call-1",
+        ignorable: true as const,
       },
       {
         type: "tool_call" as const,
@@ -196,6 +198,7 @@ describe("the activity channel cannot reach a persisted trace", () => {
         type: "activity" as const,
         text: "Found 1 match for “Jerred#NA1”",
         toolCallId: "call-1",
+        ignorable: true as const,
       },
       {
         type: "tool_result" as const,
