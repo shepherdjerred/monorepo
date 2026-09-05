@@ -114,7 +114,7 @@ export const ChallengeEvidenceMatchSchema = z.strictObject({
   timelineEvidenceAvailable: z.boolean(),
   timelineEventCounts: z.record(
     z.string(),
-    z.record(
+    z.partialRecord(
       TimelineEventParticipantRoleSchema,
       z.number().int().nonnegative(),
     ),
