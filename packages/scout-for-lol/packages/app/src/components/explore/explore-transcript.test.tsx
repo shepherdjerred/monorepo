@@ -285,6 +285,10 @@ describe("Explore expandable artifacts", () => {
   });
 
   test("does not offer it for an empty result set", () => {
+    // The fixture carries a visualization on purpose: every executed query
+    // gets one — including TABLE and empty results — so a version of this
+    // test without it passed while the real behaviour offered a button onto
+    // a blank dialog.
     const markup = renderToStaticMarkup(
       <ExploreTranscript
         messages={[
@@ -294,6 +298,26 @@ describe("Explore expandable artifacts", () => {
               rows: [],
               rowsScanned: 0,
               renderKind: "TABLE",
+            },
+            visualization: {
+              version: 1,
+              generatedAt: "2026-08-14T12:00:30.000Z",
+              kind: "table",
+              title: null,
+              temporal: null,
+              bucket: null,
+              display: {
+                theme: null,
+                palette: null,
+                smooth: false,
+                stack: "none",
+                rollingWindow: null,
+                cumulative: false,
+                sparkline: false,
+              },
+              series: [],
+              annotations: [],
+              trends: [],
             },
           }),
         ]}

@@ -48,15 +48,19 @@ export function ExploreArtifactDialog(props: {
         }
       }}
     >
-      <DialogContent className="!max-w-[min(96vw,80rem)]">
+      {/* `width`, not just `max-width`: `.scout-dialog` sets an explicit
+          `width: min(100vw - 2rem, 34rem)`, so raising only the maximum left
+          this dialog *narrower* than the `max-w-3xl` transcript it exists to
+          escape. */}
+      <DialogContent className="!w-[min(96vw,80rem)] !max-w-[min(96vw,80rem)]">
         <DialogHeader>
           <DialogTitle>{artifact?.title ?? "Result"}</DialogTitle>
         </DialogHeader>
         {artifact !== null && (
-          // The table already scrolls inside its own `overflow-x-auto`, so a
-          // result wider than even this dialog stays reachable rather than
-          // pushing the page sideways.
-          <div className="max-h-[70vh] overflow-y-auto">
+          // `.scout-dialog` already caps its own height and scrolls, and the
+          // table scrolls sideways inside its own `overflow-x-auto`, so this
+          // adds no scroll container of its own.
+          <div>
             <ExploreVisualResult
               preview={artifact.preview}
               visualization={artifact.visualization}
