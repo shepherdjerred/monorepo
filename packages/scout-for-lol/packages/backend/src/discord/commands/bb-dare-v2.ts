@@ -287,7 +287,7 @@ export async function replyBbDareV2(
         serverId: input.serverId,
         actorDiscordId: input.challengerDiscordId,
         expectedRevision: draft.dare.currentRevision,
-        payload: { action: "fund" },
+        payload: { kind: "dare_fund" },
         idempotencyKey: `discord:${interaction.id}:fund`,
       },
       {

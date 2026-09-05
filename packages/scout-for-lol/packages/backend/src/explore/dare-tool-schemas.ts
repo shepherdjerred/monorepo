@@ -8,8 +8,8 @@ import {
   DareDeadlineSpecV2Schema,
   DareSqlV3CompetitionSchema,
   DareActivationV3Schema,
+  ConfirmationIntentPayloadSchema,
 } from "@scout-for-lol/data";
-import { DareV2IntentPayloadSchema } from "#src/betting/dare-intent-v2.ts";
 
 export const DareToolResultSchema = z.strictObject({
   kind: z.string().min(1),
@@ -99,7 +99,7 @@ export const DareInspectToolInputSchema = z.strictObject({
 export const DareActionToolInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
   expectedRevision: z.number().int().positive(),
-  payload: DareV2IntentPayloadSchema,
+  payload: ConfirmationIntentPayloadSchema,
 });
 
 export const DareDeleteToolInputSchema = z.strictObject({

@@ -1,6 +1,8 @@
 import {
+  ConfirmationIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  type ConfirmationIntentPayload,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -10,10 +12,6 @@ import {
   acceptDareV2InTransaction,
   fundDareV2InTransaction,
 } from "#src/betting/dare-fund-consent-v2.ts";
-import {
-  DareV2IntentPayloadSchema,
-  type DareV2IntentPayload,
-} from "#src/betting/dare-intent-v2.ts";
 import {
   cancelDareV2InTransaction,
   declineDareV2InTransaction,
@@ -25,43 +23,62 @@ import {
 } from "#src/betting/dare-v2-common.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import type { Db } from "#src/database/index.ts";
+import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
+import { claimAndExecute } from "#src/lib/confirmation-intent/claim.ts";
 
 type IntentAccount = { id: number } | undefined;
 
-function needsFeature(payload: DareV2IntentPayload): boolean {
+/** The dare an intent acts on, together with the revision it was minted for. */
+type DareIntentTarget = { dareId: number; revision: number };
+
+function needsFeature(payload: ConfirmationIntentPayload): boolean {
   return (
-    payload.action === "fund" ||
-    payload.action === "accept" ||
-    payload.action === "contribute"
+    payload.kind === "dare_fund" ||
+    payload.kind === "dare_accept" ||
+    payload.kind === "dare_contribute"
   );
 }
 
-function needsAccount(payload: DareV2IntentPayload): boolean {
+function needsAccount(payload: ConfirmationIntentPayload): boolean {
   return (
-    payload.action === "fund" ||
-    payload.action === "accept" ||
-    payload.action === "contribute"
+    payload.kind === "dare_fund" ||
+    payload.kind === "dare_accept" ||
+    payload.kind === "dare_contribute"
   );
+}
+
+/**
+ * A dare intent always carries its dare and revision; the columns are nullable
+ * only because an intent need not act on an existing row. Missing values here
+ * mean a broken caller contract, so they are let through as an error rather
+ * than defaulted.
+ */
+function dareTarget(intent: ConfirmationIntent): DareIntentTarget {
+  if (intent.dareId === null || intent.expectedRevision === null) {
+    throw new Error(
+      `Confirmation intent ${intent.id} of kind ${intent.kind} has no dare target.`,
+    );
+  }
+  return { dareId: intent.dareId, revision: intent.expectedRevision };
 }
 
 async function executeAction(
   tx: Db,
   input: {
-    dareId: number;
-    revision: number;
+    target: DareIntentTarget;
     actorDiscordId: DiscordAccountId;
-    payload: DareV2IntentPayload;
+    payload: ConfirmationIntentPayload;
     account: IntentAccount;
     now: Date;
   },
 ) {
   const common = {
-    dareId: input.dareId,
-    revision: input.revision,
+    dareId: input.target.dareId,
+    revision: input.target.revision,
     actorDiscordId: input.actorDiscordId,
     now: input.now,
   };
-  if (input.payload.action === "fund") {
+  if (input.payload.kind === "dare_fund") {
     if (input.account === undefined)
       throw new Error("Fund intent has no wallet.");
     return await fundDareV2InTransaction(tx, {
@@ -69,7 +86,7 @@ async function executeAction(
       bucksAccountId: input.account.id,
     });
   }
-  if (input.payload.action === "accept") {
+  if (input.payload.kind === "dare_accept") {
     if (input.account === undefined)
       throw new Error("Accept intent has no wallet.");
     return await acceptDareV2InTransaction(tx, {
@@ -77,10 +94,10 @@ async function executeAction(
       bucksAccountId: input.account.id,
     });
   }
-  if (input.payload.action === "decline") {
+  if (input.payload.kind === "dare_decline") {
     return await declineDareV2InTransaction(tx, common);
   }
-  if (input.payload.action === "cancel") {
+  if (input.payload.kind === "dare_cancel") {
     return await cancelDareV2InTransaction(tx, common);
   }
   if (input.account === undefined)
@@ -92,58 +109,8 @@ async function executeAction(
   });
 }
 
-async function consumeClaim(
-  input: {
-    intent: { id: string; dareId: number; revision: number };
-    actorDiscordId: DiscordAccountId;
-    payload: DareV2IntentPayload;
-    account: IntentAccount;
-    now: Date;
-  },
-  dependencies: DareV2Dependencies,
-) {
-  return await dependencies.prismaClient.$transaction(async (tx) => {
-    const claimed = await tx.bucksDareV2ConfirmationIntent.updateMany({
-      where: {
-        id: input.intent.id,
-        actorDiscordId: input.actorDiscordId,
-        consumedAt: null,
-        expiresAt: { gt: input.now },
-      },
-      data: { consumedAt: input.now },
-    });
-    if (claimed.count !== 1) {
-      const current = await tx.bucksDareV2ConfirmationIntent.findUniqueOrThrow({
-        where: { id: input.intent.id },
-      });
-      return current.consumedAt === null
-        ? ({ kind: "intent_expired" } as const)
-        : ({
-            kind: "already_consumed",
-            result:
-              current.resultJson === null
-                ? null
-                : JSON.parse(current.resultJson),
-          } as const);
-    }
-    const result = await executeAction(tx, {
-      dareId: input.intent.dareId,
-      revision: input.intent.revision,
-      actorDiscordId: input.actorDiscordId,
-      payload: input.payload,
-      account: input.account,
-      now: input.now,
-    });
-    await tx.bucksDareV2ConfirmationIntent.update({
-      where: { id: input.intent.id },
-      data: { resultJson: JSON.stringify(result) },
-    });
-    return result;
-  });
-}
-
 async function openingStakeNeeded(
-  input: { dareId: number; revision: number },
+  input: DareIntentTarget,
   dependencies: DareV2Dependencies,
 ): Promise<number> {
   const revision =
@@ -163,8 +130,8 @@ async function insufficientOutcome(
   input: {
     error: unknown;
     account: IntentAccount;
-    payload: DareV2IntentPayload;
-    intent: { dareId: number; revision: number };
+    payload: ConfirmationIntentPayload;
+    target: DareIntentTarget;
   },
   dependencies: DareV2Dependencies,
 ) {
@@ -180,10 +147,10 @@ async function insufficientOutcome(
       select: { balance: true },
     });
   const needed =
-    input.payload.action === "contribute"
+    input.payload.kind === "dare_contribute"
       ? input.payload.amount
-      : input.payload.action === "fund"
-        ? await openingStakeNeeded(input.intent, dependencies)
+      : input.payload.kind === "dare_fund"
+        ? await openingStakeNeeded(input.target, dependencies)
         : undefined;
   return { kind: "insufficient", balance: current.balance, needed } as const;
 }
@@ -197,27 +164,20 @@ export async function consumeDareV2ConfirmationIntent(
   dependencies: DareV2Dependencies = defaultDareV2Dependencies,
   now: Date = new Date(),
 ) {
-  const intent =
-    await dependencies.prismaClient.bucksDareV2ConfirmationIntent.findUnique({
-      where: { id: input.intentId },
-      include: {
-        dare: { select: { serverId: true } },
-      },
-    });
-  if (intent?.dare.serverId !== input.serverId) {
+  const intent = await dependencies.prismaClient.confirmationIntent.findUnique({
+    where: { id: input.intentId },
+  });
+  // The guild is stored on the intent, so this is the same check the join
+  // through `dare.serverId` used to make.
+  if (intent?.serverId !== input.serverId) {
     return { kind: "not_found" } as const;
   }
   if (intent.actorDiscordId !== input.actorDiscordId) {
     return { kind: "forbidden" } as const;
   }
-  const payload = DareV2IntentPayloadSchema.parse(
-    JSON.parse(intent.actionPayload),
+  const payload = ConfirmationIntentPayloadSchema.parse(
+    JSON.parse(intent.payload),
   );
-  if (intent.action !== payload.action) {
-    throw new Error(
-      `Dare v2 intent ${intent.id} action does not match its payload.`,
-    );
-  }
   if (intent.consumedAt !== null) {
     return {
       kind: "already_consumed",
@@ -227,12 +187,13 @@ export async function consumeDareV2ConfirmationIntent(
   if (intent.expiresAt.getTime() <= now.getTime()) {
     return { kind: "intent_expired" } as const;
   }
+  const target = dareTarget(intent);
   const revision =
     await dependencies.prismaClient.bucksDareV2Revision.findUniqueOrThrow({
       where: {
         dareId_revision: {
-          dareId: intent.dareId,
-          revision: intent.revision,
+          dareId: target.dareId,
+          revision: target.revision,
         },
       },
       select: { compilerVersion: true },
@@ -242,7 +203,7 @@ export async function consumeDareV2ConfirmationIntent(
     !(await relationalDareActionEnabled(
       input.serverId,
       revision.compilerVersion,
-      payload.action === "fund",
+      payload.kind === "dare_fund",
       dependencies,
     ))
   ) {
@@ -258,19 +219,25 @@ export async function consumeDareV2ConfirmationIntent(
       )
     : undefined;
   try {
-    return await consumeClaim(
+    return await claimAndExecute(
+      dependencies.prismaClient,
       {
-        intent,
+        intentId: intent.id,
         actorDiscordId: input.actorDiscordId,
-        payload,
-        account,
         now,
       },
-      dependencies,
+      async (tx) =>
+        await executeAction(tx, {
+          target,
+          actorDiscordId: input.actorDiscordId,
+          payload,
+          account,
+          now,
+        }),
     );
   } catch (error) {
     return await insufficientOutcome(
-      { error, account, payload, intent },
+      { error, account, payload, target },
       dependencies,
     );
   }

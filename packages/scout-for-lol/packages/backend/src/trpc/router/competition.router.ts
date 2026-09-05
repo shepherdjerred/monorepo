@@ -7,6 +7,11 @@
  * `guildProcedure`/`guildMutationProcedure` (Discord admins/owners hold all
  * permissions). Any fetch-by-id additionally verifies the row belongs to the
  * requested guild (NOT_FOUND otherwise) to prevent cross-guild ID probing.
+ *
+ * `create` is a thin caller: the pipeline — including the `competitions:invite`
+ * and `competitions:schedule` sub-gates and root's rate-limit bypass — lives in
+ * `#src/lib/competitions/create.ts` so other surfaces run the same policy, and
+ * it commits with its `COMPETITION_CREATE` audit row in one transaction.
  */
 
 import { z } from "zod";

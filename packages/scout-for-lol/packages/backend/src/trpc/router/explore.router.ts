@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import type { User } from "#generated/prisma/client/index.js";
 import {
+  ConfirmationIntentKindSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
@@ -14,7 +15,6 @@ import {
 } from "@scout-for-lol/data";
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
 import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
-import { DareV2IntentActionSchema } from "#src/betting/dare-intent-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,
@@ -85,19 +85,26 @@ async function requireExploreUserAndGuilds(
   };
 }
 
-async function requireGuildDareIntent(intentId: string, guildIds: string[]) {
-  const intent = await prisma.bucksDareV2ConfirmationIntent.findUnique({
+/**
+ * Loads a confirmation intent the caller's servers can see.
+ *
+ * The guild is stored on the intent, so this is a direct column comparison
+ * rather than a join through the dare it targets. Probing an intent in another
+ * server has to stay indistinguishable from it not existing, hence NOT_FOUND
+ * for both.
+ */
+async function requireGuildIntent(intentId: string, guildIds: string[]) {
+  const intent = await prisma.confirmationIntent.findUnique({
     where: { id: intentId },
-    include: { dare: { select: { serverId: true } } },
   });
-  if (!guildIds.includes(intent?.dare.serverId ?? "")) {
+  if (!guildIds.includes(intent?.serverId ?? "")) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Confirmation not found.",
     });
   }
   if (intent === null) {
-    throw new Error("A visible Dare confirmation unexpectedly disappeared.");
+    throw new Error("A visible confirmation unexpectedly disappeared.");
   }
   return intent;
 }
@@ -133,11 +140,11 @@ export const exploreRouter = router({
     return await listExploreConversations(prisma, userId);
   }),
 
-  dareIntentStatus: exploreProcedure
+  intentStatus: exploreProcedure
     .input(z.strictObject({ intentId: z.uuid() }))
     .query(async ({ ctx, input }) => {
       const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      const intent = await requireGuildDareIntent(input.intentId, guildIds);
+      const intent = await requireGuildIntent(input.intentId, guildIds);
       if (intent.actorDiscordId !== userId) {
         throw new TRPCError({
           code: "NOT_FOUND",
@@ -151,7 +158,7 @@ export const exploreRouter = router({
               ? ("expired" as const)
               : ("pending" as const)
             : ("consumed" as const),
-        action: DareV2IntentActionSchema.parse(intent.action),
+        kind: ConfirmationIntentKindSchema.parse(intent.kind),
         expiresAt: intent.expiresAt.toISOString(),
         result:
           intent.resultJson === null
@@ -164,10 +171,16 @@ export const exploreRouter = router({
     .input(z.strictObject({ intentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      const intent = await requireGuildDareIntent(input.intentId, guildIds);
+      const intent = await requireGuildIntent(input.intentId, guildIds);
+      if (intent.dareId === null) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Confirmation not found.",
+        });
+      }
       const outcome = await consumeDareV2ConfirmationIntent({
         intentId: input.intentId,
-        serverId: DiscordGuildIdSchema.parse(intent.dare.serverId),
+        serverId: DiscordGuildIdSchema.parse(intent.serverId),
         actorDiscordId: userId,
       });
       const callout = [

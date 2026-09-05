@@ -1509,7 +1509,7 @@ model BucksDareV2 {
   targets            BucksDareV2Target[]
   contributions      BucksDareV2Contribution[]
   evidence           BucksDareV2Evidence[]
-  intents            BucksDareV2ConfirmationIntent[]
+  intents            ConfirmationIntent[]
   notificationEvents BucksDareNotificationEvent[]
   activation         BucksDareV2Activation?
 
@@ -1622,21 +1622,32 @@ model BucksDareV2Evidence {
   @@index([dareId, gameEndAt, matchId])
 }
 
-// Binding or financial actions are prepared as revision-bound, single-use
-// intents. The button/control consumes the intent idempotently after approval.
-model BucksDareV2ConfirmationIntent {
-  id             String      @id @default(uuid())
-  dareId         Int
-  dare           BucksDareV2 @relation(fields: [dareId], references: [id], onDelete: Cascade)
-  revision       Int
-  actorDiscordId String
-  action         String
-  actionPayload  String
-  idempotencyKey String      @unique
-  expiresAt      DateTime
-  consumedAt     DateTime?
-  resultJson     String?
-  createdAt      DateTime    @default(now())
+// Binding or financial actions are prepared as single-use, actor-bound,
+// expiring intents. The button/control consumes the intent idempotently after
+// a human approves it; nothing writes domain state before that.
+//
+// `kind` is the sole discriminator and `payload` is its Zod-validated JSON
+// body, so the action can never disagree with the payload describing it.
+// `serverId` is denormalized from the target at mint time — every guild
+// visibility check is a comparison against this column, so it must be derived
+// from the row being acted on rather than taken from the caller.
+//
+// `dareId`/`expectedRevision` are nullable because an intent need not have an
+// existing target; a dare intent always sets both, keeping its cascade delete.
+model ConfirmationIntent {
+  id               String       @id @default(uuid())
+  kind             String
+  serverId         String
+  actorDiscordId   String
+  payload          String
+  idempotencyKey   String       @unique
+  expiresAt        DateTime
+  consumedAt       DateTime?
+  resultJson       String?
+  createdAt        DateTime     @default(now())
+  dareId           Int?
+  dare             BucksDareV2? @relation(fields: [dareId], references: [id], onDelete: Cascade)
+  expectedRevision Int?
 
   @@index([dareId, expiresAt])
 }
