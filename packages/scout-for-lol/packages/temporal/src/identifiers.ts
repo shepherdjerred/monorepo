@@ -13,6 +13,9 @@ export const SCOUT_WORKFLOW_NAMES = {
   reportScheduleReconciler: "scoutReportScheduleReconcilerWorkflow",
   interactiveRun: "scoutInteractiveRunWorkflow",
   queueCanary: "scoutQueueCanaryWorkflow",
+  hallBaseline: "scoutHallBaselineWorkflow",
+  challengeRunRecompute: "scoutChallengeRunRecomputeWorkflow",
+  duelSeries: "scoutDuelSeriesWorkflow",
 } as const;
 
 export function scoutTaskQueues(stage: ScoutStage) {
@@ -78,6 +81,29 @@ export function scoutQueueCanaryWorkflowId(
   canaryId: string,
 ): string {
   return `scout-${stage}-canary-${canaryId}`;
+}
+
+export function scoutHallBaselineWorkflowId(
+  stage: ScoutStage,
+  guildId: string,
+  revision: number,
+): string {
+  return `scout-${stage}-hall-${guildId}-${revision.toString()}`;
+}
+
+export function scoutChallengeRunRecomputeWorkflowId(
+  stage: ScoutStage,
+  runId: string,
+  revision: number,
+): string {
+  return `scout-${stage}-challenge-${runId}-${revision.toString()}`;
+}
+
+export function scoutDuelSeriesWorkflowId(
+  stage: ScoutStage,
+  seriesId: string,
+): string {
+  return `scout-${stage}-duel-series-${seriesId}`;
 }
 
 export function scoutSchedulePrefix(stage: ScoutStage): string {

@@ -126,6 +126,42 @@ async function seedGuild(
     errorType: "channel_missing",
   });
 
+  await db.hallSettings.create({
+    data: {
+      guildId: serverId,
+      catalogVersion: 1,
+      channelId,
+      enabledQueueFamilies: '["aram"]',
+      enabledRecords: '["kills"]',
+      baselineRevision: 1,
+      updatedByDiscordId: creator,
+      recordCells: {
+        create: {
+          queueFamilyId: "aram",
+          recordId: "kills",
+          baselineStatus: "ready",
+          baselineRevision: 1,
+        },
+      },
+      baselineRuns: {
+        create: {
+          revision: 1,
+          baselineState: "ready",
+          requestedByDiscordId: creator,
+          workflowId: `hall-cleanup-${serverId}`,
+        },
+      },
+    },
+  });
+  await db.hallRecordBreakOutbox.create({
+    data: {
+      guildId: serverId,
+      matchId: `match-${serverId}`,
+      channelId,
+      payloadJson: "[]",
+    },
+  });
+
   return player.id;
 }
 
@@ -146,6 +182,12 @@ async function countGuild(
     permissionErrors: await db.guildPermissionError.count({
       where: { serverId },
     }),
+    hallSettings: await db.hallSettings.count({
+      where: { guildId: serverId },
+    }),
+    hallRecordBreakOutbox: await db.hallRecordBreakOutbox.count({
+      where: { guildId: serverId },
+    }),
   };
 }
 
@@ -160,6 +202,8 @@ beforeEach(async () => {
   await prisma.reportRun.deleteMany();
   await prisma.report.deleteMany();
   await prisma.subscription.deleteMany();
+  await prisma.hallRecordBreakOutbox.deleteMany();
+  await prisma.hallSettings.deleteMany();
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
   await prisma.serverPermission.deleteMany();
@@ -188,6 +232,8 @@ describe("cleanupRemovedGuild", () => {
       accounts: 1,
       players: 1,
       permissionErrors: 1,
+      hallSettings: 1,
+      hallRecordBreakOutbox: 1,
     });
 
     // ...and actually gone from the database.
@@ -201,6 +247,8 @@ describe("cleanupRemovedGuild", () => {
       notificationPreferences: 0,
       serverPermissions: 0,
       permissionErrors: 0,
+      hallSettings: 0,
+      hallRecordBreakOutbox: 0,
     });
 
     // The cascade removed the competition participant too.
@@ -217,6 +265,8 @@ describe("cleanupRemovedGuild", () => {
       notificationPreferences: 1,
       serverPermissions: 1,
       permissionErrors: 1,
+      hallSettings: 1,
+      hallRecordBreakOutbox: 1,
     });
   });
 
@@ -231,6 +281,8 @@ describe("cleanupRemovedGuild", () => {
       accounts: 0,
       players: 0,
       permissionErrors: 0,
+      hallSettings: 0,
+      hallRecordBreakOutbox: 0,
     });
   });
 });

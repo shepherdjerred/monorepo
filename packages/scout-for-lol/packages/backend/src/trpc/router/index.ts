@@ -28,6 +28,7 @@ import { consumerMatchRouter } from "#src/trpc/router/consumer-match.router.ts";
 import { bucksRouter } from "#src/trpc/router/bucks.router.ts";
 import { customsRouter } from "#src/trpc/router/customs.router.ts";
 import { customsHistoryRouter } from "#src/trpc/router/customs-history.router.ts";
+import { hallRouter } from "#src/trpc/router/hall.router.ts";
 
 export const appRouter = router({
   auth: authRouter,
@@ -52,6 +53,7 @@ export const appRouter = router({
   bucks: bucksRouter,
   customs: customsRouter,
   customsHistory: customsHistoryRouter,
+  hall: hallRouter,
 });
 
 export type AppRouter = typeof appRouter;

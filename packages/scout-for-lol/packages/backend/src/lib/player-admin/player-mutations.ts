@@ -5,7 +5,9 @@ import {
   type PlayerId,
 } from "@scout-for-lol/data";
 import { prisma, type Db } from "#src/database/index.ts";
+import configuration from "#src/configuration.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
+import { queueHallRosterRebaseline } from "#src/progression/hall/roster-change.ts";
 import {
   GuildIdInput,
   conflict,
@@ -47,7 +49,7 @@ export async function renamePlayer(ctx: WebCtx, input: RenamePlayerInputData) {
   });
   const now = new Date();
   try {
-    return await prisma.$transaction(async (tx) => {
+    const renamed = await prisma.$transaction(async (tx) => {
       const existing = await tx.player.findUnique({
         where: {
           serverId_alias: { serverId: input.guildId, alias: input.newAlias },
@@ -81,8 +83,15 @@ export async function renamePlayer(ctx: WebCtx, input: RenamePlayerInputData) {
         },
         tx,
       );
+      await queueHallRosterRebaseline({
+        guildId: input.guildId,
+        actorDiscordId: ctx.user.discordId,
+        stage: configuration.environment,
+        db: tx,
+      });
       return { alias: updated.alias };
     });
+    return renamed;
   } catch (error) {
     if (isUniqueConstraintError(error)) {
       throw conflict(`A player named "${input.newAlias}" already exists`);
@@ -195,6 +204,12 @@ export async function deletePlayer(ctx: WebCtx, input: DeletePlayerInputData) {
       },
       tx,
     );
+    await queueHallRosterRebaseline({
+      guildId: input.guildId,
+      actorDiscordId: ctx.user.discordId,
+      stage: configuration.environment,
+      db: tx,
+    });
   });
   return { deletedAlias: player.alias };
 }
@@ -261,6 +276,12 @@ export async function mergePlayers(ctx: WebCtx, input: MergePlayersInputData) {
       },
       tx,
     );
+    await queueHallRosterRebaseline({
+      guildId: input.guildId,
+      actorDiscordId: ctx.user.discordId,
+      stage: configuration.environment,
+      db: tx,
+    });
   });
   return { sourceAlias: source.alias, targetAlias: target.alias };
 }

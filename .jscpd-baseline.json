@@ -1150,7 +1150,7 @@
     },
     "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.test.ts|packages/scout-for-lol/packages/backend/src/lib/player-admin/player-mutations.test.ts": {
       "clones": 2,
-      "tokens": 305
+      "tokens": 248
     },
     "packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.ts|packages/scout-for-lol/packages/backend/src/lib/player-admin/account-mutations.ts": {
       "clones": 1,

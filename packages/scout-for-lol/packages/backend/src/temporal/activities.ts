@@ -324,6 +324,18 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await expireCustomNights();
             break;
           }
+          case "progression-outbox": {
+            const [
+              { deliverHallRecordBreakOutbox },
+              { reconcileCompetitiveProgression },
+            ] = await Promise.all([
+              import("#src/progression/hall/outbox.ts"),
+              import("#src/progression/reconcile.ts"),
+            ]);
+            await reconcileCompetitiveProgression(input.stage);
+            await deliverHallRecordBreakOutbox();
+            break;
+          }
           case "prediction-ingest":
           case "legacy-backfill":
             unavailable(input.kind);
@@ -427,6 +439,20 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
         }
       });
       Context.current().heartbeat({ kind: input.kind, phase: "complete" });
+    },
+    runHallBaseline: async (input) => {
+      await heartbeatWhile(
+        {
+          guildId: input.guildId,
+          revision: input.revision,
+          phase: "building-hall-baseline",
+        },
+        async () => {
+          const { runHallBaseline } =
+            await import("#src/progression/hall/baseline.ts");
+          await runHallBaseline(input);
+        },
+      );
     },
   };
 }

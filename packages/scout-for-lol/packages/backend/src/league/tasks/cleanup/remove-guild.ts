@@ -33,6 +33,8 @@ export type RemovedGuildCleanupSummary = {
   accounts: number;
   players: number;
   permissionErrors: number;
+  hallSettings: number;
+  hallRecordBreakOutbox: number;
 };
 
 /**
@@ -123,6 +125,12 @@ export async function cleanupRemovedGuild(
       const serverPermissions = await tx.serverPermission.deleteMany({
         where: { serverId },
       });
+      const hallRecordBreakOutbox = await tx.hallRecordBreakOutbox.deleteMany({
+        where: { guildId: serverId },
+      });
+      const hallSettings = await tx.hallSettings.deleteMany({
+        where: { guildId: serverId },
+      });
       const accounts = await tx.account.deleteMany({ where: { serverId } });
       const players = await tx.player.deleteMany({ where: { serverId } });
       const permissionErrors = await tx.guildPermissionError.deleteMany({
@@ -138,6 +146,8 @@ export async function cleanupRemovedGuild(
         accounts: accounts.count,
         players: players.count,
         permissionErrors: permissionErrors.count,
+        hallSettings: hallSettings.count,
+        hallRecordBreakOutbox: hallRecordBreakOutbox.count,
       };
     },
   );

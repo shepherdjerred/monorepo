@@ -15,6 +15,8 @@ import { backfillLastMatchTime } from "#src/league/api/backfill-match-history.ts
 import { getRiotIdByPuuid } from "#src/lib/riot/account-riot-id.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { enqueueInitialMatchHistoryImport } from "#src/league/initial-history/enqueue.ts";
+import configuration from "#src/configuration.ts";
+import { queueHallRosterRebaseline } from "#src/progression/hall/roster-change.ts";
 import {
   conflict,
   GuildIdInput,
@@ -151,6 +153,12 @@ export async function addAccount(ctx: WebCtx, input: AddAccountInputData) {
         },
         tx,
       );
+      await queueHallRosterRebaseline({
+        guildId: input.guildId,
+        actorDiscordId: ctx.user.discordId,
+        stage: configuration.environment,
+        db: tx,
+      });
       return account;
     })
     .catch((error: unknown) => {
@@ -222,6 +230,12 @@ export async function deleteAccount(ctx: WebCtx, input: RiotAccountInputData) {
       },
       tx,
     );
+    await queueHallRosterRebaseline({
+      guildId: input.guildId,
+      actorDiscordId: ctx.user.discordId,
+      stage: configuration.environment,
+      db: tx,
+    });
     return {
       accountId: currentAccount.id,
       playerAlias: currentAccount.player.alias,
@@ -300,6 +314,12 @@ export async function transferAccount(
       },
       tx,
     );
+    await queueHallRosterRebaseline({
+      guildId: input.guildId,
+      actorDiscordId: ctx.user.discordId,
+      stage: configuration.environment,
+      db: tx,
+    });
     return {
       accountId: account.id,
       fromPlayerAlias: currentAccount.player.alias,
@@ -382,9 +402,14 @@ export async function updateAccount(
       },
       tx,
     );
+    await queueHallRosterRebaseline({
+      guildId: input.guildId,
+      actorDiscordId: ctx.user.discordId,
+      stage: configuration.environment,
+      db: tx,
+    });
     return result;
   });
-
   return {
     accountId: updated.id,
     alias: updated.alias,
