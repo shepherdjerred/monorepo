@@ -1,7 +1,6 @@
 ---
 name: screenshot
 description: Boot a fresh isolated dev server for a package, drive a real Chrome instance via PinchTab to a route, and capture a screenshot — the happy-path way to visually verify a frontend change in this monorepo.
-user-invocable: true
 allowed-tools:
   - Bash
   - Read

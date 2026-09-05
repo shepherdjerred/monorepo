@@ -44,6 +44,7 @@ packages/dpp/
 /.claude/hooks/*
 !/.claude/hooks/trust-mise.sh
 !/.claude/hooks/worktree-reminder.sh
+!/.claude/skills
 /.claude.json
 /.claude.json.*
 

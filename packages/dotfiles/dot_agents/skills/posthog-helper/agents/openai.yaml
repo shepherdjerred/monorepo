@@ -1,4 +1,0 @@
-interface:
-  display_name: "PostHog CLI Helper"
-  short_description: "Analyze PostHog with schema-first API workflows"
-  default_prompt: "Use $posthog-helper to inspect PostHog schema-first and make only explicitly authorized changes."
