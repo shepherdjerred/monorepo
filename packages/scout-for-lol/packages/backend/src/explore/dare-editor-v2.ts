@@ -12,14 +12,14 @@ import {
   prepareDareDraftV3,
   retainedDareDraftV3Semantics,
   reviseDareDraftV3,
-} from "#src/betting/dare-draft-v3.ts";
+} from "#src/betting/dares/lifecycle/dare-draft-v3.ts";
 import {
   prepareDareDraftV2,
   reviseDareDraftV2,
-} from "#src/betting/dare-draft-v2.ts";
-import { historicallyPreviewDareV2 } from "#src/betting/dare-preview-v2.ts";
-import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
-import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
+} from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
+import { historicallyPreviewDareV2 } from "#src/betting/dares/presentation/dare-preview-v2.ts";
+import { compileDareScoutQlPlanV2 } from "#src/betting/dares/sql/dare-scoutql-plan-compiler-v2.ts";
+import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dares/sql/dare-sql-v3-description.ts";
 import { prisma } from "#src/database/index.ts";
 
 export const DareDraftEditorInputSchema = z.strictObject({

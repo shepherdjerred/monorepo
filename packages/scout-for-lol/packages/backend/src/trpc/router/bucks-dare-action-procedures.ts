@@ -6,14 +6,14 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
-import { deleteDareDraftV2 } from "#src/betting/dare-draft-v2.ts";
-import { listDareEvidenceV2 } from "#src/betting/dare-evidence-view-v2.ts";
-import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
+import { tryEnsureDareV2Callout } from "#src/betting/dares/presentation/dare-callout-v2.ts";
+import { deleteDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
+import { listDareEvidenceV2 } from "#src/betting/dares/presentation/dare-evidence-view-v2.ts";
+import { consumeDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume-v2.ts";
 import {
   createDareV2ConfirmationIntent,
   dareV2IntentAction,
-} from "#src/betting/dare-intent-v2.ts";
+} from "#src/betting/dares/lifecycle/dare-intent-v2.ts";
 import { assertBucksScope } from "#src/consumer/bucks-access.ts";
 import { prisma } from "#src/database/index.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";

@@ -4,13 +4,13 @@ import {
   type DareParaphraseCorpus,
 } from "@scout-for-lol/data";
 import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
-import { darePlanSemanticIssues } from "#src/betting/dare-contract-compiler-v2.ts";
-import { prepareDareDraftV2 } from "#src/betting/dare-draft-v2.ts";
+import { darePlanSemanticIssues } from "#src/betting/dares/evaluation/dare-contract-compiler-v2.ts";
+import { prepareDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
 import {
   canonicalDarePlanJsonV2,
   canonicalDarePlanV2,
-} from "#src/betting/dare-plan-canonical-v2.ts";
-import { renderDarePlanV2 } from "#src/betting/dare-render-v2.ts";
+} from "#src/betting/dares/evaluation/dare-plan-canonical-v2.ts";
+import { renderDarePlanV2 } from "#src/betting/dares/presentation/dare-render-v2.ts";
 import { DareDefinitionV2ToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
 import {
   DARE_V2_EVAL_MODEL,

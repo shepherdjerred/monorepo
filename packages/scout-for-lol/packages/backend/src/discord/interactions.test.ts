@@ -6,8 +6,8 @@ import {
 } from "#src/discord/interactions.ts";
 import { formatBucksCustomId } from "#src/betting/custom-id.ts";
 import { formatBucksNavigationId } from "#src/betting/navigation.ts";
-import { formatParlayCustomId } from "#src/betting/parlay-custom-id.ts";
-import { formatDareV2CustomId } from "#src/betting/dare-custom-id-v2.ts";
+import { formatParlayCustomId } from "#src/betting/parlays/parlay-custom-id.ts";
+import { formatDareV2CustomId } from "#src/betting/dares/lifecycle/dare-custom-id-v2.ts";
 
 const USER_ID = DiscordAccountIdSchema.parse("160509172704739328");
 

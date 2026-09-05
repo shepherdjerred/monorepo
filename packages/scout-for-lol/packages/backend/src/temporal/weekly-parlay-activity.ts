@@ -24,7 +24,7 @@ export async function invokeWeeklyParlayAction(
     },
     async () => {
       const { runWeeklyParlayControlAction } =
-        await import("#src/betting/weekly-parlay-control.ts");
+        await import("#src/betting/weekly/weekly-parlay-control.ts");
       return await runWeeklyParlayControlAction(action, {
         serverId: MY_SERVER,
         signal: Context.current().cancellationSignal,

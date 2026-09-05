@@ -10,19 +10,19 @@ import {
   type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
-import type { EarnedAward } from "#src/betting/earnings.ts";
+import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
+import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
 import { buildSettlementMessage } from "#src/betting/outcome-message.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
-import { deliverSettlementDms } from "#src/betting/settlement-dm-delivery.ts";
+import { deliverSettlementDms } from "#src/betting/settlement/settlement-dm-delivery.ts";
 import {
   bettingSettlementSuppressedTotal,
   bettingSettlementUndeliverableTotal,
 } from "#src/metrics/betting.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
-import type { ClosedPool } from "#src/betting/sweep-types.ts";
+import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   ChannelSendError,
