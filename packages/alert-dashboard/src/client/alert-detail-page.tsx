@@ -259,12 +259,22 @@ function AlertDetailContent({
                     Previews are unavailable; alert details remain available.
                   </div>
                 ),
-                available: (data) => (
-                  <div className="preview-grid">
-                    <Preview title="Prometheus" value={data.prometheus} />
-                    <Preview title="Loki" value={data.loki} />
-                    <Preview title="Tempo" value={data.tempo} />
-                  </div>
+                available: (data, previewMeta) => (
+                  <>
+                    {/*
+                      The previews are their own dependency: the outer
+                      LoadingBlock joins only `alertValue`, so a failed preview
+                      refetch over cached previews is invisible to the page's
+                      StaleNotice. Without this the old Prometheus/Loki/Tempo
+                      values read as current.
+                    */}
+                    <StaleNotice errors={previewMeta.errors} />
+                    <div className="preview-grid">
+                      <Preview title="Prometheus" value={data.prometheus} />
+                      <Preview title="Loki" value={data.loki} />
+                      <Preview title="Tempo" value={data.tempo} />
+                    </div>
+                  </>
                 ),
               })}
             </div>

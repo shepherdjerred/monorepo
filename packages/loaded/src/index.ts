@@ -143,7 +143,6 @@ type JoinState = {
   readonly fatal: boolean;
   readonly pending: boolean;
   readonly errors: readonly LoadedError[];
-  readonly data: Record<string, unknown>;
 };
 
 const NO_ERRORS: readonly LoadedError[] = [];
@@ -287,7 +286,6 @@ function joinEntries(
   entries: readonly (readonly [string, Loaded<unknown>])[],
 ): JoinState {
   const errors: LoadedError[] = [];
-  const data: Record<string, unknown> = {};
   let fetching = false;
   let fatal = false;
   let pending = false;
@@ -303,12 +301,10 @@ function joinEntries(
       fatal = true;
     } else if (value.status === "loading") {
       pending = true;
-    } else {
-      data[key] = value.data;
     }
   }
 
-  return { fetching, fatal, pending, errors, data };
+  return { fetching, fatal, pending, errors };
 }
 
 /**
@@ -372,13 +368,26 @@ function all<T extends LoadedRecord>(values: T): Loaded<LoadedData<T>> {
   if (joined.fatal || joined.pending) {
     return unavailable(joined);
   }
+
+  // `for...in` over a generic gives correctly-typed keys where `Object.keys`
+  // would give `string[]`, so each assignment below is checked against that
+  // key's own slot in the mapped type. The values are therefore type-checked;
+  // what remains unproven is only *totality*.
+  const collected: Partial<LoadedData<T>> = {};
+  for (const key in values) {
+    const value: T[Extract<keyof T, string>] = values[key];
+    if (value.status === "degraded" || value.status === "done") {
+      collected[key] = value.data;
+    }
+  }
+
   // Neither fatal nor pending means every entry was `degraded` or `done`, so
-  // the loop wrote exactly one own property per key of `T`, each holding that
-  // key's `data`. That is precisely `LoadedData<T>`. The checker cannot connect
-  // a loop's proof to a mapped type, and this is the only place in the package
-  // that needs telling.
-  // eslint-disable-next-line custom-rules/no-type-assertions -- proven above
-  const data = joined.data as LoadedData<T>;
+  // the loop assigned every key of `T` and `collected` is total. TypeScript
+  // cannot carry that fact out of a loop: `Partial<X>` to `X` is exactly the
+  // step it will not take. The assertion covers only that gap — not the value
+  // types, which the loop above already checked key by key.
+  // eslint-disable-next-line custom-rules/no-type-assertions -- totality only
+  const data = collected as LoadedData<T>;
   return availableFrom(joined, data);
 }
 
