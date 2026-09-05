@@ -21,6 +21,7 @@ import {
   acceptDuelChallenge,
   acceptDuelDisclosure,
   createDirectDuel,
+  getDuelCode,
   getDuelSeries,
   markDuelReady,
 } from "#src/progression/duels/series.ts";
@@ -327,6 +328,72 @@ async function verifyRoundRobinAcceptanceCap(): Promise<void> {
   ).toBe(1);
 }
 
+async function verifyCodeVisibilityAfterIdentityChange(): Promise<void> {
+  const first = await createPlayer(1);
+  const second = await createPlayer(2);
+  const duel = await createTestDirectDuel(first, second);
+  for (const player of [first, second]) {
+    await acceptDuelDisclosure(db, {
+      guildId: GUILD_ID,
+      playerId: player.playerId,
+      discordId: player.discordId,
+    });
+    await acceptDuelChallenge(db, duel.seriesId, player.discordId, GUILD_ID);
+    await markDuelReady(db, duel.seriesId, player.discordId, GUILD_ID);
+  }
+  const lobby = await db.tournamentLobby.create({
+    data: {
+      code: `DUEL-CODE-${crypto.randomUUID()}`,
+      apiMode: "stub",
+      providerId: 1,
+      tournamentId: 2,
+      region: "AMERICA_NORTH",
+      platformId: "NA1",
+      serverId: GUILD_ID,
+      channelId: CHANNEL_ID,
+      creatorDiscordId: ORGANIZER_ID,
+      bluePuuids: "[]",
+      redPuuids: "[]",
+      blueAliases: "[]",
+      redAliases: "[]",
+      teamSize: 2,
+      pickType: "TOURNAMENT_DRAFT",
+      mapType: "SUMMONERS_RIFT",
+      spectatorType: "ALL",
+      state: "created",
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    },
+  });
+  await db.duelSeries.update({
+    where: { id: duel.seriesId },
+    data: { seriesState: "code_ready" },
+  });
+  await db.duelGame.create({
+    data: {
+      seriesId: duel.seriesId,
+      gameNumber: 1,
+      gameState: "code_ready",
+      tournamentLobbyId: lobby.id,
+    },
+  });
+
+  const replacementDiscordId = testAccountId("73188");
+  await db.player.update({
+    where: { id: first.playerId },
+    data: { discordId: replacementDiscordId },
+  });
+  await expect(
+    getDuelCode(db, duel.seriesId, replacementDiscordId, GUILD_ID),
+  ).rejects.toThrow(
+    "Tournament codes are visible only to assigned participants",
+  );
+  await expect(
+    getDuelCode(db, duel.seriesId, first.discordId, GUILD_ID),
+  ).rejects.toThrow(
+    "Tournament codes are visible only to assigned participants",
+  );
+}
+
 beforeEach(async () => {
   vi.mocked(launchDuelSeries).mockClear();
   await db.duelStatusOutbox.deleteMany();
@@ -455,6 +522,10 @@ describe("duel persistence", () => {
     await expect(
       markDuelReady(db, duel.seriesId, replacementDiscordId, GUILD_ID),
     ).resolves.toMatchObject({ deadlineAt: expect.any(Date) });
+  });
+
+  test("does not reveal a code to an identity that has not re-consented", async () => {
+    await verifyCodeVisibilityAfterIdentityChange();
   });
 
   test("revokes member-wide list visibility after an identity change", async () => {

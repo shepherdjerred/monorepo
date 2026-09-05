@@ -467,7 +467,9 @@ export async function getDuelCode(
     !series.participants.some(
       (participant) =>
         effectiveParticipantDiscordId(currentDiscordIdByPlayer, participant) ===
-        viewerDiscordId,
+          viewerDiscordId &&
+        participant.discordId === viewerDiscordId &&
+        participant.acceptedAt !== null,
     )
   ) {
     throw new Error(
