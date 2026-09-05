@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
+  BucksStakeSchema,
   ConfirmationIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -17,6 +18,48 @@ import { assertBucksScope } from "#src/consumer/bucks-access.ts";
 import { prisma } from "#src/database/index.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 
+/**
+ * Dare action payloads accepted from the management app.
+ *
+ * Confirmation intents used to discriminate on `action` (`{action: "fund"}`)
+ * and now discriminate on `kind`. A tab loaded before that deployment is still
+ * running the old client, so rejecting its shape would take every Dare action
+ * in that tab out of service until the user happened to reload. Both shapes
+ * are accepted for one release; delete the legacy branch after stale clients
+ * have aged out.
+ *
+ * The new shape is tried first, and the legacy objects are strict, so this
+ * widens what is accepted without loosening validation of either form.
+ */
+const LEGACY_ACTION_KINDS = {
+  fund: "dare_fund",
+  accept: "dare_accept",
+  decline: "dare_decline",
+  cancel: "dare_cancel",
+  contribute: "dare_contribute",
+} as const;
+
+const LegacyDarePayloadSchema = z
+  .union([
+    z.strictObject({
+      action: z.enum(["fund", "accept", "decline", "cancel"]),
+    }),
+    z.strictObject({
+      action: z.literal("contribute"),
+      amount: BucksStakeSchema,
+    }),
+  ])
+  .transform((legacy) =>
+    legacy.action === "contribute"
+      ? { kind: LEGACY_ACTION_KINDS.contribute, amount: legacy.amount }
+      : { kind: LEGACY_ACTION_KINDS[legacy.action] },
+  );
+
+export const DarePayloadInputSchema = z.union([
+  ConfirmationIntentPayloadSchema,
+  LegacyDarePayloadSchema.pipe(ConfirmationIntentPayloadSchema),
+]);
+
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const DareInput = GuildInput.extend({ dareId: z.number().int().positive() });
 const DareEvidenceInput = DareInput.extend({
@@ -25,7 +68,7 @@ const DareEvidenceInput = DareInput.extend({
 });
 const DarePrepareActionInput = DareInput.extend({
   expectedRevision: z.number().int().positive(),
-  payload: ConfirmationIntentPayloadSchema,
+  payload: DarePayloadInputSchema,
   idempotencyKey: z.uuid(),
 });
 const DareConfirmActionInput = GuildInput.extend({ intentId: z.uuid() });

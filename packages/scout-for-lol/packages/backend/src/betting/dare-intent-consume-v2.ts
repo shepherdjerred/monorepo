@@ -1,5 +1,4 @@
 import {
-  ConfirmationIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type ConfirmationIntentPayload,
@@ -23,6 +22,7 @@ import {
 } from "#src/betting/dare-v2-common.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import type { Db } from "#src/database/index.ts";
+import { readConfirmationIntentPayload } from "#src/lib/confirmation-intent/payload.ts";
 import type { ConfirmationIntent } from "#generated/prisma/client/index.js";
 import { claimAndExecute } from "#src/lib/confirmation-intent/claim.ts";
 
@@ -175,9 +175,7 @@ export async function consumeDareV2ConfirmationIntent(
   if (intent.actorDiscordId !== input.actorDiscordId) {
     return { kind: "forbidden" } as const;
   }
-  const payload = ConfirmationIntentPayloadSchema.parse(
-    JSON.parse(intent.payload),
-  );
+  const payload = readConfirmationIntentPayload(intent);
   if (intent.consumedAt !== null) {
     return {
       kind: "already_consumed",
