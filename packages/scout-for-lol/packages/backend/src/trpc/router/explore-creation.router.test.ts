@@ -331,6 +331,28 @@ describe("explore.confirmCreationIntent — subscriptions", () => {
 });
 
 describe("explore.confirmCreationIntent — competitions", () => {
+  test("an entrant that no longer exists is a refusal, not a server error", async () => {
+    // The payload's entrant ids were written by the model when the intent was
+    // prepared, so a player deleted since then is expected input at this
+    // boundary rather than a broken caller. createCompetitionForActor lets the
+    // enrollment throw so the half-built competition rolls back; that must
+    // surface as an actionable refusal instead of an internal error the person
+    // would hit again on every retry.
+    await grant({ resource: "competitions", action: "create" });
+    await grant({ resource: "competitions", action: "invite" });
+    const payload = ConfirmationIntentPayloadSchema.parse({
+      ...competitionPayload(),
+      initialPlayerIds: [987_654_321],
+    });
+    const intentId = await mintIntent(payload);
+
+    await expect(
+      caller().explore.confirmCreationIntent({ intentId }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+
+    expect(await db.competition.count({ where: { serverId: GUILD } })).toBe(0);
+  });
+
   test("creates the competition with a COMPETITION_CREATE audit row", async () => {
     await grant({ resource: "competitions", action: "create" });
     const intentId = await mintIntent(competitionPayload());

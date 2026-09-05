@@ -38,10 +38,15 @@ import type {
   User,
 } from "#generated/prisma/client/index.js";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type Db } from "#src/database/index.ts";
 import { captureFirstSubscriptionCreated } from "#src/analytics/guild-lifecycle.ts";
 import { recordMutationAudit } from "#src/lib/audit/audited-mutation.ts";
-import { claimAndExecute } from "#src/lib/confirmation-intent/claim.ts";
+import {
+  claimAndExecute,
+  type ClaimRefusal,
+} from "#src/lib/confirmation-intent/claim.ts";
+import { InitialEntrantsValidationError } from "#src/database/competition/participants.ts";
+import { asCompetitionBadRequest } from "#src/trpc/router/competition-router-helpers.ts";
 import {
   executeCreationIntent,
   type CreationPostCommit,
@@ -209,6 +214,46 @@ async function runPostCommit(params: {
   }
 }
 
+/**
+ * Run the claim, turning a prepared payload's own invalidity into an answer.
+ *
+ * A competition intent carries model-authored dates and entrant ids, so a
+ * reversed range, or an entrant removed between preparing and confirming, is
+ * expected input at this boundary rather than a broken caller.
+ * `createCompetitionForActor` deliberately lets both throw so the transaction
+ * rolls back instead of committing a half-enrolled competition — and that
+ * rollback takes the claim with it, so without this the person would get a 500
+ * and the same 500 on every retry until the intent expired.
+ *
+ * Rolling the claim back is the right half of that behaviour and is kept: the
+ * intent is left to expire rather than burned by a failure, and the refusal
+ * carries the same message the web form would have given.
+ */
+async function claimCreation<Result>(
+  run: (tx: Db) => Promise<Result>,
+  input: { intentId: string; actorDiscordId: DiscordAccountId },
+): Promise<Result | ClaimRefusal> {
+  try {
+    return await claimAndExecute(
+      prisma,
+      {
+        intentId: input.intentId,
+        actorDiscordId: input.actorDiscordId,
+        now: new Date(),
+      },
+      run,
+    );
+  } catch (error) {
+    if (
+      error instanceof InitialEntrantsValidationError ||
+      error instanceof z.ZodError
+    ) {
+      asCompetitionBadRequest(error);
+    }
+    throw error;
+  }
+}
+
 const confirmCreationIntent = webMutationProcedure
   .input(intentInput)
   .mutation(async ({ ctx, input }) => {
@@ -227,13 +272,7 @@ const confirmCreationIntent = webMutationProcedure
     const captured: { postCommit: CreationPostCommit | null } = {
       postCommit: null,
     };
-    const outcome = await claimAndExecute(
-      prisma,
-      {
-        intentId: loaded.intent.id,
-        actorDiscordId: loaded.userId,
-        now: new Date(),
-      },
+    const outcome = await claimCreation(
       async (tx) => {
         const executed = await executeCreationIntent(tx, {
           payload: loaded.payload,
@@ -250,6 +289,10 @@ const confirmCreationIntent = webMutationProcedure
           detail: executed.audit,
         });
         return executed.outcome;
+      },
+      {
+        intentId: loaded.intent.id,
+        actorDiscordId: loaded.userId,
       },
     );
 

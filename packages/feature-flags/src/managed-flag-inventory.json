@@ -595,6 +595,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "explore_creation_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Let Explore prepare report, subscription and competition creations for confirmation.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",
