@@ -1,9 +1,11 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { skipToken, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { RefreshCwIcon, SearchIcon } from "lucide-react";
 import { useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "react-router";
 
 import { AlertTable } from "./alert-table.tsx";
+import { StaleNotice } from "./stale-notice.tsx";
 import { age } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
 import { Button } from "#components/button";
@@ -35,10 +37,6 @@ function withUpdatedParam(
   if (value === "") next.delete(key);
   else next.set(key, value);
   return next;
-}
-
-function queryFailed(...states: readonly boolean[]): boolean {
-  return states.includes(true);
 }
 
 function searchParam(search: string): string {
@@ -108,14 +106,28 @@ export function DashboardPage(): React.JSX.Element {
       },
     ),
   );
-  const alertItems = alerts.data?.pages.flatMap((page) => page.items) ?? [];
+  // The page renders its shell immediately and fills values in as they arrive,
+  // so the two dependencies stay separate for display. They are joined only to
+  // decide the one thing that is genuinely shared: whether the page can be
+  // shown at all. A dependency that failed but still holds cached data is
+  // `degraded`, not `error`, so a failed refresh no longer blanks the page.
+  const summaryValue = Loaded.fromQuery(summary, ["summary"]);
+  const alertsValue = Loaded.fromQuery(alerts, ["alerts"]);
+  const page = Loaded.all({ summary: summaryValue, alerts: alertsValue });
+  const summaryData = Loaded.getOrElse(summaryValue, undefined);
+  const alertItems = Loaded.getOrElse(
+    Loaded.map(alertsValue, (data) =>
+      data.pages.flatMap((entry) => entry.items),
+    ),
+    [],
+  );
   const update = (key: string, value: string): void => {
     setParams(withUpdatedParam(params, key, value), {
       flushSync: true,
       replace: false,
     });
   };
-  if (queryFailed(summary.isError, alerts.isError))
+  if (page.status === "error")
     return (
       <main>
         <div className="error-state">
@@ -133,11 +145,12 @@ export function DashboardPage(): React.JSX.Element {
   return (
     <main>
       <title>Active alerts · Alerts</title>
+      <StaleNotice errors={page.status === "degraded" ? page.errors : []} />
       <div className="page-heading">
         <div>
           <p className="eyebrow">Alertmanager ledger</p>
           <h1>Active alerts</h1>
-          <p>Last reconciled {age(summary.data?.lastReconciledAt ?? null)}</p>
+          <p>Last reconciled {age(summaryData?.lastReconciledAt ?? null)}</p>
         </div>
         <Button
           aria-label="Refresh alerts"
@@ -150,11 +163,11 @@ export function DashboardPage(): React.JSX.Element {
       </div>
       <section className="summary-grid" aria-label="Alert summary">
         {[
-          ["Open", summary.data?.open],
-          ["Critical", summary.data?.critical],
-          ["Warning", summary.data?.warning],
-          ["Silenced", summary.data?.silenced],
-          ["Inhibited", summary.data?.inhibited],
+          ["Open", summaryData?.open],
+          ["Critical", summaryData?.critical],
+          ["Warning", summaryData?.warning],
+          ["Silenced", summaryData?.silenced],
+          ["Inhibited", summaryData?.inhibited],
         ].map(([label, value]) => (
           <div className="summary-card" key={label}>
             <span>{label}</span>
@@ -213,7 +226,7 @@ export function DashboardPage(): React.JSX.Element {
           </label>
         </div>
         {input.success ? (
-          alerts.isPending ? (
+          alertsValue.status === "loading" ? (
             <div className="loading-state">Loading alerts…</div>
           ) : (
             <>

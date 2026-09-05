@@ -1,6 +1,8 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { skipToken, useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useSearchParams } from "react-router";
 
+import { StaleNotice } from "./stale-notice.tsx";
 import { formatInstant } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
 import { Button } from "#components/button";
@@ -33,7 +35,11 @@ export function HistoryPage(): React.JSX.Element {
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     ),
   );
-  const eventItems = events.data?.pages.flatMap((page) => page.items) ?? [];
+  const eventsValue = Loaded.fromQuery(events, ["events"]);
+  const eventItems = Loaded.getOrElse(
+    Loaded.map(eventsValue, (data) => data.pages.flatMap((page) => page.items)),
+    [],
+  );
   const update = (key: string, value: string): void => {
     const next = new URLSearchParams(params);
     if (value === "") next.delete(key);
@@ -43,6 +49,9 @@ export function HistoryPage(): React.JSX.Element {
   return (
     <main>
       <title>History · Alerts</title>
+      <StaleNotice
+        errors={eventsValue.status === "degraded" ? eventsValue.errors : []}
+      />
       <div className="page-heading">
         <div>
           <p className="eyebrow">Durable lifecycle ledger</p>
@@ -125,9 +134,9 @@ export function HistoryPage(): React.JSX.Element {
           </label>
         </div>
         {input.success ? (
-          events.isError ? (
+          eventsValue.status === "error" ? (
             <div className="error-state">History is unavailable.</div>
-          ) : events.isPending ? (
+          ) : eventsValue.status === "loading" ? (
             <div className="loading-state">Loading history…</div>
           ) : eventItems.length === 0 ? (
             <div className="empty-state">
