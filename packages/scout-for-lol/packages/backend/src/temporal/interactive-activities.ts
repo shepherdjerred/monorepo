@@ -93,6 +93,11 @@ async function salvageAmbiguousExploreRun(input: {
       state: "INTERRUPTED",
       outcome: "interrupted",
       completedAt: new Date(),
+      // Same reason as the outcome path below: these mirror a running turn's
+      // progress and may name the person it looked up, so a terminal state
+      // clears them rather than leaving them in an undeleted row.
+      activity: null,
+      preview: null,
       lastError:
         "Provider attempt state was ambiguous after restart; Scout did not issue a second model request.",
     },
@@ -486,6 +491,14 @@ export async function persistScoutInteractiveOutcome(
               : "FAILED",
       outcome: input.outcome.status,
       completedAt: new Date(),
+      // Both are mirrored purely so a durable observer can follow a *running*
+      // turn, and both may name the person the turn looked up — the activity
+      // channel is the one place that text is allowed, precisely because it is
+      // never stored. Rows here are not deleted, so leaving them behind would
+      // turn "never persisted" into "persisted forever". A finished run has
+      // nothing to observe, so this costs nothing.
+      activity: null,
+      preview: null,
     },
     select: { partialOutput: true },
   });
