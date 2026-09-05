@@ -118,6 +118,7 @@
     "packages/llm-models",
     "packages/llm-observability",
     "packages/llm-runtime",
+    "packages/loaded",
     "packages/macos-ai-subscription-tracker",
     "packages/openrouter-broadcast-ingest",
     "packages/monarch",
