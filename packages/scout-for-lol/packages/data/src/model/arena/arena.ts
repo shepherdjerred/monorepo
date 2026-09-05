@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ChampionSchema } from "#src/model/champion.ts";
-import { PlayerConfigEntrySchema } from "#src/model/player-config.ts";
+import { ChampionSchema } from "#src/model/riot/champion.ts";
+import { PlayerConfigEntrySchema } from "#src/model/riot/player-config.ts";
 import { match } from "ts-pattern";
 import { AugmentSchema } from "#src/model/arena/augment.ts";
 

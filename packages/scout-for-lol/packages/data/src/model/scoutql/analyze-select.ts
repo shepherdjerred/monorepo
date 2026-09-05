@@ -7,7 +7,7 @@ import type {
   ScoutQlDiagnostic,
   ScoutQlSpan,
 } from "#src/model/scoutql/diagnostics.ts";
-import type { ReportDisplayKind } from "#src/model/report.ts";
+import type { ReportDisplayKind } from "#src/model/reports/report.ts";
 import type { ScoutQlOutputExpr } from "#src/model/scoutql/plan.ts";
 import type { ScoutQlEvidence } from "#src/model/scoutql/expression.ts";
 import { ScoutQlOutputNameSchema } from "#src/model/scoutql/expression.ts";

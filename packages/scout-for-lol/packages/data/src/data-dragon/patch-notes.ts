@@ -9,9 +9,9 @@
 
 import { z } from "zod";
 import patchNotesData from "./assets/patch-notes.json" with { type: "json" };
-import { normalizeChampionName } from "#src/model/champion-registry.ts";
+import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 import { getItemInfo } from "#src/data-dragon/item.ts";
-import { type Lane } from "#src/model/lane.ts";
+import { type Lane } from "#src/model/riot/lane.ts";
 
 export const PatchDirectionSchema = z.enum([
   "buff",

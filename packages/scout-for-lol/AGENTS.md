@@ -845,7 +845,7 @@ produce mentions, even when their labels match a player alias.
 - **There is no metric registry.** ScoutQL v2 is explicit SQL over the lake's
   own columns, so a new statistic is just a new lake column plus the
   aggregate the author writes (`SUM(x)`, `AVG(x::INT)`, …). Adding a column =
-  the shared schemas in `packages/data/src/model/lake-columns.ts` plus backend
+  the shared schemas in `packages/data/src/model/reports/lake-columns.ts` plus backend
   `report-lake/flatten.ts`. No Prisma migration, no backfill — the nightly
   rebuild picks it up.
 - **ScoutQL v1 is retired.** Its lexer/parser/compiler survive only in
@@ -1691,7 +1691,7 @@ localhost callback URI, and ensure the test guild contains the BETA bot.
 ## Queue availability windows (committed, bot-refreshed)
 
 Limited-time queue availability lives in
-`packages/data/src/model/queue-windows.json` (validated by
+`packages/data/src/model/competitions/queue-windows.json` (validated by
 `queue-windows.schema.ts`; loaded by `queue-availability.ts` — end dates are
 inclusive through the whole UTC day). The `scout-queue-windows-daily` Temporal
 schedule (06:45 PT, `packages/temporal/src/activities/scout-queue-windows.ts`)

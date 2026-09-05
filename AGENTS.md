@@ -838,11 +838,11 @@ Over 25 files prints an advisory and never affects the exit code. Over `CEILING`
 fails.
 
 **There is no allowlist, no exempt-path table, and no per-directory
-suppression.** While the repository is being reorganized, the exported `CEILING`
-sits above `TARGET` (50) and is lowered by each reorganization PR — a single
-global number, so nothing is individually excused and no new directory may
-exceed today's worst case. Do not raise `CEILING`; the only permitted edit is
-lowering it, and the final PR sets it to `TARGET`. This is deliberately unlike
+suppression.** `CEILING` was a ratchet while the repository was reorganized: it
+started at the measured maximum and each reorganization PR lowered it. It now
+equals `TARGET` (50), so enforcement is uniform and complete. **Do not raise
+it** — that would reintroduce exactly the grandfathering this check exists to
+prevent. Split the directory instead. This is deliberately unlike
 `.quality-baseline.json` and `.jscpd-baseline.json`, which are per-file
 allowlists.
 

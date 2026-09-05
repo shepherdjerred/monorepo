@@ -38,7 +38,7 @@ import {
 import {
   resolveTemporalBucket,
   temporalWindowDays,
-} from "#src/model/temporal-analysis.ts";
+} from "#src/model/reports/temporal-analysis.ts";
 import { parseTemporalAnalysisClause } from "#src/model/legacy/temporal-analysis-clause.ts";
 
 const PositiveIntSchema = z.coerce.number().int().positive();

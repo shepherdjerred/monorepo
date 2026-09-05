@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { LaneSchema } from "#src/model/lane.ts";
+import { LaneSchema } from "#src/model/riot/lane.ts";
 
 export const LanePriorVersionSchema = z.literal(1);
 

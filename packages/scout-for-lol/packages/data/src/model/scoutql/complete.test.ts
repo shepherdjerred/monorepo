@@ -5,7 +5,7 @@ import {
   type ScoutQlCompletionItem,
 } from "#src/model/scoutql/complete-items.ts";
 import { lintScoutQl } from "#src/model/scoutql/lint.ts";
-import { ReportOutputFormatSchema } from "#src/model/report.ts";
+import { ReportOutputFormatSchema } from "#src/model/reports/report.ts";
 
 // ── Completion ───────────────────────────────────────────────────────────────
 // The cursor is written as `|` in these fixtures. What is asserted is the

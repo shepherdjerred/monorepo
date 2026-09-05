@@ -4,11 +4,11 @@ import {
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
 } from "@scout-for-lol/data";
-import { ReportDisplayKindSchema } from "@scout-for-lol/data/model/report.ts";
+import { ReportDisplayKindSchema } from "@scout-for-lol/data/model/reports/report.ts";
 import {
   QueueTypeSchema,
   queueTypeToDisplayString,
-} from "@scout-for-lol/data/model/state.ts";
+} from "@scout-for-lol/data/model/core/state.ts";
 import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
 import {
   scoutQlSourceCatalogs,

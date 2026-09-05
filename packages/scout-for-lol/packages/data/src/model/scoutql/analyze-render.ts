@@ -10,7 +10,7 @@ import type {
   ReportOutputFormat,
   ReportRenderChannel,
   ReportRenderSpec,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 import { z } from "zod";
 import {
   ReportChartLabelsSchema,
@@ -23,7 +23,7 @@ import {
   ReportDisplayKindSchema,
   ReportOutputFormatSchema,
   ReportRenderSpecSchema,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 import type { ScoutQlTimeWindow } from "#src/model/scoutql/plan.ts";
 import { closestScoutQlName } from "#src/model/scoutql/catalog-functions.ts";
 import { emitDiagnostic } from "#src/model/scoutql/analyze-expr-shared.ts";

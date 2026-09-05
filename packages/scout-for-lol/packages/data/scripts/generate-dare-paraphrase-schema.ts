@@ -1,11 +1,11 @@
 import path from "node:path";
 import { format } from "prettier";
 import { z } from "zod";
-import { DareParaphraseCorpusSchema } from "#src/model/dare-paraphrase-corpus.ts";
+import { DareParaphraseCorpusSchema } from "#src/model/bucks/dare-paraphrase-corpus.ts";
 
 const outputPath = path.join(
   import.meta.dir,
-  "../src/model/dare-v2-paraphrase-corpus.schema.json",
+  "../src/model/bucks/dare-v2-paraphrase-corpus.schema.json",
 );
 const generated = await format(
   JSON.stringify(z.toJSONSchema(DareParaphraseCorpusSchema)),

@@ -1,5 +1,5 @@
 import { timingSafeEqual } from "node:crypto";
-import { WeeklyParlayControlActionSchema } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import { WeeklyParlayControlActionSchema } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import configuration from "#src/configuration.ts";
 import {
   runWeeklyParlayControlAction,

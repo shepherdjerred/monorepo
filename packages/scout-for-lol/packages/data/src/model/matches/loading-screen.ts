@@ -1,0 +1,410 @@
+import { z } from "zod";
+import { RanksSchema } from "#src/model/riot/rank.ts";
+import {
+  QueueTypeSchema,
+  queueTypeToDisplayString,
+  type QueueType,
+} from "#src/model/core/state.ts";
+import { TeamSchema } from "#src/model/riot/team.ts";
+import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
+import { MapNameSchema } from "#src/model/riot/map.ts";
+import { ArenaTeamIdSchema } from "#src/model/arena/arena.ts";
+import { LaneSchema } from "#src/model/riot/lane.ts";
+import { match } from "ts-pattern";
+import {
+  SummonerSpellIdSchema,
+  RuneIdSchema,
+} from "#src/model/core/identifiers.ts";
+
+/**
+ * Layout mode determines how participants are arranged visually.
+ * - "standard": 5v5 with two columns (ranked, draft, quickplay, swiftplay, brawl, URF, custom, clash)
+ * - "aram": 5v5 with two columns, no bans (ARAM / ARAM clash / normal ARAM Mayhem)
+ * - "arena": Arena prematch focused on followed-player champion cards only
+ * - "classic": Classic champion/spell assets for League Classic modes
+ */
+export type LoadingScreenLayout = z.infer<typeof LoadingScreenLayoutSchema>;
+export const LoadingScreenLayoutSchema = z.enum([
+  "standard",
+  "aram",
+  "arena",
+  "classic",
+]);
+
+export function loadingScreenLayoutForQueueType(
+  queueType: QueueType,
+): LoadingScreenLayout {
+  return match(queueType)
+    .returnType<LoadingScreenLayout>()
+    .with("aram", "aram clash", "aram mayhem", () => "aram")
+    .with("arena", () => "arena")
+    .with("classic", "classic aram mayhem", () => "classic")
+    .with(
+      "solo",
+      "flex",
+      "ranked 5s",
+      "clash",
+      "arurf",
+      "urf",
+      "quickplay",
+      "swiftplay",
+      "brawl",
+      "normal",
+      "draft pick",
+      "easy doom bots",
+      "normal doom bots",
+      "hard doom bots",
+      "custom",
+      () => "standard",
+    )
+    .exhaustive();
+}
+
+/**
+ * Branded type for Riot game IDs (from spectator API).
+ */
+export type GameId = z.infer<typeof GameIdSchema>;
+export const GameIdSchema = z.number().int().positive().brand<"GameId">();
+
+/**
+ * Branded type for Riot champion IDs (e.g., 1=Annie, 266=Aatrox).
+ */
+export type LoadingScreenChampionId = z.infer<
+  typeof LoadingScreenChampionIdSchema
+>;
+export const LoadingScreenChampionIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand<"LoadingScreenChampionId">();
+
+/**
+ * Discriminated team assignment:
+ * - "blue" or "red" for standard 5v5 / ARAM
+ * - { arenaTeam: 1..8 | null } for Arena mode. Null means Riot did not expose
+ *   Arena subteams in the prematch payload.
+ *
+ * Reuses ArenaTeamIdSchema from the arena model to avoid duplication.
+ */
+export type LoadingScreenTeam = z.infer<typeof LoadingScreenTeamSchema>;
+export const LoadingScreenTeamSchema = z.union([
+  TeamSchema,
+  z.strictObject({ arenaTeam: ArenaTeamIdSchema.nullable() }),
+]);
+
+/**
+ * Branded display name for a queue (e.g., "ranked solo", "ARAM").
+ * Always derived from QueueType via queueTypeToDisplayString.
+ */
+export type QueueDisplayName = z.infer<typeof QueueDisplayNameSchema>;
+export const QueueDisplayNameSchema = z
+  .string()
+  .min(1)
+  .brand<"QueueDisplayName">();
+
+export const LoadingScreenRankStateSchema = z.discriminatedUnion("status", [
+  z.strictObject({ status: z.literal("hidden") }),
+  z.strictObject({ status: z.literal("error") }),
+  z.strictObject({
+    status: z.literal("available"),
+    ranks: RanksSchema,
+  }),
+]);
+export type LoadingScreenRankState = z.infer<
+  typeof LoadingScreenRankStateSchema
+>;
+
+function validateRankVisibility(
+  participant: {
+    puuid: string | null;
+    rankState: LoadingScreenRankState;
+  },
+  context: z.RefinementCtx,
+): void {
+  if (participant.puuid === null && participant.rankState.status !== "hidden") {
+    context.addIssue({
+      code: "custom",
+      message: "Participants without a PUUID must have hidden rank state",
+      path: ["rankState"],
+    });
+  }
+  if (participant.puuid !== null && participant.rankState.status === "hidden") {
+    context.addIssue({
+      code: "custom",
+      message: "Identifiable participants cannot have hidden rank state",
+      path: ["rankState"],
+    });
+  }
+}
+
+export const BaseLoadingScreenParticipantSchema = z.strictObject({
+  /** Riot PUUID — null for participants we cannot identify (rare, e.g., bots) */
+  puuid: LeaguePuuidSchema.nullable(),
+  /** In-game Riot ID (e.g., "Cain#3276") */
+  summonerName: z.string().min(1),
+  /** Riot champion ID from Spectator / Match-V5 */
+  championId: LoadingScreenChampionIdSchema,
+  /** Champion key for image lookup (e.g., "Aatrox", "LeeSin") */
+  championName: z.string().min(1),
+  /** Human-readable champion name (e.g., "Lee Sin") */
+  championDisplayName: z.string().min(1),
+  /** Team assignment (discriminated by layout) */
+  team: LoadingScreenTeamSchema,
+  /** Summoner spell 1 ID (e.g., 4=Flash) */
+  spell1Id: SummonerSpellIdSchema,
+  /** Summoner spell 2 ID (e.g., 14=Ignite) */
+  spell2Id: SummonerSpellIdSchema,
+  /** Keystone rune ID (first perk in primary tree) */
+  keystoneRuneId: RuneIdSchema.optional(),
+  /** Secondary rune tree ID */
+  secondaryTreeId: RuneIdSchema.optional(),
+  /** League-V4 lookup state for loading-screen presentation. */
+  rankState: LoadingScreenRankStateSchema,
+  /** Whether this player is tracked by the bot */
+  isTrackedPlayer: z.boolean(),
+});
+
+export const StandardLoadingScreenParticipantSchema =
+  BaseLoadingScreenParticipantSchema.extend({
+    /** Standard 5v5 side assignment */
+    team: TeamSchema,
+    /**
+     * Inferred standard 5v5 lane.
+     *
+     * Optional because a side that is not a full five has no roles to infer:
+     * Riot reports an empty `teamPosition`, and the lane-prior model is trained
+     * on 5-stacks, so running it on a 2-man side produces confident nonsense.
+     * A full 5v5 still always carries one — see `inferStandardParticipants`.
+     */
+    lane: LaneSchema.optional(),
+  }).superRefine(validateRankVisibility);
+
+export type StandardLoadingScreenParticipant = z.infer<
+  typeof StandardLoadingScreenParticipantSchema
+>;
+
+export const NonStandardLoadingScreenParticipantSchema =
+  BaseLoadingScreenParticipantSchema.extend({
+    /** Team assignment for ARAM or Arena */
+    team: LoadingScreenTeamSchema,
+  }).superRefine(validateRankVisibility);
+
+export type NonStandardLoadingScreenParticipant = z.infer<
+  typeof NonStandardLoadingScreenParticipantSchema
+>;
+
+export const LoadingScreenParticipantSchema = z.union([
+  StandardLoadingScreenParticipantSchema,
+  NonStandardLoadingScreenParticipantSchema,
+]);
+
+/**
+ * A single participant on the loading screen.
+ * Contains all info needed to render one player card.
+ */
+export type LoadingScreenParticipant = z.infer<
+  typeof LoadingScreenParticipantSchema
+>;
+
+/**
+ * A banned champion shown in the loading screen header.
+ */
+export type LoadingScreenBan = z.infer<typeof LoadingScreenBanSchema>;
+export const LoadingScreenBanSchema = z.strictObject({
+  /** Riot champion ID */
+  championId: LoadingScreenChampionIdSchema,
+  /** Champion key for image lookup (e.g., "Aatrox") */
+  championName: z.string().min(1),
+  /** Team that made the ban */
+  team: TeamSchema,
+});
+
+const BaseLoadingScreenDataSchema = z.strictObject({
+  /** Riot game ID from spectator API */
+  gameId: GameIdSchema,
+  /** Parsed queue type */
+  queueType: QueueTypeSchema,
+  /** Human-readable queue name (e.g., "ranked solo", "ARAM") */
+  queueDisplayName: QueueDisplayNameSchema,
+  /** Whether the game is ranked (solo or flex) */
+  isRanked: z.boolean(),
+  /** Map name */
+  mapName: MapNameSchema,
+  /** Banned champions (empty for ARAM/Arena) */
+  bans: z.array(LoadingScreenBanSchema),
+  /** Game start timestamp in milliseconds */
+  gameStartTime: z.number().int().nonnegative(),
+});
+
+/**
+ * Both sides must hold 1-5 players. Applied to the standard and ARAM layouts,
+ * mirroring the check `ClassicLoadingScreenDataSchema` already performs — a
+ * bare length bound would accept a 10v0.
+ */
+function refineSideSizes(
+  data: { participants: { team: unknown }[] },
+  context: z.RefinementCtx,
+): void {
+  for (const team of ["blue", "red"] as const) {
+    const teamSize = data.participants.filter(
+      (participant) => participant.team === team,
+    ).length;
+    if (teamSize < 1 || teamSize > 5) {
+      context.addIssue({
+        code: "custom",
+        message: `${team} team must contain between 1 and 5 participants`,
+        path: ["participants"],
+      });
+    }
+  }
+}
+
+/**
+ * A full five has one player per lane, so every member must carry one. Making
+ * `lane` optional on the participant is what lets a short side omit it; without
+ * this, a full 5v5 that lost its lanes would render as a laneless column and
+ * nothing would object. Short sides are exempt because Riot reports no
+ * `teamPosition` for them at all.
+ */
+function refineFullSidesHaveLanes(
+  data: { participants: { team: unknown; lane?: unknown }[] },
+  context: z.RefinementCtx,
+): void {
+  for (const team of ["blue", "red"] as const) {
+    const side = data.participants.filter(
+      (participant) => participant.team === team,
+    );
+    if (side.length !== 5) continue;
+    if (side.some((participant) => participant.lane === undefined)) {
+      context.addIssue({
+        code: "custom",
+        message: `every player on a full ${team} team must have an inferred lane`,
+        path: ["participants"],
+      });
+    }
+  }
+}
+
+export const StandardLoadingScreenDataSchema =
+  BaseLoadingScreenDataSchema.extend({
+    /** Layout mode for standard 5v5 games */
+    layout: z.literal("standard"),
+    /**
+     * 2-10 rather than exactly 10: a tournament-code custom lobby carries a
+     * teamSize of 1-5. Sides are bounded individually by the refinement below.
+     */
+    participants: z
+      .array(StandardLoadingScreenParticipantSchema)
+      .min(2)
+      .max(10),
+  })
+    .superRefine(refineSideSizes)
+    .superRefine(refineFullSidesHaveLanes);
+
+export type StandardLoadingScreenData = z.infer<
+  typeof StandardLoadingScreenDataSchema
+>;
+
+export const AramLoadingScreenDataSchema = BaseLoadingScreenDataSchema.extend({
+  /** Layout mode for ARAM games */
+  layout: z.literal("aram"),
+  /** ARAM participants do not carry standard lane assignments */
+  participants: z
+    .array(NonStandardLoadingScreenParticipantSchema)
+    .min(2)
+    .max(10),
+}).superRefine(refineSideSizes);
+
+export type AramLoadingScreenData = z.infer<typeof AramLoadingScreenDataSchema>;
+
+export const ArenaLoadingScreenDataSchema = BaseLoadingScreenDataSchema.extend({
+  /** Layout mode for Arena games */
+  layout: z.literal("arena"),
+  /** Arena participants do not carry standard lane assignments. */
+  participants: z
+    .array(NonStandardLoadingScreenParticipantSchema)
+    .refine(
+      (participants) =>
+        participants.length === 16 || participants.length === 18,
+      "Arena loading screens must contain either 16 legacy participants or 18 current participants",
+    ),
+});
+
+export type ArenaLoadingScreenData = z.infer<
+  typeof ArenaLoadingScreenDataSchema
+>;
+
+export const ClassicLoadingScreenParticipantSchema = z.strictObject({
+  puuid: LeaguePuuidSchema.nullable(),
+  summonerName: z.string().min(1),
+  championId: LoadingScreenChampionIdSchema,
+  championName: z.string().min(1),
+  championDisplayName: z.string().min(1),
+  team: TeamSchema,
+  spell1Id: SummonerSpellIdSchema,
+  spell2Id: SummonerSpellIdSchema,
+  isTrackedPlayer: z.boolean(),
+});
+export type ClassicLoadingScreenParticipant = z.infer<
+  typeof ClassicLoadingScreenParticipantSchema
+>;
+
+export const ClassicLoadingScreenDataSchema = z
+  .strictObject({
+    gameId: GameIdSchema,
+    queueType: z.enum(["classic", "classic aram mayhem"]),
+    queueDisplayName: QueueDisplayNameSchema,
+    layout: z.literal("classic"),
+    mapName: z.enum(["Classic Rift", "The Bandlewood"]),
+    participants: z.array(ClassicLoadingScreenParticipantSchema).min(2).max(10),
+    gameStartTime: z.number().int().nonnegative(),
+  })
+  .superRefine((data, context) => {
+    const expectedMapName =
+      data.queueType === "classic" ? "Classic Rift" : "The Bandlewood";
+    if (data.mapName !== expectedMapName) {
+      context.addIssue({
+        code: "custom",
+        message: `${data.queueType} loading screens must use ${expectedMapName}`,
+        path: ["mapName"],
+      });
+    }
+    for (const team of ["blue", "red"] as const) {
+      const teamSize = data.participants.filter(
+        (participant) => participant.team === team,
+      ).length;
+      if (teamSize < 1 || teamSize > 5) {
+        context.addIssue({
+          code: "custom",
+          message: `Classic ${team} team must contain between 1 and 5 participants`,
+          path: ["participants"],
+        });
+      }
+    }
+  });
+export type ClassicLoadingScreenData = z.infer<
+  typeof ClassicLoadingScreenDataSchema
+>;
+
+export const LoadingScreenDataSchema = z.discriminatedUnion("layout", [
+  StandardLoadingScreenDataSchema,
+  AramLoadingScreenDataSchema,
+  ArenaLoadingScreenDataSchema,
+  ClassicLoadingScreenDataSchema,
+]);
+
+/**
+ * Complete data needed to render a loading screen image.
+ * Fully resolved — no external lookups needed during rendering.
+ */
+export type LoadingScreenData = z.infer<typeof LoadingScreenDataSchema>;
+
+/**
+ * Build a QueueDisplayName from a QueueType, ensuring we never have
+ * raw strings flowing through the system.
+ */
+export function makeQueueDisplayName(
+  queueType: z.infer<typeof QueueTypeSchema>,
+): QueueDisplayName {
+  return QueueDisplayNameSchema.parse(queueTypeToDisplayString(queueType));
+}

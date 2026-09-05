@@ -4,7 +4,7 @@ import {
   ReportDisplayKindSchema,
   ReportRenderSpecSchema,
   type ReportRenderSpec,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 import {
   ScoutQlEvidenceSchema,
   ScoutQlOutputNameSchema,

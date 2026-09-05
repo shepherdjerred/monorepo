@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { ReportOutputFormat } from "#src/model/report.ts";
+import type { ReportOutputFormat } from "#src/model/reports/report.ts";
 import type { ScoutQlDiagnosticCode } from "#src/model/scoutql/diagnostics.ts";
 import type {
   ScoutQlPlan,

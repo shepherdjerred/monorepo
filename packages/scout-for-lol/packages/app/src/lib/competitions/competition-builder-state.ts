@@ -6,7 +6,7 @@ import {
 import {
   CompetitionScheduledUpdatesSchema,
   DEFAULT_V2_COMPETITION_CRON,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { EMPTY_STATE } from "#src/components/competitions/competition-form-fields.tsx";
 import {
   buildCompetitionScenarios,

@@ -37,7 +37,7 @@ function getRiot5xxSampleRate(): number {
  * friendly error. There is no actionable bug for the operator.
  *
  * The string is the literal `message` argument passed to `.regex(...)` in
- * `RiotIdSchema` (see `packages/data/src/model/league-account.ts`).
+ * `RiotIdSchema` (see `packages/data/src/model/riot/league-account.ts`).
  */
 const RIOT_ID_FORMAT_MESSAGE =
   "Riot ID must be in the format <game_name>#<tag_line>";

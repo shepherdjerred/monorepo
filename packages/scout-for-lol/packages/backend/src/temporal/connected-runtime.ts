@@ -11,7 +11,7 @@ import { scoutTaskQueues } from "@scout-for-lol/temporal";
 import type { ScoutTemporalActivities } from "@scout-for-lol/temporal/activities";
 import { createLogger } from "#src/logger.ts";
 import type { WeeklyParlayControlResult } from "#src/betting/weekly/weekly-parlay-control.ts";
-import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import type { WeeklyParlayControlAction } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import {
   createTemporalClientTracingInterceptor,
   createTemporalWorkerTracing,

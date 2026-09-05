@@ -1,5 +1,5 @@
 import { describe, test, expect } from "vitest";
-import { normalizeChampionName } from "#src/model/champion-registry.ts";
+import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 import {
   championNameToDisplayName,
   getChampionDisplayNameById,

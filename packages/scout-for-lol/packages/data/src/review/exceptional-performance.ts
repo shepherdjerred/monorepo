@@ -1,4 +1,4 @@
-import type { PlayerConfigEntry } from "#src/model/player-config.ts";
+import type { PlayerConfigEntry } from "#src/model/riot/player-config.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
 
 const THRESHOLDS = {

@@ -2,7 +2,7 @@ import type { ReportGroupBy } from "#src/model/legacy/report-query-spec.ts";
 import type {
   ReportRenderChannel,
   ReportRenderSpec,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 
 export function validateRenderShape(
   render: Extract<ReportRenderSpec, { encoding: ReportRenderChannel }>,

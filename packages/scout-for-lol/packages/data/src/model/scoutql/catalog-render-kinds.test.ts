@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { ReportOutputFormatSchema } from "#src/model/report.ts";
+import { ReportOutputFormatSchema } from "#src/model/reports/report.ts";
 import {
   isChartRenderKind,
   renderKindToken,

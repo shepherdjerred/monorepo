@@ -21,7 +21,7 @@ import type {
   DiscordGuildId,
   ReportCreateInput,
 } from "@scout-for-lol/data";
-import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
+import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import type { Report } from "#generated/prisma/client/index.js";
 import type { Db } from "#src/database/index.ts";

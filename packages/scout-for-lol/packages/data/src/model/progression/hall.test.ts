@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { MatchLakeRow } from "#src/model/lake-columns.ts";
+import type { MatchLakeRow } from "#src/model/reports/lake-columns.ts";
 import {
   classifyHallQueueFamily,
   compareHallCandidate,

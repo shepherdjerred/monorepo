@@ -8,5 +8,5 @@
     "types": ["bun-types"],
     "outDir": "dist"
   },
-  "include": ["src/model/weekly-parlay.ts"]
+  "include": ["src/model/bucks/weekly-parlay.ts"]
 }
