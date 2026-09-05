@@ -121,7 +121,13 @@ Learned from migrating eight packages onto it, not from theory.
 
 - **Authorization and freshness checks.** `degraded` means "keep rendering the
   last known answer when the refresh fails". That is right for a match list and
-  wrong for a permission check. Scout's consumer profile deliberately blocks on
+  wrong for a permission check. Where the data itself is access-scoped, project
+  it through `Loaded.strict`, which collapses `degraded` back into `error`: the
+  failing request _is_ the access recheck, and TanStack retains the cache unless
+  the query sets `gcTime: 0`, so rendering stale data outlives the permission
+  that produced it. This is not hypothetical — review caught exactly this on
+  `consumerMatch.detail`, and an audit of the same class found it again on the
+  `consumerChampion.compare` cohorts. Scout's consumer profile deliberately blocks on
   `isFetching` as well as `isPending` because its access decision must be freshly
   fetched (`staleTime: 0`, `refetchOnMount: "always"`); projecting it onto
   `Loaded` would have turned a stale-guard into a stale-renderer. `Loaded` is a
