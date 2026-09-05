@@ -3,7 +3,6 @@ import {
   type DiscordAccountId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
-  type ExploreTraceEntry,
   type ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -40,6 +39,7 @@ import { startExploreRun } from "#src/explore/run-manager-start.ts";
 import type {
   ActiveRun,
   ExploreAgentRunner,
+  ExploreRunProgress,
   RunTermination,
   Subscriber,
   StartedTurn,
@@ -238,13 +238,16 @@ export class ExploreRunManager {
     return await requestDurableExploreStop(this.#client, runId, userId);
   }
 
-  snapshot(
-    runId: string,
-  ): { answer: string; trace: ExploreTraceEntry[] } | undefined {
+  snapshot(runId: string): ExploreRunProgress | undefined {
     const run = this.#runs.get(runId);
     return run === undefined
       ? undefined
-      : { answer: run.answer, trace: run.trace };
+      : {
+          answer: run.answer,
+          trace: run.trace,
+          activity: run.activity,
+          preview: run.preview,
+        };
   }
 
   cancelTemporal(runId: string, message: string): void {

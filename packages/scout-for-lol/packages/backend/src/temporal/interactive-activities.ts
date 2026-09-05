@@ -266,12 +266,41 @@ export async function executeRecoveredExplore(
       // Durable cleanup releases quota when this Activity records its outcome.
     },
   };
+  let activity: string | null = null;
+  let preview: string | null = null;
   const emit = async (event: ExploreStreamEvent): Promise<void> => {
-    if (event.type === "answer_delta") {
-      const available = EXPLORE_ANSWER_MAX_LENGTH - partial.length;
-      if (available > 0) partial += event.text.slice(0, available);
-    } else if (event.type === "final") {
-      partial = event.message.content;
+    switch (event.type) {
+      case "answer_delta": {
+        const available = EXPLORE_ANSWER_MAX_LENGTH - partial.length;
+        if (available > 0) partial += event.text.slice(0, available);
+        break;
+      }
+      case "final": {
+        partial = event.message.content;
+        break;
+      }
+      case "activity": {
+        activity = event.text;
+        break;
+      }
+      case "preview": {
+        // The chart is deliberately not mirrored, matching the reconnect
+        // snapshot: it is far larger and the observer re-reads this row about
+        // once a second.
+        preview = JSON.stringify(event.preview);
+        break;
+      }
+      case "snapshot":
+      case "run_preview":
+      case "started":
+      case "tool_call":
+      case "tool_result":
+      case "error":
+      case "done": {
+        // Nothing mirrored: the trace is folded below, and the rest is either
+        // reconstructed by the observer or terminal.
+        break;
+      }
     }
     recordExploreTraceEvent(trace, event);
     await database.scoutInteractiveRun.update({
@@ -279,6 +308,8 @@ export async function executeRecoveredExplore(
       data: {
         partialOutput: partial.length === 0 ? null : partial,
         trace: JSON.stringify(trace),
+        activity,
+        preview,
         ...(event.type === "final"
           ? { resultMessageId: event.message.id }
           : {}),
@@ -313,6 +344,8 @@ async function runExploreActivity(
   const cancellationSignal = Context.current().cancellationSignal;
   const recoveredAbortController = new AbortController();
   const localRuntime = exploreRunManager.snapshot(run.id) !== undefined;
+  /** Last preview written to the row, so an unchanged one is not rewritten. */
+  let lastMirroredPreview: string | null = null;
   const cancel = (): void => {
     if (localRuntime) {
       exploreRunManager.cancelTemporal(
@@ -345,13 +378,21 @@ async function runExploreActivity(
         });
         if (control.stopRequestedAt !== null) cancel();
         if (snapshot !== undefined) {
+          // `preview` is written only when it actually changed. It is small
+          // by design but not trivial, and this runs once a second for the
+          // life of the turn.
+          const preview =
+            snapshot.preview === null ? null : JSON.stringify(snapshot.preview);
           await database.scoutInteractiveRun.update({
             where: { id: run.id },
             data: {
               partialOutput: snapshot.answer,
               trace: JSON.stringify(snapshot.trace),
+              activity: snapshot.activity,
+              ...(preview === lastMirroredPreview ? {} : { preview }),
             },
           });
+          lastMirroredPreview = preview;
         }
         Context.current().heartbeat({
           runId: run.id,

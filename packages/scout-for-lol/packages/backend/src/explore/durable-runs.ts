@@ -2,8 +2,10 @@ import * as Sentry from "@sentry/bun";
 import { z } from "zod";
 import {
   ExploreActiveRunSchema,
+  ExploreRunPreviewEventSchema,
   ExploreRunSnapshotEventSchema,
   ExploreTraceEntrySchema,
+  ReportAiPreviewSummarySchema,
   type DiscordAccountId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
@@ -125,6 +127,56 @@ function outcomeForStatus(status: string): ExploreRunOutcome {
   return "failed";
 }
 
+/**
+ * Rebuild a run's snapshot from the row a durable observer polls.
+ *
+ * Exported because this mapping is the whole of the durable path's fidelity:
+ * every field it cannot read is one it has to invent, and inventing
+ * `"Thinking…"` is exactly what made the same run narrate itself differently
+ * depending on which subscribe path a request happened to land on.
+ *
+ * The two fallbacks are not the old behaviour returning — they cover a run
+ * that has not heartbeated yet, and rows written before these columns
+ * existed.
+ */
+export function exploreAttachEventsFromRow(row: {
+  state: string;
+  payload: string;
+  partialOutput: string | null;
+  trace: string | null;
+  activity: string | null;
+  preview: string | null;
+}): ExploreStreamEvent[] {
+  const parsed = z
+    .object({ summary: ExploreActiveRunSchema })
+    .parse(JSON.parse(row.payload));
+  const answer = row.partialOutput ?? "";
+  const snapshot = ExploreRunSnapshotEventSchema.parse({
+    type: "snapshot",
+    ...parsed.summary,
+    answer: answer.length === 0 ? null : answer,
+    activity:
+      row.activity ??
+      (row.state === "PENDING" ? "Waiting to start…" : "Thinking…"),
+    trace: z
+      .array(ExploreTraceEntrySchema)
+      .parse(row.trace === null ? [] : JSON.parse(row.trace)),
+  });
+  if (row.preview === null) {
+    return [snapshot];
+  }
+  // Beside the snapshot, never inside it: every bundle already open in a
+  // browser parses the snapshot strictly, so an added key there makes the
+  // snapshot itself unparseable and the turn stops updating for that tab.
+  return [
+    snapshot,
+    ExploreRunPreviewEventSchema.parse({
+      type: "run_preview",
+      preview: ReportAiPreviewSummarySchema.parse(JSON.parse(row.preview)),
+    }),
+  ];
+}
+
 export async function subscribeDurableExploreRun(
   database: ExtendedPrismaClient,
   runId: string,
@@ -140,32 +192,18 @@ export async function subscribeDurableExploreRun(
   let reading = false;
   let lastPartial = "";
   let lastTrace = "[]";
+  let lastActivity: string | null = null;
+  let lastPreview: string | null = null;
   const emitRow = (row: typeof initial): boolean => {
     if (row.state !== "PENDING" && row.state !== "RUNNING") {
       subscriber({ type: "done", outcome: outcomeForStatus(row.state) });
       return true;
     }
-    const parsed = z
-      .object({ summary: ExploreActiveRunSchema })
-      .parse(JSON.parse(row.payload));
-    const trace = z
-      .array(ExploreTraceEntrySchema)
-      .parse(row.trace === null ? [] : JSON.parse(row.trace));
     lastPartial = row.partialOutput ?? "";
     lastTrace = row.trace ?? "[]";
-    subscriber(
-      ExploreRunSnapshotEventSchema.parse({
-        type: "snapshot",
-        ...parsed.summary,
-        answer: lastPartial.length === 0 ? null : lastPartial,
-        activity: row.state === "PENDING" ? "Waiting to start…" : "Thinking…",
-        trace,
-      }),
-    );
-    // No companion `run_preview` here: the run row has no column for it, so
-    // an observer that reached this path instead of the in-process one gets
-    // no table back until the next query or `final`. Stated rather than left
-    // implicit, so the gap is visible to whoever reads this next.
+    lastActivity = row.activity;
+    lastPreview = row.preview;
+    for (const event of exploreAttachEventsFromRow(row)) subscriber(event);
     return false;
   };
   if (emitRow(initial)) {
@@ -186,7 +224,12 @@ export async function subscribeDurableExploreRun(
         subscriber({ type: "done", outcome: outcomeForStatus(row.state) });
       } else if (
         (row.partialOutput ?? "") !== lastPartial ||
-        (row.trace ?? "[]") !== lastTrace
+        (row.trace ?? "[]") !== lastTrace ||
+        // Without these two the status line would freeze at whatever it said
+        // when the answer last grew — which, during a long query, is exactly
+        // when the reader is watching it.
+        row.activity !== lastActivity ||
+        row.preview !== lastPreview
       ) {
         emitRow(row);
       }

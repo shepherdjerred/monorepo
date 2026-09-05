@@ -32,6 +32,22 @@ export type StartedTurn = {
   createdQuestion: boolean;
 };
 
+/**
+ * The live progress a durable observer needs to reconstruct a run.
+ *
+ * Mirrored onto the run row by the Temporal Activity's heartbeat, because a
+ * client's SSE request does not necessarily reach the process that owns the
+ * run. Anything missing from this shape is something that observer has to
+ * invent — which is what used to make the same run show a real status line on
+ * one path and a fabricated "Thinking…" on the other.
+ */
+export type ExploreRunProgress = {
+  answer: string;
+  trace: ExploreTraceEntry[];
+  activity: string | null;
+  preview: ReportAiPreviewSummary | null;
+};
+
 export type ActiveRun = {
   summary: ExploreActiveRun;
   identity: ExploreRateLimitIdentity;
