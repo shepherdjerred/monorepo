@@ -1,6 +1,8 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import {
   ErrorState,
   LoadingState,
+  StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import {
@@ -48,32 +50,33 @@ export type MarketErrorMap = Record<string, string>;
 
 /** Loading / error / empty banner above the market list; renders nothing once markets are showing. */
 export function MarketsStatusBanner(props: {
-  isPending: boolean;
-  isError: boolean;
+  status: Loaded<unknown>;
   onRetry: () => void;
   isEmpty: boolean;
 }) {
-  if (props.isPending) {
-    return <LoadingState label="Loading open markets…" />;
-  }
-  if (props.isError) {
-    return (
+  return Loaded.match(props.status, {
+    loading: () => <LoadingState label="Loading open markets…" />,
+    error: () => (
       <ErrorState
         message="Scout couldn't load open Bryan Bucks markets."
         onRetry={props.onRetry}
       />
-    );
-  }
-  if (props.isEmpty) {
-    return (
-      <EmptyState>
-        <p>
-          No open markets right now. Markets open when an eligible game starts.
-        </p>
-      </EmptyState>
-    );
-  }
-  return null;
+    ),
+    available: (_data, meta) =>
+      props.isEmpty ? (
+        <>
+          <StaleState errors={meta.errors} />
+          <EmptyState>
+            <p>
+              No open markets right now. Markets open when an eligible game
+              starts.
+            </p>
+          </EmptyState>
+        </>
+      ) : (
+        <StaleState errors={meta.errors} />
+      ),
+  });
 }
 
 /**
