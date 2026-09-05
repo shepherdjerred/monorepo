@@ -8,7 +8,7 @@
     "**/*.ts",
     "types/**/*.d.ts",
     "observability/**/*.ts",
-    "../.buildkite/scripts/*.ts"
+    "../.buildkite/scripts/**/*.ts"
   ],
   // local-stack is a standalone mini-package (own package.json + bun.lock,
   // deliberately outside the workspace); its deps only exist after its own

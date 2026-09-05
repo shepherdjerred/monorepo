@@ -29,7 +29,7 @@ function requiredString(
 }
 
 /**
- * The bake lanes run `bun --no-install .buildkite/scripts/bake-images.ts` in a
+ * The bake lanes run `bun --no-install .buildkite/scripts/images/bake-images.ts` in a
  * pod that never installs the workspace, so this reader must stay on platform
  * primitives. A Zod-backed schema here makes every bake pod fail at module load
  * with "Cannot find package 'zod'" — moving the module between workspaces does

@@ -8,7 +8,7 @@ steps:
     timeout_in_minutes: 5
     command: |
       . .buildkite/scripts/ci-image-refs.sh
-      bun --no-install .buildkite/scripts/select-main-pipeline.ts
+      bun --no-install .buildkite/scripts/selectors/select-main-pipeline.ts
     plugins:
       - kubernetes:
           metadata:

@@ -169,7 +169,7 @@ preflight CI uses and run the UI suite once:
 
 ```bash
 . .buildkite/scripts/macos-native-env.sh
-TASKNOTES_UITEST_IDENTITY="$(bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes)"
+TASKNOTES_UITEST_IDENTITY="$(bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes)"
 export TASKNOTES_UITEST_IDENTITY
 bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
 ```
@@ -199,7 +199,7 @@ then manually unlock and log in. After login, confirm:
 ```bash
 brew services info buildkite-agent@3
 pmset -g custom
-bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
+bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar
 ```
 
 The service must be running, system/disk sleep must remain disabled, and the
@@ -207,7 +207,7 @@ GUI session must satisfy the native preflight.
 
 ## Native preflight
 
-`.buildkite/scripts/macos-native-preflight.ts` is read-only. Every job requires:
+`.buildkite/scripts/macos/macos-native-preflight.ts` is read-only. Every job requires:
 
 - Darwin on `arm64`;
 - the exact Xcode from `.xcode-version` selected as a full Xcode installation;
