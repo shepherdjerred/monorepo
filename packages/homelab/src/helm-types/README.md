@@ -1,66 +1,69 @@
 # @shepherdjerred/helm-types
 
-Generate TypeScript types from Helm chart values.
+Generate TypeScript types from a Helm chart's `values.yaml` and optional
+`values.schema.json`. The CLI and library preserve YAML comments as JSDoc,
+infer nested types, and emit a flattened type for `helm --set` parameters.
 
-## What it does
+Requires Node.js 24 or newer, or Bun, plus the `helm` CLI on `PATH`.
 
-This tool fetches Helm charts and generates strongly-typed TypeScript interfaces from their
-`values.yaml` and `values.schema.json` files. Use it to get type-safe Helm configurations in your
-TypeScript projects.
+## Why use this?
 
-**Features:**
+Helm charts expose configuration as YAML, so a typo in an override or a string
+where a chart expects a number can survive review and fail late. `helm-types`
+turns one pinned chart version into TypeScript types, including chart comments
+and flattened `--set` keys, so an editor and CI can check those values first.
 
-- Fetch charts from any Helm repository
-- Generate nested interfaces with proper types
-- Parse YAML comments for JSDoc documentation
-- Support for arrays, unions, enums, and optional properties
-- Handle reserved keywords and special characters
+Use it when you are building:
 
-## Installation
+- A TypeScript or cdk8s deployment that configures third-party Helm charts.
+- GitOps configuration that should catch renamed keys and wrong value types
+  before a Helm render or cluster apply.
+- A deployment CLI that accepts chart settings and needs a checked list of
+  supported dotted `--set` parameters.
 
-```bash
-npm install @shepherdjerred/helm-types
-# or
-bun add @shepherdjerred/helm-types
-```
-
-## Requirements
-
-- **Node.js 18+** or **Bun**
-- **Helm CLI** installed and available in PATH
-
-## CLI Usage
-
-Generate types directly with npx/bunx:
+## Quick start
 
 ```bash
-# Generate types for ArgoCD
+bun add -d @shepherdjerred/helm-types
+
 npx @shepherdjerred/helm-types \
   --name argo-cd \
   --repo https://argoproj.github.io/argo-helm \
-  --version 8.3.1 \
-  --output argo-cd.types.ts
+  --version 7.7.16 \
+  --output src/generated/argo-cd-values.ts
+```
 
-# Short flags
+The command downloads the exact chart version into a temporary directory,
+generates the file, then removes that directory. It does not add, update, or
+remove Helm repositories in your local Helm configuration.
+
+Use `bunx @shepherdjerred/helm-types` instead of `npx` when Bun is your package
+manager.
+
+## Migrating from 1.x
+
+The 2.0 release requires Node.js 24 or newer (or Bun) and publishes compiled
+ESM JavaScript with declarations from `dist/`. Consumers that imported the
+workspace source path must switch to the package entry point and rebuild their
+workspace dependency before typechecking.
+
+## CLI usage
+
+```bash
+# Print the generated module to stdout.
 npx @shepherdjerred/helm-types \
   -n argo-cd \
   -r https://argoproj.github.io/argo-helm \
-  -v 8.3.1 \
-  -o argo-cd.types.ts
+  -v 7.7.16
 
-# Print to stdout
+# The chart name can differ from the generated module name.
 npx @shepherdjerred/helm-types \
-  -n argo-cd \
-  -r https://argoproj.github.io/argo-helm \
-  -v 8.3.1
-
-# Custom interface name
-npx @shepherdjerred/helm-types \
-  -n argo-cd \
-  -r https://argoproj.github.io/argo-helm \
-  -v 8.3.1 \
-  -i CustomArgocdValues \
-  -o argo-cd.types.ts
+  --name platform-argo-cd \
+  --chart argo-cd \
+  --repo https://argoproj.github.io/argo-helm \
+  --version 7.7.16 \
+  --interface PlatformArgoCdValues \
+  --output src/generated/platform-argo-cd.ts
 ```
 
 **Options:**
@@ -75,9 +78,13 @@ npx @shepherdjerred/helm-types \
 | `--interface, -i` | Interface name (auto-generated if not provided) |
 | `--help, -h`      | Show help message                               |
 
+`--version` is the Helm chart version, not the package version. Run
+`helm-types --help` to inspect the installed CLI.
+
 ## Programmatic API
 
-```typescript
+```ts
+import { writeFile } from "node:fs/promises";
 import {
   fetchHelmChart,
   convertToTypeScriptInterface,
@@ -89,24 +96,39 @@ const chart = {
   name: "argo-cd",
   chartName: "argo-cd",
   repoUrl: "https://argoproj.github.io/argo-helm",
-  version: "8.3.1",
+  version: "7.7.16",
 };
 
 // 2. Fetch and generate types
 const { values, schema, yamlComments } = await fetchHelmChart(chart);
-const tsInterface = convertToTypeScriptInterface(
+const tsInterface = convertToTypeScriptInterface({
   values,
-  "ArgocdHelmValues",
+  interfaceName: "ArgocdHelmValues",
   schema,
   yamlComments,
-);
+  chartName: chart.name,
+});
 const code = generateTypeScriptCode(tsInterface, chart.name);
 
 // 3. Write output
-await fs.writeFile("argo-cd.types.ts", code);
+await writeFile("argo-cd.types.ts", code);
 ```
 
-## Generated Output
+The runnable [`examples/argo-cd/generate.mjs`](examples/argo-cd/generate.mjs)
+writes the generated module to standard output so callers choose where it
+belongs.
+
+## Demo recording
+
+The included replayable asciicast starts with the pinned chart's `server`
+values, shows the generated `replicas?: number` contract, then contrasts an
+unsafe override with the typed alternative:
+
+```bash
+asciinema play node_modules/@shepherdjerred/helm-types/demos/argo-cd-cli.cast
+```
+
+## Generated output
 
 ### Values Interface
 
@@ -146,7 +168,7 @@ export type ArgocdHelmParameters = {
 };
 ```
 
-## Type Inference
+## Type inference
 
 The library intelligently infers types from values:
 
@@ -163,7 +185,7 @@ The library intelligently infers types from values:
 
 JSON schema takes precedence when available.
 
-## API Reference
+## API reference
 
 ### `fetchHelmChart(chart: ChartInfo)`
 
@@ -185,25 +207,22 @@ type ChartInfo = {
 }
 ```
 
-### `convertToTypeScriptInterface(values, name, schema?, comments?, prefix?)`
+### `convertToTypeScriptInterface(options)`
 
-Converts Helm values to TypeScript interface definition.
+Converts Helm values to a TypeScript interface definition.
 
-- `values` - Chart values object
-- `name` - Interface name
-- `schema?` - Optional JSON schema for type hints
-- `comments?` - Optional YAML comments for JSDoc
-- `prefix?` - Optional key prefix for nested types
+- `options.values` - Chart values object
+- `options.interfaceName` - Interface name
+- `options.schema?` - Optional JSON schema for type hints
+- `options.yamlComments?` - Optional YAML comments for JSDoc
+- `options.keyPrefix?` - Optional key prefix for nested types
+- `options.chartName?` - Chart name used for chart-specific type rules
 
 ### `generateTypeScriptCode(interface, chartName)`
 
 Generates TypeScript code from interface definition. Returns a string containing the main values
 interface, nested type definitions, and flattened parameters type.
 
-### `parseYAMLComments(yamlContent)`
-
-Extracts YAML comments and associates them with keys.
-
 ## License
 
-GPL-3.0
+GPL-3.0-only.

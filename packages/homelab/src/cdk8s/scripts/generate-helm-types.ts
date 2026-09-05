@@ -16,12 +16,14 @@
  */
 
 // Using string concatenation instead of node:path
-import { fetchHelmChart } from "@shepherdjerred/helm-types/src/chart-fetcher.ts";
-import { convertToTypeScriptInterface } from "@shepherdjerred/helm-types/src/type-converter.ts";
-import { generateTypeScriptCode } from "@shepherdjerred/helm-types/src/interface-generator.ts";
-import type { TypeScriptInterface } from "@shepherdjerred/helm-types/src/types.ts";
-import type { HelmValue } from "@shepherdjerred/helm-types/src/schemas.ts";
-import type { JSONSchemaProperty } from "@shepherdjerred/helm-types/src/types.ts";
+import {
+  convertToTypeScriptInterface,
+  fetchHelmChart,
+  generateTypeScriptCode,
+  type HelmValue,
+  type JSONSchemaProperty,
+  type TypeScriptInterface,
+} from "@shepherdjerred/helm-types";
 import {
   parseChartInfoFromVersions,
   type ChartInfo,

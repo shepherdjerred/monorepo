@@ -28,6 +28,12 @@
       "release-type": "node",
       "package-name": "@shepherdjerred/helm-types",
       "component": "helm-types"
+    },
+    "packages/home-assistant": {
+      "release-type": "node",
+      "package-name": "@shepherdjerred/home-assistant",
+      "component": "home-assistant",
+      "initial-version": "0.1.0"
     }
   }
 }

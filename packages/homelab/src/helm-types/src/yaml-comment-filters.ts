@@ -1,4 +1,4 @@
-import { isYAMLKey } from "./yaml-comments.ts";
+import { isYAMLKey } from "./yaml-comments.js";
 
 /**
  * Helper: Check if a line is part of a commented YAML block

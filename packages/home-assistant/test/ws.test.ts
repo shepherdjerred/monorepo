@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { HomeAssistantEventClient } from "#lib";
+import { HomeAssistantEventClient } from "../src/index.ts";
 import { createFakeWebSocketFactory } from "./fake-websocket.ts";
 
 async function flush(): Promise<void> {

@@ -1,8 +1,8 @@
 import { parseDocument } from "yaml";
 import { z } from "zod";
-import { filterCommentedOutYAML } from "./yaml-comment-filters.ts";
-import { parseCommentsWithRegex } from "./yaml-comment-regex-parser.ts";
-import { preprocessYAMLComments } from "./yaml-preprocess.ts";
+import { filterCommentedOutYAML } from "./yaml-comment-filters.js";
+import { parseCommentsWithRegex } from "./yaml-comment-regex-parser.js";
+import { preprocessYAMLComments } from "./yaml-preprocess.js";
 
 /**
  * Metadata about how a comment was extracted

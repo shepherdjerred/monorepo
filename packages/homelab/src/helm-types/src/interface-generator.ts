@@ -1,11 +1,11 @@
-import type { TypeScriptInterface } from "./types.ts";
+import type { TypeScriptInterface } from "./types.js";
 import {
   ArraySchema,
   RecordSchema,
   StringSchema,
   ActualNumberSchema,
   ActualBooleanSchema,
-} from "./schemas.ts";
+} from "./schemas.js";
 
 /**
  * Generate TypeScript code from interface definition

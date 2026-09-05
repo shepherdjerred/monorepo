@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { EntityState } from "#rest/schemas.ts";
-import { EntityState as EntityStateSchema } from "#rest/schemas.ts";
+import type { EntityState } from "../rest/schemas.js";
+import { EntityState as EntityStateSchema } from "../rest/schemas.js";
 import type {
   DefaultHaSchema,
   Domain,
@@ -8,18 +8,18 @@ import type {
   HaSchema,
   Service,
   ServiceDataFor,
-} from "#schema/types.ts";
-import type { HomeAssistantConfig } from "#shared/config.ts";
+} from "../schema/types.js";
+import type { HomeAssistantConfig } from "../shared/config.js";
 import {
   HaWebSocketAuthError,
   HaWebSocketClosedError,
   HaWebSocketError,
   HaWebSocketResultError,
-} from "./errors.ts";
-import type { EventMessage, ResultMessage } from "./messages.ts";
-import { AuthMessage, EntityRegistryEntry, ServerMessage } from "./messages.ts";
-import type { EntityRegistryEntry as EntityRegistryEntryType } from "./messages.ts";
-import type { WebSocketLike, WebSocketLikeCtor } from "./socket-helpers.ts";
+} from "./errors.js";
+import type { EventMessage, ResultMessage } from "./messages.js";
+import { AuthMessage, EntityRegistryEntry, ServerMessage } from "./messages.js";
+import type { EntityRegistryEntry as EntityRegistryEntryType } from "./messages.js";
+import type { WebSocketLike, WebSocketLikeCtor } from "./socket-helpers.js";
 import {
   buildWsUrl,
   extractEventData,
@@ -27,9 +27,9 @@ import {
   wait,
   waitForFirstMessage,
   waitForOpen,
-} from "./socket-helpers.ts";
-import type { EventHandler, Subscription } from "./subscriptions.ts";
-import { SubscriptionRegistry } from "./subscriptions.ts";
+} from "./socket-helpers.js";
+import type { EventHandler, Subscription } from "./subscriptions.js";
+import { SubscriptionRegistry } from "./subscriptions.js";
 
 export type HomeAssistantEventClientOptions = {
   reconnect?: boolean;

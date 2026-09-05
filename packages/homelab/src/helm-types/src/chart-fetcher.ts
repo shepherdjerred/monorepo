@@ -1,221 +1,136 @@
-// Using Bun.$ for path operations instead of node:path
+import { spawn } from "node:child_process";
+import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { z } from "zod";
 import { parse as yamlParse } from "yaml";
-import type { ChartInfo, JSONSchemaProperty } from "./types.ts";
-import { HelmValueSchema, RecordSchema, ErrorSchema } from "./schemas.ts";
-import type { HelmValue } from "./schemas.ts";
-import { parseYAMLComments } from "./yaml-comments.ts";
+import { HelmValueSchema, RecordSchema } from "./schemas.js";
+import type { HelmValue } from "./schemas.js";
+import type { ChartInfo, JSONSchemaProperty } from "./types.js";
+import { parseYAMLComments } from "./yaml-comments.js";
 
-/**
- * Load JSON schema if it exists in the chart
- */
-async function loadJSONSchema(
+export type FetchedHelmChart = {
+  values: HelmValue;
+  schema: JSONSchemaProperty | null;
+  yamlComments: Map<string, string>;
+};
+
+const MissingFileError = z.object({ code: z.literal("ENOENT") });
+
+async function loadJsonSchema(
   chartPath: string,
 ): Promise<JSONSchemaProperty | null> {
+  const schemaPath = path.join(chartPath, "values.schema.json");
+  let schemaContent: string;
   try {
-    const schemaPath = `${chartPath}/values.schema.json`;
-    const schemaContent = await Bun.file(schemaPath).text();
-    const parsed: unknown = JSON.parse(schemaContent);
-    // Validate that parsed is an object
-    const recordCheck = RecordSchema.safeParse(parsed);
-    if (!recordCheck.success) {
+    schemaContent = await readFile(schemaPath, "utf8");
+  } catch (error: unknown) {
+    if (MissingFileError.safeParse(error).success) {
       return null;
     }
-    // Note: JSONSchemaProperty is a structural type
-    const schema: JSONSchemaProperty = recordCheck.data;
-    console.log(`  📋 Loaded values.schema.json`);
-    return schema;
-  } catch {
-    // Schema doesn't exist or couldn't be parsed - that's okay
-    return null;
+    throw new Error(`Failed to read ${schemaPath}`, { cause: error });
   }
+
+  const parsed: unknown = JSON.parse(schemaContent);
+  return RecordSchema.parse(parsed);
 }
 
-/**
- * Run a command and return its output using Bun
- */
-async function runCommand(command: string, args: string[]): Promise<string> {
-  try {
-    const proc = Bun.spawn([command, ...args], {
-      stdout: "pipe",
-      stderr: "inherit",
+async function runCommand(
+  command: string,
+  args: readonly string[],
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
     });
-
-    const output = await new Response(proc.stdout).text();
-    const exitCode = await proc.exited;
-
-    if (exitCode === 0) {
-      return output;
-    } else {
-      throw new Error(
-        `Command "${command} ${args.join(" ")}" failed with code ${exitCode.toString()}`,
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.once("error", (error) => {
+      reject(
+        new Error(`Failed to start ${command}: ${error.message}`, {
+          cause: error,
+        }),
       );
-    }
-  } catch (error) {
-    const parseResult = ErrorSchema.safeParse(error);
-    const errorMessage = parseResult.success
-      ? parseResult.data.message
-      : String(error);
-    throw new Error(
-      `Failed to spawn command "${command} ${args.join(" ")}": ${errorMessage}`,
-      { cause: error },
-    );
-  }
+    });
+    child.once("close", (code, signal) => {
+      if (code === 0) {
+        resolve(stdout);
+        return;
+      }
+      const status = signal === null ? String(code) : `signal ${signal}`;
+      reject(
+        new Error(
+          `${command} ${args.join(" ")} failed with ${status}: ${stderr.trim()}`,
+        ),
+      );
+    });
+  });
 }
 
-/**
- * Locate the directory `helm pull --untar` created. helm names it after the
- * Chart.yaml `name`, which can differ from the OCI artifact path (e.g.
- * a chart at `foo/charts/foo` untars to `foo/`), so prefer the version-key fallback
- * but fall back to scanning for the extracted Chart.yaml.
- */
 async function resolveUntarredChartDir(
   tempDir: string,
   fallbackName: string,
 ): Promise<string> {
-  const fallback = `${tempDir}/${fallbackName}`;
-  if (await Bun.file(`${fallback}/Chart.yaml`).exists()) {
-    return fallback;
-  }
-  const lsOutput = await runCommand("ls", ["-1", tempDir]);
-  for (const entry of lsOutput.split("\n").map((s) => s.trim())) {
-    if (entry === "") {
-      continue;
-    }
-    if (await Bun.file(`${tempDir}/${entry}/Chart.yaml`).exists()) {
-      return `${tempDir}/${entry}`;
+  const fallback = path.join(tempDir, fallbackName);
+  const entries = await readdir(tempDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory() && entry.name === fallbackName) {
+      return fallback;
     }
   }
-  return fallback;
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      return path.join(tempDir, entry.name);
+    }
+  }
+  throw new Error(`Helm did not extract a chart directory in ${tempDir}`);
 }
 
 /**
- * Fetch a Helm chart and extract its values.yaml and optional schema
+ * Download a chart into an isolated temporary directory and read its values,
+ * optional JSON schema, and YAML documentation comments. The caller's Helm
+ * repository configuration is never modified.
  */
-export async function fetchHelmChart(chart: ChartInfo): Promise<{
-  values: HelmValue;
-  schema: JSONSchemaProperty | null;
-  yamlComments: Map<string, string>;
-}> {
-  const pwd = Bun.env["PWD"] ?? process.cwd();
-  const tempDir = `${pwd}/temp/helm-${chart.name}`;
-  const repoName = `temp-repo-${chart.name}-${String(Date.now())}`;
-
+export async function fetchHelmChart(
+  chart: ChartInfo,
+): Promise<FetchedHelmChart> {
+  const tempDir = await mkdtemp(path.join(tmpdir(), "helm-types-"));
   try {
-    // Ensure temp directory exists
-    await Bun.$`mkdir -p ${tempDir}`.quiet();
-
-    let chartDir: string;
-    if (chart.oci === true) {
-      // OCI registry: pull directly, no `helm repo add` needed.
-      const ociRef = `oci://${chart.repoUrl}/${chart.chartName}`;
-      console.log(`  ⬇️  Pulling OCI chart ${ociRef}:${chart.version}...`);
-      await runCommand("helm", [
-        "pull",
-        ociRef,
-        "--version",
-        chart.version,
-        "--destination",
-        tempDir,
-        "--untar",
-      ]);
-      chartDir = await resolveUntarredChartDir(tempDir, chart.name);
-    } else {
-      console.log(`  📦 Adding Helm repo: ${chart.repoUrl}`);
-      // Add the helm repo
-      await runCommand("helm", ["repo", "add", repoName, chart.repoUrl]);
-
-      console.log(`  🔄 Updating Helm repo ${repoName}...`);
-      // Update ONLY the repo we just added. `helm repo update` with no args
-      // refreshes every repo in the local helm config — including unrelated
-      // stale entries (e.g. the retired public bitnami repo) whose failure
-      // would abort an otherwise-fine fetch.
-      await runCommand("helm", ["repo", "update", repoName]);
-
-      console.log(`  ⬇️  Pulling chart ${chart.chartName}:${chart.version}...`);
-      // Pull the chart
-      await runCommand("helm", [
-        "pull",
-        `${repoName}/${chart.chartName}`,
-        "--version",
-        chart.version,
-        "--destination",
-        tempDir,
-        "--untar",
-      ]);
-      chartDir = `${tempDir}/${chart.chartName}`;
+    const chartReference =
+      chart.oci === true
+        ? `oci://${chart.repoUrl}/${chart.chartName}`
+        : chart.chartName;
+    const pullArgs = [
+      "pull",
+      chartReference,
+      "--version",
+      chart.version,
+      "--destination",
+      tempDir,
+      "--untar",
+    ];
+    if (chart.oci !== true) {
+      pullArgs.push("--repo", chart.repoUrl);
     }
+    await runCommand("helm", pullArgs);
 
-    // Read values.yaml
-    const valuesPath = `${chartDir}/values.yaml`;
-    console.log(`  📖 Reading values.yaml from ${valuesPath}`);
+    const chartDir = await resolveUntarredChartDir(tempDir, chart.chartName);
+    const valuesPath = path.join(chartDir, "values.yaml");
+    const valuesContent = await readFile(valuesPath, "utf8");
+    const yamlComments = parseYAMLComments(valuesContent);
+    const parsedValues: unknown = yamlParse(valuesContent);
+    const values = HelmValueSchema.parse(RecordSchema.parse(parsedValues));
+    const schema = await loadJsonSchema(chartDir);
 
-    try {
-      const valuesContent = await Bun.file(valuesPath).text();
-
-      // Parse YAML comments
-      const yamlComments = parseYAMLComments(valuesContent);
-      console.log(
-        `  💬 Extracted ${String(yamlComments.size)} comments from values.yaml`,
-      );
-
-      // Parse YAML using yaml package
-      const parsedValues = yamlParse(valuesContent) as unknown;
-      console.log(`  ✅ Successfully parsed values.yaml`);
-      const recordParseResult = RecordSchema.safeParse(parsedValues);
-      if (recordParseResult.success) {
-        console.log(
-          `  🔍 Parsed values keys: ${Object.keys(recordParseResult.data)
-            .slice(0, 10)
-            .join(
-              ", ",
-            )}${Object.keys(recordParseResult.data).length > 10 ? "..." : ""}`,
-        );
-      }
-
-      // Check if parsedValues is a valid object using Zod before validation
-      if (!recordParseResult.success) {
-        console.warn(
-          `  ⚠️  Parsed values is not a valid record object: ${String(parsedValues)}`,
-        );
-        return { values: {}, schema: null, yamlComments: new Map() };
-      }
-
-      // Validate and parse with Zod for runtime type safety
-      const parseResult = HelmValueSchema.safeParse(recordParseResult.data);
-
-      // Try to load JSON schema
-      const schema = await loadJSONSchema(chartDir);
-
-      if (parseResult.success) {
-        console.log(`  ✅ Zod validation successful`);
-        return { values: parseResult.data, schema, yamlComments };
-      } else {
-        console.warn(`  ⚠️  Zod validation failed for ${chart.name}:`);
-        console.warn(
-          `    First few errors:`,
-          parseResult.error.issues.slice(0, 3),
-        );
-        console.warn(
-          `  ⚠️  Falling back to unvalidated object for type generation`,
-        );
-        // Return the validated record data from the successful parse result
-        return { values: recordParseResult.data, schema, yamlComments };
-      }
-    } catch (error) {
-      console.warn(`  ⚠️  Failed to read/parse values.yaml: ${String(error)}`);
-      return { values: {}, schema: null, yamlComments: new Map() };
-    }
+    return { values, schema, yamlComments };
   } finally {
-    // Cleanup
-    try {
-      console.log(`  🧹 Cleaning up...`);
-      // OCI charts never added a named repo, so only remove for HTTP repos.
-      if (chart.oci !== true) {
-        await runCommand("helm", ["repo", "remove", repoName]);
-      }
-      await Bun.$`rm -rf ${tempDir}`.quiet();
-    } catch (cleanupError) {
-      console.warn(`Cleanup failed for ${chart.name}:`, String(cleanupError));
-    }
+    await rm(tempDir, { recursive: true, force: true });
   }
 }

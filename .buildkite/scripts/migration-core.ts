@@ -353,6 +353,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/astro-opengraph-images",
     "packages/webring",
     "packages/homelab/src/helm-types",
+    "packages/home-assistant",
     "scripts/publish-npm.ts",
     "scripts/lib",
   ],

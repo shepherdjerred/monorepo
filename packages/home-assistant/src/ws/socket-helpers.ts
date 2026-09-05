@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { normalizeBaseUrl } from "#shared/config.ts";
-import { HaWebSocketClosedError, HaWebSocketError } from "./errors.ts";
+import { normalizeBaseUrl } from "../shared/config.js";
+import { HaWebSocketClosedError, HaWebSocketError } from "./errors.js";
 
 /**
  * Minimal structural shape of the WebSocket API the client consumes. Narrow

@@ -1,4 +1,4 @@
-import type { EventEnvelope } from "./messages.ts";
+import type { EventEnvelope } from "./messages.js";
 
 export type EventHandler = (event: EventEnvelope) => void | Promise<void>;
 

@@ -1,4 +1,4 @@
-import type { WebSocketLikeCtor } from "#ws/socket-helpers.ts";
+import type { WebSocketLikeCtor } from "../src/ws/socket-helpers.ts";
 
 type Listener = (event: unknown) => void;
 

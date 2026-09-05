@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { parseYAMLComments } from "./yaml-comments.ts";
+import { parseYAMLComments } from "./yaml-comments.js";
 
 describe("Real-World Helm Charts - PostgreSQL (Bitnami)", () => {
   test("should handle complex authentication configuration with commented alternatives", () => {
