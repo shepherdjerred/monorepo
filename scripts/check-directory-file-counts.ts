@@ -46,7 +46,27 @@ const CODE_EXTENSIONS = new Set([
  */
 const EXCLUDED_PREFIX = "sandbox/";
 
-const TEST_FILE = /\.(?:test|spec)\.[a-z]+$/u;
+/**
+ * Test-file conventions, one per in-scope language.
+ *
+ * The budget split only means anything if a test is recognised as a test in
+ * whatever language it is written in. Charging `foo_test.go` or `FooTests.swift`
+ * to the source budget would make a directory of 30 modules and their 30
+ * conventionally named tests fail a 50-module limit it never actually exceeded.
+ *
+ * Each pattern is anchored on its own extension, so no language's convention
+ * can classify another language's files.
+ */
+const TEST_FILE_PATTERNS: readonly RegExp[] = [
+  /\.(?:test|spec)\.[cm]?[jt]sx?$/u, // JavaScript / TypeScript
+  /\.(?:test|spec)\.astro$/u, // Astro
+  /_test\.go$/u, // Go
+  /(?:^|\/)test_[^/]*\.py$/u, // Python, pytest prefix form
+  /_test\.py$/u, // Python, suffix form
+  /Tests?\.swift$/u, // Swift, XCTest
+  /Tests?\.cs$/u, // C#
+  /_test\.rs$/u, // Rust
+];
 
 /**
  * Pathspecs handing the extension filter to git, so the existence check runs
@@ -80,7 +100,9 @@ export function isCountedPath(path: string): boolean {
 }
 
 export function budgetOf(path: string): Budget {
-  return TEST_FILE.test(path) ? "test" : "source";
+  return TEST_FILE_PATTERNS.some((pattern) => pattern.test(path))
+    ? "test"
+    : "source";
 }
 
 /** The directory a file is a direct child of. Repository-root files are `"."`. */

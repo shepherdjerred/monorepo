@@ -93,6 +93,52 @@ describe("budgetOf", () => {
     expect(budgetOf("src/betting/test-fixtures.ts")).toBe("source");
     expect(budgetOf("src/betting/latest.ts")).toBe("source");
   });
+
+  /**
+   * The budget split only means anything if a test is recognised as a test in
+   * the language it is written in. Charging these to the source budget would
+   * make a directory of 30 modules and their 30 tests fail a 50-module limit it
+   * never exceeded.
+   */
+  test("recognises Go's convention", () => {
+    expect(budgetOf("internal/provider/resource_test.go")).toBe("test");
+    expect(budgetOf("internal/provider/resource.go")).toBe("source");
+  });
+
+  test("recognises Python's conventions", () => {
+    expect(budgetOf("scripts/test_audit.py")).toBe("test");
+    expect(budgetOf("scripts/audit_test.py")).toBe("test");
+    expect(budgetOf("scripts/audit.py")).toBe("source");
+    // `test_` is a filename prefix, not a substring of the path.
+    expect(budgetOf("test_helpers/audit.py")).toBe("source");
+  });
+
+  test("recognises Swift's XCTest convention", () => {
+    expect(budgetOf("Tests/TaskNotesKitTests/RecurrenceTests.swift")).toBe(
+      "test",
+    );
+    expect(budgetOf("Tests/TaskNotesKitTests/RecurrenceTest.swift")).toBe(
+      "test",
+    );
+    expect(budgetOf("Sources/TaskNotesKit/Recurrence.swift")).toBe("source");
+  });
+
+  test("recognises C#'s convention", () => {
+    expect(budgetOf("src/QuotaBarTests.cs")).toBe("test");
+    expect(budgetOf("src/QuotaBar.cs")).toBe("source");
+  });
+
+  test("recognises Rust's suffix convention", () => {
+    expect(budgetOf("crates/core/src/recurrence_test.rs")).toBe("test");
+    expect(budgetOf("crates/core/src/recurrence.rs")).toBe("source");
+  });
+
+  test("does not let one language's convention classify another's files", () => {
+    // `_test.go` must not make `_test.ts` a test by the Go rule, and Swift's
+    // `Tests.swift` must not reach a `.ts` file.
+    expect(budgetOf("src/thing_test.ts")).toBe("source");
+    expect(budgetOf("src/Tests.ts")).toBe("source");
+  });
 });
 
 describe("directoryOf", () => {
