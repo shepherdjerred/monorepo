@@ -374,3 +374,66 @@ describe("Dare v2 objective attribution roles", () => {
     ).toBe(true);
   });
 });
+
+describe("Dare v2 legacy timeline plans", () => {
+  // `dare_v2` is live, so a timeline dare can be authored by the currently
+  // deployed six-argument code between any survey of existing rows and this
+  // change landing. That revision must keep loading, or a funded dare is
+  // stranded on display, funding, and settlement alike.
+  const SIX_ARGUMENT_PLAN = {
+    version: 2,
+    maxEligibleGames: 100,
+    gameSets: [
+      {
+        name: "qualifying_game",
+        targetKeys: ["virmel"],
+        relationship: "independent",
+        queues: ["solo"],
+        predicate: {
+          kind: "comparison",
+          value: {
+            kind: "timeline_event_count",
+            eventType: "CHAMPION_KILL",
+            target: "virmel",
+            role: "killer",
+            afterMs: null,
+            beforeMs: null,
+            itemId: null,
+          },
+          operator: "gte",
+          threshold: 1,
+        },
+        projections: [],
+        orderBy: "game_end_at_asc_match_id_asc",
+        limit: 100,
+      },
+    ],
+    result: {
+      kind: "matching_games",
+      gameSet: "qualifying_game",
+      operator: "gte",
+      threshold: 1,
+    },
+  };
+
+  test("reads a stored plan written before the objective fields existed", () => {
+    const parsed = DareStoredPlanV2Schema.safeParse(SIX_ARGUMENT_PLAN);
+    expect(parsed.success).toBe(true);
+  });
+
+  test("treats the absent narrowings as no narrowing", () => {
+    const parsed = DareStoredPlanV2Schema.parse(SIX_ARGUMENT_PLAN);
+    const predicate = parsed.gameSets[0]?.predicate;
+    const value =
+      predicate?.kind === "comparison" ? predicate.value : undefined;
+    expect(
+      value?.kind === "timeline_event_count" ? value.monsterType : "x",
+    ).toBe(null);
+  });
+
+  test("still authors cleanly without the objective fields", () => {
+    expect(DareCompiledPlanV2Schema.safeParse(SIX_ARGUMENT_PLAN).success).toBe(
+      true,
+    );
+  });
+});

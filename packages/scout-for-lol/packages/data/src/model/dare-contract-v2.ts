@@ -141,8 +141,15 @@ export const DareValueV2Schema: z.ZodType<DareValueV2> = z.lazy(() =>
       // an enum on the shared value shape would make a dare funded against one of
       // them unreadable the day it left the list. Both the allowlist and the
       // event-type pairing are enforced in the authoring refinement.
-      monsterType: z.string().min(1).max(80).nullable(),
-      buildingType: z.string().min(1).max(80).nullable(),
+      //
+      // Defaulted, not required. `dare_v2` is live, so a timeline dare can be
+      // authored by the currently deployed six-argument code between any
+      // check for existing rows and this rollout landing. Requiring the keys
+      // would make that revision unreadable — stranding a funded dare on load,
+      // display, funding, and settlement alike. An absent key means the same
+      // thing the old representation meant: no narrowing.
+      monsterType: z.string().min(1).max(80).nullable().default(null),
+      buildingType: z.string().min(1).max(80).nullable().default(null),
     }),
     z.strictObject({
       kind: z.literal("arithmetic"),
