@@ -1,9 +1,11 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatInteger } from "@scout-for-lol/data";
 import {
   ErrorState,
   LoadingState,
+  StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { BucksCancelDialog } from "#src/components/bucks-cancel-dialog.tsx";
 import {
@@ -93,45 +95,50 @@ type BetPlacementSink = {
  * still-loading wallet must not be read as "not eligible" — that misleads an
  * eligible member and hides every bet form with no way to retry.
  */
-export function WalletPanel(props: {
-  isPending: boolean;
-  isError: boolean;
-  onRetry: () => void;
-  wallet:
-    | {
-        balance: number;
-        totalAtRisk: number;
-        pendingPositionCount: number;
-      }
-    | null
-    | undefined;
+export type WalletData = {
+  wallet: {
+    balance: number;
+    totalAtRisk: number;
+    pendingPositionCount: number;
+    pendingPositions?: Parameters<typeof BucksPendingPositions>[0]["positions"];
+  } | null;
   eligible: boolean;
-  pendingPositions: Parameters<typeof BucksPendingPositions>[0]["positions"];
+};
+
+export function WalletPanel(props: {
+  /**
+   * One value instead of the `isPending` / `isError` / `wallet` / `eligible` /
+   * `pendingPositions` set this took before. Those five described one query
+   * result, and the combination that mattered — an error arriving while a
+   * wallet was already in hand — had no agreed meaning: the old order checked
+   * `isError` first and replaced a usable balance with a retry card.
+   */
+  wallet: Loaded<WalletData>;
+  onRetry: () => void;
   onCancelOutcome: (matchId: string) => void;
 }) {
-  if (props.isPending) {
-    return <LoadingState label="Loading your wallet…" />;
-  }
-  if (props.isError) {
-    return (
+  return Loaded.match(props.wallet, {
+    loading: () => <LoadingState label="Loading your wallet…" />,
+    error: () => (
       <ErrorState
         message="Scout couldn't load your Bryan Bucks wallet."
         onRetry={props.onRetry}
       />
-    );
-  }
-  return (
-    <>
-      <BucksWalletCard
-        wallet={props.wallet ?? null}
-        eligible={props.eligible}
-      />
-      <BucksPendingPositions
-        positions={props.pendingPositions}
-        onCancelOutcome={props.onCancelOutcome}
-      />
-    </>
-  );
+    ),
+    available: (data, meta) => (
+      <>
+        <StaleState errors={meta.errors} />
+        <BucksWalletCard
+          wallet={data.wallet ?? null}
+          eligible={data.eligible}
+        />
+        <BucksPendingPositions
+          positions={data.wallet?.pendingPositions ?? []}
+          onCancelOutcome={props.onCancelOutcome}
+        />
+      </>
+    ),
+  });
 }
 
 function usePositionNames(
@@ -314,19 +321,14 @@ export function BucksOverview() {
   return (
     <div className="space-y-4">
       <WalletPanel
-        isPending={walletQuery.isPending}
-        isError={walletQuery.isError}
+        wallet={Loaded.fromQuery(walletQuery, ["bucks.wallet"])}
         onRetry={() => {
           void walletQuery.refetch();
         }}
-        wallet={walletQuery.data?.wallet}
-        eligible={walletQuery.data?.eligible === true}
-        pendingPositions={walletQuery.data?.wallet?.pendingPositions ?? []}
         onCancelOutcome={requestCancel}
       />
       <MarketsStatusBanner
-        isPending={marketsQuery.isPending}
-        isError={marketsQuery.isError}
+        status={Loaded.fromQuery(marketsQuery, ["bucks.openMarkets"])}
         onRetry={() => {
           void marketsQuery.refetch();
         }}
