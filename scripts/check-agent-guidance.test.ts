@@ -265,3 +265,36 @@ describe("agent guidance guard", () => {
     expect(validateAgentGuidance(entries)).toEqual([]);
   });
 });
+
+describe("agent guidance compatibility", () => {
+  test("rejects an orphaned nested Claude compatibility link", () => {
+    const entries = validFixture();
+    entries.push(symlink("packages/app/CLAUDE.md", "AGENTS.md"));
+    expect(rules(entries)).toContain("claude-compatibility");
+  });
+
+  test("reads staged guidance content from the index", async () => {
+    const repositoryRoot = await mkdtemp(
+      nodePath.join(tmpdir(), "agent-guidance-index-"),
+    );
+    try {
+      await runGit(repositoryRoot, ["init", "--quiet"]);
+      await writeFile(nodePath.join(repositoryRoot, "AGENTS.md"), "# Staged\n");
+      await runGit(repositoryRoot, ["add", "AGENTS.md"]);
+      await writeFile(
+        nodePath.join(repositoryRoot, "AGENTS.md"),
+        "x\n".repeat(201),
+      );
+
+      const entries = await listGuidanceEntries(new Set(), repositoryRoot);
+
+      expect(entries).toContainEqual({
+        path: "AGENTS.md",
+        kind: "file",
+        contents: "# Staged\n",
+      });
+    } finally {
+      await rm(repositoryRoot, { recursive: true, force: true });
+    }
+  });
+});

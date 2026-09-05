@@ -79,27 +79,21 @@ function lineCount(contents: string): number {
 function byteCount(contents: string): number {
   return new TextEncoder().encode(contents).byteLength;
 }
-
 function isArchived(entryPath: string): boolean {
   return entryPath.startsWith(ARCHIVE_PREFIX);
 }
-
 function isSkill(entryPath: string): boolean {
   return entryPath.endsWith("/SKILL.md");
 }
-
 function isGlobalReferenceSkill(entryPath: string): boolean {
   return entryPath.startsWith("packages/dotfiles/dot_agents/skills/");
 }
-
 function skillDirectoryName(entryPath: string): string {
   return gitPath.basename(gitPath.dirname(entryPath));
 }
-
 export function claudeCompatibilityPath(agentPath: string): string {
   return gitPath.join(gitPath.dirname(agentPath), "CLAUDE.md");
 }
-
 function catalogRoot(entryPath: string): string | undefined {
   const personalMarker = "packages/dotfiles/dot_agents/skills/";
   if (entryPath.startsWith(personalMarker)) {
@@ -111,7 +105,6 @@ function catalogRoot(entryPath: string): string | undefined {
   if (index === -1) return undefined;
   return entryPath.slice(0, index + marker.length - 1);
 }
-
 function parseSkillFrontmatter(
   entry: GuidanceEntry,
 ):
@@ -134,7 +127,6 @@ function parseSkillFrontmatter(
     return undefined;
   }
 }
-
 function addBudgetViolations(
   entry: GuidanceEntry,
   values: Readonly<{
@@ -162,13 +154,11 @@ function addBudgetViolations(
     });
   }
 }
-
 type LinkExpectation = Readonly<{
   path: string;
   target: string;
   rule: string;
 }>;
-
 function hasPathOrDescendant(
   entries: ReadonlyMap<string, GuidanceEntry>,
   entryPath: string,
@@ -180,7 +170,6 @@ function hasPathOrDescendant(
   }
   return false;
 }
-
 function validateSymlink(
   entries: ReadonlyMap<string, GuidanceEntry>,
   expectation: LinkExpectation,
@@ -202,7 +191,6 @@ function validateSymlink(
   }
   return undefined;
 }
-
 function validateSourceAdapter(
   entries: ReadonlyMap<string, GuidanceEntry>,
   entryPath: string,
@@ -218,7 +206,6 @@ function validateSourceAdapter(
   }
   return undefined;
 }
-
 function addWhenPresent(
   violations: GuidanceViolation[],
   violation: GuidanceViolation | undefined,
@@ -247,9 +234,7 @@ function validateClientLayout(
     );
   }
 
-  const cursorAdapter = byPath.get(
-    "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc",
-  );
+  const cursorAdapter = byPath.get(CURSOR_ADAPTER_PATH);
   if (
     cursorAdapter?.kind !== "file" ||
     !cursorAdapter.contents.includes("~/AGENTS.md") ||
@@ -257,13 +242,12 @@ function validateClientLayout(
   ) {
     violations.push({
       rule: "cursor-adapter",
-      path: "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc",
+      path: CURSOR_ADAPTER_PATH,
       message: "must be a minimal pointer to ~/AGENTS.md",
     });
   }
   return violations;
 }
-
 function validateClientSpecificEntry(
   entry: GuidanceEntry,
 ): GuidanceViolation[] {
@@ -301,7 +285,6 @@ function validateClientSpecificEntry(
   }
   return violations;
 }
-
 function validateAgentEntry(
   entry: GuidanceEntry,
   byPath: ReadonlyMap<string, GuidanceEntry>,
@@ -329,7 +312,17 @@ function validateAgentEntry(
   );
   return violations;
 }
-
+function validateClaudeEntry(
+  entry: GuidanceEntry,
+  byPath: ReadonlyMap<string, GuidanceEntry>,
+): GuidanceViolation[] {
+  const violation = validateSymlink(byPath, {
+    path: entry.path,
+    target: "AGENTS.md",
+    rule: "claude-compatibility",
+  });
+  return violation === undefined ? [] : [violation];
+}
 type SkillRegistry = Readonly<{
   ids: Map<string, string>;
   catalogSizes: Map<string, number>;
@@ -462,6 +455,9 @@ export function validateAgentGuidance(
     }
     if (entry.path.endsWith("/AGENTS.md") || entry.path === "AGENTS.md") {
       violations.push(...validateAgentEntry(entry, byPath));
+    }
+    if (entry.path.endsWith("/CLAUDE.md") || entry.path === "CLAUDE.md") {
+      violations.push(...validateClaudeEntry(entry, byPath));
     }
     if (isSkill(entry.path)) {
       violations.push(...validateSkillEntry(entry, registry));

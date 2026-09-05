@@ -59,7 +59,7 @@
 	autoupdate = true
 
 # git-spice stacked-branch workflow (mirrors ~/.gitconfig; agents drive
-# git-spice per the git-spice-helper skill).
+# git-spice per the monorepo-delivery skill).
 [spice "branchCreate"]
 	commit = false
 [spice "submit"]
