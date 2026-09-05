@@ -78,6 +78,67 @@ function openRouterResponse(
   });
 }
 
+function createResponseSequenceRuntime(
+  responses: Response[],
+  captureRequestBody: (body: unknown) => void,
+  options: {
+    logger?: (record: OpenRouterRuntimeLogRecord) => void;
+    metricsRegister?: Registry;
+  } = {},
+) {
+  return createOpenRouterRuntime({
+    apiKey: "test-key",
+    service: "test",
+    appName: "test",
+    ...options,
+    fetch: Object.assign(
+      async (
+        _input: Parameters<typeof fetch>[0],
+        init?: Parameters<typeof fetch>[1],
+      ) => {
+        if (typeof init?.body !== "string") {
+          throw new TypeError("expected JSON request body");
+        }
+        captureRequestBody(JSON.parse(init.body));
+        const response = responses.shift();
+        if (response === undefined) throw new Error("unexpected request");
+        return response;
+      },
+      { preconnect: (url: string | URL) => void url },
+    ),
+  });
+}
+
+function createPostSemanticFailureRuntime(input: {
+  status: 402 | 503;
+  message: string;
+  headers?: ResponseInit["headers"];
+}) {
+  let requestCount = 0;
+  const runtime = createOpenRouterRuntime({
+    apiKey: "test-key",
+    service: "test",
+    appName: "test",
+    fetch: () => {
+      requestCount += 1;
+      if (requestCount === 1) {
+        return Promise.resolve(openRouterResponse('{"count":"bad"}'));
+      }
+      const responseInit: ResponseInit =
+        input.headers === undefined
+          ? { status: input.status }
+          : { status: input.status, headers: input.headers };
+      return Promise.resolve(
+        Response.json(
+          { error: { code: input.status, message: input.message } },
+          responseInit,
+        ),
+      );
+    },
+  });
+  return { runtime, requestCount: () => requestCount };
+}
+
 describe("catalog-aware runtime", () => {
   test("resolves exact endpoint and capability contracts", () => {
     const runtime = createOpenRouterRuntime({
@@ -405,28 +466,14 @@ describe("generateValidatedObject", () => {
       openRouterResponse('{"count":"bad"}'),
       openRouterResponse('{"count":2}'),
     ];
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      metricsRegister: new Registry(),
-      logger: (record) => logRecords.push(record),
-      fetch: Object.assign(
-        async (
-          _input: Parameters<typeof fetch>[0],
-          init?: Parameters<typeof fetch>[1],
-        ) => {
-          if (typeof init?.body !== "string") {
-            throw new TypeError("expected JSON request body");
-          }
-          bodies.push(RequestBodySchema.parse(JSON.parse(init.body)));
-          const response = responses.shift();
-          if (response === undefined) throw new Error("unexpected request");
-          return response;
-        },
-        { preconnect: (url: string | URL) => void url },
-      ),
-    });
+    const runtime = createResponseSequenceRuntime(
+      responses,
+      (body) => bodies.push(RequestBodySchema.parse(body)),
+      {
+        metricsRegister: new Registry(),
+        logger: (record) => logRecords.push(record),
+      },
+    );
 
     const result = await generateValidatedObject(runtime, {
       model: "gpt-5.6-luna",
@@ -532,27 +579,14 @@ describe("generateValidatedObject retries", () => {
   });
 
   test("does not multiply transport retries across semantic repairs", async () => {
-    let requestCount = 0;
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: () => {
-        requestCount += 1;
-        if (requestCount === 1) {
-          return Promise.resolve(openRouterResponse('{"count":"bad"}'));
-        }
-        return Promise.resolve(
-          Response.json(
-            { error: { code: 503, message: "provider unavailable" } },
-            { status: 503, headers: { "Retry-After": "0" } },
-          ),
-        );
-      },
+    const scenario = createPostSemanticFailureRuntime({
+      status: 503,
+      message: "provider unavailable",
+      headers: { "Retry-After": "0" },
     });
 
     await expect(
-      generateValidatedObject(runtime, {
+      generateValidatedObject(scenario.runtime, {
         model: "gpt-5.6-luna",
         schema: z.object({ count: z.number().int() }),
         schemaName: "CountResult",
@@ -560,34 +594,21 @@ describe("generateValidatedObject retries", () => {
         workload: "bounded-retry-test",
       }),
     ).rejects.toThrow();
-    expect(requestCount).toBe(2);
+    expect(scenario.requestCount()).toBe(2);
   });
 });
 
 describe("generateValidatedObject transport failures", () => {
   test("wraps a mid-retry transport failure with the usage already charged", async () => {
-    let requestCount = 0;
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: () => {
-        requestCount += 1;
-        if (requestCount === 1) {
-          return Promise.resolve(openRouterResponse('{"count":"bad"}'));
-        }
-        return Promise.resolve(
-          Response.json(
-            { error: { code: 503, message: "provider unavailable" } },
-            { status: 503, headers: { "Retry-After": "0" } },
-          ),
-        );
-      },
+    const scenario = createPostSemanticFailureRuntime({
+      status: 503,
+      message: "provider unavailable",
+      headers: { "Retry-After": "0" },
     });
     let thrown: unknown;
 
     try {
-      await generateValidatedObject(runtime, {
+      await generateValidatedObject(scenario.runtime, {
         model: "gpt-5.6-luna",
         schema: z.object({ count: z.number().int() }),
         schemaName: "CountResult",
@@ -614,28 +635,14 @@ describe("generateValidatedObject transport failures", () => {
   });
 
   test("wraps an immediate API failure that follows a billable attempt", async () => {
-    let requestCount = 0;
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: () => {
-        requestCount += 1;
-        if (requestCount === 1) {
-          return Promise.resolve(openRouterResponse('{"count":"bad"}'));
-        }
-        return Promise.resolve(
-          Response.json(
-            { error: { code: 402, message: "insufficient credits" } },
-            { status: 402 },
-          ),
-        );
-      },
+    const scenario = createPostSemanticFailureRuntime({
+      status: 402,
+      message: "insufficient credits",
     });
     let thrown: unknown;
 
     try {
-      await generateValidatedObject(runtime, {
+      await generateValidatedObject(scenario.runtime, {
         model: "gpt-5.6-luna",
         schema: z.object({ count: z.number().int() }),
         schemaName: "CountResult",
@@ -735,26 +742,9 @@ describe("generateValidatedObject exhaustion", () => {
       openRouterResponse('{"count":', "length"),
       openRouterResponse('{"count":2}'),
     ];
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: Object.assign(
-        async (
-          _input: Parameters<typeof fetch>[0],
-          init?: Parameters<typeof fetch>[1],
-        ) => {
-          if (typeof init?.body !== "string") {
-            throw new TypeError("expected JSON request body");
-          }
-          bodies.push(RequestBodySchema.parse(JSON.parse(init.body)));
-          const response = responses.shift();
-          if (response === undefined) throw new Error("unexpected request");
-          return response;
-        },
-        { preconnect: (url: string | URL) => void url },
-      ),
-    });
+    const runtime = createResponseSequenceRuntime(responses, (body) =>
+      bodies.push(RequestBodySchema.parse(body)),
+    );
 
     const result = await generateValidatedObject(runtime, {
       model: "gpt-5.6-luna",
@@ -794,30 +784,11 @@ describe("generateValidatedObject corrective prompts", () => {
       openRouterResponse('{"count":1}'),
       openRouterResponse('{"count":2}'),
     ];
-    const runtime = createOpenRouterRuntime({
-      apiKey: "test-key",
-      service: "test",
-      appName: "test",
-      fetch: Object.assign(
-        async (
-          _input: Parameters<typeof fetch>[0],
-          init?: Parameters<typeof fetch>[1],
-        ) => {
-          if (typeof init?.body !== "string") {
-            throw new TypeError("expected JSON request body");
-          }
-          const body = PromptBodySchema.parse(JSON.parse(init.body));
-          const user = body.messages.findLast(
-            (message) => message.role === "user",
-          );
-          if (user === undefined) throw new Error("expected a user message");
-          prompts.push(user.content);
-          const response = responses.shift();
-          if (response === undefined) throw new Error("unexpected request");
-          return response;
-        },
-        { preconnect: (url: string | URL) => void url },
-      ),
+    const runtime = createResponseSequenceRuntime(responses, (requestBody) => {
+      const body = PromptBodySchema.parse(requestBody);
+      const user = body.messages.findLast((message) => message.role === "user");
+      if (user === undefined) throw new Error("expected a user message");
+      prompts.push(user.content);
     });
 
     // A validation message far larger than the bound forces the truncation path.

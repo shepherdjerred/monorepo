@@ -792,10 +792,6 @@
       "clones": 1,
       "tokens": 77
     },
-    "packages/llm-runtime/test/runtime.test.ts|packages/llm-runtime/test/runtime.test.ts": {
-      "clones": 5,
-      "tokens": 501
-    },
     "packages/macos-ai-subscription-tracker/scripts/verify-app.ts|packages/macos-ai-subscription-tracker/scripts/verify-notarized-app.ts": {
       "clones": 1,
       "tokens": 192
