@@ -77,4 +77,49 @@ describe("Dare SQL v3 value domains", () => {
       compile("team_position = individual_position"),
     ).resolves.toMatchObject({ compilerVersion: "dare-scoutql-3" });
   });
+
+  // A CTE may publish any name it likes, so a domain belongs to the lake column
+  // rather than to the spelling: `COUNT(*) AS queue` is an integer.
+  test("accepts a derived alias that reuses a lake domain column's name", async () => {
+    await expect(
+      compileDareSqlV3({
+        queryText: `WITH counts AS (SELECT COUNT(*) AS queue FROM T1)
+          SELECT queue >= 5 AS achieved FROM counts`,
+        targetKeys: ["T1"],
+      }),
+    ).resolves.toMatchObject({ compilerVersion: "dare-scoutql-3" });
+  });
+
+  // The relaxation above must not become an escape hatch: a CTE that merely
+  // forwards a lake column is still comparing the lake column.
+  test("rejects an out-of-domain literal on a column a CTE forwards from the lake", async () => {
+    await expect(
+      compileDareSqlV3({
+        queryText: `WITH lake_games AS (
+            SELECT match_id, game_end_at, team_position FROM T1
+          ), qualifying_game AS (
+            SELECT match_id, game_end_at, (team_position = 'MID') AS matched
+            FROM lake_games
+          )
+          SELECT EXISTS (SELECT 1 FROM qualifying_game WHERE matched) AS achieved`,
+        targetKeys: ["T1"],
+      }),
+    ).rejects.toThrow("MIDDLE");
+  });
+
+  // A qualifier that names a lake relation is the shape the model writes most
+  // often, and it stays checked whichever alias the FROM clause gave it.
+  test("rejects an out-of-domain literal behind a lake table alias", async () => {
+    await expect(
+      compileDareSqlV3({
+        queryText: `WITH qualifying_game AS (
+            SELECT p0.match_id, p0.game_end_at,
+              (p0.team_position = 'MID') AS matched
+            FROM T1 AS p0
+          )
+          SELECT EXISTS (SELECT 1 FROM qualifying_game WHERE matched) AS achieved`,
+        targetKeys: ["T1"],
+      }),
+    ).rejects.toThrow("MIDDLE");
+  });
 });
