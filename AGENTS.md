@@ -818,6 +818,38 @@ prune after a legitimate reduction, run the package's own lint invocation with
 package directory and commit the shrunken file. Never baseline new code with
 `--suppress-rule` — refactor it under the threshold instead.
 
+### Directory file counts — `check-directory-file-counts`
+
+A flat directory stops being a domain and becomes a dumping ground somewhere
+past fifty modules. `scripts/check-directory-file-counts.ts` draws that line
+mechanically: it runs in the `pre-commit` hook (`lefthook.yml`) and as the
+`//#check-directory-file-counts` turbo task under `bun run verify`.
+
+Each directory gets **two independent budgets** — source files and colocated
+test files. A `foo.test.ts` is not a new concept, so it must not consume the
+module budget; a directory may hold fifty modules and their fifty tests. Only
+direct children count. Scope is tracked files with a code extension
+(`.ts .tsx .js .jsx .mjs .cjs .rs .go .py .swift .cs .astro`), excluding
+`sandbox/**` because `sandbox/archive` is do-not-modify and a rule that could
+block it is a rule that cannot be obeyed. Generated code is **not** excluded:
+unlike `sandbox/`, a generator's output layout can be changed.
+
+Over 25 files prints an advisory and never affects the exit code. Over `CEILING`
+fails.
+
+**There is no allowlist, no exempt-path table, and no per-directory
+suppression.** While the repository is being reorganized, the exported `CEILING`
+sits above `TARGET` (50) and is lowered by each reorganization PR — a single
+global number, so nothing is individually excused and no new directory may
+exceed today's worst case. Do not raise `CEILING`; the only permitted edit is
+lowering it, and the final PR sets it to `TARGET`. This is deliberately unlike
+`.quality-baseline.json` and `.jscpd-baseline.json`, which are per-file
+allowlists.
+
+Staged paths select which directories to _report_ on; the counts always come
+from each directory's full tracked contents. Counting only the staged files
+would report `1` for a file added to a sixty-file directory and pass.
+
 ### CI credentials — `check-ci-env`
 
 `scripts/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run
