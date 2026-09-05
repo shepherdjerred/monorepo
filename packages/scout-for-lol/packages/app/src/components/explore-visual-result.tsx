@@ -41,6 +41,35 @@ function chartableSnapshot(
   return format.success && isChartRenderKind(format.data) ? snapshot : null;
 }
 
+export function initialChartKind(
+  rawChart: VisualizationSnapshot | null,
+  preview: ReportAiPreviewSummary | null,
+): ReportOutputFormat {
+  if (rawChart !== null) {
+    const format = ReportOutputFormatSchema.safeParse(
+      rawChart.kind.toUpperCase(),
+    );
+    if (format.success && isChartRenderKind(format.data)) {
+      return format.data;
+    }
+  }
+
+  if (preview !== null && isChartRenderKind(preview.renderKind)) {
+    return preview.renderKind;
+  }
+
+  return "BAR_CHART";
+}
+
+function initialChartOrientation(
+  rawChart: VisualizationSnapshot | null,
+): "vertical" | "horizontal" {
+  if (rawChart === null) {
+    return "vertical";
+  }
+  return rawChart.display.options?.orientation ?? "vertical";
+}
+
 export type ExploreVisualResultProps = {
   readonly message: ExploreMessage;
   readonly onFollowUp?: ((text: string) => void) | undefined;
@@ -238,6 +267,7 @@ function resolveActiveSnapshot(options: {
   preview: ReportAiPreviewSummary | null;
   isPreviewChartable: boolean;
   rawChart: VisualizationSnapshot | null;
+  hasCustomChartSelection: boolean;
   selectedChartKind: ReportOutputFormat;
   selectedMetricKey: string | undefined;
   orientation: "vertical" | "horizontal";
@@ -246,10 +276,15 @@ function resolveActiveSnapshot(options: {
     preview,
     isPreviewChartable,
     rawChart,
+    hasCustomChartSelection,
     selectedChartKind,
     selectedMetricKey,
     orientation,
   } = options;
+
+  if (rawChart !== null && !hasCustomChartSelection) {
+    return rawChart;
+  }
 
   if (preview !== null && isPreviewChartable) {
     const synthesized = previewToVisualizationSnapshot(preview, {
@@ -311,11 +346,13 @@ export function ExploreVisualResult(props: {
   >(plottableCols[0]?.key);
 
   const [selectedChartKind, setSelectedChartKind] =
-    useState<ReportOutputFormat>("BAR_CHART");
+    useState<ReportOutputFormat>(() => initialChartKind(rawChart, preview));
 
   const [orientation, setOrientation] = useState<"vertical" | "horizontal">(
-    "vertical",
+    () => initialChartOrientation(rawChart),
   );
+
+  const [hasCustomChartSelection, setHasCustomChartSelection] = useState(false);
 
   const [selectedPoint, setSelectedPoint] = useState<SelectedDataPoint | null>(
     null,
@@ -327,6 +364,7 @@ export function ExploreVisualResult(props: {
         preview,
         isPreviewChartable,
         rawChart,
+        hasCustomChartSelection,
         selectedChartKind,
         selectedMetricKey,
         orientation,
@@ -335,6 +373,7 @@ export function ExploreVisualResult(props: {
       preview,
       isPreviewChartable,
       rawChart,
+      hasCustomChartSelection,
       selectedChartKind,
       selectedMetricKey,
       orientation,
@@ -362,12 +401,14 @@ export function ExploreVisualResult(props: {
               selectedChartKind={selectedChartKind}
               orientation={orientation}
               onChartKindChange={(kind, orient) => {
+                setHasCustomChartSelection(true);
                 setSelectedChartKind(kind);
                 setOrientation(orient);
               }}
               plottableCols={plottableCols}
               selectedMetricKey={selectedMetricKey}
               onMetricChange={(val) => {
+                setHasCustomChartSelection(true);
                 setSelectedMetricKey(val);
               }}
             />

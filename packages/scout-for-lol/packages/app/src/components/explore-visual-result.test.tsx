@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
-import { ExploreVisualResult } from "#src/components/explore-visual-result.tsx";
+import {
+  ExploreMessageSchema,
+  VisualizationSnapshotSchema,
+  type ExploreMessage,
+} from "@scout-for-lol/data";
+import {
+  ExploreVisualResult,
+  initialChartKind,
+} from "#src/components/explore-visual-result.tsx";
 
 function createMessage(overrides: Record<string, unknown>): ExploreMessage {
   return ExploreMessageSchema.parse({
@@ -44,6 +51,61 @@ describe("ExploreVisualResult", () => {
     rowsScanned: 100,
     renderKind: "TABLE" as const,
   };
+
+  const persistedLineChart = VisualizationSnapshotSchema.parse({
+    version: 1,
+    generatedAt: "2026-08-14T12:00:30.000Z",
+    kind: "LINE_CHART",
+    title: "Win rate by patch",
+    temporal: null,
+    bucket: null,
+    display: {
+      theme: null,
+      palette: null,
+      smooth: false,
+      stack: "none",
+      rollingWindow: null,
+      cumulative: false,
+      sparkline: false,
+      options: null,
+    },
+    series: [
+      {
+        id: "win_rate",
+        label: "Win rate",
+        metric: "win_rate",
+        displayKind: "percent",
+        additive: false,
+        points: [
+          {
+            key: "26.15",
+            label: "26.15",
+            start: "2026-08-01T00:00:00.000Z",
+            end: "2026-08-14T00:00:00.000Z",
+            value: 0.54,
+            evidence: { sampleSize: 25 },
+          },
+        ],
+      },
+    ],
+    annotations: [],
+    trends: [],
+  });
+
+  test("uses the persisted chart kind before preview defaults", () => {
+    expect(initialChartKind(persistedLineChart, chartablePreview)).toBe(
+      "LINE_CHART",
+    );
+  });
+
+  test("uses the preview render kind when no snapshot is persisted", () => {
+    expect(
+      initialChartKind(null, {
+        ...chartablePreview,
+        renderKind: "DONUT_CHART",
+      }),
+    ).toBe("DONUT_CHART");
+  });
 
   test("renders both Chart and Table tab controls for chartable results", () => {
     const message = createMessage({ preview: chartablePreview });
