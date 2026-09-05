@@ -100,6 +100,8 @@ export async function executeActiveExploreRun(input: {
         ticket: input.run.ticket,
         identity: input.run.identity,
         guildIds: input.run.guildIds,
+        // The web run manager only ever answers the Explore page.
+        surface: "web",
         started: input.run.started,
         history: input.run.history,
         abortSignal: input.run.abortController.signal,

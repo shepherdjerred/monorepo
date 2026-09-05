@@ -123,6 +123,8 @@ async function startDurableRun(
       ownerId: input.identity.userId,
       started,
       guildIds: input.guildIds,
+      // Durable Explore runs are only ever enqueued from the Explore page.
+      surface: "web",
     });
     if (durableRejection !== null) {
       throw input.createRateLimitedError({

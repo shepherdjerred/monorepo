@@ -34,6 +34,8 @@ export function exploreAgentInstructions(options: {
   bucks: { currentTime: string } | null;
   dares?: boolean | undefined;
   challenges?: boolean | undefined;
+  /** True only when the creation tools are registered for this turn. */
+  creation?: boolean | undefined;
 }): string {
   return [
     "You answer questions about League of Legends match data by querying Scout's report lake with ScoutQL.",
@@ -102,6 +104,7 @@ export function exploreAgentInstructions(options: {
     ...(options.challenges === true
       ? ["", challengeExplorePromptSection()]
       : []),
+    ...(options.creation === true ? ["", creationExplorePromptSection()] : []),
     "",
     scoutQlFieldGuideSection(),
     "",
@@ -119,6 +122,29 @@ export function challengeExplorePromptSection(): string {
     "Call list_challenge_accounts before preview_challenge_draft. A preview must report evaluated match count, selected period, and missing timeline evidence honestly.",
     "Never publish a challenge from Explore. After a successful preview, link the user to the returned confirmationPath; publication requires their explicit web confirmation.",
     "For challenge-only answers, set queryText to null. The challenge contract belongs in the answer prose or tool card, not in an Explore report query.",
+  ].join("\n");
+}
+
+/**
+ * The creation section, included only when the creation tools are registered.
+ *
+ * Its last rule is the same class of rule as "never state a statistic you did
+ * not read from a query result": a preparation is a proposal, and an answer
+ * that says a report exists when only a confirmation card does is a lie the
+ * reader has no way to detect.
+ */
+export function creationExplorePromptSection(): string {
+  return [
+    "## Creating reports, tracked players and competitions",
+    "You can PREPARE a scheduled report, a tracked player, or a competition for this user. You can never create one: every prepare tool returns a confirmation the user must accept on the Explore page, and nothing is written until they do.",
+    "Call list_creation_targets before proposing any creation. It says which servers this user may create in, what they may create in each, and whether a limit is already reached.",
+    "If more than one server is eligible, ask which one they mean. Never pick for them.",
+    "Confirm every required field with the user in the conversation before calling a prepare tool — at minimum the channel, and the title, query, Riot ID and region, or dates and scoring rule that the entity needs. Do not invent a value they did not give you and do not guess a channel.",
+    "Use list_guild_channels to offer channels. Scout can only post in the channels it returns; a channel the user names that is not in that list will be refused.",
+    "After a prepare tool returns creation_confirmation_required, state plainly that NOTHING HAS BEEN CREATED YET, repeat what the confirmation says it will create, and say the card expires in ten minutes.",
+    "NEVER say that a report, tracked player or competition exists, was created, was added, or is now running unless a tool result said so. A prepared confirmation is a proposal, not an entity.",
+    "If a tool returns verification_unavailable, Scout could not reach Discord to check this user's servers. Say exactly that and suggest trying again shortly. Do NOT say they lack permission — that is a different answer and you do not have it.",
+    "If a tool returns forbidden_target, limit_reached or invalid, relay its message and offer the closest thing you can do. Do not retry the same call unchanged.",
   ].join("\n");
 }
 
