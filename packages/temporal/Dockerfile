@@ -51,11 +51,16 @@ COPY --parents \
   packages/feature-flags \
   packages/code-review \
   packages/glitter-context \
+  packages/home-assistant \
   packages/llm-models \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
   ./
+# Home Assistant is published with a dist-based export. Build it in the
+# artifact stage so the runtime image does not resolve the workspace link to a
+# source package with no gitignored dist directory.
+RUN cd packages/home-assistant && bun run build
 # llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
 # consumer that imports it (temporal's pr-review cost activity) crashes at
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
@@ -427,6 +432,7 @@ COPY --parents \
 # Built artifacts from the build stage.
 COPY --from=build /app/packages/llm-models/dist packages/llm-models/dist
 COPY --from=build /app/packages/glitter-context/dist packages/glitter-context/dist
+COPY --from=build /app/packages/home-assistant/dist packages/home-assistant/dist
 COPY --from=build /app/packages/scout-for-lol/packages/data/dist packages/scout-for-lol/packages/data/dist
 COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 
