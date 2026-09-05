@@ -19,6 +19,7 @@ import {
 } from "#src/showcase/discord-templates.ts";
 import { readS3JsonOptional } from "#src/showcase/s3.ts";
 import { getTrackedPlayerCount } from "#src/storage/s3-metadata.ts";
+import { parseShowcaseCliValues } from "./showcase-cli.ts";
 
 const CliFlagNameSchema = z.enum([
   "bucket",
@@ -47,43 +48,9 @@ const CliValuesSchema = z.strictObject({
 /** Safety cap on metadata reads per prefix if a wanted combo is unexpectedly scarce. */
 const DEFAULT_MAX_HEAD = 800;
 
-function parseCliValues(args: string[]): z.infer<typeof CliValuesSchema> {
-  const entries: [string, string][] = [];
-  const seen = new Set<string>();
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (arg === undefined) {
-      throw new Error(`Missing argument at index ${index.toString()}`);
-    }
-    if (!arg.startsWith("--")) {
-      throw new Error(`Unexpected positional argument: ${arg}`);
-    }
-
-    const raw = arg.slice(2);
-    const equalsIndex = raw.indexOf("=");
-    const rawName = equalsIndex === -1 ? raw : raw.slice(0, equalsIndex);
-    const name = CliFlagNameSchema.parse(rawName);
-    if (seen.has(name)) {
-      throw new Error(`Duplicate --${name}`);
-    }
-    seen.add(name);
-
-    const value =
-      equalsIndex === -1 ? args[index + 1] : raw.slice(equalsIndex + 1);
-    if (value === undefined || value.startsWith("--") || value.length === 0) {
-      throw new Error(`Missing value for --${name}`);
-    }
-    if (equalsIndex === -1) {
-      index += 1;
-    }
-    entries.push([name, value]);
-  }
-
-  return CliValuesSchema.parse(Object.fromEntries(entries));
-}
-
-const values = parseCliValues(Bun.argv.slice(2));
+const values = CliValuesSchema.parse(
+  parseShowcaseCliValues(Bun.argv.slice(2), CliFlagNameSchema),
+);
 
 const MetadataSchema = z.record(z.string(), z.string());
 
