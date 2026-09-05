@@ -9,6 +9,7 @@ import {
 import {
   DiscordAccountIdSchema,
   EXPLORE_ANSWER_MAX_LENGTH,
+  ReportAiPreviewSummarySchema,
   type ExploreActiveRun,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
@@ -192,6 +193,10 @@ describe("ExploreRunManager", () => {
       answer: "Jinx wins.",
       activity: "Thinking…",
       trace: [],
+      // Named explicitly: `toMatchObject` ignores fields it is not told
+      // about, so a new snapshot field added without a line here would go
+      // unpinned rather than failing.
+      preview: null,
     });
     expect(manager.list(owner)).toHaveLength(1);
 
@@ -201,6 +206,44 @@ describe("ExploreRunManager", () => {
     expect(manager.list(owner)).toEqual([]);
     expect(manager.outcome(summary.runId, owner)).toBe("succeeded");
     expect(manager.outcome(summary.runId, stranger)).toBeNull();
+  });
+
+  test("a reconnect keeps the query result but not its chart", async () => {
+    // The table is what the reader is looking at, and the run row can serve
+    // it cheaply. The chart deliberately does not survive: a snapshot is
+    // re-sent on every durable poll tick that sees a change, and a
+    // visualization permits eight series totalling two thousand points.
+    const preview = ReportAiPreviewSummarySchema.parse({
+      columns: [{ key: "label", label: "Champion", format: "text" }],
+      rows: [{ label: "Jinx", values: [] }],
+      rowsReturned: 1,
+      rowsScanned: 1284,
+      renderKind: "TABLE",
+    });
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const summary = await startNew(manager, "Who wins most?");
+    const unsubscribe = manager.subscribe(summary.runId, owner, () => null);
+    if (unsubscribe === null) throw new Error("Expected an observer.");
+
+    await requiredRun(agent, 0).params.emit({
+      type: "preview",
+      preview,
+      visualization: null,
+    });
+    unsubscribe();
+
+    const reconnected: ExploreStreamEvent[] = [];
+    const finished = observeUntilDone(manager, summary, reconnected);
+    const snapshot = reconnected[0];
+    if (snapshot?.type !== "snapshot") {
+      throw new Error("Expected a snapshot first.");
+    }
+    expect(snapshot.preview?.rowsScanned).toBe(1284);
+    expect(snapshot).not.toHaveProperty("visualization");
+
+    requiredRun(agent, 0).resolve(successfulResult("Jinx wins."));
+    expect(await finished).toBe("succeeded");
   });
 
   test("reconnect snapshots remain valid after overlong partial output", async () => {

@@ -1,11 +1,16 @@
 import * as Sentry from "@sentry/bun";
 import type {
+  ExploreActiveRun,
+  ExploreMessage,
   ExploreRunOutcome,
   ExploreStreamEvent,
   ExploreTurnRequest,
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
-import type { ExploreRateLimitIdentity } from "#src/explore/rate-limit.ts";
+import type {
+  ExploreRateLimitIdentity,
+  ExploreRateLimitTicket,
+} from "#src/explore/rate-limit.ts";
 import {
   ExploreInvalidTurnError,
   resolveRegenerateTarget,
@@ -85,6 +90,42 @@ export function createDeferred(): {
 } {
   const deferred = Promise.withResolvers<null>();
   return { promise: deferred.promise, resolve: deferred.resolve };
+}
+
+/**
+ * One place that decides what a fresh in-memory run starts out holding.
+ *
+ * Both the ordinary start path and Temporal rehydration build an `ActiveRun`,
+ * and they had drifted into two copies of the same literal — so every field
+ * added to the live-run state had to be remembered twice, and forgetting one
+ * would leave rehydrated runs silently missing it.
+ */
+export function createActiveExploreRun(input: {
+  summary: ExploreActiveRun;
+  identity: ExploreRateLimitIdentity;
+  guildIds: string[];
+  ticket: ExploreRateLimitTicket;
+  started: StartedTurn;
+  history: ExploreMessage[];
+}): ActiveRun {
+  const deferred = createDeferred();
+  return {
+    summary: input.summary,
+    identity: input.identity,
+    guildIds: input.guildIds,
+    ticket: input.ticket,
+    started: input.started,
+    history: input.history,
+    abortController: new AbortController(),
+    subscribers: new Set(),
+    answer: "",
+    activity: "Thinking…",
+    trace: [],
+    preview: null,
+    termination: null,
+    settled: deferred.promise,
+    resolveSettled: deferred.resolve,
+  };
 }
 
 export async function executeActiveExploreRun(input: {

@@ -17,8 +17,8 @@ import {
 import { rollbackUnstartedExploreTurn } from "#src/explore/rollback.ts";
 import { reserveAndStartDurableExploreRun } from "#src/explore/durable-runs.ts";
 import {
+  createActiveExploreRun,
   resolveTurnTarget,
-  createDeferred,
 } from "#src/explore/run-manager-helpers.ts";
 import type { ActiveRun, StartedTurn } from "#src/explore/run-manager-types.ts";
 
@@ -73,23 +73,14 @@ export async function startExploreRun(input: {
       versionCountAtStart,
       startedAt: new Date().toISOString(),
     });
-    const deferred = createDeferred();
-    const run: ActiveRun = {
+    const run = createActiveExploreRun({
       summary,
       identity,
       guildIds,
       ticket,
       started,
       history: transcript.messages,
-      abortController: new AbortController(),
-      subscribers: new Set(),
-      answer: "",
-      activity: "Thinking…",
-      trace: [],
-      termination: null,
-      settled: deferred.promise,
-      resolveSettled: deferred.resolve,
-    };
+    });
     input.registerRun(run);
     if (input.inlineExecutionForTests) {
       input.executeInline(run);

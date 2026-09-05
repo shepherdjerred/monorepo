@@ -39,6 +39,11 @@ export function recordExploreEvent(
   if (event.type === "tool_call" || event.type === "tool_result") {
     run.activity = event.message;
   }
+  if (event.type === "preview") {
+    // Retained without its visualization: see the snapshot schema's comment
+    // on why the chart deliberately does not survive a reconnect.
+    run.preview = event.preview;
+  }
   recordExploreTraceEvent(run.trace, event);
   broadcastExploreEvent(run, event);
 }

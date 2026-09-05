@@ -466,6 +466,21 @@ export const ExploreRunSnapshotEventSchema = z
     answer: z.string().max(EXPLORE_ANSWER_MAX_LENGTH).nullable(),
     activity: z.string().trim().min(1).max(500).nullable(),
     trace: z.array(ExploreTraceEntrySchema),
+    /**
+     * The most recent query result, so a reconnecting reader keeps the table
+     * a `preview` event already put on screen instead of watching it vanish
+     * until the turn finishes.
+     *
+     * Deliberately without the visualization that rides alongside it on the
+     * live `preview` event. A `VisualizationSnapshot` permits eight series
+     * totalling two thousand points, and the durable observer re-emits this
+     * whole snapshot on every poll tick that sees a change — roughly once a
+     * second for the rest of the turn. This summary is hard-bounded at 20
+     * columns by 22 rows, so it is a few KB either way. A reconnecting reader
+     * therefore gets the table back immediately and the chart at the next
+     * query or at `final`, whichever comes first.
+     */
+    preview: ReportAiPreviewSummarySchema.nullable().default(null),
   })
   .strict();
 
