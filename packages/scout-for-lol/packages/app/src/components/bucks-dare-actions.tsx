@@ -23,7 +23,7 @@ function contributionPayload(amount: number | undefined) {
   if (amount === undefined) {
     throw new Error("A contribution action requires an amount.");
   }
-  return { action: "contribute" as const, amount };
+  return { kind: "dare_contribute" as const, amount };
 }
 
 export function BucksDareActions(props: {
@@ -72,12 +72,12 @@ export function BucksDareActions(props: {
       action === "contribute"
         ? contributionPayload(contributionAmount)
         : action === "fund"
-          ? ({ action: "fund" } as const)
+          ? ({ kind: "dare_fund" } as const)
           : action === "accept"
-            ? ({ action: "accept" } as const)
+            ? ({ kind: "dare_accept" } as const)
             : action === "decline"
-              ? ({ action: "decline" } as const)
-              : ({ action: "cancel" } as const);
+              ? ({ kind: "dare_decline" } as const)
+              : ({ kind: "dare_cancel" } as const);
     prepare.mutate(
       {
         guildId: props.guildId,

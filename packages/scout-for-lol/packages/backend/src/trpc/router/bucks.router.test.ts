@@ -49,7 +49,7 @@ function caller() {
 }
 
 async function clearAll(): Promise<void> {
-  await db.bucksDareV2ConfirmationIntent.deleteMany();
+  await db.confirmationIntent.deleteMany();
   await db.bucksDareV2.deleteMany();
   await db.bucksLedgerEntry.deleteMany();
   await db.bucksOpenPosition.deleteMany();

@@ -41,11 +41,11 @@ function actionPayload(parsed: Extract<DareV2CustomId, { kind: "prepare" }>) {
     if (parsed.amount === null) {
       throw new Error("Dare v2 contribution button has no amount.");
     }
-    return { action: "contribute" as const, amount: parsed.amount };
+    return { kind: "dare_contribute" as const, amount: parsed.amount };
   }
-  if (parsed.action === "accept") return { action: "accept" as const };
-  if (parsed.action === "decline") return { action: "decline" as const };
-  return { action: "cancel" as const };
+  if (parsed.action === "accept") return { kind: "dare_accept" as const };
+  if (parsed.action === "decline") return { kind: "dare_decline" as const };
+  return { kind: "dare_cancel" as const };
 }
 
 type DareV2DiscordContext = {
@@ -92,12 +92,10 @@ async function consumeIntent(
   intentId: string,
 ): Promise<void> {
   const intent =
-    await context.dependencies.prismaClient.bucksDareV2ConfirmationIntent.findUnique(
-      {
-        where: { id: intentId },
-        select: { dareId: true },
-      },
-    );
+    await context.dependencies.prismaClient.confirmationIntent.findUnique({
+      where: { id: intentId },
+      select: { dareId: true },
+    });
   await context.interaction.deferUpdate();
   const outcome = await context.dependencies.consumeIntent(
     {
@@ -111,13 +109,14 @@ async function consumeIntent(
     },
   );
   let deliveryFailed = false;
-  if (intent !== null) {
+  const dareId = intent?.dareId ?? null;
+  if (dareId !== null) {
     try {
-      await ensureDareV2Callout(intent.dareId, context.dependencies);
+      await ensureDareV2Callout(dareId, context.dependencies);
     } catch (error) {
       deliveryFailed = true;
       logger.error(
-        `Dare v2 ${intent.dareId.toString()} action committed but its callout failed:`,
+        `Dare v2 ${dareId.toString()} action committed but its callout failed:`,
         error,
       );
     }

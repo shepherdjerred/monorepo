@@ -1,39 +1,42 @@
 import {
-  BucksStakeSchema,
-  DiscordAccountIdSchema,
+  ConfirmationIntentPayloadSchema,
+  DiscordGuildIdSchema,
+  type ConfirmationIntentKind,
+  type ConfirmationIntentPayload,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
-import { z } from "zod";
 import {
   defaultDareV2Dependencies,
   relationalDareActionEnabled,
   type DareV2Dependencies,
 } from "#src/betting/dare-v2-common.ts";
 import { DARE_V2_INTENT_TTL_MS } from "#src/betting/constants.ts";
+import { createConfirmationIntent } from "#src/lib/confirmation-intent/create.ts";
 
-const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
+/**
+ * The bare action behind a dare confirmation kind.
+ *
+ * Storage and the shared protocol speak the prefixed kind, but the word a
+ * person reads — in the Discord confirmation, in the web confirmation card, in
+ * the Explore tool result — has always been the bare action, so the two views
+ * are mapped rather than merged.
+ */
+const DARE_ACTION_BY_KIND = {
+  dare_fund: "fund",
+  dare_accept: "accept",
+  dare_decline: "decline",
+  dare_contribute: "contribute",
+  dare_cancel: "cancel",
+} as const satisfies Record<ConfirmationIntentKind, string>;
 
-export const DareV2IntentActionSchema = z.enum([
-  "fund",
-  "accept",
-  "decline",
-  "contribute",
-  "cancel",
-]);
-export type DareV2IntentAction = z.infer<typeof DareV2IntentActionSchema>;
+type DareV2IntentAction = (typeof DARE_ACTION_BY_KIND)[ConfirmationIntentKind];
 
-export const DareV2IntentPayloadSchema = z.discriminatedUnion("action", [
-  z.strictObject({ action: z.literal("fund") }),
-  z.strictObject({ action: z.literal("accept") }),
-  z.strictObject({ action: z.literal("decline") }),
-  z.strictObject({
-    action: z.literal("contribute"),
-    amount: BucksStakeSchema,
-  }),
-  z.strictObject({ action: z.literal("cancel") }),
-]);
-export type DareV2IntentPayload = z.infer<typeof DareV2IntentPayloadSchema>;
+export function dareV2IntentAction(
+  kind: ConfirmationIntentKind,
+): DareV2IntentAction {
+  return DARE_ACTION_BY_KIND[kind];
+}
 
 function actionNeedsFeature(action: DareV2IntentAction): boolean {
   return action === "fund" || action === "accept" || action === "contribute";
@@ -55,38 +58,20 @@ function actorAuthorized(
   return !target;
 }
 
-async function createOrReadConfirmationIntent(
-  input: Parameters<
-    DareV2Dependencies["prismaClient"]["bucksDareV2ConfirmationIntent"]["create"]
-  >[0],
-  idempotencyKey: string,
-  dependencies: DareV2Dependencies,
-) {
-  try {
-    return await dependencies.prismaClient.bucksDareV2ConfirmationIntent.create(
-      input,
-    );
-  } catch (error) {
-    if (!UniqueViolationSchema.safeParse(error).success) throw error;
-    return await dependencies.prismaClient.bucksDareV2ConfirmationIntent.findUniqueOrThrow(
-      { where: { idempotencyKey } },
-    );
-  }
-}
-
 export async function createDareV2ConfirmationIntent(
   input: {
     dareId: number;
     serverId: DiscordGuildId;
     actorDiscordId: DiscordAccountId;
     expectedRevision: number;
-    payload: DareV2IntentPayload;
+    payload: ConfirmationIntentPayload;
     idempotencyKey: string;
   },
   dependencies: DareV2Dependencies = defaultDareV2Dependencies,
   now: Date = new Date(),
 ) {
-  const payload = DareV2IntentPayloadSchema.parse(input.payload);
+  const payload = ConfirmationIntentPayloadSchema.parse(input.payload);
+  const action = dareV2IntentAction(payload.kind);
   const dare = await dependencies.prismaClient.bucksDareV2.findUnique({
     where: { id: input.dareId },
     include: {
@@ -101,7 +86,7 @@ export async function createDareV2ConfirmationIntent(
   if (dare?.serverId !== input.serverId) {
     return { kind: "not_found" } as const;
   }
-  if (!actorAuthorized(payload.action, input.actorDiscordId, dare)) {
+  if (!actorAuthorized(action, input.actorDiscordId, dare)) {
     return { kind: "forbidden" } as const;
   }
   const revision = dare.revisions[0];
@@ -112,11 +97,11 @@ export async function createDareV2ConfirmationIntent(
     } as const;
   }
   if (
-    actionNeedsFeature(payload.action) &&
+    actionNeedsFeature(action) &&
     !(await relationalDareActionEnabled(
       input.serverId,
       revision.compilerVersion,
-      payload.action === "fund",
+      action === "fund",
       dependencies,
     ))
   ) {
@@ -125,43 +110,31 @@ export async function createDareV2ConfirmationIntent(
   const applicableRevision = dare.fundedRevision ?? dare.currentRevision;
   if (
     applicableRevision !== input.expectedRevision ||
-    (payload.action === "fund" && dare.dareState !== "draft")
+    (action === "fund" && dare.dareState !== "draft")
   ) {
     return {
       kind: "stale_revision",
       currentRevision: applicableRevision,
     } as const;
   }
-  const expiresAt = new Date(now.getTime() + DARE_V2_INTENT_TTL_MS);
-  const actionPayload = JSON.stringify(payload);
-  const created = await createOrReadConfirmationIntent(
-    {
-      data: {
-        dareId: dare.id,
-        revision: input.expectedRevision,
-        actorDiscordId: DiscordAccountIdSchema.parse(input.actorDiscordId),
-        action: payload.action,
-        actionPayload,
-        idempotencyKey: input.idempotencyKey,
-        expiresAt,
-      },
-    },
-    input.idempotencyKey,
-    dependencies,
-  );
-  if (
-    created.dareId !== dare.id ||
-    created.actorDiscordId !== input.actorDiscordId ||
-    created.action !== payload.action ||
-    created.actionPayload !== actionPayload ||
-    created.revision !== input.expectedRevision
-  ) {
+  const created = await createConfirmationIntent(dependencies.prismaClient, {
+    // Taken from the dare, never from the caller: the stored guild is what
+    // every later visibility check compares against.
+    serverId: DiscordGuildIdSchema.parse(dare.serverId),
+    actorDiscordId: input.actorDiscordId,
+    payload,
+    idempotencyKey: input.idempotencyKey,
+    expiresAt: new Date(now.getTime() + DARE_V2_INTENT_TTL_MS),
+    dareId: dare.id,
+    expectedRevision: input.expectedRevision,
+  });
+  if (created.kind === "idempotency_conflict") {
     return { kind: "idempotency_conflict" } as const;
   }
   return {
     kind: "intent_created",
-    intentId: created.id,
-    expiresAt: created.expiresAt,
-    action: payload.action,
+    intentId: created.intent.id,
+    expiresAt: created.intent.expiresAt,
+    action,
   } as const;
 }
