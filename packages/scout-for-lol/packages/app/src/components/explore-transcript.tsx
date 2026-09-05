@@ -151,6 +151,15 @@ const PendingTurn = memo(function PendingTurnView(props: {
   trace: ExploreTraceEntry[];
   showRawTrace: boolean;
 }) {
+  /**
+   * The status line describes work in flight, so it goes away once prose is
+   * arriving — the answer itself is then the progress.
+   *
+   * Without this the last tool's completion message ("Got results.") keeps
+   * pulsing and counting for the whole of answer generation, presenting a
+   * finished step as ongoing work and timing it from the wrong moment.
+   */
+  const activity = props.pendingAnswer === null ? props.activity : null;
   return (
     <div aria-live="polite" className="space-y-6">
       {props.pendingQuestion !== null && (
@@ -163,11 +172,9 @@ const PendingTurn = memo(function PendingTurnView(props: {
       {/* Status and steps are one unit — the line says what is happening now,
           the disclosure holds how it got here — so they sit closer together
           than the surrounding `space-y-6` rhythm. */}
-      {(props.activity !== null || props.trace.length > 0) && (
+      {(activity !== null || props.trace.length > 0) && (
         <div className="space-y-2">
-          {props.activity !== null && (
-            <ActivityLine activity={props.activity} />
-          )}
+          {activity !== null && <ActivityLine activity={activity} />}
           {props.trace.length > 0 && (
             <Disclosure label={`Steps (${String(props.trace.length)})`}>
               <ExploreToolTrace
@@ -212,7 +219,13 @@ function ActivityLine(props: { activity: string }) {
       <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
       <span>{props.activity}</span>
       {elapsedMs >= ELAPSED_VISIBLE_AFTER_MS && (
-        <span className="tabular-nums">{formatDuration(elapsedMs)}</span>
+        // Hidden from the live region this sits inside: it changes every
+        // second, and a screen reader announcing "3.0 s", "4.0 s" … would
+        // talk over the streamed answer and the status text that actually
+        // says something.
+        <span aria-hidden="true" className="tabular-nums">
+          {formatDuration(elapsedMs)}
+        </span>
       )}
     </p>
   );

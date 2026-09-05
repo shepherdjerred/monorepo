@@ -44,7 +44,7 @@ describe("ExploreTranscript", () => {
     expect(markup).toContain('aria-live="polite"');
   });
 
-  test("renders the streaming answer and activity inside the live region", () => {
+  test("renders the streaming answer inside the live region", () => {
     const markup = renderToStaticMarkup(
       <ExploreTranscript
         messages={[]}
@@ -55,7 +55,11 @@ describe("ExploreTranscript", () => {
     );
     expect(markup).toContain("Who wins?");
     expect(markup).toContain("Jinx so far");
-    expect(markup).toContain("Running the query…");
+    // The status line steps aside once prose is arriving: it describes work
+    // in flight, and the answer itself is now the progress. Leaving it up
+    // pulsed and timed the last *finished* step for the whole of answer
+    // generation.
+    expect(markup).not.toContain("Running the query…");
   });
 
   test("sizes user bubbles against the transcript width", () => {
@@ -255,6 +259,17 @@ describe("ExploreTranscript", () => {
 });
 
 describe("Explore live progress", () => {
+  test("shows the status line before any prose has arrived", () => {
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[]}
+        pendingQuestion="Who wins?"
+        activity="Running the query…"
+      />,
+    );
+    expect(markup).toContain("Running the query…");
+  });
+
   test("keeps the status line visible once tool steps have started", () => {
     // The regression this pins: the status line used to render only while the
     // trace was empty, so from the first tool call to the final answer — the

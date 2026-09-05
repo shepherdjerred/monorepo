@@ -554,22 +554,38 @@ const KNOWN_EXPLORE_STREAM_EVENT_TYPES: ReadonlySet<string> = new Set(
   ExploreStreamEventSchema.options.map((option) => option.shape.type.value),
 );
 
-/** Just enough of a frame to tell "new member" from "corrupt payload". */
-const ExploreStreamEnvelopeSchema = z.looseObject({ type: z.string() });
+/**
+ * Just enough of a frame to tell "a newer server sent something optional" from
+ * "this payload is corrupt".
+ *
+ * `ignorable` is the marker a new event uses to say an old client may drop it
+ * and still render a correct transcript. It is opt-in on purpose: an unknown
+ * discriminator alone proves only that the sender is newer, not that what it
+ * sent was unimportant, and silently discarding an event whose semantics the
+ * transcript depended on would leave the page quietly wrong instead of
+ * visibly broken.
+ */
+const ExploreStreamEnvelopeSchema = z.looseObject({
+  type: z.string(),
+  ignorable: z.boolean().optional(),
+});
 
 /**
- * Parse one stream frame, tolerating a member this bundle has never heard of.
+ * Parse one stream frame, tolerating a member this bundle has never heard of
+ * **only when that member said it was safe to skip**.
  *
  * A browser tab keeps its bundle for as long as it stays open, so a deploy
  * that adds a stream event reaches tabs whose parser predates it. The union is
  * `.strict()` and the SSE reader treats a parse failure as a corrupted stream,
- * so without this an open tab would die mid-turn — showing a corruption error
- * for a turn the server answered perfectly well.
+ * so without any tolerance an open tab would die mid-turn — showing a
+ * corruption error for a turn the server answered perfectly well.
  *
- * The tolerance is deliberately narrow. An **unrecognised discriminator** is
- * skipped, because it can only mean a newer server. Anything else still
- * throws: the server validates every event before emitting it, so a known type
- * arriving in the wrong shape is real corruption and must not be swallowed.
+ * So the tolerance exists, but it is granted by the sender rather than assumed
+ * by the reader: an unrecognised discriminator is skipped only if the frame
+ * carries `ignorable: true`. Everything else still throws — a known type in
+ * the wrong shape is real corruption, and an unknown type that did not
+ * volunteer to be skippable is a client too old to render this turn honestly.
+ * Both belong on the corrupted-stream path, which reconnects.
  */
 export function parseExploreStreamEvent(
   raw: unknown,
@@ -581,6 +597,7 @@ export function parseExploreStreamEvent(
   const envelope = ExploreStreamEnvelopeSchema.safeParse(raw);
   if (
     envelope.success &&
+    envelope.data.ignorable === true &&
     !KNOWN_EXPLORE_STREAM_EVENT_TYPES.has(envelope.data.type)
   ) {
     return null;

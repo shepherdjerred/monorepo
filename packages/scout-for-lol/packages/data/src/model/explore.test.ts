@@ -34,14 +34,35 @@ describe("parseExploreStreamEvent", () => {
     expect(event).toEqual({ type: "answer_delta", text: "Jinx " });
   });
 
-  test("skips a member this bundle has never heard of", () => {
+  test("skips an unknown member that marked itself ignorable", () => {
     // A browser keeps its bundle for as long as the tab stays open, so a
     // deploy that adds a stream event reaches parsers that predate it. The
     // SSE reader treats a throw as a corrupted stream, so without this an
     // open tab would die mid-turn on a turn the server answered correctly.
     expect(
-      parseExploreStreamEvent({ type: "activity", text: "Finding a player…" }),
+      parseExploreStreamEvent({
+        type: "a-member-from-a-newer-server",
+        ignorable: true,
+        whatever: true,
+      }),
     ).toBeNull();
+  });
+
+  test("refuses an unknown member that did not volunteer to be skipped", () => {
+    // Tolerance is granted by the sender, not assumed by the reader. An
+    // unknown discriminator proves the server is newer; it does not prove
+    // that what it sent was unimportant. Dropping an event the transcript
+    // depended on would leave the page quietly wrong rather than visibly
+    // broken, so this takes the corrupted-stream path, which reconnects.
+    expect(() =>
+      parseExploreStreamEvent({ type: "a-member-this-client-needs" }),
+    ).toThrow();
+    expect(() =>
+      parseExploreStreamEvent({
+        type: "a-member-this-client-needs",
+        ignorable: false,
+      }),
+    ).toThrow();
   });
 
   test("still throws on a known type carrying the wrong shape", () => {
