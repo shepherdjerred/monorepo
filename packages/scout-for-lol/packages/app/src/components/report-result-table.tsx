@@ -1,9 +1,21 @@
+import { useMemo, useState } from "react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Check,
+  Copy,
+  Download,
+  Search,
+} from "lucide-react";
 import {
   isLowSampleGameCount,
   formatReportDisplayValue,
   type ReportResultColumn,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
+import { Button } from "@scout-for-lol/design-system/components/button";
+import { Input } from "@scout-for-lol/design-system/components/field";
 import {
   Table,
   TableBody,
@@ -12,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
+import { tableToCsv, downloadCsv } from "#src/lib/table-export.ts";
 
 // Accepts both the AI preview rows (non-null values) and the live tRPC preview
 // rows, whose values are nullable when a column is absent for a row.
@@ -41,7 +54,119 @@ export function ReportResultTable(props: {
   rows: PreviewRow[];
   visualization?: VisualizationSnapshot | null;
   evidence?: PreviewEvidence[];
+  interactive?: boolean;
+  onRowClick?: (row: PreviewRow) => void;
 }) {
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [filterText, setFilterText] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const isInteractive = props.interactive === true;
+
+  const handleSort = (columnKey: string) => {
+    if (!isInteractive) return;
+    if (sortColumn !== columnKey) {
+      setSortColumn(columnKey);
+      const col = props.columns.find((c) => c.key === columnKey);
+      setSortDirection(col?.format === "text" ? "asc" : "desc");
+    } else if (sortDirection === "desc") {
+      setSortDirection("asc");
+    } else {
+      setSortColumn(null);
+      setSortDirection("desc");
+    }
+  };
+
+  const hasGamesColumn = useMemo(
+    () =>
+      props.columns.some((col) => {
+        const label = col.label.toLowerCase();
+        return (
+          col.key === "games" || label === "games" || label === "game count"
+        );
+      }),
+    [props.columns],
+  );
+
+  const indexedRows = useMemo(() => {
+    let result = props.rows.map((row, originalIndex) => ({
+      row,
+      originalIndex,
+    }));
+
+    if (filterText.trim().length > 0) {
+      const query = filterText.toLowerCase();
+      result = result.filter(({ row, originalIndex }) => {
+        if (row.label.toLowerCase().includes(query)) return true;
+        return props.columns.some((col) => {
+          const cellStr = formatCell(
+            col,
+            row,
+            props.evidence?.[originalIndex],
+            hasGamesColumn,
+          );
+          return cellStr.toLowerCase().includes(query);
+        });
+      });
+    }
+
+    if (sortColumn !== null) {
+      result = [...result].sort((a, b) => {
+        const valA =
+          sortColumn === "label"
+            ? a.row.label
+            : (a.row.values.find((e) => e.column === sortColumn)?.value ??
+              null);
+        const valB =
+          sortColumn === "label"
+            ? b.row.label
+            : (b.row.values.find((e) => e.column === sortColumn)?.value ??
+              null);
+
+        if (valA === null) return 1;
+        if (valB === null) return -1;
+
+        const cmp =
+          typeof valA === "number" && typeof valB === "number"
+            ? valA - valB
+            : String(valA).localeCompare(String(valB));
+
+        return sortDirection === "asc" ? cmp : -cmp;
+      });
+    }
+
+    return result;
+  }, [
+    props.rows,
+    props.columns,
+    props.evidence,
+    filterText,
+    sortColumn,
+    sortDirection,
+    hasGamesColumn,
+  ]);
+
+  const handleCopyCsv = async () => {
+    const csv = tableToCsv(
+      props.columns,
+      indexedRows.map((r) => r.row),
+    );
+    await navigator.clipboard.writeText(csv);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
+
+  const handleDownloadCsv = () => {
+    const csv = tableToCsv(
+      props.columns,
+      indexedRows.map((r) => r.row),
+    );
+    downloadCsv("scout-report-data", csv);
+  };
+
   if (props.rows.length === 0) {
     return (
       <div className="rounded-md border border-border p-4 text-sm text-scout-subtle">
@@ -55,27 +180,123 @@ export function ReportResultTable(props: {
       {props.visualization?.display.sparkline === true && (
         <SnapshotSparklines snapshot={props.visualization} />
       )}
+
+      {isInteractive && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="relative max-w-xs flex-1">
+            <Search className="absolute left-2.5 top-2.5 size-3.5 text-scout-subtle" />
+            <Input
+              type="search"
+              placeholder="Search rows…"
+              value={filterText}
+              onChange={(e) => {
+                setFilterText(e.target.value);
+              }}
+              className="h-8 pl-8 text-xs"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs text-scout-subtle hover:text-scout-ink"
+              onClick={() => {
+                void handleCopyCsv();
+              }}
+              title="Copy table data as CSV"
+            >
+              {copied ? (
+                <Check className="size-3.5 text-scout-success" />
+              ) : (
+                <Copy className="size-3.5" />
+              )}
+              {copied ? "Copied" : "Copy CSV"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs text-scout-subtle hover:text-scout-ink"
+              onClick={handleDownloadCsv}
+              title="Download table data as CSV"
+            >
+              <Download className="size-3.5" />
+              CSV
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-md border border-border">
         <Table>
           <TableHeader>
             <TableRow>
-              {props.columns.map((column) => (
-                <TableHead key={column.key}>{column.label}</TableHead>
-              ))}
+              {props.columns.map((column) => {
+                const isSorted = sortColumn === column.key;
+                return (
+                  <TableHead
+                    key={column.key}
+                    aria-sort={
+                      isSorted
+                        ? sortDirection === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : undefined
+                    }
+                  >
+                    {isInteractive ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSort(column.key);
+                        }}
+                        className="inline-flex items-center gap-1 font-medium hover:text-scout-ink focus-visible:outline-none"
+                      >
+                        <span>{column.label}</span>
+                        {isSorted ? (
+                          sortDirection === "asc" ? (
+                            <ArrowUp className="size-3 text-scout-ink" />
+                          ) : (
+                            <ArrowDown className="size-3 text-scout-ink" />
+                          )
+                        ) : (
+                          <ArrowUpDown className="size-3 text-scout-subtle opacity-40 hover:opacity-100" />
+                        )}
+                      </button>
+                    ) : (
+                      column.label
+                    )}
+                  </TableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody>
-            {(() => {
-              const hasGamesColumn = props.columns.some((col) => {
-                const label = col.label.toLowerCase();
-                return (
-                  col.key === "games" ||
-                  label === "games" ||
-                  label === "game count"
-                );
-              });
-              return props.rows.map((row, rowIndex) => (
-                <TableRow key={`${row.label}-${rowIndex.toString()}`}>
+            {indexedRows.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={props.columns.length}
+                  className="py-6 text-center text-xs text-scout-subtle"
+                >
+                  No matching rows found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              indexedRows.map(({ row, originalIndex }) => (
+                <TableRow
+                  key={`${row.label}-${originalIndex.toString()}`}
+                  onClick={
+                    props.onRowClick === undefined
+                      ? undefined
+                      : () => {
+                          props.onRowClick?.(row);
+                        }
+                  }
+                  className={
+                    props.onRowClick === undefined
+                      ? undefined
+                      : "cursor-pointer hover:bg-scout-surface-hover"
+                  }
+                >
                   {props.columns.map((column) => (
                     <TableCell
                       key={column.key}
@@ -86,14 +307,14 @@ export function ReportResultTable(props: {
                       {formatCell(
                         column,
                         row,
-                        props.evidence?.[rowIndex],
+                        props.evidence?.[originalIndex],
                         hasGamesColumn,
                       )}
                     </TableCell>
                   ))}
                 </TableRow>
-              ));
-            })()}
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

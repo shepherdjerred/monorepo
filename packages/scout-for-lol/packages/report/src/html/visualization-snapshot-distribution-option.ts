@@ -11,6 +11,7 @@ import {
   formatSnapshotAxisValue,
 } from "#src/html/visualization-value-format.ts";
 import {
+  VISUALIZATION_BODY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
   visualizationSnapshotLabels,
@@ -174,6 +175,7 @@ function distributionValueAxis(
     ),
     axisLabel: {
       color: presentation.theme.muted,
+      fontFamily: VISUALIZATION_BODY_FONT,
       formatter: (value: number) => formatSnapshotAxisValue(snapshot, value),
     },
     splitLine: { lineStyle: { color: presentation.theme.grid } },
@@ -183,7 +185,7 @@ function distributionValueAxis(
 function distributionFrame(
   snapshot: VisualizationSnapshot,
   presentation: VisualizationSnapshotPresentation,
-  mode: "interactive" | "static",
+  _mode?: "interactive" | "static",
 ): echarts.EChartsOption {
   return {
     ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
@@ -192,18 +194,9 @@ function distributionFrame(
       left: 68,
       right: presentation.options.legend === "right" ? 220 : 36,
       top: 105,
-      bottom: mode === "interactive" ? 92 : 58,
+      bottom: 58,
       containLabel: true,
     },
-    ...(mode === "interactive"
-      ? {
-          dataZoom: [{ type: "inside" }, { type: "slider", bottom: 20 }],
-          toolbox: {
-            right: 24,
-            feature: { dataZoom: {}, restore: {}, saveAsImage: {} },
-          },
-        }
-      : {}),
   };
 }
 

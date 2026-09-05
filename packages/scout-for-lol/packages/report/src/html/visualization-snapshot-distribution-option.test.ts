@@ -159,8 +159,9 @@ describe("distribution rendering modes", () => {
     expect(JSON.stringify(interactiveOption.xAxis)).toBe(
       JSON.stringify(staticOption.xAxis),
     );
-    expect(interactiveOption.dataZoom).toBeDefined();
+    expect(interactiveOption.dataZoom).toBeUndefined();
     expect(staticOption.dataZoom).toBeUndefined();
+    expect(interactiveOption.toolbox).toBeUndefined();
     expect(staticOption.toolbox).toBeUndefined();
   });
 });

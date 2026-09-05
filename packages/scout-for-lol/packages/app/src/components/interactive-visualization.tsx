@@ -9,9 +9,16 @@ import { visualizationSnapshotToOption } from "@scout-for-lol/report/visualizati
 export function InteractiveVisualization(props: {
   snapshot: VisualizationSnapshot;
   compact?: boolean;
+  onPointClick?: (
+    label: string,
+    value: number | null,
+    seriesName: string,
+  ) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
+  const onPointClickRef = useRef(props.onPointClick);
+  onPointClickRef.current = props.onPointClick;
 
   // Init once: canvas + ResizeObserver + dispose. Re-initialising per
   // snapshot rebuilt every on-screen chart from scratch each time a turn's
@@ -22,11 +29,23 @@ export function InteractiveVisualization(props: {
     if (container === null) return;
     const chart = echarts.init(container, undefined, { renderer: "canvas" });
     chartRef.current = chart;
+
+    const clickHandler = (params: echarts.ECElementEvent) => {
+      if (params.componentType === "series") {
+        const label =
+          params.name || (typeof params.data === "string" ? params.data : "");
+        const value = typeof params.value === "number" ? params.value : null;
+        onPointClickRef.current?.(label, value, params.seriesName ?? "");
+      }
+    };
+    chart.on("click", clickHandler);
+
     const observer = new ResizeObserver(() => {
       chart.resize();
     });
     observer.observe(container);
     return () => {
+      chart.off("click", clickHandler);
       observer.disconnect();
       chart.dispose();
       chartRef.current = null;

@@ -14,6 +14,21 @@ import {
   formatPercent,
   isPercentageSeries,
 } from "#src/html/visualization-value-format.ts";
+import { scoutThemes } from "@scout-for-lol/design-system/themes";
+
+const typography = scoutThemes["modern-light"].typography;
+const displayTokens = typography.display
+  .split(",")
+  .map((token) => token.trim());
+export const VISUALIZATION_DISPLAY_FONT = [
+  "Beaufort for LoL",
+  "Beaufort for LOL",
+  ...displayTokens.filter(
+    (token) => token !== "Beaufort for LoL" && token !== "Beaufort for LOL",
+  ),
+].join(", ");
+export const VISUALIZATION_BODY_FONT = typography.body;
+export const VISUALIZATION_MONO_FONT = typography.mono;
 
 export type VisualizationSnapshotPresentation = {
   options: ReportChartOptions;
@@ -76,14 +91,23 @@ export function visualizationSnapshotBaseOption(
     backgroundColor: theme.background,
     animation: false,
     color: colors,
-    textStyle: { color: theme.text },
+    textStyle: { color: theme.text, fontFamily: VISUALIZATION_BODY_FONT },
     title: {
       text: snapshot.title ?? defaultTitle,
       ...(subtitle.length === 0 ? {} : { subtext: subtitle }),
       left: 28,
       top: 18,
-      textStyle: { color: theme.accent, fontSize: 28 },
-      subtextStyle: { color: theme.muted, fontSize: 14 },
+      textStyle: {
+        color: theme.accent,
+        fontSize: 28,
+        fontFamily: VISUALIZATION_DISPLAY_FONT,
+        fontWeight: 700,
+      },
+      subtextStyle: {
+        color: theme.muted,
+        fontSize: 14,
+        fontFamily: VISUALIZATION_BODY_FONT,
+      },
     },
   };
 }
@@ -108,7 +132,10 @@ export function visualizationSnapshotLegend(
       : bottom
         ? { left: 68, right: 68, bottom: 18 }
         : { left: 68, right: 68, top: 62 }),
-    textStyle: { color: presentation.theme.muted },
+    textStyle: {
+      color: presentation.theme.muted,
+      fontFamily: VISUALIZATION_BODY_FONT,
+    },
   };
 }
 
@@ -119,8 +146,17 @@ export function visualizationSnapshotAxis(
   return {
     ...(name === undefined
       ? {}
-      : { name, nameTextStyle: { color: theme.muted } }),
-    axisLabel: { color: theme.muted },
+      : {
+          name,
+          nameTextStyle: {
+            color: theme.muted,
+            fontFamily: VISUALIZATION_BODY_FONT,
+          },
+        }),
+    axisLabel: {
+      color: theme.muted,
+      fontFamily: VISUALIZATION_BODY_FONT,
+    },
     axisLine: { lineStyle: { color: theme.border } },
     splitLine: { lineStyle: { color: theme.grid } },
   };
@@ -140,6 +176,7 @@ export function visualizationSnapshotLabels(
           options.labels === "value" ||
           options.labels === "percent",
     position: horizontal ? "right" : "top",
+    fontFamily: VISUALIZATION_BODY_FONT,
     ...(options.labels === "percent"
       ? { formatter: percentLabel }
       : valueFormatter !== undefined && options.labels === "value"

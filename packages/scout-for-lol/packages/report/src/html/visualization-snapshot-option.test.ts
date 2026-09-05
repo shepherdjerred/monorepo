@@ -377,7 +377,9 @@ describe("archived chart presentation", () => {
     expect(option).toContain(
       '"yAxis":{"type":"category","data":["Beta","Alpha"],"name":"Champion"',
     );
-    expect(option).toContain('"label":{"show":true,"position":"right"}');
+    expect(option).toContain('"label":{"show":true,"position":"right"');
+    expect(option).toContain("Beaufort for LoL");
+    expect(option).toContain("Spiegel");
   });
 });
 

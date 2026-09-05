@@ -26,6 +26,8 @@ import {
 } from "#src/html/visualization-tooltip.ts";
 import { alignedTrendValues } from "#src/html/visualization-trend-values.ts";
 import {
+  VISUALIZATION_BODY_FONT,
+  VISUALIZATION_DISPLAY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
   visualizationSnapshotLabels,
@@ -69,6 +71,7 @@ export function visualizationSnapshotToOption(
     trigger: snapshot.kind === "SCATTER_CHART" ? "item" : "axis",
     axisPointer: { type: "cross" },
     formatter: (input) => tooltipText(snapshot, input),
+    textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
   };
   const points = categoryPoints(snapshot);
   const annotations = snapshot.annotations.flatMap((annotation) => {
@@ -116,7 +119,7 @@ export function visualizationSnapshotToOption(
       left: 68,
       right: presentation.options.legend === "right" ? 220 : 36,
       top: 105,
-      bottom: mode === "interactive" ? 92 : 58,
+      bottom: 58,
       containLabel: true,
     },
     xAxis: horizontal
@@ -128,6 +131,7 @@ export function visualizationSnapshotToOption(
           ),
           axisLabel: {
             color: presentation.theme.muted,
+            fontFamily: VISUALIZATION_BODY_FONT,
             formatter: (value: number) =>
               formatSnapshotAxisValue(snapshot, value),
           },
@@ -167,25 +171,12 @@ export function visualizationSnapshotToOption(
           ),
           axisLabel: {
             color: presentation.theme.muted,
+            fontFamily: VISUALIZATION_BODY_FONT,
             formatter: (value: number) =>
               formatSnapshotAxisValue(snapshot, value),
           },
           splitLine: { lineStyle: { color: presentation.theme.grid } },
         },
-    ...(mode === "interactive"
-      ? {
-          dataZoom: [{ type: "inside" }, { type: "slider", bottom: 20 }],
-          brush: { toolbox: ["lineX", "clear"], xAxisIndex: "all" },
-          toolbox: {
-            right: 24,
-            feature: {
-              dataZoom: {},
-              restore: {},
-              saveAsImage: {},
-            },
-          },
-        }
-      : {}),
     series,
   };
 }
@@ -214,7 +205,7 @@ function evidenceOverlaySeries(
 
 function kpiOption(
   snapshot: VisualizationSnapshot,
-  mode: VisualizationOptionMode,
+  _mode?: VisualizationOptionMode,
 ): echarts.EChartsOption {
   const categories = categoryPoints(snapshot).map((point) => point.label);
   const columns = Math.min(4, Math.max(1, snapshot.series.length));
@@ -255,7 +246,8 @@ function kpiOption(
             style: {
               text: series.label,
               fill: presentation.theme.muted,
-              font: "13px sans-serif",
+              fontSize: 13,
+              fontFamily: VISUALIZATION_BODY_FONT,
             },
           },
           {
@@ -265,7 +257,9 @@ function kpiOption(
             style: {
               text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}${gameBasis}`,
               fill: presentation.theme.text,
-              font: "bold 18px sans-serif",
+              fontSize: 18,
+              fontWeight: 700,
+              fontFamily: VISUALIZATION_DISPLAY_FONT,
             },
           },
           {
@@ -281,7 +275,8 @@ function kpiOption(
                   ? ""
                   : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta)} · ${formatPercent(percent ?? null)}`,
               fill: presentation.theme.accent,
-              font: "11px sans-serif",
+              fontSize: 11,
+              fontFamily: VISUALIZATION_BODY_FONT,
             },
           },
         ],
@@ -291,13 +286,10 @@ function kpiOption(
       left: 48,
       right: 30,
       top: Math.max(190, 88 + Math.ceil(snapshot.series.length / columns) * 92),
-      bottom: mode === "interactive" ? 72 : 34,
+      bottom: 34,
     },
     xAxis: { type: "category", data: categories, show: false },
     yAxis: { type: "value", show: false },
-    ...(mode === "interactive"
-      ? { dataZoom: [{ type: "inside" }, { type: "slider", bottom: 18 }] }
-      : {}),
     series: snapshot.series.map((series) => ({
       name: series.label,
       type: "line",

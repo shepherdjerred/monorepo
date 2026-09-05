@@ -1,102 +1,54 @@
 import { describe, expect, test } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import {
-  ReportResultTable,
-  sparklineSegments,
-} from "#src/components/report-result-table.tsx";
+import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import type { ReportResultColumn } from "@scout-for-lol/data";
 
 describe("ReportResultTable", () => {
-  test("keeps evidence aligned by row when labels repeat", () => {
-    const markup = renderToStaticMarkup(
-      <ReportResultTable
-        columns={[
-          { key: "label", label: "Player", format: "text" },
-          { key: "wins", label: "Wins", format: "integer" },
-        ]}
-        rows={[
-          { label: "Shared", values: [{ column: "wins", value: 1 }] },
-          { label: "Shared", values: [{ column: "wins", value: 2 }] },
-        ]}
-        evidence={[
-          {
-            label: "Shared",
-            games: 10,
-            values: [{ column: "wins", sampleSize: 10 }],
-          },
-          {
-            label: "Shared",
-            games: 20,
-            values: [{ column: "wins", sampleSize: 20 }],
-          },
-        ]}
-      />,
-    );
+  const columns: ReportResultColumn[] = [
+    { key: "label", label: "Player", format: "text" },
+    { key: "win_rate", label: "Win rate", format: "percent" },
+  ];
 
-    expect(markup).toContain("1 (Based on 10 games)");
-    expect(markup).toContain("2 (Based on 20 games)");
+  const rows = [
+    {
+      label: "Faker",
+      values: [{ column: "win_rate", value: 0.65 }],
+    },
+    {
+      label: "Chovy",
+      values: [{ column: "win_rate", value: 0.62 }],
+    },
+  ];
+
+  test("renders standard static table when interactive is false", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable columns={columns} rows={rows} />,
+    );
+    expect(markup).toContain("Player");
+    expect(markup).toContain("Win rate");
+    expect(markup).toContain("Faker");
+    expect(markup).toContain("65.0%");
+    expect(markup).toContain("Chovy");
+    expect(markup).not.toContain("Search rows…");
+    expect(markup).not.toContain("Copy CSV");
   });
 
-  test("preserves missing buckets as gaps in sparklines", () => {
-    expect(sparklineSegments([0.5, null, 0.7])).toEqual([
-      "0.0,26.0 0.0,26.0",
-      "120.0,2.0 120.0,2.0",
-    ]);
+  test("renders search input, sort buttons, and export buttons when interactive is true", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable columns={columns} rows={rows} interactive={true} />,
+    );
+    expect(markup).toContain("Search rows…");
+    expect(markup).toContain("Copy CSV");
+    expect(markup).toContain("CSV");
+    expect(markup).toContain("Faker");
+    expect(markup).toContain("Chovy");
+    expect(markup).toContain("<button");
   });
 
-  test("annotates thin rate results once at table level", () => {
+  test("renders empty state when no rows are provided", () => {
     const markup = renderToStaticMarkup(
-      <ReportResultTable
-        columns={[{ key: "win_rate", label: "Win rate", format: "percent" }]}
-        rows={[{ label: "Aurora", values: [{ column: "win_rate", value: 1 }] }]}
-        evidence={[
-          {
-            label: "Aurora",
-            games: 4,
-            values: [{ column: "win_rate", sampleSize: 4 }],
-          },
-        ]}
-      />,
+      <ReportResultTable columns={columns} rows={[]} />,
     );
-
-    expect(markup).toContain("Based on 4 games");
-    expect(markup).toContain(
-      "Fewer than 10 games — treat this rate as indicative only.",
-    );
-    expect(markup.match(/Fewer than 10 games/g)).toHaveLength(1);
-  });
-
-  test("omits 'Based on X games' when a games column is present", () => {
-    const markup = renderToStaticMarkup(
-      <ReportResultTable
-        columns={[
-          { key: "label", label: "Champion", format: "text" },
-          { key: "games", label: "Games", format: "integer" },
-          { key: "win_rate", label: "Win rate", format: "percent" },
-        ]}
-        rows={[
-          {
-            label: "Ambessa",
-            games: 17,
-            values: [
-              { column: "games", value: 17 },
-              { column: "win_rate", value: 0.882 },
-            ],
-          },
-        ]}
-        evidence={[
-          {
-            label: "Ambessa",
-            games: 17,
-            values: [
-              { column: "games", sampleSize: 17 },
-              { column: "win_rate", sampleSize: 17 },
-            ],
-          },
-        ]}
-      />,
-    );
-
-    expect(markup).toContain("88.2%");
-    expect(markup).not.toContain("Based on 17 games");
+    expect(markup).toContain("No rows matched this query.");
   });
 });

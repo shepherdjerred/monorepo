@@ -1,6 +1,7 @@
 import type { VisualizationSnapshot } from "@scout-for-lol/data";
 import type * as echarts from "echarts";
 import {
+  VISUALIZATION_BODY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
   visualizationSnapshotLabels,
@@ -40,6 +41,7 @@ export function donutOption(
         label: {
           ...visualizationSnapshotLabels(presentation.options, false, true),
           color: presentation.theme.text,
+          fontFamily: VISUALIZATION_BODY_FONT,
           ...(presentation.options.labels === "percent"
             ? { formatter: "{b}: {d}%" }
             : {}),
@@ -51,7 +53,7 @@ export function donutOption(
 
 export function heatmapOption(
   snapshot: VisualizationSnapshot,
-  interactive: boolean,
+  _interactive?: boolean,
 ): echarts.EChartsOption {
   const xCategories = snapshot.series.map((series) => series.label);
   const yCategories = [
@@ -95,11 +97,14 @@ export function heatmapOption(
     visualMap: {
       min: Math.min(...values, 0),
       max: Math.max(...values, 1),
-      calculable: interactive,
+      calculable: false,
       orient: "horizontal",
       left: "center",
       bottom: 18,
-      textStyle: { color: presentation.theme.muted },
+      textStyle: {
+        color: presentation.theme.muted,
+        fontFamily: VISUALIZATION_BODY_FONT,
+      },
       inRange: { color: presentation.colors },
     },
     series: [
@@ -137,7 +142,10 @@ export function radarOption(
         name: series.metric,
         max: maxima[index] ?? 1,
       })),
-      axisName: { color: presentation.theme.text },
+      axisName: {
+        color: presentation.theme.text,
+        fontFamily: VISUALIZATION_BODY_FONT,
+      },
       splitLine: { lineStyle: { color: presentation.theme.border } },
     },
     series: [
