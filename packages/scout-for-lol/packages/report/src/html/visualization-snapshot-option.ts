@@ -30,9 +30,11 @@ import {
   VISUALIZATION_DISPLAY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
+  visualizationSnapshotFont,
   visualizationSnapshotLabels,
   visualizationSnapshotLegend,
   visualizationSnapshotPresentation,
+  visualizationSnapshotValueAxisLabel,
   type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
@@ -73,7 +75,7 @@ export function visualizationSnapshotToOption(
     axisPointer: { type: "cross" },
     formatter: (input) => tooltipText(snapshot, input),
     ...(mode === "interactive"
-      ? { textStyle: { fontFamily: VISUALIZATION_BODY_FONT } }
+      ? { textStyle: visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT) }
       : {}),
   };
   const points = categoryPoints(snapshot);
@@ -134,14 +136,11 @@ export function visualizationSnapshotToOption(
             presentation.options.xAxisLabel,
             mode,
           ),
-          axisLabel: {
-            color: presentation.theme.muted,
-            ...(mode === "interactive"
-              ? { fontFamily: VISUALIZATION_BODY_FONT }
-              : {}),
-            formatter: (value: number) =>
-              formatSnapshotAxisValue(snapshot, value),
-          },
+          axisLabel: visualizationSnapshotValueAxisLabel(
+            presentation.theme,
+            mode,
+            (value) => formatSnapshotAxisValue(snapshot, value),
+          ),
         }
       : snapshot.kind === "SCATTER_CHART"
         ? {
@@ -180,14 +179,11 @@ export function visualizationSnapshotToOption(
             presentation.options.yAxisLabel,
             mode,
           ),
-          axisLabel: {
-            color: presentation.theme.muted,
-            ...(mode === "interactive"
-              ? { fontFamily: VISUALIZATION_BODY_FONT }
-              : {}),
-            formatter: (value: number) =>
-              formatSnapshotAxisValue(snapshot, value),
-          },
+          axisLabel: visualizationSnapshotValueAxisLabel(
+            presentation.theme,
+            mode,
+            (value) => formatSnapshotAxisValue(snapshot, value),
+          ),
           splitLine: { lineStyle: { color: presentation.theme.grid } },
         },
     series,

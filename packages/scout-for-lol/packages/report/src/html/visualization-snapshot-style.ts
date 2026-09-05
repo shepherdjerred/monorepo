@@ -32,8 +32,33 @@ export const VISUALIZATION_MONO_FONT = typography.mono;
 
 export type VisualizationRenderMode = "interactive" | "static";
 
-function interactiveFont(mode: VisualizationRenderMode, family: string) {
+export function visualizationSnapshotFont(
+  mode: VisualizationRenderMode,
+  family: string,
+) {
   return mode === "interactive" ? { fontFamily: family } : {};
+}
+
+export function visualizationSnapshotScaleTextStyle(
+  theme: AnalyticsChartTheme,
+  mode: VisualizationRenderMode,
+) {
+  return {
+    color: theme.muted,
+    ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+  };
+}
+
+export function visualizationSnapshotValueAxisLabel(
+  theme: AnalyticsChartTheme,
+  mode: VisualizationRenderMode,
+  formatter: (value: number) => string,
+) {
+  return {
+    color: theme.muted,
+    ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
+    formatter,
+  };
 }
 
 export type VisualizationSnapshotPresentation = {
@@ -100,7 +125,7 @@ export function visualizationSnapshotBaseOption(
     color: colors,
     textStyle: {
       color: theme.text,
-      ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+      ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
     },
     title: {
       text: snapshot.title ?? defaultTitle,
@@ -110,13 +135,13 @@ export function visualizationSnapshotBaseOption(
       textStyle: {
         color: theme.accent,
         fontSize: 28,
-        ...interactiveFont(mode, VISUALIZATION_DISPLAY_FONT),
+        ...visualizationSnapshotFont(mode, VISUALIZATION_DISPLAY_FONT),
         ...(mode === "interactive" ? { fontWeight: 700 } : {}),
       },
       subtextStyle: {
         color: theme.muted,
         fontSize: 14,
-        ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
       },
     },
   };
@@ -145,7 +170,7 @@ export function visualizationSnapshotLegend(
         : { left: 68, right: 68, top: 62 }),
     textStyle: {
       color: presentation.theme.muted,
-      ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+      ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
     },
   };
 }
@@ -162,12 +187,12 @@ export function visualizationSnapshotAxis(
           name,
           nameTextStyle: {
             color: theme.muted,
-            ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+            ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
           },
         }),
     axisLabel: {
       color: theme.muted,
-      ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+      ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
     },
     axisLine: { lineStyle: { color: theme.border } },
     splitLine: { lineStyle: { color: theme.grid } },
@@ -194,7 +219,7 @@ export function visualizationSnapshotLabels(
           options.labels === "value" ||
           options.labels === "percent",
     position: horizontal ? "right" : "top",
-    ...interactiveFont(mode, VISUALIZATION_BODY_FONT),
+    ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
     ...(options.labels === "percent"
       ? { formatter: percentLabel }
       : valueFormatter !== undefined && options.labels === "value"

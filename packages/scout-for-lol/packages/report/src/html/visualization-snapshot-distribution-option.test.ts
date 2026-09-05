@@ -1,3 +1,4 @@
+import type * as echarts from "echarts";
 import { describe, expect, test } from "vitest";
 import {
   type TemporalSeries,
@@ -142,16 +143,7 @@ describe("distribution rendering modes", () => {
       "interactive",
     );
 
-    expect(serializeWithoutFontFamily(interactiveOption.series)).toBe(
-      serializeWithoutFontFamily(staticOption.series),
-    );
-    expect(serializeWithoutFontFamily(interactiveOption.xAxis)).toBe(
-      serializeWithoutFontFamily(staticOption.xAxis),
-    );
-    expect(interactiveOption.dataZoom).toBeUndefined();
-    expect(staticOption.dataZoom).toBeUndefined();
-    expect(interactiveOption.toolbox).toBeUndefined();
-    expect(staticOption.toolbox).toBeUndefined();
+    expectModeDataToMatch(interactiveOption, staticOption);
   });
 
   test("keeps box plot data identical across interactive and static modes", () => {
@@ -165,16 +157,7 @@ describe("distribution rendering modes", () => {
       "interactive",
     );
 
-    expect(serializeWithoutFontFamily(interactiveOption.series)).toBe(
-      serializeWithoutFontFamily(staticOption.series),
-    );
-    expect(serializeWithoutFontFamily(interactiveOption.xAxis)).toBe(
-      serializeWithoutFontFamily(staticOption.xAxis),
-    );
-    expect(interactiveOption.dataZoom).toBeUndefined();
-    expect(staticOption.dataZoom).toBeUndefined();
-    expect(interactiveOption.toolbox).toBeUndefined();
-    expect(staticOption.toolbox).toBeUndefined();
+    expectModeDataToMatch(interactiveOption, staticOption);
   });
 });
 
@@ -182,6 +165,22 @@ function serializeWithoutFontFamily(value: unknown): string {
   return JSON.stringify(value, (key, nestedValue) =>
     key === "fontFamily" ? undefined : nestedValue,
   );
+}
+
+function expectModeDataToMatch(
+  interactiveOption: echarts.EChartsOption,
+  staticOption: echarts.EChartsOption,
+): void {
+  expect(serializeWithoutFontFamily(interactiveOption.series)).toBe(
+    serializeWithoutFontFamily(staticOption.series),
+  );
+  expect(serializeWithoutFontFamily(interactiveOption.xAxis)).toBe(
+    serializeWithoutFontFamily(staticOption.xAxis),
+  );
+  expect(interactiveOption.dataZoom).toBeUndefined();
+  expect(staticOption.dataZoom).toBeUndefined();
+  expect(interactiveOption.toolbox).toBeUndefined();
+  expect(staticOption.toolbox).toBeUndefined();
 }
 
 const BOX_PLOT_ENCODING = ["min", "q1", "median", "q3", "max"];

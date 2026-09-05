@@ -4,9 +4,11 @@ import {
   VISUALIZATION_BODY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
+  visualizationSnapshotFont,
   visualizationSnapshotLabels,
   visualizationSnapshotLegend,
   visualizationSnapshotPresentation,
+  visualizationSnapshotScaleTextStyle,
   type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
@@ -46,9 +48,7 @@ export function donutOption(
             mode,
           }),
           color: presentation.theme.text,
-          ...(mode === "interactive"
-            ? { fontFamily: VISUALIZATION_BODY_FONT }
-            : {}),
+          ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
           ...(presentation.options.labels === "percent"
             ? { formatter: "{b}: {d}%" }
             : {}),
@@ -110,12 +110,7 @@ export function heatmapOption(
       orient: "horizontal",
       left: "center",
       bottom: 18,
-      textStyle: {
-        color: presentation.theme.muted,
-        ...(mode === "interactive"
-          ? { fontFamily: VISUALIZATION_BODY_FONT }
-          : {}),
-      },
+      textStyle: visualizationSnapshotScaleTextStyle(presentation.theme, mode),
       inRange: { color: presentation.colors },
     },
     series: [
@@ -159,9 +154,7 @@ export function radarOption(
       })),
       axisName: {
         color: presentation.theme.text,
-        ...(mode === "interactive"
-          ? { fontFamily: VISUALIZATION_BODY_FONT }
-          : {}),
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
       },
       splitLine: { lineStyle: { color: presentation.theme.border } },
     },

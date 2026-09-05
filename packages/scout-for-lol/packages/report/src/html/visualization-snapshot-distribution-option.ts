@@ -11,12 +11,12 @@ import {
   formatSnapshotAxisValue,
 } from "#src/html/visualization-value-format.ts";
 import {
-  VISUALIZATION_BODY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
   visualizationSnapshotLabels,
   visualizationSnapshotLegend,
   visualizationSnapshotPresentation,
+  visualizationSnapshotValueAxisLabel,
   type VisualizationRenderMode,
   type VisualizationSnapshotPresentation,
 } from "#src/html/visualization-snapshot-style.ts";
@@ -179,13 +179,11 @@ function distributionValueAxis(
       presentation.options.yAxisLabel,
       mode,
     ),
-    axisLabel: {
-      color: presentation.theme.muted,
-      ...(mode === "interactive"
-        ? { fontFamily: VISUALIZATION_BODY_FONT }
-        : {}),
-      formatter: (value: number) => formatSnapshotAxisValue(snapshot, value),
-    },
+    axisLabel: visualizationSnapshotValueAxisLabel(
+      presentation.theme,
+      mode,
+      (value) => formatSnapshotAxisValue(snapshot, value),
+    ),
     splitLine: { lineStyle: { color: presentation.theme.grid } },
   };
 }

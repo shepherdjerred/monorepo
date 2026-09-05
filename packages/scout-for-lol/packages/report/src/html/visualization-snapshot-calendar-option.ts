@@ -4,7 +4,9 @@ import { calendarTooltipText } from "#src/html/visualization-calendar-tooltip.ts
 import {
   VISUALIZATION_BODY_FONT,
   visualizationSnapshotBaseOption,
+  visualizationSnapshotFont,
   visualizationSnapshotPresentation,
+  visualizationSnapshotScaleTextStyle,
   type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
@@ -27,12 +29,7 @@ export function calendarOption(
       orient: "horizontal",
       left: "center",
       bottom: 18,
-      textStyle: {
-        color: presentation.theme.muted,
-        ...(mode === "interactive"
-          ? { fontFamily: VISUALIZATION_BODY_FONT }
-          : {}),
-      },
+      textStyle: visualizationSnapshotScaleTextStyle(presentation.theme, mode),
       inRange: { color: presentation.colors },
     },
     calendar: {
@@ -51,15 +48,11 @@ export function calendarOption(
       },
       dayLabel: {
         color: presentation.theme.muted,
-        ...(mode === "interactive"
-          ? { fontFamily: VISUALIZATION_BODY_FONT }
-          : {}),
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
       },
       monthLabel: {
         color: presentation.theme.text,
-        ...(mode === "interactive"
-          ? { fontFamily: VISUALIZATION_BODY_FONT }
-          : {}),
+        ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
       },
       yearLabel: { show: false },
     },
