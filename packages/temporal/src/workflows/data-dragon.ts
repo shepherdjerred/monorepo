@@ -1,5 +1,5 @@
 import { patched, proxyActivities } from "@temporalio/workflow";
-import type { DataDragonActivities } from "#activities/data-dragon.ts";
+import type { DataDragonActivities } from "#activities/data-dragon/data-dragon.ts";
 import type {
   DataDragonVersionState,
   DataDragonUpdateMode,
@@ -12,7 +12,7 @@ import {
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
-} from "#activities/report-delivery.ts";
+} from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 

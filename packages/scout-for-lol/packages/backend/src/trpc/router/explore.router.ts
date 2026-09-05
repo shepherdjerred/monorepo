@@ -13,8 +13,8 @@ import {
   ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
 } from "@scout-for-lol/data";
-import { consumeDareV2ConfirmationIntent } from "#src/betting/dare-intent-consume-v2.ts";
-import { tryEnsureDareV2Callout } from "#src/betting/dare-callout-v2.ts";
+import { consumeDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume-v2.ts";
+import { tryEnsureDareV2Callout } from "#src/betting/dares/presentation/dare-callout-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   assertExploreAccess,

@@ -5,11 +5,11 @@ import {
   DiscordGuildIdSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
-import type { DareConditions } from "#src/betting/dare-criteria.ts";
+import type { DareConditions } from "#src/betting/dares/evaluation/dare-criteria.ts";
 import type {
   DareTranslationRecord,
   DareTranslationResult,
-} from "#src/betting/dare-translate.ts";
+} from "#src/betting/dares/evaluation/dare-translate.ts";
 import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 import { isPublicBbSubcommand } from "#src/discord/commands/bb.ts";
 import {

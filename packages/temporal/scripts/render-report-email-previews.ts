@@ -1,10 +1,13 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { renderReportHtml, renderReportText } from "#shared/report-renderer.ts";
+import {
+  renderReportHtml,
+  renderReportText,
+} from "#shared/reports/report-renderer.ts";
 import {
   ReportEnvelopeV1Schema,
   type ReportEnvelopeV1,
-} from "#shared/report.ts";
+} from "#shared/reports/report.ts";
 
 const OUTPUT_DIRECTORY = "/tmp/temporal-report-email-previews";
 const FIXED_STARTED_AT = "2026-08-30T15:00:00.000Z";

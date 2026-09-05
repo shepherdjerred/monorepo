@@ -2,12 +2,12 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   ReportDeliveryActivities,
   ReportDeliveryResult,
-} from "#activities/report-delivery.ts";
-import type { ReportEnvelopeV1 } from "#shared/report.ts";
+} from "#activities/reports/report-delivery.ts";
+import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
 import {
   REPORT_DELIVERY_ACTIVITY_RETRY,
   REPORT_DELIVERY_ACTIVITY_START_TO_CLOSE_MS,
-} from "#shared/report-delivery-policy.ts";
+} from "#shared/reports/report-delivery-policy.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const reportDeliveryActivities = proxyActivities<

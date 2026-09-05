@@ -13,9 +13,9 @@ import {
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
-import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
+import { summarizeCriteria } from "#src/lib/domain/criteria-summary.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useCompetitionParams } from "#src/lib/route-params.ts";
+import { useCompetitionParams } from "#src/lib/api/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -24,8 +24,8 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
-import { CompetitionLeaderboardPanel } from "#src/components/competition-leaderboard-panel.tsx";
-import { CompetitionParticipantsPanel } from "#src/components/competition-participants-panel.tsx";
+import { CompetitionLeaderboardPanel } from "#src/components/competitions/competition-leaderboard-panel.tsx";
+import { CompetitionParticipantsPanel } from "#src/components/competitions/competition-participants-panel.tsx";
 
 export function CompetitionDetail() {
   const { guildId, competitionId } = useCompetitionParams();

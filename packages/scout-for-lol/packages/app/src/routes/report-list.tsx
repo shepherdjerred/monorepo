@@ -10,7 +10,7 @@ import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useGuildParams } from "#src/lib/route-params.ts";
+import { useGuildParams } from "#src/lib/api/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
 
 function cronLabel(cron: string): string {
   const preset = CronPresets.find((entry) => entry.value === cron);

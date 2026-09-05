@@ -7,7 +7,7 @@ import type { OutcomeRecord } from "#activities/outcome.ts";
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
-} from "#shared/ha-errors.ts";
+} from "#shared/infra/ha-errors.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   goodMorningGetUp,

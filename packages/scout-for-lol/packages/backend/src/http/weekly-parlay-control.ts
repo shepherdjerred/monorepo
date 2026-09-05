@@ -4,7 +4,7 @@ import configuration from "#src/configuration.ts";
 import {
   runWeeklyParlayControlAction,
   WEEKLY_PARLAY_CONTROL_PATH,
-} from "#src/betting/weekly-parlay-control.ts";
+} from "#src/betting/weekly/weekly-parlay-control.ts";
 import { MY_SERVER } from "#src/configuration/flags.ts";
 
 function authorized(request: Request, expected: string): boolean {

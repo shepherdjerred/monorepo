@@ -1,14 +1,14 @@
 import { describe, expect, test } from "vitest";
-import type { CiIoImpactResult } from "#activities/ci-io-impact.ts";
+import type { CiIoImpactResult } from "#activities/maintenance/ci-io-impact.ts";
 import type {
   DataDragonUpdateResult,
   DataDragonVersionState,
 } from "#shared/data-dragon-types.ts";
-import type { ScoutQueueWindowsResult } from "#activities/scout-queue-windows.ts";
-import type { ScoutSeasonRefreshResult } from "#activities/scout-season-refresh.ts";
-import type { TasknotesCanaryResult } from "#activities/tasknotes-canary.ts";
-import type { ActivityReportInput } from "#activities/report-delivery.ts";
-import { ReportEnvelopeV1Schema } from "#shared/report.ts";
+import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
+import type { ScoutSeasonRefreshResult } from "#activities/scout/scout-season-refresh.ts";
+import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-canary.ts";
+import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
+import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import { ciIoImpactReport } from "./ci-io-impact.ts";
 import { dataDragonReport } from "./data-dragon.ts";
 import { protobufWatchReport } from "./protobuf-watch.ts";

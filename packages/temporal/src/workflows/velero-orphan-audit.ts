@@ -1,5 +1,5 @@
 import { log, proxyActivities } from "@temporalio/workflow";
-import type { VeleroOrphanAuditActivities } from "#activities/velero-orphan-audit.ts";
+import type { VeleroOrphanAuditActivities } from "#activities/homelab/velero-orphan-audit.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runVeleroOrphanAudit } = proxyActivities<VeleroOrphanAuditActivities>({

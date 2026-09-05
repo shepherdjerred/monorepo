@@ -5,19 +5,19 @@ import {
   ErrorState,
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
-import { BucksCancelDialog } from "#src/components/bucks-cancel-dialog.tsx";
+import { BucksCancelDialog } from "#src/components/bucks/bucks-cancel-dialog.tsx";
 import {
   BucksMarketSections,
   MarketsStatusBanner,
   type MarketErrorMap,
-} from "#src/components/bucks-market-sections.tsx";
-import { BucksPendingPositions } from "#src/components/bucks-pending-positions.tsx";
-import { BucksWalletCard } from "#src/components/bucks-wallet-card.tsx";
-import type { BucksBetSubmission } from "#src/components/bucks-bet-form.tsx";
+} from "#src/components/bucks/bucks-market-sections.tsx";
+import { BucksPendingPositions } from "#src/components/bucks/bucks-pending-positions.tsx";
+import { BucksWalletCard } from "#src/components/bucks/bucks-wallet-card.tsx";
+import type { BucksBetSubmission } from "#src/components/bucks/bucks-bet-form.tsx";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { useNow } from "#src/hooks/use-now.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { computeClockSkewMs } from "#src/lib/bucks-countdown.ts";
+import { computeClockSkewMs } from "#src/lib/bucks/bucks-countdown.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 

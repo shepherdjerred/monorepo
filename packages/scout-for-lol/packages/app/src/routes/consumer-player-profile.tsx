@@ -11,18 +11,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
-import { Section } from "#src/components/player-detail-sections.tsx";
+import { ConsumerGuildAvatar } from "#src/components/identity/consumer-guild-avatar.tsx";
+import { Section } from "#src/components/players/player-detail-sections.tsx";
 import {
   ChampionPoolTable,
   MatchHistoryList,
   PlayerSummaryCards,
   RankValue,
-} from "#src/components/player-profile-sections.tsx";
-import { PlayerProfileFilterBar } from "#src/components/player-profile-filter-bar.tsx";
+} from "#src/components/players/player-profile-sections.tsx";
+import { PlayerProfileFilterBar } from "#src/components/players/player-profile-filter-bar.tsx";
 import { track } from "#src/lib/analytics.ts";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
-import { useConsumerPlayerParams } from "#src/lib/route-params.ts";
+import { formatRiotId } from "#src/lib/domain/riot-id-format.ts";
+import { useConsumerPlayerParams } from "#src/lib/api/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
   filterKey,

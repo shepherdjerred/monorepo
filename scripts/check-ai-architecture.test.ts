@@ -74,7 +74,7 @@ describe("AI architecture guard", () => {
     expect(
       findAiArchitectureViolations([
         {
-          path: "packages/temporal/src/activities/agent-task-env.ts",
+          path: "packages/temporal/src/activities/agent/agent-task-env.ts",
           contents: 'delete environment["ANTHROPIC_API_KEY"]',
         },
         {

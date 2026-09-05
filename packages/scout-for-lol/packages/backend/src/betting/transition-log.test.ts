@@ -92,7 +92,9 @@ describe("BucksTransitionEvent coverage", () => {
       "bucks.transfer.rejected",
     ];
 
-    const glob = new Bun.Glob("*.ts");
+    // Recursive: the emitters live in sub-domains (`dares/`, `markets/`, …),
+    // so a `*.ts` scan would silently stop covering most of them.
+    const glob = new Bun.Glob("**/*.ts");
     const bettingDir = new URL("./", import.meta.url).pathname;
     const missing: string[] = [];
     for (const event of declared) {

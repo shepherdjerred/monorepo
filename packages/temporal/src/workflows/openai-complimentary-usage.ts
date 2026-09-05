@@ -1,5 +1,5 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { OpenAiComplimentaryUsageActivities } from "#activities/openai-complimentary-usage.ts";
+import type { OpenAiComplimentaryUsageActivities } from "#activities/agent/openai-complimentary-usage.ts";
 import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 

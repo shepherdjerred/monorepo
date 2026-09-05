@@ -15,12 +15,15 @@ import {
 } from "./observability/metrics.ts";
 // Emit worker boot logs to stdout and the tracing provider when enabled.
 import { log as jsonLog } from "./observability/log.ts";
-import { parseWorkerRole, type WorkerRole } from "./shared/worker-role.ts";
+import {
+  parseWorkerRole,
+  type WorkerRole,
+} from "./shared/infra/worker-role.ts";
 import {
   parseTemporalBootstrap,
   requireWorkerDeployment,
   type TemporalBootstrap,
-} from "./shared/temporal-bootstrap.ts";
+} from "./shared/infra/temporal-bootstrap.ts";
 import { getWorkerRoleContract } from "./worker-config.ts";
 import {
   executionDomainForTaskQueue,
@@ -40,11 +43,11 @@ import {
 import {
   parseTemporalNamespace,
   type TemporalNamespace,
-} from "./shared/temporal-namespace.ts";
+} from "./shared/infra/temporal-namespace.ts";
 import {
   assertCentralWorkerNamespace,
   workerNamespaces,
-} from "./shared/worker-namespaces.ts";
+} from "./shared/infra/worker-namespaces.ts";
 import {
   parseScheduleReconciliationMode,
   type ScheduleReconciliationMode,

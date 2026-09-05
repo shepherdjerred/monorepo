@@ -7,7 +7,7 @@ import {
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { formatDate } from "#src/lib/format.ts";
-import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
+import { summarizeCriteria } from "#src/lib/domain/criteria-summary.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { LoadMore } from "#src/components/load-more.tsx";
@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
 
 export function CompetitionList() {
   const { guildId } = useParams();

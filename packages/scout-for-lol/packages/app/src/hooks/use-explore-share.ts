@@ -4,7 +4,7 @@ import {
   exploreShareLink,
   mintedAfterPersisted,
   resolveShareToken,
-} from "#src/lib/explore-share-link.ts";
+} from "#src/lib/explore/explore-share-link.ts";
 import { track } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 

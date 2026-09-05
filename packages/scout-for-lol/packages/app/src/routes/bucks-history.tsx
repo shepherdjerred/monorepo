@@ -4,13 +4,13 @@ import {
   ErrorState,
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
-import { BucksLedgerList } from "#src/components/bucks-ledger-list.tsx";
+import { BucksLedgerList } from "#src/components/bucks/bucks-ledger-list.tsx";
 import {
   INITIAL_LEDGER_PAGING,
   adoptSnapshot,
   nextPage,
   previousPage,
-} from "#src/lib/bucks-ledger-paging.ts";
+} from "#src/lib/bucks/bucks-ledger-paging.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 

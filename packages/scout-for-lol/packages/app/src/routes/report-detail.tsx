@@ -11,7 +11,7 @@ import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useReportParams } from "#src/lib/route-params.ts";
+import { useReportParams } from "#src/lib/api/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
@@ -20,10 +20,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { ReportRunHistory } from "#src/components/report-run-history.tsx";
-import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
-import { ReportTimeControls } from "#src/components/report-time-controls.tsx";
-import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
+import { ReportRunHistory } from "#src/components/reports/report-run-history.tsx";
+import { ReportQueryViewer } from "#src/components/reports/report-query-viewer.tsx";
+import { ReportTimeControls } from "#src/components/reports/report-time-controls.tsx";
+import { ReportQueryPreview } from "#src/components/reports/report-query-preview.tsx";
 
 type ReportRow = {
   description: string | null;

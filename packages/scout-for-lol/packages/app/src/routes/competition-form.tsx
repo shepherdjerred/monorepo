@@ -10,14 +10,14 @@ import {
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { FormActions } from "@scout-for-lol/design-system/components/input";
-import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
+import { CompetitionBuilderV2 } from "#src/components/competitions/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,
   EMPTY_STATE,
   competitionFormOptions,
   type FormState,
-} from "#src/components/competition-form-fields.tsx";
-import { CompetitionPresets } from "#src/components/competition-presets.tsx";
+} from "#src/components/competitions/competition-form-fields.tsx";
+import { CompetitionPresets } from "#src/components/competitions/competition-presets.tsx";
 import {
   focusFirstInvalid,
   FormPendingStatus,
@@ -32,10 +32,10 @@ import {
   useUnsavedForm,
 } from "#src/hooks/use-unsaved-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
-import { calendarDateInTimezone } from "#src/lib/competition-time.ts";
+import { validateForm } from "#src/lib/competitions/competition-form-state.ts";
+import { calendarDateInTimezone } from "#src/lib/competitions/competition-time.ts";
 import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
-import type { CompetitionExample } from "#src/lib/onboarding-examples.ts";
+import type { CompetitionExample } from "#src/lib/onboarding/onboarding-examples.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 export function CompetitionForm() {

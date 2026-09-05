@@ -16,38 +16,38 @@ import {
   renderParlay,
   selectParlayTeam,
   type ParlaySubject,
-} from "#src/betting/parlay-criteria.ts";
+} from "#src/betting/parlays/parlay-criteria.ts";
 import {
   generatedParlaySchemaFor,
   parlayProposalSchemaFor,
   parseModelGeneratedParlay,
   thresholdsMatchProposal,
-} from "#src/betting/parlay-model-schema.ts";
+} from "#src/betting/parlays/parlay-model-schema.ts";
 import {
   buildPlayerFrame,
   statLegsForProposal,
-} from "#src/betting/parlay-stats.ts";
+} from "#src/betting/parlays/parlay-stats.ts";
 import {
   OPPONENT_PING_HISTORY_COLUMNS,
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
-} from "#src/betting/parlay-stat-fields.ts";
+} from "#src/betting/parlays/parlay-stat-fields.ts";
 import {
   numericThresholdsAreMeasured,
   priceParlay,
-} from "#src/betting/parlay-pricing.ts";
+} from "#src/betting/parlays/parlay-pricing.ts";
 import type {
   ParlayHistory,
   ParlayHistoryMatch,
-} from "#src/betting/parlay-history.ts";
+} from "#src/betting/parlays/parlay-history.ts";
 import {
   PARLAY_SYSTEM_PROMPT,
   ParlayGenerationContextSchema,
   buildParlayProposalPrompt,
   buildParlayThresholdPrompt,
-} from "#src/betting/parlay-prompt.ts";
+} from "#src/betting/parlays/parlay-prompt.ts";
 import { createLogger } from "#src/logger.ts";
-import { buildParlayShortlist } from "#src/betting/parlay-shortlist.ts";
+import { buildParlayShortlist } from "#src/betting/parlays/parlay-shortlist.ts";
 
 const logger = createLogger("test-parlay-live");
 

@@ -4,7 +4,7 @@ import {
   ANALYTICS_EVENT_NAMES,
   type AnalyticsProps,
   type ScoutAnalyticsEvent,
-} from "#src/lib/analytics-events.ts";
+} from "#src/lib/analytics/analytics-events.ts";
 
 /**
  * Product analytics for the Scout SPA, backed by PostHog Cloud.
