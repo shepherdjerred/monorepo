@@ -1,10 +1,8 @@
+import { Loaded } from "@shepherdjerred/loaded";
+import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
+import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { Link, useNavigate } from "react-router";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   competitionGameVariantToString,
   visibilityToString,
@@ -34,8 +32,9 @@ export function CompetitionDetail() {
   const navigate = useNavigate();
   const { perms } = usePermissions(guildId);
 
-  const competitionQuery = useSuspenseQuery(
-    trpc.competition.get.queryOptions({ guildId, competitionId }),
+  const competitionValue = Loaded.fromQuery(
+    useQuery(trpc.competition.get.queryOptions({ guildId, competitionId })),
+    ["competition.get"],
   );
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions({ guildId }),
@@ -57,187 +56,194 @@ export function CompetitionDetail() {
     }),
   );
 
-  const competition = competitionQuery.data;
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {competition.title}
-          </h2>
-          <CompetitionStatusBadge status={competition.status} />
-        </div>
-        <div className="flex gap-2">
-          <Button asChild variant="outline" size="sm">
-            <Link to={`/g/${guildId}/competitions`}>Back</Link>
-          </Button>
-          {(competition.status === "DRAFT" ||
-            competition.status === "ACTIVE") && (
-            <>
-              {perms.can("competitions", "update") && (
+    <LoadingBlock values={{ competition: competitionValue }}>
+      {({ competition }, meta) => (
+        <>
+          <StaleState errors={meta.errors} />
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-semibold tracking-tight">
+                  {competition.title}
+                </h2>
+                <CompetitionStatusBadge status={competition.status} />
+              </div>
+              <div className="flex gap-2">
                 <Button asChild variant="outline" size="sm">
-                  <Link
-                    to={`/g/${guildId}/competitions/${competitionId.toString()}/edit`}
-                  >
-                    Edit
-                  </Link>
+                  <Link to={`/g/${guildId}/competitions`}>Back</Link>
                 </Button>
-              )}
-              {perms.can("competitions", "cancel") && (
-                <Button
+                {(competition.status === "DRAFT" ||
+                  competition.status === "ACTIVE") && (
+                  <>
+                    {perms.can("competitions", "update") && (
+                      <Button asChild variant="outline" size="sm">
+                        <Link
+                          to={`/g/${guildId}/competitions/${competitionId.toString()}/edit`}
+                        >
+                          Edit
+                        </Link>
+                      </Button>
+                    )}
+                    {perms.can("competitions", "cancel") && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        disabled={cancelMutation.isPending}
+                        onClick={() => {
+                          if (
+                            !globalThis.confirm(
+                              `Cancel "${competition.title}"? This cannot be undone.`,
+                            )
+                          ) {
+                            return;
+                          }
+                          cancelMutation.mutate({ guildId, competitionId });
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {cancelMutation.error && (
+              <p className="text-sm text-scout-danger">
+                {cancelMutation.error.message}
+              </p>
+            )}
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p className="text-scout-subtle">{competition.description}</p>
+                  <div>
+                    <span className="text-scout-subtle">Visibility</span>
+                    <p>{visibilityToString(competition.visibility)}</p>
+                    <p className="text-xs text-scout-subtle">
+                      {visibilityDescription(competition.visibility)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-scout-subtle">Channel</span>
+                    <p>
+                      {channelLabel(channelsQuery.data, competition.channelId)}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-scout-subtle">Max participants</span>
+                    <p>{competition.maxParticipants}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Schedule</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-scout-subtle">Start</span>
+                    <p>
+                      {formatCompetitionDate(
+                        competition.startDate,
+                        competition.analysisTimezone,
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-scout-subtle">End</span>
+                    <p>
+                      {formatCompetitionDate(
+                        competition.endDate,
+                        competition.analysisTimezone,
+                      )}
+                    </p>
+                    <p className="text-xs text-scout-subtle">
+                      {competition.analysisTimezone}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-scout-subtle">Update schedule</span>
+                    {competition.scheduledUpdatesEnabled ? (
+                      <p className="font-mono text-xs">
+                        {competition.updateCronExpression} ·{" "}
+                        {competition.scheduleTimezone}
+                      </p>
+                    ) : (
+                      <p>Disabled</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Criteria</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  <p className="font-medium">
+                    {competitionGameVariantToString(competition.gameVariant)}
+                  </p>
+                  <p>{summarizeCriteria(competition.criteria)}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <CompetitionLeaderboardPanel
+              guildId={guildId}
+              competitionId={competitionId}
+              status={competition.status}
+              startDate={competition.startDate}
+              endDate={competition.endDate}
+              analysisTimezone={competition.analysisTimezone}
+              criteria={competition.criteria}
+            />
+
+            <CompetitionParticipantsPanel
+              guildId={guildId}
+              competitionId={competitionId}
+              status={competition.status}
+              visibility={competition.visibility}
+              participants={competition.participants}
+              onChanged={() => {
+                void queryClient.invalidateQueries({
+                  queryKey: trpc.competition.get.queryKey({
+                    guildId,
+                    competitionId,
+                  }),
+                });
+              }}
+            />
+
+            <p className="text-xs text-scout-subtle">
+              Need to change criteria or dates?{" "}
+              {competition.status === "DRAFT" ? (
+                <button
                   type="button"
-                  variant="destructive"
-                  size="sm"
-                  disabled={cancelMutation.isPending}
+                  className="underline"
                   onClick={() => {
-                    if (
-                      !globalThis.confirm(
-                        `Cancel "${competition.title}"? This cannot be undone.`,
-                      )
-                    ) {
-                      return;
-                    }
-                    cancelMutation.mutate({ guildId, competitionId });
+                    void navigate(
+                      `/g/${guildId}/competitions/${competitionId.toString()}/edit`,
+                    );
                   }}
                 >
-                  Cancel
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </div>
-
-      {cancelMutation.error && (
-        <p className="text-sm text-scout-danger">
-          {cancelMutation.error.message}
-        </p>
-      )}
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="text-scout-subtle">{competition.description}</p>
-            <div>
-              <span className="text-scout-subtle">Visibility</span>
-              <p>{visibilityToString(competition.visibility)}</p>
-              <p className="text-xs text-scout-subtle">
-                {visibilityDescription(competition.visibility)}
-              </p>
-            </div>
-            <div>
-              <span className="text-scout-subtle">Channel</span>
-              <p>{channelLabel(channelsQuery.data, competition.channelId)}</p>
-            </div>
-            <div>
-              <span className="text-scout-subtle">Max participants</span>
-              <p>{competition.maxParticipants}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Schedule</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div>
-              <span className="text-scout-subtle">Start</span>
-              <p>
-                {formatCompetitionDate(
-                  competition.startDate,
-                  competition.analysisTimezone,
-                )}
-              </p>
-            </div>
-            <div>
-              <span className="text-scout-subtle">End</span>
-              <p>
-                {formatCompetitionDate(
-                  competition.endDate,
-                  competition.analysisTimezone,
-                )}
-              </p>
-              <p className="text-xs text-scout-subtle">
-                {competition.analysisTimezone}
-              </p>
-            </div>
-            <div>
-              <span className="text-scout-subtle">Update schedule</span>
-              {competition.scheduledUpdatesEnabled ? (
-                <p className="font-mono text-xs">
-                  {competition.updateCronExpression} ·{" "}
-                  {competition.scheduleTimezone}
-                </p>
+                  Edit this competition
+                </button>
               ) : (
-                <p>Disabled</p>
+                "Those are locked once a competition starts."
               )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Criteria</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="font-medium">
-              {competitionGameVariantToString(competition.gameVariant)}
             </p>
-            <p>{summarizeCriteria(competition.criteria)}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <CompetitionLeaderboardPanel
-        guildId={guildId}
-        competitionId={competitionId}
-        status={competition.status}
-        startDate={competition.startDate}
-        endDate={competition.endDate}
-        analysisTimezone={competition.analysisTimezone}
-        criteria={competition.criteria}
-      />
-
-      <CompetitionParticipantsPanel
-        guildId={guildId}
-        competitionId={competitionId}
-        status={competition.status}
-        visibility={competition.visibility}
-        participants={competition.participants}
-        onChanged={() => {
-          void queryClient.invalidateQueries({
-            queryKey: trpc.competition.get.queryKey({
-              guildId,
-              competitionId,
-            }),
-          });
-        }}
-      />
-
-      <p className="text-xs text-scout-subtle">
-        Need to change criteria or dates?{" "}
-        {competition.status === "DRAFT" ? (
-          <button
-            type="button"
-            className="underline"
-            onClick={() => {
-              void navigate(
-                `/g/${guildId}/competitions/${competitionId.toString()}/edit`,
-              );
-            }}
-          >
-            Edit this competition
-          </button>
-        ) : (
-          "Those are locked once a competition starts."
-        )}
-      </p>
-    </div>
+          </div>
+        </>
+      )}
+    </LoadingBlock>
   );
 }
 

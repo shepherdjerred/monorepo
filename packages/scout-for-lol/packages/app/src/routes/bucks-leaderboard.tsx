@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useQuery } from "@tanstack/react-query";
 import { formatInteger } from "@scout-for-lol/data";
 import {
@@ -11,6 +12,7 @@ import {
 import {
   ErrorState,
   LoadingState,
+  StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
@@ -38,10 +40,11 @@ export function BucksLeaderboard() {
       : [],
   );
 
-  if (query.isPending) {
+  const value = Loaded.fromQuery(query, ["bucks.leaderboard"]);
+  if (value.status === "loading") {
     return <LoadingState label="Loading the weekly leaderboard…" />;
   }
-  if (query.isError) {
+  if (value.status === "error") {
     return (
       <ErrorState
         message="Scout couldn't load the weekly leaderboard."
@@ -51,7 +54,7 @@ export function BucksLeaderboard() {
       />
     );
   }
-  const snapshot = query.data;
+  const snapshot = value.data;
   if (snapshot.kind !== "snapshot") {
     return (
       <EmptyState>
@@ -63,33 +66,37 @@ export function BucksLeaderboard() {
     );
   }
   return (
-    <div className="space-y-2">
-      <p className="text-scout-subtle text-sm">
-        As of {formatDate(snapshot.postedAt)} — the standings the weekly Discord
-        post disclosed, not live balances.
-      </p>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Rank</TableHead>
-            <TableHead>Member</TableHead>
-            <TableHead className="text-right">Balance</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {snapshot.entries.map((entry) => (
-            <TableRow key={entry.discordId}>
-              <TableCell>{formatInteger(entry.rank)}</TableCell>
-              <TableCell>
-                {names.resolve(entry.discordId)?.displayName ?? entry.discordId}
-              </TableCell>
-              <TableCell className="text-right">
-                {formatInteger(entry.balance)} BB
-              </TableCell>
+    <>
+      <StaleState errors={value.status === "degraded" ? value.errors : []} />
+      <div className="space-y-2">
+        <p className="text-scout-subtle text-sm">
+          As of {formatDate(snapshot.postedAt)} — the standings the weekly
+          Discord post disclosed, not live balances.
+        </p>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Rank</TableHead>
+              <TableHead>Member</TableHead>
+              <TableHead className="text-right">Balance</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+          </TableHeader>
+          <TableBody>
+            {snapshot.entries.map((entry) => (
+              <TableRow key={entry.discordId}>
+                <TableCell>{formatInteger(entry.rank)}</TableCell>
+                <TableCell>
+                  {names.resolve(entry.discordId)?.displayName ??
+                    entry.discordId}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatInteger(entry.balance)} BB
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }

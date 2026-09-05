@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, useEffect, type ReactNode } from "react";
@@ -15,7 +16,6 @@ import {
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
 import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
-import type { QueryError } from "#src/lib/permission-query-state.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 import { GUILD_NAVIGATION_ITEMS } from "#src/lib/app-navigation.ts";
 
@@ -31,7 +31,7 @@ export function GuildWorkspace() {
     }),
   );
   const guild = guilds?.find((g) => g.id === guildId);
-  const { perms, isLoading, hasAccess, error } = usePermissions(guildId);
+  const { perms, access, hasAccess } = usePermissions(guildId);
 
   // This is the only component mounted for every `/g/:guildId/*` route, so it
   // owns the guild super property: every subsequent event — autocapture and
@@ -53,12 +53,12 @@ export function GuildWorkspace() {
   const contextRoute = analyticsContextRoute(location.pathname);
   const analyticsGuildId = hasAccess ? guildId : undefined;
   useEffect(() => {
-    if (contextRoute === undefined || isLoading) return;
+    if (contextRoute === undefined || access.status === "loading") return;
     resolveGuildContext(contextRoute, analyticsGuildId);
     return () => {
       clearGuildContext();
     };
-  }, [contextRoute, isLoading, analyticsGuildId]);
+  }, [contextRoute, access.status, analyticsGuildId]);
 
   if (guildId === undefined) {
     return (
@@ -81,12 +81,12 @@ export function GuildWorkspace() {
     location.pathname,
   );
   const sectionForbidden =
-    !isLoading &&
+    access.status !== "loading" &&
     hasAccess &&
     actionRoutePermissions === null &&
     activeNav !== undefined &&
     perms.cannot(activeNav.permission.resource, activeNav.permission.action);
-  const accessDenied = !isLoading && !hasAccess;
+  const accessDenied = access.status !== "loading" && !hasAccess;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
@@ -106,24 +106,24 @@ export function GuildWorkspace() {
           Setup guide
         </Link>
       </div>
-      {error === null ? (
-        accessDenied ? (
-          <ForbiddenPanel
-            title="No access to this server"
-            message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
-          />
-        ) : sectionForbidden ? (
-          <ForbiddenPanel
-            title={`No access to ${activeNav.label}`}
-            message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
-          />
-        ) : (
-          <Suspense fallback={<SectionSkeleton />}>
-            <Outlet />
-          </Suspense>
-        )
+      {access.status === "error" ? (
+        <PermissionLoadError
+          message={Loaded.messageOf(access.errors[0].error)}
+        />
+      ) : accessDenied ? (
+        <ForbiddenPanel
+          title="No access to this server"
+          message="You aren't a member of this server, or a Scout admin hasn't granted you access yet."
+        />
+      ) : sectionForbidden ? (
+        <ForbiddenPanel
+          title={`No access to ${activeNav.label}`}
+          message={`Ask a Scout admin to grant you ${activeNav.label} access.`}
+        />
       ) : (
-        <PermissionLoadError error={error} />
+        <Suspense fallback={<SectionSkeleton />}>
+          <Outlet />
+        </Suspense>
       )}
     </div>
   );
@@ -138,10 +138,13 @@ export function GuildWorkspace() {
  */
 export function GuildSectionIndex() {
   const { guildId } = useParams();
-  const { perms, isLoading, error } = usePermissions(guildId);
+  const { perms, access } = usePermissions(guildId);
 
-  if (isLoading) return null;
-  if (error !== null) return <PermissionLoadError error={error} />;
+  if (access.status === "loading") return null;
+  if (access.status === "error")
+    return (
+      <PermissionLoadError message={Loaded.messageOf(access.errors[0].error)} />
+    );
   const first = GUILD_NAVIGATION_ITEMS.find((item) =>
     perms.can(item.permission.resource, item.permission.action),
   );
@@ -162,7 +165,7 @@ export function GuildPermissionsGate(props: {
   children: ReactNode;
 }) {
   const { guildId } = useParams();
-  const { perms, isLoading, error } = usePermissions(guildId);
+  const { perms, access } = usePermissions(guildId);
 
   if (guildId === undefined) {
     return (
@@ -172,8 +175,11 @@ export function GuildPermissionsGate(props: {
       />
     );
   }
-  if (isLoading) return null;
-  if (error !== null) return <PermissionLoadError error={error} />;
+  if (access.status === "loading") return null;
+  if (access.status === "error")
+    return (
+      <PermissionLoadError message={Loaded.messageOf(access.errors[0].error)} />
+    );
   const missing = props.permissions.find((permission) =>
     perms.cannot(permission.resource, permission.action),
   );
@@ -188,14 +194,14 @@ export function GuildPermissionsGate(props: {
   return props.children;
 }
 
-function PermissionLoadError(props: { error: QueryError }) {
+function PermissionLoadError(props: { message: string }) {
   return (
     <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
       <h2 className="text-base font-semibold text-scout-danger">
         Unable to load access
       </h2>
       <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
-        {props.error.message}
+        {props.message}
       </p>
     </div>
   );
