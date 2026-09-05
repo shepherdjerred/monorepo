@@ -11,6 +11,12 @@ export async function emitReportAgentStreamChunk(
     return;
   }
   switch (chunk.kind) {
+    case "tool-input-start": {
+      // The report editor already announces every step and streams the
+      // model's own text, so it has no quiet stretch for an early tool name
+      // to fill. Explore does, which is why the parser reads this chunk.
+      break;
+    }
     case "step-start": {
       await emit({
         type: "step_started",
