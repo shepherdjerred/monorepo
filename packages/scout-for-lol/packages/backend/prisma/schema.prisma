@@ -31,13 +31,14 @@ model Subscription {
 }
 
 model Player {
-  id                      Int                      @id @default(autoincrement())
-  alias                   String
-  discordId               String?
-  accounts                Account[]
-  subscriptions           Subscription[]
-  competitionParticipants CompetitionParticipant[]
-  competitionSnapshots    CompetitionSnapshot[]
+  id                        Int                        @id @default(autoincrement())
+  alias                     String
+  discordId                 String?
+  accounts                  Account[]
+  subscriptions             Subscription[]
+  competitionParticipants   CompetitionParticipant[]
+  competitionSnapshots      CompetitionSnapshot[]
+  duelDisclosureAcceptances DuelDisclosureAcceptance[]
 
   // metadata
   serverId         String
@@ -442,6 +443,8 @@ model User {
   desktopClients       DesktopClient[]
   storedSounds         StoredSound[]
   exploreConversations ExploreConversation[]
+  challengeDrafts      ChallengeDraft[]
+  challengeRuns        ChallengeRun[]
 }
 
 /// A saved explore conversation. Explore queries the whole report lake rather
@@ -1860,6 +1863,7 @@ model TournamentLobby {
   /// claim-before-Riot provisioning service.
   provision  TournamentLobbyProvision?
   customGame CustomGame?
+  duelGame   DuelGame?
 
   @@index([state, expiresAt])
   @@index([serverId, state])
@@ -2125,4 +2129,506 @@ model ScoutEffectClaim {
   updatedAt   DateTime  @updatedAt
 
   @@index([kind, state, claimedAt])
+}
+
+// =============================================================================
+// Competitive progression: Hall of Fame, challenge runs, and direct duels
+//
+// Enum-shaped and JSON fields remain strings validated by @scout-for-lol/data
+// at every read/write boundary. This follows the provider-neutral persistence
+// convention used by Customs and tournament lobbies.
+// =============================================================================
+
+model HallSettings {
+  guildId              String   @id
+  catalogVersion       Int
+  channelId            String?
+  enabledQueueFamilies String
+  enabledRecords       String
+  baselineRevision     Int      @default(0)
+  updatedByDiscordId   String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  recordCells  HallRecordCell[]
+  baselineRuns HallBaselineRun[]
+
+  @@index([updatedAt])
+}
+
+model HallRecordCell {
+  id                  String    @id @default(uuid())
+  guildId             String
+  queueFamilyId       String
+  recordId            String
+  baselineStatus      String    @default("building")
+  baselineRevision    Int
+  baselineValue       Float?
+  currentValue        Float?
+  holdersJson         String    @default("[]")
+  evidenceJson        String    @default("[]")
+  errorMessage        String?
+  baselineStartedAt   DateTime?
+  baselineCompletedAt DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  settings HallSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, queueFamilyId, recordId])
+  @@index([guildId, baselineStatus])
+}
+
+model HallBaselineRun {
+  id                   String    @id @default(uuid())
+  guildId              String
+  revision             Int
+  baselineState        String    @default("building")
+  requestedByDiscordId String
+  workflowId           String    @unique
+  errorMessage         String?
+  createdAt            DateTime  @default(now())
+  startedAt            DateTime?
+  completedAt          DateTime?
+  updatedAt            DateTime  @updatedAt
+
+  settings HallSettings @relation(fields: [guildId], references: [guildId], onDelete: Cascade)
+
+  @@unique([guildId, revision])
+  @@index([baselineState, createdAt])
+}
+
+model HallRecordBreakOutbox {
+  id             String    @id @default(uuid())
+  guildId        String
+  matchId        String
+  channelId      String
+  payloadJson    String
+  deliveryStatus String    @default("pending")
+  attemptCount   Int       @default(0)
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  sentAt         DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([guildId, matchId])
+  @@index([deliveryStatus, createdAt])
+}
+
+model ChallengeTemplate {
+  id              String   @id @default(uuid())
+  slug            String?  @unique
+  authorDiscordId String
+  latestVersion   Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  versions   ChallengeTemplateVersion[]
+  runs       ChallengeRun[]
+  activeRuns ChallengeActiveRun[]
+
+  @@index([createdAt])
+}
+
+model ChallengeTemplateVersion {
+  id              String   @id @default(uuid())
+  templateId      String
+  version         Int
+  title           String
+  summary         String
+  contractJson    String
+  authorDiscordId String
+  publishedAt     DateTime @default(now())
+
+  template ChallengeTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  runs     ChallengeRun[]
+
+  @@unique([templateId, version])
+  @@index([publishedAt])
+}
+
+model ChallengeDraft {
+  id                 String    @id @default(uuid())
+  ownerDiscordId     String
+  sourceTemplateId   String?
+  contractJson       String
+  previewJson        String?
+  previewedAt        DateTime?
+  expiresAt          DateTime
+  publishedVersionId String?   @unique
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  owner User @relation(fields: [ownerDiscordId], references: [discordId], onDelete: Cascade)
+
+  @@index([ownerDiscordId, expiresAt])
+}
+
+model ChallengeRun {
+  id                 String    @id @default(uuid())
+  ownerDiscordId     String
+  templateId         String
+  templateVersionId  String
+  runState           String    @default("active")
+  originalStartAt    DateTime
+  importRequestedAt  DateTime?
+  frozenContractJson String
+  evaluationRevision Int       @default(1)
+  recomputing        Boolean   @default(true)
+  currentSnapshotId  String?
+  completedAt        DateTime?
+  archivedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  owner           User                       @relation(fields: [ownerDiscordId], references: [discordId], onDelete: Cascade)
+  template        ChallengeTemplate          @relation(fields: [templateId], references: [id], onDelete: Restrict)
+  templateVersion ChallengeTemplateVersion   @relation(fields: [templateVersionId], references: [id], onDelete: Restrict)
+  activePointer   ChallengeActiveRun?
+  revisions       ChallengeRunRevision[]
+  snapshots       ChallengeRunSnapshot[]
+  evidence        ChallengeRunEvidence[]
+  cursors         ChallengeRunCursor[]
+  matchTriggers   ChallengeRunMatchTrigger[]
+
+  @@index([ownerDiscordId, runState, updatedAt])
+  @@index([templateId, runState])
+}
+
+model ChallengeActiveRun {
+  ownerDiscordId String
+  templateId     String
+  runId          String   @unique
+  createdAt      DateTime @default(now())
+
+  template ChallengeTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  run      ChallengeRun      @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@id([ownerDiscordId, templateId])
+}
+
+model ChallengeRunRevision {
+  id                   String    @id @default(uuid())
+  runId                String
+  revision             Int
+  selectedAccountsJson String
+  revisionState        String    @default("queued")
+  workflowId           String    @unique
+  errorMessage         String?
+  createdAt            DateTime  @default(now())
+  startedAt            DateTime?
+  completedAt          DateTime?
+  updatedAt            DateTime  @updatedAt
+
+  run ChallengeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, revision])
+  @@index([revisionState, createdAt])
+}
+
+model ChallengeRunSnapshot {
+  id                 String    @id @default(uuid())
+  runId              String
+  revision           Int
+  progressJson       String
+  coverageJson       String
+  evaluatedThroughAt DateTime?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+
+  run ChallengeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, revision])
+  @@index([runId, createdAt])
+}
+
+model ChallengeRunEvidence {
+  id               String   @id @default(uuid())
+  runId            String
+  revision         Int
+  matchId          String
+  puuid            String
+  gameEndAt        DateTime
+  timelineComplete Boolean
+  evidenceJson     String
+  createdAt        DateTime @default(now())
+
+  run ChallengeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, revision, matchId, puuid])
+  @@index([runId, revision, gameEndAt, matchId])
+}
+
+model ChallengeRunCursor {
+  runId            String
+  puuid            String
+  revision         Int
+  lastMatchEndAt   DateTime?
+  lastMatchId      String?
+  timelineRequired Boolean
+  updatedAt        DateTime  @updatedAt
+
+  run ChallengeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@id([runId, puuid])
+  @@index([puuid, updatedAt])
+}
+
+model ChallengeRunMatchTrigger {
+  runId     String
+  matchId   String
+  revision  Int
+  createdAt DateTime @default(now())
+
+  run ChallengeRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@id([runId, matchId])
+  @@index([matchId, createdAt])
+}
+
+model DuelRiotApproval {
+  feature             String   @id
+  evidenceReference   String
+  approvedAt          DateTime
+  recordedByDiscordId String
+  createdAt           DateTime @default(now())
+}
+
+model DuelEvent {
+  id                   String    @id @default(uuid())
+  guildId              String
+  name                 String
+  format               String
+  competitorKind       String
+  bestOf               Int
+  rulesetJson          String
+  registrationMode     String
+  seedMethod           String
+  randomSeed           String
+  matchWindowHours     Int       @default(168)
+  channelId            String
+  organizerDiscordId   String
+  eventState           String    @default("draft")
+  registrationClosesAt DateTime?
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  entrants       DuelEventEntrant[]
+  roundOverrides DuelEventRoundOverride[]
+  series         DuelSeries[]
+
+  @@index([guildId, eventState, createdAt])
+}
+
+model DuelCompetitor {
+  id        String   @id @default(uuid())
+  guildId   String
+  kind      String
+  teamName  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members      DuelCompetitorMember[]
+  eventEntries DuelEventEntrant[]
+  seriesAsOne  DuelSeries[]           @relation("DuelSeriesCompetitorOne")
+  seriesAsTwo  DuelSeries[]           @relation("DuelSeriesCompetitorTwo")
+
+  @@index([guildId, kind, createdAt])
+}
+
+model DuelCompetitorMember {
+  competitorId String
+  playerId     Int
+  accountId    Int
+  puuid        String
+  region       String
+  discordId    String
+  playerAlias  String
+  accountAlias String
+  position     Int
+  createdAt    DateTime @default(now())
+
+  competitor DuelCompetitor @relation(fields: [competitorId], references: [id], onDelete: Cascade)
+
+  @@id([competitorId, playerId])
+  @@unique([competitorId, position])
+  @@index([playerId, createdAt])
+  @@index([accountId])
+}
+
+model DuelDisclosureAcceptance {
+  id                String   @id @default(uuid())
+  guildId           String
+  playerId          Int
+  discordId         String
+  disclosureVersion Int
+  acceptedAt        DateTime
+  createdAt         DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, playerId, disclosureVersion])
+  @@index([discordId, acceptedAt])
+}
+
+model DuelEventEntrant {
+  eventId            String
+  competitorId       String
+  registrationSource String
+  registrationState  String    @default("pending")
+  seed               Int?
+  invitedAt          DateTime?
+  registeredAt       DateTime?
+  acceptedAt         DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  event      DuelEvent      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  competitor DuelCompetitor @relation(fields: [competitorId], references: [id], onDelete: Restrict)
+
+  @@id([eventId, competitorId])
+  @@unique([eventId, seed])
+  @@index([eventId, registrationState])
+}
+
+model DuelEventRoundOverride {
+  eventId     String
+  roundNumber Int
+  bestOf      Int
+
+  event DuelEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, roundNumber])
+}
+
+model DuelSeries {
+  id                 String    @id @default(uuid())
+  guildId            String
+  eventId            String?
+  roundNumber        Int?
+  bracket            String?
+  position           Int?
+  competitorOneId    String
+  competitorTwoId    String
+  bestOf             Int
+  rulesetJson        String
+  seriesState        String    @default("awaiting_acceptance")
+  channelId          String
+  organizerDiscordId String
+  windowStartsAt     DateTime?
+  deadlineAt         DateTime?
+  workflowId         String    @unique
+  winnerCompetitorId String?
+  advancementKind    String?
+  advancementReason  String?
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  event          DuelEvent?              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  competitorOne  DuelCompetitor          @relation("DuelSeriesCompetitorOne", fields: [competitorOneId], references: [id], onDelete: Restrict)
+  competitorTwo  DuelCompetitor          @relation("DuelSeriesCompetitorTwo", fields: [competitorTwoId], references: [id], onDelete: Restrict)
+  participants   DuelSeriesParticipant[]
+  games          DuelGame[]
+  auditDecisions DuelAuditDecision[]
+
+  @@unique([eventId, bracket, roundNumber, position])
+  @@index([guildId, seriesState, createdAt])
+  @@index([eventId, roundNumber, position])
+  @@index([deadlineAt, seriesState])
+}
+
+model DuelSeriesParticipant {
+  seriesId          String
+  playerId          Int
+  competitorId      String
+  discordId         String
+  disclosureVersion Int
+  acceptedAt        DateTime?
+  readyAt           DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  series DuelSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@id([seriesId, playerId])
+  @@index([discordId, acceptedAt])
+  @@index([seriesId, readyAt])
+}
+
+model DuelGame {
+  id                   String    @id @default(uuid())
+  seriesId             String
+  gameNumber           Int
+  tournamentLobbyId    Int?      @unique
+  matchId              String?   @unique
+  gameState            String    @default("awaiting_readiness")
+  resultState          String?
+  winnerCompetitorId   String?
+  objective            String?
+  objectiveTimestampMs Int?
+  evidenceJson         String?
+  reviewReason         String?
+  verifiedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  series          DuelSeries       @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  tournamentLobby TournamentLobby? @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
+
+  @@unique([seriesId, gameNumber])
+  @@index([seriesId, gameState])
+}
+
+model DuelAuditDecision {
+  id             String   @id @default(uuid())
+  seriesId       String
+  actorDiscordId String
+  action         String
+  reason         String
+  payloadJson    String
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+
+  series DuelSeries @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+
+  @@index([seriesId, createdAt])
+}
+
+model DuelRecord {
+  id           String   @id @default(uuid())
+  guildId      String
+  scope        String
+  subjectKey   String
+  opponentKey  String   @default("")
+  games        Int      @default(0)
+  wins         Int      @default(0)
+  losses       Int      @default(0)
+  series       Int      @default(0)
+  seriesWins   Int      @default(0)
+  seriesLosses Int      @default(0)
+  streak       Int      @default(0)
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
+
+  @@unique([guildId, scope, subjectKey, opponentKey])
+  @@index([guildId, scope, wins])
+}
+
+model DuelStatusOutbox {
+  id             String    @id @default(uuid())
+  guildId        String
+  channelId      String
+  dedupeKey      String    @unique
+  payloadJson    String
+  deliveryStatus String    @default("pending")
+  attemptCount   Int       @default(0)
+  lastError      String?
+  createdAt      DateTime  @default(now())
+  sentAt         DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  @@index([deliveryStatus, createdAt])
 }

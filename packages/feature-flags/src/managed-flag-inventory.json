@@ -382,6 +382,72 @@
       "thresholdRollouts": []
     },
     {
+      "key": "hall_of_fame_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable queue-scoped Scout Hall of Fame records and breakage notifications.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "challenge_runs_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable deterministic community challenge templates and personal runs.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "scout-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "duels_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Enable consent-gated Scout direct duels and structured events after Riot approval.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "debug",
       "owner": "scout",
       "namespace": "scout",

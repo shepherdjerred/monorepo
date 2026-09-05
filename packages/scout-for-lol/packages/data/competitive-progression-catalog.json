@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "hall": {
+    "queueFamilies": [
+      {
+        "id": "ranked_sr",
+        "label": "Ranked Summoner's Rift",
+        "defaultEnabled": true,
+        "queues": ["solo", "flex", "ranked 5s"]
+      },
+      {
+        "id": "unranked_sr",
+        "label": "Unranked Summoner's Rift",
+        "defaultEnabled": true,
+        "queues": ["normal", "draft pick", "quickplay", "swiftplay"]
+      },
+      {
+        "id": "aram",
+        "label": "ARAM",
+        "defaultEnabled": true,
+        "queues": ["aram"]
+      },
+      {
+        "id": "sr_clash",
+        "label": "Summoner's Rift Clash",
+        "defaultEnabled": false,
+        "queues": ["clash"]
+      },
+      {
+        "id": "aram_clash",
+        "label": "ARAM Clash",
+        "defaultEnabled": false,
+        "queues": ["aram clash"]
+      },
+      {
+        "id": "urf",
+        "label": "URF and ARURF",
+        "defaultEnabled": false,
+        "queues": ["urf", "arurf"]
+      },
+      {
+        "id": "arena",
+        "label": "Arena",
+        "defaultEnabled": true,
+        "queues": ["arena"]
+      },
+      {
+        "id": "brawl",
+        "label": "Brawl",
+        "defaultEnabled": false,
+        "queues": ["brawl"]
+      },
+      {
+        "id": "classic_sr",
+        "label": "Classic Summoner's Rift",
+        "defaultEnabled": false,
+        "queues": ["classic"]
+      },
+      {
+        "id": "aram_mayhem",
+        "label": "ARAM Mayhem",
+        "defaultEnabled": false,
+        "queues": ["aram mayhem"]
+      },
+      {
+        "id": "classic_aram_mayhem",
+        "label": "Classic ARAM Mayhem",
+        "defaultEnabled": false,
+        "queues": ["classic aram mayhem"]
+      },
+      {
+        "id": "doom_bots_easy",
+        "label": "Doom Bots — Easy",
+        "defaultEnabled": false,
+        "queues": ["easy doom bots"]
+      },
+      {
+        "id": "doom_bots_normal",
+        "label": "Doom Bots — Normal",
+        "defaultEnabled": false,
+        "queues": ["normal doom bots"]
+      },
+      {
+        "id": "doom_bots_hard",
+        "label": "Doom Bots — Hard",
+        "defaultEnabled": false,
+        "queues": ["hard doom bots"]
+      }
+    ],
+    "records": [
+      { "id": "kills", "label": "Most kills", "unit": "count", "precision": 0 },
+      {
+        "id": "assists",
+        "label": "Most assists",
+        "unit": "count",
+        "precision": 0
+      },
+      {
+        "id": "largest_multikill",
+        "label": "Largest multikill",
+        "unit": "count",
+        "precision": 0
+      },
+      {
+        "id": "champion_damage",
+        "label": "Most champion damage",
+        "unit": "damage",
+        "precision": 0
+      },
+      {
+        "id": "champion_damage_per_minute",
+        "label": "Champion damage per minute",
+        "unit": "damage_per_minute",
+        "precision": 2
+      },
+      {
+        "id": "damage_taken",
+        "label": "Most damage taken",
+        "unit": "damage",
+        "precision": 0
+      },
+      {
+        "id": "damage_mitigated",
+        "label": "Most damage mitigated",
+        "unit": "damage",
+        "precision": 0
+      },
+      {
+        "id": "cs",
+        "label": "Most creep score",
+        "unit": "count",
+        "precision": 0
+      },
+      {
+        "id": "cs_per_minute",
+        "label": "Creep score per minute",
+        "unit": "count_per_minute",
+        "precision": 2
+      },
+      {
+        "id": "gold_earned",
+        "label": "Most gold earned",
+        "unit": "gold",
+        "precision": 0
+      },
+      {
+        "id": "teammate_healing",
+        "label": "Most teammate healing",
+        "unit": "healing",
+        "precision": 0
+      },
+      {
+        "id": "vision_score",
+        "label": "Highest vision score",
+        "unit": "score",
+        "precision": 0
+      },
+      {
+        "id": "wards_cleared",
+        "label": "Most wards cleared",
+        "unit": "count",
+        "precision": 0
+      },
+      {
+        "id": "objective_damage",
+        "label": "Most objective damage",
+        "unit": "damage",
+        "precision": 0
+      },
+      {
+        "id": "turret_damage",
+        "label": "Most turret damage",
+        "unit": "damage",
+        "precision": 0
+      },
+      {
+        "id": "crowd_control_time",
+        "label": "Most crowd-control time",
+        "unit": "seconds",
+        "precision": 0
+      },
+      {
+        "id": "longest_life",
+        "label": "Longest life",
+        "unit": "seconds",
+        "precision": 0
+      },
+      {
+        "id": "total_time_dead",
+        "label": "Most total time dead",
+        "unit": "seconds",
+        "precision": 0
+      }
+    ]
+  }
+}
