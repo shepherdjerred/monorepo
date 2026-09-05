@@ -25,6 +25,7 @@
     "@orama/orama": "^3.1.18",
     "@sentry/react": "^10.49.0",
     "@tanstack/query-async-storage-persister": "^5.101.4",
+    "@shepherdjerred/loaded": "workspace:*",
     "@tanstack/react-query": "^5.101.4",
     "@tanstack/react-query-persist-client": "^5.101.4",
     "@tanstack/react-router": "^1.170.29",
