@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { Loaded, type LoadedErrors } from "@shepherdjerred/loaded";
-import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { ChampionSplashArt } from "#src/assets/index.tsx";
 import { Button } from "#src/components/button.tsx";
 import {
@@ -51,7 +49,6 @@ import {
   ErrorState,
   LoadingState,
   PermissionState,
-  StaleState,
 } from "#src/domain/states.tsx";
 import { InteractiveVisualization } from "#src/domain/visualization.tsx";
 import { Callout, Grid, Panel, Section, Stack } from "#src/layout/index.tsx";
@@ -71,16 +68,6 @@ const reportRows = [
   { champion: "Ahri", result: "Victory", kda: "8 / 2 / 11" },
   { champion: "Aatrox", result: "Defeat", kda: "4 / 6 / 5" },
 ];
-
-const reportStates: {
-  fallback: React.ReactNode;
-  renderError: (errors: LoadedErrors) => React.ReactNode;
-} = {
-  fallback: <LoadingState label="Loading report…" />,
-  renderError: (errors) => (
-    <ErrorState message={Loaded.messageOf(errors[0].error)} />
-  ),
-};
 
 export function CatalogSamples() {
   const [formOpen, setFormOpen] = useState(false);
@@ -159,56 +146,6 @@ export function CatalogSamples() {
           <LoadingState label="Loading match history…" />
           <ErrorState message="The report could not be loaded." />
           <PermissionState message="Administrator access is required." />
-        </Grid>
-      </Section>
-
-      <Section className="workbench-section">
-        <SectionHeader>
-          <h2>Renderability states</h2>
-        </SectionHeader>
-        {/*
-          Every branch `LoadingBlock` can take, rendered side by side so the
-          per-theme screenshot diffs cover them. The app package these back is
-          migrating ~82 call sites onto this component and has no e2e coverage
-          at all, so this catalog is the only automated net under its loading,
-          error, and degraded surfaces.
-        */}
-        <Grid>
-          <LoadingBlock values={{ report: Loaded.loading() }} {...reportStates}>
-            {() => <Panel>unreachable</Panel>}
-          </LoadingBlock>
-          <LoadingBlock
-            values={{ report: Loaded.failed(new Error("Report unavailable.")) }}
-            {...reportStates}
-          >
-            {() => <Panel>unreachable</Panel>}
-          </LoadingBlock>
-          <LoadingBlock
-            values={{ report: Loaded.done("Patch 26.17 · 12 matches") }}
-            {...reportStates}
-          >
-            {(data, meta) => (
-              <Panel>
-                <StaleState errors={meta.errors} />
-                <p>{data.report}</p>
-              </Panel>
-            )}
-          </LoadingBlock>
-          <LoadingBlock
-            values={{
-              report: Loaded.degraded("Patch 26.17 · 12 matches", [
-                { path: ["report"], error: new Error("Refresh failed.") },
-              ]),
-            }}
-            {...reportStates}
-          >
-            {(data, meta) => (
-              <Panel>
-                <StaleState errors={meta.errors} />
-                <p>{data.report}</p>
-              </Panel>
-            )}
-          </LoadingBlock>
         </Grid>
       </Section>
 
