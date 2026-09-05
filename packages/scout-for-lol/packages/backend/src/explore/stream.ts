@@ -217,18 +217,24 @@ export async function emitExploreStreamChunk(
         rawOutput: boundedRawValue(inspection.rawOutput, state),
       });
       // After the tool_result, so the step in the panel has already flipped to
-      // its final status by the time the status line describes the outcome.
-      await emit(
-        activityEvent(
-          toolResultActivity(
-            chunk.toolName,
-            chunk.input,
-            inspection,
-            toolResultMessage(chunk.toolName, inspection.succeeded),
+      // its final status by the time the status line describes the outcome —
+      // and only when nothing else is still running. A step can issue several
+      // tool calls at once, and announcing "Got results." while a second query
+      // is still executing would claim the turn had finished work it had not.
+      // The still-running call keeps the line until it too completes.
+      if (state.toolStartedAt.size === 0) {
+        await emit(
+          activityEvent(
+            toolResultActivity(
+              chunk.toolName,
+              chunk.input,
+              inspection,
+              toolResultMessage(chunk.toolName, inspection.succeeded),
+            ),
+            chunk.toolCallId,
           ),
-          chunk.toolCallId,
-        ),
-      );
+        );
+      }
       break;
     }
     case "tool-error": {
@@ -251,12 +257,14 @@ export async function emitExploreStreamChunk(
         details: inspectExploreToolCall(chunk.toolName, chunk.input).details,
         rawOutput: null,
       });
-      await emit(
-        activityEvent(
-          toolResultMessage(chunk.toolName, false),
-          chunk.toolCallId,
-        ),
-      );
+      if (state.toolStartedAt.size === 0) {
+        await emit(
+          activityEvent(
+            toolResultMessage(chunk.toolName, false),
+            chunk.toolCallId,
+          ),
+        );
+      }
       break;
     }
   }
