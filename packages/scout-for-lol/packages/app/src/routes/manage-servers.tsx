@@ -20,13 +20,18 @@ const INSTALL_URL = "/api/discord/install?surface=manage_servers";
 
 export function ManageServers() {
   const trpc = useTRPC();
-  const guildsValue = Loaded.fromQuery(
-    useQuery(
-      trpc.guild.listManageable.queryOptions(undefined, {
-        staleTime: STALE_TIME_SLOW_LIST,
-      }),
+  // `guild.listManageable` is the set of guilds this viewer may administer, so
+  // a stale copy lists servers they may no longer manage. Access-bearing, and
+  // therefore strict.
+  const guildsValue = Loaded.strict(
+    Loaded.fromQuery(
+      useQuery(
+        trpc.guild.listManageable.queryOptions(undefined, {
+          staleTime: STALE_TIME_SLOW_LIST,
+        }),
+      ),
+      ["listManageable"],
     ),
-    ["listManageable"],
   );
 
   return (
