@@ -57,7 +57,7 @@ function frontmatterKeyToken(
 
 function frontmatterValueToken(stream: CookStream, state: CookState): string {
   if (state.frontmatterValue) {
-    if (stream.match(/^\s*\|[-+]?/)) {
+    if (stream.match(/^\s*[|>][-+]?/)) {
       state.frontmatterValue = false;
       state.inBlockValue = true;
       return "operator";

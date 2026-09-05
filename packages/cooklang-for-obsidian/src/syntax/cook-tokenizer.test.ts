@@ -71,6 +71,12 @@ describe("cookParser", () => {
     ]);
   });
 
+  test("highlights folded frontmatter block values", () => {
+    expect(
+      tokenNames(["---", "description: >", "  Folded text", "---"]),
+    ).toEqual([["meta"], ["atom", "operator"], ["docString"], ["meta"]]);
+  });
+
   test("highlights comments", () => {
     expect(tokenNames(["-- recipe note"])).toEqual([["comment"]]);
   });
