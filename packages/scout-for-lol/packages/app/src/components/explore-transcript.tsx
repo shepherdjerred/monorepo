@@ -1,6 +1,11 @@
 import { memo, useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
-import type { ExploreMessage, ExploreTraceEntry } from "@scout-for-lol/data";
+import type {
+  ExploreMessage,
+  ExploreTraceEntry,
+  ReportAiPreviewSummary,
+  VisualizationSnapshot,
+} from "@scout-for-lol/data";
 import {
   Button,
   IconButton,
@@ -12,6 +17,7 @@ import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { AssistantTurn } from "#src/components/explore-assistant-turn.tsx";
+import { ExploreVisualResult } from "#src/components/explore-visual-result.tsx";
 import { useNow } from "#src/hooks/use-now.ts";
 import { formatDuration } from "#src/lib/format-duration.ts";
 
@@ -42,6 +48,9 @@ export function ExploreTranscript(props: {
   /** The status describes a deliberate stop, not work still in flight. */
   stopping?: boolean;
   pendingTrace?: ExploreTraceEntry[];
+  /** The streaming turn's newest query result, rendered before it lands. */
+  pendingPreview?: ReportAiPreviewSummary | null;
+  pendingVisualization?: VisualizationSnapshot | null;
   /** True while a turn is running, so a trailing question is not "interrupted". */
   turnActive?: boolean;
   /** Owner-only raw tool payloads are never offered on the shared route. */
@@ -90,6 +99,8 @@ export function ExploreTranscript(props: {
         activity={props.activity ?? null}
         stopping={props.stopping ?? false}
         trace={props.pendingTrace ?? []}
+        preview={props.pendingPreview ?? null}
+        visualization={props.pendingVisualization ?? null}
         showRawTrace={props.showRawTrace ?? false}
       />
     </div>
@@ -153,6 +164,8 @@ const PendingTurn = memo(function PendingTurnView(props: {
   activity: string | null;
   stopping: boolean;
   trace: ExploreTraceEntry[];
+  preview: ReportAiPreviewSummary | null;
+  visualization: VisualizationSnapshot | null;
   showRawTrace: boolean;
 }) {
   /**
@@ -180,6 +193,13 @@ const PendingTurn = memo(function PendingTurnView(props: {
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
       {props.showRawTrace && <ExploreDareCards trace={props.trace} />}
+      {/* The query result the moment the query returns, rather than at the end
+          of the turn. The same component renders it after the turn lands, so
+          the hand-off to the persisted message does not reflow the table. */}
+      <ExploreVisualResult
+        preview={props.preview}
+        visualization={props.visualization}
+      />
       {/* Status and steps are one unit — the line says what is happening now,
           the disclosure holds how it got here — so they sit closer together
           than the surrounding `space-y-6` rhythm. */}

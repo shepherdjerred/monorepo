@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { BarChart2, Table as TableIcon, X } from "lucide-react";
 import {
   ReportOutputFormatSchema,
-  type ExploreMessage,
   type ReportAiPreviewSummary,
   type ReportOutputFormat,
   type ReportResultColumn,
@@ -86,7 +85,8 @@ export function initialMetricKey(
 }
 
 export type ExploreVisualResultProps = {
-  readonly message: ExploreMessage;
+  readonly preview: ReportAiPreviewSummary | null;
+  readonly visualization: VisualizationSnapshot | null;
   readonly onFollowUp?: ((text: string) => void) | undefined;
 };
 
@@ -345,13 +345,22 @@ export function resolveActiveSnapshot(options: {
   return null;
 }
 
+/**
+ * Takes the result rather than the message because a turn shows this twice in
+ * its life: while streaming, from the `preview` event the server sends the
+ * moment a query returns, and again from the persisted message once the turn
+ * lands. Those arrive in different shapes and must render identically, or the
+ * table visibly reflows at the hand-off. Only these two fields were ever read
+ * off the message.
+ */
 export function ExploreVisualResult(props: {
-  readonly message: ExploreMessage;
+  readonly preview: ReportAiPreviewSummary | null;
+  readonly visualization: VisualizationSnapshot | null;
   readonly onFollowUp?: ((text: string) => void) | undefined;
 }) {
-  const { message, onFollowUp } = props;
-  const rawChart = chartableSnapshot(message.visualization);
-  const preview = message.preview;
+  const { onFollowUp } = props;
+  const rawChart = chartableSnapshot(props.visualization);
+  const preview = props.preview;
 
   const isUngrouped = preview !== null && isUngroupedResult(preview);
   const isPreviewChartable = isChartablePreview(preview);
@@ -455,7 +464,7 @@ export function ExploreVisualResult(props: {
           columns={preview.columns}
           rows={preview.rows}
           rowsReturned={preview.rowsReturned}
-          visualization={message.visualization}
+          visualization={props.visualization}
           interactive={true}
           onRowClick={(row) => {
             setSelectedPoint({ label: row.label, value: null });

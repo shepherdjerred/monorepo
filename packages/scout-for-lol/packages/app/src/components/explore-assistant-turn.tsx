@@ -194,7 +194,11 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
 
       {props.showRawTrace && <ExploreDareCards trace={message.trace} />}
 
-      <ExploreVisualResult message={message} onFollowUp={actions.onFollowUp} />
+      <ExploreVisualResult
+        preview={message.preview}
+        visualization={message.visualization}
+        onFollowUp={actions.onFollowUp}
+      />
 
       {message.caveats.length > 0 && (
         <ul className="space-y-1 rounded-md border-l-2 border-scout-border bg-scout-surface py-2 pr-3 pl-3 text-xs">

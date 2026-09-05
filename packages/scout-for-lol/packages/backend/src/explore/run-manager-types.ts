@@ -4,6 +4,7 @@ import type {
   ExploreMessage,
   ExploreStreamEvent,
   ExploreTraceEntry,
+  ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import type {
   ExploreAgentParams,
@@ -43,6 +44,13 @@ export type ActiveRun = {
   answer: string;
   activity: string | null;
   trace: ExploreTraceEntry[];
+  /**
+   * The latest query result this turn produced, retained purely so a
+   * reconnect snapshot can carry it. Last write wins, matching the agent's
+   * own `lastPreview`, so a reconnecting reader never sees an earlier
+   * query's table beside a later query's answer.
+   */
+  preview: ReportAiPreviewSummary | null;
   termination: RunTermination;
   settled: Promise<null>;
   resolveSettled: (value: null) => void;
