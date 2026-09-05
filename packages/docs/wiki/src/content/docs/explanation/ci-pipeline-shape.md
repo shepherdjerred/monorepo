@@ -142,7 +142,7 @@ This separates a renewable login session from an extracted short-lived token.
 The distinction lets the release refiner recover normally when its Codex access
 token expires without broadening the rest of the Buildkite credential surface.
 The [release pod definition](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml),
-[PVC declaration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts),
+[PVC declaration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts),
 and [refiner boundary](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/release-refiner.ts)
 define that separation.
 

@@ -32,7 +32,7 @@ docker compose down -v   # -v also removes anonymous volumes
 ## What this validates
 
 - **Phase 1** (datasource config): `grafana-datasources.yml` mirrors the cdk8s
-  block at [prometheus.ts:190-208](../../../packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts:190).
+  block at [prometheus.ts:190-208](../../../packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts:190).
   If you change one, change the other.
 - **Phase 2** (OTLP logs from apps): `emit-test-trace.ts` uses the same OTel
   JS SDK + ordering that birmel and temporal-worker use. If the production

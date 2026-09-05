@@ -63,7 +63,7 @@ const SNAPSHOT_PATH = path.join(
  */
 const CI_SECRET_DECLARATION = path.join(
   REPOSITORY_ROOT,
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts",
+  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
 );
 /** The only `requireEnv` whose contract this check models. */
 const REQUIRE_ENV_MODULE = path.join(

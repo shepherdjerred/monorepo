@@ -203,7 +203,7 @@ export function initializeTracing(): void {
   // Loki auto-promotes `service.name` to the `service_name` stream label and
   // stores trace_id/span_id as structured metadata (Loki has
   // allow_structured_metadata: true). The Tempo→Loki `tracesToLogsV2` mapping
-  // in homelab/argo-applications/prometheus.ts uses that label + filter, so
+  // in homelab/argo-applications/observability/prometheus.ts uses that label + filter, so
   // each span's log records are findable via "Logs for this span".
   //
   // logsAPI.getLogger().emit() automatically attaches the active span's

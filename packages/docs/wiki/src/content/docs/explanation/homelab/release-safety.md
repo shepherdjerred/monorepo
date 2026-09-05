@@ -112,7 +112,7 @@ Certificate waves still use resource health as their ordering barrier. The
 allows separate `Ready` and `Issuing` conditions. A new Certificate briefly
 reports `Ready=False` with reason `DoesNotExist` while it creates the referenced
 Secret. The
-[ArgoCD health customization](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/argocd.ts)
+[ArgoCD health customization](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/argocd.ts)
 classifies only that normal issuance transition as `Progressing`, so the wave
 waits instead of terminating. It checks the separate Issuing condition before
 exempting a missing Secret because cert-manager

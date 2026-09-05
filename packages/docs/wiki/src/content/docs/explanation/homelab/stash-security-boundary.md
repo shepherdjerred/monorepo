@@ -76,5 +76,5 @@ key-recovery design that preserves the initial recovery points.
 ## Where to look
 
 - [Workload boundary](https://github.com/shepherdjerred/monorepo/tree/808643e192b14d4c9ec14b3c664f099407c07fd1/packages/homelab/src/cdk8s/src/resources/stash)
-- [ArgoCD ownership](https://github.com/shepherdjerred/monorepo/blob/808643e192b14d4c9ec14b3c664f099407c07fd1/packages/homelab/src/cdk8s/src/resources/argo-applications/stash.ts)
+- [ArgoCD ownership](https://github.com/shepherdjerred/monorepo/blob/808643e192b14d4c9ec14b3c664f099407c07fd1/packages/homelab/src/cdk8s/src/resources/argo-applications/media/stash.ts)
 - [Backup policy and its enforcement](https://github.com/shepherdjerred/monorepo/blob/808643e192b14d4c9ec14b3c664f099407c07fd1/packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.ts)

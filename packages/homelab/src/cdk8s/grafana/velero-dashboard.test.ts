@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { BUILDKITE_KUBE_STATE_METRICS_VALUES } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-values.ts";
+import { BUILDKITE_KUBE_STATE_METRICS_VALUES } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
 import { createVeleroDashboard } from "./velero-dashboard.ts";
 
 const DashboardSchema = z.object({
