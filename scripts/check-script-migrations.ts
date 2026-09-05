@@ -89,6 +89,46 @@ async function existingTrackedShellScripts(): Promise<string[]> {
     .map(({ path: filePath }) => filePath);
 }
 
+/**
+ * ts-morph and ESLint instances are memoized per config path, not per manifest
+ * entry. Both are only ever asked a boolean about the entry's replacement file
+ * — is it in the program, is it linted — but constructing a Project with
+ * `skipAddingFilesFromTsConfig: false` loads the owner's ENTIRE TypeScript
+ * program. The manifest's 33 owned entries name just 9 distinct tsconfigs, with
+ * scripts/tsconfig.json alone appearing 17 times, so the uncached form paid for
+ * the same program load 17 times over.
+ *
+ * Keyed on the resolved absolute path: two entries naming the same config get
+ * the same instance, and a different config still gets its own. Nothing here is
+ * mutated after construction, so sharing is safe.
+ */
+const projectsByTsconfig = new Map<string, Project>();
+
+function projectForTsconfig(tsConfigFilePath: string): Project {
+  const cached = projectsByTsconfig.get(tsConfigFilePath);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const project = new Project({
+    tsConfigFilePath,
+    skipAddingFilesFromTsConfig: false,
+  });
+  projectsByTsconfig.set(tsConfigFilePath, project);
+  return project;
+}
+
+const eslintsByConfig = new Map<string, ESLint>();
+
+function eslintForConfig(overrideConfigFile: string): ESLint {
+  const cached = eslintsByConfig.get(overrideConfigFile);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const eslint = new ESLint({ cwd: REPOSITORY_ROOT, overrideConfigFile });
+  eslintsByConfig.set(overrideConfigFile, eslint);
+  return eslint;
+}
+
 async function validateCompletedPort(
   entry: ScriptMigration,
 ): Promise<string[]> {
@@ -138,10 +178,9 @@ async function validateCompletedPort(
     }
   }
 
-  const project = new Project({
-    tsConfigFilePath: path.resolve(REPOSITORY_ROOT, entry.owner.tsconfig),
-    skipAddingFilesFromTsConfig: false,
-  });
+  const project = projectForTsconfig(
+    path.resolve(REPOSITORY_ROOT, entry.owner.tsconfig),
+  );
   if (
     project.getSourceFile(path.resolve(REPOSITORY_ROOT, entry.replacement)) ===
     undefined
@@ -151,10 +190,9 @@ async function validateCompletedPort(
     );
   }
 
-  const eslint = new ESLint({
-    cwd: REPOSITORY_ROOT,
-    overrideConfigFile: path.resolve(REPOSITORY_ROOT, entry.owner.eslintConfig),
-  });
+  const eslint = eslintForConfig(
+    path.resolve(REPOSITORY_ROOT, entry.owner.eslintConfig),
+  );
   if (
     (await eslint.calculateConfigForFile(
       path.resolve(REPOSITORY_ROOT, entry.replacement),
