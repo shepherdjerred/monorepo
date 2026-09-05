@@ -82,49 +82,75 @@ function recordingAttempt() {
   return { handle, finishes, endpoints };
 }
 
+type LifecycleOptions = ConstructorParameters<typeof VoiceAudioLifecycle>[0];
+
+function createLifecycle(
+  options: Partial<LifecycleOptions> & Pick<LifecycleOptions, "onTurn">,
+  { useProductionVerificationDelay = false } = {},
+): VoiceAudioLifecycle {
+  return new VoiceAudioLifecycle({
+    models: fakeModels(2, 4),
+    preRollMs: 1200,
+    maxUtteranceMs: 15_000,
+    ...(useProductionVerificationDelay ? {} : { verificationDelayMs: 0 }),
+    postVerificationMs: 0,
+    createDecoder: () => ({
+      decode: (opus) => new Float32Array([opus[0] ?? 0]),
+      close: () => {
+        /* fake has no decoder handle */
+      },
+    }),
+    ...options,
+  });
+}
+
 describe("VoiceAudioLifecycle", () => {
-  test("holds a typed candidate for the fallback window, rejects locally, and zeros verifier audio", async () => {
-    let nowMs = 42;
+  test("holds a typed candidate for the 1,250 ms production fallback window, rejects locally, and zeros verifier audio", async () => {
+    const nowMs = 42;
     let verificationCalls = 0;
     const verificationAudio: { value: Float32Array | null } = { value: null };
     const candidates: WakeCandidateEvidence[] = [];
     const models = fakeModels(2, 4);
-    const lifecycle = new VoiceAudioLifecycle({
-      models: {
-        ...models,
-        verifyWakePhrase: (samples) => {
-          verificationCalls += 1;
-          verificationAudio.value = samples;
-          return Promise.resolve({ accepted: false, score: 0.2 });
+    const lifecycle = createLifecycle(
+      {
+        models: {
+          ...models,
+          verifyWakePhrase: (samples) => {
+            verificationCalls += 1;
+            verificationAudio.value = samples;
+            return Promise.resolve({ accepted: false, score: 0.2 });
+          },
         },
+        preRollMs: 2000,
+        maxUtteranceMs: 15_000,
+        now: () => nowMs,
+        createDecoder: () => ({
+          decode: (opus) => {
+            const samples = new Float32Array(8000);
+            samples.fill((opus[0] ?? 0) / 10);
+            samples[0] = opus[0] ?? 0;
+            return samples;
+          },
+          close: () => {
+            /* fake has no decoder handle */
+          },
+        }),
+        onCandidate: (candidate) => {
+          candidates.push(candidate);
+        },
+        onTurn: () =>
+          Promise.reject(new Error("rejected wake reached command")),
       },
-      preRollMs: 2000,
-      maxUtteranceMs: 15_000,
-      now: () => nowMs,
-      createDecoder: () => ({
-        decode: (opus) => {
-          const samples = new Float32Array(8000);
-          samples.fill((opus[0] ?? 0) / 10);
-          samples[0] = opus[0] ?? 0;
-          return samples;
-        },
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
-      onCandidate: (candidate) => {
-        candidates.push(candidate);
-      },
-      onTurn: () => Promise.reject(new Error("rejected wake reached command")),
-    });
+      { useProductionVerificationDelay: true },
+    );
 
     lifecycle.accept(audio("speaker-a", 2));
     expect(verificationCalls).toBe(0);
     lifecycle.accept(audio("speaker-b", 4));
     lifecycle.accept(audio("speaker-a", 3));
+    expect(verificationCalls).toBe(0);
     lifecycle.accept(audio("speaker-a", 3));
     expect(verificationCalls).toBe(0);
-    nowMs = 1292;
     lifecycle.accept(audio("speaker-a", 3));
     expect(verificationCalls).toBe(1);
     await Bun.sleep(0);
@@ -149,18 +175,7 @@ describe("VoiceAudioLifecycle", () => {
 
   test("makes no command call before wake and locks the turn to its speaker", async () => {
     const turns: string[] = [];
-    const lifecycle = new VoiceAudioLifecycle({
-      models: fakeModels(2, 4),
-      preRollMs: 1200,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
+    const lifecycle = createLifecycle({
       onTurn: async (turn) => {
         turns.push(turn.userId);
       },
@@ -178,18 +193,8 @@ describe("VoiceAudioLifecycle", () => {
 
   test("allows a back-to-back wake after the prior transaction completes", async () => {
     const turns: string[] = [];
-    const lifecycle = new VoiceAudioLifecycle({
-      models: fakeModels(2, 4),
+    const lifecycle = createLifecycle({
       preRollMs: 0,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
       onTurn: async (turn) => {
         turns.push(turn.userId);
       },
@@ -208,18 +213,7 @@ describe("VoiceAudioLifecycle", () => {
   test("retains wake pre-roll and makes the completed transaction single-flight", async () => {
     const turnBarrier = Promise.withResolvers<true>();
     const delivered: number[][] = [];
-    const lifecycle = new VoiceAudioLifecycle({
-      models: fakeModels(2, 4),
-      preRollMs: 1200,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
+    const lifecycle = createLifecycle({
       onTurn: async (turn) => {
         delivered.push([...turn.pcm16k]);
         await turnBarrier.promise;
@@ -277,20 +271,13 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
   test("ends a locally rejected attempt exactly once with its verifier audio", async () => {
     const attempt = recordingAttempt();
     const models = fakeModels(2, 4);
-    const lifecycle = new VoiceAudioLifecycle({
+    const lifecycle = createLifecycle({
       models: {
         ...models,
         verifyWakePhrase: () =>
           Promise.resolve({ accepted: false, score: 0.1 }),
       },
       preRollMs: 0,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => null,
-      }),
       beginAttempt: () => attempt.handle,
       onTurn: () => Promise.reject(new Error("rejected wake reached turn")),
     });
@@ -306,15 +293,9 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
 
   test("ends a closed candidate exactly once", () => {
     const attempt = recordingAttempt();
-    const lifecycle = new VoiceAudioLifecycle({
-      models: fakeModels(2, 4),
+    const lifecycle = createLifecycle({
       preRollMs: 0,
-      maxUtteranceMs: 15_000,
       verificationDelayMs: 200,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => null,
-      }),
       beginAttempt: () => attempt.handle,
       onTurn: () => Promise.reject(new Error("closed wake reached turn")),
     });
@@ -329,16 +310,8 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
 
   test("ends a delivery failure exactly once", async () => {
     const attempt = recordingAttempt();
-    const lifecycle = new VoiceAudioLifecycle({
-      models: fakeModels(2, 4),
+    const lifecycle = createLifecycle({
       preRollMs: 0,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => null,
-      }),
       beginAttempt: () => attempt.handle,
       onTurn: () => Promise.reject(new Error("delivery failed")),
     });
@@ -570,21 +543,11 @@ describe("VoiceAudioLifecycle DTX endpointing", () => {
   test("endpoints on wall-clock silence when the client's DTX stops the packet stream", async () => {
     const ticker = tickerHarness();
     const turns: { userId: string; sampleCount: number }[] = [];
-    const lifecycle = new VoiceAudioLifecycle({
+    const lifecycle = createLifecycle({
       // vadEndsOn 0: the fake VAD completes on a silence chunk, like Silero after real silence.
       models: fakeModels(2, 0),
-      preRollMs: 1200,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
       now: ticker.now,
       createSilenceTicker: ticker.createSilenceTicker,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
       onTurn: async (turn) => {
         turns.push({ userId: turn.userId, sampleCount: turn.pcm16k.length });
       },
@@ -610,7 +573,7 @@ describe("VoiceAudioLifecycle DTX endpointing", () => {
     let verificationCalls = 0;
     const turns: string[] = [];
     const models = fakeModels(2, 0);
-    const lifecycle = new VoiceAudioLifecycle({
+    const lifecycle = createLifecycle({
       models: {
         ...models,
         verifyWakePhrase: (samples) => {
@@ -618,19 +581,10 @@ describe("VoiceAudioLifecycle DTX endpointing", () => {
           return models.verifyWakePhrase(samples);
         },
       },
-      preRollMs: 1200,
-      maxUtteranceMs: 15_000,
       // 200 ms of post-candidate audio required before the verifier can score.
       verificationDelayMs: 200,
-      postVerificationMs: 0,
       now: ticker.now,
       createSilenceTicker: ticker.createSilenceTicker,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
       onTurn: async (turn) => {
         turns.push(turn.userId);
       },
@@ -653,23 +607,13 @@ describe("VoiceAudioLifecycle DTX endpointing", () => {
   test("creates no ticker before a candidate and stops it on rejection and close", async () => {
     const ticker = tickerHarness();
     const models = fakeModels(2, 0);
-    const lifecycle = new VoiceAudioLifecycle({
+    const lifecycle = createLifecycle({
       models: {
         ...models,
         verifyWakePhrase: () => Promise.resolve({ accepted: false, score: 0 }),
       },
-      preRollMs: 1200,
-      maxUtteranceMs: 15_000,
-      verificationDelayMs: 0,
-      postVerificationMs: 0,
       now: ticker.now,
       createSilenceTicker: ticker.createSilenceTicker,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
       onTurn: () => Promise.reject(new Error("rejected wake reached command")),
     });
 
@@ -692,7 +636,7 @@ describe("VoiceAudioLifecycle DTX endpointing", () => {
     const ticker = tickerHarness();
     let verificationCalls = 0;
     const models = fakeModels(2, 0);
-    const lifecycle = new VoiceAudioLifecycle({
+    const lifecycle = createLifecycle({
       models: {
         ...models,
         verifyWakePhrase: (samples) => {
@@ -700,18 +644,9 @@ describe("VoiceAudioLifecycle DTX endpointing", () => {
           return models.verifyWakePhrase(samples);
         },
       },
-      preRollMs: 1200,
-      maxUtteranceMs: 15_000,
       verificationDelayMs: 200,
-      postVerificationMs: 0,
       now: ticker.now,
       createSilenceTicker: ticker.createSilenceTicker,
-      createDecoder: () => ({
-        decode: (opus) => new Float32Array([opus[0] ?? 0]),
-        close: () => {
-          /* fake has no decoder handle */
-        },
-      }),
       onTurn: () => Promise.reject(new Error("no turn should complete")),
     });
 

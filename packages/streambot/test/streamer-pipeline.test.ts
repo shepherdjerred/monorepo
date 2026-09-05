@@ -1,25 +1,18 @@
 import { describe, expect, test } from "vitest";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
 import type { PlayerFactory } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
-import {
-  loadConfig,
-  type EnvLookup,
-} from "@shepherdjerred/streambot/config/index.ts";
+import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type {
   ResolvedSource,
-  VoiceHandle,
+  RunStreamInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
+import type { EnvLookup } from "@shepherdjerred/streambot/config/index.ts";
 import {
-  ChannelIdSchema,
-  GuildIdSchema,
-  UserTokenSchema,
-} from "@shepherdjerred/streambot/types/ids.ts";
+  STREAMER_USER_TOKEN as USER_TOKEN,
+  STREAMER_VOICE as VOICE,
+  streamerEnv as env,
+} from "./streamer-test-fixtures.ts";
 
-const USER_TOKEN = UserTokenSchema.parse("user-token");
-const VOICE: VoiceHandle = {
-  guildId: GuildIdSchema.parse("100000000000000010"),
-  channelId: ChannelIdSchema.parse("100000000000000020"),
-};
 const SUBTITLE_PATH = "/tmp/streambot-subs/test-pipeline.srt";
 const RESOLVED_HDR_WITH_SUBS: ResolvedSource = {
   title: "Movie",
@@ -28,15 +21,6 @@ const RESOLVED_HDR_WITH_SUBS: ResolvedSource = {
   subtitle: { path: SUBTITLE_PATH, cleanupPath: SUBTITLE_PATH },
   hdr: true,
 };
-
-function env(over: EnvLookup = {}): EnvLookup {
-  return {
-    BOT_TOKEN: "bot-token",
-    USER_TOKENS: "user-token",
-    VIDEOS_DIR: "/videos",
-    ...over,
-  };
-}
 
 type PrepareSnapshot = {
   hardwareAcceleratedDecoding: boolean | undefined;
@@ -95,27 +79,35 @@ function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 5));
 }
 
+async function startPipelineRun(options: {
+  pipelineMode: RunStreamInput["pipelineMode"];
+  resolved?: ResolvedSource;
+  startErrors?: (Error | undefined)[];
+}) {
+  const { factory, attempts } = makeFakeFactory(options.startErrors);
+  const streamer = new StreambotStreamer(
+    USER_TOKEN,
+    loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
+    () => 0,
+    factory,
+  );
+  const run = streamer.runStream(
+    {
+      voice: VOICE,
+      resolved: options.resolved ?? RESOLVED_HDR_WITH_SUBS,
+      volume: 100,
+      seekSeconds: 0,
+      pipelineMode: options.pipelineMode,
+    },
+    new AbortController().signal,
+  );
+  await flush();
+  return { attempts, run };
+}
+
 describe("StreambotStreamer pipeline options", () => {
   test("subtitles no longer force software: HW attempt carries subtitleBurn + inputColor hdr", async () => {
-    const { factory, attempts } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => 0,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED_HDR_WITH_SUBS,
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { attempts, run } = await startPipelineRun({ pipelineMode: "hw" });
 
     expect(attempts).toHaveLength(1);
     expect(attempts[0]?.hardwareAcceleratedDecoding).toBe(true);
@@ -129,25 +121,9 @@ describe("StreambotStreamer pipeline options", () => {
   });
 
   test("pipelineMode hw-upload threads hardwarePipelineMode upload with the VAAPI encoder", async () => {
-    const { factory, attempts } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => 0,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED_HDR_WITH_SUBS,
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw-upload",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { attempts, run } = await startPipelineRun({
+      pipelineMode: "hw-upload",
+    });
 
     expect(attempts[0]?.hardwareAcceleratedDecoding).toBe(true);
     expect(attempts[0]?.hardwarePipelineMode).toBe("upload");
@@ -158,25 +134,7 @@ describe("StreambotStreamer pipeline options", () => {
   });
 
   test("pipelineMode sw runs software even when hardware is enabled in config", async () => {
-    const { factory, attempts } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => 0,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED_HDR_WITH_SUBS,
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "sw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { attempts, run } = await startPipelineRun({ pipelineMode: "sw" });
 
     expect(attempts[0]?.hardwareAcceleratedDecoding).toBe(false);
     expect(attempts[0]?.hasEncoder).toBe(false);
@@ -186,27 +144,10 @@ describe("StreambotStreamer pipeline options", () => {
   });
 
   test("HW startup failure → SW retry keeps subtitleBurn and inputColor so the software graph tonemaps + burns", async () => {
-    const { factory, attempts } = makeFakeFactory([
-      new Error("overlay_vaapi unsupported"),
-    ]);
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => 0,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED_HDR_WITH_SUBS,
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { attempts, run } = await startPipelineRun({
+      pipelineMode: "hw",
+      startErrors: [new Error("overlay_vaapi unsupported")],
+    });
 
     expect(attempts).toHaveLength(2);
     expect(attempts[1]?.hardwareAcceleratedDecoding).toBe(false);
@@ -219,29 +160,14 @@ describe("StreambotStreamer pipeline options", () => {
   });
 
   test("SDR source without subtitles passes inputColor sdr and no subtitleBurn", async () => {
-    const { factory, attempts } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => 0,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: {
-          title: "Movie",
-          ffmpegInput: "/videos/m.mkv",
-          chapters: [],
-        },
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw",
+    const { attempts, run } = await startPipelineRun({
+      pipelineMode: "hw",
+      resolved: {
+        title: "Movie",
+        ffmpegInput: "/videos/m.mkv",
+        chapters: [],
       },
-      new AbortController().signal,
-    );
-    await flush();
+    });
 
     expect(attempts[0]?.subtitleBurn).toBeUndefined();
     expect(attempts[0]?.inputColor).toBe("sdr");

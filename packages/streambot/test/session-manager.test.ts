@@ -274,6 +274,36 @@ function makeManager(config: Config, pool: UserbotProvider) {
   return { manager, announced, cards };
 }
 
+async function sessionHarness(poolSize: number, config?: Config) {
+  const resolvedConfig = config ?? (await makeConfig());
+  const pool = fakePool(poolSize);
+  return {
+    config: resolvedConfig,
+    pool,
+    ...makeManager(resolvedConfig, pool.provider),
+  };
+}
+
+function addFile(
+  manager: SessionManager,
+  channelId: ChannelId = CHANNEL_A,
+  file?: { path: string; title: string },
+) {
+  const source = file ?? { path: "/clip.mkv", title: "Clip" };
+  const handle = manager.ensureForPlay({
+    guildId: GUILD,
+    voiceChannelId: channelId,
+    statusChannelId: STATUS,
+  });
+  expect(handle).not.toBeNull();
+  handle?.dispatch({
+    type: "ADD",
+    source: { kind: "file", ...source },
+    requesterId: USER,
+  });
+  return handle;
+}
+
 describe("SessionManager", () => {
   test("ensureForPlay returns null when no userbot is available", async () => {
     const config = await makeConfig();
@@ -288,21 +318,8 @@ describe("SessionManager", () => {
   });
 
   test("a play starts a session that posts a player card", async () => {
-    const config = await makeConfig();
-    const pool = fakePool(1);
-    const { manager, cards } = makeManager(config, pool.provider);
-
-    const handle = manager.ensureForPlay({
-      guildId: GUILD,
-      voiceChannelId: CHANNEL_A,
-      statusChannelId: STATUS,
-    });
-    expect(handle).not.toBeNull();
-    handle?.dispatch({
-      type: "ADD",
-      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
-      requesterId: USER,
-    });
+    const { manager, cards, pool } = await sessionHarness(1);
+    addFile(manager);
 
     await waitUntil(() => cards.posts.length > 0);
     expect(cards.posts[0]?.channelId).toBe(STATUS);
@@ -316,20 +333,8 @@ describe("SessionManager", () => {
   });
 
   test("a second play in the same channel reuses the session (no new userbot)", async () => {
-    const config = await makeConfig();
-    const pool = fakePool(2);
-    const { manager } = makeManager(config, pool.provider);
-
-    const first = manager.ensureForPlay({
-      guildId: GUILD,
-      voiceChannelId: CHANNEL_A,
-      statusChannelId: STATUS,
-    });
-    first?.dispatch({
-      type: "ADD",
-      source: { kind: "file", path: "/a.mkv", title: "A" },
-      requesterId: USER,
-    });
+    const { manager, pool } = await sessionHarness(2);
+    addFile(manager, CHANNEL_A, { path: "/a.mkv", title: "A" });
     const second = manager.ensureForPlay({
       guildId: GUILD,
       voiceChannelId: CHANNEL_A,
@@ -342,9 +347,7 @@ describe("SessionManager", () => {
   });
 
   test("two channels in one guild get independent sessions + userbots", async () => {
-    const config = await makeConfig();
-    const pool = fakePool(2);
-    const { manager } = makeManager(config, pool.provider);
+    const { manager, pool } = await sessionHarness(2);
 
     manager.ensureForPlay({
       guildId: GUILD,
@@ -364,20 +367,8 @@ describe("SessionManager", () => {
   });
 
   test("moveSession rekeys a live session to the new voice channel", async () => {
-    const config = await makeConfig();
-    const pool = fakePool(1);
-    const { manager } = makeManager(config, pool.provider);
-
-    const handle = manager.ensureForPlay({
-      guildId: GUILD,
-      voiceChannelId: CHANNEL_A,
-      statusChannelId: STATUS,
-    });
-    handle?.dispatch({
-      type: "ADD",
-      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
-      requesterId: USER,
-    });
+    const { manager, pool } = await sessionHarness(1);
+    const handle = addFile(manager);
     await waitUntil(() => handle?.view().state === "streaming");
 
     expect(
@@ -399,20 +390,8 @@ describe("SessionManager", () => {
   });
 
   test("moveSession carries the resume-state file to the new channel path", async () => {
-    const config = await makeConfig();
-    const pool = fakePool(1);
-    const { manager } = makeManager(config, pool.provider);
-
-    const handle = manager.ensureForPlay({
-      guildId: GUILD,
-      voiceChannelId: CHANNEL_A,
-      statusChannelId: STATUS,
-    });
-    handle?.dispatch({
-      type: "ADD",
-      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
-      requesterId: USER,
-    });
+    const { config, manager } = await sessionHarness(1);
+    const handle = addFile(manager);
     await waitUntil(() => handle?.view().state === "streaming");
 
     // Seed a snapshot at the OLD channel path so we can prove it follows the move (VOICE_TARGET_MOVED
@@ -447,20 +426,8 @@ describe("SessionManager", () => {
   });
 
   test("STOP tears the session down and releases the userbot", async () => {
-    const config = await makeConfig();
-    const pool = fakePool(1);
-    const { manager } = makeManager(config, pool.provider);
-
-    const handle = manager.ensureForPlay({
-      guildId: GUILD,
-      voiceChannelId: CHANNEL_A,
-      statusChannelId: STATUS,
-    });
-    handle?.dispatch({
-      type: "ADD",
-      source: { kind: "file", path: "/clip.mkv", title: "Clip" },
-      requesterId: USER,
-    });
+    const { manager, pool } = await sessionHarness(1);
+    const handle = addFile(manager);
     // Let it reach streaming, then stop.
     await waitUntil(() => manager.getExisting(GUILD, CHANNEL_A) !== null);
     handle?.dispatch({ type: "STOP" });
@@ -556,29 +523,17 @@ async function makeReconnectConfig(
 
 /** Start a session in CHANNEL_A and wait until it is streaming (its player card is posted). */
 async function startStreaming(
-  manager: SessionManager,
-  cards: { posts: { channelId: string; owner: CardOwner | null }[] },
+  harness: Awaited<ReturnType<typeof sessionHarness>>,
 ): Promise<void> {
-  const handle = manager.ensureForPlay({
-    guildId: GUILD,
-    voiceChannelId: CHANNEL_A,
-    statusChannelId: STATUS,
-  });
-  expect(handle).not.toBeNull();
-  handle?.dispatch({
-    type: "ADD",
-    source: { kind: "file", path: "/clip.mkv", title: "Clip" },
-    requesterId: USER,
-  });
-  await waitUntil(() => cards.posts.length > 0);
+  addFile(harness.manager);
+  await waitUntil(() => harness.cards.posts.length > 0);
 }
 
 describe("SessionManager voice-loss recovery", () => {
   test("transient close: state survives teardown and the session auto-resumes at position", async () => {
-    const config = await makeReconnectConfig();
-    const pool = fakePool(1);
-    const { manager, announced, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(1, await makeReconnectConfig());
+    const { config, pool, manager, announced } = harness;
+    await startStreaming(harness);
 
     const streamer = pool.streamers[0];
     if (streamer === undefined) throw new Error("missing fake streamer");
@@ -612,10 +567,9 @@ describe("SessionManager voice-loss recovery", () => {
   });
 
   test("deliberate close (fresh 4014): stays down, deletes state, announces the kick", async () => {
-    const config = await makeReconnectConfig();
-    const pool = fakePool(1);
-    const { manager, announced, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(1, await makeReconnectConfig());
+    const { config, pool, manager, announced } = harness;
+    await startStreaming(harness);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4014,
@@ -643,10 +597,9 @@ describe("SessionManager voice-loss recovery", () => {
   });
 
   test("a late 4014 reclassifies a gateway-first detach before reconnect", async () => {
-    const config = await makeReconnectConfig();
-    const pool = fakePool(1);
-    const { manager, announced, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(1, await makeReconnectConfig());
+    const { config, pool, manager, announced } = harness;
+    await startStreaming(harness);
 
     const streamer = pool.streamers[0];
     if (streamer === undefined) throw new Error("missing fake streamer");
@@ -688,10 +641,9 @@ describe("SessionManager voice-loss recovery", () => {
 
 describe("SessionManager incident-scoped voice recovery", () => {
   test("a late 4014 stays bound to its incident after the userbot is reused", async () => {
-    const config = await makeReconnectConfig();
-    const pool = fakePool(1);
-    const { manager, announced, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(1, await makeReconnectConfig());
+    const { config, pool, manager, announced } = harness;
+    await startStreaming(harness);
 
     manager.notifyStreamerDetached({
       guildId: GUILD,
@@ -743,10 +695,12 @@ describe("SessionManager incident-scoped voice recovery", () => {
 
 describe("SessionManager voice recovery policy", () => {
   test("reconnect disabled: transient close stays down like today, but announces the reason", async () => {
-    const config = await makeReconnectConfig({ enabled: false });
-    const pool = fakePool(1);
-    const { manager, announced, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(
+      1,
+      await makeReconnectConfig({ enabled: false }),
+    );
+    const { config, pool, manager, announced } = harness;
+    await startStreaming(harness);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4006,
@@ -771,10 +725,9 @@ describe("SessionManager voice recovery policy", () => {
   });
 
   test("manual re-play during the reconnect window wins; the timer no-ops", async () => {
-    const config = await makeReconnectConfig();
-    const pool = fakePool(1);
-    const { manager, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(1, await makeReconnectConfig());
+    const { pool, manager } = harness;
+    await startStreaming(harness);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4006,
@@ -805,10 +758,12 @@ describe("SessionManager voice recovery policy", () => {
   });
 
   test("saturated pool: waits (without burning the reconnect budget) then resumes when a userbot frees", async () => {
-    const config = await makeReconnectConfig({ maxAttempts: 2 });
-    const pool = fakePool(1);
-    const { manager, announced, cards } = makeManager(config, pool.provider);
-    await startStreaming(manager, cards);
+    const harness = await sessionHarness(
+      1,
+      await makeReconnectConfig({ maxAttempts: 2 }),
+    );
+    const { config, pool, manager, announced } = harness;
+    await startStreaming(harness);
 
     pool.streamers[0]?.triggerVoiceClose({
       code: 4006,
@@ -842,31 +797,36 @@ describe("SessionManager voice recovery policy", () => {
   });
 });
 
+function leaveActorHarness() {
+  const pool = fakePool(1);
+  const streamer = pool.streamers[0];
+  if (streamer === undefined) throw new Error("fake pool produced no bot");
+  const left = { value: false };
+  const entry: UserbotEntry = {
+    userbot: {
+      ...streamer,
+      leaveVoice: () => {
+        left.value = true;
+        return Promise.resolve();
+      },
+    },
+    guildIds: new Set([GUILD]),
+    busy: false,
+  };
+  const hold = new TeardownHold(() => {
+    throw new Error("teardown must not run under a hold");
+  });
+  const actors = buildPlaybackActors({
+    entry,
+    resolveSource: () => Promise.resolve(RESOLVED),
+    teardownHold: () => hold,
+  });
+  return { actors, hold, left };
+}
+
 describe("playback actors", () => {
   test("the voice disconnect waits for a held assistant transaction", async () => {
-    const pool = fakePool(1);
-    const streamer = pool.streamers[0];
-    if (streamer === undefined) throw new Error("fake pool produced no bot");
-    let left = false;
-    const entry: UserbotEntry = {
-      userbot: {
-        ...streamer,
-        leaveVoice: () => {
-          left = true;
-          return Promise.resolve();
-        },
-      },
-      guildIds: new Set([GUILD]),
-      busy: false,
-    };
-    const hold = new TeardownHold(() => {
-      throw new Error("teardown must not run under a hold");
-    });
-    const actors = buildPlaybackActors({
-      entry,
-      resolveSource: () => Promise.resolve(RESOLVED),
-      teardownHold: () => hold,
-    });
+    const { actors, hold, left } = leaveActorHarness();
     const release = hold.acquire();
 
     // A voice `stop` dispatches STOP from inside its own transaction: the machine reaches `leaving`
@@ -876,37 +836,15 @@ describe("playback actors", () => {
       new AbortController().signal,
     );
     await Bun.sleep(0);
-    expect(left).toBe(false);
+    expect(left.value).toBe(false);
 
     release();
     await leaving;
-    expect(left).toBe(true);
+    expect(left.value).toBe(true);
   });
 
   test("an aborted leave stops waiting on the hold and never disconnects late", async () => {
-    const pool = fakePool(1);
-    const streamer = pool.streamers[0];
-    if (streamer === undefined) throw new Error("fake pool produced no bot");
-    let left = false;
-    const entry: UserbotEntry = {
-      userbot: {
-        ...streamer,
-        leaveVoice: () => {
-          left = true;
-          return Promise.resolve();
-        },
-      },
-      guildIds: new Set([GUILD]),
-      busy: false,
-    };
-    const hold = new TeardownHold(() => {
-      throw new Error("teardown must not run under a hold");
-    });
-    const actors = buildPlaybackActors({
-      entry,
-      resolveSource: () => Promise.resolve(RESOLVED),
-      teardownHold: () => hold,
-    });
+    const { actors, hold, left } = leaveActorHarness();
     const release = hold.acquire();
 
     // The machine's leaving-state wedge guard aborts the invoke while the voice transaction
@@ -918,10 +856,10 @@ describe("playback actors", () => {
     );
     controller.abort(new Error("leaving-state wedge guard"));
     await expect(leaving).rejects.toThrow("leaving-state wedge guard");
-    expect(left).toBe(false);
+    expect(left.value).toBe(false);
 
     release();
     await Bun.sleep(0);
-    expect(left).toBe(false);
+    expect(left.value).toBe(false);
   });
 });

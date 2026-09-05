@@ -5,39 +5,22 @@ import type {
   StreamObserverFactory,
 } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { StreamCrashError } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
-import {
-  loadConfig,
-  type EnvLookup,
-} from "@shepherdjerred/streambot/config/index.ts";
+import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type {
   ResolvedSource,
-  VoiceHandle,
+  RunStreamInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import {
-  ChannelIdSchema,
-  GuildIdSchema,
-  UserTokenSchema,
-} from "@shepherdjerred/streambot/types/ids.ts";
+  STREAMER_USER_TOKEN as USER_TOKEN,
+  STREAMER_VOICE as VOICE,
+  streamerEnv as env,
+} from "./streamer-test-fixtures.ts";
 
-const USER_TOKEN = UserTokenSchema.parse("user-token");
-const VOICE: VoiceHandle = {
-  guildId: GuildIdSchema.parse("100000000000000010"),
-  channelId: ChannelIdSchema.parse("100000000000000020"),
-};
 const RESOLVED: ResolvedSource = {
   title: "Movie",
   ffmpegInput: "/videos/movie.mkv",
   chapters: [],
 };
-
-function env(over: EnvLookup = {}): EnvLookup {
-  return {
-    BOT_TOKEN: "bot-token",
-    USER_TOKENS: "user-token",
-    VIDEOS_DIR: "/videos",
-    ...over,
-  };
-}
 
 type SegmentControl = {
   resolve: () => void;
@@ -113,6 +96,47 @@ function flush(): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, 5));
 }
 
+async function startPositionRun(options: {
+  clock?: { ms: number };
+  seekSeconds?: number;
+  pipelineMode?: RunStreamInput["pipelineMode"];
+  resolved?: ResolvedSource;
+  hardwareEnabled?: boolean;
+  startErrors?: (Error | undefined)[];
+  seekErrors?: (Error | undefined)[];
+  seekGates?: (Promise<void> | undefined)[];
+}) {
+  const clock = options.clock ?? { ms: 1000 };
+  const { factory, segments } = makeFakeFactory(
+    options.startErrors,
+    options.seekErrors,
+    options.seekGates,
+  );
+  const streamer = new StreambotStreamer(
+    USER_TOKEN,
+    loadConfig(
+      env({
+        STREAM_HARDWARE_ACCELERATION:
+          options.hardwareEnabled === false ? "false" : "true",
+      }),
+    ),
+    () => clock.ms,
+    factory,
+  );
+  const run = streamer.runStream(
+    {
+      voice: VOICE,
+      resolved: options.resolved ?? RESOLVED,
+      volume: 100,
+      seekSeconds: options.seekSeconds ?? 30,
+      pipelineMode: options.pipelineMode ?? "sw",
+    },
+    new AbortController().signal,
+  );
+  await flush();
+  return { clock, segments, streamer, run };
+}
+
 describe("StreambotStreamer position tracking", () => {
   test("a startup-time stall uses the new segment offset before playback starts", async () => {
     const start = createVoidDeferred();
@@ -170,28 +194,10 @@ describe("StreambotStreamer position tracking", () => {
   });
 
   test("getPosition advances with the clock from the seek offset, then clears", async () => {
-    const clock = { ms: 1000 };
-    const { factory, segments } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
-      () => clock.ms,
-      factory,
-    );
-
-    expect(streamer.getPosition()).toBeNull();
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED,
-        volume: 100,
-        seekSeconds: 30,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, streamer, run } = await startPositionRun({
+      pipelineMode: "hw",
+      hardwareEnabled: false,
+    });
 
     // The resume offset reached ffmpeg as -ss 30, and position is anchored there.
     expect(segments[0]?.startTime).toBe(30);
@@ -206,25 +212,9 @@ describe("StreambotStreamer position tracking", () => {
   });
 
   test("a successful live seek re-anchors the position before returning", async () => {
-    const clock = { ms: 1000 };
-    const { factory, segments } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
-      () => clock.ms,
-      factory,
-    );
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED,
-        volume: 100,
-        seekSeconds: 30,
-        pipelineMode: "sw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, streamer, run } = await startPositionRun({
+      hardwareEnabled: false,
+    });
 
     clock.ms = 6000;
     expect(streamer.getPosition()).toBe(35);
@@ -239,26 +229,11 @@ describe("StreambotStreamer position tracking", () => {
   });
 
   test("a live seek freezes position while its replacement attaches", async () => {
-    const clock = { ms: 1000 };
     const seekAttach = createVoidDeferred();
-    const { factory, segments } = makeFakeFactory([], [], [seekAttach.promise]);
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
-      () => clock.ms,
-      factory,
-    );
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED,
-        volume: 100,
-        seekSeconds: 30,
-        pipelineMode: "sw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, streamer, run } = await startPositionRun({
+      hardwareEnabled: false,
+      seekGates: [seekAttach.promise],
+    });
 
     clock.ms = 6000;
     const seek = streamer.seek(120);
@@ -394,26 +369,11 @@ describe("StreambotStreamer overlapping seeks", () => {
 
 describe("StreambotStreamer seek rollback", () => {
   test("a failed live seek restores the prior playback anchor", async () => {
-    const clock = { ms: 1000 };
     const seekError = new Error("seek restart failed");
-    const { factory, segments } = makeFakeFactory([], [seekError]);
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "false" })),
-      () => clock.ms,
-      factory,
-    );
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED,
-        volume: 100,
-        seekSeconds: 30,
-        pipelineMode: "sw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, streamer, run } = await startPositionRun({
+      hardwareEnabled: false,
+      seekErrors: [seekError],
+    });
 
     clock.ms = 6000;
     expect(streamer.getPosition()).toBe(35);
@@ -481,26 +441,10 @@ describe("StreambotStreamer seek failure lifecycle", () => {
 
 describe("StreambotStreamer failure position tracking", () => {
   test("a mid-stream failure surfaces as StreamCrashError with the elapsed position — no in-streamer retry", async () => {
-    const clock = { ms: 1000 };
-    const { factory, segments } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => clock.ms,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED,
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, run } = await startPositionRun({
+      seekSeconds: 0,
+      pipelineMode: "hw",
+    });
     expect(segments[0]?.startTime).toBeUndefined(); // fresh play, no -ss
 
     clock.ms = 9000; // 8s played before ffmpeg dies
@@ -519,28 +463,10 @@ describe("StreambotStreamer failure position tracking", () => {
   });
 
   test("a STARTUP failure still falls back to software in-streamer, resuming at the requested offset", async () => {
-    const clock = { ms: 1000 };
-    const { factory, segments } = makeFakeFactory([
-      new Error("vaapi device init failed"),
-    ]);
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => clock.ms,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: RESOLVED,
-        volume: 100,
-        seekSeconds: 30,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { segments, run } = await startPositionRun({
+      pipelineMode: "hw",
+      startErrors: [new Error("vaapi device init failed")],
+    });
 
     // start() rejected before playback began → the classic in-streamer software fallback, at the
     // last known position (playback never started, so the requested offset).
@@ -552,26 +478,12 @@ describe("StreambotStreamer failure position tracking", () => {
   });
 
   test("exit-0 far short of the probed duration classifies as ended-short", async () => {
-    const clock = { ms: 0 };
-    const { factory, segments } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => clock.ms,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: { ...RESOLVED, durationSeconds: 7200 },
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, run } = await startPositionRun({
+      clock: { ms: 0 },
+      seekSeconds: 0,
+      pipelineMode: "hw",
+      resolved: { ...RESOLVED, durationSeconds: 7200 },
+    });
 
     clock.ms = 40_000; // "played" 40s of a 2h movie, then ffmpeg exited 0
     segments[0]?.resolve();
@@ -586,26 +498,12 @@ describe("StreambotStreamer failure position tracking", () => {
   });
 
   test("exit-0 near the probed duration is a natural end", async () => {
-    const clock = { ms: 0 };
-    const { factory, segments } = makeFakeFactory();
-    const streamer = new StreambotStreamer(
-      USER_TOKEN,
-      loadConfig(env({ STREAM_HARDWARE_ACCELERATION: "true" })),
-      () => clock.ms,
-      factory,
-    );
-
-    const run = streamer.runStream(
-      {
-        voice: VOICE,
-        resolved: { ...RESOLVED, durationSeconds: 7200 },
-        volume: 100,
-        seekSeconds: 0,
-        pipelineMode: "hw",
-      },
-      new AbortController().signal,
-    );
-    await flush();
+    const { clock, segments, run } = await startPositionRun({
+      clock: { ms: 0 },
+      seekSeconds: 0,
+      pipelineMode: "hw",
+      resolved: { ...RESOLVED, durationSeconds: 7200 },
+    });
 
     clock.ms = 7_190_000; // within 30s of the end
     segments[0]?.resolve();
