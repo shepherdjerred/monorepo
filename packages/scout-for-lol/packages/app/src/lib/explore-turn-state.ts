@@ -111,13 +111,14 @@ export function applyStreamEvent(
         answer: event.answer,
         activity: event.activity,
         trace: event.trace,
-        preview: event.preview,
-        // Cleared, not kept. The snapshot's preview is the newest result, but
-        // the snapshot carries no chart to go with it — so a chart this client
-        // received live may belong to an earlier query. `ExploreTurnResult`
-        // gives a chart precedence over a table, so keeping it would render
-        // query A's chart above query B's numbers. The chart comes back with
-        // the next preview or with `final`.
+        // The snapshot itself carries no result; `run_preview` follows it
+        // when there is one. Both are cleared here so a reconnect that
+        // restores an *older* run cannot leave the previous one's table and
+        // chart on screen, and so a chart received live — which may belong to
+        // an earlier query than the preview about to arrive — cannot sit
+        // above newer numbers. `ExploreTurnResult` gives a chart precedence
+        // over a table, which is what makes that mismatch invisible.
+        preview: null,
         visualization: null,
       };
     }
@@ -158,6 +159,11 @@ export function applyStreamEvent(
         preview: event.preview,
         visualization: event.visualization,
       };
+    }
+    case "run_preview": {
+      // The reconnect companion: the newest table, with no chart to go with
+      // it. The chart returns with the next `preview` or with `final`.
+      return { ...turn, preview: event.preview, visualization: null };
     }
     case "error":
     case "done": {

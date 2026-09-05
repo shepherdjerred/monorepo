@@ -92,7 +92,6 @@ describe("applyStreamEvent", () => {
       answer: "Jinx",
       activity: "Querying match data.",
       trace: [],
-      preview: null,
     });
     turn = applyStreamEvent(turn, { type: "answer_delta", text: " wins." });
 
@@ -434,7 +433,14 @@ describe("streamed query results", () => {
       answer: "Jinx",
       activity: "Querying match data.",
       trace: [],
+    });
+    // The snapshot clears the result; the companion event restores it.
+    expect(turn.preview).toBeNull();
+
+    turn = applyStreamEvent(turn, {
+      type: "run_preview",
       preview: PREVIEW,
+      ignorable: true,
     });
     expect(turn.preview?.rowsScanned).toBe(1284);
     expect(turn.visualization).toBeNull();
@@ -479,7 +485,11 @@ describe("streamed query results", () => {
       answer: "Jinx",
       activity: "Querying match data.",
       trace: [],
+    });
+    turn = applyStreamEvent(turn, {
+      type: "run_preview",
       preview: { ...PREVIEW, rowsScanned: 7 },
+      ignorable: true,
     });
 
     // The newest table with no chart, rather than the newest table under the

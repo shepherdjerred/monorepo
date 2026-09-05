@@ -160,14 +160,12 @@ export async function subscribeDurableExploreRun(
         answer: lastPartial.length === 0 ? null : lastPartial,
         activity: row.state === "PENDING" ? "Waiting to start…" : "Thinking…",
         trace,
-        // Stated rather than defaulted: the run row has no column for it, so
-        // an observer that reached this path instead of the in-process one
-        // gets no table back until the next query or `final`. The schema
-        // would default this to null anyway; spelling it out keeps the gap
-        // visible to whoever reads this next.
-        preview: null,
       }),
     );
+    // No companion `run_preview` here: the run row has no column for it, so
+    // an observer that reached this path instead of the in-process one gets
+    // no table back until the next query or `final`. Stated rather than left
+    // implicit, so the gap is visible to whoever reads this next.
     return false;
   };
   if (emitRow(initial)) {

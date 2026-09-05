@@ -1,6 +1,5 @@
 import {
   EXPLORE_TIMEOUT_MS,
-  ExploreRunSnapshotEventSchema,
   type DiscordAccountId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
@@ -32,6 +31,7 @@ import {
   waitForDurableExploreRun,
 } from "#src/explore/durable-runs.ts";
 import {
+  attachEvents,
   createActiveExploreRun,
   createDeferred,
   executeActiveExploreRun,
@@ -206,16 +206,7 @@ export class ExploreRunManager {
     if (run?.identity.userId !== userId) {
       return null;
     }
-    subscriber(
-      ExploreRunSnapshotEventSchema.parse({
-        type: "snapshot",
-        ...run.summary,
-        answer: run.answer.length === 0 ? null : run.answer,
-        activity: run.activity,
-        trace: run.trace,
-        preview: run.preview,
-      }),
-    );
+    for (const event of attachEvents(run)) subscriber(event);
     run.subscribers.add(subscriber);
     return () => {
       run.subscribers.delete(subscriber);

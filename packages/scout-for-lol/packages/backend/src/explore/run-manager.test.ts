@@ -193,11 +193,12 @@ describe("ExploreRunManager", () => {
       answer: "Jinx wins.",
       activity: "Thinking…",
       trace: [],
-      // Named explicitly: `toMatchObject` ignores fields it is not told
-      // about, so a new snapshot field added without a line here would go
-      // unpinned rather than failing.
-      preview: null,
     });
+    // The snapshot itself gains no fields — every bundle already in a browser
+    // parses it strictly — so the result travels as its own ignorable event.
+    expect(reconnected.some((event) => event.type === "run_preview")).toBe(
+      false,
+    );
     expect(manager.list(owner)).toHaveLength(1);
 
     requiredRun(agent, 0).resolve(successfulResult("Jinx wins."));
@@ -235,12 +236,16 @@ describe("ExploreRunManager", () => {
 
     const reconnected: ExploreStreamEvent[] = [];
     const finished = observeUntilDone(manager, summary, reconnected);
-    const snapshot = reconnected[0];
-    if (snapshot?.type !== "snapshot") {
-      throw new Error("Expected a snapshot first.");
+    expect(reconnected[0]?.type).toBe("snapshot");
+    const restored = reconnected[1];
+    if (restored?.type !== "run_preview") {
+      throw new Error("Expected the preview to follow the snapshot.");
     }
-    expect(snapshot.preview?.rowsScanned).toBe(1284);
-    expect(snapshot).not.toHaveProperty("visualization");
+    expect(restored.preview?.rowsScanned).toBe(1284);
+    // Ignorable, so a bundle that predates this member skips it and renders
+    // the table a beat later rather than failing the stream.
+    expect(restored.ignorable).toBe(true);
+    expect(restored).not.toHaveProperty("visualization");
 
     requiredRun(agent, 0).resolve(successfulResult("Jinx wins."));
     expect(await finished).toBe("succeeded");

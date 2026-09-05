@@ -1,4 +1,8 @@
 import * as Sentry from "@sentry/bun";
+import {
+  ExploreRunPreviewEventSchema,
+  ExploreRunSnapshotEventSchema,
+} from "@scout-for-lol/data";
 import type {
   ExploreActiveRun,
   ExploreMessage,
@@ -126,6 +130,36 @@ export function createActiveExploreRun(input: {
     settled: deferred.promise,
     resolveSettled: deferred.resolve,
   };
+}
+
+/**
+ * Everything an attaching observer is sent, in order.
+ *
+ * The result travels as its own `run_preview` event rather than as a field on
+ * the snapshot, and that is a compatibility requirement rather than a
+ * preference: every bundle already open in a browser parses the snapshot
+ * strictly, so an added key makes the snapshot itself unparseable there. The
+ * reader calls that a corrupted stream, reconnects, and receives the same
+ * rejected snapshot for the rest of the turn.
+ */
+export function attachEvents(run: ActiveRun): ExploreStreamEvent[] {
+  const snapshot = ExploreRunSnapshotEventSchema.parse({
+    type: "snapshot",
+    ...run.summary,
+    answer: run.answer.length === 0 ? null : run.answer,
+    activity: run.activity,
+    trace: run.trace,
+  });
+  if (run.preview === null) {
+    return [snapshot];
+  }
+  return [
+    snapshot,
+    ExploreRunPreviewEventSchema.parse({
+      type: "run_preview",
+      preview: run.preview,
+    }),
+  ];
 }
 
 export async function executeActiveExploreRun(input: {
