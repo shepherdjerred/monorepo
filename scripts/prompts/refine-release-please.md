@@ -82,16 +82,27 @@ Read `/tmp/monorepo/.release-please-manifest.json` to see the new versions. The 
 | `@shepherdjerred/helm-types`     | `packages/homelab/src/helm-types` | `helm-types-v<version>`             |
 | `@shepherdjerred/home-assistant` | `packages/home-assistant`         | `home-assistant-v<version>`         |
 
-For each package, compare the new version in the manifest against the most recent tag (`git tag -l "<prefix>*" | sort -V | tail -1`). If the manifest version equals the latest tag, that package was not bumped — skip it.
+For each package, compare the new version in the manifest against the most recent tag (`git tag -l "<prefix>*" | sort -V | tail -1`). If the manifest version equals the latest tag, that package was not bumped — skip it. For an initial release with no matching tag, treat the empty Git tree as the baseline and inspect the package's complete history.
 
 ### 4. Inspect the real diff per bumped package
+
+When `<last-tag>` exists:
 
 ```bash
 git diff <last-tag>..origin/main -- <package-path>
 git diff --stat <last-tag>..origin/main -- <package-path>
 ```
 
-Read every non-trivial file change. Walk through the commits with `git log --oneline <last-tag>..origin/main -- <package-path>` to attribute changes accurately.
+When there is no `<last-tag>` (the initial release), use the empty tree and a history walk from the first package commit:
+
+```bash
+empty_tree=$(git hash-object -t tree /dev/null)
+git diff "$empty_tree"..origin/main -- <package-path>
+git diff --stat "$empty_tree"..origin/main -- <package-path>
+git log --reverse --oneline origin/main -- <package-path>
+```
+
+Read every non-trivial file change. For a tagged release, walk through the commits with `git log --oneline <last-tag>..origin/main -- <package-path>` to attribute changes accurately.
 
 ### 5. Library-consumer filter — match the release eligibility preflight
 
