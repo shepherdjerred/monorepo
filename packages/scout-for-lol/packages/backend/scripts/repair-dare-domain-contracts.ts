@@ -267,19 +267,31 @@ async function planResettlement(
     };
   }
   if (dare.settledAt !== null) {
-    // A settled dare whose contract no longer holds the broken value has
-    // already been repaired and re-settled by an earlier run. Re-settling it
-    // again would reverse a *correct* settlement — and reversing a payout
-    // debits the winner, which fails outright once that balance has been spent
-    // down, leaving the ledger half-reversed. A second run does nothing rather
-    // than churn a result that is already right.
+    // Decide from the evidence, not from the contract text.
+    //
+    // A settled dare that has already been repaired and re-settled must not be
+    // touched again: reversing a *correct* settlement debits the winner, which
+    // throws once that balance has been spent down and leaves the ledger
+    // half-reversed. But "the contract no longer says MID" is not proof the
+    // re-settlement finished — the rewrite and the reversal are separate
+    // commits, so a run that rewrote the contract and then failed to reverse
+    // leaves exactly that state, and treating it as complete would strand the
+    // stale settlement forever.
+    //
+    // The repair transaction deletes this dare's evidence, and only
+    // re-settlement writes it back. So a settled dare holding evidence was
+    // settled against evidence that survived the repair; a settled dare holding
+    // none was interrupted between the two commits and still needs recovery.
+    const evidenceCount = await prisma.bucksDareV2Evidence.count({
+      where: { dareId },
+    });
     const repair = REPAIRS.find((candidate) => candidate.dareId === dareId);
-    const outstanding =
+    const contractRepaired =
       repair !== undefined &&
       dare.contractJson !== null &&
-      repairDocument(dare.contractJson, repair.from, repair.to).replacements >
+      repairDocument(dare.contractJson, repair.from, repair.to).replacements ===
         0;
-    if (!outstanding) {
+    if (contractRepaired && evidenceCount > 0) {
       return {
         dareId,
         matchId,
