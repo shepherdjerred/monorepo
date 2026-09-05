@@ -24,7 +24,7 @@ Tests/TaskNotesKitTests/      Swift Testing
 Tests/TaskNotesMacTests/      image snapshots, and AppEnvironment — the only test
                               target that sees SwiftUI
 ci/no-suppressions.sh         the three gates SwiftLint cannot enforce
-scripts/release.ts            the operator-run release lane (see Releasing)
+scripts/release/release.ts            the operator-run release lane (see Releasing)
 project.yml                   XcodeGen spec; the .xcodeproj is generated + gitignored
 Package.swift                 SwiftPM manifest; owns every library target's settings
 ```

@@ -50,7 +50,7 @@ export function validatePlaywrightLanes(
     );
     requireIncludes(
       block,
-      "bun --no-install scripts/namespace-playwright-reports.ts",
+      "bun --no-install scripts/ci/namespace-playwright-reports.ts",
       `Playwright lane ${key} does not namespace its Playwright JUnit report before upload`,
     );
     // The Scout design audit is no longer part of these lanes; it runs nightly

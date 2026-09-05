@@ -41,11 +41,11 @@
     "lint": "astro check && eslint src && check-architecture",
     "preview": "astro preview",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
-    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
     "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "deploy": "bun ../../../../scripts/deploy-site.ts scout-frontend",
-    "deploy:beta": "bun ../../../../scripts/deploy-site.ts scout-frontend-beta"
+    "deploy": "bun ../../../../scripts/release/deploy-site.ts scout-frontend",
+    "deploy:beta": "bun ../../../../scripts/release/deploy-site.ts scout-frontend-beta"
   },
   "type": "module",
   "version": "0.0.1",

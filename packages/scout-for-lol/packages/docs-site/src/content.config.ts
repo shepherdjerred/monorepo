@@ -16,7 +16,7 @@ import { glob } from "astro/loaders";
  * all follow, because they are derived from built routes.
  *
  * Defaults to `prod` — i.e. excluded — so a local `bun run build`, `astro dev`,
- * or any future caller fails closed. Only `scripts/scout-site-release.ts` sets
+ * or any future caller fails closed. Only `scripts/release/scout-site-release.ts` sets
  * the flavor, and it sets it for both builds.
  */
 const isBeta = env.PUBLIC_SCOUT_SITE_FLAVOR === "beta";

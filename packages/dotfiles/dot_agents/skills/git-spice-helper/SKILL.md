@@ -108,7 +108,7 @@ chore(root): update stuff
 | Auth | `git-spice auth login` → **Service CLI** (reuses your `gh auth token`); CI uses the `GITHUB_TOKEN` env var |
 | First-run | `git-spice repo init` once per clone (or let it auto-init on first use) |
 | `branch create` commit | `spice.branchCreate.commit = false` is set in `~/.gitconfig` → `git-spice branch create <name>` makes **no** commit (a name is required); commit real changes after with `git-spice commit create -m "type(scope): …"` |
-| Commit convention | `type(scope): description`; scope = a `packages/*` dir (e.g. `dotfiles`, `homelab`) or `root`/`deps`/`ci`/`practice`/`archive`/`dagger`/`cooklang`. Enforced by the `commit-msg` lefthook (`scripts/validate-commit-msg.ts`). This is exactly why the empty-commit default is turned off. |
+| Commit convention | `type(scope): description`; scope = a `packages/*` dir (e.g. `dotfiles`, `homelab`) or `root`/`deps`/`ci`/`practice`/`archive`/`dagger`/`cooklang`. Enforced by the `commit-msg` lefthook (`scripts/misc/validate-commit-msg.ts`). This is exactly why the empty-commit default is turned off. |
 | Required PR checks | `ci/merge-conflict` + `buildkite/monorepo/pr`, run **per PR** in the stack |
 
 Why the commit-msg detail matters: `git-spice branch create` normally commits

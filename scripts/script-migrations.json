@@ -191,15 +191,15 @@
       "source": "packages/anki/generate.sh",
       "disposition": "port",
       "reason": "Generation already requires Bun",
-      "replacement": "scripts/generate-anki.ts",
+      "replacement": "scripts/misc/generate-anki.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/generate-anki.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/misc/generate-anki.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
@@ -576,90 +576,90 @@
       "source": "scripts/check-env-var-names.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
-      "replacement": "scripts/check-env-var-names.ts",
+      "replacement": "scripts/checks/check-env-var-names.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/check-env-var-names.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/checks/check-env-var-names.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
       "source": "scripts/check-merge-conflicts.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
-      "replacement": "scripts/check-merge-conflicts.ts",
+      "replacement": "scripts/checks/check-merge-conflicts.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/check-merge-conflicts.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/checks/check-merge-conflicts.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
       "source": "scripts/compliance-check.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
-      "replacement": "scripts/compliance-check.ts",
+      "replacement": "scripts/checks/compliance-check.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/compliance-check.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/checks/compliance-check.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
       "source": "scripts/new-package.sh",
       "disposition": "port",
       "reason": "Workspace scaffolding should emit strict Bun packages",
-      "replacement": "scripts/new-package.ts",
+      "replacement": "scripts/misc/new-package.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/new-package.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/misc/new-package.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
       "source": "scripts/prettier-staged.sh",
       "disposition": "port",
       "reason": "Repository hooks already require Bun",
-      "replacement": "scripts/prettier-staged.ts",
+      "replacement": "scripts/tools/prettier-staged.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/prettier-staged.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/tools/prettier-staged.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
       "source": "scripts/pyright-check.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
-      "replacement": "scripts/pyright-check.ts",
+      "replacement": "scripts/tools/pyright-check.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/pyright-check.test.ts",
-        "scripts/migration-smoke.test.ts"
+        "scripts/tools/pyright-check.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
       ]
     },
     {
@@ -671,13 +671,16 @@
       "source": "scripts/shellcheck.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
-      "replacement": "scripts/shellcheck.ts",
+      "replacement": "scripts/tools/shellcheck.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
-      "tests": ["scripts/shellcheck.test.ts", "scripts/migration-smoke.test.ts"]
+      "tests": [
+        "scripts/tools/shellcheck.test.ts",
+        "scripts/misc/migration-smoke.test.ts"
+      ]
     },
     {
       "source": "packages/discord-plays-mario-kart/wasm-src/code/build.sh",

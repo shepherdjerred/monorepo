@@ -6,9 +6,9 @@
   "scripts": {
     "build": "bun run scripts/build.ts",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
-    "deploy": "bun ../../scripts/deploy-site.ts glitter",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "deploy": "bun ../../scripts/release/deploy-site.ts glitter",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@shepherdjerred/glitter-context": "workspace:*"

@@ -16,7 +16,7 @@ import { ApplicationFailure } from "@temporalio/common";
  * retryably, so the execution ends promptly and visibly (`temporal-failure-watch`
  * raises it) instead of hanging. The rewritten delivery path is not reachable
  * from the legacy command sequence, and the pre-rewrite one sent mail outside
- * the shared report sender, which `scripts/check-suppressions.ts` now forbids.
+ * the shared report sender, which `scripts/checks/check-suppressions.ts` now forbids.
  *
  * Delete this module, its worker registration, and the workflow's legacy
  * branch once no pre-rewrite execution can still be open — the schedule's

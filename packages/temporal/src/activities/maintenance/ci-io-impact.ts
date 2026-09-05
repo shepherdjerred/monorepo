@@ -171,7 +171,7 @@ async function runReporter(
   const process = Bun.spawn(
     [
       "bun",
-      "scripts/ci-io-report.ts",
+      "scripts/ci/ci-io-report.ts",
       ...args,
       "--json",
       jsonPath,

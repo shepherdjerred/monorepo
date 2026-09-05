@@ -19,8 +19,8 @@
     "clean:ios": "bun scripts/clean-ios.ts",
     "ios:logs": "bun scripts/ios-logs.ts",
     "lint:swift": "swiftlint lint --strict --quiet ios/TasksForObsidian ios/TasksWidget",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "^3.0.2",

@@ -5,8 +5,7 @@
     "noEmit": true
   },
   "include": [
-    "*.ts",
-    "lib/**/*.ts",
+    "**/*.ts",
     "types/**/*.d.ts",
     "observability/**/*.ts",
     "../.buildkite/scripts/*.ts"
@@ -14,5 +13,7 @@
   // local-stack is a standalone mini-package (own package.json + bun.lock,
   // deliberately outside the workspace); its deps only exist after its own
   // install, so the scripts typecheck must not include it.
-  "exclude": ["ci", "node_modules", "observability/local-stack"]
+  // `ci` was excluded here for a directory that no longer exists; leaving it
+  // would silently drop the real `ci/` sub-domain from the project service.
+  "exclude": ["node_modules", "observability/local-stack"]
 }

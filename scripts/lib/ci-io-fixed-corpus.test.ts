@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   annotationStyle,
   assertRequestedBenchmarkIntegrity,
-} from "../ci-io-report.ts";
+} from "../ci/ci-io-report.ts";
 import type { TimeWindow } from "./ci-io-api.ts";
 import { renderCiIoMarkdown } from "./ci-io-markdown.ts";
 import type {

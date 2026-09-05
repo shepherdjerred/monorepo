@@ -11,7 +11,7 @@
     "astro": "astro",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "astro check",
-    "deploy": "bun ../../scripts/deploy-site.ts stocks-sjer-red"
+    "deploy": "bun ../../scripts/release/deploy-site.ts stocks-sjer-red"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",

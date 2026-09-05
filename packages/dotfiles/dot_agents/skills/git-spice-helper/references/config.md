@@ -8,7 +8,7 @@ case-sensitive subsections, e.g. `spice.branchCreate.commit` →
 
 | Key | Value | Why |
 | --- | --- | --- |
-| `spice.branchCreate.commit` | `false` | `git-spice branch create <name>` makes **no** commit (name required). Prevents git-spice's default empty/placeholder commit from being rejected by the `commit-msg` hook (`scripts/validate-commit-msg.ts`). Committed in `private_dot_gitconfig.tmpl`. |
+| `spice.branchCreate.commit` | `false` | `git-spice branch create <name>` makes **no** commit (name required). Prevents git-spice's default empty/placeholder commit from being rejected by the `commit-msg` hook (`scripts/misc/validate-commit-msg.ts`). Committed in `private_dot_gitconfig.tmpl`. |
 
 The stacking-friendly git settings git-spice relies on are already present in
 `private_dot_gitconfig.tmpl` and need no change: `rebase.updateRefs = true`,

@@ -74,9 +74,12 @@ const turbo = Bun.spawn(
 const turboExitCode = await turbo.exited;
 if (turboExitCode !== 0) process.exit(turboExitCode);
 
-const analyticsCheck = Bun.spawn(["bun", "scripts/check-analytics-sites.ts"], {
-  stdin: "inherit",
-  stdout: "inherit",
-  stderr: "inherit",
-});
+const analyticsCheck = Bun.spawn(
+  ["bun", "scripts/checks/check-analytics-sites.ts"],
+  {
+    stdin: "inherit",
+    stdout: "inherit",
+    stderr: "inherit",
+  },
+);
 process.exit(await analyticsCheck.exited);

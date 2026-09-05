@@ -64,7 +64,18 @@ cd "$GATE_DIR"
 BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/.buildkite/scripts/bun-install.sh" --frozen-lockfile \
   --filter '@shepherdjerred/root-scripts' --production
 
-WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"
+# This runs main's copy of the wait script, so the path has to match whatever
+# layout main is on — not this branch's. While the scripts/ sub-domain split is
+# in flight the two differ, so resolve both and fail loudly if neither exists
+# rather than letting a missing file fall through as a failed grep.
+WAIT_SCRIPT="$GATE_DIR/scripts/review/wait-for-review.ts"
+if [[ ! -f "$WAIT_SCRIPT" ]]; then
+  WAIT_SCRIPT="$GATE_DIR/scripts/wait-for-review.ts"
+fi
+if [[ ! -f "$WAIT_SCRIPT" ]]; then
+  echo "review gate: wait-for-review.ts is absent from the fetched main source" >&2
+  exit 1
+fi
 if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
   ! grep -Fq 'ciProviders = new Set(["codex"])' "$WAIT_SCRIPT" && \
   ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then

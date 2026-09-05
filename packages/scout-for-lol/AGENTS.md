@@ -528,9 +528,9 @@ CI runs on the static Buildkite pipeline (`.buildkite/pipeline.yml`): every PR r
 
 Each stage serves backend + marketing site + SPA from the same monorepo build; the SPA compiles against the backend tRPC router types, so mixed versions are a real contract hazard.
 
-- **Beta (continuous):** every main build auto-bumps the `shepherdjerred/scout-for-lol/beta` image pin (version commit-back) and runs `bun scripts/scout-site-release.ts deploy-beta` (beta-flavored site → `scout-frontend-beta` bucket + a `.release-version` marker). The same build archives a prod-flavored site artifact to `s3://scout-site-releases/2.0.0-<n>/` for later promotion.
+- **Beta (continuous):** every main build auto-bumps the `shepherdjerred/scout-for-lol/beta` image pin (version commit-back) and runs `bun scripts/release/scout-site-release.ts deploy-beta` (beta-flavored site → `scout-frontend-beta` bucket + a `.release-version` marker). The same build archives a prod-flavored site artifact to `s3://scout-site-releases/2.0.0-<n>/` for later promotion.
 - **Prod (promotion = merging the Renovate PR):** the `scout-tag-release` CI step mints `ghcr.io/shepherdjerred/scout-for-lol:2.0.0-<n>` after site version `<n>` is archived, pointing at the backend digest beta serves it against — every minted tag is a complete backend+site release pair. Renovate (docker datasource on the `shepherdjerred/scout-for-lol/prod` pin, `automerge: false`) offers those tags as a standing PR. **Merging that PR is the promotion**: ArgoCD deploys the backend and the `scout-prod-reconcile` CI step syncs the prod bucket from the archived artifact for the version in the pin's tag portion (there is no separate site pin). Don't enable auto-merge unless you want prod to track beta continuously. Rollback = revert the promotion commit, or hand-edit the pin to any older **minted** tag@digest.
-- **Never** deploy the scout buckets with `scripts/deploy-site.ts` (they're intentionally not in its catalog) and never pin a tag that was not minted by `scout-tag-release` (e.g. hand-pairing a tag with a different digest) — that reintroduces the unversioned frontend↔backend skew.
+- **Never** deploy the scout buckets with `scripts/release/deploy-site.ts` (they're intentionally not in its catalog) and never pin a tag that was not minted by `scout-tag-release` (e.g. hand-pairing a tag with a different digest) — that reintroduces the unversioned frontend↔backend skew.
 - Verify what a stage serves: `curl https://scout-for-lol.com/.release-version` / `curl https://beta.scout-for-lol.com/.release-version`.
 
 ---
@@ -1961,7 +1961,7 @@ dry run at production itself.
   so a masked recording can sit beside a click event carrying the alias as
   `$el_text` and the guild path in `href` — attached to a durable person profile.
   Scout, Mario Kart, and Pokémon therefore all set `mask_all_text` and
-  `mask_all_element_attributes`; `scripts/check-analytics-sites.ts` enforces it
+  `mask_all_element_attributes`; `scripts/checks/check-analytics-sites.ts` enforces it
   for every tracker marked `masksAllText`.
 - `guild_id` on browser events deliberately joins a website session to a bot
   installation, and the published privacy policy

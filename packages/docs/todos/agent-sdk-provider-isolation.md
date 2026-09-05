@@ -25,7 +25,7 @@ had, because neither SDK exposes a spawn hook the worker can wrap.
   handed the agent an ephemeral loopback token and injected the real provider
   credential in the parent. It was removed rather than ported: it authenticated
   upstream with `OPENAI_API_KEY` against `https://api.openai.com`, which the
-  OpenRouter/native-SDK architecture gate (`scripts/check-ai-architecture.ts`)
+  OpenRouter/native-SDK architecture gate (`scripts/checks/check-ai-architecture.ts`)
   forbids, and Codex agent auth is now the ChatGPT subscription token
   `CODEX_ACCESS_TOKEN` rather than an API key. With the agent sharing the
   worker's uid it could also read the parent's `/proc/<pid>/environ`, so the

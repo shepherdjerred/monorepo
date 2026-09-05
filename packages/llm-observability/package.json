@@ -27,8 +27,8 @@
     "test:e2e": "bun test/e2e/run.ts",
     "test:e2e:ci": "bun test/e2e/run-ci.ts",
     "test:e2e:debug": "docker compose -f test/e2e/compose.yaml up -d --wait && bun --no-install --bun vitest --config ../../vitest.config.ts test/e2e --watch",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@ai-sdk/otel": "^1.0.77",

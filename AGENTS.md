@@ -255,7 +255,7 @@ immediately in hosted or web environments.
 
 ## Automation Code — Banned Patterns
 
-These patterns are banned in automation code (`scripts/`, `.buildkite/`, deploy/build scripts). `scripts/check-suppressions.ts` scans the staged diff for them (`|| true`, `2>/dev/null`, `|| bun install`, `x-access-token`, `git add -A`, `--no-exit-code`) and runs in the `pre-commit` hook (`lefthook.yml`) plus the `//#check-suppressions` turbo task under `bun run verify`. Do not write them.
+These patterns are banned in automation code (`scripts/`, `.buildkite/`, deploy/build scripts). `scripts/checks/check-suppressions.ts` scans the staged diff for them (`|| true`, `2>/dev/null`, `|| bun install`, `x-access-token`, `git add -A`, `--no-exit-code`) and runs in the `pre-commit` hook (`lefthook.yml`) plus the `//#check-suppressions` turbo task under `bun run verify`. Do not write them.
 
 - `|| true` — never swallow errors silently
 - `2>/dev/null` — never hide stderr
@@ -428,7 +428,7 @@ finding-bearing rounds over 33 PRs, and 93% of the findings raised from round 8
 onward flagged a line that did not exist at first review — the review was mostly
 reviewing its own churn. Blind grading of 76 findings put the defect-reality rate
 at ~97%, with P1 at ~50% production bugs against 0% one tier down, which is where
-the line is drawn. Re-measure with `scripts/review-analytics.ts`.
+the line is drawn. Re-measure with `scripts/review/review-analytics.ts`.
 
 **Asking for a review.** Prefer provider configuration over a comment: the
 repo-root `.pr_agent.toml` sets Qodo's `handle_push_trigger`, so Qodo re-reviews
@@ -482,7 +482,7 @@ Codex rollout bridge described above. Set it when creating the build, as with
 
 ### Release refinement provider
 
-The main-only `release-please` lane runs `scripts/release.ts`. Its CHANGELOG
+The main-only `release-please` lane runs `scripts/release/release.ts`. Its CHANGELOG
 refiner uses the pinned Codex SDK with `gpt-5.6-luna` through OpenRouter and has
 no provider or model fallback. `OPENROUTER_API_KEY` is the only inference
 credential. The lane passes it to the SDK constructor and does not expose it to
@@ -821,7 +821,7 @@ package directory and commit the shrunken file. Never baseline new code with
 ### Directory file counts — `check-directory-file-counts`
 
 A flat directory stops being a domain and becomes a dumping ground somewhere
-past fifty modules. `scripts/check-directory-file-counts.ts` draws that line
+past fifty modules. `scripts/checks/check-directory-file-counts.ts` draws that line
 mechanically: it runs in the `pre-commit` hook (`lefthook.yml`) and as the
 `//#check-directory-file-counts` turbo task under `bun run verify`.
 
@@ -852,7 +852,7 @@ would report `1` for a file added to a sixty-file directory and pass.
 
 ### CI credentials — `check-ci-env`
 
-`scripts/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run
+`scripts/checks/check-ci-env.ts` (the `//#check-ci-env` turbo task, in `bun run
 verify`) checks every Buildkite command step against
 `.buildkite/secret-grants.json`. Each grant names exactly one environment
 variable and one `{secret, key}` source. The check also asserts that every
@@ -874,7 +874,7 @@ two exception tables at the top of the script, each with its reason.
 ### Blocked review gate — `review-findings`
 
 ```bash
-GH_TOKEN=$(toolkit gh auth token) bun scripts/review-findings.ts list <pr>
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review/review-findings.ts list <pr>
 toolkit pr review harvest <pr>
 ```
 
@@ -901,9 +901,9 @@ comment. Neither is automatic and neither runs in CI.
 ### Measuring the review loop — `review-analytics`
 
 ```bash
-GH_TOKEN=$(toolkit gh auth token) bun scripts/review-analytics.ts rounds --last 50
-GH_TOKEN=$(toolkit gh auth token) bun scripts/review-analytics.ts requests --last 50
-GH_TOKEN=$(toolkit gh auth token) bun scripts/review-analytics.ts blame --pr 2301
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review/review-analytics.ts rounds --last 50
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review/review-analytics.ts requests --last 50
+GH_TOKEN=$(toolkit gh auth token) bun scripts/review/review-analytics.ts blame --pr 2301
 ```
 
 `rounds` prints the per-push finding sequence and severity mix, `requests`

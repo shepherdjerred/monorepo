@@ -257,7 +257,7 @@ expected. Run locally with `HELM_RENDER_TEST=1 bun run test src/argocd-helm-rend
 
 ## Git Workflow
 
-- Use conventional commit messages (`type(scope): description`); the `commit-msg` lefthook validates them (`scripts/validate-commit-msg.ts`, scope must be a package name or `root`/`deps`/`ci`/etc.). The staged-only `pre-commit` hook does not replace Buildkite's full `bun run verify` graph.
+- Use conventional commit messages (`type(scope): description`); the `commit-msg` lefthook validates them (`scripts/misc/validate-commit-msg.ts`, scope must be a package name or `root`/`deps`/`ci`/etc.). The staged-only `pre-commit` hook does not replace Buildkite's full `bun run verify` graph.
 
 ## Version Management
 

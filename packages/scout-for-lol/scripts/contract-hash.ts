@@ -10,7 +10,7 @@
  *
  * The hash is baked into the backend image (ENV CONTRACT_HASH, via
  * docker-bake.hcl) and into the SPA bundle (VITE_CONTRACT_HASH, via
- * scripts/scout-site-release.ts). Equal hashes ⇒ the two builds share a
+ * scripts/release/scout-site-release.ts). Equal hashes ⇒ the two builds share a
  * contract, regardless of their build numbers — the backend image is
  * content-gated, so a healthy release pair routinely carries different
  * version labels. The SPA warns (reload nudge) when the hashes differ.

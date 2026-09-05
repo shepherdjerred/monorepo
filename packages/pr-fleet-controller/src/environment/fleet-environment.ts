@@ -262,7 +262,7 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     hostedReviewComplete: boolean;
   }> {
     // Observe completion FIRST, then fetch review threads — the same order as
-    // the canonical gate (scripts/wait-for-review.ts). If a provider finishes
+    // the canonical gate (scripts/review/wait-for-review.ts). If a provider finishes
     // between the two calls, pairing a "reviewed" completion with a pre-review
     // (findings-free) thread snapshot would let a green CI run classify the PR
     // green despite newly-created unresolved findings. Fetching threads last

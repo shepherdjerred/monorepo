@@ -53,7 +53,7 @@ async function main(): Promise<void> {
       if (match) {
         currentFile = match[1];
         // Skip checking the suppression checker script itself
-        if (currentFile === "scripts/check-suppressions.ts") {
+        if (currentFile === "scripts/checks/check-suppressions.ts") {
           currentFile = "";
         }
       }
