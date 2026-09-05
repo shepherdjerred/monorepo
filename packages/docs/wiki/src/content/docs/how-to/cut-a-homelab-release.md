@@ -135,9 +135,9 @@ reading that structured catalog rather than the generated runtime projection.
 ## If GHCR rejects a workload pull
 
 The
-[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)
+[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/images/bake-images.ts)
 resolves every pushed candidate to a digest. The
-[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
+[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/images/ghcr-public-access.ts)
 then fetches that immutable digest before the job records any pin candidate. A
 `401` from the anonymous token request means the package is still private. A
 manifest `404` after a successful token request can be brief registry

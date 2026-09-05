@@ -18,7 +18,7 @@ any two of them would lose information the pipeline is built to preserve.
   lane is about published sites rather than about Playwright as a tool. The
   design audit uses a deterministic local boot and fixture; see [Run the Scout
   design audit](/how-to/run-scout-design-audit/). The lane's scope statement is asserted in
-  [`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validate-pipeline-clarity.ts)
+  [`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validation/validate-pipeline-clarity.ts)
   against the lane defined in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
 - **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo
   and MinIO and runs only `@shepherdjerred/llm-observability`'s
@@ -77,7 +77,7 @@ single host to run them concurrently.
 explicitly soft-failed, while scanner, configuration, and runtime failures stay
 hard failures. The exact `soft_fail` exit statuses are pinned in
 [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml) and asserted in
-[`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validate-pipeline-clarity.ts).
+[`validate-pipeline-clarity.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/validation/validate-pipeline-clarity.ts).
 
 That split matters: a soft-failed scanner would silently stop scanning and still
 look green. Separating "the scan found something" from "the scan did not run"
@@ -99,7 +99,7 @@ make the gate approve unreviewed changes.
 
 A main build starts from a small selector bootstrap,
 [`main-bootstrap.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/main-bootstrap.yml), rather than the
-complete graph. [`select-main-pipeline.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/select-main-pipeline.ts)
+complete graph. [`select-main-pipeline.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/selectors/select-main-pipeline.ts)
 compares the commit with the last green main build, uploads only the selected
 main steps, and preserves the stable step keys and release dependencies so
 downstream lanes still resolve.
@@ -122,9 +122,9 @@ correctly is not a degraded optimization, it is a broken build.
 
 Steps pass values to later steps through Buildkite metadata. Image digests and
 pin candidates move to artifacts automatically once they exceed the metadata
-budget in [`buildkite-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/buildkite-handoff.ts),
+budget in [`buildkite-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/reporting/buildkite-handoff.ts),
 and downstream release jobs read either form through
-[`read-buildkite-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/read-buildkite-handoff.ts).
+[`read-buildkite-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/scripts/reporting/read-buildkite-handoff.ts).
 
 The alternative — always using artifacts — would add a download to every handoff
 for values that are usually a few hundred bytes.

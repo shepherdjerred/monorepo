@@ -314,9 +314,9 @@ for bootstrapping or recovering package visibility lives in
 [Cut a homelab release](/how-to/cut-a-homelab-release/#if-ghcr-rejects-a-workload-pull).
 
 After the push, the
-[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/bake-images.ts)
+[image publication flow](https://github.com/shepherdjerred/monorepo/blob/6891646ef4bfbe67a3b5bea615c0e100e99c6145/.buildkite/scripts/images/bake-images.ts)
 resolves the candidate tag to a digest. The
-[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/ghcr-public-access.ts)
+[anonymous GHCR probe](https://github.com/shepherdjerred/monorepo/blob/ecfd92e182858588dc98c9ed85fcefe768fb0680/.buildkite/scripts/images/ghcr-public-access.ts)
 then requests a pull token and fetches that immutable digest. Visibility and
 manifest propagation may lag briefly, so the probe polls a bounded number of
 times. Buildx then reads the effective OCI configuration at that same digest

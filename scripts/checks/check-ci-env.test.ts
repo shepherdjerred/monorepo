@@ -130,12 +130,12 @@ describe("scriptPathsInCommand", () => {
     const paths = scriptPathsInCommand(
       [
         "bun --no-install scripts/release/release.ts --dry-run",
-        "bun --no-install .buildkite/scripts/ci-changed.ts images",
+        "bun --no-install .buildkite/scripts/selectors/ci-changed.ts images",
         "bun --no-install packages/homelab/scripts/argocd.ts release-root apps",
       ].join("\n"),
     );
     expect(paths).toEqual([
-      ".buildkite/scripts/ci-changed.ts",
+      ".buildkite/scripts/selectors/ci-changed.ts",
       "packages/homelab/scripts/argocd.ts",
       "scripts/release/release.ts",
     ]);

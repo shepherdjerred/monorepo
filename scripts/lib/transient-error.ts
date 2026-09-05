@@ -7,7 +7,7 @@
  * message text.
  *
  * Kept in its own module so a script that only needs to *signal* transience
- * (e.g. `.buildkite/scripts/application-image-runtime.ts`) can import just the
+ * (e.g. `.buildkite/scripts/images/application-image-runtime.ts`) can import just the
  * error type without pulling in the `runMain`/pattern machinery.
  */
 export class TransientError extends Error {

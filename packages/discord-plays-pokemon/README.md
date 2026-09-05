@@ -96,7 +96,7 @@ Runs on the homelab Kubernetes cluster via ArgoCD
 (`packages/homelab/src/cdk8s/src/resources/pokemon.ts`). CI builds and smokes
 the image on every affected PR and pushes it on merge to `main` (the
 `discord-plays-pokemon` target in
-[`.buildkite/scripts/image-targets.ts`](../../.buildkite/scripts/image-targets.ts),
+[`.buildkite/scripts/images/image-targets.ts`](../../.buildkite/scripts/images/image-targets.ts),
 driven by `.buildkite/pipeline.yml`). Configuration is a mounted `config.toml`
 — see `config.example.toml`.
 

@@ -165,7 +165,7 @@ steps:
     timeout_in_minutes: 90
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/validate-pipeline.ts
+      bun --no-install .buildkite/scripts/validation/validate-pipeline.ts
       bun install --frozen-lockfile
       export TURBO_CACHE="local:rw,remote:rw"
       set +e

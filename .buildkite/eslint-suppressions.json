@@ -1,45 +1,45 @@
 {
-  ".buildkite/scripts/annotate-image-summary.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  ".buildkite/scripts/ci-changed.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  ".buildkite/scripts/docker-source-label.ts": {
+  ".buildkite/scripts/images/docker-source-label.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 4
     }
   },
-  ".buildkite/scripts/select-image-targets-lockfile.ts": {
+  ".buildkite/scripts/images/update-ci-image-pin.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  ".buildkite/scripts/reporting/annotate-image-summary.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  ".buildkite/scripts/selectors/ci-changed.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  ".buildkite/scripts/selectors/select-image-targets-lockfile.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 4
     }
   },
-  ".buildkite/scripts/select-main-pipeline.ts": {
+  ".buildkite/scripts/selectors/select-main-pipeline.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  ".buildkite/scripts/update-ci-image-pin.ts": {
+  ".buildkite/scripts/validation/validate-pipeline-lib.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  ".buildkite/scripts/validate-pipeline-lib.ts": {
+  ".buildkite/scripts/validation/validate-pipeline-release.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  ".buildkite/scripts/validate-pipeline-release.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  ".buildkite/scripts/validate-pipeline-resources.ts": {
+  ".buildkite/scripts/validation/validate-pipeline-resources.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

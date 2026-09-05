@@ -79,8 +79,8 @@ CMD ["bun", "src/server/index.ts"]
 FROM runtime AS smoke
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
-COPY .buildkite/scripts/smoke-app-configs.ts /app/.buildkite/scripts/smoke-app-configs.ts
+COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
+COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=scout-evals
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000), never root: it must prove the
@@ -88,6 +88,6 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # same uid the K8s deployment runs with. HOME points at /tmp for tool caches.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

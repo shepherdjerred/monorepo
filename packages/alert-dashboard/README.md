@@ -8,7 +8,7 @@ through Postal, and renders bounded Grafana-backed Prometheus, Loki, and Tempo
 previews for firing alerts.
 
 It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
-[`.buildkite/scripts/image-targets.ts`](../../.buildkite/scripts/image-targets.ts)),
+[`.buildkite/scripts/images/image-targets.ts`](../../.buildkite/scripts/images/image-targets.ts)),
 the digest is pinned in
 [`packages/homelab/src/cdk8s/src/versions.ts`](../homelab/src/cdk8s/src/versions.ts),
 and an ArgoCD `Application`

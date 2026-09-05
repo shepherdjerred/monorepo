@@ -199,8 +199,8 @@ FROM runtime AS smoke
 USER 0
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
-COPY .buildkite/scripts/smoke-app-configs.ts /app/.buildkite/scripts/smoke-app-configs.ts
+COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
+COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=discord-plays-mario-kart
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # The smoke harness writes its temporary config at the application's normal
@@ -214,6 +214,6 @@ RUN touch /app/packages/discord-plays-mario-kart/config.toml \
 # points at /tmp so any tool cache has a writable target.
 USER 1000:1000
 ENV HOME=/tmp
-RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image

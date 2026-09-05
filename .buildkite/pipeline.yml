@@ -728,7 +728,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/validate-pipeline.ts
+      bun --no-install .buildkite/scripts/validation/validate-pipeline.ts
       .buildkite/scripts/bun-install.sh --frozen-lockfile
       # CI is the cross-machine cache producer/consumer. Developer shells use
       # local-only caching by default to avoid large transfers on weak Wi-Fi.
@@ -805,23 +805,23 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/bun-install.sh"
-        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
-        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.test.ts"
         - ".buildkite/scripts/macos-native-env.sh"
-        - ".buildkite/scripts/macos-native-preflight.ts"
-        - ".buildkite/scripts/macos-native-preflight.test.ts"
-        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos/macos-native-selection.ts"
         - ".buildkite/scripts/toolchain.test.sh"
-        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".buildkite/scripts/validation/validate-pipeline*.ts"
         - ".mise.toml"
         - ".xcode-version"
         - "bun.lock"
@@ -839,7 +839,7 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/macos-native-dispatch-watch.ts
+      bun --no-install .buildkite/scripts/macos/macos-native-dispatch-watch.ts
     retry: *retry
     plugins:
       - kubernetes:
@@ -865,23 +865,23 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/bun-install.sh"
-        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
-        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.test.ts"
         - ".buildkite/scripts/macos-native-env.sh"
-        - ".buildkite/scripts/macos-native-preflight.ts"
-        - ".buildkite/scripts/macos-native-preflight.test.ts"
-        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos/macos-native-selection.ts"
         - ".buildkite/scripts/toolchain.test.sh"
-        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".buildkite/scripts/validation/validate-pipeline*.ts"
         - ".mise.toml"
         - ".xcode-version"
         - "packages/homelab/mac-ci/**"
@@ -892,7 +892,7 @@ steps:
     concurrency_group: monorepo/macos-native
     command: |
       . .buildkite/scripts/macos-native-env.sh
-      bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
+      bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar
       bun --no-install run --cwd packages/macos-ai-subscription-tracker verify:macos
     retry: *retry
     agents:
@@ -908,7 +908,7 @@ steps:
     concurrency_group: monorepo/macos-native
     command: |
       . .buildkite/scripts/macos-native-env.sh
-      bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
+      bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar
       bun --no-install run --cwd packages/macos-ai-subscription-tracker verify:macos
     retry: *retry
     agents:
@@ -922,23 +922,23 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/bun-install.sh"
-        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
-        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.test.ts"
         - ".buildkite/scripts/macos-native-env.sh"
-        - ".buildkite/scripts/macos-native-preflight.ts"
-        - ".buildkite/scripts/macos-native-preflight.test.ts"
-        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos/macos-native-selection.ts"
         - ".buildkite/scripts/toolchain.test.sh"
-        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".buildkite/scripts/validation/validate-pipeline*.ts"
         - ".mise.toml"
         - ".xcode-version"
         - "packages/homelab/mac-ci/**"
@@ -977,23 +977,23 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/bun-install.sh"
-        - ".buildkite/scripts/macos-native-dispatch-watch.ts"
-        - ".buildkite/scripts/macos-native-dispatch-watch.test.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.ts"
+        - ".buildkite/scripts/macos/macos-native-dispatch-watch.test.ts"
         - ".buildkite/scripts/macos-native-env.sh"
-        - ".buildkite/scripts/macos-native-preflight.ts"
-        - ".buildkite/scripts/macos-native-preflight.test.ts"
-        - ".buildkite/scripts/macos-native-selection.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.ts"
+        - ".buildkite/scripts/macos/macos-native-preflight.test.ts"
+        - ".buildkite/scripts/macos/macos-native-selection.ts"
         - ".buildkite/scripts/toolchain.test.sh"
-        - ".buildkite/scripts/validate-pipeline*.ts"
+        - ".buildkite/scripts/validation/validate-pipeline*.ts"
         - ".mise.toml"
         - ".xcode-version"
         - "bun.lock"
@@ -1011,7 +1011,7 @@ steps:
     concurrency_group: monorepo/macos-native
     command: |
       . .buildkite/scripts/macos-native-env.sh
-      TASKNOTES_UITEST_IDENTITY="$$(bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes)"
+      TASKNOTES_UITEST_IDENTITY="$$(bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes)"
       export TASKNOTES_UITEST_IDENTITY
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter tasknotes-server
       cd packages/tasknotes-core
@@ -1034,7 +1034,7 @@ steps:
     concurrency_group: monorepo/macos-native
     command: |
       . .buildkite/scripts/macos-native-env.sh
-      TASKNOTES_UITEST_IDENTITY="$$(bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes)"
+      TASKNOTES_UITEST_IDENTITY="$$(bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes)"
       export TASKNOTES_UITEST_IDENTITY
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter tasknotes-server
       cd packages/tasknotes-core
@@ -1108,13 +1108,13 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/toolchain.sh"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/ci-playwright/**"
@@ -1293,13 +1293,13 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "packages/resume/**"
         # Main's resume lane also gates on the deploy consumers of its
@@ -1388,13 +1388,13 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "packages/trmnl-dashboard/**"
         - "packages/version-catalog/**"
@@ -1487,13 +1487,13 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/scripts/toolchain.sh"
         - "bun.lock"
@@ -1592,7 +1592,7 @@ steps:
     if: build.branch == pipeline.default_branch
     cancel_on_build_failing: true
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts docker-e2e; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts docker-e2e; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'
       bun --no-install run --cwd packages/llm-observability test:e2e:ci
@@ -1685,12 +1685,12 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "**/bun.lock"
@@ -1802,12 +1802,12 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "bunfig.toml"
@@ -1993,24 +1993,24 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/bake-images.ts"
-        - ".buildkite/scripts/bake-retry.ts"
-        - ".buildkite/scripts/buildkit-env.ts"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
-        - ".buildkite/scripts/docker-source-label.ts"
+        - ".buildkite/scripts/images/bake-images.ts"
+        - ".buildkite/scripts/images/bake-retry.ts"
+        - ".buildkite/scripts/reporting/buildkit-env.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
+        - ".buildkite/scripts/images/docker-source-label.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
-        - ".buildkite/scripts/select-image-targets.ts"
-        - ".buildkite/scripts/select-image-targets-lockfile.ts"
-        - ".buildkite/scripts/select-image-targets-workspaces.ts"
-        - ".buildkite/scripts/smoke-app-configs.ts"
-        - ".buildkite/scripts/smoke-app-in-image.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/select-image-targets.ts"
+        - ".buildkite/scripts/selectors/select-image-targets-lockfile.ts"
+        - ".buildkite/scripts/selectors/select-image-targets-workspaces.ts"
+        - ".buildkite/scripts/images/smoke-app-configs.ts"
+        - ".buildkite/scripts/images/smoke-app-in-image.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
-        - ".buildkite/scripts/validate-image-migration.ts"
+        - ".buildkite/scripts/validation/validate-image-migration.ts"
         - "bun.lock"
         - "bunfig.toml"
         - "package.json"
@@ -2067,7 +2067,7 @@ steps:
       # main tree). Renovate chart bumps touching versions.ts fail here until
       # someone pushes the regen commit (--check prints the command; hosted
       # Renovate cannot run it). helm comes from the ci-image's mise toolchain.
-      if bun --no-install .buildkite/scripts/ci-changed.ts helm-types; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts helm-types; then
         bun --no-install run --cwd packages/homelab/src/cdk8s generate-helm-types --check
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
@@ -2122,13 +2122,13 @@ steps:
       include:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/secret-grants.json"
         - ".buildkite/secret-grants.schema.json"
@@ -2346,13 +2346,13 @@ steps:
       include:
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/pipeline.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - ".buildkite/secret-grants.json"
         - "bun.lock"
@@ -2401,13 +2401,13 @@ steps:
       include:
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/pipeline.yml"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline-selection.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
         - ".buildkite/scripts/upload-pipeline.sh"
         - "bun.lock"
         - "bunfig.toml"
@@ -2431,7 +2431,7 @@ steps:
         CI_CHANGED_BASE=""
       fi
       export CI_CHANGED_BASE
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-posthog; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-posthog; then exit 0; fi
       (
         export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
         flock -x 9
@@ -2454,25 +2454,25 @@ steps:
         - ".buildkite/pipeline.yml"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/application-image-smoke.Dockerfile"
-        - ".buildkite/scripts/application-image-runtime.ts"
-        - ".buildkite/scripts/bake-images.ts"
-        - ".buildkite/scripts/bake-retry.ts"
-        - ".buildkite/scripts/buildkit-env.ts"
-        - ".buildkite/scripts/buildkite-handoff.ts"
-        - ".buildkite/scripts/ci-changed.ts"
-        - ".buildkite/scripts/image-targets.ts"
+        - ".buildkite/scripts/images/application-image-runtime.ts"
+        - ".buildkite/scripts/images/bake-images.ts"
+        - ".buildkite/scripts/images/bake-retry.ts"
+        - ".buildkite/scripts/reporting/buildkit-env.ts"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
+        - ".buildkite/scripts/images/image-targets.ts"
         - ".buildkite/scripts/migration-core.ts"
-        - ".buildkite/scripts/prepare-ci-changed-base.ts"
-        - ".buildkite/scripts/read-buildkite-handoff.ts"
-        - ".buildkite/scripts/select-main-pipeline.ts"
-        - ".buildkite/scripts/select-image-targets.ts"
-        - ".buildkite/scripts/select-image-targets-lockfile.ts"
-        - ".buildkite/scripts/select-image-targets-workspaces.ts"
-        - ".buildkite/scripts/smoke-app-configs.ts"
-        - ".buildkite/scripts/smoke-app-in-image.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-image-targets.ts"
+        - ".buildkite/scripts/selectors/select-image-targets-lockfile.ts"
+        - ".buildkite/scripts/selectors/select-image-targets-workspaces.ts"
+        - ".buildkite/scripts/images/smoke-app-configs.ts"
+        - ".buildkite/scripts/images/smoke-app-in-image.ts"
         - ".buildkite/scripts/toolchain.sh"
         - ".buildkite/scripts/upload-pipeline.sh"
-        - ".buildkite/scripts/validate-pipeline.ts"
+        - ".buildkite/scripts/validation/validate-pipeline.ts"
         - "scripts/lib/image-pin-catalog.ts"
         - ".dockerignore"
         - "bun.lock"
@@ -2518,12 +2518,12 @@ steps:
     cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/buildkit-env.ts
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
       # Affected-scoped parallel bake + smoke, no push, cache read-only
       # (PUSH_CACHE stays false — only main writes the buildcache refs).
       # Executes no-exporter in-image smoke targets against remote BuildKit.
-      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bun --no-install .buildkite/scripts/bake-images.ts --affected
+      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bun --no-install .buildkite/scripts/images/bake-images.ts --affected
     artifact_paths:
       - "image-selection-report.json"
     retry: *retry
@@ -2553,7 +2553,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/image-push
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts images; then
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts images; then
         pending_version_bump=$$(git ls-remote origin refs/heads/chore/version-bump-pending)
         if [ -n "$$pending_version_bump" ]; then
           echo "chore/version-bump-pending is still active; retry after its catalog update merges"
@@ -2581,15 +2581,15 @@ steps:
         if [ ! -f image-selection-report.json ]; then
           jq -n '{base: null, changedPaths: [], mode: "selected", globalReason: "no image-owning packages changed since last completed main image release", targets: {}}' > image-selection-report.json
         fi
-        if ! bun --no-install .buildkite/scripts/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
+        if ! bun --no-install .buildkite/scripts/reporting/annotate-image-summary.ts --report image-selection-report.json --outcomes image-push-outcomes.json; then
           echo "WARN: image summary annotation failed (non-fatal)" >&2
         fi
         exit 0
       fi
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/buildkit-env.ts
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
       buildkite-agent artifact download "caddyfile.generated" /tmp --step verify
-      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bun --no-install .buildkite/scripts/bake-images.ts --push
+      CADDYFILE_SMOKE_PATH=/tmp/caddyfile.generated bun --no-install .buildkite/scripts/images/bake-images.ts --push
     artifact_paths:
       - "image-selection-report.json"
       - "image-push-outcomes.json"
@@ -2625,7 +2625,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts sites; then
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts sites; then
         # The per-site lanes below never run on this early-exit path, so their
         # own ci-changed.ts calls (and the recordDecision inside them) never
         # fire even though the aggregate answer applies to every one of them —
@@ -2635,7 +2635,7 @@ steps:
         # only the recorded decision matters here.
         for site_lane in site-sjer-red site-resume site-webring site-cooklang \
           site-stocks site-wiki site-better-skill-capped site-glitter; do
-          if bun --no-install .buildkite/scripts/ci-changed.ts "$$site_lane"; then :; fi
+          if bun --no-install .buildkite/scripts/selectors/ci-changed.ts "$$site_lane"; then :; fi
         done
         exit 0
       fi
@@ -2649,29 +2649,29 @@ steps:
       site_stocks=false
       site_wiki=false
       site_glitter=false
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-sjer-red; then site_sjer=true; fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-resume; then site_resume=true; fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-webring; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-sjer-red; then site_sjer=true; fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-resume; then site_resume=true; fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-webring; then
         site_webring=true
         filters+=(--filter webring)
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-cooklang; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-cooklang; then
         site_cooklang=true
         filters+=(--filter '@shepherdjerred/cooklang-rich-preview')
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-stocks; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-stocks; then
         site_stocks=true
         filters+=(--filter stocks-sjer-red)
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-wiki; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-wiki; then
         site_wiki=true
         filters+=(--filter '@shepherdjerred/docs-wiki')
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-better-skill-capped; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-better-skill-capped; then
         site_better_skill_capped=true
         filters+=(--filter better-skill-capped)
       fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-glitter; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-glitter; then
         site_glitter=true
         # The build imports @shepherdjerred/glitter-context through Glitter's
         # declared workspace dependency. Under Bun's isolated linker the
@@ -2744,8 +2744,8 @@ steps:
     command: |
       npm_changed=true
       cooklang_changed=true
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts npm; then npm_changed=false; fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts cooklang; then cooklang_changed=false; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts npm; then npm_changed=false; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts cooklang; then cooklang_changed=false; fi
       if ! $$npm_changed && ! $$cooklang_changed; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       filters=()
@@ -2795,7 +2795,7 @@ steps:
     if: build.branch == pipeline.default_branch
     depends_on: verify
     command: |
-      bun --no-install .buildkite/scripts/homelab-release-admission.ts admit
+      bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts admit
     retry: *retry
     plugins:
       - kubernetes:
@@ -2821,16 +2821,16 @@ steps:
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests)
+      image_digests=$$(bun --no-install .buildkite/scripts/reporting/read-buildkite-handoff.ts image-digests)
       release_requested=false
-      if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts helm; then release_requested=true; fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts argocd; then release_requested=true; fi
       if [ "$$image_digests" != "{}" ]; then release_requested=true; fi
       if ! $$release_requested; then
         exit 0
@@ -2840,7 +2840,7 @@ steps:
       export ARGOCD_TOKEN="$$ARGOCD_AUTH_TOKEN"
       bun --no-install packages/homelab/scripts/argocd.ts suspend-auto-sync apps --timeout 300
       export HOMELAB_IMAGE_DIGESTS_JSON="$$image_digests"
-      export HOMELAB_VERSION_CATALOG_JSON="$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts version-catalog)"
+      export HOMELAB_VERSION_CATALOG_JSON="$$(bun --no-install .buildkite/scripts/reporting/read-buildkite-handoff.ts version-catalog)"
       export HOMELAB_RELEASE_VERSION="2.0.0-$BUILDKITE_BUILD_NUMBER"
       bun --no-install packages/homelab/scripts/helm-push.ts "$BUILDKITE_BUILD_NUMBER"
       buildkite-agent artifact upload "helm-release-plan.json"
@@ -2871,13 +2871,13 @@ steps:
     depends_on: [homelab-release-admission, helm-push]
     cancel_on_build_failing: true
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -2910,13 +2910,13 @@ steps:
     depends_on: tofu-apply-seaweedfs
     cancel_on_build_failing: true
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -2949,13 +2949,13 @@ steps:
     depends_on: tofu-apply-tailscale
     cancel_on_build_failing: true
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -2987,13 +2987,13 @@ steps:
     depends_on: tofu-apply-buildkite
     cancel_on_build_failing: true
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -3038,13 +3038,13 @@ steps:
     # No automatic retry: GitHub API mutations are not idempotent on partial
     # failure (same policy as the old pipeline).
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
@@ -3079,13 +3079,13 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/tofu-posthog
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-posthog; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-posthog; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       (
@@ -3118,13 +3118,13 @@ steps:
     command: |
       requested_platform=$${TOFU_PLATFORM_APPLY:-}
       if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "openai" ]; then exit 0; fi
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-platforms; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -3165,13 +3165,13 @@ steps:
     command: |
       requested_platform=$${TOFU_PLATFORM_APPLY:-}
       if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "anthropic" ]; then exit 0; fi
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-platforms; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -3211,13 +3211,13 @@ steps:
     command: |
       requested_platform=$${TOFU_PLATFORM_APPLY:-}
       if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "discord" ]; then exit 0; fi
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-platforms; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -3262,13 +3262,13 @@ steps:
     command: |
       requested_platform=$${TOFU_PLATFORM_APPLY:-}
       if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "openrouter" ]; then exit 0; fi
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-platforms; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -3309,13 +3309,13 @@ steps:
     command: |
       requested_platform=$${TOFU_PLATFORM_APPLY:-}
       if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "cloudflare-tokens" ]; then exit 0; fi
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu-platforms; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-platforms; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
@@ -3353,16 +3353,16 @@ steps:
     concurrency_group: monorepo/homelab-release
     concurrency_method: ordered
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      image_digests=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests)
+      image_digests=$$(bun --no-install .buildkite/scripts/reporting/read-buildkite-handoff.ts image-digests)
       release_requested=false
-      if bun --no-install .buildkite/scripts/ci-changed.ts helm; then release_requested=true; fi
-      if bun --no-install .buildkite/scripts/ci-changed.ts argocd; then release_requested=true; fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts helm; then release_requested=true; fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts argocd; then release_requested=true; fi
       if [ "$$image_digests" != "{}" ]; then release_requested=true; fi
       if ! $$release_requested; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
@@ -3406,10 +3406,10 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      scout_candidate=$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts image-digests |
+      scout_candidate=$$(bun --no-install .buildkite/scripts/reporting/read-buildkite-handoff.ts image-digests |
         jq -r '."shepherdjerred/scout-for-lol/beta" // empty')
       scout_source_changed=false
-      if bun --no-install .buildkite/scripts/ci-changed.ts site-scout; then
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-scout; then
         scout_source_changed=true
       fi
       if [ -z "$$scout_candidate" ] && ! $$scout_source_changed; then exit 0; fi
@@ -3511,7 +3511,7 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts scout-reconcile; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts scout-reconcile; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
       export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
@@ -3546,14 +3546,14 @@ steps:
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
     # the Cloudflare DNS tunnel route is removed (same gate as the old CI).
     command: |
-      release_admission=$$(bun --no-install .buildkite/scripts/homelab-release-admission.ts consume)
+      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
       if [ "$$release_admission" != "admitted" ]; then
         echo "invalid homelab release admission outcome: $$release_admission"
         exit 1
       fi
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts tofu; then
-        if ! bun --no-install .buildkite/scripts/ci-changed.ts argocd; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu; then
+        if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts argocd; then exit 0; fi
       fi
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@homelab/cdk8s' --filter homelab --production
@@ -3649,7 +3649,7 @@ steps:
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production
-      bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$$(bun --no-install .buildkite/scripts/read-buildkite-handoff.ts pin-candidates)"
+      bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$$(bun --no-install .buildkite/scripts/reporting/read-buildkite-handoff.ts pin-candidates)"
     # Safe to retry: the bump branch is force-updated and the PR lookup is
     # find-or-create; transient gh/git failures exit 34 via transient.ts.
     retry: *retry
@@ -3683,11 +3683,11 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/ci-base-refresh
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts ci-base; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts ci-base; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/buildkit-env.ts
-      bun --no-install .buildkite/scripts/build-ci-image.ts --image ci-base --candidate-out ci-base-candidate.json
-      bun --no-install .buildkite/scripts/update-ci-image-pin.ts --candidate ci-base-candidate.json
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
+      bun --no-install .buildkite/scripts/images/build-ci-image.ts --image ci-base --candidate-out ci-base-candidate.json
+      bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate ci-base-candidate.json
     retry: *retry
     plugins:
       - kubernetes:
@@ -3717,11 +3717,11 @@ steps:
     concurrency: 1
     concurrency_group: monorepo/ci-playwright-refresh
     command: |
-      if ! bun --no-install .buildkite/scripts/ci-changed.ts ci-playwright; then exit 0; fi
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts ci-playwright; then exit 0; fi
       . .buildkite/scripts/toolchain.sh
-      bun --no-install .buildkite/scripts/buildkit-env.ts
-      bun --no-install .buildkite/scripts/build-ci-image.ts --image ci-playwright --candidate-out ci-playwright-candidate.json
-      bun --no-install .buildkite/scripts/update-ci-image-pin.ts --candidate ci-playwright-candidate.json
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
+      bun --no-install .buildkite/scripts/images/build-ci-image.ts --image ci-playwright --candidate-out ci-playwright-candidate.json
+      bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate ci-playwright-candidate.json
     retry: *retry
     plugins:
       - kubernetes:
@@ -3782,7 +3782,7 @@ steps:
       - ci-base-refresh
       - ci-playwright-refresh
     allow_dependency_failure: true
-    command: bun --no-install .buildkite/scripts/annotate-build-summary.ts
+    command: bun --no-install .buildkite/scripts/reporting/annotate-build-summary.ts
     plugins:
       - kubernetes:
           <<: *pod_light_kubernetes
