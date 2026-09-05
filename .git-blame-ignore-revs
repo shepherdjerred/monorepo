@@ -8,6 +8,11 @@
 #
 #   git config blame.ignoreRevsFile .git-blame-ignore-revs
 #
+# Add entries AFTER the pull request merges, never inside it. This repository
+# squash-merges, so a branch cannot know the SHA it will land as: any SHA
+# recorded pre-merge names a commit that never reaches main, and a rebase
+# invalidates it again on the way. Take the squashed SHA from main's history.
+#
 # Only pure moves and mechanical import-specifier rewrites belong here — never a
 # commit that also changes behaviour. Add the full 40-character SHA with a
 # comment naming the reorganization.
