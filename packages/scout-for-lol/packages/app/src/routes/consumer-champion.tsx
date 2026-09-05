@@ -1,5 +1,4 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -135,12 +134,16 @@ export function ConsumerChampion() {
   );
   useComparisonOpenTracking(qualified.isSuccess, qualified.isError);
 
-  // Both cohorts use `keepPreviousData`, so a failed refetch usually still
-  // has a page in hand. Joining them separates "no comparison at all",
-  // which is the error card, from "the refresh failed", which keeps the
-  // previous page on screen behind a notice.
-  const qualifiedValue = Loaded.fromQuery(qualified, ["qualified"]);
-  const smallValue = Loaded.fromQuery(small, ["small"]);
+  // Both cohorts use `keepPreviousData`, so a failed refetch still has a page
+  // in hand — and that is exactly the hazard here. These cohorts are scoped to
+  // the viewer's currently enabled shared servers, so the failing request is
+  // the access recheck; showing the retained page would outlive the permission
+  // that produced it. `strict` collapses that `degraded` back to `error` so the
+  // comparison disappears rather than going stale.
+  const qualifiedValue = Loaded.strict(
+    Loaded.fromQuery(qualified, ["qualified"]),
+  );
+  const smallValue = Loaded.strict(Loaded.fromQuery(small, ["small"]));
   const comparison = Loaded.all({
     qualified: qualifiedValue,
     small: smallValue,
@@ -188,9 +191,6 @@ export function ConsumerChampion() {
 
   return (
     <PageShell>
-      <StaleState
-        errors={comparison.status === "degraded" ? comparison.errors : []}
-      />
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           {champion === undefined ? null : (

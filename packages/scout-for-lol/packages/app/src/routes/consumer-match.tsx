@@ -36,7 +36,13 @@ export function ConsumerMatch() {
     trpc.consumerMatch.detail.queryOptions({ playerId, matchId }),
   );
   const tracked = useRef(false);
-  const detailValue = Loaded.fromQuery(detail, ["consumer.match"]);
+  // `strict` because this query carries authorization: the scoreboard and the
+  // guild-scoped Scout aliases below are only visible through a shared guild.
+  // Without it a revoked access whose refetch 403s would come back as
+  // `degraded` over the retained cache and keep rendering protected data.
+  const detailValue = Loaded.strict(
+    Loaded.fromQuery(detail, ["consumer.match"]),
+  );
 
   useEffect(() => {
     if (tracked.current || (!detail.isSuccess && !detail.isError)) return;

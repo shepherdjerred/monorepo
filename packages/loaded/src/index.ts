@@ -451,6 +451,26 @@ function messageOf(error: unknown): string {
   return String(error);
 }
 
+/**
+ * Collapses `degraded` into `error`.
+ *
+ * `degraded` says "the refresh failed, here is what we had", which is right for
+ * a match list and wrong for anything the server is re-authorizing. When the
+ * failing request *is* the access recheck, a retained cache outlives the
+ * permission that produced it, and the data keeps rendering after access was
+ * revoked. TanStack keeps that cache unless the query opts out with
+ * `gcTime: 0`, so the fallthrough is the default, not the exception.
+ *
+ * Applying this at the projection makes the mistake unrepresentable downstream
+ * rather than asking every call site to remember which of its queries carry
+ * authorization.
+ */
+function strict<T>(value: Loaded<T>): Loaded<T> {
+  return value.status === "degraded"
+    ? { status: "error", fetching: value.fetching, errors: value.errors }
+    : value;
+}
+
 function getOrElse<T, F>(value: Loaded<T>, fallback: F): T | F {
   return value.status === "degraded" || value.status === "done"
     ? value.data
@@ -518,6 +538,7 @@ export const Loaded = {
   allArray,
   match,
   getOrElse,
+  strict,
   messageOf,
   fromQuery,
 };

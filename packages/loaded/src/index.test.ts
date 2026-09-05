@@ -439,3 +439,32 @@ describe("messageOf", () => {
     expect(Loaded.messageOf(404)).toBe("404");
   });
 });
+
+describe("strict", () => {
+  test("turns degraded into error so stale access data cannot render", () => {
+    expect(
+      Loaded.strict(Loaded.degraded("cohort", [errorAt(["compare"], boom)])),
+    ).toEqual({
+      status: "error",
+      fetching: false,
+      errors: [errorAt(["compare"], boom)],
+    });
+  });
+
+  test("leaves every other state alone", () => {
+    expect(Loaded.strict(Loaded.done("ada"))).toEqual({
+      status: "done",
+      fetching: false,
+      data: "ada",
+    });
+    expect(Loaded.strict(Loaded.loading())).toEqual({
+      status: "loading",
+      fetching: true,
+    });
+    expect(Loaded.strict(Loaded.failed(boom))).toEqual({
+      status: "error",
+      fetching: false,
+      errors: [errorAt([], boom)],
+    });
+  });
+});
