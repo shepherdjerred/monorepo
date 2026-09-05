@@ -94,13 +94,19 @@ pending child resolves.
 - `Loaded.map`'s callback is allowed to throw. A render-model function that
   blows up is a bug, not an error state.
 - `Loaded.fromQuery` branches on **data presence**, not on the producer's own
-  status field, which is what lets it narrow `T | undefined` to `T` honestly
-  instead of asserting a contract it cannot check. Its structural `QueryLike`
-  shape is why this package depends on no query library.
+  status field. Its structural `QueryLike` shape is why this package depends on
+  no query library. `QueryLike.data` is `unknown` rather than a generic
+  `T | undefined` deliberately: `UseQueryResult` is a discriminated union, and
+  inferring from `data: T | undefined` matches per member, so the pending
+  member's `data: undefined` wins and collapses every consumer's data type.
+  Inferring the whole result and projecting with `QueryData<Q>` is immune,
+  because an indexed access distributes over the union.
   Known limitation: a query whose success value is legitimately `undefined`
   projects to `loading`. Wrap such a value before handing it here.
 - `Loaded.fromQuery`'s optional `path` is for a value that will _not_ travel
   through a keyed join. `Loaded.all` prefixes its own key, so passing
   `["user"]` and then joining under `user` yields `["user", "user"]`.
-- The package contains exactly one type assertion, in `Loaded.all`, where the
-  checker cannot connect the loop's proof to the mapped result type.
+- The package contains two type assertions, both in `src/index.ts`: one in
+  `Loaded.all`, where the checker cannot connect the loop's proof to the mapped
+  result type, and one in `Loaded.fromQuery`, where it cannot reduce `Exclude`
+  over an unresolved generic after the `data !== undefined` guard.

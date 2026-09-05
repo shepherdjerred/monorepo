@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { Loaded, type LoadedError } from "@shepherdjerred/loaded/index.ts";
+import {
+  Loaded,
+  type LoadedData,
+  type LoadedError,
+} from "@shepherdjerred/loaded/index.ts";
 
 const boom = new Error("boom");
 const splat = new Error("splat");
@@ -341,5 +345,83 @@ describe("getOrElse", () => {
   test("returns the fallback otherwise", () => {
     expect(Loaded.getOrElse(Loaded.loading(), "nobody")).toBe("nobody");
     expect(Loaded.getOrElse(Loaded.failed(boom), "nobody")).toBe("nobody");
+  });
+
+  test("accepts a fallback of a different type, for progressive rendering", () => {
+    const absent: string | undefined = Loaded.getOrElse(
+      Loaded.loading(),
+      undefined,
+    );
+    const present: string | undefined = Loaded.getOrElse(
+      Loaded.done("ada"),
+      undefined,
+    );
+    expect(absent).toBeUndefined();
+    expect(present).toBe("ada");
+  });
+});
+
+/**
+ * Compile-time guard. `LoadedData` once used `T[K] extends Loaded<infer U>`,
+ * which widened `U` with `undefined` because the data-less `loading` and
+ * `error` members take part in the union match. That forced a null check on
+ * data `LoadingBlock` had already proven present. If it regresses, `takesUser`
+ * stops accepting `data.user` and `typecheck` fails here rather than in every
+ * consumer.
+ */
+describe("LoadedData", () => {
+  test("unwraps to the data type without widening it", () => {
+    type User = { readonly name: string };
+    const takesUser = (user: User): string => user.name;
+
+    const data: LoadedData<{ user: Loaded<User> }> = { user: { name: "ada" } };
+
+    expect(takesUser(data.user)).toBe("ada");
+  });
+
+  test("unwraps a joined record the same way", () => {
+    type User = { readonly name: string };
+    const joined = Loaded.all({
+      user: Loaded.done<User>({ name: "ada" }),
+      count: Loaded.done(2),
+    });
+    const rendered = Loaded.match(joined, {
+      loading: () => "loading",
+      error: () => "error",
+      available: (data) => `${data.user.name}:${String(data.count)}`,
+    });
+    expect(rendered).toBe("ada:2");
+  });
+});
+
+describe("QueryData", () => {
+  /**
+   * Regression: `fromQuery` once took `QueryLike<T>` with `data: T | undefined`.
+   * Against a discriminated-union result the per-member match settled on
+   * `T = undefined`, so every consumer's data collapsed to `undefined` — caught
+   * only when a real `UseQueryResult` reached it. The authoritative guard is a
+   * consumer package's `typecheck`; this pins the projection itself.
+   */
+  test("projects data through a discriminated-union result", () => {
+    type User = { readonly name: string };
+    type Result =
+      | { data: User; error: null; isFetching: boolean; status: "success" }
+      | { data: undefined; error: null; isFetching: boolean; status: "pending" }
+      | { data: undefined; error: Error; isFetching: boolean; status: "error" };
+
+    const takesUser = (user: User): string => user.name;
+    const result: Result = {
+      data: { name: "ada" },
+      error: null,
+      isFetching: false,
+      status: "success",
+    };
+
+    const rendered = Loaded.match(Loaded.fromQuery(result), {
+      loading: () => "loading",
+      error: () => "error",
+      available: (data) => takesUser(data),
+    });
+    expect(rendered).toBe("ada");
   });
 });
