@@ -272,13 +272,13 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "bucks-reconciliation": {
             const { reconcileBucksBalances } =
-              await import("#src/betting/reconcile.ts");
+              await import("#src/betting/settlement/reconcile.ts");
             await reconcileBucksBalances();
             break;
           }
           case "weekly-bucks-leaderboard": {
             const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/weekly-leaderboard.ts");
+              await import("#src/betting/weekly/weekly-leaderboard.ts");
             await runWeeklyBucksLeaderboard();
             break;
           }

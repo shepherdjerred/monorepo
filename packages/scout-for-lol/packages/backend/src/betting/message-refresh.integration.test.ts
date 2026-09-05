@@ -14,8 +14,8 @@ import {
   sendSettlementMessage,
   type SettlementDeliveryDependencies,
 } from "#src/betting/announce.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlay-settle.ts";
-import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/parlay-settle.ts";
+import { recordPoolMessageRefs } from "#src/betting/markets/pool-open.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import {
   bucksTestDiscordId,

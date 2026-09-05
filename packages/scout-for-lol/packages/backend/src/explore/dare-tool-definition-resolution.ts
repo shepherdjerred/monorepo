@@ -1,7 +1,7 @@
 import type { z } from "zod";
 import type { DareTargetBindingV2 } from "@scout-for-lol/data";
-import type { DareDraftV2Definition } from "#src/betting/dare-draft-v2.ts";
-import type { DareDraftV3Definition } from "#src/betting/dare-draft-v3.ts";
+import type { DareDraftV2Definition } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
+import type { DareDraftV3Definition } from "#src/betting/dares/lifecycle/dare-draft-v3.ts";
 import type {
   DareDefinitionV2ToolInputSchema,
   DareDefinitionV3ToolInputSchema,

@@ -18,7 +18,7 @@ import {
   PARLAY_BETTING_WINDOW_MS,
   SEED_GRANT,
 } from "#src/betting/constants.ts";
-import { EARNED_REWARDS } from "#src/betting/earnings.ts";
+import { EARNED_REWARDS } from "#src/betting/accounts/earnings.ts";
 import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
 import { DARE_V2_INTENT_TTL_MS } from "#src/betting/constants.ts";
 import {
@@ -30,7 +30,7 @@ import {
   WEEKLY_PARLAY_MIN_LEG_PROBABILITY_BPS,
   WEEKLY_PARLAY_MIN_YES_PROBABILITY_BPS,
   WEEKLY_PARLAY_SETTLEMENT_MIN_GAMES,
-} from "#src/betting/weekly-parlay-criteria.ts";
+} from "#src/betting/weekly/weekly-parlay-criteria.ts";
 import {
   WEEKLY_PARLAY_BETTING_CLOSE_HOUR,
   WEEKLY_PARLAY_CATCHUP_MINIMUM_BETTING_HOURS,
@@ -39,7 +39,7 @@ import {
   WEEKLY_PARLAY_OPEN_HOUR,
   WEEKLY_PARLAY_TIMEZONE,
   weeklyParlayWallClockLabel,
-} from "#src/betting/weekly-parlay-period.ts";
+} from "#src/betting/weekly/weekly-parlay-period.ts";
 
 const BUCKS_COLOR = 0x2e_cc_71;
 

@@ -8,16 +8,16 @@ import {
 import { z } from "zod";
 import { DARE_MAX_TEXT_LENGTH } from "#src/betting/constants.ts";
 import { bucksInsufficient } from "#src/betting/copy.ts";
-import { dareConfirmationComponents } from "#src/betting/dare-callout.ts";
+import { dareConfirmationComponents } from "#src/betting/dares/presentation/dare-callout.ts";
 import {
   DARES_NOT_ENABLED,
   dareConfirmationContent,
-} from "#src/betting/dare-copy.ts";
-import { createProposedDare } from "#src/betting/dare-create.ts";
+} from "#src/betting/dares/presentation/dare-copy.ts";
+import { createProposedDare } from "#src/betting/dares/lifecycle/dare-create.ts";
 import {
   translateDare,
   type DareTranslationResult,
-} from "#src/betting/dare-translate.ts";
+} from "#src/betting/dares/evaluation/dare-translate.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 import {

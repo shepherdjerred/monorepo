@@ -13,17 +13,17 @@ import {
   BucksBetQuerySchema,
   BucksLedgerQueryResultSchema,
   BucksLedgerQuerySchema,
-} from "#src/betting/ask-analytics-schema.ts";
+} from "#src/betting/analytics/ask-analytics-schema.ts";
 import {
   loadBucksAskAnalyticsDataset,
   type BucksAskAnalyticsDataset,
-} from "#src/betting/ask-analytics.ts";
+} from "#src/betting/analytics/ask-analytics.ts";
 import {
   bucksAskDatasetOverview,
   queryBucksAccounts,
   queryBucksBets,
   queryBucksLedger,
-} from "#src/betting/ask-analytics-query.ts";
+} from "#src/betting/analytics/ask-analytics-query.ts";
 import {
   isPolicyEnabled,
   listGuildsWithFlagEnabled,

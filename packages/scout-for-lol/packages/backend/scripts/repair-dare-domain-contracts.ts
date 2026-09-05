@@ -28,7 +28,7 @@ import {
   RawMatchSchema,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { settleDaresV2ForMatch } from "#src/betting/dare-settle-v2.ts";
+import { settleDaresV2ForMatch } from "#src/betting/dares/settlement/dare-settle-v2.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 
 /**
