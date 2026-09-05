@@ -1,20 +1,10 @@
-import {
-  DARE_V2_MAX_ELIGIBLE_GAMES,
-  DARE_V2_MAX_EXPRESSION_DEPTH,
-  DARE_V2_MAX_GAME_SETS,
-  DARE_V2_MAX_HORIZON_DAYS,
-  DARE_V2_MAX_JOINED_RELATIONS,
-  DARE_V2_MAX_PREDICATES,
-  DARE_V2_MAX_QUERY_LENGTH,
-  DARE_V2_MAX_TARGETS,
-} from "@scout-for-lol/data";
 import { buildDareShortlist } from "#src/betting/dare-shortlist.ts";
 import {
   createDareDraftV3,
   prepareDareDraftV3,
   reviseDareDraftV3,
 } from "#src/betting/dare-draft-v3.ts";
-import { dareSqlV3Catalog } from "#src/betting/dare-sql-v3-catalog.ts";
+import { dareLanguagePayload } from "#src/explore/dare-language.ts";
 import { compileDareSqlV3 } from "#src/betting/dare-sql-v3.ts";
 import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
 import {
@@ -163,29 +153,7 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
           targets.length === 0
             ? "No eligible targets are currently linked in this guild."
             : "Use only these target keys and the closed contract schema.",
-          {
-            authoringVersion: sqlV3 ? 3 : 2,
-            targets: targets.map((target) => ({
-              key: target.key,
-              alias: target.alias,
-            })),
-            limits: {
-              targets: DARE_V2_MAX_TARGETS,
-              gameSets: DARE_V2_MAX_GAME_SETS,
-              joinedRelations: DARE_V2_MAX_JOINED_RELATIONS,
-              predicates: DARE_V2_MAX_PREDICATES,
-              expressionDepth: DARE_V2_MAX_EXPRESSION_DEPTH,
-              queryCharacters: DARE_V2_MAX_QUERY_LENGTH,
-              eligibleGames: DARE_V2_MAX_ELIGIBLE_GAMES,
-              horizonDays: DARE_V2_MAX_HORIZON_DAYS,
-            },
-            defaults: {
-              queues: ["solo", "flex"],
-              relativeDeadlineDays: 7,
-              orderBy: "game_end_at_asc_match_id_asc",
-            },
-            ...(sqlV3 ? { sql: dareSqlV3Catalog() } : {}),
-          },
+          dareLanguagePayload({ sqlV3, targets }),
         );
       }),
     validateScoutQl: (raw: unknown) =>

@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { BucksStakeSchema } from "#src/model/bryan-bucks.ts";
 import { QueueTypeSchema } from "#src/model/state.ts";
-import {
-  dareGameSetDomainIssuesV2,
-  DareTimelineEventTypeSchema,
-} from "#src/model/dare-domains.ts";
+import { dareGameSetDomainIssuesV2 } from "#src/model/dare-domains.ts";
 import {
   DareParticipantRateFieldV2Schema,
   DareParticipantValueFieldV2Schema,
@@ -121,7 +118,13 @@ export const DareValueV2Schema: z.ZodType<DareValueV2> = z.lazy(() =>
     }),
     z.strictObject({
       kind: z.literal("timeline_event_count"),
-      eventType: DareTimelineEventTypeSchema,
+      // A bounded string, not the `DARE_TIMELINE_EVENT_TYPES` enum, because this
+      // schema is shared by `DareStoredPlanV2Schema`: an enum here would make a
+      // dare funded against an event type we later dropped — or one Riot renames
+      // — unreadable in settlement, callouts, and progress views, stranding real
+      // money. The allowlist is enforced in `DareCompiledPlanV2Schema`'s
+      // refinement instead, exactly like every other value domain.
+      eventType: z.string().min(1).max(80),
       target: z.string().min(1).nullable(),
       role: z
         .enum(["subject", "killer", "victim", "assist", "creator"])

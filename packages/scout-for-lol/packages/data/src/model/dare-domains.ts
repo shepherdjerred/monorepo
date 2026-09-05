@@ -156,7 +156,20 @@ function dareDomainColumnForValue(value: DareValueV2): DareDomainColumn | null {
   return value.kind === "game" && value.field === "queue" ? "queue" : null;
 }
 
-/** Domain issues carried by a value itself, independent of any threshold. */
+function issueList(issue: string | null): string[] {
+  return issue === null ? [] : [issue];
+}
+
+/**
+ * Domain issues carried by a value itself, independent of any threshold.
+ *
+ * A closed-domain field that lives *on* a value never reaches
+ * `dareBooleanDomainIssuesV2`: that walk resolves a column from what the
+ * comparison reads, so it only ever inspects the comparison's own threshold.
+ * `related_participant_count.championName` and `timeline_event_count.eventType`
+ * are filters the value applies before it produces a number, so they have to be
+ * checked here or they are not checked at all.
+ */
 export function dareValueDomainIssuesV2(value: DareValueV2): string[] {
   if (value.kind === "arithmetic") {
     return [
@@ -164,14 +177,15 @@ export function dareValueDomainIssuesV2(value: DareValueV2): string[] {
       ...dareValueDomainIssuesV2(value.right),
     ];
   }
-  if (
-    value.kind !== "related_participant_count" ||
-    value.championName === null
-  ) {
-    return [];
+  if (value.kind === "related_participant_count") {
+    return value.championName === null
+      ? []
+      : issueList(dareDomainIssue("champion_name", value.championName));
   }
-  const issue = dareDomainIssue("champion_name", value.championName);
-  return issue === null ? [] : [issue];
+  if (value.kind === "timeline_event_count") {
+    return issueList(dareDomainIssue("event_type", value.eventType));
+  }
+  return [];
 }
 
 /**
