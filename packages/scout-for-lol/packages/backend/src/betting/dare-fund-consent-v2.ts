@@ -2,6 +2,7 @@ import {
   DARE_CONTRACT_VERSION,
   DareStoredPlanV2Schema,
   DareSqlV3CompilationSchema,
+  DareCompiledPlanV2Schema,
   DareContractV2Schema,
   DiscordAccountIdSchema,
   PlayerIdSchema,
@@ -79,6 +80,23 @@ export async function fundDareV2InTransaction(
     },
   });
   if (revision === null) return { kind: "stale_revision" } as const;
+  // Draft-to-funded is the last moment a contract can still be fixed, and the
+  // only place the authoring rules can still be applied to a draft that predates
+  // them. Activation deliberately parses with the permissive stored schema so an
+  // already-funded dare stays readable, and this transition is what would
+  // otherwise let a stale draft holding a value the allowlist now refuses take a
+  // stake and settle as a real loss.
+  if (revision.compilerVersion !== "dare-scoutql-3") {
+    const authored = DareCompiledPlanV2Schema.safeParse(
+      JSON.parse(revision.compiledPlan),
+    );
+    if (!authored.success) {
+      return {
+        kind: "contract_invalid",
+        issues: authored.error.issues.map((issue) => issue.message),
+      } as const;
+    }
+  }
   const targets = parseDareV2Targets(revision.targetsJson);
   const deadlineSpec = parseDareV2Deadline(revision.deadlineSpecJson);
   const absoluteDeadline =

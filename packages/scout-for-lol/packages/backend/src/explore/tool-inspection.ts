@@ -265,6 +265,7 @@ export function inspectExploreToolResult(
         "forbidden",
         "feature_disabled",
         "stale_revision",
+        "contract_invalid",
       ].includes(parsed.kind),
       rawOutput: JsonValueSchema.parse(parsed),
       details: null,
