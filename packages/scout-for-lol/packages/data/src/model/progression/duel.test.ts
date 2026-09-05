@@ -140,6 +140,45 @@ describe("duel rules and evidence", () => {
     });
   });
 
+  test("sends CS crossings that overlap exact objectives to review", () => {
+    const competitors = [
+      competitor(FIRST_ID, ["first"]),
+      competitor(SECOND_ID, ["second"]),
+    ];
+    const input = timeline(["first"], ["second"]);
+    input.kills = [{ timestampMs: 30_000, killerPuuid: "second" }];
+    input.frames = [
+      {
+        timestampMs: 20_000,
+        participants: input.participants.map((participant) => ({
+          puuid: participant.puuid,
+          minionsKilled: 9,
+          jungleMinionsKilled: 0,
+        })),
+      },
+      {
+        timestampMs: 60_000,
+        participants: input.participants.map((participant) => ({
+          puuid: participant.puuid,
+          minionsKilled: participant.puuid === "first" ? 10 : 9,
+          jungleMinionsKilled: 0,
+        })),
+      },
+    ];
+
+    expect(
+      evaluateDuelGame(
+        { version: 1, killTarget: 1, laneCsTarget: 10, firstTurret: false },
+        competitors,
+        input,
+      ),
+    ).toMatchObject({
+      state: "needs_review",
+      reason:
+        "A participant-frame CS crossing overlaps another objective, so the winner order is indeterminate",
+    });
+  });
+
   test("sends simultaneous CS crossings and split pairs to review", () => {
     const competitors = [
       competitor(FIRST_ID, ["first-a", "first-b"]),
