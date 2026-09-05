@@ -39,6 +39,7 @@ async function reconcileChallengeRevisions(stage: ScoutStage): Promise<void> {
 }
 
 async function reconcileDuelSeries(stage: ScoutStage): Promise<void> {
+  const reconciliationRequestId = crypto.randomUUID();
   let cursor: string | undefined;
   for (;;) {
     const seriesPage = await prisma.duelSeries.findMany({
@@ -67,7 +68,7 @@ async function reconcileDuelSeries(stage: ScoutStage): Promise<void> {
         stage,
         seriesId: series.id,
         deadlineAt: series.deadlineAt,
-        requestId: `reconcile-duel:${series.id}`,
+        requestId: `reconcile-duel:${reconciliationRequestId}:${series.id}`,
       });
     }
     if (seriesPage.length < RECONCILIATION_BATCH_SIZE) return;
