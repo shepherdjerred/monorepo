@@ -22,6 +22,7 @@
     "@scout-for-lol/backend": "workspace:*",
     "@scout-for-lol/data": "workspace:*",
     "@scout-for-lol/design-system": "workspace:*",
+    "@shepherdjerred/loaded": "workspace:*",
     "@tanstack/react-query": "^5.90.21",
     "@trpc/client": "^11.18.0",
     "@trpc/tanstack-react-query": "^11.18.0",
