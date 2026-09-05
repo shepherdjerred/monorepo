@@ -134,6 +134,7 @@ type LakeActivities = Pick<
   | "runDetachedLakeWork"
   | "runHallBaseline"
   | "recomputeChallengeRunPage"
+  | "markChallengeRunRecomputeFailure"
   | "probeQueue"
 >;
 

@@ -61,6 +61,9 @@ export type ScoutTemporalActivities = {
   recomputeChallengeRunPage: (
     input: ScoutChallengeRunRecomputeInput,
   ) => Promise<ScoutChallengeRunRecomputePageResult>;
+  markChallengeRunRecomputeFailure: (
+    input: ScoutChallengeRunRecomputeInput,
+  ) => Promise<void>;
   refreshDuelSeries: (
     input: ScoutDuelSeriesInput,
   ) => Promise<ScoutDuelSeriesRefreshResult>;

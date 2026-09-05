@@ -468,6 +468,11 @@ function createLakeActivities(): ScoutTemporalActivityGroups["lake"] {
         },
       );
     },
+    markChallengeRunRecomputeFailure: async (input) => {
+      const { markChallengeRunRecomputeFailure } =
+        await import("#src/progression/challenges/recompute.ts");
+      await markChallengeRunRecomputeFailure(input);
+    },
   };
 }
 export function createScoutTemporalActivityGroups(): ScoutTemporalActivityGroups {

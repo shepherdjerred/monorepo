@@ -33,7 +33,9 @@ function progressCompleted(
 async function markRevisionFailure(
   input: ScoutChallengeRunRecomputeInput,
   error: unknown,
+  options?: { readonly terminal: boolean },
 ): Promise<void> {
+  const terminal = options?.terminal ?? false;
   const revision = await prisma.challengeRunRevision.findUnique({
     where: {
       runId_revision: { runId: input.runId, revision: input.revision },
@@ -44,7 +46,7 @@ async function markRevisionFailure(
     prisma.challengeRunRevision.updateMany({
       where: { runId: input.runId, revision: input.revision },
       data: {
-        revisionState: "failed",
+        revisionState: terminal ? "failed" : "running",
         errorMessage: error instanceof Error ? error.message : String(error),
       },
     }),
@@ -54,7 +56,10 @@ async function markRevisionFailure(
         evaluationRevision: input.revision,
         runState: { not: "archived" },
       },
-      data: { runState: "failed", recomputing: false },
+      data: {
+        runState: terminal ? "failed" : "active",
+        recomputing: !terminal,
+      },
     }),
   ]);
   const startedAt = revision?.startedAt ?? revision?.createdAt;
@@ -64,6 +69,16 @@ async function markRevisionFailure(
       (Date.now() - startedAt.getTime()) / 1000,
     );
   }
+}
+
+export async function markChallengeRunRecomputeFailure(
+  input: ScoutChallengeRunRecomputeInput,
+): Promise<void> {
+  await markRevisionFailure(
+    input,
+    new Error("Challenge recomputation exhausted activity retries"),
+    { terminal: true },
+  );
 }
 
 async function finalizeRevision(
