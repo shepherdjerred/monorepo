@@ -718,6 +718,16 @@
       "source": "packages/homelab/src/tofu/asuswrt/import.sh",
       "disposition": "retain",
       "reason": "Operator-run OpenTofu import bootstrap invoked manually via op run; drives the tofu CLI with a shell heredoc and is not part of the Bun runtime"
+    },
+    {
+      "source": "packages/home-assistant/demos/record-codegen-demo.sh",
+      "disposition": "retain",
+      "reason": "Terminal narration for asciinema capture: emits raw ANSI cursor/clear sequences and human-paced sleeps to drive a live tty recording, not automation logic"
+    },
+    {
+      "source": "packages/homelab/src/helm-types/demos/record-cli-demo.sh",
+      "disposition": "retain",
+      "reason": "Terminal narration for asciinema capture: emits raw ANSI cursor/clear sequences and human-paced sleeps to drive a live tty recording, not automation logic"
     }
   ]
 }
