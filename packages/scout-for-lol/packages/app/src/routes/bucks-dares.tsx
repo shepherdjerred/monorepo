@@ -8,20 +8,20 @@ import type {
   DarePollHealth,
   DareProgress,
 } from "@scout-for-lol/data";
-import { BucksDareEditor } from "#src/components/bucks-dare-editor.tsx";
-import { BucksDareActions } from "#src/components/bucks-dare-actions.tsx";
+import { BucksDareEditor } from "#src/components/bucks/bucks-dare-editor.tsx";
+import { BucksDareActions } from "#src/components/bucks/bucks-dare-actions.tsx";
 import { FilterSelect } from "#src/components/filter-select.tsx";
 import {
   DareEvidencePanel,
   DareActivationHealthPanel,
   DareProcessingHealthPanel,
   DareProgressPanel,
-} from "#src/components/bucks-dare-progress.tsx";
+} from "#src/components/bucks/bucks-dare-progress.tsx";
 import {
   DareFact as Fact,
   DareStatePill as StatePill,
   isNonterminalDareState,
-} from "#src/components/bucks-dare-display.tsx";
+} from "#src/components/bucks/bucks-dare-display.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
@@ -35,8 +35,8 @@ import {
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
-import { dareDeadlineDescription } from "#src/lib/dare-deadline.ts";
-import { dareEditorInstanceKey } from "#src/lib/dare-editor-state.ts";
+import { dareDeadlineDescription } from "#src/lib/dares/dare-deadline.ts";
+import { dareEditorInstanceKey } from "#src/lib/dares/dare-editor-state.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 

@@ -1,4 +1,4 @@
-import type { AnalyticsProps } from "#src/lib/analytics-events.ts";
+import type { AnalyticsProps } from "#src/lib/analytics/analytics-events.ts";
 
 /**
  * Pure decisions for the /app/installed landing page: what to show, where

@@ -13,19 +13,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { ChampionIcon } from "#src/components/champion-icon.tsx";
+import { ChampionIcon } from "#src/components/matches/champion-icon.tsx";
 import {
   ChampionComparisonTable,
   type ChampionComparisonRow,
-} from "#src/components/champion-comparison-table.tsx";
+} from "#src/components/matches/champion-comparison-table.tsx";
 import { PageSectionHeading } from "#src/components/page-section-heading.tsx";
-import { PlayerProfileFilterBar } from "#src/components/player-profile-filter-bar.tsx";
+import { PlayerProfileFilterBar } from "#src/components/players/player-profile-filter-bar.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
   playerProfileSearch,
   type PlayerProfileFilters,
 } from "#src/lib/player-profile-filters.ts";
-import { useConsumerChampionParams } from "#src/lib/route-params.ts";
+import { useConsumerChampionParams } from "#src/lib/api/route-params.ts";
 import { useTRPC, type RouterOutputs } from "#src/lib/trpc.ts";
 import { usePlayerProfileUrlState } from "#src/lib/use-player-profile-url-state.ts";
 

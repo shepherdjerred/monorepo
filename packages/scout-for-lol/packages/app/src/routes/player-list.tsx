@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
+import { AddSubscriptionDialog } from "#src/components/dialogs/add-subscription-dialog.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ConceptCards } from "#src/components/concept-cards.tsx";
 import {
@@ -25,9 +25,9 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { DiscordUser } from "#src/components/discord-user.tsx";
+import { DiscordUser } from "#src/components/identity/discord-user.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
 
 function channelLabel(
   channels: { id: string; name: string }[] | undefined,

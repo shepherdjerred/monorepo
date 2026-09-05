@@ -10,14 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { MatchScoreboards } from "#src/components/match-scoreboard.tsx";
-import { MatchTimeline } from "#src/components/match-timeline.tsx";
+import { MatchScoreboards } from "#src/components/matches/match-scoreboard.tsx";
+import { MatchTimeline } from "#src/components/matches/match-timeline.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
   parsePlayerProfileFilters,
   playerProfileSearch,
 } from "#src/lib/player-profile-filters.ts";
-import { useConsumerMatchParams } from "#src/lib/route-params.ts";
+import { useConsumerMatchParams } from "#src/lib/api/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 function duration(seconds: number): string {

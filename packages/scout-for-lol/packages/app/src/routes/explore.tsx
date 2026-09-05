@@ -8,27 +8,27 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@scout-for-lol/design-system/components/collapsible";
-import { ExploreComposer } from "#src/components/explore-composer.tsx";
-import { ExploreHeader } from "#src/components/explore-header.tsx";
-import { ExploreShareRow } from "#src/components/explore-share.tsx";
-import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
-import type { ExploreTranscriptActions } from "#src/components/explore-transcript-actions.ts";
+import { ExploreComposer } from "#src/components/explore/explore-composer.tsx";
+import { ExploreHeader } from "#src/components/explore/explore-header.tsx";
+import { ExploreShareRow } from "#src/components/explore/explore-share.tsx";
+import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
+import type { ExploreTranscriptActions } from "#src/components/explore/explore-transcript-actions.ts";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
   visiblePending,
-} from "#src/lib/explore-turn-state.ts";
+} from "#src/lib/explore/explore-turn-state.ts";
 import {
   conversationToMarkdown,
   downloadMarkdown,
   exportFilename,
-} from "#src/lib/explore-export.ts";
+} from "#src/lib/explore/explore-export.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
-import { useExploreParams } from "#src/lib/route-params.ts";
+import { useExploreParams } from "#src/lib/api/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
-import { useExploreRuns } from "#src/components/explore-runs-context.ts";
+import { useExploreRuns } from "#src/components/explore/explore-runs-context.ts";
 import { usePinnedScroll } from "#src/hooks/use-pinned-scroll.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 

@@ -11,20 +11,20 @@ import { MoreHorizontal } from "lucide-react";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
+import { AddSubscriptionDialog } from "#src/components/dialogs/add-subscription-dialog.tsx";
 import {
   SubscriptionChannelDialog,
   type SubscriptionChannelAction,
-} from "#src/components/subscription-channel-dialog.tsx";
+} from "#src/components/subscriptions/subscription-channel-dialog.tsx";
 import {
   SubscriptionFilterDialog,
   type SubscriptionFilterAction,
-} from "#src/components/subscription-filter-dialog.tsx";
-import { FilterSummary } from "#src/components/subscription-filter-summary.tsx";
+} from "#src/components/subscriptions/subscription-filter-dialog.tsx";
+import { FilterSummary } from "#src/components/subscriptions/subscription-filter-summary.tsx";
 import {
   muteResultOutcome,
   removeResultOutcome,
-} from "#src/lib/subscription-result-messages.ts";
+} from "#src/lib/domain/subscription-result-messages.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   DropdownMenu,
@@ -42,7 +42,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
 
 function accountLabel(account: {
   alias: string;

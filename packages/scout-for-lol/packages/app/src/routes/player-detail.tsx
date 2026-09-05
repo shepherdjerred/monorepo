@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { PlayerSubscriptionsManager } from "#src/components/player-subscriptions-manager.tsx";
+import { PlayerSubscriptionsManager } from "#src/components/players/player-subscriptions-manager.tsx";
 import {
   useMutation,
   useQuery,
@@ -11,10 +11,10 @@ import {
 import { CompetitionStatusSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
-import { findRegion, type RegionValue } from "#src/lib/regions.ts";
+import { nextRiotIdPollInterval } from "#src/lib/domain/riot-id-poll.ts";
+import { findRegion, type RegionValue } from "#src/lib/domain/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { usePlayerParams } from "#src/lib/route-params.ts";
+import { usePlayerParams } from "#src/lib/api/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -22,20 +22,20 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { DiscordUser } from "#src/components/discord-user.tsx";
-import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
+import { DiscordUser } from "#src/components/identity/discord-user.tsx";
+import { PlayerHeaderActions } from "#src/components/players/player-header-actions.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
   Section,
-} from "#src/components/player-detail-sections.tsx";
-import { GuildPlayerStats } from "#src/components/guild-player-stats.tsx";
-import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
-import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";
-import { AddAccountDialog } from "#src/components/add-account-dialog.tsx";
-import { EditAccountDialog } from "#src/components/edit-account-dialog.tsx";
-import { MergePlayersDialog } from "#src/components/merge-players-dialog.tsx";
-import { TransferAccountDialog } from "#src/components/transfer-account-dialog.tsx";
+} from "#src/components/players/player-detail-sections.tsx";
+import { GuildPlayerStats } from "#src/components/identity/guild-player-stats.tsx";
+import { RenamePlayerDialog } from "#src/components/dialogs/rename-player-dialog.tsx";
+import { LinkDiscordDialog } from "#src/components/dialogs/link-discord-dialog.tsx";
+import { AddAccountDialog } from "#src/components/dialogs/add-account-dialog.tsx";
+import { EditAccountDialog } from "#src/components/dialogs/edit-account-dialog.tsx";
+import { MergePlayersDialog } from "#src/components/dialogs/merge-players-dialog.tsx";
+import { TransferAccountDialog } from "#src/components/dialogs/transfer-account-dialog.tsx";
 
 type EditableAccount = { id: number; alias: string; region: string };
 

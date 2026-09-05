@@ -3,13 +3,13 @@ import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { FormActions } from "@scout-for-lol/design-system/components/input";
-import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
+import { CompetitionBuilderV2 } from "#src/components/competitions/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,
   EMPTY_STATE,
   competitionFormOptions,
   type FormState,
-} from "#src/components/competition-form-fields.tsx";
+} from "#src/components/competitions/competition-form-fields.tsx";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 import {
   focusFirstInvalid,
@@ -26,9 +26,9 @@ import {
   useUnsavedFormTransition,
 } from "#src/hooks/use-unsaved-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
+import { validateForm } from "#src/lib/competitions/competition-form-state.ts";
 import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
-import { COMPETITION_EXAMPLES } from "#src/lib/onboarding-examples.ts";
+import { COMPETITION_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 const TITLE = "Start a competition";
