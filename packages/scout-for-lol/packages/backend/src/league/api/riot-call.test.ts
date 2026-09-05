@@ -3,6 +3,7 @@ import { ZodError, z } from "zod";
 import {
   callRiotOrThrow,
   callRiotOrUndefined,
+  callRiotOrUndefinedOn404,
 } from "#src/league/api/riot-call.ts";
 import { RiotHttpError } from "#src/league/api/client/errors.ts";
 
@@ -140,6 +141,50 @@ describe("callRiotOrThrow", () => {
       fails(new Error("ENOTFOUND")),
     );
     await expect(promise).rejects.toThrow(/ENOTFOUND/);
+  });
+});
+
+describe("callRiotOrUndefinedOn404", () => {
+  test("returns parsed data on success", async () => {
+    const result = await callRiotOrUndefinedOn404(
+      { source: "test-404-only-success", schema: Schema, context: {} },
+      ok({ id: 1, name: "ok" }),
+    );
+    expect(result).toEqual({ id: 1, name: "ok" });
+  });
+
+  test("returns undefined on HTTP 404", async () => {
+    const result = await callRiotOrUndefinedOn404(
+      { source: "test-404-only-missing", schema: Schema, context: {} },
+      fails(httpError(404)),
+    );
+    expect(result).toBeUndefined();
+  });
+
+  test("throws ZodError on validation failure", async () => {
+    const promise = callRiotOrUndefinedOn404(
+      { source: "test-404-only-validation", schema: Schema, context: {} },
+      ok({ id: "not-a-number", name: "ok" }),
+    );
+    await expect(promise).rejects.toBeInstanceOf(ZodError);
+  });
+
+  test("throws the underlying HTTP error when the status is not 404", async () => {
+    const error = httpError(500);
+    const promise = callRiotOrUndefinedOn404(
+      { source: "test-404-only-500", schema: Schema, context: {} },
+      fails(error),
+    );
+    await expect(promise).rejects.toBe(error);
+  });
+
+  test("throws the underlying transport error", async () => {
+    const error = new Error("ENOTFOUND");
+    const promise = callRiotOrUndefinedOn404(
+      { source: "test-404-only-transport", schema: Schema, context: {} },
+      fails(error),
+    );
+    await expect(promise).rejects.toBe(error);
   });
 });
 
