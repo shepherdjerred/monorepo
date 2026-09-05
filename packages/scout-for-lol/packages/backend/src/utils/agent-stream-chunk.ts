@@ -14,6 +14,17 @@ import { z } from "zod";
 
 const AgentStreamChunkSchema = z.discriminatedUnion("type", [
   z.looseObject({ type: z.literal("start-step") }),
+  // The provider names the tool before it has finished emitting arguments.
+  // Note the field is `id`, not `toolCallId`: on `TextStreamPart` — the union
+  // `agent.stream().stream` actually yields — this part spells it `id`, while
+  // the `toolCallId` spelling belongs to the UI-message chunk union, which
+  // Explore does not consume. Getting that wrong yields a member that silently
+  // never matches, because unparsed chunks are dropped by design.
+  z.looseObject({
+    type: z.literal("tool-input-start"),
+    id: z.string().min(1),
+    toolName: z.string(),
+  }),
   z.looseObject({
     type: z.literal("text-delta"),
     text: z.string(),
@@ -51,6 +62,7 @@ type JsonValue = z.infer<ReturnType<typeof z.json>>;
 
 export type AgentStreamChunk =
   | { kind: "step-start" }
+  | { kind: "tool-input-start"; toolCallId: string; toolName: string }
   | { kind: "text-delta"; text: string }
   | {
       kind: "tool-call";
@@ -87,6 +99,18 @@ export type AgentStreamChunk =
 /**
  * Returns null for chunks that carry nothing an agent needs to act on.
  * Throws when the chunk reports a stream error.
+ *
+ * Two omissions are deliberate rather than pending.
+ *
+ * `tool-input-delta` is not parsed: deriving anything from it means buffering
+ * and partially parsing argument JSON, and the arguments are complete by
+ * `tool-call` anyway. For Explore that buffer would hold model-authored query
+ * text, which is precisely what must not reach a status line.
+ *
+ * `reasoning-*` is not parsed: reasoning is model-authored free text and is
+ * the most likely place for a raw query — or anything else the model happens
+ * to be thinking about — to appear verbatim. It is the worst available source
+ * for a status line, even one that is never persisted.
  */
 export function parseAgentStreamChunk(
   rawChunk: unknown,
@@ -99,6 +123,13 @@ export function parseAgentStreamChunk(
   switch (chunk.type) {
     case "start-step": {
       return { kind: "step-start" };
+    }
+    case "tool-input-start": {
+      return {
+        kind: "tool-input-start",
+        toolCallId: chunk.id,
+        toolName: chunk.toolName,
+      };
     }
     case "text-delta": {
       return chunk.text.length > 0

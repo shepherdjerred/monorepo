@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
+  EXPLORE_ACTIVITY_MAX_LENGTH,
   EXPLORE_ANSWER_MAX_LENGTH,
   EXPLORE_TITLE_MAX_LENGTH,
   ExploreAnswerSchema,
@@ -159,7 +160,15 @@ describe("explore stream mapping", () => {
       { type: "text-delta", text: '{"answer":"Across' },
       { type: "text-delta", text: ' the bottom lane"' },
     ]);
-    expect(events).toHaveLength(0);
+    expect(events.filter((event) => event.type === "answer_delta")).toEqual([]);
+    // Their arrival is still information — with no tool in flight the first
+    // one is the moment the model started composing — but it is announced
+    // once per turn, not once per fragment.
+    expect(events.filter((event) => event.type === "activity")).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "activity",
+      text: "Writing the answer…",
+    });
   });
 
   test("tool activity still surfaces alongside the answer", async () => {
@@ -185,9 +194,15 @@ describe("explore stream mapping", () => {
       objectChunk("Jinx leads."),
     ]);
 
+    // This is the test that pins the bracket ordering: the call is narrated
+    // before the step appears, and the outcome only after the step has
+    // flipped to its final status, so the status line and the step panel can
+    // never disagree about what is happening.
     expect(events.map((event) => event.type)).toEqual([
+      "activity",
       "tool_call",
       "tool_result",
+      "activity",
       "answer_delta",
     ]);
   });
@@ -363,8 +378,7 @@ describe("explore raw tool payload inspection", () => {
       },
     ]);
 
-    expect(events).toHaveLength(1);
-    const [event] = events;
+    const [event, narration] = events;
     if (event?.type !== "tool_result") {
       throw new Error("expected a tool_result event");
     }
@@ -374,6 +388,19 @@ describe("explore raw tool payload inspection", () => {
     expect(event.message).not.toContain("xxxx");
     // The schema is what would have thrown, so parsing is the real assertion.
     expect(ExploreStreamEventSchema.parse(event)).toEqual(event);
+
+    // The status line is a second place the exception could have escaped to,
+    // and it has a tighter cap than the trace message, so it would fail the
+    // schema sooner rather than later.
+    if (narration?.type !== "activity") {
+      throw new Error("expected the failure to be narrated");
+    }
+    expect(narration.text.length).toBeLessThanOrEqual(
+      EXPLORE_ACTIVITY_MAX_LENGTH,
+    );
+    expect(narration.text).not.toContain("someInternalFrame");
+    expect(narration.text).not.toContain("xxxx");
+    expect(ExploreStreamEventSchema.parse(narration)).toEqual(narration);
   });
 
   test("drains both agent streams concurrently to completion", async () => {
@@ -442,5 +469,245 @@ describe("explore raw tool payload inspection", () => {
         createExploreStreamState(),
       ),
     ).rejects.toThrow(/upstream exploded/);
+  });
+});
+
+/**
+ * The live status line and the persisted trace are two channels with two
+ * audiences. A trace `message` is stored on the message and served
+ * unauthenticated to anyone holding a share link; an `activity` string is
+ * never stored and never shared. That asymmetry is what lets the status line
+ * be specific, and these tests are what keep the two from swapping places.
+ */
+function narrations(events: ExploreStreamEvent[]): string[] {
+  return events.flatMap((event) =>
+    event.type === "activity" ? [event.text] : [],
+  );
+}
+
+function traceMessages(events: ExploreStreamEvent[]): string[] {
+  return events.flatMap((event) =>
+    event.type === "tool_call" || event.type === "tool_result"
+      ? [event.message]
+      : [],
+  );
+}
+
+describe("explore live status versus persisted trace", () => {
+  test("the status line names the player while the trace stays anonymous", async () => {
+    const { events } = await collect([
+      {
+        type: "tool-input-start",
+        id: "call-1",
+        toolName: "resolve_player",
+      },
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "resolve_player",
+        input: { query: "Jerred#NA1" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-1",
+        toolName: "resolve_player",
+        input: { query: "Jerred#NA1" },
+        output: { candidates: [{ displayName: "Jerred" }], message: "One." },
+      },
+    ]);
+
+    expect(narrations(events).join(" ")).toContain("Jerred#NA1");
+    // The pair of assertions below is the entire design in one place.
+    for (const message of traceMessages(events)) {
+      expect(message).not.toContain("Jerred");
+    }
+    expect(traceMessages(events)).toEqual([
+      "Looking up who that is.",
+      "Identified the player.",
+    ]);
+  });
+
+  test("no part of a query reaches the status line", async () => {
+    // The source name is looked up in the closed catalog and the catalog's own
+    // id is what gets emitted, so a query cannot smuggle text onto the wire
+    // through the table it names.
+    const queryText =
+      "FROM match_participants SELECT games WHERE player('secret-alias')";
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText },
+        output: {
+          ok: true,
+          message: "Returned 84 rows.",
+          formattedQueryText: queryText,
+          preview: {
+            columns: [{ key: "label", label: "Player", format: "text" }],
+            rows: [{ label: "Jinx", values: [] }],
+            rowsReturned: 84,
+            rowsScanned: 1_284_000,
+            renderKind: "TABLE",
+          },
+        },
+      },
+    ]);
+
+    const text = narrations(events).join(" ");
+    expect(text).not.toContain("secret-alias");
+    expect(text).not.toContain("SELECT");
+    expect(text).not.toContain("WHERE");
+    // The high-information half comes from numbers the engine computed.
+    expect(text).toContain("Querying match participants");
+    expect(text).toContain("Scanned 1.3M rows, kept 84");
+  });
+
+  test("an unknown source falls back to the generic phrase", async () => {
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM notasource SELECT x" },
+      },
+    ]);
+    const text = narrations(events).join(" ");
+    expect(text).not.toContain("notasource");
+    expect(text).toBe("Querying match data.");
+  });
+
+  test("tool-input-start narrates early without starting the duration clock", async () => {
+    let now = 1000;
+    const state = createExploreStreamState(() => now);
+    const events: ExploreStreamEvent[] = [];
+    const push = (event: ExploreStreamEvent) => {
+      events.push(event);
+    };
+    await emitExploreStreamChunk(
+      { type: "tool-input-start", id: "call-1", toolName: "run_report_query" },
+      push,
+      state,
+    );
+    // Only a status line so far — no step exists until its arguments do.
+    expect(events.map((event) => event.type)).toEqual(["activity"]);
+
+    now = 2000;
+    await emitExploreStreamChunk(
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM match_participants SELECT games" },
+      },
+      push,
+      state,
+    );
+    now = 2275;
+    await emitExploreStreamChunk(
+      {
+        type: "tool-result",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM match_participants SELECT games" },
+        output: {
+          ok: true,
+          message: "Returned 1 row.",
+          formattedQueryText: "FROM match_participants SELECT games",
+          preview: null,
+        },
+      },
+      push,
+      state,
+    );
+
+    // 275ms, not 1275: the clock starts when the tool runs, not when the
+    // model began writing its arguments. Timing it from input-start would
+    // silently redefine what the trace's `durationMs` means.
+    const result = events.find((event) => event.type === "tool_result");
+    expect(result?.durationMs).toBe(275);
+  });
+
+  test("a malformed tool input still narrates before the inspection throws", async () => {
+    const state = createExploreStreamState();
+    const events: ExploreStreamEvent[] = [];
+    await expect(
+      emitExploreStreamChunk(
+        {
+          type: "tool-call",
+          toolCallId: "call-1",
+          toolName: "run_report_query",
+          input: { queryText: 42 },
+        },
+        (event) => {
+          events.push(event);
+        },
+        state,
+      ),
+    ).rejects.toThrow();
+    // Status text is decoration: it degrades to the generic phrase rather
+    // than escalating, and it is emitted before the strict parse that throws.
+    expect(events).toEqual([
+      {
+        type: "activity",
+        text: "Querying match data.",
+        toolCallId: "call-1",
+        ignorable: true,
+      },
+    ]);
+  });
+});
+
+describe("explore status with overlapping tool calls", () => {
+  test("a finished tool does not claim the turn is done while another runs", async () => {
+    // A step can issue several tool calls at once. Announcing "Got results."
+    // as soon as the first one lands claims the turn finished work it had
+    // not, and overwrites the status describing the call still executing.
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM match_participants SELECT games" },
+      },
+      {
+        type: "tool-call",
+        toolCallId: "call-2",
+        toolName: "run_report_query",
+        input: { queryText: "FROM player_groups SELECT games" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM match_participants SELECT games" },
+        output: {
+          ok: true,
+          message: "Returned 1 row.",
+          formattedQueryText: "FROM match_participants SELECT games",
+          preview: null,
+        },
+      },
+    ]);
+
+    // Two call narrations, and no result narration while call-2 is in flight.
+    const narrated = events.flatMap((event) =>
+      event.type === "activity" ? [event.text] : [],
+    );
+    expect(narrated).toEqual([
+      "Querying match participants",
+      "Querying player groups",
+    ]);
+
+    // The step itself still completes in the panel — only the status line waits.
+    expect(events.filter((event) => event.type === "tool_result")).toHaveLength(
+      1,
+    );
   });
 });
