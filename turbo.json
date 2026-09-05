@@ -87,6 +87,34 @@
     "//#check-suppressions": {
       "inputs": ["scripts/**", "!scripts/node_modules/**"]
     },
+    "//#check-agent-guidance": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "AGENTS.md",
+        "CLAUDE.md",
+        ".agents/**",
+        ".claude/skills",
+        ".cursor/**",
+        ".opencode/**",
+        "packages/**/AGENTS.md",
+        "packages/**/CLAUDE.md",
+        "packages/**/.agents/**",
+        "packages/**/.cursor/**",
+        "packages/**/.opencode/**",
+        "packages/**/skills/**",
+        "packages/dotfiles/dot_agents/skills/**",
+        "packages/dotfiles/dot_claude/**",
+        "packages/dotfiles/dot_gemini/**",
+        "packages/dotfiles/private_dot_codex/**",
+        "packages/dotfiles/private_dot_cursor/**",
+        "sandbox/**/AGENTS.md",
+        "sandbox/**/CLAUDE.md",
+        "scripts/check-agent-guidance.ts",
+        "scripts/check-agent-guidance.test.ts",
+        "scripts/lib/agent-guidance-files.ts",
+        "!**/node_modules/**"
+      ]
+    },
     "//#check-test-standardization": {
       "inputs": [
         "package.json",

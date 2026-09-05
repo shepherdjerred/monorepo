@@ -77,7 +77,6 @@ bun run docker:build     # build the image (repo-root build context)
 bun run smoke            # smoke script
 ```
 
-The live e2e runs need real tokens and test-guild IDs via env — see
-[AGENTS.md](AGENTS.md), which also covers the architecture in depth, the
-player card, subtitles, HDR, the VAAPI pipeline, observability, and known
-gotchas (fresh-worktree typecheck, yt-dlp install in the Dockerfile).
+The live e2e runs need real tokens and test-guild IDs via environment. See
+[AGENTS.md](AGENTS.md) for the small set of always-on package constraints and
+the linked wiki pages above for voice architecture and diagnostics.

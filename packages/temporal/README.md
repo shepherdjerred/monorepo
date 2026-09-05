@@ -101,19 +101,21 @@ Production remains embedded until beta acceptance completes.
 
 ## Documentation
 
-The complete reference is [AGENTS.md](AGENTS.md):
+- [Temporal overview](../docs/wiki/src/content/docs/explanation/temporal/overview.md)
+  explains the deployment and ownership model.
+- [Workflow families](../docs/wiki/src/content/docs/explanation/temporal/workflow-families.md)
+  explains domain boundaries.
+- [Schedule reference](../docs/wiki/src/content/docs/reference/temporal-schedules.md)
+  lists registered schedules and their policy.
+- [Workflow reference](../docs/wiki/src/content/docs/reference/temporal-workflows.md)
+  lists durable workflow interfaces.
+- [Worker rollout how-to](../docs/wiki/src/content/docs/how-to/roll-out-a-temporal-worker-deployment.md)
+  is the operator procedure.
+- [Agent task boundary](../docs/wiki/src/content/docs/explanation/temporal/agent-task-boundary.md)
+  and [input reference](../docs/wiki/src/content/docs/reference/agent-task-input.md)
+  define generic agent tasks.
 
-| Section                                                                                                  | Covers                                                           |
-| -------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| [Runtime](AGENTS.md#runtime) / [Structure](AGENTS.md#structure) / [Key Concepts](AGENTS.md#key-concepts) | Worker roles, source layout, workflow/activity/schedule basics   |
-| [Schedules](AGENTS.md#schedules-srcschedulesregister-schedulests-srcschedulesschedule-definitionsts)     | Declarative `SCHEDULES`, pausing, catchup windows, orphan alerts |
-| [Commands](AGENTS.md#commands) / [Environment Variables](AGENTS.md#environment-variables)                | Local commands and the full env-var reference                    |
-| [LLM observability](AGENTS.md#llm-observability)                                                         | Required `gen_ai.*` spans for SDK and CLI LLM calls              |
-| [HA schema](AGENTS.md#ha-schema-type-safe-workflows)                                                     | Type-safe Home Assistant workflows and the gitignored schema     |
-| [Homelab audit](AGENTS.md#homelab-audit-daily)                                                           | The daily audit agent task and its local dev loop                |
-| [Workflow failure alerts](AGENTS.md#temporal-workflow-failure--alerts-occurrences)                       | Per-failure Alertmanager occurrences                             |
-| [Generic agent tasks](AGENTS.md#generic-agent-tasks)                                                     | `agentTaskWorkflow`, `/agent-tasks` API, canary, schema dialects |
-| [Scheduled PR-creating workflows](AGENTS.md#scheduled-pr-creating-workflows)                             | Deterministic refresh jobs, bot-clone helpers, rehearsal check   |
-| [Review threads (CI gate)](AGENTS.md#review-threads-ci-gate)                                             | Provider-neutral CI review gate                                  |
-| [GitHub webhook](AGENTS.md#github-webhook-merge-conflict-check--pr-closed-build-cancel)                  | Merge-conflict status and PR-closed Buildkite build cancellation |
-| [HA presence](AGENTS.md#ha-presence-welcomehome--leavinghome--reconcilelock--debounce-model)             | Presence debounce model and the front-door lock reconciler       |
+Source remains authoritative: schedule definitions live in
+`src/schedules/schedule-definitions.ts`, role registries live beside worker
+startup, and command schemas live in `scripts/`. [AGENTS.md](AGENTS.md) contains
+only the constraints that every package task must keep in context.

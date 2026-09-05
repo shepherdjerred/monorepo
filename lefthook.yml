@@ -39,6 +39,10 @@ pre-commit:
           - name: check-suppressions
             run: bun scripts/check-suppressions.ts
 
+          - name: check-agent-guidance
+            glob: "**/*"
+            run: bun run check-agent-guidance -- --staged
+
           # Swift is the one language Buildkite cannot build: the CI image ships
           # SwiftLint's static binary but no toolchain, and standing up a
           # Swift+Rust+bun image for one test layer is not worth ~5GB/arch and a

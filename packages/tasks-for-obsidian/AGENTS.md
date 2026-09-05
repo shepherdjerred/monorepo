@@ -1,206 +1,38 @@
-# Tasks for Obsidian
+# Tasks for Obsidian constraints
 
-React Native 0.83 bare workflow app (no Expo) for iOS/Android. Syncs with the TaskNotes Obsidian plugin via its HTTP API. Uses Metro bundler, Hermes engine, and New Architecture.
+This is a bare React Native iOS/Android client for TaskNotes. `README.md` and
+`e2e/README.md` own setup, screens, deep links, and test reference.
 
-## Quick Reference
+- Domain code is React-free. API responses and native modules are parsed with
+  Zod. Expected failures use the typed result/error model.
+- Wire conversion is centralized; internal camelCase vocabulary must not leak
+  into the upstream `/v2` contract.
+- Sync and mutation queues preserve offline ordering, crash recovery,
+  idempotency, and optimistic rollback. Do not hide durable failures.
+- Native bridges validate availability. A deliberately unsupported platform may
+  no-op, but malformed bridge data is not an availability condition.
+- Production errors surface through UI or Sentry. Do not add ad-hoc console
+  logging that can expose task content.
+- Widgets and Live Activities share only the configured app-group data. Tokens
+  stay in secure storage.
 
-```bash
-bun install                          # Install JS deps
-bun run pod-install                  # Install iOS native deps (CocoaPods)
-bun run ios                          # Build + launch on simulator
-bun run ios --simulator="iPhone 16 Pro"  # Specific simulator
-bun run start                        # Start Metro bundler (separate terminal)
-bun run typecheck                    # Type check
-bunx eslint . --max-warnings=0       # Lint
-bun run test                         # Unit tests (src, scripts, and deterministic E2E date tests)
-bun run test:contract                # Wire-contract suite vs a real spawned tasknotes-server
-bun run e2e                          # Maestro e2e (simulator + real server + chaos proxy)
-```
-
-## Testing Layers
-
-- **Unit** (`bun run test`): domain/lib/sync; the sync layer has a deterministic
-  simulation harness at `src/data/sync/__tests__/harness.ts` (FakeServer with
-  offline/failure injection, manual clock, snapshot-able storage for crash tests).
-- **Contract** (`bun run test:contract`): the real `TaskNotesClient` against a
-  spawned real `../tasknotes-server` over a temp vault. Exposed as the
-  `test:contract` turbo task (`turbo.json`), whose inputs and
-  `tasknotes-server#typecheck` dependency make it cache correctly; it runs in
-  `bun run verify` and therefore the Buildkite pipeline. There is no
-  `pre-push` hook. Lives in
-  `contract-tests/` — deliberately outside the default test glob because it needs
-  the sibling server package present.
-- **E2E** (`bun run e2e`, see `e2e/README.md`): Maestro drives the app in a
-  simulator against a local server + chaos proxy (offline simulation), then
-  asserts on the vault's markdown bytes. Maestro needs a simulator, so it stays a
-  **local-only pre-merge gate for app PRs** — it is not part of the Buildkite
-  pipeline. Prereqs: Xcode + simulators, `brew install mobile-dev-inc/tap/maestro`.
-
-## iOS First-Time Setup
+## Acceptance layers
 
 ```bash
-bun install
-bun run pod-install
-bun run ios
+bun run typecheck
+bun run test
+bun run lint
+bun run test:contract
+bun run e2e
 ```
 
-If `pod install` fails, check prerequisites:
+Unit tests use the deterministic sync harness. Contract tests spawn the real
+server. Maestro E2E drives a simulator through a chaos proxy and asserts vault
+Markdown bytes; it is a local native gate.
 
-- Xcode installed with iOS simulator runtimes
-- CocoaPods installed (`gem install cocoapods`)
-- If Xcode can’t find Node in build phases, create `ios/.xcode.env.local` (untracked) from `ios/.xcode.env.local.example` and set `NODE_BINARY`, e.g. `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local`.
+Xcode Cloud owns Archive and TestFlight. Dependency/import changes must pass the
+Release Metro bundle guard and keep `ci_post_clone.sh` installing every required
+workspace dependency. A debug simulator build does not prove Archive.
 
-## Xcode Cloud
-
-iOS release builds (Archive → TestFlight) run on **Xcode Cloud**, separate from
-the monorepo's Buildkite pipeline — the Buildkite pipeline doesn't build the
-iOS app (no macOS/Xcode agents), so Xcode Cloud owns the release path.
-
-- Custom dependency bootstrap script: `ios/ci_scripts/ci_post_clone.sh` (installs Node/Bun deps + pods)
-- The bootstrap installs deps in **both** `packages/tasknotes-types` and this app.
-  `tasknotes-types` is a `file:` dep consumed from source, and its own transitive
-  deps (e.g. `@tasknotes/model`) must exist in `packages/tasknotes-types/node_modules`
-  for Metro to resolve them during the Release/Archive bundle — Bun does not install
-  a `file:` dir dep's transitive deps into the consumer.
-- For monorepo efficiency, set workflow file filters to at least `packages/tasks-for-obsidian/**` and `packages/tasknotes-types/**`
-- Archive action must use a distributable setting (not `None`) to support TestFlight
-- Add a TestFlight post-action with your internal tester group
-
-### Pulling Xcode Cloud logs (when a cloud build fails)
-
-Fetch the real xcodebuild/Metro logs from a failed cloud build via the App Store
-Connect API (credentials in 1Password — see the `xcode-cloud-debug` skill):
-
-```bash
-bun scripts/xcode-cloud-logs.ts runs              # list recent build runs
-bun scripts/xcode-cloud-logs.ts logs latest-failed # download the newest FAILED run's logs
-```
-
-Unzip the `LOG_BUNDLE` and grep `xcodebuild-archive.log` for `Command PhaseScriptExecution failed`
-or `error:`. The **"Bundle React Native code and images"** phase (Metro) is the
-usual culprit — it only runs in Release/Archive, so simulator debug builds pass
-while Archive fails. See the `xcode-cloud-debug` skill for the full workflow and
-the known `@tasknotes/model` resolution failure.
-
-### Guard against Archive bundle failures (run locally)
-
-`bun run scripts/check-release-bundle.ts` runs the exact
-Release Metro bundle Xcode Cloud runs during Archive — pure JS, so it runs anywhere.
-It is not wired into the Buildkite pipeline (which doesn't build the iOS app), so
-**run it locally before merging** anything that touches the app's deps or imports. An unresolvable
-import (from any package) fails the guard **before** it reaches Xcode Cloud. If you
-add a new source-only `file:` dep, install it in `ci_post_clone.sh` — the guard
-stays red until you do.
-
-## iOS Build Troubleshooting
-
-Try these in order (least to most destructive):
-
-1. **Reset Metro cache**: `bun run start --reset-cache`
-2. **Reinstall pods**: `bun run pod-install`
-3. **Clean Xcode derived data**: `rm -rf ~/Library/Developer/Xcode/DerivedData/TasksForObsidian-*`
-4. **Deintegrate + reinstall pods**: `cd ios && pod deintegrate && pod install`
-5. **Nuclear clean**: `bun run clean:ios` (removes ios/build, ios/Pods, DerivedData, then reinstalls pods)
-
-### Specific Failures
-
-- **"Node not found" during Xcode build phase**: Create/update `ios/.xcode.env.local` with a valid Node path. Fix: `echo "export NODE_BINARY=$(mise where node)/bin/node" > ios/.xcode.env.local`
-- **Pod version conflicts**: `cd ios && pod cache clean --all && pod deintegrate && pod install`
-- **Code signing errors on physical device**: Must be configured in Xcode — open `ios/TasksForObsidian.xcworkspace`, set the development team under Signing & Capabilities for both `TasksForObsidian` and `TasksWidget` targets.
-
-## Debugging & Logs
-
-### How the human gets you logs
-
-The human will typically be running the app and hit a problem. Ask them to run one of these in a terminal and then give you the log file:
-
-**Build failures** — captures the full xcodebuild output:
-
-```bash
-bun run ios 2>&1 | tee /tmp/ios-build.log
-```
-
-**JS runtime logs** — Metro console output (console.log, console.warn, console.error, React errors):
-
-```bash
-bun run start 2>&1 | tee /tmp/metro.log
-```
-
-**Native device logs** — Swift print() statements, native crashes, system messages from the simulator:
-
-```bash
-xcrun simctl spawn booted log stream --predicate 'process == "TasksForObsidian"' --level debug 2>&1 | tee /tmp/device.log
-```
-
-**Physical device logs** — if the app is running on a real iPhone connected via USB:
-
-```bash
-idevicesyslog --process TasksForObsidian 2>&1 | tee /tmp/device.log
-```
-
-(Requires `brew install libimobiledevice`)
-
-Then the human tells you: "read /tmp/ios-build.log" or "read /tmp/metro.log" etc.
-
-### Debugging tools
-
-- **React Native DevTools**: Press `j` in Metro terminal to open Chrome-based debugger (console, breakpoints, React component tree). This replaced Flipper.
-- **Xcode console**: For native Swift/ObjC logs — human opens `ios/TasksForObsidian.xcworkspace` in Xcode and runs from there.
-- **Shake gesture / Cmd+D in simulator**: Opens React Native dev menu (reload, DevTools, performance monitor).
-
-## Simulator Commands
-
-```bash
-xcrun simctl list devices                              # List simulators
-xcrun simctl boot "iPhone 16 Pro"                      # Boot a simulator
-xcrun simctl shutdown all                              # Shutdown all simulators
-xcrun simctl openurl booted "tasknotes://today"        # Test deep links
-xcrun simctl openurl booted "tasknotes://quick-add"    # Test quick add
-xcrun simctl io booted screenshot /tmp/sim.png         # Take screenshot
-xcrun simctl io booted recordVideo /tmp/demo.mp4       # Record (Ctrl+C to stop)
-xcrun simctl erase booted                              # Factory reset simulator
-```
-
-## Deep Linking
-
-URL scheme: `tasknotes://`
-
-Routes: `inbox`, `today`, `upcoming`, `browse`, `quick-add`, `search`, `settings`, `pomodoro`, `time-report`, `kanban`, `task/:taskId`, `project/:projectName`, `context/:contextName`, `tag/:tagName`, `view/:viewId`
-
-Test: `xcrun simctl openurl booted "tasknotes://today"`
-
-## Architecture
-
-- **domain/** — Pure types, Zod schemas, Result<T,E>, errors (no React imports)
-- **data/** — API client (Zod-validated), AsyncStorage cache, sync engine, mutation queue
-- **state/** — React contexts: TaskContext, SettingsContext, SyncContext, TimeTrackingContext, ApiClientContext
-- **hooks/** — Custom hooks bridging state to UI (kebab-case filenames)
-- **screens/** — Full-screen views (Today, Inbox, Upcoming, Browse, TaskDetail, Settings, etc.)
-- **components/** — Reusable UI (TaskRow, TaskList, FAB, ConnectionBanner, ErrorBoundary, etc.)
-- **navigation/** — React Navigation: NativeStack + BottomTabs, deep linking config in `linking.ts`
-- **native/** — Bridge modules to Swift: widget-bridge.ts, live-activity-bridge.ts, sync-widget.ts
-- **styles/** — Dark/light color themes
-- **lib/** — Utility functions: NLP parsing, date helpers, feedback (haptics + sounds), secure storage
-
-## Patterns
-
-- **Zod schemas** validate every API response — no `as T` casts
-- **Branded types** for IDs: `TaskId`, `ProjectName`, `ContextName`, `TagName`
-- **Result<T, AppError>** for expected failures — no try/catch for business logic
-- **Error types**: NetworkError, ApiError, ValidationError, NotFoundError, ConnectionError
-- **Native bridges** use Zod to validate NativeModules at runtime, silently no-op when unavailable
-- **No logging in source code** — the codebase has zero console.log calls. Errors surface via UI (Alerts, ConnectionBanner) or Sentry (production only)
-- Uses bare React Native, context-based state, and a class-based API client
-- Strict tsconfig: noUncheckedIndexedAccess, exactOptionalPropertyTypes, noPropertyAccessFromIndexSignature
-
-## iOS Native Features
-
-These require Xcode (not just `bun run ios`) for full testing:
-
-- **Widgets** (`ios/TasksWidget/`): TodayTasksWidget (S/M/L), QuickAddControl (iOS 18+ Control Center). Data synced via WidgetBridge → shared UserDefaults (app group: `group.com.tasksforobsidian`).
-- **Live Activities** (`ios/TasksForObsidian/LiveActivityBridge.swift`): Time tracking on lock screen + Dynamic Island. iOS 16.2+.
-- **Siri Intents** (`ios/TasksForObsidian/Intents/`): AddTaskIntent, ShowTodayIntent — voice commands and Shortcuts app.
-- **SF Symbols** (`ios/TasksForObsidian/SFSymbolView.swift`): Native UIView for system icons, exposed to JS via RCTViewManager.
-- **App Groups**: `group.com.tasksforobsidian` — shared between main app and widget extension.
-
-To test widgets: build in Xcode, select the TasksWidget scheme, choose a widget size from the preview.
+Capture affected screens and flows on a simulator. Preserve accessibility and
+native behavior rather than weakening E2E assertions.

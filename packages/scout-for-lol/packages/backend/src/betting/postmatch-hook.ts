@@ -137,8 +137,8 @@ export async function settleAndAwardBucks(
   // dares last also means an ordinary (non-retry-exhausting) throw anywhere
   // ABOVE this line can never discard an already-committed dare summary
   // before it reaches delivery: a dare's summary is one-shot the same way an
-  // outcome settlement's is (see AGENTS.md's "settlement summary is
-  // one-shot" note), and computing it earlier would risk losing that return
+  // outcome settlement's is: `settleDaresForMatch` returns summaries only for
+  // the transition that committed them, and computing it earlier would risk losing that return
   // value to a later throw, leaving an already-terminal dare with no
   // summary to announce, ever.
   // V2 capture is also unflagged: any funded contract keeps evaluating after

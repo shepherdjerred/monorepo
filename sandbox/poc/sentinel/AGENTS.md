@@ -1,25 +1,18 @@
-# AGENTS.md - Sentinel
+# Sentinel POC constraints
 
-Autonomous agent system that automates operational tasks (CI fixing, health checks, alert triage). Agents investigate and propose; humans approve before write actions execute.
+Sentinel is a sandbox experiment for queued operational agents. It may
+investigate and propose; a human approves external writes.
 
-## Commands
+- SQLite/Prisma owns the priority job queue.
+- Workers claim jobs durably before starting an agent session.
+- Read tools may be automatic. Shell and external mutations follow the
+  allowlist and approval queue; model text never grants itself authority.
+- Conversation logs are private runtime data and must not enter Git.
+- Keep POC dependencies, credentials, and patterns isolated from production
+  packages unless intentionally redesigned and reviewed.
 
 ```bash
-bun run dev        # Development with watch
-bun run start      # Production
-bun run typecheck  # Prisma generate + type check
-bun run lint       # ESLint
-bun test           # Run tests
+bun run typecheck
+bun run test
+bun run lint
 ```
-
-## Architecture
-
-- **Queue**: SQLite (Prisma) job queue with priority ordering
-- **Worker**: Long-lived loop that polls queue, spawns agent sessions
-- **Agents**: Defined in `src/agents/` with triggers, tools, permissions
-- **Permissions**: 3-tier system (auto-allow reads, bash allowlist, approval queue)
-- **History**: JSONL conversation logs in `data/conversations/`
-
-## Environment
-
-Requires `.env` with `DATABASE_URL`, `ANTHROPIC_API_KEY`, `DISCORD_TOKEN`, etc.

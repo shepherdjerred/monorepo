@@ -9,7 +9,7 @@ export default defineConfig({
   forbidOnly: isCI,
   // The suite shares one in-memory store across tests on a single worker, so
   // Playwright retries are unsafe here — a retried mutating test would re-run
-  // against dirty state (see packages/scout-for-lol/AGENTS.md). Instead of
+  // against dirty state. Instead of
   // retries, give assertions generous headroom: on a CPU-constrained CI agent
   // (the playwright pod requests 2 CPUs and runs test:e2e concurrently with the
   // unit tests + lint), React mount after a full-page navigation can lag past

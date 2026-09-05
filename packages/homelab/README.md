@@ -8,8 +8,9 @@ Talos Linux nodes: `torvalds` (control plane, all production workloads) and
 `liskov` (CI-only worker). Services are deployed across multiple namespaces
 (media, home, postal, etc.) using an app-of-apps pattern in ArgoCD.
 
-See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, cluster
-topology details, the 1Password secret linter, and operator runbooks.
+See the [homelab overview](../docs/wiki/src/content/docs/explanation/homelab/overview.md)
+for topology and the wiki how-to guides for operator workflows.
+[AGENTS.md](AGENTS.md) contains only always-on package constraints.
 
 ## Layout
 

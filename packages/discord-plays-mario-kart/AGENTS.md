@@ -1,216 +1,33 @@
-# discord-plays-mario-kart — agent notes
+# Discord Plays Mario Kart constraints
 
-Headless MK64 (N64Wasm: parallel-n64 + angrylion) streamed to Discord; up to 4
-people drive seats P1–P4 from a React web UI over Socket.IO. See `README.md` for
-the architecture; this file is the quick orientation for agents.
+This app runs headless Mario Kart 64 and streams Go-Live video to Discord while
+drivers use a separate low-latency controller feed. `README.md` owns the
+architecture, controls, harness, profiling, and deployment reference.
 
-**There are two video paths.** Spectators watch the Discord Go-Live stream;
-drivers additionally decode a low-latency H.264 feed in the controller page (see
-"Driver feed" below). The Go-Live path is unchanged by it and remains the
-default — the driver feed is off unless `[driver_feed] enabled` is set.
+- The copyrighted ROM is never committed, encrypted into Git, logged, or copied
+  into an image. Local harnesses resolve only the explicit path/environment and
+  documented Syncthing locations. Production uses the existing private PVC.
+- Go-Live and driver-feed video are independent. The driver feed remains off
+  unless explicitly enabled; do not couple its failure to spectator playback.
+- Shared stream lifecycle, tracing, metrics, audio transport, web server, and
+  boot behavior belong in `@shepherdjerred/discord-plays-core`.
+- Controller input is authoritative only for its assigned seat and current
+  session. Validate socket events and never trust a client-supplied guild,
+  channel, or user identity.
+- Emulation timing is monotonic and frame-paced. Profile real ROM-backed paths
+  before changing frame skip, buffer, encoder, or copy behavior.
+- Prisma-backed session/leaderboard state must disconnect during test and
+  shutdown.
 
-The tracing/metrics wiring, loopback audio transport, Go-Live streamer base class,
-web server, and bot entrypoint are shared with discord-plays-pokemon in
-**`@shepherdjerred/discord-plays-core`** (`packages/discord-plays-core`,
-source-only, subpath imports) — see its `AGENTS.md`. This backend supplies the
-MK64-specific pieces: the N64 emulator, `MarioKartGameDriver`, seats /
-leaderboard / name overlay, the richer ffmpeg/send-path metrics + `copyMs`, the
-socket dispatch, and the `GameStreamerBase` hook overrides (frame-drop policy,
-StreamObserver, session summary, guarded client destroy).
+Routine CI uses ROM-free unit and integration tests. Real emulator scenarios,
+media probes, and performance harnesses are manual acceptance layers.
 
-## The ROM (not in the repo)
+```bash
+bun run typecheck
+bun run test
+bun run lint
+bun run --cwd packages/backend smoke
+```
 
-The MK64 ROM is **copyrighted** and the repo is **public** with a 5 MB
-per-file pre-commit limit, so it is never committed (not even encrypted). The
-canonical copy lives in Syncthing (replicated across the owner's machines).
-Everything that needs it resolves the path the same way (`resolveRom()` in
-`packages/backend/scripts/lib/harness.ts`):
-
-1. explicit `--rom <path>` / first positional arg
-2. `MK64_ROM` env var
-3. `~/syncthing/Sync/roms/mariokart64.z64`
-4. `~/Sync/Sync/roms/mariokart64.z64`
-
-Both Syncthing spellings are checked because the root differs by machine —
-`~/Sync` is what the macOS client creates by default, `~/syncthing` is the older
-layout. Before 2026-08-08 only the first was tried, so every ROM-gated harness
-failed on a default macOS install unless you passed `MK64_ROM`.
-
-Production gets the ROM via a one-time `kubectl cp` onto the ROM PVC (README →
-One-time provisioning); the deployed pod does not fetch it.
-
-## Test harness (`packages/backend/scripts/`)
-
-Manual, ROM-gated (never CI). The unit tests (`*.test.ts`, run in CI) remain the
-automated gate; these harnesses are for driving the real game.
-
-- **`e2e-scenario.ts`** (`bun run e2e:scenario`) — drive the game to a named
-  scenario and optionally screenshot it. `bun run e2e:scenario` with no args
-  lists scenarios (`menu`, `1p`–`4p`). Flags: `--rom`, `--shot out.png`,
-  `--names a,b,c,d`, `--watch` (log state transitions). This regenerates the
-  1p–4p leaderboard overlay screenshots.
-- **`e2e-race.ts`** (`bun run e2e:race`) — stream raw RDRAM globals while the
-  attract demo / `start-mash` runs; the tool for validating the `mk64-memory.ts`
-  address map.
-- **`e2e-input.ts`** / **`e2e-input-assert.ts`** — prove a web keypress reaches
-  the game (frame-hash diff).
-- **`e2e-stream-latency.ts`** (`bun run e2e:stream-latency`) — encode
-  synchronized video flashes and audio chirps through the production
-  H.264/Opus/NUT pipeline, decode them, and report media delay and signed A/V
-  offset without including Discord. Positive A/V offset means audio lags.
-  `--audio-delay-ms` and `--video-delay-frames` inject known delays for analyzer
-  validation.
-- **`e2e-viewer-stats.ts`** (`bun run e2e:viewer-stats`) — receive-side WebRTC
-  ruler for the Discord viewer leg. Polls `RTCInboundRtpStreamStats`
-  (jitterBufferDelay, freezeCount, packetsLost, decode FPS) plus selected-pair
-  RTT from a PinchTab-driven Discord web-client tab watching the Go-Live stream,
-  giving viewer-side numbers no server-side metric can see. Discord hides its
-  `RTCPeerConnection`, so the script installs a constructor hook that only
-  captures peers created _after_ it runs: start it before the viewer joins, or
-  pass `--reload` to reload the tab (it reinstalls the hook, then you re-join
-  voice and re-open the stream before sampling). Prerequisites: a running
-  PinchTab instance with a Discord tab, `--tab <tabId>`, and a `PINCHTAB_TOKEN`
-  (env or the standard PinchTab config file). Flags: `--duration`,
-  `--interval-ms`, `--out`, `--pinchtab`, `--reload`.
-- **`lib/harness.ts`** — reusable primitives: `resolveRom`, `bootEmulator`
-  (sprint mode, deterministic per-tick), `driveUntil({schedule, until,
-timeoutFrames, onTick})`, `captureScreenshot({path, names, screenMode})`.
-- **`lib/scenarios.ts`** — scenarios as data (input schedules + reach
-  predicates). **Add a scenario by adding an entry here.**
-
-**Menu-nav gotcha:** multiplayer character select blocks until _every_ seat
-presses A — the schedules mirror A onto all N controllers. Drive into a race by:
-tap START to the GAME SELECT menu → press RIGHT (seats−1) times to pick the
-N-player column → mirror A on all seats through char/course select into racing.
-
-## Controller input
-
-The headless N64Wasm host latches web inputs into `g_neilHostPads[4]` and
-re-applies them every frame via `applyHostControls()` (in
-`wasm-src/patches/0001-*.patch`). This works around `mainLoopInner()` calling
-`resetNeilButtons()` every frame — the original code wrote `neilbuttons[*]` once
-before `_runMainLoop()`, so all input was silently dropped (frames still
-rendered). Because the WASM is built at image-build time (gitignored assets;
-CI builds, smokes, and pushes the image on merge to main via the `smoke`/image
-lanes in `.buildkite/pipeline.yml`), a fix here needs an image rebuild + GitOps
-redeploy to reach prod. Manual
-game-effect verification (needs ROM + built core): from `packages/backend`,
-`bun run build:wasm` then `bun run e2e:input:check "<rom>"` — holding START on
-the title screen must advance to GAME SELECT while the baseline stays put.
-
-## Stream performance & profiling
-
-Input lag is **not** the encoder. The VAAPI `h264_vaapi` path benchmarks at
-~16.7× realtime — keep hardware encode. The real bottleneck: the emulator
-`runMainLoop` (p95 `emulate_ms` ≈ 30ms of the 33ms budget) and Discord stream
-I/O share one Node event loop, starving ffmpeg below realtime in prod →
-`pushFrame` piled frames into an unbounded `PassThrough` (`stream_sink_buffer_bytes`
-hit 3.47 GB ≈ 188s of lag, OOM risk vs the 4 GB limit). Fix (PR #1274):
-`shouldDropFrame` drops the newest frame once the queue exceeds
-`MAX_SINK_BUFFER_BYTES` (~3 frames) — bounds latency, degrades fps. Restoring
-full 30fps under load needs the emulator on a Worker thread; that follow-up is
-tracked in Linear.
-
-Diagnosis: `stream_sink_buffer_bytes` growing unbounded is the smoking gun;
-`stream_ffmpeg_speed_ratio` < 1 sustained; the `e2e:perf` harness drives only
-the emulator path (empty `onFrame`) so it can't exercise the sink.
-
-For server-owned latency attribution, use the stream observer metrics rather
-than visual estimates from Discord. `stream_packet_ready_delay_ms` and
-`stream_send_complete_delay_ms` cover raw-media availability to encoded packet
-readiness and RTP completion. `stream_input_to_packet_ready_ms` and
-`stream_input_to_send_complete_ms` correlate a controller receipt with the
-first video packet containing that state. `stream_av_content_offset_ms` is
-signed source-content skew (positive means audio lags); correlation misses must
-increment `stream_latency_correlation_failures_total` instead of silently
-guessing.
-
-Profiling: node-wide `pyroscope.ebpf` → Pyroscope has `mario-kart/main`, but
-~64% of Bun samples are `[unknown]` (eBPF can't symbolize Bun's JIT'd JS/wasm).
-For symbolized JS, PR #1274 added on-demand capture:
-`kubectl exec -n mario-kart deploy/mario-kart -- sh -c 'kill -USR2 1'` runs the
-JSC sampling profiler for ~30s and writes folded stacks (speedscope) to the logs.
-
-**N64 timing contract:** `_runMainLoop` advances one 60 Hz vertical interrupt;
-MK64 renders one video frame every two interrupts. Pace core steps at 60 Hz,
-drain audio after every step, and emit video after every second step at 30 fps.
-Do not batch both core steps into one video deadline: the resulting 24–60 ms
-burst misses the 33 ms output budget. One core call per 30 fps output frame
-slows game time and 44.1 kHz PCM to 0.5×; ffmpeg then blocks on audio, queues
-video, and the frame gate drops roughly half the frames. The ROM-gated
-`e2e:audio --rom` duration assertion is the end-to-end guard.
-
-## Driver feed (`packages/backend/src/driver-feed/`)
-
-A second video path for the people actually driving: the same overlay-composited
-frames go to a second ffmpeg, out as Annex-B H.264, over the `/video` WebSocket,
-into a `VideoDecoder` on a canvas in the controller page. It skips Discord's
-voice leg and its ~85 ms client de-jitter buffer — the largest remaining term in
-the press-to-glass budget.
-
-Load-bearing details:
-
-- **The frame tee is after `applyStreamOverlays`**, so drivers see byte-identical
-  pixels to the stream. That is deliberate: the burned-in HUD clock is what lets
-  a browser measure its own glass-to-glass latency off its own canvas. The frame
-  Buffer is transferred zero-copy out of the emulator Worker and nothing mutates
-  it after the overlay call, so both sinks share one reference safely.
-- **`-bsf:v h264_metadata=aud=insert` is not optional.** The splitter keys
-  entirely on Access Unit Delimiters; without it a raw H.264 pipe is undelimited
-  and access-unit boundaries are silently wrong rather than loudly broken.
-- **`-bf 0`**, so output order equals input order and the client never reorders.
-- **Profile and level are pinned** (`main`, `-level 40`) so `H264_CODEC_STRING`
-  handed to `VideoDecoder.configure` is exact. Spell the level `40`, not `4.0` —
-  `h264_vaapi` parses it as an integer `level_idc` and rejects the dotted form.
-- **No `description` is sent to the decoder.** Per the W3C AVC registration,
-  omitting it selects Annex-B, which is what a live stream with in-band SPS/PPS is.
-- **`ws` runs in `noServer` mode** with a path-guarded `upgrade` listener.
-  Attached mode destroys non-matching upgrades and would kill Socket.IO.
-- **Clients only ever start at a decoder entry point** (IDR + SPS + PPS), which
-  is also how a backlogged client resyncs. Do not "helpfully" send deltas earlier.
-- **Failures are contained, not propagated.** A dead driver-feed encoder must
-  never take down the Go-Live stream spectators are watching.
-
-`bun run e2e:driver-feed` verifies the whole chain against a real ffmpeg. It
-re-decodes its own output and asserts (a) a late join at a mid-stream entry point
-yields exactly the remaining frames — the property the hub's fan-out depends on —
-and (b) every decoded frame's HUD clock reads back as one of the timestamps that
-was stamped, which is what the browser's latency readout relies on.
-
-Two modes:
-
-- default: synthetic gradient frames, so it needs no ROM and no GPU
-- `--rom <path>`: drives the actual emulator through the real overlay pipeline
-  (add `--dump-frame <path.png>` to write out what a driver's canvas would show)
-
-`bun run e2e:driver-feed:glass` goes one step further: it boots the emulator and
-the feed on a local web server, serves the built frontend, drives a real Chrome
-tab via PinchTab, and reports the latency the shipped page measures for itself.
-
-Measured 2026-08-08 (Apple silicon, libx264, loopback):
-
-| Leg                         | p50   | p95   |
-| --------------------------- | ----- | ----- |
-| Capture → access unit ready | 34 ms | 36 ms |
-| Capture → painted on canvas | 36 ms | 64 ms |
-
-Correctness on the same run: 1348 access units at 29.96 fps, 45 entry points, all
-delivered, 1348/1348 HUD clocks read with zero mismatches.
-
-**34 ms is one frame interval, and it does not move with resolution** — the
-Go-Live output profile (`--golive-profile`, 960x720 @ 5 Mbps) measures the same
-34/36 ms. The encode leg is pacing-bound, not compute-bound, so shrinking the
-frame buys bandwidth rather than latency, and further wins have to come from the
-pacing itself.
-
-**Drivers must stay in the voice channel.** `AloneInVoiceWatcher` counts voice
-membership, not stream viewership, with a 30 s grace; everyone leaving VC to
-"just watch in the browser" ends the session and the feed with it.
-
-## Conventions
-
-- Bun only; strict TS; no `as` casts; no `.then/.catch` (use async/await); Bun
-  APIs over `node:fs`; `max-params` ≤ 4 (bundle into an opts object).
-- Scenario screenshots: white-on-black labels are channel-symmetric, so the
-  stream-overlay primitives (`src/overlay/`) render correctly on the RGBA
-  screenshot path too — `captureScreenshot` reuses them directly.
+For ROM-gated work, run the named harness from the README and capture the
+relevant controller/stream evidence without publishing ROM-derived assets.

@@ -1,6 +1,6 @@
 ---
 name: bun-workspaces
-description: Current Bun workspace guidance for isolated and hoisted linkers, catalogs, filters, scripts, dependency classes, lockfiles, lifecycle trust, caches, publishing, TypeScript package exports, and containers. Use when configuring or reviewing a Bun monorepo.
+description: "Use this skill for Current Bun workspace guidance for isolated and hoisted linkers, catalogs, filters, scripts, dep…"
 ---
 
 # Bun Workspaces

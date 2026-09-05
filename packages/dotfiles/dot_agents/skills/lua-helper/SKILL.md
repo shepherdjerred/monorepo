@@ -1,6 +1,6 @@
 ---
 name: lua-helper
-description: Current Lua guidance for portable Lua, LuaJIT, Neovim's Lua interface, WezTerm configuration, LuaLS, formatting, linting, testing, and security. Use when writing or reviewing Lua, Neovim plugins/config, WezTerm config, rockspecs, or Lua tooling.
+description: "Use this skill for Current Lua guidance for portable Lua, LuaJIT, Neovim's Lua interface, WezTerm configuration, Lu…"
 ---
 
 # Lua Helper

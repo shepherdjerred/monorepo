@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: Security audit of a codebase — web apps, APIs, services, CLI tools, libraries, daemons, and more. Use when asked to find security bugs, do a security review, audit for vulnerabilities, or pen-test the code. Focuses on exploitable issues with real impact, not theoretical concerns or industry-standard behavior.
+description: "Use this skill for Security audit of a codebase — web apps, APIs, services, CLI tools, libraries, daemons, and more…"
 license: MIT
 ---
 

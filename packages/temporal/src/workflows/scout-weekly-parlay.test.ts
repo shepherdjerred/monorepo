@@ -156,7 +156,7 @@ describe("runScoutWeeklyParlayWorkflow", () => {
     //    but produced a periodKey/window that could never occur in
     //    production: buildScoutWeeklyParlayCatchupTimeline requires
     //    periodKey to be a Monday and finalizesAt to be that period's
-    //    standard Sunday finalization (packages/temporal/AGENTS.md).
+    //    standard Sunday finalization enforced by the timeline builder.
     // testEnvironment.sleep() advances the simulated clock only — it
     // resolves immediately regardless of how far ahead the target is — so
     // anchoring to a fixed future instant costs nothing and never drifts

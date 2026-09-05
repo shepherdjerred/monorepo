@@ -48,8 +48,8 @@ export type BucksMessageOperation = "send" | "edit";
  *
  * These are not equally alarming and must not be logged at the same level.
  * `skipped_no_base` is expected forever for pools created before
- * `prematchContentBase` existed — the schema comment and AGENTS.md both say
- * legacy pools are deliberately not edited, so it must never be alerted on.
+ * `prematchContentBase` existed — the schema deliberately leaves those legacy
+ * pools uneditable, so it must never be alerted on.
  * `skipped_no_refs` follows a failed `recordPoolMessageRefs` and is the
  * leading indicator of "settlement had nowhere to announce".
  */

@@ -22,5 +22,13 @@ bun run typecheck  # tsc --noEmit
 bun run deploy     # bun ../../scripts/deploy-site.ts stocks-sjer-red
 ```
 
-See [AGENTS.md](AGENTS.md) for how to update prices, data provenance, and
-contributor/agent workflow notes.
+## Updating prices and provenance
+
+Append a `{ "date": "YYYY-MM-DD", "price": number }` entry to the relevant
+component history. The final entry is the current mark.
+
+The July 2024 through May 2026 history was manually approximated from
+PCPartPicker charts on 2026-05-24. Later points should record a precise source
+when available. The portfolio framing is a joke, not investment guidance.
+
+[AGENTS.md](AGENTS.md) contains the always-on package constraints.

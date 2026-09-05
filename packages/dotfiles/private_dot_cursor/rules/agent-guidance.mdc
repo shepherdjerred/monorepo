@@ -1,0 +1,7 @@
+---
+description: Use the canonical personal and repository agent guidance
+alwaysApply: true
+---
+
+Follow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching
+skills from `.agents/skills`; do not duplicate their instructions here.

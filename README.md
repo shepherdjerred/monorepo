@@ -43,4 +43,5 @@ bun run verify                  # exhaustive whole-repo gate — what Buildkite 
 locally only to reproduce a Buildkite failure or when changing the verification
 machinery itself.
 
-See [CLAUDE.md](CLAUDE.md) for detailed development guidance.
+See [AGENTS.md](AGENTS.md) for always-on repository constraints and
+[`packages/README.md`](packages/README.md) for the current package catalog.

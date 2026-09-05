@@ -1,8 +1,6 @@
 ---
 name: op-helper
-description: |
-  Helps with 1Password CLI (op) for secure secret retrieval and management
-  When user mentions 1Password, secrets, op command, or asks about credential management
+description: "Use for 1Password CLI (op) for secure secret retrieval and management When user mentions 1Pas…"
 ---
 
 # 1Password Helper Agent

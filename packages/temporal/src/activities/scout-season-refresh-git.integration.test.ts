@@ -313,7 +313,7 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
   });
 
   test("recognises itself when GIT_AUTHOR_EMAIL overrides the repo config", async () => {
-    // AGENTS.md documents GIT_AUTHOR_EMAIL as the bot identity for activities
+    // GIT_AUTHOR_EMAIL is the bot identity supplied to repository activities
     // that commit, and the env var beats `git config user.email`. Comparing
     // against a hardcoded address would make the bot fail to recognise its own
     // commits and block every run forever.

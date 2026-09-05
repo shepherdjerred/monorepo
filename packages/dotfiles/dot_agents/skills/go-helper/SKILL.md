@@ -1,6 +1,6 @@
 ---
 name: go-helper
-description: Current Go development guidance for modules, toolchains, workspaces, testing, fuzzing, concurrency, profiling, security, and Go tooling. Use when writing or reviewing Go, go.mod, go.work, Go CI, tests, performance work, or Go upgrades.
+description: "Use this skill for Current Go development guidance for modules, toolchains, workspaces, testing, fuzzing, concurren…"
 ---
 
 # Go Helper

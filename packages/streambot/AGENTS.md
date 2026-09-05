@@ -1,437 +1,57 @@
-# AGENTS.md - streambot
+# Streambot constraints
 
-A Discord video-streaming bot, rewritten from first principles. Streams local files and
-yt-dlp/URL sources into a Discord voice channel.
+Streambot is a Bun service that controls Discord video playback. One command
+bot serves many guilds while a bounded userbot pool streams at most one voice
+channel per account. `README.md` and the streambot wiki pages own the full
+architecture, media, voice, and diagnostics reference.
 
-## Architecture
+## Playback
 
-One Bun process serving **many servers** — and **many voice channels per server** — with a single
-command bot plus a **pool of streamer userbots**:
+- One XState actor owns each `(guild, voice channel)` session. The machine is
+  pure; invoked actors own I/O. Release the userbot when the session ends.
+- Identity and channel authority come from the Discord interaction/session,
+  never client or model arguments.
+- Preserve the player-card message contract and session persistence across
+  restart. Voice loss, ffmpeg exit, skip, seek, and teardown must reach one
+  deterministic terminal transition.
+- Use the in-repo `discord-video-stream` fork. Profile real ffmpeg/VAAPI output
+  before changing timing, queues, copying, subtitles, HDR, or buffers.
 
-- **Command bot** (`discord.js`, bot token) — one identity, registers **global** slash commands and
-  routes each interaction (by `interaction.guildId` + the issuer's current voice channel) to the
-  right session. Renders status/queue embeds. ToS-clean control plane (`src/discord/command-bot.ts`).
-- **Userbot pool** (`src/pool/userbot-pool.ts`) — N `discord.js-selfbot-v13` accounts
-  (`USER_TOKENS`, comma-separated). Each logs in at boot and snapshots its guild membership from
-  `client.guilds.cache`. A play **acquires** a free userbot that is a member of the requesting guild;
-  when none is free the bot replies "No stream bots are available right now." One userbot streams in
-  at most one voice channel at a time, so the pool size bounds concurrent streams.
-- **Session manager** (`src/session/session-manager.ts`) — one playback session per
-  `(guild, voice channel)`, each an isolated XState actor bound to the acquired userbot's streamer.
-  Sessions are independent (separate queues/loop/volume) and release their userbot when the channel
-  goes idle. The bot joins the **issuer's current voice channel**; status posts to the channel the
-  command was invoked in.
-- **Streamer** (`src/streamer/streamer.ts`, `@shepherdjerred/discord-video-stream`) — owns one
-  selfbot's voice connection + ffmpeg, driven by the machine's invoked actors. The library is our
-  in-repo fork of `@dank074/discord-video-stream` (seekable player; see `FORK.md`). Live
-  `/stream volume` and `/stream seek` act on the active player as side-channels.
-- **Playback machine** (`src/machine/`) — XState v5. Models the lifecycle
-  (`idle → joining → resolving → streaming → … → waiting → leaving`, plus `failed`/retry). All I/O
-  lives in invoked actors; the machine itself is pure and unit-tested. One actor per active session.
+## Voice assistant
 
-## Hybrid voice assistant
+Voice wake detection is local and layered before cloud transcription. The
+two-second phrase-verifier window is end-aligned from token timestamps; do not
+replace it with a fixed post-detection delay. Missing required models, keys, or
+recognition smoke fails startup when voice is enabled. Assets are pinned in the
+image and never downloaded at runtime.
 
-When `VOICE_ASSISTANT_ENABLED=true`, each active playback session also owns one isolated voice
-assistant (`src/voice/`). The normal Discord voice connection receives DAVE-decrypted, identified
-speaker Opus; Go Live remains the separate movie transport. Permissive sherpa phrase/fragment
-matches provisionally lock one speaker, then a phrase-specific in-process ONNX verifier decides
-from the two-second rolling window. That window is an **alignment contract**, not a buffer size:
-the verifier scores the last two seconds it is handed and was trained with the phrase end-aligned
-(+/-200 ms jitter), so the wake phrase must finish near the window's end. It is therefore anchored
-to sherpa's per-token `timestamps` plus a per-fragment tail (`VOICE_FRAGMENT_TAIL_MS`), never to a
-fixed delay after sherpa's emission — the decoder reports a match a variable ~280 ms after the
-audio it matched, and the six declared fragments end at very different points in the phrase
-(`HEY` leaves most of "streambot" unsaid; `STREAMBOT` and `BOT` end with it). Closing the window a
-constant time after emission put every real wake at the classifier's 0.002 floor and produced 0/11
-live recall while end-aligned offline evaluation read 94%. A runtime reporting no timestamp falls
-back to a fixed delay set to the measured zero-false-accept point, so the failure direction is
-"no wake" rather than unbounded cloud calls. Silero starts at the candidate boundary. Only after both local
-layers pass does a fresh official Realtime SDK WebSocket commit audio to unprompted English
-`gpt-transcribe`. A rejected leading wake prefix closes silently. An accepted prefix deletes the
-audio conversation item, inserts command-only text, and permits one `gpt-realtime-2.1`/`marin`
-response with at most one typed playback mutation.
+After a verified wake, the native OpenAI Realtime path may perform at most one
+typed playback mutation. Actor identity comes from the detected speaker.
+Assistant ducking multiplies the latest desired volume and restores on every
+success, failure, timeout, interruption, and teardown path.
 
-The native sherpa addon is preferred and image-smoked under Bun/Linux; bundled in-process WASM is
-the fallback. Both runtimes must recognize the packaged official positive fixture, not merely load
-the model. KWS, mel, embedding, phrase-classifier, and Silero files live at
-`/opt/streambot/voice`, are pinned and checksum-verified in
-the Docker build, and must never be downloaded at runtime. Missing assets, a failed recognition
-smoke, or key configuration are fatal when voice is enabled. Production diagnostics deliberately
-persist every wake candidate and operator-triggered debug window in the private, 90-day
-`streambot-voice-captures` bucket. Captures can contain decoded user audio, Discord IDs,
-transcripts, normalized commands, media queries, and validated tool arguments/results. Raw audio
-must never enter logs, traces, metrics, or error reporting; credentials must never enter any
-diagnostic surface. Counters and histograms must use finite labels only. Guild/channel IDs are
-allowed only on active-session gauges and those series must be removed at session teardown. Tool
-calls derive the Discord user from the detected
-speaker and go through `commands/playback-command-service.ts`; do not accept identity or URLs from
-model arguments. Transient assistant ducking is a multiplier over the latest desired volume and
-must restore on success, failure, timeout, interruption, and teardown.
+Wake captures are private, bounded, non-blocking diagnostics. Audio uploads
+before the versioned manifest commit marker. Raw audio, credentials, Discord
+IDs, transcripts, and tool arguments must not leak to logs, metrics, traces,
+errors, or public artifacts. Finite metric labels only; remove session gauge
+series on teardown.
 
-Every wake candidate owns a Streambot-local attempt context from candidate detection through local
-verification, endpointing, cloud transcription/prefix verification, tools, reply drain, and one
-terminal outcome. The controlled root and child spans carry the capture ID; structured logs add the
-active trace/span IDs. OpenAI SDK tracing stays disabled. Offline probes and corpus evaluation use
-the no-op attempt implementation and do not upload captures. The capture queue is non-blocking,
-two-worker, and bounded to 128 MiB; upload or OTLP failure degrades observability only. Audio objects
-must upload before the versioned `manifest.json` commit marker. Graceful shutdown flushes capture,
-log, and trace exporters before exit.
+Offline corpus evaluation uses the production decode and local-verification
+path without OpenAI. The image must not contain the corpus. Human/live
+measurements are diagnostic acceptance, not a substitute for deterministic
+tests and image smoke.
 
-For local tuning on macOS, `bun run voice:harness` replaces only the outer adapters: AVFoundation
-microphone PCM is encoded with `DiscordOpusEncoder` and enters the same decoder/KWS/VAD lifecycle,
-while a dry-run `VoiceCommandPort` records the typed operation instead of touching playback. The
-same `gpt-transcribe` hard gate and command-only `gpt-realtime-2.1` transaction run after both
-local layers; the ephemeral transcript is displayed only for diagnosis. Prepare the pinned
-assets once with `bun run voice:harness:prepare`; recordings, transcripts, and queries are never
-written to disk by default, and probe results are tuning evidence rather than a human acceptance
-holdout. The explicit `--save-recordings` diagnostic mode persists private raw-microphone and exact
-OpenAI-input WAVs under `.context`; it still never persists transcripts or tool queries.
-Replay saved samples offline with `bun run voice:harness:evaluate`. The command uses FFmpeg only to
-normalize each source, then enters the production Discord Opus encoder/decoder and complete local
-`VoiceAudioLifecycle` cascade; it never constructs Realtime or contacts OpenAI. Output
-distinguishes sherpa candidates from phrase-verifier passes. Use `--runtime both
---require-perfect` for a blocking native/WASM comparison.
-
-Production ships with voice enabled (`VOICE_ASSISTANT_ENABLED=true` in the homelab chart); the
-flag is the single GitOps rollback knob and there is intentionally no guild allowlist. The merge
-bar is the deterministic suite plus the image's two-runtime recognition smoke; wake quality is
-measured (not gated) by the operator-run corpus evaluation, whose reports live in
-`voice-training/reports/`. A missed wake means repeating yourself; a local false accept costs one
-rate-limited transcription that the transcript gate rejects. The live e2e matrix and the
-three-speaker human holdout remain available as diagnostics, not merge gates; the
-`voice-training/` recipe is the improvement path when live quality warrants it. `.dopus` fixtures are versioned length-prefixed 20 ms Discord
-Opus packets; offline evaluation must enter `DiscordOpusDecoder` and `VoiceAudioLifecycle`, never a
-test-only recognizer path. The final image must not contain the corpus. Corpus evaluation is an
-operator-run acceptance measurement, not a build step — the image build's only voice gate is the
-two-runtime recognition smoke. Run the evaluation inside the built image (deployment UID and
-runtime environment) and commit the report to `voice-training/reports/`:
+## Verification
 
 ```bash
-docker run --rm -u 1000:1000 -e HOME=/tmp -e VOICE_ASSETS_DIR=/opt/streambot/voice \
-  -v "$PWD/test/fixtures/voice-corpus:/app/packages/streambot/test/fixtures/voice-corpus:ro" \
-  -v "$PWD/voice-training/reports:/reports" \
-  <streambot-image> bun run voice:corpus:evaluate --report /reports/corpus-report-<date>.json
-```
-
-The phrase-verifier manifest is a startup contract: it must attest at least 20,000 positive
-utterances, 40,000 adversarial near-matches, 25 hours of general negative speech/noise, and no
-human holdout inclusion, and it must contain the SHA-256 of all three ONNX assets. Do not package
-the rejected prototype or weaken these minima to make a smoke pass. Per playback session, cloud
-verification allows a burst of two and five attempts per rolling minute; a transcript rejection
-adds a three-second cooldown. These bound bursts, not spend: the production ceiling lives on the
-OpenAI project token, so exhausting it is an expected recurring state. `quota-errors.ts` classifies
-OpenAI's documented spend refusals (`insufficient_quota`, `billing_hard_limit_reached`) apart from
-transient failures — a bare HTTP 429 is ordinary throttling and must not match — and the session
-then announces once with accurate wording, counts a `quota` transcript outcome, and holds the
-limiter in a bounded backoff so later wakes never open a connection. A refused request bills
-nothing, so the backoff self-heals at period rollover without operator action.
-Train from LiveKit commit `95448a7559c453fcd87645bd67b247ffb45f85b0` with
-`voice-training/streambot-cascade.yaml`, select the threshold only on the synthetic tuning split,
-then run `bun run voice:verifier:package --livekit-dir <checkout> --model-dir <run>
---threshold <reviewed>`; packaging fails without the full ACAV100M general-negative feature asset.
-It also packages and hashes a generated positive smoke WAV, which both native and WASM image
-smokes must classify as accepted. See `voice-training/README.md` for the persistent-worker runbook.
-
-Resume: per-`(guild, channel)` state files `playback-state-<guildId>-<channelId>.json` (schema v2).
-On restart the session manager re-acquires a member-userbot per persisted session and resumes it.
-
-Voice-loss recovery: when Discord kills the userbot's voice session mid-stream (surfaced by the
-dvs fork's `close` event and/or the main gateway's voiceStateUpdate), `session/voice-recovery.ts`
-classifies the loss by ws close code — a fresh 4014 (moderator disconnect) is respected and stays
-down; anything else checkpoints position, preserves the state file through teardown, and retries
-`resumeSession` on a delay (bounded by `STREAMER_RECONNECT_MAX_ATTEMPTS`, kill switch
-`STREAMER_RECONNECT_ENABLED=false`). Stop reasons are announced to the status channel and counted
-in `streambot_voice_disconnects_total` / `streambot_voice_reconnects_total`.
-
-The bot/userbot split is necessary because Discord bots cannot stream video to voice — only user
-accounts can (via the unofficial selfbot lib). Modeled on `packages/discord-plays-pokemon`, but we
-stream files/URLs directly with ffmpeg instead of automating a browser.
-
-## Layout
-
-- `src/config/` — Zod config parsed from env at boot (validate at boundary).
-- `src/machine/` — XState machine, context/events/actor types.
-- `src/sources/` — `source.ts` (Zod discriminated union), `library.ts` (recursive fs scan +
-  search), `ytdlp.ts` (system `yt-dlp` via `Bun.spawn`, `--dump-json` → Zod), `normalize.ts`
-  (clean release-junk filenames → `Title (Year)`, used for display + matching), `chapters.ts`
-  (chapter markers: `ffprobe` for files, yt-dlp `chapters` for URLs; best-effort, never throws),
-  `subtitles.ts` (pure subtitle helpers), `subtitle-io.ts` (ffprobe/ffmpeg/yt-dlp glue that stages
-  a track).
-- `src/metadata/` — `tmdb.ts`: optional TMDB poster lookup for the player card's thumbnail (local
-  files). Best-effort + in-process cache; disabled unless `TMDB_API_KEY` is set.
-- `src/discord/` — command bot client + commands + routing, plus the player card (see below).
-  `status-reporter.ts` posts only one-shot notices (preparing, crash/retry, stop reason, shaming) —
-  now-playing belongs to the card. `/stream chapters`
-  lists chapters; `/stream chapter <n>` seeks to one (reuses the live seek side-channel).
-  `/stream help` (`helpText()` in `command-handler.ts`) prints the command reference + a
-  "supported sources" note; a command-handler test asserts every registered subcommand appears in it.
-  `/stream sources [query]` (`sourcesText()` + `listExtractors()` in `sources/ytdlp.ts`, memoized)
-  lists/searches the live `yt-dlp --list-extractors` set. `help`/`sources` are session-less
-  (`STATELESS_SUBCOMMANDS` in `command-bot.ts`), so they work without anything playing.
-- `src/pool/` — userbot pool (login, membership snapshot, acquire/release).
-- `src/session/` — per-`(guild, channel)` session manager (actor lifecycle, resume, checkpointing).
-- `src/streamer/` — selfbot + `@dank074` stream driver.
-- `src/observability/` — `metrics.ts` (`prom-client` registry + `Bun.serve` `/metrics`),
-  `stream-observer.ts` (maps the fork's `StreamObserver` callbacks → metrics/logs).
-- `src/voice/` — local sherpa models, speaker-locking audio lifecycle, bounded Realtime tools, and
-  per-session assistant ownership.
-- `src/util/` — structured logger, errors.
-- `test/` — Vitest; the machine is the most heavily tested surface.
-- `integration/` — real-ffmpeg integration tests (`bun run test:integration`); need real
-  ffmpeg/ffprobe (e.g. inside the streambot image), never part of the plain `bun run test`. They
-  are not wired into a turbo task, so `bun run verify` and CI don't run them — run them
-  manually against real ffmpeg when touching the ffmpeg pipeline.
-
-## Player card
-
-The public "now playing" message is a **live card**, not a one-shot line: an embed with a progress
-bar, a poster thumbnail, and control rows, re-rendered as playback advances. It is the primary UI —
-there is no web dashboard, and Discord Activities are ruled out (the app wouldn't pass Discord
-verification).
-
-- **Rendering** is split the way `subtitle-menu.ts` splits its own: `discord/player-card.ts` is pure
-  (bar math, embed body, button/menu descriptors) and `discord/player-card-message.ts` is the
-  discord.js edge (descriptors → `EmbedBuilder` + `ActionRowBuilder`). Classic embeds, deliberately
-  **not** Components V2 — V2 forbids `embeds`, which the TMDB poster path uses.
-- **Controls**: `⏪/⏩ 30s`, `⏭ Skip`, `⏹ Stop`, `🔁 Loop` (cycles off→track→queue), `🔉/🔊`,
-  `🔀 Shuffle`, `📜 Queue`, `💬 Subtitles`, plus a chapter jump menu when the item has chapters
-  (first 25). `💬 Subtitles` runs the **real** `/stream subtitles` handler over an adapted component
-  interaction (`discord/interaction-adapters.ts`), so the single-flight guard and the
-  playback-moved-on re-check are shared rather than forked.
-- **Permissions** live in `discord/player-controls.ts` (pure, exhaustively tested). Anyone **in the
-  voice channel**: seek, volume, loop, shuffle, queue. Requester-or-admin: skip, subtitles.
-  Admin-only: stop. Seek/volume are intentionally looser here than `/stream seek` — pressing a
-  button while sitting in the channel is more visible than typing a command from anywhere in the
-  server. The slash gates are unchanged; don't "fix" the asymmetry without deciding which way.
-- **Lifecycle** (`discord/player-card-manager.ts`) keys on `QueueItemView.sourceId`
-  (`sourceIdentity()`), **not** the display title. A new card is posted when a _different source_
-  reaches `streaming`; the old one keeps its text but loses its controls. Two files sharing a title
-  therefore get their own cards, and a title that changes as a source resolves doesn't look like a
-  new track. Non-streaming states for the _same_ source (a crash retry, a subtitle-change restart)
-  re-render the existing card. When the machine has moved on to the **next** item but it hasn't
-  started streaming, the card is left untouched — re-rendering there would rewrite the old card with
-  the new title and then post a second card for it, leaving two cards for one track and none for the
-  other. Teardown calls `finalize()`, which renders a control-less final card.
-- **Edits are three-valued** (`CardEditResult`): `ok` caches the payload so an identical re-render
-  skips the REST call; `gone` (10008) re-posts; `failed` (rate limit, 5xx) must **not** be cached —
-  caching an undelivered payload makes the next identical render a no-op and strands the card
-  showing stale state forever. `finalize()` falls back to `strip()` on `failed` so a dead session
-  never keeps live-looking buttons. A failed **post** clears `trackKey`, so the next refresh retries
-  via `beginTrack` instead of routing forever into an edit path with no message to edit.
-- **Everything that touches `messageId` runs inside the serialized `tail`.** Three rules make the
-  async gaps safe, and all three have regression tests:
-  - `beginTrack`'s queued task re-reads `this.messageId` **when it runs**, not when it was queued —
-    capturing it synchronously reads `null` whenever the previous track's post is still in flight,
-    which would leave that card up with working controls and nothing tracking it.
-  - That task bails when `this.trackKey` has moved on, so rapid track changes collapse to one card
-    instead of each queued task posting the newest track.
-  - `cardTrackKey` records which item the posted card actually represents. It lags `trackKey` across
-    the post, and editing requires the two to agree — otherwise a queued edit writes the new track's
-    view into the previous track's message.
-- **`finalize()` drains the tail in two phases.** `finalizing` synchronously blocks new work and
-  makes queued work stop before stripping or deleting the live card; work already in flight is
-  allowed to finish its replacement. The final serialized task then sets `finished` and retires the
-  card that remains. Between them, no card outlives its session with live controls or a dangling
-  routing entry, and teardown cannot remove the last card without leaving stopped history.
-- **Click routing** is a message-id → `(guild, voice channel)` table in `PlayerCardMessenger`, not
-  ids baked into the `customId`: a card outlives every interaction token, so a click hours later
-  carries only `interaction.message.id`. Unknown message → "That player card is no longer active."
-  `moveSession` calls `card.reown()` so a moderator dragging the streamer doesn't strand the buttons.
-  Ids are namespaced `sb:v1:` so the router leaves `pagination.ts`'s `page_*` collectors alone.
-- **Re-posting**: the bot holds the non-privileged `GuildMessages` intent (message _content_ is not
-  requested) purely to count messages landing beneath the card; past the threshold the card is
-  deleted and re-posted at the bottom so controls stay reachable in a chatty channel. `command-bot.ts`
-  excludes any message that is itself a registered card (`cards.ownerOf(id) !== null`) — sessions
-  sharing a status channel see each other's card posts, and counting them lets N cards feed each
-  other's thresholds into a self-sustaining delete/re-post loop. Ordinary bot notices still count.
-- **Config**: `PLAYER_CARD_ENABLED` (default true; false restores the plain `▶️ Now playing …`
-  announcement with no components), `PLAYER_CARD_TICK_MS` (default `10000`, `0` disables ticking),
-  `PLAYER_CARD_REPOST_AFTER_MESSAGES` (default `5`, `0` disables re-posting). Defaults are baked in,
-  so the homelab chart needs no new env wiring. With the card disabled the manager posts **unowned**
-  (nothing to route, so the table can't leak) and **awaits the TMDB lookup before posting**, because
-  that mode never edits and so has no second chance to attach the poster.
-
-`StatusReporter` no longer announces now-playing — it is strictly one-shot notices (preparing,
-crash/retry, stop reason, adult shaming). Don't reintroduce a now-playing line there; it would
-double up with the card.
-
-**No pause button.** The dvs fork's `Player` has no pause and `streamer/elapsed.ts` depends on
-wall-clock elapsed tracking media position. Adding one means killing ffmpeg, restarting at position
-through the seek machinery, and a paused state in both the machine and the elapsed tracker.
-
-## Subtitles
-
-Discord Go-Live is a single video track, so subtitles are **burned in** with ffmpeg's `subtitles=`
-(libass) filter. On by default (`SUBTITLES_ENABLED`), with per-request overrides on `/stream play` /
-`/stream playnext`: `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `es`, or `en.forced` to pin a
-modifier). For local files, **sidecar and embedded text tracks compete in ONE cross-source ranking**:
-language preference (tags canonicalized so `en`/`eng`/`en-US` are one language) → modifier quality
-(full > hi/sdh/cc > forced) → source (sidecar preferred only as a tie-break). A forced-only sidecar
-therefore never shadows a full embedded track. Candidate sources:
-
-- **Local sidecar**: a sibling `<videobase>.<lang>[.forced|.hi|.sdh|.cc].{srt,ass,ssa,vtt}`
-  (Plex/Bazarr naming).
-- **Local embedded**: an embedded **text** track (subrip/ass/mov_text/…), extracted via ffmpeg;
-  modifiers come from dispositions (`forced`, `hearing_impaired`) and `SDH`/`FORCED` title tags. Image
-  subs (PGS/VobSub/DVB — common on Blu-ray Remux) can't be burned and are skipped.
-- **yt-dlp** (non-local sources): downloads the preferred subtitle track, falling back to
-  auto-captions (`SUBTITLES_INCLUDE_AUTO_GENERATED`). YouTube **auto-generated** captions use a
-  "rolling" format (each phrase emitted several times — built up word-by-word, a ~10 ms finalization
-  cue, then carried as the top line while the next builds), which libass would burn as a doubled,
-  stale, sometimes-reversed two-line scroll. `cleanRollingSrt` (`sources/subtitle-clean.ts`) detects
-  that signature on the staged `.srt` and collapses it to clean, one-line-at-a-time cues; clean tracks
-  (manual captions, sidecars) are left untouched.
-
-Every track is staged to a safe temp file (`$TMPDIR/streambot-subs/<uuid>.<ext>`) so the filter never
-references a user path with spaces/quotes; `runStream` unlinks it when the track ends, and startup
-sweeps orphans. **Burning no longer forces software encoding**: on the VAAPI pipeline the fork renders
-subtitles with libass onto a transparent BGRA canvas, `hwupload`s it, and composites with
-`overlay_vaapi`, so decode/scale/tonemap/encode all stay on the GPU. Subtitles survive `/stream seek`
-and the HW→SW retry because the seekable player re-applies the burn on every ffmpeg restart, and the
-graph PTS-compensates the `subtitles=` filter for the `-ss` offset (cues stay correct after seeks).
-Config: `SUBTITLES_ENABLED`, `SUBTITLE_LANGUAGES`, `SUBTITLES_INCLUDE_AUTO_GENERATED`, `FFPROBE_PATH`.
-
-## HDR
-
-`resolveSource` ffprobes every input; PQ/HLG (`smpte2084`/`arib-std-b67`) sets `ResolvedSource.hdr`,
-which `streamer.ts` passes to the fork as `inputColor: "hdr"`. The pipeline then tonemaps to BT.709
-SDR — `scale_vaapi=format=p010,tonemap_vaapi` on the GPU path, a zimg/Hable `zscale`+`tonemap` chain
-on the software path — so HDR remuxes no longer look washed out. If the iGPU lacks the HDR VPP
-(`tonemap_vaapi`) or `overlay_vaapi`, ffmpeg fails at graph init and the existing HW→SW retry
-resumes playback on the software chain (watch `streambot_hw_fallback_total`).
-
-## discord-video-stream / VAAPI pipeline
-
-`@shepherdjerred/discord-video-stream` lives at `packages/discord-video-stream`, consumed via `file:` → TS source. VAAPI gotchas baked into its design:
-
-- **Software-scale trap:** `prepareStream` historically emitted `-hwaccel auto` (decode → system RAM) + software `scale=` (swscale) with only the encode on the GPU; on 4K HEVC that swscale runs ~0.77× realtime → CFS throttling on the 2-core limit → `Frame takes too long to send` stutter. `EncoderSettings.hwPipeline` keeps the whole graph on the GPU (`-hwaccel vaapi -hwaccel_output_format vaapi` + `scale_vaapi=…:format=nv12`) for ~22× less CPU.
-- `h264_vaapi` defaults to **AVBR** (ignores `-maxrate`/`-bufsize`, uncapped bitrate) — pin `-rc_mode VBR`. Drop `-pix_fmt yuv420p` + `hwupload` on the hw path.
-- Node `torvalds` advertises 10 `gpu.intel.com/i915` slots (iHD driver); spin a temp pod to benchmark ffmpeg against the real media (RWO PVCs mount on multiple same-node pods).
-
-## Live e2e (`bun run e2e`)
-
-Runs against a dedicated **test** Discord server (never the production `streambot-config` guild). IDs are passed as env vars so prod config is untouched; tokens come from the `streambot-config` 1P item (Homelab vault). The selfbot logs in as `glidiot_`. (This live Discord e2e is not part of the Buildkite pipeline — it needs a real test guild and user tokens — so run `e2e/run.ts` directly.) It needs `USER_TOKENS` plus the test-only `E2E_GUILD_ID`/`E2E_VIDEO_CHANNEL_ID` envs (production joins the issuer's current VC, which a headless test can't set), and real ffmpeg/ffprobe on PATH.
-
-```bash
-J=$(op item get streambot-config --vault "Homelab (Kubernetes)" --format json --reveal)
-export BOT_TOKEN=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="BOT_TOKEN").value')
-export USER_TOKENS=$(echo "$J" | jq -r '.fields[]|select((.label//.id)=="TOKEN").value')
-VIDEOS_DIR=/tmp E2E_GUILD_ID=1337623164146155593 E2E_VIDEO_CHANNEL_ID=1337623164955398253 bun run e2e
-```
-
-The hybrid assistant has a separate macOS operator harness: `bun run e2e:voice-assistant`. It
-requires voice enabled with the dedicated OpenAI key and extracted model assets, two Streambot
-`USER_TOKENS`, `E2E_GUILD_ID`, two comma-separated `E2E_VOICE_CHANNEL_IDS`, and two independent
-`E2E_VOICE_SPEAKER_TOKENS`. It sends selected canonical `.dopus` fixtures (or one optional
-`E2E_VOICE_RAW_FILE` human holdout) rather than synthesizing at runtime. It requires assistant DAVE
-readiness, filters replies by the session's userbot ID, decodes and validates them, checks exact
-metric deltas, exercises source restrictions/all tools/permissions/duck restoration/stop teardown,
-runs two same-guild sessions concurrently, and defaults to a 30-minute negative soak
-(`E2E_VOICE_NEGATIVE_SOAK_MINUTES`). It is manual and must pass twice consecutively.
-Run it separately with an intentionally invalid key and
-`E2E_VOICE_EXPECT_INVALID_CREDENTIALS=true` to prove a real Discord wake fails before
-transcription, reply audio, ducking, or tools while Go Live continues.
-
-Corpus generation is the only networked corpus command:
-
-```bash
-bun run voice:corpus:generate
-bun run voice:corpus:generate --refresh
-bun run voice:corpus:verify
-VOICE_ASSETS_DIR=/opt/streambot/voice bun run voice:corpus:evaluate
-bun run voice:human:evaluate --input-dir <repo>/.context/streambot-human-holdout \
-  --assets-dir /opt/streambot/voice
-bun run voice:harness:prepare
-bun run voice:harness --list-devices
-OPENAI_API_KEY=... bun run voice:harness --device <avfoundation-index>
-OPENAI_API_KEY=... bun run voice:harness --device <avfoundation-index> --save-recordings
-bun run voice:harness:evaluate \
-  --positive-dir ../../.context/streambot-voice-recordings \
-  --positive-pattern '^trial-' \
-  --negative-dir ../../.context/streambot-kws-negatives \
-  --runtime native
-```
-
-The probe is non-persistent by default. `--save-recordings` is an explicit debugging mode that
-writes both the pre-Opus microphone PCM and the exact post-Opus/post-lifecycle PCM committed to
-OpenAI as lossless 24 kHz mono WAV files under `.context/streambot-voice-recordings`, prints
-peak/RMS levels, and zeroes its in-memory copies after each trial. `--recordings-dir <path>`
-overrides that location and implies recording.
-
-The human input manifest has exactly three `speaker-1`…`speaker-3` groups, each with five
-`positive`, three `near-match`, and two `background` clips. Only aggregate results survive; the
-input directory is deleted after evaluation.
-
-`bun run e2e:voice-recovery` uses the same environment and dedicated server. It lets a short
-subtitled fixture reach natural EOF and verifies the machine advances to its idle-wait state without
-a stall retry, then starts a second stream and uses `E2E_MODERATOR_USER_TOKEN` to disconnect the
-userbot. That identity must belong to the test guild and have **Move Members** permission. The run
-fails if close code `4014` does not surface or if Streambot reacquires a userbot after the reconnect
-window.
-
-The homelab deployment sources `USER_TOKENS` (comma-separated pool) from that 1P item.
-
-## Observability
-
-Prometheus metrics are served at `/metrics` on `METRICS_PORT` (default `9466`, `0` disables),
-scraped by a ServiceMonitor (homelab `streambot.ts`). The headline metric is
-`streambot_ffmpeg_speed_ratio` — sustained `< 1.0` means the transcode can't keep realtime and
-playback will stutter once the buffer drains; read it alongside `streambot_send_frametime_ratio`
-(send-bound vs transcode-bound) and `streambot_source_info` (ffprobe codec/resolution/HDR/audio).
-Grafana dashboard: `packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts` (uid `streambot`).
-The complete voice surface is
-`packages/homelab/src/cdk8s/grafana/streambot-voice-dashboard.ts` (uid `streambot-voice`), with
-Tempo/Loki drill-downs by trace and capture ID. Voice telemetry initializes before local voice
-models so startup and transport work can be observed. `service.name` is always `streambot`.
-Stdout remains structured JSON and is mirrored to Loki through OTLP; controlled traces go to Tempo.
-Transcripts, normalized commands, IDs, and validated tool arguments/results are permitted in those
-private diagnostic records. Raw audio and credentials are prohibited.
-
-The receive observer in `@shepherdjerred/discord-video-stream` reports only bounded packet outcomes,
-bytes, speaking mappings, and DAVE readiness; observer exceptions are isolated and cannot change
-packet delivery. Five minutes without ingress emits one info log and the next packet emits one
-recovery log. Inactivity never alerts by itself. Alerting begins at an active-but-unready receive
-path, elevated decrypt/decode/malformed traffic, quota/cloud/reply failure, capture loss/pressure,
-a turn older than 35 seconds, or playback left ducked after a turn ends.
-The ffmpeg/send signals come from the vendored fork's optional `StreamObserver`
-(`@shepherdjerred/discord-video-stream`), threaded via the prepare/play options in `streamer.ts`.
-
-## Conventions
-
-Standard monorepo rules apply: strict TS, no `as` casts, kebab-case files, `.ts` import
-extensions, no parent imports (use `@shepherdjerred/streambot/...`), Zod at every boundary,
-Bun APIs, structured logging. `yt-dlp` and `ffmpeg` are system binaries baked into the image
-(no runtime download). When building the image, install `yt-dlp` by downloading the per-arch
-standalone binary from the release **asset CDN**
-(`github.com/yt-dlp/yt-dlp/releases/download/<version>/<asset>`) and verify it
-against the `SHA2-256SUMS` asset from that same pinned release (this install
-runs as a step in the `Dockerfile`). Do **not** rely on
-`youtube-dl-exec`'s postinstall — it queries `api.github.com`
-unauthenticated (its token header is silently dropped by a `fetch(url, headers)` vs
-`fetch(url, { headers })` bug) and exhausts GitHub's 60 req/hr anonymous limit on shared egress
-IPs, intermittently failing image builds.
-
-## Commands
-
-```bash
-bun run dev              # watch
-bun run test             # unit tests (machine, config, sources) — test/, no ffmpeg
-bun run test:integration # real-ffmpeg subtitle tests — integration/, needs ffmpeg+libass
 bun run typecheck
+bun run test
+bun run test:integration
 bun run lint
+bun run docker:build
+bun run smoke
 ```
 
-**Fresh-worktree typecheck gotcha:** `bun run typecheck` can fail with ~40 errors from
-`../discord-video-stream/src/*`. Cause: `bun run build` in `packages/discord-video-stream`
-produces the package's d.ts into its `dist/`, but the **copied** workspace entries under
-`node_modules/@shepherdjerred/discord-video-stream/` have no `dist/`, so tsc's `exports` `types`
-condition fails and it type-checks the loose package source instead. Fix (gitignored, local-only):
-
-```bash
-for d in node_modules packages/streambot/node_modules; do
-  mkdir -p "$d/@shepherdjerred/discord-video-stream/dist"
-  cp -R packages/discord-video-stream/dist/. "$d/@shepherdjerred/discord-video-stream/dist/"
-done
-```
-
-(The image build does the same copy, so CI never hits this; apply the fix manually in fresh local checkouts.)
+Live Discord E2E and voice-recovery tests require the dedicated test guild and
+ambient secrets. Distinguish package tests, image recognition smoke, live
+Discord delivery, media quality, and production observability.
