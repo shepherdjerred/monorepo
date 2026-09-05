@@ -170,7 +170,7 @@ export async function fetchProgressionMatches(options: {
   const matchClause = options.matchId === undefined ? "" : " AND match_id = ?";
   const source = buildMatchesSource(files, {
     sql:
-      "puuid IN (SELECT unnest(?)) AND epoch_ms(game_end_at) >= ?" +
+      "puuid IN (SELECT unnest(?)) AND queue IS NOT NULL AND epoch_ms(game_end_at) >= ?" +
       endClause +
       matchClause +
       ` ${cursor.sql}`,
