@@ -5,6 +5,8 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 export function PlayerHeaderActions(props: {
   guildId: string;
   alias: string;
+  playerId?: number;
+  showStats: boolean;
   playerLoaded: boolean;
   permissions: PermissionSet;
   deletePending: boolean;
@@ -21,6 +23,11 @@ export function PlayerHeaderActions(props: {
 
   return (
     <div className="flex flex-wrap gap-2">
+      {props.playerId !== undefined && props.showStats && (
+        <Button asChild variant="outline" size="sm">
+          <Link to={`/players/${props.playerId.toString()}`}>View stats</Link>
+        </Button>
+      )}
       {canRename && (
         <Button
           type="button"

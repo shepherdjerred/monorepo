@@ -427,7 +427,7 @@ export function AppWorkspaceFrame(props: {
         >
           {props.sidebar === undefined ? null : (
             <aside
-              className="scout-app-sidebar relative"
+              className="scout-app-sidebar"
               aria-label="Workspace navigation"
             >
               {props.sidebar}

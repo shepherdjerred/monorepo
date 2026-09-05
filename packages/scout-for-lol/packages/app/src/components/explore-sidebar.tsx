@@ -61,12 +61,12 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
 
       {props.conversations.length > 4 && (
         <div className="relative px-0.5">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-scout-subtle" />
+          <Search className="pointer-events-none absolute left-2 top-1/2 size-3.5 -translate-y-1/2 text-scout-subtle" />
           <input
             type="search"
             value={search}
             placeholder="Search chats…"
-            className="h-6 w-full rounded-md border border-transparent bg-scout-hover/50 px-2 pl-6 text-[12px] text-scout-ink placeholder:text-scout-subtle !outline-none transition-colors hover:bg-scout-hover/80 focus:border-scout-border/70 focus:bg-scout-surface focus:!outline-none focus-visible:!outline-none"
+            className="h-8 w-full rounded-md border border-transparent bg-scout-hover/50 px-2.5 pl-7 text-sm text-scout-ink placeholder:text-scout-subtle !outline-none transition-colors hover:bg-scout-hover/80 focus:border-scout-border/70 focus:bg-scout-surface focus:!outline-none focus-visible:!outline-none"
             onChange={(event) => {
               setSearch(event.target.value);
             }}
@@ -77,7 +77,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-0.5">
         {groups.map((group) => (
           <div key={group.label} className="space-y-0.5">
-            <p className="px-2 pt-1 text-[11px] font-medium text-scout-subtle">
+            <p className="px-2.5 pt-1 text-xs font-medium text-scout-subtle">
               {group.label}
             </p>
             <ul className="space-y-0.5">
@@ -92,7 +92,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                 >
                   <Link
                     to={`/explore/${conversation.id}`}
-                    className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-1 text-left text-[13px] text-inherit no-underline outline-none"
+                    className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-1.5 text-left text-sm text-inherit no-underline outline-none"
                     onClick={(event) => {
                       if (
                         event.defaultPrevented ||
@@ -121,15 +121,15 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                       <DropdownMenuTrigger asChild>
                         <button
                           type="button"
-                          className="flex size-5 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus:outline-none"
+                          className="flex size-6 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus:outline-none"
                           aria-label={`Actions for ${conversation.title}`}
                         >
                           <MoreHorizontal className="size-3.5" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-32">
+                      <DropdownMenuContent align="end" className="w-36">
                         <DropdownMenuItem
-                          className="gap-2 text-xs"
+                          className="gap-2 text-sm"
                           onSelect={() => {
                             props.onRename(conversation);
                           }}
@@ -138,7 +138,7 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
                           <span>Rename</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          className="gap-2 text-xs text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
+                          className="gap-2 text-sm text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
                           onSelect={() => {
                             props.onDelete(conversation);
                           }}

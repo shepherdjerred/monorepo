@@ -24,12 +24,12 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
-import { PlayerTabsNav } from "#src/components/player-tabs-nav.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
   Section,
 } from "#src/components/player-detail-sections.tsx";
+import { GuildPlayerStats } from "#src/components/guild-player-stats.tsx";
 import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
 import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";
 import { AddAccountDialog } from "#src/components/add-account-dialog.tsx";
@@ -193,6 +193,9 @@ export function PlayerDetail() {
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions({ guildId }),
   );
+  const consumerStatusQuery = useQuery(
+    trpc.consumerPlayer.status.queryOptions({ guildId }),
+  );
 
   function refresh() {
     void queryClient.invalidateQueries({ queryKey: playerKey });
@@ -212,10 +215,7 @@ export function PlayerDetail() {
     void queryClient.invalidateQueries({
       queryKey: trpc.player.listPlayers.pathKey(),
     });
-    // Stay on the manage tab — the user was mid-administration.
-    void navigate(
-      `/g/${guildId}/players/${encodeURIComponent(nextAlias)}/manage`,
-    );
+    void navigate(`/g/${guildId}/players/${encodeURIComponent(nextAlias)}`);
   }
 
   const unlinkMutation = useMutation(
@@ -278,6 +278,10 @@ export function PlayerDetail() {
         <PlayerHeaderActions
           guildId={guildId}
           alias={alias}
+          {...(consumerStatusQuery.data?.state === "available"
+            ? { playerId: player.id }
+            : {})}
+          showStats={consumerStatusQuery.data?.state === "available"}
           playerLoaded={true}
           permissions={perms}
           deletePending={deletePlayerMutation.isPending}
@@ -292,8 +296,6 @@ export function PlayerDetail() {
           }}
         />
       </div>
-
-      <PlayerTabsNav guildId={guildId} alias={alias} />
 
       {actionError !== null && (
         <p className="text-sm text-scout-danger">{actionError}</p>
@@ -314,6 +316,8 @@ export function PlayerDetail() {
           unlinkMutation.mutate({ guildId, playerAlias: alias });
         }}
       />
+
+      <GuildPlayerStats guildId={guildId} alias={alias} />
 
       <Section
         title="Riot accounts"

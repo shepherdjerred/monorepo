@@ -246,7 +246,7 @@ export function Explore() {
       : undefined;
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-3xl flex-col gap-4 px-4 py-8 sm:px-6 sm:py-10 [overscroll-behavior:none]">
+    <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col gap-4 px-6 py-8 sm:px-8 sm:py-12 [overscroll-behavior:none]">
       <ExploreHeader
         title={conversationId === null ? "Explore" : title}
         {...(headerActions === undefined ? {} : { actions: headerActions })}

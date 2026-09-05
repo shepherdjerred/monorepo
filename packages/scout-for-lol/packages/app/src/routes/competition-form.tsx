@@ -206,7 +206,7 @@ export function CompetitionForm() {
             setError(null);
           }}
         >
-          <fieldset disabled={pending} className="m-0 border-0 p-0">
+          <fieldset disabled={pending} className="m-0 space-y-4 border-0 p-0">
             <CompetitionFormFields
               form={form}
               locked={isEdit && !isDraft}

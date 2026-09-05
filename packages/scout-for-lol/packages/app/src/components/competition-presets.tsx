@@ -26,13 +26,13 @@ export function CompetitionPresets(props: {
               key={example.id}
               type="button"
               variant="outline"
-              className="h-auto justify-start whitespace-normal p-3 text-left"
+              className="h-auto items-start justify-start whitespace-normal p-3 text-left"
               onClick={() => {
                 props.onUsePreset(example);
               }}
             >
-              <Trophy className="mt-0.5" />
-              <span className="space-y-1">
+              <Trophy className="mt-0.5 size-5 shrink-0" />
+              <span className="w-full space-y-1 text-left">
                 <span className="block text-sm font-medium leading-5">
                   {example.label}
                 </span>

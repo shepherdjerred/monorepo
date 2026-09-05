@@ -241,7 +241,10 @@ function CompetitionBuilderReady(props: {
           setError(null);
         }}
       >
-        <fieldset disabled={mutation.isPending} className="m-0 border-0 p-0">
+        <fieldset
+          disabled={mutation.isPending}
+          className="m-0 space-y-4 border-0 p-0"
+        >
           <Card>
             <CardHeader>
               <CardTitle>Start with a scenario</CardTitle>
@@ -266,14 +269,14 @@ function CompetitionBuilderReady(props: {
                     variant={
                       starter?.id === scenario.id ? "secondary" : "outline"
                     }
-                    className="h-auto min-h-20 justify-start whitespace-normal p-3 text-left"
+                    className="h-auto min-h-20 items-start justify-start whitespace-normal p-3 text-left"
                     disabled={scenario.value === null}
                     title={scenario.unavailableReason}
                     onClick={() => {
                       applyScenario(scenario.id);
                     }}
                   >
-                    <span>
+                    <span className="w-full text-left">
                       <span className="block font-medium">
                         {scenario.label}
                       </span>

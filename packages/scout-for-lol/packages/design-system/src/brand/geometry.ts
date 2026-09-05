@@ -26,6 +26,35 @@ export function scoutMarkInner(options: {
   <circle cx="${String(scoutMarkCircles.pupil.cx)}" cy="${String(scoutMarkCircles.pupil.cy)}" r="${String(scoutMarkCircles.pupil.r)}" fill="${options.fill}"/>`;
 }
 
+export function scoutAdaptiveMarkSvg(options: {
+  light: { outer: string; inner: string };
+  dark: { outer: string; inner: string };
+  strokeWidth: number;
+  ariaLabel?: string;
+}): string {
+  const label =
+    options.ariaLabel === undefined
+      ? ""
+      : ` role="img" aria-label="${options.ariaLabel}"`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${scoutMarkViewBox}" fill="none"${label}>
+  <style>
+    .scout-mark-outer { stroke: ${options.light.outer}; }
+    .scout-mark-inner { stroke: ${options.light.inner}; }
+    .scout-mark-pupil { fill: ${options.light.inner}; }
+    @media (prefers-color-scheme: dark) {
+      .scout-mark-outer { stroke: ${options.dark.outer}; }
+      .scout-mark-inner { stroke: ${options.dark.inner}; }
+      .scout-mark-pupil { fill: ${options.dark.inner}; }
+    }
+  </style>
+  <path class="scout-mark-outer" d="${scoutMarkPaths.hexagon}" fill="none" stroke-width="${String(options.strokeWidth)}"/>
+  <path class="scout-mark-inner" d="${scoutMarkPaths.star}" fill="none" stroke-width="${String(options.strokeWidth)}" stroke-linejoin="round"/>
+  <circle class="scout-mark-outer" cx="${String(scoutMarkCircles.ring.cx)}" cy="${String(scoutMarkCircles.ring.cy)}" r="${String(scoutMarkCircles.ring.r)}" fill="none" stroke-width="${String(options.strokeWidth)}"/>
+  <circle class="scout-mark-pupil" cx="${String(scoutMarkCircles.pupil.cx)}" cy="${String(scoutMarkCircles.pupil.cy)}" r="${String(scoutMarkCircles.pupil.r)}"/>
+</svg>
+`;
+}
+
 export function scoutMarkSvg(options: {
   stroke: string;
   fill: string;

@@ -134,6 +134,24 @@ describe("consumerPlayer.status", () => {
       state: "no_shared_guild",
     });
   });
+
+  test("reports rollout availability for the requested guild", async () => {
+    enableProfiles(guildId);
+    trpc.setMembership([
+      { guildId, asAdmin: false },
+      { guildId: otherGuildId, asAdmin: false },
+    ]);
+
+    await expect(
+      trpc.authedCaller().consumerPlayer.status({ guildId }),
+    ).resolves.toEqual({
+      state: "available",
+      guildCount: 1,
+    });
+    await expect(
+      trpc.authedCaller().consumerPlayer.status({ guildId: otherGuildId }),
+    ).resolves.toEqual({ state: "feature_disabled" });
+  });
 });
 
 describe("consumerPlayer search and direct lookup", () => {

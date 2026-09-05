@@ -97,6 +97,7 @@ export function CompetitionDatesFields(props: {
                 type="date"
                 required
                 value={value.startDate}
+                data-empty={value.startDate === ""}
                 disabled={disabled}
                 {...builderErrorAttributes(
                   props.errors.startDate,
@@ -119,6 +120,7 @@ export function CompetitionDatesFields(props: {
                 type="date"
                 required
                 value={value.endDate}
+                data-empty={value.endDate === ""}
                 disabled={disabled}
                 {...builderErrorAttributes(
                   props.errors.endDate,

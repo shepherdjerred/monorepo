@@ -121,7 +121,7 @@ export function ConsumerPlayerSearch() {
   ]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
       <div className="space-y-2">
         <p className="text-sm font-medium text-primary">Player profiles</p>
         <h1 className="text-3xl font-semibold tracking-tight">

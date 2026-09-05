@@ -22,6 +22,12 @@ const ConsumerPlayerInput = z.object({
   playerId: PlayerIdSchema,
 });
 
+const ConsumerPlayerStatusInput = z
+  .object({
+    guildId: DiscordGuildIdSchema,
+  })
+  .optional();
+
 const FilterInput = z.object({
   games: PlayerProfileGameWindowSchema.default(20),
   queues: PlayerProfileQueueSelectionSchema.optional(),
@@ -186,20 +192,28 @@ function homePlayer(
 }
 
 export const consumerPlayerRouter = router({
-  status: protectedProcedure.query(async ({ ctx }) => {
-    const scope = await resolveConsumerPlayerScope(ctx.user);
-    if (scope.kind === "unavailable") {
-      throw new TRPCError({
-        code: "SERVICE_UNAVAILABLE",
-        message:
-          "Scout could not verify its connected servers. Try again soon.",
-      });
-    }
-    if (scope.kind === "forbidden") {
-      return { state: scope.reason } as const;
-    }
-    return { state: "available", guildCount: scope.guilds.length } as const;
-  }),
+  status: protectedProcedure
+    .input(ConsumerPlayerStatusInput)
+    .query(async ({ ctx, input }) => {
+      const scope = await resolveConsumerPlayerScope(ctx.user);
+      if (scope.kind === "unavailable") {
+        throw new TRPCError({
+          code: "SERVICE_UNAVAILABLE",
+          message:
+            "Scout could not verify its connected servers. Try again soon.",
+        });
+      }
+      if (scope.kind === "forbidden") {
+        return { state: scope.reason } as const;
+      }
+      if (
+        input?.guildId !== undefined &&
+        !scope.guilds.some((guild) => guild.id === input.guildId)
+      ) {
+        return { state: "feature_disabled" } as const;
+      }
+      return { state: "available", guildCount: scope.guilds.length } as const;
+    }),
 
   home: protectedProcedure.query(async ({ ctx }) => {
     const guilds = await assertConsumerPlayerScope(ctx.user);
