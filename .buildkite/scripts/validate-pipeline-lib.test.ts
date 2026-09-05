@@ -61,36 +61,12 @@ describe("native Buildkite execution surface", () => {
     );
   });
 
-  test("rejects soft-fail configuration on a step that is not exempt", () => {
+  test("rejects soft-fail configuration", () => {
     const source = validNativeStep.replace(
       "    command:",
       "    soft_fail: true\n    command:",
     );
-    expect(() => validateNativeStep(source)).toThrow(
-      "must be a hard step; add it to SOFT_FAIL_EXEMPT_NATIVE_STEPS",
-    );
-  });
-
-  // The exemption is only worth having if it cannot outlive its reason: a
-  // listed step that starts gating again has to drop the entry, or the next
-  // step to reuse that key inherits a silent pass nobody chose.
-  test("rejects a listed exemption once the step gates again", () => {
-    const source = validNativeStep.replace(
-      "    key: quotabar-macos-pr",
-      "    key: tasknotes-native-main",
-    );
-    expect(() => validateNativeStep(source)).toThrow(
-      "no longer declares soft_fail; drop the exemption",
-    );
-  });
-
-  test("allows soft-fail on a step that is listed as exempt", () => {
-    const source = validNativeStep
-      .replace("    key: quotabar-macos-pr", "    key: tasknotes-native-main")
-      .replace("    command:", "    soft_fail: true\n    command:");
-    expect(() => {
-      validateNativeStep(source);
-    }).not.toThrow();
+    expect(() => validateNativeStep(source)).toThrow("must be a hard step");
   });
 
   test("rejects missing global serialization", () => {

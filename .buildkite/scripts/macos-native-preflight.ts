@@ -71,6 +71,18 @@ export function missingTaskNotesRustTargets(output: string): string[] {
   return TASKNOTES_RUST_TARGETS.filter((target) => !installed.has(target));
 }
 
+export function automationModeDoesNotRequireAuthentication(
+  output: string,
+): boolean {
+  return output
+    .split("\n")
+    .some(
+      (line) =>
+        line.trim() ===
+        "This device DOES NOT REQUIRE user authentication to enable Automation Mode.",
+    );
+}
+
 async function run(command: readonly string[]): Promise<string> {
   const child = Bun.spawn([...command], {
     stdout: "pipe",
@@ -123,6 +135,13 @@ async function preflight(suite: NativeSuite): Promise<string | undefined> {
   if (!developerDirectory.endsWith("/Contents/Developer")) {
     throw new Error(
       `xcode-select returned an invalid developer directory: ${developerDirectory}`,
+    );
+  }
+
+  const automationModeStatus = await run(["/usr/bin/automationmodetool"]);
+  if (!automationModeDoesNotRequireAuthentication(automationModeStatus)) {
+    throw new Error(
+      "unattended native CI requires passwordless Automation Mode; run sudo /usr/bin/automationmodetool enable-automationmode-without-authentication",
     );
   }
 

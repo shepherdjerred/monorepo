@@ -85,6 +85,10 @@ if ((INSTALL_XCODE)); then
   xcodes signout
 fi
 
+echo "==> Allowing XCTest to enable Automation Mode without authentication — needs sudo"
+sudo /usr/bin/automationmodetool enable-automationmode-without-authentication
+/usr/bin/automationmodetool
+
 echo "==> Validating Xcode and native toolchain"
 xcodebuild -version
 xcode-select -p

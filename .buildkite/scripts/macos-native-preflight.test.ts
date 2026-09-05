@@ -1,11 +1,40 @@
 import { describe, expect, test } from "vitest";
 import {
   appleDevelopmentIdentities,
+  automationModeDoesNotRequireAuthentication,
   availableDiskKib,
   missingTaskNotesRustTargets,
   parseNativeSuite,
   pinnedToolVersion,
 } from "./macos-native-preflight.ts";
+
+describe("unattended Automation Mode authorization", () => {
+  test("accepts enabled Automation Mode without authentication", () => {
+    expect(
+      automationModeDoesNotRequireAuthentication(
+        "Automation Mode is ENABLED.\nThis device DOES NOT REQUIRE user authentication to enable Automation Mode.\n",
+      ),
+    ).toBe(true);
+  });
+
+  test("accepts disabled Automation Mode when XCTest may enable it without authentication", () => {
+    expect(
+      automationModeDoesNotRequireAuthentication(
+        "Automation Mode is disabled.\nThis device DOES NOT REQUIRE user authentication to enable Automation Mode.\n",
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects required authentication and malformed output", () => {
+    expect(
+      automationModeDoesNotRequireAuthentication(
+        "Automation Mode is disabled.\nThis device requires user authentication to enable Automation Mode.\n",
+      ),
+    ).toBe(false);
+    expect(automationModeDoesNotRequireAuthentication("disabled")).toBe(false);
+    expect(automationModeDoesNotRequireAuthentication("\n")).toBe(false);
+  });
+});
 
 describe("native macOS suite parsing", () => {
   test("accepts only the two supported suites", () => {

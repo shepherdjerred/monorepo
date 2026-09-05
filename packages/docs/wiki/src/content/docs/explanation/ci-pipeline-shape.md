@@ -59,7 +59,9 @@ Those phases target a dedicated `macos` queue and serialize in one global
 concurrency group. They do not inherit the Kubernetes plugin, pod metadata, or
 cluster-secret environment. This is an intentional trust boundary: affected PR
 code runs directly in an unlocked macOS user session, so the host contains only
-the development certificate and permissions required by those tests. Release
+the development certificate and permissions required by those tests. The host
+allows XCTest to enable Automation Mode without authenticating interactively,
+so native jobs never depend on an expiring password grant. Release
 signing, notarization, iOS simulators, devices, CocoaPods, and Maestro remain
 outside that surface.
 
