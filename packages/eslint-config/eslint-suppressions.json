@@ -1,9 +1,4 @@
 {
-  "src/rules/knip-unused.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/rules/no-re-exports.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -25,11 +20,6 @@
     }
   },
   "src/rules/prefer-zod-validation.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/rules/shared/tool-runner.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

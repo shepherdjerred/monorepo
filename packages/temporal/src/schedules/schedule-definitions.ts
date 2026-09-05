@@ -107,6 +107,30 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly Scout Data Dragon refresh even when version is unchanged",
   },
   {
+    // Friday, 24h ahead of scout-data-dragon-weekly-refresh above. This
+    // dress-rehearses the bot-clone pipeline that refresh depends on, so a
+    // regression is found the day before the job that would hit it — the
+    // 2026-06-20 to 07-11 breakage of exactly that job went unnoticed for
+    // three weeks. It previously ran as the `check:rehearsal` turbo task in
+    // the root verify graph, i.e. on every pull request, which is why verify
+    // carried ~338s of uncacheable work for a once-a-week job.
+    id: "schedule-rehearsal-weekly",
+    workflowType: "runScheduleRehearsalWorkflow",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "0 6 * * 5",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    // The rehearsal performs a full root install plus a Data Dragon snapshot
+    // refresh inside its scratch clone; 2 hours leaves room for a cold Bun
+    // cache without letting a wedged run sit until the Saturday job fires.
+    workflowExecutionTimeout: "2 hours",
+    memo: "Weekly dress rehearsal of the scheduled bot-clone pipeline",
+  },
+  {
     id: "scout-lane-priors-weekly-refresh",
     workflowType: "runScoutLanePriorsWeeklyRefresh",
     args: [SCOUT_LANE_PRIOR_UPDATE_CONFIG],

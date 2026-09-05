@@ -54,11 +54,11 @@ export async function withInstallRetry(
 // Environment preparation for the ephemeral bot clones the deterministic
 // PR-creating activities (data-dragon, scout-season-refresh, llm-catalog-refresh)
 // make under /tmp. Every activity that clones the monorepo MUST prepare the
-// clone through these helpers — the `temporal-schedule-rehearsal` CI step
-// drives these exact functions against the PR's tree, so environment logic
-// added here is what gets validated at PR time. Hand-rolling install steps in
-// an activity puts them outside that safety net, which previously let weekly
-// refreshes remain broken for a month.
+// clone through these helpers — the weekly `schedule-rehearsal-weekly`
+// schedule drives these exact functions against current main, so environment
+// logic added here is what gets validated before the weekend jobs run.
+// Hand-rolling install steps in an activity puts them outside that safety net,
+// which previously let weekly refreshes remain broken for a month.
 
 /**
  * Per-run Bun install cache directory for a bot clone, sibling to the git

@@ -24,6 +24,7 @@ import { scoutImageGcActivities } from "./scout-image-gc.ts";
 import { homelabCrdImportsRefreshActivities } from "./homelab-crd-imports-refresh.ts";
 import { pokeemeraldDataRefreshActivities } from "./dpp-pokeemerald-data-refresh.ts";
 import { scoutShowcaseRefreshActivities } from "./scout-showcase-refresh.ts";
+import { scheduleRehearsalActivities } from "./schedule-rehearsal.ts";
 import { scoutQueueWindowsActivities } from "./scout-queue-windows.ts";
 import { glitterCorpusActivities } from "./glitter-corpus.ts";
 import { glitterContextRefreshActivities } from "./glitter-context-refresh.ts";
@@ -99,6 +100,7 @@ export const scoutActivities = {
   ...scoutQueueWindowsActivities,
   ...scoutWeeklyParlayActivities,
   ...scoutBryanBucksActivities,
+  ...scheduleRehearsalActivities,
 };
 
 export const agentActivities = {

@@ -3,8 +3,6 @@ const config = [
   ...recommended({
     tsconfigRootDir: import.meta.dirname,
     tsconfigPaths: ["./tsconfig.scripts.json"],
-    // knip (dead code/exports) + jscpd (duplication), both at warn.
-    customRules: { analysisRules: true },
   }),
   { rules: { "no-console": "off" } },
   {

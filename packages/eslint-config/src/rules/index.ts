@@ -16,8 +16,6 @@ import { preferAsyncAwait } from "./prefer-async-await.js";
 import { noDtoNaming } from "./no-dto-naming.js";
 import { preferStructuredLogging } from "./prefer-structured-logging.js";
 import { noShadcnThemeTokens } from "./no-shadcn-theme-tokens.js";
-import { knipUnused } from "./knip-unused.js";
-import { noCodeDuplication } from "./jscpd-duplication.js";
 import { requireContainerResources } from "./require-container-resources.js";
 
 /**
@@ -43,8 +41,6 @@ export const customRulesPlugin = {
     "no-dto-naming": noDtoNaming,
     "prefer-structured-logging": preferStructuredLogging,
     "no-shadcn-theme-tokens": noShadcnThemeTokens,
-    "knip-unused": knipUnused,
-    "no-code-duplication": noCodeDuplication,
     "require-container-resources": requireContainerResources,
   },
 };
@@ -69,7 +65,5 @@ export {
   noDtoNaming,
   preferStructuredLogging,
   noShadcnThemeTokens,
-  knipUnused,
-  noCodeDuplication,
   requireContainerResources,
 };

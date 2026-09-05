@@ -54,7 +54,6 @@ const turboTasks = [
   "lint:swift",
   "check:caddyfile",
   "test:contract",
-  "check:rehearsal",
 ] as const;
 
 const forwardedArgs = process.argv

@@ -61,8 +61,13 @@ The `customRulesPlugin` (rules namespaced `custom-rules/*`) lives in
 - `prisma-client-disconnect`, `satori-best-practices`,
   `require-container-resources`, `prefer-structured-logging`,
   `no-use-effect`, `no-dto-naming`, `no-shadcn-theme-tokens`
-- `knip-unused`, `jscpd-duplication` — project-wide analysis rules (opt-in via
-  `customRules.analysisRules`)
+
+Project-wide analysis (dead exports, duplication) is deliberately NOT an ESLint
+rule. `knip` and `jscpd` are whole-repo tools, so running them from a per-file
+linter meant re-running them once per linted package — measurably ~9s of knip
+per package, duplicated across every package that opted in, for rules that only
+ever emitted warnings. The enforcing copies are the root `//#knip` and
+`//#jscpd` turbo tasks, which run once per build and fail it.
 
 Individual rules are also exported for advanced composition, and
 `@shepherdjerred/eslint-config/rules` exposes the plugin subpath.

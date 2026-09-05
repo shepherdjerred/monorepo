@@ -426,6 +426,18 @@ common:
   # check without allowing several cold verify pods to overcommit the 80Gi
   # Buildkite quota. It has no DinD sidecar; image work uses remote BuildKit.
   # Only verify pays this; other lanes use their measured complete-pod sizing.
+  #
+  # The CPU limit is sized against throttling, not average draw. Every earlier
+  # revision of this anchor tuned memory and carried cpu: "7" along untouched.
+  # Over 163 verify pods in 24h the median pod spent 53% of its CFS periods
+  # throttled (p90 80%) while averaging only 3.9 cores (p90 5.6, max 6.5): the
+  # turbo fan-out bursts past a 7-core quota inside single 100ms windows even
+  # though its mean draw sits well under the limit. 12 clears the measured p90
+  # burst with margin. Kueue admits on requests, so this buys back throttled
+  # wall-clock without consuming a byte of the memory-bound admission quota —
+  # the request stays at 1. liskov is a dedicated CI node (ci=only:NoSchedule)
+  # whose only co-tenants are observability and cache infrastructure, and it
+  # averages 22% CPU, so the headroom for these bursts is real.
   - pod_verify: &pod_verify
       kubernetes: &pod_verify_kubernetes
         checkout:
@@ -447,7 +459,7 @@ common:
                   value: "/bin/bash -e -c"
               resources:
                 requests: { cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }
-                limits: { cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }
+                limits: { cpu: "12", memory: "24Gi", ephemeral-storage: "40Gi" }
               volumeMounts:
                 # Mirror-backed checkouts: see the base pod anchor above.
                 - name: buildkite-git-mirrors
@@ -1198,8 +1210,29 @@ steps:
                   # exceeded 8Gi and was OOM-killed (exit -7) reproducibly at the
                   # same point across three consecutive attempts, independent of
                   # overall cluster load.
-                  requests: { cpu: "1", memory: "5Gi" }
-                  limits: { cpu: "4", memory: "12Gi" }
+                  #
+                  # That burst limit was raised to 12Gi but the reservation was
+                  # left at 5Gi, so the pod has been running ~3Gi outside what
+                  # Kueue accounts for. Measured over 244 pods in 24h: median
+                  # peak working set 7.7Gi, p90 8.2Gi, max 8.8Gi — every one of
+                  # them above the request. The node reached 99% memory while
+                  # the quota still read 99%, because admission was reasoning
+                  # about 5Gi pods that were really 8Gi pods, and the kubelet
+                  # evicted one outright ("using 8477136Ki, request is 5Gi").
+                  # 9Gi covers the measured max and makes the reservation
+                  # honest; the 12Gi burst limit already had the headroom.
+                  #
+                  # 4 cores was the tightest limit on the heaviest parallel
+                  # workload here: Playwright drives six browser projects while
+                  # sibling packages build in the same container, and these pods
+                  # sat at 41% of CFS periods throttled (p90 98%) — starving the
+                  # design-system vite server badly enough that it failed to
+                  # bind inside its 120s webServer timeout on main build 14255,
+                  # which cancelled that release. The reporting pipeline's
+                  # design-audit pod already carries cpu "4" against a 12Gi
+                  # reservation for the same browser workload.
+                  requests: { cpu: "1", memory: "9Gi" }
+                  limits: { cpu: "8", memory: "12Gi" }
                 volumeMounts:
                   # Mirror-backed checkouts: see the container-0 mounts in the
                   # shared pod anchors (turbo runs git in these containers).
@@ -1278,8 +1311,29 @@ steps:
                   # exceeded 8Gi and was OOM-killed (exit -7) reproducibly at the
                   # same point across three consecutive attempts, independent of
                   # overall cluster load.
-                  requests: { cpu: "1", memory: "5Gi" }
-                  limits: { cpu: "4", memory: "12Gi" }
+                  #
+                  # That burst limit was raised to 12Gi but the reservation was
+                  # left at 5Gi, so the pod has been running ~3Gi outside what
+                  # Kueue accounts for. Measured over 244 pods in 24h: median
+                  # peak working set 7.7Gi, p90 8.2Gi, max 8.8Gi — every one of
+                  # them above the request. The node reached 99% memory while
+                  # the quota still read 99%, because admission was reasoning
+                  # about 5Gi pods that were really 8Gi pods, and the kubelet
+                  # evicted one outright ("using 8477136Ki, request is 5Gi").
+                  # 9Gi covers the measured max and makes the reservation
+                  # honest; the 12Gi burst limit already had the headroom.
+                  #
+                  # 4 cores was the tightest limit on the heaviest parallel
+                  # workload here: Playwright drives six browser projects while
+                  # sibling packages build in the same container, and these pods
+                  # sat at 41% of CFS periods throttled (p90 98%) — starving the
+                  # design-system vite server badly enough that it failed to
+                  # bind inside its 120s webServer timeout on main build 14255,
+                  # which cancelled that release. The reporting pipeline's
+                  # design-audit pod already carries cpu "4" against a 12Gi
+                  # reservation for the same browser workload.
+                  requests: { cpu: "1", memory: "9Gi" }
+                  limits: { cpu: "8", memory: "12Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors

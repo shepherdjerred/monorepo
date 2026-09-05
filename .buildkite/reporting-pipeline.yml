@@ -245,8 +245,11 @@ steps:
                 resources:
                   requests:
                     { cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }
+                  # Same exhaustive-graph pod as the main pipeline's verify, held
+                  # in lockstep by validateExhaustiveGraphCapacity. See the CPU
+                  # throttling measurement on the pod_verify anchor there.
                   limits:
-                    { cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }
+                    { cpu: "12", memory: "24Gi", ephemeral-storage: "40Gi" }
                 volumeMounts:
                   - name: buildkite-git-mirrors
                     mountPath: /buildkite/git-mirrors

@@ -42,8 +42,6 @@ export {
   noDtoNaming,
   preferStructuredLogging,
   noShadcnThemeTokens,
-  knipUnused,
-  noCodeDuplication,
 } from "./rules/index.js";
 
 // Import configs for the recommended preset
@@ -74,8 +72,6 @@ export type RecommendedOptions = BaseConfigOptions &
       structuredLogging?: boolean;
       /** Enable shadcn token restriction rule */
       noShadcnThemeTokens?: boolean;
-      /** Enable project-wide analysis rules (knip/jscpd) */
-      analysisRules?: boolean;
     };
   };
 
@@ -109,7 +105,6 @@ export function recommended(
       noDtoNaming: false,
       structuredLogging: false,
       noShadcnThemeTokens: false,
-      analysisRules: false,
     },
     ...baseOptions
   } = options;
@@ -192,14 +187,6 @@ export function recommended(
     customRulesConfig.rules = {
       ...customRulesConfig.rules,
       "custom-rules/no-shadcn-theme-tokens": "error",
-    };
-  }
-
-  if (customRules.analysisRules === true) {
-    customRulesConfig.rules = {
-      ...customRulesConfig.rules,
-      "custom-rules/knip-unused": "warn",
-      "custom-rules/no-code-duplication": "warn",
     };
   }
 

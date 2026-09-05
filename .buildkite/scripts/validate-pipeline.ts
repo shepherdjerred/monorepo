@@ -404,8 +404,8 @@ for (const required of [
 }
 
 for (const [stepKey, expectedRequests] of [
-  ["playwright-e2e-pr", 'requests: { cpu: "1", memory: "5Gi" }'],
-  ["playwright-e2e-main", 'requests: { cpu: "1", memory: "5Gi" }'],
+  ["playwright-e2e-pr", 'requests: { cpu: "1", memory: "9Gi" }'],
+  ["playwright-e2e-main", 'requests: { cpu: "1", memory: "9Gi" }'],
   ["resume-build-pr", 'requests: { cpu: "1", memory: "2Gi" }'],
   ["resume-build-main", 'requests: { cpu: "1", memory: "2Gi" }'],
   ["trivy", 'requests: { cpu: "250m", memory: "512Mi" }'],

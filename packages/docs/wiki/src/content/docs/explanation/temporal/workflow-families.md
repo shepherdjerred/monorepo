@@ -42,8 +42,14 @@ The reliability lives in the details:
 - **Idempotent PR creation** — force-with-lease to a job-specific branch, then
   update the existing open PR rather than duplicating it.
 
-A rehearsal canary drives these exact helpers inside `bun run verify`, so a
-change that would break the nightly bots fails the PR that introduces it.
+A rehearsal canary drives these exact helpers on its own weekly schedule,
+`schedule-rehearsal-weekly`, running each Friday — a day before the weekly
+refresh it stands in for. It runs on the same queue and worker image as the
+real jobs, so it exercises the environment they will actually meet. It used to
+run inside `bun run verify` on every pull request, but a rehearsal for a
+once-a-week job was the single longest task in that graph and could not be
+cached; matching it to the cadence of what it protects costs at most a day of
+detection latency on a job that once stayed broken for three weeks unnoticed.
 
 ## Repo upkeep
 

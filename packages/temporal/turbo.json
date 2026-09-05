@@ -15,9 +15,15 @@
       "passThroughEnv": ["MISE_DATA_DIR"]
     },
     // Rehearse the scheduled PR-creating workflows' environment prep against a
-    // copy of the repo tree (old CI: temporal-schedule-rehearsal). Drives the
-    // SAME bot-clone.ts helpers the weekly activities run, so a break surfaces
-    // at PR time instead of silently on the weekend.
+    // copy of the repo tree. Drives the SAME bot-clone.ts helpers the weekly
+    // activities run.
+    //
+    // This task is for LOCAL use: run it when you touch bot-clone.ts or a
+    // scheduled activity's install/repo-path assumptions. In production the
+    // rehearsal runs on the `schedule-rehearsal-weekly` Temporal schedule
+    // (Friday, 24h before the Saturday job it protects), not in CI — it was
+    // the longest task in the root verify graph at ~338s of uncacheable work
+    // per pull request, for a rehearsal of a once-a-week job.
     //
     // cache:false: the rehearsal copies the entire live repo tree and runs real
     // installs + git + prettier — its correctness depends on the whole tree
