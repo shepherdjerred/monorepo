@@ -1,6 +1,6 @@
 ---
 name: deep-research
-description: "This skill should be used when the user asks to \"deep research\", \"research this topic\", \"investigate thoroughly\",…"
+description: "Use when the user asks to \"deep research\", \"research this topic\", \"investi…"
 user-invocable: true
 allowed-tools:
   - Read

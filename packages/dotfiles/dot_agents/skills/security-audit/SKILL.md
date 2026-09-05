@@ -1,6 +1,6 @@
 ---
 name: security-audit
-description: "Security audit of a codebase — web apps, APIs, services, CLI tools, libraries, daemons, and more. Use when asked…"
+description: "Use this skill for Security audit of a codebase — web apps, APIs, services, CLI tools, libraries, daemons, and more…"
 license: MIT
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: "Audit agent behavior and configuration when the user asks to reflect on a conversation, improve agent…"
+description: "Use this skill for Audit agent behavior and configuration when the user asks to reflect on a conversation, improve …"
 ---
 
 # Reflect on agent configuration

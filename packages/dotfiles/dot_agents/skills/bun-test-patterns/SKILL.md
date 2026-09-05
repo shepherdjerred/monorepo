@@ -1,6 +1,6 @@
 ---
 name: bun-test-patterns
-description: "Current Bun test runner guidance for discovery, isolation, parallelism, sharding, changed tests, mocks, timers,…"
+description: "Use this skill for Current Bun test runner guidance for discovery, isolation, parallelism, sharding, changed tests,…"
 ---
 
 # Bun Test Patterns

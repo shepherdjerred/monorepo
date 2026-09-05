@@ -1,6 +1,6 @@
 ---
 name: figma-use
-description: "This skill should be used when the user asks to \"create a Figma design\", \"design in Figma\", \"make a Figma mockup\",…"
+description: "Use when the user asks to \"create a Figma design\", \"design in Figma\", \"mak…"
 ---
 
 # figma-use

@@ -1,6 +1,6 @@
 ---
 name: terminal-concepts
-description: "Comprehensive guide for building CLI and TUI applications - terminal internals, design principles, and…"
+description: "Use this skill for Comprehensive guide for building CLI and TUI applications - terminal internals, design principle…"
 ---
 
 # Terminal Concepts for Developers

@@ -1,6 +1,6 @@
 ---
 name: react-native-guidelines
-description: "React Native and Expo best practices for building performant mobile apps. Use when building React Native…"
+description: "Use this skill for React Native and Expo best practices for building performant mobile apps. Use when building Reac…"
 license: MIT
 metadata:
   author: vercel

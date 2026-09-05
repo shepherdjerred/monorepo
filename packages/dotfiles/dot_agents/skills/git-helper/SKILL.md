@@ -1,6 +1,6 @@
 ---
 name: git-helper
-description: "Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, worktrees,…"
+description: "Use this skill for Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, work…"
 ---
 
 # Git Helper

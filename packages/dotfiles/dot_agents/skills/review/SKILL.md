@@ -1,6 +1,6 @@
 ---
 name: review
-description: "This skill should be used when the user asks to \"review implementation\", \"compare to plan\", \"check what was…"
+description: "Use when the user asks to \"review implementation\", \"compare to plan\", \"che…"
 user-invocable: true
 allowed-tools:
   - Read

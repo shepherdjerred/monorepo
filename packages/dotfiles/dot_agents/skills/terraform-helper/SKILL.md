@@ -1,6 +1,6 @@
 ---
 name: terraform-helper
-description: "Terraform and OpenTofu infrastructure as code - HCL, providers, modules, state management, and CLI operations When…"
+description: "Use this skill for Terraform and OpenTofu infrastructure as code - HCL, providers, modules, state management, and C…"
 ---
 
 # Terraform & OpenTofu Helper Agent

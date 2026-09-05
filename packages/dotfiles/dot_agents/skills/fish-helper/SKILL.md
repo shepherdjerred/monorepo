@@ -1,6 +1,6 @@
 ---
 name: fish-helper
-description: "Current Fish shell scripting, functions, abbreviations, completions, variables, events, configuration, plugins,…"
+description: "Use this skill for Current Fish shell scripting, functions, abbreviations, completions, variables, events, configur…"
 ---
 
 # Fish Helper

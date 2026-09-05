@@ -1,6 +1,6 @@
 ---
 name: temporal-helper
-description: "Design, test, deploy, debug, and operate Temporal Workflows, Activities, Workers, task queues, Schedules,…"
+description: "Use this skill for Design, test, deploy, debug, and operate Temporal Workflows, Activities, Workers, task queues, S…"
 ---
 
 # Temporal helper

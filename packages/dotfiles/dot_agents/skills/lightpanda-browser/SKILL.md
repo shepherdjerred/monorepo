@@ -1,6 +1,6 @@
 ---
 name: lightpanda-browser
-description: "Lightpanda headless browser CLI for fast web content extraction, searching, and fetching When browsing the web,…"
+description: "Use this skill for Lightpanda headless browser CLI for fast web content extraction, searching, and fetching When br…"
 ---
 
 # Lightpanda Browser

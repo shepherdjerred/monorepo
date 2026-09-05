@@ -1,6 +1,6 @@
 ---
 name: buildkite-helper
-description: "Design, inspect, and troubleshoot Buildkite pipelines, steps, agents, plugins, retries, artifacts, APIs, and…"
+description: "Use this skill for Design, inspect, and troubleshoot Buildkite pipelines, steps, agents, plugins, retries, artifact…"
 ---
 
 # Buildkite helper

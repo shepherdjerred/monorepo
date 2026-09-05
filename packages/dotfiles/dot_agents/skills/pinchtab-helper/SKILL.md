@@ -1,6 +1,6 @@
 ---
 name: pinchtab-helper
-description: "PinchTab browser automation - profiles, instances, multi-instance routing, tabs, actions, and anti-detection When…"
+description: "Use this skill for PinchTab browser automation - profiles, instances, multi-instance routing, tabs, actions, and an…"
 ---
 
 # PinchTab Browser Automation

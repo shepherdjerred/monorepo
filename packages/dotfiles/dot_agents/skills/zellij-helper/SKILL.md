@@ -1,6 +1,6 @@
 ---
 name: zellij-helper
-description: "Current Zellij session, pane, tab, layout, KDL, CLI automation, plugin, resurrection, and web-client guidance. Use…"
+description: "Use this skill for Current Zellij session, pane, tab, layout, KDL, CLI automation, plugin, resurrection, and web-cl…"
 ---
 
 # Zellij Helper

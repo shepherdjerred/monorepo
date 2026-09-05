@@ -1,6 +1,6 @@
 ---
 name: xstate-helper
-description: "XState v5 state machines, statecharts, and the actor model for complex, event-driven application logic. When user…"
+description: "Use this skill for XState v5 state machines, statecharts, and the actor model for complex, event-driven application…"
 ---
 
 # XState Helper Agent

@@ -1,6 +1,6 @@
 ---
 name: bun-runtime-best-practices
-description: "Bun runtime APIs and current operational patterns for files, processes, modules, networking, databases, tests, and…"
+description: "Use this skill for Bun runtime APIs and current operational patterns for files, processes, modules, networking, dat…"
 ---
 
 # Bun Runtime Best Practices

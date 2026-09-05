@@ -1,6 +1,6 @@
 ---
 name: oai-solution-reviewer
-description: "This skill should be used when the user asks to \"grade my solution\", \"review my code\", \"score this\", \"how did I…"
+description: "Use when the user asks to \"grade my solution\", \"review my code\", \"score th…"
 ---
 
 # OAI Solution Reviewer

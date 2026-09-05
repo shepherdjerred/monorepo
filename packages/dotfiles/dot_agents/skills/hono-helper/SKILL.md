@@ -1,6 +1,6 @@
 ---
 name: hono-helper
-description: "Hono web framework for edge-first, lightweight APIs - routing, middleware, validation, and multi-runtime support…"
+description: "Use this skill for Hono web framework for edge-first, lightweight APIs - routing, middleware, validation, and multi…"
 ---
 
 # Hono Helper Agent

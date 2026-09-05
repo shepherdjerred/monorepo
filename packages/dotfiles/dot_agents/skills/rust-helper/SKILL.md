@@ -1,6 +1,6 @@
 ---
 name: rust-helper
-description: "Current Rust and Cargo development guidance for workspaces, editions, MSRV, testing, Clippy, rustfmt, unsafe code,…"
+description: "Use this skill for Current Rust and Cargo development guidance for workspaces, editions, MSRV, testing, Clippy, rus…"
 ---
 
 # Rust Helper

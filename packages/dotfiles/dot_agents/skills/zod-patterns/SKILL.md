@@ -1,6 +1,6 @@
 ---
 name: zod-patterns
-description: "Zod schema validation, type-safe development, and strict TypeScript patterns. When user works with Zod, validates…"
+description: "Use this skill for Zod schema validation, type-safe development, and strict TypeScript patterns. When user works wi…"
 ---
 
 # Zod Patterns Agent

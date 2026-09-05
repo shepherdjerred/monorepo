@@ -1,6 +1,6 @@
 ---
 name: go-helper
-description: "Current Go development guidance for modules, toolchains, workspaces, testing, fuzzing, concurrency, profiling,…"
+description: "Use this skill for Current Go development guidance for modules, toolchains, workspaces, testing, fuzzing, concurren…"
 ---
 
 # Go Helper

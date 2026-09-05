@@ -1,6 +1,6 @@
 ---
 name: tailscale-helper
-description: "Tailscale VPN and networking - CLI operations, MagicDNS, ACLs, SSH, funnel, serve, and network administration When…"
+description: "Use this skill for Tailscale VPN and networking - CLI operations, MagicDNS, ACLs, SSH, funnel, serve, and network a…"
 ---
 
 # Tailscale Helper Agent

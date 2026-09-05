@@ -1,6 +1,6 @@
 ---
 name: modern-cli-tools
-description: "Safe, current usage of ripgrep, fd, bat, eza, fzf, zoxide, sd, jq, yq, hyperfine, delta, bottom, dust, duf, procs,…"
+description: "Use this skill for Safe, current usage of ripgrep, fd, bat, eza, fzf, zoxide, sd, jq, yq, hyperfine, delta, bottom,…"
 ---
 
 # Modern CLI Tools

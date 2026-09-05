@@ -1,6 +1,6 @@
 ---
 name: argocd-helper
-description: "Inspect, configure, and troubleshoot Argo CD Applications, syncs, health, diffs, projects, repositories,…"
+description: "Use this skill for Inspect, configure, and troubleshoot Argo CD Applications, syncs, health, diffs, projects, repos…"
 ---
 
 # Argo CD helper

@@ -1,6 +1,6 @@
 ---
 name: python-helper
-description: "Current Python development guidance for versions, uv and pip, packaging, typing, asyncio, pytest, Ruff, security,…"
+description: "Use this skill for Current Python development guidance for versions, uv and pip, packaging, typing, asyncio, pytest…"
 ---
 
 # Python Helper

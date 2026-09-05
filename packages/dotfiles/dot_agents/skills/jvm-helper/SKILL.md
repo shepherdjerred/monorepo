@@ -1,6 +1,6 @@
 ---
 name: jvm-helper
-description: "Current Java, Kotlin, Gradle, Maven, JUnit, JVM diagnostics, packaging, and performance guidance. Use when writing…"
+description: "Use this skill for Current Java, Kotlin, Gradle, Maven, JUnit, JVM diagnostics, packaging, and performance guidance…"
 ---
 
 # JVM Helper

@@ -1,6 +1,6 @@
 ---
 name: diataxis
-description: "Author and restructure technical documentation with the Diátaxis framework — tutorials, how-to guides, reference,…"
+description: "Use this skill for Author and restructure technical documentation with the Diátaxis framework — tutorials, how-to g…"
 user-invocable: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: lol-helper
-description: "League of Legends domain knowledge, terminology, and Riot Games API reference. Use when working with match data,…"
+description: "Use this skill for League of Legends domain knowledge, terminology, and Riot Games API reference. Use when working …"
 ---
 
 # League of Legends Helper

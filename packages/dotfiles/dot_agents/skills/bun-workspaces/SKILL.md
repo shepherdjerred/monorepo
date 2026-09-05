@@ -1,6 +1,6 @@
 ---
 name: bun-workspaces
-description: "Current Bun workspace guidance for isolated and hoisted linkers, catalogs, filters, scripts, dependency classes,…"
+description: "Use this skill for Current Bun workspace guidance for isolated and hoisted linkers, catalogs, filters, scripts, dep…"
 ---
 
 # Bun Workspaces

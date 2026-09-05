@@ -1,6 +1,6 @@
 ---
 name: typst-authoring
-description: "This skill should be used when the user asks to \"write Typst\", \"create a Typst document\", \"format in Typst\",…"
+description: "Use when the user asks to \"write Typst\", \"create a Typst document\", \"forma…"
 ---
 
 # Typst Authoring Reference

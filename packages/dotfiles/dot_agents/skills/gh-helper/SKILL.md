@@ -1,6 +1,6 @@
 ---
 name: gh-helper
-description: "Complete GitHub operations via gh CLI - repos, issues, PRs, code search, releases, file management When user…"
+description: "Use this skill for Complete GitHub operations via gh CLI - repos, issues, PRs, code search, releases, file manageme…"
 ---
 
 # GitHub CLI Helper Agent

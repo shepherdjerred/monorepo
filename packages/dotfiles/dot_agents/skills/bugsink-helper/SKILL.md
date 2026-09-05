@@ -1,6 +1,6 @@
 ---
 name: bugsink-helper
-description: "Bugsink self-hosted error tracking via REST API - teams, projects, issues, events, releases, stacktraces When user…"
+description: "Use this skill for Bugsink self-hosted error tracking via REST API - teams, projects, issues, events, releases, sta…"
 ---
 
 # Bugsink Helper Agent
