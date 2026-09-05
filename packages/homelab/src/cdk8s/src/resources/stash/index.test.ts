@@ -3,7 +3,7 @@ import { App, Chart } from "cdk8s";
 import { z } from "zod";
 import { createStashChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/stash.ts";
 import { STASH_AUTH_INIT_SCRIPT } from "@shepherdjerred/homelab/cdk8s/src/resources/stash/index.ts";
-import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/stash.ts";
+import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
 import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 
 const ManifestSchema = z

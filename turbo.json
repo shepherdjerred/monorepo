@@ -169,7 +169,7 @@
         "!scripts/node_modules/**",
         "packages/homelab/scripts/**",
         "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
-        "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts"
+        "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts"
       ]
     },
     "//#check-script-migrations": {

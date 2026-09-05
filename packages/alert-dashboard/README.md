@@ -12,7 +12,7 @@ It is deployed: CI builds and pushes the image (the `alert-dashboard` target in
 the digest is pinned in
 [`packages/homelab/src/cdk8s/src/versions.ts`](../homelab/src/cdk8s/src/versions.ts),
 and an ArgoCD `Application`
-([`argo-applications/alert-dashboard.ts`](../homelab/src/cdk8s/src/resources/argo-applications/alert-dashboard.ts))
+([`argo-applications/observability/alert-dashboard.ts`](../homelab/src/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts))
 manages the workload.
 
 ## Local development

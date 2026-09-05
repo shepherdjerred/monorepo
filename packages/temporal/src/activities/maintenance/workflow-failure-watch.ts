@@ -22,7 +22,7 @@ import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
  * Failed/TimedOut in the lookback window, extracts each execution's
  * structured failure via `handle.result()`, and posts at most 100 detail-rich
  * alerts plus one aggregate overflow alert to Alertmanager (which routes to Alerts — see
- * `packages/homelab/.../argo-applications/prometheus.ts`). Each successful
+ * `packages/homelab/.../argo-applications/observability/prometheus.ts`). Each successful
  * detail batch heartbeats its last item and consumed budget. A retry scans the
  * full lookback and applies a conservative checkpoint because the public
  * visibility iterator does not expose a precision-safe page token. Safe to overlap

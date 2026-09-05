@@ -365,8 +365,8 @@ export async function createPrometheusApp(chart: Chart) {
 
 ## Key Files
 
-- `src/cdk8s/src/resources/argo-applications/argocd.ts` - ArgoCD self-management
-- `src/cdk8s/src/resources/argo-applications/prometheus.ts` - Complex example
-- `src/cdk8s/src/resources/argo-applications/velero.ts` - Backup system
+- `src/cdk8s/src/resources/argo-applications/platform/argocd.ts` - ArgoCD self-management
+- `src/cdk8s/src/resources/argo-applications/observability/prometheus.ts` - Complex example
+- `src/cdk8s/src/resources/argo-applications/storage/velero.ts` - Backup system
 - `src/cdk8s/src/resources/argo-applications/gitlab.ts` - External DB example
 - `src/cdk8s/src/cdk8s-charts/apps.ts` - Apps orchestration

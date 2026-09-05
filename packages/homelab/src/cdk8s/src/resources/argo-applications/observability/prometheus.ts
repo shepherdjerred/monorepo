@@ -14,7 +14,7 @@ import {
   BUILDKITE_IO_OBSERVABILITY_VALUES,
   createGrafanaValues,
   type PrometheusValuesWithBlackbox,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/grafana-values.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/grafana-values.ts";
 import { createPrometheusMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/prometheus.ts";
 import { createSmartctlMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/smartctl.ts";
 import { createNvmeMetricsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/nvme-metrics.ts";

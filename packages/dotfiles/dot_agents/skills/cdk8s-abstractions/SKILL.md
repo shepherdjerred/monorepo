@@ -227,7 +227,7 @@ new TailscaleIngress(chart, "external-ingress", {
 ### Tailscale Operator Configuration
 
 ```typescript
-// From src/cdk8s/src/resources/argo-applications/tailscale.ts
+// From src/cdk8s/src/resources/argo-applications/networking/tailscale.ts
 const tailscaleValues: HelmValuesForChart<"tailscale-operator"> = {
   oauth: { clientId: "...", clientSecret: "..." },
   operatorConfig: { hostname: "homelab-operator" },

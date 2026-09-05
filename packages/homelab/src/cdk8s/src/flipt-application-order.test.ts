@@ -1,8 +1,8 @@
 import { App, Chart, Testing } from "cdk8s";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { createFliptApp } from "./resources/argo-applications/flipt.ts";
-import { createTemporalApp } from "./resources/argo-applications/temporal.ts";
+import { createFliptApp } from "./resources/argo-applications/apps/flipt.ts";
+import { createTemporalApp } from "./resources/argo-applications/apps/temporal.ts";
 
 const ApplicationSchema = z.object({
   metadata: z.object({

@@ -243,7 +243,7 @@ new KubeStorageClass(chart, "host-zfs-ssd", {
 
 ## Velero Helm Values
 
-From `src/cdk8s/src/resources/argo-applications/velero.ts`:
+From `src/cdk8s/src/resources/argo-applications/storage/velero.ts`:
 
 ```typescript
 const veleroValues: HelmValuesForChart<"velero"> = {
@@ -275,5 +275,5 @@ const veleroValues: HelmValuesForChart<"velero"> = {
 - `src/cdk8s/src/misc/zfs-nvme-volume.ts` - SSD volume construct
 - `src/cdk8s/src/misc/zfs-sata-volume.ts` - HDD volume construct
 - `src/cdk8s/src/resources/velero-schedules.ts` - Backup schedule config
-- `src/cdk8s/src/resources/argo-applications/velero.ts` - Velero deployment
-- `src/cdk8s/src/resources/argo-applications/openebs.ts` - OpenEBS CSI driver
+- `src/cdk8s/src/resources/argo-applications/storage/velero.ts` - Velero deployment
+- `src/cdk8s/src/resources/argo-applications/platform/openebs.ts` - OpenEBS CSI driver

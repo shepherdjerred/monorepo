@@ -1,5 +1,5 @@
 apiVersion: 1
-# Mirrors the codified config in packages/homelab/src/cdk8s/src/resources/argo-applications/prometheus.ts.
+# Mirrors the codified config in packages/homelab/src/cdk8s/src/resources/argo-applications/observability/prometheus.ts.
 # When you change that file's tempo datasource block, mirror it here so the
 # local docker-compose validation exercises the same provisioning shape.
 datasources:

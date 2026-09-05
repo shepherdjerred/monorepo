@@ -83,9 +83,9 @@ alert is the signal that something is about to go wrong regardless.
 
 ## Where to look
 
-- Kueue chart and ServiceMonitor: `resources/argo-applications/kueue.ts`
+- Kueue chart and ServiceMonitor: `resources/argo-applications/platform/kueue.ts`
 - Queue resources and pod quota: `resources/kueue-config.ts`
-- Namespace and count cap: `resources/argo-applications/buildkite.ts`
+- Namespace and count cap: `resources/argo-applications/ci/buildkite.ts`
 - Node and admission alerts:
   `resources/monitoring/monitoring/rules/resource-monitoring-liskov.ts`
 

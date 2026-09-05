@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createAlertDashboardChart } from "./cdk8s-charts/alert-dashboard.ts";
 import { createPostalChart } from "./cdk8s-charts/postal.ts";
 import { createAppsChart } from "./cdk8s-charts/apps.ts";
-import { createAlertDashboardApp } from "./resources/argo-applications/alert-dashboard.ts";
+import { createAlertDashboardApp } from "./resources/argo-applications/observability/alert-dashboard.ts";
 import {
   getRegisteredBackendProbes,
   resetProbeRegistry,
