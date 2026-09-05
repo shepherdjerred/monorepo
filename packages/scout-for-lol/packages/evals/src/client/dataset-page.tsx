@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import {
   skipToken,
   useMutation,
@@ -79,7 +80,14 @@ export function DatasetPage(): React.JSX.Element {
       idResult.success ? { datasetId: idResult.data } : skipToken,
     ),
   );
-  const dataset = datasetsQuery.data?.find(
+  // Joined for the shared decision — whether the page can render at all — while
+  // the title still reads through whatever has arrived. A query that failed but
+  // still holds cached rows is `degraded`, so a failed refresh no longer
+  // replaces a working page with "could not be loaded".
+  const datasets = Loaded.fromQuery(datasetsQuery, ["datasets"]);
+  const caseRows = Loaded.fromQuery(casesQuery, ["cases"]);
+  const page = Loaded.all({ datasets, cases: caseRows });
+  const dataset = Loaded.getOrElse(datasets, undefined)?.find(
     (candidate) => idResult.success && candidate.id === idResult.data,
   );
   useDocumentTitle(dataset?.name ?? "Dataset");
@@ -96,21 +104,22 @@ export function DatasetPage(): React.JSX.Element {
   if (!idResult.success) {
     return <main className="mx-auto max-w-5xl p-8">Invalid dataset URL.</main>;
   }
-  if (datasetsQuery.isError || casesQuery.isError) {
+  if (page.status === "error") {
     return (
       <main className="mx-auto max-w-5xl p-8" role="alert">
         Dataset could not be loaded.
       </main>
     );
   }
-  if (dataset === undefined && datasetsQuery.data !== undefined) {
-    return <main className="mx-auto max-w-5xl p-8">Dataset not found.</main>;
-  }
-  if (dataset === undefined || casesQuery.data === undefined) {
+  if (page.status === "loading") {
     return <main className="mx-auto max-w-5xl p-8">Loading dataset...</main>;
   }
+  if (dataset === undefined) {
+    return <main className="mx-auto max-w-5xl p-8">Dataset not found.</main>;
+  }
 
-  const cases = casesQuery.data;
+  const cases = page.data.cases;
+  const refreshFailed = page.status === "degraded";
   const resumeCase = cases.find(
     (evalCase) => !evalCase.isRated && evalCase.generationId !== null,
   );
@@ -122,6 +131,11 @@ export function DatasetPage(): React.JSX.Element {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      {refreshFailed ? (
+        <div className="mb-4 rounded border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Showing the last known data — the most recent refresh failed.
+        </div>
+      ) : null}
       <Button
         className="-ml-2 mb-4"
         nativeButton={false}
