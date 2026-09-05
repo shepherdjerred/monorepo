@@ -111,6 +111,44 @@ async function requireGuildIntent(intentId: string, guildIds: string[]) {
 
 const exploreProcedure = protectedProcedure;
 
+/**
+ * The status of one confirmation intent the caller owns.
+ *
+ * Registered under two names. `dareIntentStatus` is what this procedure was
+ * called before confirmation intents stopped being dare-only, and a tab loaded
+ * before that deployment keeps polling the old name for a confirmation card it
+ * is still showing. The intent migration deliberately preserved those ids so
+ * the cards keep working, and dropping the procedure they poll would have
+ * undone exactly that. Remove the alias one release after deploy, once stale
+ * clients have aged out.
+ */
+const intentStatusProcedure = exploreProcedure
+  .input(z.strictObject({ intentId: z.uuid() }))
+  .query(async ({ ctx, input }) => {
+    const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
+    const intent = await requireGuildIntent(input.intentId, guildIds);
+    if (intent.actorDiscordId !== userId) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Confirmation not found.",
+      });
+    }
+    return {
+      state:
+        intent.consumedAt === null
+          ? intent.expiresAt.getTime() <= Date.now()
+            ? ("expired" as const)
+            : ("pending" as const)
+          : ("consumed" as const),
+      kind: ConfirmationIntentKindSchema.parse(intent.kind),
+      expiresAt: intent.expiresAt.toISOString(),
+      result:
+        intent.resultJson === null
+          ? null
+          : z.json().parse(JSON.parse(intent.resultJson)),
+    };
+  });
+
 export const exploreRouter = router({
   /**
    * Whether the caller may use explore, plus their remaining quota. Answers
@@ -140,32 +178,10 @@ export const exploreRouter = router({
     return await listExploreConversations(prisma, userId);
   }),
 
-  intentStatus: exploreProcedure
-    .input(z.strictObject({ intentId: z.uuid() }))
-    .query(async ({ ctx, input }) => {
-      const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-      const intent = await requireGuildIntent(input.intentId, guildIds);
-      if (intent.actorDiscordId !== userId) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Confirmation not found.",
-        });
-      }
-      return {
-        state:
-          intent.consumedAt === null
-            ? intent.expiresAt.getTime() <= Date.now()
-              ? ("expired" as const)
-              : ("pending" as const)
-            : ("consumed" as const),
-        kind: ConfirmationIntentKindSchema.parse(intent.kind),
-        expiresAt: intent.expiresAt.toISOString(),
-        result:
-          intent.resultJson === null
-            ? null
-            : z.json().parse(JSON.parse(intent.resultJson)),
-      };
-    }),
+  intentStatus: intentStatusProcedure,
+
+  /** @deprecated Pre-rename alias; see {@link intentStatusProcedure}. */
+  dareIntentStatus: intentStatusProcedure,
 
   confirmDareIntent: webMutationProcedure
     .input(z.strictObject({ intentId: z.uuid() }))
