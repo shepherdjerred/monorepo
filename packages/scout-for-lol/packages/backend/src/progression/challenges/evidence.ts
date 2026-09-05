@@ -24,7 +24,10 @@ export async function fetchChallengeEvidence(options: {
 }> {
   const rows = await fetchProgressionMatches(options);
   const timelineCounts = await fetchTimelineEventCounts({
-    matchIds: [...new Set(rows.map((row) => row.match_id))],
+    matchPuuids: rows.map((row) => ({
+      matchId: row.match_id,
+      puuid: row.puuid,
+    })),
   });
   const evidence: {
     readonly puuid: string;
@@ -65,7 +68,8 @@ export async function fetchChallengeEvidence(options: {
         longest_life: row.longest_time_spent_living,
         total_time_dead: row.total_time_spent_dead,
         timelineEvidenceAvailable: row.timeline_complete,
-        timelineEventCounts: timelineCounts.get(row.match_id) ?? {},
+        timelineEventCounts:
+          timelineCounts.get(row.match_id)?.get(row.puuid) ?? {},
       }),
     });
   }
