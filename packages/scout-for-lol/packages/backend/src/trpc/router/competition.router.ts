@@ -12,31 +12,18 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  CompetitionDescriptionSchema,
-  CompetitionMaxParticipantsSchema,
-  CompetitionTitleSchema,
-  CompetitionCriteriaSchema,
-  CompetitionGameVariantSchema,
   CompetitionIdSchema,
-  CompetitionVisibilitySchema,
+  CompetitionWriteSchema,
   DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   PlayerIdSchema,
   CompetitionStatusSchema,
   getCompetitionStatus,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
-import {
-  CompetitionScheduledUpdatesSchema,
-  DEFAULT_COMPETITION_CRON,
-  DEFAULT_SCHEDULE_TIMEZONE,
-  ReportScheduleTimezoneSchema,
-} from "@scout-for-lol/data/model/competition-cron.ts";
 import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 import {
   CompetitionEditInputSchema,
-  WebCompetitionDatesSchema,
   assertCompetitionEditable,
   buildCompetitionUpdateInput,
 } from "#src/trpc/router/competition-edit-input.ts";
@@ -49,27 +36,21 @@ import {
 import { prisma } from "#src/database/index.ts";
 import {
   cancelCompetition,
-  createCompetition,
   getCompetitionsByServerPaginated,
   updateCompetition,
 } from "#src/database/competition/queries.ts";
 import {
   addParticipant,
   bulkEnrollTrackedPlayers,
-  enrollInitialPlayers,
   InitialEntrantsValidationError,
   removeParticipant,
 } from "#src/database/competition/participants.ts";
+import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 import {
-  validateOwnerLimit,
-  validateServerLimit,
-} from "#src/database/competition/validation.ts";
-import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
-import {
-  checkRateLimit,
-  getTimeRemaining,
-  recordCreation,
-} from "#src/database/competition/rate-limit.ts";
+  createCompetitionForActor,
+  recordCompetitionCreation,
+  type CreateCompetitionResult,
+} from "#src/lib/competitions/create.ts";
 import { competitionAnalysisProcedures } from "#src/trpc/router/competition-analysis-procedures.ts";
 import { competitionDeliveryProcedures } from "#src/trpc/router/competition-delivery-procedures.ts";
 import {
@@ -81,26 +62,6 @@ import { isPolicyEnabled } from "#src/configuration/flags.ts";
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const CompetitionIdInput = GuildInput.extend({
   competitionId: CompetitionIdSchema,
-});
-
-const CompetitionWriteSchema = z.object({
-  channelId: DiscordChannelIdSchema,
-  title: CompetitionTitleSchema,
-  description: CompetitionDescriptionSchema,
-  visibility: CompetitionVisibilitySchema,
-  maxParticipants: CompetitionMaxParticipantsSchema.default(100),
-  gameVariant: CompetitionGameVariantSchema.default("MODERN"),
-  dates: WebCompetitionDatesSchema,
-  criteria: CompetitionCriteriaSchema,
-  initialPlayerIds: z.array(PlayerIdSchema).max(100).default([]),
-  analysisTimezone: ReportScheduleTimezoneSchema.default(
-    DEFAULT_SCHEDULE_TIMEZONE,
-  ),
-  scheduledUpdates: CompetitionScheduledUpdatesSchema.default({
-    enabled: false,
-    cronExpression: DEFAULT_COMPETITION_CRON,
-    timezone: DEFAULT_SCHEDULE_TIMEZONE,
-  }),
 });
 
 export const competitionRouter = router({
@@ -198,114 +159,58 @@ export const competitionRouter = router({
         channelId: input.channelId,
       });
       const ownerId = DiscordAccountIdSchema.parse(ctx.user.discordId);
-      const dates = CompetitionDatesSchema.parse(input.dates);
-      try {
-        validateCompetitionConfiguration(input.criteria, input.gameVariant);
-      } catch (error) {
-        asCompetitionBadRequest(error);
-      }
 
-      if (!ctx.permissions.isRoot && !checkRateLimit(input.guildId, ownerId)) {
-        const remainingMinutes = Math.ceil(
-          getTimeRemaining(input.guildId, ownerId) / (60 * 1000),
+      // Creation, SERVER_WIDE enrollment and the audit row run in one
+      // transaction so an enrollment failure rolls the new competition back
+      // rather than leaving a partial/orphaned row the client would retry into
+      // a duplicate.
+      let result: CreateCompetitionResult;
+      try {
+        result = await runAuditedMutation(
+          ctx,
+          input.guildId,
+          (tx) =>
+            createCompetitionForActor({
+              db: tx,
+              permissions: ctx.permissions,
+              guildId: input.guildId,
+              ownerId,
+              input,
+            }),
+          (created) =>
+            created.kind === "created"
+              ? {
+                  action: "COMPETITION_CREATE",
+                  targetChannelId: input.channelId,
+                  payload: {
+                    competitionId: created.competition.id,
+                    title: input.title,
+                    visibility: input.visibility,
+                    gameVariant: input.gameVariant,
+                    maxParticipants: input.maxParticipants,
+                    initialPlayerIds: input.initialPlayerIds,
+                  },
+                }
+              : null,
         );
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: `Rate limited: You can create 1 competition per hour. Try again in ${remainingMinutes.toString()} minute${remainingMinutes === 1 ? "" : "s"}.`,
-        });
-      }
-
-      // Persistent active-competition limits (per server + per owner). The
-      // in-memory rate limiter above matches the Discord delegated-grant flow;
-      // Discord roots bypass it in both surfaces.
-      try {
-        await validateServerLimit(prisma, input.guildId, ownerId);
-        await validateOwnerLimit(prisma, input.guildId, ownerId);
-      } catch (error) {
-        asCompetitionBadRequest(error);
-      }
-
-      // SERVER_WIDE bulk-enrolls every tracked player, which is participant
-      // management — gate it on competitions:invite (the permission the invite /
-      // add-all-members procedures already require) rather than letting the
-      // create permission alone bypass it. Checked before insertion so a
-      // denied request never leaves a competition behind.
-      if (
-        (input.visibility === "SERVER_WIDE" ||
-          input.initialPlayerIds.length > 0) &&
-        !ctx.permissions.can("competitions", "invite")
-      ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            input.visibility === "SERVER_WIDE"
-              ? "Server-wide competitions require the invite permission."
-              : "Choosing initial entrants requires the invite permission.",
-        });
-      }
-
-      const customizesSchedule =
-        input.scheduledUpdates.enabled ||
-        input.scheduledUpdates.cronExpression !== DEFAULT_COMPETITION_CRON ||
-        input.scheduledUpdates.timezone !== DEFAULT_SCHEDULE_TIMEZONE;
-      if (
-        customizesSchedule &&
-        !ctx.permissions.can("competitions", "schedule")
-      ) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message:
-            "Configuring leaderboard updates requires the schedule permission.",
-        });
-      }
-
-      // Creation and SERVER_WIDE enrollment run in one transaction so an
-      // enrollment failure rolls the new competition back rather than leaving a
-      // partial/orphaned row the client would retry into a duplicate.
-      let competition: CompetitionWithCriteria;
-      try {
-        competition = await prisma.$transaction(async (tx) => {
-          const created = await createCompetition(tx, {
-            serverId: input.guildId,
-            ownerId,
-            channelId: input.channelId,
-            title: input.title,
-            description: input.description,
-            gameVariant: input.gameVariant,
-            visibility: input.visibility,
-            maxParticipants: input.maxParticipants,
-            dates,
-            criteria: input.criteria,
-            analysisTimezone: input.analysisTimezone,
-            scheduledUpdates: input.scheduledUpdates,
-          });
-          if (input.visibility === "SERVER_WIDE") {
-            await bulkEnrollTrackedPlayers({
-              prisma: tx,
-              competitionId: created.id,
-              guildId: input.guildId,
-            });
-          } else {
-            await enrollInitialPlayers({
-              prisma: tx,
-              competitionId: created.id,
-              guildId: input.guildId,
-              playerIds: input.initialPlayerIds,
-              maxParticipants: input.maxParticipants,
-            });
-          }
-          return created;
-        });
       } catch (error) {
         if (error instanceof InitialEntrantsValidationError) {
           asCompetitionBadRequest(error);
         }
         throw error;
       }
-      if (!ctx.permissions.isRoot) {
-        recordCreation(input.guildId, ownerId);
+      if (result.kind === "missing_permission") {
+        throw new TRPCError({ code: "FORBIDDEN", message: result.message });
       }
-      return competition;
+      if (result.kind !== "created") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: result.message });
+      }
+      recordCompetitionCreation({
+        permissions: ctx.permissions,
+        guildId: input.guildId,
+        ownerId,
+      });
+      return result.competition;
     }),
 
   edit: guildMutationProcedure("competitions", "update")

@@ -79,6 +79,7 @@ function createInput(
 }
 
 beforeEach(async () => {
+  await testPrisma.auditLog.deleteMany();
   await testPrisma.competitionParticipant.deleteMany();
   await testPrisma.competition.deleteMany();
   await testPrisma.player.deleteMany();
@@ -292,6 +293,47 @@ describe("competition.create auto-enrollment", () => {
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
     expect(
       await testPrisma.competition.count({ where: { serverId: guildId } }),
+    ).toBe(0);
+  });
+});
+
+describe("competition.create auditing", () => {
+  test("writes a COMPETITION_CREATE audit row", async () => {
+    const guildId = nextGuildId();
+    const competition = await trpc
+      .authedCaller(actorDiscordId)
+      .competition.create(createInput(guildId, "OPEN"));
+
+    const audits = await testPrisma.auditLog.findMany({
+      where: { serverId: guildId },
+    });
+    expect(audits).toHaveLength(1);
+    const [audit] = audits;
+    expect(audit).toBeDefined();
+    if (audit === undefined) return;
+    expect(audit.action).toBe("COMPETITION_CREATE");
+    expect(audit.actorDiscordId).toBe(actorDiscordId);
+    expect(audit.targetChannelId).toBe(channelId);
+    expect(JSON.parse(audit.payload)).toMatchObject({
+      competitionId: competition.id,
+      title: competition.title,
+      visibility: "OPEN",
+    });
+  });
+
+  test("a rolled-back creation writes no audit row", async () => {
+    const guildId = nextGuildId();
+    const [playerId] = await seedPlayers(guildId, 1);
+    expect(playerId).toBeDefined();
+    if (playerId === undefined) return;
+    await expect(
+      trpc.authedCaller(actorDiscordId).competition.create({
+        ...createInput(guildId, "OPEN"),
+        initialPlayerIds: [playerId, playerId],
+      }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    expect(
+      await testPrisma.auditLog.count({ where: { serverId: guildId } }),
     ).toBe(0);
   });
 });

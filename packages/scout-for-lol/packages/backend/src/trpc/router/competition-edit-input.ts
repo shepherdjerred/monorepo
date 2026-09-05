@@ -10,27 +10,13 @@ import {
   CompetitionVisibilitySchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-  SeasonIdSchema,
+  WebCompetitionDatesSchema,
   getCompetitionStatus,
   type CompetitionWithCriteria,
 } from "@scout-for-lol/data";
 import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import type { UpdateCompetitionInput } from "#src/database/competition/queries.ts";
 import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competition-cron.ts";
-
-/**
- * Web date input. The tRPC link carries no superjson transformer, so `Date`s
- * arrive as ISO strings — coerce them, then the existing duration/ordering
- * rules apply via `CompetitionDatesSchema.parse` in the handler.
- */
-export const WebCompetitionDatesSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("FIXED_DATES"),
-    startDate: z.coerce.date(),
-    endDate: z.coerce.date(),
-  }),
-  z.object({ type: z.literal("SEASON"), seasonId: SeasonIdSchema }),
-]);
 
 export const CompetitionEditInputSchema = z.object({
   guildId: DiscordGuildIdSchema,

@@ -1,9 +1,16 @@
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
 import { getLimit } from "#src/configuration/flags.ts";
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
+
+/**
+ * Only the `report` delegate is needed, so both the root client and a
+ * `$transaction` client satisfy this — the limit check runs inside the same
+ * transaction as the insert it guards.
+ */
+type ReportCountClient = Pick<Db, "report">;
 
 export async function canCreateAnotherUserReport(params: {
-  prisma: ExtendedPrismaClient;
+  prisma: ReportCountClient;
   serverId: DiscordGuildId;
   ownerId: DiscordAccountId;
 }): Promise<{ allowed: true } | { allowed: false; reason: string }> {

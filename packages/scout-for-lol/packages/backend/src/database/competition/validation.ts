@@ -1,4 +1,4 @@
-import { type ExtendedPrismaClient } from "#src/database/index.ts";
+import { type Db } from "#src/database/index.ts";
 import {
   CompetitionCriteriaSchema,
   CompetitionGameVariantSchema,
@@ -127,11 +127,18 @@ export type CompetitionCreationInput = z.infer<
 // ============================================================================
 
 /**
+ * Only the `competition` delegate is needed, so the root client and a
+ * `$transaction` client both satisfy this — a limit check can run inside the
+ * same transaction as the insert it guards.
+ */
+type CompetitionCountClient = Pick<Db, "competition">;
+
+/**
  * Validate owner doesn't have too many active competitions
  * This is async so it can't be part of Zod schema refinement easily
  */
 export async function validateOwnerLimit(
-  prisma: ExtendedPrismaClient,
+  prisma: CompetitionCountClient,
   serverId: DiscordGuildId,
   ownerId: DiscordAccountId,
 ): Promise<void> {
@@ -165,7 +172,7 @@ export async function validateOwnerLimit(
  * Validate server doesn't have too many active competitions
  */
 export async function validateServerLimit(
-  prisma: ExtendedPrismaClient,
+  prisma: CompetitionCountClient,
   serverId: DiscordGuildId,
   requesterId?: DiscordAccountId,
 ): Promise<void> {
