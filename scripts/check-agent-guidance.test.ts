@@ -40,6 +40,7 @@ function validFixture(): GuidanceEntry[] {
     symlink("CLAUDE.md", "AGENTS.md"),
     symlink(".claude/skills", "../.agents/skills"),
     file("packages/dotfiles/AGENTS.md", "# Personal\n"),
+    skill("packages/dotfiles/dot_agents/skills/personal/SKILL.md", "personal"),
     symlink("packages/dotfiles/CLAUDE.md", "AGENTS.md"),
     file("packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md\n"),
     file("packages/dotfiles/dot_claude/symlink_skills", "../.agents/skills\n"),
@@ -286,6 +287,23 @@ describe("agent guidance guard", () => {
       file("sandbox/archive/old/.cursor/rules/old.mdc", "old"),
     );
     expect(validateAgentGuidance(entries)).toEqual([]);
+  });
+});
+
+describe("agent guidance edge cases", () => {
+  test("allows documents whose names merely end with GEMINI.md", () => {
+    const entries = validFixture();
+    entries.push(
+      file("packages/app/USING-GEMINI.md", "ordinary documentation"),
+    );
+    expect(rules(entries)).not.toContain("repository-gemini-guidance");
+  });
+
+  test("rejects missing canonical source for global skill adapters", () => {
+    const entries = validFixture().filter(
+      ({ path }) => !path.startsWith("packages/dotfiles/dot_agents/skills/"),
+    );
+    expect(rules(entries)).toContain("source-adapter-target");
   });
 });
 

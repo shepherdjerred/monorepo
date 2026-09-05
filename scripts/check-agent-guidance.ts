@@ -7,11 +7,7 @@ import {
   type GuidanceReadMode,
   type GuidanceEntry,
 } from "./lib/agent-guidance-files.ts";
-export type GuidanceViolation = Readonly<{
-  rule: string;
-  path: string;
-  message: string;
-}>;
+export type GuidanceViolation = { rule: string; path: string; message: string };
 const SkillFrontmatterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
@@ -35,6 +31,7 @@ const SKILL_MAX_LINES = 160;
 const SKILL_MAX_BYTES = 12 * 1024;
 const CATALOG_MAX_BYTES = 8 * 1024;
 const PERSONAL_AGENT_PATH = "packages/dotfiles/AGENTS.md";
+const PERSONAL_SKILLS_PATH = "packages/dotfiles/dot_agents/skills";
 const gitPath = path.posix;
 const CLIENT_SKILL_DIRECTORIES = new Set(
   [
@@ -148,11 +145,7 @@ function addBudgetViolations(
     });
   }
 }
-type LinkExpectation = Readonly<{
-  path: string;
-  target: string;
-  rule: string;
-}>;
+type LinkExpectation = Readonly<{ path: string; target: string; rule: string }>;
 function hasPathOrDescendant(
   entries: ReadonlyMap<string, GuidanceEntry>,
   entryPath: string,
@@ -233,6 +226,14 @@ function validateClientLayout(
       message: "required source adapters need the canonical personal AGENTS.md",
     });
   }
+  if (!hasPathOrDescendant(byPath, PERSONAL_SKILLS_PATH)) {
+    violations.push({
+      rule: "source-adapter-target",
+      path: PERSONAL_SKILLS_PATH,
+      message:
+        "required skill adapters need the canonical personal skill catalog",
+    });
+  }
   const cursorAdapter = byPath.get(CURSOR_ADAPTER_PATH);
   if (
     cursorAdapter?.kind !== "file" ||
@@ -266,7 +267,7 @@ function validateClientSpecificEntry(
     });
   }
   if (
-    entry.path.endsWith("GEMINI.md") &&
+    gitPath.basename(entry.path) === "GEMINI.md" &&
     entry.path !== GEMINI_SOURCE_ADAPTER_PATH
   ) {
     violations.push({
@@ -491,11 +492,10 @@ export async function checkAgentGuidance(
     );
   }
   console.log(
-    `Agent guidance: ${entries.length.toString()} active files satisfy placement, compatibility, and budget rules`,
+    `Agent guidance: ${entries.length.toString()} active files valid`,
   );
 }
 if (import.meta.main) {
-  await checkAgentGuidance(
-    process.argv.includes("--staged") ? "index" : "worktree",
-  );
+  const readMode = process.argv.includes("--staged") ? "index" : "worktree";
+  await checkAgentGuidance(readMode);
 }
