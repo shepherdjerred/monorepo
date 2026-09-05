@@ -2,14 +2,11 @@ import { afterEach, describe, expect, test } from "vitest";
 import {
   chmod,
   mkdir,
-  mkdtemp,
   readFile,
   readdir,
-  rm,
   stat,
   writeFile,
 } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   inspectEvents,
@@ -23,47 +20,23 @@ import {
   RunRecorder,
 } from "@shepherdjerred/pr-fleet-controller/src/bundle/run-recorder.ts";
 import type { RecordedRunEvent } from "@shepherdjerred/pr-fleet-controller/src/domain/run-events.ts";
-import type { FleetSnapshot } from "@shepherdjerred/pr-fleet-controller/src/domain/schemas.ts";
 import { writeFileSinkSynchronously } from "@shepherdjerred/pr-fleet-controller/src/runtime/synchronous-file-sink.ts";
-import { evidence, identity } from "./fixtures.ts";
+import {
+  createRunRecorder,
+  emptyFleetSnapshot as snapshot,
+  evidence,
+  identity,
+  TemporaryDirectoryOwner,
+} from "./fixtures.ts";
 
-const snapshot: FleetSnapshot = {
-  open: 0,
-  green: 0,
-  active: 0,
-  queued: 0,
-  pending: 0,
-  waiting: 0,
-  paused: 0,
-  prs: [],
-};
-
-const temporaryDirectories: string[] = [];
+const temporaryDirectories = new TemporaryDirectoryOwner();
 
 afterEach(async () => {
-  await Promise.all(
-    temporaryDirectories
-      .splice(0)
-      .map((directory) => rm(directory, { recursive: true, force: true })),
-  );
+  await temporaryDirectories.cleanup();
 });
 
-async function createRecorder(secretValues: readonly string[] = []) {
-  const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
-  temporaryDirectories.push(stateDirectory);
-  return RunRecorder.create({
-    stateDirectory,
-    controllerVersion: "0.1.0",
-    controllerCommit: "a".repeat(40),
-    controllerSourceDirty: false,
-    controllerSourceFingerprint: "b".repeat(64),
-    model: "openai/gpt-5.6-terra",
-    repository: "example/repository",
-    checkout: "/tmp/checkout",
-    worktreeRoot: "/tmp/worktrees",
-    maxWorkers: 2,
-    secretValues,
-  });
+function createRecorder(secretValues: readonly string[] = []) {
+  return createRunRecorder(temporaryDirectories, "pr-fleet-run-", secretValues);
 }
 
 async function mode(file: string): Promise<number> {
@@ -76,8 +49,7 @@ async function runCliWithImplicitCheckout(): Promise<{
   exitCode: number;
   stderr: string;
 }> {
-  const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-cli-"));
-  temporaryDirectories.push(parent);
+  const parent = await temporaryDirectories.create("pr-fleet-cli-");
   const stateDirectory = path.join(parent, "state");
   const binDirectory = path.join(parent, "bin");
   await mkdir(binDirectory);
@@ -134,8 +106,7 @@ async function runCliInterruptedDuringCheckout(): Promise<{
   exitCode: number;
   stderr: string;
 }> {
-  const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-sigint-"));
-  temporaryDirectories.push(parent);
+  const parent = await temporaryDirectories.create("pr-fleet-sigint-");
   const stateDirectory = path.join(parent, "state");
   const binDirectory = path.join(parent, "bin");
   const readyFifo = path.join(parent, "ready.fifo");
@@ -350,8 +321,7 @@ async function recordSyntheticWorkerRun(recorder: RunRecorder): Promise<void> {
 }
 
 async function testSynchronousPersistenceFailure(): Promise<void> {
-  const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
-  temporaryDirectories.push(stateDirectory);
+  const stateDirectory = await temporaryDirectories.create("pr-fleet-run-");
   let failNextWrite = true;
   const recorder = await RunRecorder.create({
     stateDirectory,
@@ -449,8 +419,7 @@ describe("local run bundles", () => {
   });
 
   test("resolves bootstrap metadata before recording controller data", async () => {
-    const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-run-"));
-    temporaryDirectories.push(stateDirectory);
+    const stateDirectory = await temporaryDirectories.create("pr-fleet-run-");
     const recorder = await RunRecorder.create({
       stateDirectory,
       controllerVersion: "unresolved",
@@ -514,8 +483,7 @@ describe("local run bundles", () => {
 
 describe("local run bundle integrity", () => {
   test("fails closed when the selected state directory is group-readable", async () => {
-    const stateDirectory = await mkdtemp(path.join(tmpdir(), "pr-fleet-open-"));
-    temporaryDirectories.push(stateDirectory);
+    const stateDirectory = await temporaryDirectories.create("pr-fleet-open-");
     await chmod(stateDirectory, 0o750);
     await expect(
       RunRecorder.create({
@@ -583,8 +551,7 @@ describe("local run bundle integrity", () => {
   });
 
   test("captures a missing-tool preflight failure in a replayable bundle", async () => {
-    const parent = await mkdtemp(path.join(tmpdir(), "pr-fleet-cli-"));
-    temporaryDirectories.push(parent);
+    const parent = await temporaryDirectories.create("pr-fleet-cli-");
     const stateDirectory = path.join(parent, "state");
     const packageDirectory = path.join(import.meta.dir, "..");
     const subprocess = Bun.spawn(
@@ -641,7 +608,7 @@ describe("CLI command capture", () => {
       packageDirectory,
       `.test-xdg-state-${crypto.randomUUID()}`,
     );
-    temporaryDirectories.push(stateBase);
+    temporaryDirectories.own(stateBase);
     const subprocess = Bun.spawn(
       [
         "bun",
