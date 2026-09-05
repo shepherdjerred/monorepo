@@ -425,3 +425,17 @@ describe("QueryData", () => {
     expect(rendered).toBe("ada");
   });
 });
+
+describe("messageOf", () => {
+  test("prefers an Error's message", () => {
+    expect(Loaded.messageOf(new Error("boom"))).toBe("boom");
+  });
+
+  test("passes a string through", () => {
+    expect(Loaded.messageOf("boom")).toBe("boom");
+  });
+
+  test("stringifies anything else", () => {
+    expect(Loaded.messageOf(404)).toBe("404");
+  });
+});
