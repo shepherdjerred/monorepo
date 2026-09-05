@@ -165,7 +165,14 @@ export function BucksWorkspace() {
     resolvedGuildId,
   ]);
 
-  const statusValue = Loaded.fromQuery(statusQuery, ["bucks.status"]);
+  // This probe *is* the gate for the Bucks outlet, not something rendered
+  // inside an already-gated one: the backend resolves Bucks scope from live
+  // Discord membership on every request, so a cached "available" cannot
+  // authorize the outlet once the recheck starts failing. `strict` keeps
+  // every page beneath this route closed until the probe succeeds again.
+  const statusValue = Loaded.strict(
+    Loaded.fromQuery(statusQuery, ["bucks.status"]),
+  );
   if (statusValue.status === "loading") {
     return (
       <BucksPage>

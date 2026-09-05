@@ -151,10 +151,13 @@ export function CasePage(): React.JSX.Element {
         : skipToken,
     ),
   );
-  // `error` is a case that could not be read at all; a refetch that failed
-  // over a case already open is `degraded` and keeps rendering, so a rater
-  // does not lose an in-progress review to one failed poll.
-  const caseValue = Loaded.fromQuery(detailQuery, ["case"]);
+  // This was `degraded`-tolerant so a rater would not lose an in-progress
+  // review to one failed poll. That trade is wrong here: the scorecard submits
+  // against `generation.id`, and `upsertHumanRating` does not verify that it is
+  // still the latest generation — so rating a stale cached case silently writes
+  // work that no longer counts. Losing the scroll position is the cheaper
+  // failure, so this projection is `strict`.
+  const caseValue = Loaded.strict(Loaded.fromQuery(detailQuery, ["case"]));
   const detail = Loaded.getOrElse(caseValue, undefined);
   useDocumentTitle(
     detail === undefined
