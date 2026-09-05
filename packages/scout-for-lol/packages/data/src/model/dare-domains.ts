@@ -295,9 +295,17 @@ function dareObjectiveAttributionIssue(
   value: DareTimelineEventCountV2,
 ): string | null {
   if (!DARE_TEAM_OWNED_EVENT_TYPES.has(value.eventType)) return null;
-  return value.target === null
-    ? `${value.eventType} events belong to the side that took the objective, so leaving target null counts both teams and an enemy objective would settle the dare. Bind target to the player who takes it, with role "killer" or "assist". A team-relative objective count is not expressible in a version-two contract.`
-    : null;
+  if (value.target === null) {
+    return `${value.eventType} events belong to the side that took the objective, so leaving target null counts both teams and an enemy objective would settle the dare. Bind target to the player who takes it, with role "killer" or "assist". A team-relative objective count is not expressible in a version-two contract.`;
+  }
+  // Binding the target is not enough: the evaluator filters on the exact role,
+  // and only `killer` and `assist` attribute an objective to the player who took
+  // it. `victim`, `subject`, and `creator` never appear on these events, so such
+  // a contract counts zero in every game and settles a funded dare as a real
+  // loss — the same silent-impossibility this module exists to refuse.
+  return value.role === "killer" || value.role === "assist"
+    ? null
+    : `${value.eventType} events attribute to the player who took the objective, so role must be "killer" or "assist"; ${value.role === null ? "null" : `"${value.role}"`} never appears on these events and would count zero in every game.`;
 }
 
 /**

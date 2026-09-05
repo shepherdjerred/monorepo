@@ -301,3 +301,76 @@ describe("Dare v2 objective narrowings must match their event type", () => {
     ).toBe(true);
   });
 });
+
+function objectiveWithRole(role: string | null) {
+  return {
+    version: 2,
+    maxEligibleGames: 100,
+    gameSets: [
+      {
+        name: "qualifying_game",
+        targetKeys: ["virmel"],
+        relationship: "independent",
+        queues: ["solo"],
+        predicate: {
+          kind: "comparison",
+          value: {
+            kind: "timeline_event_count",
+            eventType: "ELITE_MONSTER_KILL",
+            target: "virmel",
+            role,
+            afterMs: null,
+            beforeMs: null,
+            itemId: null,
+            monsterType: "DRAGON",
+            buildingType: null,
+          },
+          operator: "gte",
+          threshold: 1,
+        },
+        projections: [],
+        orderBy: "game_end_at_asc_match_id_asc",
+        limit: 100,
+      },
+    ],
+    result: {
+      kind: "matching_games",
+      gameSet: "qualifying_game",
+      operator: "gte",
+      threshold: 1,
+    },
+  };
+}
+
+describe("Dare v2 objective attribution roles", () => {
+  // The evaluator filters on the exact role, and only killer/assist appear on
+  // an objective event. Any other role counts zero in every game — a funded
+  // dare that cannot be won, which is the failure this whole module refuses.
+  test.each(["victim", "subject", "creator"])(
+    "rejects the non-attributing role %s",
+    (role) => {
+      expect(
+        DareCompiledPlanV2Schema.safeParse(objectiveWithRole(role)).success,
+      ).toBe(false);
+    },
+  );
+
+  test("rejects a null role on an objective count", () => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(objectiveWithRole(null)).success,
+    ).toBe(false);
+  });
+
+  test.each(["killer", "assist"])("accepts the attributing role %s", (role) => {
+    expect(
+      DareCompiledPlanV2Schema.safeParse(objectiveWithRole(role)).success,
+    ).toBe(true);
+  });
+
+  // Stored plans must keep parsing regardless: the rule is authoring-only.
+  test("still reads a stored plan holding a non-attributing role", () => {
+    expect(
+      DareStoredPlanV2Schema.safeParse(objectiveWithRole("victim")).success,
+    ).toBe(true);
+  });
+});
