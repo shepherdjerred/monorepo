@@ -378,6 +378,24 @@ function withheldFor(field: string): string {
   );
 }
 
+function retiredContextWindowAlerts() {
+  return buildCatalogAlerts(
+    {
+      applied: [],
+      models: {
+        "claude-sonnet-5": {
+          withheld: {},
+          measured: ["input", "output"],
+          unmeasured: [],
+          retired: ["contextWindow"],
+        },
+      },
+      prUrl: undefined,
+    },
+    NOW,
+  );
+}
+
 describe("retain instructions per field", () => {
   test("a price divergence points at the acceptance pair", () => {
     for (const field of ["input", "output"]) {
@@ -408,21 +426,7 @@ describe("retired fields close their own alerts", () => {
     // removes the field from cross-checking, so before this it produced no
     // occurrence at all and the very alert they were answering stayed firing
     // for the full eight-day TTL — the advice appeared to do nothing.
-    const alerts = buildCatalogAlerts(
-      {
-        applied: [],
-        models: {
-          "claude-sonnet-5": {
-            withheld: {},
-            measured: ["input", "output"],
-            unmeasured: [],
-            retired: ["contextWindow"],
-          },
-        },
-        prUrl: undefined,
-      },
-      NOW,
-    );
+    const alerts = retiredContextWindowAlerts();
 
     const drift = alerts.find(
       (alert) =>
@@ -440,21 +444,7 @@ describe("retired fields close their own alerts", () => {
     // compared — the operator pinned it. Telling them a check passed on a
     // number nobody checked is the same class of false claim as the
     // evidence-missing alert this branch already fixed.
-    const alerts = buildCatalogAlerts(
-      {
-        applied: [],
-        models: {
-          "claude-sonnet-5": {
-            withheld: {},
-            measured: ["input", "output"],
-            unmeasured: [],
-            retired: ["contextWindow"],
-          },
-        },
-        prUrl: undefined,
-      },
-      NOW,
-    );
+    const alerts = retiredContextWindowAlerts();
     const drift = alerts.find(
       (alert) =>
         alert.labels["alertname"] === "LlmCatalogDriftWithheld" &&
@@ -468,21 +458,7 @@ describe("retired fields close their own alerts", () => {
   });
 
   test("says evidence is not expected, not that it returned", () => {
-    const alerts = buildCatalogAlerts(
-      {
-        applied: [],
-        models: {
-          "claude-sonnet-5": {
-            withheld: {},
-            measured: ["input", "output"],
-            unmeasured: [],
-            retired: ["contextWindow"],
-          },
-        },
-        prUrl: undefined,
-      },
-      NOW,
-    );
+    const alerts = retiredContextWindowAlerts();
     const evidence = alerts.find(
       (alert) =>
         alert.labels["alertname"] === "LlmCatalogEvidenceMissing" &&
@@ -556,21 +532,7 @@ describe("retired fields close their own alerts", () => {
   test("a retired field is not also reported as missing evidence", () => {
     // Nobody is checking it, so "no upstream published this" would be a
     // finding about a question we stopped asking.
-    const alerts = buildCatalogAlerts(
-      {
-        applied: [],
-        models: {
-          "claude-sonnet-5": {
-            withheld: {},
-            measured: ["input", "output"],
-            unmeasured: [],
-            retired: ["contextWindow"],
-          },
-        },
-        prUrl: undefined,
-      },
-      NOW,
-    );
+    const alerts = retiredContextWindowAlerts();
 
     expect(firingFor(alerts, "LlmCatalogEvidenceMissing")).toEqual([]);
     expect(firingFor(alerts, "LlmCatalogDriftWithheld")).toEqual([]);

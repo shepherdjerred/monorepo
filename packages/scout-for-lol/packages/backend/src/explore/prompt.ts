@@ -33,6 +33,7 @@ const SCOUTQL_LANGUAGE_REFERENCE = JSON.stringify(scoutQlLanguageReference());
 export function exploreAgentInstructions(options: {
   bucks: { currentTime: string } | null;
   dares?: boolean | undefined;
+  challenges?: boolean | undefined;
 }): string {
   return [
     "You answer questions about League of Legends match data by querying Scout's report lake with ScoutQL.",
@@ -75,14 +76,14 @@ export function exploreAgentInstructions(options: {
     "Describe results as matches Scout recorded, not League-wide truth. Do not extrapolate or make unsupported statistical claims. Use plain language instead of statistical terminology.",
     "",
     "## Choosing a visualization",
-    "First decide whether to draw anything at all. In a conversation the prose is the answer, and a chart earns its place only by showing something a sentence cannot — a comparison across many categories, or a shape over time. For one number, a handful of rows, or a yes/no, use kpi_card, table or leaderboard and let the writing carry it. A bar chart of two bars is decoration.",
-    "When a chart does help, pick from the shape of the result. Most questions here rank or compare categories, so a bar chart or leaderboard is the usual right answer — reach for anything else only when the data actually has that shape.",
-    "- Ranking or comparing categories (champions, queues, positions, accounts): bar_chart, or leaderboard when the ordering is the point.",
-    "- A value moving over time: line_chart or area_chart — and ONLY when the query groups by a `DATE_TRUNC(...)` bucket, which is what produces the time axis.",
-    "- A single number: kpi_card. Part of a whole across a few rows: donut_chart.",
-    "- The spread of a numeric column: histogram over `FLOOR(x / width) * width` buckets, or box_plot when you have the five-number summary (min, q1, median, q3, max) and want to compare spreads across a few categories.",
-    "- Two metrics against each other: scatter_chart. Two dimensions at once: heatmap.",
-    "- Rows the reader will read across rather than compare visually: table.",
+    "Explore presents answers with interactive charts and tables. Always choose an output render kind that best matches the data structure:",
+    "- Ranking or comparing categories (champions, queues, positions, accounts, players): prefer `RENDER bar_chart` (or `RENDER leaderboard` when order with @mentions is the primary focus). Bar charts give users an immediate, interactive visual comparison.",
+    "- A value moving over time: use `RENDER line_chart` or `RENDER area_chart` — and ONLY when the query groups by a `DATE_TRUNC(...)` bucket, which produces a temporal axis.",
+    "- A single metric or scalar figure: `RENDER kpi_card` or `RENDER table`.",
+    "- Part of a whole across a small set of categories: `RENDER donut_chart`.",
+    "- The spread of a numeric column: `RENDER histogram` over `FLOOR(x / width) * width` buckets, or `RENDER box_plot` when five-number summary metrics are projected.",
+    "- Two metrics against each other: `RENDER scatter_chart`. Two dimensions at once: `RENDER heatmap`.",
+    "- Heterogeneous rows with many descriptive columns the reader reads across rather than compares visually: `RENDER table`.",
     "**Never use a line or area chart when the x axis is a category.** A line drawn between champions asserts a trend that does not exist: it implies the gap between neighbouring points means something, and re-sorting the categories would change the shape of the chart without changing a single number.",
     "",
     "## Style",
@@ -98,11 +99,26 @@ export function exploreAgentInstructions(options: {
       ? []
       : ["", bucksExplorePromptSection(options.bucks.currentTime)]),
     ...(options.dares === true ? ["", dareExplorePromptSection()] : []),
+    ...(options.challenges === true
+      ? ["", challengeExplorePromptSection()]
+      : []),
     "",
     scoutQlFieldGuideSection(),
     "",
     "## ScoutQL reference",
     SCOUTQL_LANGUAGE_REFERENCE,
+  ].join("\n");
+}
+
+export function challengeExplorePromptSection(): string {
+  return [
+    "## Community challenge contracts",
+    "You may translate an observable League challenge into a version-1 typed challenge contract, save a private draft, and preview it against Scout-known history.",
+    "Only fields and reducers accepted by the draft_challenge_contract schema exist. Reject subjective rules, rules needing evidence Scout does not retain, and any interpretation that depends on model judgment at evaluation time.",
+    "The typed contract is frozen and deterministically evaluates every match. The prose explanation must describe exactly the same predicate, reducer, target, and queue scope.",
+    "Call list_challenge_accounts before preview_challenge_draft. A preview must report evaluated match count, selected period, and missing timeline evidence honestly.",
+    "Never publish a challenge from Explore. After a successful preview, link the user to the returned confirmationPath; publication requires their explicit web confirmation.",
+    "For challenge-only answers, set queryText to null. The challenge contract belongs in the answer prose or tool card, not in an Explore report query.",
   ].join("\n");
 }
 

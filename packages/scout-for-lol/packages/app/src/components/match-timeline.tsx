@@ -7,6 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
+import {
+  VISUALIZATION_BODY_FONT,
+  VISUALIZATION_DISPLAY_FONT,
+} from "@scout-for-lol/report/browser";
 import { TimelineFrameTable } from "#src/components/timeline-frame-table.tsx";
 import {
   TimelinePagination,
@@ -362,17 +366,37 @@ function TimelineChart(props: {
     if (container.current === null) return;
     const chart = echarts.init(container.current);
     chart.setOption({
+      textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
       title: {
         text: props.title,
         left: 12,
         top: 8,
-        textStyle: { fontSize: 14 },
+        textStyle: {
+          fontSize: 14,
+          fontFamily: VISUALIZATION_DISPLAY_FONT,
+          fontWeight: 700,
+        },
       },
-      tooltip: { trigger: "axis" },
-      legend: { top: 34 },
+      tooltip: {
+        trigger: "axis",
+        textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
+      },
+      legend: {
+        top: 34,
+        textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
+      },
       grid: { top: 70, left: 52, right: 18, bottom: 36 },
-      xAxis: { type: "category", name: "min", data: props.labels },
-      yAxis: { type: "value" },
+      xAxis: {
+        type: "category",
+        name: "min",
+        data: props.labels,
+        nameTextStyle: { fontFamily: VISUALIZATION_BODY_FONT },
+        axisLabel: { fontFamily: VISUALIZATION_BODY_FONT },
+      },
+      yAxis: {
+        type: "value",
+        axisLabel: { fontFamily: VISUALIZATION_BODY_FONT },
+      },
       series: props.series,
     });
     const observer = new ResizeObserver(() => {

@@ -1,11 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import { Check, Copy, MoreHorizontal, RefreshCw } from "lucide-react";
-import { ReportOutputFormatSchema } from "@scout-for-lol/data";
-import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
-import type {
-  ExploreMessage,
-  VisualizationSnapshot,
-} from "@scout-for-lol/data";
+import type { ExploreMessage } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Disclosure } from "#src/components/explore-disclosure.tsx";
 import {
@@ -16,17 +11,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@scout-for-lol/design-system/components/dropdown-menu";
-import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
-import { ReportResultTable } from "#src/components/report-result-table.tsx";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
 import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
-import {
-  SingleRowResult,
-  isUngroupedResult,
-} from "#src/components/explore-result.tsx";
+import { ExploreVisualResult } from "#src/components/explore-visual-result.tsx";
 import type { ExploreTranscriptActions } from "#src/components/explore-transcript-actions.ts";
 
 const TIME_FULL = new Intl.DateTimeFormat("en-US", {
@@ -39,40 +29,6 @@ const TIME_SHORT = new Intl.DateTimeFormat("en-US", {
   hour: "numeric",
   minute: "2-digit",
 });
-
-function chartableSnapshot(
-  snapshot: VisualizationSnapshot | null,
-): VisualizationSnapshot | null {
-  if (snapshot === null) {
-    return null;
-  }
-  const format = ReportOutputFormatSchema.safeParse(
-    snapshot.kind.toUpperCase(),
-  );
-  return format.success && isChartRenderKind(format.data) ? snapshot : null;
-}
-
-function AssistantTurnResult(props: { readonly message: ExploreMessage }) {
-  const chart = chartableSnapshot(props.message.visualization);
-  if (chart !== null) {
-    return <InteractiveVisualization snapshot={chart} />;
-  }
-  if (
-    props.message.preview === null ||
-    props.message.preview.rows.length === 0
-  ) {
-    return null;
-  }
-  if (isUngroupedResult(props.message.preview)) {
-    return <SingleRowResult preview={props.message.preview} />;
-  }
-  return (
-    <ReportResultTable
-      columns={props.message.preview.columns}
-      rows={props.message.preview.rows}
-    />
-  );
-}
 
 function AssistantTurnActionBar(props: {
   readonly message: ExploreMessage;
@@ -238,7 +194,7 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
 
       {props.showRawTrace && <ExploreDareCards trace={message.trace} />}
 
-      <AssistantTurnResult message={message} />
+      <ExploreVisualResult message={message} onFollowUp={actions.onFollowUp} />
 
       {message.caveats.length > 0 && (
         <ul className="space-y-1 rounded-md border-l-2 border-scout-border bg-scout-surface py-2 pr-3 pl-3 text-xs">

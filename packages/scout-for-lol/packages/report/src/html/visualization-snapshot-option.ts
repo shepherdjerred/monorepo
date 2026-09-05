@@ -26,11 +26,16 @@ import {
 } from "#src/html/visualization-tooltip.ts";
 import { alignedTrendValues } from "#src/html/visualization-trend-values.ts";
 import {
+  VISUALIZATION_BODY_FONT,
+  VISUALIZATION_DISPLAY_FONT,
   visualizationSnapshotAxis,
   visualizationSnapshotBaseOption,
+  visualizationSnapshotFont,
   visualizationSnapshotLabels,
   visualizationSnapshotLegend,
   visualizationSnapshotPresentation,
+  visualizationSnapshotValueAxisLabel,
+  type VisualizationRenderMode,
 } from "#src/html/visualization-snapshot-style.ts";
 
 export type VisualizationOptionMode = "interactive" | "static";
@@ -46,13 +51,13 @@ export function visualizationSnapshotToOption(
     return kpiOption(snapshot, mode);
   }
   if (snapshot.kind === "DONUT_CHART") {
-    return donutOption(snapshot);
+    return donutOption(snapshot, mode);
   }
   if (snapshot.kind === "HEATMAP") {
-    return heatmapOption(snapshot, mode === "interactive");
+    return heatmapOption(snapshot, mode);
   }
   if (snapshot.kind === "RADAR_CHART") {
-    return radarOption(snapshot);
+    return radarOption(snapshot, mode);
   }
   if (snapshot.kind === "HISTOGRAM") {
     return histogramOption(snapshot, mode);
@@ -69,6 +74,9 @@ export function visualizationSnapshotToOption(
     trigger: snapshot.kind === "SCATTER_CHART" ? "item" : "axis",
     axisPointer: { type: "cross" },
     formatter: (input) => tooltipText(snapshot, input),
+    ...(mode === "interactive"
+      ? { textStyle: visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT) }
+      : {}),
   };
   const points = categoryPoints(snapshot);
   const annotations = snapshot.annotations.flatMap((annotation) => {
@@ -96,6 +104,7 @@ export function visualizationSnapshotToOption(
         categories,
         annotations,
         horizontal,
+        mode,
       }),
     ),
     ...evidenceOverlaySeries(snapshot, categories),
@@ -109,14 +118,14 @@ export function visualizationSnapshotToOption(
     })),
   ];
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout analysis", mode),
     tooltip,
-    legend: visualizationSnapshotLegend(presentation),
+    legend: visualizationSnapshotLegend(presentation, "top", mode),
     grid: {
       left: 68,
       right: presentation.options.legend === "right" ? 220 : 36,
       top: 105,
-      bottom: mode === "interactive" ? 92 : 58,
+      bottom: 58,
       containLabel: true,
     },
     xAxis: horizontal
@@ -125,12 +134,13 @@ export function visualizationSnapshotToOption(
           ...visualizationSnapshotAxis(
             presentation.theme,
             presentation.options.xAxisLabel,
+            mode,
           ),
-          axisLabel: {
-            color: presentation.theme.muted,
-            formatter: (value: number) =>
-              formatSnapshotAxisValue(snapshot, value),
-          },
+          axisLabel: visualizationSnapshotValueAxisLabel(
+            presentation.theme,
+            mode,
+            (value) => formatSnapshotAxisValue(snapshot, value),
+          ),
         }
       : snapshot.kind === "SCATTER_CHART"
         ? {
@@ -138,6 +148,7 @@ export function visualizationSnapshotToOption(
             ...visualizationSnapshotAxis(
               presentation.theme,
               presentation.options.xAxisLabel,
+              mode,
             ),
           }
         : {
@@ -146,6 +157,7 @@ export function visualizationSnapshotToOption(
             ...visualizationSnapshotAxis(
               presentation.theme,
               presentation.options.xAxisLabel,
+              mode,
             ),
           },
     yAxis: horizontal
@@ -155,6 +167,7 @@ export function visualizationSnapshotToOption(
           ...visualizationSnapshotAxis(
             presentation.theme,
             presentation.options.yAxisLabel,
+            mode,
           ),
         }
       : {
@@ -164,28 +177,15 @@ export function visualizationSnapshotToOption(
           ...visualizationSnapshotAxis(
             presentation.theme,
             presentation.options.yAxisLabel,
+            mode,
           ),
-          axisLabel: {
-            color: presentation.theme.muted,
-            formatter: (value: number) =>
-              formatSnapshotAxisValue(snapshot, value),
-          },
+          axisLabel: visualizationSnapshotValueAxisLabel(
+            presentation.theme,
+            mode,
+            (value) => formatSnapshotAxisValue(snapshot, value),
+          ),
           splitLine: { lineStyle: { color: presentation.theme.grid } },
         },
-    ...(mode === "interactive"
-      ? {
-          dataZoom: [{ type: "inside" }, { type: "slider", bottom: 20 }],
-          brush: { toolbox: ["lineX", "clear"], xAxisIndex: "all" },
-          toolbox: {
-            right: 24,
-            feature: {
-              dataZoom: {},
-              restore: {},
-              saveAsImage: {},
-            },
-          },
-        }
-      : {}),
     series,
   };
 }
@@ -220,7 +220,7 @@ function kpiOption(
   const columns = Math.min(4, Math.max(1, snapshot.series.length));
   const presentation = visualizationSnapshotPresentation(snapshot);
   return {
-    ...visualizationSnapshotBaseOption(snapshot, "Scout KPIs"),
+    ...visualizationSnapshotBaseOption(snapshot, "Scout KPIs", mode),
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "cross" },
@@ -255,7 +255,9 @@ function kpiOption(
             style: {
               text: series.label,
               fill: presentation.theme.muted,
-              font: "13px sans-serif",
+              ...(mode === "interactive"
+                ? { fontSize: 13, fontFamily: VISUALIZATION_BODY_FONT }
+                : { font: "13px sans-serif" }),
             },
           },
           {
@@ -265,7 +267,13 @@ function kpiOption(
             style: {
               text: `${formatSeriesValue(snapshot, series, latest?.value ?? null)}${gameBasis}`,
               fill: presentation.theme.text,
-              font: "bold 18px sans-serif",
+              ...(mode === "interactive"
+                ? {
+                    fontSize: 18,
+                    fontWeight: 700,
+                    fontFamily: VISUALIZATION_DISPLAY_FONT,
+                  }
+                : { font: "bold 18px sans-serif" }),
             },
           },
           {
@@ -281,7 +289,9 @@ function kpiOption(
                   ? ""
                   : `Δ ${formatSeriesAbsoluteDelta(snapshot, series, delta)} · ${formatPercent(percent ?? null)}`,
               fill: presentation.theme.accent,
-              font: "11px sans-serif",
+              ...(mode === "interactive"
+                ? { fontSize: 11, fontFamily: VISUALIZATION_BODY_FONT }
+                : { font: "11px sans-serif" }),
             },
           },
         ],
@@ -291,13 +301,10 @@ function kpiOption(
       left: 48,
       right: 30,
       top: Math.max(190, 88 + Math.ceil(snapshot.series.length / columns) * 92),
-      bottom: mode === "interactive" ? 72 : 34,
+      bottom: 34,
     },
     xAxis: { type: "category", data: categories, show: false },
     yAxis: { type: "value", show: false },
-    ...(mode === "interactive"
-      ? { dataZoom: [{ type: "inside" }, { type: "slider", bottom: 18 }] }
-      : {}),
     series: snapshot.series.map((series) => ({
       name: series.label,
       type: "line",
@@ -325,8 +332,9 @@ function snapshotSeriesOption(context: {
     label: { formatter: string };
   }[];
   horizontal: boolean;
+  mode: VisualizationRenderMode;
 }): echarts.SeriesOption {
-  const { snapshot, item, index, categories, annotations, horizontal } =
+  const { snapshot, item, index, categories, annotations, horizontal, mode } =
     context;
   if (snapshot.kind === "SCATTER_CHART") {
     return {
@@ -359,8 +367,10 @@ function snapshotSeriesOption(context: {
     label: visualizationSnapshotLabels(
       snapshot.display.options ?? {},
       horizontal,
-      false,
-      (input) => snapshotSeriesLabel(snapshot, item, input),
+      {
+        valueFormatter: (input) => snapshotSeriesLabel(snapshot, item, input),
+        mode,
+      },
     ),
     ...(index === 0 && annotations.length > 0
       ? { markLine: { symbol: "none", data: annotations } }

@@ -135,6 +135,33 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
   let remoteDir: string;
   let repoDir: string;
 
+  async function publishOperatorChangeAndExpectRefusal(
+    operatorClone: string,
+    force: boolean,
+  ): Promise<void> {
+    const pushFlag = force ? "-qf" : "-q";
+    await runCommand(["git", "push", pushFlag, "origin", BRANCH], {
+      cwd: operatorClone,
+    });
+    await rm(operatorClone, { recursive: true, force: true });
+    await runCommand(
+      [
+        "git",
+        "fetch",
+        "-q",
+        "origin",
+        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
+        "--force",
+      ],
+      { cwd: repoDir },
+    );
+    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
+
+    await expect(
+      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
+    ).rejects.toThrow(/jerred@sjer\.red/);
+  }
+
   beforeEach(async () => {
     remoteDir = await mkdtemp(`${tmpdir()}/branch-guard-remote-`);
     await runCommand(["git", "init", "-q", "--bare", "."], { cwd: remoteDir });
@@ -221,28 +248,8 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
       "catalog.json",
       "human adjudication",
     );
-    await runCommand(["git", "push", "-q", "origin", BRANCH], {
-      cwd: operatorClone,
-    });
-    await rm(operatorClone, { recursive: true, force: true });
-
     // The bot re-fetches and regenerates, as the next scheduled run would.
-    await runCommand(
-      [
-        "git",
-        "fetch",
-        "-q",
-        "origin",
-        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
-        "--force",
-      ],
-      { cwd: repoDir },
-    );
-    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
-
-    await expect(
-      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
-    ).rejects.toThrow(/jerred@sjer\.red/);
+    await publishOperatorChangeAndExpectRefusal(operatorClone, false);
   });
 
   test("refuses an amended commit, where the bot is still the author", async () => {
@@ -289,27 +296,7 @@ describe("assertRemoteBranchIsOurs (real remote)", () => {
       { cwd: operatorClone },
     );
     expect(author).toBe(BOT);
-    await runCommand(["git", "push", "-qf", "origin", BRANCH], {
-      cwd: operatorClone,
-    });
-    await rm(operatorClone, { recursive: true, force: true });
-
-    await runCommand(
-      [
-        "git",
-        "fetch",
-        "-q",
-        "origin",
-        `refs/heads/${BRANCH}:refs/remotes/origin/${BRANCH}`,
-        "--force",
-      ],
-      { cwd: repoDir },
-    );
-    await commitAs(repoDir, BOT, "catalog.json", "bot proposal");
-
-    await expect(
-      assertRemoteBranchIsOurs({ repoDir, branch: BRANCH }),
-    ).rejects.toThrow(/jerred@sjer\.red/);
+    await publishOperatorChangeAndExpectRefusal(operatorClone, true);
   });
 
   test("recognises itself when GIT_AUTHOR_EMAIL overrides the repo config", async () => {

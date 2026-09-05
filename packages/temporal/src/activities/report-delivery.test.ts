@@ -228,6 +228,21 @@ function heldBy(owner: string, claimedAt: string): Map<string, StoredClaim> {
   ]);
 }
 
+function installSuccessorClaim(
+  claims: Map<string, StoredClaim>,
+  claimKey: string,
+): void {
+  claims.set(claimKey, {
+    claim: {
+      schemaVersion: 1,
+      reportRunId: report().reportRunId,
+      owner: "workflow/run-1/activity-1/2",
+      claimedAt: NOW,
+    },
+    etag: "etag-successor",
+  });
+}
+
 describe("report send ownership", () => {
   test("refuses to resend while another attempt still owns the send", async () => {
     // Attempt 1 wrote `pending` and sent, then stalled past start-to-close.
@@ -383,15 +398,7 @@ describe("report send ownership", () => {
       send: async (input: PostalSendInput) => {
         const result = await owner.send(input);
         // A successor takes the lease while this attempt is still persisting.
-        claims.set(claimKey, {
-          claim: {
-            schemaVersion: 1 as const,
-            reportRunId: report().reportRunId,
-            owner: "workflow/run-1/activity-1/2",
-            claimedAt: NOW,
-          },
-          etag: "etag-successor",
-        });
+        installSuccessorClaim(claims, claimKey);
         return result;
       },
     };
@@ -421,15 +428,7 @@ describe("report send ownership", () => {
         const result = await owner.send(input);
         // The successor takes the lease AND records its delivery after this
         // attempt's ownership check has already passed.
-        claims.set(claimKey, {
-          claim: {
-            schemaVersion: 1 as const,
-            reportRunId: report().reportRunId,
-            owner: "workflow/run-1/activity-1/2",
-            claimedAt: NOW,
-          },
-          etag: "etag-successor",
-        });
+        installSuccessorClaim(claims, claimKey);
         await owner.backend.writeReceipt(receiptKey, {
           schemaVersion: 1,
           reportRunId: report().reportRunId,

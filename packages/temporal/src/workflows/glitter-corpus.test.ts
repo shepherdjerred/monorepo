@@ -189,6 +189,22 @@ async function runGlitterWorkflow<T>(
   }
 }
 
+function verifyChannelInto(
+  verified: z.input<typeof VerifyChannelInputSchema>[],
+) {
+  return async (rawInput: z.input<typeof VerifyChannelInputSchema>) => {
+    const input = VerifyChannelInputSchema.parse(rawInput);
+    verified.push(input);
+    const manifestKey = `states/${input.snapshotId}.json`;
+    return {
+      channelId: input.channelId,
+      manifestKey,
+      manifestObject: storedObject(manifestKey),
+      uniqueMessageCount: 2,
+    };
+  };
+}
+
 describe("Glitter corpus workflows", () => {
   it("fails a traversal safety ceiling non-retryably", async () => {
     const activities = {
@@ -268,19 +284,7 @@ describe("Glitter corpus workflows", () => {
         }
         throw new Error(`unexpected direction ${input.direction}`);
       },
-      verifyGlitterCorpusChannel: async (
-        rawInput: z.input<typeof VerifyChannelInputSchema>,
-      ) => {
-        const input = VerifyChannelInputSchema.parse(rawInput);
-        verified.push(input);
-        const manifestKey = `states/${input.snapshotId}.json`;
-        return {
-          channelId: input.channelId,
-          manifestKey,
-          manifestObject: storedObject(manifestKey),
-          uniqueMessageCount: 2,
-        };
-      },
+      verifyGlitterCorpusChannel: verifyChannelInto(verified),
       finalizeGlitterCorpusSnapshot: finalSnapshot,
     };
 
@@ -494,19 +498,7 @@ describe("Glitter corpus periodic full refresh", () => {
         captured.push(input);
         return pageResult(input, [], []);
       },
-      verifyGlitterCorpusChannel: async (
-        rawInput: z.input<typeof VerifyChannelInputSchema>,
-      ) => {
-        const input = VerifyChannelInputSchema.parse(rawInput);
-        verified.push(input);
-        const manifestKey = `states/${input.snapshotId}.json`;
-        return {
-          channelId: input.channelId,
-          manifestKey,
-          manifestObject: storedObject(manifestKey),
-          uniqueMessageCount: 2,
-        };
-      },
+      verifyGlitterCorpusChannel: verifyChannelInto(verified),
       finalizeGlitterCorpusSnapshot: finalSnapshot,
     };
 

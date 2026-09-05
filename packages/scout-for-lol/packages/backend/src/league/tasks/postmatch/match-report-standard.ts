@@ -55,11 +55,41 @@ export async function fetchTimelineForDareV2(
   });
 }
 
+/** Timeline capture required by active challenge or duel evidence. */
+export async function fetchTimelineForProgression(
+  matchData: RawMatch,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<RawTimeline | undefined> {
+  return await fetchAndRecordTimeline({
+    matchData,
+    matchId,
+    playersInMatch,
+    persistence: "required",
+    source: "timeline_progression",
+  });
+}
+
+/** Reassert durable persistence when an earlier best-effort report fetch supplied the timeline. */
+export async function persistTimelineForProgression(
+  timeline: RawTimeline,
+  playersInMatch: PlayerConfigEntry[],
+  matchId: MatchId,
+): Promise<void> {
+  const staged = await recordTimelineForReportStore({
+    timeline,
+    source: "timeline_progression",
+    trackedPlayerAliases: playersInMatch.map((player) => player.alias),
+  });
+  requireTimelineStaging("required", staged, matchId);
+}
+
 async function fetchAndRecordTimeline(options: {
   matchData: RawMatch;
   matchId: MatchId;
   playersInMatch: PlayerConfigEntry[];
   persistence: "best_effort" | "required";
+  source?: "timeline_progression";
 }): Promise<RawTimeline | undefined> {
   // Don't fetch timeline for arena matches
   if (
@@ -68,11 +98,13 @@ async function fetchAndRecordTimeline(options: {
       options.matchData.info.gameMode,
     )
   ) {
+    requireTimelineStaging(options.persistence, false, options.matchId);
     return undefined;
   }
 
   const firstPlayer = options.playersInMatch[0];
   if (!firstPlayer) {
+    requireTimelineStaging(options.persistence, false, options.matchId);
     return undefined;
   }
 
@@ -101,9 +133,10 @@ async function fetchAndRecordTimeline(options: {
         const staged = await recordTimelineForReportStore({
           timeline: timelineData,
           source:
-            options.persistence === "required"
+            options.source ??
+            (options.persistence === "required"
               ? "timeline_dare_v2"
-              : "timeline_live",
+              : "timeline_live"),
           trackedPlayerAliases,
         });
         requireTimelineStaging(options.persistence, staged, options.matchId);
@@ -115,6 +148,11 @@ async function fetchAndRecordTimeline(options: {
         );
       }
     }
+    requireTimelineStaging(
+      options.persistence,
+      timelineData !== undefined,
+      options.matchId,
+    );
     return timelineData;
   } catch (error) {
     logger.error(
