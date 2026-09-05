@@ -6,13 +6,13 @@ import {
   MATCH_TEAM_LAKE_COLUMNS as importedMatchTeamLakeColumns,
   PREMATCH_LAKE_COLUMNS as importedPrematchLakeColumns,
   type DuckDbColumnType,
-} from "@scout-for-lol/data/model/lake-columns.ts";
+} from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import {
   TIMELINE_COVERAGE_LAKE_COLUMNS as importedTimelineCoverageLakeColumns,
   TIMELINE_EVENT_LAKE_COLUMNS as importedTimelineEventLakeColumns,
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS as importedTimelineEventParticipantLakeColumns,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS as importedTimelineParticipantFrameLakeColumns,
-} from "@scout-for-lol/data/model/timeline-lake-columns.ts";
+} from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 
 const ACCOUNT_LAKE_COLUMNS = importedAccountLakeColumns;
 const COMPETITION_RANK_HISTORY_LAKE_COLUMNS =

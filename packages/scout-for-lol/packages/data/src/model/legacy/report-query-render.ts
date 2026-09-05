@@ -18,7 +18,7 @@ import {
   type ReportRenderChannel,
   type ReportRenderSpec,
   type ReportTableOptions,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 
 function normalizeToken(value: string): string {
   return value.trim().toLowerCase();

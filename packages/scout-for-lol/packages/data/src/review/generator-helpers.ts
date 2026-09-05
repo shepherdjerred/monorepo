@@ -9,11 +9,11 @@ import {
   wasDemoted,
   rankToSimpleString,
   tierToPercentileString,
-} from "#src/model/rank.ts";
+} from "#src/model/riot/rank.ts";
 import {
   lpDiffToString,
   rankToLeaguePoints,
-} from "#src/model/league-points.ts";
+} from "#src/model/riot/league-points.ts";
 import { formatGenericPatchNotes } from "#src/data-dragon/patch-notes.ts";
 
 /**

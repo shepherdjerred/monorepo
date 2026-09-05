@@ -9,11 +9,11 @@ import DataTable from "../../../components/DataTable.astro";
 import {
   QueueTypeSchema,
   queueTypeToDisplayString,
-} from "@scout-for-lol/data/model/state.ts";
+} from "@scout-for-lol/data/model/core/state.ts";
 import {
   RegionSchema,
   toReadableRegion,
-} from "@scout-for-lol/data/model/league-account.ts";
+} from "@scout-for-lol/data/model/riot/league-account.ts";
 
 export const queues = QueueTypeSchema.options.map((id) => ({
   id,

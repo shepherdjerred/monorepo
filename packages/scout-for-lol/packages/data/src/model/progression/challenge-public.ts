@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { QueueTypeSchema } from "#src/model/state.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
 import {
   ChallengeContractV1Schema,
   ChallengeFrozenValueSchema,

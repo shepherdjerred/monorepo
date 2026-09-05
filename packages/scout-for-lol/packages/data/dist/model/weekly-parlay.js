@@ -1,7 +1,7 @@
 // @bun
-// src/model/weekly-parlay.ts
+// src/model/bucks/weekly-parlay.ts
 import { z } from "zod";
-// src/model/weekly-parlay.json
+// src/model/bucks/weekly-parlay.json
 var weekly_parlay_default = {
   timezone: "America/Los_Angeles",
   slot: 0,
@@ -23,7 +23,7 @@ var weekly_parlay_default = {
   ]
 };
 
-// src/model/weekly-parlay.ts
+// src/model/bucks/weekly-parlay.ts
 var WeeklyParlayLifecycleSchema = z.strictObject({
   timezone: z.string().min(1),
   slot: z.number().int().nonnegative(),

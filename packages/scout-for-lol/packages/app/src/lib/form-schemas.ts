@@ -30,7 +30,7 @@ import {
   CompetitionCronSchema,
   CompetitionScheduledUpdatesSchema,
   ReportScheduleTimezoneSchema,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 
 export const RiotIdTextSchema = z.string().superRefine((value, context) => {
   const parsed = RiotIdSchema.safeParse(value);

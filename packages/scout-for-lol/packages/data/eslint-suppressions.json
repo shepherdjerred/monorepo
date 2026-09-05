@@ -83,7 +83,7 @@
       "count": 1
     }
   },
-  "src/model/queue-window-drift.ts": {
+  "src/model/competitions/queue-window-drift.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

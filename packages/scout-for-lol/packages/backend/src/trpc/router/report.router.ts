@@ -27,11 +27,11 @@ import {
   type DiscordGuildId,
   type ReportId,
 } from "@scout-for-lol/data";
-import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
+import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import {
   CompetitionCronSchema,
   ReportScheduleTimezoneSchema,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import type { Report } from "#generated/prisma/client/index.js";
 import { router } from "#src/trpc/trpc.ts";
 import { assertChannelInGuild } from "#src/trpc/guild-guard.ts";

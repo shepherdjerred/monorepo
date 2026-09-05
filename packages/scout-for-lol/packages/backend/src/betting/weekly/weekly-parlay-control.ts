@@ -5,7 +5,7 @@ import {
   WEEKLY_PARLAY_OPEN_ACTION_BUDGET_MS,
   WeeklyParlayControlActionSchema,
   type WeeklyParlayControlAction,
-} from "@scout-for-lol/data/model/weekly-parlay.ts";
+} from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import {
   deliverWeeklyParlayDiscord,
   weeklyParlaySettlementActionKey,

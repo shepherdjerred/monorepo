@@ -7,7 +7,7 @@ import type {
 import {
   closestChampionName,
   resolveReportChampion,
-} from "#src/model/report-query-champions.ts";
+} from "#src/model/reports/report-query-champions.ts";
 import {
   closestScoutQlFunctionName,
   scoutQlFunction,

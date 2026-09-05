@@ -1,5 +1,5 @@
-import type { Champion } from "#src/model/champion.ts";
-import type { Lane } from "#src/model/lane.ts";
+import type { Champion } from "#src/model/riot/champion.ts";
+import type { Lane } from "#src/model/riot/lane.ts";
 
 /**
  * A zeroed `Champion` for tests that care about roster shape or lane pairing

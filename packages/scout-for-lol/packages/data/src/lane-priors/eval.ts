@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
-import { LaneSchema, parseLane, type Lane } from "#src/model/lane.ts";
+import { LaneSchema, parseLane, type Lane } from "#src/model/riot/lane.ts";
 import { inferStandardLanes } from "#src/lane-priors/inference.ts";
 import {
   LanePriorArtifactSchema,

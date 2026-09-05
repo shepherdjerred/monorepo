@@ -7,7 +7,7 @@
  */
 
 import { z } from "zod";
-import type { Lane } from "#src/model/lane.ts";
+import type { Lane } from "#src/model/riot/lane.ts";
 
 /**
  * Random behavior schema - weighted random prompts

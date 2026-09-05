@@ -7,7 +7,7 @@ import {
   DEFAULT_RENDER_SPEC,
   REPORT_DEFAULT_MAX_ROWS,
   type ReportRenderSpec,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 import type {
   ScoutQlHavingPredicate,
   ScoutQlPredicate,

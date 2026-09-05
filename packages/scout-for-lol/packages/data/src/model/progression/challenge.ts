@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { getAllChampions } from "#src/model/champion-registry.ts";
-import { QueueTypeSchema } from "#src/model/state.ts";
+import { getAllChampions } from "#src/model/riot/champion-registry.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
 import type {
   ChallengeCoverage,
   ChallengeEvidenceMatch,

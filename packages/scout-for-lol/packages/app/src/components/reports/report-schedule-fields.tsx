@@ -4,7 +4,7 @@ import {
   computeUpcomingSchedule,
   CronPresets,
   ReportScheduleTimezoneSchema,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import {
   Field,
   FieldDescription,

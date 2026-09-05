@@ -24,7 +24,7 @@ import {
   decodeScoutQlIdentifier,
   tokenSpan,
 } from "#src/model/scoutql/tokens.ts";
-import { ReportOutputFormatSchema } from "#src/model/report.ts";
+import { ReportOutputFormatSchema } from "#src/model/reports/report.ts";
 
 // ── hoverScoutQl ─────────────────────────────────────────────────────────────
 // Resolves the token under the cursor THROUGH the analysis rather than by

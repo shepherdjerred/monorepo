@@ -29,7 +29,7 @@ const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";
 const MAIN_BRANCH = "main";
 const SCOUT_ROOT = "packages/scout-for-lol";
-const QUEUE_WINDOWS_PATH = `${SCOUT_ROOT}/packages/data/src/model/queue-windows.json`;
+const QUEUE_WINDOWS_PATH = `${SCOUT_ROOT}/packages/data/src/model/competitions/queue-windows.json`;
 // The ONLY path this job is allowed to stage.
 const GENERATED_PATHS = [QUEUE_WINDOWS_PATH];
 const LOOKBACK_DAYS = SCOUT_QUEUE_WINDOWS_LOOKBACK_DAYS;

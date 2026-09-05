@@ -1276,13 +1276,9 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bryan-bucks.ts": {
+    "packages/scout-for-lol/packages/data/src/model/bucks/bryan-bucks.ts|packages/scout-for-lol/packages/data/src/model/bucks/bryan-bucks.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/scout-for-lol/packages/data/src/model/explore.ts|packages/scout-for-lol/packages/data/src/model/report-ai.ts": {
-      "clones": 1,
-      "tokens": 76
     },
     "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/tokens.ts": {
       "clones": 1,
@@ -1292,11 +1288,15 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/scout-for-lol/packages/data/src/model/loading-screen.test.ts|packages/scout-for-lol/packages/data/src/model/loading-screen.test.ts": {
+    "packages/scout-for-lol/packages/data/src/model/matches/loading-screen.test.ts|packages/scout-for-lol/packages/data/src/model/matches/loading-screen.test.ts": {
       "clones": 1,
       "tokens": 84
     },
-    "packages/scout-for-lol/packages/data/src/model/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog-functions.ts": {
+    "packages/scout-for-lol/packages/data/src/model/reports/explore.ts|packages/scout-for-lol/packages/data/src/model/reports/report-ai.ts": {
+      "clones": 1,
+      "tokens": 76
+    },
+    "packages/scout-for-lol/packages/data/src/model/reports/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog-functions.ts": {
       "clones": 1,
       "tokens": 181
     },

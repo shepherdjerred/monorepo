@@ -13,7 +13,7 @@ import {
   type CompetitionScheduledUpdates,
   DEFAULT_COMPETITION_CRON,
   DEFAULT_SCHEDULE_TIMEZONE,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { match } from "ts-pattern";
 import { type Db, type ExtendedPrismaClient } from "#src/database/index.ts";

@@ -19,7 +19,7 @@ import type {
   ScoutQlColumnInfo,
   SourceCatalog,
 } from "#src/model/scoutql/catalog-columns.ts";
-import { resolveReportChampion } from "#src/model/report-query-champions.ts";
+import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
 
 // ── Expression-analysis shared vocabulary ────────────────────────────────────
 // The type lattice, the diagnostic emitter, the AST walkers, and the small

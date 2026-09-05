@@ -13,8 +13,11 @@ import type {
   ModelConfig,
 } from "#src/review/pipeline-types.ts";
 import type { Personality } from "#src/review/prompts.ts";
-import { type CompletedMatch, CompletedMatchSchema } from "#src/model/match.ts";
-import { LeaguePuuidSchema } from "#src/model/league-account.ts";
+import {
+  type CompletedMatch,
+  CompletedMatchSchema,
+} from "#src/model/matches/match.ts";
+import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
 
 const REVIEWER_NAME = "TestReviewer";
 const PLAYER_NAME = "TestPlayer";

@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { LeaguePuuidSchema } from "#src/model/league-account.ts";
+import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
 import {
   RiotGameNameSchema,
   RiotTagLineSchema,
-} from "#src/model/identifiers.ts";
+} from "#src/model/core/identifiers.ts";
 
 export const RawAccountSchema = z.strictObject({
   puuid: LeaguePuuidSchema,

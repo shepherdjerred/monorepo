@@ -9,8 +9,8 @@ import {
   ReportDisplayKindSchema,
   ReportOutputFormatSchema,
   type ReportOutputFormat,
-} from "#src/model/report.ts";
-import { QueueTypeSchema } from "#src/model/state.ts";
+} from "#src/model/reports/report.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
 import { SCOUTQL_CHART_OPTION_NAMES } from "#src/model/scoutql/render-options.ts";
 import type { ScoutQlAnalysis } from "#src/model/scoutql/analyze.ts";
 import { isChartRenderKind } from "#src/model/scoutql/analyze-render.ts";

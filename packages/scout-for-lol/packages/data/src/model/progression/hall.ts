@@ -9,12 +9,12 @@ import {
   type HallQueueFamilyId,
   type HallRecordId,
 } from "#src/model/progression/catalog.ts";
-import { type MatchLakeRow } from "#src/model/lake-columns.ts";
-import { type QueueType } from "#src/model/state.ts";
+import { type MatchLakeRow } from "#src/model/reports/lake-columns.ts";
+import { type QueueType } from "#src/model/core/state.ts";
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-} from "#src/model/discord.ts";
+} from "#src/model/core/discord.ts";
 
 export const HallBaselineStatusSchema = z.enum(["building", "ready", "failed"]);
 export type HallBaselineStatus = z.infer<typeof HallBaselineStatusSchema>;

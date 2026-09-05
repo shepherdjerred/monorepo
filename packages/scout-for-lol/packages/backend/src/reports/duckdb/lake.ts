@@ -12,7 +12,7 @@ import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_EVENT_PARTICIPANT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
-} from "@scout-for-lol/data/model/timeline-lake-columns.ts";
+} from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
 
