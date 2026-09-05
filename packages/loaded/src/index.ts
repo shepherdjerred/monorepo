@@ -73,21 +73,41 @@ export type LoadedMeta = {
 
 export type LoadedRecord = Record<string, Loaded<unknown>>;
 
-/** Unwraps a record of `Loaded` values to a record of their data. */
+/**
+ * Unwraps a record of `Loaded` values to a record of their data.
+ *
+ * This selects the data-bearing variants and indexes them, rather than writing
+ * `T[K] extends Loaded<infer U> ? U : never`. The `infer` form looks equivalent
+ * and is not: matching a four-member union against `Loaded<infer U>` pairs the
+ * data-less `loading` and `error` members too, and `U` comes back widened with
+ * `undefined`. Every consumer then has to null-check data that `LoadingBlock`
+ * has already proven is present, which defeats the point of the barrier.
+ */
 export type LoadedData<T extends LoadedRecord> = {
-  readonly [K in keyof T]: T[K] extends Loaded<infer U> ? U : never;
+  readonly [K in keyof T]: Extract<T[K], { readonly data: unknown }>["data"];
 };
 
 /**
  * The structural shape `fromQuery` reads. TanStack Query's `UseQueryResult`
  * satisfies it; so does anything else exposing the same three fields, which is
  * why this package depends on no query library.
+ *
+ * `data` is `unknown` rather than a generic `T | undefined` on purpose.
+ * `UseQueryResult` is a *discriminated union*, and inferring `T` from
+ * `data: T | undefined` runs the match per member: the pending member supplies
+ * `data: undefined` and TS settles on `T = undefined`, collapsing every
+ * consumer's data type. Inferring the whole result type instead and projecting
+ * with {@link QueryData} is immune to that, because an indexed access
+ * distributes over the union rather than racing its members.
  */
-export type QueryLike<T> = {
-  readonly data: T | undefined;
+export type QueryLike = {
+  readonly data: unknown;
   readonly error: unknown;
   readonly isFetching: boolean;
 };
+
+/** The renderable data type behind a query result: its `data`, minus absence. */
+export type QueryData<Q extends QueryLike> = Exclude<Q["data"], undefined>;
 
 /**
  * `available` covers `degraded | done` — the two variants that can be
@@ -382,7 +402,16 @@ function match<T, R>(value: Loaded<T>, matchers: LoadedMatchers<T, R>): R {
   }
 }
 
-function getOrElse<T>(value: Loaded<T>, fallback: T): T {
+/**
+ * The data if it is available, otherwise `fallback`.
+ *
+ * The fallback is deliberately its own type parameter rather than `T`. Progressive
+ * pages — ones that render a shell immediately and fill values in as they
+ * arrive — want `getOrElse(summary, undefined)` to mean "`Summary` or nothing",
+ * and constraining the fallback to `T` makes exactly that call illegal while
+ * permitting only the substitute-a-fake-value form.
+ */
+function getOrElse<T, F>(value: Loaded<T>, fallback: F): T | F {
   return value.status === "degraded" || value.status === "done"
     ? value.data
     : fallback;
@@ -406,23 +435,28 @@ function getOrElse<T>(value: Loaded<T>, fallback: T): T {
  * prefixes its own key, so `fromQuery(query, ["user"])` joined under `user`
  * produces `["user", "user"]`. Pass it only at a root, or omit it.
  */
-function fromQuery<T>(
-  query: QueryLike<T>,
+function fromQuery<Q extends QueryLike>(
+  query: Q,
   path: readonly string[] = [],
-): Loaded<T> {
+): Loaded<QueryData<Q>> {
   const errors: LoadedErrors | undefined =
     query.error === undefined || query.error === null
       ? undefined
       : [{ path, error: query.error }];
 
   if (query.data !== undefined) {
+    // The guard removed `undefined` from `Q["data"]`, which leaves exactly
+    // `QueryData<Q>`. TS cannot reduce `Exclude` over an unresolved generic, so
+    // it cannot see that the narrowing already produced that type.
+    // eslint-disable-next-line custom-rules/no-type-assertions -- proven by the guard above
+    const data = query.data as QueryData<Q>;
     return errors === undefined
-      ? { status: "done", fetching: query.isFetching, data: query.data }
+      ? { status: "done", fetching: query.isFetching, data }
       : {
           status: "degraded",
           fetching: query.isFetching,
           errors,
-          data: query.data,
+          data,
         };
   }
   if (errors !== undefined) {
