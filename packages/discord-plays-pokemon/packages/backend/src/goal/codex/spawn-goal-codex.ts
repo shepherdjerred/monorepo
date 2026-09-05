@@ -9,7 +9,10 @@ import {
   createCodexJsonlParser,
   type CodexJsonlParser,
 } from "@shepherdjerred/llm-observability/codex-jsonl";
-import { prepareRuntimeTools, buildEnvironment } from "./goal-runtime-env.ts";
+import {
+  prepareRuntimeTools,
+  buildEnvironment,
+} from "#src/goal/goal-runtime-env.ts";
 import {
   buildDeveloperInstructions,
   buildTracePrompt,
@@ -17,7 +20,7 @@ import {
   type PromptContext,
 } from "./codex-command.ts";
 import { attachCodexTrace, type CodexTrace } from "./codex-trace.ts";
-import type { GoalProcess, GoalProcessSpawner } from "./goal-types.ts";
+import type { GoalProcess, GoalProcessSpawner } from "#src/goal/goal-types.ts";
 
 export const CODEX_JSONL_SCHEMA_VERSION = 2;
 

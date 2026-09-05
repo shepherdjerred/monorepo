@@ -2,7 +2,7 @@
 // operating policy is injected as developer instructions; Discord content and
 // save-specific context remain an explicitly untrusted user message.
 
-import { PREFERRED_POKEMONCTL_CAPABILITIES } from "./goal-capabilities.ts";
+import { PREFERRED_POKEMONCTL_CAPABILITIES } from "#src/goal/goal-capabilities.ts";
 
 export type PromptContext = {
   gameStateSummary: string;

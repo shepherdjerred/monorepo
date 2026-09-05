@@ -3,7 +3,7 @@ import type { CommandInput } from "#src/game/command/command-input.ts";
 import { GameBattleControl } from "./game-battle-control.ts";
 import { requireBattleItemSelection } from "./game-battle-control-rules.ts";
 import type { GameObservationV2 } from "./game-observation.ts";
-import { handlePokemonctlBattle } from "./pokemonctl-battle.ts";
+import { handlePokemonctlBattle } from "#src/goal/control/pokemonctl-battle.ts";
 
 type BattleState = NonNullable<GameObservationV2["battle"]>;
 type GameState = NonNullable<GameObservationV2["game"]>;

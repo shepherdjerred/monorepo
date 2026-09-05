@@ -101,7 +101,7 @@ describe("AI architecture guard", () => {
     expect(
       findAiArchitectureViolations([
         {
-          path: "packages/discord-plays-pokemon/packages/backend/src/goal/codex-auth.ts",
+          path: "packages/discord-plays-pokemon/packages/backend/src/goal/codex/codex-auth.ts",
           contents: "const token = Bun.env.CODEX_ACCESS_TOKEN;",
         },
         {
