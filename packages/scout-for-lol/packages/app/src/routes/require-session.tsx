@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { Suspense } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -21,10 +22,13 @@ export function RequireSession() {
   const location = useLocation();
   // sessionState answers `{ user: null }` when signed out instead of throwing,
   // so a normal anonymous visit no longer manufactures a server-side error.
-  const { data, failureCount, isError, refetch } = useQuery(
+  const query = useQuery(
     trpc.auth.sessionState.queryOptions(undefined, SESSION_QUERY_OPTIONS),
   );
-  const guardState = resolveSessionGuardState(data, isError);
+  const { failureCount, refetch } = query;
+  const guardState = resolveSessionGuardState(
+    Loaded.fromQuery(query, ["auth.sessionState"]),
+  );
 
   if (guardState === "loading") {
     return (

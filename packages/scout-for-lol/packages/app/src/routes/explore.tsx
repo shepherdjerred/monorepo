@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router";
@@ -55,8 +56,16 @@ export function Explore() {
   const [restoredDraft, setRestoredDraft] = useState<string | null>(null);
   const runs = useExploreRuns();
 
-  const { status, enabled, quota, transcript, messages, title, shared } =
-    useExploreConversation(conversationId);
+  const {
+    status,
+    statusQuery,
+    enabled,
+    quota,
+    transcript,
+    messages,
+    title,
+    shared,
+  } = useExploreConversation(conversationId);
 
   const pendingTurn = runs.pendingTurn(conversationId);
   const turnActive = exploreTurnIsActive(pendingTurn, runs.discoverySettled);
@@ -184,11 +193,11 @@ export function Explore() {
     scrollIfPinned();
   }, [transcript.data, pendingAnswer, activity, pendingTrace, scrollIfPinned]);
 
-  if (status.isLoading) {
+  if (status.status === "loading") {
     return <SectionSkeleton />;
   }
 
-  if (status.isError) {
+  if (status.status === "error") {
     // A failed availability check is not a denial — say so, and offer the
     // narrow retry (just this query) rather than a whole-page reload.
     return (
@@ -206,7 +215,7 @@ export function Explore() {
             variant="outline"
             size="sm"
             onClick={() => {
-              void status.refetch();
+              void statusQuery.refetch();
             }}
           >
             Try again
@@ -376,21 +385,38 @@ function ExploreQuota(props: {
  */
 function useExploreConversation(conversationId: string | null) {
   const trpc = useTRPC();
-  const status = useQuery(trpc.explore.status.queryOptions());
-  const enabled = status.data?.enabled === true;
+  const statusQuery = useQuery(trpc.explore.status.queryOptions());
+  // `strict` because `enabled` is the authorization for this page: a stale
+  // `enabled: true` read through `getOrElse` would keep the owner-only
+  // transcript on screen precisely when Scout could not reverify guild
+  // membership. Collapsing `degraded` to `error` makes the recheck failure
+  // close the page instead of failing open.
+  const status = Loaded.strict(
+    Loaded.fromQuery(statusQuery, ["explore.status"]),
+  );
+  const availability = Loaded.getOrElse(status, undefined);
+  const enabled = availability?.enabled === true;
   const transcript = useQuery({
     ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
     enabled: enabled && conversationId !== null,
   });
 
+  const conversation = Loaded.getOrElse(
+    // The transcript is the owner-only content the status check guards, so it
+    // is `strict` for the same reason the check is: a retained conversation
+    // must not outlive the authorization that produced it.
+    Loaded.strict(Loaded.fromQuery(transcript, ["explore.get"])),
+    undefined,
+  );
   return {
     status,
+    statusQuery,
     enabled,
-    quota: status.data?.quota ?? [],
+    quota: availability?.quota ?? [],
     transcript,
-    messages: transcript.data?.messages ?? [],
-    title: transcript.data?.conversation.title ?? "Explore",
-    shared: transcript.data?.conversation.shareToken ?? null,
+    messages: conversation?.messages ?? [],
+    title: conversation?.conversation.title ?? "Explore",
+    shared: conversation?.conversation.shareToken ?? null,
   };
 }
 

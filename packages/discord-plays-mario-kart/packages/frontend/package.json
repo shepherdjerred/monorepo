@@ -22,6 +22,7 @@
     "@sentry/react": "^10.0.0",
     "@discord-plays-mario-kart/common": "workspace:*",
     "@tailwindcss/vite": "^4.0.17",
+    "@shepherdjerred/loaded": "workspace:*",
     "@tanstack/react-query": "^5.70.0",
     "keyboardjs": "^2.7.0",
     "lodash": "4.18.1",

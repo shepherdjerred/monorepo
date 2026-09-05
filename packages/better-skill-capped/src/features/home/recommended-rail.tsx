@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import React from "react";
 import { Link } from "@tanstack/react-router";
 import { Star } from "lucide-react";
@@ -17,7 +18,7 @@ export function RecommendedRail({
 }: {
   visible: boolean;
 }): React.ReactElement | null {
-  const { content } = useContent();
+  const content = Loaded.getOrElse(useContent().content, undefined);
   if (!visible || content === undefined) {
     return null;
   }

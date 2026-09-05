@@ -321,6 +321,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/loaded",
+      "directory": "packages/loaded",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/llm-observability",
       "directory": "packages/llm-observability",
       "steps": [

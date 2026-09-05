@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import React from "react";
 import Highlighter from "react-highlight-words";
 import { Link } from "@tanstack/react-router";
@@ -15,7 +16,7 @@ export function CoachAttribution({
   name: string;
   matchedStrings: string[];
 }): React.ReactElement {
-  const { content } = useContent();
+  const content = Loaded.getOrElse(useContent().content, undefined);
   const staff = content?.staffByName.get(name);
 
   return (

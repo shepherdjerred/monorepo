@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import {
@@ -102,6 +103,7 @@ export function GuildSubscriptions() {
       { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
+  const subsValue = Loaded.fromQuery(subsQuery, ["guild.subscriptions"]);
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
       meta: analyticsMeta("subscription_removed"),
@@ -218,7 +220,7 @@ export function GuildSubscriptions() {
         </div>
       </div>
 
-      {subsQuery.isLoading && (
+      {subsValue.status === "loading" && (
         <p role="status" className="text-sm text-scout-subtle">
           Loading subscriptions…
         </p>

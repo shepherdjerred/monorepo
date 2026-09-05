@@ -39,6 +39,7 @@
     "@fontsource-variable/geist": "^5.3.0",
     "@scout-for-lol/data": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
+    "@shepherdjerred/loaded": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@trpc/client": "^11.18.0",
     "@trpc/server": "^11.18.0",

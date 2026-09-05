@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -102,7 +103,9 @@ export function OnboardingCompetitionStep(props: {
     },
   });
   const isDirty = useSelector(form.store, (state) => state.isDirty);
-  const builderV2Enabled = builderQuery.data?.builderV2Enabled === true;
+  const builder = Loaded.fromQuery(builderQuery, ["builderCapabilities"]);
+  const builderV2Enabled =
+    Loaded.getOrElse(builder, undefined)?.builderV2Enabled === true;
   const transition = useUnsavedFormTransition(
     builderV2Enabled ? builderDirty : isDirty,
     mutation.isPending,
@@ -113,12 +116,14 @@ export function OnboardingCompetitionStep(props: {
     transition.isNavigationAllowed,
   );
 
-  if (builderQuery.isLoading) {
+  if (builder.status === "loading") {
     return <p className="text-sm text-scout-subtle">Loading builder…</p>;
   }
-  if (builderQuery.error !== null) {
+  if (builder.status === "error") {
     return (
-      <p className="text-sm text-scout-danger">{builderQuery.error.message}</p>
+      <p className="text-sm text-scout-danger">
+        {Loaded.messageOf(builder.errors[0].error)}
+      </p>
     );
   }
 

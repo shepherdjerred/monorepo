@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -48,10 +49,7 @@ describe("consumer player hub states", () => {
   test("renders loading, error, and both empty explanations", () => {
     const loading = renderToStaticMarkup(
       createElement(PlayerHome, {
-        yourProfiles: undefined,
-        recentPlayers: undefined,
-        pending: true,
-        error: false,
+        home: Loaded.loading(),
         onRetry: vi.fn(),
       }),
     );
@@ -59,10 +57,7 @@ describe("consumer player hub states", () => {
 
     const error = renderToStaticMarkup(
       createElement(PlayerHome, {
-        yourProfiles: undefined,
-        recentPlayers: undefined,
-        pending: false,
-        error: true,
+        home: Loaded.failed(new Error("hub unavailable")),
         onRetry: vi.fn(),
       }),
     );
@@ -73,10 +68,7 @@ describe("consumer player hub states", () => {
         MemoryRouter,
         undefined,
         createElement(PlayerHome, {
-          yourProfiles: [],
-          recentPlayers: [],
-          pending: false,
-          error: false,
+          home: Loaded.done({ yourProfiles: [], recentPlayers: [] }),
           onRetry: vi.fn(),
         }),
       ),

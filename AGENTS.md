@@ -31,6 +31,7 @@ packages/
 ├── homelab/                    # Homelab infrastructure (K8s, cdk8s, Tofu)
 ├── leetcode/                   # LeetCode practice
 ├── llm-observability/          # LLM tracing/metrics package
+├── loaded/                     # Loaded<T> renderability algebra + LoadingBlock
 ├── monarch/                    # Transaction categorization pipeline
 ├── resume/                     # Resume site
 ├── scout-for-lol/              # League of Legends match analysis (backend + web app + desktop)

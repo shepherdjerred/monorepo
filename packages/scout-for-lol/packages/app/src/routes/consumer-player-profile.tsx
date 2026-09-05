@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -119,6 +120,11 @@ type HistoryCursor = {
   consumed?: number | undefined;
 };
 
+const EMPTY_HISTORY: { entries: never[]; nextCursor: null } = {
+  entries: [],
+  nextCursor: null,
+};
+
 function ConsumerPlayerProfileContent(props: {
   filters: PlayerProfileFilters;
   onFiltersChange: (
@@ -165,6 +171,12 @@ function ConsumerPlayerProfileContent(props: {
       },
     ),
   );
+  // Deliberately NOT migrated: `accessQuery` and the summary gate above.
+  // They block on `isFetching` as well as `isPending` because the access
+  // decision must be freshly fetched (`staleTime: 0`,
+  // `refetchOnMount: "always"`), and `Loaded`'s `degraded` says the exact
+  // opposite — keep rendering the last known answer when the refresh fails.
+  // That is right for a match list and wrong for an authorization check.
   const historyQuery = useQuery(
     trpc.consumerPlayer.matchHistory.queryOptions(
       {
@@ -268,7 +280,15 @@ function ConsumerPlayerProfileContent(props: {
   if (summary === undefined) {
     throw new Error("Successful player profile query returned no summary");
   }
-  const entries = historyQuery.data?.entries ?? [];
+  // Consumer-scoped, so `strict`. Its PROTECTED options set `gcTime: 0`, which
+  // means there is no cache to go stale today — this states the requirement
+  // rather than depending on that option staying put.
+  const history = Loaded.strict(
+    Loaded.fromQuery(historyQuery, ["matchHistory"]),
+  );
+  // One fallback instead of two optional chains and two `??`s: the component
+  // was already at the cyclomatic limit, and "absent history" has one shape.
+  const { entries, nextCursor } = Loaded.getOrElse(history, EMPTY_HISTORY);
   const profileSearch = playerProfileSearch(props.filters);
 
   return (
@@ -364,9 +384,9 @@ function ConsumerPlayerProfileContent(props: {
           This is Scout&apos;s stored coverage, not a complete Riot match
           history. Each card identifies the account Scout observed.
         </p>
-        {historyQuery.isPending || historyQuery.isRefetching ? (
+        {history.status === "loading" || historyQuery.isRefetching ? (
           <p className="text-sm text-scout-subtle">Loading games…</p>
-        ) : historyQuery.isError ? (
+        ) : history.status === "error" ? (
           <div className="flex items-center gap-3">
             <p className="text-sm text-scout-danger">
               Match history didn&apos;t load.
@@ -408,16 +428,12 @@ function ConsumerPlayerProfileContent(props: {
                   type="button"
                   size="sm"
                   variant="outline"
-                  disabled={
-                    historyQuery.data.nextCursor === null ||
-                    historyQuery.isFetching
-                  }
+                  disabled={nextCursor === null || history.fetching}
                   onClick={() => {
-                    const next = historyQuery.data.nextCursor;
-                    if (next === null) return;
+                    if (nextCursor === null) return;
                     setHistoryCursors((cursors) => [
                       ...cursors.slice(0, historyPage + 1),
-                      next,
+                      nextCursor,
                     ]);
                     setHistoryPage((page) => page + 1);
                   }}

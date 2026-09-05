@@ -1,8 +1,10 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ErrorState,
   LoadingState,
+  StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { BucksNotificationPreferencesForm } from "#src/components/bucks-notification-preferences-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
@@ -35,10 +37,11 @@ export function BucksSettings() {
     }),
   );
 
-  if (query.isPending) {
+  const value = Loaded.fromQuery(query, ["bucks.settings"]);
+  if (value.status === "loading") {
     return <LoadingState label="Loading your preferences…" />;
   }
-  if (query.isError) {
+  if (value.status === "error") {
     return (
       <ErrorState
         message="Scout couldn't load your Bryan Bucks preferences."
@@ -49,13 +52,16 @@ export function BucksSettings() {
     );
   }
   return (
-    <BucksNotificationPreferencesForm
-      preferences={query.data}
-      pending={mutation.isPending}
-      error={error}
-      onSubmit={(preferences) => {
-        mutation.mutate({ guildId, ...preferences });
-      }}
-    />
+    <>
+      <StaleState errors={value.status === "degraded" ? value.errors : []} />
+      <BucksNotificationPreferencesForm
+        preferences={value.data}
+        pending={mutation.isPending}
+        error={error}
+        onSubmit={(preferences) => {
+          mutation.mutate({ guildId, ...preferences });
+        }}
+      />
+    </>
   );
 }

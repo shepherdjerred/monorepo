@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Loaded } from "@shepherdjerred/loaded";
+import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
+import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -39,11 +38,14 @@ export function ReportList() {
   const [enabledOnly, setEnabledOnly] = useState(true);
 
   const listKey = trpc.report.list.queryKey({ guildId });
-  const reportsQuery = useSuspenseQuery(
-    trpc.report.list.queryOptions(
-      { guildId },
-      { staleTime: STALE_TIME_SLOW_LIST },
+  const reportsValue = Loaded.fromQuery(
+    useQuery(
+      trpc.report.list.queryOptions(
+        { guildId },
+        { staleTime: STALE_TIME_SLOW_LIST },
+      ),
     ),
+    ["report.list"],
   );
   const setEnabledMutation = useMutation(
     trpc.report.setEnabled.mutationOptions({
@@ -54,116 +56,127 @@ export function ReportList() {
     }),
   );
 
-  const reports = reportsQuery.data;
-  const visibleReports = enabledOnly
-    ? reports.filter((report) => report.isEnabled)
-    : reports;
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">Reports</h2>
-        <div className="flex items-center gap-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={enabledOnly ? "default" : "outline"}
-            onClick={() => {
-              setEnabledOnly((prev) => !prev);
-            }}
-          >
-            {enabledOnly ? "Enabled only" : "All"}
-          </Button>
-          {perms.can("reports", "create") && (
-            <Button asChild size="sm">
-              <Link to={`/g/${guildId}/reports/new`}>+ New report</Link>
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {setEnabledMutation.error && (
-        <p className="text-sm text-scout-danger">
-          {setEnabledMutation.error.message}
-        </p>
-      )}
-
-      {reports.length === 0 && (
-        <p className="text-sm text-scout-subtle">
-          No reports yet — click &quot;New report&quot; to get started.
-        </p>
-      )}
-      {reports.length > 0 && visibleReports.length === 0 && (
-        <p className="text-sm text-scout-subtle">
-          All reports are disabled — switch the toggle to &quot;All&quot; to see
-          them.
-        </p>
-      )}
-
-      {visibleReports.length > 0 && (
-        <div className="rounded-md border border-border">
-          <Table>
-            <caption className="sr-only">Scheduled reports</caption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Report</TableHead>
-                <TableHead>Schedule</TableHead>
-                <TableHead>Enabled</TableHead>
-                <TableHead>Last run</TableHead>
-                <TableHead>Source</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleReports.map((report) => (
-                <TableRow key={report.id}>
-                  <TableCell className="font-medium">
-                    <Link
-                      className="underline"
-                      to={`/g/${guildId}/reports/${report.id.toString()}`}
-                    >
-                      {report.title}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-scout-subtle">
-                    {cronLabel(report.cronExpression)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={
-                        report.isSystemManaged ||
-                        !canManageReports ||
-                        setEnabledMutation.isPending
-                      }
-                      onClick={() => {
-                        setEnabledMutation.mutate({
-                          guildId,
-                          reportId: ReportIdSchema.parse(report.id),
-                          isEnabled: !report.isEnabled,
-                        });
-                      }}
-                    >
-                      {report.isEnabled ? "On" : "Off"}
+    <LoadingBlock values={{ reports: reportsValue }}>
+      {({ reports }, meta) => {
+        const visibleReports = enabledOnly
+          ? reports.filter((report) => report.isEnabled)
+          : reports;
+        return (
+          <>
+            <StaleState errors={meta.errors} />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Reports
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={enabledOnly ? "default" : "outline"}
+                    onClick={() => {
+                      setEnabledOnly((prev) => !prev);
+                    }}
+                  >
+                    {enabledOnly ? "Enabled only" : "All"}
+                  </Button>
+                  {perms.can("reports", "create") && (
+                    <Button asChild size="sm">
+                      <Link to={`/g/${guildId}/reports/new`}>+ New report</Link>
                     </Button>
-                  </TableCell>
-                  <TableCell>
-                    <ReportRunStatusBadge status={report.lastRunStatus} />
-                  </TableCell>
-                  <TableCell>
-                    {report.isSystemManaged ? (
-                      <Badge variant="outline">System</Badge>
-                    ) : (
-                      <span className="text-scout-subtle">User</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </div>
+                  )}
+                </div>
+              </div>
+
+              {setEnabledMutation.error && (
+                <p className="text-sm text-scout-danger">
+                  {setEnabledMutation.error.message}
+                </p>
+              )}
+
+              {reports.length === 0 && (
+                <p className="text-sm text-scout-subtle">
+                  No reports yet — click &quot;New report&quot; to get started.
+                </p>
+              )}
+              {reports.length > 0 && visibleReports.length === 0 && (
+                <p className="text-sm text-scout-subtle">
+                  All reports are disabled — switch the toggle to
+                  &quot;All&quot; to see them.
+                </p>
+              )}
+
+              {visibleReports.length > 0 && (
+                <div className="rounded-md border border-border">
+                  <Table>
+                    <caption className="sr-only">Scheduled reports</caption>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Report</TableHead>
+                        <TableHead>Schedule</TableHead>
+                        <TableHead>Enabled</TableHead>
+                        <TableHead>Last run</TableHead>
+                        <TableHead>Source</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visibleReports.map((report) => (
+                        <TableRow key={report.id}>
+                          <TableCell className="font-medium">
+                            <Link
+                              className="underline"
+                              to={`/g/${guildId}/reports/${report.id.toString()}`}
+                            >
+                              {report.title}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-scout-subtle">
+                            {cronLabel(report.cronExpression)}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              disabled={
+                                report.isSystemManaged ||
+                                !canManageReports ||
+                                setEnabledMutation.isPending
+                              }
+                              onClick={() => {
+                                setEnabledMutation.mutate({
+                                  guildId,
+                                  reportId: ReportIdSchema.parse(report.id),
+                                  isEnabled: !report.isEnabled,
+                                });
+                              }}
+                            >
+                              {report.isEnabled ? "On" : "Off"}
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <ReportRunStatusBadge
+                              status={report.lastRunStatus}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            {report.isSystemManaged ? (
+                              <Badge variant="outline">System</Badge>
+                            ) : (
+                              <span className="text-scout-subtle">User</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </>
+        );
+      }}
+    </LoadingBlock>
   );
 }

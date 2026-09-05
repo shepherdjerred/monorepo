@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { Loaded } from "@shepherdjerred/loaded";
 import { useQuery } from "@tanstack/react-query";
 import type { Content, ContentItem } from "#src/model/content";
 import type { Manifest } from "#src/parser/manifest";
@@ -24,10 +25,18 @@ function selectContent(manifest: Manifest): Content {
 }
 
 export type UseContentResult = {
-  content: Content | undefined;
+  /**
+   * The manifest as a renderability state rather than a
+   * `content` / `isLoading` / `error` triple.
+   *
+   * The triple let all three be meaningful at once, and both call sites that
+   * read `error` threw it unconditionally — so a background refetch that
+   * failed while a parsed catalog was still cached blanked the page to the
+   * route error boundary. `Loaded` reports that case as `degraded`: data
+   * present, refresh failed, still renderable.
+   */
+  content: Loaded<Content>;
   itemsByUuid: Map<string, ContentItem>;
-  isLoading: boolean;
-  error: Error | null;
   /** Changes whenever a new manifest payload lands; usable as a cache key. */
   dataUpdatedAt: number;
 };
@@ -55,10 +64,8 @@ export function useContent(): UseContentResult {
   }, [query.data]);
 
   return {
-    content: query.data,
+    content: Loaded.fromQuery(query, ["manifest"]),
     itemsByUuid,
-    isLoading: query.isLoading,
-    error: query.error,
     dataUpdatedAt: query.dataUpdatedAt,
   };
 }
