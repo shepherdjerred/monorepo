@@ -112,9 +112,13 @@ export function applyStreamEvent(
         activity: event.activity,
         trace: event.trace,
         preview: event.preview,
-        // The snapshot carries no chart; keep whatever this client already
-        // received live rather than blanking a chart it is already showing.
-        visualization: turn.visualization,
+        // Cleared, not kept. The snapshot's preview is the newest result, but
+        // the snapshot carries no chart to go with it — so a chart this client
+        // received live may belong to an earlier query. `ExploreTurnResult`
+        // gives a chart precedence over a table, so keeping it would render
+        // query A's chart above query B's numbers. The chart comes back with
+        // the next preview or with `final`.
+        visualization: null,
       };
     }
     case "started": {

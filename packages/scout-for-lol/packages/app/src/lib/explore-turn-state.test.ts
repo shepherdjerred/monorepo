@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   ExploreMessageSchema,
   ReportAiPreviewSummarySchema,
+  VisualizationSnapshotSchema,
   type ExploreMessage,
 } from "@scout-for-lol/data";
 import {
@@ -410,11 +411,13 @@ describe("streamed query results", () => {
     expect(turn.preview?.rowsScanned).toBe(7);
   });
 
-  test("a reconnect restores the table and leaves an existing chart alone", () => {
+  test("a reconnect restores the table and drops a possibly stale chart", () => {
     // The snapshot deliberately carries no visualization — it can be far
-    // larger than the table and the durable observer re-sends the whole
-    // snapshot roughly once a second — so a client that already received one
-    // live must not have it blanked by reconnecting.
+    // larger than the table, and the durable observer re-sends the whole
+    // snapshot roughly once a second. So the chart this client is holding may
+    // belong to an earlier query than the preview the snapshot just brought,
+    // and `ExploreTurnResult` gives a chart precedence over a table: keeping
+    // it would render query A's chart above query B's numbers.
     let turn = applyStreamEvent(startedTurn(), {
       type: "preview",
       preview: PREVIEW,
@@ -434,6 +437,54 @@ describe("streamed query results", () => {
       preview: PREVIEW,
     });
     expect(turn.preview?.rowsScanned).toBe(1284);
+    expect(turn.visualization).toBeNull();
+  });
+
+  test("a reconnect after a second query does not keep the first chart", () => {
+    const chart = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-18T12:00:00.000Z",
+      kind: "line_chart",
+      title: "Games per week",
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [],
+      annotations: [],
+      trends: [],
+    });
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "preview",
+      preview: PREVIEW,
+      visualization: chart,
+    });
+    expect(turn.visualization).not.toBeNull();
+
+    turn = applyStreamEvent(turn, {
+      type: "snapshot",
+      runId: RUN_ID,
+      conversationId: CONVERSATION,
+      questionMessageId: QUESTION_ID,
+      leafIdAtStart: null,
+      versionCountAtStart: 0,
+      startedAt: "2026-08-18T12:00:00.000Z",
+      answer: "Jinx",
+      activity: "Querying match data.",
+      trace: [],
+      preview: { ...PREVIEW, rowsScanned: 7 },
+    });
+
+    // The newest table with no chart, rather than the newest table under the
+    // previous query's chart.
+    expect(turn.preview?.rowsScanned).toBe(7);
     expect(turn.visualization).toBeNull();
   });
 
