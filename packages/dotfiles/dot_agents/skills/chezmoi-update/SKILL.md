@@ -1,10 +1,6 @@
 ---
 name: chezmoi-update
-description: >
-  This skill should be used when the user asks to "update chezmoi", "sync dotfiles",
-  "match live state", "match repo state", "chezmoi re-add", "chezmoi diff fix",
-  "chezmoi apply", or mentions chezmoi source/live discrepancies, divergence between
-  dotfiles repo and filesystem, or wants to reconcile chezmoi state in either direction.
+description: "This skill should be used when the user asks to \"update chezmoi\", \"sync dotfiles\", \"match live state\", \"match repo…"
 ---
 
 # Chezmoi Update — Syncing Source and Live State

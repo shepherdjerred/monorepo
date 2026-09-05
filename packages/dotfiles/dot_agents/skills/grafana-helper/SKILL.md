@@ -1,6 +1,6 @@
 ---
 name: grafana-helper
-description: Use Grafana's GCX CLI for dashboards, datasources, Prometheus metrics, Loki logs, Tempo traces, alert rules, and Grafana resource operations. Trigger for Grafana, GCX, dashboards, PromQL, LogQL, metrics, logs, traces, Tempo, alert rules, or observability investigations.
+description: "Use Grafana's GCX CLI for dashboards, datasources, Prometheus metrics, Loki logs, Tempo traces, alert rules, and…"
 ---
 
 # Grafana with GCX

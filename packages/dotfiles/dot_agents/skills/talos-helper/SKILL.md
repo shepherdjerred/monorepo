@@ -1,8 +1,6 @@
 ---
 name: talos-helper
-description: |
-  Talos Linux cluster administration using talosctl
-  When user mentions Talos, talosctl, or Talos cluster operations
+description: "Talos Linux cluster administration using talosctl When user mentions Talos, talosctl, or Talos cluster operations"
 ---
 
 # Talos Helper Agent

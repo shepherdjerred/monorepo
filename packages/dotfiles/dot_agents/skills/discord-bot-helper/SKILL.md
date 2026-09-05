@@ -1,8 +1,6 @@
 ---
 name: discord-bot-helper
-description: |
-  Discord.js v14 for building Discord bots - slash commands, events, components, embeds, and permissions
-  When user works with Discord bots, discord.js, slash commands, Discord API, or mentions discord.js patterns
+description: "Discord.js v14 for building Discord bots - slash commands, events, components, embeds, and permissions When user…"
 ---
 
 # Discord Bot Helper Agent

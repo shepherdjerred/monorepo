@@ -30,6 +30,10 @@ function isGuidancePath(
     entryPath === ".claude/skills" ||
     entryPath.includes("/.cursor/rules/") ||
     entryPath.startsWith(".cursor/rules/") ||
+    entryPath.includes("/dot_cursor/rules/") ||
+    entryPath.startsWith("dot_cursor/rules/") ||
+    entryPath.includes("/private_dot_cursor/rules/") ||
+    entryPath.startsWith("private_dot_cursor/rules/") ||
     entryPath.startsWith(".claude/skills/") ||
     entryPath.startsWith(".cursor/skills/") ||
     entryPath.startsWith(".opencode/skills/") ||

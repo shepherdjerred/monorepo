@@ -1,10 +1,6 @@
 ---
 name: apple-hig-helper
-description: |
-  Apple Human Interface Guidelines - comprehensive design guidance for iOS,
-  macOS, visionOS, watchOS, tvOS, and Apple technologies with summaries of 174
-  topics. Use when the user asks about Apple design guidelines, HIG,
-  platform UI patterns, Apple UI components, or accessibility guidance.
+description: "Apple Human Interface Guidelines - comprehensive design guidance for iOS, macOS, visionOS, watchOS, tvOS, and…"
 ---
 
 # Apple Human Interface Guidelines (HIG) Helper

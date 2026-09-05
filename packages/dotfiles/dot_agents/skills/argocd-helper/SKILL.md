@@ -1,6 +1,6 @@
 ---
 name: argocd-helper
-description: Inspect, configure, and troubleshoot Argo CD Applications, syncs, health, diffs, projects, repositories, ApplicationSets, and notifications. Use for generic Argo CD GitOps work; load the repository homelab skill for local release policy.
+description: "Inspect, configure, and troubleshoot Argo CD Applications, syncs, health, diffs, projects, repositories,…"
 ---
 
 # Argo CD helper

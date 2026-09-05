@@ -32,7 +32,7 @@ new abstraction without repeated need.
 Run focused checks from the homelab package. Typical coverage includes:
 
 ```bash
-bunx turbo run build typecheck test lint --filter=@shepherdjerred/homelab
+bunx turbo run build typecheck test lint --filter=homelab
 bun run --cwd packages/homelab/src/cdk8s check:1password
 bun run --cwd packages/homelab lint:tofu
 ```

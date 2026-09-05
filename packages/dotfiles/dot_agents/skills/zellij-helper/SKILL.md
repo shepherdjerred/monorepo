@@ -1,6 +1,6 @@
 ---
 name: zellij-helper
-description: Current Zellij session, pane, tab, layout, KDL, CLI automation, plugin, resurrection, and web-client guidance. Use when configuring Zellij, scripting sessions, building layouts/plugins, or diagnosing Zellij CLI behavior.
+description: "Current Zellij session, pane, tab, layout, KDL, CLI automation, plugin, resurrection, and web-client guidance. Use…"
 ---
 
 # Zellij Helper

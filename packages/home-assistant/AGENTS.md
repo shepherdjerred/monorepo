@@ -13,7 +13,6 @@ WebSocket APIs. `README.md` owns the public API and codegen reference.
   live-instance acceptance as separate checks.
 
 ```bash
-bun run build
 bun run typecheck
 bun run test
 bun run lint

@@ -1,6 +1,6 @@
 ---
 name: reflect
-description: Audit agent behavior and configuration when the user asks to reflect on a conversation, improve agent instructions, optimize an agent setup, or review AGENTS.md, skills, hooks, MCPs, or permissions.
+description: "Audit agent behavior and configuration when the user asks to reflect on a conversation, improve agent…"
 ---
 
 # Reflect on agent configuration

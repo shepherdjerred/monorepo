@@ -39,7 +39,6 @@ reference; the Temporal wiki explains workflow families and boundaries. Load
 
 ```bash
 TEMPORAL_NAMESPACE=dev TEMPORAL_WORKER_ROLE=all bun run start
-bun run build
 bun run typecheck
 bun run test
 bun run lint

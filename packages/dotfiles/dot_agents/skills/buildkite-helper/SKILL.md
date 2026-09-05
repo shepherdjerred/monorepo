@@ -1,6 +1,6 @@
 ---
 name: buildkite-helper
-description: Design, inspect, and troubleshoot Buildkite pipelines, steps, agents, plugins, retries, artifacts, APIs, and Kubernetes-hosted runners. Use for generic Buildkite configuration or operations; load a repository delivery skill for local CI policy.
+description: "Design, inspect, and troubleshoot Buildkite pipelines, steps, agents, plugins, retries, artifacts, APIs, and…"
 ---
 
 # Buildkite helper

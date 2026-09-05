@@ -50,6 +50,9 @@ const CLIENT_SKILL_DIRECTORIES = new Set([
   "private_dot_cursor",
   "private_dot_opencode",
 ]);
+const GEMINI_SKILL_DIRECTORIES = new Set(["dot_gemini", "private_dot_gemini"]);
+const CURSOR_ADAPTER_PATH =
+  "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc";
 
 const REQUIRED_SOURCE_ADAPTERS = new Map([
   ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
@@ -98,6 +101,10 @@ export function claudeCompatibilityPath(agentPath: string): string {
 }
 
 function catalogRoot(entryPath: string): string | undefined {
+  const personalMarker = "packages/dotfiles/dot_agents/skills/";
+  if (entryPath.startsWith(personalMarker)) {
+    return "packages/dotfiles/dot_agents/skills";
+  }
   const marker = "/.agents/skills/";
   if (entryPath.startsWith(".agents/skills/")) return ".agents/skills";
   const index = entryPath.indexOf(marker);
@@ -264,7 +271,10 @@ function validateClientSpecificEntry(
   const parts = entry.path.split("/");
   const clientSkillCopy = parts.some(
     (part, index) =>
-      CLIENT_SKILL_DIRECTORIES.has(part) && parts[index + 1] === "skills",
+      (CLIENT_SKILL_DIRECTORIES.has(part) && parts[index + 1] === "skills") ||
+      (GEMINI_SKILL_DIRECTORIES.has(part) &&
+        parts[index + 1] === "config" &&
+        parts[index + 2] === "skills"),
   );
   if (clientSkillCopy) {
     violations.push({
@@ -275,8 +285,13 @@ function validateClientSpecificEntry(
   }
 
   if (
-    entry.path.startsWith(".cursor/rules/") ||
-    entry.path.includes("/.cursor/rules/")
+    (entry.path.startsWith(".cursor/rules/") ||
+      entry.path.includes("/.cursor/rules/") ||
+      entry.path.startsWith("dot_cursor/rules/") ||
+      entry.path.includes("/dot_cursor/rules/") ||
+      entry.path.startsWith("private_dot_cursor/rules/") ||
+      entry.path.includes("/private_dot_cursor/rules/")) &&
+    entry.path !== CURSOR_ADAPTER_PATH
   ) {
     violations.push({
       rule: "repository-cursor-rule",

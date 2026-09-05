@@ -1,6 +1,6 @@
 ---
 name: rust-helper
-description: Current Rust and Cargo development guidance for workspaces, editions, MSRV, testing, Clippy, rustfmt, unsafe code, debugging, and toolchains. Use when writing or reviewing Rust, Cargo manifests, Rust CI, edition migrations, or unsafe boundaries.
+description: "Current Rust and Cargo development guidance for workspaces, editions, MSRV, testing, Clippy, rustfmt, unsafe code,…"
 ---
 
 # Rust Helper

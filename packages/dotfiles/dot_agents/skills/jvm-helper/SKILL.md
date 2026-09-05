@@ -1,6 +1,6 @@
 ---
 name: jvm-helper
-description: Current Java, Kotlin, Gradle, Maven, JUnit, JVM diagnostics, packaging, and performance guidance. Use when writing or reviewing Java or Kotlin, build files, JVM tests, concurrency, GraalVM Native Image, jlink/jpackage, or JVM tuning.
+description: "Current Java, Kotlin, Gradle, Maven, JUnit, JVM diagnostics, packaging, and performance guidance. Use when writing…"
 ---
 
 # JVM Helper

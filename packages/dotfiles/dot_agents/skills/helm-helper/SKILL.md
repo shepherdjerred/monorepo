@@ -1,8 +1,6 @@
 ---
 name: helm-helper
-description: |
-  Helm chart management for Kubernetes deployments
-  When user mentions Helm, charts, helm commands, values, releases, or Kubernetes packaging
+description: "Helm chart management for Kubernetes deployments When user mentions Helm, charts, helm commands, values, releases,…"
 ---
 
 # Helm Helper Agent

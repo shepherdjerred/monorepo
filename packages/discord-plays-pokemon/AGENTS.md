@@ -24,7 +24,7 @@ benchmark reference.
 bun run typecheck
 bun run test
 bun run lint
-bun run smoke
+bun run --cwd packages/discord-plays-pokemon/packages/backend smoke
 ```
 
 Run a real-model goal benchmark only when requested and credentials are already

@@ -1,10 +1,6 @@
 ---
 name: xstate-helper
-description: |
-  XState v5 state machines, statecharts, and the actor model for complex, event-driven application logic.
-  When user works with XState, state machines, statecharts, actors, createMachine/setup, createActor,
-  @xstate/react, @xstate/store, useMachine/useActor/useSelector, invoke/spawn, guards/actions/assign,
-  or needs to model complex async flows, wizards, and event-driven state.
+description: "XState v5 state machines, statecharts, and the actor model for complex, event-driven application logic. When user…"
 ---
 
 # XState Helper Agent

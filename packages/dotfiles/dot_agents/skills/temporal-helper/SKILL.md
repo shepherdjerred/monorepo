@@ -1,6 +1,6 @@
 ---
 name: temporal-helper
-description: Design, test, deploy, debug, and operate Temporal Workflows, Activities, Workers, task queues, Schedules, messaging, retries, versioning, replay, and observability. Use for generic Temporal concepts or SDK work; load a repository Temporal skill for local queues and rollout policy.
+description: "Design, test, deploy, debug, and operate Temporal Workflows, Activities, Workers, task queues, Schedules,…"
 ---
 
 # Temporal helper

@@ -1,6 +1,6 @@
 ---
 name: terraform-provider-development
-description: Build, extend, test, document, and migrate Terraform providers with the Plugin Framework. Use when scaffolding a provider, implementing provider configuration, resources, data sources, actions, documentation, imports, acceptance tests, or SDKv2-to-Framework migrations.
+description: "Build, extend, test, document, and migrate Terraform providers with the Plugin Framework. Use when scaffolding a…"
 license: MPL-2.0
 ---
 

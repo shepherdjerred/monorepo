@@ -15,7 +15,6 @@ owns the data format and provenance.
 ```bash
 bun run build
 bun run typecheck
-bun run test
 bun run lint
 ```
 

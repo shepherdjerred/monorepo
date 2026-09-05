@@ -230,12 +230,30 @@ describe("agent guidance guard", () => {
         "packages/dotfiles/private_dot_cursor/skills/cursor-copy/SKILL.md",
         "cursor-copy",
       ),
+      skill(
+        "packages/dotfiles/dot_gemini/config/skills/gemini-copy/SKILL.md",
+        "gemini-copy",
+      ),
     );
     const found = rules(entries);
     expect(found).toEqual(expect.arrayContaining(["repository-cursor-rule"]));
     expect(
       found.filter((rule) => rule === "duplicate-client-skill"),
-    ).toHaveLength(3);
+    ).toHaveLength(4);
+  });
+
+  test("rejects an oversized personal skill catalog", () => {
+    const entries = validFixture();
+    for (let index = 0; index < 9; index += 1) {
+      entries.push(
+        skill(
+          `packages/dotfiles/dot_agents/skills/personal-${index.toString()}/SKILL.md`,
+          `personal-${index.toString()}`,
+          "x".repeat(1000),
+        ),
+      );
+    }
+    expect(rules(entries)).toContain("skill-catalog-bytes");
   });
 
   test("ignores archived sandbox guidance", () => {

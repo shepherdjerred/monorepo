@@ -1,8 +1,6 @@
 ---
 name: terminal-concepts
-description: |
-  Comprehensive guide for building CLI and TUI applications - terminal internals, design principles, and battle-tested patterns
-  When building CLI/TUI apps, implementing argument parsing, handling terminal input/output, escape codes, buffering, signals, or asking about terminal development concepts
+description: "Comprehensive guide for building CLI and TUI applications - terminal internals, design principles, and…"
 ---
 
 # Terminal Concepts for Developers

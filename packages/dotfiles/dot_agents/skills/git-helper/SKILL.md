@@ -1,6 +1,6 @@
 ---
 name: git-helper
-description: Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, worktrees, configuration, maintenance, and repository troubleshooting. Use for Git commands and diagnosis; load the repository's owning stack or branching skill before branch or PR mutations.
+description: "Safe, current Git operations for inspection, commits, history, recovery, merging, rebasing, worktrees,…"
 ---
 
 # Git Helper

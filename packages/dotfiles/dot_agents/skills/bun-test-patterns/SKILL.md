@@ -1,6 +1,6 @@
 ---
 name: bun-test-patterns
-description: Current Bun test runner guidance for discovery, isolation, parallelism, sharding, changed tests, mocks, timers, snapshots, coverage, DOM Testing Library, and integration teardown. Use when writing, reviewing, or configuring tests run by `bun test`.
+description: "Current Bun test runner guidance for discovery, isolation, parallelism, sharding, changed tests, mocks, timers,…"
 ---
 
 # Bun Test Patterns

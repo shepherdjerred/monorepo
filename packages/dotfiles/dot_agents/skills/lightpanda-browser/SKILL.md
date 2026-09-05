@@ -1,8 +1,6 @@
 ---
 name: lightpanda-browser
-description: |
-  Lightpanda headless browser CLI for fast web content extraction, searching, and fetching
-  When browsing the web, fetching URLs, searching the web, extracting web page content, or needing rendered HTML from a URL
+description: "Lightpanda headless browser CLI for fast web content extraction, searching, and fetching When browsing the web,…"
 ---
 
 # Lightpanda Browser
