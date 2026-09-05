@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import path from "node:path";
 import { loadSpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 
-const ASSETS_DIR = path.join(import.meta.dir, "..", "assets", "voice");
+const ASSETS_DIR = path.join(import.meta.dir, "..", "..", "assets", "voice");
 
 describe("spoken feedback clips", () => {
   test("the committed clips are valid 24 kHz mono PCM16 and non-trivial", async () => {
