@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -41,12 +42,20 @@ export function CompetitionList() {
     ),
   );
 
+  const competitionsValue = Loaded.fromQuery(competitionsQuery, [
+    "competition.list",
+  ]);
+
   if (guildId === undefined) {
     return <p className="text-sm text-scout-danger">Missing guild id</p>;
   }
 
-  const competitions =
-    competitionsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const competitions = Loaded.getOrElse(
+    Loaded.map(competitionsValue, (data) =>
+      data.pages.flatMap((page) => page.items),
+    ),
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -73,16 +82,17 @@ export function CompetitionList() {
         </div>
       </div>
 
-      {competitionsQuery.isLoading && (
+      {competitionsValue.status === "loading" && (
         <p className="text-sm text-scout-subtle">Loading competitions…</p>
       )}
-      {competitionsQuery.error && (
+      {(competitionsValue.status === "error" ||
+        competitionsValue.status === "degraded") && (
         <p className="text-sm text-scout-danger">
-          Failed to load: {competitionsQuery.error.message}
+          Failed to load: {Loaded.messageOf(competitionsValue.errors[0].error)}
         </p>
       )}
 
-      {competitionsQuery.data && competitions.length === 0 && (
+      {competitionsValue.status !== "loading" && competitions.length === 0 && (
         <p className="text-sm text-scout-subtle">
           No competitions yet — click &quot;New competition&quot; to get
           started.

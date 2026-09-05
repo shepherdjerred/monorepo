@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Compass, Settings } from "lucide-react";
@@ -30,8 +31,16 @@ export function GuildPicker() {
     exploreAvailable: exploreQuery.data?.enabled === true,
     profilesAvailable: profilesQuery.data?.state === "available",
   });
-  const memberPending = exploreQuery.isPending || profilesQuery.isPending;
-  const memberError = exploreQuery.isError || profilesQuery.isError;
+  // Both checks answer one question — can this visitor use the member card —
+  // so they are joined rather than ORed field by field. `error` here means
+  // neither check produced an answer; if one succeeded and the other's refresh
+  // failed, the join is `degraded` and the card stays usable.
+  const member = Loaded.all({
+    explore: Loaded.fromQuery(exploreQuery, ["explore.status"]),
+    profiles: Loaded.fromQuery(profilesQuery, ["consumerPlayer.status"]),
+  });
+  const memberPending = member.status === "loading";
+  const memberError = member.status === "error";
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
