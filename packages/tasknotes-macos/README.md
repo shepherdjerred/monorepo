@@ -61,5 +61,6 @@ flows with the one preflight-discovered Apple Development certificate. The
 root lefthook `pre-commit` hook still runs the fast local subset, and
 `mac:verify` remains the focused pre-PR command.
 
-See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes, including the
-host-layer contract, threading rules, and release procedure.
+See [AGENTS.md](AGENTS.md) for the host/threading invariants that must remain in
+context. The architecture and command reference live on this page; the release
+implementation is in `scripts/release.ts`.

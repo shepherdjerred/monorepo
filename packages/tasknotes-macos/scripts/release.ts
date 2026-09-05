@@ -27,8 +27,8 @@
 // ## What this script will not do
 //
 // It never writes a credential to disk. Notarization authenticates through
-// `xcrun notarytool --keychain-profile`, which the operator stores once (see
-// `AGENTS.md` › Releasing), and that keychain profile is the only credential
+// `xcrun notarytool --keychain-profile`, which the operator creates once with
+// `notarytool store-credentials`; that keychain profile is the only credential
 // the lane touches.
 //
 // ## Usage

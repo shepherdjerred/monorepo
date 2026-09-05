@@ -42,7 +42,7 @@ export const scoutShowcaseRefreshActivities = {
    * agent). A NoSuchKey failure means an S3 object the manifest references is
    * gone — the scout-image-gc showcase exemption should prevent that; if it
    * fires anyway, re-curate the manifest with
-   * scripts/discover-marketing-showcase.ts (see scout AGENTS.md).
+   * packages/scout-for-lol/scripts/discover-marketing-showcase.ts.
    */
   async refreshScoutShowcase(): Promise<ScoutShowcaseRefreshResult> {
     const start = Date.now();

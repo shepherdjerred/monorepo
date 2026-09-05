@@ -86,9 +86,8 @@ putting the encyclopedia in every prompt. Knowledge is advisory; live
 for repeatable real-model catch measurements. It requires an immutable
 131,072-byte Emerald flash save (`--save`), a built `pokeemerald.wasm`
 (`--wasm`), and a nonexistent output directory (`--output`); it refuses dirty
-Git worktrees and never overwrites existing results. See
-[AGENTS.md](AGENTS.md) and the `pokemon-goal-benchmark` skill for the complete
-workflow.
+Git worktrees and never overwrites existing results. Read the package-local
+`pokemon-goal-benchmark` skill for the benchmark workflow.
 
 ## Deployment
 
