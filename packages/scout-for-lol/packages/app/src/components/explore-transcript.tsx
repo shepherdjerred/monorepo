@@ -39,6 +39,8 @@ export function ExploreTranscript(props: {
   pendingAnswer?: string | null;
   pendingQuestion?: string | null;
   activity?: string | null;
+  /** The status describes a deliberate stop, not work still in flight. */
+  stopping?: boolean;
   pendingTrace?: ExploreTraceEntry[];
   /** True while a turn is running, so a trailing question is not "interrupted". */
   turnActive?: boolean;
@@ -86,6 +88,7 @@ export function ExploreTranscript(props: {
         pendingQuestion={props.pendingQuestion ?? null}
         pendingAnswer={props.pendingAnswer ?? null}
         activity={props.activity ?? null}
+        stopping={props.stopping ?? false}
         trace={props.pendingTrace ?? []}
         showRawTrace={props.showRawTrace ?? false}
       />
@@ -148,6 +151,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
   pendingQuestion: string | null;
   pendingAnswer: string | null;
   activity: string | null;
+  stopping: boolean;
   trace: ExploreTraceEntry[];
   showRawTrace: boolean;
 }) {
@@ -158,8 +162,15 @@ const PendingTurn = memo(function PendingTurnView(props: {
    * Without this the last tool's completion message ("Got results.") keeps
    * pulsing and counting for the whole of answer generation, presenting a
    * finished step as ongoing work and timing it from the wrong moment.
+   *
+   * Stopping is the exception, and the reason this is not simply "hide it once
+   * there is prose": a stop only ever salvages a turn that already streamed
+   * something, so "Stopped — saving the partial answer…" arrives precisely
+   * when prose exists. Hiding it there leaves the reader watching a frozen
+   * answer with nothing to say the stop is still landing.
    */
-  const activity = props.pendingAnswer === null ? props.activity : null;
+  const activity =
+    props.pendingAnswer === null || props.stopping ? props.activity : null;
   return (
     <div aria-live="polite" className="space-y-6">
       {props.pendingQuestion !== null && (

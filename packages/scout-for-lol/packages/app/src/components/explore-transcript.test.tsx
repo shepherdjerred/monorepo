@@ -391,3 +391,32 @@ describe("Explore Dare transcript cards", () => {
     expect(withoutError).toContain("Answer it");
   });
 });
+
+describe("Explore stop feedback", () => {
+  test("keeps the stopping status visible over a partial answer", () => {
+    // A stop only salvages a turn that already streamed something, so the
+    // "saving" status arrives exactly when prose exists. Hiding the status
+    // line whenever there is prose left the reader watching a frozen answer
+    // with nothing to say the stop was still landing.
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[]}
+        pendingAnswer="Jinx so far"
+        activity="Stopped — saving the partial answer…"
+        stopping
+      />,
+    );
+    expect(markup).toContain("Stopped — saving the partial answer…");
+  });
+
+  test("still hides a finished tool's status once prose arrives", () => {
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[]}
+        pendingAnswer="Jinx so far"
+        activity="Got results."
+      />,
+    );
+    expect(markup).not.toContain("Got results.");
+  });
+});
