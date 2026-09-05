@@ -1,7 +1,7 @@
 import {
-  ExploreStreamEventSchema,
   ExploreTranscriptSchema,
   ExploreRunObserveRequestSchema,
+  parseExploreStreamEvent,
   type ExploreStreamEvent,
   type ExploreTranscript,
 } from "@scout-for-lol/data";
@@ -19,7 +19,7 @@ export async function observeExploreRun(params: {
     body: ExploreRunObserveRequestSchema.parse({ runId: params.runId }),
     signal: params.signal,
     csrfToken: readCsrfCookie(),
-    parseEvent: (raw) => ExploreStreamEventSchema.parse(raw),
+    parseEvent: parseExploreStreamEvent,
     onEvent: params.onEvent,
     httpErrorMessage: (response, text) =>
       httpErrorMessage(response, text, "Explore request failed"),

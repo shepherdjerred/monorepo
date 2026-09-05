@@ -234,6 +234,13 @@ export function visiblePending(
   pendingQuestion: string | null;
   pendingAnswer: string | null;
   activity: string | null;
+  /**
+   * Whether the status describes a deliberate stop rather than work in
+   * flight. The transcript hides the status line once prose is arriving — a
+   * finished step must not keep pulsing — but stopping is exactly the case
+   * where prose exists *and* something is still happening.
+   */
+  stopping: boolean;
   trace: ExploreTraceEntry[];
 } {
   if (turn === null) {
@@ -241,6 +248,7 @@ export function visiblePending(
       pendingQuestion: null,
       pendingAnswer: null,
       activity: null,
+      stopping: false,
       trace: [],
     };
   }
@@ -249,6 +257,7 @@ export function visiblePending(
       pendingQuestion: null,
       pendingAnswer: null,
       activity: null,
+      stopping: false,
       trace: [],
     };
   }
@@ -261,6 +270,7 @@ export function visiblePending(
     pendingQuestion: questionPersisted ? null : turn.question,
     pendingAnswer: landed ? null : turn.answer,
     activity: landed ? null : turn.activity,
+    stopping: !landed && turn.phase === "stopping",
     trace: landed ? [] : turn.trace,
   };
 }

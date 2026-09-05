@@ -176,6 +176,7 @@ export function Explore() {
     pendingQuestion,
     pendingAnswer,
     activity,
+    stopping,
     trace: pendingTrace,
   } = visiblePending(pendingTurn, conversationId, messages);
 
@@ -285,6 +286,7 @@ export function Explore() {
           pendingQuestion={pendingQuestion}
           pendingAnswer={pendingAnswer}
           activity={activity}
+          stopping={stopping}
           pendingTrace={pendingTrace}
           turnActive={turnActive}
           showRawTrace
