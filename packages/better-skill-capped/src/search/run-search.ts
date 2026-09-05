@@ -73,13 +73,13 @@ const BOOSTS = {
 // Orama caps facet values at 10 by default; every real cardinality here is
 // known (173 champions, ~25 coaches, ~100 tags).
 const FACETS_CONFIG = {
-  kind: { limit: 3 },
-  role: { limit: 6 },
-  yourChampion: { limit: 200 },
+  kind: { limit: 5 },
+  role: { limit: 10 },
+  yourChampion: { limit: 250 },
   staff: { limit: 50 },
   tags: { limit: 150 },
-  carry: { limit: 3 },
-  commentaryType: { limit: 5 },
+  carry: { limit: 10 },
+  commentaryType: { limit: 10 },
 };
 
 type EnumInClause = { in: string[] };
@@ -145,7 +145,16 @@ function passesUserState(
 function extractFacets(results: Results<SearchDoc>): SearchRunResult["facets"] {
   const read = (field: keyof typeof FACETS_CONFIG): FacetCounts => {
     const facet = results.facets?.[field];
-    return facet === undefined ? {} : { ...facet.values };
+    if (facet === undefined) {
+      return {};
+    }
+    const values: FacetCounts = {};
+    for (const [key, valueCount] of Object.entries(facet.values)) {
+      if (key !== "") {
+        values[key] = valueCount;
+      }
+    }
+    return values;
   };
   return {
     kind: read("kind"),
