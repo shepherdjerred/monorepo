@@ -25,6 +25,37 @@ export type AuditDetail = Pick<
 >;
 
 /**
+ * Insert a mutation's audit row inside a transaction the caller already owns.
+ *
+ * Split out of {@link runAuditedMutation} because not every audited mutation
+ * gets to open its own transaction: confirming a prepared confirmation intent
+ * has to make the single-use claim the *first* statement of the transaction
+ * (that guarded write is the entire double-spend guard), so the claim helper
+ * owns the transaction and this records the audit row into it. Both callers
+ * share one mapping from ctx to audit row rather than restating it.
+ *
+ * A `null` detail records nothing, e.g. when the mutation was a no-op.
+ */
+export async function recordMutationAudit(params: {
+  ctx: AuditedMutationCtx;
+  guildId: string;
+  tx: Db;
+  detail: AuditDetail | null;
+}): Promise<void> {
+  if (params.detail === null) return;
+  await recordAudit(
+    {
+      ...params.detail,
+      actorDiscordId: params.ctx.user.discordId,
+      serverId: params.guildId,
+      ipAddress: params.ctx.webSession.ipAddress,
+      userAgent: params.ctx.webSession.userAgent,
+    },
+    params.tx,
+  );
+}
+
+/**
  * Run a state-changing domain mutation and its audit-row insert inside a
  * single Prisma transaction so they commit atomically — either both land or
  * neither does.
@@ -43,19 +74,7 @@ export async function runAuditedMutation<TResult>(
 ): Promise<TResult> {
   return prisma.$transaction(async (tx) => {
     const result = await run(tx);
-    const detail = audit(result);
-    if (detail !== null) {
-      await recordAudit(
-        {
-          ...detail,
-          actorDiscordId: ctx.user.discordId,
-          serverId: guildId,
-          ipAddress: ctx.webSession.ipAddress,
-          userAgent: ctx.webSession.userAgent,
-        },
-        tx,
-      );
-    }
+    await recordMutationAudit({ ctx, guildId, tx, detail: audit(result) });
     return result;
   });
 }

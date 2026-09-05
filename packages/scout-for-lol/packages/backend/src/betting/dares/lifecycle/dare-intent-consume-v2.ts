@@ -2,6 +2,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   type ConfirmationIntentPayload,
+  type DareIntentPayload,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -31,7 +32,33 @@ type IntentAccount = { id: number } | undefined;
 /** The dare an intent acts on, together with the revision it was minted for. */
 type DareIntentTarget = { dareId: number; revision: number };
 
-function needsFeature(payload: ConfirmationIntentPayload): boolean {
+/**
+ * Narrow a stored payload to a dare payload, or `null` for a creation intent.
+ *
+ * Creation intents live on the same table and have their own confirm procedure
+ * with its own gate and its own RBAC; this one must refuse them rather than
+ * fall through to the contribute branch.
+ */
+function asDarePayload(
+  payload: ConfirmationIntentPayload,
+): DareIntentPayload | null {
+  switch (payload.kind) {
+    case "dare_fund":
+    case "dare_accept":
+    case "dare_decline":
+    case "dare_contribute":
+    case "dare_cancel": {
+      return payload;
+    }
+    case "report":
+    case "subscription":
+    case "competition": {
+      return null;
+    }
+  }
+}
+
+function needsFeature(payload: DareIntentPayload): boolean {
   return (
     payload.kind === "dare_fund" ||
     payload.kind === "dare_accept" ||
@@ -39,7 +66,7 @@ function needsFeature(payload: ConfirmationIntentPayload): boolean {
   );
 }
 
-function needsAccount(payload: ConfirmationIntentPayload): boolean {
+function needsAccount(payload: DareIntentPayload): boolean {
   return (
     payload.kind === "dare_fund" ||
     payload.kind === "dare_accept" ||
@@ -67,7 +94,7 @@ async function executeAction(
   input: {
     target: DareIntentTarget;
     actorDiscordId: DiscordAccountId;
-    payload: ConfirmationIntentPayload;
+    payload: DareIntentPayload;
     account: IntentAccount;
     now: Date;
   },
@@ -130,7 +157,7 @@ async function insufficientOutcome(
   input: {
     error: unknown;
     account: IntentAccount;
-    payload: ConfirmationIntentPayload;
+    payload: DareIntentPayload;
     target: DareIntentTarget;
   },
   dependencies: DareV2Dependencies,
@@ -175,7 +202,10 @@ export async function consumeDareV2ConfirmationIntent(
   if (intent.actorDiscordId !== input.actorDiscordId) {
     return { kind: "forbidden" } as const;
   }
-  const payload = readConfirmationIntentPayload(intent);
+  const payload = asDarePayload(readConfirmationIntentPayload(intent));
+  if (payload === null) {
+    return { kind: "not_found" } as const;
+  }
   if (intent.consumedAt !== null) {
     return {
       kind: "already_consumed",
