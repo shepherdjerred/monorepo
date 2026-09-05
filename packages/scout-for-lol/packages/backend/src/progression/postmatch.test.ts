@@ -22,6 +22,10 @@ const mocks = vi.hoisted(() => {
     queuePreparedChallengeRuns: vi.fn(async () => {
       calls.push("queue");
     }),
+    duelMatchNeedsTimeline: vi.fn(async () => false),
+    processDuelResult: vi.fn(async () => {
+      calls.push("duel");
+    }),
   };
 });
 
@@ -39,6 +43,10 @@ vi.mock("#src/progression/challenges/postmatch.ts", () => ({
 vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
   fetchTimelineForProgression: mocks.fetchTimelineForProgression,
   persistTimelineForProgression: vi.fn(),
+}));
+vi.mock("#src/progression/duels/results.ts", () => ({
+  duelMatchNeedsTimeline: mocks.duelMatchNeedsTimeline,
+  processDuelResult: mocks.processDuelResult,
 }));
 
 const { processCompetitiveProgressionMatch } =
@@ -86,6 +94,7 @@ describe("competitive progression post-match ordering", () => {
     });
 
     expect(mocks.calls).toEqual([
+      "duel",
       "hall",
       "prepare",
       "fetch-timeline",
