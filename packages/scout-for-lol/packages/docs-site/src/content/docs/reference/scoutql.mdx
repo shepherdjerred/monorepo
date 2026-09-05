@@ -66,8 +66,8 @@ ambiguity:
 - `dare_target('T1')` binds the frozen accounts for target `T1`.
 - `dare_rate('T1', 'cs_per_minute')` computes a supported participant rate.
 - `dare_related_participant_count(...)` expresses ally or opponent context.
-- `dare_timeline_event_count(...)` counts covered timeline evidence, including
-  optional roles, time bounds, and item IDs.
+- `dare_timeline_event_count(...)` counts covered timeline evidence. Its
+  arguments are positional and documented below.
 - `dare_matching_games(...)` and `dare_aggregate(...)` produce the final
   three-valued `achieved` result from bounded game sets.
 
@@ -84,6 +84,56 @@ also stores the immutable DuckDB AST and its SHA-256 plan hash; activation copie
 those artifacts into the funded contract, and settlement records the same
 identity in evidence rows and the final proof. Compiler v1 contracts remain
 readable so funded work never depends on a rollout flag or migration rewrite.
+
+### Counting timeline events
+
+```text
+dare_timeline_event_count(
+  event_type,    -- required, e.g. 'CHAMPION_KILL' or 'ELITE_MONSTER_KILL'
+  target,        -- a bound target key, or NULL for the whole match
+  role,          -- 'subject', 'killer', 'victim', 'assist', 'creator', or NULL
+  after_ms,      -- count only events at or after this game timestamp, or NULL
+  before_ms,     -- count only events at or before this game timestamp, or NULL
+  item_id,       -- restrict to one item, or NULL
+  monster_type,  -- narrows ELITE_MONSTER_KILL, or NULL
+  building_type  -- narrows BUILDING_KILL, or NULL
+)
+```
+
+`monster_type` and `building_type` are the two newest arguments and are
+**appended** rather than inserted. The macro is positional, so moving an
+existing argument would change the canonical text of every stored contract and
+break its plan-hash round trip.
+
+They exist because the event type alone cannot tell one objective from another:
+every elite monster is an `ELITE_MONSTER_KILL` and every structure a
+`BUILDING_KILL`, so before these arguments a dragon dare and a baron dare
+compiled to the same predicate.
+
+| Argument        | Accepted values                                            |
+| --------------- | ---------------------------------------------------------- |
+| `monster_type`  | `ATAKHAN`, `BARON_NASHOR`, `DRAGON`, `HORDE`, `RIFTHERALD` |
+| `building_type` | `INHIBITOR_BUILDING`, `TOWER_BUILDING`                     |
+
+Three rules are enforced when a contract is authored, and each of them exists
+because breaking it produces a predicate that counts zero — or counts the wrong
+side — rather than an error:
+
+- A narrowing must match its event type. `monster_type` applies only to
+  `ELITE_MONSTER_KILL` and `building_type` only to `BUILDING_KILL`; Riot leaves
+  the other column empty on every other event, so a mismatched pair is false in
+  every game that could ever be played.
+- The two narrowings cannot be combined. An event is either an elite monster
+  kill or a building kill.
+- An `ELITE_MONSTER_KILL` or `BUILDING_KILL` count must name a `target`. These
+  objectives belong to the side that took them, so an unbound count includes the
+  enemy team's dragons and towers, and an enemy objective would settle the dare.
+  Bind the target with role `killer` or `assist`. A team-relative objective
+  count is not expressible in a version-two contract.
+
+These rules apply when a contract is written, never when one is read. A dare
+already funded against a plan that predates them keeps rendering and settling
+exactly as its participants agreed.
 
 ## Clause order
 

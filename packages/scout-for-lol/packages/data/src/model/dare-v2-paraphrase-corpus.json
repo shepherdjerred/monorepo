@@ -316,7 +316,9 @@
                 "role": "killer",
                 "afterMs": null,
                 "beforeMs": 600000,
-                "itemId": null
+                "itemId": null,
+                "monsterType": null,
+                "buildingType": null
               },
               "operator": "gte",
               "threshold": 1
@@ -346,7 +348,7 @@
       },
       "deadlineSpec": { "kind": "relative", "days": 7 },
       "openingStake": 15,
-      "expectedCanonicalSha256": "ce1c752da7eeb2ae7924c301bbd00b9714e1a586dcae2bf02ed96a88856e03b7",
+      "expectedCanonicalSha256": "fd2cb70153c9d8d5fc7bf0d0803d243bcfdf6087fd2d5db5b23c5d2d20e6ef73",
       "expectedMeaning": "Every condition in this game set must hold in the same game.\nearly_kill_games: Virmel in one game, in solo/flex, first 10 eligible games, where Virmel's CHAMPION_KILL timeline events as killer before 600 seconds is at least 1; record cs_per_minute=Virmel's cs per minute\nThe dare succeeds when average of early_kill_games.cs_per_minute is at least 8."
     },
     {
@@ -389,7 +391,9 @@
                     "role": "subject",
                     "afterMs": null,
                     "beforeMs": null,
-                    "itemId": 3089
+                    "itemId": 3089,
+                    "monsterType": null,
+                    "buildingType": null
                   },
                   "operator": "gte",
                   "threshold": 1
@@ -410,7 +414,7 @@
       },
       "deadlineSpec": { "kind": "relative", "days": 7 },
       "openingStake": 20,
-      "expectedCanonicalSha256": "4f9eaf6bc93d026a9becbeb9584367030dae5c811077aaafe63dd46975fd5630",
+      "expectedCanonicalSha256": "2f16bab140f954919ce5975c48195eda47a3cc63711da1e9cbfb42457c5a827e",
       "expectedMeaning": "Every condition in this game set must hold in the same game.\nyasuo_deathcap_game: Virmel in one game, in solo/flex, first 100 eligible games, where (the number of Yasuo opponents of Virmel is at least 1 AND Virmel's ITEM_PURCHASED timeline events as subject for item 3089 is at least 1)\nThe dare succeeds when yasuo_deathcap_game matching-game count is at least 1."
     }
   ]

@@ -187,6 +187,8 @@ function timelinePlan(eventType: string) {
       afterMs: null,
       beforeMs: null,
       itemId: null,
+      monsterType: null,
+      buildingType: null,
     },
     operator: "gte",
     threshold: 1,

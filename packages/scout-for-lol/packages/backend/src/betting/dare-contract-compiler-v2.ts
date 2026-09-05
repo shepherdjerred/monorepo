@@ -85,7 +85,7 @@ function timelineEventCountSql(
       : typeof argumentValue === "number"
         ? argumentValue.toString()
         : quote(argumentValue);
-  return `dare_timeline_event_count(${quote(value.eventType)}, ${argument(value.target)}, ${argument(value.role)}, ${argument(value.afterMs)}, ${argument(value.beforeMs)}, ${argument(value.itemId)})`;
+  return `dare_timeline_event_count(${quote(value.eventType)}, ${argument(value.target)}, ${argument(value.role)}, ${argument(value.afterMs)}, ${argument(value.beforeMs)}, ${argument(value.itemId)}, ${argument(value.monsterType)}, ${argument(value.buildingType)})`;
 }
 
 function valueSql(value: DareValueV2, gameSet: DareGameSetV2): string {

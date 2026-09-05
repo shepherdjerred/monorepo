@@ -120,6 +120,19 @@ function timelineValue(
     afterMs: nullableNumberArgument(children, 3, "dare_timeline_event_count"),
     beforeMs: nullableNumberArgument(children, 4, "dare_timeline_event_count"),
     itemId: nullableNumberArgument(children, 5, "dare_timeline_event_count"),
+    // Appended, never inserted: the macro is positional, so shifting an existing
+    // argument would change the canonical text of every stored contract and
+    // break its plan-hash round-trip.
+    monsterType: nullableStringArgument(
+      children,
+      6,
+      "dare_timeline_event_count",
+    ),
+    buildingType: nullableStringArgument(
+      children,
+      7,
+      "dare_timeline_event_count",
+    ),
   };
 }
 

@@ -62,6 +62,8 @@ export type DareValueV2 =
       afterMs: number | null;
       beforeMs: number | null;
       itemId: number | null;
+      monsterType: string | null;
+      buildingType: string | null;
     }
   | {
       kind: "arithmetic";

@@ -25,6 +25,8 @@ export type DareTimelineEvidenceV2 = {
     eventType: string;
     timestampMs: number;
     itemId: number | null;
+    monsterType: string | null;
+    buildingType: string | null;
   }[];
   participants: readonly {
     eventId: string;
@@ -137,6 +139,9 @@ function timelineEventCount(
       (value.afterMs === null || event.timestampMs >= value.afterMs) &&
       (value.beforeMs === null || event.timestampMs <= value.beforeMs) &&
       (value.itemId === null || event.itemId === value.itemId) &&
+      (value.monsterType === null || event.monsterType === value.monsterType) &&
+      (value.buildingType === null ||
+        event.buildingType === value.buildingType) &&
       (value.target === null && value.role === null
         ? true
         : participantEvents.has(event.eventId)),

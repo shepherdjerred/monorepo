@@ -72,6 +72,29 @@ export const DareTimelineEventTypeSchema = z.enum(DARE_TIMELINE_EVENT_TYPES);
 export type DareTimelineEventType = z.infer<typeof DareTimelineEventTypeSchema>;
 
 /**
+ * Elite monsters, as `monster_type` records them.
+ *
+ * Also from the beta lake, and the reason objective dares need this field at
+ * all: every one of these is an `ELITE_MONSTER_KILL`, so the event type alone
+ * cannot tell a dragon from a baron.
+ */
+export const DARE_MONSTER_TYPES = [
+  "ATAKHAN",
+  "BARON_NASHOR",
+  "DRAGON",
+  "HORDE",
+  "RIFTHERALD",
+] as const;
+export const DareMonsterTypeSchema = z.enum(DARE_MONSTER_TYPES);
+
+/** Structures, as `building_type` records them. */
+export const DARE_BUILDING_TYPES = [
+  "INHIBITOR_BUILDING",
+  "TOWER_BUILDING",
+] as const;
+export const DareBuildingTypeSchema = z.enum(DARE_BUILDING_TYPES);
+
+/**
  * Lake columns whose values are drawn from a closed set.
  *
  * Keyed by column name so one table serves both contract shapes: a v2 contract
@@ -85,6 +108,8 @@ export const DARE_DOMAIN_COLUMNS = [
   "team_position",
   "queue",
   "event_type",
+  "monster_type",
+  "building_type",
 ] as const;
 export const DareDomainColumnSchema = z.enum(DARE_DOMAIN_COLUMNS);
 export type DareDomainColumn = z.infer<typeof DareDomainColumnSchema>;
@@ -108,6 +133,30 @@ function championResolves(champion: string): boolean {
 }
 
 /**
+ * Every closed-domain column, keyed so adding one is a single table entry rather
+ * than another branch — and so the column list and the checks cannot drift.
+ */
+const DARE_COLUMN_DOMAINS: Record<
+  DareDomainColumn,
+  { readonly noun: string; readonly values: readonly string[] }
+> = {
+  team_position: {
+    noun: "a team position",
+    values: DARE_TEAM_POSITIONS,
+  },
+  queue: { noun: "a queue", values: QueueTypeSchema.options },
+  event_type: {
+    noun: "a timeline event type",
+    values: DARE_TIMELINE_EVENT_TYPES,
+  },
+  monster_type: { noun: "an elite monster", values: DARE_MONSTER_TYPES },
+  building_type: { noun: "a building type", values: DARE_BUILDING_TYPES },
+  // Champions are the one open-ended domain: ~170 keys plus display names and
+  // aliases, resolved through the registry rather than listed back at the author.
+  champion_name: { noun: "a known champion", values: [] },
+};
+
+/**
  * Returns a human-readable issue when `threshold` is outside `column`'s domain,
  * or null when it is in-domain.
  *
@@ -122,24 +171,15 @@ export function dareDomainIssue(
   if (typeof threshold !== "string") {
     return `${column} must be compared against a string value.`;
   }
-  if (column === "team_position") {
-    return DareTeamPositionSchema.safeParse(threshold).success
+  if (column === "champion_name") {
+    return championResolves(threshold)
       ? null
-      : `"${threshold}" is not a team position. Use one of ${DARE_TEAM_POSITIONS.join(", ")}.`;
+      : `"${threshold}" is not a known champion.`;
   }
-  if (column === "queue") {
-    return QueueTypeSchema.safeParse(threshold).success
-      ? null
-      : `"${threshold}" is not a queue. Use one of ${QueueTypeSchema.options.join(", ")}.`;
-  }
-  if (column === "event_type") {
-    return DareTimelineEventTypeSchema.safeParse(threshold).success
-      ? null
-      : `"${threshold}" is not a timeline event type. Use one of ${DARE_TIMELINE_EVENT_TYPES.join(", ")}.`;
-  }
-  return championResolves(threshold)
+  const domain = DARE_COLUMN_DOMAINS[column];
+  return domain.values.includes(threshold)
     ? null
-    : `"${threshold}" is not a known champion.`;
+    : `"${threshold}" is not ${domain.noun}. Use one of ${domain.values.join(", ")}.`;
 }
 
 /**
@@ -160,15 +200,123 @@ function issueList(issue: string | null): string[] {
   return issue === null ? [] : [issue];
 }
 
+type DareTimelineEventCountV2 = Extract<
+  DareValueV2,
+  { kind: "timeline_event_count" }
+>;
+
+/**
+ * The event type each narrowing field belongs to.
+ *
+ * Riot writes `monster_type` only on `ELITE_MONSTER_KILL` and `building_type`
+ * only on `BUILDING_KILL`; on every other event type both columns are null. So
+ * `eventType: "CHAMPION_KILL"` with `monsterType: "DRAGON"` is not merely
+ * redundant — it is a predicate no game can ever satisfy, which counts zero,
+ * reads as a definite failure, and settles `unachieved` with a house cut. That
+ * is the `team_position = 'MID'` failure wearing a different hat.
+ */
+function narrowingEventTypeIssue(
+  eventType: string,
+  required: string,
+  field: string,
+): string | null {
+  return eventType === required
+    ? null
+    : `${field} narrows ${required} events, but this value counts ${eventType} events, which never carry that field. The predicate would count zero in every game.`;
+}
+
+function dareTimelineNarrowingIssues(
+  value: DareTimelineEventCountV2,
+): string[] {
+  const { monsterType, buildingType } = value;
+  if (monsterType !== null && buildingType !== null) {
+    return [
+      "A timeline event is either an elite monster kill or a building kill, never both. Narrow by monsterType or by buildingType, not both.",
+    ];
+  }
+  if (monsterType !== null) {
+    return [
+      ...issueList(dareDomainIssue("monster_type", monsterType)),
+      ...issueList(
+        narrowingEventTypeIssue(
+          value.eventType,
+          "ELITE_MONSTER_KILL",
+          "monsterType",
+        ),
+      ),
+    ];
+  }
+  if (buildingType !== null) {
+    return [
+      ...issueList(dareDomainIssue("building_type", buildingType)),
+      ...issueList(
+        narrowingEventTypeIssue(
+          value.eventType,
+          "BUILDING_KILL",
+          "buildingType",
+        ),
+      ),
+    ];
+  }
+  return [];
+}
+
+/**
+ * Event types that belong to a side rather than to the match.
+ *
+ * A dragon or a tower is taken *by a team*, so "at least three dragons" without
+ * a bound target counts both teams and an enemy objective settles the dare —
+ * which is the one thing a funded contract must never do.
+ *
+ * A team-relative filter is deliberately not offered, because it cannot be made
+ * correct for both of these here. `killer_team_id` answers it exactly for an
+ * elite monster, but `BUILDING_KILL` carries no such column: it carries
+ * `team_id`, whose meaning (the team that owned the structure, not the team that
+ * destroyed it) is pinned by nothing in this repository — no fixture, no lake
+ * row, no schema comment — and a filter built on the wrong reading inverts the
+ * dare, which is worse than counting too much. Resolving the side through the
+ * event's `killer` participant instead is exact for monsters but silently
+ * under-counts buildings finished by minions, and an under-count settles as a
+ * real loss. A field that is sound for one of the two and quietly wrong for the
+ * other is exactly the trap this module exists to remove, so the unsound case is
+ * refused rather than approximated.
+ *
+ * Binding a target keeps every objective dare attributable to a person the plain
+ * language names: "Virmel's BUILDING_KILL timeline events of TOWER_BUILDING as
+ * killer". Lifting this needs `BUILDING_KILL.team_id` verified against the beta
+ * lake first.
+ */
+const DARE_TEAM_OWNED_EVENT_TYPES = new Set<string>([
+  "ELITE_MONSTER_KILL",
+  "BUILDING_KILL",
+]);
+
+function dareObjectiveAttributionIssue(
+  value: DareTimelineEventCountV2,
+): string | null {
+  if (!DARE_TEAM_OWNED_EVENT_TYPES.has(value.eventType)) return null;
+  if (value.target === null) {
+    return `${value.eventType} events belong to the side that took the objective, so leaving target null counts both teams and an enemy objective would settle the dare. Bind target to the player who takes it, with role "killer" or "assist". A team-relative objective count is not expressible in a version-two contract.`;
+  }
+  // Binding the target is not enough: the evaluator filters on the exact role,
+  // and only `killer` and `assist` attribute an objective to the player who took
+  // it. `victim`, `subject`, and `creator` never appear on these events, so such
+  // a contract counts zero in every game and settles a funded dare as a real
+  // loss — the same silent-impossibility this module exists to refuse.
+  return value.role === "killer" || value.role === "assist"
+    ? null
+    : `${value.eventType} events attribute to the player who took the objective, so role must be "killer" or "assist"; ${value.role === null ? "null" : `"${value.role}"`} never appears on these events and would count zero in every game.`;
+}
+
 /**
  * Domain issues carried by a value itself, independent of any threshold.
  *
  * A closed-domain field that lives *on* a value never reaches
  * `dareBooleanDomainIssuesV2`: that walk resolves a column from what the
  * comparison reads, so it only ever inspects the comparison's own threshold.
- * `related_participant_count.championName` and `timeline_event_count.eventType`
- * are filters the value applies before it produces a number, so they have to be
- * checked here or they are not checked at all.
+ * `related_participant_count.championName` and every `timeline_event_count`
+ * filter are applied by the value before it produces a number, so they have to
+ * be checked here or they are not checked at all.
  */
 export function dareValueDomainIssuesV2(value: DareValueV2): string[] {
   if (value.kind === "arithmetic") {
@@ -183,7 +331,11 @@ export function dareValueDomainIssuesV2(value: DareValueV2): string[] {
       : issueList(dareDomainIssue("champion_name", value.championName));
   }
   if (value.kind === "timeline_event_count") {
-    return issueList(dareDomainIssue("event_type", value.eventType));
+    return [
+      ...issueList(dareDomainIssue("event_type", value.eventType)),
+      ...dareTimelineNarrowingIssues(value),
+      ...issueList(dareObjectiveAttributionIssue(value)),
+    ];
   }
   return [];
 }

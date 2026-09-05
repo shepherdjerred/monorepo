@@ -55,7 +55,16 @@ function valueText(
   ].filter((part) => part !== null);
   const item =
     value.itemId === null ? "" : ` for item ${value.itemId.toString()}`;
-  return `${owner}'s ${value.eventType} timeline events${role}${item}${bounds.length === 0 ? "" : ` ${bounds.join(" and ")}`}`;
+  // The narrowing has to appear in the plain language, or a dragon dare and a
+  // baron dare read identically to the person accepting it.
+  const narrowing = [
+    value.monsterType === null ? null : `of ${value.monsterType}`,
+    value.buildingType === null ? null : `of ${value.buildingType}`,
+  ]
+    .filter((part) => part !== null)
+    .join(" and ");
+  const narrowed = narrowing === "" ? "" : ` ${narrowing}`;
+  return `${owner}'s ${value.eventType} timeline events${narrowed}${role}${item}${bounds.length === 0 ? "" : ` ${bounds.join(" and ")}`}`;
 }
 
 function operatorText(operator: string): string {

@@ -34,6 +34,8 @@ describe("prepareDareDraftV2", () => {
                 afterMs: null,
                 beforeMs: 600_000,
                 itemId: null,
+                monsterType: null,
+                buildingType: null,
               },
             },
           ],

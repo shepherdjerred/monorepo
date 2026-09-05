@@ -1,4 +1,6 @@
 import {
+  DARE_BUILDING_TYPES,
+  DARE_MONSTER_TYPES,
   DARE_TEAM_POSITIONS,
   DARE_TIMELINE_EVENT_TYPES,
   DARE_V2_MAX_ELIGIBLE_GAMES,
@@ -55,7 +57,17 @@ export function dareLanguagePayload(input: {
     domains: {
       teamPosition: DARE_TEAM_POSITIONS,
       timelineEventType: DARE_TIMELINE_EVENT_TYPES,
+      // The two objective narrowings, with the rules that make them usable. A
+      // mismatched pair or an unbound objective count is refused at authoring,
+      // and the model can only avoid the round trip if it is told the rule here.
+      monsterType: DARE_MONSTER_TYPES,
+      buildingType: DARE_BUILDING_TYPES,
     },
+    objectiveRules: [
+      "monsterType narrows ELITE_MONSTER_KILL only; buildingType narrows BUILDING_KILL only. Riot leaves the other column empty, so a mismatched pair counts zero in every game.",
+      "Never set monsterType and buildingType together: an event is either an elite monster kill or a building kill.",
+      'An ELITE_MONSTER_KILL or BUILDING_KILL count must bind a target, with role "killer" or "assist". These objectives belong to the side that took them, so an unbound count includes the enemy team\'s and an enemy objective would settle the dare. A team-relative objective count cannot be expressed in a version-two contract.',
+    ],
     ...(input.sqlV3 ? { sql: dareSqlV3Catalog() } : {}),
   };
 }
