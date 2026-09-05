@@ -40,6 +40,13 @@ import {
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
+import { exploreCreationProcedures } from "#src/trpc/router/explore-creation-procedures.ts";
+import {
+  confirmationNotFound,
+  requireActorIntent,
+  requireExploreUserAndGuilds,
+  requireGuildIntent,
+} from "#src/trpc/router/explore-intent-access.ts";
 import {
   protectedProcedure,
   router,
@@ -67,48 +74,6 @@ async function requireExploreUser(user: User): Promise<DiscordAccountId> {
   return DiscordAccountIdSchema.parse(user.discordId);
 }
 
-/**
- * The caller's id together with the servers they belong to.
- *
- * `assertExploreAccess` already fetches those servers to make its allowlist
- * decision, so returning them costs nothing extra — and starting a turn needs
- * them, because a `player('…')` alias may only resolve against servers the
- * asker is actually in.
- */
-async function requireExploreUserAndGuilds(
-  user: User,
-): Promise<{ userId: DiscordAccountId; guildIds: string[] }> {
-  const guildIds = await assertExploreAccess(user);
-  return {
-    userId: DiscordAccountIdSchema.parse(user.discordId),
-    guildIds,
-  };
-}
-
-/**
- * Loads a confirmation intent the caller's servers can see.
- *
- * The guild is stored on the intent, so this is a direct column comparison
- * rather than a join through the dare it targets. Probing an intent in another
- * server has to stay indistinguishable from it not existing, hence NOT_FOUND
- * for both.
- */
-async function requireGuildIntent(intentId: string, guildIds: string[]) {
-  const intent = await prisma.confirmationIntent.findUnique({
-    where: { id: intentId },
-  });
-  if (!guildIds.includes(intent?.serverId ?? "")) {
-    throw new TRPCError({
-      code: "NOT_FOUND",
-      message: "Confirmation not found.",
-    });
-  }
-  if (intent === null) {
-    throw new Error("A visible confirmation unexpectedly disappeared.");
-  }
-  return intent;
-}
-
 const exploreProcedure = protectedProcedure;
 
 /**
@@ -126,13 +91,11 @@ const intentStatusProcedure = exploreProcedure
   .input(z.strictObject({ intentId: z.uuid() }))
   .query(async ({ ctx, input }) => {
     const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
-    const intent = await requireGuildIntent(input.intentId, guildIds);
-    if (intent.actorDiscordId !== userId) {
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Confirmation not found.",
-      });
-    }
+    const intent = await requireActorIntent({
+      intentId: input.intentId,
+      guildIds,
+      userId,
+    });
     return {
       state:
         intent.consumedAt === null
@@ -183,16 +146,17 @@ export const exploreRouter = router({
   /** @deprecated Pre-rename alias; see {@link intentStatusProcedure}. */
   dareIntentStatus: intentStatusProcedure,
 
+  // Confirming an entity an Explore agent prepared. Nothing mints these yet;
+  // see explore-creation-procedures.ts.
+  ...exploreCreationProcedures,
+
   confirmDareIntent: webMutationProcedure
     .input(z.strictObject({ intentId: z.uuid() }))
     .mutation(async ({ ctx, input }) => {
       const { userId, guildIds } = await requireExploreUserAndGuilds(ctx.user);
       const intent = await requireGuildIntent(input.intentId, guildIds);
       if (intent.dareId === null) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Confirmation not found.",
-        });
+        throw confirmationNotFound();
       }
       const outcome = await consumeDareV2ConfirmationIntent({
         intentId: input.intentId,

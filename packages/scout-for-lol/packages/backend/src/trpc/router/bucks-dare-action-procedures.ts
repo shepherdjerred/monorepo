@@ -2,7 +2,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
   BucksStakeSchema,
-  ConfirmationIntentPayloadSchema,
+  DareIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -55,9 +55,12 @@ const LegacyDarePayloadSchema = z
       : { kind: LEGACY_ACTION_KINDS[legacy.action] },
   );
 
+// Deliberately the dare-only union, not the full confirmation-intent one: a
+// creation payload accepted here would mint a creation intent through the dare
+// prepare procedure and skip the creation gate entirely.
 export const DarePayloadInputSchema = z.union([
-  ConfirmationIntentPayloadSchema,
-  LegacyDarePayloadSchema.pipe(ConfirmationIntentPayloadSchema),
+  DareIntentPayloadSchema,
+  LegacyDarePayloadSchema.pipe(DareIntentPayloadSchema),
 ]);
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });

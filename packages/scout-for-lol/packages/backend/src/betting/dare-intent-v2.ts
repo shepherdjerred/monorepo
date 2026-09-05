@@ -1,8 +1,8 @@
 import {
-  ConfirmationIntentPayloadSchema,
+  DareIntentPayloadSchema,
   DiscordGuildIdSchema,
-  type ConfirmationIntentKind,
-  type ConfirmationIntentPayload,
+  type DareIntentKind,
+  type DareIntentPayload,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -28,13 +28,11 @@ const DARE_ACTION_BY_KIND = {
   dare_decline: "decline",
   dare_contribute: "contribute",
   dare_cancel: "cancel",
-} as const satisfies Record<ConfirmationIntentKind, string>;
+} as const satisfies Record<DareIntentKind, string>;
 
-type DareV2IntentAction = (typeof DARE_ACTION_BY_KIND)[ConfirmationIntentKind];
+type DareV2IntentAction = (typeof DARE_ACTION_BY_KIND)[DareIntentKind];
 
-export function dareV2IntentAction(
-  kind: ConfirmationIntentKind,
-): DareV2IntentAction {
+export function dareV2IntentAction(kind: DareIntentKind): DareV2IntentAction {
   return DARE_ACTION_BY_KIND[kind];
 }
 
@@ -64,13 +62,13 @@ export async function createDareV2ConfirmationIntent(
     serverId: DiscordGuildId;
     actorDiscordId: DiscordAccountId;
     expectedRevision: number;
-    payload: ConfirmationIntentPayload;
+    payload: DareIntentPayload;
     idempotencyKey: string;
   },
   dependencies: DareV2Dependencies = defaultDareV2Dependencies,
   now: Date = new Date(),
 ) {
-  const payload = ConfirmationIntentPayloadSchema.parse(input.payload);
+  const payload = DareIntentPayloadSchema.parse(input.payload);
   const action = dareV2IntentAction(payload.kind);
   const dare = await dependencies.prismaClient.bucksDareV2.findUnique({
     where: { id: input.dareId },
