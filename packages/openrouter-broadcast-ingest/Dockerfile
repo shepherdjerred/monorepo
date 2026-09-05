@@ -19,6 +19,7 @@ COPY --parents \
   tsconfig.base.json \
   packages/llm-models \
   packages/llm-observability \
+  packages/s3-signed-request \
   packages/openrouter-broadcast-ingest \
   ./
 # llm-observability imports the catalog package whose runtime export points at

@@ -50,7 +50,11 @@ public final class TaskNotesServerProcess {
     public let authToken: String
 
     private let process: Process
-    private let output: Pipe
+    // A Pipe can keep Process.waitUntilExit() blocked after the child exits if
+    // nobody drains it. A file preserves startup diagnostics without coupling
+    // server shutdown to a reader.
+    private let output: FileHandle
+    private let outputURL: URL
 
     /// Start a server, or report why it could not be started.
     ///
@@ -69,6 +73,20 @@ public final class TaskNotesServerProcess {
         vault = FileManager.default.temporaryDirectory
             .appending(path: "tasknotes-e2e-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: vault, withIntermediateDirectories: true)
+        outputURL = vault.appending(path: "server.log")
+        guard
+            FileManager.default.createFile(
+                atPath: outputURL.path(percentEncoded: false),
+                contents: nil
+            )
+        else {
+            throw ServerUnavailable(reason: "could not create the server log")
+        }
+        do {
+            output = try FileHandle(forWritingTo: outputURL)
+        } catch {
+            throw ServerUnavailable(reason: "could not open the server log: \(error)")
+        }
 
         let port = try Self.reserveEphemeralPort()
         guard let url = URL(string: "http://127.0.0.1:\(port)") else {
@@ -91,7 +109,6 @@ public final class TaskNotesServerProcess {
         environment["SENTRY_DSN"] = ""
         process.environment = environment
 
-        output = Pipe()
         process.standardOutput = output
         process.standardError = output
 
@@ -108,6 +125,7 @@ public final class TaskNotesServerProcess {
         if process.isRunning {
             process.terminate()
         }
+        _ = Result { try output.close() }
         // Best-effort, and explicitly so. `deinit` cannot propagate, `try?` is
         // banned repository-wide for hiding the error, and a leftover
         // directory under `/tmp` is not a test failure — `Result` makes the
@@ -121,6 +139,7 @@ public final class TaskNotesServerProcess {
             process.terminate()
             process.waitUntilExit()
         }
+        _ = Result { try output.close() }
     }
 
     /// Everything the server has written to stdout and stderr so far.
@@ -128,8 +147,13 @@ public final class TaskNotesServerProcess {
     /// Read on failure, so a timeout reports what the server said rather than
     /// just that it never answered.
     public func log() -> String {
-        let data = output.fileHandleForReading.availableData
-        return String(bytes: data, encoding: .utf8) ?? "<non-UTF-8 server output>"
+        _ = Result { try output.synchronize() }
+        switch Result(catching: { try Data(contentsOf: outputURL) }) {
+        case .success(let data):
+            return String(bytes: data, encoding: .utf8) ?? "<non-UTF-8 server output>"
+        case .failure(let error):
+            return "<unreadable server output: \(error)>"
+        }
     }
 
     // ── The vault, as a user would see it ──────────────────────────────────

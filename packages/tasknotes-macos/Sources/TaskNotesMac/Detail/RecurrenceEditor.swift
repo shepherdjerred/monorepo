@@ -107,6 +107,7 @@ struct RecurrenceEditorSheet: View {
                 }
             }
             .formStyle(.grouped)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             Divider()
             HStack {
@@ -119,9 +120,14 @@ struct RecurrenceEditorSheet: View {
                     .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceApply)
             }
             .padding()
+            .fixedSize(horizontal: false, vertical: true)
         }
         .frame(width: 480, height: 610)
         .interactiveDismissDisabled()
+        // Keep the sheet identifier on this container. Without `.contain`,
+        // SwiftUI pushes it down and replaces the Apply button identifier when
+        // the form changes shape (for example, Daily to Weekly).
+        .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.Inspector.recurrenceSheet)
     }
 }

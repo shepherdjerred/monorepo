@@ -1,0 +1,29 @@
+{
+  "name": "@shepherdjerred/s3-signed-request",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun --no-install build src/index.ts --outdir dist --target bun",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
+    "lint": "bunx eslint --cache .",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test",
+    "test:ci": "bun ../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/recommended": "^1.0.13",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/bun": "1.4.0",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "typescript": "^6.0.0",
+    "vitest": "4.1.10"
+  }
+}

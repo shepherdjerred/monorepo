@@ -116,6 +116,7 @@ COPY --parents \
   packages/discord-video-stream \
   packages/llm-models \
   packages/llm-observability \
+  packages/s3-signed-request \
   ./
 # Build the workspace deps whose package `main`/exports resolve to a gitignored
 # `dist/` — consumers crash at startup with `Cannot find module` otherwise.
@@ -197,6 +198,7 @@ COPY --parents \
   packages/discord-video-stream \
   packages/llm-models \
   packages/llm-observability \
+  packages/s3-signed-request \
   ./
 
 # Keep the deployed Codex instruction surface identical to the benchmark

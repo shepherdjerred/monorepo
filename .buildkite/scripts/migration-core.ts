@@ -295,6 +295,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   "docker-e2e": [
     ...workspacePaths,
     "packages/llm-observability",
+    "packages/s3-signed-request",
     "packages/eslint-config",
   ],
   "helm-types": [
