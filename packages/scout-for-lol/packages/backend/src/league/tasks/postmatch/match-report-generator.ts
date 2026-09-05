@@ -12,7 +12,7 @@ import type {
   DiscordGuildId,
   Player,
 } from "@scout-for-lol/data/index.ts";
-import type { PostmatchRankChanges } from "#src/betting/dare-rank-capture-v3.ts";
+import type { PostmatchRankChanges } from "#src/betting/dares/lifecycle/dare-rank-capture-v3.ts";
 import {
   MatchIdSchema,
   queueTypeToDisplayString,

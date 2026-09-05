@@ -10,11 +10,11 @@ import {
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { settlementHouseCut } from "#src/betting/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
-import { requireValidBucksAllocation } from "#src/betting/allocation.ts";
-import { creditBet } from "#src/betting/settlement-ledger.ts";
-import type { SettlementBet } from "#src/betting/settlement-types.ts";
-import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
-import type { ClosedPool } from "#src/betting/sweep-types.ts";
+import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
+import { creditBet } from "#src/betting/settlement/settlement-ledger.ts";
+import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
+import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
+import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import {
   prisma,
   type Db,

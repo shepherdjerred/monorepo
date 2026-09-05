@@ -34,11 +34,11 @@ import {
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
 import { isStandardLobby } from "#src/betting/eligibility.ts";
-import { withBucksDigest } from "#src/betting/prematch-line.ts";
+import { withBucksDigest } from "#src/betting/markets/prematch-line.ts";
 import {
   prepareBucksPrematch,
   type BucksPrematchAttachment,
-} from "#src/betting/prematch-hook.ts";
+} from "#src/betting/markets/prematch-hook.ts";
 import { PrematchNotificationPostDeliveryError } from "#src/league/tasks/prematch/prematch-notification-errors.ts";
 import { recordPrematchOutputs } from "#src/league/tasks/prematch/prematch-output-recording.ts";
 import type { MessageCreateOptions } from "discord.js";

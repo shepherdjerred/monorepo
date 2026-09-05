@@ -5,11 +5,11 @@ import type {
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
-import { recordPoolMessageRefs } from "#src/betting/pool-open.ts";
+import { recordPoolMessageRefs } from "#src/betting/markets/pool-open.ts";
 import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
-import { startParlayGeneration } from "#src/betting/parlay-generate.ts";
+import { startParlayGeneration } from "#src/betting/parlays/parlay-generate.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
-import type { BucksPrematchAttachment } from "#src/betting/prematch-hook.ts";
+import type { BucksPrematchAttachment } from "#src/betting/markets/prematch-hook.ts";
 import type { LoadingScreenData } from "@scout-for-lol/data/index.ts";
 
 export async function recordPrematchOutputs(input: {

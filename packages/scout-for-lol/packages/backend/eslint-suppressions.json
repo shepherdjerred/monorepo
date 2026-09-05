@@ -136,67 +136,67 @@
       "count": 1
     }
   },
+  "src/betting/accounts/classic-prematch-earnings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/accounts/earnings-retry.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/accounts/earnings.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 2
+    }
+  },
   "src/betting/announce.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/classic-prematch-earnings.ts": {
+  "src/betting/markets/matching.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/earnings-retry.ts": {
+  "src/betting/parlays/parlay-evaluator.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/earnings.ts": {
+  "src/betting/parlays/parlay-history.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlays/parlay-model-schema.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlays/parlay-place-bet.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlays/parlay-pricing.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlays/parlay-publish.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "src/betting/parlays/parlay-settle.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }
   },
-  "src/betting/matching.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-evaluator.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-history.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-model-schema.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-place-bet.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-pricing.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-publish.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "src/betting/parlay-settle.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
-  "src/betting/parlay-stats.ts": {
+  "src/betting/parlays/parlay-stats.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }
@@ -206,37 +206,37 @@
       "count": 1
     }
   },
-  "src/betting/settlement-dm-delivery.ts": {
+  "src/betting/settlement/settlement-dm-delivery.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/settlement-dm.ts": {
+  "src/betting/settlement/settlement-dm.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/sweep-observability.ts": {
+  "src/betting/settlement/sweep-observability.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/sweep.ts": {
+  "src/betting/settlement/sweep.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/weekly-parlay-contribution.ts": {
+  "src/betting/weekly/weekly-parlay-contribution.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/weekly-parlay-open.ts": {
+  "src/betting/weekly/weekly-parlay-open.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/betting/weekly-parlay-settle.ts": {
+  "src/betting/weekly/weekly-parlay-settle.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

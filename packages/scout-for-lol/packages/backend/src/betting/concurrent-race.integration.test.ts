@@ -8,10 +8,10 @@ import {
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { placeBet } from "#src/betting/place-bet.ts";
-import { cancelBet } from "#src/betting/cancel-bet.ts";
+import { placeBet } from "#src/betting/markets/place-bet.ts";
+import { cancelBet } from "#src/betting/markets/cancel-bet.ts";
 import { SEED_GRANT } from "#src/betting/constants.ts";
-import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
+import { reconcileBucksBalances } from "#src/betting/settlement/reconcile.ts";
 import {
   addFlagOverride,
   clearFlagOverrides,

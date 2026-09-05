@@ -12,7 +12,7 @@ import {
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
 } from "@scout-for-lol/data";
-import { dareSqlV3Catalog } from "#src/betting/dare-sql-v3-catalog.ts";
+import { dareSqlV3Catalog } from "#src/betting/dares/sql/dare-sql-v3-catalog.ts";
 
 /**
  * Everything `get_dare_language` tells the model about the contract vocabulary.

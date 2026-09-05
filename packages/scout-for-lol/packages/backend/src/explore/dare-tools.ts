@@ -1,4 +1,4 @@
-import { buildDareShortlist } from "#src/betting/dare-shortlist.ts";
+import { buildDareShortlist } from "#src/betting/dares/dare-shortlist.ts";
 import {
   createDarePreviewLedger,
   dareContractNeedsPreview,
@@ -9,29 +9,29 @@ import {
   createDareDraftV3,
   prepareDareDraftV3,
   reviseDareDraftV3,
-} from "#src/betting/dare-draft-v3.ts";
+} from "#src/betting/dares/lifecycle/dare-draft-v3.ts";
 import { dareLanguagePayload } from "#src/explore/dare-language.ts";
-import { compileDareSqlV3 } from "#src/betting/dare-sql-v3.ts";
-import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dare-sql-v3-description.ts";
+import { compileDareSqlV3 } from "#src/betting/dares/sql/dare-sql-v3.ts";
+import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dares/sql/dare-sql-v3-description.ts";
 import {
   createDareDraftV2,
   deleteDareDraftV2,
   prepareDareDraftV2,
   reviseDareDraftV2,
   type DareDraftV2Definition,
-} from "#src/betting/dare-draft-v2.ts";
-import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
+} from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
+import { createDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-v2.ts";
 import {
   inspectVisibleDareV2,
   listVisibleDaresV2,
-} from "#src/betting/dare-view-v2.ts";
+} from "#src/betting/dares/presentation/dare-view-v2.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { historicallyPreviewDareV2 } from "#src/betting/dare-preview-v2.ts";
+import { historicallyPreviewDareV2 } from "#src/betting/dares/presentation/dare-preview-v2.ts";
 import {
   renderDarePlanV2,
   renderDareProofPlanV2,
-} from "#src/betting/dare-render-v2.ts";
-import { compileDareScoutQlPlanV2 } from "#src/betting/dare-scoutql-plan-compiler-v2.ts";
+} from "#src/betting/dares/presentation/dare-render-v2.ts";
+import { compileDareScoutQlPlanV2 } from "#src/betting/dares/sql/dare-scoutql-plan-compiler-v2.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   DareActionToolInputSchema,

@@ -7,7 +7,7 @@ import {
 import {
   transferBucks,
   type TransferBucksResult,
-} from "#src/betting/transfer.ts";
+} from "#src/betting/accounts/transfer.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 

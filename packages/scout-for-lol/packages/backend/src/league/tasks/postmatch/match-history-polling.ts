@@ -14,13 +14,13 @@ import {
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { announceSettlements } from "#src/betting/announce.ts";
-import { deliverDareSummaries } from "#src/betting/dare-delivery.ts";
+import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
 import {
   voidDareV2WithFullRefund,
   type RefundableDareV2Row,
-} from "#src/betting/dare-void-v2.ts";
-import type { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
-import { settleBucksWithDareTimelineV2 } from "#src/betting/dare-postmatch-timeline-v2.ts";
+} from "#src/betting/dares/settlement/dare-void-v2.ts";
+import type { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
+import { settleBucksWithDareTimelineV2 } from "#src/betting/dares/evaluation/dare-postmatch-timeline-v2.ts";
 import { matchHistoryPollingSkipsTotal } from "#src/metrics/index.ts";
 import {
   markPostMatchPollCompleted,

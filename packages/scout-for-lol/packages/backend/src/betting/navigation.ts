@@ -17,8 +17,8 @@ import {
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { BUCKS_GUILD_ONLY, BUCKS_NOT_ENABLED } from "#src/betting/copy.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import type { BucksButtonEditReplyOptions } from "#src/betting/bet-button.ts";
-import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly-parlay-criteria.ts";
+import type { BucksButtonEditReplyOptions } from "#src/betting/markets/bet-button.ts";
+import { WeeklyParlaySubjectsSchema } from "#src/betting/weekly/weekly-parlay-criteria.ts";
 import { truncateDiscordMessage } from "#src/discord/utils/message.ts";
 
 export const BUCKS_NAVIGATION_NAMESPACE = "bbnav";

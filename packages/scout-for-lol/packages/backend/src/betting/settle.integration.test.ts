@@ -16,11 +16,11 @@ import {
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { settleBettingForMatch } from "#src/betting/settle.ts";
-import { settleAndAwardBucks } from "#src/betting/postmatch-hook.ts";
-import { closeBettingWindowsForMatch } from "#src/betting/sweep.ts";
-import { voidStaleBettingPools } from "#src/betting/void-stale.ts";
-import { reconcileBucksBalances } from "#src/betting/reconcile.ts";
-import { BUCKS_RECONCILIATION_PAGE_SIZE } from "#src/betting/reconcile-shared.ts";
+import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
+import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
+import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
+import { reconcileBucksBalances } from "#src/betting/settlement/reconcile.ts";
+import { BUCKS_RECONCILIATION_PAGE_SIZE } from "#src/betting/settlement/reconcile-shared.ts";
 import {
   HOUSE_ACCOUNT_DISCORD_ID,
   HOUSE_BANKROLL,

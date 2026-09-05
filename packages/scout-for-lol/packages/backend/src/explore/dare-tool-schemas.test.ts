@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { prepareDareDraftV2 } from "#src/betting/dare-draft-v2.ts";
+import { prepareDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
 import { DareDefinitionV2ToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
 
 /** A contract whose lane spelling Riot never emits. */

@@ -13,7 +13,7 @@ import { classifyLlmProviderIssue } from "#src/alerts/provider-metrics.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
-import type { StartParlayGenerationInput } from "#src/betting/parlay-generation-types.ts";
+import type { StartParlayGenerationInput } from "#src/betting/parlays/parlay-generation-types.ts";
 import { currentScoutTemporalSupervisor } from "./runtime.ts";
 import { startScoutDetachedWork } from "./starts.ts";
 
@@ -154,7 +154,7 @@ export async function executeScoutTemporalWork(
     const raw = JSON.parse(work.payload);
     const parlayInput = ParlayWorkPayloadSchema.parse(raw);
     const { runParlayGeneration } =
-      await import("#src/betting/parlay-generate.ts");
+      await import("#src/betting/parlays/parlay-generate.ts");
     await runParlayGeneration(
       {
         gameInfo: parlayInput.gameInfo,
