@@ -13,7 +13,8 @@ const REQUIRED_RUNTIME_PATHS = [
 ] as const;
 
 const OPTIONAL_RUNTIME_PATHS = OPTIONAL_CODEX_INSTRUCTION_PATHS;
-const POKEMONCTL_RELATIVE_PATH = "packages/backend/src/goal/pokemonctl.ts";
+const POKEMONCTL_RELATIVE_PATH =
+  "packages/backend/src/goal/control/pokemonctl.ts";
 
 function pathIsInside(parent: string, candidate: string): boolean {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));

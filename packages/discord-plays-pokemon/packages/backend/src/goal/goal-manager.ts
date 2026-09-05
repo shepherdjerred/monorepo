@@ -1,17 +1,17 @@
 import path from "node:path";
 import { logger } from "#src/logger.ts";
 import type { Config } from "#src/config/schema.ts";
-import { hasCodexCredential } from "./codex-auth.ts";
+import { hasCodexCredential } from "./codex/codex-auth.ts";
 import type { GameSnapshot } from "#src/game/events/types.ts";
 import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import type { CodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
-import type { CodexTrace } from "./codex-trace.ts";
+import type { CodexTrace } from "./codex/codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
-import { formatGameStateForPrompt } from "./game-state-summary.ts";
+import { formatGameStateForPrompt } from "./game/game-state-summary.ts";
 import { GoalIntervalReporter } from "./goal-progress.ts";
 import { formatHistoryForPrompt } from "./history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
-import { spawnGoalCodex } from "./spawn-goal-codex.ts";
+import { spawnGoalCodex } from "./codex/spawn-goal-codex.ts";
 import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
 import type {
   GoalMessageSender,

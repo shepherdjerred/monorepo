@@ -6,7 +6,7 @@
 import { logger } from "#src/logger.ts";
 import { goalProgressUpdatesTotal } from "#src/observability/metrics.ts";
 import type { SpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import { formatLocationLine } from "./game-state-summary.ts";
+import { formatLocationLine } from "./game/game-state-summary.ts";
 import { GoalActivityLog } from "./goal-activity.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import type { GoalMessageSender, GoalState } from "./goal-types.ts";

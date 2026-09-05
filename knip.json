@@ -130,7 +130,7 @@
       "entry": [
         "src/**/*.test.ts",
         "scripts/**/*.ts",
-        "src/goal/pokemonctl.ts"
+        "src/goal/control/pokemonctl.ts"
       ],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },

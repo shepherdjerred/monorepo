@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { verifyPokemonctlCapabilities } from "./goal-capabilities.ts";
+import { verifyPokemonctlCapabilities } from "#src/goal/goal-capabilities.ts";
 import { handlePokemonctlBattle } from "./pokemonctl-battle.ts";
 import {
   formatPokemonctlActionOutput,

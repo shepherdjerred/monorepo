@@ -14,9 +14,9 @@ import {
   type CatchEvidenceSettler,
   type CatchEventEvidence,
 } from "#src/goal/catch-evidence.ts";
-import { readGameObservation } from "#src/goal/game-observation.ts";
+import { readGameObservation } from "#src/goal/game/game-observation.ts";
 import { GoalManager } from "#src/goal/goal-manager.ts";
-import { startGoalControlServer } from "#src/goal/control-server.ts";
+import { startGoalControlServer } from "#src/goal/control/control-server.ts";
 
 // The benchmark worker is streamed as text and executed with its working
 // directory set to the target implementation's backend root, so every subpath
@@ -28,7 +28,7 @@ import { startGoalControlServer } from "#src/goal/control-server.ts";
 // (readGameObservation / readGameSnapshot / readSpatialSnapshot) stay as
 // subpath imports because they are stable readers present in every comparison
 // target. Keep this block in sync with
-// src/goal/benchmark-worker-boot-readiness.ts, which holds the same
+// src/goal/benchmark/benchmark-worker-boot-readiness.ts, which holds the same
 // assessBenchmarkBootReadiness logic under unit test.
 type BenchmarkBootPosition = Readonly<{
   frame: number;

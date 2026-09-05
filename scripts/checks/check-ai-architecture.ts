@@ -93,7 +93,7 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
 ]);
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/config.example.toml",
-  "packages/discord-plays-pokemon/packages/backend/src/goal/codex-auth.ts",
+  "packages/discord-plays-pokemon/packages/backend/src/goal/codex/codex-auth.ts",
   "packages/discord-plays-pokemon/packages/backend/src/goal/goal-manager.ts",
   "packages/discord-plays-pokemon/packages/backend/src/goal/goal-runtime-env.ts",
   "packages/homelab/src/cdk8s/src/resources/pokemon.ts",

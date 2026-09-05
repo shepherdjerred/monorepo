@@ -19,7 +19,7 @@ import type { GoalDiscordMessage } from "#src/goal/goal-types.ts";
 import {
   startGoalControlServer,
   type GoalControlServer,
-} from "#src/goal/control-server.ts";
+} from "#src/goal/control/control-server.ts";
 import { createGameEventWatcher } from "#src/game/events/watcher.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";

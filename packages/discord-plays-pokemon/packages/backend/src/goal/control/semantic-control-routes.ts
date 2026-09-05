@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { parseCommandInput } from "#src/game/command/command-input.ts";
-import type { WaitCondition } from "./game-controller.ts";
+import type { WaitCondition } from "#src/goal/game/game-controller.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
-import { readGameMap, readGameMapExits } from "./game-map.ts";
-import { caseInsensitiveEnum, clampedInt } from "./schema-helpers.ts";
+import { readGameMap, readGameMapExits } from "#src/goal/game/game-map.ts";
+import { caseInsensitiveEnum, clampedInt } from "#src/goal/schema-helpers.ts";
 
 // Validation convention: JSON-body routes use `.parse()` and rely on the
 // control-server catch to turn any ZodError into a prettified 400 body;

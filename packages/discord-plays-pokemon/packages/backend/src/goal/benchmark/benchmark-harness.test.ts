@@ -40,7 +40,7 @@ import {
 } from "./benchmark-runtime-overlay.ts";
 import { runBenchmarkSeries } from "./benchmark-series.ts";
 import { harnessErrorLifecycle } from "./benchmark-result.ts";
-import { prepareRuntimeTools } from "./goal-runtime-env.ts";
+import { prepareRuntimeTools } from "#src/goal/goal-runtime-env.ts";
 
 const SAVE_SLOT_BYTES = 0xe0_00;
 const SAVE_SECTOR_BYTES = 0x10_00;
@@ -231,10 +231,10 @@ describe("validateCatchBenchmarkSourceSave", () => {
     const root = await mkdtemp(path.join(tmpdir(), "pokemon-source-save-"));
     const savePath = path.join(root, "source.sav");
     const original = await Bun.file(
-      new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      new URL("../../game/events/testdata/after_starter.sav", import.meta.url),
     ).bytes();
     const replacement = await Bun.file(
-      new URL("../game/events/testdata/champion.sav", import.meta.url),
+      new URL("../../game/events/testdata/champion.sav", import.meta.url),
     ).bytes();
     const originalHasher = new Bun.CryptoHasher("sha256");
     originalHasher.update(original);
@@ -256,7 +256,7 @@ describe("validateCatchBenchmarkSourceSave", () => {
 
   test("accepts a real source save with room for caught Pokemon", async () => {
     const save = await Bun.file(
-      new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      new URL("../../game/events/testdata/after_starter.sav", import.meta.url),
     ).bytes();
 
     expect(() => validateCatchBenchmarkSourceSave(save)).not.toThrow();
@@ -265,7 +265,10 @@ describe("validateCatchBenchmarkSourceSave", () => {
   test("accepts a save checksummed with the pinned wasm32 block layout", async () => {
     const save = Uint8Array.from(
       await Bun.file(
-        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+        new URL(
+          "../../game/events/testdata/after_starter.sav",
+          import.meta.url,
+        ),
       ).bytes(),
     );
     convertToWasm32Checksums(save);
@@ -276,7 +279,10 @@ describe("validateCatchBenchmarkSourceSave", () => {
   test("rejects per-sector mixing of the two supported block layouts", async () => {
     const save = Uint8Array.from(
       await Bun.file(
-        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+        new URL(
+          "../../game/events/testdata/after_starter.sav",
+          import.meta.url,
+        ),
       ).bytes(),
     );
     const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
@@ -308,7 +314,7 @@ describe("validateCatchBenchmarkSourceSave", () => {
 
   test("rejects a real full-party save before a benchmark can run", async () => {
     const save = await Bun.file(
-      new URL("../game/events/testdata/champion.sav", import.meta.url),
+      new URL("../../game/events/testdata/champion.sav", import.meta.url),
     ).bytes();
 
     expect(() => validateCatchBenchmarkSourceSave(save)).toThrow(
@@ -328,7 +334,10 @@ describe("validateCatchBenchmarkSourceSave", () => {
   test("rejects incomplete slots even when their remaining sectors look valid", async () => {
     const save = Uint8Array.from(
       await Bun.file(
-        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+        new URL(
+          "../../game/events/testdata/after_starter.sav",
+          import.meta.url,
+        ),
       ).bytes(),
     );
     const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
@@ -343,7 +352,10 @@ describe("validateCatchBenchmarkSourceSave", () => {
   test("rejects slots whose logical data does not match the stored checksum", async () => {
     const save = Uint8Array.from(
       await Bun.file(
-        new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+        new URL(
+          "../../game/events/testdata/after_starter.sav",
+          import.meta.url,
+        ),
       ).bytes(),
     );
     const view = new DataView(save.buffer, save.byteOffset, save.byteLength);
@@ -365,10 +377,10 @@ describe("validateCatchBenchmarkSourceSave", () => {
 
   test("selects counter zero over max counter at the exact rollover", async () => {
     const roomy = await Bun.file(
-      new URL("../game/events/testdata/after_starter.sav", import.meta.url),
+      new URL("../../game/events/testdata/after_starter.sav", import.meta.url),
     ).bytes();
     const full = await Bun.file(
-      new URL("../game/events/testdata/champion.sav", import.meta.url),
+      new URL("../../game/events/testdata/champion.sav", import.meta.url),
     ).bytes();
     const save = new Uint8Array(128 * 1024);
     save.set(full.subarray(0, SAVE_SLOT_BYTES), 0);
@@ -952,7 +964,7 @@ describe("benchmark output containment", () => {
 
   test("CLI preflights containment before reserving the output directory", async () => {
     const source = await Bun.file(
-      path.resolve(import.meta.dir, "../../scripts/goal-benchmark.ts"),
+      path.resolve(import.meta.dir, "../../../scripts/goal-benchmark.ts"),
     ).text();
     const containmentCheck = source.indexOf(
       "await requireBenchmarkPathOutsideGitWorktrees(",
@@ -972,7 +984,7 @@ describe("benchmark output containment", () => {
 describe("benchmark runtime overlay", () => {
   test("matches the production image's Codex instruction surface", async () => {
     const dockerfile = await Bun.file(
-      path.resolve(import.meta.dir, "../../../../Dockerfile"),
+      path.resolve(import.meta.dir, "../../../../../Dockerfile"),
     ).text();
     const scopedCopyStart = dockerfile.indexOf("# Scoped source closure.");
     const scopedCopyEnd = dockerfile.indexOf(
@@ -1026,7 +1038,10 @@ describe("benchmark runtime overlay", () => {
       { createPath: true },
     );
     await Bun.write(
-      path.join(implementationRoot, "packages/backend/src/goal/pokemonctl.ts"),
+      path.join(
+        implementationRoot,
+        "packages/backend/src/goal/control/pokemonctl.ts",
+      ),
       "process.stdout.write('old pokemonctl\\n');\n",
       { createPath: true },
     );
@@ -1065,7 +1080,7 @@ describe("benchmark runtime overlay", () => {
         await Bun.file(
           path.join(
             runtimeDirectory,
-            "packages/backend/src/goal/pokemonctl.ts",
+            "packages/backend/src/goal/control/pokemonctl.ts",
           ),
         ).text(),
       ).toBe("process.stdout.write('old pokemonctl\\n');\n");
@@ -1076,7 +1091,7 @@ describe("benchmark runtime overlay", () => {
         await Bun.file(
           path.join(
             runtimeDirectory,
-            "packages/backend/src/goal/benchmark-worker-boot-readiness.ts",
+            "packages/backend/src/goal/benchmark/benchmark-worker-boot-readiness.ts",
           ),
         ).exists(),
       ).toBe(false);
@@ -1109,7 +1124,7 @@ describe("benchmark runtime overlay", () => {
 
   test("executes the copied current pokemonctl dependency graph", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "pokemon-runtime-exec-"));
-    const implementationRoot = path.resolve(import.meta.dir, "../../../..");
+    const implementationRoot = path.resolve(import.meta.dir, "../../../../..");
     const runDirectory = path.join(root, "run-001");
     await mkdir(runDirectory);
     try {
@@ -1122,7 +1137,7 @@ describe("benchmark runtime overlay", () => {
           "bun",
           path.join(
             runtimeDirectory,
-            "packages/backend/src/goal/pokemonctl.ts",
+            "packages/backend/src/goal/control/pokemonctl.ts",
           ),
           "--help",
         ],
@@ -1189,7 +1204,7 @@ test("harness-error lifecycle preserves the actual Codex exit code", () => {
 
 test("benchmark worker inlines its boot-readiness glue instead of importing it", async () => {
   const worker = await Bun.file(
-    path.resolve(import.meta.dir, "../../scripts/goal-benchmark-worker.ts"),
+    path.resolve(import.meta.dir, "../../../scripts/goal-benchmark-worker.ts"),
   ).text();
   const benchmarkImports = [
     ...worker.matchAll(/from "(#src\/goal\/benchmark-[^"]+)"/gu),
@@ -1202,7 +1217,7 @@ test("benchmark worker inlines its boot-readiness glue instead of importing it",
   // functions call (present in every comparison target).
   expect(worker).toContain("async function bootBenchmarkSave(");
   expect(worker).toContain("function assessBenchmarkBootReadiness(");
-  expect(worker).toContain('from "#src/goal/game-observation.ts"');
+  expect(worker).toContain('from "#src/goal/game/game-observation.ts"');
   expect(worker).toContain('started.kind === "missing_credential"');
   expect(worker).toContain(".some((entry) => entry.id === goalId)");
   expect(worker).not.toContain("helper_dir:");
@@ -1210,7 +1225,7 @@ test("benchmark worker inlines its boot-readiness glue instead of importing it",
 });
 
 test("streamed worker boots against a target predating the boot-readiness helper", async () => {
-  const backendRoot = path.resolve(import.meta.dir, "../..");
+  const backendRoot = path.resolve(import.meta.dir, "../../..");
   const workerSource = await Bun.file(
     path.join(backendRoot, "scripts/goal-benchmark-worker.ts"),
   ).text();
@@ -1230,9 +1245,15 @@ test("streamed worker boots against a target predating the boot-readiness helper
       path.join(target, "node_modules"),
       "dir",
     );
-    await rm(path.join(target, "src/goal/benchmark-worker-boot-readiness.ts"), {
-      force: true,
-    });
+    await rm(
+      path.join(
+        target,
+        "src/goal/benchmark/benchmark-worker-boot-readiness.ts",
+      ),
+      {
+        force: true,
+      },
+    );
     await Bun.write(
       path.join(target, "package.json"),
       `${JSON.stringify({
@@ -1242,7 +1263,10 @@ test("streamed worker boots against a target predating the boot-readiness helper
     );
     expect(
       await Bun.file(
-        path.join(target, "src/goal/benchmark-worker-boot-readiness.ts"),
+        path.join(
+          target,
+          "src/goal/benchmark/benchmark-worker-boot-readiness.ts",
+        ),
       ).exists(),
     ).toBe(false);
 
@@ -1277,7 +1301,7 @@ test("streamed worker boots against a target predating the boot-readiness helper
 
 test("benchmark runner rejects an unidentifiable dirty implementation", async () => {
   const runner = await Bun.file(
-    path.resolve(import.meta.dir, "../../scripts/goal-benchmark.ts"),
+    path.resolve(import.meta.dir, "../../../scripts/goal-benchmark.ts"),
   ).text();
 
   expect(runner).toContain('"target implementation"');

@@ -1,7 +1,7 @@
 import type {
   CatchStateEvidence,
   PartyIdentityEvidence,
-} from "./catch-evidence.ts";
+} from "#src/goal/catch-evidence.ts";
 import {
   EMERALD_FLASH_SAVE_BYTES,
   readValidatedEmeraldSaveSlots,
