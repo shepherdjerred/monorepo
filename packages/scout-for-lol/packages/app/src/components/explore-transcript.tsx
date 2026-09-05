@@ -12,7 +12,7 @@ import {
 } from "@scout-for-lol/design-system/components/button";
 import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { Disclosure } from "#src/components/explore-disclosure.tsx";
-import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
+import { ExploreIntentCards } from "#src/components/explore-intent-cards.tsx";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
@@ -192,7 +192,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
       {props.pendingAnswer !== null && (
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
-      {props.showRawTrace && <ExploreDareCards trace={props.trace} />}
+      {props.showRawTrace && <ExploreIntentCards trace={props.trace} />}
       {/* The query result the moment the query returns, rather than at the end
           of the turn. The same component renders it after the turn lands, so
           the hand-off to the persisted message does not reflow the table. */}
