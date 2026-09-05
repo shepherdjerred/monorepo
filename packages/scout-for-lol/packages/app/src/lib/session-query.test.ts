@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test } from "vitest";
 import {
   resolveSessionGuardState,
@@ -6,14 +7,25 @@ import {
 
 describe("session query", () => {
   test("only a successful anonymous response means signed out", () => {
-    expect(resolveSessionGuardState({ user: null }, false)).toBe("anonymous");
-    expect(resolveSessionGuardState(undefined, true)).toBe("unavailable");
+    expect(resolveSessionGuardState(Loaded.done({ user: null }))).toBe(
+      "anonymous",
+    );
+    expect(
+      resolveSessionGuardState(Loaded.failed(new Error("unreachable"))),
+    ).toBe("unavailable");
+    expect(resolveSessionGuardState(Loaded.loading())).toBe("loading");
   });
 
   test("keeps cached authentication through a failed background refresh", () => {
-    expect(resolveSessionGuardState({ user: { discordId: "123" } }, true)).toBe(
-      "authenticated",
-    );
+    // This is `degraded`: a session in hand and a failed refresh over it. The
+    // guard predates the name and already made the right call.
+    expect(
+      resolveSessionGuardState(
+        Loaded.degraded({ user: { discordId: "123" } }, [
+          { path: ["auth.sessionState"], error: new Error("refresh failed") },
+        ]),
+      ),
+    ).toBe("authenticated");
   });
 
   test("polls after retries are exhausted so a restarted backend can recover", () => {
