@@ -7,7 +7,7 @@ import {
 } from "@scout-for-lol/design-system/components/button";
 import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import { Disclosure } from "#src/components/explore-disclosure.tsx";
-import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
+import { ExploreIntentCards } from "#src/components/explore-intent-cards.tsx";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
@@ -157,7 +157,7 @@ const PendingTurn = memo(function PendingTurnView(props: {
       {props.pendingAnswer !== null && (
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
-      {props.showRawTrace && <ExploreDareCards trace={props.trace} />}
+      {props.showRawTrace && <ExploreIntentCards trace={props.trace} />}
       {props.activity !== null && props.trace.length === 0 && (
         <p className="flex items-center gap-2 text-sm text-scout-subtle">
           <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
