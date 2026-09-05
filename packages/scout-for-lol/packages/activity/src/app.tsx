@@ -139,9 +139,11 @@ function ActivityContent() {
       </main>
     );
   }
+  const stale = night.status === "degraded";
   if (night.data === null || night.data.state === "ENDED") {
     return (
       <main className="centered">
+        {stale ? <StaleBanner /> : null}
         <section className="panel welcome">
           <p className="eyebrow">Beta</p>
           <h1>Scout Customs</h1>
@@ -176,6 +178,7 @@ function ActivityContent() {
 
   return (
     <main className="centered">
+      {stale ? <StaleBanner /> : null}
       <section className="panel welcome">
         <h1>{snapshot.guildName} Customs</h1>
         <p>
@@ -199,6 +202,19 @@ function ActivityContent() {
         </button>
       </section>
     </main>
+  );
+}
+
+/**
+ * A customs night is live state, so a snapshot that stopped updating is
+ * misleading in a way a stale list is not — including the "no night yet"
+ * screen, which is just as cacheable as a running one.
+ */
+function StaleBanner() {
+  return (
+    <p className="stale-banner" role="status">
+      Showing the last synced night — reconnecting.
+    </p>
   );
 }
 
