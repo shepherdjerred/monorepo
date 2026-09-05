@@ -72,9 +72,11 @@ export function DatasetListPage(): React.JSX.Element {
                 <CardContent className="py-8">Loading datasets...</CardContent>
               </Card>
             ) : null}
-            {datasets.status === "error" ? (
+            {datasets.status === "error" || datasets.status === "degraded" ? (
               <p className="text-sm text-red-700" role="alert">
-                Could not load datasets:{" "}
+                {datasets.status === "degraded"
+                  ? "Showing the last known datasets — the most recent refresh failed: "
+                  : "Could not load datasets: "}
                 {Loaded.messageOf(datasets.errors[0].error)}
               </p>
             ) : null}

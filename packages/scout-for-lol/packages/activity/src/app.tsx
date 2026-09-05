@@ -174,7 +174,16 @@ function ActivityContent() {
     (participant) => participant.discordId === session.identity.id,
   );
   const manager = ["HOST", "COHOST", "ADMIN"].includes(snapshot.viewerRole);
-  if (joined || manager) return <CustomsExperience snapshot={snapshot} />;
+  if (joined || manager) {
+    // The live view is the branch that most needs this: stale teams, roles and
+    // controls presented as synchronized are worse than a stale lobby screen.
+    return (
+      <>
+        {stale ? <StaleBanner /> : null}
+        <CustomsExperience snapshot={snapshot} />
+      </>
+    );
+  }
 
   return (
     <main className="centered">
