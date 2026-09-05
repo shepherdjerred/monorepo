@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import {
   skipToken,
   useMutation,
@@ -150,7 +151,11 @@ export function CasePage(): React.JSX.Element {
         : skipToken,
     ),
   );
-  const detail = detailQuery.data;
+  // `error` is a case that could not be read at all; a refetch that failed
+  // over a case already open is `degraded` and keeps rendering, so a rater
+  // does not lose an in-progress review to one failed poll.
+  const caseValue = Loaded.fromQuery(detailQuery, ["case"]);
+  const detail = Loaded.getOrElse(caseValue, undefined);
   useDocumentTitle(
     detail === undefined
       ? "Review case"
@@ -184,7 +189,7 @@ export function CasePage(): React.JSX.Element {
   if (!datasetResult.success || !caseResult.success) {
     return <main className="mx-auto max-w-5xl p-8">Invalid case URL.</main>;
   }
-  if (detailQuery.isError) {
+  if (caseValue.status === "error") {
     return <main className="mx-auto max-w-5xl p-8">Case not found.</main>;
   }
   if (detail === undefined) {
