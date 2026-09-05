@@ -105,6 +105,19 @@ describe("native macOS dispatch watch", () => {
     ).toEqual({ kind: "complete" });
   });
 
+  test("treats selector-skipped native lanes as terminal", () => {
+    expect(
+      dispatchDecision(
+        [
+          job("quotabar-macos-pr", "broken", null),
+          job("hkctl-native-pr", "broken", null),
+          job("tasknotes-native-pr", "passed", "2026-08-24T00:00:00Z"),
+        ],
+        { idleSinceMs: null, nowMs: 10_000 },
+      ),
+    ).toEqual({ kind: "complete" });
+  });
+
   test("pauses the idle clock while the serial Mac is running another job", () => {
     expect(
       dispatchDecision(
