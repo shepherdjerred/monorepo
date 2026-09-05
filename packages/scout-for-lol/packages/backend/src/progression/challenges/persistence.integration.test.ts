@@ -2,12 +2,15 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   ChallengeContractV1Schema,
   type DiscordAccountId,
+  type RawMatch,
 } from "@scout-for-lol/data";
 import { publishChallengeDraft } from "#src/progression/challenges/catalog.ts";
 import { previewChallengeDraft } from "#src/progression/challenges/drafts.ts";
 import {
   challengeMatchNeedsTimeline,
   challengeRunIdsForMatch,
+  prepareChallengeRunsForMatch,
+  queuePreparedChallengeRuns,
 } from "#src/progression/challenges/postmatch.ts";
 import {
   changeChallengeRunAccounts,
@@ -97,6 +100,34 @@ async function createOwnedAccounts() {
     throw new Error("Challenge fixture requires two accounts");
   }
   return { first, second };
+}
+
+function matchForParticipant(puuid: string): RawMatch {
+  return {
+    metadata: {
+      dataVersion: "2",
+      matchId: "NA1_9876543210",
+      participants: [puuid],
+    },
+    info: {
+      endOfGameResult: "GameComplete",
+      gameCreation: 1_000_000,
+      gameDuration: 1800,
+      gameEndTimestamp: 2_000_000,
+      gameId: 987_654_321,
+      gameMode: "CLASSIC",
+      gameName: "challenge-trigger-fixture",
+      gameStartTimestamp: 1_000_000,
+      gameType: "MATCHED_GAME",
+      gameVersion: "14.1.1",
+      mapId: 11,
+      participants: [],
+      platformId: "NA1",
+      queueId: 420,
+      teams: [],
+      tournamentCode: "",
+    },
+  };
 }
 
 async function verifyCompletedRunCannotDisplaceRestart(): Promise<void> {
@@ -398,5 +429,26 @@ describe("challenge timeline durability", () => {
     await expect(challengeMatchNeedsTimeline([second.puuid], db)).resolves.toBe(
       false,
     );
+
+    const match = matchForParticipant(first.puuid);
+    const prepared = await prepareChallengeRunsForMatch(match, "beta", db);
+    expect(prepared).toEqual([
+      { runId: run.runId, revision: 2, timelineRequired: true },
+    ]);
+    await expect(
+      prepareChallengeRunsForMatch(match, "beta", db),
+    ).resolves.toEqual(prepared);
+    await expect(
+      db.challengeRunRevision.findUniqueOrThrow({
+        where: { runId_revision: { runId: run.runId, revision: 2 } },
+      }),
+    ).resolves.toMatchObject({ revisionState: "waiting_for_evidence" });
+
+    await queuePreparedChallengeRuns(prepared, db);
+    await expect(
+      db.challengeRunRevision.findUniqueOrThrow({
+        where: { runId_revision: { runId: run.runId, revision: 2 } },
+      }),
+    ).resolves.toMatchObject({ revisionState: "queued" });
   });
 });

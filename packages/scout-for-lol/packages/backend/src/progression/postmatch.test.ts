@@ -11,17 +11,16 @@ const mocks = vi.hoisted(() => {
     }),
     prepareChallengeRunsForMatch: vi.fn(async () => {
       calls.push("prepare");
-      return [{ runId: "run-id", revision: 2 }];
-    }),
-    challengeMatchNeedsTimeline: vi.fn(async () => {
-      calls.push("needs-timeline");
-      return true;
+      return [{ runId: "run-id", revision: 2, timelineRequired: true }];
     }),
     fetchTimelineForProgression: vi.fn(async () => {
       calls.push("fetch-timeline");
     }),
     launchPreparedChallengeRuns: vi.fn(async () => {
       calls.push("launch");
+    }),
+    queuePreparedChallengeRuns: vi.fn(async () => {
+      calls.push("queue");
     }),
   };
 });
@@ -33,9 +32,9 @@ vi.mock("#src/progression/hall/evaluate-match.ts", () => ({
   evaluateHallMatch: mocks.evaluateHallMatch,
 }));
 vi.mock("#src/progression/challenges/postmatch.ts", () => ({
-  challengeMatchNeedsTimeline: mocks.challengeMatchNeedsTimeline,
   launchPreparedChallengeRuns: mocks.launchPreparedChallengeRuns,
   prepareChallengeRunsForMatch: mocks.prepareChallengeRunsForMatch,
+  queuePreparedChallengeRuns: mocks.queuePreparedChallengeRuns,
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
   fetchTimelineForProgression: mocks.fetchTimelineForProgression,
@@ -79,7 +78,7 @@ describe("competitive progression post-match ordering", () => {
     vi.clearAllMocks();
   });
 
-  test("revalidates timeline evidence after revision creation and before launch", async () => {
+  test("stages timeline evidence before queueing and launching revisions", async () => {
     await processCompetitiveProgressionMatch({
       match: matchFixture(),
       timeline: null,
@@ -89,8 +88,9 @@ describe("competitive progression post-match ordering", () => {
     expect(mocks.calls).toEqual([
       "hall",
       "prepare",
-      "needs-timeline",
       "fetch-timeline",
+      "prepare",
+      "queue",
       "launch",
     ]);
   });

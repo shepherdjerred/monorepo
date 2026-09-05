@@ -29,7 +29,10 @@ export async function challengeMatchNeedsTimeline(
   });
   if (cursorMatch !== null) return true;
   const initializingRuns = await db.challengeRun.findMany({
-    where: { activePointer: { isNot: null } },
+    where: {
+      activePointer: { isNot: null },
+      OR: [{ recomputing: true }, { cursors: { none: {} } }],
+    },
     select: {
       frozenContractJson: true,
       revisions: {
@@ -105,100 +108,191 @@ export async function challengeRunIdsForMatch(
   return runIds;
 }
 
+export type PreparedChallengeRun = {
+  readonly runId: string;
+  readonly revision: number;
+  readonly timelineRequired: boolean;
+};
+
+function timelineRequirementForRevision(
+  frozenContractJson: string,
+  selectedAccountsJson: string,
+  participantPuuids: readonly LeaguePuuid[],
+): boolean | null {
+  const participants = new Set(participantPuuids);
+  const accounts = parseProgressionJson(
+    selectedAccountsJson,
+    ChallengeSelectedAccountsSchema,
+  );
+  if (!accounts.some((account) => participants.has(account.puuid))) return null;
+  const contract = parseProgressionJson(
+    frozenContractJson,
+    ChallengeContractV1Schema,
+  );
+  return challengeNeedsTimeline(contract.matchPredicate);
+}
+
 async function createMatchRevision(
-  runId: string,
-  matchId: ReturnType<typeof MatchIdSchema.parse>,
-  stage: ScoutStage,
-): Promise<{ readonly runId: string; readonly revision: number } | null> {
-  return await prisma.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT 1 FROM "ChallengeRun" WHERE "id" = ${runId} FOR UPDATE`;
-    const existing = await tx.challengeRunMatchTrigger.findUnique({
-      where: { runId_matchId: { runId, matchId } },
+  db: ExtendedPrismaClient,
+  options: {
+    readonly runId: string;
+    readonly matchId: ReturnType<typeof MatchIdSchema.parse>;
+    readonly stage: ScoutStage;
+    readonly participantPuuids: readonly LeaguePuuid[];
+  },
+): Promise<PreparedChallengeRun | null> {
+  return await db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT 1 FROM "ChallengeRun" WHERE "id" = ${options.runId} FOR UPDATE`;
+    const current = await tx.challengeRun.findUniqueOrThrow({
+      where: { id: options.runId },
+      include: { activePointer: true },
     });
-    if (existing !== null) {
-      const [run, revision] = await Promise.all([
-        tx.challengeRun.findUniqueOrThrow({
-          where: { id: runId },
-          include: { activePointer: true },
-        }),
-        tx.challengeRunRevision.findUniqueOrThrow({
-          where: {
-            runId_revision: { runId, revision: existing.revision },
+    if (current.activePointer === null) return null;
+    const existing = await tx.challengeRunMatchTrigger.findUnique({
+      where: {
+        runId_matchId: { runId: options.runId, matchId: options.matchId },
+      },
+    });
+    if (existing !== null && current.evaluationRevision === existing.revision) {
+      const revision = await tx.challengeRunRevision.findUniqueOrThrow({
+        where: {
+          runId_revision: {
+            runId: options.runId,
+            revision: existing.revision,
           },
-        }),
-      ]);
+        },
+      });
       if (
-        run.activePointer === null ||
-        run.evaluationRevision !== existing.revision ||
         revision.revisionState === "ready" ||
         revision.revisionState === "stale"
       ) {
         return null;
       }
-      return { runId, revision: existing.revision };
+      const timelineRequired = timelineRequirementForRevision(
+        current.frozenContractJson,
+        revision.selectedAccountsJson,
+        options.participantPuuids,
+      );
+      return timelineRequired === null
+        ? null
+        : {
+            runId: options.runId,
+            revision: existing.revision,
+            timelineRequired,
+          };
     }
-    const current = await tx.challengeRun.findUniqueOrThrow({
-      where: { id: runId },
-      include: { activePointer: true },
-    });
-    if (current.activePointer === null) return null;
+    if (existing !== null) {
+      await tx.challengeRunRevision.updateMany({
+        where: {
+          runId: options.runId,
+          revision: existing.revision,
+          revisionState: "waiting_for_evidence",
+        },
+        data: { revisionState: "stale", completedAt: new Date() },
+      });
+    }
     const priorRevision = await tx.challengeRunRevision.findUniqueOrThrow({
       where: {
         runId_revision: {
-          runId,
+          runId: options.runId,
           revision: current.evaluationRevision,
         },
       },
     });
+    const timelineRequired = timelineRequirementForRevision(
+      current.frozenContractJson,
+      priorRevision.selectedAccountsJson,
+      options.participantPuuids,
+    );
+    if (timelineRequired === null) return null;
     const updated = await tx.challengeRun.update({
-      where: { id: runId },
+      where: { id: options.runId },
       data: { evaluationRevision: { increment: 1 }, recomputing: true },
     });
     const workflowId = scoutChallengeRunRecomputeWorkflowId(
-      stage,
-      runId,
+      options.stage,
+      options.runId,
       updated.evaluationRevision,
     );
     await tx.challengeRunRevision.create({
       data: {
-        runId,
+        runId: options.runId,
         revision: updated.evaluationRevision,
         selectedAccountsJson: priorRevision.selectedAccountsJson,
+        revisionState: "waiting_for_evidence",
         workflowId,
       },
     });
-    await tx.challengeRunMatchTrigger.create({
-      data: { runId, matchId, revision: updated.evaluationRevision },
+    await tx.challengeRunMatchTrigger.upsert({
+      where: {
+        runId_matchId: { runId: options.runId, matchId: options.matchId },
+      },
+      create: {
+        runId: options.runId,
+        matchId: options.matchId,
+        revision: updated.evaluationRevision,
+      },
+      update: { revision: updated.evaluationRevision },
     });
-    return { runId, revision: updated.evaluationRevision };
+    return {
+      runId: options.runId,
+      revision: updated.evaluationRevision,
+      timelineRequired,
+    };
   });
 }
 
 export async function prepareChallengeRunsForMatch(
   match: RawMatch,
   stage: ScoutStage,
-): Promise<readonly { readonly runId: string; readonly revision: number }[]> {
+  db: ExtendedPrismaClient = prisma,
+): Promise<readonly PreparedChallengeRun[]> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
-  const runIds = await challengeRunIdsForMatch(
-    match.metadata.participants.map((puuid) => LeaguePuuidSchema.parse(puuid)),
+  const participantPuuids = match.metadata.participants.map((puuid) =>
+    LeaguePuuidSchema.parse(puuid),
   );
-  const revisions: { readonly runId: string; readonly revision: number }[] = [];
+  const runIds = await challengeRunIdsForMatch(participantPuuids, db);
+  const revisions: PreparedChallengeRun[] = [];
   for (const runId of runIds) {
-    const revision = await createMatchRevision(runId, matchId, stage);
+    const revision = await createMatchRevision(db, {
+      runId,
+      matchId,
+      stage,
+      participantPuuids,
+    });
     if (revision === null) continue;
     revisions.push(revision);
   }
   return revisions;
 }
 
+export async function queuePreparedChallengeRuns(
+  revisions: readonly PreparedChallengeRun[],
+  db: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await db.$transaction(async (tx) => {
+    for (const revision of revisions) {
+      await tx.challengeRunRevision.updateMany({
+        where: {
+          runId: revision.runId,
+          revision: revision.revision,
+          revisionState: "waiting_for_evidence",
+        },
+        data: { revisionState: "queued" },
+      });
+    }
+  });
+}
+
 export async function launchPreparedChallengeRuns(
   stage: ScoutStage,
-  revisions: readonly {
-    readonly runId: string;
-    readonly revision: number;
-  }[],
+  revisions: readonly PreparedChallengeRun[],
 ): Promise<void> {
   for (const revision of revisions) {
-    await launchChallengeRunRecompute({ stage, ...revision });
+    await launchChallengeRunRecompute({
+      stage,
+      runId: revision.runId,
+      revision: revision.revision,
+    });
   }
 }

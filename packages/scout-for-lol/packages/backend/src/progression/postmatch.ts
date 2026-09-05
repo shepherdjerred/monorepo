@@ -1,5 +1,4 @@
 import {
-  LeaguePuuidSchema,
   MatchIdSchema,
   type PlayerConfigEntry,
   type RawMatch,
@@ -8,9 +7,10 @@ import {
 import configuration from "#src/configuration.ts";
 import { evaluateHallMatch } from "#src/progression/hall/evaluate-match.ts";
 import {
-  challengeMatchNeedsTimeline,
   launchPreparedChallengeRuns,
   prepareChallengeRunsForMatch,
+  queuePreparedChallengeRuns,
+  type PreparedChallengeRun,
 } from "#src/progression/challenges/postmatch.ts";
 import {
   fetchTimelineForProgression,
@@ -26,18 +26,22 @@ export async function processCompetitiveProgressionMatch(input: {
   readonly timeline: RawTimeline | null | undefined;
   readonly trackedPlayers: PlayerConfigEntry[];
 }): Promise<void> {
-  const participantPuuids = input.match.metadata.participants.map((puuid) =>
-    LeaguePuuidSchema.parse(puuid),
-  );
-  await evaluateHallMatch(input.match);
-  const challengeRevisions = await prepareChallengeRunsForMatch(
-    input.match,
-    configuration.environment,
-  );
-  // A run can start or change accounts while this match is being processed.
-  // Re-read the run state after match-trigger revisions are serialized, then
-  // durably stage required evidence before recompute and cursor advancement.
-  if (await challengeMatchNeedsTimeline(participantPuuids)) {
+  const preparedByRun = new Map<string, PreparedChallengeRun>();
+  async function prepareCurrentRuns(): Promise<
+    readonly PreparedChallengeRun[]
+  > {
+    const prepared = await prepareChallengeRunsForMatch(
+      input.match,
+      configuration.environment,
+    );
+    for (const revision of prepared) {
+      preparedByRun.set(revision.runId, revision);
+    }
+    return prepared;
+  }
+  let timelinePersisted = false;
+  async function ensureChallengeTimeline(): Promise<void> {
+    if (timelinePersisted) return;
     const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
     if (input.timeline === null || input.timeline === undefined) {
       await fetchTimelineForProgression(
@@ -52,7 +56,24 @@ export async function processCompetitiveProgressionMatch(input: {
         matchId,
       );
     }
+    timelinePersisted = true;
   }
+
+  await evaluateHallMatch(input.match);
+  const initiallyPrepared = await prepareCurrentRuns();
+  if (initiallyPrepared.some((revision) => revision.timelineRequired)) {
+    await ensureChallengeTimeline();
+  }
+  // Catch a run start or account edit that committed while evidence was being
+  // staged. Preparing a match revision supersedes its independently launched
+  // recompute, and waiting revisions are invisible to reconciliation until the
+  // required timeline is durable.
+  const rediscovered = await prepareCurrentRuns();
+  if (rediscovered.some((revision) => revision.timelineRequired)) {
+    await ensureChallengeTimeline();
+  }
+  const challengeRevisions = [...preparedByRun.values()];
+  await queuePreparedChallengeRuns(challengeRevisions);
   await launchPreparedChallengeRuns(
     configuration.environment,
     challengeRevisions,
