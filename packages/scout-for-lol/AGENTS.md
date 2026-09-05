@@ -11,6 +11,12 @@ reference. Load `scout-development` for its working procedure.
   conversational query authoring and continuation.
 - Bryan Bucks owns Dare viewing and management. Preserve origin conversation
   links without moving management into Explore.
+- Explore may prepare report, subscription, and competition creations, never
+  perform them. A tool mints a guild- and actor-bound confirmation intent; the
+  human confirm re-runs access, permissions, channel, and limits and calls the
+  same services the web forms call. Confirmation intents are one shared table
+  and protocol with Dares: single-use, expiring, claimed by a guarded write
+  before any effect.
 - Version stored betting and Dare semantics. Existing records keep their
   original cross-game or same-game interpretation.
 - Challenger stake, pile-ons, pot total, settlement, and Discord presentation
