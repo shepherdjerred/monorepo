@@ -66,6 +66,11 @@ const SCOUT_ANALYTICS_EVENTS = [
   "explore_conversation_deleted",
   "explore_branch_selected",
   "explore_exported",
+  // Explore-prepared creations, confirmed by the person who asked for them
+  "explore_report_created",
+  "explore_subscription_created",
+  "explore_competition_created",
+  "explore_creation_confirm_failed",
   // Access (RBAC)
   "access_granted",
   "access_updated",

@@ -20,7 +20,7 @@ import { InteractiveVisualization } from "#src/components/interactive-visualizat
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { ReportResultTable } from "#src/components/report-result-table.tsx";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
-import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
+import { ExploreIntentCards } from "#src/components/explore-intent-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import {
@@ -236,7 +236,7 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
     <div className="space-y-3">
       <MarkdownAnswer>{message.content}</MarkdownAnswer>
 
-      {props.showRawTrace && <ExploreDareCards trace={message.trace} />}
+      {props.showRawTrace && <ExploreIntentCards trace={message.trace} />}
 
       <AssistantTurnResult message={message} />
 
