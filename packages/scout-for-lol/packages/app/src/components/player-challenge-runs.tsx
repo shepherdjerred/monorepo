@@ -38,21 +38,6 @@ function ChallengeRunSection(props: {
   );
 }
 
-export function GuildPlayerChallengeRuns(props: {
-  guildId: string;
-  alias: string;
-}) {
-  const trpc = useTRPC();
-  const challengeRuns = useQuery(
-    trpc.challenge.profileRuns.queryOptions(
-      { guildId: props.guildId, alias: props.alias },
-      { retry: false },
-    ),
-  );
-
-  return <ChallengeRunSection runs={challengeRuns.data} />;
-}
-
 export function ConsumerPlayerChallengeRuns(props: { playerId: PlayerId }) {
   const trpc = useTRPC();
   const challengeRuns = useQuery(
