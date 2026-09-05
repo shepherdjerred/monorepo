@@ -1,21 +1,17 @@
 #!/usr/bin/env bun
-
 import path from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
-
 import {
   listGuidanceEntries,
   type GuidanceReadMode,
   type GuidanceEntry,
 } from "./lib/agent-guidance-files.ts";
-
 export type GuidanceViolation = Readonly<{
   rule: string;
   path: string;
   message: string;
 }>;
-
 const SkillFrontmatterSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
@@ -28,7 +24,6 @@ const PORTABLE_SKILL_FIELDS = new Set([
   "metadata",
   "allowed-tools",
 ]);
-
 const SKILL_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const ROOT_AGENT_PATHS = new Set(["AGENTS.md", "packages/dotfiles/AGENTS.md"]);
 const ARCHIVE_PREFIX = "sandbox/archive/";
@@ -39,24 +34,20 @@ const ROOT_AGENT_MAX_BYTES = 16 * 1024;
 const SKILL_MAX_LINES = 160;
 const SKILL_MAX_BYTES = 12 * 1024;
 const CATALOG_MAX_BYTES = 8 * 1024;
+const PERSONAL_AGENT_PATH = "packages/dotfiles/AGENTS.md";
 const gitPath = path.posix;
-const CLIENT_SKILL_DIRECTORIES = new Set([
-  ".claude",
-  ".codex",
-  ".cursor",
-  ".opencode",
-  "dot_claude",
-  "dot_codex",
-  "dot_cursor",
-  "dot_opencode",
-  "private_dot_claude",
-  "private_dot_codex",
-  "private_dot_cursor",
-  "private_dot_opencode",
-]);
+const CLIENT_SKILL_DIRECTORIES = new Set(
+  [
+    ".claude .codex .cursor .opencode",
+    "dot_claude dot_codex dot_cursor dot_opencode",
+    "private_dot_claude private_dot_codex private_dot_cursor private_dot_opencode",
+  ].flatMap((group) => group.split(" ")),
+);
 const GEMINI_SKILL_DIRECTORIES = new Set(["dot_gemini", "private_dot_gemini"]);
 const CURSOR_ADAPTER_PATH =
   "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc";
+const GEMINI_SOURCE_ADAPTER_PATH =
+  "packages/dotfiles/dot_gemini/symlink_GEMINI.md";
 const CURSOR_ADAPTER_CONTENT =
   "---\ndescription: Use the canonical personal and repository agent guidance\nalwaysApply: true\n---\n\n" +
   "Follow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching\nskills from `.agents/skills`; do not duplicate their instructions here.";
@@ -64,7 +55,7 @@ const REQUIRED_SOURCE_ADAPTERS = new Map([
   ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
   ["packages/dotfiles/dot_claude/symlink_skills", "../.agents/skills"],
   ["packages/dotfiles/private_dot_codex/symlink_AGENTS.md", "../AGENTS.md"],
-  ["packages/dotfiles/dot_gemini/symlink_GEMINI.md", "../AGENTS.md"],
+  [GEMINI_SOURCE_ADAPTER_PATH, "../AGENTS.md"],
   [
     "packages/dotfiles/dot_gemini/config/symlink_skills",
     "../../.agents/skills",
@@ -79,7 +70,6 @@ function lineCount(contents: string): number {
   const count = contents.split(/\r?\n/).length;
   return contents.endsWith("\n") ? count - 1 : count;
 }
-
 function byteCount(contents: string): number {
   return new TextEncoder().encode(contents).byteLength;
 }
@@ -236,6 +226,13 @@ function validateClientLayout(
       validateSourceAdapter(byPath, entryPath, expected),
     );
   }
+  if (byPath.get(PERSONAL_AGENT_PATH)?.kind !== "file") {
+    violations.push({
+      rule: "source-adapter-target",
+      path: PERSONAL_AGENT_PATH,
+      message: "required source adapters need the canonical personal AGENTS.md",
+    });
+  }
   const cursorAdapter = byPath.get(CURSOR_ADAPTER_PATH);
   if (
     cursorAdapter?.kind !== "file" ||
@@ -266,6 +263,16 @@ function validateClientSpecificEntry(
       rule: "duplicate-client-skill",
       path: entry.path,
       message: "client-specific skill copies are not allowed",
+    });
+  }
+  if (
+    entry.path.endsWith("GEMINI.md") &&
+    entry.path !== GEMINI_SOURCE_ADAPTER_PATH
+  ) {
+    violations.push({
+      rule: "repository-gemini-guidance",
+      path: entry.path,
+      message: "repository guidance belongs in AGENTS.md or .agents/skills",
     });
   }
   if (
@@ -311,17 +318,6 @@ function validateAgentEntry(
     }),
   );
   return violations;
-}
-function validateClaudeEntry(
-  entry: GuidanceEntry,
-  byPath: ReadonlyMap<string, GuidanceEntry>,
-): GuidanceViolation[] {
-  const violation = validateSymlink(byPath, {
-    path: entry.path,
-    target: "AGENTS.md",
-    rule: "claude-compatibility",
-  });
-  return violation === undefined ? [] : [violation];
 }
 type SkillRegistry = Readonly<{
   ids: Map<string, string>;
@@ -385,7 +381,6 @@ function validateSkillMetadata(
       message: `duplicates ${priorPath}`,
     });
   }
-
   const root = catalogRoot(entry.path);
   if (root !== undefined) {
     const catalogBytes = byteCount(
@@ -452,7 +447,14 @@ export function validateAgentGuidance(
       violations.push(...validateAgentEntry(entry, byPath));
     }
     if (entry.path.endsWith("/CLAUDE.md") || entry.path === "CLAUDE.md") {
-      violations.push(...validateClaudeEntry(entry, byPath));
+      addWhenPresent(
+        violations,
+        validateSymlink(byPath, {
+          path: entry.path,
+          target: "AGENTS.md",
+          rule: "claude-compatibility",
+        }),
+      );
     }
     if (isSkill(entry.path)) {
       violations.push(...validateSkillEntry(entry, registry));
@@ -465,7 +467,6 @@ export function validateAgentGuidance(
       left.rule.localeCompare(right.rule),
   );
 }
-
 export async function checkAgentGuidance(
   readMode: GuidanceReadMode = "worktree",
 ): Promise<void> {
@@ -493,7 +494,6 @@ export async function checkAgentGuidance(
     `Agent guidance: ${entries.length.toString()} active files satisfy placement, compatibility, and budget rules`,
   );
 }
-
 if (import.meta.main) {
   await checkAgentGuidance(
     process.argv.includes("--staged") ? "index" : "worktree",

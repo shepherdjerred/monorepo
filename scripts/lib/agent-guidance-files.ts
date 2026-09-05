@@ -41,6 +41,7 @@ function isGuidancePath(
   return (
     entryPath.endsWith("AGENTS.md") ||
     entryPath.endsWith("CLAUDE.md") ||
+    entryPath.endsWith("GEMINI.md") ||
     entryPath.endsWith("SKILL.md") ||
     entryPath === ".claude/skills" ||
     cursorRule ||

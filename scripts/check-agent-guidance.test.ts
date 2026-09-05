@@ -221,6 +221,7 @@ describe("agent guidance guard", () => {
     const entries = validFixture();
     entries.push(
       file("packages/app/.cursor/rules/local.mdc", "duplicated prose"),
+      file("packages/app/GEMINI.md", "duplicated guidance"),
       file(".claude/skills/delivery/SKILL.md", "duplicated skill"),
       skill(
         "packages/app/.claude/skills/package-copy/SKILL.md",
@@ -241,6 +242,7 @@ describe("agent guidance guard", () => {
     );
     const found = rules(entries);
     expect(found).toEqual(expect.arrayContaining(["repository-cursor-rule"]));
+    expect(found).toContain("repository-gemini-guidance");
     expect(
       found.filter((rule) => rule === "duplicate-client-skill"),
     ).toHaveLength(5);
@@ -268,6 +270,13 @@ describe("agent guidance guard", () => {
       );
     }
     expect(rules(entries)).toContain("skill-catalog-bytes");
+  });
+
+  test("rejects missing canonical source for global adapters", () => {
+    const entries = validFixture().filter(
+      ({ path }) => path !== "packages/dotfiles/AGENTS.md",
+    );
+    expect(rules(entries)).toContain("source-adapter-target");
   });
 
   test("ignores archived sandbox guidance", () => {

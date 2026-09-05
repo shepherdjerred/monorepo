@@ -56,9 +56,19 @@ entire homelab runbook for a library edit would obscure that simple boundary.
 
 ## Compatibility without copies
 
-`AGENTS.md` and `.agents/skills` are the open core. Claude consumes symlinked
-compatibility paths. Codex, Cursor, OpenCode, and Antigravity receive the same
-source through native discovery or a tiny pointer.
+[`AGENTS.md`](https://github.com/shepherdjerred/monorepo/blob/a5af0efd7258d402c269bc99e6a597dd732edbd2/AGENTS.md)
+and [`.agents/skills`](https://github.com/shepherdjerred/monorepo/tree/a5af0efd7258d402c269bc99e6a597dd732edbd2/.agents/skills)
+are the open core. Claude consumes the
+[chezmoi adapters](https://github.com/shepherdjerred/monorepo/tree/a5af0efd7258d402c269bc99e6a597dd732edbd2/packages/dotfiles/dot_claude),
+while Codex uses its
+[canonical pointer](https://github.com/shepherdjerred/monorepo/blob/a5af0efd7258d402c269bc99e6a597dd732edbd2/packages/dotfiles/private_dot_codex/symlink_AGENTS.md),
+Cursor uses its
+[minimal adapter](https://github.com/shepherdjerred/monorepo/blob/a5af0efd7258d402c269bc99e6a597dd732edbd2/packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc),
+and Antigravity uses its
+[Gemini adapters](https://github.com/shepherdjerred/monorepo/tree/a5af0efd7258d402c269bc99e6a597dd732edbd2/packages/dotfiles/dot_gemini).
+The [guidance guard](https://github.com/shepherdjerred/monorepo/blob/a5af0efd7258d402c269bc99e6a597dd732edbd2/scripts/check-agent-guidance.ts)
+rejects duplicate client copies. OpenCode relies on native discovery, so it has
+no second prose copy.
 
 An adapter contains no independent policy. Its only job is to lead a client to
 the canonical source. Deleting duplicated prose removes the possibility that
