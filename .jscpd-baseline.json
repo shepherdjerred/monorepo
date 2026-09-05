@@ -1032,10 +1032,6 @@
       "clones": 1,
       "tokens": 72
     },
-    "packages/scout-for-lol/packages/backend/src/discord/scout/visualization.test.ts|packages/scout-for-lol/packages/backend/src/discord/scout/visualization.test.ts": {
-      "clones": 2,
-      "tokens": 172
-    },
     "packages/scout-for-lol/packages/backend/src/discord/scout/visualization.ts|packages/scout-for-lol/packages/backend/src/discord/scout/visualization.ts": {
       "clones": 2,
       "tokens": 158
