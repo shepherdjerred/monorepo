@@ -40,10 +40,19 @@ export function DareList(props: {
     ),
     available: (dares, meta) =>
       dares.length === 0 ? (
-        <EmptyState>
-          <h2>No dares match</h2>
-          <p>Try another search or create a Dare in Explore.</p>
-        </EmptyState>
+        <>
+          {/*
+            An empty list can itself be stale — a cached `[]` whose refetch
+            failed. Without the notice the reader is told there are no matching
+            dares with nothing to say the answer is out of date, which is the
+            most misleading of the four states.
+          */}
+          <StaleState errors={meta.errors} />
+          <EmptyState>
+            <h2>No dares match</h2>
+            <p>Try another search or create a Dare in Explore.</p>
+          </EmptyState>
+        </>
       ) : (
         <>
           <StaleState errors={meta.errors} />

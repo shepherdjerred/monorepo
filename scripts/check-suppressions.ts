@@ -54,12 +54,6 @@ const EXCLUDED_FILES = [
   "packages/birmel/src/music/extractors.ts",
   // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
   "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
-  // Intentional: `Loaded.all` accumulates into a `Record<string, unknown>` and
-  // returns it as the mapped `LoadedData<T>`. The loop proves every key of `T`
-  // was written, but the checker cannot connect a loop's proof to a mapped
-  // type. Every other combinator in the package narrows honestly; this is the
-  // single assertion, and it is also baselined in .quality-baseline.json.
-  "packages/loaded/src/index.ts",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19
   "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
   // Intentional: Sentry ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
