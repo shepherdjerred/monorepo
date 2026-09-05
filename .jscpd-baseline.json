@@ -1564,10 +1564,6 @@
       "clones": 1,
       "tokens": 90
     },
-    "packages/temporal/src/activities/agent-task.test.ts|packages/temporal/src/activities/agent-task.test.ts": {
-      "clones": 1,
-      "tokens": 75
-    },
     "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts|packages/temporal/src/activities/data-dragon.ts": {
       "clones": 1,
       "tokens": 76
@@ -1608,29 +1604,13 @@
       "clones": 1,
       "tokens": 95
     },
-    "packages/temporal/src/activities/report-delivery.test.ts|packages/temporal/src/activities/report-delivery.test.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/temporal/src/activities/report-freshness.ts|packages/temporal/src/activities/tasknotes-canary.ts": {
       "clones": 1,
       "tokens": 105
     },
-    "packages/temporal/src/activities/scout-generated-preflight.test.ts|packages/temporal/src/activities/scout-generated-preflight.test.ts": {
-      "clones": 2,
-      "tokens": 158
-    },
-    "packages/temporal/src/activities/scout-season-refresh-git.integration.test.ts|packages/temporal/src/activities/scout-season-refresh-git.integration.test.ts": {
-      "clones": 1,
-      "tokens": 100
-    },
     "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
       "clones": 1,
       "tokens": 70
-    },
-    "packages/temporal/src/event-bridge/github-webhook.test.ts|packages/temporal/src/event-bridge/github-webhook.test.ts": {
-      "clones": 1,
-      "tokens": 74
     },
     "packages/temporal/src/event-bridge/sleep-webhook.ts|packages/temporal/src/event-bridge/xcode-cloud-webhook.ts": {
       "clones": 1,
@@ -1644,17 +1624,9 @@
       "clones": 1,
       "tokens": 143
     },
-    "packages/temporal/src/shared/llm-catalog-alert.test.ts|packages/temporal/src/shared/llm-catalog-alert.test.ts": {
-      "clones": 1,
-      "tokens": 91
-    },
     "packages/temporal/src/workflows/data-dragon.test.ts|packages/temporal/src/workflows/data-dragon.test.ts": {
       "clones": 1,
       "tokens": 75
-    },
-    "packages/temporal/src/workflows/glitter-corpus.test.ts|packages/temporal/src/workflows/glitter-corpus.test.ts": {
-      "clones": 1,
-      "tokens": 78
     },
     "packages/temporal/src/workflows/test-support.ts|packages/temporal/src/workflows/test-support.ts": {
       "clones": 1,
