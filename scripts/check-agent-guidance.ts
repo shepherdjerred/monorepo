@@ -38,6 +38,7 @@ const ROOT_AGENT_MAX_BYTES = 16 * 1024;
 const SKILL_MAX_LINES = 160;
 const SKILL_MAX_BYTES = 12 * 1024;
 const CATALOG_MAX_BYTES = 8 * 1024;
+const gitPath = path.posix;
 
 const REQUIRED_SOURCE_ADAPTERS = new Map([
   ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
@@ -78,7 +79,11 @@ function isGlobalReferenceSkill(entryPath: string): boolean {
 }
 
 function skillDirectoryName(entryPath: string): string {
-  return path.basename(path.dirname(entryPath));
+  return gitPath.basename(gitPath.dirname(entryPath));
+}
+
+export function claudeCompatibilityPath(agentPath: string): string {
+  return gitPath.join(gitPath.dirname(agentPath), "CLAUDE.md");
 }
 
 function catalogRoot(entryPath: string): string | undefined {
@@ -267,7 +272,7 @@ function validateAgentEntry(
     },
     violations,
   );
-  const claudePath = path.join(path.dirname(entry.path), "CLAUDE.md");
+  const claudePath = claudeCompatibilityPath(entry.path);
   addWhenPresent(
     violations,
     validateSymlink(byPath, {

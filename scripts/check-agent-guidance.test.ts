@@ -1,10 +1,17 @@
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import nodePath from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
+  claudeCompatibilityPath,
   checkAgentGuidance,
   validateAgentGuidance,
 } from "./check-agent-guidance.ts";
-import type { GuidanceEntry } from "./lib/agent-guidance-files.ts";
+import {
+  listGuidanceEntries,
+  type GuidanceEntry,
+} from "./lib/agent-guidance-files.ts";
 
 function file(path: string, contents: string): GuidanceEntry {
   return { path, kind: "file", contents };
@@ -54,6 +61,41 @@ function rules(entries: readonly GuidanceEntry[]): string[] {
 describe("agent guidance guard", () => {
   test("scans the repository layout", async () => {
     await expect(checkAgentGuidance()).resolves.toBeUndefined();
+  });
+
+  test("uses portable Git paths for nested Claude compatibility links", () => {
+    expect(claudeCompatibilityPath("packages/app/AGENTS.md")).toBe(
+      "packages/app/CLAUDE.md",
+    );
+  });
+
+  test("discovers guidance under arbitrary top-level directories", async () => {
+    const repositoryRoot = await mkdtemp(
+      nodePath.join(tmpdir(), "agent-guidance-discovery-"),
+    );
+    try {
+      const gitInit = Bun.spawn(["git", "init", "--quiet"], {
+        cwd: repositoryRoot,
+        stdout: "pipe",
+        stderr: "pipe",
+      });
+      expect(await gitInit.exited).toBe(0);
+      await mkdir(nodePath.join(repositoryRoot, "scripts", "fixture"), {
+        recursive: true,
+      });
+      await writeFile(
+        nodePath.join(repositoryRoot, "scripts", "fixture", "AGENTS.md"),
+        "# Fixture\n",
+      );
+
+      const entries = await listGuidanceEntries(new Set(), repositoryRoot);
+
+      expect(entries.map((entry) => entry.path)).toContain(
+        "scripts/fixture/AGENTS.md",
+      );
+    } finally {
+      await rm(repositoryRoot, { recursive: true, force: true });
+    }
   });
 
   test("accepts the canonical fixture", () => {

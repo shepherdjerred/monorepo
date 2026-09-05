@@ -33,26 +33,10 @@ function isGuidancePath(
 
 export async function listGuidanceEntries(
   extraTrackedPaths: ReadonlySet<string>,
+  repositoryRoot = path.resolve(import.meta.dir, "../.."),
 ): Promise<GuidanceEntry[]> {
-  const repositoryRoot = path.resolve(import.meta.dir, "../..");
   const tracked = await run(
-    [
-      "git",
-      "ls-files",
-      "--cached",
-      "--others",
-      "--exclude-standard",
-      "-z",
-      "--",
-      "AGENTS.md",
-      "CLAUDE.md",
-      ".agents",
-      ".claude",
-      ".cursor",
-      ".opencode",
-      "packages",
-      "sandbox",
-    ],
+    ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
     { cwd: repositoryRoot, capture: true, secret: true },
   );
   const entryPaths = tracked.stdout
