@@ -39,6 +39,17 @@ const SKILL_MAX_LINES = 160;
 const SKILL_MAX_BYTES = 12 * 1024;
 const CATALOG_MAX_BYTES = 8 * 1024;
 const gitPath = path.posix;
+const CLIENT_SKILL_DIRECTORIES = new Set([
+  ".claude",
+  ".cursor",
+  ".opencode",
+  "dot_claude",
+  "dot_cursor",
+  "dot_opencode",
+  "private_dot_claude",
+  "private_dot_cursor",
+  "private_dot_opencode",
+]);
 
 const REQUIRED_SOURCE_ADAPTERS = new Map([
   ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
@@ -231,11 +242,12 @@ function validateClientSpecificEntry(
   entry: GuidanceEntry,
 ): GuidanceViolation[] {
   const violations: GuidanceViolation[] = [];
-  if (
-    entry.path.startsWith(".claude/skills/") ||
-    entry.path.startsWith(".cursor/skills/") ||
-    entry.path.startsWith(".opencode/skills/")
-  ) {
+  const parts = entry.path.split("/");
+  const clientSkillCopy = parts.some(
+    (part, index) =>
+      CLIENT_SKILL_DIRECTORIES.has(part) && parts[index + 1] === "skills",
+  );
+  if (clientSkillCopy) {
     violations.push({
       rule: "duplicate-client-skill",
       path: entry.path,

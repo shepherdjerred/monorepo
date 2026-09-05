@@ -1,4 +1,10 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  rm,
+  symlink as createSymlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import nodePath from "node:path";
 import { describe, expect, test } from "vitest";
@@ -58,6 +64,15 @@ function rules(entries: readonly GuidanceEntry[]): string[] {
   return validateAgentGuidance(entries).map(({ rule }) => rule);
 }
 
+async function runGit(repositoryRoot: string, args: readonly string[]) {
+  const process = Bun.spawn(["git", ...args], {
+    cwd: repositoryRoot,
+    stdout: "ignore",
+    stderr: "pipe",
+  });
+  expect(await process.exited).toBe(0);
+}
+
 describe("agent guidance guard", () => {
   test("scans the repository layout", async () => {
     await expect(checkAgentGuidance()).resolves.toBeUndefined();
@@ -74,12 +89,7 @@ describe("agent guidance guard", () => {
       nodePath.join(tmpdir(), "agent-guidance-discovery-"),
     );
     try {
-      const gitInit = Bun.spawn(["git", "init", "--quiet"], {
-        cwd: repositoryRoot,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      expect(await gitInit.exited).toBe(0);
+      await runGit(repositoryRoot, ["init", "--quiet"]);
       await mkdir(nodePath.join(repositoryRoot, "scripts", "fixture"), {
         recursive: true,
       });
@@ -87,12 +97,23 @@ describe("agent guidance guard", () => {
         nodePath.join(repositoryRoot, "scripts", "fixture", "AGENTS.md"),
         "# Fixture\n",
       );
+      await writeFile(nodePath.join(repositoryRoot, "AGENTS.md"), "# Root\n");
+      const claudePath = nodePath.join(repositoryRoot, "CLAUDE.md");
+      await createSymlink("AGENTS.md", claudePath);
+      await runGit(repositoryRoot, ["add", "AGENTS.md", "CLAUDE.md"]);
+      await rm(claudePath);
+      await writeFile(claudePath, "AGENTS.md");
 
       const entries = await listGuidanceEntries(new Set(), repositoryRoot);
 
       expect(entries.map((entry) => entry.path)).toContain(
         "scripts/fixture/AGENTS.md",
       );
+      expect(entries).toContainEqual({
+        path: "CLAUDE.md",
+        kind: "symlink",
+        contents: "AGENTS.md",
+      });
     } finally {
       await rm(repositoryRoot, { recursive: true, force: true });
     }
@@ -196,13 +217,20 @@ describe("agent guidance guard", () => {
     entries.push(
       file("packages/app/.cursor/rules/local.mdc", "duplicated prose"),
       file(".claude/skills/delivery/SKILL.md", "duplicated skill"),
+      skill(
+        "packages/app/.claude/skills/package-copy/SKILL.md",
+        "package-copy",
+      ),
+      skill(
+        "packages/dotfiles/private_dot_cursor/skills/cursor-copy/SKILL.md",
+        "cursor-copy",
+      ),
     );
-    expect(rules(entries)).toEqual(
-      expect.arrayContaining([
-        "repository-cursor-rule",
-        "duplicate-client-skill",
-      ]),
-    );
+    const found = rules(entries);
+    expect(found).toEqual(expect.arrayContaining(["repository-cursor-rule"]));
+    expect(
+      found.filter((rule) => rule === "duplicate-client-skill"),
+    ).toHaveLength(3);
   });
 
   test("ignores archived sandbox guidance", () => {

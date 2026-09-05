@@ -89,6 +89,7 @@
     },
     "//#check-agent-guidance": {
       "inputs": [
+        "$TURBO_DEFAULT$",
         "AGENTS.md",
         "CLAUDE.md",
         ".agents/**",

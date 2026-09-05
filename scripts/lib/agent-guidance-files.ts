@@ -9,6 +9,12 @@ export type GuidanceEntry = Readonly<{
   contents: string;
 }>;
 
+function trackedSymlinkPath(record: string): string | undefined {
+  if (!record.startsWith("120000 ")) return undefined;
+  const separator = record.indexOf("\t");
+  return separator === -1 ? undefined : record.slice(separator + 1);
+}
+
 function isMissingPath(error: unknown): boolean {
   return error instanceof Error && "code" in error && error.code === "ENOENT";
 }
@@ -39,6 +45,16 @@ export async function listGuidanceEntries(
     ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
     { cwd: repositoryRoot, capture: true, secret: true },
   );
+  const trackedModes = await run(
+    ["git", "ls-files", "--cached", "--stage", "-z"],
+    { cwd: repositoryRoot, capture: true, secret: true },
+  );
+  const trackedSymlinks = new Set(
+    trackedModes.stdout
+      .split("\0")
+      .map((record) => trackedSymlinkPath(record))
+      .filter((entryPath) => entryPath !== undefined),
+  );
   const entryPaths = tracked.stdout
     .split("\0")
     .filter((entryPath) => entryPath !== "")
@@ -54,11 +70,13 @@ export async function listGuidanceEntries(
       if (isMissingPath(error)) continue;
       throw error;
     }
-    if (status.isSymbolicLink()) {
+    if (status.isSymbolicLink() || trackedSymlinks.has(entryPath)) {
       entries.push({
         path: entryPath,
         kind: "symlink",
-        contents: await readlink(absolutePath),
+        contents: status.isSymbolicLink()
+          ? await readlink(absolutePath)
+          : await Bun.file(absolutePath).text(),
       });
     } else {
       entries.push({
