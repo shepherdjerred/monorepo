@@ -45,7 +45,7 @@ describe("ReportResultTable", () => {
     expect(markup).toContain("<button");
   });
 
-  test("gives drill-down rows keyboard semantics", () => {
+  test("gives drill-down rows a semantic keyboard entry point", () => {
     const markup = renderToStaticMarkup(
       <ReportResultTable
         columns={columns}
@@ -54,8 +54,7 @@ describe("ReportResultTable", () => {
       />,
     );
 
-    expect(markup).toContain('role="button"');
-    expect(markup).toContain('tabindex="0"');
+    expect(markup).toContain('type="button"');
     expect(markup).toContain('aria-label="Explore Faker"');
   });
 

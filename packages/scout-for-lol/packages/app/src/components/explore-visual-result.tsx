@@ -301,6 +301,16 @@ export function resolveActiveSnapshot(options: {
     return rawChart;
   }
 
+  const hasPersistedMetric =
+    rawChart?.series.some((series) => series.metric === selectedMetricKey) ??
+    false;
+  if (rawChart !== null && hasPersistedMetric) {
+    return visualizationSnapshotWithControls(rawChart, {
+      preferredKind: selectedChartKind,
+      orientation,
+    });
+  }
+
   if (preview !== null && isPreviewChartable) {
     const synthesized = previewToVisualizationSnapshot(preview, {
       baseSnapshot: rawChart ?? undefined,

@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -291,45 +291,45 @@ export function ReportResultTable(props: {
                           props.onRowClick?.(row);
                         }
                   }
-                  onKeyDown={
-                    props.onRowClick === undefined
-                      ? undefined
-                      : (event: KeyboardEvent<HTMLTableRowElement>) => {
-                          if (event.key !== "Enter" && event.key !== " ") {
-                            return;
-                          }
-                          event.preventDefault();
-                          props.onRowClick?.(row);
-                        }
-                  }
-                  tabIndex={props.onRowClick === undefined ? undefined : 0}
-                  role={props.onRowClick === undefined ? undefined : "button"}
-                  aria-label={
-                    props.onRowClick === undefined
-                      ? undefined
-                      : `Explore ${row.label}`
-                  }
                   className={
                     props.onRowClick === undefined
                       ? undefined
                       : "cursor-pointer hover:bg-scout-surface-hover"
                   }
                 >
-                  {props.columns.map((column) => (
-                    <TableCell
-                      key={column.key}
-                      className={
-                        column.key === "label" ? "font-medium" : undefined
-                      }
-                    >
-                      {formatCell(
-                        column,
-                        row,
-                        props.evidence?.[originalIndex],
-                        hasGamesColumn,
-                      )}
-                    </TableCell>
-                  ))}
+                  {props.columns.map((column) => {
+                    const cellValue = formatCell(
+                      column,
+                      row,
+                      props.evidence?.[originalIndex],
+                      hasGamesColumn,
+                    );
+                    return (
+                      <TableCell
+                        key={column.key}
+                        className={
+                          column.key === "label" ? "font-medium" : undefined
+                        }
+                      >
+                        {props.onRowClick !== undefined &&
+                        column.key === "label" ? (
+                          <button
+                            type="button"
+                            aria-label={`Explore ${row.label}`}
+                            className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scout-accent"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              props.onRowClick?.(row);
+                            }}
+                          >
+                            {cellValue}
+                          </button>
+                        ) : (
+                          cellValue
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             )}
