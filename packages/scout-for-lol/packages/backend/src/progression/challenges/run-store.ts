@@ -14,6 +14,7 @@ import {
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import type { Db, ExtendedPrismaClient } from "#src/database/index.ts";
+import { lockChallengeProgression } from "#src/progression/challenges/locking.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 import { fetchProgressionMatches } from "#src/progression/progression-lake-reads.ts";
 
@@ -121,6 +122,10 @@ export async function startChallengeRun(
   if (startAt > now)
     throw new Error("Challenge runs cannot start in the future");
   return await db.$transaction(async (tx) => {
+    await lockChallengeProgression(
+      tx,
+      accounts.map((account) => account.puuid),
+    );
     await lockChallengeTemplate(tx, options.templateId);
     const version = await tx.challengeTemplateVersion.findFirstOrThrow({
       where: {
@@ -197,6 +202,10 @@ export async function changeChallengeRunAccounts(
     options.accountIds,
   );
   return await db.$transaction(async (tx) => {
+    await lockChallengeProgression(
+      tx,
+      accounts.map((account) => account.puuid),
+    );
     const runReference = await tx.challengeRun.findFirstOrThrow({
       where: { id: options.runId, ownerDiscordId: options.ownerDiscordId },
       select: { templateId: true },

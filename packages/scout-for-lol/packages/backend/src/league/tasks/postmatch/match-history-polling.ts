@@ -48,6 +48,7 @@ import {
   unavailableRequiredPuuids,
   type MatchPollAccount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
+import { withChallengeProgressionLock } from "#src/progression/challenges/locking.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -211,28 +212,33 @@ export async function processMatchAndUpdatePlayers(
 
   const { processCompetitiveProgressionMatch } =
     await import("#src/progression/postmatch.ts");
-  await processCompetitiveProgressionMatch({
-    match: matchData,
-    timeline: prefetchedTimeline,
-    trackedPlayers: allTrackedPlayers,
-  });
+  await withChallengeProgressionLock(
+    matchData.metadata.participants,
+    async () => {
+      await processCompetitiveProgressionMatch({
+        match: matchData,
+        timeline: prefetchedTimeline,
+        trackedPlayers: allTrackedPlayers,
+      });
 
-  // Mark as processed
-  processedMatchIds.add(matchId);
+      // Mark as processed
+      processedMatchIds.add(matchId);
 
-  // Update lastProcessedMatchId and lastMatchTime for all players in this match
-  // (single updateMany per player). Reached only after authoritative S3 ingest.
-  const matchCreationTime = new Date(matchData.info.gameCreation);
-  for (const trackedPlayer of allTrackedPlayers) {
-    const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
-    const brandedMatchId = MatchIdSchema.parse(matchId);
-    await updateLastProcessedMatch(
-      playerPuuid,
-      brandedMatchId,
-      undefined,
-      matchCreationTime,
-    );
-  }
+      // Update lastProcessedMatchId and lastMatchTime for all players in this match
+      // (single updateMany per player). Reached only after authoritative S3 ingest.
+      const matchCreationTime = new Date(matchData.info.gameCreation);
+      for (const trackedPlayer of allTrackedPlayers) {
+        const playerPuuid = trackedPlayer.league.leagueAccount.puuid;
+        const brandedMatchId = MatchIdSchema.parse(matchId);
+        await updateLastProcessedMatch(
+          playerPuuid,
+          brandedMatchId,
+          undefined,
+          matchCreationTime,
+        );
+      }
+    },
+  );
 }
 
 async function recoverUnavailableActiveDares(input: {
