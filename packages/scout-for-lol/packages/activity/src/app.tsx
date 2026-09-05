@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -123,13 +124,22 @@ function ActivityContent() {
   };
   const callbacks = { onSnapshot: cache, onError: fail };
 
-  if (active.isPending) {
+  // `error` here means the night could not be read at all. A refetch that
+  // failed over a snapshot already on screen is `degraded`, and falls through
+  // to render it — dropping a live customs night because one poll failed would
+  // be worse than showing a slightly stale one.
+  const night = Loaded.fromQuery(active, ["customs"]);
+  if (night.status === "loading") {
     return <main className="centered">Loading this server’s night…</main>;
   }
-  if (active.isError) {
-    return <main className="centered">{active.error.message}</main>;
+  if (night.status === "error") {
+    return (
+      <main className="centered">
+        {Loaded.messageOf(night.errors[0].error)}
+      </main>
+    );
   }
-  if (active.data === null || active.data.state === "ENDED") {
+  if (night.data === null || night.data.state === "ENDED") {
     return (
       <main className="centered">
         <section className="panel welcome">
@@ -157,7 +167,7 @@ function ActivityContent() {
       </main>
     );
   }
-  const snapshot = active.data;
+  const snapshot = night.data;
   const joined = snapshot.participants.some(
     (participant) => participant.discordId === session.identity.id,
   );
