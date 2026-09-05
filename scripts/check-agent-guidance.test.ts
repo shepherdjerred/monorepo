@@ -200,6 +200,11 @@ describe("agent guidance guard", () => {
     expect(found).toContain("source-adapter");
   });
 
+  test("rejects a dangling compatibility link", () => {
+    const entries = validFixture().filter(({ path }) => path !== "AGENTS.md");
+    expect(rules(entries)).toContain("repository-symlink");
+  });
+
   test("rejects a missing nested Claude link and a missing Cursor adapter", () => {
     const entries = validFixture().filter(
       ({ path }) =>

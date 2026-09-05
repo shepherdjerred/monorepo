@@ -9,7 +9,7 @@ Inspect first, preserve user work, and use the repository's owning branch workfl
 
 ## Branch workflow ownership
 
-In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `git-spice-helper` first; it is authoritative for branch creation, restacking, and publishing.
+In `shepherdjerred/monorepo`, every PR — human or agent, new or existing — is a git-spice stack. Load `monorepo-delivery` first; it is authoritative for branch creation, restacking, and publishing.
 
 When working in Conductor, use the provided isolated workspace; do not create a
 second worktree unless the user explicitly asks for one. Do not use a bare

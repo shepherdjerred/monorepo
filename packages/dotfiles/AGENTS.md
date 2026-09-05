@@ -75,5 +75,6 @@ paths, and verify the targeted diff is clean. Never run a broad apply as a
 shortcut.
 
 The Brewfile is generated from pinned tool manifests. macOS Spotlight paths are
-declared in `.chezmoidata.yaml` and applied by the existing configuration
-script. Berkeley Mono is licensed local input and must never enter the repo.
+declared in `.chezmoidata/spotlight.yaml` and applied by the existing
+configuration script. Berkeley Mono is licensed local input and must never
+enter the repo.

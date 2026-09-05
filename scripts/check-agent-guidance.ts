@@ -162,16 +162,35 @@ type LinkExpectation = Readonly<{
   rule: string;
 }>;
 
+function hasPathOrDescendant(
+  entries: ReadonlyMap<string, GuidanceEntry>,
+  entryPath: string,
+): boolean {
+  if (entries.has(entryPath)) return true;
+  const prefix = `${entryPath}/`;
+  for (const candidate of entries.keys()) {
+    if (candidate.startsWith(prefix)) return true;
+  }
+  return false;
+}
+
 function validateSymlink(
   entries: ReadonlyMap<string, GuidanceEntry>,
   expectation: LinkExpectation,
 ): GuidanceViolation | undefined {
   const entry = entries.get(expectation.path);
-  if (entry?.kind !== "symlink" || entry.contents !== expectation.target) {
+  const targetPath = gitPath.normalize(
+    gitPath.join(gitPath.dirname(expectation.path), expectation.target),
+  );
+  if (
+    entry?.kind !== "symlink" ||
+    entry.contents !== expectation.target ||
+    !hasPathOrDescendant(entries, targetPath)
+  ) {
     return {
       rule: expectation.rule,
       path: expectation.path,
-      message: `must be a symlink to ${expectation.target}`,
+      message: `must be a symlink to existing ${expectation.target}`,
     };
   }
   return undefined;
