@@ -1,5 +1,11 @@
 import { buildDareShortlist } from "#src/betting/dare-shortlist.ts";
 import {
+  createDarePreviewLedger,
+  dareContractNeedsPreview,
+  DARE_PREVIEW_REQUIRED_ISSUE,
+  darePreviewSummary,
+} from "#src/explore/dare-draft-guardrails.ts";
+import {
   createDareDraftV3,
   prepareDareDraftV3,
   reviseDareDraftV3,
@@ -12,6 +18,7 @@ import {
   deleteDareDraftV2,
   prepareDareDraftV2,
   reviseDareDraftV2,
+  type DareDraftV2Definition,
 } from "#src/betting/dare-draft-v2.ts";
 import { createDareV2ConfirmationIntent } from "#src/betting/dare-intent-v2.ts";
 import {
@@ -100,6 +107,30 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
     );
     return shortlistPromise;
   };
+  // Which contracts this turn has actually previewed. `create` is gated on it:
+  // the historical preview is the only check that can catch a contract that is
+  // valid, in-domain, and still impossible — and it was optional, so the model
+  // could and did skip it. Keyed by canonical text so a revised contract has to
+  // be previewed again rather than riding on an earlier one's result.
+  const previewedContracts = createDarePreviewLedger();
+  // Every v2 path that persists a contract takes the gate. Gating creation
+  // alone was a bypass: an author could preview and create one contract, then
+  // revise it into an unpreviewed condition and fund that revision.
+  const previewGate = (
+    candidate: DareDraftV2Definition,
+    action: "creating it" | "saving it as a revision",
+  ) => {
+    const prepared = prepareDareDraftV2(candidate);
+    return dareContractNeedsPreview(
+      previewedContracts,
+      prepared.kind === "valid" ? prepared.draft.canonicalScoutQl : null,
+    )
+      ? result("invalid", `Preview this exact contract before ${action}.`, {
+          issues: [DARE_PREVIEW_REQUIRED_ISSUE],
+        })
+      : null;
+  };
+
   const sqlV3Enabled = async () =>
     await isPolicyEnabled("dare_extended_contracts_enabled", {
       server: input.capability.serverId,
@@ -289,19 +320,17 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
           start,
           end,
         });
-        return result(
-          "previewed",
-          preview.eligibleGames === 0
-            ? "No retained eligible games were found in the preview window."
-            : `Historically evaluated ${preview.eligibleGames.toString()} eligible games.`,
-          {
-            ...preview,
-            start: start.toISOString(),
-            end: end.toISOString(),
-            canonicalScoutQl: prepared.draft.canonicalScoutQl,
-            plainLanguage: prepared.draft.plainLanguage,
-          },
-        );
+        // Lead with what was satisfied, not what was considered. The old
+        // summary reported how many games were *considered*, so a predicate
+        // that could never be satisfied read as reassuringly as a hard one.
+        previewedContracts.record(prepared.draft.canonicalScoutQl);
+        return result("previewed", darePreviewSummary(preview), {
+          ...preview,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          canonicalScoutQl: prepared.draft.canonicalScoutQl,
+          plainLanguage: prepared.draft.plainLanguage,
+        });
       }),
     create: (raw: unknown) =>
       input.track("create_dare_draft", async () => {
@@ -333,6 +362,8 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             targetAliases: created.draft.targets.map((target) => target.alias),
           });
         }
+        const blocked = previewGate(resolved.definition, "creating it");
+        if (blocked !== null) return blocked;
         const created = await createDareDraftV2({
           ...resolved.definition,
           serverId: input.capability.serverId,
@@ -382,6 +413,11 @@ export function createDareToolExecutors(input: DareExploreToolsInput) {
             sqlIsBinding: true,
           });
         }
+        const blocked = previewGate(
+          resolved.definition,
+          "saving it as a revision",
+        );
+        if (blocked !== null) return blocked;
         const revised = await reviseDareDraftV2({
           dareId: parsed.dareId,
           serverId: input.capability.serverId,

@@ -381,3 +381,21 @@ export function dareGameSetDomainIssuesV2(gameSet: {
     ),
   ];
 }
+
+/**
+ * The closed domains, shaped for the authoring tool's language response.
+ *
+ * The model had no source of truth for these anywhere — not in the prompt, not
+ * in a tool description, and (before the event-type enum) not in the JSON
+ * Schema either. It was inferring them, which is how `team_position = 'MID'`
+ * reached three funded contracts when Riot writes `MIDDLE`. Champions are
+ * omitted deliberately: ~170 keys is not a useful thing to recite, and the
+ * registry resolves display names anyway.
+ */
+export function dareValueDomainCatalog(): Record<string, readonly string[]> {
+  return Object.fromEntries(
+    Object.entries(DARE_COLUMN_DOMAINS)
+      .filter(([, domain]) => domain.values.length > 0)
+      .map(([column, domain]) => [column, domain.values]),
+  );
+}
