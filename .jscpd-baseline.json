@@ -1612,10 +1612,6 @@
       "clones": 2,
       "tokens": 194
     },
-    "packages/temporal/src/activities/ha.test.ts|packages/temporal/src/activities/ha.test.ts": {
-      "clones": 6,
-      "tokens": 518
-    },
     "packages/temporal/src/activities/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab-audit-collectors.ts": {
       "clones": 1,
       "tokens": 78
@@ -1644,10 +1640,6 @@
       "clones": 1,
       "tokens": 100
     },
-    "packages/temporal/src/activities/workflow-failure-watch.test.ts|packages/temporal/src/activities/workflow-failure-watch.test.ts": {
-      "clones": 3,
-      "tokens": 253
-    },
     "packages/temporal/src/event-bridge/agent-task-api.ts|packages/temporal/src/event-bridge/sleep-webhook.ts": {
       "clones": 1,
       "tokens": 70
@@ -1675,10 +1667,6 @@
     "packages/temporal/src/workflows/data-dragon.test.ts|packages/temporal/src/workflows/data-dragon.test.ts": {
       "clones": 1,
       "tokens": 75
-    },
-    "packages/temporal/src/workflows/deps-summary.test.ts|packages/temporal/src/workflows/deps-summary.test.ts": {
-      "clones": 2,
-      "tokens": 235
     },
     "packages/temporal/src/workflows/glitter-corpus.test.ts|packages/temporal/src/workflows/glitter-corpus.test.ts": {
       "clones": 1,
