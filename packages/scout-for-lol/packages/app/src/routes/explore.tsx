@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router";
-import { ChevronDown } from "lucide-react";
+import { ArrowDown, ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Collapsible,
@@ -182,7 +182,8 @@ export function Explore() {
     visualization: pendingVisualization,
   } = visiblePending(pendingTurn, conversationId, messages);
 
-  const { bottomRef, scrollIfPinned } = usePinnedScroll();
+  const { bottomRef, scrollIfPinned, pinned, scrollToBottom } =
+    usePinnedScroll();
   useEffect(() => {
     scrollIfPinned();
   }, [
@@ -326,6 +327,22 @@ export function Explore() {
       {/* Pinned to the bottom of the viewport with a translucent gradient fade:
           allows chat text to remain visible below the composer through the fade effect. */}
       <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 bg-gradient-to-t from-scout-canvas/80 via-scout-canvas/30 via-40% to-transparent dark:from-black/75 dark:via-black/30 dark:via-40% dark:to-transparent">
+        {/* Only while the reader is away from the bottom, so the idle page is
+            unchanged and nothing overlaps the composer at rest. */}
+        {!pinned && (
+          <div className="pointer-events-auto mb-2 flex justify-center">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="rounded-full shadow-sm"
+              onClick={scrollToBottom}
+            >
+              <ArrowDown className="size-3.5" aria-hidden="true" />
+              Jump to latest
+            </Button>
+          </div>
+        )}
         <div className="pointer-events-auto">
           <ExploreComposer
             active={pendingTurn !== null}
