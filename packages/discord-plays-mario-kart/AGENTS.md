@@ -26,7 +26,7 @@ media probes, and performance harnesses are manual acceptance layers.
 bun run typecheck
 bun run test
 bun run lint
-bun run --cwd packages/discord-plays-mario-kart/packages/backend smoke
+bun run --cwd packages/backend smoke
 ```
 
 For ROM-gated work, run the named harness from the README and capture the

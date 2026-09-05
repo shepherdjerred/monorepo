@@ -18,5 +18,5 @@ web-server wiring, and process boot. Package exports point directly at `src/`.
 bun run typecheck
 bun run test
 bun run lint
-bunx turbo run typecheck test --filter=@shepherdjerred/discord-plays-pokemon-backend --filter=@shepherdjerred/discord-plays-mario-kart-backend
+bunx turbo run typecheck test --filter=@discord-plays-pokemon/backend --filter=@discord-plays-mario-kart/backend
 ```

@@ -29,7 +29,7 @@ health probes, ingress, secrets, persistence, observability, backup class, and
 ArgoCD parent before coding. Match neighboring resources instead of starting a
 new abstraction without repeated need.
 
-Run focused checks from the homelab package. Typical coverage includes:
+Run focused checks from the repository root. Typical coverage includes:
 
 ```bash
 bunx turbo run build typecheck test lint --filter=homelab
