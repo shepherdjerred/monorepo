@@ -1,5 +1,11 @@
 import { memo, useEffect, useState } from "react";
-import { Check, Copy, MoreHorizontal, RefreshCw } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Maximize2,
+  MoreHorizontal,
+  RefreshCw,
+} from "lucide-react";
 import type { ExploreMessage } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Disclosure } from "#src/components/explore-disclosure.tsx";
@@ -16,7 +22,14 @@ import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
 import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
-import { ExploreVisualResult } from "#src/components/explore-visual-result.tsx";
+import {
+  ExploreVisualResult,
+  exploreVisualResultHasContent,
+} from "#src/components/explore-visual-result.tsx";
+import {
+  ExploreArtifactDialog,
+  type ExploreArtifact,
+} from "#src/components/explore-artifact-dialog.tsx";
 import type { ExploreTranscriptActions } from "#src/components/explore-transcript-actions.ts";
 
 const TIME_FULL = new Intl.DateTimeFormat("en-US", {
@@ -35,6 +48,7 @@ function AssistantTurnActionBar(props: {
   readonly actions: ExploreTranscriptActions;
   readonly copied: boolean;
   readonly onCopy: () => void;
+  readonly onExpand: (() => void) | null;
 }) {
   const { message, actions, copied, onCopy } = props;
   return (
@@ -50,6 +64,18 @@ function AssistantTurnActionBar(props: {
         message={message}
         onSelectVersion={actions.onSelectVersion}
       />
+      {props.onExpand !== null && (
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="size-7 text-scout-subtle hover:text-scout-ink"
+          aria-label="Expand result"
+          title="Expand result"
+          onClick={props.onExpand}
+        >
+          <Maximize2 className="size-3.5" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="icon-sm"
@@ -188,6 +214,17 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
     setCopied(true);
   };
 
+  // Offered only when there is something to expand, judged by the same
+  // predicate the renderer uses. A turn answered from the transcript has no
+  // result; and every executed query carries a visualization snapshot even
+  // when it is a table or returned no rows, so asking "is there a
+  // visualization" would offer a button onto a blank dialog.
+  const hasResult = exploreVisualResultHasContent(
+    message.preview,
+    message.visualization,
+  );
+  const [expanded, setExpanded] = useState<ExploreArtifact | null>(null);
+
   return (
     <div className="space-y-3">
       <MarkdownAnswer>{message.content}</MarkdownAnswer>
@@ -213,6 +250,24 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
         actions={actions}
         copied={copied}
         onCopy={handleCopy}
+        onExpand={
+          hasResult
+            ? () => {
+                setExpanded({
+                  title: message.queryText === null ? "Result" : "Query result",
+                  preview: message.preview,
+                  visualization: message.visualization,
+                });
+              }
+            : null
+        }
+      />
+
+      <ExploreArtifactDialog
+        artifact={expanded}
+        onClose={() => {
+          setExpanded(null);
+        }}
       />
 
       <AssistantTurnEvidence

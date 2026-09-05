@@ -346,6 +346,26 @@ export function resolveActiveSnapshot(options: {
 }
 
 /**
+ * Whether this component will render anything at all.
+ *
+ * Exported so an affordance that opens it — the expand control on a turn —
+ * cannot disagree with it. `executeCompiledReportQuery` attaches a
+ * `VisualizationSnapshot` to every result, including tables, lists and empty
+ * ones, so "has a visualization" is not the same question as "has something
+ * to show"; gating on the former offered a button onto a blank dialog.
+ */
+export function exploreVisualResultHasContent(
+  preview: ReportAiPreviewSummary | null,
+  visualization: VisualizationSnapshot | null,
+): boolean {
+  return (
+    chartableSnapshot(visualization) !== null ||
+    isChartablePreview(preview) ||
+    (preview !== null && preview.rows.length > 0)
+  );
+}
+
+/**
  * Takes the result rather than the message because a turn shows this twice in
  * its life: while streaming, from the `preview` event the server sends the
  * moment a query returns, and again from the persisted message once the turn

@@ -6,6 +6,13 @@ import {
 } from "@scout-for-lol/data";
 import { visualizationSnapshotToOption } from "@scout-for-lol/report/visualization";
 
+/**
+ * `compact` and `heightPx` are two ways to ask for the same thing, kept apart
+ * on purpose: `compact` is the established preset, while `heightPx` exists for
+ * the expanded view, where the right height is "as much of the dialog as there
+ * is" and no preset can know that. The ResizeObserver below means either one
+ * simply works.
+ */
 export function InteractiveVisualization(props: {
   snapshot: VisualizationSnapshot;
   compact?: boolean;
@@ -14,6 +21,7 @@ export function InteractiveVisualization(props: {
     value: number | null,
     seriesName: string,
   ) => void;
+  heightPx?: number;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<echarts.ECharts | null>(null);
@@ -78,7 +86,7 @@ export function InteractiveVisualization(props: {
     <div
       ref={containerRef}
       className="w-full rounded-md border border-border"
-      style={{ height: props.compact === true ? 180 : 480 }}
+      style={{ height: props.heightPx ?? (props.compact === true ? 180 : 480) }}
       role="img"
       aria-label={props.snapshot.title ?? "Interactive Scout visualization"}
     />

@@ -258,6 +258,75 @@ describe("ExploreTranscript", () => {
   });
 });
 
+describe("Explore expandable artifacts", () => {
+  test("offers an expand control only when there is a result", () => {
+    // A turn answered from the transcript runs no query, so there is nothing
+    // behind the button and it must not appear.
+    const withoutResult = renderToStaticMarkup(
+      <ExploreTranscript messages={[assistantMessage({})]} />,
+    );
+    expect(withoutResult).not.toContain('aria-label="Expand result"');
+
+    const withResult = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[
+          assistantMessage({
+            preview: {
+              columns: [{ key: "label", label: "Player", format: "text" }],
+              rows: [{ label: "Faker", values: [] }],
+              rowsScanned: 12,
+              renderKind: "TABLE",
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(withResult).toContain('aria-label="Expand result"');
+  });
+
+  test("does not offer it for an empty result set", () => {
+    // The fixture carries a visualization on purpose: every executed query
+    // gets one — including TABLE and empty results — so a version of this
+    // test without it passed while the real behaviour offered a button onto
+    // a blank dialog.
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[
+          assistantMessage({
+            preview: {
+              columns: [{ key: "label", label: "Player", format: "text" }],
+              rows: [],
+              rowsScanned: 0,
+              renderKind: "TABLE",
+            },
+            visualization: {
+              version: 1,
+              generatedAt: "2026-08-14T12:00:30.000Z",
+              kind: "table",
+              title: null,
+              temporal: null,
+              bucket: null,
+              display: {
+                theme: null,
+                palette: null,
+                smooth: false,
+                stack: "none",
+                rollingWindow: null,
+                cumulative: false,
+                sparkline: false,
+              },
+              series: [],
+              annotations: [],
+              trends: [],
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(markup).not.toContain('aria-label="Expand result"');
+  });
+});
+
 describe("Explore live progress", () => {
   test("shows the status line before any prose has arrived", () => {
     const markup = renderToStaticMarkup(
