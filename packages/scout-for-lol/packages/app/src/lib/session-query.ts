@@ -1,3 +1,5 @@
+import { Loaded } from "@shepherdjerred/loaded";
+
 /**
  * Session reads sit on the boundary between authentication and availability.
  * A successful `{ user: null }` response means signed out; a rejected request
@@ -20,11 +22,13 @@ export type SessionGuardState =
  * refresh, so an already-rendered authenticated route stays mounted.
  */
 export function resolveSessionGuardState(
-  data: { user: object | null } | undefined,
-  isError: boolean,
+  session: Loaded<{ user: object | null }>,
 ): SessionGuardState {
-  if (data !== undefined) {
-    return data.user === null ? "anonymous" : "authenticated";
-  }
-  return isError ? "unavailable" : "loading";
+  return Loaded.match(session, {
+    loading: () => "loading",
+    error: () => "unavailable",
+    // `degraded` lands here too, which is the whole point: a failed background
+    // refresh over a cached session must not read as a sign-out.
+    available: (data) => (data.user === null ? "anonymous" : "authenticated"),
+  });
 }
