@@ -12,6 +12,8 @@ import {
   ExploreRunObserveRequestSchema,
   ExploreRunOutcomeResultSchema,
   ExploreTurnRequestSchema,
+  ExploreMentionCandidateSchema,
+  ExploreMentionSearchSchema,
 } from "@scout-for-lol/data";
 import { consumeDareV2ConfirmationIntent } from "#src/betting/dares/lifecycle/dare-intent-consume-v2.ts";
 import { tryEnsureDareV2Callout } from "#src/betting/dares/presentation/dare-callout-v2.ts";
@@ -40,6 +42,7 @@ import {
   shareExploreConversation,
 } from "#src/explore/store.ts";
 import { scoutExploreSharesTotal } from "#src/metrics/explore.ts";
+import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import {
   protectedProcedure,
   router,
@@ -149,12 +152,56 @@ const intentStatusProcedure = exploreProcedure
     };
   });
 
+/**
+ * Enough to choose from, few enough that a lake scan stays cheap and the
+ * popover does not become a second scroll region.
+ */
+const MENTION_RESULT_LIMIT = 8;
+
 export const exploreRouter = router({
   /**
    * Whether the caller may use explore, plus their remaining quota. Answers
    * `enabled: false` rather than throwing so the UI can render a "not
    * available" state instead of an error.
    */
+  /**
+   * Players the composer's `@` picker may offer.
+   *
+   * Scoped exactly like starting a turn — `requireExploreUserAndGuilds` —
+   * because it answers the same question a `player('…')` alias does, and a
+   * looser scope here would let someone enumerate aliases from servers they
+   * are not in. `consumerPlayer.search` is deliberately not reused: it scopes
+   * through `assertConsumerPlayerScope`, a different authorization rule.
+   *
+   * This reads the DuckDB lake, not Postgres, so it is heavier than a typical
+   * typeahead. The client debounces and this caps the result set; neither is
+   * decoration.
+   */
+  searchPlayers: exploreProcedure
+    .input(ExploreMentionSearchSchema)
+    .query(async ({ ctx, input }) => {
+      const { guildIds } = await requireExploreUserAndGuilds(ctx.user);
+      const identities = await resolvePlayerIdentities({
+        query: input.query,
+        guildIds,
+        // A typeahead has to answer before the reader has finished typing.
+        // `player('…')` resolution keeps the default exact rule, where a
+        // widened match would turn "one person" into "ambiguous".
+        match: "prefix",
+      });
+      return identities.slice(0, MENTION_RESULT_LIMIT).map((identity) =>
+        ExploreMentionCandidateSchema.parse({
+          kind: "player",
+          label: identity.displayName,
+          // The most recent Riot ID when there is one: it is the form that
+          // resolves to exactly one person, and `resolvePlayerRefPuuids`
+          // throws rather than guessing when a name is ambiguous.
+          insertText: identity.riotIds[0] ?? identity.displayName,
+          detail: `${identity.games.toLocaleString("en-US")} games`,
+        }),
+      );
+    }),
+
   status: exploreProcedure.query(async ({ ctx }) => {
     if (!isExploreConfigured()) {
       return { enabled: false, quota: [] };

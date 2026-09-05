@@ -282,6 +282,52 @@ async function games(queryText: string): Promise<number> {
   );
 }
 
+describe("typeahead prefix matching", () => {
+  test("a prefix finds the player an exact match cannot", async () => {
+    // The composer's `@` picker searches while the reader is still typing, so
+    // exact matching returned nothing until they had typed a complete alias —
+    // which defeats the point of a picker.
+    const exact = await resolvePlayerIdentities({
+      query: "Aar",
+      guildIds: [serverId],
+      lakeDir,
+    });
+    expect(exact).toEqual([]);
+
+    const prefix = await resolvePlayerIdentities({
+      query: "Aar",
+      guildIds: [serverId],
+      lakeDir,
+      match: "prefix",
+    });
+    expect(prefix).toHaveLength(1);
+    expect(prefix[0]?.displayName).toBe("Aaron");
+  });
+
+  test("a wildcard typed by the reader is a literal character", async () => {
+    // `%` and `_` mean something to LIKE and nothing to the person typing, so
+    // an unescaped `%` would return every tracked player in the server.
+    const found = await resolvePlayerIdentities({
+      query: "%",
+      guildIds: [serverId],
+      lakeDir,
+      match: "prefix",
+    });
+    expect(found).toEqual([]);
+  });
+
+  test("exact stays exact, so player() cannot widen by accident", async () => {
+    // `player('…')` refuses an ambiguous name, and a prefix rule leaking into
+    // it would turn "one person" into "ambiguous" for perfectly good queries.
+    const found = await resolvePlayerIdentities({
+      query: "Aar",
+      guildIds: [serverId],
+      lakeDir,
+    });
+    expect(found).toEqual([]);
+  });
+});
+
 describe("PUUIDs stay in the data layer", () => {
   // The owner's constraint, as a test. Stored query text is rendered in the
   // transcript, served unauthenticated to anyone holding a share link, baked
