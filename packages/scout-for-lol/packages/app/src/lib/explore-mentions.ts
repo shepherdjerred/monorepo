@@ -57,7 +57,12 @@ export function activeMentionSpan(
   if (query.length > MAX_MENTION_QUERY || /\s/u.test(query)) {
     return null;
   }
-  return { query, start: at, end: caret };
+  // Runs to the end of the token, not to the caret. With the caret inside an
+  // existing mention — `@jer|red` — ending the span at the caret would leave
+  // the suffix behind, so picking a suggestion produced "Jerred#NA1 red" and
+  // the question carried a word the reader never wrote.
+  const after = /^\S*/u.exec(text.slice(caret))?.[0] ?? "";
+  return { query, start: at, end: caret + after.length };
 }
 
 /**
