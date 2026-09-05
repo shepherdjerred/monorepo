@@ -32,12 +32,12 @@ import {
   getRollingDuelRecords,
   listGuildDuels,
 } from "#src/progression/duels/read.ts";
+import { getDuelCode } from "#src/progression/duels/code.ts";
 import { decideDuelSeries } from "#src/progression/duels/review.ts";
 import {
   acceptDuelChallenge,
   acceptDuelDisclosure,
   createDirectDuel,
-  getDuelCode,
   getDuelSeries,
   markDuelReady,
 } from "#src/progression/duels/series.ts";

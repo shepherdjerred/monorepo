@@ -252,6 +252,27 @@ export async function currentParticipantDiscordIds(
   return new Map(players.map((player) => [player.id, player.discordId]));
 }
 
+export async function currentDisclosureKeys(
+  db: ExtendedPrismaClient,
+  guildId: DiscordGuildId,
+  participants: readonly { readonly playerId: number }[],
+): Promise<ReadonlySet<string>> {
+  const disclosures = await db.duelDisclosureAcceptance.findMany({
+    where: {
+      guildId,
+      playerId: { in: participants.map((participant) => participant.playerId) },
+      disclosureVersion: DUEL_DISCLOSURE_VERSION,
+    },
+    select: { playerId: true, discordId: true },
+  });
+  return new Set(
+    disclosures.map(
+      (disclosure) =>
+        `${disclosure.playerId.toString()}:${disclosure.discordId}`,
+    ),
+  );
+}
+
 export function effectiveParticipantDiscordId(
   current: ReadonlyMap<number, string | null>,
   participant: { readonly playerId: number; readonly discordId: string },
@@ -401,6 +422,11 @@ export async function getDuelSeries(
     guildId,
     series.participants,
   );
+  const disclosureKeys = await currentDisclosureKeys(
+    db,
+    guildId,
+    series.participants,
+  );
   if (!duelSeriesVisibleTo(currentDiscordIdByPlayer, series, viewerDiscordId)) {
     throw new Error("This duel is private until every participant accepts");
   }
@@ -416,12 +442,23 @@ export async function getDuelSeries(
     winnerCompetitorId: series.winnerCompetitorId,
     competitorOne: parseDuelCompetitor(series.competitorOne),
     competitorTwo: parseDuelCompetitor(series.competitorTwo),
-    participants: series.participants.map((participant) => ({
-      playerId: participant.playerId,
-      competitorId: participant.competitorId,
-      accepted: participant.acceptedAt !== null,
-      ready: participant.readyAt !== null,
-    })),
+    participants: series.participants.map((participant) => {
+      const currentDiscordId = effectiveParticipantDiscordId(
+        currentDiscordIdByPlayer,
+        participant,
+      );
+      const consentCurrent =
+        currentDiscordId === participant.discordId &&
+        disclosureKeys.has(
+          `${participant.playerId.toString()}:${participant.discordId}`,
+        );
+      return {
+        playerId: participant.playerId,
+        competitorId: participant.competitorId,
+        accepted: participant.acceptedAt !== null && consentCurrent,
+        ready: participant.readyAt !== null && consentCurrent,
+      };
+    }),
     games: series.games.map((game) => ({
       id: game.id,
       gameNumber: game.gameNumber,
@@ -438,62 +475,5 @@ export async function getDuelSeries(
       reason: decision.reason,
       createdAt: decision.createdAt.toISOString(),
     })),
-  };
-}
-
-export async function getDuelCode(
-  db: ExtendedPrismaClient,
-  seriesId: string,
-  viewerDiscordId: DiscordAccountId,
-  guildId: DiscordGuildId,
-) {
-  const series = await db.duelSeries.findFirstOrThrow({
-    where: { id: seriesId, guildId },
-    include: {
-      participants: true,
-      games: {
-        orderBy: { gameNumber: "desc" },
-        take: 1,
-        include: { tournamentLobby: true },
-      },
-    },
-  });
-  const currentDiscordIdByPlayer = await currentParticipantDiscordIds(
-    db,
-    guildId,
-    series.participants,
-  );
-  if (
-    !series.participants.some(
-      (participant) =>
-        effectiveParticipantDiscordId(currentDiscordIdByPlayer, participant) ===
-          viewerDiscordId &&
-        participant.discordId === viewerDiscordId &&
-        participant.acceptedAt !== null,
-    )
-  ) {
-    throw new Error(
-      "Tournament codes are visible only to assigned participants",
-    );
-  }
-  if (
-    !series.participants.every((participant) => participant.readyAt !== null)
-  ) {
-    throw new Error(
-      "The tournament code is unavailable until everyone is ready",
-    );
-  }
-  const game = series.games[0];
-  if (game?.gameState !== "code_ready" || series.seriesState !== "code_ready") {
-    throw new Error("The tournament code is not ready yet");
-  }
-  if (game.tournamentLobby === null) {
-    throw new Error("The tournament code is not ready yet");
-  }
-  return {
-    gameId: game.id,
-    gameNumber: game.gameNumber,
-    code: game.tournamentLobby.code,
-    stub: game.tournamentLobby.apiMode === "stub",
   };
 }

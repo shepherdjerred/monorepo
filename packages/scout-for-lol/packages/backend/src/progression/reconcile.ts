@@ -2,7 +2,7 @@ import type { ScoutStage } from "@scout-for-lol/temporal";
 import { prisma } from "#src/database/index.ts";
 import { launchChallengeRunRecompute } from "#src/progression/challenges/launch.ts";
 import { advanceDuelEvent } from "#src/progression/duels/advancement.ts";
-import { launchDuelSeries } from "#src/progression/duels/launch.ts";
+import { signalDuelSeries } from "#src/progression/duels/launch.ts";
 import { launchHallBaseline } from "#src/progression/hall/launch.ts";
 import {
   challengeRecomputeLag,
@@ -63,10 +63,11 @@ async function reconcileDuelSeries(stage: ScoutStage): Promise<void> {
       if (series.deadlineAt === null) {
         throw new Error("A reconcilable duel series has no deadline");
       }
-      await launchDuelSeries({
+      await signalDuelSeries({
         stage,
         seriesId: series.id,
         deadlineAt: series.deadlineAt,
+        requestId: `reconcile-duel:${series.id}`,
       });
     }
     if (seriesPage.length < RECONCILIATION_BATCH_SIZE) return;

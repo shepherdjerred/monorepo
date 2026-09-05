@@ -1,4 +1,3 @@
-import { z } from "zod";
 import {
   DiscordChannelIdSchema,
   DuelBestOfSchema,
@@ -10,11 +9,13 @@ import {
   scoutDuelSeriesWorkflowId,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
-import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import {
+  prisma,
+  type Db,
+  type ExtendedPrismaClient,
+} from "#src/database/index.ts";
 import { duelSeriesParticipantsCreateData } from "#src/progression/duels/competitors.ts";
 import { launchDuelSeries } from "#src/progression/duels/launch.ts";
-
-const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 
 type EventWithSeries = NonNullable<
   Awaited<ReturnType<typeof loadEventForAdvancement>>
@@ -49,7 +50,7 @@ function seriesBestOf(event: EventWithSeries, roundNumber: number) {
 }
 
 async function createSeries(
-  db: ExtendedPrismaClient,
+  db: Db,
   event: EventWithSeries,
   options: {
     readonly firstId: string;
@@ -72,52 +73,23 @@ async function createSeries(
   const deadlineAt = new Date(
     Date.now() + event.matchWindowHours * 60 * 60 * 1000,
   );
-  const seriesId = crypto.randomUUID();
-  try {
-    const series = await db.duelSeries.create({
-      data: {
-        id: seriesId,
-        guildId: event.guildId,
+  const existing = await db.duelSeries.findUnique({
+    where: {
+      eventId_bracket_roundNumber_position: {
         eventId: event.id,
-        roundNumber: options.roundNumber,
         bracket: options.bracket,
+        roundNumber: options.roundNumber,
         position: options.position,
-        competitorOneId: options.firstId,
-        competitorTwoId: options.secondId,
-        bestOf: seriesBestOf(event, options.roundNumber),
-        matchWindowHours: event.matchWindowHours,
-        rulesetJson: event.rulesetJson,
-        seriesState: "awaiting_readiness",
-        channelId: DiscordChannelIdSchema.parse(event.channelId),
-        organizerDiscordId: event.organizerDiscordId,
-        windowStartsAt: new Date(),
-        deadlineAt,
-        workflowId: scoutDuelSeriesWorkflowId(options.stage, seriesId),
-        participants: {
-          create: duelSeriesParticipantsCreateData([first, second]),
-        },
       },
-    });
-    return { seriesId: series.id, deadlineAt };
-  } catch (error) {
-    if (!UniqueViolationSchema.safeParse(error).success) throw error;
-    const existing = await db.duelSeries.findUniqueOrThrow({
-      where: {
-        eventId_bracket_roundNumber_position: {
-          eventId: event.id,
-          bracket: options.bracket,
-          roundNumber: options.roundNumber,
-          position: options.position,
-        },
-      },
-    });
+    },
+  });
+  if (existing !== null) {
     if (
       existing.competitorOneId !== options.firstId ||
       existing.competitorTwoId !== options.secondId
     ) {
       throw new Error(
         "An event bracket slot was reused with different competitors",
-        { cause: error },
       );
     }
     return {
@@ -125,6 +97,63 @@ async function createSeries(
       deadlineAt: existing.deadlineAt ?? deadlineAt,
     };
   }
+  const seriesId = crypto.randomUUID();
+  const series = await db.duelSeries.create({
+    data: {
+      id: seriesId,
+      guildId: event.guildId,
+      eventId: event.id,
+      roundNumber: options.roundNumber,
+      bracket: options.bracket,
+      position: options.position,
+      competitorOneId: options.firstId,
+      competitorTwoId: options.secondId,
+      bestOf: seriesBestOf(event, options.roundNumber),
+      matchWindowHours: event.matchWindowHours,
+      rulesetJson: event.rulesetJson,
+      seriesState: "awaiting_readiness",
+      channelId: DiscordChannelIdSchema.parse(event.channelId),
+      organizerDiscordId: event.organizerDiscordId,
+      windowStartsAt: new Date(),
+      deadlineAt,
+      workflowId: scoutDuelSeriesWorkflowId(options.stage, seriesId),
+      participants: {
+        create: duelSeriesParticipantsCreateData([first, second]),
+      },
+    },
+  });
+  return { seriesId: series.id, deadlineAt };
+}
+
+async function createSeriesRound(
+  db: ExtendedPrismaClient,
+  event: EventWithSeries,
+  options: {
+    readonly pairs: readonly [string, string][];
+    readonly bracket: string;
+    readonly roundNumber: number;
+    readonly stage: ScoutStage;
+  },
+) {
+  return await db.$transaction(async (tx) => {
+    // A whole round is one durable unit. This lock also makes the read-then-
+    // create idempotency check safe when reconciliation runs concurrently.
+    await tx.$executeRaw`SELECT 1 FROM "DuelEvent" WHERE "id" = ${event.id} FOR UPDATE`;
+    const requests: Awaited<ReturnType<typeof createSeries>>[] = [];
+    for (const [firstId, secondId] of options.pairs) {
+      requests.push(
+        await createSeries(tx, event, {
+          firstId,
+          secondId,
+          bracket: options.bracket,
+          roundNumber: options.roundNumber,
+          position: requests.length,
+          stage: options.stage,
+        }),
+      );
+    }
+    return requests;
+  });
 }
 
 function completedRound(event: EventWithSeries, roundNumber: number): boolean {
@@ -240,18 +269,12 @@ async function advanceDoubleElimination(
     pairs = [...pairAdjacent(zeroLoss), ...pairAdjacent(oneLoss)];
     bracket = "double_elimination";
   }
-  return await Promise.all(
-    pairs.map(([firstId, secondId], position) =>
-      createSeries(db, event, {
-        firstId,
-        secondId,
-        bracket,
-        roundNumber: nextRound,
-        position,
-        stage,
-      }),
-    ),
-  );
+  return await createSeriesRound(db, event, {
+    pairs,
+    bracket,
+    roundNumber: nextRound,
+    stage,
+  });
 }
 
 function singleEliminationRoundWinners(
@@ -314,23 +337,12 @@ async function advanceSingleElimination(
     return [];
   }
   const nextRound = currentRound + 1;
-  const alreadyCreated = event.series.some(
-    (series) =>
-      series.bracket === "winners" && series.roundNumber === nextRound,
-  );
-  if (alreadyCreated) return [];
-  return await Promise.all(
-    pairAdjacent(resolvedWinners).map(([firstId, secondId], position) =>
-      createSeries(db, event, {
-        firstId,
-        secondId,
-        bracket: "winners",
-        roundNumber: nextRound,
-        position,
-        stage,
-      }),
-    ),
-  );
+  return await createSeriesRound(db, event, {
+    pairs: pairAdjacent(resolvedWinners),
+    bracket: "winners",
+    roundNumber: nextRound,
+    stage,
+  });
 }
 
 async function advanceRoundRobin(
@@ -380,18 +392,12 @@ async function advanceRoundRobin(
   const pairs = [...tiedGroups.values()].flatMap((group) =>
     everyPair(group.map((rank) => rank.competitorId)),
   );
-  return await Promise.all(
-    pairs.map(([firstId, secondId], position) =>
-      createSeries(db, event, {
-        firstId,
-        secondId,
-        bracket: "tiebreak",
-        roundNumber: nextRound,
-        position,
-        stage,
-      }),
-    ),
-  );
+  return await createSeriesRound(db, event, {
+    pairs,
+    bracket: "tiebreak",
+    roundNumber: nextRound,
+    stage,
+  });
 }
 
 export async function advanceDuelEvent(

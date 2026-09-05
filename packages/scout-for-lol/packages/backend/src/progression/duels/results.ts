@@ -71,7 +71,19 @@ function timelineInput(match: RawMatch, timeline: RawTimeline) {
         ) {
           return [];
         }
-        return [{ timestampMs: event.timestamp, scoringTeamId: event.teamId }];
+        // Riot's BUILDING_KILL teamId is the team whose structure was
+        // destroyed, not the team credited with the takedown. A duel's first
+        // turret belongs to the opposing team in the match roster.
+        const teamIds = new Set(
+          match.info.participants.map((participant) => participant.teamId),
+        );
+        if (teamIds.size !== 2 || !teamIds.has(event.teamId)) return [];
+        const scoringTeamId = [...teamIds].find(
+          (teamId) => teamId !== event.teamId,
+        );
+        return scoringTeamId === undefined
+          ? []
+          : [{ timestampMs: event.timestamp, scoringTeamId }];
       }),
     ),
     frames: timeline.info.frames.map((frame) => ({

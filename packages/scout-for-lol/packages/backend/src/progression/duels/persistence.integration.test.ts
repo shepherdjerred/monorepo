@@ -16,12 +16,12 @@ import {
 } from "#src/progression/duels/registration.ts";
 import { advanceDuelEvent } from "#src/progression/duels/advancement.ts";
 import { launchDuelSeries } from "#src/progression/duels/launch.ts";
+import { getDuelCode } from "#src/progression/duels/code.ts";
 import { decideDuelSeries } from "#src/progression/duels/review.ts";
 import {
   acceptDuelChallenge,
   acceptDuelDisclosure,
   createDirectDuel,
-  getDuelCode,
   getDuelSeries,
   markDuelReady,
 } from "#src/progression/duels/series.ts";

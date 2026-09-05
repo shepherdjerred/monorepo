@@ -324,7 +324,7 @@ export function DuelSeries() {
   const reviewRequired =
     series.data.state === "needs_review" || series.data.state === "overdue";
   const canReview =
-    series.data.isOrganizer && perms.can("competitions", "update");
+    series.data.isOrganizer || perms.can("competitions", "update");
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:py-12">
       <Link className="text-sm text-scout-subtle hover:underline" to="/">
