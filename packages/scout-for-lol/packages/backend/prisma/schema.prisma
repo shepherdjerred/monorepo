@@ -2112,6 +2112,11 @@ model ScoutInteractiveRun {
   stopRequestedAt   DateTime?
   partialOutput     String?
   trace             String?
+  /// Mirrored live-run progress, so a durable observer that did not land on
+  /// the process owning the run shows the same status line and result table
+  /// as one that did. `preview` is JSON, matching `trace`.
+  activity          String?
+  preview           String?
   resultMessageId   String?
   outcome           String?
   lastError         String?
