@@ -197,6 +197,14 @@ export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
     }
   }
   if (enabledGuildIds.size === 0) return;
+  const configuredGuildIds = new Set<DiscordGuildId>();
+  for (const guildId of enabledGuildIds) {
+    const settingsRow = await prisma.hallSettings.findUnique({
+      where: { guildId },
+    });
+    if (settingsRow !== null) configuredGuildIds.add(guildId);
+  }
+  if (configuredGuildIds.size === 0) return;
   const earliest = accounts.reduce(
     (minimum, account) =>
       new Date(Math.min(account.createdTime.getTime(), minimum.getTime())),
@@ -213,7 +221,7 @@ export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
     const row = byPuuid.get(account.puuid);
     if (row === undefined) continue;
     const guildId = DiscordGuildIdSchema.parse(account.serverId);
-    if (enabledGuildIds.has(guildId)) guildIds.add(guildId);
+    if (configuredGuildIds.has(guildId)) guildIds.add(guildId);
   }
   for (const guildId of guildIds) {
     await evaluateGuild(guildId, matchId, byPuuid);
