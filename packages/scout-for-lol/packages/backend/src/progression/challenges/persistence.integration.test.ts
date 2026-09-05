@@ -109,6 +109,7 @@ async function verifyCompletedRunCannotDisplaceRestart(): Promise<void> {
   const completed = await startChallengeRun(db, {
     ownerDiscordId: OWNER_ID,
     templateId: template.templateId,
+    templateVersionId: template.id,
     accountIds: [first.id],
     mode: { kind: "clean_slate" },
     stage: "beta",
@@ -121,6 +122,7 @@ async function verifyCompletedRunCannotDisplaceRestart(): Promise<void> {
   const restarted = await startChallengeRun(db, {
     ownerDiscordId: OWNER_ID,
     templateId: template.templateId,
+    templateVersionId: template.id,
     accountIds: [first.id],
     mode: { kind: "clean_slate" },
     stage: "beta",
@@ -244,6 +246,41 @@ describe("challenge persistence", () => {
     ]);
   });
 
+  test("starts a run with the immutable version the user reviewed", async () => {
+    const originalDraft = await createDraft(OWNER_ID, "Reviewed rules");
+    const original = await publishChallengeDraft(db, {
+      ownerDiscordId: OWNER_ID,
+      draftId: originalDraft.id,
+    });
+    const editedDraft = await createDraft(
+      OWNER_ID,
+      "Newer unseen rules",
+      original.templateId,
+    );
+    await publishChallengeDraft(db, {
+      ownerDiscordId: OWNER_ID,
+      draftId: editedDraft.id,
+    });
+    const { first } = await createOwnedAccounts();
+
+    const started = await startChallengeRun(db, {
+      ownerDiscordId: OWNER_ID,
+      templateId: original.templateId,
+      templateVersionId: original.id,
+      accountIds: [first.id],
+      mode: { kind: "clean_slate" },
+      stage: "beta",
+    });
+    const run = await db.challengeRun.findUniqueOrThrow({
+      where: { id: started.runId },
+    });
+
+    expect(run.templateVersionId).toBe(original.id);
+    expect(
+      ChallengeContractV1Schema.parse(JSON.parse(run.frozenContractJson)).title,
+    ).toBe("Reviewed rules");
+  });
+
   test("archives a prior run and keeps its last snapshot during recompute", async () => {
     const draft = await createDraft(OWNER_ID, "Two wins");
     const template = await publishChallengeDraft(db, {
@@ -254,6 +291,7 @@ describe("challenge persistence", () => {
     const oldRun = await startChallengeRun(db, {
       ownerDiscordId: OWNER_ID,
       templateId: template.templateId,
+      templateVersionId: template.id,
       accountIds: [first.id],
       mode: { kind: "clean_slate" },
       stage: "beta",
@@ -261,6 +299,7 @@ describe("challenge persistence", () => {
     const restarted = await startChallengeRun(db, {
       ownerDiscordId: OWNER_ID,
       templateId: template.templateId,
+      templateVersionId: template.id,
       accountIds: [first.id],
       mode: { kind: "clean_slate" },
       stage: "beta",
@@ -327,6 +366,7 @@ describe("challenge timeline durability", () => {
     const run = await startChallengeRun(db, {
       ownerDiscordId: OWNER_ID,
       templateId: template.templateId,
+      templateVersionId: template.id,
       accountIds: [first.id],
       mode: { kind: "clean_slate" },
       stage: "beta",

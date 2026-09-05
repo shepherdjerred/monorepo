@@ -54,6 +54,7 @@ const RunModeSchema = z.discriminatedUnion("kind", [
 ]);
 const StartRunInputSchema = z.strictObject({
   templateId: z.uuid(),
+  templateVersionId: z.uuid(),
   accountIds: AccountIdSchema.array().min(1),
   mode: RunModeSchema,
 });
@@ -80,6 +81,7 @@ async function startRunForUser(
   const request = await startChallengeRun(prisma, {
     ownerDiscordId: ownerId(discordId),
     templateId: input.templateId,
+    templateVersionId: input.templateVersionId,
     accountIds: input.accountIds,
     mode: input.mode,
     stage: configuration.environment,

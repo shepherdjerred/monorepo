@@ -80,7 +80,16 @@ export function ChallengeTemplate() {
               startAt: new Date(`${parsed.startDate}T00:00:00`),
             }
           : { kind: parsed.mode };
-      start.mutate({ templateId, accountIds: parsed.accountIds, mode });
+      const templateVersion = detail.data?.[0];
+      if (templateVersion === undefined) {
+        throw new Error("Challenge template version is unavailable");
+      }
+      start.mutate({
+        templateId,
+        templateVersionId: templateVersion.id,
+        accountIds: parsed.accountIds,
+        mode,
+      });
     },
     onSubmitInvalid: () => {
       focusFirstInvalid(formElement.current);

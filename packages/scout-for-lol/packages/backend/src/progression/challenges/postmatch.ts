@@ -174,17 +174,31 @@ async function createMatchRevision(
   });
 }
 
-export async function updateChallengeRunsForMatch(
+export async function prepareChallengeRunsForMatch(
   match: RawMatch,
   stage: ScoutStage,
-): Promise<void> {
+): Promise<readonly { readonly runId: string; readonly revision: number }[]> {
   const matchId = MatchIdSchema.parse(match.metadata.matchId);
   const runIds = await challengeRunIdsForMatch(
     match.metadata.participants.map((puuid) => LeaguePuuidSchema.parse(puuid)),
   );
+  const revisions: { readonly runId: string; readonly revision: number }[] = [];
   for (const runId of runIds) {
     const revision = await createMatchRevision(runId, matchId, stage);
     if (revision === null) continue;
+    revisions.push(revision);
+  }
+  return revisions;
+}
+
+export async function launchPreparedChallengeRuns(
+  stage: ScoutStage,
+  revisions: readonly {
+    readonly runId: string;
+    readonly revision: number;
+  }[],
+): Promise<void> {
+  for (const revision of revisions) {
     await launchChallengeRunRecompute({ stage, ...revision });
   }
 }

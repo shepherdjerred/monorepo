@@ -9,7 +9,8 @@ import configuration from "#src/configuration.ts";
 import { evaluateHallMatch } from "#src/progression/hall/evaluate-match.ts";
 import {
   challengeMatchNeedsTimeline,
-  updateChallengeRunsForMatch,
+  launchPreparedChallengeRuns,
+  prepareChallengeRunsForMatch,
 } from "#src/progression/challenges/postmatch.ts";
 import {
   fetchTimelineForProgression,
@@ -28,28 +29,32 @@ export async function processCompetitiveProgressionMatch(input: {
   const participantPuuids = input.match.metadata.participants.map((puuid) =>
     LeaguePuuidSchema.parse(puuid),
   );
-  const needsChallengeTimeline =
-    await challengeMatchNeedsTimeline(participantPuuids);
-  if (
-    needsChallengeTimeline &&
-    (input.timeline === null || input.timeline === undefined)
-  ) {
-    await fetchTimelineForProgression(
-      input.match,
-      MatchIdSchema.parse(input.match.metadata.matchId),
-      input.trackedPlayers,
-    );
-  } else if (
-    needsChallengeTimeline &&
-    input.timeline !== undefined &&
-    input.timeline !== null
-  ) {
-    await persistTimelineForProgression(
-      input.timeline,
-      input.trackedPlayers,
-      MatchIdSchema.parse(input.match.metadata.matchId),
-    );
-  }
   await evaluateHallMatch(input.match);
-  await updateChallengeRunsForMatch(input.match, configuration.environment);
+  const challengeRevisions = await prepareChallengeRunsForMatch(
+    input.match,
+    configuration.environment,
+  );
+  // A run can start or change accounts while this match is being processed.
+  // Re-read the run state after match-trigger revisions are serialized, then
+  // durably stage required evidence before recompute and cursor advancement.
+  if (await challengeMatchNeedsTimeline(participantPuuids)) {
+    const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
+    if (input.timeline === null || input.timeline === undefined) {
+      await fetchTimelineForProgression(
+        input.match,
+        matchId,
+        input.trackedPlayers,
+      );
+    } else {
+      await persistTimelineForProgression(
+        input.timeline,
+        input.trackedPlayers,
+        matchId,
+      );
+    }
+  }
+  await launchPreparedChallengeRuns(
+    configuration.environment,
+    challengeRevisions,
+  );
 }

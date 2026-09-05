@@ -94,6 +94,7 @@ export async function startChallengeRun(
   options: {
     readonly ownerDiscordId: DiscordAccountId;
     readonly templateId: string;
+    readonly templateVersionId: string;
     readonly accountIds: z.infer<typeof AccountIdSchema>[];
     readonly mode:
       | { readonly kind: "clean_slate" }
@@ -107,10 +108,6 @@ export async function startChallengeRun(
     options.ownerDiscordId,
     options.accountIds,
   );
-  const version = await db.challengeTemplateVersion.findFirstOrThrow({
-    where: { templateId: options.templateId },
-    orderBy: { version: "desc" },
-  });
   const now = new Date();
   const startAt =
     options.mode.kind === "clean_slate"
@@ -123,11 +120,17 @@ export async function startChallengeRun(
           );
   if (startAt > now)
     throw new Error("Challenge runs cannot start in the future");
-  const contract = freezeChallengeCatalogs(
-    parseProgressionJson(version.contractJson, ChallengeContractV1Schema),
-  );
   return await db.$transaction(async (tx) => {
     await lockChallengeTemplate(tx, options.templateId);
+    const version = await tx.challengeTemplateVersion.findFirstOrThrow({
+      where: {
+        id: options.templateVersionId,
+        templateId: options.templateId,
+      },
+    });
+    const contract = freezeChallengeCatalogs(
+      parseProgressionJson(version.contractJson, ChallengeContractV1Schema),
+    );
     await tx.challengeRun.updateMany({
       where: {
         ownerDiscordId: options.ownerDiscordId,
