@@ -411,6 +411,20 @@ function match<T, R>(value: Loaded<T>, matchers: LoadedMatchers<T, R>): R {
  * and constraining the fallback to `T` makes exactly that call illegal while
  * permitting only the substitute-a-fake-value form.
  */
+/**
+ * A displayable message for a `LoadedError.error`.
+ *
+ * `error` is `unknown` because a producer may reject with anything, which is
+ * honest but means every consumer that wants to show it needs this same three
+ * lines. Providing it here keeps that from being reinvented — usually less
+ * carefully — in each app.
+ */
+function messageOf(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return String(error);
+}
+
 function getOrElse<T, F>(value: Loaded<T>, fallback: F): T | F {
   return value.status === "degraded" || value.status === "done"
     ? value.data
@@ -482,5 +496,6 @@ export const Loaded = {
   allArray,
   match,
   getOrElse,
+  messageOf,
   fromQuery,
 };
