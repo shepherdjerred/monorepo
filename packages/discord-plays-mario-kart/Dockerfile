@@ -74,6 +74,7 @@ COPY --parents \
   packages/discord-plays-core \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
+  packages/loaded \
   ./
 # discord-stream-lifecycle's package resolves to a gitignored `dist/`; consumed
 # as compiled JS from the nested backend, it must be built or the app crashes at
