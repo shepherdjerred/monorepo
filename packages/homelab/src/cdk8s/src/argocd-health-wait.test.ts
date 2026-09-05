@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
 import { applicationReadiness } from "./argocd-application-readiness.ts";
-import { createAppsApp } from "./resources/argo-applications/apps.ts";
+import { createAppsApp } from "./resources/argo-applications/platform/apps.ts";
 
 const AppsManifestSchema = z.tuple([
   z.object({

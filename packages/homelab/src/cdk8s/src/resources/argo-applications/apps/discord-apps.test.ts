@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
-import { createMarioKartApp } from "./mario-kart.ts";
-import { createPokemonApp } from "./pokemon.ts";
+import { createMarioKartApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/mario-kart.ts";
+import { createPokemonApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/games/pokemon.ts";
 
 const ApplicationSchema = z
   .object({

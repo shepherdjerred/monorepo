@@ -326,7 +326,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/homelab/src/tofu/posthog",
     "packages/homelab/scripts/tofu-stack.ts",
     "scripts/lib/transient-error.ts",
-    "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts",
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
     "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
     "scripts/lib/run.ts",
     "scripts/lib/transient.ts",
