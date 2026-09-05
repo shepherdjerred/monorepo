@@ -8,7 +8,7 @@ import {
 import {
   SubscriptionFields,
   subscriptionFormOptions,
-} from "#src/components/subscription-fields.tsx";
+} from "#src/components/subscriptions/subscription-fields.tsx";
 import { useAddSubscription } from "#src/lib/use-add-subscription.ts";
 import type { OnboardingStepKind } from "@scout-for-lol/data";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";

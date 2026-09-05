@@ -1,7 +1,7 @@
 import { useParams } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { DiscordUser } from "#src/components/discord-user.tsx";
+import { DiscordUser } from "#src/components/identity/discord-user.tsx";
 import { LoadMore } from "#src/components/load-more.tsx";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import {

@@ -10,7 +10,7 @@ import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import {
   resolveSessionGuardState,
   SESSION_QUERY_OPTIONS,
-} from "#src/lib/session-query.ts";
+} from "#src/lib/api/session-query.ts";
 
 /**
  * Route guard that redirects to /login if the user has no valid web

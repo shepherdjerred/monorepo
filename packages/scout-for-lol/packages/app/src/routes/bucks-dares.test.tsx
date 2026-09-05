@@ -7,7 +7,7 @@ import {
   DareList,
   parseBucksDareId,
 } from "#src/routes/bucks-dares.tsx";
-import { formatDareEvidenceJson } from "#src/components/bucks-dare-progress.tsx";
+import { formatDareEvidenceJson } from "#src/components/bucks/bucks-dare-progress.tsx";
 
 const noAction = vi.fn();
 const progress = DareProgressSchema.parse({

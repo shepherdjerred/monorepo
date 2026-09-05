@@ -4,7 +4,7 @@ import {
   type ExploreRunOutcome,
 } from "@scout-for-lol/data";
 import { observeExploreRunUntilFinished } from "#src/hooks/use-explore-run-observer.ts";
-import type { ExploreClientRun } from "#src/lib/explore-client-runs.ts";
+import type { ExploreClientRun } from "#src/lib/explore/explore-client-runs.ts";
 
 const summary = ExploreActiveRunSchema.parse({
   runId: "11111111-1111-4111-8111-111111111111",

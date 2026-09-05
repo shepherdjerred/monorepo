@@ -10,8 +10,8 @@ import {
   reportFormOptions,
   ReportFormFields,
   type ReportFormState,
-} from "#src/components/report-form-fields.tsx";
-import { REPORT_EXAMPLES } from "#src/lib/onboarding-examples.ts";
+} from "#src/components/reports/report-form-fields.tsx";
+import { REPORT_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 import {
   focusFirstInvalid,

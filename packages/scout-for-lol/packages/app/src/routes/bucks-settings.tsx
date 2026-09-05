@@ -4,7 +4,7 @@ import {
   ErrorState,
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
-import { BucksNotificationPreferencesForm } from "#src/components/bucks-notification-preferences-form.tsx";
+import { BucksNotificationPreferencesForm } from "#src/components/bucks/bucks-notification-preferences-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";

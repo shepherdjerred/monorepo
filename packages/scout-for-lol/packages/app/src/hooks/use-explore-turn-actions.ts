@@ -1,9 +1,9 @@
 import { useCallback, type RefObject } from "react";
 import type { NavigateFunction } from "react-router";
 import type { ExploreMessage } from "@scout-for-lol/data";
-import type { ExploreRunsContextValue } from "#src/lib/explore-runs-contract.ts";
+import type { ExploreRunsContextValue } from "#src/lib/explore/explore-runs-contract.ts";
 import { track } from "#src/lib/analytics.ts";
-import { shouldOpenStartedExploreConversation } from "#src/lib/explore-navigation.ts";
+import { shouldOpenStartedExploreConversation } from "#src/lib/explore/explore-navigation.ts";
 
 /**
  * The four ways a turn starts — ask/follow-up, edit, regenerate, retry — all

@@ -5,7 +5,7 @@ import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
 import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
-import { queryClient } from "#src/lib/query-client.ts";
+import { queryClient } from "#src/lib/api/query-client.ts";
 import { createAppRouter } from "#src/router.tsx";
 import { initAnalytics, track } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";

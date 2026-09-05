@@ -22,13 +22,13 @@ import {
   missingPermissionFromError,
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
-import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
+import { DiscordMemberCombobox } from "#src/components/identity/discord-member-combobox.tsx";
 import {
   CustomPermissionsForm,
   MemberRoleForm,
   PermissionChecklist,
   type RoleSelection,
-} from "#src/components/guild-access-forms.tsx";
+} from "#src/components/identity/guild-access-forms.tsx";
 import {
   Table,
   TableBody,
@@ -37,8 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-import { useGuildParams } from "#src/lib/route-params.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
+import { useGuildParams } from "#src/lib/api/route-params.ts";
 import {
   fieldErrorMessage,
   focusFirstInvalid,

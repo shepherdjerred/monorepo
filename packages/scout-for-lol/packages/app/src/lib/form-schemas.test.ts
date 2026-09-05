@@ -7,8 +7,8 @@ import {
   RiotIdTextSchema,
   SubscriptionFormSchema,
 } from "#src/lib/form-schemas.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
-import { buildReportPayload } from "#src/components/report-form-fields.tsx";
+import { validateForm } from "#src/lib/competitions/competition-form-state.ts";
+import { buildReportPayload } from "#src/components/reports/report-form-fields.tsx";
 
 const CHANNEL_ID = "123456789012345678";
 const DISCORD_USER_ID = ["123456789", "012345678"].join("");

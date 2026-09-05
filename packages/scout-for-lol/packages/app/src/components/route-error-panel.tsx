@@ -8,8 +8,8 @@ import {
 import * as Sentry from "@sentry/react";
 import { z } from "zod";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { queryClient } from "#src/lib/query-client.ts";
-import { RouteParameterError } from "#src/lib/route-params.ts";
+import { queryClient } from "#src/lib/api/query-client.ts";
+import { RouteParameterError } from "#src/lib/api/route-params.ts";
 
 const ErrorMessageSchema = z.object({ message: z.string() });
 const HttpStatusErrorSchema = z.object({

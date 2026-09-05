@@ -6,7 +6,7 @@ import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
 import {
   EMPTY_REPORT_STATE,
   STARTER_REPORT_QUERY,
-} from "#src/components/report-form-fields.tsx";
+} from "#src/components/reports/report-form-fields.tsx";
 
 // ── The starter query ────────────────────────────────────────────────────────
 // A fresh report form arrives pre-filled, so this text is the first ScoutQL

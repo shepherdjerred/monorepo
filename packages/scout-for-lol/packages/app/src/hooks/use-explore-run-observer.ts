@@ -12,13 +12,13 @@ import {
   type ExploreActiveRun,
   type ExploreRunOutcome,
 } from "@scout-for-lol/data";
-import { applyStreamEvent } from "#src/lib/explore-turn-state.ts";
-import { observeExploreRun } from "#src/lib/explore-stream.ts";
+import { applyStreamEvent } from "#src/lib/explore/explore-turn-state.ts";
+import { observeExploreRun } from "#src/lib/explore/explore-stream.ts";
 import {
   setExploreClientRun,
   type ExploreClientRun,
-} from "#src/lib/explore-client-runs.ts";
-import type { ExploreRunIdentity } from "#src/lib/explore-run-completion.ts";
+} from "#src/lib/explore/explore-client-runs.ts";
+import type { ExploreRunIdentity } from "#src/lib/explore/explore-run-completion.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 const RECONNECT_DELAYS_MS = [250, 750, 1500, 3000];
