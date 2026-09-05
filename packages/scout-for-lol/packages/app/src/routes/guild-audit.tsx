@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useParams } from "react-router";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -26,6 +27,7 @@ export function GuildAudit() {
       },
     ),
   );
+  const auditValue = Loaded.fromQuery(query, ["guild.audit"]);
   const rows = query.data?.pages.flatMap((page) => page.items) ?? [];
   // Audit actors aren't necessarily stored players, so resolve their names
   // via the batch hook rather than relying on payload enrichment.
@@ -43,7 +45,9 @@ export function GuildAudit() {
     <div className="space-y-4">
       <h2 className="text-xl font-semibold tracking-tight">Audit log</h2>
 
-      {query.isLoading && <p className="text-sm text-scout-subtle">Loading…</p>}
+      {auditValue.status === "loading" && (
+        <p className="text-sm text-scout-subtle">Loading…</p>
+      )}
       {query.error && (
         <p className="text-sm text-scout-danger">
           Failed to load: {query.error.message}

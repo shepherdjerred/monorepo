@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
@@ -63,6 +64,7 @@ export function PlayerList() {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     }),
   );
+  const playersValue = Loaded.fromQuery(playersQuery, ["player.list"]);
   const currentPlayerQuery = useQuery(
     trpc.player.getCurrentLinkedPlayer.queryOptions(
       { guildId: safeGuildId },
@@ -138,7 +140,7 @@ export function PlayerList() {
         />
       </div>
 
-      {playersQuery.isLoading && (
+      {playersValue.status === "loading" && (
         <p role="status" className="text-sm text-scout-subtle">
           Loading players...
         </p>
