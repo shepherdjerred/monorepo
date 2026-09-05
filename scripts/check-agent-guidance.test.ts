@@ -54,7 +54,7 @@ function validFixture(): GuidanceEntry[] {
     ),
     file(
       "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc",
-      "---\nalwaysApply: true\n---\nFollow ~/AGENTS.md.\n",
+      "---\ndescription: Use the canonical personal and repository agent guidance\nalwaysApply: true\n---\n\nFollow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching\nskills from `.agents/skills`; do not duplicate their instructions here.\n",
     ),
     skill(".agents/skills/delivery/SKILL.md", "delivery"),
   ];
@@ -234,12 +234,26 @@ describe("agent guidance guard", () => {
         "packages/dotfiles/dot_gemini/config/skills/gemini-copy/SKILL.md",
         "gemini-copy",
       ),
+      skill(
+        "packages/dotfiles/private_dot_codex/skills/codex-copy/SKILL.md",
+        "codex-copy",
+      ),
     );
     const found = rules(entries);
     expect(found).toEqual(expect.arrayContaining(["repository-cursor-rule"]));
     expect(
       found.filter((rule) => rule === "duplicate-client-skill"),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
+  });
+
+  test("rejects policy appended to the Cursor adapter", () => {
+    const entries = validFixture().map((entry) =>
+      entry.path ===
+      "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc"
+        ? { ...entry, contents: `${entry.contents}Extra policy.\n` }
+        : entry,
+    );
+    expect(rules(entries)).toContain("cursor-adapter");
   });
 
   test("rejects an oversized personal skill catalog", () => {
@@ -286,12 +300,26 @@ describe("agent guidance compatibility", () => {
         "x\n".repeat(201),
       );
 
-      const entries = await listGuidanceEntries(new Set(), repositoryRoot);
+      const entries = await listGuidanceEntries(
+        new Set(),
+        repositoryRoot,
+        "index",
+      );
 
       expect(entries).toContainEqual({
         path: "AGENTS.md",
         kind: "file",
         contents: "# Staged\n",
+      });
+
+      const worktreeEntries = await listGuidanceEntries(
+        new Set(),
+        repositoryRoot,
+      );
+      expect(worktreeEntries).toContainEqual({
+        path: "AGENTS.md",
+        kind: "file",
+        contents: "x\n".repeat(201),
       });
     } finally {
       await rm(repositoryRoot, { recursive: true, force: true });

@@ -41,7 +41,7 @@ pre-commit:
 
           - name: check-agent-guidance
             glob: "**/*"
-            run: bun run check-agent-guidance
+            run: bun run check-agent-guidance -- --staged
 
           # Swift is the one language Buildkite cannot build: the CI image ships
           # SwiftLint's static binary but no toolchain, and standing up a

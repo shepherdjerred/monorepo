@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import {
   listGuidanceEntries,
+  type GuidanceReadMode,
   type GuidanceEntry,
 } from "./lib/agent-guidance-files.ts";
 
@@ -41,19 +42,24 @@ const CATALOG_MAX_BYTES = 8 * 1024;
 const gitPath = path.posix;
 const CLIENT_SKILL_DIRECTORIES = new Set([
   ".claude",
+  ".codex",
   ".cursor",
   ".opencode",
   "dot_claude",
+  "dot_codex",
   "dot_cursor",
   "dot_opencode",
   "private_dot_claude",
+  "private_dot_codex",
   "private_dot_cursor",
   "private_dot_opencode",
 ]);
 const GEMINI_SKILL_DIRECTORIES = new Set(["dot_gemini", "private_dot_gemini"]);
 const CURSOR_ADAPTER_PATH =
   "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc";
-
+const CURSOR_ADAPTER_CONTENT =
+  "---\ndescription: Use the canonical personal and repository agent guidance\nalwaysApply: true\n---\n\n" +
+  "Follow `~/AGENTS.md`, then the nearest repository `AGENTS.md`. Load matching\nskills from `.agents/skills`; do not duplicate their instructions here.";
 const REQUIRED_SOURCE_ADAPTERS = new Map([
   ["packages/dotfiles/dot_claude/symlink_CLAUDE.md", "../AGENTS.md"],
   ["packages/dotfiles/dot_claude/symlink_skills", "../.agents/skills"],
@@ -64,12 +70,10 @@ const REQUIRED_SOURCE_ADAPTERS = new Map([
     "../../.agents/skills",
   ],
 ]);
-
 const ROOT_SYMLINKS = new Map([
   ["CLAUDE.md", "AGENTS.md"],
   [".claude/skills", "../.agents/skills"],
 ]);
-
 function lineCount(contents: string): number {
   if (contents === "") return 0;
   const count = contents.split(/\r?\n/).length;
@@ -212,7 +216,6 @@ function addWhenPresent(
 ): void {
   if (violation !== undefined) violations.push(violation);
 }
-
 function validateClientLayout(
   byPath: ReadonlyMap<string, GuidanceEntry>,
 ): GuidanceViolation[] {
@@ -233,12 +236,10 @@ function validateClientLayout(
       validateSourceAdapter(byPath, entryPath, expected),
     );
   }
-
   const cursorAdapter = byPath.get(CURSOR_ADAPTER_PATH);
   if (
     cursorAdapter?.kind !== "file" ||
-    !cursorAdapter.contents.includes("~/AGENTS.md") ||
-    byteCount(cursorAdapter.contents) > 1024
+    cursorAdapter.contents.trim() !== CURSOR_ADAPTER_CONTENT
   ) {
     violations.push({
       rule: "cursor-adapter",
@@ -267,7 +268,6 @@ function validateClientSpecificEntry(
       message: "client-specific skill copies are not allowed",
     });
   }
-
   if (
     (entry.path.startsWith(".cursor/rules/") ||
       entry.path.includes("/.cursor/rules/") ||
@@ -327,7 +327,6 @@ type SkillRegistry = Readonly<{
   ids: Map<string, string>;
   catalogSizes: Map<string, number>;
 }>;
-
 function validateSkillMetadata(
   entry: GuidanceEntry,
   registry: SkillRegistry,
@@ -399,7 +398,6 @@ function validateSkillMetadata(
   }
   return violations;
 }
-
 function validateSkillEntry(
   entry: GuidanceEntry,
   registry: SkillRegistry,
@@ -421,7 +419,6 @@ function validateSkillEntry(
   violations.push(...validateSkillMetadata(entry, registry));
   return violations;
 }
-
 function validateCatalogSizes(
   catalogSizes: ReadonlyMap<string, number>,
 ): GuidanceViolation[] {
@@ -437,7 +434,6 @@ function validateCatalogSizes(
   }
   return violations;
 }
-
 export function validateAgentGuidance(
   inputEntries: readonly GuidanceEntry[],
 ): GuidanceViolation[] {
@@ -448,7 +444,6 @@ export function validateAgentGuidance(
     catalogSizes: new Map<string, number>(),
   };
   const violations = validateClientLayout(byPath);
-
   for (const entry of entries) {
     if (entry.path !== ".claude/skills") {
       violations.push(...validateClientSpecificEntry(entry));
@@ -464,7 +459,6 @@ export function validateAgentGuidance(
     }
   }
   violations.push(...validateCatalogSizes(registry.catalogSizes));
-
   return violations.sort(
     (left, right) =>
       left.path.localeCompare(right.path) ||
@@ -472,12 +466,18 @@ export function validateAgentGuidance(
   );
 }
 
-export async function checkAgentGuidance(): Promise<void> {
+export async function checkAgentGuidance(
+  readMode: GuidanceReadMode = "worktree",
+): Promise<void> {
   const extraTrackedPaths = new Set([
     ...REQUIRED_SOURCE_ADAPTERS.keys(),
     "packages/dotfiles/private_dot_cursor/rules/agent-guidance.mdc",
   ]);
-  const entries = await listGuidanceEntries(extraTrackedPaths);
+  const entries = await listGuidanceEntries(
+    extraTrackedPaths,
+    undefined,
+    readMode,
+  );
   const violations = validateAgentGuidance(entries);
   if (violations.length > 0) {
     throw new Error(
@@ -494,4 +494,8 @@ export async function checkAgentGuidance(): Promise<void> {
   );
 }
 
-if (import.meta.main) await checkAgentGuidance();
+if (import.meta.main) {
+  await checkAgentGuidance(
+    process.argv.includes("--staged") ? "index" : "worktree",
+  );
+}

@@ -9,6 +9,8 @@ export type GuidanceEntry = Readonly<{
   contents: string;
 }>;
 
+export type GuidanceReadMode = "worktree" | "index";
+
 function trackedSymlinkPath(record: string): string | undefined {
   if (!record.startsWith("120000 ")) return undefined;
   const separator = record.indexOf("\t");
@@ -100,6 +102,7 @@ async function readWorktreeEntry(
 export async function listGuidanceEntries(
   extraTrackedPaths: ReadonlySet<string>,
   repositoryRoot = path.resolve(import.meta.dir, "../.."),
+  readMode: GuidanceReadMode = "worktree",
 ): Promise<GuidanceEntry[]> {
   const tracked = await run(
     ["git", "ls-files", "--cached", "--others", "--exclude-standard", "-z"],
@@ -124,16 +127,22 @@ export async function listGuidanceEntries(
   const entryPaths = tracked.stdout
     .split("\0")
     .filter((entryPath) => entryPath !== "")
-    .filter((entryPath) => isGuidancePath(entryPath, extraTrackedPaths));
+    .filter((entryPath) => isGuidancePath(entryPath, extraTrackedPaths))
+    .filter(
+      (entryPath) => readMode === "worktree" || trackedPaths.has(entryPath),
+    );
 
   const entries = await Promise.all(
     entryPaths.map(async (entryPath) => {
-      const trackedEntry = await readTrackedEntry(
-        entryPath,
-        trackedPaths,
-        trackedSymlinks,
-        repositoryRoot,
-      );
+      const trackedEntry =
+        readMode === "index"
+          ? await readTrackedEntry(
+              entryPath,
+              trackedPaths,
+              trackedSymlinks,
+              repositoryRoot,
+            )
+          : undefined;
       return (
         trackedEntry ??
         (await readWorktreeEntry(entryPath, trackedSymlinks, repositoryRoot))
