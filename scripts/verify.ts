@@ -6,6 +6,7 @@ const turboTasks = [
   "lint",
   "check-suppressions",
   "check-agent-guidance",
+  "check-directory-file-counts",
   "check-ai-architecture",
   "check-floating-deps",
   "check-patched-deps",
