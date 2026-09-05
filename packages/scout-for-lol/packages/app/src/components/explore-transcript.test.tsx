@@ -258,6 +258,51 @@ describe("ExploreTranscript", () => {
   });
 });
 
+describe("Explore expandable artifacts", () => {
+  test("offers an expand control only when there is a result", () => {
+    // A turn answered from the transcript runs no query, so there is nothing
+    // behind the button and it must not appear.
+    const withoutResult = renderToStaticMarkup(
+      <ExploreTranscript messages={[assistantMessage({})]} />,
+    );
+    expect(withoutResult).not.toContain('aria-label="Expand result"');
+
+    const withResult = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[
+          assistantMessage({
+            preview: {
+              columns: [{ key: "label", label: "Player", format: "text" }],
+              rows: [{ label: "Faker", values: [] }],
+              rowsScanned: 12,
+              renderKind: "TABLE",
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(withResult).toContain('aria-label="Expand result"');
+  });
+
+  test("does not offer it for an empty result set", () => {
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[
+          assistantMessage({
+            preview: {
+              columns: [{ key: "label", label: "Player", format: "text" }],
+              rows: [],
+              rowsScanned: 0,
+              renderKind: "TABLE",
+            },
+          }),
+        ]}
+      />,
+    );
+    expect(markup).not.toContain('aria-label="Expand result"');
+  });
+});
+
 describe("Explore live progress", () => {
   test("shows the status line before any prose has arrived", () => {
     const markup = renderToStaticMarkup(
