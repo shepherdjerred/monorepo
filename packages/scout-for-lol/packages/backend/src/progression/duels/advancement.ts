@@ -359,7 +359,22 @@ async function advanceRoundRobin(
   ) {
     return [];
   }
-  const results = event.series.map((series) => ({
+  // A tiebreak rematch is the decisive meeting for that pair. Keep only the
+  // latest series for each unordered matchup so rankRoundRobin cannot select
+  // an earlier result with its first-match lookup.
+  const latestByMatchup = new Map<string, (typeof event.series)[number]>();
+  for (const series of event.series.toSorted(
+    (left, right) =>
+      (left.roundNumber ?? 0) - (right.roundNumber ?? 0) ||
+      left.createdAt.getTime() - right.createdAt.getTime() ||
+      left.id.localeCompare(right.id),
+  )) {
+    const matchup = [series.competitorOneId, series.competitorTwoId]
+      .toSorted()
+      .join(":");
+    latestByMatchup.set(matchup, series);
+  }
+  const results = [...latestByMatchup.values()].map((series) => ({
     firstCompetitorId: series.competitorOneId,
     secondCompetitorId: series.competitorTwoId,
     winnerCompetitorId: series.winnerCompetitorId ?? "",
