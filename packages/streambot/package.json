@@ -28,6 +28,7 @@
     "voice:harness:prepare": "bun run scripts/voice-harness-prepare.ts",
     "voice:harness": "bun run scripts/voice-harness.ts",
     "voice:harness:evaluate": "bun run scripts/voice-harness-evaluate.ts",
+    "voice:cloud-probe": "bun run scripts/voice-cloud-probe.ts",
     "voice:verifier:package": "bun run scripts/voice-verifier-package.ts",
     "e2e:local": "bun run e2e/local.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
