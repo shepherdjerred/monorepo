@@ -132,6 +132,7 @@ export async function createDirectDuel(
         existing.organizerDiscordId !== options.organizerDiscordId ||
         existing.channelId !== options.channelId ||
         existing.bestOf !== bestOf ||
+        existing.matchWindowHours !== matchWindowHours ||
         existing.rulesetJson !== JSON.stringify(ruleset) ||
         !competitorMatches(existing.competitorOne, first) ||
         !competitorMatches(existing.competitorTwo, second)
@@ -153,6 +154,7 @@ export async function createDirectDuel(
         competitorOneId: firstRow.id,
         competitorTwoId: secondRow.id,
         bestOf,
+        matchWindowHours,
         rulesetJson: JSON.stringify(ruleset),
         channelId: options.channelId,
         organizerDiscordId: options.organizerDiscordId,
@@ -232,7 +234,7 @@ export async function acceptDuelDisclosure(
   });
 }
 
-async function currentParticipantDiscordIds(
+export async function currentParticipantDiscordIds(
   db: ExtendedPrismaClient,
   guildId: DiscordGuildId,
   participants: readonly {
@@ -250,13 +252,42 @@ async function currentParticipantDiscordIds(
   return new Map(players.map((player) => [player.id, player.discordId]));
 }
 
-function effectiveParticipantDiscordId(
+export function effectiveParticipantDiscordId(
   current: ReadonlyMap<number, string | null>,
   participant: { readonly playerId: number; readonly discordId: string },
 ): string | null | undefined {
   return current.has(participant.playerId)
     ? current.get(participant.playerId)
     : participant.discordId;
+}
+
+export function duelSeriesVisibleTo(
+  currentDiscordIdByPlayer: ReadonlyMap<number, string | null>,
+  series: {
+    readonly organizerDiscordId: string;
+    readonly participants: readonly {
+      readonly playerId: number;
+      readonly discordId: string;
+      readonly acceptedAt: Date | null;
+    }[];
+  },
+  viewerDiscordId: DiscordAccountId,
+): boolean {
+  const allAccepted = series.participants.every(
+    (participant) =>
+      participant.acceptedAt !== null &&
+      effectiveParticipantDiscordId(currentDiscordIdByPlayer, participant) ===
+        participant.discordId,
+  );
+  return (
+    allAccepted ||
+    series.organizerDiscordId === viewerDiscordId ||
+    series.participants.some(
+      (participant) =>
+        effectiveParticipantDiscordId(currentDiscordIdByPlayer, participant) ===
+        viewerDiscordId,
+    )
+  );
 }
 
 async function participantSeries(
@@ -333,6 +364,11 @@ export async function markDuelReady(
   if (participants.some((participant) => participant.acceptedAt === null)) {
     throw new Error("Accept the duel before marking ready");
   }
+  if (participants.some((participant) => participant.discordId !== discordId)) {
+    throw new Error(
+      "Accept the duel again under your current Discord identity before marking ready",
+    );
+  }
   await db.duelSeriesParticipant.updateMany({
     where: {
       seriesId,
@@ -365,21 +401,7 @@ export async function getDuelSeries(
     guildId,
     series.participants,
   );
-  const allAccepted = series.participants.every(
-    (participant) =>
-      participant.acceptedAt !== null &&
-      effectiveParticipantDiscordId(currentDiscordIdByPlayer, participant) ===
-        participant.discordId,
-  );
-  const authorized =
-    allAccepted ||
-    series.organizerDiscordId === viewerDiscordId ||
-    series.participants.some(
-      (participant) =>
-        effectiveParticipantDiscordId(currentDiscordIdByPlayer, participant) ===
-        viewerDiscordId,
-    );
-  if (!authorized) {
+  if (!duelSeriesVisibleTo(currentDiscordIdByPlayer, series, viewerDiscordId)) {
     throw new Error("This duel is private until every participant accepts");
   }
   return {

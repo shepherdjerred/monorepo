@@ -15,6 +15,7 @@ type DecisionSeries = {
   readonly eventId: string | null;
   readonly competitorOneId: string;
   readonly competitorTwoId: string;
+  readonly matchWindowHours: number;
   readonly competitorOne: {
     readonly members: readonly { readonly playerId: number }[];
   };
@@ -198,7 +199,9 @@ export async function decideDuelSeries(
     });
     validateDecision(series, options.actorDiscordId, options.decision);
     const now = new Date();
-    const deadlineAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const deadlineAt = new Date(
+      now.getTime() + series.matchWindowHours * 60 * 60 * 1000,
+    );
     await tx.duelAuditDecision.create({
       data: {
         seriesId: series.id,

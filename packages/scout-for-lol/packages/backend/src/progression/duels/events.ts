@@ -152,6 +152,7 @@ function seriesCreateData(options: {
     competitorOneId: options.first.competitorId,
     competitorTwoId: options.second.competitorId,
     bestOf: options.bestOf,
+    matchWindowHours: options.event.matchWindowHours,
     rulesetJson: options.event.rulesetJson,
     seriesState: "awaiting_readiness",
     channelId: DiscordChannelIdSchema.parse(options.event.channelId),

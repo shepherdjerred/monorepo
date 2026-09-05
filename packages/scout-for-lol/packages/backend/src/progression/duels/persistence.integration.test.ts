@@ -22,7 +22,9 @@ import {
   acceptDuelDisclosure,
   createDirectDuel,
   getDuelSeries,
+  markDuelReady,
 } from "#src/progression/duels/series.ts";
+import { listGuildDuels } from "#src/progression/duels/read.ts";
 import {
   createTestDatabase,
   dropTestDatabase,
@@ -89,6 +91,7 @@ async function createTestDirectDuel(
   first: Awaited<ReturnType<typeof createPlayer>>,
   second: Awaited<ReturnType<typeof createPlayer>>,
   requestId = crypto.randomUUID(),
+  matchWindowHours = 168,
 ) {
   return await createDirectDuel(db, {
     requestId,
@@ -100,7 +103,7 @@ async function createTestDirectDuel(
     second: { accountIds: [second.accountId] },
     bestOf: 1,
     ruleset: RULESET,
-    matchWindowHours: 168,
+    matchWindowHours,
     stage: "dev",
   });
 }
@@ -231,6 +234,99 @@ async function verifyCommitteeSeriesRecord(): Promise<void> {
   ).toEqual([0, 1]);
 }
 
+async function verifyRoundRobinAcceptanceCap(): Promise<void> {
+  const players = await Promise.all(
+    Array.from(
+      { length: 17 },
+      async (_, index) => await createPlayer(index + 1),
+    ),
+  );
+  const event = await createDuelEvent(db, {
+    guildId: GUILD_ID,
+    name: "Capped round robin",
+    format: "round_robin",
+    competitorKind: "player",
+    bestOf: 1,
+    ruleset: RULESET,
+    registrationMode: "invitations",
+    seedMethod: "manual",
+    matchWindowHours: 168,
+    channelId: CHANNEL_ID,
+    organizerDiscordId: ORGANIZER_ID,
+    roundOverrides: [],
+  });
+  const registrations: { readonly competitorId: string }[] = [];
+  for (const player of players) {
+    registrations.push(
+      await registerDuelEventEntrant(db, {
+        guildId: GUILD_ID,
+        eventId: event.id,
+        actorDiscordId: ORGANIZER_ID,
+        selection: { accountIds: [player.accountId] },
+        source: "invitation",
+      }),
+    );
+  }
+  for (const [index, player] of players.slice(0, 15).entries()) {
+    const registration = registrations[index];
+    if (registration === undefined) {
+      throw new Error("Accepted entrant fixture is incomplete");
+    }
+    await acceptDuelDisclosure(db, {
+      guildId: GUILD_ID,
+      playerId: player.playerId,
+      discordId: player.discordId,
+    });
+    await acceptDuelEventRegistration(db, {
+      guildId: GUILD_ID,
+      eventId: event.id,
+      competitorId: registration.competitorId,
+      actorDiscordId: player.discordId,
+    });
+  }
+  const finalPlayers = players.slice(15);
+  await Promise.all(
+    finalPlayers.map(async (player) => {
+      await acceptDuelDisclosure(db, {
+        guildId: GUILD_ID,
+        playerId: player.playerId,
+        discordId: player.discordId,
+      });
+    }),
+  );
+  const finalAcceptances = await Promise.allSettled(
+    finalPlayers.map(async (player, index) => {
+      const registration = registrations[index + 15];
+      if (registration === undefined) {
+        throw new Error("Final entrant fixture is incomplete");
+      }
+      await acceptDuelEventRegistration(db, {
+        guildId: GUILD_ID,
+        eventId: event.id,
+        competitorId: registration.competitorId,
+        actorDiscordId: player.discordId,
+      });
+    }),
+  );
+
+  expect(
+    finalAcceptances.filter((result) => result.status === "fulfilled"),
+  ).toHaveLength(1);
+  expect(
+    finalAcceptances.filter((result) => result.status === "rejected"),
+  ).toHaveLength(1);
+  expect(
+    await db.duelEventEntrant.count({
+      where: { eventId: event.id, registrationState: "accepted" },
+    }),
+  ).toBe(16);
+  expect(
+    await db.duelEventEntrant.count({
+      where: { eventId: event.id, registrationState: "pending" },
+    }),
+  ).toBe(1);
+}
+
 beforeEach(async () => {
   vi.mocked(launchDuelSeries).mockClear();
   await db.duelStatusOutbox.deleteMany();
@@ -325,6 +421,73 @@ describe("duel persistence", () => {
     await verifyCurrentDiscordIdentity();
   });
 
+  test("requires renewed acceptance before readiness after an identity change", async () => {
+    const first = await createPlayer(1);
+    const second = await createPlayer(2);
+    const duel = await createTestDirectDuel(first, second);
+    await acceptDuelDisclosure(db, {
+      guildId: GUILD_ID,
+      playerId: first.playerId,
+      discordId: first.discordId,
+    });
+    await acceptDuelChallenge(db, duel.seriesId, first.discordId, GUILD_ID);
+    const replacementDiscordId = testAccountId("73188");
+    await db.player.update({
+      where: { id: first.playerId },
+      data: { discordId: replacementDiscordId },
+    });
+    await acceptDuelDisclosure(db, {
+      guildId: GUILD_ID,
+      playerId: first.playerId,
+      discordId: replacementDiscordId,
+    });
+
+    await expect(
+      markDuelReady(db, duel.seriesId, replacementDiscordId, GUILD_ID),
+    ).rejects.toThrow("Accept the duel again");
+
+    await acceptDuelChallenge(
+      db,
+      duel.seriesId,
+      replacementDiscordId,
+      GUILD_ID,
+    );
+    await expect(
+      markDuelReady(db, duel.seriesId, replacementDiscordId, GUILD_ID),
+    ).resolves.toMatchObject({ deadlineAt: expect.any(Date) });
+  });
+
+  test("revokes member-wide list visibility after an identity change", async () => {
+    const first = await createPlayer(1);
+    const second = await createPlayer(2);
+    const outsider = testAccountId("73199");
+    const duel = await createTestDirectDuel(first, second);
+    for (const player of [first, second]) {
+      await acceptDuelDisclosure(db, {
+        guildId: GUILD_ID,
+        playerId: player.playerId,
+        discordId: player.discordId,
+      });
+      await acceptDuelChallenge(db, duel.seriesId, player.discordId, GUILD_ID);
+    }
+    await expect(listGuildDuels(db, GUILD_ID, outsider)).resolves.toMatchObject(
+      { direct: [{ id: duel.seriesId }] },
+    );
+
+    const replacementDiscordId = testAccountId("73188");
+    await db.player.update({
+      where: { id: first.playerId },
+      data: { discordId: replacementDiscordId },
+    });
+
+    await expect(listGuildDuels(db, GUILD_ID, outsider)).resolves.toMatchObject(
+      { direct: [] },
+    );
+    await expect(
+      listGuildDuels(db, GUILD_ID, replacementDiscordId),
+    ).resolves.toMatchObject({ direct: [{ id: duel.seriesId }] });
+  });
+
   test("records a committee series result only after a verified game", async () => {
     await verifyCommitteeSeriesRecord();
   });
@@ -366,6 +529,37 @@ describe("duel persistence", () => {
     await expect(
       db.duelSeries.findUniqueOrThrow({ where: { id: duel.seriesId } }),
     ).resolves.toMatchObject({ seriesState: "needs_review" });
+  });
+
+  test("preserves the configured match window when committeeing a replay", async () => {
+    const first = await createPlayer(1);
+    const second = await createPlayer(2);
+    const duel = await createTestDirectDuel(
+      first,
+      second,
+      crypto.randomUUID(),
+      24,
+    );
+    await db.duelSeries.update({
+      where: { id: duel.seriesId },
+      data: { seriesState: "needs_review" },
+    });
+    const beforeDecision = Date.now();
+
+    const decision = await decideDuelSeries(db, {
+      seriesId: duel.seriesId,
+      guildId: GUILD_ID,
+      actorDiscordId: ORGANIZER_ID,
+      idempotencyKey: "configured-replay-window",
+      reason: "Timeline evidence was incomplete",
+      decision: { kind: "replay" },
+    });
+
+    const expectedDeadline = beforeDecision + 24 * 60 * 60 * 1000;
+    expect(decision.deadlineAt.getTime()).toBeGreaterThanOrEqual(
+      expectedDeadline,
+    );
+    expect(decision.deadlineAt.getTime()).toBeLessThan(expectedDeadline + 1000);
   });
 });
 
@@ -510,59 +704,8 @@ describe("duel event registration", () => {
     ).rejects.toThrow("retain disclosure consent");
   });
 
-  test("serializes registration at the round-robin entrant cap", async () => {
-    const players = await Promise.all(
-      Array.from(
-        { length: 17 },
-        async (_, index) => await createPlayer(index + 1),
-      ),
-    );
-    const event = await createDuelEvent(db, {
-      guildId: GUILD_ID,
-      name: "Capped round robin",
-      format: "round_robin",
-      competitorKind: "player",
-      bestOf: 1,
-      ruleset: RULESET,
-      registrationMode: "invitations",
-      seedMethod: "manual",
-      matchWindowHours: 168,
-      channelId: CHANNEL_ID,
-      organizerDiscordId: ORGANIZER_ID,
-      roundOverrides: [],
-    });
-    for (const player of players.slice(0, 15)) {
-      await registerDuelEventEntrant(db, {
-        guildId: GUILD_ID,
-        eventId: event.id,
-        actorDiscordId: ORGANIZER_ID,
-        selection: { accountIds: [player.accountId] },
-        source: "invitation",
-      });
-    }
-    const finalPlayers = players.slice(15);
-    const registrations = await Promise.allSettled(
-      finalPlayers.map(
-        async (player) =>
-          await registerDuelEventEntrant(db, {
-            guildId: GUILD_ID,
-            eventId: event.id,
-            actorDiscordId: ORGANIZER_ID,
-            selection: { accountIds: [player.accountId] },
-            source: "invitation",
-          }),
-      ),
-    );
-
-    expect(
-      registrations.filter((result) => result.status === "fulfilled"),
-    ).toHaveLength(1);
-    expect(
-      registrations.filter((result) => result.status === "rejected"),
-    ).toHaveLength(1);
-    expect(
-      await db.duelEventEntrant.count({ where: { eventId: event.id } }),
-    ).toBe(16);
+  test("serializes acceptance at the round-robin entrant cap", async () => {
+    await verifyRoundRobinAcceptanceCap();
   });
 });
 

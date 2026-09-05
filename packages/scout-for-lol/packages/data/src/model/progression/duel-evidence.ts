@@ -132,24 +132,20 @@ function turretCrossings(
   return sorted
     .filter((turret) => turret.timestampMs === first.timestampMs)
     .flatMap((turret) => {
-      const defendingCompetitor = competitors.find((competitor) =>
+      const scoringCompetitor = competitors.find((competitor) =>
         competitor.accounts.some((account) =>
           input.participants.some(
             (participant) =>
               participant.puuid === account.puuid &&
-              participant.teamId === turret.destroyedTeamId,
+              participant.teamId === turret.scoringTeamId,
           ),
         ),
       );
-      const winningCompetitor = competitors.find(
-        (competitor) => competitor.id !== defendingCompetitor?.id,
-      );
-      return defendingCompetitor === undefined ||
-        winningCompetitor === undefined
+      return scoringCompetitor === undefined
         ? []
         : [
             {
-              competitorId: winningCompetitor.id,
+              competitorId: scoringCompetitor.id,
               objective: "first_turret" as const,
               timestampMs: turret.timestampMs,
             },

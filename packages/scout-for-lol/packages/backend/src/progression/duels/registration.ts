@@ -31,7 +31,6 @@ export async function registerDuelEventEntrant(
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext('scout-duel-event-registration'), hashtext(${options.eventId}))`;
     const event = await tx.duelEvent.findFirstOrThrow({
       where: { id: options.eventId, guildId: options.guildId },
-      include: { _count: { select: { entrants: true } } },
     });
     if (event.eventState !== "registration_open") {
       throw new Error("This event is not accepting registrations");
@@ -50,10 +49,6 @@ export async function registerDuelEventEntrant(
       event.organizerDiscordId !== options.actorDiscordId
     ) {
       throw new Error("Only the organizer may invite an entrant");
-    }
-    const maximum = event.format === "round_robin" ? 16 : 64;
-    if (event._count.entrants >= maximum) {
-      throw new Error(`This event is capped at ${maximum.toString()} entrants`);
     }
     const kind = event.competitorKind === "player" ? "player" : "pair";
     const guildId = DiscordGuildIdSchema.parse(event.guildId);
@@ -144,6 +139,17 @@ export async function acceptDuelEventRegistration(
       entrant.event.registrationClosesAt <= new Date()
     ) {
       throw new Error("Registration has closed");
+    }
+    const maximum = entrant.event.format === "round_robin" ? 16 : 64;
+    const acceptedCompetitors = await tx.duelEventEntrant.count({
+      where: {
+        eventId: entrant.eventId,
+        registrationState: "accepted",
+        competitorId: { not: entrant.competitorId },
+      },
+    });
+    if (acceptedCompetitors >= maximum) {
+      throw new Error(`This event is capped at ${maximum.toString()} entrants`);
     }
     const players = await tx.player.findMany({
       where: {

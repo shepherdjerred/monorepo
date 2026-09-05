@@ -132,7 +132,7 @@ export const DuelTimelineInputSchema = z.strictObject({
   turretKills: z.array(
     z.strictObject({
       timestampMs: z.number().int().nonnegative(),
-      destroyedTeamId: z.number().int(),
+      scoringTeamId: z.number().int(),
     }),
   ),
   frames: z.array(

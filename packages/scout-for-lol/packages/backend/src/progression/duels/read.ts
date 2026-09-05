@@ -8,12 +8,22 @@ import {
 } from "@scout-for-lol/data";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { parseDuelCompetitor } from "#src/progression/duels/competitors.ts";
+import {
+  currentParticipantDiscordIds,
+  duelSeriesVisibleTo,
+  effectiveParticipantDiscordId,
+} from "#src/progression/duels/series.ts";
 
 export async function listGuildDuels(
   db: ExtendedPrismaClient,
   guildId: DiscordGuildId,
   viewerDiscordId: DiscordAccountId,
 ) {
+  const viewerPlayers = await db.player.findMany({
+    where: { serverId: guildId, discordId: viewerDiscordId },
+    select: { id: true },
+  });
+  const viewerPlayerIds = viewerPlayers.map((player) => player.id);
   const [events, direct] = await Promise.all([
     db.duelEvent.findMany({
       where: { guildId },
@@ -26,7 +36,7 @@ export async function listGuildDuels(
         eventId: null,
         OR: [
           { participants: { every: { acceptedAt: { not: null } } } },
-          { participants: { some: { discordId: viewerDiscordId } } },
+          { participants: { some: { playerId: { in: viewerPlayerIds } } } },
           { organizerDiscordId: viewerDiscordId },
         ],
       },
@@ -35,9 +45,18 @@ export async function listGuildDuels(
       include: {
         competitorOne: { include: { members: true } },
         competitorTwo: { include: { members: true } },
+        participants: true,
       },
     }),
   ]);
+  const currentDiscordIdByPlayer = await currentParticipantDiscordIds(
+    db,
+    guildId,
+    direct.flatMap((series) => series.participants),
+  );
+  const visibleDirect = direct.filter((series) =>
+    duelSeriesVisibleTo(currentDiscordIdByPlayer, series, viewerDiscordId),
+  );
   return {
     events: events.map((event) => ({
       id: event.id,
@@ -49,7 +68,7 @@ export async function listGuildDuels(
       series: event._count.series,
       createdAt: event.createdAt.toISOString(),
     })),
-    direct: direct.map((series) => ({
+    direct: visibleDirect.map((series) => ({
       id: series.id,
       state: DuelSeriesStatusSchema.parse(series.seriesState),
       bestOf: series.bestOf,
@@ -89,36 +108,40 @@ export async function getDuelEvent(
     },
   });
   const isOrganizer = event.organizerDiscordId === viewerDiscordId;
-  const viewerPlayers = await db.player.findMany({
+  const currentPlayers = await db.player.findMany({
     where: {
       serverId: guildId,
-      discordId: viewerDiscordId,
       id: {
         in: event.entrants.flatMap((entrant) =>
           entrant.competitor.members.map((member) => member.playerId),
         ),
       },
     },
-    select: { id: true },
+    select: { id: true, discordId: true },
   });
-  const viewerPlayerIds = new Set(viewerPlayers.map((player) => player.id));
+  const currentDiscordIdByPlayer = new Map(
+    currentPlayers.map((player) => [player.id, player.discordId]),
+  );
+  const viewerPlayerIds = new Set(
+    currentPlayers
+      .filter((player) => player.discordId === viewerDiscordId)
+      .map((player) => player.id),
+  );
   const visibleEntrants = event.entrants.filter(
     (entrant) =>
-      entrant.registrationState === "accepted" ||
+      (entrant.registrationState === "accepted" &&
+        entrant.competitor.members.every(
+          (member) =>
+            effectiveParticipantDiscordId(currentDiscordIdByPlayer, member) ===
+            member.discordId,
+        )) ||
       isOrganizer ||
       entrant.competitor.members.some((member) =>
         viewerPlayerIds.has(member.playerId),
       ),
   );
-  const visibleSeries = event.series.filter(
-    (series) =>
-      series.participants.every(
-        (participant) => participant.acceptedAt !== null,
-      ) ||
-      isOrganizer ||
-      series.participants.some(
-        (participant) => participant.discordId === viewerDiscordId,
-      ),
+  const visibleSeries = event.series.filter((series) =>
+    duelSeriesVisibleTo(currentDiscordIdByPlayer, series, viewerDiscordId),
   );
   return {
     id: event.id,

@@ -348,7 +348,7 @@ export const duelRouter = router({
         configuration.environment,
       );
       try {
-        const requests = await startDuelEvent(prisma, {
+        return await startDuelEvent(prisma, {
           guildId: input.guildId,
           eventId: input.eventId,
           actorDiscordId: viewerId(ctx.user.discordId),
@@ -357,15 +357,6 @@ export const duelRouter = router({
             ? {}
             : { manualOrder: input.manualOrder }),
         });
-        await Promise.all(
-          requests.map((request) =>
-            launchDuelSeries({
-              stage: configuration.environment,
-              ...request,
-            }),
-          ),
-        );
-        return requests;
       } catch (error) {
         return domainError(error);
       }

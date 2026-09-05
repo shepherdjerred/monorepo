@@ -323,6 +323,7 @@ CREATE TABLE "DuelSeries" (
     "competitorOneId" TEXT NOT NULL,
     "competitorTwoId" TEXT NOT NULL,
     "bestOf" INTEGER NOT NULL,
+    "matchWindowHours" INTEGER NOT NULL DEFAULT 168,
     "rulesetJson" TEXT NOT NULL,
     "seriesState" TEXT NOT NULL DEFAULT 'awaiting_acceptance',
     "channelId" TEXT NOT NULL,
@@ -438,6 +439,9 @@ ALTER TABLE "DuelEventRoundOverride"
 
 ALTER TABLE "DuelSeries"
     ADD CONSTRAINT "DuelSeries_bestOf_check" CHECK ("bestOf" IN (1, 3, 5));
+
+ALTER TABLE "DuelSeries"
+    ADD CONSTRAINT "DuelSeries_matchWindowHours_check" CHECK ("matchWindowHours" BETWEEN 24 AND 336);
 
 -- CreateIndex
 CREATE INDEX "HallSettings_updatedAt_idx" ON "HallSettings"("updatedAt");

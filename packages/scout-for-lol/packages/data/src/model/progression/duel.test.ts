@@ -80,7 +80,7 @@ describe("duel rules and evidence", () => {
       { timestampMs: 20_000, killerPuuid: "second" },
       { timestampMs: 30_000, killerPuuid: "first" },
     ];
-    input.turretKills = [{ timestampMs: 40_000, destroyedTeamId: 200 }];
+    input.turretKills = [{ timestampMs: 40_000, scoringTeamId: 100 }];
     const result = evaluateDuelGame(
       { version: 1, killTarget: 1, laneCsTarget: null, firstTurret: true },
       competitors,
@@ -94,13 +94,13 @@ describe("duel rules and evidence", () => {
     });
   });
 
-  test("attributes a minion-destroyed turret to the opposing team", () => {
+  test("attributes a turret kill to Riot's scoring team", () => {
     const competitors = [
       competitor(FIRST_ID, ["first"]),
       competitor(SECOND_ID, ["second"]),
     ];
     const input = timeline(["first"], ["second"]);
-    input.turretKills = [{ timestampMs: 40_000, destroyedTeamId: 200 }];
+    input.turretKills = [{ timestampMs: 40_000, scoringTeamId: 100 }];
 
     expect(
       evaluateDuelGame(
@@ -123,8 +123,8 @@ describe("duel rules and evidence", () => {
     ];
     const input = timeline(["first"], ["second"]);
     input.turretKills = [
-      { timestampMs: 40_000, destroyedTeamId: 100 },
-      { timestampMs: 40_000, destroyedTeamId: 200 },
+      { timestampMs: 40_000, scoringTeamId: 100 },
+      { timestampMs: 40_000, scoringTeamId: 200 },
     ];
 
     expect(

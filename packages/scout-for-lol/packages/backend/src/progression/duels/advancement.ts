@@ -85,6 +85,7 @@ async function createSeries(
         competitorOneId: options.firstId,
         competitorTwoId: options.secondId,
         bestOf: seriesBestOf(event, options.roundNumber),
+        matchWindowHours: event.matchWindowHours,
         rulesetJson: event.rulesetJson,
         seriesState: "awaiting_readiness",
         channelId: DiscordChannelIdSchema.parse(event.channelId),

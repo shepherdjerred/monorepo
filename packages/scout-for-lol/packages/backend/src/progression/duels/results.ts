@@ -71,9 +71,7 @@ function timelineInput(match: RawMatch, timeline: RawTimeline) {
         ) {
           return [];
         }
-        return [
-          { timestampMs: event.timestamp, destroyedTeamId: event.teamId },
-        ];
+        return [{ timestampMs: event.timestamp, scoringTeamId: event.teamId }];
       }),
     ),
     frames: timeline.info.frames.map((frame) => ({
