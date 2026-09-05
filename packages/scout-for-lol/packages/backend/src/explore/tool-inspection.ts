@@ -28,6 +28,17 @@ import {
   DareToolResultSchema,
   ReviseDareToolInputSchema,
 } from "#src/explore/dare-tool-schemas.ts";
+import {
+  CreationChannelsResultSchema,
+  CreationToolKindSchema,
+  CreationPrepareResultSchema,
+  CreationTargetsResultSchema,
+  ListCreationTargetsToolInputSchema,
+  ListGuildChannelsToolInputSchema,
+  PrepareCompetitionToolInputSchema,
+  PrepareReportToolInputSchema,
+  PrepareSubscriptionToolInputSchema,
+} from "#src/explore/creation/schemas.ts";
 
 /**
  * The Bryan Bucks tools' validated shapes, keyed by tool name. They carry no
@@ -100,6 +111,54 @@ const DARE_TOOL_SCHEMAS = new Map<
   [
     "delete_dare_draft",
     { input: DareDeleteToolInputSchema, output: DareToolResultSchema },
+  ],
+]);
+
+/**
+ * The Explore creation tools' validated shapes, keyed by tool name.
+ *
+ * Like the Bucks and Dare maps they carry no curated `details`: the closed
+ * `ExploreTraceDetails` union is persisted data, and these results are already
+ * bounded by their own schemas.
+ */
+const CREATION_TOOL_SCHEMAS = new Map<
+  string,
+  { input: z.ZodType; output: z.ZodType }
+>([
+  [
+    "list_creation_targets",
+    {
+      input: ListCreationTargetsToolInputSchema,
+      output: CreationTargetsResultSchema,
+    },
+  ],
+  [
+    "list_guild_channels",
+    {
+      input: ListGuildChannelsToolInputSchema,
+      output: CreationChannelsResultSchema,
+    },
+  ],
+  [
+    "prepare_report_creation",
+    {
+      input: PrepareReportToolInputSchema,
+      output: CreationPrepareResultSchema,
+    },
+  ],
+  [
+    "prepare_subscription_creation",
+    {
+      input: PrepareSubscriptionToolInputSchema,
+      output: CreationPrepareResultSchema,
+    },
+  ],
+  [
+    "prepare_competition_creation",
+    {
+      input: PrepareCompetitionToolInputSchema,
+      output: CreationPrepareResultSchema,
+    },
   ],
 ]);
 
@@ -178,6 +237,13 @@ export function inspectExploreToolCall(
   if (dare !== undefined) {
     return {
       rawInput: JsonValueSchema.parse(dare.input.parse(input)),
+      details: null,
+    };
+  }
+  const creation = CREATION_TOOL_SCHEMAS.get(toolName);
+  if (creation !== undefined) {
+    return {
+      rawInput: JsonValueSchema.parse(creation.input.parse(input)),
       details: null,
     };
   }
@@ -266,6 +332,23 @@ export function inspectExploreToolResult(
         "feature_disabled",
         "stale_revision",
       ].includes(parsed.kind),
+      rawOutput: JsonValueSchema.parse(parsed),
+      details: null,
+    };
+  }
+  const creation = CREATION_TOOL_SCHEMAS.get(toolName);
+  if (creation !== undefined) {
+    creation.input.parse(input);
+    const parsed = creation.output.parse(output);
+    // A creation tool never throws for a domain refusal: it answers with one.
+    // Only the outcomes that produced nothing count as failures here.
+    return {
+      succeeded: ![
+        "invalid",
+        "limit_reached",
+        "forbidden_target",
+        "verification_unavailable",
+      ].includes(CreationToolKindSchema.parse(parsed).kind),
       rawOutput: JsonValueSchema.parse(parsed),
       details: null,
     };

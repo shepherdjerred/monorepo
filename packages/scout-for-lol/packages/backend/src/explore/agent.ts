@@ -28,7 +28,13 @@ import {
 } from "#src/explore/bucks-tools.ts";
 import { createDareExploreTools } from "#src/explore/dare-tool-definitions.ts";
 import { dareExploreEnabled } from "#src/explore/dare-tool-context.ts";
+import {
+  resolveCreationCapability,
+  type CreationCapability,
+} from "#src/explore/creation/capability.ts";
+import { createCreationExploreTools } from "#src/explore/creation/tools.ts";
 import { exploreAgentInstructions } from "#src/explore/prompt.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { createLogger } from "#src/logger.ts";
 import { drainExploreStreams } from "#src/explore/stream.ts";
@@ -84,6 +90,12 @@ export type ExploreAgentParams = {
   requesterId: DiscordAccountId;
   /** Discord-originated dare drafts keep the invoking channel as metadata. */
   originChannelId: DiscordChannelId | null;
+  /**
+   * Which product surface this turn is answered on. Creation tools are
+   * web-only; see `explore/surface.ts` for why that is structural rather than
+   * a policy choice.
+   */
+  surface: ExploreSurface;
   abortSignal: AbortSignal;
   emit: (event: ExploreStreamEvent) => void | Promise<void>;
 };
@@ -135,6 +147,13 @@ async function streamExploreAgentInternal(
   // tools on its very next turn.
   const bucksCapability = await resolveBucksCapability(params.guildIds);
   const daresEnabled = await dareExploreEnabled(bucksCapability);
+  // Tier 1 only: a surface comparison and one flag read per guild. The
+  // permission work this gates is deferred into the first creation tool call,
+  // so an analytics turn never pays for an OAuth refresh it will not use.
+  const creationCapability = await resolveCreationCapability({
+    surface: params.surface,
+    guildIds: params.guildIds,
+  });
 
   const agent = new ToolLoopAgent({
     id: "scout-explore-agent",
@@ -144,9 +163,16 @@ async function streamExploreAgentInternal(
           ? null
           : { currentTime: new Date().toISOString() },
       dares: daresEnabled,
+      creation: creationCapability !== null,
     }),
     model: runtime.languageModel(model, ["tools"]),
-    tools: createExploreTools(params, state, bucksCapability, daresEnabled),
+    tools: createExploreTools({
+      params,
+      state,
+      bucksCapability,
+      daresEnabled,
+      creationCapability,
+    }),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
     // supportsTemperature: false, and the runtime asks OpenRouter for
@@ -232,12 +258,14 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
   return [...messages, { role: "user", content: params.question }];
 }
 
-function createExploreTools(
-  params: ExploreAgentParams,
-  state: RunState,
-  bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>,
-  daresEnabled: boolean,
-) {
+function createExploreTools(input: {
+  params: ExploreAgentParams;
+  state: RunState;
+  bucksCapability: Awaited<ReturnType<typeof resolveBucksCapability>>;
+  daresEnabled: boolean;
+  creationCapability: CreationCapability | null;
+}) {
+  const { params, state, bucksCapability, daresEnabled } = input;
   const track: ToolTracker = async (toolName, work) => {
     state.toolCalls++;
     if (state.toolCalls > EXPLORE_MAX_TOOL_CALLS) {
@@ -387,5 +415,10 @@ function createExploreTools(
           originChannelId: params.originChannelId,
           track,
         })),
+    ...createCreationExploreTools({
+      capability: input.creationCapability,
+      requesterId: params.requesterId,
+      track,
+    }),
   };
 }

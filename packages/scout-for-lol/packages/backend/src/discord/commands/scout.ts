@@ -137,6 +137,9 @@ export async function executeScout(
       // Discord asks always carry a guild context (global in production,
       // guild-scoped in beta), so the invoking server is the whole alias scope.
       guildIds: [interaction.guildId],
+      // `/scout ask` is one-shot with no confirmation UI, and the user upserted
+      // above deliberately has no OAuth token, so creation tools stay absent.
+      surface: "discord",
       started,
       history: transcript.messages,
       emit: () => Promise.resolve(),
