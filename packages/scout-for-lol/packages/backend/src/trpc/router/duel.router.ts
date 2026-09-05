@@ -73,8 +73,9 @@ async function assertMemberAndFeature(
   user: Parameters<typeof resolveGuildPermissions>[0],
   guildId: ReturnType<typeof DiscordGuildIdSchema.parse>,
 ) {
-  await resolveGuildPermissions(user, guildId);
+  const permissions = await resolveGuildPermissions(user, guildId);
   await assertDuelsEnabled(prisma, guildId, configuration.environment);
+  return permissions;
 }
 
 export const duelRouter = router({
@@ -414,7 +415,7 @@ export const duelRouter = router({
       );
       return await getDuelHeadToHead(prisma, input);
     }),
-  reviewResult: guildMutationProcedure("competitions", "update")
+  reviewResult: webMutationProcedure
     .input(
       z.strictObject({
         guildId: DiscordGuildIdSchema,
@@ -432,16 +433,13 @@ export const duelRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      await assertDuelsEnabled(
-        prisma,
-        input.guildId,
-        configuration.environment,
-      );
+      const permissions = await assertMemberAndFeature(ctx.user, input.guildId);
       try {
         const result = await decideDuelSeries(prisma, {
           guildId: input.guildId,
           seriesId: input.seriesId,
           actorDiscordId: viewerId(ctx.user.discordId),
+          allowPrivilegedReviewer: permissions.can("competitions", "update"),
           idempotencyKey: input.idempotencyKey,
           reason: input.reason,
           decision: input.decision,

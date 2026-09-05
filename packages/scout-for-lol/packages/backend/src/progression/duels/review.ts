@@ -31,9 +31,13 @@ type DecisionSeries = {
 function validateDecision(
   series: DecisionSeries,
   actorDiscordId: string,
+  allowPrivilegedReviewer: boolean,
   decision: DuelSeriesDecision,
 ): void {
-  if (series.organizerDiscordId !== actorDiscordId) {
+  if (
+    !allowPrivilegedReviewer &&
+    series.organizerDiscordId !== actorDiscordId
+  ) {
     throw new Error("Only the series organizer may committee a result");
   }
   if (!["overdue", "needs_review"].includes(series.seriesState)) {
@@ -158,6 +162,7 @@ export async function decideDuelSeries(
     readonly seriesId: string;
     readonly guildId: DiscordGuildId;
     readonly actorDiscordId: DiscordAccountId;
+    readonly allowPrivilegedReviewer: boolean;
     readonly idempotencyKey: string;
     readonly reason: string;
     readonly decision: DuelSeriesDecision;
@@ -197,7 +202,12 @@ export async function decideDuelSeries(
         competitorTwo: { include: { members: true } },
       },
     });
-    validateDecision(series, options.actorDiscordId, options.decision);
+    validateDecision(
+      series,
+      options.actorDiscordId,
+      options.allowPrivilegedReviewer,
+      options.decision,
+    );
     const now = new Date();
     const deadlineAt = new Date(
       now.getTime() + series.matchWindowHours * 60 * 60 * 1000,

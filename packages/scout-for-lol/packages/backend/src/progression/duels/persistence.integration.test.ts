@@ -204,6 +204,7 @@ async function verifyCommitteeSeriesRecord(): Promise<void> {
     seriesId: series.id,
     guildId: GUILD_ID,
     actorDiscordId: ORGANIZER_ID,
+    allowPrivilegedReviewer: false,
     idempotencyKey: "committee-after-played-game",
     reason: "Remaining games could not be completed",
     decision: {
@@ -483,7 +484,9 @@ describe("duel persistence", () => {
       },
     });
   });
+});
 
+describe("duel persistence after identity changes", () => {
   test("moves direct acceptance to the player's current Discord identity", async () => {
     await verifyCurrentDiscordIdentity();
   });
@@ -591,6 +594,7 @@ describe("duel persistence", () => {
         seriesId: duel.seriesId,
         guildId: GUILD_ID,
         actorDiscordId: ORGANIZER_ID,
+        allowPrivilegedReviewer: false,
         idempotencyKey: "structured-no-contest",
         reason: "Both players were unavailable",
         decision: { kind: "no_contest" },
@@ -621,6 +625,7 @@ describe("duel persistence", () => {
       seriesId: duel.seriesId,
       guildId: GUILD_ID,
       actorDiscordId: ORGANIZER_ID,
+      allowPrivilegedReviewer: false,
       idempotencyKey: "configured-replay-window",
       reason: "Timeline evidence was incomplete",
       decision: { kind: "replay" },
