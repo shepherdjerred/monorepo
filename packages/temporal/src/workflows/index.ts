@@ -109,6 +109,8 @@ import type {
 } from "#activities/glitter-context-audit-schema.ts";
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
 import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
+import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
+import type { ScheduleRehearsalResult } from "#activities/schedule-rehearsal.ts";
 import {
   runKometaWorkflow as runKometaWorkflowImplementation,
   runBunCacheGcWorkflow as runBunCacheGcWorkflowImplementation,
@@ -153,6 +155,10 @@ export async function runMainVulnScanWorkflow(): Promise<void> {
 
 export async function runLinkRotScanWorkflow(): Promise<void> {
   return runLinkRotScanWorkflowImplementation();
+}
+
+export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
+  return runScheduleRehearsalWorkflowImplementation();
 }
 
 export async function runBunCacheGcWorkflow(): Promise<void> {

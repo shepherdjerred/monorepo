@@ -463,6 +463,11 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
   "scoutReportLakeWorkflow",
+  // Awaits a single rehearseScheduleBotClone activity (clone + root install +
+  // prettier + Data Dragon snapshot refresh in a scratch tree). No
+  // workflow-level sleeps; the activity carries its own startToCloseTimeout
+  // and heartbeat budget.
+  "runScheduleRehearsalWorkflow",
 ]);
 
 const SLACK_MS = 5 * ONE_MINUTE;
