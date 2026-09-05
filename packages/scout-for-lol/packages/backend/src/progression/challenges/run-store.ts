@@ -205,6 +205,7 @@ export async function changeChallengeRunAccounts(
     await lockChallengeProgression(
       tx,
       accounts.map((account) => account.puuid),
+      [options.runId],
     );
     const runReference = await tx.challengeRun.findFirstOrThrow({
       where: { id: options.runId, ownerDiscordId: options.ownerDiscordId },
