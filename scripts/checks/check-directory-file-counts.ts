@@ -16,11 +16,18 @@
 
 import { trackedExistingFiles } from "../lib/tracked-files.ts";
 
-/** Lowered by each reorganization PR until it reaches `TARGET`. */
-export const CEILING = 53;
-
-/** The permanent limit. When `CEILING` reaches this, the workstream is done. */
+/** The permanent limit. No directory may exceed this in either budget. */
 export const TARGET = 50;
+
+/**
+ * The enforced ceiling.
+ *
+ * This was a ratchet while the repository was reorganized: it started at the
+ * measured maximum and each reorganization PR lowered it. It has now reached
+ * `TARGET`, so there is nothing left to lower — and raising it would
+ * reintroduce exactly the grandfathering this check exists to prevent.
+ */
+export const CEILING = TARGET;
 
 /** Advisory only — never affects the exit code. */
 export const WARN_THRESHOLD = 25;
