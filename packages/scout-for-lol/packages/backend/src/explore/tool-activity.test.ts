@@ -146,3 +146,46 @@ describe("explore tool activity", () => {
     expect(text).toBe("run_report_query returned an error.");
   });
 });
+
+describe("naming a query's source", () => {
+  test("ignores a FROM inside a comment or a string literal", () => {
+    // The status line would otherwise name a table the query never reads.
+    // Blanking comments and literals first is cheap; the real parser is the
+    // full grammar on a hot stream path and its diagnostics carry the query's
+    // own text, which is what must not reach this channel.
+    expect(
+      toolCallActivity(
+        "run_report_query",
+        {
+          queryText:
+            "-- from match_participants\nFROM player_groups SELECT games",
+        },
+        "Querying match data.",
+      ),
+    ).toBe("Querying player groups");
+
+    expect(
+      toolCallActivity(
+        "run_report_query",
+        {
+          queryText:
+            "FROM player_groups SELECT games WHERE alias = 'from match_participants'",
+        },
+        "Querying match data.",
+      ),
+    ).toBe("Querying player groups");
+  });
+
+  test("a block comment before the source does not win", () => {
+    expect(
+      toolCallActivity(
+        "run_report_query",
+        {
+          queryText:
+            "/* from rank_current */ FROM match_participants SELECT games",
+        },
+        "Querying match data.",
+      ),
+    ).toBe("Querying match participants");
+  });
+});

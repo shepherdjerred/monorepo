@@ -663,3 +663,51 @@ describe("explore live status versus persisted trace", () => {
     ]);
   });
 });
+
+describe("explore status with overlapping tool calls", () => {
+  test("a finished tool does not claim the turn is done while another runs", async () => {
+    // A step can issue several tool calls at once. Announcing "Got results."
+    // as soon as the first one lands claims the turn finished work it had
+    // not, and overwrites the status describing the call still executing.
+    const { events } = await collect([
+      {
+        type: "tool-call",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM match_participants SELECT games" },
+      },
+      {
+        type: "tool-call",
+        toolCallId: "call-2",
+        toolName: "run_report_query",
+        input: { queryText: "FROM player_groups SELECT games" },
+      },
+      {
+        type: "tool-result",
+        toolCallId: "call-1",
+        toolName: "run_report_query",
+        input: { queryText: "FROM match_participants SELECT games" },
+        output: {
+          ok: true,
+          message: "Returned 1 row.",
+          formattedQueryText: "FROM match_participants SELECT games",
+          preview: null,
+        },
+      },
+    ]);
+
+    // Two call narrations, and no result narration while call-2 is in flight.
+    const narrated = events.flatMap((event) =>
+      event.type === "activity" ? [event.text] : [],
+    );
+    expect(narrated).toEqual([
+      "Querying match participants",
+      "Querying player groups",
+    ]);
+
+    // The step itself still completes in the panel — only the status line waits.
+    expect(events.filter((event) => event.type === "tool_result")).toHaveLength(
+      1,
+    );
+  });
+});

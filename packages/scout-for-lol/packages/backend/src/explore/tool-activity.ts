@@ -57,6 +57,26 @@ function compactCount(value: number): string {
 }
 
 /**
+ * Blank out comments and string literals so a `FROM` inside one cannot be
+ * mistaken for the query's actual source clause.
+ *
+ * `-- from match_participants` above `SELECT … FROM player_groups` would
+ * otherwise narrate the wrong table. Characters are replaced with spaces
+ * rather than removed so nothing downstream depends on offsets shifting.
+ *
+ * Deliberately not the real parser: `parseScoutQl` is the full grammar on a
+ * hot stream path, its diagnostics carry the query's own text, and a
+ * summariser built on the AST would drift with every grammar change. This
+ * needs to find one identifier, and being wrong costs a generic phrase.
+ */
+function withoutCommentsAndStrings(queryText: string): string {
+  return queryText.replaceAll(
+    /--[^\n]*|\/\*[\s\S]*?(?:\*\/|$)|'(?:[^']|'')*'?|"(?:[^"]|"")*"?/gu,
+    (match) => " ".repeat(match.length),
+  );
+}
+
+/**
  * Name the table a query reads without echoing any of the query.
  *
  * The token found after `FROM` is used only to *look up* an entry in the
@@ -66,7 +86,7 @@ function compactCount(value: number): string {
  * unrecognised token simply yields the generic phrase.
  */
 function querySourceLabel(queryText: string): string | null {
-  const match = /\bfrom\s+(\w+)/iu.exec(queryText);
+  const match = /\bfrom\s+(\w+)/iu.exec(withoutCommentsAndStrings(queryText));
   const token = match?.[1];
   if (token === undefined) {
     return null;
