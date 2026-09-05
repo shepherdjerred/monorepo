@@ -10,7 +10,7 @@ import {
 } from "@scout-for-lol/data";
 
 const CORPUS_URL = new URL(
-  "../../../../data/src/model/dare-v2-paraphrase-corpus.json",
+  "../../../../data/src/model/bucks/dare-v2-paraphrase-corpus.json",
   import.meta.url,
 );
 

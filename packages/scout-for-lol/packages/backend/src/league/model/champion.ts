@@ -3,7 +3,7 @@ import {
   type Augment,
   type RawParticipant,
 } from "@scout-for-lol/data";
-import { participantToChampion } from "@scout-for-lol/data/model/match-helpers.ts";
+import { participantToChampion } from "@scout-for-lol/data/model/matches/match-helpers.ts";
 import { mapAugmentIdsToUnion } from "#src/league/arena/augment.ts";
 
 // Arena champion conversion with arena-specific fields

@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { RegionSchema } from "#src/model/league-account.ts";
-import { AccountIdSchema } from "#src/model/competition.ts";
+import { RegionSchema } from "#src/model/riot/league-account.ts";
+import { AccountIdSchema } from "#src/model/competitions/competition.ts";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
-} from "#src/model/discord.ts";
+} from "#src/model/core/discord.ts";
 
 export const CustomNightStateSchema = z.enum([
   "RECRUITING",

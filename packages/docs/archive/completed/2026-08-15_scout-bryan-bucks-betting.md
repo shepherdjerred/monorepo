@@ -155,7 +155,7 @@ revoked guild's pools outlive the revocation.
 
 Everything lives in `packages/scout-for-lol/packages/backend/src/betting/`, with
 no barrel file. Shared Zod schemas are in
-`packages/data/src/model/bryan-bucks.ts`.
+`packages/data/src/model/bucks/bryan-bucks.ts`.
 
 Five Prisma models: `BucksAccount`, `BucksLedgerEntry`, `BucksBet`,
 `BucksMatchPool`, `BucksMatchEarning`.

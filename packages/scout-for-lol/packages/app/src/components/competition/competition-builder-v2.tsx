@@ -5,7 +5,7 @@ import { getAllSeasons } from "@scout-for-lol/data";
 import {
   DEFAULT_COMPETITION_CRON,
   DEFAULT_SCHEDULE_TIMEZONE,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,

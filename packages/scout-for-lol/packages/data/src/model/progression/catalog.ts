@@ -1,6 +1,6 @@
 import { z } from "zod";
 import catalogJson from "#competitive-progression-catalog" with { type: "json" };
-import { QueueTypeSchema } from "#src/model/state.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
 
 export const HallQueueFamilyIdSchema = z.enum([
   "ranked_sr",

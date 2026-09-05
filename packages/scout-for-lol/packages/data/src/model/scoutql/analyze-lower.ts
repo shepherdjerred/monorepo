@@ -12,7 +12,7 @@ import {
   ScoutQlCompareOpSchema,
   ScoutQlScalarFunctionSchema,
 } from "#src/model/scoutql/expression.ts";
-import { resolveReportChampion } from "#src/model/report-query-champions.ts";
+import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
 import {
   inItemLiteral,
   normalizeCastType,

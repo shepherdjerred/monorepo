@@ -1,4 +1,4 @@
-import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competition-cron.ts";
+import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { z } from "zod";
 
 const CalendarDateSchema = z

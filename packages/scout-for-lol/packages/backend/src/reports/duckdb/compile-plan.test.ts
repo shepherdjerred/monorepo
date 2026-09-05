@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/report.ts";
+import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/reports/report.ts";
 import type {
   ScoutQlOutput,
   ScoutQlPlan,

@@ -1,7 +1,7 @@
 import {
   ReportOutputFormatSchema,
   type ReportOutputFormat,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 
 // ── ScoutQL v2 render-kind catalog ───────────────────────────────────────────
 // What `RENDER <kind>` accepts, with the labels and descriptions the docs site,

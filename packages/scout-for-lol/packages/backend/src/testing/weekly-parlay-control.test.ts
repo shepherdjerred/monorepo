@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { WeeklyParlayControlActionSchema } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import { WeeklyParlayControlActionSchema } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
 

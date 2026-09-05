@@ -21,7 +21,7 @@ import {
 import { dareExplorePromptSection } from "#src/explore/prompt.ts";
 
 const CORPUS_URL = new URL(
-  "../../data/src/model/dare-v2-paraphrase-corpus.json",
+  "../../data/src/model/bucks/dare-v2-paraphrase-corpus.json",
   import.meta.url,
 );
 const REPORT_URL = new URL(

@@ -29,7 +29,7 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { strict as assert } from "node:assert";
 import { participantToArenaChampion } from "#src/league/model/champion.ts";
-import { participantToChampion } from "@scout-for-lol/data/model/match-helpers.ts";
+import { participantToChampion } from "@scout-for-lol/data/model/matches/match-helpers.ts";
 import { createLogger } from "#src/logger.ts";
 import { participantMismatchTotal } from "#src/metrics/index.ts";
 

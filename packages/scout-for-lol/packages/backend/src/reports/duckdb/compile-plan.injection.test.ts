@@ -1,9 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/report.ts";
+import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/reports/report.ts";
 import {
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
-} from "@scout-for-lol/data/model/lake-columns.ts";
+} from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import type {
   ScoutQlAggregateExpr,
   ScoutQlPredicate,

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { normalizeChampionName } from "#src/model/champion-registry.ts";
+import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 
 const ChampionSpellSchema = z.object({
   id: z.string(),

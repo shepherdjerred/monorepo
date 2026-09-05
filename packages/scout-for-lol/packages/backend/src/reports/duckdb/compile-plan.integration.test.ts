@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import { z } from "zod";
-import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/report.ts";
+import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/reports/report.ts";
 import type {
   ScoutQlOutput,
   ScoutQlPlan,

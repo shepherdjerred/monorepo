@@ -5,7 +5,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { ReportIdSchema } from "@scout-for-lol/data";
-import { CronPresets } from "@scout-for-lol/data/model/competition-cron.ts";
+import { CronPresets } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";

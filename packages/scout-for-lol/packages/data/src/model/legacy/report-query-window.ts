@@ -1,10 +1,10 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { z } from "zod";
-import { ReportScheduleTimezoneSchema } from "#src/model/competition-cron.ts";
+import { ReportScheduleTimezoneSchema } from "#src/model/competitions/competition-cron.ts";
 import {
   RelativeTemporalWindowSchema,
   type TemporalAnalysisSpec,
-} from "#src/model/temporal-analysis.ts";
+} from "#src/model/reports/temporal-analysis.ts";
 
 /**
  * The time period a report query covers — the `DURING` clause.

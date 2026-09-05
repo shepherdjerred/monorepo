@@ -8,7 +8,7 @@ import {
 import {
   CompetitionScheduledUpdatesSchema,
   computeNextScheduledUpdateAt,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { prisma } from "#src/database/index.ts";
 import { clearCompetitionAnalysisCache } from "#src/league/competition/analysis.ts";
 import { refreshAndCacheLeaderboard } from "#src/league/competition/refresh.ts";
