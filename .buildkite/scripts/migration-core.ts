@@ -1,7 +1,10 @@
 import { asRecord } from "../../scripts/lib/json.ts";
-import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
-import { nativeLanePaths } from "./macos-native-selection.ts";
-import { legacyTofuPaths, platformTofuPaths } from "./tofu-lane-paths.ts";
+import { ALL_IMAGE_TARGETS } from "./images/image-targets.ts";
+import { nativeLanePaths } from "./macos/macos-native-selection.ts";
+import {
+  legacyTofuPaths,
+  platformTofuPaths,
+} from "./selectors/tofu-lane-paths.ts";
 const infrastructureTargets = [
   "caddy-s3proxy",
   "obsidian-headless",
@@ -172,13 +175,13 @@ export function parseLastPassedStepsCommit(
 export const globalPaths = [
   ".buildkite/main-bootstrap.yml",
   ".buildkite/pipeline.yml",
-  ".buildkite/scripts/buildkite-handoff.ts",
-  ".buildkite/scripts/ci-changed.ts",
+  ".buildkite/scripts/reporting/buildkite-handoff.ts",
+  ".buildkite/scripts/selectors/ci-changed.ts",
   ".buildkite/scripts/migration-core.ts",
-  ".buildkite/scripts/prepare-ci-changed-base.ts",
-  ".buildkite/scripts/read-buildkite-handoff.ts",
-  ".buildkite/scripts/select-main-pipeline.ts",
-  ".buildkite/scripts/select-main-pipeline-selection.ts",
+  ".buildkite/scripts/selectors/prepare-ci-changed-base.ts",
+  ".buildkite/scripts/reporting/read-buildkite-handoff.ts",
+  ".buildkite/scripts/selectors/select-main-pipeline.ts",
+  ".buildkite/scripts/selectors/select-main-pipeline-selection.ts",
   ".buildkite/scripts/upload-pipeline.sh",
 ] as const;
 
@@ -374,27 +377,27 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   cooklang: [...workspacePaths, "packages/cooklang-for-obsidian"],
   "ci-base": [
     ".buildkite/ci-image/Dockerfile",
-    ".buildkite/scripts/application-image-runtime.ts",
-    ".buildkite/scripts/bake-retry.ts",
-    ".buildkite/scripts/build-ci-image-core.ts",
-    ".buildkite/scripts/build-ci-image.ts",
-    ".buildkite/scripts/buildkit-env.ts",
-    ".buildkite/scripts/update-ci-image-pin-core.ts",
-    ".buildkite/scripts/update-ci-image-pin-github.ts",
-    ".buildkite/scripts/update-ci-image-pin.ts",
+    ".buildkite/scripts/images/application-image-runtime.ts",
+    ".buildkite/scripts/images/bake-retry.ts",
+    ".buildkite/scripts/images/build-ci-image-core.ts",
+    ".buildkite/scripts/images/build-ci-image.ts",
+    ".buildkite/scripts/reporting/buildkit-env.ts",
+    ".buildkite/scripts/images/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/images/update-ci-image-pin-github.ts",
+    ".buildkite/scripts/images/update-ci-image-pin.ts",
     "scripts/lib/transient-error.ts",
     ".mise.toml",
   ],
   "ci-playwright": [
     ".buildkite/ci-playwright/Dockerfile",
-    ".buildkite/scripts/application-image-runtime.ts",
-    ".buildkite/scripts/bake-retry.ts",
-    ".buildkite/scripts/build-ci-image-core.ts",
-    ".buildkite/scripts/build-ci-image.ts",
-    ".buildkite/scripts/buildkit-env.ts",
-    ".buildkite/scripts/update-ci-image-pin-core.ts",
-    ".buildkite/scripts/update-ci-image-pin-github.ts",
-    ".buildkite/scripts/update-ci-image-pin.ts",
+    ".buildkite/scripts/images/application-image-runtime.ts",
+    ".buildkite/scripts/images/bake-retry.ts",
+    ".buildkite/scripts/images/build-ci-image-core.ts",
+    ".buildkite/scripts/images/build-ci-image.ts",
+    ".buildkite/scripts/reporting/buildkit-env.ts",
+    ".buildkite/scripts/images/update-ci-image-pin-core.ts",
+    ".buildkite/scripts/images/update-ci-image-pin-github.ts",
+    ".buildkite/scripts/images/update-ci-image-pin.ts",
     "scripts/lib/transient-error.ts",
   ],
 };

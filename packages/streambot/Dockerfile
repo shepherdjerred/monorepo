@@ -213,8 +213,8 @@ FROM runtime AS smoke
 COPY --from=deps /app/ /app/
 COPY vitest.config.ts /app/vitest.config.ts
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
-COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
-COPY .buildkite/scripts/smoke-app-configs.ts /app/.buildkite/scripts/smoke-app-configs.ts
+COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
+COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=streambot
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 USER 1000:1000
@@ -227,7 +227,7 @@ ENV HOME=/tmp
 RUN mkdir -p /tmp/videos \
     && cd /app/packages/streambot \
     && bun run test:integration
-RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
 # Corpus evaluation is deliberately NOT a build dependency: it is a multi-hour acceptance

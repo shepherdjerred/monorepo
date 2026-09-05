@@ -114,8 +114,8 @@ cd "$REPO_ROOT"
 # this host script fails with the same actionable reason CI would report.
 # shellcheck source=.buildkite/scripts/macos-native-env.sh
 . .buildkite/scripts/macos-native-env.sh
-bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar
-bun --no-install .buildkite/scripts/macos-native-preflight.ts tasknotes
+bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar
+bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts tasknotes
 
 echo
 echo "Native host setup is complete only after:"
@@ -127,4 +127,4 @@ echo "Run the affected native preflight from:"
 echo "  $REPO_ROOT"
 echo
 echo "  . .buildkite/scripts/macos-native-env.sh"
-echo "  bun --no-install .buildkite/scripts/macos-native-preflight.ts quotabar"
+echo "  bun --no-install .buildkite/scripts/macos/macos-native-preflight.ts quotabar"

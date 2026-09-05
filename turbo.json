@@ -143,7 +143,7 @@
         "patches/**",
         "packages/**/patches/*.patch",
         "scripts/checks/check-patched-deps.ts",
-        ".buildkite/scripts/select-image-targets.ts"
+        ".buildkite/scripts/selectors/select-image-targets.ts"
       ]
     },
     // Every env var a pipeline step's scripts require must be provided by that
