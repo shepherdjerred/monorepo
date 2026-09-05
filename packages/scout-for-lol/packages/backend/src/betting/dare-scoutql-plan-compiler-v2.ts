@@ -326,17 +326,16 @@ export async function compileDareScoutQlPlanV2(input: {
       compilation: { ...relational.compilation, plan },
     };
   } catch (error) {
-    if (
-      error instanceof DareScoutQlProfileError ||
-      error instanceof z.ZodError
-    ) {
+    if (error instanceof DareScoutQlProfileError) {
+      return { kind: "invalid", issues: [error.message] };
+    }
+    // Surface the schema's own messages rather than one generic line: a domain
+    // rejection ("MID" is not a team position) is only actionable if the
+    // authoring loop is told which value was wrong and what is legal.
+    if (error instanceof z.ZodError) {
       return {
         kind: "invalid",
-        issues: [
-          error instanceof DareScoutQlProfileError
-            ? error.message
-            : "Dare ScoutQL contains a value outside the versioned contract profile.",
-        ],
+        issues: error.issues.map((issue) => issue.message),
       };
     }
     throw error;

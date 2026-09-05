@@ -1,6 +1,6 @@
 import {
   BucksDareV2StateSchema,
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareDeadlineSpecV2Schema,
   DarePollHealthSchema,
   DareProgressSchema,
@@ -70,7 +70,9 @@ export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   channelId: z.string().min(1),
   originConversationId: z.string().min(1).nullable(),
   canonicalScoutQl: z.string().min(1),
-  plan: z.union([DareCompiledPlanV2Schema, DareSqlV3CompilationSchema]),
+  // Stored, not authoring: this describes a plan being *read back*, and a
+  // revision written before a domain rule existed must still render.
+  plan: z.union([DareStoredPlanV2Schema, DareSqlV3CompilationSchema]),
   semanticProofPlan: z.string().min(1),
   originalText: z.string().min(1),
   deadlineSpec: DareDeadlineSpecV2Schema,

@@ -7,7 +7,7 @@ import {
   MessageFlags,
 } from "discord.js";
 import {
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareDeadlineSpecV2Schema,
   DareSqlV3CompilationSchema,
   DareTargetBindingV2Schema,
@@ -117,9 +117,7 @@ function contractFields(revision: {
       },
     ];
   }
-  const plan = DareCompiledPlanV2Schema.parse(
-    JSON.parse(revision.compiledPlan),
-  );
+  const plan = DareStoredPlanV2Schema.parse(JSON.parse(revision.compiledPlan));
   const queues = [
     ...new Set(plan.gameSets.flatMap((gameSet) => gameSet.queues)),
   ];

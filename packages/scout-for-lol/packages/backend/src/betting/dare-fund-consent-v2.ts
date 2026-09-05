@@ -1,6 +1,6 @@
 import {
   DARE_CONTRACT_VERSION,
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareSqlV3CompilationSchema,
   DareContractV2Schema,
   DiscordAccountIdSchema,
@@ -345,7 +345,7 @@ export async function acceptDareV2InTransaction(
       : DareContractV2Schema.parse({
           version: DARE_CONTRACT_VERSION,
           canonicalScoutQl: revision.canonicalScoutQl,
-          compiledPlan: DareCompiledPlanV2Schema.parse(
+          compiledPlan: DareStoredPlanV2Schema.parse(
             JSON.parse(revision.compiledPlan),
           ),
           compilerVersion,

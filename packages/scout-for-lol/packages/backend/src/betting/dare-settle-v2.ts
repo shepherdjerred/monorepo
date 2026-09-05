@@ -1,5 +1,5 @@
 import {
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   type DareContractV2,
   type RawMatch,
 } from "@scout-for-lol/data";
@@ -366,7 +366,7 @@ export async function settleDaresV2ForMatch(
           now,
         });
       }
-      const plan = DareCompiledPlanV2Schema.parse(contract.compiledPlan);
+      const plan = DareStoredPlanV2Schema.parse(contract.compiledPlan);
       const evaluator = dareEvaluatorImplementationV2(
         contract.evaluatorVersion,
       );

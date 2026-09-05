@@ -101,6 +101,7 @@ export function makeTwistedFateMatch(
     timePlayed: number;
     creepScore: number;
     gameStartTimestamp?: number | undefined;
+    teamPosition?: string | undefined;
   },
 ): RawMatch {
   const copy = RawMatchSchema.parse(structuredClone(fixture));
@@ -111,6 +112,9 @@ export function makeTwistedFateMatch(
     timePlayed: input.timePlayed,
     totalMinionsKilled: input.creepScore,
     neutralMinionsKilled: 0,
+    ...(input.teamPosition === undefined
+      ? {}
+      : { teamPosition: input.teamPosition }),
   });
   const timing =
     input.gameStartTimestamp === undefined

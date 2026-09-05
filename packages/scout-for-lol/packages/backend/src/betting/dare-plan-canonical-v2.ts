@@ -1,5 +1,5 @@
 import {
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   type DareBooleanExpressionV2,
   type DareCompiledPlanV2,
   type DareResultExpressionV2,
@@ -87,7 +87,7 @@ function canonicalResult(
 export function canonicalDarePlanV2(
   input: DareCompiledPlanV2,
 ): DareCompiledPlanV2 {
-  const plan = DareCompiledPlanV2Schema.parse(input);
+  const plan = DareStoredPlanV2Schema.parse(input);
   const mappings = new Map(
     plan.gameSets.map((gameSet, setIndex) => [
       gameSet.name,
@@ -120,7 +120,7 @@ export function canonicalDarePlanV2(
       })),
     };
   });
-  return DareCompiledPlanV2Schema.parse({
+  return DareStoredPlanV2Schema.parse({
     version: plan.version,
     gameSets,
     result: canonicalResult(plan.result, mappings),

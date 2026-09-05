@@ -4,7 +4,7 @@ import {
   DARE_V2_MAX_HORIZON_DAYS,
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
-  DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   DareDeadlineSpecV2Schema,
   DareSqlV3CompetitionSchema,
   DareActivationV3Schema,
@@ -24,7 +24,14 @@ export const DareDefinitionV2ToolInputSchema = z.strictObject({
     .array(z.string().regex(/^T\d{1,2}$/))
     .min(1)
     .max(DARE_V2_MAX_TARGETS),
-  plan: DareCompiledPlanV2Schema,
+  // Structural, not authoring. The AI SDK validates tool input against this
+  // schema *before* the executor runs, so putting the value-domain refinement
+  // here would make the SDK reject the call itself — and the model would get a
+  // generic invalid-tool-input error instead of `prepareDareDraftV2`'s
+  // actionable `{ kind: "invalid", issues }`, which names the wrong value and
+  // the legal ones. The domains are still enforced, one layer in, where the
+  // model can act on the answer.
+  plan: DareStoredPlanV2Schema,
   deadlineSpec: DareDeadlineSpecV2Schema,
   openingStake: BucksStakeSchema,
 });

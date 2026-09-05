@@ -4,6 +4,7 @@ import {
   DARE_V2_MAX_JOINED_RELATIONS,
   DARE_V2_MAX_PREDICATES,
   DareCompiledPlanV2Schema,
+  DareStoredPlanV2Schema,
   type DareBooleanExpressionV2,
   type DareCompiledPlanV2,
   type DareGameSetV2,
@@ -404,7 +405,15 @@ export function darePlanSemanticIssues(
   planInput: DareCompiledPlanV2,
   targets: readonly DareTargetBindingV2[],
 ): string[] {
-  const plan = DareCompiledPlanV2Schema.parse(planInput);
+  // safeParse, not parse: the schema's superRefine is the hard gate for plan
+  // limits and value domains, and this function's contract is to *return* the
+  // problems so the authoring loop can show them. Throwing here would turn a
+  // fixable contract into a provider error the model cannot act on.
+  const parsed = DareCompiledPlanV2Schema.safeParse(planInput);
+  if (!parsed.success) {
+    return parsed.error.issues.map((issue) => issue.message);
+  }
+  const plan = parsed.data;
   const issues: string[] = [];
   const targetKeys = new Set(targets.map((target) => target.key));
   if (targetKeys.size !== targets.length)
@@ -444,7 +453,9 @@ export function darePlanSemanticIssues(
 }
 
 export function formatDareScoutQlV2(planInput: DareCompiledPlanV2): string {
-  const plan = DareCompiledPlanV2Schema.parse(planInput);
+  // Structural parse: this renders a plan, it does not authorise one. A
+  // legacy draft still has to display its query.
+  const plan = DareStoredPlanV2Schema.parse(planInput);
   const eligibleUnion = plan.gameSets
     .map(
       (gameSet) =>
