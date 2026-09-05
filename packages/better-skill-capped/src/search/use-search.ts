@@ -28,6 +28,7 @@ function getSearchIndex(stamp: number, content: Content): Promise<SearchIndex> {
 export type UseSearchResult = {
   result: SearchRunResult | undefined;
   isPending: boolean;
+  isPlaceholderData: boolean;
 };
 
 /**
@@ -69,5 +70,9 @@ export function useSearch(params: SearchRunParams): UseSearchResult {
     },
   });
 
-  return { result: query.data, isPending: query.isPending };
+  return {
+    result: query.data,
+    isPending: query.isPending,
+    isPlaceholderData: query.isPlaceholderData,
+  };
 }

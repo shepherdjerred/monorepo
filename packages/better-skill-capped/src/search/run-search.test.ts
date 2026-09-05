@@ -123,6 +123,10 @@ describe("runSearch", () => {
     expect(result.facets.staff["Sjorry"]).toBe(2);
     expect(result.facets.staff["Hector"]).toBe(1);
     expect(result.facets.champion["Kai'Sa"]).toBe(1);
+    expect(result.facets.champion[""]).toBeUndefined();
+    expect(result.facets.staff[""]).toBeUndefined();
+    expect(result.facets.carry[""]).toBeUndefined();
+    expect(result.facets.commentaryType[""]).toBeUndefined();
   });
 
   test("watched filter excludes docs and corrects facet counts", async () => {

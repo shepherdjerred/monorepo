@@ -34,7 +34,7 @@ export function RecommendedRail({
       <h2 className="mb-2 flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
         <Star className="size-4" /> Recommended courses
       </h2>
-      <div className="flex gap-3 overflow-x-auto pb-2">
+      <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30">
         {recommended.map((course) => (
           <Link
             key={course.uuid}

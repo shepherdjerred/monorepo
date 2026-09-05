@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "#components/ui/card";
 import { Checkbox } from "#components/ui/checkbox";
 import { Input } from "#components/ui/input";
 import { Label } from "#components/ui/label";
+import { cn } from "#lib/utils";
 
 export type FacetChecklistProps = {
   title: string;
@@ -32,7 +33,10 @@ export function FacetChecklist({
   const [filter, setFilter] = useState("");
 
   const values = Object.entries(counts)
-    .filter(([value, count]) => count > 0 || selected.includes(value))
+    .filter(
+      ([value, count]) =>
+        value.trim() !== "" && (count > 0 || selected.includes(value)),
+    )
     .sort(([aValue, aCount], [bValue, bCount]) =>
       bCount === aCount ? aValue.localeCompare(bValue) : bCount - aCount,
     );
@@ -78,7 +82,13 @@ export function FacetChecklist({
             }}
           />
         )}
-        <div className="flex max-h-56 flex-col gap-2 overflow-y-auto">
+        <div
+          className={cn(
+            "flex flex-col gap-2",
+            visible.length > visibleLimit &&
+              "max-h-72 overflow-y-auto pr-2.5 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30",
+          )}
+        >
           {visible.map(([value, count]) => (
             <div key={value} className="flex items-center gap-2">
               <Checkbox
@@ -92,7 +102,7 @@ export function FacetChecklist({
                 htmlFor={`${title}-${value}`}
                 className="flex w-full justify-between gap-2 font-normal"
               >
-                <span className="truncate">{value}</span>
+                <span className="truncate py-0.5">{value}</span>
                 <span className="text-muted-foreground">{count}</span>
               </Label>
             </div>

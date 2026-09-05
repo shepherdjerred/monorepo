@@ -52,7 +52,7 @@ export function SearchPage(): React.ReactElement {
   // Defer the query so typing stays responsive; the search itself is an
   // in-memory pass over ~6.3k docs.
   const deferredQ = useDeferredValue(search.q);
-  const { result } = useSearch({ ...search, q: deferredQ });
+  const { result, isPlaceholderData } = useSearch({ ...search, q: deferredQ });
 
   const championAliases = useMemo(
     () =>
@@ -75,15 +75,33 @@ export function SearchPage(): React.ReactElement {
   // truth — otherwise ?page=99 stays shareable while page 3 is on screen.
   // `replace` keeps the bogus page out of history, and the mismatch guard makes
   // the effect a no-op on the next render rather than a navigation loop.
+  //
+  // Only sync when `result` reflects the current search state:
+  // when `isPlaceholderData` is true or `deferredQ` has not caught up with
+  // `search.q`, `result` still holds the PREVIOUS search's clamped page.
+  // Writing that stale page back to the URL immediately reverts page changes
+  // on the first click.
   const clampedPage = result?.page;
   React.useEffect(() => {
-    if (clampedPage !== undefined && clampedPage !== search.page) {
+    if (
+      clampedPage !== undefined &&
+      !isPlaceholderData &&
+      deferredQ === search.q &&
+      clampedPage !== search.page
+    ) {
       void navigate({
         search: (previous) => ({ ...previous, page: clampedPage }),
         replace: true,
       });
     }
-  }, [clampedPage, search.page, navigate]);
+  }, [
+    clampedPage,
+    search.page,
+    navigate,
+    isPlaceholderData,
+    deferredQ,
+    search.q,
+  ]);
 
   const updateSearch = (updated: Partial<SearchParams>) => {
     void navigate({
@@ -163,9 +181,14 @@ export function SearchPage(): React.ReactElement {
             />
           ))}
           <PaginationControls
-            currentPage={result?.page ?? search.page}
+            currentPage={
+              isPlaceholderData ? search.page : (result?.page ?? search.page)
+            }
             lastPage={result?.pageCount ?? 0}
             onPageChange={(newPage) => {
+              if (newPage === search.page) {
+                return;
+              }
               // Scrolling here (the event handler) rather than in an effect —
               // scrollRestoration only manages full-navigation scroll.
               window.scrollTo(0, 0);
