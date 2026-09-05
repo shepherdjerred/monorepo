@@ -28,6 +28,8 @@
     "@vitest/coverage-istanbul": "4.1.10"
   },
   "dependencies": {
+    "@codemirror/language": "^6.12.4",
+    "@lezer/highlight": "^1.2.3",
     "chevrotain": "^13.0.0"
   }
 }

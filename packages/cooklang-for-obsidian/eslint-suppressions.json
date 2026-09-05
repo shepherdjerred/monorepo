@@ -8,10 +8,5 @@
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
-  },
-  "src/syntax/cook-language.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
   }
 }

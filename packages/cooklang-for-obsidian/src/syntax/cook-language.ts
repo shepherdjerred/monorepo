@@ -1,77 +1,26 @@
-import { StreamLanguage } from "@codemirror/language";
-
-type CookState = {
-  inFrontmatter: boolean;
-  frontmatterDone: boolean;
-  lineStart: boolean;
-};
+import {
+  HighlightStyle,
+  StreamLanguage,
+  syntaxHighlighting,
+} from "@codemirror/language";
+import { tags } from "@lezer/highlight";
+import { cookParser } from "./cook-tokenizer.ts";
 
 /** StreamLanguage definition for Cooklang syntax highlighting in CodeMirror 6. */
-export const cookLanguage = StreamLanguage.define<CookState>({
-  startState(): CookState {
-    return { inFrontmatter: false, frontmatterDone: false, lineStart: true };
-  },
+export const cookLanguage = StreamLanguage.define(cookParser);
 
-  token(stream, state): string | null {
-    if (stream.sol()) {
-      state.lineStart = true;
-    }
+const cookHighlightStyle = HighlightStyle.define([
+  { tag: tags.variableName, color: "var(--color-purple)", fontWeight: 500 },
+  { tag: tags.keyword, color: "var(--color-cyan)", fontWeight: 500 },
+  { tag: tags.number, color: "var(--color-orange)", fontWeight: 600 },
+  { tag: tags.heading, color: "var(--text-normal)", fontWeight: 700 },
+  { tag: tags.meta, color: "var(--text-faint)" },
+  { tag: tags.atom, color: "var(--color-blue)", fontWeight: 500 },
+  { tag: tags.string, color: "var(--text-normal)" },
+  { tag: tags.docString, color: "var(--text-muted)" },
+  { tag: tags.operator, color: "var(--text-faint)" },
+  { tag: tags.url, color: "var(--text-accent)" },
+  { tag: tags.comment, color: "var(--text-faint)", fontStyle: "italic" },
+]);
 
-    // Frontmatter delimiter
-    if (state.lineStart && stream.match(/^---\s*$/)) {
-      if (!state.frontmatterDone) {
-        state.inFrontmatter = !state.inFrontmatter;
-        if (!state.inFrontmatter) state.frontmatterDone = true;
-      }
-      state.lineStart = false;
-      return "meta";
-    }
-
-    // Inside frontmatter
-    if (state.inFrontmatter) {
-      if (state.lineStart && stream.match(/^[\w.-]+:/)) {
-        state.lineStart = false;
-        return "atom";
-      }
-      stream.next();
-      state.lineStart = false;
-      return "string";
-    }
-
-    state.lineStart = false;
-
-    // Section header: = Name or == Name ==
-    if (stream.sol() && stream.match(/^=+\s*.+/)) {
-      return "heading";
-    }
-
-    // Comment: -- rest of line
-    if (stream.match(/^--.*$/)) {
-      return "comment";
-    }
-
-    // Ingredient: @name{qty%unit} or @name
-    if (stream.match(/@\w[\w\s]*\{[^}]*\}/)) {
-      return "variableName";
-    }
-    if (stream.match(/@\w[\w-]*/)) {
-      return "variableName";
-    }
-
-    // Cookware: #name{} or #name
-    if (stream.match(/#\w[\w\s]*\{[^}]*\}/)) {
-      return "keyword";
-    }
-    if (stream.match(/#\w[\w-]*/)) {
-      return "keyword";
-    }
-
-    // Timer: ~name{qty%unit} or ~{qty%unit}
-    if (stream.match(/~\w*\{[^}]*\}/)) {
-      return "number";
-    }
-
-    stream.next();
-    return null;
-  },
-});
+export const cookHighlighting = syntaxHighlighting(cookHighlightStyle);
