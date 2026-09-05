@@ -84,6 +84,26 @@ unknown rather than as a failed condition. Save the revision only when the diff
 matches the intended dare, then prepare and confirm funding. The confirmation
 is single-use and expires after ten minutes.
 
+## Set something up from the conversation
+
+Where your server has this enabled, Explore can also prepare a scheduled report,
+a tracked player, or a competition from the conversation you are already having,
+instead of sending you to a form.
+
+Ask for it in ordinary language—for example, “save this as a weekly report in
+the #general channel.” Scout confirms the details it is missing, then shows a
+confirmation card summarising exactly what it would create.
+
+Nothing exists until you press **Confirm**. Scout re-checks your permissions in
+that server at that moment, so a card prepared before your access changed still
+cannot create anything you are no longer allowed to create. Like a Dare funding
+confirmation, the card is single-use and expires after ten minutes; when it
+expires, ask again to prepare a fresh one.
+
+The card appears only for you, in your own conversation. Sharing or publishing
+the conversation shows the question and answer without it, so nobody else is
+offered a confirmation they cannot complete.
+
 ## Next steps
 
 - [Find and interpret a player profile](/docs/how-to/find-player-profile/)
