@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Loaded } from "@shepherdjerred/loaded";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   LeaderboardEntry,
@@ -37,48 +38,66 @@ export function Leaderboard() {
     };
   }, [queryClient]);
 
-  const entries = query.data ?? [];
-  const loaded = query.data !== undefined;
+  const board = Loaded.fromQuery(query, ["leaderboard"]);
 
   return (
     <div className="w-full rounded-lg border border-zinc-800 bg-zinc-950/60 p-4">
       <h2 className="mb-2 text-sm font-black uppercase tracking-[0.18em] text-zinc-400">
         Leaderboard
       </h2>
-      {loaded ? (
-        entries.length === 0 ? (
-          <p className="text-sm text-zinc-500">
-            No races recorded yet. Set a name and race to get on the board.
+      {Loaded.match(board, {
+        loading: () => <p className="text-sm text-zinc-500">Loading…</p>,
+        error: (errors) => (
+          <p className="text-sm text-red-400">
+            {Loaded.messageOf(errors[0].error)}
           </p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wider text-zinc-500">
-                <th className="w-8 font-semibold">#</th>
-                <th className="font-semibold">Player</th>
-                <th className="w-10 text-right font-semibold">W</th>
-                <th className="w-12 text-right font-semibold">R</th>
-                <th className="w-14 text-right font-semibold">%</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((e, i) => (
-                <tr key={e.name} className="border-t border-zinc-800/60">
-                  <td className="py-1 text-zinc-500">{i + 1}</td>
-                  <td className="py-1 font-semibold text-zinc-100">{e.name}</td>
-                  <td className="py-1 text-right text-emerald-400">{e.wins}</td>
-                  <td className="py-1 text-right text-zinc-300">{e.races}</td>
-                  <td className="py-1 text-right text-zinc-300">
-                    {Math.round(e.winRate * 100)}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )
-      ) : (
-        <p className="text-sm text-zinc-500">Loading…</p>
-      )}
+        ),
+        available: (entries, meta) => (
+          <>
+            {meta.errors.length > 0 && (
+              <p className="mb-2 text-xs text-amber-400">
+                Showing the last known board — the most recent refresh failed.
+              </p>
+            )}
+            {entries.length === 0 ? (
+              <p className="text-sm text-zinc-500">
+                No races recorded yet. Set a name and race to get on the board.
+              </p>
+            ) : (
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wider text-zinc-500">
+                    <th className="w-8 font-semibold">#</th>
+                    <th className="font-semibold">Player</th>
+                    <th className="w-10 text-right font-semibold">W</th>
+                    <th className="w-12 text-right font-semibold">R</th>
+                    <th className="w-14 text-right font-semibold">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((e, i) => (
+                    <tr key={e.name} className="border-t border-zinc-800/60">
+                      <td className="py-1 text-zinc-500">{i + 1}</td>
+                      <td className="py-1 font-semibold text-zinc-100">
+                        {e.name}
+                      </td>
+                      <td className="py-1 text-right text-emerald-400">
+                        {e.wins}
+                      </td>
+                      <td className="py-1 text-right text-zinc-300">
+                        {e.races}
+                      </td>
+                      <td className="py-1 text-right text-zinc-300">
+                        {Math.round(e.winRate * 100)}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </>
+        ),
+      })}
     </div>
   );
 }
