@@ -1352,14 +1352,6 @@
       "clones": 1,
       "tokens": 97
     },
-    "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-distribution-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-special-options.test.ts": {
-      "clones": 1,
-      "tokens": 83
-    },
-    "packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-option.test.ts": {
-      "clones": 4,
-      "tokens": 326
-    },
     "packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/rule-editor.tsx|packages/scout-for-lol/packages/ui/src/components/sound-pack-editor/sound-pool-editor.tsx": {
       "clones": 1,
       "tokens": 75
