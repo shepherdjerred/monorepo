@@ -1,8 +1,10 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
   ErrorState,
   LoadingState,
+  StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { BucksLedgerList } from "#src/components/bucks-ledger-list.tsx";
 import {
@@ -37,10 +39,11 @@ export function BucksHistory() {
     ),
   );
 
-  if (query.isPending) {
+  const value = Loaded.fromQuery(query, ["bucks.history"]);
+  if (value.status === "loading") {
     return <LoadingState label="Loading your history…" />;
   }
-  if (query.isError) {
+  if (value.status === "error") {
     return (
       <ErrorState
         message="Scout couldn't load your Bryan Bucks history."
@@ -50,29 +53,32 @@ export function BucksHistory() {
       />
     );
   }
-  const page = query.data;
+  const page = value.data;
   return (
-    <BucksLedgerList
-      entries={page.entries}
-      page={page.page}
-      totalPages={page.totalPages}
-      onPreviousPage={() => {
-        setPaging((current) =>
-          previousPage(
-            adoptSnapshot(current, page.snapshotId),
-            page.totalPages,
-          ),
-        );
-      }}
-      onNextPage={() => {
-        setPaging((current) =>
-          nextPage(adoptSnapshot(current, page.snapshotId), page.totalPages),
-        );
-      }}
-      onRefresh={() => {
-        setPaging(INITIAL_LEDGER_PAGING);
-        void query.refetch();
-      }}
-    />
+    <>
+      <StaleState errors={value.status === "degraded" ? value.errors : []} />
+      <BucksLedgerList
+        entries={page.entries}
+        page={page.page}
+        totalPages={page.totalPages}
+        onPreviousPage={() => {
+          setPaging((current) =>
+            previousPage(
+              adoptSnapshot(current, page.snapshotId),
+              page.totalPages,
+            ),
+          );
+        }}
+        onNextPage={() => {
+          setPaging((current) =>
+            nextPage(adoptSnapshot(current, page.snapshotId), page.totalPages),
+          );
+        }}
+        onRefresh={() => {
+          setPaging(INITIAL_LEDGER_PAGING);
+          void query.refetch();
+        }}
+      />
+    </>
   );
 }

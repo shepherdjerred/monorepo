@@ -1,11 +1,9 @@
+import { Loaded } from "@shepherdjerred/loaded";
+import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
+import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReportId } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
@@ -194,8 +192,9 @@ export function ReportDetail() {
   const { perms } = usePermissions(guildId);
 
   const getKey = trpc.report.get.queryKey({ guildId, reportId });
-  const reportQuery = useSuspenseQuery(
-    trpc.report.get.queryOptions({ guildId, reportId }),
+  const reportValue = Loaded.fromQuery(
+    useQuery(trpc.report.get.queryOptions({ guildId, reportId })),
+    ["report.get"],
   );
   const channelsQuery = useQuery(
     trpc.guild.listChannels.queryOptions({ guildId }),
@@ -220,65 +219,79 @@ export function ReportDetail() {
     }),
   );
 
-  const report = reportQuery.data.report;
-  const runs = reportQuery.data.runs;
-  const systemManaged = report.isSystemManaged;
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h2 className="text-xl font-semibold tracking-tight">
-            {report.title}
-          </h2>
-          {systemManaged && <Badge variant="outline">System</Badge>}
-        </div>
-        <ReportHeaderActions
-          guildId={guildId}
-          reportId={reportId}
-          title={report.title}
-          systemManaged={systemManaged}
-          canEdit={perms.can("reports", "update")}
-          canRun={perms.can("reports", "run")}
-          canDelete={perms.can("reports", "delete")}
-          onRun={() => {
-            runMutation.mutate({ guildId, reportId });
-          }}
-          runPending={runMutation.isPending}
-          onDelete={() => {
-            if (!globalThis.confirm(`Delete "${report.title}"?`)) {
-              return;
-            }
-            deleteMutation.mutate({ guildId, reportId });
-          }}
-          deletePending={deleteMutation.isPending}
-        />
-      </div>
+    <LoadingBlock values={{ detail: reportValue }}>
+      {({ detail }, meta) => {
+        const report = detail.report;
+        const runs = detail.runs;
+        const systemManaged = report.isSystemManaged;
+        return (
+          <>
+            <StaleState errors={meta.errors} />
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-xl font-semibold tracking-tight">
+                    {report.title}
+                  </h2>
+                  {systemManaged && <Badge variant="outline">System</Badge>}
+                </div>
+                <ReportHeaderActions
+                  guildId={guildId}
+                  reportId={reportId}
+                  title={report.title}
+                  systemManaged={systemManaged}
+                  canEdit={perms.can("reports", "update")}
+                  canRun={perms.can("reports", "run")}
+                  canDelete={perms.can("reports", "delete")}
+                  onRun={() => {
+                    runMutation.mutate({ guildId, reportId });
+                  }}
+                  runPending={runMutation.isPending}
+                  onDelete={() => {
+                    if (!globalThis.confirm(`Delete "${report.title}"?`)) {
+                      return;
+                    }
+                    deleteMutation.mutate({ guildId, reportId });
+                  }}
+                  deletePending={deleteMutation.isPending}
+                />
+              </div>
 
-      {runMutation.error && (
-        <p className="text-sm text-scout-danger">{runMutation.error.message}</p>
-      )}
-      {deleteMutation.error && (
-        <p className="text-sm text-scout-danger">
-          {deleteMutation.error.message}
-        </p>
-      )}
+              {runMutation.error && (
+                <p className="text-sm text-scout-danger">
+                  {runMutation.error.message}
+                </p>
+              )}
+              {deleteMutation.error && (
+                <p className="text-sm text-scout-danger">
+                  {deleteMutation.error.message}
+                </p>
+              )}
 
-      <ReportDefinitionCards
-        guildId={guildId}
-        report={report}
-        channels={channelsQuery.data}
-      />
-      {perms.can("reports", "run") && (
-        <ReportExploration
-          guildId={guildId}
-          reportId={reportId}
-          title={report.title}
-          report={report}
-          canEdit={!systemManaged && perms.can("reports", "update")}
-        />
-      )}
-      <ReportRunHistory guildId={guildId} reportId={reportId} runs={runs} />
-    </div>
+              <ReportDefinitionCards
+                guildId={guildId}
+                report={report}
+                channels={channelsQuery.data}
+              />
+              {perms.can("reports", "run") && (
+                <ReportExploration
+                  guildId={guildId}
+                  reportId={reportId}
+                  title={report.title}
+                  report={report}
+                  canEdit={!systemManaged && perms.can("reports", "update")}
+                />
+              )}
+              <ReportRunHistory
+                guildId={guildId}
+                reportId={reportId}
+                runs={runs}
+              />
+            </div>
+          </>
+        );
+      }}
+    </LoadingBlock>
   );
 }
