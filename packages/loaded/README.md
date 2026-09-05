@@ -110,3 +110,30 @@ pending child resolves.
   `Loaded.all`, where the checker cannot connect the loop's proof to the mapped
   result type, and one in `Loaded.fromQuery`, where it cannot reduce `Exclude`
   over an unresolved generic after the `data !== undefined` guard.
+
+## When not to use this
+
+Learned from migrating eight packages onto it, not from theory.
+
+- **Authorization and freshness checks.** `degraded` means "keep rendering the
+  last known answer when the refresh fails". That is right for a match list and
+  wrong for a permission check. Scout's consumer profile deliberately blocks on
+  `isFetching` as well as `isPending` because its access decision must be freshly
+  fetched (`staleTime: 0`, `refetchOnMount: "always"`); projecting it onto
+  `Loaded` would have turned a stale-guard into a stale-renderer. `Loaded` is a
+  renderability model, not a permission model.
+- **Sites that already render without their data.** A component reading
+  `query.data?.x ?? fallback` and never gating has nothing to gain: it has no
+  branch to collapse and no fatal path to soften. Wrapping one in
+  `<LoadingBlock>` _adds_ a spinner that did not exist. Use `Loaded.all` for a
+  shared error gate and `getOrElse` for display, or leave it alone.
+- **Anything that is not a rendering decision.** Analytics effects that fire on
+  `isSuccess`/`isError` are asking when to emit an event, not what to draw.
+  Rewriting one bought a memoisation problem and two lint suppressions in
+  exchange for nothing.
+
+The rule that fell out: **`LoadingBlock` where the site already blocks;
+`Loaded.all` + `getOrElse` where it already renders progressively.** Across
+Scout's 82 read sites the split was roughly three progressive to two blocking,
+so applying the render-prop form uniformly would have been wrong more often
+than right.
