@@ -45,6 +45,20 @@ describe("ReportResultTable", () => {
     expect(markup).toContain("<button");
   });
 
+  test("gives drill-down rows keyboard semantics", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable
+        columns={columns}
+        rows={rows}
+        onRowClick={(row) => row.label}
+      />,
+    );
+
+    expect(markup).toContain('role="button"');
+    expect(markup).toContain('tabindex="0"');
+    expect(markup).toContain('aria-label="Explore Faker"');
+  });
+
   test("renders empty state when no rows are provided", () => {
     const markup = renderToStaticMarkup(
       <ReportResultTable columns={columns} rows={[]} />,

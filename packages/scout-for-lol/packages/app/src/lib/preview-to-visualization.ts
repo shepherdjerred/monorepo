@@ -51,6 +51,7 @@ export function isChartablePreview(
 }
 
 export type PreviewToVisualizationOptions = {
+  baseSnapshot?: VisualizationSnapshot | undefined;
   preferredKind?: ReportOutputFormat | undefined;
   metricKey?: string | undefined;
   orientation?: ("horizontal" | "vertical") | undefined;
@@ -64,27 +65,76 @@ export function previewToVisualizationSnapshot(
     return null;
   }
 
-  const plottableCols = plottableMetricColumns(preview.columns);
-  const selectedMetric =
-    options?.metricKey === undefined
-      ? plottableCols[0]
-      : (preview.columns.find((col) => col.key === options.metricKey) ??
-        plottableCols[0]);
+  const selectedMetric = selectedMetricForPreview(preview, options);
 
   if (selectedMetric === undefined) {
     return null;
   }
 
-  const metricKey = selectedMetric.key;
+  const baseSnapshot = options?.baseSnapshot;
+  const series =
+    baseSnapshot?.series.find((item) => item.metric === selectedMetric.key) ??
+    previewMetricSeries(preview, selectedMetric);
+  const targetKind = targetVisualizationKind(preview, options?.preferredKind);
+  const snapshot = baseSnapshot ?? emptyVisualizationSnapshot();
+  const withControls = visualizationSnapshotWithControls(snapshot, {
+    preferredKind: targetKind,
+    orientation: options?.orientation,
+  });
+  return VisualizationSnapshotSchema.parse({
+    ...withControls,
+    series: [series],
+  });
+}
+
+export function visualizationSnapshotWithControls(
+  snapshot: VisualizationSnapshot,
+  options: {
+    preferredKind: string;
+    orientation: "horizontal" | "vertical" | undefined;
+  },
+): VisualizationSnapshot {
+  const currentOptions = snapshot.display.options;
+  const orientation =
+    options.orientation ?? currentOptions?.orientation ?? "vertical";
+  const displayOptions =
+    currentOptions === null || currentOptions === undefined
+      ? { orientation }
+      : { ...currentOptions, orientation };
+
+  return VisualizationSnapshotSchema.parse({
+    ...snapshot,
+    kind: options.preferredKind,
+    display: {
+      ...snapshot.display,
+      options: displayOptions,
+    },
+  });
+}
+
+function selectedMetricForPreview(
+  preview: ReportAiPreviewSummary,
+  options: PreviewToVisualizationOptions | undefined,
+): ReportResultColumn | undefined {
+  const plottableCols = plottableMetricColumns(preview.columns);
+  if (options?.metricKey === undefined) return plottableCols[0];
+  return (
+    preview.columns.find((col) => col.key === options.metricKey) ??
+    plottableCols[0]
+  );
+}
+
+function previewMetricSeries(
+  preview: ReportAiPreviewSummary,
+  selectedMetric: ReportResultColumn,
+) {
   const rows =
     preview.visualizationRows.length > 0
       ? preview.visualizationRows
       : preview.rows;
-
   const points = rows.map((row) => {
-    const entry = row.values.find((val) => val.column === metricKey);
+    const entry = row.values.find((val) => val.column === selectedMetric.key);
     const numericValue = typeof entry?.value === "number" ? entry.value : null;
-
     const games = row.games ?? 0;
     return {
       key: row.label,
@@ -99,36 +149,40 @@ export function previewToVisualizationSnapshot(
     };
   });
 
-  let displayKind: "percent" | "count" | "decimal" = "decimal";
-  if (selectedMetric.format === "percent") {
-    displayKind = "percent";
-  } else if (selectedMetric.format === "integer") {
-    displayKind = "count";
-  }
-
-  const series = {
+  return {
     id: selectedMetric.key,
     label: selectedMetric.label,
     metric: selectedMetric.key,
-    displayKind,
+    displayKind: metricDisplayKind(selectedMetric),
     additive: false,
     points,
   };
+}
 
-  let targetKind = "BAR_CHART";
-  if (
-    options?.preferredKind !== undefined &&
-    isChartRenderKind(options.preferredKind)
-  ) {
-    targetKind = options.preferredKind;
-  } else if (isChartRenderKind(preview.renderKind)) {
-    targetKind = preview.renderKind;
+function metricDisplayKind(
+  column: ReportResultColumn,
+): "percent" | "count" | "decimal" {
+  if (column.format === "percent") return "percent";
+  if (column.format === "integer") return "count";
+  return "decimal";
+}
+
+function targetVisualizationKind(
+  preview: ReportAiPreviewSummary,
+  preferredKind: ReportOutputFormat | undefined,
+): string {
+  if (preferredKind !== undefined && isChartRenderKind(preferredKind)) {
+    return preferredKind;
   }
+  if (isChartRenderKind(preview.renderKind)) return preview.renderKind;
+  return "BAR_CHART";
+}
 
-  return VisualizationSnapshotSchema.parse({
+function emptyVisualizationSnapshot(): VisualizationSnapshot {
+  return {
     version: 1,
     generatedAt: new Date().toISOString(),
-    kind: targetKind,
+    kind: "BAR_CHART",
     title: null,
     temporal: null,
     bucket: null,
@@ -140,12 +194,10 @@ export function previewToVisualizationSnapshot(
       rollingWindow: null,
       cumulative: false,
       sparkline: false,
-      options: {
-        orientation: options?.orientation ?? "vertical",
-      },
+      options: null,
     },
-    series: [series],
+    series: [],
     annotations: [],
     trends: [],
-  });
+  };
 }

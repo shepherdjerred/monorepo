@@ -9,6 +9,7 @@ import {
   ExploreVisualResult,
   initialChartKind,
   initialMetricKey,
+  resolveActiveSnapshot,
 } from "#src/components/explore-visual-result.tsx";
 
 function createMessage(overrides: Record<string, unknown>): ExploreMessage {
@@ -58,8 +59,12 @@ describe("ExploreVisualResult", () => {
     generatedAt: "2026-08-14T12:00:30.000Z",
     kind: "LINE_CHART",
     title: "Win rate by patch",
-    temporal: null,
-    bucket: null,
+    temporal: {
+      window: { kind: "relative", days: 30 },
+      bucket: "patch",
+      timezone: "UTC",
+    },
+    bucket: "patch",
     display: {
       theme: null,
       palette: null,
@@ -112,6 +117,30 @@ describe("ExploreVisualResult", () => {
     expect(initialMetricKey(persistedLineChart, chartablePreview.columns)).toBe(
       "win_rate",
     );
+  });
+
+  test("preserves persisted metadata and points when chart controls change", () => {
+    const snapshot = resolveActiveSnapshot({
+      preview: chartablePreview,
+      isPreviewChartable: true,
+      rawChart: persistedLineChart,
+      hasCustomChartSelection: true,
+      selectedChartKind: "BAR_CHART",
+      selectedMetricKey: "win_rate",
+      orientation: "horizontal",
+    });
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.kind).toBe("BAR_CHART");
+    expect(snapshot?.generatedAt).toBe(persistedLineChart.generatedAt);
+    expect(snapshot?.title).toBe(persistedLineChart.title);
+    expect(snapshot?.temporal).toEqual(persistedLineChart.temporal);
+    expect(snapshot?.bucket).toBe(persistedLineChart.bucket);
+    expect(snapshot?.display.options?.orientation).toBe("horizontal");
+    expect(snapshot?.series[0]?.points[0]?.start).toBe(
+      persistedLineChart.series[0]?.points[0]?.start,
+    );
+    expect(snapshot?.series[0]?.displayKind).toBe("percent");
   });
 
   test("renders both Chart and Table tab controls for chartable results", () => {

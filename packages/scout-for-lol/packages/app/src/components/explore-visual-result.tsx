@@ -27,6 +27,7 @@ import {
   isChartablePreview,
   plottableMetricColumns,
   previewToVisualizationSnapshot,
+  visualizationSnapshotWithControls,
 } from "#src/lib/preview-to-visualization.ts";
 
 function chartableSnapshot(
@@ -277,7 +278,7 @@ function ExploreDrillDownBar(props: {
   );
 }
 
-function resolveActiveSnapshot(options: {
+export function resolveActiveSnapshot(options: {
   preview: ReportAiPreviewSummary | null;
   isPreviewChartable: boolean;
   rawChart: VisualizationSnapshot | null;
@@ -302,6 +303,7 @@ function resolveActiveSnapshot(options: {
 
   if (preview !== null && isPreviewChartable) {
     const synthesized = previewToVisualizationSnapshot(preview, {
+      baseSnapshot: rawChart ?? undefined,
       preferredKind: selectedChartKind,
       metricKey: selectedMetricKey,
       orientation,
@@ -312,23 +314,10 @@ function resolveActiveSnapshot(options: {
   }
 
   if (rawChart !== null) {
-    if (selectedChartKind === "BAR_CHART" && orientation === "horizontal") {
-      return {
-        ...rawChart,
-        kind: "BAR_CHART",
-        display: {
-          ...rawChart.display,
-          options: {
-            ...rawChart.display.options,
-            orientation: "horizontal",
-          },
-        },
-      };
-    }
-    return {
-      ...rawChart,
-      kind: selectedChartKind,
-    };
+    return visualizationSnapshotWithControls(rawChart, {
+      preferredKind: selectedChartKind,
+      orientation,
+    });
   }
 
   return null;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import {
   ArrowDown,
   ArrowUp,
@@ -290,6 +290,24 @@ export function ReportResultTable(props: {
                       : () => {
                           props.onRowClick?.(row);
                         }
+                  }
+                  onKeyDown={
+                    props.onRowClick === undefined
+                      ? undefined
+                      : (event: KeyboardEvent<HTMLTableRowElement>) => {
+                          if (event.key !== "Enter" && event.key !== " ") {
+                            return;
+                          }
+                          event.preventDefault();
+                          props.onRowClick?.(row);
+                        }
+                  }
+                  tabIndex={props.onRowClick === undefined ? undefined : 0}
+                  role={props.onRowClick === undefined ? undefined : "button"}
+                  aria-label={
+                    props.onRowClick === undefined
+                      ? undefined
+                      : `Explore ${row.label}`
                   }
                   className={
                     props.onRowClick === undefined
