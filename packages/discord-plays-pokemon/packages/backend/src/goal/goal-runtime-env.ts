@@ -5,7 +5,7 @@
 // Extracted from goal-manager.ts to keep that file under the 500-line cap.
 
 import path from "node:path";
-import { buildCodexCredentialEnvironment } from "./codex-auth.ts";
+import { buildCodexCredentialEnvironment } from "./codex/codex-auth.ts";
 
 // Only these variables are forwarded to the Codex SDK runtime. The goal text
 // is attacker-controlled and Codex can read its own environment, so the

@@ -11,7 +11,7 @@ import {
   type CatchBenchmarkResult,
   type GoalBenchmarkTelemetry,
 } from "./benchmark-evaluator.ts";
-import type { CatchStateEvidence } from "./catch-evidence.ts";
+import type { CatchStateEvidence } from "#src/goal/catch-evidence.ts";
 import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
   BENCHMARK_PROVIDER_STARTUP_FAILURE_FILE,
@@ -19,7 +19,7 @@ import {
   type BenchmarkProviderFailure,
   type BenchmarkProviderStartupFailure,
 } from "./benchmark-provider-failure.ts";
-import { computeCost } from "./pricing.ts";
+import { computeCost } from "#src/goal/pricing.ts";
 
 export function benchmarkTelemetryCost(
   model: string,

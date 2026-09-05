@@ -5,13 +5,13 @@ import { z } from "zod";
 import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
-} from "#src/goal/benchmark-harness.ts";
+} from "#src/goal/benchmark/benchmark-harness.ts";
 import {
   benchmarkGitWorktrees,
   requireBenchmarkPathOutsideGitWorktrees,
-} from "#src/goal/benchmark-output-location.ts";
-import { captureCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
-import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
+} from "#src/goal/benchmark/benchmark-output-location.ts";
+import { captureCatchBenchmarkSourceSave } from "#src/goal/benchmark/benchmark-source-save.ts";
+import { runBenchmarkSeries } from "#src/goal/benchmark/benchmark-series.ts";
 import {
   commandOutput,
   requireCleanGitWorktree,
@@ -20,17 +20,17 @@ import {
   sha256File,
   writeBenchmarkJson,
   type BenchmarkImplementation,
-} from "#src/goal/benchmark-run.ts";
+} from "#src/goal/benchmark/benchmark-run.ts";
 
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
 const WORKER_SOURCE = path.join(import.meta.dir, "goal-benchmark-worker.ts");
 const EVALUATOR_SOURCE = path.resolve(
   import.meta.dir,
-  "../src/goal/benchmark-evaluator.ts",
+  "../src/goal/benchmark/benchmark-evaluator.ts",
 );
 const SAVE_ORACLE_SOURCE = path.resolve(
   import.meta.dir,
-  "../src/goal/benchmark-save-oracle.ts",
+  "../src/goal/benchmark/benchmark-save-oracle.ts",
 );
 
 const UpstreamSchema = z.looseObject({
@@ -105,8 +105,8 @@ async function resolveImplementationRoot(
     "src/emulator/emulator.ts",
     "src/game/events/watcher.ts",
     "src/goal/goal-manager.ts",
-    "src/goal/control-server.ts",
-    "src/goal/pokemonctl.ts",
+    "src/goal/control/control-server.ts",
+    "src/goal/control/pokemonctl.ts",
     "node_modules/@openai/codex-sdk/package.json",
     "node_modules/zod/package.json",
   ];

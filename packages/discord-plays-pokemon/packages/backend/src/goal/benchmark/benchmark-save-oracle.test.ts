@@ -10,7 +10,7 @@ const MAX_SAVE_COUNTER = 0xff_ff_ff_ff;
 
 async function fixture(name: string): Promise<Uint8Array> {
   return await Bun.file(
-    new URL(`../game/events/testdata/${name}`, import.meta.url),
+    new URL(`../../game/events/testdata/${name}`, import.meta.url),
   ).bytes();
 }
 
