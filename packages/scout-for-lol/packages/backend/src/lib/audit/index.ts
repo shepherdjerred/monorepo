@@ -28,6 +28,8 @@ export const AuditActionSchema = z.enum([
   "ACCOUNT_UPDATE",
   "ROLE_GRANT",
   "ROLE_REVOKE",
+  "REPORT_CREATE",
+  "COMPETITION_CREATE",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

@@ -17,11 +17,6 @@ import {
   DiscordGuildIdSchema,
   parseStoredPermissionKey,
 } from "@scout-for-lol/data";
-import {
-  ChannelType,
-  PermissionFlagsBits,
-  type GuildBasedChannel,
-} from "discord.js";
 import { router, webProcedure } from "#src/trpc/trpc.ts";
 import {
   guildProcedure,
@@ -32,6 +27,7 @@ import {
   hasAdministrator,
   isDevGuildOverrideGuild,
 } from "#src/lib/discord-rest.ts";
+import { listPostableChannels } from "#src/lib/discord/postable-channels.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
@@ -128,39 +124,5 @@ export const guildRouter = router({
    */
   listChannels: guildProcedure("channels", "read")
     .input(z.object({ guildId: DiscordGuildIdSchema }))
-    .query(({ input }) => {
-      const guild = discordClient.guilds.cache.get(input.guildId);
-      if (guild === undefined) {
-        // resolveGuildPermissions already proved Scout is installed, but the
-        // cache lookup is still narrowed here for type-safety.
-        return [];
-      }
-
-      const me = guild.members.me;
-      const channels = guild.channels.cache
-        .filter((c: GuildBasedChannel) => {
-          const isText =
-            c.type === ChannelType.GuildText ||
-            c.type === ChannelType.GuildAnnouncement;
-          if (!isText) return false;
-          // Only offer channels the bot can actually post in. Without
-          // this we'd show channels Scout could read but never message.
-          const perms = me?.permissionsIn(c);
-          return (
-            perms !== undefined &&
-            perms.has(PermissionFlagsBits.ViewChannel) &&
-            perms.has(PermissionFlagsBits.SendMessages)
-          );
-        })
-        .map((c: GuildBasedChannel) => ({
-          id: c.id,
-          name: c.name,
-          parentId: c.parentId,
-        }));
-
-      // Keep the response deterministic.
-      channels.sort((a, b) => a.name.localeCompare(b.name));
-
-      return channels;
-    }),
+    .query(({ input }) => listPostableChannels(input.guildId)),
 });

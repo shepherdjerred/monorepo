@@ -36,7 +36,8 @@ import {
   guildMutationProcedure,
 } from "#src/trpc/guild-permission.ts";
 import { prisma } from "#src/database/index.ts";
-import { canCreateAnotherUserReport } from "#src/lib/reports/authorization.ts";
+import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
+import { createReportInTransaction } from "#src/lib/reports/create.ts";
 import { executeReportQuery } from "#src/reports/query-engine.ts";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { planResultColumns } from "#src/reports/plan-columns.ts";
@@ -199,51 +200,39 @@ export const reportRouter = router({
         channelId: input.channelId,
       });
       const ownerId = DiscordAccountIdSchema.parse(ctx.user.discordId);
-      const limitCheck = await canCreateAnotherUserReport({
-        prisma,
-        serverId: input.guildId,
-        ownerId,
-      });
-      if (!limitCheck.allowed) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: limitCheck.reason,
-        });
-      }
-      try {
-        compileScoutQl(input.queryText);
-      } catch (error) {
-        asBadRequest(error);
-      }
-      const now = new Date();
-      const report = await prisma.$transaction(async (tx) => {
-        const created = await tx.report.create({
-          data: {
+      const result = await runAuditedMutation(
+        ctx,
+        input.guildId,
+        (tx) =>
+          createReportInTransaction(tx, {
             serverId: input.guildId,
             ownerId,
-            // Already validated by ReportCreateInputSchema's DiscordChannelIdSchema.
-            channelId: input.channelId,
-            title: input.title,
-            description: input.description,
-            queryText: input.queryText,
-            isEnabled: input.isEnabled,
-            isSystemManaged: false,
-            cronExpression: input.cronExpression,
-            scheduleTimezone: input.scheduleTimezone,
-            nextScheduledRunAt: computeNextScheduledUpdateAt(
-              input.cronExpression,
-              now,
-              input.scheduleTimezone,
-            ),
-            createdTime: now,
-            updatedTime: now,
-          },
-        });
-        await enqueueReportScheduleUpsert(tx, created.id, created.revision);
-        return created;
-      });
+            input,
+          }),
+        (created) =>
+          created.kind === "created"
+            ? {
+                action: "REPORT_CREATE",
+                targetChannelId: input.channelId,
+                payload: {
+                  reportId: created.report.id,
+                  title: input.title,
+                  queryText: input.queryText,
+                  cronExpression: input.cronExpression,
+                  scheduleTimezone: input.scheduleTimezone,
+                  isEnabled: input.isEnabled,
+                },
+              }
+            : null,
+      );
+      if (result.kind === "limit_reached") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: result.reason });
+      }
+      if (result.kind === "invalid_query") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: result.message });
+      }
       await notifyReportScheduleReconciler();
-      return report;
+      return result.report;
     }),
 
   update: guildMutationProcedure("reports", "update")
