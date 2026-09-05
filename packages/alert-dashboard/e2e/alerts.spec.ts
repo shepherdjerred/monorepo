@@ -165,3 +165,36 @@ test("semantic navigation is keyboard reachable and responsive", async ({
     page.getByRole("definition").filter({ hasText: "disabled" }),
   ).toBeVisible();
 });
+
+test("a failed refresh keeps the alerts on screen behind a stale notice", async ({
+  page,
+}) => {
+  // The degraded state is the one this app gained when it moved to `Loaded`:
+  // before, any query error replaced the dashboard, discarding alerts an
+  // operator could still act on. Load once so the cache is warm, then fail
+  // every subsequent tRPC call and refresh.
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: /DiskFull/u })).toBeVisible();
+  await expect(page.getByRole("status")).toBeHidden();
+
+  await page.route("**/trpc/**", async (route) => {
+    await route.fulfill({
+      status: 500,
+      contentType: "application/json",
+      body: JSON.stringify([
+        { error: { message: "upstream unavailable", code: -32603 } },
+      ]),
+    });
+  });
+
+  await page.getByRole("button", { name: "Refresh alerts" }).click();
+
+  await expect(
+    page.getByText(
+      "Showing the last known data — the most recent refresh failed.",
+    ),
+  ).toBeVisible();
+  // The point of `degraded`: the data is still there.
+  await expect(page.getByRole("link", { name: /DiskFull/u })).toBeVisible();
+  await expect(page.getByText("Could not load alerts.")).toBeHidden();
+});
