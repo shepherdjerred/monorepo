@@ -53,6 +53,22 @@ bun run mac:verify        # generate + build + test + lint + format + app + smok
 bun run mac:release       # operator-run release lane (scripts/release.ts)
 ```
 
+### Signed UI tests
+
+The two global-hotkey flows post system events and require a stable signed test
+runner plus Accessibility trust. List signing identities with
+`security find-identity -v -p codesigning`, choose the SHA-1 beside an
+**Apple Development** identity, then run:
+
+```bash
+TASKNOTES_UITEST_IDENTITY=<40-hex SHA-1> bun run mac:e2e:ci
+```
+
+On first run, approve `TaskNotesUITests-Runner` in System Settings → Privacy &
+Security → Accessibility. Do not use the Developer ID release identity or an
+ad-hoc signature: their runner signature is not accepted for UI testing, or
+changes on every build and loses the trust grant.
+
 `lint` participates in the repository's Linux CI verify graph because
 SwiftLint ships a static Linux binary. Changed TaskNotes paths also select the
 hard `tasknotes-native` Buildkite lane after Linux `verify`; it validates the

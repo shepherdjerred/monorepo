@@ -6,7 +6,7 @@ import XCTest
 /// These are the flows that do **not** depend on system-level event posting, so
 /// they run on an unprivileged machine. The two that do — anything involving the
 /// global hotkey — live in ``QuickAddPanelUITests`` and are blocked on a one-time
-/// Accessibility grant; see `AGENTS.md` › Running the end-to-end tests.
+/// Accessibility grant; see `README.md` › Signed UI tests.
 ///
 /// ⚠️ **These flows deliberately do not call `performAccessibilityAudit()`**,
 /// because the audit found real problems but cannot remain a useful *gate*.
