@@ -5,7 +5,7 @@ import { validateExhaustiveGraphCapacity } from "./validate-pipeline-resources.t
 const measuredCapacity = [
   "--concurrency=4",
   'requests: { cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }',
-  'limits: { cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }',
+  'limits: { cpu: "12", memory: "24Gi", ephemeral-storage: "40Gi" }',
 ].join("\n");
 
 describe("exhaustive graph capacity contract", () => {
@@ -31,7 +31,7 @@ describe("exhaustive graph capacity contract", () => {
         "verify",
       ),
     ).toThrow(
-      'verify is missing measured capacity contract { cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }',
+      'verify is missing measured capacity contract { cpu: "12", memory: "24Gi", ephemeral-storage: "40Gi" }',
     );
   });
 });

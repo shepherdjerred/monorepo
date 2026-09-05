@@ -10,7 +10,7 @@ import {
 const EXHAUSTIVE_GRAPH_CAPACITY = [
   "--concurrency=4",
   '{ cpu: "1", memory: "18Gi", ephemeral-storage: "2Gi" }',
-  '{ cpu: "7", memory: "24Gi", ephemeral-storage: "40Gi" }',
+  '{ cpu: "12", memory: "24Gi", ephemeral-storage: "40Gi" }',
 ] as const;
 
 export function validateExhaustiveGraphCapacity(
@@ -123,7 +123,7 @@ export function validatePipelineResourceContracts(
 
   for (const step of ["playwright-e2e-pr", "playwright-e2e-main"]) {
     const command = containerBlock(step, stepBlocks.get(step), "container-0");
-    if (!hasTrimmedLine(command, 'requests: { cpu: "1", memory: "5Gi" }')) {
+    if (!hasTrimmedLine(command, 'requests: { cpu: "1", memory: "9Gi" }')) {
       fail(`${step} is missing audited Playwright command reservation`);
     }
   }
