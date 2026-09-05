@@ -19,7 +19,7 @@ bun run dev        # dev server on localhost:4321
 bun run build      # astro check + tsc --noEmit + astro build
 bun run preview    # preview the production build
 bun run typecheck  # tsc --noEmit
-bun run deploy     # bun ../../scripts/deploy-site.ts stocks-sjer-red
+bun run deploy     # bun ../../scripts/release/deploy-site.ts stocks-sjer-red
 ```
 
 See [AGENTS.md](AGENTS.md) for how to update prices, data provenance, and

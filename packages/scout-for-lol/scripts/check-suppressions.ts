@@ -38,7 +38,7 @@ function parseDiffForSuppressions(diff: string): Finding[] {
       const matchedFile = match?.[1];
       if (matchedFile !== undefined && matchedFile.length > 0) {
         currentFile = matchedFile;
-        if (currentFile === "scripts/check-suppressions.ts") {
+        if (currentFile === "scripts/checks/check-suppressions.ts") {
           currentFile = "";
         }
       }

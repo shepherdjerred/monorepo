@@ -50,7 +50,7 @@ bun run mac:e2e           # XCUITest suite
 bun run mac:e2e:ci        # signed CI suite; requires TASKNOTES_UITEST_IDENTITY
 bun run mac:verify        # generate + build + test + lint + format + app + smoke
 
-bun run mac:release       # operator-run release lane (scripts/release.ts)
+bun run mac:release       # operator-run release lane (scripts/release/release.ts)
 ```
 
 `lint` participates in the repository's Linux CI verify graph because

@@ -12,10 +12,10 @@ bun run test:e2e     # Playwright visual-snapshot suite
 bun run test:update  # rebuild, then update Playwright snapshots
 bun run lint         # eslint (lint:fix to autofix)
 bun run typecheck
-bun run deploy       # bun ../../scripts/deploy-site.ts sjer-red
+bun run deploy       # bun ../../scripts/release/deploy-site.ts sjer-red
 ```
 
-Deploys are a static sync to the object-storage host via the shared [`scripts/deploy-site.ts`](../../scripts/deploy-site.ts); credentials come from the environment (wrap with `op run`).
+Deploys are a static sync to the object-storage host via the shared [`scripts/release/deploy-site.ts`](../../scripts/release/deploy-site.ts); credentials come from the environment (wrap with `op run`).
 
 ## Content
 

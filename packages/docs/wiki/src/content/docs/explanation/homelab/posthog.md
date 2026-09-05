@@ -117,7 +117,7 @@ value.
 
 ## Source verification
 
-Run `bun scripts/check-analytics-sites.ts`, then build each affected site. The
+Run `bun scripts/checks/check-analytics-sites.ts`, then build each affected site. The
 generated browser assets must contain the configured US hosts and must not
 contain a retired analytics endpoint. Scout tests additionally cover route
 normalization, bounded typed events, replay gating, local no-op behavior, and

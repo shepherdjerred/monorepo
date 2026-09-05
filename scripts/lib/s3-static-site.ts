@@ -1,6 +1,6 @@
 /**
  * Two-pass `aws s3 sync` for static sites on SeaweedFS (ported from the old
- * CI's `s3SyncStaticSite`; extracted from scripts/deploy-site.ts so the scout
+ * CI's `s3SyncStaticSite`; extracted from scripts/release/deploy-site.ts so the scout
  * lockstep deploy scripts share the exact same sync semantics).
  */
 

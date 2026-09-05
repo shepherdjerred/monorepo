@@ -117,7 +117,7 @@
           "args": [
             "scripts/build-wasm.test.ts",
             "scripts/vendor-n64wasm.test.ts",
-            "scripts/migration-smoke.test.ts"
+            "scripts/misc/migration-smoke.test.ts"
           ]
         }
       ]
@@ -271,7 +271,7 @@
             "scripts/helm-release-core.test.ts",
             "scripts/helm-set-version.test.ts",
             "scripts/lint-helm.test.ts",
-            "scripts/migration-smoke.test.ts",
+            "scripts/misc/migration-smoke.test.ts",
             "scripts/velero-backups.test.ts"
           ]
         }
@@ -379,7 +379,7 @@
             "scripts/create-minimal-png.test.ts",
             "scripts/dev-web.test.ts",
             "scripts/install-pkgs.test.ts",
-            "scripts/migration-smoke.test.ts"
+            "scripts/misc/migration-smoke.test.ts"
           ]
         }
       ]

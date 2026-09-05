@@ -1,0 +1,276 @@
+#!/usr/bin/env bun
+
+/**
+ * Pre-commit hook to detect new code quality suppressions
+ * Fails if any new eslint-disable, @ts-ignore, etc. are added
+ */
+
+import { $ } from "bun";
+
+// Patterns to detect (case-insensitive where appropriate)
+const SUPPRESSION_PATTERNS = [
+  /(?:\/\/|\/\*)\s*eslint-disable(?:-next-line|-line)?(?:\s|$)/i,
+  /@ts-ignore/i,
+  /@ts-nocheck/i,
+  /@ts-expect-error/i,
+  /prettier-ignore/i,
+  // Rust suppressions
+  /#\[allow\(/,
+  /#!\[allow\(/,
+  // Shell hygiene patterns (error swallowing, token-in-URL)
+  /\|\| true/,
+  /2>\/dev\/null/,
+  /\|\| bun install/,
+  /x-access-token/,
+  /git add -A/,
+  /--no-exit-code/,
+];
+
+// Files where suppression patterns are legitimate (config, the script itself, etc.)
+const EXCLUDED_FILES = [
+  // Vendored fork of @dank074/discord-video-stream — preserve upstream source as-is, including
+  // its @ts-expect-error comments (matched as a path prefix).
+  "packages/discord-video-stream/",
+  "scripts/checks/check-suppressions.ts",
+  // The detector's regression fixtures necessarily contain suppression text.
+  "scripts/checks/check-suppressions.test.ts",
+  // Same category as this file: a detector that names the pattern it bans.
+  // tasknotes-core enforces a zero-`#[allow]` policy in its Rust workspace, and
+  // the script that enforces it has to spell `#[allow(` in its grep and in its
+  // failure message.
+  "packages/tasknotes-core/ci/no-suppressions.sh",
+  "CHANGELOG.md",
+  "Cargo.toml",
+  "clippy.toml",
+  ".quality-baseline.json",
+  // Intentional: vite/client ImportMetaEnv declaration merging requires
+  // `interface` (same suppression as better-skill-capped's vite-env.d.ts,
+  // which predates this check; both are in the quality-ratchet baseline).
+  "packages/scout-for-lol/packages/app/src/vite-env.d.ts",
+  // Intentional: TanStack Router's Register declaration merging requires
+  // `interface`; a type alias cannot merge across modules.
+  "packages/better-skill-capped/src/router.tsx",
+  // Intentional: discord-player-youtubei types incompatible without --preserveSymlinks
+  "packages/birmel/src/music/extractors.ts",
+  // Intentional: Zod-validated discord.js Channel stub (60+ properties impractical to mock)
+  "packages/birmel/tests/agent-tools/tools/discord/channel-resolver.test.ts",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19
+  "packages/discord-plays-pokemon/packages/frontend/src/main.tsx",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19 (same issue as Pokemon)
+  "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
+  // Vendored third-party code: mupen64plus-core (GPL-2.0) — preserve upstream source as-is
+  "packages/discord-plays-mario-kart/wasm-src/code/src/mupen64plus-core/",
+  // Intentional: public Firebase web API key (same as better-skill-capped fetcher)
+  "packages/temporal/src/activities/fetcher.ts",
+  // Intentional: ha-codegen emits `/* eslint-disable */` into the generated HA schema header
+  "packages/home-assistant/src/codegen/emit.ts",
+  // Intentional: committed stub for the generated HA schema; gets overwritten by ha-codegen
+  "packages/temporal/src/generated/ha-schema.stub.ts",
+  // Machine-generated cdk8s CRD imports: update-imports.ts prepends
+  // `// @ts-nocheck` and cdk8s-cli emits `/* eslint-disable ... */` headers.
+  // Refreshed by the homelab-crd-imports-daily Temporal schedule; the
+  // quality-ratchet likewise excludes /generated/ paths.
+  "packages/homelab/src/cdk8s/generated/imports/",
+  // Intentional: compile-time type tests — @ts-expect-error is the whole point
+  "packages/home-assistant/test/typed-client.test-d.ts",
+  // Documentation: AGENTS.md files and docs mention suppression patterns as things to avoid
+  "AGENTS.md",
+  "CLAUDE.md",
+  "packages/docs/wiki/",
+  // Package-local documentation moved out of packages/docs/ (the working-document
+  // system retired in favor of Linear): operator runbooks and setup guides are prose,
+  // not automation code, and legitimately show example shell commands containing
+  // banned-pattern text (e.g. the Velero runbook's `zfs list ... 2>/dev/null`).
+  "packages/temporal/runbooks/",
+  "packages/macos-ai-subscription-tracker/docs/",
+  // Agent prompts are prose that PROHIBITS the banned patterns by name
+  // (e.g. refine-release-please.md tells the agent never to `git add -A`).
+  "scripts/prompts/",
+  "packages/dotfiles/AGENTS.md",
+  "packages/dotfiles/CLAUDE.md",
+  // Uses || true for grep exit code
+  "scripts/tools/quality-ratchet.ts",
+  // Prometheus exporter shell script: `2>/dev/null` falls back to a 0 metric
+  // when zpool/date are unavailable, which is the right behavior for scrape
+  // resilience; the ban targets automation scripts, not arbitrary shell.
+  "packages/homelab/src/cdk8s/src/resources/monitoring/scripts/zfs_zpool.sh",
+  // Intentional: writes a GIT_ASKPASS script that returns the literal string
+  // "x-access-token" as the git username (with $GH_TOKEN as the password).
+  // This is the recommended pattern that the AGENTS.md rule actually points
+  // toward — the ban is on putting `x-access-token` in URLs, not in askpass.
+  "packages/temporal/src/activities/data-dragon.ts",
+  // Same pattern: GIT_ASKPASS script for the agent-task workdir clone
+  // (lib/pr-review-workdir.ts — legacy name; now used by agent-task). The
+  // literal "x-access-token" is the username GitHub's HTTPS clone expects
+  // when the password is a PAT; not a token-in-URL.
+  "packages/temporal/src/lib/pr-review-workdir.ts",
+  // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
+  // git username for the bare blobless clone the ci/merge-conflict checker uses
+  // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.
+  "packages/temporal/src/activities/check-pr-merge-conflicts-git.ts",
+  // Intentional: Sentry ErrorBoundary class types incompatible with React 19
+  // (same pattern as discord-plays-pokemon/packages/frontend/src/main.tsx)
+  "packages/discord-plays-mario-kart/packages/frontend/src/main.tsx",
+];
+
+type Finding = {
+  file: string;
+  lineNumber: number;
+  line: string;
+};
+
+export function hasSuppressionPattern(line: string): boolean {
+  return SUPPRESSION_PATTERNS.some((pattern) => pattern.test(line));
+}
+
+const POSTAL_BOUNDARY_FILES = new Set([
+  "packages/temporal/src/activities/reports/report-delivery.ts",
+  "packages/temporal/src/shared/infra/postal.test.ts",
+  "packages/temporal/src/shared/infra/postal.ts",
+]);
+
+export function isPostalBoundaryViolation(
+  path: string,
+  contents: string,
+): boolean {
+  const normalizedPath = path.replaceAll("\\", "/");
+  return (
+    contents.includes("sendPostalEmail") &&
+    !POSTAL_BOUNDARY_FILES.has(normalizedPath)
+  );
+}
+
+async function checkPostalBoundary(): Promise<void> {
+  const violations: string[] = [];
+  const glob = new Bun.Glob("packages/temporal/src/**/*.ts");
+  for await (const path of glob.scan({ cwd: ".", onlyFiles: true })) {
+    if (isPostalBoundaryViolation(path, await Bun.file(path).text())) {
+      violations.push(path);
+    }
+  }
+  if (violations.length > 0) {
+    throw new Error(
+      `Direct Postal delivery is restricted to the shared report sender: ${violations.join(", ")}`,
+    );
+  }
+}
+
+async function main(): Promise<void> {
+  console.log("Checking for new code quality suppressions...\n");
+  await checkPostalBoundary();
+
+  // In CI mode, skip staged-diff check (quality-ratchet enforces total counts)
+  if (process.argv.includes("--ci")) {
+    console.log(
+      "Postal boundary passed; staged suppression diff is covered elsewhere in CI",
+    );
+    return;
+  }
+
+  // Get the diff of staged files (bypass external diff tools)
+  const diffResult =
+    await $`git diff --cached --unified=0 --no-ext-diff`.quiet();
+  const diff = diffResult.text();
+
+  if (!diff) {
+    console.log("No staged changes to check");
+    return;
+  }
+
+  const findings: Finding[] = [];
+  const lines = diff.split("\n");
+  let currentFile = "";
+  let currentLineNumber = 0;
+
+  for (const line of lines) {
+    // Track which file we're in
+    if (line.startsWith("+++ ")) {
+      const match = /^\+\+\+ [a-z]\/(.*)/.exec(line);
+      if (match?.[1] !== undefined) {
+        currentFile = match[1];
+        // Skip checking excluded files
+        if (
+          EXCLUDED_FILES.some(
+            (f) => currentFile.endsWith(f) || currentFile.startsWith(f),
+          )
+        ) {
+          currentFile = "";
+        }
+      }
+      continue;
+    }
+
+    // Skip if we're in an excluded file
+    if (!currentFile) {
+      continue;
+    }
+
+    // Track line numbers from diff hunks
+    if (line.startsWith("@@")) {
+      const match = /\+(\d+)/.exec(line);
+      if (match?.[1] !== undefined) {
+        currentLineNumber = Number.parseInt(match[1]);
+      }
+      continue;
+    }
+
+    // Only check added lines (starting with +)
+    if (!line.startsWith("+") || line.startsWith("+++")) {
+      continue;
+    }
+
+    const cleanedLine = line.slice(1); // Remove the + prefix
+
+    // Check if line matches any suppression pattern
+    if (hasSuppressionPattern(cleanedLine)) {
+      findings.push({
+        file: currentFile,
+        lineNumber: currentLineNumber,
+        line: cleanedLine.trim(),
+      });
+    }
+
+    currentLineNumber++;
+  }
+
+  if (findings.length === 0) {
+    console.log("No new code quality suppressions found");
+    return;
+  }
+
+  // Report findings
+  console.error("Found new code quality suppressions:\n");
+
+  // Group by file
+  const byFile = findings.reduce<Record<string, Finding[]>>((acc, finding) => {
+    const bucket = (acc[finding.file] ??= []);
+    bucket.push(finding);
+    return acc;
+  }, {});
+
+  for (const [file, fileFindings] of Object.entries(byFile)) {
+    console.error(`  ${file}`);
+    for (const finding of fileFindings) {
+      console.error(`   Line ${String(finding.lineNumber)}: ${finding.line}`);
+    }
+    console.error("");
+  }
+
+  console.error("Code quality suppressions detected!");
+  console.error("");
+  console.error("Please review these suppressions carefully:");
+  console.error("  - Can you fix the underlying issue instead?");
+  console.error("  - Is the suppression absolutely necessary?");
+  console.error("  - Have you documented why it's needed?");
+  console.error("");
+  console.error("If you've reviewed and these are intentional:");
+  console.error("  1. Add a comment explaining why");
+  console.error("  2. Run: git commit --no-verify");
+  console.error("");
+
+  process.exit(1);
+}
+
+if (import.meta.main) {
+  await main();
+}

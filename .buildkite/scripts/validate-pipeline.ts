@@ -221,10 +221,10 @@ for (const required of [
   '- "packages/homelab/src/helm-types/**"',
   "generate-helm-types --check",
   "ci-changed.ts helm-types",
-  "scripts/deploy-site.ts",
-  "scripts/scout-site-release.ts",
+  "scripts/release/deploy-site.ts",
+  "scripts/release/scout-site-release.ts",
   "helm-push.ts",
-  "scripts/release.ts --dry-run",
+  "scripts/release/release.ts --dry-run",
 ]) {
   requireIncludes(
     prDryrun,
@@ -462,11 +462,11 @@ assertNoImplicitBunRuntime([
 
 await assertNoNestedBunRuntime([
   "scripts/lib/github-auth.ts",
-  "scripts/release.ts",
-  "scripts/deploy-site.ts",
-  "scripts/scout-site-release.ts",
-  "scripts/publish-npm.ts",
-  "scripts/check-large-files.ts",
+  "scripts/release/release.ts",
+  "scripts/release/deploy-site.ts",
+  "scripts/release/scout-site-release.ts",
+  "scripts/release/publish-npm.ts",
+  "scripts/checks/check-large-files.ts",
   "packages/scout-for-lol/scripts/build-bucket.ts",
   "packages/homelab/scripts/helm-push.ts",
   "packages/homelab/scripts/smoke-images.ts",

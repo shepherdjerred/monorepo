@@ -14,13 +14,13 @@
 //     `packages/tasks-for-obsidian` does for iOS e2e. Root `scripts/` is the
 //     home of things the Linux graph runs.
 //  2. **Root `scripts/` is inside a 90%-coverage gate.** `scripts/` is a bun
-//     workspace and `scripts/check-script-coverage.ts` fails the build if its
+//     workspace and `scripts/checks/check-script-coverage.ts` fails the build if its
 //     aggregate function/line coverage drops below 90%. A file whose body is
 //     `xcodebuild`, `notarytool`, `codesign` and `spctl` invocations cannot be
 //     covered by TypeScript tests on a Linux agent, and manufacturing coverage for it
 //     would be ceremony rather than assurance.
 //  3. **Its inputs are here.** It reads `project.yml`'s generated `Info.plist`,
-//     the entitlements file, and the archive. Root `scripts/release.ts` already
+//     the entitlements file, and the archive. Root `scripts/release/release.ts` already
 //     exists and means release-please for the npm packages; a second unrelated
 //     "release" there would be a name collision on top of everything else.
 //

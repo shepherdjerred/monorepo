@@ -22,7 +22,7 @@ export default defineConfig({
   // Engine and the generated report index. The path is repo-root relative
   // (this package is four levels below the root). The directory MUST be the
   // sanitizeWorkspace() form of the package name (@scout-for-lol/evals ->
-  // scout-for-lol__evals) so scripts/namespace-playwright-reports.ts maps it to
+  // scout-for-lol__evals) so scripts/ci/namespace-playwright-reports.ts maps it to
   // a known manifest workspace instead of throwing "unknown workspace".
   reporter: isCI
     ? [

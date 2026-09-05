@@ -7,7 +7,7 @@ glob_matcher: doublestar
 commit-msg:
   jobs:
     - name: validate-commit-msg
-      run: bun scripts/validate-commit-msg.ts {1}
+      run: bun scripts/misc/validate-commit-msg.ts {1}
 
 pre-commit:
   jobs:
@@ -20,13 +20,13 @@ pre-commit:
 
           - name: merge-conflicts
             glob: "**/*.{ts,tsx,rs,json,yaml,yml,md,sh,astro,toml}"
-            run: bun scripts/check-merge-conflicts.ts {staged_files}
+            run: bun scripts/checks/check-merge-conflicts.ts {staged_files}
 
           - name: large-files
-            run: bun scripts/check-large-files.ts {staged_files}
+            run: bun scripts/checks/check-large-files.ts {staged_files}
 
           - name: line-endings
-            run: bun scripts/check-line-endings.ts {staged_files}
+            run: bun scripts/checks/check-line-endings.ts {staged_files}
 
           - name: env-var-names
             glob: "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}"
@@ -34,10 +34,10 @@ pre-commit:
               - "sandbox/archive/**"
               - "**/generated/**"
               - "**/node_modules/**"
-            run: bun scripts/check-env-var-names.ts {staged_files}
+            run: bun scripts/checks/check-env-var-names.ts {staged_files}
 
           - name: check-suppressions
-            run: bun scripts/check-suppressions.ts
+            run: bun scripts/checks/check-suppressions.ts
 
           # Staged paths select which directories to report on; the counts
           # always come from each directory's full contents.
@@ -46,7 +46,7 @@ pre-commit:
             exclude:
               - "sandbox/**"
               - "**/node_modules/**"
-            run: bun scripts/check-directory-file-counts.ts {staged_files}
+            run: bun scripts/checks/check-directory-file-counts.ts {staged_files}
 
           # Swift is the one language Buildkite cannot build: the CI image ships
           # SwiftLint's static binary but no toolchain, and standing up a
@@ -123,7 +123,7 @@ pre-commit:
 
           # Formatting is intentionally staged-file-only locally. CI runs the
           # sharded `//#prettier-*` tasks over the whole repository
-          # (scripts/repo-shards.ts).
+          # (scripts/ci/repo-shards.ts).
           - name: prettier
             glob: "**/*.{ts,tsx,js,jsx,json,jsonc,yaml,yml,md,css,astro,html,graphql}"
             exclude:
@@ -133,5 +133,5 @@ pre-commit:
               # CLAUDE.md is a symlink to AGENTS.md everywhere; prettier
               # errors on explicitly-passed symlinks. AGENTS.md is linted.
               - "**/CLAUDE.md"
-            run: bun scripts/prettier-staged.ts {staged_files}
+            run: bun scripts/tools/prettier-staged.ts {staged_files}
             stage_fixed: true

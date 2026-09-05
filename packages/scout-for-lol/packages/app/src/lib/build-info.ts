@@ -3,7 +3,7 @@ import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
 
 /**
  * Build identity stamped into this bundle at site-release build time
- * (scripts/scout-site-release.ts → VITE_APP_VERSION / VITE_GIT_SHA /
+ * (scripts/release/scout-site-release.ts → VITE_APP_VERSION / VITE_GIT_SHA /
  * VITE_CONTRACT_HASH). All absent in local dev, where the fallback "dev"
  * values also disable the contract-mismatch banner.
  */

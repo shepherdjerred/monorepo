@@ -15,8 +15,8 @@
     "dev:seed": "bun scripts/dev-seed.ts",
     "dev:login": "bun scripts/dev-login.ts",
     "check:assets": "bun run scripts/check-asset-sizes.ts",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
     "@scout-for-lol/backend": "workspace:*",

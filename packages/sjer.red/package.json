@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && astro build && bun ../../scripts/check-built-internal-links.ts sjer.red",
+    "build": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit && astro build && bun ../../scripts/checks/check-built-internal-links.ts sjer.red",
     "preview": "astro preview",
     "astro": "astro",
     "test:update": "bun run build && bun --no-install --bun playwright test --update-snapshots=all",
@@ -13,7 +13,7 @@
     "lint:fix": "eslint --cache --fix",
     "typecheck": "astro check && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test:e2e": "bun --no-install --bun playwright test",
-    "deploy": "bun ../../scripts/deploy-site.ts sjer-red"
+    "deploy": "bun ../../scripts/release/deploy-site.ts sjer-red"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.8",

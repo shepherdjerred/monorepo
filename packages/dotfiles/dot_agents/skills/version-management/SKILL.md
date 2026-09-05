@@ -226,7 +226,7 @@ pipeline (`.buildkite/pipeline.yml`, landed 2026-07 after the old Dagger CI was
 removed): the `images` step bakes/pushes images (tags `:$GIT_SHA` + `:latest`;
 the `2.0.0-<build>` in a pin is a cosmetic label on a digest-pinned ref) and
 records **content-gated** digests, and the `version commit-back` step
-(`scripts/update-versions.ts --commit-back`) opens the auto-merge
+(`scripts/release/update-versions.ts --commit-back`) opens the auto-merge
 "chore: bump pending image versions" PR rewriting the matching catalog entries:
 
 ```json

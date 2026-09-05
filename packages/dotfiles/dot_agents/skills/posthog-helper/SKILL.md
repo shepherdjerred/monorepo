@@ -78,7 +78,7 @@ toolkit posthog api call --confirm <tool> '<validated-json-input>'
 Do not treat a source check or HTTP capture response as stored-event proof.
 They prove different layers:
 
-1. `bun scripts/check-analytics-sites.ts` validates repository tracker source.
+1. `bun scripts/checks/check-analytics-sites.ts` validates repository tracker source.
 2. A capture response establishes only that the endpoint accepted a request.
 3. Live Events or a schema-backed read establishes that PostHog stored and made
    the event queryable.

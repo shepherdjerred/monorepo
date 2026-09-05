@@ -6,7 +6,17 @@
       "project": [".buildkite/**/*.ts"]
     },
     "scripts": {
-      "entry": ["*.ts", "observability/**/*.ts", "lib/image-pin-catalog.ts"],
+      "entry": [
+        "*.ts",
+        "checks/*.ts",
+        "ci/*.ts",
+        "release/*.ts",
+        "tools/*.ts",
+        "review/*.ts",
+        "misc/*.ts",
+        "observability/**/*.ts",
+        "lib/image-pin-catalog.ts"
+      ],
       "project": ["**/*.ts"]
     },
     "packages/birmel": {

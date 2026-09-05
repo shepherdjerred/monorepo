@@ -191,7 +191,7 @@ const workspacePaths = [
 ] as const;
 
 const deployScripts = [
-  "scripts/deploy-site.ts",
+  "scripts/release/deploy-site.ts",
   "scripts/lib/s3-static-site.ts",
   "scripts/lib/run.ts",
 ] as const;
@@ -252,7 +252,7 @@ const sitePaths = {
     // Registry corrections must rebuild Scout with the corrected site ID.
     "config/analytics-sites.json",
     "scripts/package.json",
-    "scripts/scout-site-release.ts",
+    "scripts/release/scout-site-release.ts",
     "scripts/lib/pin-candidates.ts",
     "scripts/lib/run.ts",
     "scripts/lib/scout-customs-artifact.ts",
@@ -353,7 +353,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/astro-opengraph-images",
     "packages/webring",
     "packages/homelab/src/helm-types",
-    "scripts/publish-npm.ts",
+    "scripts/release/publish-npm.ts",
     "scripts/lib",
   ],
   ...sitePaths,
@@ -368,7 +368,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/version-catalog",
     "packages/homelab/src/cdk8s/src/versions.ts",
     "scripts/package.json",
-    "scripts/scout-site-release.ts",
+    "scripts/release/scout-site-release.ts",
     "scripts/lib",
   ],
   cooklang: [...workspacePaths, "packages/cooklang-for-obsidian"],

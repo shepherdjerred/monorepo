@@ -27,8 +27,8 @@ steps:
         echo "complete reporting run did not emit the docs-wiki Playwright JUnit report" >&2
         exit 1
       fi
-      bun --no-install scripts/namespace-playwright-reports.ts
-      bun --no-install scripts/write-ci-report-index.ts
+      bun --no-install scripts/ci/namespace-playwright-reports.ts
+      bun --no-install scripts/ci/write-ci-report-index.ts
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
@@ -102,9 +102,9 @@ steps:
       set +e
       bun --no-install run --cwd packages/scout-for-lol/packages/design-audit test:e2e:ci
       audit_status=$$?
-      bun --no-install scripts/namespace-playwright-reports.ts
+      bun --no-install scripts/ci/namespace-playwright-reports.ts
       namespace_status=$$?
-      bun --no-install scripts/write-ci-report-index.ts
+      bun --no-install scripts/ci/write-ci-report-index.ts
       reporting_status=$$?
       set -e
       if [ "$$namespace_status" -ne 0 ]; then
@@ -174,11 +174,11 @@ steps:
       test_status=$?
       bun --no-install run script-coverage
       script_coverage_status=$?
-      bun --no-install scripts/annotate-turbo-summary.ts
+      bun --no-install scripts/ci/annotate-turbo-summary.ts
       annotation_status=$?
-      bun --no-install scripts/write-ci-report-index.ts
+      bun --no-install scripts/ci/write-ci-report-index.ts
       reporting_status=$?
-      bun --no-install scripts/write-coverage-summary.ts --require-complete
+      bun --no-install scripts/ci/write-coverage-summary.ts --require-complete
       coverage_status=$?
       set -e
       if [ "$$test_status" -eq 0 ] && [ "$$annotation_status" -ne 0 ]; then

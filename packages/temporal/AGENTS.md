@@ -213,7 +213,7 @@ bodies to S3 (`llm-archive` bucket) and forwards a slim span to Tempo.
   through `src/activities/codex-agent-sdk-runner.ts`. Both resolve stable
   catalog IDs to OpenRouter routes, pass the service-scoped OpenRouter key to
   the SDK constructor, and keep stable IDs in activity telemetry. No activity
-  may launch a `claude` or `codex` subprocess; `scripts/check-ai-architecture.ts`
+  may launch a `claude` or `codex` subprocess; `scripts/checks/check-ai-architecture.ts`
   enforces that repo-wide.
 
 Emit the span before cancellation, validation, or effect-reconciliation failure
@@ -743,7 +743,7 @@ This is not theoretical: the Data Dragon lane-prior step passed `--output packag
 ## Review threads (CI gate)
 
 The Buildkite pipeline has one **blocking** Codex review gate on PR builds
-(`scripts/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key
+(`scripts/review/wait-for-review.ts`, `.buildkite/pipeline.yml`, step key
 `codex-review-gate`): every non-outdated Codex finding that still applies to the
 latest revision must be resolved before the aggregate
 `buildkite/monorepo/pr` required status can go green. The gate implementation
