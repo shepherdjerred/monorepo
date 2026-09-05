@@ -13,6 +13,7 @@ import {
   duelSeriesVisibleTo,
   effectiveParticipantDiscordId,
 } from "#src/progression/duels/series.ts";
+import { latestRoundRobinResults } from "#src/progression/duels/round-robin.ts";
 
 export async function listGuildDuels(
   db: ExtendedPrismaClient,
@@ -223,22 +224,7 @@ export async function getDuelEventStandings(
     });
   });
   if (event.format !== "round_robin") return { standings, ranks: null };
-  const results = event.series.flatMap((series) => {
-    if (series.winnerCompetitorId === null) return [];
-    return [
-      {
-        firstCompetitorId: series.competitorOneId,
-        secondCompetitorId: series.competitorTwoId,
-        winnerCompetitorId: series.winnerCompetitorId,
-        firstGameWins: series.games.filter(
-          (game) => game.winnerCompetitorId === series.competitorOneId,
-        ).length,
-        secondGameWins: series.games.filter(
-          (game) => game.winnerCompetitorId === series.competitorTwoId,
-        ).length,
-      },
-    ];
-  });
+  const results = latestRoundRobinResults(event.series);
   return {
     standings,
     ranks: rankRoundRobin(

@@ -16,6 +16,7 @@ import {
 } from "#src/database/index.ts";
 import { duelSeriesParticipantsCreateData } from "#src/progression/duels/competitors.ts";
 import { launchDuelSeries } from "#src/progression/duels/launch.ts";
+import { latestRoundRobinResults } from "#src/progression/duels/round-robin.ts";
 
 type EventWithSeries = NonNullable<
   Awaited<ReturnType<typeof loadEventForAdvancement>>
@@ -359,32 +360,7 @@ async function advanceRoundRobin(
   ) {
     return [];
   }
-  // A tiebreak rematch is the decisive meeting for that pair. Keep only the
-  // latest series for each unordered matchup so rankRoundRobin cannot select
-  // an earlier result with its first-match lookup.
-  const latestByMatchup = new Map<string, (typeof event.series)[number]>();
-  for (const series of event.series.toSorted(
-    (left, right) =>
-      (left.roundNumber ?? 0) - (right.roundNumber ?? 0) ||
-      left.createdAt.getTime() - right.createdAt.getTime() ||
-      left.id.localeCompare(right.id),
-  )) {
-    const matchup = [series.competitorOneId, series.competitorTwoId]
-      .toSorted()
-      .join(":");
-    latestByMatchup.set(matchup, series);
-  }
-  const results = [...latestByMatchup.values()].map((series) => ({
-    firstCompetitorId: series.competitorOneId,
-    secondCompetitorId: series.competitorTwoId,
-    winnerCompetitorId: series.winnerCompetitorId ?? "",
-    firstGameWins: series.games.filter(
-      (game) => game.winnerCompetitorId === series.competitorOneId,
-    ).length,
-    secondGameWins: series.games.filter(
-      (game) => game.winnerCompetitorId === series.competitorTwoId,
-    ).length,
-  }));
+  const results = latestRoundRobinResults(event.series);
   const ranks = rankRoundRobin(
     event.entrants.map((entrant) => entrant.competitorId),
     results,
