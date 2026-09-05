@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { Link, useNavigate, useParams } from "react-router";
@@ -238,9 +239,7 @@ export function CompetitionForm() {
     return (
       <CompetitionCreatePage
         guildId={guildId}
-        channels={channelsQuery.data}
-        channelsLoading={channelsQuery.isLoading}
-        channelsError={channelsQuery.error?.message ?? null}
+        channels={Loaded.fromQuery(channelsQuery, ["listChannels"])}
         onUsePreset={handleUsePreset}
         onCreated={(createdId) => {
           allowNavigation.current = true;
@@ -273,9 +272,13 @@ export function CompetitionForm() {
 
 function CompetitionCreatePage(props: {
   guildId: string;
-  channels: { id: string; name: string }[] | undefined;
-  channelsLoading: boolean;
-  channelsError: string | null;
+  /**
+   * One value in place of `channels` / `channelsLoading` / `channelsError`.
+   * Those three could disagree, and the page resolved the disagreement by
+   * checking loading first, so a channel list that failed while another
+   * dependency was still loading reported "Loading builder…" indefinitely.
+   */
+  channels: Loaded<{ id: string; name: string }[]>;
   onUsePreset: (example: CompetitionExample) => void;
   onCreated: (competitionId: number) => void;
   legacyForm: React.ReactNode;
@@ -286,15 +289,22 @@ function CompetitionCreatePage(props: {
       guildId: props.guildId,
     }),
   );
-  if (builderQuery.isLoading || props.channelsLoading) {
+  const page = Loaded.all({
+    builder: Loaded.fromQuery(builderQuery, ["builderCapabilities"]),
+    channels: props.channels,
+  });
+  if (page.status === "loading") {
     return <p className="text-sm text-scout-subtle">Loading builder…</p>;
   }
-  const error = builderQuery.error?.message ?? props.channelsError;
-  if (error !== null) {
-    return <p className="text-sm text-scout-danger">{error}</p>;
+  if (page.status === "error") {
+    return (
+      <p className="text-sm text-scout-danger">
+        {Loaded.messageOf(page.errors[0].error)}
+      </p>
+    );
   }
 
-  const usesV2 = builderQuery.data?.builderV2Enabled === true;
+  const usesV2 = page.data.builder.builderV2Enabled;
   return (
     <div className={`${usesV2 ? "max-w-5xl" : "max-w-2xl"} space-y-4`}>
       <div className="flex items-center justify-between">
@@ -308,7 +318,7 @@ function CompetitionCreatePage(props: {
       {usesV2 ? (
         <CompetitionBuilderV2
           guildId={props.guildId}
-          channels={props.channels ?? []}
+          channels={page.data.channels}
           onCreated={props.onCreated}
         />
       ) : (

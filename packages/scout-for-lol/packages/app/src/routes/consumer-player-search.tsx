@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -148,10 +149,7 @@ export function ConsumerPlayerSearch() {
           statusQuery.data.state,
           <>
             <PlayerHome
-              yourProfiles={homeQuery.data?.yourProfiles}
-              recentPlayers={homeQuery.data?.recentPlayers}
-              pending={homeQuery.isPending || homeQuery.isFetching}
-              error={homeQuery.isError}
+              home={Loaded.fromQuery(homeQuery, ["consumerPlayer.home"])}
               onRetry={() => {
                 void homeQuery.refetch();
               }}
@@ -206,21 +204,29 @@ export function ConsumerPlayerSearch() {
   );
 }
 
+export type PlayerHomeData = {
+  yourProfiles: HomePlayer[];
+  recentPlayers: HomePlayer[];
+};
+
 export function PlayerHome(props: {
-  yourProfiles: HomePlayer[] | undefined;
-  recentPlayers: HomePlayer[] | undefined;
-  pending: boolean;
-  error: boolean;
+  /**
+   * One value in place of `yourProfiles` / `recentPlayers` / `pending` /
+   * `error`. `fetching` is read alongside `status` because this hub is behind
+   * a consumer access check and deliberately waits for a fresh answer rather
+   * than showing a cached one.
+   */
+  home: Loaded<PlayerHomeData>;
   onRetry: () => void;
 }) {
-  if (props.pending) {
+  if (props.home.status === "loading" || props.home.fetching) {
     return (
       <p className="text-sm text-scout-subtle" aria-live="polite">
         Loading your player hub…
       </p>
     );
   }
-  if (props.error) {
+  if (props.home.status === "error") {
     return (
       <RetryCard
         title="Your player hub didn't load"
@@ -234,13 +240,13 @@ export function PlayerHome(props: {
       <PlayerHomeSection
         title="Your profiles"
         description="Every Scout profile linked to your Discord account across enabled shared servers."
-        players={props.yourProfiles ?? []}
+        players={props.home.data.yourProfiles}
         empty="No Scout player is linked to your Discord account yet. You can still search everyone you share access to."
       />
       <PlayerHomeSection
         title="Recently active"
         description="Six other players with the newest matches Scout recorded."
-        players={props.recentPlayers ?? []}
+        players={props.home.data.recentPlayers}
         empty="No other recently active players are in Scout's stored coverage yet."
       />
     </div>
