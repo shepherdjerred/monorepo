@@ -142,26 +142,6 @@ export function playerDetailLoader({ params }: LoaderFunctionArgs): null {
   return null;
 }
 
-export function playerProfileLoader({ params }: LoaderFunctionArgs): null {
-  const { guildId, alias } = params;
-  if (guildId === undefined || alias === undefined) return null;
-  void preloadQuery(
-    queryClient.query(
-      trpcOptions.player.profileSummary.queryOptions({ guildId, alias }),
-    ),
-  );
-  void preloadQuery(
-    queryClient.query(
-      trpcOptions.player.matchHistory.queryOptions({
-        guildId,
-        alias,
-        limit: 20,
-      }),
-    ),
-  );
-  return null;
-}
-
 export function competitionsLoader({ params }: LoaderFunctionArgs): null {
   const { guildId } = params;
   if (guildId === undefined) return null;

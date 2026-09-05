@@ -6,6 +6,7 @@ import { scoutThemes } from "#src/generated/tokens.ts";
 import { scoutOgCard } from "#src/brand/og-card.ts";
 import { outlineText } from "./outline-font.ts";
 import {
+  scoutAdaptiveMarkSvg,
   scoutMarkInner,
   scoutMarkStroke,
   scoutMarkSvg,
@@ -21,6 +22,9 @@ const frontendPublic = fileURLToPath(
 );
 const evalsPublic = fileURLToPath(
   new URL("../../evals/public/", import.meta.url),
+);
+const docsPublic = fileURLToPath(
+  new URL("../../docs-site/public/", import.meta.url),
 );
 const desktopDir = fileURLToPath(new URL("../../desktop/", import.meta.url));
 const desktopIcons = `${desktopDir}src-tauri/icons/`;
@@ -106,9 +110,15 @@ const emblem = scoutMarkSvg({
   fill: "currentColor",
   strokeWidth: scoutMarkStroke.ui,
 });
-const compass = scoutMarkSvg({
-  stroke: colors.primary,
-  fill: colors.primary,
+const compass = scoutAdaptiveMarkSvg({
+  light: {
+    outer: colors.primary,
+    inner: colors.primary,
+  },
+  dark: {
+    outer: dark.primary,
+    inner: dark.accent,
+  },
   strokeWidth: scoutMarkStroke.favicon,
   ariaLabel: "Scout",
 });
@@ -259,6 +269,7 @@ await emit(
   ]),
 );
 await emit(`${evalsPublic}favicon.svg`, compass);
+await emit(`${docsPublic}favicon.svg`, compass);
 
 const ogSvg = await satori(
   scoutOgCard({

@@ -33,7 +33,7 @@ export function ReportCommonPresets(props: {
                     key={preset.id}
                     type="button"
                     variant="outline"
-                    className="h-auto justify-start whitespace-normal p-3 text-left"
+                    className="h-auto items-start justify-start whitespace-normal p-3 text-left"
                     onClick={() => {
                       track("report_preset_used", {
                         category: preset.category,
@@ -41,8 +41,8 @@ export function ReportCommonPresets(props: {
                       props.onUsePreset(preset);
                     }}
                   >
-                    <FileText className="mt-0.5" />
-                    <span className="space-y-1">
+                    <FileText className="mt-0.5 size-5 shrink-0" />
+                    <span className="w-full space-y-1 text-left">
                       <span className="block text-sm font-medium leading-5">
                         {preset.title}
                       </span>

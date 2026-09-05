@@ -62,7 +62,7 @@ export function GuildWorkspace() {
 
   if (guildId === undefined) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
         <p className="text-sm text-scout-danger">Missing guild id</p>
       </div>
     );
@@ -89,13 +89,13 @@ export function GuildWorkspace() {
   const accessDenied = !isLoading && !hasAccess;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase text-scout-subtle">
+          <p className="text-xs font-medium uppercase tracking-wider text-scout-subtle">
             Guild
           </p>
-          <h1 className="text-lg font-semibold tracking-tight">
+          <h1 className="font-serif text-3xl font-bold tracking-tight text-scout-ink">
             {guild?.name ?? "…"}
           </h1>
         </div>

@@ -6,6 +6,7 @@ import {
   type ReportAiEditStatus,
   type ReportAiFinalDraft,
   type ReportAiPreviewSummary,
+  type ReportAiQuotaSnapshot,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
 import {
@@ -331,6 +332,69 @@ export function ReportAiEditor(props: {
   );
 }
 
+function selectBindingQuota(
+  snapshots: ReportAiEditStatus["quota"],
+): ReportAiQuotaSnapshot | null {
+  if (snapshots.length === 0) return null;
+
+  // 1. Any exhausted quota (0 remaining) is actively blocking
+  const exhausted = snapshots.filter((s) => s.remaining === 0);
+  if (exhausted.length > 0) {
+    return exhausted.reduce((earliest, s) =>
+      new Date(s.resetsAt) < new Date(earliest.resetsAt) ? s : earliest,
+    );
+  }
+
+  // 2. Any partially consumed quota
+  const consumed = snapshots.filter((s) => s.remaining < s.limit);
+  if (consumed.length > 0) {
+    return consumed.reduce((tightest, s) => {
+      if (s.remaining !== tightest.remaining) {
+        return s.remaining < tightest.remaining ? s : tightest;
+      }
+      return s.scope === "user_guild" ? s : tightest;
+    });
+  }
+
+  // 3. If unconsumed, prefer user's daily quota, then any user quota, else first
+  const userDay = snapshots.find(
+    (s) => s.scope === "user_guild" && s.window === "day",
+  );
+  if (userDay !== undefined) return userDay;
+
+  const anyUser = snapshots.find((s) => s.scope === "user_guild");
+  if (anyUser !== undefined) return anyUser;
+
+  return snapshots[0] ?? null;
+}
+
+function quotaWindowLabel(
+  window: ReportAiEditStatus["quota"][number]["window"],
+): string {
+  switch (window) {
+    case "minute":
+      return "minute";
+    case "hour":
+      return "hour";
+    case "day":
+      return "day";
+    case "week":
+      return "week";
+  }
+}
+
+function bindingQuotaDescription(
+  snapshot: ReportAiEditStatus["quota"][number],
+): string {
+  const scopePrefix =
+    snapshot.scope === "user_guild"
+      ? ""
+      : snapshot.scope === "guild"
+        ? "server "
+        : "service ";
+  return `${snapshot.remaining.toString()} of ${snapshot.limit.toString()} ${scopePrefix}edits left this ${quotaWindowLabel(snapshot.window)}`;
+}
+
 function QuotaSummary(props: { status: ReportAiEditStatus | undefined }) {
   if (props.status === undefined) {
     return <p className="text-xs text-scout-subtle">Loading credits…</p>;
@@ -338,20 +402,46 @@ function QuotaSummary(props: { status: ReportAiEditStatus | undefined }) {
   if (props.status.exempt) {
     return null;
   }
+
+  const binding = selectBindingQuota(props.status.quota);
+
   return (
-    <div className="grid gap-x-4 gap-y-1 sm:grid-cols-2">
-      {props.status.quota.map((snapshot) => (
-        <p
-          key={`${snapshot.scope}-${snapshot.window}`}
-          className="text-xs text-scout-subtle"
-        >
-          <span className="font-medium text-scout-ink">
-            {quotaScopeLabel(snapshot.scope)} {snapshot.window}:
-          </span>{" "}
-          {snapshot.remaining.toString()} of {snapshot.limit.toString()}{" "}
-          remaining · resets {formatReset(snapshot.resetsAt)}
-        </p>
-      ))}
+    <div className="space-y-1">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-scout-subtle">
+        <span>
+          {binding === null ? (
+            "Credits available"
+          ) : (
+            <>
+              <span className="font-medium text-scout-ink">
+                {bindingQuotaDescription(binding)}
+              </span>
+              {binding.remaining < binding.limit ? (
+                <> · resets {formatReset(binding.resetsAt)}</>
+              ) : null}
+            </>
+          )}
+        </span>
+      </div>
+      <details className="text-xs text-scout-subtle">
+        <summary className="cursor-pointer text-[11px] text-scout-subtle hover:text-scout-ink">
+          Details
+        </summary>
+        <div className="mt-1.5 grid gap-x-4 gap-y-1 rounded border border-border/60 bg-scout-hover/20 p-2 sm:grid-cols-2">
+          {props.status.quota.map((snapshot) => (
+            <p
+              key={`${snapshot.scope}-${snapshot.window}`}
+              className="text-[11px] text-scout-subtle"
+            >
+              <span className="font-medium text-scout-ink">
+                {quotaScopeLabel(snapshot.scope)} {snapshot.window}:
+              </span>{" "}
+              {snapshot.remaining.toString()} of {snapshot.limit.toString()}{" "}
+              remaining · resets {formatReset(snapshot.resetsAt)}
+            </p>
+          ))}
+        </div>
+      </details>
     </div>
   );
 }

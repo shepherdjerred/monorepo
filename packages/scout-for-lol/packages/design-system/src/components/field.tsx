@@ -21,12 +21,24 @@ export const Label = forwardRef<
 ));
 Label.displayName = "Label";
 
-export const Input = forwardRef<
-  HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement>
->(({ className, ...props }, ref) => (
-  <input ref={ref} className={cn("scout-control", className)} {...props} />
-));
+export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+  "data-empty"?: boolean | string;
+};
+
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  ({ className, value, "data-empty": dataEmptyProp, ...props }, ref) => {
+    const dataEmpty = dataEmptyProp ?? (value === "" ? "true" : undefined);
+    return (
+      <input
+        ref={ref}
+        data-empty={dataEmpty}
+        value={value}
+        className={cn("scout-control", className)}
+        {...props}
+      />
+    );
+  },
+);
 Input.displayName = "Input";
 
 export const Textarea = forwardRef<

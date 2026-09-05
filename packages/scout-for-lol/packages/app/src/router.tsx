@@ -1,4 +1,9 @@
-import { createBrowserRouter, redirect, type RouteObject } from "react-router";
+import {
+  createBrowserRouter,
+  Navigate,
+  redirect,
+  type RouteObject,
+} from "react-router";
 import { Login } from "#src/routes/login.tsx";
 import { GuildPicker } from "#src/routes/guild-picker.tsx";
 import { ManageServers } from "#src/routes/manage-servers.tsx";
@@ -13,7 +18,6 @@ import {
 } from "#src/routes/guild-workspace.tsx";
 import { PlayerList } from "#src/routes/player-list.tsx";
 import { PlayerDetail } from "#src/routes/player-detail.tsx";
-import { PlayerProfile } from "#src/routes/player-profile.tsx";
 import { CompetitionList } from "#src/routes/competition-list.tsx";
 import { CompetitionDetail } from "#src/routes/competition-detail.tsx";
 import { CompetitionForm } from "#src/routes/competition-form.tsx";
@@ -51,7 +55,6 @@ import {
   exploreLoader,
   guildLoader,
   playerDetailLoader,
-  playerProfileLoader,
   playersLoader,
   reportDetailLoader,
   reportsLoader,
@@ -80,18 +83,14 @@ const guildChildren: RouteObject[] = [
     errorElement: <RouteErrorPanel />,
   },
   {
-    // Profile is the default: a non-admin clicking a friend's name wants their
-    // games, not subscription plumbing.
     path: "players/:alias",
-    element: <PlayerProfile />,
-    loader: playerProfileLoader,
+    element: <PlayerDetail />,
+    loader: playerDetailLoader,
     errorElement: <RouteErrorPanel />,
   },
   {
     path: "players/:alias/manage",
-    element: <PlayerDetail />,
-    loader: playerDetailLoader,
-    errorElement: <RouteErrorPanel />,
+    element: <Navigate to="../" replace relative="path" />,
   },
   {
     path: "competitions",
