@@ -13,6 +13,7 @@
     "start": "bun run src/index.ts",
     "prestart": "bun --no-install run --cwd ../home-assistant build",
     "dev": "bun --watch run src/index.ts",
+    "predev": "bun --no-install run --cwd ../home-assistant build",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "pretypecheck": "bun --no-install run --cwd ../home-assistant build",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",

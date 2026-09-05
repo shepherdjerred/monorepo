@@ -40,6 +40,13 @@ remove Helm repositories in your local Helm configuration.
 Use `bunx @shepherdjerred/helm-types` instead of `npx` when Bun is your package
 manager.
 
+## Migrating from 1.x
+
+The 2.0 release requires Node.js 24 or newer (or Bun) and publishes compiled
+ESM JavaScript with declarations from `dist/`. Consumers that imported the
+workspace source path must switch to the package entry point and rebuild their
+workspace dependency before typechecking.
+
 ## CLI usage
 
 ```bash
