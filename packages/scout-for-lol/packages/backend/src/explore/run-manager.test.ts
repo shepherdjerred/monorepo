@@ -9,6 +9,7 @@ import {
 import {
   DiscordAccountIdSchema,
   EXPLORE_ANSWER_MAX_LENGTH,
+  ReportAiPreviewSummarySchema,
   type ExploreActiveRun,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
@@ -193,6 +194,11 @@ describe("ExploreRunManager", () => {
       activity: "Thinking…",
       trace: [],
     });
+    // The snapshot itself gains no fields — every bundle already in a browser
+    // parses it strictly — so the result travels as its own ignorable event.
+    expect(reconnected.some((event) => event.type === "run_preview")).toBe(
+      false,
+    );
     expect(manager.list(owner)).toHaveLength(1);
 
     requiredRun(agent, 0).resolve(successfulResult("Jinx wins."));
@@ -201,6 +207,48 @@ describe("ExploreRunManager", () => {
     expect(manager.list(owner)).toEqual([]);
     expect(manager.outcome(summary.runId, owner)).toBe("succeeded");
     expect(manager.outcome(summary.runId, stranger)).toBeNull();
+  });
+
+  test("a reconnect keeps the query result but not its chart", async () => {
+    // The table is what the reader is looking at, and the run row can serve
+    // it cheaply. The chart deliberately does not survive: a snapshot is
+    // re-sent on every durable poll tick that sees a change, and a
+    // visualization permits eight series totalling two thousand points.
+    const preview = ReportAiPreviewSummarySchema.parse({
+      columns: [{ key: "label", label: "Champion", format: "text" }],
+      rows: [{ label: "Jinx", values: [] }],
+      rowsReturned: 1,
+      rowsScanned: 1284,
+      renderKind: "TABLE",
+    });
+    const agent = controlledAgent();
+    const manager = createManager(agent);
+    const summary = await startNew(manager, "Who wins most?");
+    const unsubscribe = manager.subscribe(summary.runId, owner, () => null);
+    if (unsubscribe === null) throw new Error("Expected an observer.");
+
+    await requiredRun(agent, 0).params.emit({
+      type: "preview",
+      preview,
+      visualization: null,
+    });
+    unsubscribe();
+
+    const reconnected: ExploreStreamEvent[] = [];
+    const finished = observeUntilDone(manager, summary, reconnected);
+    expect(reconnected[0]?.type).toBe("snapshot");
+    const restored = reconnected[1];
+    if (restored?.type !== "run_preview") {
+      throw new Error("Expected the preview to follow the snapshot.");
+    }
+    expect(restored.preview?.rowsScanned).toBe(1284);
+    // Ignorable, so a bundle that predates this member skips it and renders
+    // the table a beat later rather than failing the stream.
+    expect(restored.ignorable).toBe(true);
+    expect(restored).not.toHaveProperty("visualization");
+
+    requiredRun(agent, 0).resolve(successfulResult("Jinx wins."));
+    expect(await finished).toBe("succeeded");
   });
 
   test("reconnect snapshots remain valid after overlong partial output", async () => {

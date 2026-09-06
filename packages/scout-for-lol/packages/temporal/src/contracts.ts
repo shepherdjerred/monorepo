@@ -14,6 +14,16 @@ const OpaqueIdentifierSchema = z
   .max(180)
   .regex(/^[A-Z0-9][\w.:-]*$/i);
 
+// Riot PUUIDs are base64url-derived and may legitimately start with `_` or
+// `-` (e.g. "_UiFP1VZrFut5_6UFe-ks..."), unlike our own generated identifiers.
+// Reusing OpaqueIdentifierSchema's leading-alnum assumption here throws on
+// every replay of an affected workflow, wedging it forever.
+const RiotPuuidSchema = z
+  .string()
+  .min(1)
+  .max(180)
+  .regex(/^[\w.:-]+$/);
+
 const IsoInstantSchema = z.iso.datetime({ offset: true });
 
 export const ScoutWorkflowStatusSchema = z.enum([
@@ -41,7 +51,7 @@ export type ScoutRealtimePollInput = z.infer<
 export const ScoutMatchIngestionInputSchema = z.object({
   stage: ScoutStageSchema,
   matchId: OpaqueIdentifierSchema,
-  sourcePuuid: OpaqueIdentifierSchema,
+  sourcePuuid: RiotPuuidSchema,
   region: z.enum([
     "BRAZIL",
     "EU_EAST",
@@ -75,7 +85,7 @@ export type ScoutPostMatchDiscoveryInput = z.infer<
 
 export const ScoutInitialHistoryInputSchema = z.object({
   stage: ScoutStageSchema,
-  puuid: OpaqueIdentifierSchema,
+  puuid: RiotPuuidSchema,
   cursor: z.string().min(1).max(512).optional(),
   runOnStart: z.boolean().optional(),
   pagesProcessed: z.number().int().nonnegative().default(0),
@@ -212,7 +222,7 @@ export const ScoutChallengeRunRecomputeInputSchema = z.strictObject({
     .strictObject({
       gameEndMs: z.number().int().nonnegative(),
       matchId: OpaqueIdentifierSchema,
-      puuid: OpaqueIdentifierSchema,
+      puuid: RiotPuuidSchema,
     })
     .optional(),
   pagesProcessed: z.number().int().nonnegative().default(0),
@@ -263,7 +273,7 @@ export type InitialHistoryPageResult = z.infer<
 >;
 
 export const IngestionReconciliationResultSchema = z.object({
-  initialHistoryPuuids: z.array(OpaqueIdentifierSchema),
+  initialHistoryPuuids: z.array(RiotPuuidSchema),
   detachedWorks: z.array(
     ScoutDetachedWorkInputSchema.pick({ kind: true, workId: true }),
   ),

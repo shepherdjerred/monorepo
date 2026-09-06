@@ -3,6 +3,8 @@ import {
   type ExploreMessage,
   type ExploreStreamEvent,
   type ExploreTraceEntry,
+  type ReportAiPreviewSummary,
+  type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 
 /**
@@ -29,6 +31,20 @@ export type ExplorePendingTurn = {
   activity: string | null;
   /** Provider-id-keyed steps, updated in place as their results arrive. */
   trace: ExploreTraceEntry[];
+  /**
+   * The newest query result, rendered while the answer is still streaming.
+   *
+   * The server has these the instant a query returns and the page used to
+   * throw them away, so a table the reader could have seen seconds earlier
+   * only appeared once the whole turn landed. Last write wins, matching what
+   * `final` will persist.
+   *
+   * A reconnect restores `preview` without `visualization` — the snapshot
+   * deliberately omits the chart — so these two are independently nullable
+   * and a null chart beside a present table is a normal state, not a bug.
+   */
+  preview: ReportAiPreviewSummary | null;
+  visualization: VisualizationSnapshot | null;
   /**
    * The on-screen leaf id when the turn began — how a stop tells a fresh
    * salvage row apart from the answer that was already there.
@@ -63,6 +79,8 @@ export function createPendingTurn(input: {
     answer: null,
     activity: "Thinking…",
     trace: [],
+    preview: null,
+    visualization: null,
     leafIdAtStart: input.leafIdAtStart,
     finalMessageId: null,
     phase: "streaming",
@@ -93,6 +111,15 @@ export function applyStreamEvent(
         answer: event.answer,
         activity: event.activity,
         trace: event.trace,
+        // The snapshot itself carries no result; `run_preview` follows it
+        // when there is one. Both are cleared here so a reconnect that
+        // restores an *older* run cannot leave the previous one's table and
+        // chart on screen, and so a chart received live — which may belong to
+        // an earlier query than the preview about to arrive — cannot sit
+        // above newer numbers. `ExploreTurnResult` gives a chart precedence
+        // over a table, which is what makes that mismatch invisible.
+        preview: null,
+        visualization: null,
       };
     }
     case "started": {
@@ -120,9 +147,24 @@ export function applyStreamEvent(
         finalMessageId: event.message.id,
         activity: null,
         trace: event.message.trace,
+        // The persisted message owns the result from here on, and the turn
+        // stops rendering its own copy the moment it lands.
+        preview: event.message.preview,
+        visualization: event.message.visualization,
       };
     }
-    case "preview":
+    case "preview": {
+      return {
+        ...turn,
+        preview: event.preview,
+        visualization: event.visualization,
+      };
+    }
+    case "run_preview": {
+      // The reconnect companion: the newest table, with no chart to go with
+      // it. The chart returns with the next `preview` or with `final`.
+      return { ...turn, preview: event.preview, visualization: null };
+    }
     case "error":
     case "done": {
       return turn;
@@ -242,6 +284,8 @@ export function visiblePending(
    */
   stopping: boolean;
   trace: ExploreTraceEntry[];
+  preview: ReportAiPreviewSummary | null;
+  visualization: VisualizationSnapshot | null;
 } {
   if (turn === null) {
     return {
@@ -250,6 +294,8 @@ export function visiblePending(
       activity: null,
       stopping: false,
       trace: [],
+      preview: null,
+      visualization: null,
     };
   }
   if (turn.conversationId !== displayedConversationId) {
@@ -259,6 +305,8 @@ export function visiblePending(
       activity: null,
       stopping: false,
       trace: [],
+      preview: null,
+      visualization: null,
     };
   }
   const questionPersisted =
@@ -272,6 +320,10 @@ export function visiblePending(
     activity: landed ? null : turn.activity,
     stopping: !landed && turn.phase === "stopping",
     trace: landed ? [] : turn.trace,
+    // Dropped the moment the persisted message renders its own copy, so
+    // there is never a frame showing the table twice.
+    preview: landed ? null : turn.preview,
+    visualization: landed ? null : turn.visualization,
   };
 }
 

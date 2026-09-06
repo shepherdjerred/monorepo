@@ -178,12 +178,21 @@ export function Explore() {
     activity,
     stopping,
     trace: pendingTrace,
+    preview: pendingPreview,
+    visualization: pendingVisualization,
   } = visiblePending(pendingTurn, conversationId, messages);
 
   const { bottomRef, scrollIfPinned } = usePinnedScroll();
   useEffect(() => {
     scrollIfPinned();
-  }, [transcript.data, pendingAnswer, activity, pendingTrace, scrollIfPinned]);
+  }, [
+    transcript.data,
+    pendingAnswer,
+    activity,
+    pendingTrace,
+    pendingPreview,
+    scrollIfPinned,
+  ]);
 
   if (status.isLoading) {
     return <SectionSkeleton />;
@@ -288,6 +297,8 @@ export function Explore() {
           activity={activity}
           stopping={stopping}
           pendingTrace={pendingTrace}
+          pendingPreview={pendingPreview}
+          pendingVisualization={pendingVisualization}
           turnActive={turnActive}
           showRawTrace
           actions={transcriptActions}
