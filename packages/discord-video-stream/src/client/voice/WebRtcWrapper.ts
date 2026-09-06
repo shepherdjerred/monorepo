@@ -9,7 +9,9 @@ import {
   AV1RtpPacketizer,
   RtpPacketizationConfig,
   RtcpNackResponder,
+  RtcpReceivingSession,
   RtcpSrReporter,
+  type MediaHandler,
   type Track,
 } from "@lng2004/node-datachannel";
 import { CodecPayloadType } from "./CodecPayloadType.js";
@@ -22,6 +24,34 @@ import {
 } from "../processing/AnnexBHelper.js";
 import { rewriteSPSVUI } from "../processing/SPSVUIRewriter.js";
 import type { BaseMediaConnection } from "./BaseMediaConnection.js";
+
+/**
+ * Fail loud if the loaded @lng2004/node-datachannel binding lacks the patched
+ * `PeerConnection.registerIncomingSsrc` method. That method is what routes a
+ * Discord speaker's lazily-announced SSRC to the audio track; without it,
+ * inbound voice is silently dropped (the exact production bug this fork fixes).
+ * A node-datachannel version bump that invalidated the vendored patched prebuild
+ * — or a botched install that fell back to the registry's unpatched binary —
+ * would otherwise regress receive to silently-broken. Call this once at startup
+ * wherever voice receive is enabled.
+ */
+export function assertIncomingAudioSupported(): void {
+  const ctor: unknown = PeerConnection;
+  const prototype =
+    typeof ctor === "function" ? Reflect.get(ctor, "prototype") : undefined;
+  const method =
+    typeof prototype === "object" && prototype !== null
+      ? Reflect.get(prototype, "registerIncomingSsrc")
+      : undefined;
+  if (typeof method !== "function") {
+    throw new Error(
+      "@lng2004/node-datachannel is missing PeerConnection.registerIncomingSsrc: " +
+        "the patched prebuild was not installed, so Discord voice receive would be " +
+        "silently broken. Verify the node-datachannel entry in patchedDependencies " +
+        "(overlay of packages/discord-video-stream/prebuilds-patched) applied for this platform.",
+    );
+  }
+}
 
 // The playout-delay header extension carries min/max as 12-bit fields counted
 // in 10ms units (0..40950ms). https://webrtc.googlesource.com/src/+/main/docs/native-code/rtp-hdrext/playout-delay
@@ -82,6 +112,11 @@ export class WebRtcConnWrapper {
   private _audioTrack?: Track;
   private _videoTrack?: Track;
   private _audioPacketizer?: RtpPacketizer;
+  // The media handler bound to the audio track. libdatachannel processes an
+  // incoming RTP packet on the chain ROOT only, so when we receive audio this
+  // must be an RtcpReceivingSession (with the outbound packetizer chained under
+  // it); when we only send, it is the packetizer itself.
+  private _audioMediaHandler?: MediaHandler;
   private _videoPacketizer?: RtpPacketizer;
   private _videoCodec?: SupportedVideoCodec;
 
@@ -133,10 +168,30 @@ export class WebRtcConnWrapper {
   }
 
   private _setMediaHandler() {
-    if (this._audioPacketizer)
-      this._audioTrack?.setMediaHandler(this._audioPacketizer);
+    const audioHandler = this._audioMediaHandler ?? this._audioPacketizer;
+    if (audioHandler) this._audioTrack?.setMediaHandler(audioHandler);
     if (this._videoPacketizer)
       this._videoTrack?.setMediaHandler(this._videoPacketizer);
+  }
+
+  /**
+   * Register a remote speaker's audio SSRC so libdatachannel routes its incoming
+   * RTP to our audio track. Discord announces each speaker's SSRC lazily over the
+   * gateway (the SPEAKING op), not in the SDP, so without this the transport
+   * demuxes the packet, finds no track owning the SSRC, and drops it before any
+   * media handler runs.
+   */
+  public registerIncomingAudioSsrc(ssrc: number): void {
+    const mid = this._audioTrack?.mid();
+    if (this._webRtcConn === undefined || mid === undefined) return;
+    // Map the speaker's SSRC to our audio track in libdatachannel's live routing
+    // table. libdatachannel only builds that table from the SDP at negotiation
+    // time and drops RTP whose SSRC it doesn't recognise; Discord announces
+    // speaker SSRCs lazily over the gateway, so we register each one here as it
+    // is learned. Keeping the description SSRC in sync lets any later
+    // renegotiation rebuild the same mapping.
+    if (!this._audioDef.hasSSRC(ssrc)) this._audioDef.addSSRC(ssrc);
+    this._webRtcConn.registerIncomingSsrc(ssrc, mid);
   }
 
   public close() {
@@ -193,6 +248,21 @@ export class WebRtcConnWrapper {
     this._audioPacketizer = new RtpPacketizer(rtpConfig);
     this._audioPacketizer.addToChain(new RtcpSrReporter(rtpConfig));
     this._audioPacketizer.addToChain(new RtcpNackResponder());
+    // Inbound audio only reaches the track's onMessage handler when the chain
+    // ROOT can depacketize incoming RTP. libdatachannel runs incoming() on the
+    // root handler only, so an appended RtcpReceivingSession never fires. When
+    // we receive, root the chain at the receiving session and chain the outbound
+    // packetizer under it (outgoing frames still traverse the whole chain and
+    // get packetized). Without this every inbound packet is dropped inside
+    // libdatachannel before handleIncomingAudioPacket runs, so the voice
+    // assistant never hears a wake word.
+    if (this._mediaConn.receiveAudio) {
+      const receivingSession = new RtcpReceivingSession();
+      receivingSession.addToChain(this._audioPacketizer);
+      this._audioMediaHandler = receivingSession;
+    } else {
+      this._audioMediaHandler = this._audioPacketizer;
+    }
     this._setMediaHandler();
   }
 
