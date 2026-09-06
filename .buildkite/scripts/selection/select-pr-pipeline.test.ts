@@ -33,11 +33,15 @@ describe("PR pipeline selection", () => {
   - key: main
     if: build.branch == pipeline.default_branch
 `);
-    expect(
-      selectPrSteps(document, [".buildkite/pipeline.yml"]).map(
-        (step) => step["key"],
-      ),
-    ).toEqual(["verify", "browser", "other"]);
+    for (const changedPath of [
+      ".buildkite/pipeline.yml",
+      ".buildkite/scripts/select-main-pipeline.ts",
+      "scripts/lib/json.ts",
+    ]) {
+      expect(
+        selectPrSteps(document, [changedPath]).map((step) => step["key"]),
+      ).toEqual(["verify", "browser", "other"]);
+    }
   });
 
   test("honors include and exclude globs", () => {

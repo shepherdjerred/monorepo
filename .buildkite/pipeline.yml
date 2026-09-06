@@ -1129,6 +1129,7 @@ steps:
         - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/select-main-pipeline.ts"
         - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/selectors/select-image-targets-lockfile.ts"
         - ".buildkite/scripts/selectors/select-image-targets-workspaces.ts"
         - ".buildkite/scripts/selection/playwright-targets.ts"
         - ".buildkite/scripts/selection/run-playwright.ts"
