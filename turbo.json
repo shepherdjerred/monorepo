@@ -222,10 +222,12 @@
     "//#script-coverage": {
       "dependsOn": ["//#check-script-migrations"],
       "inputs": [
-        "scripts/bunfig.coverage.toml",
         "scripts/checks/check-script-coverage.ts",
         "scripts/misc/migration-core.ts",
+        "scripts/package.json",
+        "renovate.json",
         "scripts/**/*.test.ts",
+        "vitest.config.ts",
         ".buildkite/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
         "packages/discord-plays-pokemon/scripts/**/*.ts",
