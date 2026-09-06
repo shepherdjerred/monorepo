@@ -818,6 +818,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -878,6 +879,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -935,6 +937,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -990,6 +993,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -1068,6 +1072,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/scripts/**"
         - "bun.lock"
         - "bunfig.toml"
@@ -1121,6 +1126,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -1167,8 +1173,10 @@ steps:
         - "scripts/lib/s3-static-site.ts"
         - "scripts/lib/run.ts"
         - "scripts/ci/ci-reporting.ts"
+        - "scripts/ci-test-manifest.json"
         - "scripts/ci/namespace-playwright-reports.ts"
         - "scripts/ci/write-ci-report-index.ts"
+        - "scripts/lib/json.ts"
     depends_on: verify
     cancel_on_build_failing: true
     env:
@@ -1345,6 +1353,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -1440,6 +1449,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -1539,6 +1549,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -1737,6 +1748,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -1854,6 +1866,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -2045,6 +2058,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/images/bake-images.ts"
         - ".buildkite/scripts/images/bake-retry.ts"
@@ -2175,6 +2189,7 @@ steps:
     if_changed: &tofu_plan_if_changed
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
@@ -2400,6 +2415,7 @@ steps:
       include:
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
@@ -2455,6 +2471,7 @@ steps:
       include:
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/scripts/reporting/buildkite-handoff.ts"
         - ".buildkite/scripts/selectors/ci-changed.ts"
         - ".buildkite/scripts/migration-core.ts"
@@ -2506,6 +2523,7 @@ steps:
     if_changed:
       include:
         - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
         - ".buildkite/main-bootstrap.yml"
         - ".buildkite/application-image-smoke.Dockerfile"
         - ".buildkite/scripts/images/application-image-runtime.ts"

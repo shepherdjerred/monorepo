@@ -81,6 +81,10 @@ describe("turbo.json mirror", () => {
         // The scripts that decide shard membership must invalidate the task.
         expect(inputs).toContain("scripts/ci/repo-shards.ts");
         expect(inputs).toContain("scripts/ci/run-shard-check.ts");
+        if (check === "prettier") {
+          expect(inputs).toContain("bun.lock");
+          expect(inputs).toContain("package.json");
+        }
       }
       // The unsharded task name must be gone, not merely joined by shards —
       // otherwise verify.ts could silently run the stale whole-tree check.

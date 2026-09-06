@@ -183,6 +183,7 @@ export const globalPaths = [
   ".buildkite/scripts/selectors/select-main-pipeline.ts",
   ".buildkite/scripts/selectors/select-main-pipeline-selection.ts",
   ".buildkite/scripts/upload-pipeline.sh",
+  "scripts/lib/json.ts",
 ] as const;
 
 const workspacePaths = [
@@ -276,6 +277,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ".buildkite/scripts/selection/playwright-targets.ts",
     ".buildkite/scripts/selection/run-playwright.ts",
     "scripts/ci/ci-reporting.ts",
+    "scripts/ci-test-manifest.json",
     "scripts/ci/namespace-playwright-reports.ts",
     "scripts/ci/write-ci-report-index.ts",
     "packages/alert-dashboard",

@@ -255,6 +255,8 @@
     "//#prettier-scout": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -273,6 +275,8 @@
     "//#prettier-homelab": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -291,6 +295,8 @@
     "//#prettier-packages": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -311,6 +317,8 @@
     "//#prettier-root": {
       "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",

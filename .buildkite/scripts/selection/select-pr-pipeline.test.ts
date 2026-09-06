@@ -36,6 +36,7 @@ describe("PR pipeline selection", () => {
     for (const changedPath of [
       ".buildkite/pipeline.yml",
       ".buildkite/scripts/select-main-pipeline.ts",
+      "scripts/ci-test-manifest.json",
       "scripts/lib/json.ts",
     ]) {
       expect(

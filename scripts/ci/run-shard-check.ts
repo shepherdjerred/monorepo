@@ -84,6 +84,8 @@ async function trackedFiles(pathspecs: readonly string[]): Promise<string[]> {
 
 const CHECK_GLOBAL_INPUTS: Record<CheckName, readonly string[]> = {
   prettier: [
+    "bun.lock",
+    "package.json",
     ".prettierignore",
     ".prettierrc.json",
     "scripts/lib/run.ts",

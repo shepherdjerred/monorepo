@@ -91,6 +91,8 @@ describe("Playwright target selection", () => {
     for (const changedPath of [
       ".buildkite/ci-playwright/Dockerfile",
       ".buildkite/scripts/select-image-targets-lockfile.ts",
+      "scripts/ci-test-manifest.json",
+      "scripts/lib/json.ts",
     ]) {
       const selection = await selectPlaywrightTargets(
         [changedPath],

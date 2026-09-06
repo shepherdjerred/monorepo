@@ -18,6 +18,7 @@ const GLOBAL_SELECTOR_INPUTS = new Set([
   ".buildkite/scripts/select-main-pipeline-selection.ts",
   ".buildkite/scripts/select-main-pipeline.ts",
   ".buildkite/scripts/selection/select-pr-pipeline.ts",
+  "scripts/ci-test-manifest.json",
   ".buildkite/scripts/tofu-lane-paths.ts",
   "scripts/lib/json.ts",
 ]);

@@ -46,10 +46,12 @@ const ALL_TARGET_INPUTS = [
   "bun.lock",
   "bunfig.toml",
   "package.json",
+  "scripts/ci-test-manifest.json",
   "patches/",
   "scripts/ci/ci-reporting.ts",
   "scripts/ci/namespace-playwright-reports.ts",
   "scripts/ci/write-ci-report-index.ts",
+  "scripts/lib/json.ts",
   "turbo.json",
 ] as const;
 
