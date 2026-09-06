@@ -1,4 +1,8 @@
-import { getLastSuccessfulPollAt } from "#src/league/tasks/recovery/app-state.ts";
+import {
+  getLastSuccessfulPollAt,
+  getReconciliationCompletedAt,
+  setReconciliationCompletedAt,
+} from "#src/league/tasks/recovery/app-state.ts";
 import { detectDowntime } from "#src/league/tasks/recovery/detect-downtime.ts";
 import { sendOfflineNotification } from "#src/league/tasks/recovery/offline-notification.ts";
 import { backfillMatchesToS3 } from "#src/league/tasks/recovery/backfill-to-s3.ts";
@@ -11,7 +15,6 @@ const logger = createLogger("ingestion-reconciliation");
 
 let isReconciliationInProgress = false;
 let reconciliationStartTime: number | undefined;
-let lastCompletedAt: number | undefined;
 
 // Under the 60-second schedule cadence ordinary scheduled runs never land
 // inside this window, but the queue-serialized duplicate of a boot+schedule
@@ -21,12 +24,11 @@ const RECENT_COMPLETION_WINDOW_MS = 30_000;
 export function resetReconciliationState(): void {
   isReconciliationInProgress = false;
   reconciliationStartTime = undefined;
-  lastCompletedAt = undefined;
 }
 
-function shouldSkipReconciliationRun(): boolean {
+function shouldSkipInFlightRun(): boolean {
   if (!isReconciliationInProgress) {
-    return shouldSkipRecentlyCompletedRun();
+    return false;
   }
 
   const elapsed =
@@ -61,9 +63,10 @@ function shouldSkipReconciliationRun(): boolean {
   return true;
 }
 
-function shouldSkipRecentlyCompletedRun(): boolean {
+async function shouldSkipRecentlyCompletedRun(): Promise<boolean> {
+  const completedAt = await getReconciliationCompletedAt();
   const sinceCompleted =
-    lastCompletedAt === undefined ? undefined : Date.now() - lastCompletedAt;
+    completedAt === undefined ? undefined : Date.now() - completedAt.getTime();
   if (
     sinceCompleted === undefined ||
     sinceCompleted >= RECENT_COMPLETION_WINDOW_MS
@@ -87,19 +90,25 @@ export async function runIngestionReconciliation(): Promise<void> {
   // (maxConcurrentActivityTaskExecutions: 1 in connected-runtime.ts), so the
   // overlapping start dequeues only after the prior run finished — that
   // ordering is what lets the completion-recency check reliably observe the
-  // previous run. The in-flight flag cannot fire under that serialization;
-  // it stays as defense in case worker concurrency ever changes. Skipping is
-  // safe: the fixed schedule retries within a minute and the boot-time start
-  // is best-effort.
-  if (shouldSkipReconciliationRun()) {
+  // previous run. The checkpoint lives on the BotState row rather than in
+  // memory so it survives a restart, which is how the boot-time duplicate
+  // right after a rollout also skips. The in-flight flag cannot fire under
+  // that serialization; it stays as defense in case worker concurrency ever
+  // changes, and it is claimed before the first await so the check-and-set
+  // stays atomic under the event loop. Skipping is safe: the fixed schedule
+  // retries within a minute and the boot-time start is best-effort.
+  if (shouldSkipInFlightRun()) {
     return;
   }
   isReconciliationInProgress = true;
   reconciliationStartTime = Date.now();
   try {
+    if (await shouldSkipRecentlyCompletedRun()) {
+      return;
+    }
     await reconcileIngestion();
     // Success only: a failed run must not suppress the queued retry.
-    lastCompletedAt = Date.now();
+    await setReconciliationCompletedAt(new Date());
   } finally {
     isReconciliationInProgress = false;
     reconciliationStartTime = undefined;
