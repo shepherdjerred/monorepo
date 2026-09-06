@@ -9,7 +9,8 @@
     "scripts/ci/ci-reporting.ts",
     "scripts/ci/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
-    "scripts/ci/run-ci-test.ts"
+    "scripts/ci/run-ci-test.ts",
+    "vitest.config.ts"
   ],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
   // (64 MB zstd) — over the default upload timeout, so those tasks
@@ -229,8 +230,14 @@
         "scripts/**/*.test.ts",
         "vitest.config.ts",
         ".buildkite/scripts/**/*.ts",
+        ".buildkite/main-bootstrap.yml",
+        ".buildkite/pipeline.yml",
+        "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
+        "packages/discord-plays-mario-kart/Dockerfile",
+        "packages/discord-plays-mario-kart/wasm-src/upstream.json",
         "packages/discord-plays-pokemon/scripts/**/*.ts",
+        "packages/discord-plays-pokemon/wasm-src/patches/**",
         "packages/dotfiles/bin/executable_git_cleanup.ts",
         "packages/dotfiles/scripts/**/*.ts",
         "packages/homelab/scripts/**/*.ts",

@@ -138,7 +138,7 @@ describe("runShardCheck", () => {
       [
         "bun",
         "--no-install",
-        "scripts/check-line-endings.ts",
+        "scripts/checks/check-line-endings.ts",
         "packages/alert-dashboard/src/index.ts",
       ],
     ]);

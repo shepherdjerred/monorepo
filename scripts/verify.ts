@@ -125,7 +125,7 @@ export async function main(
   if (turboExitCode !== 0) return turboExitCode;
 
   const analyticsCheck = Bun.spawn(
-    ["bun", "--no-install", "scripts/check-analytics-sites.ts"],
+    ["bun", "--no-install", "scripts/checks/check-analytics-sites.ts"],
     {
       stdin: "inherit",
       stdout: "inherit",
