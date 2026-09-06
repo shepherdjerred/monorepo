@@ -150,6 +150,8 @@ const SCOUT_POSITIVE_COMMANDS = [
 /**
  * "scout" is an ordinary English word, so beyond the usual homophone traps this bucket leans on
  * bare and conversational "scout" usage — the false-wake risk called out in the training plan.
+ * None of these may contain the spoken wake phrase itself: punctuation is not an acoustic
+ * boundary, so "Hey, scout ahead" would be a labeled-negative wake utterance.
  */
 const SCOUT_NEAR_MATCHES = [
   "The boy scout troop meets on Thursday night.",
@@ -158,7 +160,7 @@ const SCOUT_NEAR_MATCHES = [
   "Hey Scott, are you watching the game tonight?",
   "Hey, scoot over so I can see the map.",
   "Send a scout to check the enemy jungle.",
-  "Hey, scout ahead and ping what you see.",
+  "Scout ahead for us and ping what you see.",
   "The talent scout watched the entire match.",
   "A good scout always wards the river.",
   "He asked the scouts to skip the meeting.",

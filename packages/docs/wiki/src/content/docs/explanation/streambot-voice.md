@@ -171,12 +171,10 @@ Packaging requires the minimum training counts, the complete ACAV100M general-sp
 a generated positive smoke WAV. Both local runtimes must accept that checksum-pinned smoke sample;
 successfully loading an ONNX graph is insufficient.
 
-The corpus, keywords, packaging, and evaluation tooling stays in streambot but is
-phrase-parameterized: each wake phrase is a profile (corpus spec, per-corpus manifest format
-literal, asset manifest, fragment-tail table) selected with `--phrase`/`--phrase-slug`, defaulting
-to `hey-streambot` with byte-identical behavior. Scout's "hey scout" verifier trains through the
-same tools; its recipe and handoff live in
-`packages/scout-for-lol/packages/backend/voice-training/`.
+The corpus, keywords, packaging, and evaluation tooling stays in streambot but serves every
+trained wake phrase: each phrase is a self-contained profile, and the hey-streambot defaults are
+unchanged. Scout's "hey scout" verifier trains through the same tools; its recipe and operator
+procedure live in `packages/scout-for-lol/packages/backend/voice-training/`.
 
 The production image requires both sherpa runtimes and the in-process phrase-verifier graph to
 complete inference as the deployment user; merely opening model files is not a successful smoke.

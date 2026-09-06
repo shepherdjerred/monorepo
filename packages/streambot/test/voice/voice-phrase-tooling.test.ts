@@ -90,11 +90,29 @@ describe("scout phrase spec", () => {
     ]) {
       expect(nearMatchTexts.has(required)).toBe(true);
     }
-    for (const text of nearMatchTexts) {
-      expect(text.toLowerCase().includes("hey scout")).toBe(false);
+  });
+
+  test("no labeled negative contains the spoken wake phrase", () => {
+    const negatives = expandVoiceCorpusRecipes(SCOUT_VOICE_PHRASE_SPEC).filter(
+      (recipe) => recipe.expected === "no-wake",
+    );
+    expect(negatives.length).toBe(160);
+    for (const recipe of negatives) {
+      expect(spoken(recipe.text).includes("hey scout")).toBe(false);
     }
   });
 });
+
+/**
+ * The words TTS will actually speak: punctuation is not an acoustic boundary, so
+ * "Hey, scout ahead" is the wake phrase and a naive raw-text substring check is not enough.
+ */
+function spoken(text: string): string {
+  return text
+    .toLowerCase()
+    .replaceAll(/[^a-z]+/gu, " ")
+    .trim();
+}
 
 function manifestJson(format: string) {
   return {
