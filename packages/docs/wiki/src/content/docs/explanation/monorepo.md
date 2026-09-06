@@ -43,9 +43,11 @@ inputs, so an unchanged package is near-instant.
 
 Local and CI verification deliberately have different scopes:
 
-- The **pre-commit hook** checks staged files only — secrets, formatting, line
-  endings, and the banned automation patterns. It is fast enough to not be
-  resented.
+- The **pre-commit hook** in [`lefthook.yml`](https://github.com/shepherdjerred/monorepo/blob/main/lefthook.yml)
+  checks staged files, then
+  [`staged-package-quality.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/checks/staged-package-quality.ts)
+  runs `typecheck` and `lint` for owning workspaces at `--concurrency=1`.
+  It does not run tests, dependents, or the whole-repo graph.
 - **Buildkite** runs the exhaustive root `bun run verify` graph on every PR.
   That is the real gate.
 

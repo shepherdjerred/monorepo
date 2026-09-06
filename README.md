@@ -35,7 +35,7 @@ bunx lefthook install           # arm git hooks
 # Day-to-day: run only the tasks for the package you touched
 bunx turbo run typecheck test lint --filter=<pkg>
 
-bunx lefthook run pre-commit    # staged-file checks (Prettier, Gitleaks, …)
+bunx lefthook run pre-commit    # staged-file checks + package typecheck/lint
 bun run verify                  # exhaustive whole-repo gate — what Buildkite runs
 ```
 
