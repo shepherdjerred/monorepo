@@ -10,6 +10,26 @@ import type { ConnectionMode } from "#src/voice/voice-manager.ts";
 
 const GUILD = DiscordGuildIdSchema.parse("100000000000000001");
 
+/**
+ * Flush microtasks until `condition` holds. `performJoin` now awaits an
+ * eligibility check (flag + occupancy) before it ever reaches
+ * `joinAssistantChannel`, so a fake connection factory that pushes
+ * synchronously is no longer guaranteed to have been called by the time a
+ * test's own synchronous code finishes — wait for the actual effect instead
+ * of assuming a fixed number of ticks.
+ */
+async function waitUntil(
+  condition: () => boolean,
+  maxTicks = 50,
+): Promise<void> {
+  for (let tick = 0; tick < maxTicks && !condition(); tick++) {
+    await Promise.resolve();
+  }
+  if (!condition()) {
+    throw new Error("waitUntil: condition never became true");
+  }
+}
+
 const FAKE_RUNTIME: VoiceAssistantRuntime = {
   models: {
     runtime: "native",
@@ -71,7 +91,13 @@ type Harness = {
   left: string[];
   sessionEvents: string[];
   wakeAccepted: (() => void) | undefined;
-  setHumanCount: (count: number | null) => void;
+  /**
+   * Sets occupancy for `channelId`, or the default every OTHER channel
+   * falls back to when omitted — `countHumanMembers` is channel-scoped in
+   * production, so tests that need two channels to disagree (e.g. one
+   * request's target empties while another's does not) pass a channelId.
+   */
+  setHumanCount: (count: number | null, channelId?: string) => void;
   setGuildEnabled: (enabled: boolean) => void;
   fireConnectionLost: (guildId: string, mode: ConnectionMode) => void;
 };
@@ -84,13 +110,15 @@ function managerHarness(options?: {
   const sessionEvents: string[] = [];
   const state: {
     wakeAccepted: (() => void) | undefined;
-    humanCount: number | null;
+    defaultHumanCount: number | null;
+    humanCountsByChannel: Map<string, number | null>;
     guildEnabled: boolean;
     connectionLost:
       ((guildId: string, mode: ConnectionMode) => void) | undefined;
   } = {
     wakeAccepted: undefined,
-    humanCount: 1,
+    defaultHumanCount: 1,
+    humanCountsByChannel: new Map(),
     guildEnabled: true,
     connectionLost: undefined,
   };
@@ -106,7 +134,8 @@ function managerHarness(options?: {
       state.connectionLost = listener;
     },
     isHumanUser: () => true,
-    countHumanMembers: () => state.humanCount,
+    countHumanMembers: (_guildId, channelId) =>
+      state.humanCountsByChannel.get(channelId) ?? state.defaultHumanCount,
     createSession: (input) => {
       state.wakeAccepted = input.onWakeAccepted;
       sessionEvents.push("created");
@@ -146,8 +175,12 @@ function managerHarness(options?: {
     get wakeAccepted() {
       return state.wakeAccepted;
     },
-    setHumanCount: (count) => {
-      state.humanCount = count;
+    setHumanCount: (count, channelId) => {
+      if (channelId === undefined) {
+        state.defaultHumanCount = count;
+        return;
+      }
+      state.humanCountsByChannel.set(channelId, count);
     },
     setGuildEnabled: (enabled) => {
       state.guildEnabled = enabled;
@@ -263,10 +296,10 @@ describe("VoiceAssistantManager", () => {
     const second = h.manager.join(GUILD, "channel-2");
     // Only the first join has reached the connection step; the second is
     // queued behind it rather than racing past the "no session" check.
-    expect(pendingConnections).toHaveLength(1);
+    await waitUntil(() => pendingConnections.length === 1);
     pendingConnections[0]?.(fakeConnection());
     await first;
-    expect(pendingConnections).toHaveLength(2);
+    await waitUntil(() => pendingConnections.length === 2);
     pendingConnections[1]?.(fakeConnection());
     await second;
     // The first session was properly ended (not stranded) and exactly one
@@ -335,6 +368,30 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     expect(h.sessionEvents).not.toContain("created");
   });
 
+  test("performJoin's own flag recheck catches a disable the sweep never saw", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    // The flag turns off while this request is queued/establishing, and no
+    // closeDisabledGuildSessions() sweep ever runs — a sweep snapshots
+    // sessions/joinQueues at the moment it runs, so a join that entered
+    // joinQueues after the last sweep tick (or before flag-disable happens
+    // to align with one) is invisible to it. Only performJoin's own
+    // recheck can catch this.
+    h.setGuildEnabled(false);
+    await waitUntil(() => pendingConnections.length === 1);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(join).resolves.toBe("cancelled");
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
+  });
+
   test("shutdown cancels a pending join", async () => {
     const pendingConnections: ((connection: AssistantConnection) => void)[] =
       [];
@@ -385,7 +442,7 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     const second = h.manager.join(GUILD, "channel-2");
     // Only the first has reached the connection step; the second is queued
     // behind it and has not attempted to establish anything yet.
-    expect(pendingConnections).toHaveLength(1);
+    await waitUntil(() => pendingConnections.length === 1);
     // A stop arrives while the first is still establishing and before the
     // second has even started its own attempt.
     h.manager.leave(GUILD);
@@ -433,6 +490,7 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     const join = h.manager.join(GUILD, "channel-1");
     h.setHumanCount(2);
     h.manager.handleVoiceStateUpdate(GUILD);
+    await waitUntil(() => pendingConnections.length === 1);
     pendingConnections[0]?.(fakeConnection());
     await expect(join).resolves.toBe("joined");
   });
@@ -449,15 +507,15 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     const first = h.manager.join(GUILD, "channel-1");
     const second = h.manager.join(GUILD, "channel-2");
     // Channel-2 (the SECOND, still-queued request's target) empties out
-    // while the first request is establishing — modeled here by flipping
-    // occupancy globally, since `first`'s own proactive check already ran
-    // (and passed) synchronously before this line, so it cannot be affected
-    // retroactively. `pendingJoinChannels` only names channel-1 at this
-    // point (the first request is the one actually establishing), so a
-    // reactive `handleVoiceStateUpdate` firing here would target the wrong
-    // channel entirely — only revalidating at the moment the second request
-    // itself reaches the head of the queue can catch this.
-    h.setHumanCount(0);
+    // while the first request is establishing; channel-1 (the first's own
+    // target) still has people throughout. `pendingJoinChannels` only names
+    // channel-1 at this point (the first request is the one actually
+    // establishing), so a reactive `handleVoiceStateUpdate` firing here
+    // would target the wrong channel entirely — only revalidating at the
+    // moment the second request itself reaches the head of the queue can
+    // catch this.
+    h.setHumanCount(0, "channel-2");
+    await waitUntil(() => pendingConnections.length === 1);
     pendingConnections[0]?.(fakeConnection());
     await expect(first).resolves.toBe("joined");
     await expect(second).resolves.toBe("cancelled");

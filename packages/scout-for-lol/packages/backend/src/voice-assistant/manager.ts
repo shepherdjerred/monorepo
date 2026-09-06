@@ -269,15 +269,11 @@ export class VoiceAssistantManager {
       );
     }
     // Revalidate occupancy right as this request reaches the head of the
-    // queue, before touching any existing session and before
-    // `pendingJoinChannels` names its channel: a request that sat queued
-    // behind an earlier one for this guild could have had its OWN target
-    // channel empty out in the meantime, and `handleVoiceStateUpdate` only
-    // ever inspects a channel once `pendingJoinChannels` names it — a
-    // voiceStateUpdate that fired while this request was still queued behind
-    // a DIFFERENT channel's join would have found nothing to invalidate.
-    // Checked BEFORE ending any existing session so a request that is about
-    // to be cancelled never tears down a session that was actually fine.
+    // queue, before touching any existing session — a request about to be
+    // cancelled must never tear down a session that was actually fine. This
+    // is a plain synchronous read (`countHumanMembers` never awaits), which
+    // matters for what follows: it introduces no async gap before `myEpoch`
+    // is captured below.
     const startingHumans = this.deps.countHumanMembers(guildId, channelId);
     if (startingHumans === 0) {
       logger.info(
@@ -290,29 +286,101 @@ export class VoiceAssistantManager {
     if (existing !== undefined) {
       this.endSession(guildId, "rejoined", { leaveChannel: false });
     }
+    // Capture the epoch SYNCHRONOUSLY here, immediately after any
+    // self-inflicted "rejoined" bump above and before any `await`. A join
+    // queued behind this one captures its OWN starting epoch the moment
+    // `join()` is called — synchronously, right after THIS `join()` call
+    // returns — so this attempt's own bump (including "rejoined"'s) must
+    // already have happened by then, or the next queued join would
+    // misread this attempt's normal commitment as an external
+    // invalidation it needs to react to.
     const myEpoch = this.invalidate(guildId);
+    // Set before any async gap too, for the same reason `handleVoiceStateUpdate`
+    // needs a channel to inspect for the ENTIRE rest of this attempt — flag
+    // check included — not only during the connection establishment below.
     this.pendingJoinChannels.set(guildId, channelId);
-    let connection: AssistantConnection;
     try {
-      connection = await this.deps.joinAssistantChannel(guildId, channelId);
+      // Recheck the guild flag right as this request reaches the head of the
+      // queue: `closeDisabledGuildSessions()` snapshots `sessions`/
+      // `joinQueues` at the moment it runs, so a join that had not yet
+      // entered `joinQueues` when the flag turned off is invisible to that
+      // snapshot, and the command handler's own check (scout-voice.ts) only
+      // ran once, before this request was even enqueued. Safe to make this
+      // the first async gap: `myEpoch` is already captured, so anything that
+      // invalidates the guild during this await (including a bare `leave()`,
+      // which changes nothing a flag/occupancy check alone would see) is
+      // still caught by the epoch comparison below.
+      let startingEnabled: boolean;
+      try {
+        startingEnabled = await this.deps.isGuildEnabled(guildId);
+      } catch (error) {
+        // A flag-evaluation failure is not an answer; the command handler
+        // already confirmed the flag once before calling join(), so a
+        // transient evaluation hiccup here must not abandon an
+        // otherwise-legitimate request.
+        logger.warn("voice flag re-check could not evaluate a guild", {
+          guildId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        startingEnabled = true;
+      }
+      if (!startingEnabled || this.epochs.get(guildId) !== myEpoch) {
+        // Tear down whatever this attempt already committed to — the
+        // "rejoined" teardown above may have ended a session without
+        // leaving the channel, expecting THIS attempt to replace the
+        // connection; nobody else will if it never gets there.
+        this.deps.leaveChannel(guildId);
+        logger.info(
+          startingEnabled
+            ? "voice assistant join abandoned: the guild's session ended while checking the flag"
+            : "voice assistant join cancelled: the guild flag is disabled",
+          { guildId },
+        );
+        return "cancelled";
+      }
+
+      const connection = await this.deps.joinAssistantChannel(
+        guildId,
+        channelId,
+      );
+      // Recheck again after the (up to 30 s) connection establishment: the
+      // epoch catches every teardown path that calls
+      // `endSession`/`invalidate` directly, but a flag disable or an
+      // emptied channel needs its own direct recheck too rather than
+      // depending solely on the next periodic sweep to notice.
+      const finalEligibility = await this.isJoinStillEligible(
+        guildId,
+        channelId,
+      );
+      if (this.epochs.get(guildId) !== myEpoch || !finalEligibility.eligible) {
+        // A leave/flag-disable/empty-channel-check/shutdown ended this
+        // guild's session (or lack thereof) while the connection was still
+        // establishing. Tear down what this attempt just built and never
+        // start listening — silently joining after being told to stop is
+        // exactly the bug this ticket exists to prevent.
+        this.deps.leaveChannel(guildId);
+        logger.info(
+          finalEligibility.eligible
+            ? "voice assistant join abandoned: the guild's session ended before the connection was ready"
+            : `voice assistant join abandoned: ${finalEligibility.reason}`,
+          { guildId },
+        );
+        return "cancelled";
+      }
+      return this.createJoinedSession(guildId, channelId, runtime, connection);
     } finally {
       if (this.pendingJoinChannels.get(guildId) === channelId) {
         this.pendingJoinChannels.delete(guildId);
       }
     }
-    if (this.epochs.get(guildId) !== myEpoch) {
-      // A leave/flag-disable/empty-channel-check/shutdown ended this guild's
-      // session (or lack thereof) while the connection was still
-      // establishing. Tear down what this attempt just built and never
-      // start listening — silently joining after being told to stop is
-      // exactly the bug this ticket exists to prevent.
-      this.deps.leaveChannel(guildId);
-      logger.info(
-        "voice assistant join abandoned: the guild's session ended before the connection was ready",
-        { guildId },
-      );
-      return "cancelled";
-    }
+  }
+
+  private createJoinedSession(
+    guildId: DiscordGuildId,
+    channelId: string,
+    runtime: VoiceAssistantRuntime,
+    connection: AssistantConnection,
+  ): VoiceJoinOutcome {
     const session = this.deps.createSession({
       guildId,
       runtime,
@@ -460,6 +528,44 @@ export class VoiceAssistantManager {
   /** Read the guild's ticket without bumping it. */
   private currentEpoch(guildId: string): number {
     return this.epochs.get(guildId) ?? 0;
+  }
+
+  /**
+   * Whether a join for `channelId` in `guildId` may still proceed right now:
+   * the guild flag is enabled AND the target channel is not already known to
+   * be empty. `performJoin` calls this both at the head of the queue and
+   * again after the connection resolves — see its call sites for why a
+   * single check at either point is not enough on its own.
+   */
+  private async isJoinStillEligible(
+    guildId: string,
+    channelId: string,
+  ): Promise<{ eligible: true } | { eligible: false; reason: string }> {
+    let enabled: boolean;
+    try {
+      enabled = await this.deps.isGuildEnabled(guildId);
+    } catch (error) {
+      // A flag-evaluation failure is not an answer; the command handler
+      // already confirmed the flag once before calling join(), so a
+      // transient evaluation hiccup here must not block or abandon an
+      // otherwise-legitimate request.
+      logger.warn("voice flag re-check could not evaluate a guild", {
+        guildId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      enabled = true;
+    }
+    if (!enabled) {
+      return { eligible: false, reason: "the guild flag is disabled" };
+    }
+    const humans = this.deps.countHumanMembers(guildId, channelId);
+    if (humans === 0) {
+      return {
+        eligible: false,
+        reason: "the target channel is already empty",
+      };
+    }
+    return { eligible: true };
   }
 
   private endSession(
