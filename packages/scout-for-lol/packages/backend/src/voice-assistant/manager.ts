@@ -268,6 +268,24 @@ export class VoiceAssistantManager {
         "Voice assistant session requested without a bootstrapped runtime",
       );
     }
+    // Revalidate occupancy right as this request reaches the head of the
+    // queue, before touching any existing session and before
+    // `pendingJoinChannels` names its channel: a request that sat queued
+    // behind an earlier one for this guild could have had its OWN target
+    // channel empty out in the meantime, and `handleVoiceStateUpdate` only
+    // ever inspects a channel once `pendingJoinChannels` names it — a
+    // voiceStateUpdate that fired while this request was still queued behind
+    // a DIFFERENT channel's join would have found nothing to invalidate.
+    // Checked BEFORE ending any existing session so a request that is about
+    // to be cancelled never tears down a session that was actually fine.
+    const startingHumans = this.deps.countHumanMembers(guildId, channelId);
+    if (startingHumans === 0) {
+      logger.info(
+        "voice assistant join cancelled: target channel is already empty",
+        { guildId, channelId },
+      );
+      return "cancelled";
+    }
     const existing = this.sessions.get(guildId);
     if (existing !== undefined) {
       this.endSession(guildId, "rejoined", { leaveChannel: false });

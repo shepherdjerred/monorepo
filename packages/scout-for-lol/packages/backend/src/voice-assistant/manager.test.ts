@@ -436,4 +436,40 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     pendingConnections[0]?.(fakeConnection());
     await expect(join).resolves.toBe("joined");
   });
+
+  test("a queued join to a different channel revalidates occupancy when its own turn comes", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const first = h.manager.join(GUILD, "channel-1");
+    const second = h.manager.join(GUILD, "channel-2");
+    // Channel-2 (the SECOND, still-queued request's target) empties out
+    // while the first request is establishing — modeled here by flipping
+    // occupancy globally, since `first`'s own proactive check already ran
+    // (and passed) synchronously before this line, so it cannot be affected
+    // retroactively. `pendingJoinChannels` only names channel-1 at this
+    // point (the first request is the one actually establishing), so a
+    // reactive `handleVoiceStateUpdate` firing here would target the wrong
+    // channel entirely — only revalidating at the moment the second request
+    // itself reaches the head of the queue can catch this.
+    h.setHumanCount(0);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(first).resolves.toBe("joined");
+    await expect(second).resolves.toBe("cancelled");
+    // The cancelled second request never attempted its own connection, and
+    // — critically — never tore down the first, still-valid session either.
+    expect(pendingConnections).toHaveLength(1);
+    expect(h.manager.activeChannelId(GUILD)).toBe("channel-1");
+  });
+
+  test("a join proceeds normally when its target channel already has humans", async () => {
+    const h = managerHarness();
+    h.setHumanCount(3);
+    await expect(h.manager.join(GUILD, "channel-1")).resolves.toBe("joined");
+  });
 });
