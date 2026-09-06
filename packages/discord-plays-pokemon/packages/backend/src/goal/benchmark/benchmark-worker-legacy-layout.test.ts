@@ -3,6 +3,7 @@ import path from "node:path";
 import { cp, mkdtemp, readdir, rm, stat, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { retargetWorkerSourceForLegacyGoalLayout } from "./benchmark-runtime-overlay.ts";
+import { bootWorkerSource } from "./benchmark-worker-test-helpers.ts";
 
 test("retargets every current goal/control and goal/game specifier to its legacy flat path", () => {
   const retargeted = retargetWorkerSourceForLegacyGoalLayout(
@@ -78,20 +79,7 @@ test("streamed worker boots against a target predating the goal/control and goal
       })}\n`,
     );
 
-    const child = Bun.spawn(["bun", "run", "-"], {
-      cwd: target,
-      stdin: "pipe",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    await child.stdin.write(workerSource);
-    await child.stdin.end();
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
-    const output = stdout + stderr;
+    const { output, exitCode } = await bootWorkerSource(target, workerSource);
 
     // Reaching main()'s argument check proves the whole worker module graph
     // (including control-server, pokemonctl, and game-observation) resolved

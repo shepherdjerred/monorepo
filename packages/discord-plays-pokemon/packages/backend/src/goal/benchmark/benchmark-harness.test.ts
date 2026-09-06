@@ -41,6 +41,7 @@ import {
 import { runBenchmarkSeries } from "./benchmark-series.ts";
 import { harnessErrorLifecycle } from "./benchmark-result.ts";
 import { prepareRuntimeTools } from "#src/goal/goal-runtime-env.ts";
+import { bootWorkerSource } from "./benchmark-worker-test-helpers.ts";
 
 const SAVE_SLOT_BYTES = 0xe0_00;
 const SAVE_SECTOR_BYTES = 0x10_00;
@@ -1273,20 +1274,7 @@ test("streamed worker boots against a target predating the boot-readiness helper
       ).exists(),
     ).toBe(false);
 
-    const child = Bun.spawn(["bun", "run", "-"], {
-      cwd: target,
-      stdin: "pipe",
-      stdout: "pipe",
-      stderr: "pipe",
-    });
-    await child.stdin.write(workerSource);
-    await child.stdin.end();
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(child.stdout).text(),
-      new Response(child.stderr).text(),
-      child.exited,
-    ]);
-    const output = stdout + stderr;
+    const { output, exitCode } = await bootWorkerSource(target, workerSource);
 
     // Resolving the whole worker graph against a helper-free checkout and
     // reaching main()'s argument check (the worker logs the uncaught error to
