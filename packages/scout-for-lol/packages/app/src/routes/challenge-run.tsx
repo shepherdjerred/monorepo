@@ -11,7 +11,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { ChallengeProgress } from "#src/components/challenge-progress.tsx";
 import { ChallengeAccountEditor } from "#src/components/challenge-account-editor.tsx";
-import { useChallengeRunParams } from "#src/lib/route-params.ts";
+import { useChallengeRunParams } from "#src/lib/api/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 export function ChallengeRun() {

@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import type { PlayerId } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { Section } from "#src/components/player-detail-sections.tsx";
+import { Section } from "#src/components/players/player-detail-sections.tsx";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 type ChallengeRunSummary = {

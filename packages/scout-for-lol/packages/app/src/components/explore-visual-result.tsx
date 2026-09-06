@@ -17,11 +17,11 @@ import {
   SelectValue,
 } from "@scout-for-lol/design-system/components/select";
 import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
-import { ReportResultTable } from "#src/components/report-result-table.tsx";
+import { ReportResultTable } from "#src/components/reports/report-result-table.tsx";
 import {
   SingleRowResult,
   isUngroupedResult,
-} from "#src/components/explore-result.tsx";
+} from "#src/components/explore/explore-result.tsx";
 import {
   isChartablePreview,
   plottableMetricColumns,

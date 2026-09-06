@@ -6,7 +6,7 @@ import {
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
-import { DareStatePill as StatePill } from "#src/components/bucks-dare-display.tsx";
+import { DareStatePill as StatePill } from "#src/components/bucks/bucks-dare-display.tsx";
 
 export type DareSummary = {
   id: number;

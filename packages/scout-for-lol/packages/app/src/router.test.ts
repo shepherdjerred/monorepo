@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { matchRoutes } from "react-router";
 import { routes } from "#src/router.tsx";
-import { trpcOptions } from "#src/lib/trpc-options.ts";
+import { trpcOptions } from "#src/lib/api/trpc-options.ts";
 
 /**
  * Every URL the JSX `<Routes>` tree served must still resolve through the

@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { useHallParams } from "#src/lib/route-params.ts";
+import { useHallParams } from "#src/lib/api/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 function recordValue(value: number | null, precision: number): string {

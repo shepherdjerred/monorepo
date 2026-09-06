@@ -12,7 +12,7 @@ import {
 import { DirectDuelForm } from "#src/components/direct-duel-form.tsx";
 import { DuelEventCreateForm } from "#src/components/duel-event-create-form.tsx";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useDuelGuildParams } from "#src/lib/route-params.ts";
+import { useDuelGuildParams } from "#src/lib/api/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 function competitorLabel(competitor: {

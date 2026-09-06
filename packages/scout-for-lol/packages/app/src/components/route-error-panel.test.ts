@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { isExpectedRouteError } from "./route-error-panel.tsx";
-import { RouteParameterError } from "#src/lib/route-params.ts";
+import { RouteParameterError } from "#src/lib/api/route-params.ts";
 
 function invalidContractError(): z.ZodError {
   const parsed = z.object({ status: z.literal("ACTIVE") }).safeParse({

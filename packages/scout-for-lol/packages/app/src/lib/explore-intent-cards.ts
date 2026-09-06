@@ -5,7 +5,7 @@ import {
   type CreationIntentKind,
   type ExploreTraceEntry,
 } from "@scout-for-lol/data";
-import type { ScoutAnalyticsEvent } from "#src/lib/analytics-events.ts";
+import type { ScoutAnalyticsEvent } from "#src/lib/analytics/analytics-events.ts";
 import type { CreatedEntity } from "#src/lib/intent-confirmation.ts";
 
 /**

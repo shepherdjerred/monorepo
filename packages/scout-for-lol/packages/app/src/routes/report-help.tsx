@@ -1,6 +1,6 @@
 import { Link, useParams } from "react-router";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { ReportQueryDocs } from "#src/components/report-query-docs.tsx";
+import { ReportQueryDocs } from "#src/components/reports/report-query-docs.tsx";
 
 export function ReportHelp() {
   const { guildId } = useParams();

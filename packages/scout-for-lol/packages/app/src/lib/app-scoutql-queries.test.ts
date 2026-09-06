@@ -3,12 +3,12 @@ import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
 import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
 import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
 import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
-import { REPORT_EXAMPLES } from "#src/lib/onboarding-examples.ts";
-import { STARTER_REPORT_QUERY } from "#src/components/report-form-fields.tsx";
+import { REPORT_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
+import { STARTER_REPORT_QUERY } from "#src/components/reports/report-form-fields.tsx";
 import {
   SCOUTQL_SHAPE_EXAMPLE,
   scoutQlClauseSummary,
-} from "#src/lib/scoutql-clause-summary.ts";
+} from "#src/lib/scoutql/scoutql-clause-summary.ts";
 import {
   scoutQlFunctionSections,
   scoutQlKeywordList,
@@ -17,7 +17,7 @@ import {
   scoutQlRenderOptionNames,
   scoutQlSourceSections,
   scoutQlTimeBoundItems,
-} from "#src/lib/report-query-docs-sections.ts";
+} from "#src/lib/reports/report-query-docs-sections.ts";
 
 // ── Every ScoutQL string this app shows ──────────────────────────────────────
 // The app puts query text in front of people in four places: the starter form,

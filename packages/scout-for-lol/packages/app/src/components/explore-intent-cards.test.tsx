@@ -10,7 +10,7 @@ import {
   type ExploreTraceEntry,
 } from "@scout-for-lol/data";
 import { CreationConfirmationView } from "#src/components/explore-creation-intent-card.tsx";
-import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
+import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
 import {
   intentCardsFromTrace,
   type CreationIntentCardData,

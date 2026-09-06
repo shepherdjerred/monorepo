@@ -166,11 +166,6 @@
       "count": 1
     }
   },
-  "packages/backend/src/betting/ask-publish.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/backend/src/betting/markets/matching.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -331,11 +326,6 @@
       "count": 2
     }
   },
-  "packages/backend/src/league/tasks/postmatch/index.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/backend/src/league/tasks/prematch/active-game-detection.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
@@ -346,17 +336,7 @@
       "count": 1
     }
   },
-  "packages/backend/src/league/tasks/prematch/prematch-notification.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/backend/src/lib/subscription/limits.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "packages/backend/src/report-lake/compactor.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -396,11 +376,6 @@
       "count": 1
     }
   },
-  "packages/backend/src/trpc/router/competition.router.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "packages/data/scripts/generate-asset-manifest.ts": {
     "@typescript-eslint/restrict-template-expressions": {
       "count": 2
@@ -409,11 +384,6 @@
       "count": 1
     },
     "unicorn/import-style": {
-      "count": 1
-    }
-  },
-  "packages/data/scripts/patch-analysis.ts": {
-    "custom-rules/zod-schema-naming": {
       "count": 1
     }
   },

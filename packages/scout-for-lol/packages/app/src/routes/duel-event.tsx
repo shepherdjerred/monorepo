@@ -12,7 +12,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { DuelEventRegistrationForms } from "#src/components/duel-event-registration-forms.tsx";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useDuelEventParams } from "#src/lib/route-params.ts";
+import { useDuelEventParams } from "#src/lib/api/route-params.ts";
 import { useTRPC, type RouterOutputs } from "#src/lib/trpc.ts";
 
 type DuelEventOutput = RouterOutputs["duel"]["event"];

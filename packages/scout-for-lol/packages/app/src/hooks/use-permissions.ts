@@ -11,7 +11,7 @@ import {
   type QueryError,
   resolvePermissionQueryError,
   shouldQueryScopedPermissions,
-} from "#src/lib/permission-query-state.ts";
+} from "#src/lib/api/permission-query-state.ts";
 
 export type GuildPermissions = {
   /**

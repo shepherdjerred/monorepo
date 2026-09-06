@@ -15,8 +15,8 @@ import {
   ForbiddenPanel,
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
-import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { permissionsForGuildActionRoute } from "#src/lib/api/guild-route-permissions.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
 import { GUILD_NAVIGATION_ITEMS } from "#src/lib/app-navigation.ts";
 
 export function GuildWorkspace() {

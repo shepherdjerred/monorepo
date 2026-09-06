@@ -2,6 +2,6 @@
 // The sibling `hooks-imports-routes.ts` proves the `routes` half of the same
 // rule; this proves the `components` half, which the rule only gained once
 // `ExploreRunsContextValue` moved down to `lib/`.
-import "#src/components/explore-runs-context.ts";
+import "#src/components/explore/explore-runs-context.ts";
 
 export const illegalHooksComponentDependency = true;

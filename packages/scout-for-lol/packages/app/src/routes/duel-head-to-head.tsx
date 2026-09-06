@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { DuelOptionSelectField } from "#src/components/duel-form-fields.tsx";
-import { useDuelGuildParams } from "#src/lib/route-params.ts";
+import { useDuelGuildParams } from "#src/lib/api/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
 function HeadToHeadRecordCard(props: {

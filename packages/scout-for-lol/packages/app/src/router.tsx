@@ -57,7 +57,7 @@ import { DuelSeries } from "#src/routes/duel-series.tsx";
 import { DuelStandings } from "#src/routes/duel-standings.tsx";
 import { DuelHeadToHead } from "#src/routes/duel-head-to-head.tsx";
 import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
-import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
+import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/api/guild-route-permissions.ts";
 import {
   accessLoader,
   auditLoader,
@@ -74,7 +74,7 @@ import {
   reportsLoader,
   requireSessionLoader,
   subscriptionsLoader,
-} from "#src/lib/route-loaders.ts";
+} from "#src/lib/api/route-loaders.ts";
 
 // Each `/g/:guildId` child carries its own errorElement so a section failure
 // renders inside GuildWorkspace's outlet — the workspace nav chrome survives.

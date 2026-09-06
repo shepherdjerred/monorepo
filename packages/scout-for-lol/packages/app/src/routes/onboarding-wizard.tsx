@@ -3,19 +3,19 @@ import { useNavigate, useSearchParams } from "react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { match } from "ts-pattern";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/api/session-query.ts";
 import type { OnboardingOutcome } from "@scout-for-lol/data";
 import {
   reportOnboardingOutcome,
   reportOnboardingStep,
-} from "#src/lib/funnel.ts";
+} from "#src/lib/analytics/funnel.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   initialOnboardingState,
   onboardingReducer,
   type OnboardingState,
-} from "#src/lib/onboarding-steps.ts";
-import { markOnboardingComplete } from "#src/lib/onboarding-storage.ts";
+} from "#src/lib/onboarding/onboarding-steps.ts";
+import { markOnboardingComplete } from "#src/lib/onboarding/onboarding-storage.ts";
 import { OnboardingInstallStep } from "#src/components/onboarding/onboarding-install-step.tsx";
 import { OnboardingPickGuildStep } from "#src/components/onboarding/onboarding-pick-guild-step.tsx";
 import { OnboardingConceptsStep } from "#src/components/onboarding/onboarding-concepts-step.tsx";

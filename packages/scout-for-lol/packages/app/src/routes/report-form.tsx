@@ -6,15 +6,15 @@ import { ReportIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
+import { ReportQueryPreview } from "#src/components/reports/report-query-preview.tsx";
 import {
   buildReportPayload,
   reportFormOptions,
   ReportFormFields,
-} from "#src/components/report-form-fields.tsx";
-import { ReportCommonPresets } from "#src/components/report-common-presets.tsx";
-import { ReportAiEditor } from "#src/components/report-ai-editor.tsx";
-import { ReportDataExplorer } from "#src/components/report-data-explorer.tsx";
+} from "#src/components/reports/report-form-fields.tsx";
+import { ReportCommonPresets } from "#src/components/reports/report-common-presets.tsx";
+import { ReportAiEditor } from "#src/components/reports/report-ai-editor.tsx";
+import { ReportDataExplorer } from "#src/components/reports/report-data-explorer.tsx";
 import {
   focusFirstInvalid,
   FormPendingStatus,

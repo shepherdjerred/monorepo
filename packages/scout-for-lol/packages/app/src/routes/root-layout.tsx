@@ -19,13 +19,16 @@ import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
 import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
 import { UserMenu } from "#src/components/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
-import { docsOrigin, marketingOrigin } from "#src/lib/surface-origins.ts";
+import {
+  docsOrigin,
+  marketingOrigin,
+} from "#src/lib/analytics/surface-origins.ts";
 import { AppNavigation } from "#src/components/app-navigation.tsx";
 import {
   resolveAppShellMode,
   shouldRenderGlobalFooter,
 } from "#src/lib/app-navigation.ts";
-import { ExploreRunsProvider } from "#src/components/explore-runs-provider.tsx";
+import { ExploreRunsProvider } from "#src/components/explore/explore-runs-provider.tsx";
 
 /**
  * Top-level chrome shared by every route (login included): the contract

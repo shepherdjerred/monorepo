@@ -2,14 +2,14 @@ import { useRef, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { MessageSquare } from "lucide-react";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/api/session-query.ts";
 import { track } from "#src/lib/analytics.ts";
 import {
   isFeedbackDismissed,
   markFeedbackDismissed,
   markFeedbackSubmitted,
 } from "#src/lib/feedback-storage.ts";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/api/stale-times.ts";
 import {
   Dialog,
   DialogContent,
