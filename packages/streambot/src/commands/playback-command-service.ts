@@ -74,6 +74,19 @@ export function normalizeVoicePlayQuery(query: string): string {
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
 export class PlaybackCommandService extends PlaybackControls {
+  private clarificationGeneration = 0;
+
+  async isAssistantV2Enabled(userId: UserId): Promise<boolean> {
+    const scope = this.scope(userId);
+    return scope === null || this.deps.featureGate === undefined
+      ? true
+      : await this.deps.featureGate.assistantV2(scope);
+  }
+
+  clarificationVersion(): number {
+    return this.clarificationGeneration;
+  }
+
   async play(input: PlayInput): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
     const query = this.normalizePlayQuery(input);
@@ -159,6 +172,7 @@ export class PlaybackCommandService extends PlaybackControls {
       );
     }
     if (result.kind === "ambiguous") {
+      this.clarificationGeneration += 1;
       await this.recordFailed(scope, query, intent, "ambiguous");
       const choices = result.candidates
         .slice(0, 3)
@@ -312,15 +326,20 @@ export class PlaybackCommandService extends PlaybackControls {
     signal: AbortSignal,
   ): Promise<string> {
     const scope = this.scope(userId);
-    if (scope === null || this.deps.discovery === undefined) {
+    const discovery = this.deps.discovery;
+    if (scope === null || discovery === undefined) {
       return this.searchLibraryTitles(query, 5);
     }
-    const matches = await this.deps.discovery.search(
+    const matches = await discovery.search(
       inferMediaIntent({ query, source }),
       scope,
       signal,
     );
     if (matches.length === 0) return `Nothing matches ${query}.`;
+    if (matches.length > 1) {
+      this.clarificationGeneration += 1;
+      discovery.rememberCandidates(scope, matches);
+    }
     return matches
       .map(
         (candidate, index) =>

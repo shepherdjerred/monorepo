@@ -336,7 +336,8 @@ export class VoiceAssistantSession {
     if (
       result.wakeVerified &&
       result.normalizedCommand !== "" &&
-      !result.mutated
+      !result.mutated &&
+      result.clarificationRequested === true
     ) {
       const usedFollowUps = followUp ? this.followUpCount + 1 : 0;
       if (usedFollowUps < 2) {

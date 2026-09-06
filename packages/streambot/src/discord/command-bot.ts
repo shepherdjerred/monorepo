@@ -35,6 +35,7 @@ import {
   ChannelIdSchema,
   GuildIdSchema,
   type ChannelId,
+  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   getErrorMessage,
@@ -145,6 +146,9 @@ export class CommandBot {
         this.voiceChannelOf(interaction.guild, interaction.user),
       openSubtitlePicker: (interaction, handle) =>
         this.openSubtitlePicker(interaction, handle),
+      ...(deps.featureGate === undefined
+        ? {}
+        : { assistantV2Enabled: deps.featureGate.assistantV2 }),
     });
     this.voiceTopology = new VoiceTopologyWatcher({
       getSessions: () => this.deps.getSessions(),
@@ -280,11 +284,11 @@ export class CommandBot {
       ? invoked.data
       : null;
     const sessions = this.deps.getSessions();
+    const voiceChannelId = this.issuerVoiceChannel(interaction);
 
     let handle;
     let announceChannel: ChannelId | null = invokedChannel;
     if (PLAY_SUBCOMMANDS.has(sub)) {
-      const voiceChannelId = this.issuerVoiceChannel(interaction);
       if (voiceChannelId === null) {
         await interaction.reply({
           content:
@@ -320,11 +324,11 @@ export class CommandBot {
     } else if (STATELESS_SUBCOMMANDS.has(sub)) {
       handle = EMPTY_HANDLE;
     } else {
-      const voiceChannelId = this.issuerVoiceChannel(interaction);
+      const existingVoiceChannelId = this.issuerVoiceChannel(interaction);
       handle =
-        voiceChannelId === null
+        existingVoiceChannelId === null
           ? null
-          : sessions.getExisting(guildId.data, voiceChannelId);
+          : sessions.getExisting(guildId.data, existingVoiceChannelId);
       if (handle === null) {
         await interaction.reply({
           content: "Nothing is playing in your voice channel.",
@@ -334,13 +338,43 @@ export class CommandBot {
       }
     }
 
-    const voiceChannelId = this.issuerVoiceChannel(interaction);
-    await this.buildHandler(
+    await this.runCommand({
       handle,
       announceChannel,
-      guildId.data,
-      voiceChannelId ?? invokedChannel,
-    ).run(adaptCommandInteraction(interaction));
+      guildId: guildId.data,
+      channelId: voiceChannelId ?? invokedChannel,
+      interaction,
+      subcommand: sub,
+      sessions,
+      voiceChannelId,
+    });
+  }
+
+  private async runCommand(input: {
+    readonly handle: SessionHandle;
+    readonly announceChannel: ChannelId | null;
+    readonly guildId: GuildId;
+    readonly channelId: ChannelId | null;
+    readonly interaction: ChatInputCommandInteraction;
+    readonly subcommand: string;
+    readonly sessions: SessionManager;
+    readonly voiceChannelId: ChannelId | null;
+  }): Promise<void> {
+    try {
+      await this.buildHandler(
+        input.handle,
+        input.announceChannel,
+        input.guildId,
+        input.channelId,
+      ).run(adaptCommandInteraction(input.interaction));
+    } finally {
+      if (
+        input.voiceChannelId !== null &&
+        PLAY_SUBCOMMANDS.has(input.subcommand)
+      ) {
+        input.sessions.releaseUnused(input.guildId, input.voiceChannelId);
+      }
+    }
   }
 
   private async denyDisabledSessionStart(

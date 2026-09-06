@@ -51,6 +51,7 @@ import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/v
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
 import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
 import { SessionObserver } from "@shepherdjerred/streambot/session/session-observer.ts";
+import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 
 import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-types.ts";
 
@@ -132,6 +133,22 @@ export class SessionManager {
     return session === undefined
       ? null
       : buildSessionHandle(this.deps.config, session);
+  }
+
+  /** Release a session that was allocated for a command which produced no playback event. */
+  releaseUnused(guildId: GuildId, channelId: ChannelId): void {
+    const session = this.sessions.get(keyOf(guildId, channelId));
+    if (session === undefined || session.hasStarted) return;
+    const snapshot = session.actor.getSnapshot();
+    const { stateName } = describeSnapshot(snapshot);
+    if (
+      stateName !== "idle" ||
+      snapshot.context.current !== null ||
+      snapshot.context.queue.length > 0
+    ) {
+      return;
+    }
+    session.teardownHold.request();
   }
 
   /** Metadata for the voice-state auto-stop check, or null when no session owns that channel. */

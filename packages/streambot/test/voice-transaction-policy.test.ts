@@ -3,8 +3,8 @@ import {
   bindPlaybackVoiceCommandPort,
   createStreambotVoiceTools,
   VoiceMutationGate,
-  voiceToolSchemas,
 } from "@shepherdjerred/streambot/voice/voice-tools.ts";
+import { voiceToolSchemas } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";

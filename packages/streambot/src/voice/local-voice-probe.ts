@@ -6,10 +6,8 @@ import { normalizeVoicePlayQuery } from "@shepherdjerred/streambot/commands/play
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import type { RealtimeCommandTurnResult } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
-import type {
-  VoiceCommandInvocation,
-  VoiceCommandPort,
-} from "@shepherdjerred/streambot/voice/voice-tools.ts";
+import type { VoiceCommandPort } from "@shepherdjerred/streambot/voice/voice-tools.ts";
+import type { VoiceCommandInvocation } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
 import type { CompletedVoiceTurn } from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
 

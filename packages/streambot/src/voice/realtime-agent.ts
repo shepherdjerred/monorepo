@@ -103,6 +103,7 @@ export type RealtimeCommandTurnResult = {
   readonly wakeVerified: boolean;
   readonly mutated: boolean;
   readonly normalizedCommand: string | null;
+  readonly clarificationRequested?: boolean;
 };
 
 export function buildRealtimeSessionConfig() {
@@ -141,6 +142,17 @@ function aborted(signal: AbortSignal): Promise<never> {
   });
 }
 
+function clarificationVersionOf(commands: VoiceCommandPort): number {
+  return commands.clarificationVersion?.() ?? 0;
+}
+
+function clarificationWasRequested(
+  commands: VoiceCommandPort,
+  before: number,
+): boolean {
+  return clarificationVersionOf(commands) > before;
+}
+
 /** Shared fresh, audio-only Realtime WebSocket turn for production and local probes. */
 export async function runRealtimeCommandTurn(
   config: Config["voice"],
@@ -151,6 +163,7 @@ export async function runRealtimeCommandTurn(
   }
   const apiKey = config.openAiApiKey;
   const mutationGate = new VoiceMutationGate();
+  const clarificationVersion = clarificationVersionOf(input.commands);
   const attempt = input.attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
   const timeoutSignal = AbortSignal.timeout(config.transactionTimeoutMs);
   const transactionSignal =
@@ -323,6 +336,7 @@ export async function runRealtimeCommandTurn(
         wakeVerified: false,
         mutated: false,
         normalizedCommand: null,
+        clarificationRequested: false,
       };
     }
     attempt.transcription({
@@ -347,6 +361,7 @@ export async function runRealtimeCommandTurn(
         wakeVerified: true,
         mutated: false,
         normalizedCommand: "",
+        clarificationRequested: false,
       };
     }
     failureStage = "verified-command";
@@ -430,6 +445,10 @@ export async function runRealtimeCommandTurn(
       wakeVerified: true,
       mutated: mutationGate.hasMutated,
       normalizedCommand: verified.command,
+      clarificationRequested: clarificationWasRequested(
+        input.commands,
+        clarificationVersion,
+      ),
     };
   } catch (error) {
     if (input.signal?.aborted === true) {

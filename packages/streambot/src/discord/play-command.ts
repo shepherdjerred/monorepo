@@ -83,7 +83,15 @@ export async function runPlayCommand(
   );
 
   if (isHttpUrl(query) && isLikelyPlaylist(query)) {
-    await runPlaylist({ deps, interaction, query, subtitles, next });
+    await runPlaylistRequest({
+      deps,
+      interaction,
+      query,
+      subtitles,
+      next,
+      source: selectedSource,
+      placement: selectedPlacement,
+    });
     return;
   }
 
@@ -103,8 +111,55 @@ export async function runPlayCommand(
   await runLegacyPlay({ deps, interaction, query, subtitles, next });
 }
 
-async function runPlaylist(input: PlayCommandInput): Promise<void> {
-  const { deps, interaction, query, subtitles, next } = input;
+async function runPlaylistRequest(input: DiscoveredPlayInput): Promise<void> {
+  if (input.source !== "auto" && input.source !== "youtube") {
+    await input.interaction.reply(
+      "Playlist URLs can only use the auto or YouTube source.",
+    );
+    return;
+  }
+  await runPlaylist(input);
+}
+
+function playlistItemPlacement(
+  index: number,
+  placement: MediaPlacement,
+  next: boolean,
+): MediaPlacement {
+  if (index === 0 && placement === "now") return "now";
+  if (placement === "next" || next) return "next";
+  return "queue";
+}
+
+function playlistEventType(
+  placement: MediaPlacement,
+): "PLAY_NOW" | "ADD_NEXT" | "ADD" {
+  if (placement === "now") return "PLAY_NOW";
+  if (placement === "next") return "ADD_NEXT";
+  return "ADD";
+}
+
+async function playlistHistoryEnabled(
+  deps: CommandHandlerDeps,
+  scope: {
+    readonly guildId: string;
+    readonly channelId: string;
+    readonly userId: string;
+  } | null,
+): Promise<boolean> {
+  if (scope === null || deps.history === undefined) return false;
+  return (
+    deps.featureGate === undefined || (await deps.featureGate.history(scope))
+  );
+}
+
+async function runPlaylist(
+  input: PlayCommandInput & {
+    readonly source: MediaSourcePreference;
+    readonly placement: MediaPlacement;
+  },
+): Promise<void> {
+  const { deps, interaction, query, subtitles, next, placement } = input;
   await interaction.defer();
   const items = await deps.expandPlaylist(
     query,
@@ -118,31 +173,31 @@ async function runPlaylist(input: PlayCommandInput): Promise<void> {
           channelId: deps.channelId,
           userId: interaction.userId,
         };
-  const historyEnabled =
-    scope !== null &&
-    deps.history !== undefined &&
-    (deps.featureGate === undefined || (await deps.featureGate.history(scope)));
-  for (const item of items) {
+  const history = deps.history;
+  const historyEnabled = await playlistHistoryEnabled(deps, scope);
+  for (const [index, item] of items.entries()) {
+    const itemPlacement = playlistItemPlacement(index, placement, next);
     const source = { kind: "url", url: item.url, subtitles } as const;
-    const requestId = historyEnabled
-      ? deps.history.recordQueueRequest({
-          scope,
-          rawQuery: item.title,
-          intent: inferMediaIntent({
-            query: item.title,
-            source: "youtube",
-            placement: next ? "next" : "queue",
-          }),
-          media: {
-            title: item.title,
-            provider: "youtube",
-            source,
-            canonicalUrl: item.url,
-          },
-        })
-      : undefined;
+    const requestId =
+      historyEnabled && history !== undefined && scope !== null
+        ? history.recordQueueRequest({
+            scope,
+            rawQuery: item.title,
+            intent: inferMediaIntent({
+              query: item.title,
+              source: "youtube",
+              placement: itemPlacement,
+            }),
+            media: {
+              title: item.title,
+              provider: "youtube",
+              source,
+              canonicalUrl: item.url,
+            },
+          })
+        : undefined;
     deps.dispatch({
-      type: next ? "ADD_NEXT" : "ADD",
+      type: playlistEventType(itemPlacement),
       source,
       requesterId: interaction.userId,
       ...(requestId === undefined ? {} : { requestId }),

@@ -341,6 +341,10 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           PLAY_NOW: { target: "resolving", actions: "playNow" },
           SKIP: { target: "skipped", actions: "clearRecovery" },
           STOP: { target: "leaving", actions: ["clearQueue", "clearRecovery"] },
+          LEAVE: {
+            target: "leaving",
+            actions: ["clearQueue", "clearRecovery"],
+          },
         },
       },
       streaming: {
@@ -398,6 +402,10 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           },
           SKIP: { target: "skipped", actions: "resetCrashRetries" },
           STOP: {
+            target: "leaving",
+            actions: ["clearQueue", "resetCrashRetries"],
+          },
+          LEAVE: {
             target: "leaving",
             actions: ["clearQueue", "resetCrashRetries"],
           },

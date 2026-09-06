@@ -64,11 +64,18 @@ export class ConversationContextStore {
       ["fifth", 4],
       ["five", 4],
     ]);
-    const normalized = reference.toLocaleLowerCase("en-US");
-    for (const [word, index] of ordinal) {
-      if (new RegExp(String.raw`\b${word}\b`, "u").test(normalized)) {
-        return entry.candidates[index] ?? null;
-      }
+    const normalized = reference
+      .toLocaleLowerCase("en-US")
+      .replace(/[.!?]+$/u, "")
+      .trim();
+    const selection =
+      /^(?:(?:play|pick|choose|select)\s+)?(?:the\s+)?(?:(?:option|number)\s+)?(?<word>first|one|second|two|third|three|fourth|four|fifth|five)(?:\s+(?:one|option))?$/u.exec(
+        normalized,
+      );
+    const selectedWord = selection?.groups?.["word"];
+    if (selectedWord !== undefined) {
+      const index = ordinal.get(selectedWord);
+      if (index !== undefined) return entry.candidates[index] ?? null;
     }
     const tokenMatch = entry.candidates.find(
       (candidate) => candidate.token === reference,

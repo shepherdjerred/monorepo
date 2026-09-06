@@ -24,6 +24,7 @@ import {
 import type { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/player-card-message.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { CardOwner } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import {
   toUserId,
   type ChannelId,
@@ -35,6 +36,10 @@ import {
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("player-card-router");
+const ADVANCED_CARD_ACTIONS = new Set<ControlAction>([
+  ControlAction.Pause,
+  ControlAction.Restart,
+]);
 
 export type PlayerCardRouterDeps = {
   readonly config: Config;
@@ -56,6 +61,8 @@ export type PlayerCardRouterDeps = {
     interaction: MessageComponentInteraction,
     handle: SessionHandle,
   ) => Promise<void>;
+  /** Rollout gate for the advanced player-card controls. */
+  readonly assistantV2Enabled?: (scope: DiscoveryScope) => Promise<boolean>;
 };
 
 /** 1-based chapter number from a chapter-menu pick, or undefined when the value is unusable. */
@@ -102,6 +109,22 @@ export class PlayerCardRouter {
     const handle = this.deps.sessionFor(owner);
     if (handle === null) {
       await this.ephemeral(interaction, "That stream has ended.");
+      return true;
+    }
+
+    if (
+      ADVANCED_CARD_ACTIONS.has(action) &&
+      this.deps.assistantV2Enabled !== undefined &&
+      !(await this.deps.assistantV2Enabled({
+        guildId: owner.guildId,
+        channelId: owner.voiceChannelId,
+        userId: toUserId(interaction.user.id),
+      }))
+    ) {
+      await this.ephemeral(
+        interaction,
+        "The Streambot assistant beta is not enabled here.",
+      );
       return true;
     }
 

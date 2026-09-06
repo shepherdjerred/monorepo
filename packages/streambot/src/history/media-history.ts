@@ -107,7 +107,7 @@ export class MediaHistoryStore {
 
   finishStartedRequest(
     requestId: string,
-    status: "completed" | "failed",
+    status: "completed" | "failed" | "skipped",
   ): void {
     this.database
       .query(
@@ -175,12 +175,25 @@ export class MediaHistoryStore {
     scope: HistoryScope,
     excludeSourceIdentity?: string,
   ): MediaCandidate | null {
+    const rows = this.database
+      .query(
+        `SELECT m.*, COUNT(r.id) AS play_count
+           FROM playback_runs r
+           JOIN media_items m ON m.id = r.media_item_id
+          WHERE r.guild_id = ?1
+          GROUP BY m.id
+          ORDER BY MAX(r.started_at) DESC
+          LIMIT ?2`,
+      )
+      .all(scope.guildId, 25);
     return (
-      this.search(scope, "", 25).find(
-        (candidate) =>
-          excludeSourceIdentity === undefined ||
-          sourceIdentity(candidate.source) !== excludeSourceIdentity,
-      ) ?? null
+      rows
+        .map((row, index) => this.rowToCandidate(row, index))
+        .find(
+          (candidate) =>
+            excludeSourceIdentity === undefined ||
+            sourceIdentity(candidate.source) !== excludeSourceIdentity,
+        ) ?? null
     );
   }
 

@@ -92,6 +92,13 @@ export class DiscoveryService {
     this.context = deps.context ?? new ConversationContextStore();
   }
 
+  rememberCandidates(
+    scope: DiscoveryScope,
+    candidates: readonly MediaCandidate[],
+  ): void {
+    this.context.rememberCandidates(scope, candidates);
+  }
+
   async search(
     intent: MediaIntent,
     scope: DiscoveryScope,

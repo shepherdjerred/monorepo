@@ -57,7 +57,7 @@ export class SessionObserver {
     }
     this.options.history?.finishStartedRequest(
       this.activeRequestId,
-      context.lastError === null ? "completed" : "failed",
+      requestStatusForExit(stateName, context.lastError),
     );
     this.activeRequestId = undefined;
   }
@@ -122,4 +122,16 @@ export class SessionObserver {
       },
     });
   }
+}
+
+function requestStatusForExit(
+  stateName: string,
+  lastError: string | null,
+): "completed" | "failed" | "skipped" {
+  // The request table intentionally models skips/stops as terminal outcomes through the public
+  // control methods. A card click dispatches directly, so the observer must preserve that intent
+  // when the machine reaches its transient `skipped` or `leaving` state.
+  if (stateName === "skipped") return "skipped";
+  if (stateName === "leaving" && lastError === null) return "skipped";
+  return lastError === null ? "completed" : "failed";
 }
