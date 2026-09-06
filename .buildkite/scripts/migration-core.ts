@@ -272,8 +272,8 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ...nativeLanePaths,
   playwright: [
     ...workspacePaths,
-    ".buildkite/scripts/select-image-targets-lockfile.ts",
-    ".buildkite/scripts/select-image-targets-workspaces.ts",
+    ".buildkite/scripts/selectors/select-image-targets-lockfile.ts",
+    ".buildkite/scripts/selectors/select-image-targets-workspaces.ts",
     ".buildkite/scripts/selection/playwright-targets.ts",
     ".buildkite/scripts/selection/run-playwright.ts",
     "scripts/ci/ci-reporting.ts",

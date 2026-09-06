@@ -90,7 +90,7 @@ describe("Playwright target selection", () => {
   test("selects every target for shared browser machinery", async () => {
     for (const changedPath of [
       ".buildkite/ci-playwright/Dockerfile",
-      ".buildkite/scripts/select-image-targets-lockfile.ts",
+      ".buildkite/scripts/selectors/select-image-targets-lockfile.ts",
       "scripts/ci-test-manifest.json",
       "scripts/lib/json.ts",
     ]) {
