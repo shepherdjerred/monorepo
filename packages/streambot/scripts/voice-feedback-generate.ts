@@ -9,8 +9,10 @@
  * output over `say` for Scout's shipped WAVs when that step lands.
  */
 import path from "node:path";
-import { parseArgs } from "node:util";
-import { resolveVoiceWakePhrase } from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
+import {
+  parsePhraseCliArgs,
+  resolveVoiceWakePhrase,
+} from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
 
 type FeedbackLine = { readonly file: string; readonly text: string };
 
@@ -42,25 +44,13 @@ const DESTINATIONS: Record<"hey-streambot" | "hey-scout", string> = {
   ),
 };
 
-const { values } = parseArgs({
-  args: Bun.argv.slice(2),
-  options: {
-    phrase: { type: "string" },
-    help: { type: "boolean", short: "h", default: false },
-  },
-  strict: true,
-  allowPositionals: false,
-});
-
-if (values.help) {
-  process.stdout
-    .write(`Regenerate committed spoken-feedback clips for a wake phrase.
+const values = parsePhraseCliArgs(
+  `Regenerate committed spoken-feedback clips for a wake phrase.
 
 Usage:
   bun run scripts/voice-feedback-generate.ts [--phrase hey-streambot|hey-scout]
-`);
-  process.exit(0);
-}
+`,
+);
 
 const phrase = resolveVoiceWakePhrase(values.phrase);
 const lines = FEEDBACK_LINES[phrase.slug];

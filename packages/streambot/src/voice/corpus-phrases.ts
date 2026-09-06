@@ -1,4 +1,5 @@
 import path from "node:path";
+import { parseArgs } from "node:util";
 import { z } from "zod";
 import type { VoiceAssetManifest } from "@shepherdjerred/voice-assistant/asset-manifest.ts";
 import {
@@ -170,6 +171,28 @@ export const VOICE_WAKE_PHRASES = {
 } as const;
 
 export type VoiceWakePhraseSlug = keyof typeof VOICE_WAKE_PHRASES;
+
+/**
+ * Shared `--phrase`/`--help` parsing for the CLIs that take no other flags. Printing `helpText`
+ * and exiting is the whole help behavior, so every such script shares this exactly rather than
+ * re-declaring the same parseArgs call and exit.
+ */
+export function parsePhraseCliArgs(helpText: string): { phrase?: string } {
+  const { values } = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      phrase: { type: "string" },
+      help: { type: "boolean", short: "h", default: false },
+    },
+    strict: true,
+    allowPositionals: false,
+  });
+  if (values.help) {
+    process.stdout.write(helpText);
+    process.exit(0);
+  }
+  return values;
+}
 
 export function resolveVoiceWakePhrase(
   slug = "hey-streambot",
