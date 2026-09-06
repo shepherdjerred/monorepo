@@ -1,0 +1,51 @@
+{
+  "name": "@scout-for-lol/domain",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
+    "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
+    "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
+    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts",
+    "lint": "bun x eslint src && check-architecture",
+    "format": "bun x prettier --check src",
+    "format:write": "bun x prettier --write src",
+    "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@shepherdjerred/architecture": "workspace:*",
+    "bun-types": "1.4.0",
+    "eslint": "^10.3.0",
+    "prettier": "3.9.6",
+    "typescript": "^6.0.3",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "vitest": "4.1.10",
+    "@vitest/coverage-istanbul": "4.1.10"
+  },
+  "description": "Pure domain contracts for Scout for League of Legends: branded identities, codecs, and state-machine schemas",
+  "keywords": [
+    "league-of-legends",
+    "zod",
+    "typescript"
+  ],
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shepherdjerred/monorepo.git"
+  },
+  "homepage": "https://github.com/shepherdjerred/monorepo/tree/main/packages/scout-for-lol",
+  "bugs": {
+    "url": "https://github.com/shepherdjerred/monorepo/issues"
+  },
+  "imports": {
+    "#architecture": "./architecture.config.ts",
+    "#src/*": "./src/*"
+  }
+}

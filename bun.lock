@@ -1341,6 +1341,7 @@
       "name": "@scout-for-lol/data",
       "version": "0.1.0",
       "dependencies": {
+        "@scout-for-lol/domain": "workspace:*",
         "@shepherdjerred/glitter-context": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "@shepherdjerred/llm-runtime": "workspace:*",
@@ -1497,6 +1498,23 @@
         "@typescript/native": "npm:typescript@7.0.2",
         "@vitest/coverage-istanbul": "4.1.10",
         "eslint": "^10.3.0",
+        "typescript": "^6.0.3",
+        "vitest": "4.1.10",
+      },
+    },
+    "packages/scout-for-lol/packages/domain": {
+      "name": "@scout-for-lol/domain",
+      "version": "0.1.0",
+      "dependencies": {
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/architecture": "workspace:*",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "4.1.10",
+        "bun-types": "1.4.0",
+        "eslint": "^10.3.0",
+        "prettier": "3.9.6",
         "typescript": "^6.0.3",
         "vitest": "4.1.10",
       },
@@ -3832,6 +3850,8 @@
     "@scout-for-lol/desktop-rust": ["@scout-for-lol/desktop-rust@workspace:packages/scout-for-lol/packages/desktop/src-tauri"],
 
     "@scout-for-lol/docs-site": ["@scout-for-lol/docs-site@workspace:packages/scout-for-lol/packages/docs-site"],
+
+    "@scout-for-lol/domain": ["@scout-for-lol/domain@workspace:packages/scout-for-lol/packages/domain"],
 
     "@scout-for-lol/evals": ["@scout-for-lol/evals@workspace:packages/scout-for-lol/packages/evals"],
 
