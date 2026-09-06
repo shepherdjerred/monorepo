@@ -181,28 +181,29 @@ export function requireGroundedAnswer(
       "Answer claims supported work without citing a successful tool call",
     );
   }
-  // Membership alone still lets the model cite an unrelated success (a
-  // harmless read) while the tool that actually mattered failed later in the
-  // same turn. toolEvents is chronological (built from result.steps in
-  // order), so a mutating tool that fails strictly after the cited evidence
-  // contradicts the claim: whatever the model did after citing its proof did
-  // not go as planned, and it never came back to fix it. A failed read after
-  // the citation is not contradictory - re-checking something incidental and
-  // having that check fail says nothing about whether the original claim
-  // holds - so only write/destructive/code-execution failures count.
-  const citedToolCallIds = new Set(answer.reliedOnToolCallIds);
-  const lastCitedIndex = toolEvents.findLastIndex((event) =>
-    citedToolCallIds.has(event.toolCallId),
+  // Membership alone still lets the model point at an unrelated success - a
+  // harmless read, or a different attempt of the same tool - while the
+  // operation that actually mattered failed and was never fixed. Checking
+  // only what happened after the citation is not enough either: the failure
+  // can come first and the unrelated success get cited afterward, which
+  // reads as "grounded" under a citation-relative check but is exactly the
+  // same lie. So this ignores citation order entirely: any write, destructive,
+  // or code-execution call that fails, with no LATER call of that same tool
+  // succeeding anywhere in the turn, leaves that attempt uncorrected, and no
+  // citation of a different tool's success excuses it. A failed read is
+  // exempt - re-checking something incidental and having that check fail
+  // says nothing about whether the claimed outcome holds.
+  const uncorrectedFailure = toolEvents.find(
+    (event, index) =>
+      !event.success &&
+      getToolMetadata(event.toolId).riskClass !== "read" &&
+      !toolEvents
+        .slice(index + 1)
+        .some((later) => later.success && later.toolId === event.toolId),
   );
-  const contradiction = toolEvents
-    .slice(lastCitedIndex + 1)
-    .find(
-      (event) =>
-        !event.success && getToolMetadata(event.toolId).riskClass !== "read",
-    );
-  if (contradiction !== undefined) {
+  if (uncorrectedFailure !== undefined) {
     throw new Error(
-      `Answer claims supported work, but ${contradiction.toolId} failed after the cited evidence`,
+      `Answer claims supported work, but ${uncorrectedFailure.toolId} failed and was never retried successfully this turn`,
     );
   }
 }

@@ -269,7 +269,24 @@ describe("requireGroundedAnswer", () => {
         },
         [unrelatedRead, mutationFailed],
       ),
-    ).toThrow("manage-role failed after the cited evidence");
+    ).toThrow("manage-role failed and was never retried successfully");
+  });
+
+  test("rejects citing an unrelated success even when the mutation failed first", () => {
+    // The same lie in the other order: a citation-relative check ("nothing
+    // failed after what I cited") is blind to this, since the failure comes
+    // before the citation rather than after it. The rule must not depend on
+    // where the citation sits in the timeline.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Added the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-read"],
+        },
+        [mutationFailed, unrelatedRead],
+      ),
+    ).toThrow("manage-role failed and was never retried successfully");
   });
 
   test("allows citing the mutation that actually succeeded after an earlier failed attempt", () => {
