@@ -244,6 +244,10 @@ export function registerDiscordEventHandlers(target: Client): void {
     removeDynamicConfigRefreshListener ??= addDynamicConfigRefreshListener(
       async () => {
         await reconcileGuildScopedCommands(target.guilds.cache.keys());
+        // The same refresh that unregisters /scout leave in a flag-disabled
+        // guild must also end that guild's live capture — otherwise a session
+        // would keep listening with no command left to stop it.
+        await getVoiceAssistantManager().closeDisabledGuildSessions();
       },
     );
 

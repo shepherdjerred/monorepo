@@ -1,5 +1,6 @@
-import type { DiscordGuildId } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema, type DiscordGuildId } from "@scout-for-lol/data";
 import type { VoiceAudioInput } from "@shepherdjerred/voice-assistant";
+import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { voiceManager, type ConnectionMode } from "#src/voice/voice-manager.ts";
 import {
   getVoiceAssistantRuntime,
@@ -34,6 +35,7 @@ export type SessionEndReason =
   | "empty-channel"
   | "connection-lost"
   | "rejoined"
+  | "flag-disabled"
   | "shutdown";
 
 /** What the manager needs from an assistant-mode voice connection. */
@@ -80,6 +82,8 @@ export type VoiceAssistantManagerDeps = {
     guildId: string,
     observation: VoiceQuestionObservation,
   ) => void;
+  /** Whether `voice_assistant_enabled` currently holds for this guild. */
+  readonly isGuildEnabled: (guildId: string) => Promise<boolean>;
 };
 
 type ActiveSession = {
@@ -134,6 +138,10 @@ function defaultDeps(): VoiceAssistantManagerDeps {
     captureQuestion: (guildId, observation) => {
       void captureVoiceQuestionAsked({ guildId, observation });
     },
+    isGuildEnabled: async (guildId) =>
+      await isPolicyEnabled("voice_assistant_enabled", {
+        server: DiscordGuildIdSchema.parse(guildId),
+      }),
   };
 }
 
@@ -146,6 +154,7 @@ function defaultDeps(): VoiceAssistantManagerDeps {
  */
 export class VoiceAssistantManager {
   private readonly sessions = new Map<string, ActiveSession>();
+  private readonly joinQueues = new Map<string, Promise<void>>();
   private readonly deps: VoiceAssistantManagerDeps;
 
   constructor(deps: VoiceAssistantManagerDeps = defaultDeps()) {
@@ -168,8 +177,40 @@ export class VoiceAssistantManager {
    * Join the requester's voice channel and start listening. The caller has
    * already answered the user boundaries (flag, runtime, channel membership);
    * an unavailable runtime here is a broken internal contract.
+   *
+   * Joins are serialized per guild: two members racing `/scout join` before
+   * the first connection resolves would otherwise both observe "no session",
+   * and the second map write would strand the first session's lifecycle,
+   * bridge, and inactivity timer un-closed — with that stale timer later able
+   * to end the newer session. The second caller simply runs after the first.
    */
   async join(guildId: DiscordGuildId, channelId: string): Promise<void> {
+    const previous = this.joinQueues.get(guildId);
+    const run = (async () => {
+      if (previous !== undefined) {
+        try {
+          await previous;
+        } catch {
+          // The earlier join's failure was already its own caller's answer;
+          // this join starts from whatever state that attempt left behind.
+        }
+      }
+      await this.performJoin(guildId, channelId);
+    })();
+    this.joinQueues.set(guildId, run);
+    try {
+      await run;
+    } finally {
+      if (this.joinQueues.get(guildId) === run) {
+        this.joinQueues.delete(guildId);
+      }
+    }
+  }
+
+  private async performJoin(
+    guildId: DiscordGuildId,
+    channelId: string,
+  ): Promise<void> {
     const runtime = this.deps.runtime();
     if (runtime === null) {
       throw new Error(
@@ -231,6 +272,35 @@ export class VoiceAssistantManager {
     const humans = this.deps.countHumanMembers(guildId, active.channelId);
     if (humans === null || humans > 0) return;
     this.endSession(guildId, "empty-channel", { leaveChannel: true });
+  }
+
+  /**
+   * Dynamic-config refresh hook: an operator switching
+   * `voice_assistant_enabled` off must stop active capture, not merely hide
+   * the commands — the same refresh removes `/scout leave` from the guild's
+   * picker, so without this sweep an active session would keep listening with
+   * no command left to stop it.
+   */
+  async closeDisabledGuildSessions(): Promise<void> {
+    // Snapshot: entries are deleted across awaits while this iterates.
+    const activeGuildIds = [...this.sessions.keys()];
+    for (const guildId of activeGuildIds) {
+      let enabled: boolean;
+      try {
+        enabled = await this.deps.isGuildEnabled(guildId);
+      } catch (error) {
+        // A flag-evaluation failure is not an answer; keep the session and
+        // let the next refresh try again rather than tearing down consent
+        // the operator did not revoke.
+        logger.warn("voice flag sweep could not evaluate a guild", {
+          guildId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        continue;
+      }
+      if (enabled) continue;
+      this.endSession(guildId, "flag-disabled", { leaveChannel: true });
+    }
   }
 
   closeAll(): void {

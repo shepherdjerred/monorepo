@@ -85,6 +85,22 @@ export async function executeScoutVoice(
     );
     return;
   }
+  const manager = dependencies.manager();
+  // Leaving is processed before every enablement gate on purpose: it only
+  // ever ENDS listening, and a speaker whose guild flag was just switched off
+  // (or whose client still shows a cached command) must always be able to
+  // stop an active session. Consent controls never sit behind feature gates.
+  if (action === "leave") {
+    const left = manager.leave(guildId.data);
+    await replyPrivate(
+      interaction,
+      left
+        ? "Scout left the voice channel. Say the word — well, type it — when you want me back."
+        : "Scout is not in a voice channel in this server.",
+    );
+    return;
+  }
+
   if (!(await dependencies.isVoiceEnabledForGuild(guildId.data))) {
     await replyPrivate(
       interaction,
@@ -96,18 +112,6 @@ export async function executeScoutVoice(
     await replyPrivate(
       interaction,
       "The Hey Scout voice assistant is not switched on in this deployment yet.",
-    );
-    return;
-  }
-
-  const manager = dependencies.manager();
-  if (action === "leave") {
-    const left = manager.leave(guildId.data);
-    await replyPrivate(
-      interaction,
-      left
-        ? "Scout left the voice channel. Say the word — well, type it — when you want me back."
-        : "Scout is not in a voice channel in this server.",
     );
     return;
   }

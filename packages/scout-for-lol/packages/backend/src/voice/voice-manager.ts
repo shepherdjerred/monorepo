@@ -70,6 +70,49 @@ export type PlaybackGate = (
 ) => Promise<{ volumeMultiplier: number }>;
 
 /**
+ * Run `task` after every earlier task queued under `key` has settled, without
+ * letting an earlier failure poison the queue. A guild's alerts share one
+ * `AudioPlayer`, and `player.play()` replaces whatever the previous alert was
+ * still playing — so concurrent alerts (including a batch the playback gate
+ * releases together after assistant speech) must play one at a time or later
+ * ones truncate earlier ones while every caller records success.
+ */
+export async function enqueuePerKey<T>(
+  queues: Map<string, Promise<unknown>>,
+  key: string,
+  task: () => Promise<T>,
+): Promise<T> {
+  // Only never-rejecting tails are ever stored, so awaiting the predecessor
+  // cannot throw — a failed alert already rejected its own caller via `run`.
+  // An uncontended key starts its task synchronously, exactly like the
+  // pre-queue behavior.
+  const previous = queues.get(key);
+  const run =
+    previous === undefined
+      ? task()
+      : (async () => {
+          await previous;
+          return await task();
+        })();
+  const tail = (async () => {
+    try {
+      await run;
+    } catch {
+      // Swallowed so the NEXT task starts either way; `run` carries the
+      // failure to this task's caller.
+    }
+  })();
+  queues.set(key, tail);
+  try {
+    return await run;
+  } finally {
+    if (queues.get(key) === tail) {
+      queues.delete(key);
+    }
+  }
+}
+
+/**
  * Manages voice connections and audio playback for Discord guilds
  */
 export class VoiceManager<C extends VoiceManagerConnection> {
@@ -81,6 +124,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     guildId: string,
     mode: ConnectionMode,
   ) => void)[] = [];
+  private readonly playbackQueues = new Map<string, Promise<unknown>>();
   private playbackGate: PlaybackGate | null = null;
 
   constructor(private readonly establish: EstablishVoiceConnection<C>) {}
@@ -208,7 +252,14 @@ export class VoiceManager<C extends VoiceManagerConnection> {
   }
 
   /**
-   * Play a sound in a guild's voice channel
+   * Play a sound in a guild's voice channel.
+   *
+   * Alerts are serialized per guild: they share one `AudioPlayer`, and
+   * `player.play()` replaces the in-flight resource, so overlapping calls —
+   * including a batch released together by the playback gate — would truncate
+   * each other while every caller records success. Each queued alert consults
+   * the gate at its own turn, so one that reaches the head mid-reply still
+   * waits or ducks on its own clock.
    */
   async playSound(
     guildId: string,
@@ -218,7 +269,16 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     if (!this.connections.has(guildId)) {
       throw new Error(`No voice connection for guild ${guildId}`);
     }
+    await enqueuePerKey(this.playbackQueues, guildId, async () => {
+      await this.performPlaySound(guildId, source, volume);
+    });
+  }
 
+  private async performPlaySound(
+    guildId: string,
+    source: SoundSource,
+    volume: number,
+  ): Promise<void> {
     // Let an in-flight assistant reply finish (bounded), or duck under it.
     const gate = await this.playbackGate?.(guildId);
     const effectiveVolume = volume * (gate?.volumeMultiplier ?? 1);

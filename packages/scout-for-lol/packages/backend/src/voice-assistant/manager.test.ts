@@ -72,22 +72,33 @@ type Harness = {
   sessionEvents: string[];
   wakeAccepted: (() => void) | undefined;
   setHumanCount: (count: number | null) => void;
+  setGuildEnabled: (enabled: boolean) => void;
   fireConnectionLost: (guildId: string, mode: ConnectionMode) => void;
 };
 
-function managerHarness(): Harness {
+function managerHarness(options?: {
+  joinAssistantChannel?: VoiceAssistantManagerDeps["joinAssistantChannel"];
+}): Harness {
   const timers: FakeTimer[] = [];
   const left: string[] = [];
   const sessionEvents: string[] = [];
   const state: {
     wakeAccepted: (() => void) | undefined;
     humanCount: number | null;
+    guildEnabled: boolean;
     connectionLost:
       ((guildId: string, mode: ConnectionMode) => void) | undefined;
-  } = { wakeAccepted: undefined, humanCount: 1, connectionLost: undefined };
+  } = {
+    wakeAccepted: undefined,
+    humanCount: 1,
+    guildEnabled: true,
+    connectionLost: undefined,
+  };
   const deps: VoiceAssistantManagerDeps = {
     runtime: () => FAKE_RUNTIME,
-    joinAssistantChannel: () => Promise.resolve(fakeConnection()),
+    joinAssistantChannel:
+      options?.joinAssistantChannel ??
+      (() => Promise.resolve(fakeConnection())),
     leaveChannel: (guildId) => {
       left.push(guildId);
     },
@@ -124,6 +135,7 @@ function managerHarness(): Harness {
     captureQuestion: () => {
       /* covered by analytics tests */
     },
+    isGuildEnabled: () => Promise.resolve(state.guildEnabled),
   };
   const manager = new VoiceAssistantManager(deps);
   return {
@@ -136,6 +148,9 @@ function managerHarness(): Harness {
     },
     setHumanCount: (count) => {
       state.humanCount = count;
+    },
+    setGuildEnabled: (enabled) => {
+      state.guildEnabled = enabled;
     },
     fireConnectionLost: (guildId, mode) => {
       state.connectionLost?.(guildId, mode);
@@ -233,5 +248,48 @@ describe("VoiceAssistantManager", () => {
     await h.manager.join(GUILD, "channel-1");
     h.fireConnectionLost(GUILD, "playback");
     expect(h.manager.isActive(GUILD)).toBe(true);
+  });
+
+  test("concurrent joins serialize instead of stranding the first session", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const first = h.manager.join(GUILD, "channel-1");
+    const second = h.manager.join(GUILD, "channel-2");
+    // Only the first join has reached the connection step; the second is
+    // queued behind it rather than racing past the "no session" check.
+    expect(pendingConnections).toHaveLength(1);
+    pendingConnections[0]?.(fakeConnection());
+    await first;
+    expect(pendingConnections).toHaveLength(2);
+    pendingConnections[1]?.(fakeConnection());
+    await second;
+    // The first session was properly ended (not stranded) and exactly one
+    // live timer remains, belonging to the second session.
+    expect(h.manager.activeChannelId(GUILD)).toBe("channel-2");
+    expect(h.sessionEvents.filter((event) => event === "created")).toHaveLength(
+      2,
+    );
+    expect(h.sessionEvents.filter((event) => event === "closed")).toHaveLength(
+      1,
+    );
+    expect(h.timers.filter((timer) => !timer.cancelled)).toHaveLength(1);
+  });
+
+  test("switching the guild flag off ends its live session", async () => {
+    const h = managerHarness();
+    await h.manager.join(GUILD, "channel-1");
+    await h.manager.closeDisabledGuildSessions();
+    expect(h.manager.isActive(GUILD)).toBe(true);
+    h.setGuildEnabled(false);
+    await h.manager.closeDisabledGuildSessions();
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).toContain("closed");
   });
 });

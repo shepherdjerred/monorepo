@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { VoiceConnectionStatus, type AudioPlayer } from "@discordjs/voice";
 import { Client, GatewayIntentBits } from "discord.js";
 import {
+  enqueuePerKey,
   VoiceManager,
   type EstablishVoiceConnection,
   type VoiceManagerConnection,
@@ -172,5 +173,52 @@ describe("VoiceManager modes", () => {
     h.loseConnection(first);
     expect(h.lost).toEqual([]);
     expect(h.manager.getConnection(GUILD)).toBe(second);
+  });
+});
+
+describe("enqueuePerKey", () => {
+  test("runs tasks for one key strictly in order", async () => {
+    const queues = new Map<string, Promise<unknown>>();
+    const order: string[] = [];
+    const gate = deferredGate();
+    const first = enqueuePerKey(queues, "g1", async () => {
+      order.push("first-start");
+      await gate.promise;
+      order.push("first-end");
+    });
+    const second = enqueuePerKey(queues, "g1", async () => {
+      order.push("second-start");
+    });
+    expect(order).toEqual(["first-start"]);
+    gate.release();
+    await first;
+    await second;
+    expect(order).toEqual(["first-start", "first-end", "second-start"]);
+  });
+
+  test("a failed task rejects its caller without poisoning the queue", async () => {
+    const queues = new Map<string, Promise<unknown>>();
+    const failing = enqueuePerKey(queues, "g1", () =>
+      Promise.reject(new Error("alert failed")),
+    );
+    await expect(failing).rejects.toThrow("alert failed");
+    await expect(
+      enqueuePerKey(queues, "g1", () => Promise.resolve("ok")),
+    ).resolves.toBe("ok");
+    expect(queues.size).toBe(0);
+  });
+
+  test("keys queue independently", async () => {
+    const queues = new Map<string, Promise<unknown>>();
+    const gate = deferredGate();
+    const blocked = enqueuePerKey(queues, "g1", async () => {
+      await gate.promise;
+      return "g1";
+    });
+    await expect(
+      enqueuePerKey(queues, "g2", () => Promise.resolve("g2")),
+    ).resolves.toBe("g2");
+    gate.release();
+    await expect(blocked).resolves.toBe("g1");
   });
 });

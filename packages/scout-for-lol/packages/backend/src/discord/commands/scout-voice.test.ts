@@ -115,4 +115,20 @@ describe("/scout join and /scout leave", () => {
     await executeScoutVoice(h.interaction, "leave", h.dependencies);
     expect(h.replies[0]).toContain("not in a voice channel");
   });
+
+  test("leave still works after the guild flag is switched off", async () => {
+    // Consent control: an operator flipping the flag off (or a client with a
+    // cached command) must never strand an active session un-stoppable.
+    const h = voiceHarness({ flagEnabled: false, activeChannelId: "vc-1" });
+    await executeScoutVoice(h.interaction, "leave", h.dependencies);
+    expect(h.leaves).toEqual([GUILD]);
+    expect(h.replies[0]).toContain("left the voice channel");
+  });
+
+  test("leave still works when the runtime is unavailable", async () => {
+    const h = voiceHarness({ runtimeAvailable: false, leaveResult: false });
+    await executeScoutVoice(h.interaction, "leave", h.dependencies);
+    expect(h.leaves).toEqual([GUILD]);
+    expect(h.replies[0]).toContain("not in a voice channel");
+  });
 });
