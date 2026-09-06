@@ -8,7 +8,7 @@ import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
   PlayerAliasFormField,
   usePlayerAliasDialogForm,
-} from "#src/components/player-alias-form-field.tsx";
+} from "#src/components/player/player-alias-form-field.tsx";
 import { PlayerAliasFormSchema } from "#src/lib/form-schemas.ts";
 
 /**

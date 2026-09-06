@@ -4,13 +4,13 @@ import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { FormActions } from "@scout-for-lol/design-system/components/input";
-import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
+import { CompetitionBuilderV2 } from "#src/components/competition/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,
   EMPTY_STATE,
   competitionFormOptions,
   type FormState,
-} from "#src/components/competition-form-fields.tsx";
+} from "#src/components/competition/competition-form-fields.tsx";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 import {
   focusFirstInvalid,

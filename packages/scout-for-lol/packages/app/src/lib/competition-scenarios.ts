@@ -1,6 +1,6 @@
 import { ChampionIdSchema, type SeasonData } from "@scout-for-lol/data";
-import type { CriteriaState } from "#src/components/competition-criteria-fields.tsx";
-import type { DatesState } from "#src/components/competition-dates-fields.tsx";
+import type { CriteriaState } from "#src/components/competition/competition-criteria-fields.tsx";
+import type { DatesState } from "#src/components/competition/competition-dates-fields.tsx";
 import {
   addCalendarDays,
   calendarDateInTimezone,

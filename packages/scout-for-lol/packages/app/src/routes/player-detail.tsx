@@ -4,7 +4,7 @@ import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { PlayerSubscriptionsManager } from "#src/components/player-subscriptions-manager.tsx";
+import { PlayerSubscriptionsManager } from "#src/components/player/player-subscriptions-manager.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompetitionStatusSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -21,12 +21,12 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { DiscordUser } from "#src/components/discord-user.tsx";
-import { PlayerHeaderActions } from "#src/components/player-header-actions.tsx";
+import { PlayerHeaderActions } from "#src/components/player/player-header-actions.tsx";
 import {
   CompetitionSection,
   PlayerAccountsTable,
   Section,
-} from "#src/components/player-detail-sections.tsx";
+} from "#src/components/player/player-detail-sections.tsx";
 import { GuildPlayerStats } from "#src/components/guild-player-stats.tsx";
 import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
 import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";

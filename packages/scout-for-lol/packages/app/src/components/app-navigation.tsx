@@ -36,8 +36,8 @@ import {
 } from "#src/lib/app-navigation.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { ExploreSidebar } from "#src/components/explore-sidebar.tsx";
-import { useOptionalExploreRuns } from "#src/components/explore-runs-context.ts";
+import { ExploreSidebar } from "#src/components/explore/explore-sidebar.tsx";
+import { useOptionalExploreRuns } from "#src/components/explore/explore-runs-context.ts";
 import { RenameConversationDialog } from "#src/components/rename-conversation-dialog.tsx";
 import { ConfirmDeleteDialog } from "#src/components/confirm-delete-dialog.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";

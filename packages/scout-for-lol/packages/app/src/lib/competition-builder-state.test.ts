@@ -8,7 +8,7 @@ import {
 import { buildCompetitionScenarios } from "#src/lib/competition-scenarios.ts";
 import { COMPETITION_EXAMPLES } from "#src/lib/onboarding-examples.ts";
 import { validateForm } from "#src/lib/competition-form-state.ts";
-import { competitionReviewSummary } from "#src/components/competition-builder-review.tsx";
+import { competitionReviewSummary } from "#src/components/competition/competition-builder-review.tsx";
 
 const NOW = new Date("2026-08-23T18:00:00.000Z");
 const TIMEZONE = "America/Los_Angeles";

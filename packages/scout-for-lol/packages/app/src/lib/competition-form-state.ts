@@ -3,7 +3,7 @@ import {
   SeasonIdSchema,
   type CompetitionCriteria,
 } from "@scout-for-lol/data";
-import type { FormState } from "#src/components/competition-form-fields.tsx";
+import type { FormState } from "#src/components/competition/competition-form-fields.tsx";
 import { fixedDateRangeInTimezone } from "#src/lib/competition-time.ts";
 import {
   CompetitionFormValueSchema,

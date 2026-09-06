@@ -9,7 +9,7 @@ import {
   ChampionPoolTable,
   MatchHistoryList,
   RankValue,
-} from "#src/components/player-profile-sections.tsx";
+} from "#src/components/player/player-profile-sections.tsx";
 
 function router(children: React.ReactNode): React.ReactNode {
   return <MemoryRouter>{children}</MemoryRouter>;

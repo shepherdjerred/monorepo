@@ -2,11 +2,11 @@ import { getCurrentSeason, getSeasonChoices } from "@scout-for-lol/data";
 import {
   EMPTY_REPORT_STATE,
   type ReportFormState,
-} from "#src/components/report-form-fields.tsx";
+} from "#src/components/report/report-form-fields.tsx";
 import {
   EMPTY_STATE,
   type FormState,
-} from "#src/components/competition-form-fields.tsx";
+} from "#src/components/competition/competition-form-fields.tsx";
 
 /**
  * Concrete starter presets shown on the "Report or competition?" page (and

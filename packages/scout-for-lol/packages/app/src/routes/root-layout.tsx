@@ -25,7 +25,7 @@ import {
   resolveAppShellMode,
   shouldRenderGlobalFooter,
 } from "#src/lib/app-navigation.ts";
-import { ExploreRunsProvider } from "#src/components/explore-runs-provider.tsx";
+import { ExploreRunsProvider } from "#src/components/explore/explore-runs-provider.tsx";
 
 /**
  * Top-level chrome shared by every route (login included): the contract

@@ -6,7 +6,7 @@ import {
   LoadingState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
-import { BucksLedgerList } from "#src/components/bucks-ledger-list.tsx";
+import { BucksLedgerList } from "#src/components/bucks/bucks-ledger-list.tsx";
 import {
   INITIAL_LEDGER_PAGING,
   adoptSnapshot,

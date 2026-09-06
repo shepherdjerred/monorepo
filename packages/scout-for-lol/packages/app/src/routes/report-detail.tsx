@@ -18,10 +18,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { ReportRunHistory } from "#src/components/report-run-history.tsx";
-import { ReportQueryViewer } from "#src/components/report-query-viewer.tsx";
-import { ReportTimeControls } from "#src/components/report-time-controls.tsx";
-import { ReportQueryPreview } from "#src/components/report-query-preview.tsx";
+import { ReportRunHistory } from "#src/components/report/report-run-history.tsx";
+import { ReportQueryViewer } from "#src/components/report/report-query-viewer.tsx";
+import { ReportTimeControls } from "#src/components/report/report-time-controls.tsx";
+import { ReportQueryPreview } from "#src/components/report/report-query-preview.tsx";
 
 type ReportRow = {
   description: string | null;

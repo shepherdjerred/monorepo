@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { AddSubscriptionDialog } from "#src/components/add-subscription-dialog.tsx";
+import { AddSubscriptionDialog } from "#src/components/subscription/add-subscription-dialog.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ConceptCards } from "#src/components/concept-cards.tsx";
 import {

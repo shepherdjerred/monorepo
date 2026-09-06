@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
-import { Section } from "#src/components/player-detail-sections.tsx";
+import { Section } from "#src/components/player/player-detail-sections.tsx";
 import {
   ChampionPoolTable,
   MatchHistoryList,
   PlayerSummaryCards,
-} from "#src/components/player-profile-sections.tsx";
+} from "#src/components/player/player-profile-sections.tsx";
 
 export function GuildPlayerStats(props: { guildId: string; alias: string }) {
   const trpc = useTRPC();

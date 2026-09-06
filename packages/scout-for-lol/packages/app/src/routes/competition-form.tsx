@@ -11,14 +11,14 @@ import {
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { FormActions } from "@scout-for-lol/design-system/components/input";
-import { CompetitionBuilderV2 } from "#src/components/competition-builder-v2.tsx";
+import { CompetitionBuilderV2 } from "#src/components/competition/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,
   EMPTY_STATE,
   competitionFormOptions,
   type FormState,
-} from "#src/components/competition-form-fields.tsx";
-import { CompetitionPresets } from "#src/components/competition-presets.tsx";
+} from "#src/components/competition/competition-form-fields.tsx";
+import { CompetitionPresets } from "#src/components/competition/competition-presets.tsx";
 import {
   focusFirstInvalid,
   FormPendingStatus,

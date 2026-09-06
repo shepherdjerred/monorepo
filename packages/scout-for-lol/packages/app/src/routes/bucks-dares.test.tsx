@@ -1,11 +1,11 @@
-import { DareList } from "#src/components/dare-list.tsx";
+import { DareList } from "#src/components/bucks/dare-list.tsx";
 import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { DareProgressSchema } from "@scout-for-lol/data";
 import { DareDetail, parseBucksDareId } from "#src/routes/bucks-dares.tsx";
-import { formatDareEvidenceJson } from "#src/components/bucks-dare-progress.tsx";
+import { formatDareEvidenceJson } from "#src/components/bucks/bucks-dare-progress.tsx";
 
 const noAction = vi.fn();
 const progress = DareProgressSchema.parse({

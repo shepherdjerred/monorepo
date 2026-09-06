@@ -10,7 +10,7 @@ import {
   reportFormOptions,
   ReportFormFields,
   type ReportFormState,
-} from "#src/components/report-form-fields.tsx";
+} from "#src/components/report/report-form-fields.tsx";
 import { REPORT_EXAMPLES } from "#src/lib/onboarding-examples.ts";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 import {

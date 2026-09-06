@@ -13,15 +13,15 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
-import { Section } from "#src/components/player-detail-sections.tsx";
-import { ConsumerPlayerChallengeRuns } from "#src/components/player-challenge-runs.tsx";
+import { Section } from "#src/components/player/player-detail-sections.tsx";
+import { ConsumerPlayerChallengeRuns } from "#src/components/challenge/player-challenge-runs.tsx";
 import {
   ChampionPoolTable,
   MatchHistoryList,
   PlayerSummaryCards,
   RankValue,
-} from "#src/components/player-profile-sections.tsx";
-import { PlayerProfileFilterBar } from "#src/components/player-profile-filter-bar.tsx";
+} from "#src/components/player/player-profile-sections.tsx";
+import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
 import { useConsumerPlayerParams } from "#src/lib/route-params.ts";

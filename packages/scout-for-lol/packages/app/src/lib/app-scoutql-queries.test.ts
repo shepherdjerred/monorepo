@@ -4,7 +4,7 @@ import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
 import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
 import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
 import { REPORT_EXAMPLES } from "#src/lib/onboarding-examples.ts";
-import { STARTER_REPORT_QUERY } from "#src/components/report-form-fields.tsx";
+import { STARTER_REPORT_QUERY } from "#src/components/report/report-form-fields.tsx";
 import {
   SCOUTQL_SHAPE_EXAMPLE,
   scoutQlClauseSummary,

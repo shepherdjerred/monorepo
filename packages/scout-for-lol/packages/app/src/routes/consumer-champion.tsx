@@ -20,7 +20,7 @@ import {
   type ChampionComparisonRow,
 } from "#src/components/champion-comparison-table.tsx";
 import { PageSectionHeading } from "#src/components/page-section-heading.tsx";
-import { PlayerProfileFilterBar } from "#src/components/player-profile-filter-bar.tsx";
+import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
   playerProfileSearch,
