@@ -7,8 +7,8 @@ import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src
 import {
   createCertManagerApp,
   HOMELAB_CLUSTER_CA_FILE,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cert-manager.ts";
-import { createPrometheusApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/prometheus.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
+import { createPrometheusApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus.ts";
 import {
   ALERTMANAGER_POSTAL_SMTP_CA_MOUNT_PATH,
   ALERTMANAGER_POSTAL_SMTP_CA_SECRET,

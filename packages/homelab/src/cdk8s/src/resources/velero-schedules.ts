@@ -2,7 +2,7 @@
  * Velero backup schedule configuration - single source of truth
  *
  * This configuration is used to generate both:
- * 1. Velero Schedule resources (in argo-applications/velero.ts)
+ * 1. Velero Schedule resources (in argo-applications/storage/velero.ts)
  * 2. Prometheus monitoring alerts (in monitoring/monitoring/rules/velero.ts)
  *
  * This ensures that backup schedules and their monitoring alerts never drift apart.

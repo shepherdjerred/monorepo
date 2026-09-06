@@ -20,7 +20,7 @@ export const platformTofuPaths = [
   "packages/homelab/src/tofu/openrouter",
   "packages/homelab/src/tofu/platform-desired-state.schema.json",
   "packages/homelab/scripts/platform-desired-state.ts",
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/buildkite.ts",
+  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
   "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
 ] as const;
 

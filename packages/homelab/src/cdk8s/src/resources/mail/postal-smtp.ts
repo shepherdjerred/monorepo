@@ -5,7 +5,7 @@ import {
   HOMELAB_CLUSTER_CA_FILE,
   HOMELAB_CLUSTER_TLS_CERTIFICATE_FILE,
   HOMELAB_CLUSTER_TLS_PRIVATE_KEY_FILE,
-} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/cert-manager.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 
 export const POSTAL_SMTP_TLS_SECRET = "postal-smtp-tls";
 export const POSTAL_SMTP_TLS_SERVER_NAME =

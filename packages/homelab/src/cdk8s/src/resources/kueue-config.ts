@@ -9,7 +9,7 @@ import { BUILDKITE_MAX_IN_FLIGHT } from "@shepherdjerred/homelab/cdk8s/src/misc/
  * current allocatable capacity of roughly 83.5Gi after Talos reservations and
  * eviction floors. Memory sits below the full allocatable capacity because the
  * CI workspace is memory-backed (agent-stack `workspace-volume` tmpfs — see
- * argo-applications/buildkite.ts): checkout explicitly requests 1Gi and each
+ * argo-applications/ci/buildkite.ts): checkout explicitly requests 1Gi and each
  * step request covers its own install/workspace demand. Image builds use the
  * remote BuildKit daemon and do not run DinD sidecars. The request-weighted
  * quota admits broad light-job mixes while keeping verify, Playwright, and
