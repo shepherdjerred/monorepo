@@ -1,0 +1,388 @@
+{
+  "championKey": "Yunara",
+  "championName": "Yunara",
+  "abilities": {
+    "passive": {
+      "name": "Vow of the First Lands",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Yunara's Critical Strikes deal bonus magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Cultivation of Spirit",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Resource_Max": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "Resource_Champion": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Resource_Nonchampion": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Resource_Loss": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Resource_Loss_Interval": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Resource_Duration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "Buff_Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "Spread_Radius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "Spread_AD_Ratio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "Spread_Lifesteal_Efficacy": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Spread_Onhit_Efficacy": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "Attack_Speed": [
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6
+        ],
+        "Damage": [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        "Damage_Passive": [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      },
+      "resolvedDescription": "Passive: Yunara deal 5/10/15/20/25 (+20% AP) magic damage %i:OnHit% On-Hit and attacking grants 1 Unleash (2 Unleash for champions). Active: Yunara consumes 8 Unleash and for 5 seconds gains 20/30/40/50/60% Attack Speed and deals an additional 5/10/15/20/25 (+20% AP) magic damage %i:OnHit% On-Hit. During this time, her Attacks spread to nearby enemies dealing them 30% AD physical damage. Transcendent State: This Ability is instantly activated for 15 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Arc of Judgment | Arc of Ruin",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "Cast_Time_Base": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "Cast_Time_Min": [
+          0.225,
+          0.225,
+          0.225,
+          0.225,
+          0.225
+        ],
+        "Cast_Time_Attack_Speed_Cap": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "Cast_Time_Base_Empowered": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "Cast_Time_Min_Empowered": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "Cast_Time_Attack_Speed_Cap_Empowered": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "Linger_Duration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Damage": [
+          55,
+          95,
+          135,
+          175,
+          215
+        ],
+        "ADRatio": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DPS_Modifier": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "Slow_Duration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "Slow_Amount": [
+          0.99,
+          0.99,
+          0.99,
+          0.99,
+          0.99
+        ],
+        "Minion_Execute_Tick_Count": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "resolvedDescription": "Yunara lets rip a prayer bead that deals 55/95/135/175/215 (+85% bonus AD) (+50% AP) magic damage and Slows by 99% decaying over 1.5 seconds. It deals an additional 33/57/81/105/129.00001 (+51% bonus AD) (+30% AP) magic damage per second. Transcendent State - Arc of Ruin: Yunara fires a laser that deals 160/320/480 (+120% bonus AD) (+75% AP) magic damage and Slows by 99% decaying over 1 second.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Kanmei's Steps | Untouchable Shadow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Buff_Duration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "Move_Speed": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "Move_Speed_Modifier": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Yunara gains 30/35/40/45/50% Move Speed, increased to 45/52.5/60/67.5/75% Move Speed when moving toward an enemy champion, for 1.5 seconds. Transcendent State - Untouchable Shadow: Yunara dashes in a direction.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Transcend One's Self",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        90,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Buff_Duration": [
+          15,
+          15,
+          15
+        ],
+        "RW_Damage_Base": [
+          160,
+          320,
+          480
+        ],
+        "RW_ADRatio": [
+          1.2,
+          1.2,
+          1.2
+        ],
+        "RW_APRatio": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "RW_Slow_Duration": [
+          1,
+          1,
+          1
+        ],
+        "RW_Slow_Amount": [
+          0.99,
+          0.99,
+          0.99
+        ],
+        "RE_Dash_Speed": [
+          1350,
+          1500,
+          1650
+        ],
+        "RW_CDR": [
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Yunara enters a Transcendent State for 15 seconds upgrading her basic Abilities for the duration.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,339 @@
+{
+  "championKey": "Mordekaiser",
+  "championName": "Mordekaiser",
+  "abilities": {
+    "passive": {
+      "name": "Darkness Rise",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CombatTrackingDuration": [
+          4
+        ],
+        "MaximumStacks": [
+          3
+        ],
+        "PercentAPAddedToAutos": [
+          0.4
+        ],
+        "FuryForQHit": [
+          1
+        ],
+        "FuryForAutoHit": [
+          1
+        ],
+        "FuryForEHit": [
+          1
+        ],
+        "DoTRadius": [
+          375
+        ],
+        "MovementSpeed": [
+          0.03
+        ]
+      },
+      "resolvedDescription": "Mordekaiser gains a powerful damage aura and Move Speed after landing 3 attacks or spells against champions or monsters.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Obliterate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        675,
+        675,
+        675,
+        675,
+        675
+      ],
+      "dataValues": {
+        "QBaseDamage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "IsolationScalar": [
+          1.3,
+          1.35,
+          1.4,
+          1.45,
+          1.5
+        ],
+        "IsolationTooltip": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "MaceStartDistance": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "MaceLength": [
+          625,
+          625,
+          625,
+          625,
+          625
+        ],
+        "RectangleWidth": [
+          160,
+          160,
+          160,
+          160,
+          160
+        ],
+        "ADRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ]
+      },
+      "resolvedDescription": "Mordekaiser smashes the ground with Nightfall dealing 80/115/150/185/220 (+0-45 based on level) (+120% bonus AD) (+70% AP) magic damage, increased to {{ empowereddamagetooltip }} if it hits only a single enemy.",
+      "unresolved": [
+        "empowereddamagetooltip"
+      ]
+    },
+    "W": {
+      "name": "Indestructible",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DamageConversion": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "BaseShield": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "HealingPercent": [
+          0.35,
+          0.375,
+          0.4,
+          0.425,
+          0.45
+        ],
+        "MinionPenalty": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "DamageTakenConversion": [
+          0.075,
+          0.075,
+          0.075,
+          0.075,
+          0.075
+        ],
+        "MaxHealthCap": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "TimeBeforeDecay": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DecayPerSecond": [
+          0.005,
+          0.005,
+          0.005,
+          0.005,
+          0.005
+        ]
+      },
+      "resolvedDescription": "Passive: Mordekaiser stores 45% of the damage he deals and 7.5% of the damage he takes. Active: Mordekaiser gains the stored damage as Shield. He may Recast this Ability to restore 35/37.5/40/42.5/45% of the remaining Shield as Health. Minimum Shield: 5% max Health Maximum Shield: 30% max Health",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Death's Grasp",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14,
+        12,
+        10,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "Damage": [
+          60,
+          80,
+          100,
+          120,
+          140
+        ],
+        "DelayBeforeMovement": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MaxDistance": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "KnockTowardsDistance": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "StandAsideRange": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "MagicPen": [
+          0.05,
+          0.075,
+          0.1,
+          0.125,
+          0.15
+        ]
+      },
+      "resolvedDescription": "Passive: Mordekaiser gains 5/7.5/10/12.5/15% Magic Penetration. Active: Pulls enemies in his direction, dealing 60/80/100/120/140 (+45% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Realm of Death",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "SpiritRealmDuration": [
+          7,
+          7,
+          7
+        ],
+        "StatStealPercentScalar": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "ZoneRadius": [
+          1200,
+          1200,
+          1200
+        ],
+        "GhostAPRatio": [
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Mordekaiser banishes a champion to the Death Realm with him for 7s, stealing 10% of their core stats for the duration. If Mordekaiser kills that enemy in the Death Realm he consumes their soul, keeping the stats he stole until the target respawns.",
+      "unresolved": []
+    }
+  }
+}

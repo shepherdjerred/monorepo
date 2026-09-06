@@ -1,0 +1,276 @@
+{
+  "championKey": "Singed",
+  "championName": "Singed",
+  "abilities": {
+    "passive": {
+      "name": "Noxious Slipstream",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MSPercent": [
+          0.25
+        ],
+        "MSDuration": [
+          2
+        ],
+        "PerTargetCD": [
+          8
+        ],
+        "TriggerArea": [
+          225
+        ]
+      },
+      "resolvedDescription": "Singed drafts off nearby champions, gaining a burst of Move Speed when passing them.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Poison Trail",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "costType": "Mana per Second",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "BaseDamagePerSecond": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "APRatioPerSecond": [
+          0.425,
+          0.425,
+          0.425,
+          0.425,
+          0.425
+        ],
+        "ToggleCooldown": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CloudDuration": [
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25
+        ],
+        "PoisonDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "TicksPerSecond": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MaxLingerTicks": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Toggle: Singed lays a poisonous trail that deals 20/30/40/50/60 (+42.5% AP) magic damage per second.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Mega Adhesive",
+      "maxRank": 5,
+      "cooldownByRank": [
+        17,
+        16,
+        15,
+        14,
+        13
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "SlowPercent": [
+          50,
+          55,
+          60,
+          65,
+          70
+        ],
+        "WDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "WRadius": [
+          265,
+          265,
+          265,
+          265,
+          265
+        ],
+        "DelayExecute": [
+          0.375,
+          0.375,
+          0.375,
+          0.375,
+          0.375
+        ]
+      },
+      "resolvedDescription": "Singed hurls a cask of sticky liquid, Grounding and Slowing enemies in the area by 50/55/60/65/70% for 3 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Fling",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        125,
+        125,
+        125,
+        125,
+        125
+      ],
+      "dataValues": {
+        "BaseDamageValue": [
+          50,
+          60,
+          70,
+          80,
+          90
+        ],
+        "RootDuration": [
+          1,
+          1.25,
+          1.5,
+          1.75,
+          2
+        ],
+        "MaxHPDamage": [
+          6,
+          6.5,
+          7,
+          7.5,
+          8
+        ],
+        "FlingDistance": [
+          420,
+          420,
+          420,
+          420,
+          420
+        ],
+        "NonChampionDamageCap": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ]
+      },
+      "resolvedDescription": "Singed flings an enemy over his shoulder, dealing 50/60/70/80/90 (+55% AP) plus 6/6.5/7/7.5/8% max Health magic damage. If Singed flings a target into his Mega Adhesive, they are Rooted for 1/1.25/1.5/1.75/2 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Insanity Potion",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        100,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "StatAmount": [
+          25,
+          55,
+          85
+        ],
+        "Duration": [
+          25,
+          25,
+          25
+        ],
+        "GrievousAmount": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "GrievousDuration": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Singed drinks a potent brew of chemicals, granting him 25/55/85 Ability Power, Armor, Magic Resist, Move Speed, Health Regen, and Mana Regen for 25 seconds. During this effect, Singed's Poison Trail also applies 40% Grievous Wounds for 1 second.",
+      "unresolved": []
+    }
+  }
+}

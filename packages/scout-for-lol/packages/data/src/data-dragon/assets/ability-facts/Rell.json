@@ -1,0 +1,368 @@
+{
+  "championKey": "Rell",
+  "championName": "Rell",
+  "abilities": {
+    "passive": {
+      "name": "Break the Mold",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "RefreshDuration": [
+          3.5
+        ],
+        "StealPercent": [
+          0.03
+        ],
+        "ShredDuration": [
+          5
+        ],
+        "MaxStacks": [
+          5
+        ],
+        "MaxPercentTooltipOnly": [
+          15
+        ]
+      },
+      "resolvedDescription": "Rell's Attacks and Abilities deal additional magic damage and steal Armor and Magic Resist on hit.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Shattering Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.5,
+        10,
+        9.5,
+        9
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          100,
+          140,
+          180,
+          220
+        ],
+        "StunDuration": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ]
+      },
+      "resolvedDescription": "Rell thrusts her lance, Stunning targets for 0.65 seconds, destroying all Shields, and dealing 60/100/140/180/220 (+60% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ferromancy: Crash Down",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "CrashDownDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "CrashDownKnockupDuration": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "CrashDownStunDuration": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlideDistance": [
+          320,
+          320,
+          320,
+          320,
+          320
+        ],
+        "ResistanceIncrease": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "ShieldBase": [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        "ShieldHealthRatio": [
+          0.11,
+          0.11,
+          0.11,
+          0.11,
+          0.11
+        ],
+        "DismountedASBoost": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "DismountedRangeBoost": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "MountUpDamage": [
+          10,
+          25,
+          40,
+          55,
+          70
+        ],
+        "MountUpSpeed": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MountUpSpeedDuration": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "MountedMoveSpeed": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "FlipBaseDamage": [
+          10,
+          25,
+          40,
+          55,
+          70
+        ],
+        "FlipKnockupDuration": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "FlipStunDuration": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Passive - Mounted Alacrity: Rell gains 20/25/30/35/40 Move Speed while mounted. Active - Ferromancy: Crash Down: Rell leaps off her mount, Knocking Up enemies and dealing 60/90/120/150/180 (+60% AP) magic damage. Rell gains 20/40/60/80/100 (+11% max Health) Shield, which lasts until she remounts. Rell then enters her armored form, gaining 15% increased Armor and Magic Resist, 20% Attack Speed and 75 Attack Range. In this armored form, she can use Ferromancy: Mount Up.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Full Tilt",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "MaxMS": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MinMS": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "Duration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "MSModPhase1": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ExplosionRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "PercentHealthDamage": [
+          0.05,
+          0.055,
+          0.06,
+          0.065,
+          0.07
+        ],
+        "PassiveMSCombatPenalty": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "EmpowermentBuffer": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Phase3Start": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Rell and an ally charge, gaining 15% Move Speed, increased to 30% when facing enemy champions or each other for 3 seconds. Rell's next Attack or Shattering Strike explodes in an area for {{ maxhealthdamagecalc }} max Health magic damage.",
+      "unresolved": [
+        "maxhealthdamagecalc"
+      ]
+    },
+    "R": {
+      "name": "Magnet Storm",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        200,
+        200,
+        200
+      ],
+      "dataValues": {
+        "Duration": [
+          2,
+          2,
+          2
+        ],
+        "BaseDamagePerSecond": [
+          75,
+          125,
+          175
+        ],
+        "GravityHorizon": [
+          225,
+          225,
+          225
+        ],
+        "GravityRadius": [
+          375,
+          375,
+          375
+        ],
+        "GravityForce": [
+          300,
+          300,
+          300
+        ],
+        "InitialRadius": [
+          425,
+          425,
+          425
+        ]
+      },
+      "resolvedDescription": "Rell explodes in a magnetic fury, violently Pulling nearby enemies towards herself. Then Rell constantly Drags nearby enemies towards herself and deals 150/250/350 (+110% AP) magic damage over the next 2 seconds.",
+      "unresolved": []
+    }
+  }
+}

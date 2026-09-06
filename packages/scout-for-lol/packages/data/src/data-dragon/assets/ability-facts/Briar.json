@@ -1,0 +1,470 @@
+{
+  "championKey": "Briar",
+  "championName": "Briar",
+  "abilities": {
+    "passive": {
+      "name": "Crimson Curse",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BleedDuration": [
+          5
+        ],
+        "BleedTickRate": [
+          0.5
+        ],
+        "HealPercent": [
+          0.25
+        ],
+        "HealShieldPerMissingHPPercent": [
+          0.4
+        ],
+        "CurrentHealthPercentCost": [
+          0.05
+        ],
+        "BleedPercentAdd": [
+          0.25
+        ],
+        "MaxBleedStacks": [
+          5
+        ],
+        "PercentOfBleedHealedOnKill": [
+          1.25
+        ]
+      },
+      "resolvedDescription": "Briar's attacks and abilities apply a stacking bleed that heals her for a portion of the damage it deals. Perpetually hungry, she gains increased healing based on her missing Health, but lacks innate Health Regeneration.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Head Rush",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "DashSpeedBase": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "ExtraDashSpeedBasedOnDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "StunDuration": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "ShredPercent": [
+          0.1,
+          0.125,
+          0.15,
+          0.175,
+          0.2
+        ],
+        "ShredDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Briar leaps to a target, Stunning it for 0.85 seconds, dealing 60/85/110/135/160 (+60% AP) (+80% bonus AD) physical damage and reducing 10/12.5/15/17.5/20% Armor and Magic Resist for 5 seconds. Briar will stop prioritizing champions if she casts this Ability on a minion or monster during Blood Frenzy.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Blood Frenzy / Snack Attack",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "TauntRange": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "MinDashDistance": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "MaxDashDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "MaxRangeOverWalls": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "DashSpeed": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ],
+        "BerserkDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "BerserkAS": [
+          0.55,
+          0.65,
+          0.75,
+          0.85,
+          0.95
+        ],
+        "BerserkMS": [
+          0.24,
+          0.33,
+          0.42,
+          0.51,
+          0.6
+        ],
+        "AttackBonusDamage": [
+          5,
+          20,
+          35,
+          50,
+          65
+        ],
+        "AttackPercentMissingHealth": [
+          9,
+          9,
+          9,
+          9,
+          9
+        ],
+        "AttackHealPercent": [
+          0.24,
+          0.28,
+          0.32,
+          0.36,
+          0.4
+        ],
+        "MaxMonsterDamage": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "AoEAttackRadius": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ],
+        "AoEAttackDamagePercent": [
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1
+        ],
+        "MonsterAndMinionPercentMod": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Briar leaps and enters a Blood Frenzy, self-taunting to the nearest enemy for 5 seconds, prioritizing Champions. While in Blood Frenzy she gains 55/65/75/85/95% Attack Speed and 24/33/42/51/60% Move Speed, and her Attacks deal 60/70/80/90/100% AD physical damage to enemies surrounding her target. Briar can Recast this Ability to empower her next Attack. It deals 5/20/35/50/65 (+105% AD) + 9 (+2.5% bonus AD)% missing Health physical damage and heals Briar for 5% max Health + 24/28/32/36/40% of the damage dealt.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Chilling Scream",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "MaxBaseDamage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "WallHitBaseDamage": [
+          140,
+          215,
+          290,
+          365,
+          440
+        ],
+        "MinMissileRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "MaxMissileRange": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "Width": [
+          380,
+          380,
+          380,
+          380,
+          380
+        ],
+        "RectangleDistanceBehindCaster": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "RectangleDistanceInFrontOfCaster": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "RKnockupHeight": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "RKnockupDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RKnockTowardsSpeed": [
+          1800,
+          1800,
+          1800,
+          1800,
+          1800
+        ],
+        "WallStunDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "KnockbackDistance": [
+          575,
+          575,
+          575,
+          575,
+          575
+        ],
+        "SlowPercent": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DRPercent": [
+          35,
+          35,
+          35,
+          35,
+          35
+        ],
+        "HealHPPercent": [
+          0.1,
+          0.115,
+          0.13,
+          0.145,
+          0.16
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Briar removes Blood Frenzy and gathers energy, gaining 35% damage reduction and restoring 10/11.5/13/14.5/16% max Health Health over 1 second. Release: Briar unleashes a scream that deals up to 80/115/150/185/220 (+100% bonus AD) (+100% AP) magic damage based on time charged, and Slows by 80% for 0.5 seconds. When fully charged, the scream Knocks Back enemies, dealing 140/215/290/365/440 (+240.00001% bonus AD) (+240.00001% AP) magic damage to those who hit a wall and Stunning them for 1.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Certain Death",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health",
+      "rangeByRank": [
+        12000,
+        12000,
+        12000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "HuntDuration": [
+          25000,
+          25000,
+          25000
+        ],
+        "FearDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "FleeSlowPercent": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "AoERadius": [
+          575,
+          575,
+          575
+        ],
+        "MinDashSpeed": [
+          2500,
+          2500,
+          2500
+        ],
+        "MaxDashSpeed": [
+          5000,
+          5000,
+          5000
+        ],
+        "IdealDashTime": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "LifestealPercent": [
+          0.1,
+          0.15,
+          0.2
+        ],
+        "ResistADRatio": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ExtraMoveSpeedPercent": [
+          0.1,
+          0.2,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Briar kicks her pillory's hemolith gemstone and flies to the location of the first champion it hits, marking them as her prey. On landing, she deals 150/250/350 (+130% AP) magic damage to everything nearby and causes enemies who are not her prey to Flee for 1.5 seconds. She then enters an empowered Blood Frenzy and will pursue her prey until death. During this time, she gains 20% AD Armor and Magic Resist, 10/15/20% Lifesteal, and an additional 10/20/30% Move Speed.",
+      "unresolved": []
+    }
+  }
+}

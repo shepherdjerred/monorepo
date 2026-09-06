@@ -1,0 +1,257 @@
+{
+  "championKey": "Leona",
+  "championName": "Leona",
+  "abilities": {
+    "passive": {
+      "name": "Sunlight",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MarkDuration": [
+          2.5
+        ]
+      },
+      "resolvedDescription": "Damaging spells afflict enemies with Sunlight for 1.5 seconds. When allied Champions deal damage to those targets, they consume the Sunlight to deal additional magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Shield of Daybreak",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "dataValues": {
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseDamage": [
+          10,
+          35,
+          60,
+          85,
+          110
+        ]
+      },
+      "resolvedDescription": "Leona's next Attack Stuns for 1 seconds and deals an additional 10/35/60/85/110 (+30% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Eclipse",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "FlatDamageReduction": [
+          8,
+          12,
+          16,
+          20,
+          24
+        ],
+        "FlatDamageReductionMax": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "ExplosionBaseDamage": [
+          55,
+          85,
+          115,
+          145,
+          175
+        ],
+        "MRBaseBonus": [
+          20,
+          27.5,
+          35,
+          42.5,
+          50
+        ],
+        "ArmorBaseBonus": [
+          20,
+          27.5,
+          35,
+          42.5,
+          50
+        ],
+        "ArmorMRDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Leona raises her shield, reducing incoming damage by 8/12/16/20/24 and gaining 20/27.5/35/42.5/50 (+20% bonus Armor) Armor and 20/27.5/35/42.5/50 (+20% bonus Magic Resist) Magic Resist for 3 seconds. Afterwards, her shield detonates, dealing 55/85/115/145/175 (+40% AP) magic damage to nearby enemies. If she hits at least one, she retains the Armor and Magic Resist bonuses for an additional 3 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Zenith Blade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        10.5,
+        9,
+        7.5,
+        6
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        875,
+        875,
+        875,
+        875,
+        875
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          90,
+          130,
+          170,
+          210
+        ],
+        "RootDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Leona thrusts with a sword of light, dealing 50/90/130/170/210 (+40% AP) magic damage. The last champion struck will be Rooted for 0.5 seconds and Leona will dash to them.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Solar Flare",
+      "maxRank": 3,
+      "cooldownByRank": [
+        90,
+        75,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "OnHitBaseDamage": [
+          30,
+          40,
+          50
+        ],
+        "OnHitStacks": [
+          3,
+          4,
+          5
+        ],
+        "OnHitDuration": [
+          5,
+          5,
+          5
+        ],
+        "AttackRangeIncrease": [
+          100,
+          100,
+          100
+        ],
+        "OnHitAPRatio": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "ExplosionBaseDamage": [
+          150,
+          225,
+          300
+        ],
+        "ExplosionAPRatio": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowPercent": [
+          80,
+          80,
+          80
+        ],
+        "CCDuration": [
+          1.75,
+          1.75,
+          1.75
+        ]
+      },
+      "resolvedDescription": "Leona calls down a radiant beam of solar energy dealing 150/225/300 (+80% AP) magic damage and Slowing by 80% for 1.75 seconds. Enemies in the center of the flare are Stunned instead of Slowed.",
+      "unresolved": []
+    }
+  }
+}

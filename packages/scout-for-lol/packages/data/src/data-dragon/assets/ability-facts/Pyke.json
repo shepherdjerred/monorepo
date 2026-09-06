@@ -1,0 +1,340 @@
+{
+  "championKey": "Pyke",
+  "championName": "Pyke",
+  "abilities": {
+    "passive": {
+      "name": "Gift of the Drowned Ones",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "OneEnemy": [
+          0.09
+        ],
+        "AdditionalBonus": [
+          0.4
+        ],
+        "HPPerBAD": [
+          14
+        ],
+        "CooldownPerChamp": [
+          1
+        ],
+        "AmmoCooldown": [
+          30
+        ],
+        "DamageStoreMaxBonusADRatio": [
+          8
+        ]
+      },
+      "resolvedDescription": "When Pyke is hidden from enemies, he regenerates damage that he has recently taken from champions. Pyke also cannot gain extra Maximum Health from any source, and instead gains Bonus AD.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bone Skewer",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "ManaRefund": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseDamage": [
+          100,
+          150,
+          200,
+          250,
+          300
+        ],
+        "SlowAmount": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MinChargeTime": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MaxChargeTime": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SelfSlow": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "PullDistance": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MinRangeDistance": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MaxRangeDistance": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ],
+        "ChargeTimeToGetMaxRange": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BonusADRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Tap: Pyke stabs, dealing 100/150/200/250/300 (+75% bonus AD) physical damage to the first enemy hit, preferring champions. They are then Slowed by 90% for 1 second. Hold: Pyke throws his harpoon, dealing 100/150/200/250/300 (+75% bonus AD) physical damage to the first enemy hit and Pulling them towards him. They are then Slowed by 90% for 1 second. If Pyke successfully hits an enemy champion or the channel does not complete successfully, 75% of the Mana cost is refunded.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ghostwater Dive",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseMoveSpeed": [
+          45,
+          45,
+          45,
+          45,
+          45
+        ],
+        "BaseHealCap": [
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "MaxHPHealCap": [
+          0.55,
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ],
+        "HealADRatio": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "HealRampBase": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "HealRampPerTick": [
+          1.15,
+          1.15,
+          1.15,
+          1.15,
+          1.15
+        ],
+        "CamoDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Pyke gains Camouflage and 45 (+200% Lethality)% Move Speed decaying over 5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Phantom Undertow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          100,
+          150,
+          200,
+          250,
+          300
+        ],
+        "BonusADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseStunDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "ELethalityRatio": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "DashDistance": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "StunDelay": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Pyke dashes, leaving a drowned phantom behind him that returns to him shortly. The phantom Stuns for 1.25 (+1% Lethality) seconds and deals 100/150/200/250/300 (+100% bonus AD) physical damage to champions.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Death From Below",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        85,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "RRecastDuration": [
+          20,
+          20,
+          20
+        ],
+        "ReducedDamage": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageCap": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Pyke strikes all enemy champions in an X, teleporting to and executing targets below 250-550 (based on level) (+80% bonus AD) (+150% Lethality) Health. Champions above the threshold and non-champions instead take physical damage equal to 50% of that amount (125-275 (based on level) (+40% bonus AD) (+75% Lethality)). When an enemy champion dies inside the X, Pyke can Recast this Ability for free within 20 seconds. If he executed that champion, the last assisting ally will also get kill gold. If he did not, he will still get kill gold as if he did.",
+      "unresolved": []
+    }
+  }
+}

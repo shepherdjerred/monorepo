@@ -1,0 +1,369 @@
+{
+  "championKey": "Rumble",
+  "championName": "Rumble",
+  "abilities": {
+    "passive": {
+      "name": "Junkyard Titan",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "OverheatDuration": [
+          4
+        ],
+        "DangerZoneHeat": [
+          50
+        ],
+        "OverheatingHeat": [
+          150
+        ],
+        "OverheatPercBonusDamage": [
+          0.04
+        ],
+        "MonsterCap": [
+          80
+        ],
+        "HeatDecayPerS": [
+          -10
+        ]
+      },
+      "resolvedDescription": "Every spell Rumble casts gives him Heat. When he reaches 50% Heat he reaches Danger Zone, granting all his basic abilities bonus effects. When he reaches 100% Heat, he starts Overheating, gaining bonus Attack Speed and granting his basic attacks bonus damage, but making him unable to cast spells for a few seconds.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Flamespitter",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Heat",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "MinionMod": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "HealthDamage": [
+          0.06,
+          0.065,
+          0.07,
+          0.075,
+          0.08
+        ],
+        "APRatio": [
+          1.05,
+          1.05,
+          1.05,
+          1.05,
+          1.05
+        ],
+        "OverheatMulti": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "FlamespitterDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "DebuffTicks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "TickRate": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "TotalTicks": [
+          12,
+          12,
+          12,
+          12,
+          12
+        ],
+        "InitialHeatCost": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "BurnDuration": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Rumble ignites his flamethrower, dealing 50/75/100/125/150 (+105% AP) plus 6/6.5/7/7.5/8% max Health magic damage over 3 seconds, reduced to 70% against minions. Danger Zone: Damage is increased to 75/112.5/150/187.5/225 (+157.49999% AP) plus 9/9.75/10.5/11.25/12% max Health. Percent damage is limited to 65-300 (based on level) damage on Monsters.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Scrap Shield",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Heat",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "HeatCost": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "BaseShield": [
+          25,
+          55,
+          85,
+          115,
+          145
+        ],
+        "HealthShield": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "MoveSpeed": [
+          0.1,
+          0.15,
+          0.2,
+          0.25,
+          0.3
+        ],
+        "APRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MoveSpeedDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Rumble tosses up a barrier, gaining 25/55/85/115/145 (+30% AP) (+4% max Health) Shield for {{ shieldduration.1 }} seconds and 10/15/20/25/30% Move Speed for 1 second. Danger Zone: The barrier grants 37.5/82.5/127.5/172.5/217.5 (+45% AP) (+6% max Health) Shield and 15/22.5/30/37.5/45% Move Speed instead.",
+      "unresolved": [
+        "shieldduration.1"
+      ]
+    },
+    "E": {
+      "name": "Electro Harpoon",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Heat",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          55,
+          80,
+          105,
+          130,
+          155
+        ],
+        "FirstCastHeatCost": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "PercMagicPen": [
+          0.1,
+          0.12,
+          0.14,
+          0.16,
+          0.18
+        ],
+        "EnhancedMagicPen": [
+          0.2,
+          0.24,
+          0.28,
+          0.32,
+          0.36
+        ],
+        "ShredDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BaseSlowAmount": [
+          15,
+          20,
+          25,
+          30,
+          35
+        ],
+        "EmpoweredSlowAmount": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ]
+      },
+      "resolvedDescription": "Rumble launches an electrified harpoon, dealing 55/80/105/130/155 (+50% AP) magic damage, Slowing by 15/20/25/30/35% for 2 seconds, and reducing the enemy's Magic Resist by 10/12/14/16/18% for 4 seconds. Hitting an enemy who's already Slowed by this Ability increases the Slow to 30/40/50/60/70% and reduces the enemy's Magic Resist by 20/24/28/32/36% Danger Zone: The harpoon deals 82.5/120/157.5/195/232.5 (+75% AP) magic damage instead and the Slow and reduced Magic Resist are increased by 50%.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "The Equalizer",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        105,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1750,
+        1750,
+        1750
+      ],
+      "dataValues": {
+        "NumMissiles": [
+          6,
+          6,
+          6
+        ],
+        "TrailDuration": [
+          4.5,
+          4.5,
+          4.5
+        ],
+        "TickRate": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowAmount": [
+          35,
+          35,
+          35
+        ],
+        "BaseDamagePerSecond": [
+          120,
+          200,
+          280
+        ],
+        "MaxBurnSeconds": [
+          5,
+          5,
+          5
+        ],
+        "BurnLingerTime": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Rumble launches a line of rockets, creating a burning trail that lasts 4.5 seconds, Slowing by 35% and dealing 120/200/280 (+35% AP) magic damage per second. Rumble can control the direction of the trail by clicking and dragging while casting this Ability.",
+      "unresolved": []
+    }
+  }
+}

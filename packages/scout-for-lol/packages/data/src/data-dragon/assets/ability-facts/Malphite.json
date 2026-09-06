@@ -1,0 +1,270 @@
+{
+  "championKey": "Malphite",
+  "championName": "Malphite",
+  "abilities": {
+    "passive": {
+      "name": "Granite Shield",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Malphite is shielded by a layer of rock which absorbs damage up to 10% of his maximum Health. If Malphite has not been hit for a few seconds, this effect recharges.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Seismic Shard",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "SpeedSteal": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "SlowDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseDamage": [
+          70,
+          120,
+          170,
+          220,
+          270
+        ]
+      },
+      "resolvedDescription": "Malphite launches a shard of earth at an enemy, dealing 70/120/170/220/270 (+60% AP) magic damage and Slowing them by 20/25/30/35/40% for 3 seconds. Malphite also steals the amount Slowed, gaining it as Move Speed for 3 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Thunderclap",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "ThunderclapBuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "ThunderclapBaseDamage": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ],
+        "ThunderclapSlowDamage": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ThunderclapSplashAP": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "ThunderclapSplashArmor": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "ThunderclapBaseDamageAPRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ThunderclapBaseDamageArmorRatio": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "ThunderclapSplashDamage": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "BonusArmorPassive": [
+          0.1,
+          0.15,
+          0.2,
+          0.25,
+          0.3
+        ],
+        "BonusArmorPassiveMultiplier": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ThunderClapSplashRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "MonsterDamageMod": [
+          1.8,
+          1.8,
+          1.8,
+          1.8,
+          1.8
+        ]
+      },
+      "resolvedDescription": "Passive: Malphite gains 10/15/20/25/30% Armor (%i:scaleArmor%{{ f1 }}). This effect is increased to 30/45/60/75/90% (%i:scaleArmor%{{ f2 }}) while Granite Shield is active. Active: Malphite's next Attack deals an additional 30/40/50/60/70 (+20% AP) (+15% Armor) physical damage and creates an aftershock which deals 15/25/35/45/55 (+30% AP) (+15% Armor) physical damage %i:OnHit% On-Hit in their direction. His Attacks continue to create aftershocks %i:OnHit% On-Hit for the next 5 seconds.",
+      "unresolved": [
+        "f1",
+        "f2"
+      ]
+    },
+    "E": {
+      "name": "Ground Slam",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "ASReduction": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "Duration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Malphite slams the ground, dealing 60/95/130/165/200 (+40% Armor) (+60% AP) magic damage and reducing Attack Speed by 30/35/40/45/50% for 3 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Unstoppable Force",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        115,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "KnockupDuration": [
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Malphite charges with the force of a landslide, dashing Unstoppably. At the end of the dash, Malphite Knocks Up for 1.5 seconds and deals 200/300/400 (+90% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

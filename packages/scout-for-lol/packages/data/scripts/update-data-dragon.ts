@@ -28,6 +28,7 @@ import {
   selectPatchByMinor,
   type RiotPatch,
 } from "./riot-patch.ts";
+import { generateAbilityFactsAssets } from "./ability-facts.ts";
 import { analyzePatch, fetchOfficialPatchNotes } from "./patch-analysis.ts";
 
 const ASSETS_DIR = `${import.meta.dir}/../src/data-dragon/assets`;
@@ -88,6 +89,22 @@ export function getCDragonChampionJsonUrl(
   championId: number,
 ): string {
   return `${getCDragonLolGameDataBase(cdVersion)}/v1/champions/${championId.toString()}.json`;
+}
+
+/**
+ * CommunityDragon per-champion game bin (converted `.bin` → JSON), keyed by
+ * the champion's internal alias — identical to the Data Dragon id/key (e.g.
+ * "MonkeyKing"), lowercased. Carries `mSpell.DataValues` and
+ * `mSpellCalculations`, the only public source for ability damage numbers
+ * (Data Dragon tooltips leave them as unresolved templates). Verified 200 for
+ * chogath/pyke/karthus on 16.16 on 2026-09-05.
+ */
+export function getCDragonChampionBinUrl(
+  cdVersion: string,
+  championAlias: string,
+): string {
+  const lowered = championAlias.toLowerCase();
+  return `https://raw.communitydragon.org/${cdVersion}/game/data/characters/${lowered}/${lowered}.bin.json`;
 }
 
 /**
@@ -291,6 +308,39 @@ async function createDirectories(): Promise<void> {
   await ensureDir(`${IMG_DIR}/champion-splash`);
   await ensureDir(`${IMG_DIR}/background`);
   await ensureDir(`${ASSETS_DIR}/champion`);
+  await ensureDir(`${ASSETS_DIR}/ability-facts`);
+}
+
+/**
+ * Regenerate `assets/ability-facts/{Key}.json` for every (non-Classic)
+ * champion from the freshly written Data Dragon champion files plus each
+ * champion's CommunityDragon bin. Throws (non-zero exit) when any champion
+ * fails to fetch or parse.
+ */
+async function generateAbilityFacts(
+  cdVersion: string,
+  championNames: string[],
+): Promise<void> {
+  console.log("\nGenerating ability-facts assets from CommunityDragon bins...");
+  await generateAbilityFactsAssets({
+    championKeys: championNames,
+    assetsDir: ASSETS_DIR,
+    fetchBin: async (championKey) => {
+      const response = await fetchWithRetry(
+        getCDragonChampionBinUrl(cdVersion, championKey),
+      );
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch champion bin for ${championKey}: HTTP ${String(response.status)} ${response.statusText}`,
+        );
+      }
+      const data: unknown = await response.json();
+      return data;
+    },
+  });
+  console.log(
+    `✓ Generated ability facts for ${String(championNames.length)} champions`,
+  );
 }
 
 async function downloadClassicBackground(cdVersion: string): Promise<void> {
@@ -1447,6 +1497,37 @@ async function main(): Promise<void> {
       await $`cd ${MONOREPO_ROOT} && bun run --cwd packages/scout-for-lol/packages/data generate:asset-manifest --write`;
       return;
     }
+    // --ability-facts-only regenerates just assets/ability-facts/ from the
+    // committed Data Dragon champion files + live CommunityDragon bins,
+    // pinned to the committed version so facts and assets stay in lockstep.
+    if (process.argv.includes("--ability-facts-only")) {
+      const previousVersion = await readPreviousVersion();
+      if (previousVersion === undefined) {
+        throw new Error(
+          "--ability-facts-only requires a committed version.json",
+        );
+      }
+      if (
+        requestedVersion !== undefined &&
+        requestedVersion !== previousVersion
+      ) {
+        throw new Error(
+          `--ability-facts-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
+        );
+      }
+      const cdVersion = getCommunityDragonVersion(previousVersion);
+      await ensureDir(`${ASSETS_DIR}/ability-facts`);
+      const committedChampionList: unknown = await Bun.file(
+        `${ASSETS_DIR}/champion.json`,
+      ).json();
+      const championNames = Object.values(
+        ChampionListSchema.parse(committedChampionList).data,
+      )
+        .filter((entry) => !entry.id.startsWith("Jade_"))
+        .map((entry) => entry.id);
+      await generateAbilityFacts(cdVersion, championNames);
+      return;
+    }
     // --snapshots-only skips version resolution + asset download and jumps
     // straight to the install-refresh + snapshot-test step, against
     // whatever Data Dragon assets are already committed in the tree. Used by
@@ -1517,6 +1598,9 @@ async function main(): Promise<void> {
       version,
       championNames,
     );
+    // Must run after downloadChampionData: reads the freshly written
+    // assets/champion/{Key}.json files.
+    await generateAbilityFacts(cdVersion, championNames);
     const runeImagesCount = await downloadRuneImages(runes);
     const augmentImagesCount = await downloadAugmentImages(
       communityDragonUrl,

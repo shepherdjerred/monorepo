@@ -1,0 +1,367 @@
+{
+  "championKey": "Volibear",
+  "championName": "Volibear",
+  "abilities": {
+    "passive": {
+      "name": "The Relentless Storm",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PDamageRatio": [
+          0.2
+        ],
+        "BounceCounterMax": [
+          5
+        ],
+        "APRatio": [
+          0.45
+        ],
+        "BuffDuration": [
+          6
+        ],
+        "PAttackSpeed": [
+          0.05
+        ]
+      },
+      "resolvedDescription": "Volibear's Attacks and abilities grant Attack Speed, and eventually cause his Attacks to deal bonus magic damage to nearby enemies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Thundering Smash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "MinSpeed": [
+          0.12,
+          0.155,
+          0.19,
+          0.225,
+          0.26
+        ],
+        "MaxSpeed": [
+          0.24,
+          0.31,
+          0.38,
+          0.45,
+          0.52
+        ],
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BonusADRatio": [
+          1.6,
+          1.6,
+          1.6,
+          1.6,
+          1.6
+        ],
+        "BonusRange": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ]
+      },
+      "resolvedDescription": "Volibear gains 12/15.5/19/22.5/26% Move Speed, doubled to 24/31/38/45/52% towards enemy champions for the next 4 seconds. While active, Volibear's next Attack deals 10/20/30/40/50 (+100% AD) (+160% bonus AD) physical damage and Stuns the target for 1 second. Volibear becomes enraged if an enemy Immobilizes him before he Stuns a target, ending the Ability early but refreshing its Cooldown.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Frenzied Maul",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        20,
+        25,
+        30,
+        35,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          5,
+          30,
+          55,
+          80,
+          105
+        ],
+        "HealPercent": [
+          0.08,
+          0.11,
+          0.14,
+          0.17,
+          0.2
+        ],
+        "BonusHealthRatio": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ],
+        "MarkDuration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "W2DamageMultiplier": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseHeal": [
+          20,
+          35,
+          50,
+          65,
+          80
+        ],
+        "MinionAndMonsterMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "W2BonusADDamageMultiplier": [
+          0.0025,
+          0.0025,
+          0.0025,
+          0.0025,
+          0.0025
+        ]
+      },
+      "resolvedDescription": "Volibear mauls an enemy, dealing 5/30/55/80/105 (+110% AD) (+6% bonus Health) physical damage and marking them for 8 seconds. If this Ability is used on a marked target, its damage is increased to {{ empowereddamage }} and Volibear restores 20/35/50/65/80 plus 8/11/14/17/20% missing Health.",
+      "unresolved": [
+        "empowereddamage"
+      ]
+    },
+    "E": {
+      "name": "Sky Splitter",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BaseDamage": [
+          80,
+          110,
+          140,
+          170,
+          200
+        ],
+        "PercentDamage": [
+          0.11,
+          0.12,
+          0.13,
+          0.14,
+          0.15
+        ],
+        "ShieldAmount": [
+          0.14,
+          0.14,
+          0.14,
+          0.14,
+          0.14
+        ],
+        "MonsterDamageCapBase": [
+          150,
+          265,
+          380,
+          495,
+          610
+        ],
+        "ShieldDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "ShieldAPRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Volibear summons a thundercloud that fires a lightning bolt, dealing 80/110/140/170/200 (+70% AP) plus 11/12/13/14/15% max Health magic damage and Slowing by 40% for 2 seconds. If Volibear is inside the blast zone, he gains a 75% AP plus 14% max Health Shield for 3 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Stormbringer",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        135,
+        110
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "SweetSpotDamage": [
+          300,
+          500,
+          700
+        ],
+        "DashSpeed": [
+          750,
+          750,
+          750
+        ],
+        "TransformDuration": [
+          12,
+          12,
+          12
+        ],
+        "HealthAmount": [
+          175,
+          350,
+          525
+        ],
+        "TowerDamage": [
+          300,
+          500,
+          700
+        ],
+        "SlowAmount": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1
+        ],
+        "BonusAttackRange": [
+          50,
+          50,
+          50
+        ],
+        "TowerDisableDuration": [
+          2,
+          3,
+          4
+        ],
+        "APRatio": [
+          1.25,
+          1.25,
+          1.25
+        ]
+      },
+      "resolvedDescription": "Volibear transforms and leaps, gaining 175/350/525 Health and 50 Attack Range for the next 12 seconds. Upon landing, Volibear cracks the earth, Disabling nearby towers for 2/3/4 seconds and dealing 300/500/700 (+125% AP) (+250% bonus AD) physical damage to them. Nearby enemies are Slowed by 50%, decaying over 1 second. Enemies directly underneath Volibear suffer 300/500/700 (+125% AP) (+250% bonus AD) physical damage.",
+      "unresolved": []
+    }
+  }
+}

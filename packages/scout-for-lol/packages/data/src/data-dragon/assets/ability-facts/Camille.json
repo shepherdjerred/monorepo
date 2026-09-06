@@ -1,0 +1,369 @@
+{
+  "championKey": "Camille",
+  "championName": "Camille",
+  "abilities": {
+    "passive": {
+      "name": "Adaptive Defenses",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ShieldDuration": [
+          2
+        ]
+      },
+      "resolvedDescription": "Basic attacks on champions grant a shield equal to a percentage of Camille's maximum health against their damage type (Physical or Magic) for a brief duration.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Precision Protocol",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "QRampUpTime": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BonusAARange": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "TADRatio": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "MSBonus": [
+          0.25,
+          0.3,
+          0.35,
+          0.4,
+          0.45
+        ],
+        "MSDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "QEmpoweredAmp": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Q2Duration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "QTotalRecastTime": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ]
+      },
+      "resolvedDescription": "Camille's next Attack deals an additional 20/25/30/35/40% AD physical damage and grants her 25/30/35/40/45% Move Speed for 1 second. This ability can be Recast in the next 3.5 seconds. If the Recast Attack hits at least 1.5 seconds after the first, the bonus damage is increased to 40/50/60/70/80% AD and 40-40% (based on level) of the Attack's damage is converted into true damage. This Ability triggers spell effects upon dealing damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Tactical Sweep",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        610,
+        610,
+        610,
+        610,
+        610
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "BADRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ChargeDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "SlowPercentage": [
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "OuterConeMaxHPDamage": [
+          0.07,
+          0.075,
+          0.08,
+          0.085,
+          0.09
+        ],
+        "ADRequiredFor1PercentDamage": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "ADRequiredTooltipOnly": [
+          0.00025,
+          0.00025,
+          0.00025,
+          0.00025,
+          0.00025
+        ],
+        "MonsterDamageReduction": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "OuterConeHealingRatio": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "BlastLength": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "ConeAngle": [
+          35,
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      "resolvedDescription": "Camille winds up and slices, dealing 60/85/110/135/160 (+60% bonus AD) physical damage. Enemies hit by the outer half are Slowed by 80% decaying over 2 seconds, and they take an additional {{ outeredgetooltip }} max Health physical damage. Camille restores 100% of the bonus damage dealt to champions as Health.",
+      "unresolved": [
+        "outeredgetooltip"
+      ]
+    },
+    "E": {
+      "name": "Hookshot",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "EMinionMonsterGhostDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "KnockupDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "ASBuff": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "DashSpeed": [
+          1050,
+          1050,
+          1050,
+          1050,
+          1050
+        ],
+        "ASDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "WallHangDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "E2LongDashRange": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "E2ShortDashRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "ECollisionRange": [
+          130,
+          130,
+          130,
+          130,
+          130
+        ],
+        "BADRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Camille fires a hookshot that attaches to terrain, pulling her to it for 1 second and allowing this Ability to be Recast. Recast: Camille dashes from the wall, colliding with the first enemy champion hit. Upon landing, she gains 40/45/50/55/60% Attack Speed for 5 seconds, deals 60/90/120/150/180 (+75% bonus AD) physical damage to nearby enemies, and Stuns enemy champions for 0.75 seconds. Dashes towards enemy champions travel twice as far.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "The Hextech Ultimatum",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        115,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "RPercentCurrentHPDamage": [
+          4,
+          6,
+          8
+        ],
+        "RDuration": [
+          2.5,
+          3.25,
+          4
+        ],
+        "RCircleRadius": [
+          425,
+          425,
+          425
+        ]
+      },
+      "resolvedDescription": "Camille briefly becomes Untargetable and leaps onto an enemy champion, interrupting channels and locking them into an area they cannot escape by any means for 2.5/3.25/4 seconds. Other nearby enemies are Knocked Away. Her Attacks against the trapped enemy deal an additional 4/6/8% current Health magic damage.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,319 @@
+{
+  "championKey": "Vladimir",
+  "championName": "Vladimir",
+  "abilities": {
+    "passive": {
+      "name": "Crimson Pact",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "HPforAP": [
+          30
+        ],
+        "APRatioBonusHP": [
+          1.6
+        ]
+      },
+      "resolvedDescription": "Every 30 points of bonus Health gives Vladimir 1 Ability Power and every 1 point of Ability Power gives Vladimir 1.6 bonus Health (does not stack with itself).",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Transfusion",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        7.9,
+        6.8,
+        5.7,
+        4.6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "HealAPRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BaseDamage": [
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "BaseHeal": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "Empowered___HealPer100AP_0_1_": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "DamagePercentAmp": [
+          85,
+          85,
+          85,
+          85,
+          85
+        ],
+        "FrenzyDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MinionHealPercent": [
+          35,
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      "resolvedDescription": "Vladimir drains his target's lifeforce, dealing 80/100/120/140/160 (+60% AP) magic damage and restoring 20/25/30/35/40 (+35% AP) Health. After using this Ability twice, Vladimir gains 10-40 (based on level)% Move Speed for 0.5 seconds and empowers the next use of this Ability for 2.5 seconds. The empowered version of this Ability deals 148/185/222/259/296 (+111.00001% AP) magic damage instead and restores an additional 30-200 (based on level) plus {{ empoweredhealpercenttooltip }} missing Health.",
+      "unresolved": [
+        "empoweredhealpercenttooltip"
+      ]
+    },
+    "W": {
+      "name": "Sanguine Pool",
+      "maxRank": 5,
+      "cooldownByRank": [
+        28,
+        25,
+        22,
+        19,
+        16
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "MinionHealingMod": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "BaseDamage": [
+          80,
+          135,
+          190,
+          245,
+          300
+        ],
+        "HealthCost": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "BonusHealthRatio": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "MoveSpeedMod": [
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4
+        ],
+        "VampPercent": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "HasteBoost": [
+          0.375,
+          0.375,
+          0.375,
+          0.375,
+          0.375
+        ],
+        "HasteDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Vladimir sinks into a pool of blood for 2 seconds, gaining 37.5% decaying Move Speed for 1 second and becoming Untargetable and Ghosted while Slowing enemies in the pool by 40%. Vladimir deals 80/135/190/245/300 (+15% bonus Health) magic damage and restores 24/40.5/57/73.5/90 (+4.5% bonus Health) Health per enemy over the duration.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Tides of Blood",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        11,
+        9,
+        7,
+        5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of max Health (8% max Health)",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "SlowPercent": [
+          40,
+          45,
+          50,
+          55,
+          60
+        ],
+        "MaxHealthCost": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "BaseDamage": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "TotalMaxHPDamage": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "MaxChannelTime": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "TimetoRampMaxDamage": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseMaxDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Vladimir charges up a reservoir of blood, spending up to 8% max Health Health. While at full charge, Vladimir is Slowed by 20%. Release: Vladimir unleashes a torrent of blood missiles at surrounding enemies, dealing between 30/45/60/75/90 (+1.5% max Health) (+35% AP) and 60/90/120/150/180 (+6% max Health) (+80% AP) magic damage based on charge time. If this Ability was charged for at least 1 second, it also Slows targets by 40/45/50/55/60% for 0.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Hemoplague",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        120,
+        120
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "DamageAmp": [
+          10,
+          10,
+          10
+        ],
+        "VampPercentFirstChamp": [
+          100,
+          100,
+          100
+        ],
+        "Duration": [
+          4,
+          4,
+          4
+        ],
+        "VampPercentAdditionalChamp": [
+          40,
+          40,
+          40
+        ]
+      },
+      "resolvedDescription": "Vladimir creates a virulent plague, causing its victims to take 10% increased damage from all sources for 4 seconds. After it expires, Vladimir deals 150/250/350 (+70% AP) magic damage to all infected targets. Vladimir restores 150/250/350 (+70% AP) Health if he hits a champion, and restores an additional 60/100/140 (+28% AP) Health for each champion beyond the first.",
+      "unresolved": []
+    }
+  }
+}

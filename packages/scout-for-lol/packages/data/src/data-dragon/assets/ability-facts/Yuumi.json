@@ -1,0 +1,458 @@
+{
+  "championKey": "Yuumi",
+  "championName": "Yuumi",
+  "abilities": {
+    "passive": {
+      "name": "Feline Friendship",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TakedownCompanionship": [
+          2
+        ],
+        "HealDelayTime": [
+          4
+        ],
+        "MinionKillCompanionship": [
+          2
+        ],
+        "PityTimer": [
+          6
+        ]
+      },
+      "resolvedDescription": "Periodically, when Yuumi strikes a champion with an attack or ability, she restores health to herself and the next ally she Attaches to. While Attached, Yuumi generates a special bond with her allies. The ally with the strongest bond enhances Yuumi's abilities while she is Attached to them.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Prowling Projectile",
+      "maxRank": 6,
+      "cooldownByRank": [
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        6.5,
+        6.5
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "MissileDamage": [
+          60,
+          95,
+          130,
+          165,
+          200,
+          235
+        ],
+        "SlowAmount": [
+          20,
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "TimeToAfterburners": [
+          1.35,
+          1.35,
+          1.35,
+          1.35,
+          1.35,
+          1.35
+        ],
+        "MissileLifetime": [
+          1.85,
+          1.85,
+          1.85,
+          1.85,
+          1.85,
+          1.85
+        ],
+        "StartingSpeed": [
+          650,
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "AfterburnerSpeed": [
+          950,
+          950,
+          950,
+          950,
+          950,
+          950
+        ],
+        "InitialTimeDelay": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "MissileStartingOffset": [
+          75,
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "EmpoweredSlowAmount": [
+          50,
+          53,
+          56,
+          59,
+          62,
+          65
+        ],
+        "EmpoweredSlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "EmpoweredMissileDamage": [
+          80,
+          135,
+          190,
+          245,
+          300,
+          355
+        ],
+        "OnHitBase": [
+          10,
+          12,
+          14,
+          16,
+          18,
+          20
+        ],
+        "AllyCritChanceMaxAmp": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "APRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "EmpoweredAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Yuumi summons an errant missile that deals 60/95/130/165/200/235 (+20% AP) magic damage to the first enemy and Slows the target for 20%. If cast while Attached, Yuumi can control the missile using her mouse for a short period before it accelerates in a straight line. The accelerated missile deals 80/135/190/245/300/355 (+30% AP) magic damage and Slows the target for 50/53/56/59/62/65% for 2 seconds, instead. Best Friend Bonus: Prowling Projectile's Slow will always be enhanced and hitting an enemy champion also grants them 5% AP (+10/12/14/16/18/20) magic damage On-Hit %i:OnHit% for 5 seconds. The bonus On-Hit damage can be increased by 75% based her ally's Critical Strike Chance.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "You and Me!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "DashSpeed": [
+          1300,
+          1350,
+          1400,
+          1450,
+          1500
+        ],
+        "CastForgivenessRange": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "CastRange": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "MaxBonusHealShieldPower": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "BaseHealthOnHit": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "HealAndShieldPower": [
+          0.04,
+          0.05,
+          0.06,
+          0.07,
+          0.08
+        ],
+        "MinBonusHealShieldPower": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ]
+      },
+      "resolvedDescription": "Passive: While on her Best Friend, Yuumi gains an additional 4/5/6/7/8% Heal & Shield Power and her ally also restores 3/4/5/6/7 (+3% AP) health On-Hit %i:OnHit%. Active: Yuumi dashes to an ally champion and Attaches to them. While Yuumi is Attached, she follows her partner's movement and is Untargetable except from towers. Immobilizing effects on Yuumi place this Ability on a 5 second Cooldown.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Zoomies",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        80,
+        90,
+        100,
+        110,
+        120
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "MSDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "MSAmount": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "AttackSpeedAmount": [
+          25,
+          27.5,
+          30,
+          32.5,
+          35
+        ],
+        "BaseShielding": [
+          65,
+          90,
+          115,
+          140,
+          165
+        ],
+        "ManaRestore": [
+          20,
+          24,
+          28,
+          32,
+          36
+        ],
+        "MaxManaPercIncrease": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Yuumi shields herself, blocking 65/90/115/140/165 (+40% AP) damage and gains 25/27.5/30/32.5/35 (+8% AP)% Attack Speed for 3 seconds. While the shield persists, the target also gains 20% Move Speed. If Yuumi is Attached, this Ability affects her ally instead and also restores 20/24/28/32/36 Mana to them, increased by up to 100% based on the target's missing Mana.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Final Chapter",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "UltLength": [
+          1300,
+          1300,
+          1300
+        ],
+        "BaseMissileDamage": [
+          75,
+          125,
+          175
+        ],
+        "MultiMissileReduction": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "CCDuration": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "UltDuration": [
+          3.5,
+          3.5,
+          3.5
+        ],
+        "NumberOfWaves": [
+          5,
+          5,
+          5
+        ],
+        "WavesToRoot": [
+          3,
+          3,
+          3
+        ],
+        "TimeBetweenWaves": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MissileSlowPercent": [
+          -0.4,
+          -0.4,
+          -0.4
+        ],
+        "SpaceBehindWave": [
+          200,
+          200,
+          200
+        ],
+        "BaseHealPerWave": [
+          30,
+          50,
+          70
+        ],
+        "BaseSlow": [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        "BonusSlowPerWave": [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        "OvershieldBonusDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DegreesPerTick": [
+          10,
+          10,
+          10
+        ]
+      },
+      "resolvedDescription": "Yuumi channels for 3.5 seconds, launching 5 magical waves affecting both teams. If initially cast while Attached, Yuumi can steer the waves to follow her mouse. Enemies struck are dealt 75/125/175 (+25% AP) magic damage and Slowed by 10% for 1.25 seconds, increased by 10% per wave hit. Ally champions are healed for 30/50/70 (+12% AP) health per wave. Excess healing is converted to a Shield instead. Best Friend Bonus: For her Best Friend, the heal is increased to {{ enhancedhealperwave }} health. Casting You and Me! will locks the waves in the current direction. Yuumi can move and cast Zoomies while channeling.",
+      "unresolved": [
+        "enhancedhealperwave"
+      ]
+    }
+  }
+}

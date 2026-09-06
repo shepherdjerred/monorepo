@@ -1,0 +1,359 @@
+{
+  "championKey": "Kayle",
+  "championName": "Kayle",
+  "abilities": {
+    "passive": {
+      "name": "Divine Ascent",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "LevelForPassiveRank0": [
+          1
+        ],
+        "LevelForPassiveRank1": [
+          6
+        ],
+        "LevelForPassiveRank2": [
+          11
+        ],
+        "LevelForPassiveRank3": [
+          16
+        ],
+        "UpgradedAttackRange": [
+          525
+        ],
+        "FinalAttackRange": [
+          625
+        ],
+        "MSTowardsEnemy": [
+          0.1
+        ],
+        "MSTowardsEnemyRadius": [
+          2000
+        ],
+        "EnrageMaxStacks": [
+          5
+        ],
+        "EnrageDuration": [
+          5
+        ],
+        "EnrageASPerStack": [
+          6
+        ],
+        "PassiveWaveAPRatio": [
+          0.25
+        ],
+        "PassiveWaveBonusADRatio": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Kayle's attacks are empowered by the heavens as she levels up and spends skill points. Her wings are lit aflame as she progressively gains Attack Speed, Move Speed, Attack Range, and waves of fire on her attacks.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Radiant Blast",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "ManaRefundPercent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "CastDelay": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "Damage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "SlowPercent": [
+          25,
+          30,
+          35,
+          40,
+          45
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ShredPercent": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "ShredDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ExplosionLeftRightDist": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "ExplosionLeftRightWidth": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "ExplosionForwardDist": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "ExplosionBackwardDist": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "ExplosionForwardBackWidth": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ],
+        "ExplosionCenterAoERadius": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "ExplosionForwardOffset": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Kayle fires a celestial sword that stops on the first enemy hit, dealing 60/90/120/150/180 (+50% AP) (+60% bonus AD) magic damage, Slowing by 25/30/35/40/45% for 2 seconds, and removing 15% Armor and Magic Resist for 4 seconds from the target and enemies behind them.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Celestial Blessing",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "Heal": [
+          55,
+          80,
+          105,
+          130,
+          155
+        ],
+        "Haste": [
+          0.24,
+          0.28,
+          0.32,
+          0.36,
+          0.4
+        ],
+        "HasteDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Kayle infuses herself and an allied champion with light, restoring 55/80/105/130/155 (+25% AP) Health and granting {{ totalhaste }} Move Speed for 2 seconds.",
+      "unresolved": [
+        "totalhaste"
+      ]
+    },
+    "E": {
+      "name": "Starfire Spellblade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "PassiveDamage": [
+          15,
+          20,
+          25,
+          30,
+          35
+        ],
+        "ActiveExecutePercent": [
+          8,
+          8.5,
+          9,
+          9.5,
+          10
+        ],
+        "MaxExecuteVsMonsters": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "ExplosionRadius": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "BuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "PassiveAPRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "PassiveBonusADRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Passive: Attacks deal an additional 15/20/25/30/35 (+20% AP) (+10% bonus AD) magic damage. Active: Kayle's next attack becomes ranged and deals an additional {{ activetotalexecutedamage }} missing Health magic damage. This attack upgrades when Kayle reaches Level {{ spell.kaylepassive:levelforpassiverank2 }}, causing it to explode when it hits the target, dealing damage to nearby enemies.",
+      "unresolved": [
+        "activetotalexecutedamage",
+        "spell.kaylepassive:levelforpassiverank2"
+      ]
+    },
+    "R": {
+      "name": "Divine Judgment",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        120,
+        80
+      ],
+      "costByRank": [
+        100,
+        50,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "Damage": [
+          200,
+          300,
+          400
+        ],
+        "InvulnDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "AoERadius": [
+          675,
+          675,
+          775
+        ]
+      },
+      "resolvedDescription": "Kayle makes an allied champion Invulnerable for 2.5 seconds and then purifies the area around them, dealing 200/300/400 (+70% AP) (+100% bonus AD) magic damage to nearby enemies.",
+      "unresolved": []
+    }
+  }
+}

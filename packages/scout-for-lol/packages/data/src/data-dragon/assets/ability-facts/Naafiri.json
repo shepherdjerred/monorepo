@@ -1,0 +1,495 @@
+{
+  "championKey": "Naafiri",
+  "championName": "Naafiri",
+  "abilities": {
+    "passive": {
+      "name": "We Are More",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CooldownReduceOnKill": [
+          1
+        ],
+        "CooldownReduceOnAbilityHit": [
+          4
+        ],
+        "PackmateBaseAS": [
+          0.688
+        ],
+        "PackmateBaseMS": [
+          340
+        ],
+        "PackmateModifierTooltipOnly": [
+          0.08
+        ],
+        "LeapSpeed": [
+          1250
+        ],
+        "LeapMin": [
+          75
+        ],
+        "LeapMax": [
+          1200
+        ],
+        "PackmateTowerModifier": [
+          0.5
+        ],
+        "PackmateMonsterMod": [
+          1.55
+        ],
+        "PackmateTauntDuration": [
+          2
+        ],
+        "PackmateLastHitHelpCD": [
+          10
+        ],
+        "PackmateCSHelpRadiusMax": [
+          800
+        ],
+        "PackmateCSHelpRadiusMin": [
+          300
+        ],
+        "PackmateFrenzyDuration": [
+          3
+        ],
+        "PackmateFrenzyMaxCounters": [
+          3
+        ],
+        "PackmateFrenzyDamageMult": [
+          1.3
+        ],
+        "ProcDamageModifier": [
+          0.5
+        ],
+        "HealthRegenDelay": [
+          5
+        ],
+        "HealthRegenPercent": [
+          0.25
+        ],
+        "NonChampDamageModifier": [
+          0.5
+        ],
+        "MeleeAttackDamageModifier": [
+          2
+        ],
+        "PackmateBonusADRatio": [
+          0.04
+        ]
+      },
+      "resolvedDescription": "Naafiri spawns packmates that attack the targets of her attacks and abilities.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Darkin Daggers",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamageFirstCast": [
+          35,
+          40,
+          45,
+          50,
+          55
+        ],
+        "BaseDamageSecondCast": [
+          30,
+          42.5,
+          55,
+          67.5,
+          80
+        ],
+        "BleedBaseDamage": [
+          35,
+          60,
+          85,
+          110,
+          135
+        ],
+        "BleedInterval": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RecastWindow": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "RecastLockout": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseHealSecondCast": [
+          45,
+          60,
+          75,
+          90,
+          105
+        ],
+        "BleedDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "ExecuteMultiplier": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MinionMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "FirstCastBonusADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "SecondCastBonusADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BleedBonusADRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "HealBonusADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "SecondCastMaxADRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Naafiri hurls Darkin-tainted blades, dealing 35/40/45/50/55 (+20% bonus AD) physical damage and inflicting a bleed, dealing 35/60/85/110/135 (+80% bonus AD) physical damage over 5 seconds. Naafiri can Recast this Ability. If enemies hit are already bleeding from this Ability, it instead deals the remaining bleed damage plus between 30/42.5/55/67.5/80 (+40% bonus AD) and 60/85/110/135/160 (+140% bonus AD) physical damage, based on their missing Health. If that target was a champion or large monster, Naafiri restores 45/60/75/90/105 (+40% bonus AD) Health. Packmates will leap at the first champion or monster hit and attack them for {{ spell.naafirip:packmatetauntduration }} seconds.",
+      "unresolved": [
+        "spell.naafirip:packmatetauntduration"
+      ]
+    },
+    "W": {
+      "name": "The Call of the Pack",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        24,
+        22,
+        20,
+        18
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "PackmatesToAdd": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "MoveSpeedAmount": [
+          0.2,
+          0.225,
+          0.25,
+          0.275,
+          0.3
+        ],
+        "MoveSpeedDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "PackmateSpawnRateIncrease": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "NaafiriADPercentBoost": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "UntargetableDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Naafiri becomes Untargetable for 1 second and prepares to hunt, spawning 2 additional Packmates and gaining 20% AD Attack Damage and 20/22.5/25/27.5/30% Move Speed for 5 seconds. Packmates become Untargetable and are recalled to Naafiri.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Eviscerate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamageFirstSlash": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "ADRatioFirstSlash": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BaseDamageSecondHit": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "ADRatioSecondHit": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "RadiusSecondSlash": [
+          230,
+          230,
+          230,
+          230,
+          230
+        ],
+        "DashDistance": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "DashSpeed": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "MaxDashCheatDistance": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "MinDashDistance": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ]
+      },
+      "resolvedDescription": "Naafiri surges forward, dealing 15/25/35/45/55 (+40% bonus AD) physical damage, then explodes in a flurry of blades, dealing 60/85/110/135/160 (+80% bonus AD) physical damage. Packmates become Untargetable and are recalled to Naafiri restoring 100% Health.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Hounds' Pursuit",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        95,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          125,
+          200,
+          275
+        ],
+        "DashSpeed": [
+          1800,
+          1800,
+          1800
+        ],
+        "SlowDuration": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowPercent": [
+          -0.99,
+          -0.99,
+          -0.99
+        ],
+        "PackmateModifier": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "FailCastCDRefund": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ShredDuration": [
+          3,
+          3,
+          3
+        ],
+        "TakedownWindow": [
+          7,
+          7,
+          7
+        ],
+        "RecastWindow": [
+          12,
+          12,
+          12
+        ],
+        "ShieldDuration": [
+          3,
+          3,
+          3
+        ],
+        "ShieldSize": [
+          100,
+          150,
+          200
+        ],
+        "VisionDuration": [
+          4,
+          4,
+          4
+        ],
+        "VisionPulseDuration": [
+          1,
+          1,
+          1
+        ],
+        "VisionRadius": [
+          2100,
+          2100,
+          2100
+        ],
+        "WRefreshOnCast": [
+          1.75,
+          1.75,
+          1.75
+        ]
+      },
+      "resolvedDescription": "Naafiri dashes at an enemy champion, dealing 125/200/275 (+100% bonus AD) physical damage and briefly Slowing them. Packmates become Untargetable and dash alongside Naafiri, dealing 12.5/20/27.5 (+10% bonus AD) physical damage per Packmate. If Naafiri scores a Takedown within 7 seconds she reveals nearby enemies and can recast this Ability once. The second cast grants 100/150/200 (+150% bonus AD) Shield for 3 seconds.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,284 @@
+{
+  "championKey": "Kennen",
+  "championName": "Kennen",
+  "abilities": {
+    "passive": {
+      "name": "Mark of the Storm",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "EnergyRestore": [
+          25
+        ],
+        "StunDuration": [
+          1.25
+        ],
+        "ReducedStunDuration": [
+          0.5
+        ],
+        "MarkDuration": [
+          6
+        ],
+        "DiminishingReturnDuration": [
+          6
+        ]
+      },
+      "resolvedDescription": "Kennen stuns enemies he hits 3 times with his abilities.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Thundering Shuriken",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.25,
+        5.5,
+        4.75,
+        4
+      ],
+      "costByRank": [
+        60,
+        55,
+        50,
+        45,
+        40
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          125,
+          175,
+          225,
+          275
+        ]
+      },
+      "resolvedDescription": "Kennen throws a shuriken, dealing 75/125/175/225/275 (+75% AP) magic damage to the first enemy hit.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Electrical Surge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        11.25,
+        9.5,
+        7.75,
+        6
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        725,
+        725,
+        725,
+        725,
+        725
+      ],
+      "dataValues": {
+        "bADRatio": [
+          0.8,
+          0.9,
+          1,
+          1.1,
+          1.2
+        ],
+        "BaseOnHitDamage": [
+          35,
+          45,
+          55,
+          65,
+          75
+        ],
+        "BaseDamageActive": [
+          70,
+          95,
+          120,
+          145,
+          170
+        ],
+        "APRatioActive": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Passive: Every 5th Attack deals an additional {{ totaldamagepassive }} magic damage %i:OnHit% On-Hit. Active: Kennen sends out a blast of electricity, dealing 70/95/120/145/170 (+80% AP) magic damage to nearby enemies affected by Mark of the Storm.",
+      "unresolved": [
+        "totaldamagepassive"
+      ]
+    },
+    "E": {
+      "name": "Lightning Rush",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        170,
+        170,
+        170,
+        170,
+        170
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "EnergyRefund": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "MovementSpeed": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DurationAsBall": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "TotalAS": [
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8
+        ],
+        "DurationAfterBall": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "DamageToMinions": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "DamageRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "linger": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "CritDurationBonus": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Kennen turns into a ball of lightning, gaining 100% Move Speed, dealing 80/120/160/200/240 (+80% AP) magic damage to enemies he passes through, and becoming Ghosted for 2 seconds. If Kennen damages at least one enemy, he gains 40 Energy. After this ability ends, Kennen gains 40/50/60/70/80% Attack Speed for 4 seconds. Critical Strikes extend this duration by 1 second(s). Kennen can Recast to end this Ability early.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Slicing Maelstrom",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        120,
+        120
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          80,
+          120
+        ],
+        "APRatio": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "DamageAmp": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "KennenRTickRate": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "KennenRDefenses": [
+          25,
+          50,
+          75
+        ],
+        "KennenRDuration": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Kennen unleashes a magical storm, dealing 40/80/120 (+25% AP) magic damage to all nearby enemies every 0.5 seconds, and gaining 25/50/75 Armor and 25/50/75 Magic Resist for 3 seconds. Successive hits deal 10% increased damage for each hit the enemy has already suffered.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,294 @@
+{
+  "championKey": "Fiddlesticks",
+  "championName": "Fiddlesticks",
+  "abilities": {
+    "passive": {
+      "name": "A Harmless Scarecrow",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Fiddlesticks' trinket is replaced by scarecrow effigies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Terrify",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14.5,
+        14,
+        13.5,
+        13
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        575,
+        575,
+        575,
+        575,
+        575
+      ],
+      "dataValues": {
+        "MaxHealthDamage": [
+          0.04,
+          0.045,
+          0.05,
+          0.055,
+          0.06
+        ],
+        "FearDuration": [
+          1.2,
+          1.4,
+          1.6,
+          1.8,
+          2
+        ],
+        "MinimumDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ]
+      },
+      "resolvedDescription": "Passive: While unseen and out of combat or impersonating an Effigy, damaging an enemy with an ability Fears them for 1.2/1.4/1.6/1.8/2 second(s). Active: Fear an enemy for 1.2/1.4/1.6/1.8/2 second(s) and deal {{ totalpercenthealthdamage }} current Health magic damage. If the target has recently been Feared by Fiddlesticks, instead deal {{ totalpercenthealthdamagefeared }} current Health magic damage.",
+      "unresolved": [
+        "totalpercenthealthdamage",
+        "totalpercenthealthdamagefeared"
+      ]
+    },
+    "W": {
+      "name": "Bountiful Harvest",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "DamagePerSecond": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "TicksPerSecond": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "VampPercentage": [
+          25,
+          32.5,
+          40,
+          47.5,
+          55
+        ],
+        "DrainDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "DrainLeashRange": [
+          725,
+          725,
+          725,
+          725,
+          725
+        ],
+        "PercentMultiplier": [
+          0.12,
+          0.145,
+          0.17,
+          0.195,
+          0.22
+        ],
+        "PercentForTooltip": [
+          12,
+          14.5,
+          17,
+          19.5,
+          22
+        ],
+        "MonsterDamageMod": [
+          1.35,
+          1.35,
+          1.35,
+          1.35,
+          1.35
+        ],
+        "MonsterHealingMod": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "MinionDamageMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MinionHealingMod": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "MonsterMaxDamage": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Fiddlesticks channels and drains the souls of nearby enemies, dealing 60/90/120/150/180 (+45% AP) magic damage per second for 2 seconds, plus 12/14.5/17/19.5/22% missing Health magic damage at the end. Fiddlesticks restores 25/32.5/40/47.5/55% of damage as Health. If Fiddlesticks ends the channel without interruption, the remaining Cooldown is reduced by 60%.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Reap",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "SlowAmount": [
+          -0.3,
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5
+        ],
+        "EmpoweredSlowAmount": [
+          -0.5,
+          -0.55,
+          -0.6,
+          -0.65,
+          -0.7
+        ],
+        "CastRange": [
+          850,
+          850,
+          850,
+          850,
+          850
+        ],
+        "SilenceDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ]
+      },
+      "resolvedDescription": "Fiddlesticks unleashes dark magic, dealing 70/105/140/175/210 (+50% AP) magic damage and Slowing by 30/35/40/45/50% for 1.25 seconds. Enemies in the center are also Silenced for the duration.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Crowstorm",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        110,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "DamagePerSecond": [
+          150,
+          250,
+          350
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Duration": [
+          5,
+          5,
+          5
+        ],
+        "ChannelTime": [
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Fiddlesticks channels for 1.5 seconds, then teleports and unleashes a murder of crows, dealing 750/1250/1750 (+250% AP) magic damage over 5 seconds.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,367 @@
+{
+  "championKey": "Olaf",
+  "championName": "Olaf",
+  "abilities": {
+    "passive": {
+      "name": "Berserker Rage",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AttackSpeedPerMissingHPPerc": [
+          0.009
+        ],
+        "MaxStatsThreshold": [
+          0.3
+        ]
+      },
+      "resolvedDescription": "Olaf gains Attack Speed and Life Steal based on his missing Health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Undertow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "MinimumRange": [
+          425,
+          425,
+          425,
+          425,
+          425
+        ],
+        "SlowAmount": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "ShredAmount": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "DebuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MinimumCooldown": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "BaseDamage": [
+          70,
+          120,
+          170,
+          220,
+          270
+        ],
+        "MonsterDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "MaxSlowDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "MinSlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxSlowDistance": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "MinSlowDistance": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Olaf throws an axe, dealing 70/120/170/220/270 (+100% bonus AD) physical damage and Slowing by 30/35/40/45/50% for up to 3 seconds (based on distance travelled). Champions hit lose 20% Armor for 4 seconds. If Olaf picks up the axe, this Ability's Cooldown is reduced to {{ tooltipcdrefund }} seconds, or fully refunded if {{ tooltipcdrefund }} seconds has elapsed.",
+      "unresolved": [
+        "tooltipcdrefund",
+        "tooltipcdrefund"
+      ]
+    },
+    "W": {
+      "name": "Tough It Out",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "Attackspeed": [
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "ShieldPercMissingHP": [
+          0.175,
+          0.175,
+          0.175,
+          0.175,
+          0.175
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "BaseShield": [
+          10,
+          40,
+          70,
+          100,
+          130
+        ],
+        "ThresholdForMax": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Olaf gains 40/50/60/70/80% Attack Speed for 5 seconds, and 10/40/70/100/130 plus 17.5% missing Health Shield (up to a maximum of {{ maxshieldcalc }} Shield below 30% Health) for 2.5 seconds.",
+      "unresolved": [
+        "maxshieldcalc"
+      ]
+    },
+    "E": {
+      "name": "Reckless Swing",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Health",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "Cast_Time_Base": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "Cast_Time_Min": [
+          0.175,
+          0.175,
+          0.175,
+          0.175,
+          0.175
+        ],
+        "Cast_Time_Attack_Speed_Cap": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "ADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseHealthCost": [
+          28,
+          46,
+          64,
+          82,
+          100
+        ],
+        "HealthCostADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "BaseDamage": [
+          70,
+          115,
+          160,
+          205,
+          250
+        ],
+        "HealthCostPercent": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MonsterRefresh": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ChampionRefresh": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Olaf ferociously swings his axes, dealing 70/115/160/205/250 (+50% AD) true damage. If the enemy dies, the cost is refunded. Attacks lower the Cooldown of this Ability by 1 second, increased to 2 seconds when attacking monsters.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Ragnarok",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        90,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "Resists": [
+          10,
+          15,
+          20
+        ],
+        "Duration": [
+          3,
+          3,
+          3
+        ],
+        "FlatAD": [
+          10,
+          20,
+          30
+        ],
+        "PercentTotalADAmp": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "HasteDuration": [
+          1,
+          1,
+          1
+        ],
+        "Haste": [
+          0.2,
+          0.45,
+          0.7
+        ],
+        "DurationExtension": [
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Passive: Olaf gains 10/15/20 Armor and 10/15/20 Magic Resist. Active: Olaf cleanses all Immobilizing and Disabling effects on himself and becomes immune to them for 3 seconds. While active, Olaf gains 10/20/30 (+25% AD) Attack Damage. Hitting a champion with an Attack or Reckless Swing extends the duration by 2.5 seconds. Additionally, Olaf gains 20/45/70% Move Speed towards enemy champions for 1 second.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,444 @@
+{
+  "championKey": "Locke",
+  "championName": "Locke",
+  "abilities": {
+    "passive": {
+      "name": "Silver Stake",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MinOnHitStartValue": [
+          5
+        ],
+        "MinOnHitEndValue": [
+          40
+        ],
+        "MaxOnHitStartValue": [
+          10
+        ],
+        "MaxOnHitEndValue": [
+          80
+        ]
+      },
+      "resolvedDescription": "Locke's attacks deal additional magic damage On-Hit, increased based on enemy missing Health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Ritual Nails",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseMissileDamage": [
+          40,
+          48,
+          56,
+          64,
+          72
+        ],
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "Ammo": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "MaxStacks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "NailDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SlowAmount1": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowAmount2": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowAmount3": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "SlowDuration1": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowDuration2": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowDuration3": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MarkDamage": [
+          18,
+          26,
+          34,
+          42,
+          50
+        ],
+        "MarkRatio": [
+          0.25,
+          0.275,
+          0.3,
+          0.325,
+          0.35
+        ],
+        "TwoMarkBonusPercent": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "ThreeMarkBonusPercent": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "QMissileMinionMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "QMarkMinionMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Locke readies a set of Soul Nails to throw, dealing 40/48/56/64/72 (+20% AP) magic damage and marking enemies hit. Nails apply a 25/25/60% Slow for 1/1/2 seconds, stacking with the amount of nails hit. Attacking the enemy consumes the Soul Nails, dealing 25/27.5/30/32.5/35% AP (+18/26/34/42/50) magic damage per stack, increased by 20% and 40% for two and three nails respectively.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Soul Ignition",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana and 2% Current Health Per Second",
+      "rangeByRank": [
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "BaseMoveSpeed": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BaseDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "Radius": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "BaseDamageRestoreAmount": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "HealthCost": [
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ],
+        "DecayTime": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MinMoveSpeed": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "TimeMaxPower": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "HealCapAPRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "HealCapLevel1Value": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "HealCapLevel18Value": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ]
+      },
+      "resolvedDescription": "Locke ignites his own soul, gaining 40-70% (based on level) Attack Speed and {{ movespeed }} Move Speed that decays over 1 (+1) seconds. For 6 seconds, he suffers 2% current Health true damage per second but Heals back the last 40/60/80/100/120 (+100% AP) damage taken, and an additional 40-200 (based on level) (+20% AP) Health based on missing Health and time passed, up to a maximum of {{ maxhealingthreshold }} Health remaining. Can be Recast to end early.",
+      "unresolved": [
+        "movespeed",
+        "maxhealingthreshold"
+      ]
+    },
+    "E": {
+      "name": "Ashen Pursuit",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        30,
+        40,
+        50,
+        60,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        425,
+        425,
+        425,
+        425,
+        425
+      ],
+      "dataValues": {
+        "BaseOnHitDamage": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "MinCastRange": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "Radius": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "BaseDashDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "BonusRange": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ],
+        "E2AttackDelay": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Locke teleports to a location, dealing 40/50/60/70/80 (+40% AP) magic damage to nearby enemies on arrival. On his next Attack, he dashes to his target, dealing 40/60/80/100/120 (+40% AP) magic damage to all enemies in his path. Each hit consumes Soul Nails. If Locke scores a takedown, the Cooldown of this Ability is reset.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Purgatory",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          225,
+          300
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "Radius": [
+          400,
+          400,
+          400
+        ],
+        "SlowAmount": [
+          0.99,
+          0.99,
+          0.99
+        ],
+        "ExecutionThreshold": [
+          0.1,
+          0.11,
+          0.12
+        ],
+        "Duration": [
+          5,
+          5,
+          5
+        ],
+        "CooldownReduction": [
+          20,
+          20,
+          20
+        ],
+        "AbilityHastePerStack": [
+          6,
+          6,
+          6
+        ],
+        "Anim_BiteTime": [
+          0.39,
+          0.39,
+          0.39
+        ],
+        "ExecuteThresholdPerStack": [
+          0.005,
+          0.005,
+          0.005
+        ]
+      },
+      "resolvedDescription": "Locke throws a binding artifact to a location, dealing 150/225/300 (+60% AP) magic damage and Slowing enemies in the area by 99%, decaying over 2 seconds. The artifact marks enemies hit for 5 seconds, sealing away marked enemy champions brought below {{ executetooltipcalc }}, and resetting the duration of the mark on other affected champions. After the duration ends, if at least one champion was sealed, the artifact lands on the ground. Locke can pick up the artifact to permanently increase its execution threshold by 0.5%, and refund 20% of his total Cooldown, for each champion sealed.",
+      "unresolved": [
+        "executetooltipcalc"
+      ]
+    }
+  }
+}

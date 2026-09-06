@@ -1,0 +1,366 @@
+{
+  "championKey": "Sona",
+  "championName": "Sona",
+  "abilities": {
+    "passive": {
+      "name": "Power Chord",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TempoDuration": [
+          2
+        ],
+        "PowerChordPassiveCountMax": [
+          3
+        ],
+        "AccelerandoAHPerStack": [
+          0.5
+        ],
+        "AccelerandoCap": [
+          60
+        ],
+        "AccelerandoUltCDR": [
+          1.5
+        ]
+      },
+      "resolvedDescription": "Accelerando: Sona gains non-Ultimate ability haste permanently for her basic abilities as she uses her abilities well, up to a cap. Beyond that cap, further successful uses reduce her ultimate's remaining cooldown instead. Power Chord: Every few spell casts, Sona's next attack will deal bonus magic damage in addition to an additional effect based on what basic Ability Sona last activated.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Hymn of Valor",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          85,
+          120,
+          155,
+          190
+        ],
+        "BaseOnHitDamage": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "AuraRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "OnHitDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "EnemiesToHit": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "AuraDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseGlobalCD": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "OnHitProcs": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "OnHitRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Sona deals 50/85/120/155/190 (+40% AP) magic damage to the nearest two enemies, prioritizing champions. She then begins a new Melody. Gain a stack of Accelerando for every champion you damage with this. Melody: Sona gains an aura for 3 seconds, granting allied champions an additional 10/15/20/25/30 (+10% AP) magic damage %i:OnHit% on their next Attack within 5 seconds. Power Chord - Staccato: Power Chord bonus damage (30-255 (based on level) (+30% AP) total magic damage).",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Aria of Perseverance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "BaseShield": [
+          25,
+          45,
+          65,
+          85,
+          105
+        ],
+        "AuraDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AuraRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "BaseGlobalCD": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DiminuendoDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "HealRange": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AccelerandoShieldBreakpoint": [
+          25,
+          45,
+          65,
+          85,
+          105
+        ],
+        "HealRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "ShieldRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Active: Sona restores 30/45/60/75/90 (+30% AP) Health to herself and a nearby allied champion, prioritizing the most wounded. She then begins a new Melody. Melody: Sona gains an aura for 3 seconds, granting allied champions 25/45/65/85/105 (+25% AP) Shield for 1.5 seconds. Gain a stack of Accelerando whenever you heal another injured ally and every time you protect another ally from at least 25/45/65/85/105 damage with this shield. Power Chord - Diminuendo: Power Chord also reduces physical and magic damage dealt by the target by {{ totaldiminuendoweakenpercent }} for 3 seconds.",
+      "unresolved": [
+        "totaldiminuendoweakenpercent"
+      ]
+    },
+    "E": {
+      "name": "Song of Celerity",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        430,
+        430,
+        430,
+        430,
+        430
+      ],
+      "dataValues": {
+        "SelfBaseMovementSpeed": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "AllyBaseMovementSpeed": [
+          0.1,
+          0.12,
+          0.14,
+          0.16,
+          0.18
+        ],
+        "SelfMovementSpeedDurationMin": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SelfMovementSpeedDurationMax": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "AllyMovementSpeedDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AuraRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "AuraDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseGlobalCD": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "TempoDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Active: She begins a new Melody and grants herself {{ totalselfmovementspeed }} Move Speed for 3 seconds, extended to up to 7 seconds if she doesn't take damage. Melody: Sona gains an aura for 3 seconds that grants allied champions {{ totalallymovementspeed }} Move Speed for 3 seconds. Power Chord - Tempo: Power Chord also Slows the target by {{ totaltempomovespeedslow }} for 2 seconds.",
+      "unresolved": [
+        "totalselfmovementspeed",
+        "totalallymovementspeed",
+        "totaltempomovespeedslow"
+      ]
+    },
+    "R": {
+      "name": "Crescendo",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "StunDuration": [
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Sona strikes an irresistible chord, Stunning enemy for 1.5 seconds and dealing 150/250/350 (+50% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

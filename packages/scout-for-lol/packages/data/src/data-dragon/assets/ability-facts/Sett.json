@@ -1,0 +1,564 @@
+{
+  "championKey": "Sett",
+  "championName": "Sett",
+  "abilities": {
+    "passive": {
+      "name": "Pit Grit",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "NumHits": [
+          2
+        ],
+        "LockoutTimer": [
+          10
+        ],
+        "MarkerDuration": [
+          3
+        ],
+        "GrabDuration": [
+          2
+        ],
+        "SelfSlowPercent": [
+          0.5
+        ],
+        "MaxHPOnHit": [
+          0.06
+        ],
+        "MissingHealthUnit": [
+          0.01
+        ],
+        "AttackSpeed": [
+          1.5
+        ],
+        "JabDamagePercent": [
+          1
+        ],
+        "HookDamagePercentFinal": [
+          1.5
+        ],
+        "PassiveHealthThreshold": [
+          0.75
+        ],
+        "PassiveHealthThresholdAmp": [
+          0.02
+        ]
+      },
+      "resolvedDescription": "Sett's basic attacks alternate between left and right punch. Right punch is slightly stronger and faster. Sett also hates losing, gaining additional health regeneration based off of his missing health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Knuckle Down",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BaseDamage": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "StackCount": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "HealthCost": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MSAmount": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MSDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AdrenalineDecayLockTimer": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseHealthCost": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "ADRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "EnemyMaxHealthDamage": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "QMinimumDamage": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "MaxHealthTADRatio": [
+          0.0001,
+          0.00015,
+          0.0002,
+          0.00025,
+          0.0003
+        ],
+        "MaxHealthTADRatioTOOLTIP": [
+          1,
+          1.5,
+          2,
+          2.5,
+          3
+        ],
+        "MonsterCap": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Sett itches for a fight, gaining 30% Move Speed towards enemy champions for 1.5 seconds. Additionally Sett's next two Attacks deal an additional 10/20/30/40/50 plus {{ maxhealthdamagecalc }} max Health physical damage.",
+      "unresolved": [
+        "maxhealthdamagecalc"
+      ]
+    },
+    "W": {
+      "name": "Haymaker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        16.5,
+        15,
+        13.5,
+        12
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "DamageAmp": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Duration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MovementSpeed": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MSDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "GreyHealthDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ShieldConversion": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DamageStored": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "StoredHealth": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "LockTime": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ResourceDecayRate": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "DamageConversionBase": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "EnrageDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "EnrageHealingMult": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "EnrageADMult": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "EnrageArmorPen": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ShieldMaxDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ShieldDecayDelay": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "AdrenalineStorageWindow": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Passive: Sett stores 100% of damage taken as Grit, up to 50% max Health. Grit decays quickly 4 seconds after the damage was taken. Active: Sett consumes all Grit, gaining a 100% Grit consumed Shield decaying over 3 seconds. Sett then delivers a massive punch, dealing 80/100/120/140/160 plus {{ damageconversion }} Grit consumed true damage to enemies in the center (max {{ f1 }} damage). Enemies not in the center instead take physical damage.",
+      "unresolved": [
+        "damageconversion",
+        "f1"
+      ]
+    },
+    "E": {
+      "name": "Facebreaker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "dataValues": {
+        "Duration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "LeapDistance": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "BaseDamage": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "MaxHealthDamage": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "SlowAmount": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ThrowRange": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "SingleBaseDamage": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MonsterDamage": [
+          150,
+          175,
+          200,
+          225,
+          250
+        ]
+      },
+      "resolvedDescription": "Sett smashes enemies on either side of him into each other, dealing 50/70/90/110/130 (+60% AD) physical damage and Slowing them by 70% for 0.5 seconds. If Sett grabbed at least one enemy on each side, all enemies are Stunned for 1 second.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "The Show Stopper",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "GrabDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MoveSpeedBonus": [
+          800,
+          800,
+          800
+        ],
+        "MaxHealthDamage": [
+          0.4,
+          0.5,
+          0.6
+        ],
+        "BaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "DistanceToFirstHit": [
+          400,
+          400,
+          400
+        ],
+        "DistancePastFirstHit": [
+          600,
+          600,
+          600
+        ],
+        "MaxPassiveStacks": [
+          4,
+          4,
+          4
+        ],
+        "DelayBeforeDecay": [
+          3,
+          3,
+          3
+        ],
+        "CarryDistancePerStack": [
+          200,
+          200,
+          200
+        ],
+        "ResistDuration": [
+          6,
+          6,
+          6
+        ],
+        "SlowAmount": [
+          0.99,
+          0.99,
+          0.99
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1
+        ],
+        "CraterDuration": [
+          10,
+          10,
+          10
+        ],
+        "CraterRadius": [
+          600,
+          600,
+          600
+        ],
+        "CraterMaxHaste": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "CraterMaxSlow": [
+          0.99,
+          0.99,
+          0.99
+        ],
+        "CraterEdgeDamageReduction": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "CraterSweetSpotRadius": [
+          125,
+          125,
+          125
+        ]
+      },
+      "resolvedDescription": "Sett grabs an enemy champion and Suppresses them as he carries them forward, then slams them into the ground, dealing 200/300/400 (+120% bonus AD) plus 40/50/60% of the grabbed enemy's bonus Health physical damage to surrounding enemies and Slowing them by 99% for 1 second. Enemies take less damage the further they are from where Sett lands.",
+      "unresolved": []
+    }
+  }
+}

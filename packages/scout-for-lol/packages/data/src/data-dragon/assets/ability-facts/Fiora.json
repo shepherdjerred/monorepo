@@ -1,0 +1,302 @@
+{
+  "championKey": "Fiora",
+  "championName": "Fiora",
+  "abilities": {
+    "passive": {
+      "name": "Duelist's Dance",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveDamageADRatio": [
+          0.0004
+        ],
+        "PassiveDamageBase": [
+          0.03
+        ],
+        "MovementSpeedDuration": [
+          2
+        ]
+      },
+      "resolvedDescription": "Fiora has revealed a Vital on this Champion. If she hits the Vital, she restores Health and gains Move Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Lunge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        11.25,
+        9.5,
+        7.75,
+        6
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "Damage": [
+          70,
+          80,
+          90,
+          100,
+          110
+        ],
+        "bADRatio": [
+          0.9,
+          0.95,
+          1,
+          1.05,
+          1.1
+        ],
+        "CDRefundPercent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Fiora lunges in a direction and stabs the closest enemy, ward, or structure, dealing {{ totaldamage }} physical damage. The strike will prioritize Vitals and enemies it will kill. If Fiora strikes an enemy, this Ability's Cooldown is reduced by 50%.",
+      "unresolved": [
+        "totaldamage"
+      ]
+    },
+    "W": {
+      "name": "Riposte",
+      "maxRank": 5,
+      "cooldownByRank": [
+        24,
+        22,
+        20,
+        18,
+        16
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          110,
+          150,
+          190,
+          230,
+          270
+        ],
+        "ParryDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "CCDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MSSlowPercent": [
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "SmallBlockPercent": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "BigBlockPercent": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "AttackSlowPercent": [
+          -0.25,
+          -0.25,
+          -0.25,
+          -0.25,
+          -0.25
+        ]
+      },
+      "resolvedDescription": "Fiora parries all incoming damage, disables, and negative effects for 0.75 seconds, then stabs. The stab deals 110/150/190/230/270 (+100% AP) magic damage to the first champion hit and Slows Move Speed by 50% and Attack Speed by 25% for 2 seconds. If Fiora parries an Immobilizing effect, the stabbed enemy is Stunned rather than Slowed.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Bladework",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        425,
+        425,
+        425,
+        425,
+        425
+      ],
+      "dataValues": {
+        "BuffDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowPercent": [
+          -0.3,
+          -0.3,
+          -0.3,
+          -0.3,
+          -0.3
+        ],
+        "ASPercent": [
+          0.5,
+          0.6,
+          0.7,
+          0.8,
+          0.9
+        ],
+        "AttackOnePercentTAD": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "AttackTwoPercentTAD": [
+          1.6,
+          1.7,
+          1.8,
+          1.9,
+          2
+        ]
+      },
+      "resolvedDescription": "Fiora gains 50/60/70/80/90% Attack Speed for her next two Attacks. The first Attack Slows by 30% for 1 second. The second Attack always critically strikes for 160/170/180/190/200% damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Grand Challenge",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        90,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "MarkDuration": [
+          8,
+          8,
+          8
+        ],
+        "PassiveAS": [
+          0.3,
+          0.4,
+          0.5
+        ],
+        "PercentMS": [
+          0.3,
+          0.4,
+          0.5
+        ],
+        "MSRingRadius": [
+          500,
+          500,
+          500
+        ],
+        "HealDuration": [
+          5,
+          5,
+          5
+        ],
+        "HealPerSecond": [
+          75,
+          100,
+          125
+        ],
+        "HealRingRadius": [
+          550,
+          550,
+          550
+        ],
+        "HealDurationExtension": [
+          1,
+          1,
+          1
+        ],
+        "Ratio": [
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Passive: Duelist's Dance Move Speed bonus is increased to 30/40/50%. Active: Fiora reveals all four Vitals on a champion for a max of {{ spell.fiorapassive:rdamagetotal }} max Health true damage and gains Duelist's Dance's Move Speed bonus while near the target. If Fiora strikes all four Vitals within 8 seconds or if the target dies after she has hit at least one, Fiora restores 75/100/125 (+60% bonus AD) Health per second to surrounding allied champions for 5 seconds.",
+      "unresolved": [
+        "spell.fiorapassive:rdamagetotal"
+      ]
+    }
+  }
+}

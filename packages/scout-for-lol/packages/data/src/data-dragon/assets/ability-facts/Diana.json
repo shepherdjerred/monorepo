@@ -1,0 +1,261 @@
+{
+  "championKey": "Diana",
+  "championName": "Diana",
+  "abilities": {
+    "passive": {
+      "name": "Moonsilver Blade",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "APRatio": [
+          0.5
+        ],
+        "BuffDuration": [
+          5
+        ],
+        "AttackSpeedValue": [
+          0.3
+        ],
+        "AttackCount": [
+          3
+        ],
+        "MonsterMod": [
+          2.7
+        ]
+      },
+      "resolvedDescription": "Every third strike cleaves nearby enemies for an additional magic damage. After casting a spell, Diana gains Attack Speed for 5 seconds.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Crescent Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "MoonlightDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Diana unleashes an arc of lunar energy, dealing 70/105/140/175/210 (+70% AP) magic damage and marking with Moonlight for 3 seconds. Moonlight reveals enemies that are not stealthed.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Pale Cascade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        13.5,
+        12,
+        10.5,
+        9
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ShieldBase": [
+          45,
+          60,
+          75,
+          90,
+          105
+        ],
+        "OrbDamage": [
+          20,
+          32,
+          44,
+          56,
+          68
+        ],
+        "ShieldAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "ShieldDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "OrbAPRatio": [
+          0.18,
+          0.18,
+          0.18,
+          0.18,
+          0.18
+        ],
+        "ShieldBHPRatio": [
+          0.11,
+          0.11,
+          0.11,
+          0.11,
+          0.11
+        ]
+      },
+      "resolvedDescription": "Diana creates three orbiting spheres for 5 seconds that explode on contact, each dealing 20/32/44/56/68 (+18% AP) magic damage, up to a max of 60/96/132/168/204 (+54% AP) damage. Diana also gains 45/60/75/90/105 (+30% AP) (+11% bonus Health) Shield for the same duration. When the last sphere detonates, she gains an additional 45/60/75/90/105 (+30% AP) (+11% bonus Health) Shield and refreshes the duration.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Lunar Rush",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        20,
+        18,
+        16,
+        14
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "CDResetTime": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Diana becomes as the vengeful moon, dashing to an enemy and dealing 50/70/90/110/130 (+60% AP) magic damage. If the target is afflicted with Moonlight, this Ability's Cooldown is refreshed.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Moonfall",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        90,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "Damage": [
+          200,
+          300,
+          400
+        ],
+        "Delay": [
+          1,
+          1,
+          1
+        ],
+        "SlowPotency": [
+          -0.4,
+          -0.5,
+          -0.6
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "SlowTooltip": [
+          40,
+          50,
+          60
+        ],
+        "MultihitAmp": [
+          35,
+          60,
+          85
+        ]
+      },
+      "resolvedDescription": "Diana Pulls In, Slows by 40/50/60%, and reveals nearby enemies for 2 seconds. If Diana hits at least one enemy champion, she calls to the moon, dealing 200/300/400 (+60% AP) magic damage plus 35/60/85 (+15% AP) for each champion pulled beyond the first, up to a max of an additional 175/300/425 (+75% AP) damage.",
+      "unresolved": []
+    }
+  }
+}

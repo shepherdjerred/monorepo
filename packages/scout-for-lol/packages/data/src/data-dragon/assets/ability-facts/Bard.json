@@ -1,0 +1,317 @@
+{
+  "championKey": "Bard",
+  "championName": "Bard",
+  "abilities": {
+    "passive": {
+      "name": "Traveler's Call",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TooltipMSPerStack": [
+          24
+        ],
+        "TooltipMSMax": [
+          150
+        ],
+        "TooltipManaRestore": [
+          12
+        ],
+        "BaseMeepSpawnCD": [
+          8
+        ],
+        "BaseMeepDamage": [
+          30
+        ],
+        "TooltipChimeDamageCheckpoint": [
+          5
+        ],
+        "DamagePerCheckpoint": [
+          6
+        ],
+        "SlowDuration": [
+          1
+        ],
+        "ChimesPerUpgrade": [
+          5
+        ],
+        "MeepAPRatio": [
+          0.4
+        ],
+        "MaxSpeedStacks": [
+          10
+        ],
+        "SpeedStackDuration": [
+          20
+        ]
+      },
+      "resolvedDescription": "Meeps: Bard attracts lesser spirits that assist with his basic attacks to deal extra magic damage. When Bard has collected enough Chimes, his meeps will also deal damage in an area and slow enemies hit. Chimes: Ancient chimes randomly appear for Bard to collect. These grant experience, restore mana, and provide out of combat Move Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Cosmic Binding",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowAmountPercentage": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "SlowDuration": [
+          1,
+          1.2,
+          1.4,
+          1.6,
+          1.8
+        ],
+        "StunDuration": [
+          1,
+          1.2,
+          1.4,
+          1.6,
+          1.8
+        ]
+      },
+      "resolvedDescription": "Bard fires an energy bolt, dealing 80/120/160/200/240 (+80% AP) magic damage to the first two enemies hit. The first target hit is Slowed by 60% for 1/1.2/1.4/1.6/1.8s. If the bolt hits a second enemy or a wall, any enemies hit are Stunned for 1/1.2/1.4/1.6/1.8s.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Caretaker's Shrine",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ChargeupTime": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "MaxPacks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "HealingMult": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Ammo_Limit": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Ammo_Cooldown": [
+          18,
+          18,
+          18,
+          18,
+          18
+        ],
+        "MoveSpeed_Duration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MoveSpeed_Base": [
+          0.2,
+          0.225,
+          0.25,
+          0.275,
+          0.3
+        ],
+        "MoveSpeed_Ratio": [
+          0.0006,
+          0.0006,
+          0.0006,
+          0.0006,
+          0.0006
+        ],
+        "APRatio_Min": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "APRatio_Max": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "MinimumHeal": [
+          25,
+          50,
+          75,
+          100,
+          125
+        ],
+        "MaximumHeal": [
+          50,
+          87.5,
+          125,
+          162.5,
+          200
+        ]
+      },
+      "resolvedDescription": "Bard creates a Health shrine that grants {{ calc_movespeed }} Move Speed decaying over 1.5 seconds and restores at least 25/50/75/100/125 (+40% AP) Health to the first ally to enter. The shrine grows to restore 50/87.5/125/162.5/200 (+70% AP) Health after existing for 5 seconds. Bard can have up to 3 shrines at once. If an enemy champion enters a shrine, it is destroyed. This ability has 2 charges. Current Active Shrines: {{ f1 }} / {{ f2 }}",
+      "unresolved": [
+        "calc_movespeed",
+        "f1",
+        "f2"
+      ]
+    },
+    "E": {
+      "name": "Magical Journey",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        20.5,
+        19,
+        17.5,
+        16
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "FriendlyMovementBonusPercentage": [
+          33,
+          33,
+          33,
+          33,
+          33
+        ],
+        "DoorDuration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "BaseTravelSpeed": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ]
+      },
+      "resolvedDescription": "Bard opens a one-way portal through Terrain for 10 seconds. Any champion can enter the portal by moving onto it while near the entrance.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Tempered Fate",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        95,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        3400,
+        3400,
+        3400
+      ],
+      "dataValues": {
+        "RStasisDuration": [
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Bard hurls magical protective energy to an area, placing all units and structures hit into Stasis for 2.5 seconds.",
+      "unresolved": []
+    }
+  }
+}

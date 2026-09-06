@@ -1,0 +1,293 @@
+{
+  "championKey": "Alistar",
+  "championName": "Alistar",
+  "abilities": {
+    "passive": {
+      "name": "Triumphant Roar",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AlistarPassiveHealRatio": [
+          0.05
+        ],
+        "AlistarPassiveAllyHealRatio": [
+          1.4
+        ],
+        "PassiveCooldown": [
+          3
+        ],
+        "PassiveMaxStacks": [
+          7
+        ],
+        "PassiveStacksChampionKill": [
+          7
+        ],
+        "PassiveAllyNumHeal": [
+          15
+        ]
+      },
+      "resolvedDescription": "Alistar charges his roar by stunning or displacing enemy champions or when nearby enemies die. When fully charged he heals himself all nearby allied champions.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Pulverize",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        365,
+        365,
+        365,
+        365,
+        365
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          100,
+          140,
+          180,
+          220
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "AoERadius": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "KnockupDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Alistar smashes the ground, Knocking Up enemies for 1 second and dealing 60/100/140/180/220 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Headbutt",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "KnockBackDistance": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "Damage": [
+          55,
+          110,
+          165,
+          220,
+          275
+        ],
+        "StunDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "KnockUpDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "APRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Alistar rams into an enemy, Knocking them Back and dealing 55/110/165/220/275 (+100% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Trample",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "TrampleDamage": [
+          80,
+          110,
+          140,
+          170,
+          200
+        ],
+        "BonusAARange": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "Radius": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "MaxStacks": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ProcDamageBase": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "ProcDamageScale": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "FullChargeDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Alistar begins trampling the ground, becoming Ghosted and dealing 80/110/140/170/200 (+70% AP) magic damage over 5 seconds to nearby enemies. Each pulse that damages a champion grants a stack. At 5 stacks, Alistar's next Attack against champions Stuns for 1 second and deals an additional 20-20 (based on level) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Unbreakable Will",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1,
+        1,
+        1
+      ],
+      "dataValues": {
+        "RDuration": [
+          7,
+          7,
+          7
+        ],
+        "RDamageReduction": [
+          55,
+          65,
+          75
+        ]
+      },
+      "resolvedDescription": "Alistar immediately cleanses all Disabling effects and takes 55/65/75% reduced damage for 7 seconds.",
+      "unresolved": []
+    }
+  }
+}

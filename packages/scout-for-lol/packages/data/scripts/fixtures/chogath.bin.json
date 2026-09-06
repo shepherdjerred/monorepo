@@ -1,0 +1,1333 @@
+{
+  "Characters/Chogath/CharacterRecords/Root": {
+    "mCharacterName": "Chogath",
+    "baseHPModifiable": {
+      "baseValue": 644.0,
+      "__type": "ModifiableFloat"
+    },
+    "hpPerLevelModifiable": {
+      "baseValue": 94.0,
+      "__type": "ModifiableFloat"
+    },
+    "baseStaticHPRegenModifiable": {
+      "baseValue": 1.7999999523162842,
+      "__type": "ModifiableFloat"
+    },
+    "hpRegenPerLevelModifiable": {
+      "baseValue": 0.17000000178813934,
+      "__type": "ModifiableFloat"
+    },
+    "healthBarHeight": 93.0,
+    "primaryAbilityResource": {
+      "arType": 0,
+      "{726ee5cd}": {
+        "baseValue": 270.0,
+        "__type": "ModifiableFloat"
+      },
+      "{6216bf7b}": {
+        "baseValue": 60.0,
+        "__type": "ModifiableFloat"
+      },
+      "{c4ab3550}": {
+        "baseValue": 1.440000057220459,
+        "__type": "ModifiableFloat"
+      },
+      "{3a509002}": {
+        "baseValue": 0.09000000357627869,
+        "__type": "ModifiableFloat"
+      },
+      "__type": "AbilityResourceSlotInfo"
+    },
+    "baseDamageModifiable": {
+      "baseValue": 69.0,
+      "__type": "ModifiableFloat"
+    },
+    "damagePerLevelModifiable": {
+      "baseValue": 4.199999809265137,
+      "__type": "ModifiableFloat"
+    },
+    "baseArmorModifiable": {
+      "baseValue": 38.0,
+      "__type": "ModifiableFloat"
+    },
+    "armorPerLevelModifiable": {
+      "baseValue": 4.5,
+      "__type": "ModifiableFloat"
+    },
+    "baseMR": {
+      "baseValue": 32.0,
+      "__type": "ModifiableFloat"
+    },
+    "mrPerLevel": {
+      "baseValue": 2.049999952316284,
+      "__type": "ModifiableFloat"
+    },
+    "critDamageMultiplier": 2.0,
+    "baseMoveSpeedModifiable": {
+      "baseValue": 345.0,
+      "__type": "ModifiableFloat"
+    },
+    "attackRangeModifiable": {
+      "baseValue": 125.0,
+      "__type": "ModifiableFloat"
+    },
+    "attackSpeedModifiable": {
+      "baseValue": 0.6579999923706055,
+      "__type": "ModifiableFloat"
+    },
+    "attackSpeedRatioModifiable": {
+      "baseValue": 0.625,
+      "__type": "ModifiableFloat"
+    },
+    "attackSpeedPerLevelModifiable": {
+      "baseValue": 1.440000057220459,
+      "__type": "ModifiableFloat"
+    },
+    "mAdaptiveForceToAbilityPowerWeight": 1.0,
+    "acquisitionRange": 600.0,
+    "basicAttack": {
+      "mAttackDelayCastOffsetPercent": -0.08100000023841858,
+      "mAttackProbability": 0.5,
+      "__type": "AttackSlotData"
+    },
+    "extraAttacks": [
+      {
+        "mAttackDelayCastOffsetPercent": -0.08100000023841858,
+        "mAttackProbability": 0.5,
+        "mAttackName": "ChogathBasicAttack2",
+        "__type": "AttackSlotData"
+      }
+    ],
+    "critAttacks": [
+      {
+        "mAttackDelayCastOffsetPercent": -0.08100000023841858,
+        "mAttackName": "ChogathCritAttack",
+        "__type": "AttackSlotData"
+      }
+    ],
+    "spellNames": [
+      "RuptureAbility/Rupture",
+      "FeralScreamAbility/FeralScream",
+      "VorpalSpikesAbility/VorpalSpikes",
+      "FeastAbility/Feast"
+    ],
+    "spells": [
+      "Characters/Chogath/Spells/RuptureAbility/Rupture",
+      "Characters/Chogath/Spells/FeralScreamAbility/FeralScream",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikes",
+      "Characters/Chogath/Spells/FeastAbility/Feast"
+    ],
+    "extraSpells": [
+      "VorpalSpikesMissle",
+      "VorpalSpikesMissle2",
+      "VorpalSpikesMissle3",
+      "VorpalSpikesMissle4",
+      "VorpalSpikesMissle5",
+      "VorpalSpikesMissle6",
+      "VorpalSpikesMissle7",
+      "BaseSpell",
+      "BaseSpell",
+      "BaseSpell",
+      "BaseSpell",
+      "BaseSpell",
+      "BaseSpell",
+      "BaseSpell",
+      "Carnivore",
+      "BaseSpell"
+    ],
+    "extraSpellsList": [
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle2",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle3",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle4",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle5",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle6",
+      "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikesMissle7",
+      "Shared/Spells/BaseSpell",
+      "Shared/Spells/BaseSpell",
+      "Shared/Spells/BaseSpell",
+      "Shared/Spells/BaseSpell",
+      "Shared/Spells/BaseSpell",
+      "Shared/Spells/BaseSpell",
+      "Shared/Spells/BaseSpell",
+      "Characters/Chogath/Spells/CarnivoreAbility/Carnivore",
+      "Shared/Spells/BaseSpell"
+    ],
+    "mAbilities": [
+      "Characters/Chogath/Spells/RuptureAbility",
+      "Characters/Chogath/Spells/FeralScreamAbility",
+      "Characters/Chogath/Spells/VorpalSpikesAbility",
+      "Characters/Chogath/Spells/FeastAbility",
+      "Characters/Chogath/Spells/CarnivoreAbility"
+    ],
+    "passiveName": "game_character_passiveName_Chogath",
+    "passiveLuaName": "Carnivore",
+    "passiveToolTip": "game_character_passiveDescription_Chogath",
+    "passive1IconName": "ASSETS/Characters/Chogath/HUD/Icons2D/GreenTerror_TailSpike.dds",
+    "name": "game_character_displayname_Chogath",
+    "weaponMaterials": ["GreenTerrorBasicAttack"],
+    "selectionHeight": 150.0,
+    "selectionRadius": 130.0,
+    "pathfindingCollisionRadius": 50.0,
+    "overrideGameplayCollisionRadius": 80.0,
+    "{eb74898c}": 0.0,
+    "unitTagsString": "Champion | Special_Void",
+    "mEducationToolData": {
+      "firstItem": 1056,
+      "__type": "ToolEducationData"
+    },
+    "mAbilitySlotCC": [8, 13, 0, 0],
+    "characterToolData": {
+      "spellData": [
+        {
+          "desc": "Cho'Gath consumes a unit in one gulp.  He gains a size level each time he kills a unit in this way, gaining health, ability power, and he can Feast on higher health units.",
+          "displayName": "Feast",
+          "__type": "ToolSpellDesc"
+        },
+        {
+          "desc": "Cho'Gath consumes a unit in one gulp.  He gains a size level each time he kills a unit in this way, gaining health, ability power, and he can Feast on higher health units.",
+          "displayName": "Feast",
+          "__type": "ToolSpellDesc"
+        },
+        {
+          "desc": "Cho'Gath consumes a unit in one gulp.  He gains a size level each time he kills a unit in this way, gaining health, ability power, and he can Feast on higher health units.",
+          "displayName": "Feast",
+          "__type": "ToolSpellDesc"
+        },
+        {
+          "desc": "Cho'Gath consumes a unit in one gulp.  He gains a size level each time he kills a unit in this way, gaining health, ability power, and he can Feast on higher health units.",
+          "displayName": "Feast",
+          "__type": "ToolSpellDesc"
+        }
+      ],
+      "mapAIPresence": {
+        "0": {
+          "easy": true,
+          "medium": true,
+          "hard": true,
+          "{ca762bfc}": true,
+          "{b75b2ab8}": true,
+          "{b66d0e47}": true,
+          "{6175bb7b}": true,
+          "__type": "ToolAiPresence"
+        },
+        "3": {
+          "{ca762bfc}": true,
+          "{b75b2ab8}": true,
+          "{b66d0e47}": true,
+          "{6175bb7b}": true,
+          "__type": "ToolAiPresence"
+        },
+        "4": {
+          "{ca762bfc}": true,
+          "{b75b2ab8}": true,
+          "{b66d0e47}": true,
+          "{6175bb7b}": true,
+          "__type": "ToolAiPresence"
+        },
+        "5": {
+          "{6175bb7b}": true,
+          "__type": "ToolAiPresence"
+        }
+      },
+      "passiveData": [
+        {
+          "name": "game_character_passiveName_Chogath",
+          "__type": "ToolPassiveData"
+        }
+      ],
+      "searchTags": "tank",
+      "searchTagsSecondary": "mage",
+      "championId": 31,
+      "roles": "TANK",
+      "magicRank": 7,
+      "LevelSpellEffectiveness": 1.5,
+      "difficultyRank": 5,
+      "description": "game_character_description_Chogath",
+      "defenseRank": 7,
+      "ChasingAttackRangePercent": 0.5,
+      "botEnabled": true,
+      "botEnabledMM": true,
+      "attackRank": 3,
+      "__type": "CharacterToolData"
+    },
+    "platformEnabled": true,
+    "flags": 8398088,
+    "purchaseIdentities": ["Melee"],
+    "mPreferredPerkStyle": "Perks/Styles/Sorcery",
+    "mCharacterPassiveSpell": "Characters/Chogath/Spells/CarnivoreAbility/Carnivore",
+    "mCharacterPassiveBuffs": [
+      {
+        "mParentPassiveBuff": "Characters/Chogath/Spells/CarnivoreAbility/Carnivore",
+        "__type": "CharacterPassiveData"
+      },
+      {
+        "mParentPassiveBuff": "Characters/Chogath/Spells/Chogath_Skin07_Blackhole",
+        "SkinFilter": {
+          "skinIds": [7],
+          "__type": "SkinFilterData"
+        },
+        "__type": "CharacterPassiveData"
+      }
+    ],
+    "{c5c48b41}": 1,
+    "__type": "CharacterRecord"
+  },
+  "Characters/Chogath/Spells/RuptureAbility/Rupture": {
+    "ObjectName": "Rupture",
+    "objectPath": "Characters/Chogath/Spells/RuptureAbility/Rupture",
+    "mScriptName": "Rupture",
+    "mSpell": {
+      "mAffectsTypeFlags": 6154,
+      "mSpellTags": [
+        "Trait_ImmobilizingCCSpell",
+        "Trait_DamageAbility",
+        "Trait_SignatureSpell",
+        "Trait_Target_Area",
+        "Trait_Ranged_Zone",
+        "Trait_AoE",
+        "Trait_AoE"
+      ],
+      "mEffectAmount": [
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [0.625, 0.625, 0.625, 0.625, 0.625, 0.625, 0.625],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        }
+      ],
+      "DataValues": [
+        {
+          "name": "BaseDamage",
+          "values": [25.0, 80.0, 135.0, 190.0, 245.0, 300.0, 355.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "SlowAmountPercentage",
+          "values": [60.0, 60.0, 60.0, 60.0, 60.0, 60.0, 60.0],
+          "__type": "SpellDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "cherry": {
+          "SpellDataValues": [
+            {
+              "name": "BaseDamage",
+              "values": [40.0, 100.0, 160.0, 220.0, 280.0, 340.0, 400.0],
+              "__type": "SpellDataValue"
+            },
+            {
+              "name": "SlowAmountPercentage",
+              "values": [70.0, 70.0, 70.0, 70.0, 70.0, 70.0, 70.0],
+              "__type": "SpellDataValue"
+            }
+          ],
+          "__type": "SpellDataValueVector"
+        }
+      },
+      "{f9c2333e}": {
+        "cherry": {
+          "value": [5.0, 5.0, 5.0, 5.0, 5.0, 5.0, 5.0],
+          "__type": "SpellEffectAmount"
+        }
+      },
+      "mSpellCalculations": {
+        "TotalDamageTooltip": {
+          "mSimpleTooltipCalculationDisplay": 6,
+          "mFormulaParts": [
+            {
+              "mDataValue": "BaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mCoefficient": 1.0,
+              "__type": "StatByCoefficientCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mCoefficient": 1.0,
+      "mAnimationName": "Spell4",
+      "mImgIconName": [
+        "ASSETS/Characters/Chogath/HUD/Icons2D/GreenTerror_SpikeSlam.dds"
+      ],
+      "cooldownTime": [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0],
+      "Cooldown": {
+        "values": [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0],
+        "{0a3e0478}": 6.0,
+        "__type": "{0a0eddc9}"
+      },
+      "mCantCancelWhileWindingUp": true,
+      "castRange": [950.0, 950.0, 950.0, 950.0, 950.0, 950.0, 950.0],
+      "castRangeValues": {
+        "values": [950.0, 950.0, 950.0, 950.0, 950.0, 950.0, 950.0],
+        "{0a3e0478}": 950.0,
+        "__type": "{0a0eddc9}"
+      },
+      "castRadius": [230.0, 230.0, 230.0, 230.0, 230.0, 230.0, 230.0],
+      "castConeDistance": 100.0,
+      "castFrame": 20.15999984741211,
+      "missileSpeed": 20.0,
+      "bHaveHitBone": true,
+      "mHitBoneName": "head",
+      "mana": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0],
+      "manaValues": {
+        "values": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0],
+        "{0a3e0478}": 50.0,
+        "__type": "{630af303}"
+      },
+      "selectionPriority": 2,
+      "mTargetingTypeData": {
+        "__type": "Area"
+      },
+      "mCastingBreaksStealth": true,
+      "mClientData": {
+        "mTooltipData": {
+          "mObjectName": "Rupture",
+          "mFormat": "{d7c27163}",
+          "mLocKeys": {
+            "keyName": "Spell_Rupture_Name",
+            "keySummary": "Spell_Rupture_Summary",
+            "keyTooltip": "Spell_Rupture_Tooltip"
+          },
+          "mLists": {
+            "LevelUp": {
+              "levelCount": 5,
+              "Elements": [
+                {
+                  "type": "BaseDamage",
+                  "typeIndex": 1,
+                  "nameOverride": "Spell_ListType_Damage",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceSpell"
+        },
+        "mTargeterDefinitions": [
+          {
+            "__type": "TargeterDefinitionRange"
+          },
+          {
+            "centerLocator": {
+              "basePosition": 3,
+              "__type": "DrawablePositionLocator"
+            },
+            "__type": "TargeterDefinitionAoe"
+          }
+        ],
+        "__type": "SpellDataResourceClient"
+      },
+      "__type": "SpellDataResource"
+    },
+    "mBuff": {
+      "mDescription": "game_buff_tooltip_Rupture",
+      "__type": "BuffData"
+    },
+    "BotData": {
+      "DamageTag": 1,
+      "{6d548702}": {
+        "mFormulaParts": [
+          {
+            "mSpellCalculationKey": "TotalDamageTooltip",
+            "__type": "{f3cbe7b2}"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "{ec17e271}": [
+        {
+          "EffectTag": 1,
+          "EffectCalculation": {
+            "mFormulaParts": [
+              {
+                "mEffectIndex": 3,
+                "__type": "EffectValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "__type": "{b09016f6}"
+        },
+        {
+          "EffectTag": 16777216,
+          "EffectCalculation": {
+            "mFormulaParts": [
+              {
+                "mEffectIndex": 5,
+                "__type": "EffectValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "__type": "{b09016f6}"
+        }
+      ],
+      "{38382c53}": [
+        {
+          "{e38f54f7}": 512,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 128,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 32,
+          "__type": "{150d1b92}"
+        }
+      ],
+      "__type": "BotsSpellData"
+    },
+    "__type": "SpellObject"
+  },
+  "Characters/Chogath/Spells/FeralScreamAbility/FeralScream": {
+    "ObjectName": "FeralScream",
+    "objectPath": "Characters/Chogath/Spells/FeralScreamAbility/FeralScream",
+    "mScriptName": "FeralScream",
+    "mSpell": {
+      "mAffectsTypeFlags": 6154,
+      "mAlternateName": "FeralScream",
+      "mSpellTags": [
+        "Trait_DamageAbility",
+        "Trait_Target_Directional",
+        "Trait_Low_Damage",
+        "Trait_AoE"
+      ],
+      "mEffectAmount": [
+        {
+          "value": [80.0, 80.0, 130.0, 180.0, 230.0, 280.0, 280.0],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [
+            1.600000023841858, 1.600000023841858, 1.7000000476837158,
+            1.7999999523162842, 1.899999976158142, 2.0, 2.0
+          ],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        }
+      ],
+      "mSpellCalculations": {
+        "TotalDamageTooltip": {
+          "mSimpleTooltipCalculationDisplay": 6,
+          "mFormulaParts": [
+            {
+              "mEffectIndex": 1,
+              "__type": "EffectValueCalculationPart"
+            },
+            {
+              "mCoefficient": 0.699999988079071,
+              "__type": "StatByCoefficientCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mCoefficient": 0.699999988079071,
+      "mAnimationName": "Spell1",
+      "mImgIconName": [
+        "ASSETS/Characters/Chogath/HUD/Icons2D/GreenTerror_FeralScream.dds"
+      ],
+      "cooldownTime": [11.0, 11.0, 10.5, 10.0, 9.5, 9.0, 9.0],
+      "Cooldown": {
+        "values": [11.0, 11.0, 10.5, 10.0, 9.5, 9.0, 9.0],
+        "__type": "{0a0eddc9}"
+      },
+      "{f4ca428f}": 2,
+      "mCantCancelWhileWindingUp": true,
+      "mSpellRevealsChampion": false,
+      "bHaveHitEffect": true,
+      "castRange": [300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0],
+      "castRangeValues": {
+        "values": [300.0, 300.0, 300.0, 300.0, 300.0, 300.0, 300.0],
+        "{0a3e0478}": 300.0,
+        "__type": "{0a0eddc9}"
+      },
+      "castRadius": [210.0, 210.0, 210.0, 210.0, 210.0, 210.0, 210.0],
+      "castConeAngle": 28.0,
+      "castConeDistance": 585.0,
+      "castFrame": 19.25,
+      "missileSpeed": 0.0,
+      "mHitBoneName": "C_BUFFBONE_GLB_CHEST_LOC",
+      "mana": [70.0, 75.0, 80.0, 85.0, 90.0, 95.0],
+      "manaValues": {
+        "values": [70.0, 75.0, 80.0, 85.0, 90.0, 95.0],
+        "{0a3e0478}": 70.0,
+        "__type": "{630af303}"
+      },
+      "mTargetingTypeData": {
+        "__type": "Cone"
+      },
+      "mCastingBreaksStealth": true,
+      "mClientData": {
+        "mTooltipData": {
+          "mObjectName": "FeralScream",
+          "mFormat": "{d7c27163}",
+          "mLocKeys": {
+            "keyName": "Spell_FeralScream_Name",
+            "keySummary": "Spell_FeralScream_Summary",
+            "keyTooltip": "Spell_FeralScream_Tooltip"
+          },
+          "mLists": {
+            "LevelUp": {
+              "levelCount": 5,
+              "Elements": [
+                {
+                  "type": "Effect%dAmount",
+                  "typeIndex": 1,
+                  "nameOverride": "Spell_ListType_Damage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Cooldown",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Effect%dAmount",
+                  "typeIndex": 2,
+                  "nameOverride": "Spell_ListType_SilenceDuration",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Cost",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceSpell"
+        },
+        "mTargeterDefinitions": [
+          {
+            "endLocator": {
+              "basePosition": 3,
+              "__type": "DrawablePositionLocator"
+            },
+            "coneAngleDegrees": 28.0,
+            "coneRange": 675.0,
+            "__type": "TargeterDefinitionCone"
+          }
+        ],
+        "__type": "SpellDataResourceClient"
+      },
+      "__type": "SpellDataResource"
+    },
+    "BotData": {
+      "DamageTag": 1,
+      "{6d548702}": {
+        "mFormulaParts": [
+          {
+            "mSpellCalculationKey": "TotalDamageTooltip",
+            "__type": "{f3cbe7b2}"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "{ec17e271}": [
+        {
+          "EffectTag": 16384,
+          "EffectCalculation": {
+            "mFormulaParts": [
+              {
+                "mEffectIndex": 2,
+                "__type": "EffectValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "__type": "{b09016f6}"
+        }
+      ],
+      "__type": "BotsSpellData"
+    },
+    "__type": "SpellObject"
+  },
+  "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikes": {
+    "ObjectName": "VorpalSpikes",
+    "objectPath": "Characters/Chogath/Spells/VorpalSpikesAbility/VorpalSpikes",
+    "mScriptName": "VorpalSpikes",
+    "mSpell": {
+      "flags": 4,
+      "mAffectsTypeFlags": 9221,
+      "mRequiredUnitTags": {
+        "mObjectTagList": ["{ea595ca6}"],
+        "__type": "ObjectTags"
+      },
+      "mAlternateName": "VorpalSpikes",
+      "mSpellTags": ["Trait_AttackReset", "Trait_DamageAbility", "Trait_AoE"],
+      "DataValues": [
+        {
+          "name": "BaseDamage",
+          "values": [0.0, 20.0, 40.0, 60.0, 80.0, 100.0, 120.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "APRatio",
+          "values": [
+            0.30000001192092896, 0.30000001192092896, 0.30000001192092896,
+            0.30000001192092896, 0.30000001192092896, 0.30000001192092896,
+            0.30000001192092896
+          ],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "PercentHealthDamage",
+          "values": [
+            2.1500000953674316, 2.5, 2.8499999046325684, 3.200000047683716,
+            3.549999952316284, 3.9000000953674316, 4.25
+          ],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "FeastStackMultiplier",
+          "values": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "MonsterDamageCap",
+          "values": [200.0, 200.0, 200.0, 200.0, 200.0, 200.0, 200.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "SlowAmountPercentage",
+          "values": [25.0, 30.0, 35.0, 40.0, 45.0, 50.0, 55.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "SlowDuration",
+          "values": [1.5, 1.5, 1.5, 1.5, 1.5, 1.5, 1.5],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "AttackRangeIncrease",
+          "values": [50.0, 50.0, 50.0, 50.0, 50.0, 50.0, 50.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "MaximumAttacks",
+          "values": [3.0, 3.0, 3.0, 3.0, 3.0, 3.0, 3.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "BuffDuration",
+          "values": [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "ModifiedMonsterCap",
+          "values": [50.0, 80.0, 110.0, 140.0, 170.0, 200.0, 230.0],
+          "__type": "SpellDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "cherry": {
+          "SpellDataValues": [
+            {
+              "name": "BaseDamage",
+              "values": [20.0, 32.0, 44.0, 56.0, 68.0, 80.0, 92.0],
+              "__type": "SpellDataValue"
+            },
+            {
+              "name": "SlowAmountPercentage",
+              "values": [35.0, 40.0, 45.0, 50.0, 55.0, 60.0, 65.0],
+              "__type": "SpellDataValue"
+            }
+          ],
+          "__type": "SpellDataValueVector"
+        }
+      },
+      "mSpellCalculations": {
+        "FlatDamageCalc": {
+          "mSimpleTooltipCalculationDisplay": 6,
+          "mFormulaParts": [
+            {
+              "mDataValue": "BaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mDataValue": "APRatio",
+              "__type": "StatByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "MaxHealthPercentCalc": {
+          "mMultiplier": {
+            "mNumber": 0.009999999776482582,
+            "__type": "NumberCalculationPart"
+          },
+          "mFormulaParts": [
+            {
+              "mDataValue": "PercentHealthDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mBuffName": "{8682fc00}",
+              "mDataValue": "FeastStackMultiplier",
+              "__type": "BuffCounterByNamedDataValueCalculationPart"
+            }
+          ],
+          "mDisplayAsPercent": true,
+          "mPrecision": 1,
+          "__type": "GameCalculation"
+        }
+      },
+      "mAnimationName": "Spell2",
+      "mImgIconName": [
+        "ASSETS/Characters/Chogath/HUD/Icons2D/GreenTerror_ChitinousExoplates.dds"
+      ],
+      "spellCastTime": 0.3812499940395355,
+      "spellTotalTime": 1.5399999618530273,
+      "cooldownTime": [8.0, 8.0, 7.0, 6.0, 5.0, 4.0, 4.0],
+      "Cooldown": {
+        "values": [8.0, 8.0, 7.0, 6.0, 5.0, 4.0, 4.0],
+        "__type": "{0a0eddc9}"
+      },
+      "mAmmoRechargeTime": [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0],
+      "mAmmoNotAffectedByCDR": true,
+      "mCantCancelWhileWindingUp": true,
+      "mSpellRevealsChampion": false,
+      "castRange": [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0],
+      "castRangeValues": {
+        "values": [40.0, 40.0, 40.0, 40.0, 40.0, 40.0, 40.0],
+        "{0a3e0478}": 40.0,
+        "__type": "{0a0eddc9}"
+      },
+      "castRadius": [270.0, 270.0, 270.0, 270.0, 270.0, 270.0, 270.0],
+      "castConeDistance": 100.0,
+      "castFrame": 20.209999084472656,
+      "missileSpeed": 347.79998779296875,
+      "mLineWidth": 170.0,
+      "mFloatVarsDecimals": [
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+      ],
+      "mana": [30.0, 30.0, 30.0, 30.0, 30.0, 30.0],
+      "manaValues": {
+        "values": [30.0, 30.0, 30.0, 30.0, 30.0, 30.0],
+        "{0a3e0478}": 30.0,
+        "__type": "{630af303}"
+      },
+      "selectionPriority": 1,
+      "mTargetingTypeData": {
+        "__type": "Self"
+      },
+      "mClientData": {
+        "mTooltipData": {
+          "mObjectName": "VorpalSpikes",
+          "mFormat": "{d7c27163}",
+          "mLocKeys": {
+            "keyName": "Spell_VorpalSpikes_Name",
+            "keySummary": "Spell_VorpalSpikes_Summary",
+            "keyTooltip": "Spell_VorpalSpikes_Tooltip",
+            "keyTooltipExtendedBelowLine": "Spell_VorpalSpikes_TooltipExtendedBelowLine"
+          },
+          "mLists": {
+            "LevelUp": {
+              "levelCount": 5,
+              "Elements": [
+                {
+                  "type": "BaseDamage",
+                  "typeIndex": 1,
+                  "nameOverride": "Spell_ListType_Damage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "PercentHealthDamage",
+                  "nameOverride": "Spell_ListType_MaxHealthDamage",
+                  "Style": 1,
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "ModifiedMonsterCap",
+                  "nameOverride": "Spell_ListType_MonsterDamage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "SlowAmountPercentage",
+                  "typeIndex": 2,
+                  "nameOverride": "Spell_ListType_Slow",
+                  "Style": 1,
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Cooldown",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceSpell"
+        },
+        "__type": "SpellDataResourceClient"
+      },
+      "__type": "SpellDataResource"
+    },
+    "BotData": {
+      "DamageTag": 1,
+      "{6d548702}": {
+        "mFormulaParts": [
+          {
+            "mSpellCalculationKey": "FlatDamageCalc",
+            "__type": "{f3cbe7b2}"
+          },
+          {
+            "mSpellCalculationKey": "MaxHealthPercentCalc",
+            "__type": "{f3cbe7b2}"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "{ec17e271}": [
+        {
+          "EffectTag": 1,
+          "EffectCalculation": {
+            "mFormulaParts": [
+              {
+                "mDataValue": "SlowAmountPercentage",
+                "__type": "NamedDataValueCalculationPart"
+              }
+            ],
+            "__type": "GameCalculation"
+          },
+          "__type": "{b09016f6}"
+        }
+      ],
+      "{38382c53}": [
+        {
+          "{e38f54f7}": 1,
+          "{0717e686}": false,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 2,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 4,
+          "{0717e686}": false,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 8,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 1024,
+          "{0717e686}": false,
+          "__type": "{150d1b92}"
+        },
+        {
+          "{e38f54f7}": 4096,
+          "__type": "{150d1b92}"
+        }
+      ],
+      "__type": "BotsSpellData"
+    },
+    "__type": "SpellObject"
+  },
+  "Characters/Chogath/Spells/FeastAbility/Feast": {
+    "ObjectName": "Feast",
+    "objectPath": "Characters/Chogath/Spells/FeastAbility/Feast",
+    "mScriptName": "Feast",
+    "mSpell": {
+      "mAffectsTypeFlags": 6154,
+      "mSpellTags": ["Trait_Ultimate", "Trait_DamageAbility"],
+      "DataValues": [
+        {
+          "name": "RBaseMonsterDamage",
+          "values": [1200.0, 1200.0, 1200.0, 1200.0, 1200.0, 1200.0, 1200.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "RBaseDamage",
+          "values": [125.0, 300.0, 475.0, 650.0, 825.0, 1000.0, 1175.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "RHealthPerStack",
+          "values": [40.0, 80.0, 120.0, 160.0, 200.0, 240.0, 280.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "RMinionMaxStacks",
+          "values": [6.0, 6.0, 6.0, 6.0, 6.0, 6.0, 6.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "RStoneplateRatio",
+          "values": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "CastRangePerStack",
+          "values": [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "MaxBonusCastRange",
+          "values": [25.0, 25.0, 25.0, 25.0, 25.0, 25.0, 25.0],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "AttackRangePerStack",
+          "values": [
+            3.200000047683716, 4.699999809265137, 6.199999809265137,
+            7.699999809265137, 9.199999809265137, 10.699999809265137,
+            12.199999809265137
+          ],
+          "__type": "SpellDataValue"
+        },
+        {
+          "name": "MaxBonusAttackRange",
+          "values": [75.0, 75.0, 75.0, 75.0, 75.0, 75.0, 75.0],
+          "__type": "SpellDataValue"
+        }
+      ],
+      "DataValuesModeOverride": {
+        "cherry": {
+          "SpellDataValues": [
+            {
+              "name": "RHealthPerStack",
+              "values": [50.0, 100.0, 150.0, 200.0, 250.0, 300.0, 350.0],
+              "__type": "SpellDataValue"
+            },
+            {
+              "name": "RBaseDamage",
+              "values": [150.0, 300.0, 450.0, 600.0, 750.0, 900.0, 1050.0],
+              "__type": "SpellDataValue"
+            }
+          ],
+          "__type": "SpellDataValueVector"
+        }
+      },
+      "{f9c2333e}": {
+        "cherry": {
+          "value": [70.0, 60.0, 50.0, 40.0, 30.0, 30.0, 30.0],
+          "__type": "SpellEffectAmount"
+        }
+      },
+      "mSpellCalculations": {
+        "RMonsterDamage": {
+          "mSimpleTooltipCalculationDisplay": 6,
+          "mFormulaParts": [
+            {
+              "mDataValue": "RBaseMonsterDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mCoefficient": 0.5,
+              "__type": "StatByCoefficientCalculationPart"
+            },
+            {
+              "mStat": 12,
+              "mStatFormula": 2,
+              "mCoefficient": 0.10000000149011612,
+              "__type": "StatByCoefficientCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "RDamage": {
+          "mSimpleTooltipCalculationDisplay": 6,
+          "mFormulaParts": [
+            {
+              "mDataValue": "RBaseDamage",
+              "__type": "NamedDataValueCalculationPart"
+            },
+            {
+              "mCoefficient": 0.5,
+              "__type": "StatByCoefficientCalculationPart"
+            },
+            {
+              "mStat": 12,
+              "mStatFormula": 2,
+              "mCoefficient": 0.10000000149011612,
+              "__type": "StatByCoefficientCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "BonusAttackRange": {
+          "mFormulaParts": [
+            {
+              "mBuffName": "{8682fc00}",
+              "mDataValue": "AttackRangePerStack",
+              "__type": "BuffCounterByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "{9f798bd0}": {
+          "mFormulaParts": [
+            {
+              "mBuffName": "{8682fc00}",
+              "mDataValue": "CastRangePerStack",
+              "__type": "BuffCounterByNamedDataValueCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        }
+      },
+      "mAnimationName": "Spell2",
+      "mImgIconName": [
+        "ASSETS/Characters/Chogath/HUD/Icons2D/GreenTerror_Feast.dds"
+      ],
+      "mCastTime": 0.25,
+      "cooldownTime": [70.0, 80.0, 70.0, 60.0, 10.0, 10.0, 70.0],
+      "Cooldown": {
+        "values": [70.0, 80.0, 70.0, 60.0, 10.0, 10.0, 70.0],
+        "__type": "{0a0eddc9}"
+      },
+      "mCantCancelWhileWindingUp": true,
+      "castRangeUseBoundingBoxes": true,
+      "bHaveHitEffect": true,
+      "castRange": [175.0, 175.0, 175.0, 175.0, 175.0, 175.0, 175.0],
+      "castRangeValues": {
+        "values": [175.0, 175.0, 175.0, 175.0, 175.0, 175.0, 175.0],
+        "{0a3e0478}": 175.0,
+        "__type": "{0a0eddc9}"
+      },
+      "castConeDistance": 100.0,
+      "castFrame": 5.800000190734863,
+      "mHitEffectOrientType": 2,
+      "bHaveHitBone": true,
+      "mHitBoneName": "C_BuffBone_Glb_Center_Loc",
+      "mFloatVarsDecimals": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "mana": [100.0, 100.0, 100.0, 60.0, 60.0, 0.0],
+      "manaValues": {
+        "values": [100.0, 100.0, 100.0, 60.0, 60.0, 0.0],
+        "__type": "{630af303}"
+      },
+      "mCastingBreaksStealth": true,
+      "mClientData": {
+        "mTooltipData": {
+          "mObjectName": "Feast",
+          "mFormat": "{d7c27163}",
+          "mLocKeys": {
+            "keyName": "Spell_Feast_Name",
+            "keySummary": "Spell_Feast_Summary",
+            "keyTooltip": "Spell_Feast_Tooltip",
+            "keyTooltipExtendedBelowLine": "Spell_Feast_TooltipExtendedBelowLine"
+          },
+          "mLists": {
+            "LevelUp": {
+              "levelCount": 3,
+              "Elements": [
+                {
+                  "type": "RBaseDamage",
+                  "typeIndex": 2,
+                  "nameOverride": "Spell_ListType_ChampionDamage",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "RHealthPerStack",
+                  "typeIndex": 3,
+                  "nameOverride": "Spell_ListType_ChogathRHealthPerStack",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "AttackRangePerStack",
+                  "nameOverride": "Spell_ListType_ChogathRRangePerStack",
+                  "__type": "TooltipInstanceListElement"
+                },
+                {
+                  "type": "Cooldown",
+                  "nameOverride": "Spell_ListType_Cooldown",
+                  "__type": "TooltipInstanceListElement"
+                }
+              ],
+              "__type": "TooltipInstanceList"
+            }
+          },
+          "__type": "TooltipInstanceSpell"
+        },
+        "mTargeterDefinitions": [
+          {
+            "useCasterBoundingBox": true,
+            "__type": "TargeterDefinitionRange"
+          }
+        ],
+        "__type": "SpellDataResourceClient"
+      },
+      "__type": "SpellDataResource"
+    },
+    "mBuff": {
+      "mDescription": "game_buff_tooltip_Feast",
+      "mBuffAttributeFlag": 8,
+      "__type": "BuffData"
+    },
+    "BotData": {
+      "DamageTag": 2,
+      "{6d548702}": {
+        "mFormulaParts": [
+          {
+            "mSpellCalculationKey": "RDamage",
+            "__type": "{f3cbe7b2}"
+          }
+        ],
+        "__type": "GameCalculation"
+      },
+      "__type": "BotsSpellData"
+    },
+    "__type": "SpellObject"
+  },
+  "Characters/Chogath/Spells/CarnivoreAbility/Carnivore": {
+    "ObjectName": "Carnivore",
+    "objectPath": "Characters/Chogath/Spells/CarnivoreAbility/Carnivore",
+    "mScriptName": "Carnivore",
+    "mSpell": {
+      "mEffectAmount": [
+        {
+          "value": [16.0, 16.0, 16.0, 16.0, 16.0, 16.0, 16.0],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 2.0],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [
+            4.71999979019165, 4.71999979019165, 4.71999979019165,
+            4.71999979019165, 4.71999979019165, 4.71999979019165,
+            4.71999979019165
+          ],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "value": [
+            0.2800000011920929, 0.2800000011920929, 0.2800000011920929,
+            0.2800000011920929, 0.2800000011920929, 0.2800000011920929,
+            0.2800000011920929
+          ],
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        },
+        {
+          "__type": "SpellEffectAmount"
+        }
+      ],
+      "mSpellCalculations": {
+        "ChogathCarnivoreHeal": {
+          "mFormulaParts": [
+            {
+              "mLevel1Value": 18.0,
+              "mInitialBonusPerLevel": 2.0,
+              "__type": "ByCharLevelBreakpointsCalculationPart"
+            }
+          ],
+          "__type": "GameCalculation"
+        },
+        "ChogathCarnivoreMana": {
+          "mFormulaParts": [
+            {
+              "mLevel1Value": 4.71999979019165,
+              "mInitialBonusPerLevel": 0.2800000011920929,
+              "__type": "ByCharLevelBreakpointsCalculationPart"
+            }
+          ],
+          "mPrecision": 1,
+          "__type": "GameCalculation"
+        }
+      },
+      "mImgIconName": [
+        "ASSETS/Characters/Chogath/HUD/Icons2D/GreenTerror_TailSpike.dds"
+      ],
+      "castRange": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+      "castRangeValues": {
+        "values": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        "{0a3e0478}": 0.0,
+        "__type": "{0a0eddc9}"
+      },
+      "mClientData": {
+        "mTooltipData": {
+          "mObjectName": "Carnivore",
+          "mFormat": "{476ec0b8}",
+          "mLocKeys": {
+            "keyName": "game_character_passiveName_Chogath",
+            "keyTooltip": "game_character_passiveTooltip_Chogath",
+            "keySummary": "game_character_passiveDescription_Chogath"
+          },
+          "__type": "TooltipInstanceSpell"
+        },
+        "__type": "SpellDataResourceClient"
+      },
+      "__type": "SpellDataResource"
+    },
+    "mBuff": {
+      "mDescription": "game_buff_tooltip_Carnivore",
+      "__type": "BuffData"
+    },
+    "__type": "SpellObject"
+  }
+}

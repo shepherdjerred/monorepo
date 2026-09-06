@@ -1,0 +1,487 @@
+{
+  "championKey": "Shyvana",
+  "championName": "Shyvana",
+  "abilities": {
+    "passive": {
+      "name": "Scalemail",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BonusArmor": [
+          0.3
+        ],
+        "BonusMagicResist": [
+          0.3
+        ],
+        "PassiveScale": [
+          0.3
+        ],
+        "Stacks_Per_Epic_Monster": [
+          3
+        ],
+        "Stacks_Per_Champion": [
+          3
+        ],
+        "Stacks_Per_Buff_Monster": [
+          1
+        ],
+        "Stacks_Per_Large_Monster": [
+          1
+        ]
+      },
+      "resolvedDescription": "Takedowns on enemy champions, large minions, and large monsters grant Shyvana Scalemail stacks, improving her defenses.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Emberstrike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "EnhanceDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "RecastDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "LockoutDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "Q1Length": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "Q2Radius": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ],
+        "Cooldown_Reduction": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Max_Health_Damage": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "Max_Health_AD_Ratio": [
+          0.00011,
+          0.00011,
+          0.00011,
+          0.00011,
+          0.00011
+        ],
+        "Base_Damage": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "Damage_AD_Ratio": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ],
+        "Bonus_Attack_Range": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "Damage_Monster_Bonus": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "resolvedDescription": "Passive: Shyvana's Attacks deal {{ calc_max_health_damage }} max Health magic damage %i:OnHit% On-Hit and reduce this Ability's Cooldown by 0.5 seconds. Active: Shyvana's next Attack strikes the target and the surrounding area dealing 10/15/20/25/30 (+110% AD) (+30% AP) physical damage. This Ability may be Recast after an Attack or short delay within the next 4 seconds. Dragon Form: Shyvana gains an additional Recast, causing her to bite the target of her next Attack dealing 15/22.5/30/37.5/45 (+165% AD) (+45% AP) true damage.",
+      "unresolved": [
+        "calc_max_health_damage"
+      ]
+    },
+    "W": {
+      "name": "Inferno Aegis",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12.25,
+        11.5,
+        10.75,
+        10
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "Duration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "Radius": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "Shield": [
+          60,
+          80,
+          100,
+          120,
+          140
+        ],
+        "Shield_Radius": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "BaseMoveSpeed": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "BaseDamage": [
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "MissingHealthHealMultiplier": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MoveSpeedAmpTowardsEnemies": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "ShieldMaxHealth": [
+          0.12,
+          0.12,
+          0.12,
+          0.12,
+          0.12
+        ]
+      },
+      "resolvedDescription": "Shyvana wraps herself in flames for 2.5 seconds, gaining 60/80/100/120/140 (+12% bonus Health) Shield, increased by 18/24/30/36/42 (+3.6% bonus Health) per nearby enemy champion and 25% Move Speed, increased to 43.75% when moving towards enemy champions. When the effect ends, the Shield is broken, or upon Recast the area around her detonates, dealing 80/100/120/140/160 (+65% AP) magic damage. Dragon Form: If the detonation hits an enemy champion Shyvana heals for 60-100 (based on level) + 4-8% (based on level) Missing Health.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Molten Burst",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          65,
+          80,
+          95,
+          110
+        ],
+        "BaseDamagePerSecond": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "GroundLingerDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "GroundRadius": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "TrailRadius": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowAmount": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "DragonGroundRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "DragonTrailRadius": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "DragonCastRangeScale": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "RepeatExplosionDelay": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "DamageAPRatio": [
+          0.6,
+          0.65,
+          0.7,
+          0.75,
+          0.8
+        ],
+        "MaxHealthDamage": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "DamageDragonMod": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ]
+      },
+      "resolvedDescription": "Shyvana launches a fireball at the target location dealing 50/65/80/95/110 (+60/65/70/75/80% AP) + 5% Max health magic damage and Slowing by 30% for 2 seconds. It explodes upon striking an enemy or reaching its terminus. Dragon Form: Shyvana's fireball is larger and pierces through enemies. Upon striking a champion, large monster, or reaching its terminus it triggers a pulse of fire that deals 62.5/81.25/100/118.75/137.5 (+75/81.25/87.5/93.75/100% AP) + 6.25% Max Health magic damage and Slows by 30% for 2 seconds. The fireball leaves behind a trail for 2 seconds that deals 15-25 (based on level) (+5% AP) magic damage per second.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Dragon's Descent",
+      "maxRank": 3,
+      "cooldownByRank": [
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "Requires 100 Dragon Fury",
+      "rangeByRank": [
+        1050,
+        1050,
+        1050
+      ],
+      "dataValues": {
+        "MinCastRange": [
+          400,
+          400,
+          400
+        ],
+        "JumpDelay": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "JumpDampening": [
+          70,
+          70,
+          70
+        ],
+        "JumpGravity": [
+          25,
+          25,
+          25
+        ],
+        "JumpForwardMultiplier": [
+          100,
+          100,
+          100
+        ],
+        "Width": [
+          225,
+          225,
+          225
+        ],
+        "FuryGain": [
+          0.5,
+          0.75,
+          1
+        ],
+        "FuryDrainPerSecond": [
+          6.66666,
+          6.66666,
+          6.66666
+        ],
+        "Fury_Generation": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "FuryDragonFormMult": [
+          3,
+          3,
+          3
+        ],
+        "Fury_AoE_Efficacy": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "FearDuration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "BonusHealth": [
+          150,
+          250,
+          350
+        ],
+        "SizeScaling": [
+          0.05,
+          0.125,
+          0.2
+        ],
+        "BonusAttackRange": [
+          25,
+          50,
+          75
+        ],
+        "FuryGainPerUltHaste": [
+          0.01,
+          0.01,
+          0.01
+        ]
+      },
+      "resolvedDescription": "Passive: Shyvana generates 1.25 Dragon Fury by striking enemies with Attacks and Abilities, increased by 300% (+-100%) while in Dragon Form, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions. Active: Shyvana transforms into her Dragon Form, becoming Unstoppable, and flying to the target location breathing fire on enemies below dealing 150/250/350 (+100% AP) magic damage and causing them Flee for 0.75 seconds. While transformed, Shyvana's basic Abilities are upgraded, she gains 150/250/350 bonus Health, size, and Attack Range. Shyvana loses Dragon Fury over time and her transformation ends when she has no Dragon Fury remaining.",
+      "unresolved": [
+        "tt_fury_aoe_penalty"
+      ]
+    }
+  }
+}

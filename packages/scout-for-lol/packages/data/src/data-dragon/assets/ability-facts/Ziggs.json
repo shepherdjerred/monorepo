@@ -1,0 +1,352 @@
+{
+  "championKey": "Ziggs",
+  "championName": "Ziggs",
+  "abilities": {
+    "passive": {
+      "name": "Short Fuse",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "APRatio": [
+          0.5
+        ],
+        "StructureDamageRatio": [
+          1.75
+        ]
+      },
+      "resolvedDescription": "Periodically, Ziggs' next basic attack deals bonus magic damage. This cooldown is reduced whenever Ziggs uses an ability.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bouncing Bomb",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5.5,
+        5,
+        4.5,
+        4
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "APRatio": [
+          0.6,
+          0.65,
+          0.7,
+          0.75,
+          0.8
+        ],
+        "MaxRange": [
+          850,
+          850,
+          850,
+          850,
+          850
+        ],
+        "MaxRangeFirstBounce": [
+          325,
+          325,
+          325,
+          325,
+          325
+        ],
+        "MaxRangeSecondBounce": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "BombTriggerRange": [
+          180,
+          180,
+          180,
+          180,
+          180
+        ],
+        "ExplosionRadius": [
+          240,
+          240,
+          240,
+          240,
+          240
+        ],
+        "BoundingBoxTrigger": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ]
+      },
+      "resolvedDescription": "Ziggs throws a bouncing bomb that deals 80/130/180/230/280 (+60/65/70/75/80% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Satchel Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "BombDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TurretDestroyPercent": [
+          0.25,
+          0.275,
+          0.3,
+          0.325,
+          0.35
+        ],
+        "KnockbackSpeed": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "KnockbackGravity": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "KnockbackDistance": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "ExplosionRadius": [
+          325,
+          325,
+          325,
+          325,
+          325
+        ],
+        "KnockbackDistanceAlly": [
+          775,
+          775,
+          775,
+          775,
+          775
+        ],
+        "PerceptionBubbleRadius": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "PerceptionBubbleDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "CherryBonusHaste": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      "resolvedDescription": "Ziggs flings an explosive charge that detonates after 4 seconds, or when this ability is Recast. It deals 70/105/140/175/210 (+50% AP) magic damage to enemies and Knocks them Back. Ziggs is also knocked away, but takes no damage. Satchel Charge will automatically destroy towers below 25/27.5/30/32.5/35% of their Health.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Hexplosive Minefield",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "costByRank": [
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "APRatioPerMine": [
+          0.25,
+          0.3,
+          0.35,
+          0.4,
+          0.45
+        ],
+        "Slow": [
+          -0.1,
+          -0.2,
+          -0.3,
+          -0.4,
+          -0.5
+        ],
+        "DamagePerMine": [
+          30,
+          70,
+          110,
+          150,
+          190
+        ],
+        "MineDuration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SubsequentMineDamageMod": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "TriggerRange": [
+          135,
+          135,
+          135,
+          135,
+          135
+        ],
+        "MinePerceptionBubbleSize": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ]
+      },
+      "resolvedDescription": "Ziggs scatters proximity mines that detonate on enemy contact, dealing 30/70/110/150/190 (+25/30/35/40/45% AP) magic damage and Slows by 10/20/30/40/50% for 1.5 seconds. Mines last 10 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Mega Inferno Bomb",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        95,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        5000,
+        5000,
+        5000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          300,
+          500,
+          700
+        ],
+        "APRatio": [
+          1,
+          1,
+          1
+        ],
+        "OuterRingModifier": [
+          0.65,
+          0.65,
+          0.65
+        ],
+        "MaximumRadius": [
+          525,
+          525,
+          525
+        ],
+        "EmpoweredRadius": [
+          250,
+          250,
+          250
+        ]
+      },
+      "resolvedDescription": "Ziggs hurls his ultimate creation, dealing 300/500/700 (+100% AP) magic damage in the center of the blast radius, or 194.99999/324.99999/454.99998 (+65% AP) magic damage at the edge.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,400 @@
+{
+  "championKey": "Lillia",
+  "championName": "Lillia",
+  "abilities": {
+    "passive": {
+      "name": "Dream-Laden Bough",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Duration": [
+          3
+        ],
+        "DotDamagePercent": [
+          5
+        ],
+        "DotTicks": [
+          6
+        ],
+        "MonsterHealingPercent": [
+          0.25
+        ],
+        "ChampionHealingPercent": [
+          1
+        ],
+        "LargeMonsterHealMod": [
+          1.5
+        ],
+        "SmallMonsterHealMod": [
+          0.25
+        ],
+        "MultiHealMod": [
+          0.15
+        ]
+      },
+      "resolvedDescription": "Hitting a champion or monster with a skill will deal additional max Health damage over time.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Blooming Blows",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5.5,
+        5,
+        4.5,
+        4
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "MinimumRadius": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "MaximumRadius": [
+          485,
+          485,
+          485,
+          485,
+          485
+        ],
+        "FlatDamageBase": [
+          35,
+          45,
+          55,
+          65,
+          75
+        ],
+        "FlatDamageTrue": [
+          35,
+          45,
+          55,
+          65,
+          75
+        ],
+        "MinionDamageMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "PranceDuration": [
+          6.5,
+          6.5,
+          6.5,
+          6.5,
+          6.5
+        ],
+        "PranceMaxStacks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "PranceFalloffTime": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "PranceBonusPerStack": [
+          0.03,
+          0.04,
+          0.05,
+          0.06,
+          0.07
+        ],
+        "APRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Passive: Lillia's Ability hits grant {{ prancespeed }} Move Speed for 6.5 seconds, stacking up to 4 times. Active: Lillia whirls her censer, dealing 35/45/55/65/75 (+35% AP) magic damage, plus an additional 35/45/55/65/75 (+35% AP) true damage at the outer edge.",
+      "unresolved": [
+        "prancespeed"
+      ]
+    },
+    "W": {
+      "name": "Watch Out! Eep!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "FlatDamageBase": [
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "MaximumDistance": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "MaxSpeed": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MinimumDistance": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "LandingOffset": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "MaximumCastTime": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MinimumCastTime": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MinimumRadius": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "SweetSpotRadius": [
+          65,
+          65,
+          65,
+          65,
+          65
+        ],
+        "SweetSpotBonus": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AnimRangeCutoff": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "MinionDamageMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Lillia winds up a huge strike, dealing 80/100/120/140/160 (+35% AP) magic damage. Enemies in the center take 240/300/360/420/480 (+105% AP) damage instead.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Swirlseed",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "SlowDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BounceRange": [
+          25000,
+          25000,
+          25000,
+          25000,
+          25000
+        ],
+        "ImpactDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "ImpactRangeCheck": [
+          115,
+          115,
+          115,
+          115,
+          115
+        ],
+        "HitboxWidth": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "HitboxLength": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "AnimCutoffRange": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Lillia lobs a swirlseed overhead, dealing 60/85/110/135/160 (+50% AP) magic damage where it lands and revealing and Slowing them by 40% for 3 seconds. If no enemies are hit, the seed rolls until it hits an enemy or collides with terrain.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Lilting Lullaby",
+      "maxRank": 3,
+      "cooldownByRank": [
+        150,
+        130,
+        110
+      ],
+      "costByRank": [
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1600,
+        1600,
+        1600
+      ],
+      "dataValues": {
+        "DrowsyDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SleepDuration": [
+          2,
+          2,
+          2
+        ],
+        "ImpactDamage": [
+          25,
+          25,
+          25
+        ],
+        "BreakDamageBase": [
+          100,
+          150,
+          200
+        ],
+        "InitialSlow": [
+          -0.1,
+          -0.1,
+          -0.1
+        ]
+      },
+      "resolvedDescription": "Lillia causes all enemy champions with Dream Dust to become Drowsy for 1.5 seconds. Afterward, they fall Asleep for 2 seconds. When awakened by damage, they take an additional 100/150/200 (+40% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

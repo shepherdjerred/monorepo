@@ -1,0 +1,264 @@
+{
+  "championKey": "Khazix",
+  "championName": "Kha'Zix",
+  "abilities": {
+    "passive": {
+      "name": "Unseen Threat",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "SlowAmount": [
+          0.25
+        ],
+        "SlowDuration": [
+          2
+        ],
+        "IsolationRange": [
+          375
+        ],
+        "BonusADRatio": [
+          0.5
+        ]
+      },
+      "resolvedDescription": "Nearby enemies that are Isolated from their allies are marked. Kha'Zix's abilities have interactions with Isolated targets. When Kha'Zix is not visible to the enemy team, he gains Unseen Threat, causing his next basic attack against an enemy champion to deal bonus magic damage and slow them for a few seconds.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Taste Their Fear",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "EvolutionIsolationCDRPercentage": [
+          45,
+          45,
+          45,
+          45,
+          45
+        ],
+        "BonusADRatio": [
+          1.05,
+          1.05,
+          1.05,
+          1.05,
+          1.05
+        ]
+      },
+      "resolvedDescription": "Kha'Zix slashes a nearby enemy, dealing 80/105/130/155/180 (+105% bonus AD) physical damage. This deals 167.99999/220.49999/272.99999/325.49999/377.99998 (+220.49998% bonus AD) damage instead to enemies Isolated from their allies.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Void Spike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        55,
+        60,
+        65,
+        70,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          55,
+          75,
+          95,
+          115,
+          135
+        ],
+        "HealAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowPercentage": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "IsolatedSlowPercentage": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "IsolatedSlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Kha'Zix fires a spike dealing 75/105/135/165/195 (+100% bonus AD) physical damage to the first enemy hit in a small area. If Kha'Zix is inside the area, he restores 55/75/95/115/135 (+50% AP) Health",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Leap",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "EvolvedLeapRange": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "BaseDamage": [
+          65,
+          100,
+          135,
+          170,
+          205
+        ],
+        "ADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Kha'Zix leaps, dealing 65/100/135/170/205 (+40% bonus AD) physical damage upon landing.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Void Assault",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        85,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "StealthDuration": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "RecastWindow": [
+          12,
+          12,
+          12
+        ],
+        "BonusMovementSpeedPercent": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "EvolutionsAvailable": [
+          1,
+          2,
+          3
+        ],
+        "EvolvedStealthDuration": [
+          2,
+          2,
+          2
+        ],
+        "RecastCD": [
+          2,
+          2,
+          2
+        ],
+        "NumberOfCasts": [
+          2,
+          2,
+          2
+        ],
+        "EvolvedNumberOfCasts": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Active: Kha'Zix becomes Invisible for 1.25 seconds and gains 40% Move Speed. Kha'zix may Recast this Ability once within 12 seconds. Passive: Leveling up this Ability allows Kha'zix to Evolve one of his Abilities, granting it additional effects.Taste Their Fear: Gain Ability range, Attack range, and lowers Cooldown by {{ spell.khazixq:effect4amount }}% against Isolated targets.Void Spike: Fires 3 spikes and Slows by {{ spell.khazixw:effect3amount }}%, increased against Isolated targets.Leap: Increased range and refreshes Cooldown on champion takedown.Void Assault: Invisibility duration lasts 2 seconds and gains second Recast.",
+      "unresolved": [
+        "spell.khazixq:effect4amount",
+        "spell.khazixw:effect3amount"
+      ]
+    }
+  }
+}

@@ -1,0 +1,273 @@
+{
+  "championKey": "Talon",
+  "championName": "Talon",
+  "abilities": {
+    "passive": {
+      "name": "Blade's End",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MonsterMod": [
+          1
+        ],
+        "StackDuration": [
+          6
+        ],
+        "BleedDuration": [
+          2
+        ],
+        "BonusADRatio": [
+          2.1
+        ]
+      },
+      "resolvedDescription": "Talon's spells Wound champions and large monsters, stacking up to 3 times. When Talon attacks a champion with 3 stacks of Wound, they bleed for heavy damage over time.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Noxian Diplomacy",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        575,
+        575,
+        575,
+        575,
+        575
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          65,
+          85,
+          105,
+          125,
+          145
+        ],
+        "BonusADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "EnhancedDamageMod": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "CooldownRefund": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Talon leaps to a target and deals 65/85/105/125/145 (+100% bonus AD) physical damage. If used in melee range, this Ability instead critically strikes for {{ criticaldamage }} physical damage. If this Ability kills the target, Talon restores 9-55 (based on level) Health and refunds 50% of its Cooldown.",
+      "unresolved": [
+        "criticaldamage"
+      ]
+    },
+    "W": {
+      "name": "Rake",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "InitialBaseDamage": [
+          50,
+          60,
+          70,
+          80,
+          90
+        ],
+        "ReturnBaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "MovespeedSlow": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ReturnDelay": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "MonsterDamageMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "InitialBonusADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "ReturnBonusADRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ]
+      },
+      "resolvedDescription": "Talon tosses a volley of blades, dealing 50/60/70/80/90 (+40% bonus AD) physical damage. The blades then return to him, dealing 60/90/120/150/180 (+90% bonus AD) physical damage and Slowing by 40/45/50/55/60% for 1 second.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Assassin's Path",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        725,
+        725,
+        725,
+        725,
+        725
+      ],
+      "dataValues": {
+        "WallCD": [
+          160,
+          135,
+          110,
+          85,
+          60
+        ],
+        "WallJumpDistance": [
+          625,
+          625,
+          625,
+          625,
+          625
+        ],
+        "WallLockoutWidth": [
+          1250,
+          1250,
+          1250,
+          1250,
+          1250
+        ],
+        "DisplayCD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Talon vaults over the nearest terrain or structure. Talon cannot dash over the same terrain more than once every 160/135/110/85/60 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Shadow Assault",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        80,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          90,
+          135,
+          180
+        ],
+        "MoveSpeed": [
+          0.4,
+          0.55,
+          0.7
+        ],
+        "Duration": [
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Talon disperses a ring of blades that deal 90/135/180 (+100% bonus AD) physical damage, gains 40/55/70% Move Speed, and becomes Invisible for 2.5 seconds. When the Invisibility ends, the blades return to Talon, dealing 90/135/180 (+100% bonus AD) physical damage again. If Talon cancels the Invisibility with an Attack or with Noxian Diplomacy, the blades return to the target instead.",
+      "unresolved": []
+    }
+  }
+}

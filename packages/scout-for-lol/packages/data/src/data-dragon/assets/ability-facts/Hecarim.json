@@ -1,0 +1,355 @@
+{
+  "championKey": "Hecarim",
+  "championName": "Hecarim",
+  "abilities": {
+    "passive": {
+      "name": "Warpath",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Hecarim gains Attack Damage equal to a percentage of his bonus Move Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Rampage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        28,
+        26,
+        24,
+        22,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "MinionDamageRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "RampageBonusRatio": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "RampageDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "RampageCooldownReduction": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseDamageBonusAD": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "MaxStacks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BuffDuration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Hecarim cleaves nearby enemies for 60/90/120/150/180 (+90% bonus AD) physical damage. If this Ability hits, he gains a stack that decreases its Cooldown by 0.75 seconds and increases its damage by 3 (+3% bonus AD)% for 8 seconds. Stacks up to 3 times.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Spirit of Dread",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        525,
+        525,
+        525,
+        525,
+        525
+      ],
+      "dataValues": {
+        "NonSelfLeechRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageLeechPerc": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "Damage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "BuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TickTime": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MinionHealCap": [
+          120,
+          150,
+          180,
+          210,
+          240
+        ],
+        "ResistAmount": [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        "HealBonusADRatio": [
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Hecarim deals 80/120/160/200/240 (+80% AP) magic damage over 4 seconds to nearby enemies. Hecarim gains 5/10/15/20/25 Armor and Magic Resist and heals for 25% of damage nearby enemies take from Hecarim and 12.5% of damage taken from his allies.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Devastating Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "MinMoveSpeed": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MaxMoveSpeed": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "MinBaseDamage": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "BonusADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MaxBaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "MinKnockback": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "MaxKnockback": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "DistanceToMaxDamage": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ],
+        "TimeToMaxMoveSpeed": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Hecarim becomes Ghosted and gains 25% Move Speed increasing to 65% over 4 seconds. His next Attack Knocks Back and deals between 30/45/60/75/90 (+50% bonus AD) and 60/90/120/150/180 (+100% bonus AD) physical damage. Knock Back distance and damage scales with distance travelled during this Ability.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Onslaught of Shadows",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        50000,
+        50000,
+        50000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "FearDurationMin": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "FearDurationMax": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "APRatio": [
+          1,
+          1,
+          1
+        ],
+        "DashSpeed": [
+          1100,
+          1100,
+          1100
+        ],
+        "MaxDashRange": [
+          1000,
+          1000,
+          1000
+        ],
+        "RangeForMaxFearDuration": [
+          950,
+          950,
+          950
+        ]
+      },
+      "resolvedDescription": "Hecarim summons spectral riders and charges forward, dealing 150/250/350 (+100% AP) magic damage. Hecarim unleashes a shockwave at the end of the charge that Fears for between 0.75 to 1.5 seconds, increased by charge distance.",
+      "unresolved": []
+    }
+  }
+}

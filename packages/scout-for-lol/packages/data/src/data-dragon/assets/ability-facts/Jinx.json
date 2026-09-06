@@ -1,0 +1,296 @@
+{
+  "championKey": "Jinx",
+  "championName": "Jinx",
+  "abilities": {
+    "passive": {
+      "name": "Get Excited!",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BuffDuration": [
+          6
+        ],
+        "ASBuff": [
+          25
+        ],
+        "MSBuff": [
+          175
+        ],
+        "MSDecayRate": [
+          0.875
+        ],
+        "AssistMarkerDuration": [
+          3
+        ]
+      },
+      "resolvedDescription": "Jinx receives massively increased Move Speed and Attack Speed whenever she helps kill or destroy an enemy champions epic jungle monster, or structure.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Switcheroo!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.9,
+        0.9,
+        0.9,
+        0.9,
+        0.9
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana Per Rocket",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "RocketAoERadius": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "RocketBonusRange": [
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "MinigunAttackSpeedMax": [
+          30,
+          55,
+          80,
+          105,
+          130
+        ],
+        "MinigunAttackSpeedDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MinigunAttackSpeedStacks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "RocketTAD": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ],
+        "RocketASPDPenalty": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun. While using the rocket launcher, Jinx's Attacks deal 110% AD physical damage to the target and nearby enemies, gain 100/125/150/175/200 range, cost Mana, and scale 10% less with bonus Attack Speed. While using the minigun, Jinx's Attacks grant Attack Speed for 2.5 seconds, stacking up to 3 times (+30/55/80/105/130% %i:scaleAS% max).",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Zap!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1450,
+        1450,
+        1450,
+        1450,
+        1450
+      ],
+      "dataValues": {
+        "JinxLowEndWCastTime": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "JinxWASpeedCastTimeScalarPerHundrethSecond": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ],
+        "Damage": [
+          10,
+          60,
+          110,
+          160,
+          210
+        ],
+        "SlowPercent": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ADRatio": [
+          1.4,
+          1.4,
+          1.4,
+          1.4,
+          1.4
+        ]
+      },
+      "resolvedDescription": "Jinx fires a shock blast that deals 10/60/110/160/210 (+140% AD) physical damage to the first enemy hit, Slows them by 40/50/60/70/80%, and reveals them for 2 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Flame Chompers!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        24,
+        20.5,
+        17,
+        13.5,
+        10
+      ],
+      "costByRank": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        925,
+        925,
+        925,
+        925,
+        925
+      ],
+      "dataValues": {
+        "Damage": [
+          90,
+          140,
+          190,
+          240,
+          290
+        ],
+        "RootDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "GrenadeDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "GrenadeArmTime": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Jinx tosses out 3 chompers that last for 5 seconds. They explode on contact with enemy champions, Rooting them for 1.5 seconds and dealing 90/140/190/240/290 (+100% AP) magic damage to nearby enemies.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Super Mega Death Rocket!",
+      "maxRank": 3,
+      "cooldownByRank": [
+        85,
+        65,
+        45
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          35,
+          50
+        ],
+        "MaxDamage": [
+          200,
+          350,
+          500
+        ],
+        "PercentDamage": [
+          25,
+          30,
+          35
+        ],
+        "AoEDamageMult": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "MonsterExecuteMax": [
+          1200,
+          1200,
+          1200
+        ],
+        "AoERadius": [
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Jinx fires a rocket that explodes on the first enemy champion hit, dealing 20/35/50 (+12% bonus AD) to 200/350/500 (+120% bonus AD) + 25/30/35% missing Health physical damage, gaining damage over the first second of travel time. Nearby enemies take 80% Damage. Missing Health damage cannot exceed 1200 against Monsters.",
+      "unresolved": []
+    }
+  }
+}

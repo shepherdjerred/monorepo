@@ -1,0 +1,317 @@
+{
+  "championKey": "Akali",
+  "championName": "Akali",
+  "abilities": {
+    "passive": {
+      "name": "Assassin's Mark",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveAPRatio": [
+          0.55
+        ],
+        "PassiveBADRatio": [
+          0.6
+        ],
+        "Level1MS": [
+          0.3
+        ],
+        "MSAdditionalBonusAtThreshold": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Dealing spell damage to a champion creates a ring of energy around them. Exiting that ring empowers Akali's next Attack with bonus range and damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Five Point Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5
+      ],
+      "costByRank": [
+        110,
+        100,
+        90,
+        80,
+        70
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamageNamed": [
+          45,
+          70,
+          95,
+          120,
+          145
+        ],
+        "tADRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowPercentage": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BonusDamageToMinions": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Akali slings kunai in an arc, dealing 45/70/95/120/145 (+65% AD) (+60% AP) magic damage and Slowing enemies at the tip by 50% for 0.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Twilight Shroud",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "MovementSpeed": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "EnergyRestore": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "BaseDuration": [
+          5,
+          5.5,
+          6,
+          6.5,
+          7
+        ],
+        "MaxDuration": [
+          7,
+          7.5,
+          8,
+          8.5,
+          9
+        ],
+        "CloudRadius": [
+          140,
+          140,
+          140,
+          140,
+          140
+        ],
+        "MovementSpeedDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "CherryBonusHaste": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      "resolvedDescription": "Akali drops a smoke bomb, unleashing a spreading cover of smoke lasting 5/5.5/6/6.5/7 seconds and granting herself 30/35/40/45/50% Move Speed decaying over 2 seconds. Akali increases her max Energy by 100 while the shroud is active. While inside the smoke, Akali is Invisible.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Shuriken Flip",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          140,
+          210,
+          280,
+          350
+        ],
+        "SelfKnockbackRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "E1PercentageOfTotal": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "TotalADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "TotalAPRatio": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ],
+        "E2PercentageOfTotal": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Akali flips backwards as she throws a shuriken, dealing 21/42/63/84/105 (+30% AD) (+33% AP) magic damage and marking the first enemy or smoke cloud hit. Akali can Recast this once to dash to the marked target, dealing 49/98/147/196/245 (+70% AD) (+77% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Perfect Execution",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        90,
+        60
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        675,
+        675,
+        675
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          110,
+          220,
+          330
+        ],
+        "R2BaseDamage": [
+          70,
+          140,
+          210
+        ],
+        "R1ADRatio": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "R1APRatio": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "R2APRatio": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MaxExecuteThreshold": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "CooldownBetweenCasts": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "DashDistance": [
+          715,
+          715,
+          715
+        ]
+      },
+      "resolvedDescription": "Akali vaults over an enemy champion, dealing 110/220/330 (+50% bonus AD) (+30% AP) magic damage to all enemies in her path. Akali can Recast after 2.5 seconds to execute a piercing thrust, dashing and dealing 70/140/210 (+30% AP) to 210/420/630 (+90% AP) magic damage based on missing Health.",
+      "unresolved": []
+    }
+  }
+}

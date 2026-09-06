@@ -1,0 +1,293 @@
+{
+  "championKey": "XinZhao",
+  "championName": "Xin Zhao",
+  "abilities": {
+    "passive": {
+      "name": "Determination",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Every third attack deals bonus damage and heals Xin Zhao.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Three Talon Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        375,
+        375,
+        375,
+        375,
+        375
+      ],
+      "dataValues": {
+        "BADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BaseDamage": [
+          15,
+          30,
+          45,
+          60,
+          75
+        ],
+        "KnockUpDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Xin Zhao's next 3 Attacks deal an additional 15/30/45/60/75 (+40% bonus AD) physical damage and reduces his other Ability's Cooldowns by 1 second. The third Attack also Knocks Up for 0.75 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Wind Becomes Lightning",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "SlashBaseDamage": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ],
+        "ThrustBaseDamage": [
+          50,
+          85,
+          120,
+          155,
+          190
+        ],
+        "CritChanceAmp": [
+          0.333,
+          0.333,
+          0.333,
+          0.333,
+          0.333
+        ],
+        "MarkDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "HitNum": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "DelayTime": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "BaseSlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Xin Zhao slashes, dealing 30/40/50/60/70 (+30% AD) physical damage, then thrusts, dealing {{ thrustdamage }}. Enemies hit by the thrust are Slowed by 50% for 1.5 (+0.5% AP) seconds. Champions and Large Monsters hit by the thrust are marked as Challenged for 3 seconds and revealed unless Stealthed.",
+      "unresolved": [
+        "thrustdamage"
+      ]
+    },
+    "E": {
+      "name": "Audacious Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        11,
+        11,
+        11,
+        11
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "APRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "ASMod": [
+          0.38,
+          0.46,
+          0.54,
+          0.62,
+          0.7
+        ],
+        "BaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "ASDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowAmount": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "APToASRatio": [
+          0.001,
+          0.001,
+          0.001,
+          0.001,
+          0.001
+        ],
+        "PermanentASToASRatio": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "AoERadius": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ]
+      },
+      "resolvedDescription": "Xin Zhao charges an enemy, dealing 50/75/100/125/150 (+120% AP) magic damage to nearby enemies and Slowing them by 30% for 0.5 seconds. Xin Zhao grants himself {{ f1 }}% (%i:scaleAS%%i:scaleAP%) Attack Speed for 5 seconds. This Ability's range is increased on enemies that are Challenged.",
+      "unresolved": [
+        "f1"
+      ]
+    },
+    "R": {
+      "name": "Crescent Guard",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          175,
+          275
+        ],
+        "PercentCurrentHealthDamage": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "MissileDefenseBaseDuration": [
+          4,
+          4,
+          4
+        ],
+        "MissileDefenseRadius": [
+          450,
+          450,
+          450
+        ],
+        "MarkDuration": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Passive: The last champion Xin Zhao damaged with an Attack or Audacious Charge is Challenged for 3 seconds. Active: Xin Zhao unleashes a sweep around him that deals 75/175/275 (+100% bonus AD) (+110% AP) plus 15% current Health physical damage and Knocks Back all non-Challenged enemies. Afterwards, Xin Zhao becomes immune to damage from enemies outside the sweep range for 4 seconds.",
+      "unresolved": []
+    }
+  }
+}

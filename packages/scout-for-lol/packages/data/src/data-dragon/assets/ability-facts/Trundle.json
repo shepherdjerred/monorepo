@@ -1,0 +1,332 @@
+{
+  "championKey": "Trundle",
+  "championName": "Trundle",
+  "abilities": {
+    "passive": {
+      "name": "King's Tribute",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "When an enemy unit dies near Trundle, he heals for a percent of its maximum Health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Chomp",
+      "maxRank": 5,
+      "cooldownByRank": [
+        3.5,
+        3.5,
+        3.5,
+        3.5,
+        3.5
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "TooltipQADRatio": [
+          0.15,
+          0.25,
+          0.35,
+          0.45,
+          0.55
+        ],
+        "BonusRange": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "ADScaling": [
+          1.15,
+          1.25,
+          1.35,
+          1.45,
+          1.55
+        ],
+        "BonusDamage": [
+          10,
+          30,
+          50,
+          70,
+          90
+        ],
+        "BonusAD": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "SappedAD": [
+          -10,
+          -12.5,
+          -15,
+          -17.5,
+          -20
+        ],
+        "SapDebuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "SlowDuration": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "SlowAmount": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "PrepDuration": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ]
+      },
+      "resolvedDescription": "Trundle's next Attack deals 10/30/50/70/90 (+115/125/135/145/155% AD) physical damage and briefly Slows by 75%, then Trundle gains 20/25/30/35/40 Attack Damage for 5 seconds and the enemy loses 10/12.5/15/17.5/20 Attack Damage for the same duration.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Frozen Domain",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "MSBonus": [
+          0.2,
+          0.28,
+          0.36,
+          0.44,
+          0.52
+        ],
+        "ASBonus": [
+          0.3,
+          0.45,
+          0.6,
+          0.75,
+          0.9
+        ],
+        "HealingBonus": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "Duration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Trundle freezes an area for 8 seconds. While inside he gains 20/28/36/44/52% Move Speed, 30/45/60/75/90% Attack Speed, and 25% increased healing.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Pillar of Ice",
+      "maxRank": 5,
+      "cooldownByRank": [
+        21,
+        19.5,
+        18,
+        16.5,
+        15
+      ],
+      "costByRank": [
+        75,
+        75,
+        75,
+        75,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "PillarDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "SlowAmount": [
+          34,
+          38,
+          42,
+          46,
+          50
+        ],
+        "SlowRadius": [
+          360,
+          360,
+          360,
+          360,
+          360
+        ],
+        "KnockbackRadius": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "AllyDisplacementRange": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "EnemyDisplacementRange": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "EnemyDisplacementSpeed": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "EnemyDisplacementGravity": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ]
+      },
+      "resolvedDescription": "Trundle creates an icy pillar for 6 seconds, briefly Knocking Back enemies directly over it and Slowing nearby enemies by 34/38/42/46/50%.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Subjugate",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "PercentHPDamage": [
+          0.2,
+          0.25,
+          0.3
+        ],
+        "ArmorMRShred": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "DurationOfDrainForTooltip": [
+          4,
+          4,
+          4
+        ],
+        "NumberOfTicks": [
+          4,
+          4,
+          4
+        ],
+        "ShredDuration": [
+          8,
+          8,
+          8
+        ],
+        "PercentOfDamageAndShredUpfront": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ActualDurationOfDrainBuff": [
+          5,
+          5,
+          5
+        ],
+        "ScaleModelAmount": [
+          0.02,
+          0.02,
+          0.02
+        ],
+        "PercentHPDamageAPRatio": [
+          0.0002,
+          0.0002,
+          0.0002
+        ]
+      },
+      "resolvedDescription": "Trundle drains the lifeforce of an enemy champion, dealing {{ totalpercenthpdamage }} max Health magic damage and stealing 40% Armor and Magic Resist over 5 seconds.",
+      "unresolved": [
+        "totalpercenthpdamage"
+      ]
+    }
+  }
+}

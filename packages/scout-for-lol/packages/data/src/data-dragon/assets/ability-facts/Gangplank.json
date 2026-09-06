@@ -1,0 +1,370 @@
+{
+  "championKey": "Gangplank",
+  "championName": "Gangplank",
+  "abilities": {
+    "passive": {
+      "name": "Trial by Fire",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Cooldown": [
+          15
+        ],
+        "MoveSpeedDuration": [
+          2
+        ],
+        "DoTDuration": [
+          2.5
+        ],
+        "TurretDamageMult": [
+          0.5
+        ],
+        "ADRatio": [
+          1
+        ]
+      },
+      "resolvedDescription": "Every few seconds, Gangplank's melee strike will set his opponent on fire.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Parrrley",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4.5,
+        4.5,
+        4.5,
+        4.5,
+        4.5
+      ],
+      "costByRank": [
+        50,
+        45,
+        40,
+        35,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "SpellDamage": [
+          10,
+          40,
+          70,
+          100,
+          130
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CherryRatio": [
+          0.07,
+          0.07,
+          0.07,
+          0.07,
+          0.07
+        ],
+        "GameModeInteger": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CritDamageMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "GoldProc": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "SSProc": [
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "PlunderThreshold": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ]
+      },
+      "resolvedDescription": "{{Spell_GangplankQWrapper_Tooltip_{{ gamemodeinteger }}}}",
+      "unresolved": [
+        "Spell_GangplankQWrapper_Tooltip_{{ gamemodeinteger"
+      ]
+    },
+    "W": {
+      "name": "Remove Scurvy",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        20,
+        18,
+        16,
+        14
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          45,
+          70,
+          95,
+          120,
+          145
+        ],
+        "PercentHeal": [
+          13,
+          13,
+          13,
+          13,
+          13
+        ],
+        "BuffDuration_unused": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "HasteAmount": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "SteroidAmount_unused": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ]
+      },
+      "resolvedDescription": "Gangplank consumes a large amount of citrus fruit, removing all Disabling effects and restoring 45/70/95/120/145 (+90% AP) plus 13% missing Health.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Powder Keg",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BarrelSlow": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "MaxBarrels": [
+          3,
+          3,
+          4,
+          4,
+          5
+        ],
+        "DebuffDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BonusDamageToChampions": [
+          75,
+          95,
+          115,
+          135,
+          155
+        ],
+        "BarrelDuration": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "BarrelBaseDecay": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BarrelEnemyGoldBounty": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "MinionDamagePercentage": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "CooldownBetweenBarrels": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BarrelArmorPenetration": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ]
+      },
+      "resolvedDescription": "Gangplank places a powder keg that can be attacked by Gangplank and enemy champions for 25 seconds. When an enemy destroys it, the keg is defused. When Gangplank destroys it, it explodes, Slowing by 40/50/60/70/80% for 2 seconds and dealing the Attack's damage, ignoring 40% Armor. Champions take an additional 75/95/115/135/155 physical damage. Keg health decays every 2-0.5 (based on level) seconds. Keg explosions detonate other kegs with overlapping blast zones, but don't deal damage to the same target more than once. Keg explosions triggered by Parrrley will grant the bonus gold for targets killed.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Cannon Barrage",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        140,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        30000,
+        30000,
+        30000
+      ],
+      "dataValues": {
+        "DamagePerWave": [
+          40,
+          70,
+          100
+        ],
+        "DeathsDaughterBaseDamage": [
+          120,
+          210,
+          300
+        ],
+        "RaiseMoraleHaste": [
+          40,
+          40,
+          40
+        ],
+        "ZoneDuration": [
+          8,
+          8,
+          8
+        ],
+        "CannonDelay": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "CannonInterval": [
+          2,
+          2,
+          2
+        ],
+        "SlowPercent": [
+          30,
+          30,
+          30
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DeathsDaughterSlow": [
+          75,
+          75,
+          75
+        ],
+        "DeathsDaughterSlowDuration": [
+          1,
+          1,
+          1
+        ],
+        "RaiseMoraleHasteDuration": [
+          2,
+          2,
+          2
+        ],
+        "TotalWavesTooltip": [
+          12,
+          12,
+          12
+        ]
+      },
+      "resolvedDescription": "Gangplank signals his ship to fire 12 waves of cannonballs anywhere on the map over 8 seconds. Each wave Slows by 30% for 0.5 seconds and deals 40/70/100 (+10% AP) magic damage. Maximum damage: 480/840/1200 (+120% AP) This Ability can be upgraded in the shop via Parrrley. Fire at Will: Fires 6 additional waves of cannonballs. Death's Daughter: Fires a Mega-Cannonball that deals 120/210/300 (+30% AP) true damage and Slows by 75% for 1 second. Raise Morale: Allies inside Cannon Barrage gain 40% Move Speed for 2 seconds.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,378 @@
+{
+  "championKey": "Zaahen",
+  "championName": "Zaahen",
+  "abilities": {
+    "passive": {
+      "name": "Cultivation of War",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PercentBonusAD": [
+          0.025
+        ],
+        "FallOffDuration": [
+          5
+        ],
+        "RevivePercent": [
+          0.6
+        ],
+        "MaxStacks": [
+          12
+        ],
+        "ReviveDuration": [
+          4
+        ],
+        "NumberOfTicks": [
+          32
+        ],
+        "MaxStacksMultiplier": [
+          2
+        ],
+        "PBonusADMin": [
+          0.015
+        ],
+        "PBonusADMax": [
+          0.028
+        ],
+        "ReviveLevel1Value": [
+          0.3
+        ],
+        "ReviveAdditionalBonusAtThisLevel": [
+          0.15
+        ]
+      },
+      "resolvedDescription": "Zaahen's attacks and abilities against enemy champions grant him stacks of Determination, gaining bonus Attack Damage per stack. When filled with Determination, Zaahen gains increased Attack Damage and can revive.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "The Darkin Glaive",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "Q1BaseDamage": [
+          15,
+          30,
+          45,
+          60,
+          75
+        ],
+        "KnockUpDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "RecastWindow": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TimeBetweenAttacks": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "HealPercent": [
+          0.05,
+          0.06,
+          0.07,
+          0.08,
+          0.09
+        ],
+        "MinionHealPercent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Q2BaseDamage": [
+          25,
+          50,
+          75,
+          100,
+          125
+        ],
+        "QBonusRange": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "QCoeff": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "MonsterDamagePercent": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Zaahen slashes twice on his next Attack, dealing 15/30/45/60/75 (+20/25/30/35/40% bonus AD) bonus physical damage and restoring 5/6/7/8/9% of his max Health. Recast: Zaahen's next Attack deals 25/50/75/100/125 (+20/25/30/35/40% bonus AD) bonus physical damage and Knocks the target Up for 0.75 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Dreaded Return",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13.5,
+        13,
+        12.5,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "InitialBaseDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "SecondaryBaseDamage": [
+          30,
+          50,
+          70,
+          90,
+          110
+        ],
+        "MaximumPullDistance": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "PullSpeed": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ]
+      },
+      "resolvedDescription": "Zaahen stabs in a direction, dealing 40/60/80/100/120 (+50% bonus AD) physical damage to enemies hit, then Pulls them toward him, dealing 30/50/70/90/110 (+30% bonus AD) physical damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Aureate Rush",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "Damage_Base": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "DashDistance": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "DashSpeed": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "MaximumRadius": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "MinimumRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "PercentHPDamage": [
+          0.04,
+          0.045,
+          0.05,
+          0.055,
+          0.06
+        ],
+        "MonsterDamageCap": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "MonsterDamageBonus": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "SweetSpotDamageMod": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DamageBonusBase": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ]
+      },
+      "resolvedDescription": "Zaahen dashes then slices around himself, dealing 40/60/80/100/120 (+50% bonus AD) physical damage to nearby enemies. Enemies at the edge of the slice take 60/90/120/150/180 (+75% bonus AD) physical damage +4/4.5/5/5.5/6% of their maximum Health as magic damage instead.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Grim Deliverance",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        95,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "DashMaxDistance": [
+          600,
+          600,
+          600
+        ],
+        "DashMinDistance": [
+          10,
+          10,
+          10
+        ],
+        "EndDamage": [
+          250,
+          400,
+          550
+        ],
+        "DashSpeed": [
+          2800,
+          2800,
+          2800
+        ],
+        "HealPercent": [
+          0.33,
+          0.33,
+          0.33
+        ],
+        "AoESize": [
+          550,
+          550,
+          550
+        ],
+        "DamageReduction": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ArmorPen": [
+          0.1,
+          0.2,
+          0.3
+        ],
+        "BonusADDamageRatio": [
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Passive: Zaahen gains 10/20/30% %i:scaleAPen% Armor Penetration. Active: Zaahen rises, gaining 50% Damage Reduction while casting. Zaahen then stabs downward, dealing 250/400/550 (+200% bonus AD) physical damage and restoring 33% of the damage dealt to enemy champions as Health.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "championKey": "Thresh",
+  "championName": "Thresh",
+  "abilities": {
+    "passive": {
+      "name": "Damnation",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "StatValuePerSoul": [
+          1
+        ],
+        "SoulsToGainOnPickUp": [
+          1
+        ]
+      },
+      "resolvedDescription": "Thresh can harvest the souls of enemies that die near him, permanently granting him Armor and Ability Power.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Death Sentence",
+      "maxRank": 5,
+      "cooldownByRank": [
+        19,
+        16.5,
+        14,
+        11.5,
+        9
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1075,
+        1075,
+        1075,
+        1075,
+        1075
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          100,
+          150,
+          200,
+          250,
+          300
+        ],
+        "APRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "TauntLength": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SlowPercent": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "HitBonusCooldown": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Thresh throws out his scythe, Stunning the first unit hit and Pulling them towards Thresh for 1.5 seconds. The scythe does 100/150/200/250/300 (+90% AP) magic damage and also grants True Sight for the duration. Thresh can Recast this Ability to pull himself to the enemy. If this Ability hits, its Cooldown is reduced by 2 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Dark Passage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        21,
+        20,
+        19,
+        18,
+        17
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "ShieldPerSoul": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "LanternDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "BaseShieldValue": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "ShieldDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Thresh throws his lantern, allowing an ally to click on it to dash to Thresh. The lantern also grants {{ totalshield }} Shield for 4 seconds to Thresh and the first ally champion to come in contact with it.",
+      "unresolved": [
+        "totalshield"
+      ]
+    },
+    "E": {
+      "name": "Flay",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12.25,
+        11.5,
+        10.75,
+        10
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "PassiveADRatioTT": [
+          0.9,
+          1.2,
+          1.5,
+          1.8,
+          2.1
+        ],
+        "PassiveADRatio": [
+          90,
+          120,
+          150,
+          180,
+          210
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "ActiveBaseDamage": [
+          75,
+          120,
+          165,
+          210,
+          255
+        ],
+        "ActiveSlowPercentage": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "PassiveDmgPerSoul": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DmgPerSoul": [
+          1.7,
+          1.7,
+          1.7,
+          1.7,
+          1.7
+        ],
+        "FullChargeDuration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "Icon1ThresholdPercentage": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "Icon2ThresholdPercentage": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "Icon3ThresholdPercentage": [
+          0.975,
+          0.975,
+          0.975,
+          0.975,
+          0.975
+        ]
+      },
+      "resolvedDescription": "Passive: Thresh's Attacks deal additional damage based on how long since he last Attacked. They deal between {{ pattackdamagemin }} and {{ pattackdamagemax }} magic damage. Active: Thresh whips his chains, Pulling or Pushing enemies in the direction of the swing. Enemies hit are also Slowed by 20/25/30/35/40% for 1 second and take 75/120/165/210/255 (+70% AP) magic damage.",
+      "unresolved": [
+        "pattackdamagemin",
+        "pattackdamagemax"
+      ]
+    },
+    "R": {
+      "name": "The Box",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "ThreshRCageRadius": [
+          400,
+          400,
+          400
+        ],
+        "ThreshRWallThickness": [
+          30,
+          30,
+          30
+        ],
+        "ThreshRWallLength": [
+          470.228,
+          470.228,
+          470.228
+        ],
+        "APRatio": [
+          1,
+          1,
+          1
+        ],
+        "Damage": [
+          250,
+          400,
+          550
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "SlowAmount": [
+          99,
+          99,
+          99
+        ],
+        "WallDuration": [
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Thresh creates a prison of spectral walls, Slowing champions by 99% for 2 seconds and dealing 250/400/550 (+100% AP) magic damage. Walls break after one collision, and after one is broken, the rest deal no damage and Slow for half duration.",
+      "unresolved": []
+    }
+  }
+}

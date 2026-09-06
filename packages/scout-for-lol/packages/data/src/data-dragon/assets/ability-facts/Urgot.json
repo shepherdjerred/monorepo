@@ -1,0 +1,362 @@
+{
+  "championKey": "Urgot",
+  "championName": "Urgot",
+  "abilities": {
+    "passive": {
+      "name": "Echoing Flames",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "LegWarningTime": [
+          2.5
+        ]
+      },
+      "resolvedDescription": "Urgot's basic attacks and Purge periodically trigger blasts of flame from his legs, dealing physical damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Corrosive Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "SlowDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "SlowAmount": [
+          0.45,
+          0.5,
+          0.55,
+          0.6,
+          0.65
+        ],
+        "BaseDamage": [
+          25,
+          70,
+          115,
+          160,
+          205
+        ],
+        "ExplosionDelayPostMissile": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "DelayOnMissileLaunch": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "WHalterDuration": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "AoERadius": [
+          210,
+          210,
+          210,
+          210,
+          210
+        ]
+      },
+      "resolvedDescription": "Urgot fires an explosive charge, dealing 25/70/115/160/205 (+70% AD) physical damage and Slowing by 45/50/55/60/65% for 1.25 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Purge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        9,
+        6,
+        3,
+        0
+      ],
+      "costByRank": [
+        40,
+        30,
+        20,
+        10,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        490,
+        490,
+        490,
+        490,
+        490
+      ],
+      "dataValues": {
+        "ADRatioTT": [
+          0.2,
+          0.235,
+          0.27,
+          0.305,
+          0.34
+        ],
+        "OnHitDamageReduction": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "WAttacksPerSecond": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseDamage": [
+          12,
+          12,
+          12,
+          12,
+          12
+        ],
+        "MinionMinimumDamage": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "SlowResistance": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          25000
+        ],
+        "MoveSpeedMod": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "MoveSpeedDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Passive: Urgot's other Abilities mark the last champion hit for 5 seconds. Active: Urgot begins firing his chain gun at the closest enemy, prioritizing marked enemies. He Attacks them 3 times a second dealing 12 (+20/23.5/27/30.5/34% AD) physical damage per shot. Urgot can move while firing and has 40% Slow resistance, but loses 125 Move Speed. At max rank, this Ability lasts indefinitely and can be Toggled on and off.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Disdain",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15.5,
+        15,
+        14.5,
+        14
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "EShieldDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "EShieldBaseHealth": [
+          55,
+          75,
+          95,
+          115,
+          135
+        ],
+        "EShieldbADRatio": [
+          1.35,
+          1.35,
+          1.35,
+          1.35,
+          1.35
+        ],
+        "EBaseDamage": [
+          90,
+          120,
+          150,
+          180,
+          210
+        ],
+        "EShieldBonusHealthRatio": [
+          0.135,
+          0.135,
+          0.135,
+          0.135,
+          0.135
+        ],
+        "StunDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseDashSpeed": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ],
+        "MinimumDashRange": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "ThrowDistance": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "WHalterDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Urgot charges forward, gaining 55/75/95/115/135 (+135% bonus AD) (+13.5% bonus Health) Shield for 4 seconds. The first champion hit is Stunned for 1.5 seconds and thrown behind Urgot. All enemies Urgot collides with take 90/120/150/180/210 (+100% bonus AD) physical damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Fear Beyond Death",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        85,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2500,
+        2500,
+        2500
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          100,
+          225,
+          350
+        ],
+        "RBonusADRatio": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RMoveSpeedMod": [
+          75,
+          75,
+          75
+        ],
+        "RSlowDuration": [
+          4,
+          4,
+          4
+        ],
+        "RSlowMultiplier": [
+          1,
+          1,
+          1
+        ],
+        "RFearDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "RHealthThreshold": [
+          25,
+          25,
+          25
+        ],
+        "RChannelTimeReel": [
+          1,
+          1,
+          1
+        ],
+        "RFearRadius": [
+          600,
+          600,
+          600
+        ]
+      },
+      "resolvedDescription": "Urgot fires a chem-drill, impaling the first champion hit, dealing 100/225/350 (+50% bonus AD) physical damage and Slowing for 4 seconds by 1% per 1% missing Health, up to 75%. If the impaled victim falls below 25% Health, Urgot can Recast this Ability, Suppressing the victim and dragging them to himself. On reaching Urgot, they are killed and nearby enemies are Feared for 1.5 seconds.",
+      "unresolved": []
+    }
+  }
+}

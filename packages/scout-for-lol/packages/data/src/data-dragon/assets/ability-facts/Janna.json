@@ -1,0 +1,367 @@
+{
+  "championKey": "Janna",
+  "championName": "Janna",
+  "abilities": {
+    "passive": {
+      "name": "Tailwind",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MSPercentAlly": [
+          0.06
+        ],
+        "MSBonusMagicDamage": [
+          0.3
+        ]
+      },
+      "resolvedDescription": "Janna's allies gain Move Speed moving towards her. Janna deals a portion of bonus Move Speed as bonus magic damage on hit and with Zephyr.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Howling Gale",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        90,
+        95,
+        100,
+        105,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1075,
+        1075,
+        1075,
+        1075,
+        1075
+      ],
+      "dataValues": {
+        "MissileTravelTime": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MinionMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseRange": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ],
+        "MinDamage": [
+          55,
+          90,
+          125,
+          160,
+          195
+        ],
+        "MinimumRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BonusDamage": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "BonusRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "ChargeDistancePercent": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "BaseKnockup": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ChargeKnockup": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MaxDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Janna summons a tornado that grows stronger over 3 seconds then blows along its path. It deals 55/90/125/160/195 (+50% AP) - {{ maxdamage }} magic damage and Knocks Up for 0.5 - {{ maxknockup }} seconds. The distance, damage, and Knock Up duration increase based on how much the tornado grew. Janna can Recast to send the tornado early.",
+      "unresolved": [
+        "maxdamage",
+        "maxknockup"
+      ]
+    },
+    "W": {
+      "name": "Zephyr",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295,
+        4294967295
+      ],
+      "dataValues": {
+        "MSPercent": [
+          0.06,
+          0.07,
+          0.08,
+          0.09,
+          0.1
+        ],
+        "BaseDamage": [
+          55,
+          85,
+          115,
+          145,
+          175
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowPercent": [
+          20,
+          24,
+          28,
+          32,
+          36
+        ],
+        "MSAPRatio": [
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002
+        ],
+        "SlowAPRatio": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ]
+      },
+      "resolvedDescription": "Passive: Janna gains {{ totalms }} Move Speed and is Ghosted. Active: Janna's elemental strikes an enemy, Slowing them by {{ totalslow }} for 2 seconds, and dealing 55/85/115/145/175 (+50% AP) + {{ spell.tailwindself:bonusdamage }} magic damage.",
+      "unresolved": [
+        "totalms",
+        "totalslow",
+        "spell.tailwindself:bonusdamage"
+      ]
+    },
+    "E": {
+      "name": "Eye Of The Storm",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ECDRefundforCC": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "EmpowerDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DecayGracePeriod": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BaseShield": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "ShieldAPRatio": [
+          0.55,
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ],
+        "BonusAD": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "ADAPRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "ShieldDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Janna grants an ally champion or turret 80/120/160/200/240 (+55% AP) Shield for 4 seconds. While shielded, they gain 10/15/20/25/30 (+10% AP) Attack Damage. Janna refunds 20% of the cooldown whenever she impairs an enemy champion's movement with an Ability.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Monsoon",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        115,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        725,
+        725,
+        725
+      ],
+      "dataValues": {
+        "HealBasePerSecond": [
+          100,
+          150,
+          200
+        ],
+        "Duration": [
+          3,
+          3,
+          3
+        ],
+        "Range": [
+          700,
+          700,
+          700
+        ],
+        "MaxKnockback": [
+          875,
+          875,
+          875
+        ],
+        "KnockbackBaseRange": [
+          875,
+          875,
+          875
+        ],
+        "KnockbackSpeed": [
+          1200,
+          1200,
+          1200
+        ],
+        "KnockbackGravity": [
+          10,
+          10,
+          10
+        ],
+        "KnockbackDuration": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Janna summons a magical monsoon, Knocking Back nearby enemies then healing nearby allies for 300/450/600 (+150% AP) Health over 3 seconds. Moving or using an Ability ends the monsoon early.",
+      "unresolved": []
+    }
+  }
+}

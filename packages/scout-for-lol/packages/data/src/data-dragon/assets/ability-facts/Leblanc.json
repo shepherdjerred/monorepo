@@ -1,0 +1,306 @@
+{
+  "championKey": "Leblanc",
+  "championName": "LeBlanc",
+  "abilities": {
+    "passive": {
+      "name": "Mirror Image",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TooltipCooldown": [
+          60
+        ],
+        "Cooldown": [
+          60
+        ]
+      },
+      "resolvedDescription": "When LeBlanc drops below 40% Health, she becomes invisible for 1 second and creates a Mirror Image that deals no damage and lasts for up to 8 seconds.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Sigil of Malice",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          65,
+          90,
+          115,
+          140,
+          165
+        ],
+        "BaseMarkDamage": [
+          65,
+          90,
+          115,
+          140,
+          165
+        ],
+        "MarkDuration": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "CooldownRefund": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "ManaRefund": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "LeBlanc projects a sigil to an enemy, dealing 65/90/115/140/165 (+40% AP) magic damage and marking them for 3.5 seconds. Damaging the marked enemy with an Ability detonates the sigil, dealing 65/90/115/140/165 (+40% AP) magic damage. If either part kills the target, Leblanc refunds 100% of the Mana cost and 30% of this spell's remaining Cooldown. The initial sigil deals an additional 10-10 (based on level) damage to minions.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Distortion",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        13.75,
+        12.5,
+        11.25,
+        10
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "WAPRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "BaseDamage": [
+          75,
+          115,
+          155,
+          195,
+          235
+        ],
+        "SnapbackTimeAllowed": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SnapbackDelay": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "SnapbackQueueWindow": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "SpellMaxRange": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ]
+      },
+      "resolvedDescription": "LeBlanc dashes then deals 75/115/155/195/235 (+80% AP) magic damage to nearby enemies. For 4 seconds after dashing, LeBlanc can Recast. Recast: LeBlanc returns to her starting location.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Ethereal Chains",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13.25,
+        12.5,
+        11.75,
+        11
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        925,
+        925,
+        925,
+        925,
+        925
+      ],
+      "dataValues": {
+        "BaseInitialDamage": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "BaseDelayedDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "InitialAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "DelayedAPRatio": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "TetherDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "RootDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "TetherDistance": [
+          865,
+          865,
+          865,
+          865,
+          865
+        ]
+      },
+      "resolvedDescription": "LeBlanc launches a chain that shackles the first enemy hit, dealing 50/70/90/110/130 (+40% AP) magic damage and granting True Sight. If they remain shackled for 1.5 seconds, LeBlanc Roots them for 1.5 seconds and deals an additional 80/120/160/200/240 (+85% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Mimic",
+      "maxRank": 3,
+      "cooldownByRank": [
+        45,
+        35,
+        25
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "RQ1Base": [
+          70,
+          150,
+          230
+        ],
+        "RQ2Base": [
+          140,
+          300,
+          460
+        ],
+        "RWBase": [
+          150,
+          315,
+          480
+        ],
+        "RE1Base": [
+          70,
+          150,
+          230
+        ],
+        "RE2Base": [
+          140,
+          300,
+          460
+        ],
+        "RQMarkDuration": [
+          3.5,
+          3.5,
+          3.5
+        ],
+        "RQ1RE1BaseAPRatio": [
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "LeBlanc mimics her most recent Ability, using it again. The mimicked Ability deals increased damage. Mimicked Sigil of Malice deals 70/150/230 (+40% AP) magic damage when applied, and 140/300/460 (+80% AP) magic damage when consumed. Mimicked Distortion deals 150/315/480 (+80% AP) magic damage. Mimicked Ethereal Chains deals 70/150/230 (+40% AP) magic damage when shackled and 140/300/460 (+85% AP) magic damage when Rooting.",
+      "unresolved": []
+    }
+  }
+}

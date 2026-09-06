@@ -1,0 +1,353 @@
+{
+  "championKey": "Mel",
+  "championName": "Mel",
+  "abilities": {
+    "passive": {
+      "name": "Searing Brilliance",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "OverwhelmDuration": [
+          5
+        ],
+        "BonusAttackDuration": [
+          5
+        ],
+        "PassiveBonusMissiles": [
+          3
+        ],
+        "MaxPassiveBonusMissiles": [
+          9
+        ]
+      },
+      "resolvedDescription": "Whenever Mel uses an ability, she gains three bonus projectiles (up to nine maximum) on her next attack. When Mel deals damage through an ability or attack, she applies Overwhelm, which can stack infinitely. If the enemy is hit by Mel with enough Overwhelm damage, the stacks are consumed to execute the target.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Radiant Volley",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "ExplosionDamage": [
+          5,
+          7,
+          9,
+          11,
+          13
+        ],
+        "ExplosionCount": [
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "Spread": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "ExplosionRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "ChannelDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MinionMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "InitialDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ]
+      },
+      "resolvedDescription": "Mel unleashes a barrage of 6/7/8/9/10 projectiles that explode in the area around a target location. The first explosion hit deals 60/85/110/135/160 (+55% AP) magic damage and each subsequent explosion deals 5/7/9/11/13 (+5% AP) magic damage, adding up to {{ alldamagehit }} magic damage total.",
+      "unresolved": [
+        "alldamagehit"
+      ]
+    },
+    "W": {
+      "name": "Rebuttal",
+      "maxRank": 5,
+      "cooldownByRank": [
+        38,
+        35,
+        33,
+        29,
+        26
+      ],
+      "costByRank": [
+        80,
+        60,
+        40,
+        20,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "Duration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "ShieldRadius": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "BaseDamagePercent": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "MoveSpeed": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "PhysDamageMod": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "BaseShieldAmount": [
+          80,
+          110,
+          140,
+          170,
+          200
+        ],
+        "MoveSpeedDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Mel forms a barrier around herself that reflects projectiles from enemy champions, gaining 80/110/140/170/200 (+70% AP) Shields for 0.75 seconds and 40% decaying Move Speed for 0.75 seconds. Reflected projectiles deal {{ damagepercent }} original damage as magic damage.",
+      "unresolved": [
+        "damagepercent"
+      ]
+    },
+    "E": {
+      "name": "Solar Snare",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.5,
+        10,
+        9.5,
+        9
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "RootDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseDamage": [
+          60,
+          105,
+          150,
+          195,
+          240
+        ],
+        "BaseAreaDamage": [
+          16,
+          28,
+          40,
+          52,
+          64
+        ],
+        "AreaAPRatio": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ],
+        "AreaSlowAmount": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "AreaSlowDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MinionMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MaxAreaRadius": [
+          230,
+          230,
+          230,
+          230,
+          230
+        ],
+        "TimeToMaxRadius": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "AreaTicksPerSecond": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "DoTDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Mel fires a radiating orb, Rooting enemies at its center for 1.5 seconds and dealing 60/105/150/195/240 (+70% AP) magic damage. The orb builds up a hostile area around it that Slows enemies by 30% and deals 16/28/40/52/64 (+8% AP) magic damage per second.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Golden Eclipse",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BasePassiveStackDamage": [
+          3,
+          4,
+          5
+        ],
+        "BasePassiveFlatDamage": [
+          60,
+          70,
+          80
+        ],
+        "MinionMod": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseUltStackDamage": [
+          4,
+          7,
+          10
+        ],
+        "BaseUltFlatDamage": [
+          125,
+          200,
+          275
+        ],
+        "DisintegrateDelay": [
+          0.9,
+          0.9,
+          0.9
+        ]
+      },
+      "resolvedDescription": "Passive: Overwhelm damage is increased to 60/70/80 (+10% AP) magic damage plus 3/4/5 (+0.75% AP) magic damage per stack. Active: Mel unleashes her power on all enemies affected by Overwhelm, dealing 125/200/275 (+30% AP) magic damage plus 4/7/10 (+4% AP) magic damage per Overwhelm stack. Can only be cast when an enemy champion is affected by Overwhelm.",
+      "unresolved": []
+    }
+  }
+}

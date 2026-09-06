@@ -1,0 +1,331 @@
+{
+  "championKey": "Jhin",
+  "championName": "Jhin",
+  "abilities": {
+    "passive": {
+      "name": "Whisper",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaxAmmo": [
+          4
+        ],
+        "ReloadTime": [
+          2.5
+        ],
+        "HasteDuration": [
+          2
+        ],
+        "OutOfCombatTimeBeforeReload": [
+          8
+        ],
+        "FourthShotDamageMult": [
+          1.5
+        ],
+        "CritReductionPercent": [
+          0.25
+        ],
+        "BaseAttackSpeed": [
+          0.625
+        ],
+        "PercentAttackSpeedPerLevel": [
+          0.03
+        ],
+        "CritMoveSpeedPercentASRatio": [
+          0.44
+        ]
+      },
+      "resolvedDescription": "Jhin's hand cannon, Whisper, is a precise instrument designed to deal superior damage. It fires at a fixed rate and carries only four shots. Jhin imbues the final bullet with dark magics to critically strike and deal bonus execute damage. Whenever Whisper crits, it inspires Jhin with a burst of Move Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Dancing Grenade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          44,
+          69,
+          94,
+          119,
+          144
+        ],
+        "ADRatio": [
+          0.44,
+          0.515,
+          0.59,
+          0.665,
+          0.74
+        ],
+        "PercentAmpOnKill": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "NumberOfBounces": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BounceRange": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ]
+      },
+      "resolvedDescription": "Jhin launches a cartridge that deals 44/69/94/119/144 (+44/51.5/59/66.5/74% AD) (+60% AP) physical damage before bouncing to a nearby enemy that has not been hit yet. The cartridge can hit a maximum of 1 (+3) times. Enemies that die shortly after being hit increase the damage of subsequent hits by 35%.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Deadly Flourish",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        3000,
+        3000,
+        3000,
+        3000,
+        3000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "RootDuration": [
+          1.25,
+          1.5,
+          1.75,
+          2,
+          2.25
+        ],
+        "MinionMod": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "SpottingDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Jhin fires a long range shot dealing 70/105/140/175/210 (+50% AD) physical damage to the first champion hit and other enemies along the way. If this skill strikes a champion that has been damaged by an allied champion within the last 4 seconds, it will Root them for 1.25/1.5/1.75/2/2.25 seconds and grant Jhin Whisper's Move Speed.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Captive Audience",
+      "maxRank": 5,
+      "cooldownByRank": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "AmmoRechargeRateBaseTooltip": [
+          24,
+          21.5,
+          19,
+          16.5,
+          14
+        ],
+        "TrapSlowAmount": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "ReducedDamagePercent": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "BaseDamage": [
+          20,
+          80,
+          140,
+          200,
+          260
+        ],
+        "TrapDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "TrapAoERadius": [
+          260,
+          260,
+          260,
+          260,
+          260
+        ],
+        "TrapTriggerRadius": [
+          160,
+          160,
+          160,
+          160,
+          160
+        ],
+        "TrapDetonationTime": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "TrapRevealDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TrapArmTime": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Passive: Champions Jhin kills will create and detonate a Lotus Trap at their location. Active: Jhin places an invisible Lotus Trap for 3 minutes that creates a zone that Slows by 35% when stepped on by an enemy. After 2 seconds, the trap detonates, dealing 20/80/140/200/260 (+120% AD) (+100% AP) magic damage. This ability has 2 charges ({{ ammorechargeratetooltip }} second refresh).",
+      "unresolved": [
+        "ammorechargeratetooltip"
+      ]
+    },
+    "R": {
+      "name": "Curtain Call",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "Damage": [
+          64,
+          128,
+          192
+        ],
+        "FourthShotMultiplier": [
+          2,
+          2,
+          2
+        ],
+        "SlowPercent": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "PercentMissingAmp": [
+          3,
+          3,
+          3
+        ],
+        "MInimumDelayBetweenShots": [
+          1,
+          1,
+          1
+        ],
+        "ADRatio": [
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Jhin sets up and channels, enabling him to fire 4 super shots, each dealing between 64/128/192 (+25% AD) and {{ maxincreasecalc }} physical damage to the first champion hit based on their percentage missing health and Slowing them by 80% for 0.5 seconds. The fourth shot critically strikes for 200% damage.",
+      "unresolved": [
+        "maxincreasecalc"
+      ]
+    }
+  }
+}

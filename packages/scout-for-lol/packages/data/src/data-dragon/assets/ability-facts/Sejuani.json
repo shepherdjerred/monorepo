@@ -1,0 +1,333 @@
+{
+  "championKey": "Sejuani",
+  "championName": "Sejuani",
+  "abilities": {
+    "passive": {
+      "name": "Fury of the North",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "FrostArmorDuration": [
+          3
+        ],
+        "EpicMonsterCap": [
+          250
+        ],
+        "BonusArmorRatio": [
+          0.75
+        ],
+        "BonusMRRatio": [
+          0.75
+        ],
+        "BonusArmorBase": [
+          10
+        ],
+        "BonusMRBase": [
+          10
+        ],
+        "PercentHPDamageBase": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "After being out of combat, Sejuani gains Frost Armor which grants Armor and Magic Resist and immunity to slows. Frost Armor persists for a short time after Sejuani takes damage. Sejuani can damage a stunned enemy to shatter it, dealing massive magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Arctic Assault",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        16.5,
+        15,
+        13.5,
+        12
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          90,
+          140,
+          190,
+          240,
+          290
+        ],
+        "APRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MaxTravelDistance": [
+          625,
+          625,
+          625,
+          625,
+          625
+        ],
+        "DashSpeed": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "KnockupDurationTOOLTIPONLY": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Sejuani charges, dealing 90/140/190/240/290 (+75% AP) magic damage to enemies and Knocking them Up for 0.5 seconds. The charge ends after hitting an enemy champion.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Winter's Wrath",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "SlowDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "BaseDamageOne": [
+          5,
+          15,
+          25,
+          35,
+          45
+        ],
+        "BaseDamageTwo": [
+          5,
+          25,
+          45,
+          65,
+          85
+        ],
+        "APRatioOne": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "APRatioTwo": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "HPRatioOne": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "HPRatioTwo": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ]
+      },
+      "resolvedDescription": "Sejuani swings her flail, dealing 5/15/25/35/45 (+30% AP) (+4% max Health) physical damage and Knocking Back minions and jungle monsters. She then lashes out again, dealing 5/25/45/65/85 (+60% AP) (+8% max Health) physical damage and briefly Slowing targets. Both swings apply stacks of Permafrost.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Permafrost",
+      "maxRank": 5,
+      "cooldownByRank": [
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        560,
+        560,
+        560,
+        560,
+        560
+      ],
+      "dataValues": {
+        "PerChampionCD": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "BaseDamage": [
+          55,
+          105,
+          155,
+          205,
+          255
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "CCDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxStacks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StackDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "AuraRange": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ]
+      },
+      "resolvedDescription": "Passive: Nearby melee allied champions' Attacks apply a stack to champions and jungle monsters. Active: Sejuani deals 55/105/155/205/255 (+70% AP) magic damage to target enemy with 4 stacks and Stuns them for 1 second.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Glacial Prison",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1300,
+        1300,
+        1300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          125,
+          150,
+          175
+        ],
+        "BaseStunDuration": [
+          1,
+          1,
+          1
+        ],
+        "ZoneDuration": [
+          2,
+          2,
+          2
+        ],
+        "ExplosionSlowAmount": [
+          80,
+          80,
+          80
+        ],
+        "ExplosionSlowDuration": [
+          1,
+          1,
+          1
+        ],
+        "EmpoweredStunDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "EmpoweredBaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "ZoneSlowAmount": [
+          30,
+          30,
+          30
+        ]
+      },
+      "resolvedDescription": "Sejuani throws her True Ice bola, Stunning and revealing the first enemy champion hit for 1 second and dealing 125/150/175 (+40% AP) magic damage. If the bola travels at least 25% of its range, it Stuns and reveals for 1.5 seconds instead. It then also creates an ice storm that Slows surrounding enemies by 80% for 2 seconds. All affected enemies take 200/300/400 (+80% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

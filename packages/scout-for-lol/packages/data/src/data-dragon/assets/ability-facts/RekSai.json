@@ -1,0 +1,483 @@
+{
+  "championKey": "RekSai",
+  "championName": "Rek'Sai",
+  "abilities": {
+    "passive": {
+      "name": "Fury of the Xer'Sai",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "FuryFromAttacks": [
+          25
+        ],
+        "FuryFromAbilities": [
+          25
+        ],
+        "FuryMinionMod": [
+          0.16
+        ],
+        "HealDuration": [
+          3
+        ],
+        "PauseDuration": [
+          5
+        ],
+        "HealPercentStartValue": [
+          0.09
+        ],
+        "HealPercentEndValue": [
+          0.2
+        ]
+      },
+      "resolvedDescription": "Rek'Sai generates Fury by Attacking and hitting with basic Abilities. She consumes this Fury while Burrowed to restore health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Queen's Wrath / Prey Seeker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        3.5,
+        3,
+        2.5,
+        2
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "BuffDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "UnburrowedBaseDamage": [
+          5,
+          10,
+          15,
+          20,
+          25
+        ],
+        "UnburrowedADRatio": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "AoERange": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "AttackSpeed": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BurrowedBaseDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ],
+        "BurrowedBonusADRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "BurrowedAPRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "BurrowedCooldown": [
+          12,
+          11.5,
+          11,
+          10.5,
+          10
+        ],
+        "BurrowedAoE": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "BurrowedDebuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Unburrowed: Rek'Sai's next 3 Attacks within 3 seconds gain 35% Attack Speed and deal an additional 30/35/40/45/50% AD physical damage to nearby enemies. Attacks refresh the duration of this Ability.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Burrow / Un-burrow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1650,
+        1650,
+        1650,
+        1650,
+        1650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          30,
+          55,
+          80,
+          105,
+          130
+        ],
+        "ADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "KnockupDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "KnockupImmunity": [
+          10,
+          9,
+          8,
+          7,
+          6
+        ],
+        "ChampKnockbackRange": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "OtherKnockbackRange": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "KnockbackDuration": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "Slow": [
+          -0.3,
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5
+        ],
+        "SlowDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "VisionRadiusMod": [
+          -0.65,
+          -0.65,
+          -0.65,
+          -0.65,
+          -0.65
+        ],
+        "KnockupRange": [
+          220,
+          220,
+          220,
+          220,
+          220
+        ],
+        "LockoutTime": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "SearchRange": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "TremorTickTime": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DistanceCheck": [
+          85,
+          85,
+          85,
+          85,
+          85
+        ],
+        "BurrowedMoveSpeed": [
+          5,
+          10,
+          15,
+          20,
+          25
+        ]
+      },
+      "resolvedDescription": "Unburrowed: Rek'Sai burrows into the ground, gaining access to new Abilities but cannot Attack. She gains 5/10/15/20/25 Move Speed, 65% reduced vision range, and nearby enemies that move and are otherwise unseen will have their positions revealed to Rek'sai and her allies.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Furious Bite / Tunnel",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          95,
+          120,
+          145,
+          170
+        ],
+        "BonusAD": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "EmpoweredRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "DashDistance": [
+          850,
+          850,
+          850,
+          850,
+          850
+        ],
+        "MinimumRange": [
+          850,
+          850,
+          850,
+          850,
+          850
+        ],
+        "DashSpeedBase": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "DashSpeedMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaximumTunnels": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "TunnelDurationMinutes": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "TunnelReuseCooldown": [
+          6,
+          5,
+          4,
+          3,
+          2
+        ],
+        "DashCooldown": [
+          18,
+          17,
+          16,
+          15,
+          14
+        ],
+        "TunnelTimeRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ]
+      },
+      "resolvedDescription": "Unburrowed: Rek'Sai bites a target, dealing 70/95/120/145/170 (+60% bonus AD) physical damage. At max Fury, the bite deals 84/114/144.00001/174.00001/204.00001 (+72.00001% bonus AD) true damage instead.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Void Rush",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1500,
+        1500,
+        1500
+      ],
+      "dataValues": {
+        "TravelDistancePercent": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "ExtraDistance": [
+          125,
+          125,
+          125
+        ],
+        "LeapMovementSpeed": [
+          1400,
+          1400,
+          1400
+        ],
+        "VODistance": [
+          4000,
+          4000,
+          4000
+        ],
+        "DamageCheckRadius": [
+          1000,
+          1000,
+          1000
+        ],
+        "PreyMarkDuration": [
+          5,
+          5,
+          5
+        ],
+        "RBaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "PercentHealthDamage": [
+          15,
+          20,
+          25
+        ],
+        "CastBuffDuration": [
+          1.1,
+          1.1,
+          1.1
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Rek'Sai targets an enemy damaged by her in the last 5 seconds and then dives underground, becoming Untargetable. Moments later, she leaps unstoppably at her target, dealing 150/250/350 (+100% bonus AD) plus 15/20/25% max Health physical damage and resets the cooldown of Burrow / Un-burrow.",
+      "unresolved": []
+    }
+  }
+}

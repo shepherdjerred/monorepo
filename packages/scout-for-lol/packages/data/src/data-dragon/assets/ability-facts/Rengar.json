@@ -1,0 +1,340 @@
+{
+  "championKey": "Rengar",
+  "championName": "Rengar",
+  "abilities": {
+    "passive": {
+      "name": "Unseen Predator",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaxFerocity": [
+          4
+        ],
+        "InCombatTimer": [
+          10
+        ],
+        "InCombatTimerVisual": [
+          10
+        ],
+        "EmpoweredMSDuration": [
+          1.5
+        ],
+        "RengarPassiveRangeIncrease": [
+          620
+        ],
+        "LeapFerocityGeneration": [
+          1
+        ],
+        "BonusLeapRange": [
+          620
+        ]
+      },
+      "resolvedDescription": "While in Brush, Rengar leaps at his target with his basic attack. Rengar generates Ferocity whenever he casts an ability. At Max Ferocity, his next ability is empowered. Killing enemy champions awards trophies on Rengar's Bonetooth Necklace, granting bonus attack damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Savagery",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Generates 1 Ferocity",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          55,
+          90,
+          125,
+          160
+        ],
+        "BaseADRatio": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "BaseADRatioTooltip": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "EmpoweredADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "TowerMod": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "ASDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "ASBonus": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "BuffDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Rengar's next 2 Attacks gain 40% Attack Speed. The first Attack deals 20/55/90/125/160 (+100% AD) (+5% AD) physical damage. Max Ferocity: The first Attack deals 35-135 (based on level) (+100% AD) (+20% AD) physical damage and grants Rengar 50-50% (based on level) Attack Speed for 5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Battle Roar",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Generates 1 Ferocity",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ],
+        "DamagePercentageHealed": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "EmpoweredAPRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "HealingWindow": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "CCImmuneDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MonsterHealingMod": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Rengar roars, dealing 50/80/110/140/170 (+80% AP) magic damage to nearby enemies and restoring 50% of the damage taken in the last 1.5 seconds as Health. Max Ferocity: Deals {{ totaldamageempowered }} magic damage and additionally cleanses Rengar of crowd control.",
+      "unresolved": [
+        "totaldamageempowered"
+      ]
+    },
+    "E": {
+      "name": "Bola Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Generates 1 Ferocity",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "RevealDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BaseDamage": [
+          55,
+          100,
+          145,
+          190,
+          235
+        ],
+        "SlowAmount": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "CCDuration": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "BonusADRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Rengar throws a bola, dealing 55/100/145/190/235 (+80% bonus AD) physical damage to the first enemy hit, revealing and Slowing them by 30/45/60/75/90% for 1.75 seconds. Max Ferocity: Deals 50-50 (based on level) (+80% bonus AD) physical damage and Roots for 1.75 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Thrill of the Hunt",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        90,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        2500,
+        3000,
+        3500
+      ],
+      "dataValues": {
+        "StealthDuration": [
+          12,
+          16,
+          20
+        ],
+        "EnemyDetectionRange": [
+          1600,
+          1600,
+          1600
+        ],
+        "SelfVisionRange": [
+          2500,
+          3000,
+          3500
+        ],
+        "SelfRevealRange": [
+          750,
+          750,
+          750
+        ],
+        "StealthMS": [
+          40,
+          50,
+          60
+        ],
+        "FadeTime": [
+          2,
+          2,
+          2
+        ],
+        "ArmorShred": [
+          15,
+          20,
+          25
+        ],
+        "ArmorShredDuration": [
+          4,
+          4,
+          4
+        ],
+        "LeapRange": [
+          725,
+          725,
+          725
+        ]
+      },
+      "resolvedDescription": "Passive: Rengar will also leap Attack when Camouflaged. Active: Rengar gains 40/50/60% Move Speed and True Sight in a small area around the nearest enemy champion for 12/16/20 seconds. After 2 seconds, Rengar becomes Camouflaged and can leap without being in Brush. Leaping to the nearest champion deals an additional 100% AD physical damage, shreds 15/20/25 Armor for 4 seconds, and ends this Ability.",
+      "unresolved": []
+    }
+  }
+}

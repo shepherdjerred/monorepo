@@ -1,0 +1,297 @@
+{
+  "championKey": "Zed",
+  "championName": "Zed",
+  "abilities": {
+    "passive": {
+      "name": "Contempt for the Weak",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CurrentHealthThreshold": [
+          0.5
+        ],
+        "PerUnitCD": [
+          10
+        ],
+        "MonsterDamageCap": [
+          175
+        ],
+        "MonsterDamageMod": [
+          0.75
+        ],
+        "ShenZedQuestKillCount": [
+          2
+        ],
+        "ShenZedQuestBonus": [
+          0.02
+        ]
+      },
+      "resolvedDescription": "Zed's basic attacks against low health targets deals bonus Magic Damage. This effect can only occur once every few seconds against the same enemy champion.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Razor Shuriken",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        75,
+        70,
+        65,
+        60,
+        55
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "BonusADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Zed and his Shadows throw their shurikens, each dealing 80/120/160/200/240 (+100% bonus AD) physical damage to the first enemy they pass through, and 48/72/96/120/144.00001 (+60% bonus AD) physical damage to each additional enemy.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Living Shadow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "costByRank": [
+        40,
+        35,
+        30,
+        25,
+        20
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "RecastRange": [
+          2000,
+          2000,
+          2000,
+          2000,
+          2000
+        ],
+        "MimickRange": [
+          25000,
+          25000,
+          25000,
+          25000,
+          25000
+        ],
+        "SwapTimeLimit": [
+          5.25,
+          5.25,
+          5.25,
+          5.25,
+          5.25
+        ],
+        "EnergyRestoreDoubleHit": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "ShadowDuration": [
+          5.25,
+          5.25,
+          5.25,
+          5.25,
+          5.25
+        ],
+        "ShadowDurationTooltip": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Passive: Zed gains 30/35/40/45/50 Energy whenever he and his Shadows strike an enemy with the same Ability. Active: Zed's Shadow dashes forward, remaining in place for 5 seconds. Recasting this Ability will cause Zed to switch positions with this Shadow.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Shadow Slash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        4.5,
+        4,
+        3.5,
+        3
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        290,
+        290,
+        290,
+        290,
+        290
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          92.5,
+          115,
+          137.5,
+          160
+        ],
+        "ADRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "MoveSpeedMod": [
+          -0.2,
+          -0.25,
+          -0.3,
+          -0.35,
+          -0.4
+        ],
+        "MoveSpeedModBonus": [
+          -0.3,
+          -0.375,
+          -0.45,
+          -0.525,
+          -0.6
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ShadowHitCDR": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ZedRadius": [
+          315,
+          315,
+          315,
+          315,
+          315
+        ],
+        "ShadowRadius": [
+          290,
+          290,
+          290,
+          290,
+          290
+        ]
+      },
+      "resolvedDescription": "Zed and his Shadows slash, dealing 70/92.5/115/137.5/160 (+70% bonus AD) physical damage to nearby enemies. Each enemy champion hit by Zed's slash reduces Living Shadow's Cooldown by 3 seconds. Enemies hit by a Shadow's slash are Slowed by 20/25/30/35/40% for 1.5 seconds. Enemies hit by multiple slashes take no additional damage but are Slowed by 30/37.5/45/52.5/60% instead.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Death Mark",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "RDamageAmp": [
+          0.25,
+          0.4,
+          0.55
+        ],
+        "RReactivateCD": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RShadowDurationDisplayed": [
+          7.5,
+          7.5,
+          7.5
+        ],
+        "RDeathMarkDuration": [
+          3,
+          3,
+          3
+        ],
+        "RCanSwapBuffDuration": [
+          7.5,
+          7.5,
+          7.5
+        ],
+        "RGhostedDuration": [
+          4,
+          4,
+          4
+        ],
+        "RVisionDuration": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Zed becomes Untargetable and dashes to an enemy champion, marking them. After 3 seconds, the mark triggers, dealing 100% AD physical damage and repeating 25/40/55% of all damage dealt to the target by Zed while the mark was active. The dash leaves a Shadow behind for 7.5 seconds. Zed can Recast this Ability to switch positions with this Shadow.",
+      "unresolved": []
+    }
+  }
+}

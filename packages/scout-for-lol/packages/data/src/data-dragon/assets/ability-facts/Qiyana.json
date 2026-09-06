@@ -1,0 +1,403 @@
+{
+  "championKey": "Qiyana",
+  "championName": "Qiyana",
+  "abilities": {
+    "passive": {
+      "name": "Royal Privilege",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BurnDuration": [
+          4
+        ],
+        "SlowDuration": [
+          1.5
+        ],
+        "StunDuration": [
+          0.5
+        ],
+        "HasteDuration": [
+          1.5
+        ],
+        "StoneExecuteBase": [
+          0.06
+        ],
+        "HealDuration": [
+          4
+        ],
+        "HealRadius": [
+          360
+        ],
+        "DoubleHitBuffDuration": [
+          6
+        ],
+        "BonusADRatio": [
+          0.25
+        ],
+        "APRatio": [
+          0.3
+        ]
+      },
+      "resolvedDescription": "Qiyana's first basic attack or ability against each enemy deals bonus damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Elemental Wrath / Edge of Ixtal",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        525,
+        525,
+        525,
+        525,
+        525
+      ],
+      "dataValues": {
+        "VanillaBase": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "BaseDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "StealthDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "TremorBonus": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "Haste": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "RockExplosionDelay": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "RootDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowPotency": [
+          -0.2,
+          -0.2,
+          -0.2,
+          -0.2,
+          -0.2
+        ],
+        "CritThreshold": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "FalloffMod": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "JungleDamageAmp": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ]
+      },
+      "resolvedDescription": "If Qiyana does not have an Enchantment, she slashes, dealing 70/100/130/160/190 (+85% bonus AD) physical damage to enemies in a small area. If she does, this Ability gains extra range and an additional effect based on the type of Enchantment:Ice Enchantment: Briefly Roots, then Slows by 20% for 1 second.Rock Enchantment: Deals an additional {{ tremordamage }} physical damage to units below 50% Health.Wild Enchantment: Leaves a trail that turns Qiyana Invisible and grants 20% Move Speed.",
+      "unresolved": [
+        "tremordamage"
+      ]
+    },
+    "W": {
+      "name": "Terrashape",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        25,
+        30,
+        35,
+        40,
+        45
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          8,
+          16,
+          24,
+          32,
+          40
+        ],
+        "StealthDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "Range": [
+          425,
+          425,
+          425,
+          425,
+          425
+        ],
+        "AttackSpeed": [
+          0.15,
+          0.2,
+          0.25,
+          0.3,
+          0.35
+        ],
+        "TremorBonus": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "PassiveMS": [
+          0.03,
+          0.05,
+          0.07,
+          0.09,
+          0.11
+        ],
+        "TravelDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "DashSpeed": [
+          440,
+          440,
+          440,
+          440,
+          440
+        ],
+        "OnHitAPRatio": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "OnHitADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ]
+      },
+      "resolvedDescription": "Passive: While Qiyana's weapon is Enchanted, she gains 15/20/25/30/35% Attack Speed and her Attacks deal an additional 8/16/24/32/40 (+45% AP) (+20% bonus AD) magic damage. She also gains 3/5/7/9/11% Move Speed while out of combat near the corresponding terrain type. Active: Qiyana dashes towards a nearby brush, terrain, or river and Enchants her weapon with that particular terrain type. This refreshes Elemental Wrath / Edge of Ixtal's Cooldown.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Audacity",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          90,
+          130,
+          170,
+          210
+        ],
+        "DashSpeed": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "DashSpeedMax": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ],
+        "ADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Qiyana dashes through an enemy and deals 50/90/130/170/210 (+50% bonus AD) physical damage to them.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Supreme Display of Talent",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        120,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          100,
+          200,
+          300
+        ],
+        "Slow": [
+          0.4,
+          0.5,
+          0.6
+        ],
+        "BonusDamageBase": [
+          50,
+          100,
+          150
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "RecastWindow": [
+          10,
+          10,
+          10
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1
+        ],
+        "MonsterCapBase": [
+          500,
+          750,
+          1000
+        ],
+        "PercentHPDamageBaseRock": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "RootDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "StunDurationMin": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Qiyana launches a shockwave that Knocks Back enemies and detonates when it hits terrain. The explosion follows the entire edge of the terrain, Stunning for between 0.5 and 1 seconds and dealing 100/200/300 (+125% bonus AD) plus 10% max Health physical damage. Stun duration scales down with distance the shockwave has travelled. Any river or brush the shockwave passes through also explode after a delay for the same damage and Stun.",
+      "unresolved": []
+    }
+  }
+}

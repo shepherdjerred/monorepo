@@ -1,0 +1,361 @@
+{
+  "championKey": "Gwen",
+  "championName": "Gwen",
+  "abilities": {
+    "passive": {
+      "name": "A Thousand Cuts",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ExecuteThreshold": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "Gwen's attacks deal bonus magic damage based on the targets health. She heals for a portion of the damage dealt to champions by this effect.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Snip Snip!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6.5,
+        5.75,
+        5,
+        4.25,
+        3.5
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "InitialArcLength": [
+          475,
+          475,
+          475,
+          475,
+          475
+        ],
+        "SwipeDamageBase": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "MiniDamageRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "APRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "MiniSwipeBaseDamage": [
+          10,
+          14,
+          18,
+          22,
+          26
+        ],
+        "TrueDamageConversion": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ExecuteBonus": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "MinionMod": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "ExecuteThreshold": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "MiniSwipeAPRatio": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ]
+      },
+      "resolvedDescription": "Passive: Gwen gains 1 stack when she hits an enemy with an attack (max 4, lasts 6 seconds). Active: Consumes stacks. Gwen snips once for 10/14/18/22/26 (+5% AP) magic damage, snips again for each ammo consumed, and then snips a final time for 60/85/110/135/160 (+35% AP) magic damage. The center of each strikes converts 50% of the damage into true damage instead and applies A Thousand Cuts to enemies hit. Deals 80% damage to minions. Minions below 20% health take 1000% bonus damage instead of reduced damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Hallowed Mist",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        21,
+        20,
+        19,
+        18
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "ZoneDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ZoneRadius": [
+          370,
+          370,
+          370,
+          370,
+          370
+        ],
+        "ZonePullSpeed": [
+          2000,
+          2000,
+          2000,
+          2000,
+          2000
+        ],
+        "PullOffset": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "ZoneWallOffset": [
+          -100,
+          -100,
+          -100,
+          -100,
+          -100
+        ],
+        "NewDashCooldown": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "RecastDelay": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseResists": [
+          22,
+          24,
+          26,
+          28,
+          30
+        ],
+        "DashTargetForgiveness": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ]
+      },
+      "resolvedDescription": "Gwen summons the Hallowed Mist, making her Untargetable to all enemies (except towers) outside the zone for 4 seconds or until she leaves it. While in the Mist, Gwen gains 22/24/26/28/30 (+7% AP) Armor and Magic Resist. Gwen can Recast this Ability once to call the Mist to her. This will automatically Recast the first time Gwen attempts to leave the zone.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Skip 'n Slash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12.5,
+        12,
+        11.5,
+        11
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "DashRange": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "DashSpeed": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "WallCheatDistance": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "BuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BaseAttackSpeed": [
+          30,
+          42.5,
+          55,
+          67.5,
+          80
+        ],
+        "CDRefund": [
+          0.25,
+          0.35,
+          0.45,
+          0.55,
+          0.65
+        ],
+        "BonusAttackRange": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "BaseDamage": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ]
+      },
+      "resolvedDescription": "Gwen dashes and empowers her Attacks for 4 seconds. Empowered Attacks gain 30/42.5/55/67.5/80% Attack Speed, 15 (+20% AP) magic damage %i:OnHit% On-Hit, 75 range, and the first one to hit an enemy refunds 25/35/45/55/65% of this Ability's Cooldown.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Needlework",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "DebuffDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SlowAmount": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "BaseDamage": [
+          30,
+          50,
+          70
+        ],
+        "InitialSlow": [
+          -0.4,
+          -0.5,
+          -0.6
+        ],
+        "SubsequentSlow": [
+          -0.15,
+          -0.2,
+          -0.25
+        ],
+        "LockoutTime": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "First Cast: Hurl a needle that deals 30/50/70 (+10% AP) magic damage, Slows by 40/50/60% for 1.5 seconds, and applies A Thousand Cuts to all enemies hit. Gwen can Recast this ability up to 2 additional times within 6 seconds (1s cooldown between casts). Second Cast: Fire three needles to deal 90/150/210 (+30% AP) magic damage Third Cast: Fire five needles to deal 150/250/350 (+50% AP) magic damage",
+      "unresolved": []
+    }
+  }
+}

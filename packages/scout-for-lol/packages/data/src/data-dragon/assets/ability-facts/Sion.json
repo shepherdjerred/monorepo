@@ -1,0 +1,361 @@
+{
+  "championKey": "Sion",
+  "championName": "Sion",
+  "abilities": {
+    "passive": {
+      "name": "Glory in Death",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Lifesteal": [
+          1
+        ],
+        "PercentMaxHP": [
+          0.1
+        ],
+        "NonChampCap": [
+          75
+        ],
+        "StructureMod": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "After being killed, Sion will temporarily reanimate with rapidly decaying Health. His attacks become very rapid, heal him, and deal bonus damage based on his target's maximum Health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Decimating Smash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        45,
+        45,
+        45,
+        45,
+        45
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        10000,
+        10000,
+        10000,
+        10000,
+        10000
+      ],
+      "dataValues": {
+        "ADRatioMin": [
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8
+        ],
+        "ADRatioMax": [
+          1.2,
+          1.5,
+          1.8,
+          2.1,
+          2.4
+        ],
+        "LowDamage": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "HighDamage": [
+          90,
+          155,
+          220,
+          285,
+          350
+        ],
+        "MinionRatio": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "MonsterRatio": [
+          165,
+          165,
+          165,
+          165,
+          165
+        ],
+        "BaseStunTime": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "SlowAmount": [
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Sion charges a heavy blow for up to 2 seconds. Release: Sion slams his axe down, briefly Slowing and dealing between 30/45/60/75/90 (+40/50/60/70/80% AD) and 90/155/220/285/350 (+120/150/180/209.99999/240.00001% AD) physical damage based on charge time. If Sion charged for at least 1 second, enemies are Knocked Up and Stunned for between 1.25 and 2.25 seconds based on charge time.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Soul Furnace",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        75,
+        80,
+        85,
+        90,
+        95
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "ShieldPercentHealthTooltip": [
+          0.08,
+          0.1,
+          0.12,
+          0.14,
+          0.16
+        ],
+        "DamagePercentHealthTooltip": [
+          0.1,
+          0.11,
+          0.12,
+          0.13,
+          0.14
+        ],
+        "HPPerChampKill": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "HPPerKill": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "HPPerLargeKill": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "ShieldAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "DamageAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BaseShield": [
+          60,
+          75,
+          90,
+          105,
+          120
+        ],
+        "BaseDamage": [
+          40,
+          65,
+          90,
+          115,
+          140
+        ],
+        "MaxHPDamageRatio": [
+          14,
+          14,
+          14,
+          14,
+          14
+        ],
+        "DetonateRecastCooldown": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ShieldDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "resolvedDescription": "Passive: Sion gains 4 max Health when he kills a unit, or 15 for champion takedowns, large minions and large monsters. Active: Sion gains 60/75/90/105/120 (+40% AP) (+8/10/12/14/16% max Health) Shield for 6 seconds. After 3 seconds if the shield still holds, Sion can Recast to detonate the shield to deal 40/65/90/115/140 (+40% AP) plus 14% max Health magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Roar of the Slayer",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        35,
+        40,
+        45,
+        50,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          65,
+          100,
+          135,
+          170,
+          205
+        ],
+        "SlowAmount": [
+          40,
+          45,
+          50,
+          55,
+          60
+        ],
+        "ArmorShred": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "SlowDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "ArmorShredDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "APRatio": [
+          0.55,
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ]
+      },
+      "resolvedDescription": "Sion fires a shockwave, dealing 65/100/135/170/205 (+55% AP) magic damage, Slowing them by 40/45/50/55/60% for 2.5 seconds and removing 25% Armor for 4 seconds. Non-champions hit are Knocked Back. Enemies hit by a Knocked Back unit take the same damage and effects.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Unstoppable Onslaught",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        100,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        7500,
+        7500,
+        7500
+      ],
+      "dataValues": {
+        "MinDamage": [
+          150,
+          300,
+          450
+        ],
+        "MaxDamage": [
+          400,
+          800,
+          1200
+        ],
+        "SlowAmount": [
+          40,
+          45,
+          50
+        ],
+        "MinionDamagePercent": [
+          500,
+          500,
+          500
+        ],
+        "MinStunDuration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MaxStunDuration": [
+          1.75,
+          1.75,
+          1.75
+        ],
+        "MoveSpeedCap": [
+          950,
+          950,
+          950
+        ]
+      },
+      "resolvedDescription": "Sion charges Unstoppably in a direction for 8 seconds, turning towards the mouse cursor. Sion stops on colliding with an enemy champion or wall or on Recasting this Ability. At the end of the charge, Sion deals between 150/300/450 (+60% bonus AD) and 400/800/1200 (+120% bonus AD) physical damage based on distance travelled. Enemies close to Sion are Stunned for between 0.75 and 1.75 seconds based on distance travelled. Enemies in a larger area are Slowed by 40/45/50% for 3 seconds.",
+      "unresolved": []
+    }
+  }
+}

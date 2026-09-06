@@ -1,0 +1,266 @@
+{
+  "championKey": "Zoe",
+  "championName": "Zoe",
+  "abilities": {
+    "passive": {
+      "name": "More Sparkles!",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "APRatio": [
+          0.2
+        ],
+        "WPickupDurationMinion": [
+          20
+        ],
+        "WPickupDurationChampion": [
+          40
+        ]
+      },
+      "resolvedDescription": "Zoe's next basic attack after casting a spell deals bonus magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Paddle Star!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8.5,
+        8,
+        7.5,
+        7,
+        6.5
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MinionDamageMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between 50/80/110/140/170 (+2-34 based on level) (+60% AP) to 125/200/275/350/425 (+5-85 based on level) (+150.00001% AP) magic damage. Zoe can Recast this Ability to redirect the missile to a new position near Zoe.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Spell Thief",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.25,
+        0.25,
+        0.25,
+        0.25,
+        0.25
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        3000,
+        4500,
+        6000,
+        3000,
+        3000
+      ],
+      "dataValues": {
+        "TotalBaseDamage": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "TotalAPRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MoveSpeedMod": [
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7
+        ],
+        "MoveSpeedDuration": [
+          2,
+          2.25,
+          2.5,
+          2.75,
+          3
+        ],
+        "DurationOfSummonerCanCast": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "MovementSpeed": [
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7
+        ],
+        "MSDuration": [
+          2,
+          2.25,
+          2.5,
+          2.75,
+          3
+        ]
+      },
+      "resolvedDescription": "Passive: Enemies drop spell shards when casting a Summoner Spell or using an Active Item. Specific minions also drop a spell shard when Zoe or a nearby ally kills them. Zoe can pick up this shard to cast that ability once. Passive: When Zoe casts this Ability or any Summoner Spell, she gains 30/40/50/60/70% Move Speed for 2/2.25/2.5/2.75/3 seconds and tosses 3 missiles at the target she Attacked most recently. These missiles deal 15/25/35/45/55 (+10% AP) magic damage each. Active: Cast the Ability from a spell shard Zoe has picked up.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Sleepy Trouble Bubble",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "PercentPen": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "CooldownRefresh": [
+          0.16,
+          0.195,
+          0.23,
+          0.265,
+          0.3
+        ],
+        "TrapLife": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DrowsySlow": [
+          0.1,
+          0.15,
+          0.2,
+          0.25,
+          0.3
+        ],
+        "DrowsyDuration": [
+          1.4,
+          1.4,
+          1.4,
+          1.4,
+          1.4
+        ],
+        "SleepDuration": [
+          2.25,
+          2.25,
+          2.25,
+          2.25,
+          2.25
+        ],
+        "BrittleLinger": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Zoe dropkicks a bubble that deals 70/110/150/190/230 (+45% AP) magic damage, lingering as a trap if it hits nothing. The bubble's range is extended when flying over terrain. If either the bubble or trap hits an enemy champion she refreshes 16/19.5/23/26.5/30% of her cooldown. After a delay, the victim falls Asleep and have their Magic Resist reduced by 30% for 2 seconds. Attacks and Ability hits wake them up but deal double damage, up to 70/110/150/190/230 (+45% AP) true damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Portal Jump",
+      "maxRank": 3,
+      "cooldownByRank": [
+        11,
+        8,
+        5
+      ],
+      "costByRank": [
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        575,
+        575,
+        575
+      ],
+      "dataValues": {},
+      "resolvedDescription": "Zoe teleports to a nearby position for 1 second. Afterwards, she teleports back. Zoe can use Abilities and Attack, but can't move during this time.",
+      "unresolved": []
+    }
+  }
+}

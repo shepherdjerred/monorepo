@@ -115,3 +115,147 @@ export const CDragonChampionSchema = z.object({
 });
 
 export type CDragonChampion = z.infer<typeof CDragonChampionSchema>;
+
+/**
+ * CommunityDragon per-champion game bin (`.bin.json`) schemas, consumed by the
+ * ability-facts generator.
+ *
+ * Source: https://raw.communitydragon.org/{cdVersion}/game/data/characters/{alias}/{alias}.bin.json
+ *
+ * These bins are converted from the game's binary property files, so shapes
+ * vary per champion and fields equal to their engine default are OMITTED from
+ * the JSON (e.g. a missing `mStat` means stat 0 = AP, a missing `mStatFormula`
+ * means formula 0 = total). Everything here is `looseObject`: parse what we
+ * understand, carry the rest, and let the resolver refuse (never guess) when a
+ * referenced shape is not one of the known ones.
+ */
+
+/** A named per-rank value table. `values[0]` is rank 0 (unlearned); ranks are 1-indexed. */
+export const CDragonSpellDataValueSchema = z.looseObject({
+  name: z.string(),
+  values: z.array(z.number()).optional(),
+});
+export type CDragonSpellDataValue = z.infer<typeof CDragonSpellDataValueSchema>;
+
+/**
+ * A tooltip calculation. `GameCalculation` carries `mFormulaParts`;
+ * `GameCalculationModified` scales another calculation by `mMultiplier`.
+ * Other `__type`s exist (e.g. `GameCalculationConditional`) — the resolver
+ * treats them as unresolvable.
+ */
+export const CDragonGameCalculationSchema = z.looseObject({
+  __type: z.string(),
+  mFormulaParts: z.array(z.unknown()).optional(),
+  mMultiplier: z.unknown().optional(),
+  mModifiedGameCalculation: z.string().optional(),
+  mDisplayAsPercent: z.boolean().optional(),
+});
+export type CDragonGameCalculation = z.infer<
+  typeof CDragonGameCalculationSchema
+>;
+
+export const CDragonSpellRecordSchema = z.looseObject({
+  DataValues: z.array(CDragonSpellDataValueSchema).optional(),
+  mSpellCalculations: z
+    .record(z.string(), CDragonGameCalculationSchema)
+    .optional(),
+});
+export type CDragonSpellRecord = z.infer<typeof CDragonSpellRecordSchema>;
+
+export const CDragonSpellObjectSchema = z.looseObject({
+  __type: z.literal("SpellObject"),
+  mSpell: CDragonSpellRecordSchema.optional(),
+});
+export type CDragonSpellObject = z.infer<typeof CDragonSpellObjectSchema>;
+
+export const CDragonCharacterRecordSchema = z.looseObject({
+  __type: z.literal("CharacterRecord"),
+  /** Slot-ordered Q/W/E/R spell names, relative to `Characters/{alias}/Spells/`. */
+  spellNames: z.array(z.string()).optional(),
+  /** Full bin key of the passive's SpellObject. */
+  mCharacterPassiveSpell: z.string().optional(),
+});
+export type CDragonCharacterRecord = z.infer<
+  typeof CDragonCharacterRecordSchema
+>;
+
+/** The bin's top level: an object map keyed by bin entry path. */
+export const CDragonChampionBinSchema = z.record(z.string(), z.unknown());
+export type CDragonChampionBin = z.infer<typeof CDragonChampionBinSchema>;
+
+// Calculation formula parts. Each schema is anchored on its `__type` literal;
+// the resolver tries them in turn and refuses the whole calculation when a
+// part matches none (that keeps "never guess" mechanical).
+
+export const CDragonNamedDataValuePartSchema = z.looseObject({
+  __type: z.literal("NamedDataValueCalculationPart"),
+  mDataValue: z.string(),
+});
+
+export const CDragonStatByCoefficientPartSchema = z.looseObject({
+  __type: z.literal("StatByCoefficientCalculationPart"),
+  /** Omitted means stat 0 (AP). See STAT_NAMES in scripts/ability-facts.ts. */
+  mStat: z.number().int().optional(),
+  /** Omitted means formula 0 (total); 1 = base, 2 = bonus. */
+  mStatFormula: z.number().int().optional(),
+  mCoefficient: z.number(),
+});
+
+export const CDragonStatByNamedDataValuePartSchema = z.looseObject({
+  __type: z.literal("StatByNamedDataValueCalculationPart"),
+  mStat: z.number().int().optional(),
+  mStatFormula: z.number().int().optional(),
+  mDataValue: z.string(),
+});
+
+export const CDragonNumberPartSchema = z.looseObject({
+  __type: z.literal("NumberCalculationPart"),
+  /** Omitted means the engine default 0. */
+  mNumber: z.number().optional(),
+});
+
+export const CDragonCharLevelInterpolationPartSchema = z.looseObject({
+  __type: z.literal("ByCharLevelInterpolationCalculationPart"),
+  mStartValue: z.number().optional(),
+  mEndValue: z.number().optional(),
+});
+
+export const CDragonBreakpointSchema = z.looseObject({
+  mLevel: z.number().int(),
+  /** From this level onward every level-up adds this amount. */
+  mBonusPerLevelAtAndAfter: z.number().optional(),
+  /** One-time step increase at exactly this level. */
+  mAdditionalBonusAtThisLevel: z.number().optional(),
+});
+
+export const CDragonCharLevelBreakpointsPartSchema = z.looseObject({
+  __type: z.literal("ByCharLevelBreakpointsCalculationPart"),
+  mLevel1Value: z.number().optional(),
+  mBreakpoints: z.array(CDragonBreakpointSchema).optional(),
+});
+
+export const CDragonSumOfSubPartsPartSchema = z.looseObject({
+  __type: z.literal("SumOfSubPartsCalculationPart"),
+  mSubparts: z.array(z.unknown()),
+});
+
+/**
+ * References the spell's effect-amount table — the same table Data Dragon
+ * publishes as `effect`/`effectBurn` (`{{ eN }}`), so index N resolves from
+ * the committed champion JSON's `effectBurn[N]`.
+ */
+export const CDragonEffectValuePartSchema = z.looseObject({
+  __type: z.literal("EffectValueCalculationPart"),
+  /** Omitted means the engine default 0 (which has no published effect). */
+  mEffectIndex: z.number().int().optional(),
+});
+
+/**
+ * `{f3cbe7b2}` is the (hash-named) part that inlines another calculation from
+ * the same spell by key — self-documenting via its `mSpellCalculationKey`
+ * field (e.g. Pyke's `RDamage` referenced from `ReducedDamageFinal`).
+ */
+export const CDragonCalculationReferencePartSchema = z.looseObject({
+  __type: z.literal("{f3cbe7b2}"),
+  mSpellCalculationKey: z.string(),
+});

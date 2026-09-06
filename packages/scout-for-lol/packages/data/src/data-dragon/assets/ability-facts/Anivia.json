@@ -1,0 +1,270 @@
+{
+  "championKey": "Anivia",
+  "championName": "Anivia",
+  "abilities": {
+    "passive": {
+      "name": "Rebirth",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Cooldown": [
+          240
+        ]
+      },
+      "resolvedDescription": "Upon taking fatal damage, Anivia reverts to an egg and is reborn with full health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Flash Frost",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1075,
+        1075,
+        1075,
+        1075,
+        1075
+      ],
+      "dataValues": {
+        "PassthroughBaseDamage": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "ExplosionBaseDamage": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "StunDuration": [
+          1.1,
+          1.2,
+          1.3,
+          1.4,
+          1.5
+        ],
+        "SlowDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Anivia fires a massive chunk of ice, dealing 50/70/90/110/130 (+25% AP) magic damage and Chilling enemies for 3 seconds, Slowing them by 20/30/40%. At the end of its range, the ice detonates, Stunning enemies for 1.1/1.2/1.3/1.4/1.5 seconds and dealing 60/95/130/165/200 (+45% AP) magic damage. Anivia can Recast this ability while the ice flies to detonate it early.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Crystallize",
+      "maxRank": 5,
+      "cooldownByRank": [
+        17,
+        17,
+        17,
+        17,
+        17
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "WallDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "WallWidth": [
+          400,
+          500,
+          600,
+          700,
+          800
+        ],
+        "WallChunks": [
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "ChampPushDistance": [
+          120,
+          120,
+          120,
+          120,
+          120
+        ],
+        "NonChampPushDistance": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ]
+      },
+      "resolvedDescription": "Anivia summons a wall of ice 400/500/600/700/800 units wide. The wall lasts for 5 seconds before it melts.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Frostbite",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          55,
+          80,
+          105,
+          130,
+          155
+        ]
+      },
+      "resolvedDescription": "Anivia blasts an enemy with a freezing wind, dealing 55/80/105/130/155 (+55% AP) magic damage. Against Chilled enemies, Anivia deals 110/160/210/260/310 (+110% AP) magic damage instead.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Glacial Storm",
+      "maxRank": 3,
+      "cooldownByRank": [
+        4,
+        3,
+        2
+      ],
+      "costByRank": [
+        60,
+        60,
+        60
+      ],
+      "costType": "+ 35/45/55 Mana per second",
+      "rangeByRank": [
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "DamagePerSecond": [
+          30,
+          45,
+          60
+        ],
+        "BonusMultiplier": [
+          300,
+          300,
+          300
+        ],
+        "ManaCostPerSecond": [
+          35,
+          45,
+          55
+        ],
+        "TickRate": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowAmount": [
+          20,
+          30,
+          40
+        ],
+        "ChillDuration": [
+          1,
+          1,
+          1
+        ],
+        "GrowthTime": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AdditionalSlowPercentAtMax": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowDurationAtMaxMultiplier": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "LeashWarning": [
+          1000,
+          1000,
+          1000
+        ],
+        "LeashBreak": [
+          1000,
+          1000,
+          1000
+        ],
+        "SlowPercentEmpoweredTT": [
+          30,
+          45,
+          60
+        ],
+        "MinCooldown": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Toggle: Anivia calls forth a driving rain of ice and hail that Slows enemies by 20/30/40% and deals 30/45/60 (+12.5% AP) magic damage per second. The storm increases in size over 1.5 seconds. When the storm is fully formed, it Chills, Slows by 30/45/60%, and does 90/135/180 (+37.5% AP) magic damage per second instead.",
+      "unresolved": []
+    }
+  }
+}

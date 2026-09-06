@@ -1,0 +1,376 @@
+{
+  "championKey": "Evelynn",
+  "championName": "Evelynn",
+  "abilities": {
+    "passive": {
+      "name": "Demon Shade",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DemonShadeTimer": [
+          4
+        ],
+        "StealthDropTimer": [
+          1.5
+        ]
+      },
+      "resolvedDescription": "When out of combat, Evelynn enters Demon Shade. Demon Shade heals Evelynn when she is low on health and grants Camouflage after level 6.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Hate Spike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "MissileBaseDamage": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "BonusDamageBase": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "CooldownRefund": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "HateSpikeBaseDamage": [
+          25,
+          30,
+          35,
+          40,
+          45
+        ],
+        "BonusDamageAPRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "HateSpikeAPRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "QStackCount": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "FakeCD": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Evelynn strikes with her Lasher, dealing 25/30/35/40/45 (+25% AP) magic damage to the first enemy hit and causing Evelynn's next 3 Attacks or Abilities on that unit to deal an additional 15/25/35/45/55 (+25% AP) magic damage. Evelynn can Recast this Ability up to 3 times. Recast: Evelynn fires spikes through the nearest enemy, dealing 25/30/35/40/45 (+25% AP) magic damage to all enemies hit.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Allure",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1300,
+        1400,
+        1500,
+        1600
+      ],
+      "dataValues": {
+        "CharmDuration": [
+          1.25,
+          1.5,
+          1.75,
+          2,
+          2.25
+        ],
+        "MonsterCharm": [
+          3,
+          3.25,
+          3.5,
+          3.75,
+          4
+        ],
+        "MRShred": [
+          0.35,
+          0.375,
+          0.4,
+          0.425,
+          0.45
+        ],
+        "ShredDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MonsterDamage": [
+          250,
+          300,
+          350,
+          400,
+          450
+        ],
+        "SlowAmount": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "SlowDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MonsterExtraCharm": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowDuringCharm": [
+          -0.45,
+          -0.45,
+          -0.45,
+          -0.45,
+          -0.45
+        ],
+        "ActualCD": [
+          15,
+          14,
+          13,
+          12,
+          11
+        ],
+        "BuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "NonCharmSlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Evelynn marks a champion or monster for 5 seconds. If Evelynn hits the target with an Attack or Ability, she will expunge the mark, refund its cost, and Slow the target by 45% for 0.75 seconds. If the mark lasts at least 2.5 seconds, expunging it has extra effects:Against champions: Charms them for 1.25/1.5/1.75/2/2.25 second(s) and removes 35/37.5/40/42.5/45% Magic Resist for 4 seconds.Against monsters: Charms them for 3/3.25/3.5/3.75/4 seconds and deals 250/300/350/400/450 (+60% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Whiplash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        210,
+        210,
+        210,
+        210,
+        210
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "EmpoweredDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "BasePercentHealth": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "EmpoweredPercentHealth": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MonsterCap": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "SpeedAmount": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "SpeedDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MoveSpeed": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "MSDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MonsterDamageCamp": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ]
+      },
+      "resolvedDescription": "Evelynn whips an enemy, dealing 60/90/120/150/180 plus {{ percenthealthbasetooltip }} max Health magic damage. Evelynn gains 30/35/40/45/50% Move Speed for 2 seconds. Entering Demon Shade refreshes this Ability's cooldown and empowers it. When this Ability is empowered, Evelynn dashes to the target and deals 80/120/160/200/240 plus {{ percenthealthempoweredtooltip }} max Health magic damage to her target and everyone she passes through instead.",
+      "unresolved": [
+        "percenthealthbasetooltip",
+        "percenthealthempoweredtooltip"
+      ]
+    },
+    "R": {
+      "name": "Last Caress",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "CritMultiplier": [
+          2.4,
+          2.4,
+          2.4
+        ],
+        "PassiveReset": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "BaseDamage": [
+          125,
+          250,
+          375
+        ],
+        "CritBonus": [
+          1.4,
+          1.4,
+          1.4
+        ],
+        "CritTreshold": [
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Evelynn unleashes her demonic energy, dealing heavy damage, becoming Untargetable and teleporting backwards. She deals 125/250/375 (+75% AP) magic damage, increased to 300.00001/600.00002/900.00004 (+180.00001% AP) against enemies below 30% Health. Upon cast, set Demon Shade to a 1.25 second cooldown.",
+      "unresolved": []
+    }
+  }
+}
