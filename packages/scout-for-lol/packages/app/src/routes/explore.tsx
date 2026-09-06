@@ -1,6 +1,6 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -16,6 +16,7 @@ import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
 import type { ExploreTranscriptActions } from "#src/components/explore-transcript-actions.ts";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
+import { useExploreConversation } from "#src/hooks/use-explore-conversation.ts";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
@@ -426,43 +427,6 @@ function ExploreQuota(props: {
  * Separated from the component so the route's own logic stays about handling
  * turns rather than unwrapping query state.
  */
-function useExploreConversation(conversationId: string | null) {
-  const trpc = useTRPC();
-  const statusQuery = useQuery(trpc.explore.status.queryOptions());
-  // `strict` because `enabled` is the authorization for this page: a stale
-  // `enabled: true` read through `getOrElse` would keep the owner-only
-  // transcript on screen precisely when Scout could not reverify guild
-  // membership. Collapsing `degraded` to `error` makes the recheck failure
-  // close the page instead of failing open.
-  const status = Loaded.strict(
-    Loaded.fromQuery(statusQuery, ["explore.status"]),
-  );
-  const availability = Loaded.getOrElse(status, undefined);
-  const enabled = availability?.enabled === true;
-  const transcript = useQuery({
-    ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
-    enabled: enabled && conversationId !== null,
-  });
-
-  // The transcript is the owner-only content the status check guards, so it is
-  // `strict` for the same reason the check is: a retained conversation must not
-  // outlive the authorization that produced it.
-  const conversationState = Loaded.strict(
-    Loaded.fromQuery(transcript, ["explore.get"]),
-  );
-  const conversation = Loaded.getOrElse(conversationState, undefined);
-  return {
-    status,
-    conversationState,
-    statusQuery,
-    enabled,
-    quota: availability?.quota ?? [],
-    transcript,
-    messages: conversation?.messages ?? [],
-    title: conversation?.conversation.title ?? "Explore",
-    shared: conversation?.conversation.shareToken ?? null,
-  };
-}
 
 const EXAMPLES = [
   "Which champions have the highest win rate?",
