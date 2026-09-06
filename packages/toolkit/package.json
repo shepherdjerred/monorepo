@@ -23,8 +23,8 @@
     "test:integration": "bun --no-install --bun vitest --config ../../vitest.config.ts run test-integration",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "eslint . && check-architecture",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",

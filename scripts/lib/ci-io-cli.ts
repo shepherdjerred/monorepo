@@ -98,8 +98,8 @@ const CliOptionsSchema = z
 export type CliOptions = z.infer<typeof CliOptionsSchema>;
 
 export const CI_IO_USAGE = `Usage:
-  bun scripts/ci-io-report.ts --build <number>[,<number>...] [options]
-  bun scripts/ci-io-report.ts --from <ISO> --to <ISO> [options]
+  bun scripts/ci/ci-io-report.ts --build <number>[,<number>...] [options]
+  bun scripts/ci/ci-io-report.ts --from <ISO> --to <ISO> [options]
 
 Options:
   --baseline-build <number>[,<number>...]     Compare exact prior builds

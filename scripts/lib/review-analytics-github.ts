@@ -1,5 +1,5 @@
 /**
- * GitHub reads behind `scripts/review-analytics.ts`: listing pull requests,
+ * GitHub reads behind `scripts/review/review-analytics.ts`: listing pull requests,
  * reconstructing each provider review of each head, and blaming the line a
  * finding points at.
  *

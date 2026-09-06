@@ -10,7 +10,7 @@ import { redactSecrets } from "#shared/redact.ts";
 // /proc/<pid>/cmdline, so a `--token` value is exposed to anything sharing the
 // pod's PID namespace. gcx documents this env form as its CI/CD path and its
 // own login error names it as the alternative to the flag. `--server` is not a
-// credential and stays an argument. scripts/environment-variable-rules.ts
+// credential and stays an argument. scripts/checks/environment-variable-rules.ts
 // exempts this file for that vendor spelling; GRAFANA_URL/GRAFANA_API_KEY
 // remain the canonical names this repo reads from.
 const GCX_CONTEXT_NAME = "homelab";

@@ -217,7 +217,7 @@ describe("release refiner remote verification", () => {
           },
           message: "chore(root): refine release notes for 2026-08-28",
         },
-        files: [{ filename: "scripts/release.ts" }],
+        files: [{ filename: "scripts/release/release.ts" }],
       }),
     };
     const testHarness = harness({

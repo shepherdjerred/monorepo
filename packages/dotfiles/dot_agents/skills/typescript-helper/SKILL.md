@@ -24,7 +24,7 @@ Always inspect the selected toolchain. A bare `tsc` on `PATH` can resolve to the
 installed; run from the package that declares `@typescript/native`, then use
 the explicit native-compiler path when both are present. This matters with
 isolated workspace linkers because the repository root may not own the package's
-compiler dependency. This monorepo's `scripts/compliance-check.ts` enforces the
+compiler dependency. This monorepo's `scripts/checks/compliance-check.ts` enforces the
 same `PATH=node_modules/@typescript/native/bin:$PATH tsc` form:
 
 ```bash

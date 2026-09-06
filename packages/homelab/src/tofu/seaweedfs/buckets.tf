@@ -319,7 +319,7 @@ resource "terraform_data" "streambot_voice_captures_lifecycle" {
 # Versioned scout-for-lol site artifacts — one prod-flavored build of the
 # marketing site + SPA per main build, under `2.0.0-<build>/` with a sibling
 # `2.0.0-<build>.json` manifest. Written by the CI sites step
-# (scripts/scout-site-release.ts archive); the prod bucket is synced from a
+# (scripts/release/scout-site-release.ts archive); the prod bucket is synced from a
 # pinned version here at promotion time (reconcile-prod), so prod site content
 # always matches the promoted backend image. This bucket MUST exist via Tofu
 # before the first archive sync runs — SeaweedFS auto-creates buckets on first

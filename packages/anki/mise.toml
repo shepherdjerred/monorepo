@@ -3,4 +3,4 @@
 
 [tasks.dev]
 description = "Generate Anki decks from markdown"
-run = "bun ../../scripts/generate-anki.ts"
+run = "bun ../../scripts/misc/generate-anki.ts"

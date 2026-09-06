@@ -89,7 +89,7 @@ The required PR review gate is Codex. Its latest PR review must name the exact
 head commit; a clean review is represented by Codex's 👍 reaction. Unresolved
 Codex findings then fold into the gate decision. Qodo remains available as an
 optional provider, but is not required by Buildkite for now. The gate is
-[`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/wait-for-review.ts).
+[`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier
 push is evidence about code that is no longer proposed, and accepting it would

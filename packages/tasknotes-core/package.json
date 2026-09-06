@@ -12,6 +12,6 @@
     "typecheck": "cargo check --workspace --all-targets --all-features",
     "deny": "cargo deny --all-features check",
     "test:ci": "bun run test:report",
-    "test:report": "bun ../../scripts/run-ci-test.ts"
+    "test:report": "bun ../../scripts/ci/run-ci-test.ts"
   }
 }

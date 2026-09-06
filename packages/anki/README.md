@@ -17,10 +17,10 @@ front; the body below it is the back.
 
 ```bash
 cd packages/anki
-mise run dev   # runs: bun ../../scripts/generate-anki.ts
+mise run dev   # runs: bun ../../scripts/misc/generate-anki.ts
 ```
 
-The generator (`scripts/generate-anki.ts` at the repo root) runs
+The generator (`scripts/misc/generate-anki.ts` at the repo root) runs
 `bunx mdanki <deck>.md <deck>.apkg --config settings.json` for each deck.
 `settings.json` holds the shared card template: question/answer HTML formats
 and the card CSS.

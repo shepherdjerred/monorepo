@@ -15,7 +15,7 @@ bun run build       # production build to dist/
 bun run test        # bun run test
 bun run lint        # eslint .
 bun run typecheck   # tsc --noEmit
-bun run deploy      # bun ../../scripts/deploy-site.ts better-skill-capped
+bun run deploy      # bun ../../scripts/release/deploy-site.ts better-skill-capped
 ```
 
 `deploy` syncs `dist/` to the `better-skill-capped` SeaweedFS bucket serving
