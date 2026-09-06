@@ -1,27 +1,20 @@
-import { generateText, stepCountIs, ToolLoopAgent } from "ai";
+import { Output, stepCountIs, ToolLoopAgent } from "ai";
 import { redactSecrets } from "@shepherdjerred/llm-observability";
 import { z } from "zod";
 import {
-  RouteDecisionSchema,
-  SpecialistTaskPacketSchema,
-  type RouteDecision,
-  type SpecialistId,
-  type SpecialistTaskPacket,
+  TaskPacketSchema,
+  TurnAnswerSchema,
+  type TaskPacket,
+  type TurnAnswer,
+  type TurnDisposition,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import {
-  getToolSet,
-  toolsToRecord,
-} from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
+import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
-import {
-  directInstructions,
-  isolatedSpecialistInstructions,
-  specialistInstructions,
-} from "./prompts.ts";
+import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 
 const logger = loggers.agent.child("execution");
 
@@ -55,23 +48,13 @@ type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
 
 export type AgentExecutionResult = {
   text: string;
+  disposition: TurnDisposition;
   finishReason: string;
   inputTokens: number;
   outputTokens: number;
   stepCount: number;
   toolEvents: SessionToolEvent[];
 };
-
-export type DirectExecutor = (
-  packet: SpecialistTaskPacket,
-  decision: RouteDecision,
-) => Promise<AgentExecutionResult>;
-
-export type SpecialistExecutor = (
-  specialist: SpecialistId,
-  packet: SpecialistTaskPacket,
-  decision: RouteDecision,
-) => Promise<AgentExecutionResult>;
 
 export type IsolatedAgentOptions = {
   model?: string;
@@ -130,25 +113,7 @@ export function summarizeToolResultForSession(
   });
 }
 
-export function requireSuccessfulPrimaryTool(
-  rawDecision: RouteDecision,
-  toolEvents: SessionToolEvent[],
-): void {
-  const decision = RouteDecisionSchema.parse(rawDecision);
-  if (decision.disposition !== "supported") {
-    throw new Error("Specialist execution requires a supported route decision");
-  }
-  const succeeded = toolEvents.some(
-    ({ toolId, success }) => toolId === decision.primaryToolId && success,
-  );
-  if (!succeeded) {
-    throw new Error(
-      `Supported route did not complete its primary tool successfully: ${decision.primaryToolId ?? "null"}`,
-    );
-  }
-}
-
-function taskPrompt(packet: SpecialistTaskPacket): string {
+function taskPrompt(packet: TaskPacket): string {
   const referenceFailureText =
     packet.referenceResolutionError == null
       ? ""
@@ -156,7 +121,7 @@ function taskPrompt(packet: SpecialistTaskPacket): string {
   return `Current request from ${packet.username} (${packet.userId}):\n${packet.request}\n\nDiscord context:\nguild=${packet.guildId}\nchannel=${packet.channelId}${packet.threadId == null ? "" : `\nthread=${packet.threadId}`}\n\nRelevant context:\n${packet.context}${referenceFailureText}`;
 }
 
-function taskMessages(packet: SpecialistTaskPacket) {
+function taskMessages(packet: TaskPacket) {
   return [
     {
       role: "user" as const,
@@ -174,109 +139,87 @@ function taskMessages(packet: SpecialistTaskPacket) {
   ];
 }
 
-export const executeDirect: DirectExecutor = async (rawPacket, rawDecision) => {
-  const packet = SpecialistTaskPacketSchema.parse(rawPacket);
-  const decision = RouteDecisionSchema.parse(rawDecision);
-  if (decision.route !== "direct") {
-    throw new Error("Direct executor received a specialist route");
-  }
-  const config = getConfig();
-  const runtime = getLlmRuntime();
-  return await withSpan(
-    "birmel.agent.direct",
-    {
-      guildId: packet.guildId,
-      channelId: packet.channelId,
-      userId: packet.userId,
-      route: "direct",
-      persona: packet.personaId,
-      operation: "agent.direct.generate",
-    },
-    async (span) => {
-      const startedAt = performance.now();
-      const result = await generateText({
-        model: runtime.languageModel(config.openRouter.model),
-        system: `${directInstructions(decision)}\n\n${packet.persona}`,
-        messages: taskMessages(packet),
-        maxOutputTokens: config.openRouter.maxTokens,
-        abortSignal: AbortSignal.timeout(config.agent.responseTimeoutMs),
-        providerOptions: getOpenRouterProviderOptions(),
-        ...runtime.callOptions({
-          workload: "birmel.agent.direct",
-          sessionId: packet.threadId ?? packet.channelId,
-        }),
-      });
-      span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
-      span.setAttribute(
-        "gen_ai.usage.input_tokens",
-        result.usage.inputTokens ?? 0,
-      );
-      span.setAttribute(
-        "gen_ai.usage.output_tokens",
-        result.usage.outputTokens ?? 0,
-      );
-      logger.info("Direct agent completed", {
-        route: "direct",
-        personaId: packet.personaId,
-        finishReason: result.finishReason,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        stepCount: 1,
-        durationMs: performance.now() - startedAt,
-      });
-      return {
-        text: result.text,
-        finishReason: result.finishReason,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
-        stepCount: 1,
-        toolEvents: [],
-      };
-    },
+/**
+ * The anti-hallucination gate.
+ *
+ * The old runtime named one tool before the turn began and threw unless that
+ * exact tool succeeded. That fixed the plan before any evidence existed, so an
+ * ordinary "this actually needs a different tool" became a hard failure.
+ *
+ * This checks the same property from the other end: whatever the reply says it
+ * relied on must correspond to a tool call that really succeeded this turn. It
+ * covers every claim rather than one pre-named tool, and it lets the agent
+ * change its mind freely along the way.
+ */
+export function requireGroundedAnswer(
+  answer: TurnAnswer,
+  toolEvents: SessionToolEvent[],
+): void {
+  const succeeded = new Set(
+    toolEvents
+      .filter(({ success }) => success)
+      .map(({ toolCallId }) => toolCallId),
   );
-};
+  const ungrounded = answer.reliedOnToolCallIds.filter(
+    (toolCallId) => !succeeded.has(toolCallId),
+  );
+  if (ungrounded.length > 0) {
+    throw new Error(
+      `Answer cited tool calls that did not succeed this turn: ${ungrounded.join(", ")}`,
+    );
+  }
+  // Checking the global success set is not enough: a harmless lookup can
+  // succeed while the requested mutation never runs, and an answer citing
+  // nothing would still pass. Supported work must cite at least one call, and
+  // every cited call is already known to have succeeded by the check above.
+  if (
+    answer.disposition === "supported" &&
+    answer.reliedOnToolCallIds.length === 0
+  ) {
+    throw new Error(
+      "Answer claims supported work without citing a successful tool call",
+    );
+  }
+}
 
-async function executeSpecialistWithOptions(
-  specialist: SpecialistId,
-  rawPacket: SpecialistTaskPacket,
-  decision: RouteDecision | null,
-  options: IsolatedAgentOptions,
+export async function executeTurn(
+  rawPacket: TaskPacket,
+  options: IsolatedAgentOptions = {},
 ): Promise<AgentExecutionResult> {
-  const packet = SpecialistTaskPacketSchema.parse(rawPacket);
+  const packet = TaskPacketSchema.parse(rawPacket);
   const config = getConfig();
   const runtime = getLlmRuntime();
-  const tools = toolsToRecord(getToolSet(specialist));
-  const registeredToolIds = Object.keys(tools);
+  const registeredToolIds = Object.keys(allTools);
   return await withSpan(
-    `birmel.agent.${specialist}`,
+    "birmel.agent.turn",
     {
       guildId: packet.guildId,
       channelId: packet.channelId,
       userId: packet.userId,
-      route: specialist,
       persona: packet.personaId,
-      operation: `agent.${specialist}.generate`,
+      operation: "agent.turn.generate",
     },
     async (span) => {
       const startedAt = performance.now();
+      const maxSteps = config.agent.maxSteps;
       const agent = new ToolLoopAgent({
-        id: `birmel-${specialist}`,
+        id: "birmel-agent",
         model: runtime.languageModel(options.model ?? config.openRouter.model, [
           "tools",
         ]),
-        instructions: `${
-          decision === null
-            ? isolatedSpecialistInstructions(specialist)
-            : specialistInstructions(specialist, decision)
-        }\n\n${packet.persona}`,
-        tools,
-        stopWhen: stepCountIs(config.agent.maxSteps),
+        instructions: `${AGENT_INSTRUCTIONS}\n\n${packet.persona}`,
+        tools: allTools,
+        stopWhen: stepCountIs(maxSteps),
+        // Spend the last step answering rather than starting work that cannot
+        // finish. Without this the run can end mid-tool-call, and `output`
+        // throws NoOutputGeneratedError because the final step never stopped.
         prepareStep: ({ stepNumber }) =>
-          stepNumber >= config.agent.maxSteps - 1
+          stepNumber >= maxSteps - 1
             ? { activeTools: [], toolChoice: "none" }
             : undefined,
         maxOutputTokens: config.openRouter.maxTokens,
         providerOptions: getOpenRouterProviderOptions(options),
+        output: Output.object({ schema: TurnAnswerSchema }),
       });
       const result = await agent.generate({
         messages: taskMessages(packet),
@@ -284,7 +227,7 @@ async function executeSpecialistWithOptions(
           options.timeoutMs ?? config.agent.responseTimeoutMs,
         ),
         ...runtime.callOptions({
-          workload: `birmel.agent.${specialist}`,
+          workload: "birmel.agent.turn",
           sessionId: packet.threadId ?? packet.channelId,
         }),
       });
@@ -293,10 +236,8 @@ async function executeSpecialistWithOptions(
           summarizeToolResultForSession(toolResult, registeredToolIds),
         ),
       );
-      if (decision !== null) {
-        requireSuccessfulPrimaryTool(decision, toolEvents);
-        span.setAttribute("birmel.primary_tool_succeeded", true);
-      }
+      const answer = TurnAnswerSchema.parse(result.output);
+      requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute(
         "gen_ai.usage.input_tokens",
@@ -307,17 +248,20 @@ async function executeSpecialistWithOptions(
         result.usage.outputTokens ?? 0,
       );
       span.setAttribute("birmel.agent_steps", result.steps.length);
-      logger.info("Specialist agent completed", {
-        route: specialist,
+      span.setAttribute("birmel.turn_disposition", answer.disposition);
+      logger.info("Agent turn completed", {
+        disposition: answer.disposition,
         personaId: packet.personaId,
         finishReason: result.finishReason,
         inputTokens: result.usage.inputTokens ?? 0,
         outputTokens: result.usage.outputTokens ?? 0,
         stepCount: result.steps.length,
+        toolCallCount: toolEvents.length,
         durationMs: performance.now() - startedAt,
       });
       return {
-        text: result.text,
+        text: answer.answer,
+        disposition: answer.disposition,
         finishReason: result.finishReason,
         inputTokens: result.usage.inputTokens ?? 0,
         outputTokens: result.usage.outputTokens ?? 0,
@@ -328,20 +272,13 @@ async function executeSpecialistWithOptions(
   );
 }
 
-export const executeSpecialist: SpecialistExecutor = async (
-  specialist,
-  rawPacket,
-  decision,
-) => await executeSpecialistWithOptions(specialist, rawPacket, decision, {});
-
-export async function executeIsolatedAutomationAgent(
-  packet: SpecialistTaskPacket,
+/**
+ * Scheduled jobs run the same agent with the same tools. They differ only in
+ * their model/effort overrides, which the job payload supplies.
+ */
+export async function executeIsolatedAgent(
+  packet: TaskPacket,
   options: IsolatedAgentOptions,
 ): Promise<AgentExecutionResult> {
-  return await executeSpecialistWithOptions(
-    "automation",
-    packet,
-    null,
-    options,
-  );
+  return await executeTurn(packet, options);
 }

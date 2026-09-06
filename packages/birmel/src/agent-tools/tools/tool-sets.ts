@@ -1,15 +1,18 @@
 import type { ToolSet } from "ai";
 import { z } from "zod";
-import {
-  BirmelToolMetadataSchema,
-  SpecialistIdSchema,
-} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { BirmelToolMetadataSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { getRegisteredToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 /**
- * Specialized tool sets for different agent types.
- * Each tool belongs to exactly one of the six specialist agents.
+ * Every registered tool, flat.
+ *
+ * These used to be four arrays partitioned by "specialist", with the router
+ * picking a partition before any tool could run. The partition was never a
+ * real boundary - it granted no authority, and it had already been bent (member
+ * tools lived under moderation purely so the moderation agent would not have to
+ * delegate every role change). One agent now sees all of them and decides as it
+ * goes, so the only thing that matters is that the list is complete.
  */
 
 import { guildTools } from "./discord/guild.ts";
@@ -38,30 +41,15 @@ import { getCandidateStatsTool } from "./elections/candidate-stats.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
 import { generateImageTool } from "./images/generate-image.ts";
 
-/**
- * Messaging Agent - handles messages, threads, polls, memory, and sessions
- */
-export const messagingToolSet = [
+export const registeredTools = [
   ...messageTools,
   ...threadTools,
   ...pollTools,
   ...activityTools,
   manageMemoryTool,
   manageAgentSessionTool,
-];
-
-/**
- * Server Agent - handles guild information and channels
- */
-export const serverToolSet = [...guildTools, ...channelTools];
-
-/**
- * Moderation Agent - handles moderation, roles, automod, webhooks.
- * Includes memberTools because role grants/revokes and nickname changes are
- * conceptually moderation actions; without them the moderation-agent would
- * have to delegate to server-agent for every role assignment.
- */
-export const moderationToolSet = [
+  ...guildTools,
+  ...channelTools,
   ...moderationTools,
   ...roleTools,
   ...memberTools,
@@ -69,12 +57,6 @@ export const moderationToolSet = [
   ...webhookTools,
   ...inviteTools,
   ...emojiTools,
-];
-
-/**
- * Automation Agent - handles automation, external APIs, events, elections, birthdays
- */
-export const automationToolSet = [
   executeShellCommandTool,
   manageJobTool,
   browserAutomationTool,
@@ -87,24 +69,6 @@ export const automationToolSet = [
   generateImageTool,
 ];
 
-export type AgentType = z.infer<typeof SpecialistIdSchema>;
-
-/**
- * Get the appropriate tool set for an agent type
- */
-export function getToolSet(agentType: AgentType) {
-  switch (agentType) {
-    case "messaging":
-      return messagingToolSet;
-    case "server":
-      return serverToolSet;
-    case "moderation":
-      return moderationToolSet;
-    case "automation":
-      return automationToolSet;
-  }
-}
-
 const CapabilityCatalogSourceSchema = z
   .object({
     id: z.string().min(1).max(64),
@@ -115,7 +79,6 @@ const CapabilityCatalogSourceSchema = z
 
 export const CapabilityCatalogEntrySchema = z.strictObject({
   id: z.string().min(1).max(64),
-  specialist: SpecialistIdSchema,
   riskClass: BirmelToolMetadataSchema.shape.riskClass,
   description: z.string().min(1).max(600),
 });
@@ -129,37 +92,33 @@ const CapabilityCatalogSchema = z
   .max(64);
 
 /**
- * Build the router catalog from the actual specialist tool sets. The metadata
- * registry must match the executable inventory exactly so routing cannot
- * advertise a stale or unregistered capability.
+ * Describe every executable tool, and assert the metadata registry matches the
+ * executable inventory exactly.
+ *
+ * The router that once consumed this is gone, but the invariant is the reason
+ * the function exists: metadata and executables drifting apart is how a tool
+ * ends up with no timeout or risk class. Called at startup so the process
+ * refuses to boot on a mismatch.
  */
 export function getCapabilityCatalog(): CapabilityCatalogEntry[] {
   const entries: CapabilityCatalogEntry[] = [];
   const observedIds = new Set<string>();
-  for (const specialist of SpecialistIdSchema.options) {
-    for (const rawTool of getToolSet(specialist)) {
-      const tool = CapabilityCatalogSourceSchema.parse(rawTool);
-      if (tool.birmelMetadata.specialist !== specialist) {
-        throw new Error(
-          `Tool ${tool.id} is registered under ${specialist} but owned by ${tool.birmelMetadata.specialist}`,
-        );
-      }
-      if (tool.birmelMetadata.id !== tool.id) {
-        throw new Error(`Tool metadata ID does not match ${tool.id}`);
-      }
-      if (observedIds.has(tool.id)) {
-        throw new Error(`Tool ${tool.id} is registered more than once`);
-      }
-      observedIds.add(tool.id);
-      entries.push(
-        CapabilityCatalogEntrySchema.parse({
-          id: tool.id,
-          specialist,
-          riskClass: tool.birmelMetadata.riskClass,
-          description: tool.description,
-        }),
-      );
+  for (const rawTool of registeredTools) {
+    const tool = CapabilityCatalogSourceSchema.parse(rawTool);
+    if (tool.birmelMetadata.id !== tool.id) {
+      throw new Error(`Tool metadata ID does not match ${tool.id}`);
     }
+    if (observedIds.has(tool.id)) {
+      throw new Error(`Tool ${tool.id} is registered more than once`);
+    }
+    observedIds.add(tool.id);
+    entries.push(
+      CapabilityCatalogEntrySchema.parse({
+        id: tool.id,
+        riskClass: tool.birmelMetadata.riskClass,
+        description: tool.description,
+      }),
+    );
   }
   const metadataIds = getRegisteredToolMetadata()
     .map(({ id }) => id)

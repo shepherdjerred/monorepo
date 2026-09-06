@@ -1,10 +1,7 @@
 import { test, vi } from "vitest";
 import { z } from "zod";
 import type { PrismaClient } from "#generated/prisma/client/index.js";
-import {
-  RouteDecisionSchema,
-  TurnInputSchema,
-} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { TurnInputSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import type { MessageHandler } from "@shepherdjerred/birmel/discord/events/message-create.ts";
 import {
   FLOW_HARNESS_TEST_TIMEOUT_MS,
@@ -24,14 +21,12 @@ import {
 } from "./message-fixture.ts";
 import { suppressAutomaticMemoryExtraction } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { memoryExtractionErrorCount } from "./metrics-inspection.ts";
-const RuntimeOptionsSchema = z.object({
-  turn: TurnInputSchema,
-  route: RouteDecisionSchema,
-  personaId: z.literal("Compact elected persona"),
-  persona: z.literal("PERSONA_SOURCE_SENTINEL"),
-});
-const RouteOptionsSchema = z.object({
-  turn: TurnInputSchema,
+// The agent now receives a task packet, not a turn plus a route decision.
+const AgentPacketSchema = z.object({
+  request: z.string(),
+  guildId: z.string(),
+  channelId: z.string(),
+  userId: z.string(),
   personaId: z.literal("Compact elected persona"),
   persona: z.literal("PERSONA_SOURCE_SENTINEL"),
 });
@@ -49,7 +44,7 @@ const AgentRunRowSchema = z.object({
   errorClass: z.string().nullable(),
   finishReason: z.string().nullable(),
   routeDisposition: z.string().nullable(),
-  primaryToolId: z.string().nullable(),
+  toolCallCount: z.number().int().nonnegative(),
 });
 const AgentRunRowsSchema = z.array(AgentRunRowSchema);
 const scenarios = FlowScenarioSchema.options;
@@ -60,9 +55,7 @@ type MutableScenarioState = {
   editAttempts: string[];
   deliveredEdits: string[];
   contextCalls: number;
-  routerCalls: number;
-  directCalls: number;
-  specialistCalls: number;
+  agentCalls: number;
   toolCalls: number;
   memoryExtractionCalls: number;
   sessionEventCalls: number;
@@ -84,9 +77,7 @@ function createState(scenario: FlowScenario): MutableScenarioState {
     editAttempts: [],
     deliveredEdits: [],
     contextCalls: 0,
-    routerCalls: 0,
-    directCalls: 0,
-    specialistCalls: 0,
+    agentCalls: 0,
     toolCalls: 0,
     memoryExtractionCalls: 0,
     sessionEventCalls: 0,
@@ -98,7 +89,7 @@ function createState(scenario: FlowScenario): MutableScenarioState {
   };
 }
 
-let state = createState("direct");
+let state = createState("conversation");
 
 const fakeSpan = {
   setAttribute(_name: string, _value: unknown): void {
@@ -124,44 +115,27 @@ vi.doMock("@shepherdjerred/birmel/context/turn-context.ts", () => ({
   },
 }));
 
-vi.doMock("@shepherdjerred/birmel/agent-runtime/router.ts", () => ({
-  routeTurn: (rawOptions: unknown) => {
-    RouteOptionsSchema.parse(rawOptions);
-    state.routerCalls += 1;
-    if (state.scenario === "router-malformed") {
-      return RouteDecisionSchema.parse({
-        route: "direct",
-        secondRoute: "server",
-        disposition: "conversation",
-        primaryToolId: null,
-        confidence: 1,
-        rationale: "Ambiguous output",
-      });
-    }
-    const specialist =
-      state.scenario === "specialist-tool" ||
-      state.scenario === "specialist-failure" ||
-      state.scenario === "tool-output-failure";
-    return RouteDecisionSchema.parse({
-      route: specialist ? "messaging" : "direct",
-      disposition: specialist ? "supported" : "conversation",
-      primaryToolId: specialist ? "manage-message" : null,
-      confidence: 1,
-      rationale: specialist ? "Requires one messaging tool" : "Direct chat",
-    });
-  },
-}));
+vi.doMock("@shepherdjerred/birmel/agent-runtime/agent.ts", () => ({
+  executeTurn: (rawPacket: unknown) => {
+    const packet = AgentPacketSchema.parse(rawPacket);
+    state.agentCalls += 1;
 
-vi.doMock("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
-  executeRoutedTurn: (rawOptions: unknown) => {
-    const options = RuntimeOptionsSchema.parse(rawOptions);
-    if (options.route.route === "direct") {
-      state.directCalls += 1;
+    if (state.scenario === "agent-failure") {
+      throw new Error("AGENT_SECRET_EXCEPTION");
+    }
+
+    // A turn that used no tools: the agent decided nothing needed doing.
+    if (
+      state.scenario !== "agent-tool" &&
+      state.scenario !== "tool-output-failure" &&
+      state.scenario !== "ungrounded-answer"
+    ) {
       if (state.scenario === "memory-deletion") {
         suppressAutomaticMemoryExtraction();
       }
       return {
-        text: `direct reply for ${options.turn.discordMessageId}`,
+        text: `conversation reply for ${packet.request}`,
+        disposition: "conversation",
         finishReason: "stop",
         inputTokens: 12,
         outputTokens: 6,
@@ -170,10 +144,6 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
       };
     }
 
-    state.specialistCalls += 1;
-    if (state.scenario === "specialist-failure") {
-      throw new Error("SPECIALIST_SECRET_EXCEPTION");
-    }
     state.toolCalls += 1;
     const ToolResultSchema = z.strictObject({
       success: z.literal(true),
@@ -190,9 +160,20 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/runtime.ts", () => ({
       }
     }
     ToolResultSchema.parse({ success: true, messageId: "tool-message-1" });
+
+    // The grounding gate runs inside the real executor, so the harness
+    // reproduces its failure rather than mocking it away: an answer that cites
+    // a tool call which never succeeded must not reach Discord.
+    if (state.scenario === "ungrounded-answer") {
+      throw new Error(
+        "Answer cited tool calls that did not succeed this turn: call-invented",
+      );
+    }
+
     return {
-      text: `specialist reply for ${options.turn.discordMessageId}`,
-      finishReason: "tool-calls",
+      text: `agent reply for ${packet.request}`,
+      disposition: "supported",
+      finishReason: "stop",
       inputTokens: 20,
       outputTokens: 8,
       stepCount: 2,
@@ -317,7 +298,7 @@ async function queryScenarioRuns(prisma: PrismaClient, messageIds: string[]) {
         errorClass: true,
         finishReason: true,
         routeDisposition: true,
-        primaryToolId: true,
+        toolCallCount: true,
       },
     }),
   );
@@ -408,9 +389,7 @@ async function runScenario(options: {
     editAttempts: state.editAttempts,
     deliveredEdits: state.deliveredEdits,
     contextCalls: state.contextCalls,
-    routerCalls: state.routerCalls,
-    directCalls: state.directCalls,
-    specialistCalls: state.specialistCalls,
+    agentCalls: state.agentCalls,
     toolCalls: state.toolCalls,
     memoryExtractionCalls: state.memoryExtractionCalls,
     memoryExtractionErrors: extractionErrorsAfter - extractionErrorsBefore,
@@ -429,7 +408,7 @@ async function runScenario(options: {
       row.finishReason == null ? [] : [row.finishReason],
     ),
     routeDispositions: rows.map(({ routeDisposition }) => routeDisposition),
-    primaryToolIds: rows.map(({ primaryToolId }) => primaryToolId),
+    toolCallCounts: rows.map(({ toolCallCount }) => toolCallCount),
     agentRunColumns,
     serializedAgentRuns,
     secondReplyObservedWhileFirstBlocked:

@@ -3,13 +3,16 @@ import {
   admitAgentRun,
   completeAgentRun,
   failAgentRun,
+  markAgentRunRunning,
   recordAgentRunContext,
-  recordAgentRunRoute,
   suppressQueuedSessionAgentRun,
 } from "@shepherdjerred/birmel/agent-runtime/agent-runs.ts";
 import { extractAndApplyTurnMemory } from "@shepherdjerred/birmel/agent-runtime/memory-extraction.ts";
-import { executeRoutedTurn } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
-import { routeTurn } from "@shepherdjerred/birmel/agent-runtime/router.ts";
+import {
+  executeTurn,
+  type AgentExecutionResult,
+} from "@shepherdjerred/birmel/agent-runtime/agent.ts";
+import { createTaskPacket } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
 import { withTurnQueue } from "@shepherdjerred/birmel/agent-runtime/turn-queue.ts";
 import {
   runWithRequestContext,
@@ -150,7 +153,7 @@ async function persistDeliveredTurn(options: {
   runId: string;
   response: string;
   responseMessageId: string;
-  execution: Awaited<ReturnType<typeof executeRoutedTurn>>;
+  execution: AgentExecutionResult;
   discordContext: DiscordContext;
 }): Promise<void> {
   if (options.context.activeSessionId != null) {
@@ -236,13 +239,7 @@ async function processAdmittedTurn(
       );
     }
     const personaPrompt = personaSource?.content ?? "";
-    const route = await routeTurn({
-      turn: context.turn,
-      personaId: persona,
-      persona: personaPrompt,
-      context: bundle,
-    });
-    await recordAgentRunRoute(runId, route);
+    await markAgentRunRunning(runId);
     const requestContext: RequestContext = {
       sourceChannelId: context.turn.channelId,
       sourceMessageId: context.turn.discordMessageId,
@@ -272,13 +269,14 @@ async function processAdmittedTurn(
     const execution = await runWithRequestContext(
       requestContext,
       async () =>
-        await executeRoutedTurn({
-          turn: context.turn,
-          context: bundle,
-          personaId: persona,
-          persona: personaPrompt,
-          route,
-        }),
+        await executeTurn(
+          createTaskPacket({
+            turn: context.turn,
+            context: bundle,
+            personaId: persona,
+            persona: personaPrompt,
+          }),
+        ),
     );
     const response = validateResponse(execution.text);
     const stagedAttachments = requestContext.stagedAttachments ?? [];

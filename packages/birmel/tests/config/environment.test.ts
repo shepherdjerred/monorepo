@@ -10,7 +10,7 @@ const VALID_ENVIRONMENT = {
 describe("strict environment configuration", () => {
   test("loads documented defaults", () => {
     const config = loadConfigFromEnvironment(VALID_ENVIRONMENT);
-    expect(config.agent.maxSteps).toBe(8);
+    expect(config.agent.maxSteps).toBe(12);
     expect(config.authority.trustedUserIds.length).toBeGreaterThan(0);
     expect(config.scheduler.maxConcurrentJobs).toBe(5);
   });
@@ -24,7 +24,7 @@ describe("strict environment configuration", () => {
       "non-positive scheduler operation timeout",
       { SCHEDULER_OPERATION_TIMEOUT_MS: "0" },
     ],
-    ["too many steps", { AGENT_MAX_STEPS: "9" }],
+    ["too many steps", { AGENT_MAX_STEPS: "25" }],
     ["empty model", { LLM_MODEL: "" }],
     ["malformed user IDs", { TRUSTED_USER_IDS: '["not-a-user"]' }],
     ["short user IDs", { TRUSTED_USER_IDS: '["123"]' }],

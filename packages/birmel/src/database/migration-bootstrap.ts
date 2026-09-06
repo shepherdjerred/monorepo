@@ -8,6 +8,7 @@ export const REQUIRED_MIGRATIONS = [
   "20260808010000_birmel_3_runtime",
   "20260818000000_agent_run_route_capability",
   "20260906000000_remove_editor_and_music",
+  "20260906010000_agent_turn_outcome",
 ] as const;
 
 export const LEGACY_BASELINE_MIGRATIONS = [

@@ -1,8 +1,7 @@
 import type { AgentRun } from "#generated/prisma/client/index.js";
-import type { AgentExecutionResult } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
+import type { AgentExecutionResult } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import type {
   ContextBundle,
-  RouteDecision,
   TurnInput,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
@@ -49,18 +48,10 @@ export async function recordAgentRunContext(options: {
   });
 }
 
-export async function recordAgentRunRoute(
-  runId: string,
-  decision: RouteDecision,
-): Promise<void> {
+export async function markAgentRunRunning(runId: string): Promise<void> {
   await prisma.agentRun.update({
     where: { id: runId },
-    data: {
-      route: decision.route,
-      routeDisposition: decision.disposition,
-      primaryToolId: decision.primaryToolId,
-      status: "running",
-    },
+    data: { status: "running" },
   });
 }
 
@@ -74,6 +65,11 @@ export async function completeAgentRun(options: {
     data: {
       status: "completed",
       responseMessageId: options.responseMessageId,
+      // Recorded after the fact now. There is no pre-flight route to store:
+      // the disposition is what the turn turned out to be, and the tool count
+      // is what it actually did.
+      routeDisposition: options.execution.disposition,
+      toolCallCount: options.execution.toolEvents.length,
       inputTokens: options.execution.inputTokens,
       outputTokens: options.execution.outputTokens,
       finishReason: options.execution.finishReason,

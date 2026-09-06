@@ -1,9 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { z } from "zod";
-import {
-  BirmelToolMetadataSchema,
-  SpecialistIdSchema,
-} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { BirmelToolMetadataSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import {
   getRegisteredToolMetadata,
@@ -23,7 +20,6 @@ const trustedUserId = "186665676134547461";
 const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   {
     id: "manage-message",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -35,7 +31,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-thread",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -47,7 +42,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-poll",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -59,7 +53,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "get-activity-stats",
-    specialist: "messaging",
     riskClass: "read",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -71,7 +64,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "record-activity",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -83,7 +75,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-memory",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -95,7 +86,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-agent-session",
-    specialist: "messaging",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -107,7 +97,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-guild",
-    specialist: "server",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -119,7 +108,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-channel",
-    specialist: "server",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -131,7 +119,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "moderate-member",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -143,7 +130,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-role",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -155,7 +141,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-member",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -167,7 +152,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-automod-rule",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -179,7 +163,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-webhook",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -191,7 +174,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-invite",
-    specialist: "moderation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -203,7 +185,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-emoji",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -215,7 +196,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-sticker",
-    specialist: "moderation",
     riskClass: "destructive",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -227,7 +207,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "execute-shell-command",
-    specialist: "automation",
     riskClass: "code-execution",
     timeoutMs: 300_000,
     requiredRequestContext: [
@@ -239,7 +218,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-job",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -251,7 +229,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "browser-automation",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 120_000,
     requiredRequestContext: [
@@ -263,7 +240,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "external-service",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 120_000,
     requiredRequestContext: [
@@ -275,7 +251,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "web-research",
-    specialist: "automation",
     riskClass: "read",
     timeoutMs: 120_000,
     requiredRequestContext: [
@@ -287,7 +262,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-scheduled-event",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -299,7 +273,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-election",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -311,7 +284,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "get-candidate-stats",
-    specialist: "automation",
     riskClass: "read",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -323,7 +295,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
   },
   {
     id: "manage-birthday",
-    specialist: "automation",
     riskClass: "write",
     timeoutMs: 30_000,
     requiredRequestContext: [
@@ -368,7 +339,7 @@ async function executeInContext<T>(
 }
 
 describe("tool metadata contracts", () => {
-  test("declares the exact specialist, risk, timeout, and request context for every stable tool", () => {
+  test("declares the exact risk, timeout, and request context for every stable tool", () => {
     const actual = getRegisteredToolMetadata().toSorted((left, right) =>
       left.id.localeCompare(right.id),
     );
@@ -380,22 +351,13 @@ describe("tool metadata contracts", () => {
     expect(new Set(actual.map(({ id }) => id)).size).toBe(actual.length);
   });
 
-  test("registers each tool in exactly one matching specialist set", async () => {
-    const toolSets =
+  test("registers every tool exactly once in the flat registry", async () => {
+    const { registeredTools } =
       await import("@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts");
-    const sets = [
-      { specialist: "messaging", tools: toolSets.messagingToolSet },
-      { specialist: "server", tools: toolSets.serverToolSet },
-      { specialist: "moderation", tools: toolSets.moderationToolSet },
-      { specialist: "automation", tools: toolSets.automationToolSet },
-    ];
-    const registrations = sets.flatMap(({ specialist, tools }) =>
-      tools.map((tool) => ({
-        id: tool.id,
-        specialist: SpecialistIdSchema.parse(specialist),
-        metadata: BirmelToolMetadataSchema.parse(tool.birmelMetadata),
-      })),
-    );
+    const registrations = registeredTools.map((tool) => ({
+      id: tool.id,
+      metadata: BirmelToolMetadataSchema.parse(tool.birmelMetadata),
+    }));
 
     const registrationCounts = new Map<string, number>();
     for (const { id } of registrations) {
@@ -405,22 +367,15 @@ describe("tool metadata contracts", () => {
       .filter(([, count]) => count !== 1)
       .map(([id, count]) => `${id}:${String(count)}`)
       .toSorted();
-    const mismatchedAssignments = registrations
-      .filter(({ specialist, metadata }) => metadata.specialist !== specialist)
-      .map(
-        ({ id, specialist, metadata }) =>
-          `${id}:${specialist}->${metadata.specialist}`,
-      )
+    const mismatchedIds = registrations
+      .filter(({ id, metadata }) => metadata.id !== id)
+      .map(({ id, metadata }) => `${id}->${metadata.id}`)
       .toSorted();
-    const registeredIds = [...registrationCounts.keys()].toSorted();
+    const registeredIds = registrations.map(({ id }) => id).toSorted();
 
-    expect({
-      duplicateIds,
-      mismatchedAssignments,
-      registeredIds,
-    }).toEqual({
+    expect({ duplicateIds, mismatchedIds, registeredIds }).toEqual({
       duplicateIds: [],
-      mismatchedAssignments: [],
+      mismatchedIds: [],
       registeredIds: expectedMetadata.map(({ id }) => id).toSorted(),
     });
   });

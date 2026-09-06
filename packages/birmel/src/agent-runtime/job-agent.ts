@@ -1,10 +1,10 @@
 import { z } from "zod";
-import { SpecialistTaskPacketSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import { executeIsolatedAutomationAgent } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
+import { TaskPacketSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { executeIsolatedAgent } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import { getGuildPersona } from "@shepherdjerred/birmel/persona/guild-persona.ts";
 import type { AgentJobExecution } from "@shepherdjerred/birmel/scheduler/jobs/scheduled-tasks.ts";
 import { getSessionContext } from "@shepherdjerred/birmel/sessions/service.ts";
-import type { IsolatedAgentOptions } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
+import type { IsolatedAgentOptions } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { buildConfiguredPersonaProjection } from "@shepherdjerred/birmel/persona/projection.ts";
 import { MAX_SESSION_SUMMARY_CHARACTERS } from "@shepherdjerred/birmel/sessions/summarization.ts";
@@ -20,15 +20,15 @@ type JobSessionContext = {
 
 export type IsolatedJobAgentDependencies = {
   executeAgent: (
-    packet: z.infer<typeof SpecialistTaskPacketSchema>,
+    packet: z.infer<typeof TaskPacketSchema>,
     options: IsolatedAgentOptions,
-  ) => ReturnType<typeof executeIsolatedAutomationAgent>;
+  ) => ReturnType<typeof executeIsolatedAgent>;
   getPersona: (guildId: string) => Promise<string>;
   getSession: (sessionId: string) => Promise<JobSessionContext>;
 };
 
 const defaultDependencies: IsolatedJobAgentDependencies = {
-  executeAgent: executeIsolatedAutomationAgent,
+  executeAgent: executeIsolatedAgent,
   getPersona: getGuildPersona,
   getSession: getSessionContext,
 };
@@ -64,7 +64,7 @@ export async function executeIsolatedAgentJob(
   dependencies: IsolatedJobAgentDependencies = defaultDependencies,
 ): Promise<{ message: string; data: Record<string, unknown> }> {
   const personaId = await dependencies.getPersona(execution.guildId);
-  const packet = SpecialistTaskPacketSchema.parse({
+  const packet = TaskPacketSchema.parse({
     request: prompt,
     guildId: execution.guildId,
     channelId: execution.requestContext.sourceChannelId,
@@ -94,23 +94,39 @@ export async function executeIsolatedAgentJob(
         }),
     timeoutMs: execution.timeoutMs,
   });
-  const failedToolIds = result.toolEvents
-    .filter((event) => !event.success)
-    .map((event) => event.toolId);
   const failedToolEvents = result.toolEvents.filter((event) => !event.success);
+  // A failure whose external effect is not provably absent must never be
+  // replayed in place, even if the agent went on to succeed another way: we
+  // cannot tell whether the first attempt landed. "unknown" leaves the
+  // checkpoint intact so the job pauses for operator resolution.
+  const unresolvedFailures = failedToolEvents.filter(
+    (event) => event.effectDisposition !== "not_applied",
+  );
+  // Everything else is a failure the agent provably recovered from. Trying a
+  // tool, seeing it fail with no effect, and succeeding another way is an
+  // ordinary path through a turn now, so it must not fail the job - doing so
+  // cleared the checkpoint and retried work that had already succeeded.
+  // A run that failed without applying anything and did not go on to perform
+  // the work still fails, which is safe to retry precisely because nothing
+  // was applied.
+  const recoveredWithoutEffect =
+    unresolvedFailures.length === 0 &&
+    failedToolEvents.length > 0 &&
+    result.disposition !== "supported";
   const effectDisposition =
-    failedToolEvents.length === 0
-      ? undefined
-      : failedToolEvents.every(
-            (event) => event.effectDisposition === "not_applied",
-          )
+    unresolvedFailures.length > 0
+      ? "unknown"
+      : recoveredWithoutEffect
         ? "not_applied"
-        : "unknown";
+        : undefined;
+  const reportedFailureToolIds = (
+    unresolvedFailures.length > 0 ? unresolvedFailures : failedToolEvents
+  ).map((event) => event.toolId);
   return {
     message:
-      failedToolIds.length === 0
+      effectDisposition == null
         ? result.text
-        : `Isolated scheduled agent tool execution failed: ${failedToolIds.join(", ")}`,
+        : `Isolated scheduled agent tool execution failed: ${reportedFailureToolIds.join(", ")}`,
     data: {
       finishReason: result.finishReason,
       inputTokens: result.inputTokens,

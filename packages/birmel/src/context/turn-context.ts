@@ -86,7 +86,7 @@ async function queryEmbedding(content: string): Promise<number[] | null> {
     const result = await embed({
       model: runtime.embeddingModel(config.openRouter.embeddingModel),
       value: content,
-      abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
+      abortSignal: AbortSignal.timeout(config.agent.auxiliaryTimeoutMs),
       ...runtime.callOptions({ workload: "birmel.context.embed" }),
     });
     return result.embedding;

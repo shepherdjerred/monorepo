@@ -1,60 +1,8 @@
-import { describe, expect, test, vi } from "vitest";
-import { z } from "zod";
-import type {
-  SpecialistId,
-  SpecialistTaskPacket,
-} from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import type { RuntimeDependencies } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
+import { describe, expect, test } from "vitest";
+import { createTaskPacket } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
 import { createContextBundle, createTurnInput } from "./fixtures.ts";
 
-const defaultResult = {
-  text: "default executor result",
-  finishReason: "stop",
-  inputTokens: 1,
-  outputTokens: 1,
-  stepCount: 1,
-  toolEvents: [],
-};
-
-vi.doMock("@shepherdjerred/birmel/agent-runtime/specialists.ts", () => ({
-  executeDirect: async () => defaultResult,
-  executeSpecialist: async () => defaultResult,
-  executeIsolatedAutomationAgent: async () => defaultResult,
-}));
-
-const { createSpecialistTaskPacket, executeRoutedTurn } =
-  await import("@shepherdjerred/birmel/agent-runtime/runtime.ts");
-
-const SpecialistRoutesSchema = z.array(
-  z.enum(["messaging", "server", "moderation", "automation"]),
-);
-
-const specialistRoutes = SpecialistRoutesSchema.parse([
-  "messaging",
-  "server",
-  "moderation",
-  "automation",
-]);
-
-const primaryToolBySpecialist: Record<SpecialistId, string> = {
-  messaging: "get-activity-stats",
-  server: "manage-guild",
-  moderation: "moderate-member",
-  automation: "web-research",
-};
-
-function successfulResult(text: string) {
-  return {
-    text,
-    finishReason: "stop",
-    inputTokens: 10,
-    outputTokens: 5,
-    stepCount: 1,
-    toolEvents: [],
-  };
-}
-
-describe("createSpecialistTaskPacket", () => {
+describe("createTaskPacket", () => {
   test("carries only the bounded task packet", () => {
     const optionsWithInternalState = {
       turn: createTurnInput(),
@@ -65,7 +13,7 @@ describe("createSpecialistTaskPacket", () => {
       toolTrace: "TOOL_TRACE_SENTINEL",
     };
 
-    const packet = createSpecialistTaskPacket(optionsWithInternalState);
+    const packet = createTaskPacket(optionsWithInternalState);
     const serialized = JSON.stringify(packet);
 
     expect(packet.persona).toBe("COMPACT_PERSONA_SENTINEL");
@@ -90,80 +38,4 @@ describe("createSpecialistTaskPacket", () => {
       "username",
     ]);
   });
-});
-
-describe("executeRoutedTurn", () => {
-  test("calls only the direct executor for direct conversation", async () => {
-    let directCalls = 0;
-    let specialistCalls = 0;
-    let receivedPacket: SpecialistTaskPacket | undefined;
-    const dependencies: RuntimeDependencies = {
-      direct: async (packet) => {
-        directCalls += 1;
-        receivedPacket = packet;
-        return successfulResult("direct result");
-      },
-      specialist: async () => {
-        specialistCalls += 1;
-        return successfulResult("unexpected specialist result");
-      },
-    };
-
-    const result = await executeRoutedTurn({
-      turn: createTurnInput(),
-      context: createContextBundle(),
-      personaId: "virmel",
-      persona: "Compact persona",
-      route: {
-        route: "direct",
-        disposition: "conversation",
-        primaryToolId: null,
-        confidence: 1,
-        rationale: "Ordinary conversation",
-      },
-      dependencies,
-    });
-
-    expect(result.text).toBe("direct result");
-    expect(directCalls).toBe(1);
-    expect(specialistCalls).toBe(0);
-    expect(receivedPacket?.request).toBe("Please check the current state.");
-  });
-
-  test.each(specialistRoutes)(
-    "calls exactly one %s specialist executor",
-    async (expectedSpecialist) => {
-      let directCalls = 0;
-      const specialistCalls: SpecialistId[] = [];
-      const dependencies: RuntimeDependencies = {
-        direct: async () => {
-          directCalls += 1;
-          return successfulResult("unexpected direct result");
-        },
-        specialist: async (specialist) => {
-          specialistCalls.push(specialist);
-          return successfulResult(`${specialist} result`);
-        },
-      };
-
-      const result = await executeRoutedTurn({
-        turn: createTurnInput(),
-        context: createContextBundle(),
-        personaId: "virmel",
-        persona: "Compact persona",
-        route: {
-          route: expectedSpecialist,
-          disposition: "supported",
-          primaryToolId: primaryToolBySpecialist[expectedSpecialist],
-          confidence: 0.95,
-          rationale: `Needs ${expectedSpecialist}`,
-        },
-        dependencies,
-      });
-
-      expect(result.text).toBe(`${expectedSpecialist} result`);
-      expect(directCalls).toBe(0);
-      expect(specialistCalls).toEqual([expectedSpecialist]);
-    },
-  );
 });

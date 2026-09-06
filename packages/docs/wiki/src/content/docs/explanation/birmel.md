@@ -17,19 +17,19 @@ context, memory, sessions, jobs, and orchestration**.
 ```mermaid
 flowchart LR
   accTitle: Birmel turn lifecycle
-  accDescr: An admitted and deduplicated Discord event receives one bounded context bundle, takes exactly one capability-grounded route to either direct conversation or one specialist, produces one Discord reply, and then extracts human claims and curated self-memory. An AgentRun record audits the lifecycle without storing prompt contents.
+  accDescr: An admitted and deduplicated Discord event receives one bounded context bundle and is handed to a single agent holding every registered tool. The agent loops over tool calls, letting each result inform the next choice, then emits a structured answer whose cited tool calls are checked against calls that actually succeeded. That produces one Discord reply, and then human claims and curated self-memory are extracted. An AgentRun record audits the lifecycle without storing prompt contents.
 
   D[Discord event] --> A[Admission and deduplication]
   A --> C[One bounded<br/>ContextBundle]
-  C --> R{One route and<br/>disposition}
-  R -->|conversation or unsupported| X[Tool-free<br/>direct agent]
-  R -->|supported registered tool| S[One bounded<br/>specialist]
-  X --> O[One Discord reply]
-  S --> O
+  C --> G[One agent,<br/>every registered tool]
+  G -->|call a tool| T[Tool result]
+  T -->|informs the next choice| G
+  G --> V{Cited calls<br/>actually succeeded?}
+  V -->|no| F[Turn fails,<br/>incident reference]
+  V -->|yes| O[One Discord reply]
   O --> M[Human claims and<br/>curated self-memory]
   A -. status .-> U[(AgentRun audit)]
-  R -. route .-> U
-  O -. response ID .-> U
+  O -. disposition, tool count,<br/>response ID .-> U
 ```
 
 ## A turn has exactly one owner
@@ -57,28 +57,39 @@ which makes retries and restarts idempotent. Assembled prompts and model
 reasoning are never audit fields. The record says what happened, not what was
 said to the model.
 
-After admission a
-[structured router](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/router.ts)
-picks exactly one route and labels it as conversation, supported, or
-unsupported. Supported work must name a real registered tool owned by the
-selected specialist, and that primary tool must succeed before the runtime
-accepts the result. Unsupported work stays tool-free and states the missing
-capability plainly.
+After admission the turn goes to a single
+[agent](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/agent.ts)
+holding every registered tool. It investigates, and what it finds is allowed to
+change which tool it reaches for next. Picking a tool, learning it was the
+wrong one, and trying another is an ordinary path through a turn.
 
-The catalog is generated from
+This replaced a structured router that chose one specialist and one primary
+tool from assembled context alone — before any tool had run — and then required
+that pre-named tool to succeed. The cheapest model in the system committed the
+turn, and a perfectly recoverable "this actually needs a different tool" became
+a failed turn and an incident reference. Conversation and unsupported routes
+were tool-free, so a question that merely needed one lookup was answered from
+memory instead of checked.
+
+The turn ends with a structured answer carrying its own disposition —
+conversation, supported, or unsupported — which is the first moment that is
+actually known. Every tool call the answer cites must correspond to a call that
+really succeeded, so the bot cannot claim an action it did not take. That check
+covers the whole reply, where the old rule only proved one pre-named tool ran.
+
+The registry is generated from
 [executable tool registration](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-tools/tools/tool-sets.ts),
-so the router cannot advertise a stale hand-written capability. Birmel has
-scoped activity queries but no generic SQL access.
+and startup refuses to boot if tool metadata and the executable inventory
+disagree. Birmel has scoped activity queries but no generic SQL access.
 
 Ordinary supported writes are allowed for trusted users. The
 [core policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/prompts.ts)
 blocks only bulk destructive and bulk-creation effects. It does not disguise
 missing integrations as safety refusals.
 
-A specialist receives a compact task packet. Not a manager transcript, not
-another agent's tool trace, not a recursively assembled prompt. That is the
-whole point: a nested-agent architecture makes it impossible to say why a
-response happened.
+The agent receives a compact task packet. Not a manager transcript, not another
+agent's tool trace, not a recursively assembled prompt. That is the whole point:
+a nested-agent architecture makes it impossible to say why a response happened.
 
 ## Context is a bounded value, not a growing history
 

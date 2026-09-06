@@ -46,7 +46,7 @@ export async function classifyShouldRespond(
           workload: "birmel.admission.classify",
           sessionId: input.channelId,
           reasoningEffort: config.openRouter.reasoningEffort,
-          abortSignal: AbortSignal.timeout(config.agent.routerTimeoutMs),
+          abortSignal: AbortSignal.timeout(config.agent.auxiliaryTimeoutMs),
         });
         span.setAttribute(
           "birmel.admission.should_respond",

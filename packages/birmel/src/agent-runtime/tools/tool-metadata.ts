@@ -1,7 +1,6 @@
 import {
   BirmelToolMetadataSchema,
   type BirmelToolMetadata,
-  type SpecialistId,
   type ToolRiskClass,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 
@@ -14,13 +13,11 @@ const REQUIRED_CONTEXT = [
 
 function metadata(
   id: string,
-  specialist: SpecialistId,
   riskClass: ToolRiskClass,
   timeoutMs = 30_000,
 ): BirmelToolMetadata {
   return BirmelToolMetadataSchema.parse({
     id,
-    specialist,
     riskClass,
     timeoutMs,
     requiredRequestContext: REQUIRED_CONTEXT,
@@ -28,54 +25,36 @@ function metadata(
 }
 
 const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
-  ["manage-message", metadata("manage-message", "messaging", "write")],
-  ["manage-thread", metadata("manage-thread", "messaging", "write")],
-  ["manage-poll", metadata("manage-poll", "messaging", "write")],
-  ["get-activity-stats", metadata("get-activity-stats", "messaging", "read")],
-  ["record-activity", metadata("record-activity", "messaging", "write")],
-  ["manage-memory", metadata("manage-memory", "messaging", "write")],
-  [
-    "manage-agent-session",
-    metadata("manage-agent-session", "messaging", "write"),
-  ],
-  ["manage-guild", metadata("manage-guild", "server", "write")],
-  ["manage-channel", metadata("manage-channel", "server", "destructive")],
-  ["moderate-member", metadata("moderate-member", "moderation", "destructive")],
-  ["manage-role", metadata("manage-role", "moderation", "destructive")],
-  ["manage-member", metadata("manage-member", "moderation", "destructive")],
-  [
-    "manage-automod-rule",
-    metadata("manage-automod-rule", "moderation", "destructive"),
-  ],
-  ["manage-webhook", metadata("manage-webhook", "moderation", "destructive")],
-  ["manage-invite", metadata("manage-invite", "moderation", "write")],
-  ["manage-emoji", metadata("manage-emoji", "moderation", "destructive")],
-  ["manage-sticker", metadata("manage-sticker", "moderation", "destructive")],
+  ["manage-message", metadata("manage-message", "write")],
+  ["manage-thread", metadata("manage-thread", "write")],
+  ["manage-poll", metadata("manage-poll", "write")],
+  ["get-activity-stats", metadata("get-activity-stats", "read")],
+  ["record-activity", metadata("record-activity", "write")],
+  ["manage-memory", metadata("manage-memory", "write")],
+  ["manage-agent-session", metadata("manage-agent-session", "write")],
+  ["manage-guild", metadata("manage-guild", "write")],
+  ["manage-channel", metadata("manage-channel", "destructive")],
+  ["moderate-member", metadata("moderate-member", "destructive")],
+  ["manage-role", metadata("manage-role", "destructive")],
+  ["manage-member", metadata("manage-member", "destructive")],
+  ["manage-automod-rule", metadata("manage-automod-rule", "destructive")],
+  ["manage-webhook", metadata("manage-webhook", "destructive")],
+  ["manage-invite", metadata("manage-invite", "write")],
+  ["manage-emoji", metadata("manage-emoji", "destructive")],
+  ["manage-sticker", metadata("manage-sticker", "destructive")],
   [
     "execute-shell-command",
-    metadata("execute-shell-command", "automation", "code-execution", 300_000),
+    metadata("execute-shell-command", "code-execution", 300_000),
   ],
-  ["manage-job", metadata("manage-job", "automation", "write")],
-  [
-    "browser-automation",
-    metadata("browser-automation", "automation", "write", 120_000),
-  ],
-  [
-    "external-service",
-    metadata("external-service", "automation", "write", 120_000),
-  ],
-  ["web-research", metadata("web-research", "automation", "read", 120_000)],
-  [
-    "manage-scheduled-event",
-    metadata("manage-scheduled-event", "automation", "write"),
-  ],
-  ["manage-election", metadata("manage-election", "automation", "write")],
-  [
-    "get-candidate-stats",
-    metadata("get-candidate-stats", "automation", "read"),
-  ],
-  ["manage-birthday", metadata("manage-birthday", "automation", "write")],
-  ["generate-image", metadata("generate-image", "automation", "write", 60_000)],
+  ["manage-job", metadata("manage-job", "write")],
+  ["browser-automation", metadata("browser-automation", "write", 120_000)],
+  ["external-service", metadata("external-service", "write", 120_000)],
+  ["web-research", metadata("web-research", "read", 120_000)],
+  ["manage-scheduled-event", metadata("manage-scheduled-event", "write")],
+  ["manage-election", metadata("manage-election", "write")],
+  ["get-candidate-stats", metadata("get-candidate-stats", "read")],
+  ["manage-birthday", metadata("manage-birthday", "write")],
+  ["generate-image", metadata("generate-image", "write", 60_000)],
 ]);
 
 export function getToolMetadata(toolId: string): BirmelToolMetadata {

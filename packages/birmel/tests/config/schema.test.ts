@@ -82,15 +82,15 @@ describe("AgentConfigSchema", () => {
     const result = AgentConfigSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data.maxSteps).toBe(8);
-      expect(result.data.responseTimeoutMs).toBe(120_000);
-      expect(result.data.routerTimeoutMs).toBe(30_000);
+      expect(result.data.maxSteps).toBe(12);
+      expect(result.data.responseTimeoutMs).toBe(300_000);
+      expect(result.data.auxiliaryTimeoutMs).toBe(30_000);
     }
   });
 
-  test("rejects more than eight tool-loop steps", () => {
+  test("rejects more than twenty-four tool-loop steps", () => {
     const result = AgentConfigSchema.safeParse({
-      maxSteps: 9,
+      maxSteps: 25,
     });
     expect(result.success).toBe(false);
   });

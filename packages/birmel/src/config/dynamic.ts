@@ -24,7 +24,7 @@ const DynamicBooleanSchema = z.preprocess(
   z.boolean(),
 );
 const PositiveIntegerSchema = z.coerce.number().int().positive();
-const MaxStepsSchema = z.coerce.number().int().min(1).max(8);
+const MaxStepsSchema = z.coerce.number().int().min(1).max(24);
 const ReasoningEffortSchema = z.enum(["minimal", "low", "medium", "high"]);
 const StringSchema = z.string().trim().min(1);
 
@@ -136,25 +136,25 @@ const DEFINITION = {
   agentMaxSteps: {
     schema: MaxStepsSchema,
     sources: ["flag", "env", "default"],
-    default: 8,
+    default: 12,
     names: { flag: "birmel-agent-max-steps", env: "AGENT_MAX_STEPS" },
   },
   agentResponseTimeoutMs: {
     schema: PositiveIntegerSchema,
     sources: ["flag", "env", "default"],
-    default: 120_000,
+    default: 300_000,
     names: {
       flag: "birmel-agent-response-timeout-ms",
       env: "AGENT_RESPONSE_TIMEOUT_MS",
     },
   },
-  agentRouterTimeoutMs: {
+  agentAuxiliaryTimeoutMs: {
     schema: PositiveIntegerSchema,
     sources: ["flag", "env", "default"],
     default: 30_000,
     names: {
-      flag: "birmel-agent-router-timeout-ms",
-      env: "AGENT_ROUTER_TIMEOUT_MS",
+      flag: "birmel-agent-auxiliary-timeout-ms",
+      env: "AGENT_AUXILIARY_TIMEOUT_MS",
     },
   },
   responderEngagementWindowMs: {
@@ -216,7 +216,7 @@ function createSnapshot(
           maxTokens: "number",
           agentMaxSteps: "number",
           agentResponseTimeoutMs: "number",
-          agentRouterTimeoutMs: "number",
+          agentAuxiliaryTimeoutMs: "number",
           responderEngagementWindowMs: "number",
           responderTranscriptWindowMs: "number",
           responderTranscriptMaxMessages: "number",
@@ -250,7 +250,7 @@ function createSnapshot(
       maxTokens: config.openRouter.maxTokens,
       agentMaxSteps: config.agent.maxSteps,
       agentResponseTimeoutMs: config.agent.responseTimeoutMs,
-      agentRouterTimeoutMs: config.agent.routerTimeoutMs,
+      agentAuxiliaryTimeoutMs: config.agent.auxiliaryTimeoutMs,
       responderEngagementWindowMs: config.responder.engagementWindowMs,
       responderTranscriptWindowMs: config.responder.transcriptWindowMs,
       responderTranscriptMaxMessages: config.responder.transcriptMaxMessages,
@@ -280,7 +280,7 @@ function applySnapshot(snapshot: Snapshot, config: Config): void {
   config.openRouter.maxTokens = snapshot.get("maxTokens");
   config.agent.maxSteps = snapshot.get("agentMaxSteps");
   config.agent.responseTimeoutMs = snapshot.get("agentResponseTimeoutMs");
-  config.agent.routerTimeoutMs = snapshot.get("agentRouterTimeoutMs");
+  config.agent.auxiliaryTimeoutMs = snapshot.get("agentAuxiliaryTimeoutMs");
   config.responder.engagementWindowMs = snapshot.get(
     "responderEngagementWindowMs",
   );

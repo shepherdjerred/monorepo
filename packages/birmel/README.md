@@ -2,12 +2,20 @@
 
 Discord bot built on a single explicit AI SDK agent runtime. Every message turn
 follows one pipeline: a Discord event is admitted (trusted users only),
-assembled into a context bundle, and assigned one capability-grounded route.
-Conversation and unsupported work use the tool-free direct agent. Supported
-work uses exactly one specialist (`messaging`, `server`, `moderation`, or
-`automation`) and one registered primary tool. The runtime then
-requires that primary tool to succeed and edits one Discord reply. Durable
-memory separates human claims from curated
+assembled into a context bundle, and handed to one agent that works the request
+to a conclusion. The agent sees every registered tool and decides as it goes,
+so investigating and then changing approach is normal rather than an error.
+It finishes with a structured answer whose cited tool calls must match calls
+that actually succeeded, and the runtime edits one Discord reply.
+
+There is deliberately no up-front router. Routing used to pick one specialist
+and one primary tool from assembled context alone, before any tool could run,
+and required that pre-named tool to succeed - so an ordinary "this needs a
+different tool" became a failed turn. The turn's disposition (`conversation`,
+`supported`, `unsupported`) is now reported by the agent on the way out, which
+is the only point at which it is actually known.
+
+Durable memory separates human claims from curated
 self-memory: accepted aliases, commitments, and experiences backed by a
 specific successful current-turn tool call and its bounded, redacted result.
 Aliases and persona memory cross trusted

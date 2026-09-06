@@ -105,66 +105,36 @@ export const ContextBundleSchema = z.object({
 });
 export type ContextBundle = z.infer<typeof ContextBundleSchema>;
 
-export const SpecialistIdSchema = z.enum([
-  "messaging",
-  "server",
-  "moderation",
-  "automation",
-]);
-export type SpecialistId = z.infer<typeof SpecialistIdSchema>;
-
-export const RouteIdSchema = z.union([z.literal("direct"), SpecialistIdSchema]);
-export type RouteId = z.infer<typeof RouteIdSchema>;
-
-export const RouteDispositionSchema = z.enum([
+/**
+ * What a turn turned out to be, reported by the agent on the way out.
+ *
+ * This used to be chosen up front by a cheap classifier before any tool could
+ * run, which meant the least-informed participant in the system committed the
+ * turn to one tool and one tool set. It is an outcome now: you only know
+ * whether a request was supported after you have looked.
+ */
+export const TurnDispositionSchema = z.enum([
   "conversation",
   "supported",
   "unsupported",
 ]);
-export type RouteDisposition = z.infer<typeof RouteDispositionSchema>;
+export type TurnDisposition = z.infer<typeof TurnDispositionSchema>;
 
-export const RouteDecisionSchema = z
-  .strictObject({
-    route: RouteIdSchema,
-    disposition: RouteDispositionSchema,
-    primaryToolId: z.string().min(1).max(64).nullable(),
-    confidence: z.number().min(0).max(1),
-    rationale: z.string().max(500),
-  })
-  .superRefine((decision, context) => {
-    if (decision.disposition === "supported") {
-      if (decision.route === "direct") {
-        context.addIssue({
-          code: "custom",
-          path: ["route"],
-          message: "Supported work must select a specialist route",
-        });
-      }
-      if (decision.primaryToolId === null) {
-        context.addIssue({
-          code: "custom",
-          path: ["primaryToolId"],
-          message: "Supported work must name its primary registered tool",
-        });
-      }
-      return;
-    }
-    if (decision.route !== "direct") {
-      context.addIssue({
-        code: "custom",
-        path: ["route"],
-        message: "Conversation and unsupported work must use the direct route",
-      });
-    }
-    if (decision.primaryToolId !== null) {
-      context.addIssue({
-        code: "custom",
-        path: ["primaryToolId"],
-        message: "Conversation and unsupported work cannot name a primary tool",
-      });
-    }
-  });
-export type RouteDecision = z.infer<typeof RouteDecisionSchema>;
+/**
+ * The agent's structured final answer.
+ *
+ * `reliedOnToolCallIds` is the anti-hallucination gate. Every id must match a
+ * tool call that actually succeeded this turn, checked in
+ * `requireGroundedAnswer`. It replaces the old "the pre-named primary tool must
+ * succeed" rule and is strictly stronger: it verifies everything the reply
+ * leans on, rather than one tool named before anyone looked.
+ */
+export const TurnAnswerSchema = z.strictObject({
+  answer: z.string().min(1),
+  disposition: TurnDispositionSchema,
+  reliedOnToolCallIds: z.array(z.string().min(1).max(200)).max(64),
+});
+export type TurnAnswer = z.infer<typeof TurnAnswerSchema>;
 
 export const ToolRiskClassSchema = z.enum([
   "read",
@@ -183,7 +153,6 @@ export const RequiredRequestContextSchema = z.enum([
 
 export const BirmelToolMetadataSchema = z.object({
   id: z.string().min(1),
-  specialist: SpecialistIdSchema,
   riskClass: ToolRiskClassSchema,
   timeoutMs: z.number().int().positive(),
   requiredRequestContext: z.array(RequiredRequestContextSchema),
@@ -263,7 +232,7 @@ export const MemoryRevisionInputSchema = z.object({
 });
 export type MemoryRevisionInput = z.infer<typeof MemoryRevisionInputSchema>;
 
-export const SpecialistTaskPacketSchema = z.object({
+export const TaskPacketSchema = z.object({
   request: z.string(),
   guildId: DiscordIdSchema,
   channelId: DiscordIdSchema,
@@ -276,4 +245,4 @@ export const SpecialistTaskPacketSchema = z.object({
   attachments: z.array(TurnAttachmentSchema).default([]),
   referenceResolutionError: ReferenceResolutionErrorSchema.optional(),
 });
-export type SpecialistTaskPacket = z.infer<typeof SpecialistTaskPacketSchema>;
+export type TaskPacket = z.infer<typeof TaskPacketSchema>;

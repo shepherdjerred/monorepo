@@ -1,12 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
-  requireSuccessfulPrimaryTool,
+  requireGroundedAnswer,
   summarizeToolResultForSession,
-} from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
+} from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import {
+  AGENT_INSTRUCTIONS,
   CORE_SYSTEM_POLICY,
-  directInstructions,
-  specialistInstructions,
 } from "@shepherdjerred/birmel/agent-runtime/prompts.ts";
 
 const registeredToolIds = ["manage-message"];
@@ -110,19 +109,19 @@ describe("summarizeToolResultForSession", () => {
   });
 });
 
-describe("capability-grounded execution instructions", () => {
-  test("tells unsupported direct turns to state the missing capability plainly", () => {
-    const instructions = directInstructions({
-      route: "direct",
-      disposition: "unsupported",
-      primaryToolId: null,
-      confidence: 1,
-      rationale: "No registered capability",
-    });
+describe("agent instructions", () => {
+  test("tells the agent that changing approach mid-turn is expected", () => {
+    expect(AGENT_INSTRUCTIONS).toContain(
+      "let what you find change your approach",
+    );
+    expect(AGENT_INSTRUCTIONS).toContain("it is not a failure");
+  });
 
-    expect(instructions).toContain("no registered capability");
-    expect(instructions).toContain("State that missing capability plainly");
-    expect(instructions).toContain("Do not imply that a safety policy");
+  test("keeps unsupported work an honest limitation, not a refusal", () => {
+    expect(AGENT_INSTRUCTIONS).toContain("no registered tool can do it");
+    expect(AGENT_INSTRUCTIONS).toContain(
+      "do not imply a safety policy or permission check caused it",
+    );
   });
 
   test("allows ordinary supported writes while retaining narrow bulk bans", () => {
@@ -133,64 +132,94 @@ describe("capability-grounded execution instructions", () => {
       "Refuse only bulk destructive operations and bulk creation",
     );
   });
+});
 
-  test("binds specialist execution to the routed primary tool", () => {
-    expect(
-      specialistInstructions("automation", {
-        route: "automation",
-        disposition: "supported",
-        primaryToolId: "web-research",
-        confidence: 1,
-        rationale: "Web research",
-      }),
-    ).toContain("Primary registered tool: web-research");
+describe("requireGroundedAnswer", () => {
+  const succeeded = {
+    toolCallId: "call-1",
+    toolId: "manage-message",
+    inputSummary: "{}",
+    resultSummary: "Sent",
+    content: "Tool manage-message call call-1 succeeded",
+    success: true,
+  };
+  const failed = {
+    toolCallId: "call-2",
+    toolId: "manage-message",
+    inputSummary: "{}",
+    resultSummary: "Tool reported failure",
+    content: "Tool manage-message call call-2 failed",
+    success: false,
+  };
+
+  test("accepts an answer grounded in a successful call", () => {
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Done.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-1"],
+        },
+        [succeeded],
+      ),
+    ).not.toThrow();
   });
 
-  test("requires the routed primary tool to succeed at runtime", () => {
-    const decision = {
-      route: "automation" as const,
-      disposition: "supported" as const,
-      primaryToolId: "web-research",
-      confidence: 1,
-      rationale: "Web research",
-    };
-    const supportingTool = {
-      toolCallId: "call-service",
-      toolId: "external-service",
-      inputSummary: "{}",
-      resultSummary: "Service called",
-      content: "Tool external-service succeeded",
-      success: true,
-    };
+  test("rejects an answer citing a call that failed", () => {
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Done.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-2"],
+        },
+        [succeeded, failed],
+      ),
+    ).toThrow("did not succeed this turn");
+  });
 
+  test("rejects an answer citing a call that never happened", () => {
     expect(() =>
-      requireSuccessfulPrimaryTool(decision, [supportingTool]),
-    ).toThrow("did not complete its primary tool successfully");
-    expect(() =>
-      requireSuccessfulPrimaryTool(decision, [
-        supportingTool,
+      requireGroundedAnswer(
         {
-          toolCallId: "call-research",
-          toolId: "web-research",
-          inputSummary: '{"query":"topic"}',
-          resultSummary: "Tool reported failure",
-          content: "Tool web-research failed",
-          success: false,
+          answer: "Done.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-invented"],
         },
-      ]),
-    ).toThrow("did not complete its primary tool successfully");
+        [succeeded],
+      ),
+    ).toThrow("call-invented");
+  });
+
+  test("rejects claimed supported work with no successful tool call", () => {
     expect(() =>
-      requireSuccessfulPrimaryTool(decision, [
-        supportingTool,
+      requireGroundedAnswer(
+        { answer: "Done.", disposition: "supported", reliedOnToolCallIds: [] },
+        [failed],
+      ),
+    ).toThrow("without citing a successful tool call");
+  });
+
+  test("rejects supported work citing nothing even when an unrelated call succeeded", () => {
+    // A harmless lookup succeeding does not make an unperformed mutation real.
+    expect(() =>
+      requireGroundedAnswer(
+        { answer: "Done.", disposition: "supported", reliedOnToolCallIds: [] },
+        [succeeded, failed],
+      ),
+    ).toThrow("without citing a successful tool call");
+  });
+
+  test("allows tool-free conversation to cite nothing", () => {
+    expect(() =>
+      requireGroundedAnswer(
         {
-          toolCallId: "call-research",
-          toolId: "web-research",
-          inputSummary: '{"query":"topic"}',
-          resultSummary: "Research returned results",
-          content: "Tool web-research succeeded",
-          success: true,
+          answer: "Hello.",
+          disposition: "conversation",
+          reliedOnToolCallIds: [],
         },
-      ]),
+        [],
+      ),
     ).not.toThrow();
   });
 });

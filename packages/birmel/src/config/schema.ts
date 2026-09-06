@@ -55,9 +55,15 @@ export const OpenRouterConfigSchema = z.object({
 });
 
 export const AgentConfigSchema = z.object({
-  maxSteps: z.number().int().min(1).max(8).default(8),
-  responseTimeoutMs: z.number().int().positive().default(120_000),
-  routerTimeoutMs: z.number().int().positive().default(30_000),
+  // The agent investigates and may change approach mid-turn, so the budget is
+  // a real one rather than the old 8-step ceiling sized for "call the one tool
+  // the router already picked". 12 matches Scout's explore agent.
+  maxSteps: z.number().int().min(1).max(24).default(12),
+  // Turns are allowed to take a while; progress is surfaced in the reply.
+  responseTimeoutMs: z.number().int().positive().default(300_000),
+  // Short helper calls that are not the turn itself: the admission classifier
+  // and context embedding. These previously borrowed the router's timeout.
+  auxiliaryTimeoutMs: z.number().int().positive().default(30_000),
 });
 
 export const AuthorityConfigSchema = z.object({
