@@ -2,7 +2,7 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   ScheduleRehearsalActivities,
   ScheduleRehearsalResult,
-} from "#activities/schedule-rehearsal.ts";
+} from "#activities/scout/schedule-rehearsal.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 // The rehearsal runs on the SCOUT queue, not maintenance: the jobs it

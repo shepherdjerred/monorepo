@@ -110,7 +110,7 @@ import type {
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
 import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
 import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
-import type { ScheduleRehearsalResult } from "#activities/schedule-rehearsal.ts";
+import type { ScheduleRehearsalResult } from "#activities/scout/schedule-rehearsal.ts";
 import {
   runKometaWorkflow as runKometaWorkflowImplementation,
   runBunCacheGcWorkflow as runBunCacheGcWorkflowImplementation,
