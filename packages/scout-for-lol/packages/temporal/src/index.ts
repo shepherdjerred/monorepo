@@ -67,6 +67,7 @@ export {
   SCOUT_WORKFLOW_NAMES,
   scoutFixedScheduleId,
   scoutDetachedWorkWorkflowId,
+  scoutIngestionReconciliationGatewayReadyWorkflowId,
   scoutInitialHistoryWorkflowId,
   scoutInteractiveWorkflowId,
   scoutMatchWorkflowId,

@@ -3,6 +3,7 @@ import {
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   scoutHallBaselineWorkflowId,
+  scoutIngestionReconciliationGatewayReadyWorkflowId,
   scoutInitialHistoryWorkflowId,
   scoutInteractiveWorkflowId,
   scoutMatchWorkflowId,
@@ -34,6 +35,9 @@ describe("Scout Temporal identifiers", () => {
     );
     expect(scoutReportScheduleReconcilerWorkflowId("prod")).toBe(
       "scout-prod-report-schedule-reconciler",
+    );
+    expect(scoutIngestionReconciliationGatewayReadyWorkflowId("beta")).toBe(
+      "scout-beta-ingestion-reconciliation-gateway-ready",
     );
     expect(scoutReportScheduleId("beta", "report_123")).toBe(
       "scout-beta-report-report_123",

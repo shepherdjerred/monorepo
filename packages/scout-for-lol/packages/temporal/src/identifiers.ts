@@ -65,6 +65,12 @@ export function scoutReportScheduleReconcilerWorkflowId(
   return `scout-${stage}-report-schedule-reconciler`;
 }
 
+export function scoutIngestionReconciliationGatewayReadyWorkflowId(
+  stage: ScoutStage,
+): string {
+  return `scout-${stage}-ingestion-reconciliation-gateway-ready`;
+}
+
 export function scoutReportScheduleId(
   stage: ScoutStage,
   reportId: string,
