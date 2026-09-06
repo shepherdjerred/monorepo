@@ -61,6 +61,7 @@ hold only scoped invariants that agents must keep in context.
 | [home-assistant](home-assistant/)                 | Type-safe Home Assistant client + schema codegen                               |
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
+| [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
 
 ## Plugins & extensions
 

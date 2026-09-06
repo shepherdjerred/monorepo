@@ -1,10 +1,13 @@
 import { Temporal } from "@js-temporal/polyfill";
+import { Loaded } from "@shepherdjerred/loaded";
+import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { ArrowLeftIcon, ExternalLinkIcon } from "lucide-react";
 import { useMemo } from "react";
 import { Link, useParams } from "react-router";
 
 import { occurrencePreviewRange } from "./preview-range.ts";
+import { StaleNotice } from "./stale-notice.tsx";
 import { formatInstant } from "./time.ts";
 import { useTRPC } from "./trpc.ts";
 import { Button } from "#components/button";
@@ -73,183 +76,212 @@ function AlertDetailContent({
     ...trpc.previews.get.queryOptions(previewInput),
     enabled: alert.data?.pages[0] !== undefined,
   });
-  if (alert.isPending)
-    return (
-      <main>
-        <div className="loading-state">Loading alert…</div>
-      </main>
-    );
-  if (alert.isError)
-    return (
-      <main>
-        <div className="error-state">Alert not found.</div>
-      </main>
-    );
-  const value = alert.data.pages[0];
-  if (value === undefined) throw new Error("Alert detail page was empty");
-  const deliveries = alert.data.pages.flatMap((page) => page.deliveries);
-  const dashboardUrl = value.annotations["dashboard_url"];
-  const runbookUrl = value.annotations["runbook_url"];
+  const alertValue = Loaded.fromQuery(alert, ["alert"]);
+  const previewsValue = Loaded.fromQuery(previews, ["previews"]);
   return (
-    <main>
-      <title>{`${value.alertname} · Alerts`}</title>
-      <Link className="back-link" to="/">
-        <ArrowLeftIcon /> Active alerts
-      </Link>
-      <div className="detail-heading">
-        <div>
-          <div className="badge-row">
-            <span className={`severity severity-${value.severity}`}>
-              {value.severity}
-            </span>
-            <span className="state">{value.lifecycleState}</span>
-            {value.suppressionState === "none" ? null : (
-              <span className="suppression">{value.suppressionState}</span>
-            )}
-          </div>
-          <h1>{value.alertname}</h1>
-          <p>{value.summary}</p>
-        </div>
-        <div className="link-row">
-          {runbookUrl === undefined ? null : (
-            <a href={runbookUrl} rel="noreferrer" target="_blank">
-              Runbook <ExternalLinkIcon />
-            </a>
-          )}
-          {dashboardUrl === undefined ? null : (
-            <a href={dashboardUrl} rel="noreferrer" target="_blank">
-              Dashboard <ExternalLinkIcon />
-            </a>
-          )}
-          {value.generatorUrl === null ? null : (
-            <a href={value.generatorUrl} rel="noreferrer" target="_blank">
-              Source <ExternalLinkIcon />
-            </a>
-          )}
-        </div>
-      </div>
-      <div className="detail-grid">
-        <section className="panel metadata">
-          <h2>Metadata</h2>
-          <dl>
-            <div>
-              <dt>Fingerprint</dt>
-              <dd className="mono">{value.fingerprint}</dd>
-            </div>
-            <div>
-              <dt>Namespace</dt>
-              <dd className="mono">{value.namespace ?? "—"}</dd>
-            </div>
-            <div>
-              <dt>Opened</dt>
-              <dd className="mono">{formatInstant(value.openedAt)}</dd>
-            </div>
-            <div>
-              <dt>Resolved</dt>
-              <dd className="mono">{formatInstant(value.resolvedAt)}</dd>
-            </div>
-            <div>
-              <dt>Last seen</dt>
-              <dd className="mono">{formatInstant(value.lastSeenAt)}</dd>
-            </div>
-            <div>
-              <dt>Resolution source</dt>
-              <dd>{value.resolutionSource ?? "—"}</dd>
-            </div>
-          </dl>
-          <h3>Labels</h3>
-          <div className="label-list">
-            {Object.entries(value.labels).map(([key, label]) => (
-              <code key={key}>
-                {key}={label}
-              </code>
-            ))}
-          </div>
-          <h3>Annotations</h3>
-          <div className="label-list">
-            {Object.entries(value.annotations).map(([key, annotation]) => (
-              <code key={key}>
-                {key}={annotation}
-              </code>
-            ))}
-          </div>
-        </section>
-        <section className="panel">
-          <h2 className="section-heading">Lifecycle</h2>
-          <div className="timeline compact">
-            {value.events.map((event) => (
-              <article key={event.id}>
-                <span className="timeline-dot" />
-                <div>
-                  <strong>{event.type.replaceAll("_", " ")}</strong>
-                  <p>{event.source}</p>
-                  <time className="mono" dateTime={event.occurredAt}>
-                    {formatInstant(event.occurredAt)}
-                  </time>
+    <LoadingBlock
+      values={{ alert: alertValue }}
+      fallback={
+        <main>
+          <div className="loading-state">Loading alert…</div>
+        </main>
+      }
+      renderError={() => (
+        <main>
+          <div className="error-state">Alert not found.</div>
+        </main>
+      )}
+    >
+      {({ alert: loadedAlert }, meta) => {
+        const value = loadedAlert.pages[0];
+        if (value === undefined) throw new Error("Alert detail page was empty");
+        const deliveries = loadedAlert.pages.flatMap((page) => page.deliveries);
+        const dashboardUrl = value.annotations["dashboard_url"];
+        const runbookUrl = value.annotations["runbook_url"];
+        return (
+          <main>
+            <title>{`${value.alertname} · Alerts`}</title>
+            <StaleNotice errors={meta.errors} />
+            <Link className="back-link" to="/">
+              <ArrowLeftIcon /> Active alerts
+            </Link>
+            <div className="detail-heading">
+              <div>
+                <div className="badge-row">
+                  <span className={`severity severity-${value.severity}`}>
+                    {value.severity}
+                  </span>
+                  <span className="state">{value.lifecycleState}</span>
+                  {value.suppressionState === "none" ? null : (
+                    <span className="suppression">
+                      {value.suppressionState}
+                    </span>
+                  )}
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
-        <section className="panel">
-          <h2 className="section-heading">Webhook evidence</h2>
-          {deliveries.length === 0 ? (
-            <p>
-              No webhook delivery observed for this occurrence. It may have been
-              discovered by reconciliation.
-            </p>
-          ) : (
-            <div className="timeline compact">
-              {deliveries.map((delivery) => (
-                <article key={delivery.id}>
-                  <span className="timeline-dot" />
-                  <div>
-                    <strong>
-                      {delivery.status} · {delivery.receiver}
-                    </strong>
-                    <p className="mono">{delivery.groupKey}</p>
-                    <time className="mono" dateTime={delivery.receivedAt}>
-                      {formatInstant(delivery.receivedAt)}
-                    </time>
-                    <p className="mono">
-                      sha256:{delivery.payloadHash.slice(0, 12)} · raw{" "}
-                      {delivery.rawPayloadRetained ? "retained" : "expired"}
-                    </p>
-                  </div>
-                </article>
-              ))}
+                <h1>{value.alertname}</h1>
+                <p>{value.summary}</p>
+              </div>
+              <div className="link-row">
+                {runbookUrl === undefined ? null : (
+                  <a href={runbookUrl} rel="noreferrer" target="_blank">
+                    Runbook <ExternalLinkIcon />
+                  </a>
+                )}
+                {dashboardUrl === undefined ? null : (
+                  <a href={dashboardUrl} rel="noreferrer" target="_blank">
+                    Dashboard <ExternalLinkIcon />
+                  </a>
+                )}
+                {value.generatorUrl === null ? null : (
+                  <a href={value.generatorUrl} rel="noreferrer" target="_blank">
+                    Source <ExternalLinkIcon />
+                  </a>
+                )}
+              </div>
             </div>
-          )}
-          {alert.hasNextPage ? (
-            <Button
-              disabled={alert.isFetchingNextPage}
-              onClick={() => void alert.fetchNextPage()}
-              type="button"
-            >
-              {alert.isFetchingNextPage
-                ? "Loading evidence…"
-                : "Load more evidence"}
-            </Button>
-          ) : null}
-        </section>
-      </div>
-      <div className="previews">
-        <h2>Observability previews</h2>
-        {previews.isPending ? (
-          <div className="loading-state">Loading bounded previews…</div>
-        ) : previews.isError ? (
-          <div className="error-state">
-            Previews are unavailable; alert details remain available.
-          </div>
-        ) : (
-          <div className="preview-grid">
-            <Preview title="Prometheus" value={previews.data.prometheus} />
-            <Preview title="Loki" value={previews.data.loki} />
-            <Preview title="Tempo" value={previews.data.tempo} />
-          </div>
-        )}
-      </div>
-    </main>
+            <div className="detail-grid">
+              <section className="panel metadata">
+                <h2>Metadata</h2>
+                <dl>
+                  <div>
+                    <dt>Fingerprint</dt>
+                    <dd className="mono">{value.fingerprint}</dd>
+                  </div>
+                  <div>
+                    <dt>Namespace</dt>
+                    <dd className="mono">{value.namespace ?? "—"}</dd>
+                  </div>
+                  <div>
+                    <dt>Opened</dt>
+                    <dd className="mono">{formatInstant(value.openedAt)}</dd>
+                  </div>
+                  <div>
+                    <dt>Resolved</dt>
+                    <dd className="mono">{formatInstant(value.resolvedAt)}</dd>
+                  </div>
+                  <div>
+                    <dt>Last seen</dt>
+                    <dd className="mono">{formatInstant(value.lastSeenAt)}</dd>
+                  </div>
+                  <div>
+                    <dt>Resolution source</dt>
+                    <dd>{value.resolutionSource ?? "—"}</dd>
+                  </div>
+                </dl>
+                <h3>Labels</h3>
+                <div className="label-list">
+                  {Object.entries(value.labels).map(([key, label]) => (
+                    <code key={key}>
+                      {key}={label}
+                    </code>
+                  ))}
+                </div>
+                <h3>Annotations</h3>
+                <div className="label-list">
+                  {Object.entries(value.annotations).map(
+                    ([key, annotation]) => (
+                      <code key={key}>
+                        {key}={annotation}
+                      </code>
+                    ),
+                  )}
+                </div>
+              </section>
+              <section className="panel">
+                <h2 className="section-heading">Lifecycle</h2>
+                <div className="timeline compact">
+                  {value.events.map((event) => (
+                    <article key={event.id}>
+                      <span className="timeline-dot" />
+                      <div>
+                        <strong>{event.type.replaceAll("_", " ")}</strong>
+                        <p>{event.source}</p>
+                        <time className="mono" dateTime={event.occurredAt}>
+                          {formatInstant(event.occurredAt)}
+                        </time>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+              <section className="panel">
+                <h2 className="section-heading">Webhook evidence</h2>
+                {deliveries.length === 0 ? (
+                  <p>
+                    No webhook delivery observed for this occurrence. It may
+                    have been discovered by reconciliation.
+                  </p>
+                ) : (
+                  <div className="timeline compact">
+                    {deliveries.map((delivery) => (
+                      <article key={delivery.id}>
+                        <span className="timeline-dot" />
+                        <div>
+                          <strong>
+                            {delivery.status} · {delivery.receiver}
+                          </strong>
+                          <p className="mono">{delivery.groupKey}</p>
+                          <time className="mono" dateTime={delivery.receivedAt}>
+                            {formatInstant(delivery.receivedAt)}
+                          </time>
+                          <p className="mono">
+                            sha256:{delivery.payloadHash.slice(0, 12)} · raw{" "}
+                            {delivery.rawPayloadRetained
+                              ? "retained"
+                              : "expired"}
+                          </p>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                )}
+                {alert.hasNextPage ? (
+                  <Button
+                    disabled={alert.isFetchingNextPage}
+                    onClick={() => void alert.fetchNextPage()}
+                    type="button"
+                  >
+                    {alert.isFetchingNextPage
+                      ? "Loading evidence…"
+                      : "Load more evidence"}
+                  </Button>
+                ) : null}
+              </section>
+            </div>
+            <div className="previews">
+              <h2>Observability previews</h2>
+              {Loaded.match(previewsValue, {
+                loading: () => (
+                  <div className="loading-state">Loading bounded previews…</div>
+                ),
+                error: () => (
+                  <div className="error-state">
+                    Previews are unavailable; alert details remain available.
+                  </div>
+                ),
+                available: (data, previewMeta) => (
+                  <>
+                    {/*
+                      The previews are their own dependency: the outer
+                      LoadingBlock joins only `alertValue`, so a failed preview
+                      refetch over cached previews is invisible to the page's
+                      StaleNotice. Without this the old Prometheus/Loki/Tempo
+                      values read as current.
+                    */}
+                    <StaleNotice errors={previewMeta.errors} />
+                    <div className="preview-grid">
+                      <Preview title="Prometheus" value={data.prometheus} />
+                      <Preview title="Loki" value={data.loki} />
+                      <Preview title="Tempo" value={data.tempo} />
+                    </div>
+                  </>
+                ),
+              })}
+            </div>
+          </main>
+        );
+      }}
+    </LoadingBlock>
   );
 }
 

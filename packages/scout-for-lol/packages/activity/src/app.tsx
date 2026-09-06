@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -123,15 +124,26 @@ function ActivityContent() {
   };
   const callbacks = { onSnapshot: cache, onError: fail };
 
-  if (active.isPending) {
+  // `error` here means the night could not be read at all. A refetch that
+  // failed over a snapshot already on screen is `degraded`, and falls through
+  // to render it — dropping a live customs night because one poll failed would
+  // be worse than showing a slightly stale one.
+  const night = Loaded.fromQuery(active, ["customs"]);
+  if (night.status === "loading") {
     return <main className="centered">Loading this server’s night…</main>;
   }
-  if (active.isError) {
-    return <main className="centered">{active.error.message}</main>;
-  }
-  if (active.data === null || active.data.state === "ENDED") {
+  if (night.status === "error") {
     return (
       <main className="centered">
+        {Loaded.messageOf(night.errors[0].error)}
+      </main>
+    );
+  }
+  const stale = night.status === "degraded";
+  if (night.data === null || night.data.state === "ENDED") {
+    return (
+      <main className="centered">
+        {stale ? <StaleBanner /> : null}
         <section className="panel welcome">
           <p className="eyebrow">Beta</p>
           <h1>Scout Customs</h1>
@@ -157,15 +169,25 @@ function ActivityContent() {
       </main>
     );
   }
-  const snapshot = active.data;
+  const snapshot = night.data;
   const joined = snapshot.participants.some(
     (participant) => participant.discordId === session.identity.id,
   );
   const manager = ["HOST", "COHOST", "ADMIN"].includes(snapshot.viewerRole);
-  if (joined || manager) return <CustomsExperience snapshot={snapshot} />;
+  if (joined || manager) {
+    // The live view is the branch that most needs this: stale teams, roles and
+    // controls presented as synchronized are worse than a stale lobby screen.
+    return (
+      <>
+        {stale ? <StaleBanner /> : null}
+        <CustomsExperience snapshot={snapshot} />
+      </>
+    );
+  }
 
   return (
     <main className="centered">
+      {stale ? <StaleBanner /> : null}
       <section className="panel welcome">
         <h1>{snapshot.guildName} Customs</h1>
         <p>
@@ -189,6 +211,19 @@ function ActivityContent() {
         </button>
       </section>
     </main>
+  );
+}
+
+/**
+ * A customs night is live state, so a snapshot that stopped updating is
+ * misleading in a way a stale list is not — including the "no night yet"
+ * screen, which is just as cacheable as a running one.
+ */
+function StaleBanner() {
+  return (
+    <p className="stale-banner" role="status">
+      Showing the last synced night — reconnecting.
+    </p>
   );
 }
 

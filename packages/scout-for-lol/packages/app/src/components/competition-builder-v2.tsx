@@ -58,7 +58,7 @@ export function CompetitionBuilderV2(props: {
   isNavigationAllowed?: () => boolean;
 }) {
   const permissions = usePermissions(props.guildId);
-  if (permissions.isLoading) {
+  if (permissions.access.status === "loading") {
     return <p className="text-sm text-scout-subtle">Loading builder…</p>;
   }
   return (

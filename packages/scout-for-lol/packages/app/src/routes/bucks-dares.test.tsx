@@ -1,12 +1,10 @@
+import { DareList } from "#src/components/dare-list.tsx";
+import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { DareProgressSchema } from "@scout-for-lol/data";
-import {
-  DareDetail,
-  DareList,
-  parseBucksDareId,
-} from "#src/routes/bucks-dares.tsx";
+import { DareDetail, parseBucksDareId } from "#src/routes/bucks-dares.tsx";
 import { formatDareEvidenceJson } from "#src/components/bucks-dare-progress.tsx";
 
 const noAction = vi.fn();
@@ -79,9 +77,7 @@ describe("DareList", () => {
     expect(
       renderToStaticMarkup(
         <DareList
-          loading
-          error={null}
-          dares={[]}
+          dares={Loaded.loading()}
           onRetry={noAction}
           onSelect={noAction}
         />,
@@ -90,9 +86,7 @@ describe("DareList", () => {
     expect(
       renderToStaticMarkup(
         <DareList
-          loading={false}
-          error={{ message: "Dares could not load" }}
-          dares={[]}
+          dares={Loaded.failed(new Error("Dares could not load"))}
           onRetry={noAction}
           onSelect={noAction}
         />,
@@ -101,9 +95,7 @@ describe("DareList", () => {
     expect(
       renderToStaticMarkup(
         <DareList
-          loading={false}
-          error={null}
-          dares={[]}
+          dares={Loaded.done([])}
           onRetry={noAction}
           onSelect={noAction}
         />,
@@ -114,9 +106,7 @@ describe("DareList", () => {
   test("renders searchable list results with lifecycle and evidence", () => {
     const html = renderToStaticMarkup(
       <DareList
-        loading={false}
-        error={null}
-        dares={[
+        dares={Loaded.done([
           {
             id: 42,
             state: "active",
@@ -128,7 +118,7 @@ describe("DareList", () => {
             progress,
             requiresViewerAction: true,
           },
-        ]}
+        ])}
         onRetry={noAction}
         onSelect={noAction}
       />,

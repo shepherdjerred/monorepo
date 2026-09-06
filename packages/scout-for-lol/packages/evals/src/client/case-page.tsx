@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import {
   skipToken,
   useMutation,
@@ -150,7 +151,14 @@ export function CasePage(): React.JSX.Element {
         : skipToken,
     ),
   );
-  const detail = detailQuery.data;
+  // This was `degraded`-tolerant so a rater would not lose an in-progress
+  // review to one failed poll. That trade is wrong here: the scorecard submits
+  // against `generation.id`, and `upsertHumanRating` does not verify that it is
+  // still the latest generation — so rating a stale cached case silently writes
+  // work that no longer counts. Losing the scroll position is the cheaper
+  // failure, so this projection is `strict`.
+  const caseValue = Loaded.strict(Loaded.fromQuery(detailQuery, ["case"]));
+  const detail = Loaded.getOrElse(caseValue, undefined);
   useDocumentTitle(
     detail === undefined
       ? "Review case"
@@ -184,7 +192,7 @@ export function CasePage(): React.JSX.Element {
   if (!datasetResult.success || !caseResult.success) {
     return <main className="mx-auto max-w-5xl p-8">Invalid case URL.</main>;
   }
-  if (detailQuery.isError) {
+  if (caseValue.status === "error") {
     return <main className="mx-auto max-w-5xl p-8">Case not found.</main>;
   }
   if (detail === undefined) {

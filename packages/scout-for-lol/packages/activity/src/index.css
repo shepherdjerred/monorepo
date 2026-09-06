@@ -292,3 +292,14 @@ html[data-discord-layout="pip"] main {
     padding: 0.75rem;
   }
 }
+
+.stale-banner {
+  margin: 0 0 12px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #7a5200;
+  background: #fff6e0;
+  border: 1px solid #f0d9a0;
+}

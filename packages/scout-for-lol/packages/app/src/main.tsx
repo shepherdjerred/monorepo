@@ -1,6 +1,12 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ScoutThemeProvider } from "@scout-for-lol/design-system/runtime";
+import {
+  ErrorState,
+  LoadingState,
+} from "@scout-for-lol/design-system/domain/states";
+import { Loaded } from "@shepherdjerred/loaded";
+import { LoadingBlockDefaults } from "@shepherdjerred/loaded/react.tsx";
 import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
@@ -74,7 +80,19 @@ createRoot(container).render(
     >
       <QueryClientProvider client={queryClient}>
         <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-          <RouterProvider router={router} />
+          {/*
+            One place decides what "not yet" and "could not" look like, so the
+            call sites only say what they render when the data is there. A page
+            with its own copy still overrides per-block.
+          */}
+          <LoadingBlockDefaults
+            fallback={<LoadingState />}
+            renderError={(errors) => (
+              <ErrorState message={Loaded.messageOf(errors[0].error)} />
+            )}
+          >
+            <RouterProvider router={router} />
+          </LoadingBlockDefaults>
         </TRPCProvider>
       </QueryClientProvider>
     </ScoutThemeProvider>

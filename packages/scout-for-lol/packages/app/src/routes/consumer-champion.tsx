@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -133,6 +134,21 @@ export function ConsumerChampion() {
   );
   useComparisonOpenTracking(qualified.isSuccess, qualified.isError);
 
+  // Both cohorts use `keepPreviousData`, so a failed refetch still has a page
+  // in hand — and that is exactly the hazard here. These cohorts are scoped to
+  // the viewer's currently enabled shared servers, so the failing request is
+  // the access recheck; showing the retained page would outlive the permission
+  // that produced it. `strict` collapses that `degraded` back to `error` so the
+  // comparison disappears rather than going stale.
+  const qualifiedValue = Loaded.strict(
+    Loaded.fromQuery(qualified, ["qualified"]),
+  );
+  const smallValue = Loaded.strict(Loaded.fromQuery(small, ["small"]));
+  const comparison = Loaded.all({
+    qualified: qualifiedValue,
+    small: smallValue,
+  });
+
   function resetPagination(): void {
     setQualifiedCursors([undefined]);
     setSmallCursors([undefined]);
@@ -140,7 +156,7 @@ export function ConsumerChampion() {
     setSmallPage(0);
   }
 
-  if (qualified.isError || small.isError) {
+  if (comparison.status === "error") {
     return (
       <PageShell>
         <Card>
@@ -163,12 +179,14 @@ export function ConsumerChampion() {
   }
 
   const { champion, availableGuilds, selectedGuilds } = comparisonHeader({
-    qualified: qualified.data,
-    small: small.data,
+    qualified: Loaded.getOrElse(qualifiedValue, undefined),
+    small: Loaded.getOrElse(smallValue, undefined),
     guildIds,
   });
-  const qualifiedResult = comparisonPage(qualified.data);
-  const smallResult = comparisonPage(small.data);
+  const qualifiedResult = comparisonPage(
+    Loaded.getOrElse(qualifiedValue, undefined),
+  );
+  const smallResult = comparisonPage(Loaded.getOrElse(smallValue, undefined));
   const profileSearch = playerProfileSearch(filters);
 
   return (

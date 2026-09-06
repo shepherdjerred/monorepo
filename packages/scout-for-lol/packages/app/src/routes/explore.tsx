@@ -1,5 +1,6 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "react-router";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -15,6 +16,7 @@ import { ExploreTranscript } from "#src/components/explore-transcript.tsx";
 import type { ExploreTranscriptActions } from "#src/components/explore-transcript-actions.ts";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
+import { useExploreConversation } from "#src/hooks/use-explore-conversation.ts";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
@@ -55,8 +57,17 @@ export function Explore() {
   const [restoredDraft, setRestoredDraft] = useState<string | null>(null);
   const runs = useExploreRuns();
 
-  const { status, enabled, quota, transcript, messages, title, shared } =
-    useExploreConversation(conversationId);
+  const {
+    status,
+    conversationState,
+    statusQuery,
+    enabled,
+    quota,
+    transcript,
+    messages,
+    title,
+    shared,
+  } = useExploreConversation(conversationId);
 
   const pendingTurn = runs.pendingTurn(conversationId);
   const turnActive = exploreTurnIsActive(pendingTurn, runs.discoverySettled);
@@ -194,11 +205,40 @@ export function Explore() {
     scrollIfPinned,
   ]);
 
-  if (status.isLoading) {
+  if (status.status === "loading") {
     return <SectionSkeleton />;
   }
 
-  if (status.isError) {
+  // `strict` above turns a failed transcript refetch into `error`, and
+  // `getOrElse` then hands the page `undefined` — which is indistinguishable
+  // from "new conversation". Without this branch an existing conversation URL
+  // renders as an empty composer, silently discarding the thread.
+  if (conversationId !== null && conversationState.status === "error") {
+    return (
+      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
+        <h2 className="text-base font-semibold text-scout-danger">
+          This conversation couldn&apos;t load
+        </h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
+          {Loaded.messageOf(conversationState.errors[0].error)}
+        </p>
+        <div className="mt-4 flex justify-center">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              void transcript.refetch();
+            }}
+          >
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (status.status === "error") {
     // A failed availability check is not a denial — say so, and offer the
     // narrow retry (just this query) rather than a whole-page reload.
     return (
@@ -216,7 +256,7 @@ export function Explore() {
             variant="outline"
             size="sm"
             onClick={() => {
-              void status.refetch();
+              void statusQuery.refetch();
             }}
           >
             Try again
@@ -387,25 +427,6 @@ function ExploreQuota(props: {
  * Separated from the component so the route's own logic stays about handling
  * turns rather than unwrapping query state.
  */
-function useExploreConversation(conversationId: string | null) {
-  const trpc = useTRPC();
-  const status = useQuery(trpc.explore.status.queryOptions());
-  const enabled = status.data?.enabled === true;
-  const transcript = useQuery({
-    ...trpc.explore.get.queryOptions({ conversationId: conversationId ?? "" }),
-    enabled: enabled && conversationId !== null,
-  });
-
-  return {
-    status,
-    enabled,
-    quota: status.data?.quota ?? [],
-    transcript,
-    messages: transcript.data?.messages ?? [],
-    title: transcript.data?.conversation.title ?? "Explore",
-    shared: transcript.data?.conversation.shareToken ?? null,
-  };
-}
 
 const EXAMPLES = [
   "Which champions have the highest win rate?",

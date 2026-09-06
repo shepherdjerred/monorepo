@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Link,
@@ -164,14 +165,22 @@ export function BucksWorkspace() {
     resolvedGuildId,
   ]);
 
-  if (statusQuery.isPending) {
+  // This probe *is* the gate for the Bucks outlet, not something rendered
+  // inside an already-gated one: the backend resolves Bucks scope from live
+  // Discord membership on every request, so a cached "available" cannot
+  // authorize the outlet once the recheck starts failing. `strict` keeps
+  // every page beneath this route closed until the probe succeeds again.
+  const statusValue = Loaded.strict(
+    Loaded.fromQuery(statusQuery, ["bucks.status"]),
+  );
+  if (statusValue.status === "loading") {
     return (
       <BucksPage>
         <LoadingState label="Checking Bryan Bucks availability…" />
       </BucksPage>
     );
   }
-  if (statusQuery.isError) {
+  if (statusValue.status === "error") {
     return (
       <BucksPage>
         <ErrorState
@@ -184,7 +193,7 @@ export function BucksWorkspace() {
       </BucksPage>
     );
   }
-  const status = statusQuery.data;
+  const status = statusValue.data;
   if (status.state !== "available") {
     return (
       <BucksPage>

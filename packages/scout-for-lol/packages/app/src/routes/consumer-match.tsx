@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -35,6 +36,13 @@ export function ConsumerMatch() {
     trpc.consumerMatch.detail.queryOptions({ playerId, matchId }),
   );
   const tracked = useRef(false);
+  // `strict` because this query carries authorization: the scoreboard and the
+  // guild-scoped Scout aliases below are only visible through a shared guild.
+  // Without it a revoked access whose refetch 403s would come back as
+  // `degraded` over the retained cache and keep rendering protected data.
+  const detailValue = Loaded.strict(
+    Loaded.fromQuery(detail, ["consumer.match"]),
+  );
 
   useEffect(() => {
     if (tracked.current || (!detail.isSuccess && !detail.isError)) return;
@@ -50,14 +58,14 @@ export function ConsumerMatch() {
     }
   }, [detail.data, detail.isError, detail.isSuccess]);
 
-  if (detail.isPending) {
+  if (detailValue.status === "loading") {
     return (
       <PageShell>
         <p className="text-sm text-scout-subtle">Loading match details…</p>
       </PageShell>
     );
   }
-  if (detail.isError) {
+  if (detailValue.status === "error") {
     return (
       <PageShell>
         <Card>
@@ -81,7 +89,7 @@ export function ConsumerMatch() {
     );
   }
 
-  const match = detail.data.match;
+  const match = detailValue.data.match;
   const participantIds = match.teams.flatMap((team) =>
     team.participants.map((participant) => participant.participantId),
   );
@@ -123,8 +131,8 @@ export function ConsumerMatch() {
       <MatchTimeline
         playerId={playerId}
         matchId={matchId}
-        coverage={detail.data.timeline.coverage}
-        keyEvents={detail.data.timeline.keyEvents}
+        coverage={detailValue.data.timeline.coverage}
+        keyEvents={detailValue.data.timeline.keyEvents}
         participantIds={participantIds}
       />
     </PageShell>

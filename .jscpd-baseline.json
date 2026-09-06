@@ -8,10 +8,6 @@
       "clones": 1,
       "tokens": 99
     },
-    "packages/alert-dashboard/src/client/main.tsx|packages/scout-for-lol/packages/evals/src/client/main.tsx": {
-      "clones": 1,
-      "tokens": 93
-    },
     "packages/alert-dashboard/src/infrastructure/observability.ts|packages/discord-plays-core/src/observability/tracing.ts": {
       "clones": 1,
       "tokens": 73

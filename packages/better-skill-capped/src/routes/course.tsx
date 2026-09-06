@@ -1,4 +1,5 @@
 import React from "react";
+import { Loaded } from "@shepherdjerred/loaded";
 import { createRoute } from "@tanstack/react-router";
 import { roleDisplayName } from "#src/model/role";
 import { useContent } from "#src/hooks/use-content";
@@ -13,20 +14,24 @@ import { NotFound, rootRoute } from "./root.tsx";
 
 function CoursePage(): React.ReactElement {
   const { courseUuid } = courseRoute.useParams();
-  const { content, isLoading, error } = useContent();
+  const { content: contentValue } = useContent();
   const { isBookmarked, toggle: toggleBookmark } = useBookmarks();
   const { isWatched, toggle: toggleWatchStatus } = useWatchStatus();
 
-  // Surface manifest failures to the router error boundary (matching the
-  // search page) instead of letting them read as a missing course.
-  if (error !== null) {
-    throw error;
+  // Surface a manifest failure to the router error boundary (matching the
+  // search page) instead of letting it read as a missing course — but only
+  // when there is no catalog at all. A refetch that failed over a cached
+  // catalog is `degraded`, and blanking the page for it would discard content
+  // the reader can still use.
+  if (contentValue.status === "error") {
+    throw contentValue.errors[0].error;
   }
 
+  const content = Loaded.getOrElse(contentValue, undefined);
   if (content === undefined) {
     return (
       <div className="mx-auto max-w-4xl px-4 py-10 text-center text-muted-foreground">
-        {isLoading ? "Loading…" : "Content is unavailable."}
+        Loading…
       </div>
     );
   }

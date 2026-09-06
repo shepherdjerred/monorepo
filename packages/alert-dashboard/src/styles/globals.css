@@ -320,6 +320,14 @@ tbody tr:hover {
 .error-state {
   color: #9d241e;
 }
+.stale-state {
+  padding: 10px 24px;
+  text-align: center;
+  color: #7a5200;
+  background: #fff6e0;
+  border-bottom: 1px solid #f0d9a0;
+  font-size: 0.9rem;
+}
 .timeline {
   padding: 18px 24px;
 }

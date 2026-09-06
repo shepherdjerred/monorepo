@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -9,6 +10,7 @@ import type {
   DareProgress,
 } from "@scout-for-lol/data";
 import { BucksDareEditor } from "#src/components/bucks-dare-editor.tsx";
+import { DareList } from "#src/components/dare-list.tsx";
 import { BucksDareActions } from "#src/components/bucks-dare-actions.tsx";
 import { FilterSelect } from "#src/components/filter-select.tsx";
 import {
@@ -33,6 +35,7 @@ import {
 import {
   ErrorState,
   LoadingState,
+  StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { dareDeadlineDescription } from "#src/lib/dare-deadline.ts";
@@ -117,7 +120,9 @@ function DareListPage(props: { guildId: string; guildName: string }) {
       { getNextPageParam: (lastPage) => lastPage.nextCursor },
     ),
   );
-  const dares = list.data?.pages.flatMap((page) => page.items) ?? [];
+  const dares = Loaded.map(Loaded.fromQuery(list, ["bucks.dareList"]), (data) =>
+    data.pages.flatMap((page) => page.items),
+  );
 
   return (
     <div className="space-y-6">
@@ -208,8 +213,6 @@ function DareListPage(props: { guildId: string; guildName: string }) {
       </div>
 
       <DareList
-        loading={list.isPending}
-        error={list.error}
         dares={dares}
         onRetry={() => {
           void list.refetch();
@@ -234,72 +237,6 @@ function DareListPage(props: { guildId: string; guildName: string }) {
   );
 }
 
-export function DareList(props: {
-  loading: boolean;
-  error: { message: string } | null;
-  dares: {
-    id: number;
-    state: string;
-    plainLanguage: string;
-    targetAliases: string[];
-    potTotal: number;
-    evidenceGames: number;
-    updatedAt: string;
-    progress: DareProgress;
-    requiresViewerAction: boolean;
-  }[];
-  onRetry: () => void;
-  onSelect: (dareId: number) => void;
-}) {
-  if (props.loading) return <LoadingState label="Loading dares…" />;
-  if (props.error !== null) {
-    return <ErrorState message={props.error.message} onRetry={props.onRetry} />;
-  }
-  if (props.dares.length === 0) {
-    return (
-      <EmptyState>
-        <h2>No dares match</h2>
-        <p>Try another search or create a Dare in Explore.</p>
-      </EmptyState>
-    );
-  }
-  return (
-    <ul className="grid gap-3 lg:grid-cols-2">
-      {props.dares.map((dare) => (
-        <li key={dare.id}>
-          <button
-            type="button"
-            className="h-full w-full space-y-3 rounded-lg border border-scout-border p-4 text-left hover:bg-scout-hover"
-            onClick={() => {
-              props.onSelect(dare.id);
-            }}
-          >
-            <div className="flex items-center justify-between gap-2 text-xs">
-              <span className="font-medium">Dare #{dare.id.toString()}</span>
-              <StatePill state={dare.state} />
-            </div>
-            <p className="line-clamp-3 whitespace-pre-wrap text-sm">
-              {dare.plainLanguage}
-            </p>
-            <p className="text-xs text-scout-subtle">
-              {dare.targetAliases.join(", ")} · {dare.potTotal.toString()} BB ·{" "}
-              {dare.evidenceGames.toString()} evidence games
-            </p>
-            <div className="flex items-center justify-between gap-2 text-xs">
-              <span className="text-scout-subtle">{dare.progress.summary}</span>
-              {dare.requiresViewerAction && (
-                <span className="rounded-full bg-scout-warning/15 px-2 py-0.5 text-scout-warning">
-                  Needs action
-                </span>
-              )}
-            </div>
-          </button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function DareDetailPage(props: { guildId: string; dareId: number }) {
   const trpc = useTRPC();
   const detail = useQuery(
@@ -318,11 +255,12 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
       },
     ),
   );
-  if (detail.isPending) return <LoadingState label="Loading dare…" />;
-  if (detail.isError) {
+  const dare = Loaded.fromQuery(detail, ["bucks.dare"]);
+  if (dare.status === "loading") return <LoadingState label="Loading dare…" />;
+  if (dare.status === "error") {
     return (
       <ErrorState
-        message={detail.error.message}
+        message={Loaded.messageOf(dare.errors[0].error)}
         onRetry={() => {
           void detail.refetch();
         }}
@@ -331,20 +269,21 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
   }
   return (
     <>
-      <DareDetail guildId={props.guildId} dare={detail.data} />
+      <StaleState errors={dare.status === "degraded" ? dare.errors : []} />
+      <DareDetail guildId={props.guildId} dare={dare.data} />
       <div className="mt-5">
         <BucksDareActions
           guildId={props.guildId}
-          dareId={detail.data.id}
-          revision={detail.data.fundedRevision ?? detail.data.currentRevision}
-          availableActions={detail.data.availableActions}
+          dareId={dare.data.id}
+          revision={dare.data.fundedRevision ?? dare.data.currentRevision}
+          availableActions={dare.data.availableActions}
         />
       </div>
       <div className="mt-5">
         <DareEvidencePanel
           guildId={props.guildId}
-          dareId={detail.data.id}
-          enabled={detail.data.evidenceGames > 0}
+          dareId={dare.data.id}
+          enabled={dare.data.evidenceGames > 0}
         />
       </div>
     </>

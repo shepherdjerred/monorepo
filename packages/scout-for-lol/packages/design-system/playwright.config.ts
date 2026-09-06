@@ -33,9 +33,17 @@ export default defineConfig({
     reuseExistingServer: true,
     // Playwright defaults to 60s. This vite server shares the browser-E2E pod
     // with sjer.red's 110-screenshot run at --concurrency=2 and timed out at
-    // exactly 60s on build 10779 without emitting an error. 120s matches
-    // sjer.red, alert-dashboard, and evals.
-    timeout: 120_000,
+    // exactly 60s on build 10779 without emitting an error. 120s matched
+    // sjer.red, alert-dashboard, and evals — and then hit the same wall on
+    // build 14249, again with no error, on a change that adds nothing this
+    // server loads (the only new import in this package is `import type`,
+    // which is erased before vite sees it).
+    //
+    // The cost is startup, not the suite: `--force` above deliberately
+    // rebuilds the optimizer state on every start to avoid a stall that is
+    // worse, so a cold, contended pod pays for that every time. Raising the
+    // ceiling is the same trade made at 60s, not a new one.
+    timeout: 240_000,
   },
   use: { baseURL: "http://127.0.0.1:5190", reducedMotion: "reduce" },
   projects: [

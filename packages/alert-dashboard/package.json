@@ -46,6 +46,7 @@
     "@prisma/adapter-libsql": "7.9.1",
     "@prisma/client": "^7.9.1",
     "@prisma/client-runtime-utils": "7.9.1",
+    "@shepherdjerred/loaded": "workspace:*",
     "@tanstack/react-query": "^5.101.2",
     "@trpc/client": "^11.18.0",
     "@trpc/server": "^11.18.0",

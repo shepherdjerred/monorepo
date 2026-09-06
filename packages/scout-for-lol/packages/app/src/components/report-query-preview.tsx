@@ -1,3 +1,4 @@
+import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/trpc.ts";
@@ -58,7 +59,8 @@ export function ReportQueryPreview(props: {
     ),
   );
 
-  const result = previewQuery.data;
+  const preview = Loaded.fromQuery(previewQuery, ["queryPreview"]);
+  const result = Loaded.getOrElse(preview, undefined);
 
   return (
     <div className="min-w-0 space-y-2">
@@ -68,15 +70,15 @@ export function ReportQueryPreview(props: {
           Write a query to preview its results.
         </p>
       )}
-      {hasQuery && previewQuery.isPending && (
+      {hasQuery && preview.status === "loading" && (
         <p className="text-sm text-scout-subtle">Running preview…</p>
       )}
-      {previewQuery.error !== null && (
+      {(preview.status === "error" || preview.status === "degraded") && (
         <pre className="overflow-auto whitespace-pre-wrap rounded-md border border-scout-danger bg-scout-danger p-3 text-xs text-scout-danger-ink">
-          {previewQuery.error.message}
+          {Loaded.messageOf(preview.errors[0].error)}
         </pre>
       )}
-      {result !== undefined && previewQuery.error === null && (
+      {result !== undefined && preview.status !== "degraded" && (
         <>
           {previewQuery.isFetching && (
             <p className="text-xs text-scout-subtle">Updating…</p>
