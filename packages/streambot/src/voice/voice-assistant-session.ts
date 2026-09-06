@@ -333,12 +333,12 @@ export class VoiceAssistantSession {
     followUp: boolean,
     result: RealtimeCommandTurnResult,
   ): void {
-    if (
+    const shouldArmFollowUp =
       result.wakeVerified &&
       result.normalizedCommand !== "" &&
       !result.mutated &&
-      result.clarificationRequested === true
-    ) {
+      result.clarificationRequested === true;
+    if (shouldArmFollowUp) {
       const usedFollowUps = followUp ? this.followUpCount + 1 : 0;
       if (usedFollowUps < 2) {
         this.followUpUserId = userId;
@@ -347,7 +347,7 @@ export class VoiceAssistantSession {
       } else {
         this.clearFollowUp();
       }
-    } else if (result.mutated) {
+    } else if (followUp || result.mutated) {
       this.clearFollowUp();
     }
   }

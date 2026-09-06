@@ -130,6 +130,7 @@ async function main(): Promise<void> {
   const discovery = new DiscoveryService({
     library: () => library,
     history,
+    historyEnabled: mediaFeatureGate.history,
     searchYoutube: (query, signal, limit) =>
       searchYoutube(config, query, signal, limit),
   });

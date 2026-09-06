@@ -27,6 +27,7 @@ export type DiscoveryServiceDeps = {
     signal: AbortSignal,
     limit: number,
   ) => Promise<readonly YtdlpSearchResult[]>;
+  readonly historyEnabled?: (scope: DiscoveryScope) => Promise<boolean>;
   readonly context?: ConversationContextStore;
 };
 
@@ -105,10 +106,16 @@ export class DiscoveryService {
     signal: AbortSignal,
   ): Promise<MediaCandidate[]> {
     signal.throwIfAborted();
+    const historyEnabled = await this.isHistoryEnabled(scope);
     const contextual = this.context.select(scope, intent.query);
-    if (contextual !== null) return [contextual];
+    if (
+      contextual !== null &&
+      (historyEnabled || contextual.provider !== "history")
+    ) {
+      return [contextual];
+    }
 
-    if (isHistoryReference(intent.query)) {
+    if (historyEnabled && isHistoryReference(intent.query)) {
       const previous = referencedHistoryCandidate(
         this.deps.history,
         scope,
@@ -119,7 +126,8 @@ export class DiscoveryService {
 
     const queries = expandMediaQueries(intent);
     const includeHistory =
-      intent.source === "auto" || intent.source === "history";
+      historyEnabled &&
+      (intent.source === "auto" || intent.source === "history");
     const includeLocal = intent.source === "auto" || intent.source === "local";
     const includeYoutube =
       intent.source === "auto" || intent.source === "youtube";
@@ -155,6 +163,13 @@ export class DiscoveryService {
           right.score - left.score || left.title.localeCompare(right.title),
       )
       .slice(0, 5);
+  }
+
+  private async isHistoryEnabled(scope: DiscoveryScope): Promise<boolean> {
+    if (this.deps.history === undefined) return false;
+    return this.deps.historyEnabled === undefined
+      ? true
+      : await this.deps.historyEnabled(scope);
   }
 
   async resolve(

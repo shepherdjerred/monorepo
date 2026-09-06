@@ -27,6 +27,12 @@ const ADVANCED_TOOL_NAMES = new Set<ToolName>([
   "search_media",
 ]);
 
+function isAdvancedPlay(name: ToolName, toolArguments: unknown): boolean {
+  if (name !== "play") return false;
+  const parsed = voiceToolSchemas.play.safeParse(toolArguments);
+  return parsed.success && parsed.data.placement === "now";
+}
+
 /** User/session-bound command surface shared by production execution and local dry runs. */
 export type VoiceCommandPort = {
   readonly play: (
@@ -178,8 +184,11 @@ export function createStreambotVoiceTools(
               "That voice command expired. Say Hey Streambot and try again.";
             return result;
           }
+          const advanced =
+            ADVANCED_TOOL_NAMES.has(name) ||
+            isAdvancedPlay(name, toolArguments);
           if (
-            ADVANCED_TOOL_NAMES.has(name) &&
+            advanced &&
             commands.isAssistantV2Enabled !== undefined &&
             !(await commands.isAssistantV2Enabled())
           ) {

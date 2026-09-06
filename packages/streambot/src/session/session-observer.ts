@@ -41,6 +41,16 @@ export class SessionObserver {
     queueLength.set(this.options.totalQueueLength());
     this.updateLifecycle(stateName, snapshot.context.queue.length);
     this.updatePlaybackHistory(stateName, snapshot.context);
+    this.trackResolvingRequest(stateName, snapshot.context);
+  }
+
+  private trackResolvingRequest(
+    stateName: string,
+    context: PlaybackContext,
+  ): void {
+    if (stateName === "resolving" && context.current?.requestId !== undefined) {
+      this.activeRequestId = context.current.requestId;
+    }
   }
 
   private finishInactiveRequest(

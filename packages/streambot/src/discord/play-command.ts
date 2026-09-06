@@ -161,6 +161,17 @@ async function runPlaylist(
 ): Promise<void> {
   const { deps, interaction, query, subtitles, next, placement } = input;
   await interaction.defer();
+  if (placement === "now") {
+    try {
+      new PlaybackCommandService(deps).assertCanPlayNow(interaction.userId);
+    } catch (error) {
+      if (error instanceof PlaybackCommandBoundaryError) {
+        await interaction.editReply(error.message);
+        return;
+      }
+      throw error;
+    }
+  }
   const items = await deps.expandPlaylist(
     query,
     AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
@@ -175,7 +186,9 @@ async function runPlaylist(
         };
   const history = deps.history;
   const historyEnabled = await playlistHistoryEnabled(deps, scope);
-  for (const [index, item] of items.entries()) {
+  const dispatchItems =
+    placement === "next" || next ? items.toReversed() : items;
+  for (const [index, item] of dispatchItems.entries()) {
     const itemPlacement = playlistItemPlacement(index, placement, next);
     const source = { kind: "url", url: item.url, subtitles } as const;
     const requestId =

@@ -87,6 +87,22 @@ export class PlaybackCommandService extends PlaybackControls {
     return this.clarificationGeneration;
   }
 
+  assertCanPlayNow(userId: UserId): void {
+    const current = this.deps.view().current;
+    if (
+      current !== null &&
+      !canControlItem(
+        userId,
+        current.requesterId,
+        this.deps.config.discord.adminIds,
+      )
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "Only the requester or an admin can replace the current video.",
+      );
+    }
+  }
+
   async play(input: PlayInput): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
     const query = this.normalizePlayQuery(input);
@@ -109,7 +125,7 @@ export class PlaybackCommandService extends PlaybackControls {
       scope,
     });
     input.signal?.throwIfAborted();
-    this.assertCanPlayNow(input);
+    if (input.placement === "now") this.assertCanPlayNow(input.userId);
     const media = this.toRecordMedia(source, preResolved, selected.candidate);
     const requestId = await this.recordRequest(scope, query, intent, media);
     if (input.placement === "now") {
@@ -150,6 +166,11 @@ export class PlaybackCommandService extends PlaybackControls {
     scope: DiscoveryScope | null,
   ): Promise<SelectedMedia> {
     if (input.spoken === false && isHttpUrl(query)) {
+      if (input.source === "local" || input.source === "history") {
+        throw new PlaybackCommandBoundaryError(
+          "A URL cannot use the local or history source.",
+        );
+      }
       return { source: { kind: "url", url: query } };
     }
     const discoveryEnabled = await this.discoveryEnabled(scope);
@@ -220,23 +241,6 @@ export class PlaybackCommandService extends PlaybackControls {
       return await this.deps.featureGate.assistantV2(scope);
     }
     return this.deps.discovery !== undefined;
-  }
-
-  private assertCanPlayNow(input: PlayInput): void {
-    if (input.placement !== "now") return;
-    const current = this.deps.view().current;
-    if (
-      current !== null &&
-      !canControlItem(
-        input.userId,
-        current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
-      throw new PlaybackCommandBoundaryError(
-        "Only the requester or an admin can replace the current video.",
-      );
-    }
   }
 
   private async recordRequest(
