@@ -18,14 +18,26 @@ export type AssistantVoiceConnection = {
   playOpusPacket: (buffer: Buffer) => unknown;
 };
 
-/** Adapt one live voice connection to the shared assistant audio transport. */
+/**
+ * Adapt one live voice connection to the shared assistant audio transport.
+ *
+ * `PacedAssistantSender.run()` always awaits `setAssistantSpeaking(true)`
+ * before sending its first packet, which makes it the one hook available to
+ * reserve the connection: `reserveForAssistant` (the output arbiter's
+ * bidirectional reservation) blocks here until any in-flight sound-engine
+ * alert has released the connection, so the two producers are never
+ * concurrent on it.
+ */
 export function assistantAudioTransport(
   connection: AssistantVoiceConnection,
+  reserveForAssistant: () => Promise<void>,
 ): AssistantAudioTransport {
   return {
-    setAssistantSpeaking: (speaking) => {
+    setAssistantSpeaking: async (speaking) => {
+      if (speaking) {
+        await reserveForAssistant();
+      }
       connection.setSpeaking(speaking);
-      return Promise.resolve();
     },
     sendAssistantOpus: (opus) => {
       connection.playOpusPacket(
@@ -39,10 +51,14 @@ export function assistantAudioTransport(
 export function createAssistantSender(
   connection: AssistantVoiceConnection,
   duck: DuckObserver,
+  reserveForAssistant: () => Promise<void>,
 ): AssistantAudioSink {
-  return new PacedAssistantSender(assistantAudioTransport(connection), {
-    stagePrefix: SCOUT_VOICE_STAGE_PREFIX,
-    metrics: scoutVoiceReplyMetrics,
-    duck,
-  });
+  return new PacedAssistantSender(
+    assistantAudioTransport(connection, reserveForAssistant),
+    {
+      stagePrefix: SCOUT_VOICE_STAGE_PREFIX,
+      metrics: scoutVoiceReplyMetrics,
+      duck,
+    },
+  );
 }

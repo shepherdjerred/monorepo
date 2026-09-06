@@ -90,18 +90,23 @@ function managerHarness(): Harness {
   };
 }
 
+type GateResult = { volumeMultiplier: number; release: () => void };
+
 /** A playback gate whose completion the test controls. */
 function deferredGate() {
-  const state: { resolve: (value: { volumeMultiplier: number }) => void } = {
+  const state: { resolve: (value: GateResult) => void } = {
     resolve: doNothing,
   };
-  const promise = new Promise<{ volumeMultiplier: number }>((resolve) => {
+  const promise = new Promise<GateResult>((resolve) => {
     state.resolve = resolve;
   });
   return {
     promise,
-    release: () => {
-      state.resolve({ volumeMultiplier: 1 });
+    // Resolves the gate promise (lets the alert past the wait) — distinct
+    // from the resolved value's own `release`, which is what the alert
+    // calls once ITS playback ends to free the connection reservation.
+    resolveGate: () => {
+      state.resolve({ volumeMultiplier: 1, release: doNothing });
     },
   };
 }
@@ -260,7 +265,7 @@ describe("VoiceManager modes", () => {
     });
     // The session ends while the gate holds the alert.
     h.manager.leaveChannel(GUILD);
-    gate.release();
+    gate.resolveGate();
     await expect(alert).rejects.toThrow("No voice connection");
     // Nothing was subscribed to the destroyed connection after teardown.
     expect(assistant.subscribed).toEqual([]);
@@ -290,7 +295,7 @@ describe("enqueuePerKey", () => {
       order.push("second-start");
     });
     expect(order).toEqual(["first-start"]);
-    gate.release();
+    gate.resolveGate();
     await first;
     await second;
     expect(order).toEqual(["first-start", "first-end", "second-start"]);
@@ -318,7 +323,7 @@ describe("enqueuePerKey", () => {
     await expect(
       enqueuePerKey(queues, "g2", () => Promise.resolve("g2")),
     ).resolves.toBe("g2");
-    gate.release();
+    gate.resolveGate();
     await expect(blocked).resolves.toBe("g1");
   });
 });

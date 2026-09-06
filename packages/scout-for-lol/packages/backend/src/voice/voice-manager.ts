@@ -61,15 +61,20 @@ export type EstablishVoiceConnection<C extends VoiceManagerConnection> =
   }) => Promise<C>;
 
 /**
- * Consulted before each sound-engine alert. The voice-assistant output
- * arbiter installs one that waits for assistant speech to finish — a Discord
- * voice connection carries one outbound Opus stream, so the alert and an
- * in-flight assistant reply can never both be sending at once. The returned
- * multiplier exists for future ducking; today's arbiter always returns 1.
+ * Consulted before each sound-engine alert, and released once that alert's
+ * playback fully ends (success, error, or timeout — every path). The
+ * voice-assistant output arbiter installs one that waits for assistant
+ * speech to finish and, while `release()` has not yet been called, holds the
+ * connection reserved so a wake accepted mid-alert waits for the alert
+ * instead of sending assistant packets concurrently with it. A Discord voice
+ * connection carries one outbound Opus stream, so the two can never both be
+ * sending at once in either direction. The multiplier exists for future
+ * ducking; today's arbiter always returns 1.
  */
-export type PlaybackGate = (
-  guildId: string,
-) => Promise<{ volumeMultiplier: number }>;
+export type PlaybackGate = (guildId: string) => Promise<{
+  readonly volumeMultiplier: number;
+  readonly release: () => void;
+}>;
 
 /**
  * Run `task` after every earlier task queued under `key` has settled, without
@@ -318,12 +323,27 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     source: SoundSource,
     volume: number,
   ): Promise<void> {
-    // Wait for an in-flight assistant reply to fall fully silent — the two
-    // are never concurrent producers on the same connection (see
-    // VoiceOutputArbiter).
+    // Wait for an in-flight assistant reply to fall fully silent, and hold
+    // the connection reserved (via `gate.release()` below, called only once
+    // this alert's own playback fully ends) so a wake accepted while this
+    // alert is still playing waits for it instead of sending assistant
+    // packets concurrently with it — the two are never concurrent producers
+    // on the same connection (see VoiceOutputArbiter).
     const gate = await this.playbackGate?.(guildId);
     const effectiveVolume = volume * (gate?.volumeMultiplier ?? 1);
 
+    try {
+      await this.playResource(guildId, source, effectiveVolume);
+    } finally {
+      gate?.release();
+    }
+  }
+
+  private async playResource(
+    guildId: string,
+    source: SoundSource,
+    effectiveVolume: number,
+  ): Promise<void> {
     // Re-fetched AFTER the gate wait on purpose: `/scout leave`, auto-leave,
     // a rejoin, or connection loss can destroy and replace the connection
     // while the gate holds this alert, and a player subscribed to the

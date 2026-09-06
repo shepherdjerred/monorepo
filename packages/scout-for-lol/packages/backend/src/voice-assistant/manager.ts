@@ -133,6 +133,7 @@ function defaultDeps(): VoiceAssistantManagerDeps {
           createAssistantSender(
             input.connection,
             voiceOutputArbiter.assistantDuck(input.guildId),
+            () => voiceOutputArbiter.reserveForAssistant(input.guildId),
           ),
         onWakeAccepted: input.onWakeAccepted,
         onQuestionObserved: input.onQuestionObserved,
