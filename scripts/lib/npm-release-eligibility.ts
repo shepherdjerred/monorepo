@@ -205,6 +205,8 @@ function isTestOrExamplePath(relativePath: string): boolean {
     ) ||
     relativePath.startsWith("examples/") ||
     relativePath.startsWith("example/") ||
+    relativePath.startsWith("demos/") ||
+    relativePath.startsWith("demo/") ||
     relativePath.startsWith("src/__fixtures__/")
   );
 }
