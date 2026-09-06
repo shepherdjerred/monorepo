@@ -24,7 +24,8 @@ export type GuildNavigationItem = {
   to: string;
   label: string;
   permission: Permission;
-  betaFeature?: "customs";
+  additionalPermissions?: readonly Permission[];
+  feature?: "customs" | "hall_of_fame";
 };
 
 export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
@@ -32,7 +33,7 @@ export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
     to: "customs",
     label: "Customs",
     permission: { resource: "customs", action: "read" },
-    betaFeature: "customs",
+    feature: "customs",
   },
   {
     to: "subscriptions",
@@ -55,6 +56,13 @@ export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
     permission: { resource: "reports", action: "read" },
   },
   {
+    to: "hall-of-fame",
+    label: "Hall settings",
+    permission: { resource: "reports", action: "read" },
+    additionalPermissions: [{ resource: "reports", action: "update" }],
+    feature: "hall_of_fame",
+  },
+  {
     to: "audit",
     label: "Audit",
     permission: { resource: "audit", action: "read" },
@@ -69,11 +77,15 @@ export const GUILD_NAVIGATION_ITEMS: readonly GuildNavigationItem[] = [
 export function visibleGuildNavigationItems(
   canRead: (permission: Permission) => boolean,
   customNightsEnabled = false,
+  hallOfFameEnabled = false,
 ): readonly GuildNavigationItem[] {
   return GUILD_NAVIGATION_ITEMS.filter(
     (item) =>
       canRead(item.permission) &&
-      (item.betaFeature !== "customs" || customNightsEnabled),
+      (item.additionalPermissions?.every((permission) => canRead(permission)) ??
+        true) &&
+      (item.feature !== "customs" || customNightsEnabled) &&
+      (item.feature !== "hall_of_fame" || hallOfFameEnabled),
   );
 }
 
