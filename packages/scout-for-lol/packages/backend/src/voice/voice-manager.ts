@@ -125,6 +125,18 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     mode: ConnectionMode,
   ) => void)[] = [];
   private readonly playbackQueues = new Map<string, Promise<unknown>>();
+  /**
+   * Serializes `ensureConnected`/`joinChannel` per guild. Both read
+   * `this.connections`/`this.modes`, decide whether to establish a new
+   * connection, and (if so) await `establish()` before writing the result
+   * back — and `establish()` can take real network time. Without this queue,
+   * an alert's `ensureConnected` and an in-flight `/scout join` for a
+   * brand-new guild connection can both observe "nothing connected yet",
+   * both call `establish()`, and whichever resolves second silently
+   * overwrites the other's connection (leaking it, un-destroyed) instead of
+   * recognizing it should reuse what the first call just created.
+   */
+  private readonly connectionQueues = new Map<string, Promise<unknown>>();
   private playbackGate: PlaybackGate | null = null;
 
   constructor(private readonly establish: EstablishVoiceConnection<C>) {}
@@ -176,7 +188,17 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     if (!this.client) {
       throw new Error("Discord client not initialized");
     }
+    return await enqueuePerKey(
+      this.connectionQueues,
+      guildId,
+      async () => await this.ensureConnectedLocked(guildId, channelId),
+    );
+  }
 
+  private async ensureConnectedLocked(
+    guildId: string,
+    channelId: string,
+  ): Promise<C> {
     const existingConnection = this.connections.get(guildId);
     if (
       existingConnection !== undefined &&
@@ -189,7 +211,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
       return existingConnection;
     }
 
-    return this.joinChannel(guildId, channelId);
+    return await this.joinChannelLocked(guildId, channelId, "playback");
   }
 
   /**
@@ -204,6 +226,21 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     guildId: string,
     channelId: string,
     mode: ConnectionMode = "playback",
+  ): Promise<C> {
+    if (!this.client) {
+      throw new Error("Discord client not initialized");
+    }
+    return await enqueuePerKey(
+      this.connectionQueues,
+      guildId,
+      async () => await this.joinChannelLocked(guildId, channelId, mode),
+    );
+  }
+
+  private async joinChannelLocked(
+    guildId: string,
+    channelId: string,
+    mode: ConnectionMode,
   ): Promise<C> {
     if (!this.client) {
       throw new Error("Discord client not initialized");

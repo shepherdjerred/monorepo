@@ -292,4 +292,62 @@ describe("VoiceAssistantManager", () => {
     expect(h.left).toEqual([GUILD]);
     expect(h.sessionEvents).toContain("closed");
   });
+
+  test("leave() during an in-flight join cancels it before it can start listening", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    // /scout leave arrives while the connection is still establishing;
+    // nothing is active yet, so the immediate reply is "not in a channel" —
+    // but the join itself must still be prevented from starting to listen.
+    expect(h.manager.leave(GUILD)).toBe(false);
+    pendingConnections[0]?.(fakeConnection());
+    await join;
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test("a flag-disable sweep cancels a pending join in that guild", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    h.setGuildEnabled(false);
+    await h.manager.closeDisabledGuildSessions();
+    pendingConnections[0]?.(fakeConnection());
+    await join;
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test("shutdown cancels a pending join", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    h.manager.closeAll();
+    pendingConnections[0]?.(fakeConnection());
+    await join;
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
+  });
 });

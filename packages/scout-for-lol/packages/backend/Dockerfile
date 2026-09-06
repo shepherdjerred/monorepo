@@ -74,9 +74,14 @@ FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 # Scoped source closure. Report Satori imports resolve through the shared
 # design-system package, which also owns the exact font and rank-crest bytes.
-# `@shepherdjerred/config` and `@shepherdjerred/feature-flags` are source-only
-# (no build step, exports resolve straight to `src/*`), so their source must
-# be physically present here too, not just linked from node_modules.
+# `@shepherdjerred/config`, `@shepherdjerred/feature-flags`, and
+# `@shepherdjerred/voice-assistant` are source-only (no build step, exports
+# resolve straight to `src/*`), so their source must be physically present
+# here too, not just linked from node_modules — `discord/bootstrap.ts` imports
+# the voice-assistant manager unconditionally (voice's own enabled gate is
+# evaluated only after that import resolves), so this is required in every
+# environment, not only a voice-enabled one. Trained wake-word assets and the
+# model-baking Docker stage remain M5's responsibility.
 COPY --parents \
   tsconfig.base.json \
   packages/scout-for-lol/tsconfig.base.json \
@@ -92,6 +97,7 @@ COPY --parents \
   packages/s3-signed-request \
   packages/llm-runtime \
   packages/temporal-observability \
+  packages/voice-assistant \
   ./
 # Bake the Prisma engines into the production tree. prod-deps installs
 # without lifecycle scripts, so @prisma/engines ships empty and the CLI

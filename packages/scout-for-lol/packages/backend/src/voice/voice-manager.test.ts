@@ -10,6 +10,25 @@ import {
 
 const GUILD = "100000000000000001";
 
+/**
+ * Flush microtasks until `condition` holds. `enqueuePerKey`'s chaining is
+ * plain promise composition with no fake timers to advance, and a queued
+ * task's own async work can land an unpredictable number of microtask hops
+ * after the promise that unblocked it — so tests wait for the actual effect
+ * instead of asserting a specific tick count.
+ */
+async function waitUntil(
+  condition: () => boolean,
+  maxTicks = 50,
+): Promise<void> {
+  for (let tick = 0; tick < maxTicks && !condition(); tick++) {
+    await Promise.resolve();
+  }
+  if (!condition()) {
+    throw new Error("waitUntil: condition never became true");
+  }
+}
+
 class FakeConnection implements VoiceManagerConnection {
   destroyed = false;
   subscribed: AudioPlayer[] = [];
@@ -120,6 +139,87 @@ describe("VoiceManager modes", () => {
     const playback = await h.manager.joinChannel(GUILD, "alerts", "playback");
     expect(playback).toBe(assistant);
     expect(assistant.destroyed).toBe(false);
+  });
+
+  test("ensureConnected and an assistant joinChannel never race establish() on a brand-new guild", async () => {
+    const releases: (() => void)[] = [];
+    let establishCalls = 0;
+    const establish: EstablishVoiceConnection<FakeConnection> = ({
+      channelId,
+      selfDeaf,
+    }) =>
+      new Promise((resolve) => {
+        establishCalls += 1;
+        releases.push(() => {
+          resolve(new FakeConnection(channelId, selfDeaf));
+        });
+      });
+    const manager = new VoiceManager<FakeConnection>(establish);
+    manager.setClient(new Client({ intents: [GatewayIntentBits.Guilds] }));
+
+    // No connection exists yet for this guild: an alert's ensureConnected and
+    // an assistant /scout join race for the very first connection. Without
+    // serializing establish() per guild, both would see "nothing connected"
+    // and each call establish(), with the second silently overwriting (and
+    // leaking) whichever the first created.
+    const assistantJoin = manager.joinChannel(
+      GUILD,
+      "voice-channel",
+      "assistant",
+    );
+    const alertConnect = manager.ensureConnected(GUILD, "alert-channel");
+
+    // Only the queued (first) attempt has reached establish() so far.
+    expect(establishCalls).toBe(1);
+    releases[0]?.();
+    const assistantConnection = await assistantJoin;
+    // The alert's turn now runs, sees the assistant connection already in
+    // place, and reuses it without ever calling establish() again.
+    const alertConnection = await alertConnect;
+    expect(establishCalls).toBe(1);
+    expect(alertConnection).toBe(assistantConnection);
+    expect(manager.getConnectionMode(GUILD)).toBe("assistant");
+  });
+
+  test("a playback ensureConnected first still lets a later assistant join take over cleanly", async () => {
+    const releases: (() => void)[] = [];
+    let establishCalls = 0;
+    const establish: EstablishVoiceConnection<FakeConnection> = ({
+      channelId,
+      selfDeaf,
+    }) =>
+      new Promise((resolve) => {
+        establishCalls += 1;
+        releases.push(() => {
+          resolve(new FakeConnection(channelId, selfDeaf));
+        });
+      });
+    const manager = new VoiceManager<FakeConnection>(establish);
+    manager.setClient(new Client({ intents: [GatewayIntentBits.Guilds] }));
+
+    const alertConnect = manager.ensureConnected(GUILD, "alert-channel");
+    const assistantJoin = manager.joinChannel(
+      GUILD,
+      "voice-channel",
+      "assistant",
+    );
+
+    expect(establishCalls).toBe(1);
+    releases[0]?.();
+    const playbackConnection = await alertConnect;
+    // The queued assistant task's own establish() call happens as a later
+    // microtask continuation, not necessarily before `await alertConnect`
+    // resumes here — wait for it rather than asserting an exact tick count.
+    await waitUntil(() => establishCalls === 2);
+    releases[1]?.();
+    const assistantConnection = await assistantJoin;
+    // The assistant join runs only after the playback connection is fully
+    // in place, so it correctly destroys-and-replaces it (an explicit
+    // /scout join always may move the bot) instead of racing it.
+    expect(establishCalls).toBe(2);
+    expect(playbackConnection.destroyed).toBe(true);
+    expect(manager.getConnection(GUILD)).toBe(assistantConnection);
+    expect(manager.getConnectionMode(GUILD)).toBe("assistant");
   });
 
   test("leaving clears the mode so the next join is deafened playback", async () => {

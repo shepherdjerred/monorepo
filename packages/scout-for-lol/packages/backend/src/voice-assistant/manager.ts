@@ -155,6 +155,16 @@ function defaultDeps(): VoiceAssistantManagerDeps {
 export class VoiceAssistantManager {
   private readonly sessions = new Map<string, ActiveSession>();
   private readonly joinQueues = new Map<string, Promise<void>>();
+  /**
+   * Per-guild cancellation ticket for an in-flight join. `performJoin`
+   * captures the value right before starting the (up to 30 s) connection
+   * establishment; every teardown path bumps it via `endSession`. If the
+   * value has moved by the time the connection resolves, a leave, flag
+   * disable, empty-channel check, or shutdown arrived while this attempt was
+   * establishing — the attempt tears down what it just built instead of
+   * silently starting to listen after being told to stop.
+   */
+  private readonly epochs = new Map<string, number>();
   private readonly deps: VoiceAssistantManagerDeps;
 
   constructor(deps: VoiceAssistantManagerDeps = defaultDeps()) {
@@ -221,7 +231,21 @@ export class VoiceAssistantManager {
     if (existing !== undefined) {
       this.endSession(guildId, "rejoined", { leaveChannel: false });
     }
+    const myEpoch = this.invalidate(guildId);
     const connection = await this.deps.joinAssistantChannel(guildId, channelId);
+    if (this.epochs.get(guildId) !== myEpoch) {
+      // A leave/flag-disable/empty-channel-check/shutdown ended this guild's
+      // session (or lack thereof) while the connection was still
+      // establishing. Tear down what this attempt just built and never
+      // start listening — silently joining after being told to stop is
+      // exactly the bug this ticket exists to prevent.
+      this.deps.leaveChannel(guildId);
+      logger.info(
+        "voice assistant join abandoned: the guild's session ended before the connection was ready",
+        { guildId },
+      );
+      return;
+    }
     const session = this.deps.createSession({
       guildId,
       runtime,
@@ -282,8 +306,13 @@ export class VoiceAssistantManager {
    * no command left to stop it.
    */
   async closeDisabledGuildSessions(): Promise<void> {
-    // Snapshot: entries are deleted across awaits while this iterates.
-    const activeGuildIds = [...this.sessions.keys()];
+    // Snapshot: entries are deleted across awaits while this iterates. Union
+    // in guilds with an in-flight join (not yet in `sessions`) so a pending
+    // `/scout join` in a guild whose flag just went false is invalidated too
+    // — see `performJoin`'s epoch check.
+    const activeGuildIds = [
+      ...new Set([...this.sessions.keys(), ...this.joinQueues.keys()]),
+    ];
     for (const guildId of activeGuildIds) {
       let enabled: boolean;
       try {
@@ -304,7 +333,13 @@ export class VoiceAssistantManager {
   }
 
   closeAll(): void {
-    for (const guildId of this.sessions.keys()) {
+    // Union with in-flight joins for the same reason as the flag sweep: a
+    // pending `/scout join` must not silently complete after shutdown.
+    const guildIds = new Set([
+      ...this.sessions.keys(),
+      ...this.joinQueues.keys(),
+    ]);
+    for (const guildId of guildIds) {
       this.endSession(guildId, "shutdown", { leaveChannel: true });
     }
   }
@@ -318,11 +353,25 @@ export class VoiceAssistantManager {
     }, VOICE_INACTIVITY_TIMEOUT_MS);
   }
 
+  /**
+   * Bump the guild's join ticket, invalidating any `performJoin` currently
+   * awaiting its connection. Called unconditionally at the top of
+   * `endSession` — including when there is no active session yet — so a
+   * pending join is cancelled by the same teardown paths that would have
+   * ended it had it already started.
+   */
+  private invalidate(guildId: string): number {
+    const next = (this.epochs.get(guildId) ?? 0) + 1;
+    this.epochs.set(guildId, next);
+    return next;
+  }
+
   private endSession(
     guildId: string,
     reason: SessionEndReason,
     options: { leaveChannel: boolean },
   ): boolean {
+    this.invalidate(guildId);
     const active = this.sessions.get(guildId);
     if (active === undefined) return false;
     this.sessions.delete(guildId);
