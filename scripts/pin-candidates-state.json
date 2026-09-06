@@ -47,9 +47,9 @@
       "buildNumber": 14535
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 14578,
-      "version": "2.0.0-14578",
-      "digest": "sha256:c195a5fd932681d9d276a31a5d03ea09ee9dca6458c9a0536d0bb6a1f03d90be"
+      "buildNumber": 14619,
+      "version": "2.0.0-14619",
+      "digest": "sha256:353ef1eeae0e50985f393469dfb35e985327d6ea5d797b0e36b8d05e40da3854"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -73,9 +73,9 @@
       "buildNumber": 14535
     },
     "shepherdjerred/temporal-worker": {
-      "version": "2.0.0-14555",
-      "digest": "sha256:a6c3248cde44d32a7eecd972cffed231f1b6bc5ecab354d6ec258a2a52b7042f",
-      "buildNumber": 14555
+      "buildNumber": 14619,
+      "version": "2.0.0-14619",
+      "digest": "sha256:f418b8bb3786af59445114ab5e1019c65eb98217b80009aeff617c4b217900f6"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
