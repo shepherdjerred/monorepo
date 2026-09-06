@@ -4,7 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { ArrowUp, Square } from "lucide-react";
 import type { ExploreMentionCandidate } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { ExploreMentionPicker } from "#src/components/explore-mention-picker.tsx";
+import { ExploreMentionPicker } from "#src/components/explore/explore-mention-picker.tsx";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import {
   activeMentionSpan,
