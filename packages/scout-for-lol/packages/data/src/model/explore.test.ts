@@ -39,6 +39,11 @@ describe("parseExploreStreamEvent", () => {
     // deploy that adds a stream event reaches parsers that predate it. The
     // SSE reader treats a throw as a corrupted stream, so without this an
     // open tab would die mid-turn on a turn the server answered correctly.
+    //
+    // The discriminator here is deliberately one that will never be added.
+    // An earlier version of this test used a type that was genuinely planned,
+    // and it started failing the moment that type shipped — the fixture has
+    // to stand for "from a newer server", not "not written yet".
     expect(
       parseExploreStreamEvent({
         type: "a-member-from-a-newer-server",

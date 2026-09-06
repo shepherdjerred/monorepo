@@ -29,6 +29,16 @@ export const EXPLORE_TIMEOUT_MS = 180_000;
  */
 export const EXPLORE_MAX_HISTORY_TURNS = 8;
 export const EXPLORE_TITLE_MAX_LENGTH = 120;
+/**
+ * How long an owner-only live status line may be.
+ *
+ * Deliberately smaller than the 500-character cap on a persisted trace
+ * `message`. The two are different channels with different audiences — a trace
+ * message is served publicly on a share link, an activity string never is —
+ * and the asymmetry is a tripwire: a 500-character trace message cannot be
+ * routed onto the activity channel without visibly truncating.
+ */
+export const EXPLORE_ACTIVITY_MAX_LENGTH = 200;
 
 export const ExploreConversationTitleSchema = z
   .string()
@@ -512,6 +522,42 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
        * id, and recognise a salvaged partial answer after a stop.
        */
       questionMessageId: z.uuid(),
+    })
+    .strict(),
+  /**
+   * Owner-only narration of what the turn is doing right now.
+   *
+   * A separate member rather than a field on `tool_call`/`tool_result`, for
+   * three reasons. It has to narrate moments where no tool call exists yet —
+   * the model has named a tool but not finished its arguments — and moments
+   * with no tool at all, such as writing the answer. It keeps the specific
+   * text structurally out of the trace: `recordExploreTraceEvent` matches only
+   * tool members, and `ExploreTraceEntrySchema` is `.strict()` with no such
+   * field, so this cannot reach a trace entry even by accident. And it keeps
+   * the concern separate in the client reducer, where status and timeline used
+   * to be updated on adjacent lines of the same branch.
+   *
+   * Nothing here is persisted, and nothing here reaches a share link. That is
+   * what lets it name a player or a row count while the trace message stays as
+   * generic as the anonymous audience requires.
+   */
+  z
+    .object({
+      type: z.literal("activity"),
+      text: z.string().trim().min(1).max(EXPLORE_ACTIVITY_MAX_LENGTH),
+      /** The provider call this narrates, when there is one. */
+      toolCallId: z.string().trim().min(1).max(200).nullable().default(null),
+      /**
+       * Says a client too old to know this member may drop it and still
+       * render a correct transcript — which is true here, because a status
+       * line narrates the turn without ever changing what it produced. A
+       * client without this member simply keeps the last status it did
+       * understand until the answer arrives.
+       *
+       * Literal rather than boolean: this event is always safe to skip, and a
+       * field that could say otherwise would invite a caller to claim so.
+       */
+      ignorable: z.literal(true).default(true),
     })
     .strict(),
   z

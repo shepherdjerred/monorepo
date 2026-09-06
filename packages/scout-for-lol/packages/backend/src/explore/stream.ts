@@ -12,6 +12,11 @@ import {
   inspectExploreToolCall,
   inspectExploreToolResult,
 } from "#src/explore/tool-inspection.ts";
+import {
+  toolCallActivity,
+  toolResultActivity,
+  toolStartActivity,
+} from "#src/explore/tool-activity.ts";
 
 const logger = createLogger("explore-stream");
 type JsonValue = z.infer<ReturnType<typeof z.json>>;
@@ -27,8 +32,25 @@ export type ExploreStreamState = {
   sentAnswerLength: number;
   rawTraceBytes: number;
   toolStartedAt: Map<string, number>;
+  /** "Writing the answer…" is announced once per turn, not once per chunk. */
+  answerNarrated: boolean;
   now: () => number;
 };
+
+/**
+ * Build the ephemeral status event.
+ *
+ * Exists so `ignorable` is set in one place: the marker is what lets a client
+ * too old to know this member drop it instead of treating the stream as
+ * corrupt, and an emit site that forgot it would fail that client at runtime
+ * rather than here.
+ */
+function activityEvent(
+  text: string,
+  toolCallId: string | null,
+): ExploreStreamEvent {
+  return { type: "activity", text, toolCallId, ignorable: true };
+}
 
 export function createExploreStreamState(
   now: () => number = Date.now,
@@ -37,6 +59,7 @@ export function createExploreStreamState(
     sentAnswerLength: 0,
     rawTraceBytes: 0,
     toolStartedAt: new Map(),
+    answerNarrated: false,
     now,
   };
 }
@@ -117,15 +140,54 @@ export async function emitExploreStreamChunk(
       // "started a step" line adds noise to a chat transcript.
       break;
     }
+    case "tool-input-start": {
+      // The provider has named a tool but not finished its arguments. Only
+      // the generic phrase is knowable here; the argument-derived one
+      // replaces it a beat later at `tool-call`. Deliberately does not touch
+      // `state.toolStartedAt` — starting the clock here would redefine the
+      // trace's `durationMs` from execution time to argument generation plus
+      // execution.
+      await emit(
+        activityEvent(
+          toolStartActivity(toolCallMessage(chunk.toolName)),
+          chunk.toolCallId,
+        ),
+      );
+      break;
+    }
     case "text-delta": {
-      // Deliberately ignored. This agent runs with structured output, so a
-      // text delta is a fragment of the raw JSON the model is emitting —
-      // relaying it would stream `{"answer":"Across the botto…` into the
-      // page. The prose arrives as snapshots on the AI SDK's separate
-      // `partialOutputStream`, handled by emitExploreAnswerSnapshot.
+      // The text itself is deliberately ignored. This agent runs with
+      // structured output, so a text delta is a fragment of the raw JSON the
+      // model is emitting — relaying it would stream `{"answer":"Across the
+      // botto…` into the page. The prose arrives as snapshots on the AI SDK's
+      // separate `partialOutputStream`, handled by emitExploreAnswerSnapshot.
+      //
+      // Its *arrival* is still information: by construction the first one is
+      // the moment the model stopped calling tools and started composing, so
+      // it is what turns the status line over to "Writing the answer…". The
+      // in-flight guard covers a provider that interleaves a JSON token
+      // before its first tool result, which would otherwise flash the wrong
+      // status over a tool that is still running.
+      if (!state.answerNarrated && state.toolStartedAt.size === 0) {
+        state.answerNarrated = true;
+        await emit(activityEvent("Writing the answer…", null));
+      }
       break;
     }
     case "tool-call": {
+      // Emitted before `inspectExploreToolCall`, which parses strictly and can
+      // throw: a malformed input should still have narrated, and the throw
+      // behaviour is unchanged.
+      await emit(
+        activityEvent(
+          toolCallActivity(
+            chunk.toolName,
+            chunk.input,
+            toolCallMessage(chunk.toolName),
+          ),
+          chunk.toolCallId,
+        ),
+      );
       const inspection = inspectExploreToolCall(chunk.toolName, chunk.input);
       state.toolStartedAt.set(chunk.toolCallId, state.now());
       await emit({
@@ -154,6 +216,25 @@ export async function emitExploreStreamChunk(
         details: inspection.details,
         rawOutput: boundedRawValue(inspection.rawOutput, state),
       });
+      // After the tool_result, so the step in the panel has already flipped to
+      // its final status by the time the status line describes the outcome —
+      // and only when nothing else is still running. A step can issue several
+      // tool calls at once, and announcing "Got results." while a second query
+      // is still executing would claim the turn had finished work it had not.
+      // The still-running call keeps the line until it too completes.
+      if (state.toolStartedAt.size === 0) {
+        await emit(
+          activityEvent(
+            toolResultActivity(
+              chunk.toolName,
+              chunk.input,
+              inspection,
+              toolResultMessage(chunk.toolName, inspection.succeeded),
+            ),
+            chunk.toolCallId,
+          ),
+        );
+      }
       break;
     }
     case "tool-error": {
@@ -176,6 +257,14 @@ export async function emitExploreStreamChunk(
         details: inspectExploreToolCall(chunk.toolName, chunk.input).details,
         rawOutput: null,
       });
+      if (state.toolStartedAt.size === 0) {
+        await emit(
+          activityEvent(
+            toolResultMessage(chunk.toolName, false),
+            chunk.toolCallId,
+          ),
+        );
+      }
       break;
     }
   }

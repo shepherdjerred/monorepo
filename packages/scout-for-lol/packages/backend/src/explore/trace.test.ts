@@ -160,3 +160,84 @@ describe("Explore trace recording", () => {
     expect(encoded).toContain("Created the draft.");
   });
 });
+
+describe("the activity channel cannot reach a persisted trace", () => {
+  test("an activity event is not recorded as a step", () => {
+    // Structural, not editorial: `recordExploreTraceEvent` matches only tool
+    // members and `ExploreTraceEntrySchema` is `.strict()` with no such
+    // field, so the specific text on this channel could not enter the trace
+    // even if a caller tried to put it there.
+    const trace: ExploreTraceEntry[] = [];
+    recordExploreTraceEvent(trace, {
+      type: "activity",
+      text: "Finding “Jerred#NA1”",
+      toolCallId: "call-1",
+      ignorable: true,
+    });
+    expect(trace).toEqual([]);
+  });
+
+  test("a shared transcript carries no trace of the specific status text", () => {
+    const trace: ExploreTraceEntry[] = [];
+    for (const event of [
+      {
+        type: "activity" as const,
+        text: "Finding “Jerred#NA1”",
+        toolCallId: "call-1",
+        ignorable: true as const,
+      },
+      {
+        type: "tool_call" as const,
+        toolCallId: "call-1",
+        toolName: "resolve_player",
+        message: "Looking up who that is.",
+        details: null,
+        rawInput: null,
+      },
+      {
+        type: "activity" as const,
+        text: "Found 1 match for “Jerred#NA1”",
+        toolCallId: "call-1",
+        ignorable: true as const,
+      },
+      {
+        type: "tool_result" as const,
+        toolCallId: "call-1",
+        toolName: "resolve_player",
+        status: "succeeded" as const,
+        message: "Identified the player.",
+        durationMs: 12,
+        details: null,
+        rawOutput: null,
+      },
+    ]) {
+      recordExploreTraceEvent(trace, event);
+    }
+
+    const encoded = JSON.stringify(
+      redactSharedExploreTranscript(
+        ExploreTranscriptSchema.parse({
+          conversation: {
+            id: "11111111-1111-4111-8111-111111111111",
+            title: "Who is that",
+            shareToken: "a".repeat(32),
+            sharedLeafId: "22222222-2222-4222-8222-222222222222",
+            createdAt: "2026-08-18T12:00:00.000Z",
+            updatedAt: "2026-08-18T12:00:00.000Z",
+          },
+          messages: [
+            {
+              id: "22222222-2222-4222-8222-222222222222",
+              role: "assistant",
+              content: "Answer",
+              trace,
+              createdAt: "2026-08-18T12:00:00.000Z",
+            },
+          ],
+        }),
+      ),
+    );
+    expect(encoded).not.toContain("Jerred#NA1");
+    expect(encoded).toContain("Identified the player.");
+  });
+});

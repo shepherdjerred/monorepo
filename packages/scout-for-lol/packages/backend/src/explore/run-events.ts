@@ -36,8 +36,16 @@ export function recordExploreEvent(
     broadcastExploreEvent(run, { type: "answer_delta", text });
     return;
   }
-  if (event.type === "tool_call" || event.type === "tool_result") {
-    run.activity = event.message;
+  if (event.type === "activity") {
+    // The one thing that moves the status line. Tool events deliberately no
+    // longer set it: their `message` is the generic, share-safe string, and
+    // routing it here is what kept the live status as vague as the anonymous
+    // audience requires. An activity event is never folded into the trace —
+    // `recordExploreTraceEvent` matches only tool members — so the specific
+    // text it carries cannot reach a persisted message.
+    run.activity = event.text;
+    broadcastExploreEvent(run, event);
+    return;
   }
   if (event.type === "preview") {
     // Retained without its visualization: see the snapshot schema's comment

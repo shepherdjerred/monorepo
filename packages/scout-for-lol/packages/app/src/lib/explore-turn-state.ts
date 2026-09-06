@@ -90,6 +90,11 @@ export function createPendingTurn(input: {
 /**
  * Fold one stream event into the turn.
  *
+ * Status and timeline are separate concerns here: `activity` moves the status
+ * line and tool events build the step list. They used to be updated on
+ * adjacent lines of one branch, which is exactly where the generic trace
+ * string leaked onto the live status line.
+ *
  * `final` replaces the streamed prose with the persisted message's content —
  * the two can differ by whatever the last delta had not delivered yet, and
  * the persisted text is what the refetch will show. `error` is deliberately
@@ -130,12 +135,11 @@ export function applyStreamEvent(
         questionMessageId: event.questionMessageId,
       };
     }
+    case "activity": {
+      return { ...turn, activity: event.text };
+    }
     case "tool_call": {
-      return {
-        ...turn,
-        activity: event.message,
-        trace: applyTraceEvent(turn.trace, event),
-      };
+      return { ...turn, trace: applyTraceEvent(turn.trace, event) };
     }
     case "answer_delta": {
       return { ...turn, answer: (turn.answer ?? "") + event.text };
@@ -170,11 +174,7 @@ export function applyStreamEvent(
       return turn;
     }
     case "tool_result": {
-      return {
-        ...turn,
-        activity: event.message,
-        trace: applyTraceEvent(turn.trace, event),
-      };
+      return { ...turn, trace: applyTraceEvent(turn.trace, event) };
     }
   }
 }
