@@ -654,7 +654,12 @@ describe("explore live status versus persisted trace", () => {
     // Status text is decoration: it degrades to the generic phrase rather
     // than escalating, and it is emitted before the strict parse that throws.
     expect(events).toEqual([
-      { type: "activity", text: "Querying match data.", toolCallId: "call-1" },
+      {
+        type: "activity",
+        text: "Querying match data.",
+        toolCallId: "call-1",
+        ignorable: true,
+      },
     ]);
   });
 });

@@ -547,6 +547,17 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
       text: z.string().trim().min(1).max(EXPLORE_ACTIVITY_MAX_LENGTH),
       /** The provider call this narrates, when there is one. */
       toolCallId: z.string().trim().min(1).max(200).nullable().default(null),
+      /**
+       * Says a client too old to know this member may drop it and still
+       * render a correct transcript — which is true here, because a status
+       * line narrates the turn without ever changing what it produced. A
+       * client without this member simply keeps the last status it did
+       * understand until the answer arrives.
+       *
+       * Literal rather than boolean: this event is always safe to skip, and a
+       * field that could say otherwise would invite a caller to claim so.
+       */
+      ignorable: z.literal(true).default(true),
     })
     .strict(),
   z
