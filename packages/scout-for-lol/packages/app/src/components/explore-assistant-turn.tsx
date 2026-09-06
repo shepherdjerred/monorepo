@@ -13,7 +13,7 @@ import {
 } from "@scout-for-lol/design-system/components/dropdown-menu";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { ExploreToolTrace } from "#src/components/explore-tool-trace.tsx";
-import { ExploreDareCards } from "#src/components/explore-dare-cards.tsx";
+import { ExploreIntentCards } from "#src/components/explore-intent-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore-version-switcher.tsx";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import { ExploreVisualResult } from "#src/components/explore-visual-result.tsx";
@@ -192,7 +192,7 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
     <div className="space-y-3">
       <MarkdownAnswer>{message.content}</MarkdownAnswer>
 
-      {props.showRawTrace && <ExploreDareCards trace={message.trace} />}
+      {props.showRawTrace && <ExploreIntentCards trace={message.trace} />}
 
       <ExploreVisualResult
         preview={message.preview}
