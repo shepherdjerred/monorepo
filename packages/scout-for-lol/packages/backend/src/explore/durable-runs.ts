@@ -208,19 +208,9 @@ export async function subscribeDurableExploreRun(
     }
     lastPartial = row.partialOutput ?? "";
     lastTrace = row.trace ?? "[]";
-    subscriber(
-      ExploreRunSnapshotEventSchema.parse({
-        type: "snapshot",
-        ...parsed.summary,
-        answer: lastPartial.length === 0 ? null : lastPartial,
-        activity: row.state === "PENDING" ? "Waiting to start…" : "Thinking…",
-        trace,
-      }),
-    );
-    // No companion `run_preview` here: the run row has no column for it, so
-    // an observer that reached this path instead of the in-process one gets
-    // no table back until the next query or `final`. Stated rather than left
-    // implicit, so the gap is visible to whoever reads this next.
+    lastActivity = row.activity;
+    lastPreview = row.preview;
+    for (const event of exploreAttachEventsFromRow(row)) subscriber(event);
     return false;
   };
   if (emitRow(initial)) {
