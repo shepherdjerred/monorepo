@@ -190,9 +190,9 @@ export function initializeTracing(): void {
   });
 
   // Wrap the batch processor with the LLM archive layer. Spans carrying
-  // gen_ai.* body attributes get their bodies gzipped to SeaweedFS and
-  // replaced with a ref before the slim span reaches the OTLP exporter.
-  // No-op when LLM_OBSERVABILITY_ENABLED=false.
+  // gen_ai.* body attributes get a copy of their bodies gzipped to SeaweedFS;
+  // the span keeps the full redacted content plus the archive ref when it
+  // reaches the OTLP exporter. No-op when LLM_OBSERVABILITY_ENABLED=false.
   const rootProcessor = buildArchiveSpanProcessor({ inner: batchProcessor });
 
   // OTLP logs path. Sibling LoggerProvider shipping LogRecords to Loki via

@@ -1,9 +1,10 @@
 # @shepherdjerred/llm-observability
 
 OpenTelemetry tracing for LLM calls: thin wrappers that emit `gen_ai.*` spans
-around provider SDK calls, plus an archive span processor that offloads large
-prompt/response bodies to S3 so the trace backend (Tempo) only ever receives
-slim spans with an archive reference. Consumers include
+around provider SDK calls, plus an archive span processor that copies large
+prompt/response bodies to S3 for durable retention while the trace backend
+(Tempo) and any additional OTLP consumer receive the full redacted content on
+the span itself, alongside an archive reference. Consumers include
 [packages/temporal](../temporal/) and
 [packages/pr-fleet-controller](../pr-fleet-controller/).
 
@@ -15,8 +16,8 @@ GenAI semantic conventions: `gen_ai.system`, `gen_ai.operation.name`,
 `gen_ai.request.model` / `max_tokens` / `temperature` / `top_p`,
 `gen_ai.response.model` / `id` / `finish_reasons`, and
 `gen_ai.usage.input_tokens` / `output_tokens` / cache read + creation tokens.
-Message bodies go on `gen_ai.input.messages` / `gen_ai.output.messages` (to be
-stripped by the archive processor).
+Message bodies go on `gen_ai.input.messages` / `gen_ai.output.messages`
+(redacted in place by the archive processor before export).
 
 | Export                                                                         | Traces                                              |
 | ------------------------------------------------------------------------------ | --------------------------------------------------- |
@@ -69,7 +70,7 @@ Subject ids are span attributes only. They must never become Prometheus labels â
 the LLM metrics carry bounded service/workload/provider/model/outcome labels by
 design, and Tempo is already the store for trace, session, and user ids.
 
-## Archive pipeline (slim spans)
+## Archive pipeline (full-content spans)
 
 `LlmArchiveSpanProcessor` (`./span-processor`) wraps an inner `SpanProcessor`
 (typically a `BatchSpanProcessor` over an OTLP exporter). On span end, if the
@@ -82,11 +83,13 @@ stdout/stderr, or Vercel AI SDK legacy keys), it:
 3. gzips and PUTs it to S3 under a deterministic key
    (`buildArchiveKey`/`uploadArchive` â€” SigV4-signed, path-style capable, so
    SeaweedFS works), and
-4. forwards a copy of the span with bodies stripped and `llm.archive.*`
-   attributes added (bucket, key, sha256, sizes, status).
+4. forwards a copy of the span with bodies redacted in place and
+   `llm.archive.*` attributes added (bucket, key, sha256, sizes, status).
 
-Spans without body attributes pass through unchanged; a `sampleRate` can skip
-archiving (bodies are still stripped). `buildArchiveSpanProcessor` +
+The forwarded span keeps the complete prompt, response, and tool content; the
+S3 archive is the durable copy that outlives trace-backend retention, not a
+substitute for content on the span. Spans without body attributes pass through
+unchanged; a `sampleRate` can skip archiving (bodies stay on the span). `buildArchiveSpanProcessor` +
 `loadLlmObservabilityConfig` assemble the processor from environment
 configuration.
 
@@ -102,4 +105,4 @@ bun run lint
 
 The e2e suite (`test/e2e/`) runs real OTLP export into Tempo and real S3
 uploads against the compose stack in `test/e2e/compose.yaml`, then verifies
-both the slim span in Tempo and the archived envelope in the bucket.
+both the full-content span in Tempo and the archived envelope in the bucket.

@@ -1,6 +1,6 @@
 ---
 title: LLM stack
-description: One ordinary-inference gateway, two native coding-agent exceptions, repository-owned model and eval contracts, and an observability boundary that keeps bodies out of Tempo.
+description: One ordinary-inference gateway, two native coding-agent exceptions, repository-owned model and eval contracts, and an observability boundary that puts full redacted content on every span.
 sidebar:
   order: 5
 ---
@@ -34,14 +34,23 @@ and command tools. They run in process through their native SDKs; active
 ## Observability boundary
 
 Local OpenTelemetry is authoritative. Repository-owned `gen_ai.*` spans wrap
-AI SDK and native SDK spans. Complete redacted prompt, response, and tool bodies
-go to the private SeaweedFS LLM archive. Tempo receives only body-free spans and
-archive references.
+AI SDK and native SDK spans. Spans carry the complete redacted prompt,
+response, and tool bodies. A copy of those bodies also goes to the private
+SeaweedFS LLM archive, and each span carries its archive reference.
+
+Content lives on the span because a trace without it cannot answer the
+questions LLM traces exist for. Agent failures are semantic rather than
+exceptional, so debugging one means reading the trajectory, and any downstream
+eval or observability consumer needs the same content. An earlier design
+stripped bodies from spans and kept them only in the archive; it made every
+transcript read a two-store join and was reversed. The archive remains because
+Tempo's retention is 30 days: it is the durable body record, not the only one.
+Redaction happens before export, so credentials stay out of both stores.
 
 OpenRouter Broadcast is a correlated second source of routing, provider, token,
 and actual-cost evidence. The authenticated `openrouter-broadcast-ingest`
-service archives the complete redacted OTLP JSON payload, strips bodies, and
-forwards the slim trace to Tempo. Its digest receipt makes webhook redelivery
+service archives the complete redacted OTLP JSON payload and forwards that
+same redacted payload to Tempo. Its digest receipt makes webhook redelivery
 idempotent, including retries across UTC date partitions. A `204` means both
 archive and forward completed; a failure intentionally asks OpenRouter to
 redeliver.
@@ -144,7 +153,8 @@ The migration is deployed atomically. Create one OpenRouter key per service and
 stage, create the Broadcast bearer secret, publish the Broadcast image, and
 canary Broadcast before the consumers. For each transport, verify the
 application span, SDK child spans, correlated Broadcast span, Loki log,
-Prometheus usage and cost, private body archive, and body-free Tempo record.
+Prometheus usage and cost, private body archive, and full-content Tempo
+record.
 Only after text, structured output, tools, embeddings, images, web search,
 Claude SDK, Codex SDK, and the production Temporal canary pass may old provider
 secrets be revoked.

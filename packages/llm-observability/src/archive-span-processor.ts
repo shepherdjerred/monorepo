@@ -14,9 +14,10 @@ import { redactSecrets } from "./redact.ts";
 
 /**
  * Span attribute keys that hold large LLM bodies. The processor extracts these
- * into the archive envelope and strips them from the forwarded span so Tempo
- * receives only a slim ref. Adding a new key here is enough to support a new
- * SDK convention without touching wrappers.
+ * into the archive envelope and redacts them in place on the forwarded span,
+ * so the trace backend receives the full redacted content alongside the
+ * archive ref. Adding a new key here is enough to support a new SDK convention
+ * without touching wrappers.
  */
 const BODY_ATTR_KEYS = [
   // OTel GenAI semconv
@@ -67,7 +68,7 @@ export type LlmArchiveSpanProcessorOptions = {
   archive: ArchiveConfig;
   /** Logger for upload failures. Defaults to JSON-stderr. */
   logger?: ArchiveLogger | undefined;
-  /** 0..1. Spans rolling above the rate are not archived (bodies still stripped). */
+  /** 0..1. Spans rolling above the rate are not archived (bodies stay on the span). */
   sampleRate?: number | undefined;
   /** Provide deterministic random for tests. */
   random?: (() => number) | undefined;
@@ -83,13 +84,17 @@ export type LlmArchiveSpanProcessorOptions = {
  *     response + usage where present).
  *  2. Redact obvious secrets.
  *  3. Gzip and PUT to S3 with a deterministic key.
- *  4. Forward a *copy* of the span to `inner` with the bodies stripped and
- *     `llm.archive.*` attributes added (bucket, key, sha256, sizes, status).
+ *  4. Forward a *copy* of the span to `inner` with the bodies redacted in
+ *     place and `llm.archive.*` attributes added (bucket, key, sha256, sizes,
+ *     status).
  *
- * Spans without LLM body attributes pass through unchanged. The S3 upload runs
- * asynchronously; the wrapped span is forwarded to `inner.onEnd` only after
- * the upload settles. Upload failures degrade gracefully — the span is still
- * forwarded with `llm.archive.status = "failed"`.
+ * The forwarded span keeps the full prompt/response/tool content — the
+ * archive is the durable copy that outlives trace-backend retention, not a
+ * substitute for content on the span. Spans without LLM body attributes pass
+ * through unchanged. The S3 upload runs asynchronously; the wrapped span is
+ * forwarded to `inner.onEnd` only after the upload settles. Upload failures
+ * degrade gracefully — the span is still forwarded with
+ * `llm.archive.status = "failed"`.
  */
 export class LlmArchiveSpanProcessor implements SpanProcessor {
   private readonly inner: SpanProcessor;
@@ -169,14 +174,14 @@ export class LlmArchiveSpanProcessor implements SpanProcessor {
     sampled: boolean,
   ): Promise<void> {
     const envelope = buildEnvelope(span);
+    const redactedAttributes = redactBodyAttributes(span.attributes);
 
     if (!sampled) {
-      const stripped = stripBodyAttributes(span.attributes);
-      const slim = copySpanWithAttributes(span, {
-        ...stripped,
+      const forwarded = copySpanWithAttributes(span, {
+        ...redactedAttributes,
         "llm.archive.status": "sampled_out",
       });
-      this.inner.onEnd(slim);
+      this.inner.onEnd(forwarded);
       return;
     }
 
@@ -203,12 +208,11 @@ export class LlmArchiveSpanProcessor implements SpanProcessor {
       });
     }
 
-    const stripped = stripBodyAttributes(span.attributes);
-    const slim = copySpanWithAttributes(span, {
-      ...stripped,
+    const forwarded = copySpanWithAttributes(span, {
+      ...redactedAttributes,
       ...refToAttributes(ref),
     });
-    this.inner.onEnd(slim);
+    this.inner.onEnd(forwarded);
   }
 }
 
@@ -219,16 +223,31 @@ function hasLlmBodyAttributes(span: ReadableSpan): boolean {
   return false;
 }
 
-function stripBodyAttributes(
+/**
+ * Copy the attribute map with every body attribute's value passed through
+ * `redactSecrets`. Body attributes are JSON-serialized strings (see
+ * `serializeBodyAttribute`); non-string body values pass through unchanged
+ * since redaction targets embedded credential text.
+ */
+function redactBodyAttributes(
   attrs: Readonly<Record<string, AttributeValue | undefined>>,
 ): Record<string, AttributeValue> {
   const result: Record<string, AttributeValue> = {};
   for (const [key, value] of Object.entries(attrs)) {
-    if (BODY_ATTR_SET.has(key)) continue;
     if (value === undefined) continue;
-    result[key] = value;
+    result[key] =
+      typeof value === "string" && BODY_ATTR_SET.has(key)
+        ? redactBodyString(value)
+        : value;
   }
   return result;
+}
+
+function redactBodyString(value: string): string {
+  const parsed = safeJsonParse(value);
+  const redacted = redactSecrets(parsed);
+  if (typeof redacted === "string") return redacted;
+  return JSON.stringify(redacted);
 }
 
 function refToAttributes(ref: ArchiveRef): Record<string, AttributeValue> {

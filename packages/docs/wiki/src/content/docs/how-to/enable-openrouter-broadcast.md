@@ -67,7 +67,7 @@ toolkit prom query 'sum by (operation, outcome) (openrouter_broadcast_operations
 # The last success is recent rather than zero
 toolkit prom query 'time() - max(openrouter_broadcast_last_success_timestamp_seconds)'
 
-# A body-free correlated span reached Tempo
+# A full-content correlated span reached Tempo
 toolkit tempo query '{resource.service.name=~".*openrouter.*"}' --since 1h --limit 5
 ```
 

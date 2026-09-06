@@ -103,7 +103,7 @@ const compatUploader: ArchiveUploader = async (config, key) => ({
   error: undefined,
 });
 
-test("archives a span with gen_ai.* body attributes and forwards a slim span", async () => {
+test("archives a span with gen_ai.* body attributes and forwards it with full content", async () => {
   const collector = new CollectingProcessor();
   const { uploader, uploads } = buildSuccessUploader();
   const processor = new LlmArchiveSpanProcessor({
@@ -141,8 +141,12 @@ test("archives a span with gen_ai.* body attributes and forwards a slim span", a
 
   expect(collector.spans.length).toBe(1);
   const forwarded = collector.spans[0]!;
-  expect(forwarded.attributes["gen_ai.input.messages"]).toBeUndefined();
-  expect(forwarded.attributes["gen_ai.output.messages"]).toBeUndefined();
+  expect(forwarded.attributes["gen_ai.input.messages"]).toBe(
+    JSON.stringify([{ role: "user", content: "hi" }]),
+  );
+  expect(forwarded.attributes["gen_ai.output.messages"]).toBe(
+    JSON.stringify([{ role: "assistant", content: "hello back" }]),
+  );
   expect(forwarded.attributes["llm.archive.status"]).toBe("ok");
   expect(forwarded.attributes["llm.archive.s3_bucket"]).toBe("llm-archive");
   expect(forwarded.attributes["gen_ai.usage.input_tokens"]).toBe(12);
@@ -252,9 +256,43 @@ test("marks sampled-out spans with status=sampled_out", async () => {
   expect(collector.spans[0]!.attributes["llm.archive.status"]).toBe(
     "sampled_out",
   );
-  expect(
-    collector.spans[0]!.attributes["gen_ai.input.messages"],
-  ).toBeUndefined();
+  expect(collector.spans[0]!.attributes["gen_ai.input.messages"]).toBe(
+    JSON.stringify([{ role: "user", content: "hi" }]),
+  );
+});
+
+test("redacts secrets inside body attributes on the forwarded span", async () => {
+  const collector = new CollectingProcessor();
+  const { uploader } = buildSuccessUploader();
+  const processor = new LlmArchiveSpanProcessor({
+    inner: collector,
+    archive: archiveConfig,
+    uploader,
+  });
+  const provider = buildProvider({ serviceName: "birmel", processor });
+  const tracer = provider.getTracer("test");
+
+  await tracer.startActiveSpan("gen_ai.chat", async (span) => {
+    span.setAttributes({
+      "gen_ai.system": "openrouter",
+      "gen_ai.request.model": "gpt-5-mini",
+      "gen_ai.input.messages": JSON.stringify([
+        {
+          role: "user",
+          content: "send the request with Bearer aaa-bbb-ccc attached",
+        },
+      ]),
+    });
+    span.end();
+  });
+  await flushProcessor(processor);
+
+  expect(collector.spans.length).toBe(1);
+  const body = collector.spans[0]!.attributes["gen_ai.input.messages"];
+  expect(typeof body).toBe("string");
+  if (typeof body !== "string") throw new Error("missing body attribute");
+  expect(body).not.toContain("aaa-bbb-ccc");
+  expect(body).toContain("[REDACTED]");
 });
 
 test("registers as SimpleSpanProcessor compat (does not throw)", () => {
