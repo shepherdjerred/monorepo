@@ -68,6 +68,12 @@ export function createAlloyGatewayApp(chart: Chart) {
     // Deterministic resource/Service names regardless of helm fullname logic:
     // producers address http://alloy-gateway.alloy-gateway.svc.cluster.local:4318.
     fullnameOverride: "alloy-gateway",
+    // The profiler `alloy` Application already installs this chart's
+    // cluster-scoped monitoring CRDs; rendering them from a second Application
+    // would make two Argo apps own identical CRD objects.
+    crds: {
+      create: false,
+    },
     controller: {
       type: "deployment",
       // Must stay 1 once tail sampling lands: sampling decisions require every
@@ -104,9 +110,14 @@ export function createAlloyGatewayApp(chart: Chart) {
       },
     },
     // otelcol_* receiver/exporter metrics feed the byte-budget and failure
-    // checks for the Braintrust branch.
+    // checks for the Braintrust branch. Prometheus only discovers
+    // ServiceMonitors carrying release: prometheus (same convention the shared
+    // createServiceMonitor helper enforces).
     serviceMonitor: {
       enabled: true,
+      additionalLabels: {
+        release: "prometheus",
+      },
     },
   };
 
