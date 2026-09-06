@@ -25,6 +25,12 @@ git -C "$FIXTURE" commit -qm rename
 
 cat > "$FIXTURE/fake-bin/buildkite-agent" <<'EOF'
 #!/bin/sh
+if [ "$1" = meta-data ] && [ "$2" = set ]; then
+  if [ "$3" = ci-changed-base ]; then
+    printf '%s\n' "$4" > "$CI_CHANGED_BASE_CAPTURE"
+  fi
+  exit 0
+fi
 if [ "$1" != pipeline ] || [ "$2" != upload ]; then
   echo "unexpected buildkite-agent invocation: $*" >&2
   exit 2
@@ -45,6 +51,7 @@ EOF
 chmod +x "$FIXTURE/fake-bin/buildkite-agent"
 
 CAPTURE_PATH="$FIXTURE/changed" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/ci-playwright-image" \
   CI_CHANGED_FILES_BASE="$BASE" \
@@ -58,6 +65,10 @@ if [ "$actual" != "$expected" ]; then
   printf 'expected:\n%s\nactual:\n%s\n' "$expected" "$actual" >&2
   exit 1
 fi
+if [ "$(cat "$FIXTURE/recorded-base")" != "$BASE" ]; then
+  echo "validated PR merge base was not recorded" >&2
+  exit 1
+fi
 if [ "$(cat "$FIXTURE/ci-base-image")" != "ghcr.io/shepherdjerred/ci-base@sha256:0000000000000000000000000000000000000000000000000000000000000000" ]; then
   echo "ci-base digest pin was not exported" >&2
   exit 1
@@ -68,6 +79,7 @@ if [ "$(cat "$FIXTURE/ci-playwright-image")" != "ghcr.io/shepherdjerred/ci-playw
 fi
 
 CAPTURE_PATH="$FIXTURE/main-bootstrap" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/main-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/main-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/main-ci-playwright-image" \
   BUILDKITE_BRANCH=main \
@@ -79,6 +91,7 @@ if [ "$(cat "$FIXTURE/main-bootstrap")" != ".buildkite/main-bootstrap.yml" ]; th
 fi
 
 CAPTURE_PATH="$FIXTURE/renamed-default-bootstrap" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/renamed-default-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/renamed-default-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/renamed-default-ci-playwright-image" \
   BUILDKITE_BRANCH=trunk \
@@ -91,6 +104,7 @@ if [ "$(cat "$FIXTURE/renamed-default-bootstrap")" != ".buildkite/main-bootstrap
 fi
 
 CAPTURE_PATH="$FIXTURE/release-please" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/release-please-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/release-please-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/release-please-ci-playwright-image" \
   BUILDKITE_BRANCH=release-please--branches--main \
@@ -103,6 +117,7 @@ if [ "$(cat "$FIXTURE/release-please")" = ".buildkite/main-bootstrap.yml" ]; the
 fi
 
 CAPTURE_PATH="$FIXTURE/reporting-pipeline" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/reporting-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/reporting-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/reporting-ci-playwright-image" \
   PATH="$FIXTURE/fake-bin:$PATH" \
@@ -121,6 +136,7 @@ if [ "$(cat "$FIXTURE/reporting-ci-playwright-image")" != "ghcr.io/shepherdjerre
 fi
 
 CAPTURE_PATH="$FIXTURE/fallback" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/fallback-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/fallback-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/fallback-ci-playwright-image" \
   CI_CHANGED_FILES_BASE=missing-ref \
@@ -141,6 +157,7 @@ mkdir -p "$FIXTURE/.git/objects/info" "$FIXTURE/mirror-a" "$FIXTURE/mirror-b"
   printf '../../mirror-b\n'
 } > "$FIXTURE/.git/objects/info/alternates"
 CAPTURE_PATH="$FIXTURE/alternates-ok" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/alternates-ok-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/alternates-ok-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/alternates-ok-ci-playwright-image" \
   CI_CHANGED_FILES_BASE="$BASE" \
@@ -157,6 +174,7 @@ fi
 printf '/nonexistent/git-mirrors/repo/objects\n' \
   > "$FIXTURE/.git/objects/info/alternates"
 CAPTURE_PATH="$FIXTURE/alternates-broken" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/alternates-broken-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/alternates-broken-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/alternates-broken-ci-playwright-image" \
   CI_CHANGED_FILES_BASE="$BASE" \
@@ -175,6 +193,7 @@ rm "$FIXTURE/.git/objects/info/alternates"
 
 printf 'sha256:not-a-digest\n' > "$FIXTURE/.buildkite/ci-image/DIGEST"
 if CAPTURE_PATH="$FIXTURE/invalid" \
+  CI_CHANGED_BASE_CAPTURE="$FIXTURE/invalid-recorded-base" \
   CI_BASE_IMAGE_CAPTURE="$FIXTURE/invalid-ci-base-image" \
   CI_PLAYWRIGHT_IMAGE_CAPTURE="$FIXTURE/invalid-ci-playwright-image" \
   CI_CHANGED_FILES_BASE="$BASE" \

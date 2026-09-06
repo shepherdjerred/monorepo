@@ -15,6 +15,7 @@
 import path from "node:path";
 import { run } from "../lib/run.ts";
 import {
+  matchShard,
   parseShardName,
   shardPathspecs,
   type ShardName,
@@ -51,10 +52,13 @@ export function parseTrackedEntry(
 }
 
 export async function shardTrackedFiles(shard: ShardName): Promise<string[]> {
-  const lsFiles = Bun.spawnSync(
-    ["git", "ls-files", "-sz", "--", ...shardPathspecs(shard)],
-    { cwd: REPO_ROOT },
-  );
+  return trackedFiles(shardPathspecs(shard));
+}
+
+async function trackedFiles(pathspecs: readonly string[]): Promise<string[]> {
+  const lsFiles = Bun.spawnSync(["git", "ls-files", "-sz", "--", ...pathspecs], {
+    cwd: REPO_ROOT,
+  });
   if (lsFiles.exitCode !== 0) {
     throw new Error(`git ls-files failed: ${lsFiles.stderr.toString()}`);
   }
@@ -75,6 +79,64 @@ export async function shardTrackedFiles(shard: ShardName): Promise<string[]> {
   return checks.filter(({ exists }) => exists).map(({ file }) => file);
 }
 
+const CHECK_GLOBAL_INPUTS: Record<CheckName, readonly string[]> = {
+  prettier: [
+    ".prettierignore",
+    ".prettierrc.json",
+    "scripts/lib/run.ts",
+    "scripts/ci/repo-shards.ts",
+    "scripts/ci/run-shard-check.ts",
+  ],
+  "line-endings": [
+    ".gitattributes",
+    "scripts/checks/check-line-endings.ts",
+    "scripts/lib/run.ts",
+    "scripts/ci/repo-shards.ts",
+    "scripts/ci/run-shard-check.ts",
+  ],
+  "large-files": [
+    ".largeignore",
+    "scripts/checks/check-large-files.ts",
+    "scripts/lib/run.ts",
+    "scripts/ci/repo-shards.ts",
+    "scripts/ci/run-shard-check.ts",
+  ],
+};
+
+export function changedFilesForShard(
+  check: CheckName,
+  shard: ShardName,
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): string[] | null {
+  const base = environment["CI_CHANGED_BASE"]?.trim();
+  if (base === undefined || base === "") return null;
+  for (const command of [
+    ["git", "cat-file", "-e", `${base}^{commit}`],
+    ["git", "merge-base", "--is-ancestor", base, "HEAD"],
+  ]) {
+    const validation = Bun.spawnSync(command, { cwd: REPO_ROOT });
+    if (validation.exitCode !== 0) {
+      console.error(
+        `WARN: ${check}[${shard}] could not validate ${base}; checking the complete shard`,
+      );
+      return null;
+    }
+  }
+  const diff = Bun.spawnSync(
+    ["git", "diff", "--no-renames", "--name-only", "-z", base, "HEAD"],
+    { cwd: REPO_ROOT },
+  );
+  if (diff.exitCode !== 0) return null;
+  const changed = diff.stdout
+    .toString()
+    .split("\0")
+    .filter((file) => file !== "");
+  if (changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file))) {
+    return null;
+  }
+  return changed.filter((file) => matchShard(file) === shard);
+}
+
 export function chunk<T>(items: readonly T[], size: number): T[][] {
   const chunks: T[][] = [];
   for (let index = 0; index < items.length; index += size) {
@@ -85,7 +147,14 @@ export function chunk<T>(items: readonly T[], size: number): T[][] {
 
 export type ShardCheckDependencies = {
   runner?: typeof run;
-  fileResolver?: typeof shardTrackedFiles;
+  fileResolver?: (
+    shard: ShardName,
+    changedFiles?: readonly string[],
+  ) => Promise<string[]>;
+  changedFileResolver?: (
+    check: CheckName,
+    shard: ShardName,
+  ) => Promise<string[] | null> | string[] | null;
 };
 
 export async function runShardCheck(
@@ -94,9 +163,17 @@ export async function runShardCheck(
   dependencies: ShardCheckDependencies = {},
 ): Promise<void> {
   const runner = dependencies.runner ?? run;
+  const changed = await (
+    dependencies.changedFileResolver ?? changedFilesForShard
+  )(check, shard);
   if (check === "prettier") {
-    const fileResolver = dependencies.fileResolver ?? shardTrackedFiles;
-    const files = await fileResolver(shard);
+    const fileResolver =
+      dependencies.fileResolver ??
+      (async (requestedShard, changedFiles) =>
+        changedFiles === undefined
+          ? shardTrackedFiles(requestedShard)
+          : trackedFiles(changedFiles));
+    const files = await fileResolver(shard, changed ?? undefined);
     if (files.length === 0) {
       console.log(`prettier[${shard}]: no tracked files to check`);
       return;
@@ -116,12 +193,16 @@ export async function runShardCheck(
     }
     return;
   }
+  if (changed?.length === 0) {
+    console.log(`${check}[${shard}]: no changed files to check`);
+    return;
+  }
   await runner(
     [
       "bun",
       "--no-install",
       `scripts/checks/check-${check}.ts`,
-      ...shardPathspecs(shard),
+      ...(changed ?? shardPathspecs(shard)),
     ],
     { cwd: REPO_ROOT },
   );

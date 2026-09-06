@@ -37,7 +37,7 @@
     "prettier:fix": "prettier --write .",
     "shellcheck": "bun scripts/tools/shellcheck.ts",
     "hadolint": "bun scripts/tools/hadolint.ts",
-    "gitleaks": "gitleaks detect --source . --no-git --redact --no-banner",
+    "gitleaks": "bun --no-install scripts/ci/gitleaks.ts",
     "jscpd": "bun scripts/tools/jscpd-check.ts",
     "quality-ratchet": "bun scripts/tools/quality-ratchet.ts",
     "compliance-check": "bun scripts/checks/compliance-check.ts",

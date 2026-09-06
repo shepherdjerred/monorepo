@@ -63,7 +63,8 @@
       "dependsOn": ["^build", "generate"]
     },
     // Browser-driven e2e (Playwright). Not in the default `test` chain and
-    // never cached: needs installed browsers and exercises a live dev server.
+    // uncached by default. Deterministic browser suites opt in from their
+    // package configs with the browser image and CI behavior in their hash.
     "test:e2e": {
       "dependsOn": ["^build"],
       "cache": false
@@ -220,7 +221,6 @@
     },
     "//#script-coverage": {
       "dependsOn": ["//#check-script-migrations"],
-      "cache": false,
       "inputs": [
         "scripts/bunfig.coverage.toml",
         "scripts/checks/check-script-coverage.ts",
@@ -243,6 +243,7 @@
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
     "//#prettier-scout": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
@@ -260,6 +261,7 @@
       ]
     },
     "//#prettier-homelab": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
@@ -277,6 +279,7 @@
       ]
     },
     "//#prettier-packages": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
@@ -296,6 +299,7 @@
       ]
     },
     "//#prettier-root": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
@@ -359,7 +363,9 @@
       ]
     },
     "//#gitleaks": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "scripts/ci/gitleaks.ts",
         "**/*",
         ".gitleaks.toml",
         "!**/node_modules/**",
@@ -433,6 +439,7 @@
       ]
     },
     "//#line-endings-scout": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -449,6 +456,7 @@
       ]
     },
     "//#line-endings-homelab": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -465,6 +473,7 @@
       ]
     },
     "//#line-endings-packages": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -483,6 +492,7 @@
       ]
     },
     "//#line-endings-root": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -508,6 +518,7 @@
       ]
     },
     "//#large-files-scout": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -524,6 +535,7 @@
       ]
     },
     "//#large-files-homelab": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -540,6 +552,7 @@
       ]
     },
     "//#large-files-packages": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -558,6 +571,7 @@
       ]
     },
     "//#large-files-root": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",

@@ -56,30 +56,84 @@ const turboTasks = [
   "test:contract",
 ] as const;
 
-const forwardedArgs = process.argv
-  .slice(2)
-  .filter((argument) => argument !== "--");
-const turbo = Bun.spawn(
-  [
-    "bunx",
-    "--no-install",
-    "turbo",
-    "run",
-    ...turboTasks,
-    "--continue",
-    ...forwardedArgs,
-  ],
-  { stdin: "inherit", stdout: "inherit", stderr: "inherit" },
-);
-const turboExitCode = await turbo.exited;
-if (turboExitCode !== 0) process.exit(turboExitCode);
+type GitValidator = (command: readonly string[]) => Promise<number>;
 
-const analyticsCheck = Bun.spawn(
-  ["bun", "scripts/checks/check-analytics-sites.ts"],
-  {
-    stdin: "inherit",
-    stdout: "inherit",
+async function validateBaseWithGit(
+  command: readonly string[],
+): Promise<number> {
+  const child = Bun.spawn([...command], {
+    stdin: "ignore",
+    stdout: "ignore",
     stderr: "inherit",
-  },
-);
-process.exit(await analyticsCheck.exited);
+  });
+  return child.exited;
+}
+
+export async function affectedVerifyFilters(
+  environment: Readonly<Record<string, string | undefined>>,
+  validate: GitValidator = validateBaseWithGit,
+): Promise<string[]> {
+  if (environment["CI_IO_FIXED_CORPUS"] === "true") return [];
+  const base = environment["CI_CHANGED_BASE"]?.trim();
+  if (base === undefined || base === "") return [];
+  const checks = [
+    ["git", "cat-file", "-e", `${base}^{commit}`],
+    ["git", "merge-base", "--is-ancestor", base, "HEAD"],
+  ] as const;
+  for (const command of checks) {
+    if ((await validate(command)) !== 0) {
+      console.error(
+        `WARN: CI changed-file base ${base} is invalid; running full verification`,
+      );
+      return [];
+    }
+  }
+  // The affected package graph and the root namespace are a union. Root checks
+  // remain represented, but Turbo executes only the ones whose declared input
+  // hashes changed. Package tasks cover changed workspaces plus reverse
+  // dependents and their task dependencies.
+  return [`--filter=...[${base}]`, "--filter=//"];
+}
+
+export async function main(
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): Promise<number> {
+  const forwardedArgs = process.argv
+    .slice(2)
+    .filter((argument) => argument !== "--");
+  const affectedFilters = await affectedVerifyFilters(environment);
+  const turbo = Bun.spawn(
+    [
+      "bun",
+      "x",
+      "--no-install",
+      "turbo",
+      "run",
+      ...turboTasks,
+      "--continue",
+      ...affectedFilters,
+      ...forwardedArgs,
+    ],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  const turboExitCode = await turbo.exited;
+  if (turboExitCode !== 0) return turboExitCode;
+
+  const analyticsCheck = Bun.spawn(
+    ["bun", "--no-install", "scripts/check-analytics-sites.ts"],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  return analyticsCheck.exited;
+}
+
+if (import.meta.main) process.exitCode = await main();
