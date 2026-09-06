@@ -187,12 +187,38 @@ async function admissionDecision(
   return { triggerKind: "engaged-follow-up" };
 }
 
-function toTurnInput(
+async function resolveMessageImages(
+  message: Message,
+): Promise<ReturnType<typeof extractImageAttachments>> {
+  const directImages = extractImageAttachments(message);
+  if (directImages.length > 0) {
+    return directImages;
+  }
+  if (message.reference?.messageId != null) {
+    try {
+      const referencedMessage = await message.channel.messages.fetch(
+        message.reference.messageId,
+      );
+      const referencedImages = extractImageAttachments(referencedMessage);
+      if (referencedImages.length > 0) {
+        return referencedImages;
+      }
+    } catch (error) {
+      logger.debug("Failed to fetch referenced message for image attachment", {
+        error,
+        referencedMessageId: message.reference.messageId,
+      });
+    }
+  }
+  return [];
+}
+
+async function toTurnInput(
   message: Message,
   guildId: string,
   decision: { triggerKind: TriggerKind },
-): TurnInput {
-  const images = extractImageAttachments(message);
+): Promise<TurnInput> {
+  const images = await resolveMessageImages(message);
   return TurnInputSchema.parse({
     discordMessageId: message.id,
     guildId,
@@ -284,9 +310,10 @@ async function processMessageAdmission(
           return;
         }
         span.setAttribute("birmel.trigger_kind", decision.triggerKind);
+        const turn = await toTurnInput(message, guildId, decision);
         const context: MessageContext = {
           message,
-          turn: toTurnInput(message, guildId, decision),
+          turn,
           ...(decision.activeSessionId == null
             ? {}
             : { activeSessionId: decision.activeSessionId }),

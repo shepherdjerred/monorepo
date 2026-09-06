@@ -54,6 +54,8 @@ function loadCoreConfig(environment: Environment) {
       memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-5.4-nano",
       embeddingModel:
         environment["LLM_EMBEDDING_MODEL"] ?? "text-embedding-3-small",
+      imageModel:
+        environment["LLM_IMAGE_MODEL"] ?? "gemini-3-pro-image-preview",
       reasoningEffort: environment["LLM_REASONING_EFFORT"] ?? "medium",
       maxTokens: parseNumber(environment["LLM_MAX_OUTPUT_TOKENS"], 4096),
     },

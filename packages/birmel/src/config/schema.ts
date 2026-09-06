@@ -47,6 +47,7 @@ export const OpenRouterConfigSchema = z.object({
   classifierModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   memoryModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   embeddingModel: z.string().trim().min(1).default("text-embedding-3-small"),
+  imageModel: z.string().trim().min(1).default("gemini-3-pro-image-preview"),
   reasoningEffort: z
     .enum(["minimal", "low", "medium", "high"])
     .default("medium"),

@@ -25,7 +25,7 @@ const SPECIALIST_INSTRUCTIONS: Record<SpecialistId, string> = {
   moderation:
     "Use moderation, member, role, automod, webhook, invite, emoji, and sticker tools. Verify destructive writes before reporting success.",
   automation:
-    "Use jobs, shell, browser, external service, research, event, election, and birthday tools. Durable delayed work must use manage-job.",
+    "Use jobs, shell, browser, external service, research, image generation, event, election, and birthday tools. Durable delayed work must use manage-job. When generating or editing images, write a rich descriptive prompt; when tweaking an existing image from an attachment or reply, pass its URL as referenceImageUrl.",
 };
 
 export function directInstructions(decision: RouteDecision): string {

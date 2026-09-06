@@ -1,0 +1,144 @@
+import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
+import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
+import { stageAttachment } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { downloadImageWithRetry } from "@shepherdjerred/birmel/utils/image.ts";
+import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
+import { generateImage } from "ai";
+import { z } from "zod";
+
+const logger = loggers.tools.child("generate-image");
+
+const AspectRatioSchema = z.enum(["1:1", "16:9", "9:16", "4:3", "3:4"]);
+export type AspectRatio = z.infer<typeof AspectRatioSchema>;
+
+export const GenerateImageInputSchema = z.object({
+  prompt: z
+    .string()
+    .min(1)
+    .max(2000)
+    .describe(
+      "Detailed visual prompt describing the desired image to generate, or describing edits/modifications to make to the reference image.",
+    ),
+  aspectRatio: AspectRatioSchema.optional().describe(
+    "Aspect ratio for the generated image (default 1:1).",
+  ),
+  referenceImageUrl: z
+    .url()
+    .optional()
+    .describe(
+      "Optional URL of an image to modify, edit, or use as a style/subject reference (from a user upload or message reply).",
+    ),
+});
+
+export const GenerateImageOutputSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  prompt: z.string().optional(),
+  aspectRatio: z.string().optional(),
+});
+
+export const generateImageTool = createTool({
+  id: "generate-image",
+  description:
+    "Generate a new image or edit/tweak an existing image (from an attachment or reply) using Google's Gemini 3 Pro Image model. The resulting image will be automatically attached to your Discord reply.",
+  inputSchema: GenerateImageInputSchema,
+  outputSchema: GenerateImageOutputSchema,
+  execute: async (input, { signal }) => {
+    try {
+      signal.throwIfAborted();
+      const config = getConfig();
+      const runtime = getLlmRuntime();
+      const imageModel = config.openRouter.imageModel;
+
+      let files:
+        | [
+            {
+              type: "data";
+              data: Uint8Array;
+              mediaType: string;
+            },
+          ]
+        | undefined;
+
+      if (input.referenceImageUrl != null) {
+        try {
+          logger.debug("Downloading reference image for image editing", {
+            url: input.referenceImageUrl,
+          });
+          const referenceBuffer = await downloadImageWithRetry(
+            input.referenceImageUrl,
+          );
+          files = [
+            {
+              type: "data",
+              data: new Uint8Array(referenceBuffer),
+              mediaType: "image/png",
+            },
+          ];
+        } catch (downloadError) {
+          logger.warn(
+            "Failed to download reference image; proceeding with prompt-only generation",
+            {
+              url: input.referenceImageUrl,
+              error: downloadError,
+            },
+          );
+        }
+      }
+
+      const { headers } = runtime.callOptions({
+        workload: "birmel.agent.image-generation",
+      });
+
+      const result = await generateImage({
+        model: runtime.imageModel(imageModel),
+        prompt: input.prompt,
+        ...(input.aspectRatio == null
+          ? {}
+          : { aspectRatio: input.aspectRatio }),
+        ...(files == null ? {} : { files }),
+        headers,
+        abortSignal: signal,
+      });
+
+      const imageBuffer = Buffer.from(result.image.base64, "base64");
+      const filename = `birmel-${String(Date.now())}.png`;
+
+      stageAttachment({
+        data: imageBuffer,
+        name: filename,
+        description: input.prompt,
+        contentType: "image/png",
+      });
+
+      logger.info("Image generated and staged for reply delivery", {
+        model: imageModel,
+        aspectRatio: input.aspectRatio ?? "1:1",
+        hasReferenceImage: files != null,
+        sizeBytes: imageBuffer.length,
+      });
+
+      return {
+        success: true,
+        message: "Image successfully generated and staged for delivery.",
+        prompt: input.prompt,
+        ...(input.aspectRatio == null
+          ? {}
+          : { aspectRatio: input.aspectRatio }),
+      };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Image generation failed", error, {
+        prompt: input.prompt,
+        aspectRatio: input.aspectRatio,
+        hasReferenceImage: input.referenceImageUrl != null,
+      });
+      return {
+        success: false,
+        message: `Image generation failed: ${errorMessage}`,
+      };
+    }
+  },
+});

@@ -35,6 +35,7 @@ import { manageAgentSessionTool } from "./sessions/index.ts";
 import { electionTools } from "./elections/elections.ts";
 import { getCandidateStatsTool } from "./elections/candidate-stats.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
+import { generateImageTool } from "./images/generate-image.ts";
 
 /**
  * Messaging Agent - handles messages, threads, polls, memory, and sessions
@@ -82,6 +83,7 @@ export const automationToolSet = [
   ...electionTools,
   getCandidateStatsTool,
   manageBirthdayTool,
+  generateImageTool,
 ];
 
 export type AgentType = z.infer<typeof SpecialistIdSchema>;

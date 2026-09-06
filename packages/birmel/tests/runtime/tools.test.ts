@@ -333,6 +333,18 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "sourceMessageId",
     ],
   },
+  {
+    id: "generate-image",
+    specialist: "automation",
+    riskClass: "write",
+    timeoutMs: 60_000,
+    requiredRequestContext: [
+      "guildId",
+      "channelId",
+      "userId",
+      "sourceMessageId",
+    ],
+  },
 ]);
 
 function trustedContext(

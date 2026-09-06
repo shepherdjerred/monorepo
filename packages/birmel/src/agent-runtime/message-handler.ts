@@ -1,4 +1,4 @@
-import type { Message } from "discord.js";
+import { AttachmentBuilder, type Message } from "discord.js";
 import {
   admitAgentRun,
   completeAgentRun,
@@ -263,10 +263,23 @@ async function processAdmittedTurn(
         }),
     );
     const response = validateResponse(execution.text);
+    const stagedAttachments = requestContext.stagedAttachments ?? [];
+    const files = stagedAttachments.map(
+      (attachment) =>
+        new AttachmentBuilder(Buffer.from(attachment.data), {
+          name: attachment.name,
+          ...(attachment.description == null
+            ? {}
+            : { description: attachment.description }),
+        }),
+    );
     await withDiscordDelivery({
       context,
       phase: "final",
-      operation: async () => await deliveredResponseMessage.edit(response),
+      operation: async () =>
+        await deliveredResponseMessage.edit(
+          files.length > 0 ? { content: response, files } : response,
+        ),
     });
     finalResponseDelivered = true;
     markEngaged(context.turn.channelId);

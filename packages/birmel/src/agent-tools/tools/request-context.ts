@@ -1,5 +1,12 @@
 import { AsyncLocalStorage } from "node:async_hooks";
 
+export type StagedAttachment = {
+  data: Buffer | Uint8Array;
+  name: string;
+  description?: string;
+  contentType?: string;
+};
+
 export type RequestContext = {
   /** The channel where the user's message originated */
   sourceChannelId: string;
@@ -19,6 +26,8 @@ export type RequestContext = {
   suppressAutomaticMemoryExtraction?: boolean;
   /** Internal durable-job hook invoked immediately before a write-risk tool. */
   beforeExternalEffect?: () => Promise<void>;
+  /** Attachments staged by tools to be delivered with the single Discord reply. */
+  stagedAttachments?: StagedAttachment[];
 };
 
 const requestContextStorage = new AsyncLocalStorage<RequestContext>();
@@ -66,4 +75,18 @@ export function suppressAutomaticMemoryExtraction(): void {
   if (context != null) {
     context.suppressAutomaticMemoryExtraction = true;
   }
+}
+
+export function stageAttachment(attachment: StagedAttachment): void {
+  const context = requestContextStorage.getStore();
+  if (context != null) {
+    context.stagedAttachments ??= [];
+    context.stagedAttachments.push(attachment);
+  }
+}
+
+export function getStagedAttachments(
+  context?: RequestContext,
+): readonly StagedAttachment[] {
+  return (context ?? requestContextStorage.getStore())?.stagedAttachments ?? [];
 }
