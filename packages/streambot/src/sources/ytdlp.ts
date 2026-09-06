@@ -15,6 +15,7 @@ import {
 import { resolveSubtitleForYtdlp } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { listYtdlpSubtitleCandidates } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("ytdlp");
@@ -163,7 +164,7 @@ export async function searchYoutube(
   signal: AbortSignal,
   limit = 5,
 ): Promise<YtdlpSearchResult[]> {
-  const proc = Bun.spawn(
+  const { stdout, stderr, exitCode } = await runSubprocess(
     [
       config.ytDlpPath,
       "--flat-playlist",
@@ -174,13 +175,8 @@ export async function searchYoutube(
       String(limit),
       `ytsearch${String(limit)}:${query}`,
     ],
-    { stdout: "pipe", stderr: "pipe", stdin: "ignore", signal },
+    signal,
   );
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
   if (exitCode !== 0) {
     throw new Error(
       `yt-dlp search failed (code ${String(exitCode)}): ${stderr.trim()}`,
@@ -239,7 +235,7 @@ export async function expandPlaylist(
   url: string,
   signal: AbortSignal,
 ): Promise<PlaylistItem[]> {
-  const proc = Bun.spawn(
+  const { stdout, stderr, exitCode } = await runSubprocess(
     [
       config.ytDlpPath,
       "--flat-playlist",
@@ -248,13 +244,8 @@ export async function expandPlaylist(
       "%(url)s\t%(title)s",
       url,
     ],
-    { stdout: "pipe", stderr: "pipe", stdin: "ignore", signal },
+    signal,
   );
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
   if (exitCode !== 0) {
     throw new Error(
       `yt-dlp playlist expansion failed (code ${String(exitCode)}): ${stderr.trim()}`,
@@ -292,18 +283,10 @@ export async function resolveWithYtdlp(
   const args = buildInfoArgs(source);
   log.debug("probing source", { target: ytdlpTarget(source) });
 
-  const proc = Bun.spawn([config.ytDlpPath, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, ...args],
     signal,
-  });
-
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  );
 
   if (exitCode !== 0) {
     throw new Error(
@@ -354,17 +337,10 @@ export async function listSubtitleTracksForYtdlp(
   signal: AbortSignal,
 ): Promise<SubtitleCandidate[]> {
   const args = buildSubtitleEnumerationArgs(source);
-  const proc = Bun.spawn([config.ytDlpPath, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, ...args],
     signal,
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  );
   if (exitCode !== 0) {
     log.warn("subtitle enumeration failed", {
       target: ytdlpTarget(source),
@@ -419,17 +395,10 @@ export async function listExtractors(
   if (extractorCache !== undefined) {
     return extractorCache;
   }
-  const proc = Bun.spawn([config.ytDlpPath, "--list-extractors"], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, "--list-extractors"],
     signal,
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  );
   if (exitCode !== 0) {
     throw new Error(
       `yt-dlp --list-extractors failed (code ${String(exitCode)}): ${stderr.trim()}`,
