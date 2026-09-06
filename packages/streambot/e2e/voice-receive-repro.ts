@@ -125,7 +125,7 @@ async function main(): Promise<void> {
     for (let remaining = preSendWait; remaining > 0; remaining -= 5) {
       await Bun.sleep(Math.min(5, remaining) * 1000);
       process.stdout.write(
-        `  …${String(Math.max(0, remaining - 5))}s to replay | speaking so far: ${JSON.stringify(Object.fromEntries(speaking))} | inbound packets: ${String([...packetOutcomes.values()].reduce((a, b) => a + b, 0))}\n`,
+        `  …${String(Math.max(0, remaining - 5))}s to replay | speakers so far: ${String(speaking.size)} | inbound packets: ${String([...packetOutcomes.values()].reduce((a, b) => a + b, 0))}\n`,
       );
     }
   }
@@ -156,13 +156,12 @@ async function main(): Promise<void> {
 
   const totalPackets = [...packetOutcomes.values()].reduce((a, b) => a + b, 0);
   process.stdout.write("\n===== RECEIVE REPRO REPORT =====\n");
-  process.stdout.write(`sender id: ${senderClient.user?.id ?? "?"}\n`);
   process.stdout.write(
     `dave: version=${String(lastDave.protocolVersion)} required=${String(lastDave.required)} ready=${String(lastDave.ready)}\n`,
   );
   process.stdout.write(`receiveReady: ${String(receiveReady)}\n`);
   process.stdout.write(
-    `speaking observations: ${JSON.stringify(Object.fromEntries(speaking))}\n`,
+    `speakers observed: ${String(speaking.size)} (currently speaking: ${String([...speaking.values()].filter(Boolean).length)})\n`,
   );
   process.stdout.write(
     `inbound packets by outcome: ${JSON.stringify(Object.fromEntries(packetOutcomes))}\n`,

@@ -72,7 +72,7 @@ for (let i = 1; i <= trials; i += 1) {
       assistantAudio: new DiscardAssistantAudio(),
     });
     process.stdout.write(
-      `trial ${String(i)}: OK transcript=${JSON.stringify(result.transcript)} wakeVerified=${String(result.wakeVerified)} normalizedCommand=${JSON.stringify(result.normalizedCommand)} invocations=${JSON.stringify(commands.invocations)}\n`,
+      `trial ${String(i)}: OK wakeVerified=${String(result.wakeVerified)} mutated=${String(result.mutated)} tools=[${commands.invocations.map((c) => c.name).join(", ")}]\n`,
     );
   } catch (error) {
     const detail =
@@ -80,7 +80,7 @@ for (let i = 1; i <= trials; i += 1) {
         ? (error.stack ?? `${error.name}: ${error.message}`)
         : Bun.inspect(error, { depth: 5 });
     process.stdout.write(
-      `trial ${String(i)}: ERROR ${detail} | invocationsAtError=${JSON.stringify(commands.invocations)}\n`,
+      `trial ${String(i)}: ERROR ${detail} | tools=[${commands.invocations.map((c) => c.name).join(", ")}]\n`,
     );
   }
   await Bun.sleep(500);
