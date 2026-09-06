@@ -124,6 +124,25 @@ export async function main(
   const turboExitCode = await turbo.exited;
   if (turboExitCode !== 0) return turboExitCode;
 
+  const designTokenCheck = Bun.spawn(
+    [
+      "bun",
+      "--no-install",
+      "run",
+      "--cwd",
+      "packages/scout-for-lol/packages/design-audit",
+      "check:tokens",
+    ],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  const designTokenExitCode = await designTokenCheck.exited;
+  if (designTokenExitCode !== 0) return designTokenExitCode;
+
   const analyticsCheck = Bun.spawn(
     ["bun", "--no-install", "scripts/checks/check-analytics-sites.ts"],
     {
