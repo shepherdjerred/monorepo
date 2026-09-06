@@ -10,6 +10,7 @@
     "scripts/ci/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
     "scripts/ci/run-ci-test.ts",
+    "tsconfig.base.json",
     "vitest.config.ts"
   ],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB

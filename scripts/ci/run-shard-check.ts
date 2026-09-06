@@ -56,9 +56,12 @@ export async function shardTrackedFiles(shard: ShardName): Promise<string[]> {
 }
 
 async function trackedFiles(pathspecs: readonly string[]): Promise<string[]> {
-  const lsFiles = Bun.spawnSync(["git", "ls-files", "-sz", "--", ...pathspecs], {
-    cwd: REPO_ROOT,
-  });
+  const lsFiles = Bun.spawnSync(
+    ["git", "ls-files", "-sz", "--", ...pathspecs],
+    {
+      cwd: REPO_ROOT,
+    },
+  );
   if (lsFiles.exitCode !== 0) {
     throw new Error(`git ls-files failed: ${lsFiles.stderr.toString()}`);
   }
@@ -131,7 +134,13 @@ export function changedFilesForShard(
     .toString()
     .split("\0")
     .filter((file) => file !== "");
-  if (changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file))) {
+  if (
+    changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file)) ||
+    (check === "line-endings" &&
+      changed.some(
+        (file) => file === ".gitattributes" || file.endsWith("/.gitattributes"),
+      ))
+  ) {
     return null;
   }
   return changed.filter((file) => matchShard(file) === shard);
