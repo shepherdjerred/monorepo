@@ -20,7 +20,7 @@
           0.03
         ]
       },
-      "resolvedDescription": "Twitch's basic attacks infect the target %i:OnHit% On-Hit, dealing true damage each second.",
+      "resolvedDescription": "Twitch's basic attacks infect the target On-Hit, dealing true damage each second.",
       "unresolved": []
     },
     "Q": {
@@ -164,7 +164,7 @@
           0.06
         ]
       },
-      "resolvedDescription": "Twitch hurls a cask that adds a stack of Deadly Venom to all enemies struck and leaves behind a toxic cloud that persists for 3 seconds. Enemies that remain within the cloud are Slowed by 30/35/40/45/50 (+6% AP)% and receive an additional stack of Deadly Venom each second.",
+      "resolvedDescription": "Twitch hurls a cask that adds a stack of Deadly Venom to all enemies struck and leaves behind a toxic cloud that persists for 3 seconds. Enemies that remain within the cloud are Slowed by 30/35/40/45/50% (+6% AP) and receive an additional stack of Deadly Venom each second.",
       "unresolved": []
     },
     "E": {

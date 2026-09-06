@@ -77,7 +77,7 @@
           0.13
         ]
       },
-      "resolvedDescription": "Irelia dashes to an enemy, dealing 5/25/45/65/85 (+70% AD) physical damage and restoring 9/10/11/12/13% AD Health to herself. If the enemy dies or was Unsteady, the Cooldown is refreshed. Deals 5/25/45/65/85 (+50-50 based on level) (+70% AD) damage to minions.",
+      "resolvedDescription": "Irelia dashes to an enemy, dealing 5/25/45/65/85 (+70% AD) physical damage and restoring 9/10/11/12/13% AD Health to herself. If the enemy dies or was Unsteady, the Cooldown is refreshed. Deals 5/25/45/65/85 (+50-237 based on level) (+70% AD) damage to minions.",
       "unresolved": []
     },
     "W": {
@@ -156,7 +156,7 @@
           0.5
         ]
       },
-      "resolvedDescription": "Begin Charging: Irelia enters a defensive stance for up to 1.5 seconds, becoming unable to act but reducing physical damage taken by 40-70 (based on level) (+7% AP)% and magic damage taken by 20-35 (based on level) (+3.5% AP)%. Release: Irelia lashes out with her blades, dealing 10/20/30/40/50 (+40% AD) (+50% AP) physical damage increased up to 30/60/90/120/150 (+120% AD) (+150% AP) based on charge time.",
+      "resolvedDescription": "Begin Charging: Irelia enters a defensive stance for up to 1.5 seconds, becoming unable to act but reducing physical damage taken by 40-70% (based on level) (+7% AP) and magic damage taken by 20-35% (based on level) (+3.5% AP). Release: Irelia lashes out with her blades, dealing 10/20/30/40/50 (+40% AD) (+50% AP) physical damage increased up to 30/60/90/120/150 (+120% AD) (+150% AP) based on charge time.",
       "unresolved": []
     },
     "E": {

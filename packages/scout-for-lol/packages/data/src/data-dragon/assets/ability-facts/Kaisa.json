@@ -173,9 +173,8 @@
         3000
       ],
       "dataValues": {},
-      "resolvedDescription": "Kai'Sa fires a void blast that deals 30/55/80/105/130 (+130% AD) (+45% AP) magic damage, applies 2 stacks of Plasma, and grants True Sight of the first enemy hit for {{ spell.kaisapassive:pduration }} seconds. Evolved: Kai'Sa instead applies 3 stacks of Plasma and hitting a champion reduces the Cooldown by 75%. Current: {{ f2.1 }}/100 Ability Power",
+      "resolvedDescription": "Kai'Sa fires a void blast that deals 30/55/80/105/130 (+130% AD) (+45% AP) magic damage, applies 2 stacks of Plasma, and grants True Sight of the first enemy hit for 4 seconds. Evolved: Kai'Sa instead applies 3 stacks of Plasma and hitting a champion reduces the Cooldown by 75%. Current: {{ f2.1 }}/100 Ability Power",
       "unresolved": [
-        "spell.kaisapassive:pduration",
         "f2.1"
       ]
     },

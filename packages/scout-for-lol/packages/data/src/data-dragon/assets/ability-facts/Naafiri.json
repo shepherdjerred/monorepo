@@ -215,10 +215,8 @@
           0.7
         ]
       },
-      "resolvedDescription": "Naafiri hurls Darkin-tainted blades, dealing 35/40/45/50/55 (+20% bonus AD) physical damage and inflicting a bleed, dealing 35/60/85/110/135 (+80% bonus AD) physical damage over 5 seconds. Naafiri can Recast this Ability. If enemies hit are already bleeding from this Ability, it instead deals the remaining bleed damage plus between 30/42.5/55/67.5/80 (+40% bonus AD) and 60/85/110/135/160 (+140% bonus AD) physical damage, based on their missing Health. If that target was a champion or large monster, Naafiri restores 45/60/75/90/105 (+40% bonus AD) Health. Packmates will leap at the first champion or monster hit and attack them for {{ spell.naafirip:packmatetauntduration }} seconds.",
-      "unresolved": [
-        "spell.naafirip:packmatetauntduration"
-      ]
+      "resolvedDescription": "Naafiri hurls Darkin-tainted blades, dealing 35/40/45/50/55 (+20% bonus AD) physical damage and inflicting a bleed, dealing 35/60/85/110/135 (+80% bonus AD) physical damage over 5 seconds. Naafiri can Recast this Ability. If enemies hit are already bleeding from this Ability, it instead deals the remaining bleed damage plus between 30/42.5/55/67.5/80 (+40% bonus AD) and 60/85/110/135/160 (+140% bonus AD) physical damage, based on their missing Health. If that target was a champion or large monster, Naafiri restores 45/60/75/90/105 (+40% bonus AD) Health. Packmates will leap at the first champion or monster hit and attack them for 2 seconds.",
+      "unresolved": []
     },
     "W": {
       "name": "The Call of the Pack",

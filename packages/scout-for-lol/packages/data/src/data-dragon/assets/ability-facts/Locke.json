@@ -172,7 +172,7 @@
           1
         ]
       },
-      "resolvedDescription": "Locke readies a set of Soul Nails to throw, dealing 40/48/56/64/72 (+20% AP) magic damage and marking enemies hit. Nails apply a 25/25/60% Slow for 1/1/2 seconds, stacking with the amount of nails hit. Attacking the enemy consumes the Soul Nails, dealing 25/27.5/30/32.5/35% AP (+18/26/34/42/50) magic damage per stack, increased by 20% and 40% for two and three nails respectively.",
+      "resolvedDescription": "Locke readies a set of Soul Nails to throw, dealing 40/48/56/64/72 (+20% AP) magic damage and marking enemies hit. Nails apply a 25/25/60% Slow for 1/1/2 seconds, stacking with the amount of nails hit. Attacking the enemy consumes the Soul Nails, dealing 18/26/34/42/50 (+25/27.5/30/32.5/35% AP) magic damage per stack, increased by 20% and 40% for two and three nails respectively.",
       "unresolved": []
     },
     "W": {

@@ -73,7 +73,7 @@
           1
         ]
       },
-      "resolvedDescription": "Zed and his Shadows throw their shurikens, each dealing 80/120/160/200/240 (+100% bonus AD) physical damage to the first enemy they pass through, and 48/72/96/120/144.00001 (+60% bonus AD) physical damage to each additional enemy.",
+      "resolvedDescription": "Zed and his Shadows throw their shurikens, each dealing 80/120/160/200/240 (+100% bonus AD) physical damage to the first enemy they pass through, and 48/72/96/120/144 (+60% bonus AD) physical damage to each additional enemy.",
       "unresolved": []
     },
     "W": {

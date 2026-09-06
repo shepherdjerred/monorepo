@@ -136,7 +136,7 @@
           0.6
         ]
       },
-      "resolvedDescription": "Rumble ignites his flamethrower, dealing 50/75/100/125/150 (+105% AP) plus 6/6.5/7/7.5/8% max Health magic damage over 3 seconds, reduced to 70% against minions. Danger Zone: Damage is increased to 75/112.5/150/187.5/225 (+157.49999% AP) plus 9/9.75/10.5/11.25/12% max Health. Percent damage is limited to 65-300 (based on level) damage on Monsters.",
+      "resolvedDescription": "Rumble ignites his flamethrower, dealing 50/75/100/125/150 (+105% AP) plus 6/6.5/7/7.5/8% max Health magic damage over 3 seconds, reduced to 70% against minions. Danger Zone: Damage is increased to 75/112.5/150/187.5/225 (+157.5% AP) plus 9/9.75/10.5/11.25/12% max Health. Percent damage is limited to 65-300 (based on level) damage on Monsters.",
       "unresolved": []
     },
     "W": {

@@ -96,7 +96,7 @@
           8
         ]
       },
-      "resolvedDescription": "Hecarim cleaves nearby enemies for 60/90/120/150/180 (+90% bonus AD) physical damage. If this Ability hits, he gains a stack that decreases its Cooldown by 0.75 seconds and increases its damage by 3 (+3% bonus AD)% for 8 seconds. Stacks up to 3 times.",
+      "resolvedDescription": "Hecarim cleaves nearby enemies for 60/90/120/150/180 (+90% bonus AD) physical damage. If this Ability hits, he gains a stack that decreases its Cooldown by 0.75 seconds and increases its damage by 3% (+3% bonus AD) for 8 seconds. Stacks up to 3 times.",
       "unresolved": []
     },
     "W": {

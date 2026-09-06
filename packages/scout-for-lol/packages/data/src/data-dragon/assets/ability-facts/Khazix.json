@@ -67,7 +67,7 @@
           1.05
         ]
       },
-      "resolvedDescription": "Kha'Zix slashes a nearby enemy, dealing 80/105/130/155/180 (+105% bonus AD) physical damage. This deals 167.99999/220.49999/272.99999/325.49999/377.99998 (+220.49998% bonus AD) damage instead to enemies Isolated from their allies.",
+      "resolvedDescription": "Kha'Zix slashes a nearby enemy, dealing 80/105/130/155/180 (+105% bonus AD) physical damage. This deals 168/220.5/273/325.5/378 (+220.5% bonus AD) damage instead to enemies Isolated from their allies.",
       "unresolved": []
     },
     "W": {

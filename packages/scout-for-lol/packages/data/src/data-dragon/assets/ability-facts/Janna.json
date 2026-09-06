@@ -206,11 +206,10 @@
           0.06
         ]
       },
-      "resolvedDescription": "Passive: Janna gains {{ totalms }} Move Speed and is Ghosted. Active: Janna's elemental strikes an enemy, Slowing them by {{ totalslow }} for 2 seconds, and dealing 55/85/115/145/175 (+50% AP) + {{ spell.tailwindself:bonusdamage }} magic damage.",
+      "resolvedDescription": "Passive: Janna gains {{ totalms }} Move Speed and is Ghosted. Active: Janna's elemental strikes an enemy, Slowing them by {{ totalslow }} for 2 seconds, and dealing 55/85/115/145/175 (+50% AP) + 30% bonus Move Speed magic damage.",
       "unresolved": [
         "totalms",
-        "totalslow",
-        "spell.tailwindself:bonusdamage"
+        "totalslow"
       ]
     },
     "E": {

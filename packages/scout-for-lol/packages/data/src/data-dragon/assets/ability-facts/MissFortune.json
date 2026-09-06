@@ -286,7 +286,7 @@
           3
         ]
       },
-      "resolvedDescription": "Miss Fortune channels a barrage of bullets, firing 14/16/18 waves over 3 seconds, dealing 20/30/40 (+60% AD) (+25% AP) physical damage per wave (total {{ totalphysicaldamage }} physical damage). Each wave can critically strike for %i:scaleCrit% {{ critdamageperwave }} physical damage.",
+      "resolvedDescription": "Miss Fortune channels a barrage of bullets, firing 14/16/18 waves over 3 seconds, dealing 20/30/40 (+60% AD) (+25% AP) physical damage per wave (total {{ totalphysicaldamage }} physical damage). Each wave can critically strike for {{ critdamageperwave }} physical damage.",
       "unresolved": [
         "totalphysicaldamage",
         "critdamageperwave"

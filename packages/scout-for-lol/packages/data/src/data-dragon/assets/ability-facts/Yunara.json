@@ -138,7 +138,7 @@
           25
         ]
       },
-      "resolvedDescription": "Passive: Yunara deal 5/10/15/20/25 (+20% AP) magic damage %i:OnHit% On-Hit and attacking grants 1 Unleash (2 Unleash for champions). Active: Yunara consumes 8 Unleash and for 5 seconds gains 20/30/40/50/60% Attack Speed and deals an additional 5/10/15/20/25 (+20% AP) magic damage %i:OnHit% On-Hit. During this time, her Attacks spread to nearby enemies dealing them 30% AD physical damage. Transcendent State: This Ability is instantly activated for 15 seconds.",
+      "resolvedDescription": "Passive: Yunara deal 5/10/15/20/25 (+20% AP) magic damage On-Hit and attacking grants 1 Unleash (2 Unleash for champions). Active: Yunara consumes 8 Unleash and for 5 seconds gains 20/30/40/50/60% Attack Speed and deals an additional 5/10/15/20/25 (+20% AP) magic damage On-Hit. During this time, her Attacks spread to nearby enemies dealing them 30% AD physical damage. Transcendent State: This Ability is instantly activated for 15 seconds.",
       "unresolved": []
     },
     "W": {
@@ -266,7 +266,7 @@
           6
         ]
       },
-      "resolvedDescription": "Yunara lets rip a prayer bead that deals 55/95/135/175/215 (+85% bonus AD) (+50% AP) magic damage and Slows by 99% decaying over 1.5 seconds. It deals an additional 33/57/81/105/129.00001 (+51% bonus AD) (+30% AP) magic damage per second. Transcendent State - Arc of Ruin: Yunara fires a laser that deals 160/320/480 (+120% bonus AD) (+75% AP) magic damage and Slows by 99% decaying over 1 second.",
+      "resolvedDescription": "Yunara lets rip a prayer bead that deals 55/95/135/175/215 (+85% bonus AD) (+50% AP) magic damage and Slows by 99% decaying over 1.5 seconds. It deals an additional 33/57/81/105/129 (+51% bonus AD) (+30% AP) magic damage per second. Transcendent State - Arc of Ruin: Yunara fires a laser that deals 160/320/480 (+120% bonus AD) (+75% AP) magic damage and Slows by 99% decaying over 1 second.",
       "unresolved": []
     },
     "E": {

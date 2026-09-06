@@ -60,11 +60,8 @@
           220
         ]
       },
-      "resolvedDescription": "Zyra causes thick vines to spread and explode into spines, dealing 60/100/140/180/220 (+65% AP) magic damage. If this Ability is cast near a Seed, the Seed grows into a Thorn Spitter that deals {{ spell.zyrap:plantdamage }} magic damage and lasts {{ spell.zyrap:plantduration }} seconds. Thorn Spitters have 575 range.",
-      "unresolved": [
-        "spell.zyrap:plantdamage",
-        "spell.zyrap:plantduration"
-      ]
+      "resolvedDescription": "Zyra causes thick vines to spread and explode into spines, dealing 60/100/140/180/220 (+65% AP) magic damage. If this Ability is cast near a Seed, the Seed grows into a Thorn Spitter that deals 15-75 (based on level) (+20% AP) magic damage and lasts 8 seconds. Thorn Spitters have 575 range.",
+      "unresolved": []
     },
     "W": {
       "name": "Rampant Growth",
@@ -195,11 +192,8 @@
           2
         ]
       },
-      "resolvedDescription": "Zyra sends vines forward, Rooting for 1/1.25/1.5/1.75/2 second(s) and dealing 60/95/130/165/200 (+60% AP) magic damage. If this Ability passes near a Seed, the Seed grows into a Vine Lasher that deals {{ spell.zyrap:plantdamage }} magic damage and lasts {{ spell.zyrap:plantduration }} seconds. Vine Lashers have 400 range, and their Attacks Slow by 30% for 2 seconds. The Slow from multiple Vine Lashers stacks up to 2 times.",
-      "unresolved": [
-        "spell.zyrap:plantdamage",
-        "spell.zyrap:plantduration"
-      ]
+      "resolvedDescription": "Zyra sends vines forward, Rooting for 1/1.25/1.5/1.75/2 second(s) and dealing 60/95/130/165/200 (+60% AP) magic damage. If this Ability passes near a Seed, the Seed grows into a Vine Lasher that deals 15-75 (based on level) (+20% AP) magic damage and lasts 8 seconds. Vine Lashers have 400 range, and their Attacks Slow by 30% for 2 seconds. The Slow from multiple Vine Lashers stacks up to 2 times.",
+      "unresolved": []
     },
     "R": {
       "name": "Stranglethorns",

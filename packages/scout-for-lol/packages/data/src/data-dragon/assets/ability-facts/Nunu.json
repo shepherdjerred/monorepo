@@ -397,7 +397,7 @@
           1.5
         ]
       },
-      "resolvedDescription": "Nunu and Willump create a snowball that grows in size and speed as they roll it. They turn slower while rolling it, but can increase turning speed by holding the turn. The snowball does between 59.94/74.925/89.91/104.895/119.88 (+49.95% AP) and 180/225/270/315/360 (+150% AP) magic damage, and Knocks Up for between 0.5 and 0.5 (+0.75) seconds when it collides with a champion, large monster or wall. These values scale up with distance rolled. Nunu and Willump can Recast to let the snowball go early.",
+      "resolvedDescription": "Nunu and Willump create a snowball that grows in size and speed as they roll it. They turn slower while rolling it, but can increase turning speed by holding the turn. The snowball does between 59.94/74.925/89.91/104.9/119.88 (+49.95% AP) and 180/225/270/315/360 (+150% AP) magic damage, and Knocks Up for between 0.5 and 0.5 (+0.75) seconds when it collides with a champion, large monster or wall. These values scale up with distance rolled. Nunu and Willump can Recast to let the snowball go early.",
       "unresolved": []
     },
     "E": {

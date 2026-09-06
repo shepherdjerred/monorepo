@@ -149,7 +149,7 @@
           400
         ]
       },
-      "resolvedDescription": "Taliyah hurls 5 rocks, each dealing 55/72.5/90/107.5/125 (+50% AP) magic damage in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal 60% less damage. Casts on worked ground cost 10 Mana and have 50% less Cooldown, consume the Worked Ground, and hurl a boulder that Slows enemies it hits by 20/25/30/35/40% for 1.5 seconds, dealing 99/130.5/162/193.49999/224.99999 (+90% AP) magic damage to the primary target. Monsters hit by the boulder are Stunned for 3 seconds.",
+      "resolvedDescription": "Taliyah hurls 5 rocks, each dealing 55/72.5/90/107.5/125 (+50% AP) magic damage in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal 60% less damage. Casts on worked ground cost 10 Mana and have 50% less Cooldown, consume the Worked Ground, and hurl a boulder that Slows enemies it hits by 20/25/30/35/40% for 1.5 seconds, dealing 99/130.5/162/193.5/225 (+90% AP) magic damage to the primary target. Monsters hit by the boulder are Stunned for 3 seconds.",
       "unresolved": []
     },
     "W": {

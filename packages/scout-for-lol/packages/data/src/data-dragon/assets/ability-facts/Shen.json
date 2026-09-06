@@ -369,7 +369,7 @@
           3
         ]
       },
-      "resolvedDescription": "Shen grants an allied champion anywhere on the map between 120/220/320 (+15% bonus Health) (+135% AP) and 192/352.00001/512.00001 (+24% bonus Health) (+216.00001% AP) Shield based on their missing Health for 5 seconds (max Shield at 60% missing Health). After channeling for 3 seconds, Shen teleports to his ally's location with his Spirit Blade.",
+      "resolvedDescription": "Shen grants an allied champion anywhere on the map between 120/220/320 (+15% bonus Health) (+135% AP) and 192/352/512 (+24% bonus Health) (+216% AP) Shield based on their missing Health for 5 seconds (max Shield at 60% missing Health). After channeling for 3 seconds, Shen teleports to his ally's location with his Spirit Blade.",
       "unresolved": []
     }
   }

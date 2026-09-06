@@ -198,7 +198,7 @@
           0.25
         ]
       },
-      "resolvedDescription": "Cassiopeia launches deadly fangs, dealing 52-52 (based on level) (+10% AP) magic damage. If the enemy is Poisoned, they take an additional 20/45/70/95/120 (+55% AP) magic damage and Cassiopeia restores 10/11.5/13/14.5/16% AP Health, reduced to 2.5/2.875/3.25/3.625/4% AP Health against lane minions and small monsters. If this kills the target, Cassiopeia restores 40 Mana.",
+      "resolvedDescription": "Cassiopeia launches deadly fangs, dealing 52-120 (based on level) (+10% AP) magic damage. If the enemy is Poisoned, they take an additional 20/45/70/95/120 (+55% AP) magic damage and Cassiopeia restores 10/11.5/13/14.5/16% AP Health, reduced to 2.5/2.875/3.25/3.625/4% AP Health against lane minions and small monsters. If this kills the target, Cassiopeia restores 40 Mana.",
       "unresolved": []
     },
     "R": {

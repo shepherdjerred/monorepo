@@ -119,7 +119,7 @@
           0.1
         ]
       },
-      "resolvedDescription": "Sona deals 50/85/120/155/190 (+40% AP) magic damage to the nearest two enemies, prioritizing champions. She then begins a new Melody. Gain a stack of Accelerando for every champion you damage with this. Melody: Sona gains an aura for 3 seconds, granting allied champions an additional 10/15/20/25/30 (+10% AP) magic damage %i:OnHit% on their next Attack within 5 seconds. Power Chord - Staccato: Power Chord bonus damage (30-255 (based on level) (+30% AP) total magic damage).",
+      "resolvedDescription": "Sona deals 50/85/120/155/190 (+40% AP) magic damage to the nearest two enemies, prioritizing champions. She then begins a new Melody. Gain a stack of Accelerando for every champion you damage with this. Melody: Sona gains an aura for 3 seconds, granting allied champions an additional 10/15/20/25/30 (+10% AP) magic damage on their next Attack within 5 seconds. Power Chord - Staccato: Power Chord bonus damage (30-360 (based on level) (+30% AP) total magic damage).",
       "unresolved": []
     },
     "W": {

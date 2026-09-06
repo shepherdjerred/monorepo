@@ -300,7 +300,7 @@
           15
         ]
       },
-      "resolvedDescription": "Gwen dashes and empowers her Attacks for 4 seconds. Empowered Attacks gain 30/42.5/55/67.5/80% Attack Speed, 15 (+20% AP) magic damage %i:OnHit% On-Hit, 75 range, and the first one to hit an enemy refunds 25/35/45/55/65% of this Ability's Cooldown.",
+      "resolvedDescription": "Gwen dashes and empowers her Attacks for 4 seconds. Empowered Attacks gain 30/42.5/55/67.5/80% Attack Speed, 15 (+20% AP) magic damage On-Hit, 75 range, and the first one to hit an enemy refunds 25/35/45/55/65% of this Ability's Cooldown.",
       "unresolved": []
     },
     "R": {

@@ -144,9 +144,19 @@ export function resolveChampionKey(championId: ChampionId | number): string {
  * Normalize any-cased champion name or alias to canonical Data Dragon key.
  */
 export function normalizeChampionName(championName: string): string {
-  const decoded = championName.includes("%")
-    ? decodeURIComponent(championName)
-    : championName;
+  // User input is not guaranteed to be valid URI encoding ("100%" throws in
+  // decodeURIComponent) — fall back to the raw string rather than throwing
+  // out of what is a user boundary for every caller.
+  const decoded = (() => {
+    if (!championName.includes("%")) {
+      return championName;
+    }
+    try {
+      return decodeURIComponent(championName);
+    } catch {
+      return championName;
+    }
+  })();
   const lower = decoded.toLowerCase();
 
   const direct = championByKey.get(lower);

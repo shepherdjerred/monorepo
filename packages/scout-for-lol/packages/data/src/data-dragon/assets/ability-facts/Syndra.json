@@ -99,10 +99,8 @@
           230
         ]
       },
-      "resolvedDescription": "Syndra conjures a Dark Sphere, dealing 90/125/160/195/230 (+70% AP) magic damage. The Dark Sphere remains for 6 seconds and can be manipulated by Syndra's other Abilities. {{ spell.syndrapassive:q1upgradethreshold }} Splinters of Wrath: Syndra can store 2 charges of Dark Sphere.",
-      "unresolved": [
-        "spell.syndrapassive:q1upgradethreshold"
-      ]
+      "resolvedDescription": "Syndra conjures a Dark Sphere, dealing 90/125/160/195/230 (+70% AP) magic damage. The Dark Sphere remains for 6 seconds and can be manipulated by Syndra's other Abilities. 40 Splinters of Wrath: Syndra can store 2 charges of Dark Sphere.",
+      "unresolved": []
     },
     "W": {
       "name": "Force of Will",
@@ -159,10 +157,9 @@
           450
         ]
       },
-      "resolvedDescription": "Syndra grabs a Dark Sphere, enemy minion, or non-epic monster. She drags it with her and can Recast for up to 5 seconds. Recast: Syndra hurls the object, dealing 70/100/130/160/190 (+65% AP) magic damage and Slowing by 25% for {{ f2 }} seconds. {{ spell.syndrapassive:wupgradethreshold }} Splinters of Wrath: This Ability deals an additional {{ tooltiponlypassivebonuspercent }} true damage.",
+      "resolvedDescription": "Syndra grabs a Dark Sphere, enemy minion, or non-epic monster. She drags it with her and can Recast for up to 5 seconds. Recast: Syndra hurls the object, dealing 70/100/130/160/190 (+65% AP) magic damage and Slowing by 25% for {{ f2 }} seconds. 60 Splinters of Wrath: This Ability deals an additional {{ tooltiponlypassivebonuspercent }} true damage.",
       "unresolved": [
         "f2",
-        "spell.syndrapassive:wupgradethreshold",
         "tooltiponlypassivebonuspercent"
       ]
     },
@@ -242,10 +239,8 @@
           0.6
         ]
       },
-      "resolvedDescription": "Syndra projects a wave of force, Knocking Back enemies and Dark Spheres and dealing 60/95/130/165/200 (+60% AP) magic damage. Dark Spheres that are pushed Stun enemies for 1.25 seconds and deal 60/95/130/165/200 (+60% AP) magic damage. {{ spell.syndrapassive:eupgradethreshold }} Splinters of Wrath: This Ability's width is increased and Slows enemies by 70% for 1.25 seconds.",
-      "unresolved": [
-        "spell.syndrapassive:eupgradethreshold"
-      ]
+      "resolvedDescription": "Syndra projects a wave of force, Knocking Back enemies and Dark Spheres and dealing 60/95/130/165/200 (+60% AP) magic damage. Dark Spheres that are pushed Stun enemies for 1.25 seconds and deal 60/95/130/165/200 (+60% AP) magic damage. 80 Splinters of Wrath: This Ability's width is increased and Slows enemies by 70% for 1.25 seconds.",
+      "unresolved": []
     },
     "R": {
       "name": "Unleashed Power",
@@ -303,10 +298,8 @@
           0.2
         ]
       },
-      "resolvedDescription": "Passive: Dark Sphere gains an additional 10 Ability Haste for each rank of Unleashed Power. Syndra draws on her full cataclysmic power, launching the 3 Dark Spheres orbiting her plus up to 4 more nearby at an enemy champion. Each Dark Sphere deals 80/120/160 (+20% AP) magic damage (max 560/840/1120 (+140% AP) magic damage). {{ spell.syndrapassive:rupgradethreshold }} Splinters of Wrath: This Ability executes enemies below 15% Health.",
-      "unresolved": [
-        "spell.syndrapassive:rupgradethreshold"
-      ]
+      "resolvedDescription": "Passive: Dark Sphere gains an additional 10 Ability Haste for each rank of Unleashed Power. Syndra draws on her full cataclysmic power, launching the 3 Dark Spheres orbiting her plus up to 4 more nearby at an enemy champion. Each Dark Sphere deals 80/120/160 (+20% AP) magic damage (max 560/840/1120 (+140% AP) magic damage). 100 Splinters of Wrath: This Ability executes enemies below 15% Health.",
+      "unresolved": []
     }
   }
 }

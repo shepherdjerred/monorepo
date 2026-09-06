@@ -96,7 +96,7 @@
           35
         ]
       },
-      "resolvedDescription": "Vladimir drains his target's lifeforce, dealing 80/100/120/140/160 (+60% AP) magic damage and restoring 20/25/30/35/40 (+35% AP) Health. After using this Ability twice, Vladimir gains 10-40 (based on level)% Move Speed for 0.5 seconds and empowers the next use of this Ability for 2.5 seconds. The empowered version of this Ability deals 148/185/222/259/296 (+111.00001% AP) magic damage instead and restores an additional 30-200 (based on level) plus {{ empoweredhealpercenttooltip }} missing Health.",
+      "resolvedDescription": "Vladimir drains his target's lifeforce, dealing 80/100/120/140/160 (+60% AP) magic damage and restoring 20/25/30/35/40 (+35% AP) Health. After using this Ability twice, Vladimir gains 10-40% (based on level) Move Speed for 0.5 seconds and empowers the next use of this Ability for 2.5 seconds. The empowered version of this Ability deals 148/185/222/259/296 (+111% AP) magic damage instead and restores an additional 30-200 (based on level) plus {{ empoweredhealpercenttooltip }} missing Health.",
       "unresolved": [
         "empoweredhealpercenttooltip"
       ]

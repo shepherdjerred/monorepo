@@ -105,7 +105,7 @@
           0.1
         ]
       },
-      "resolvedDescription": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun. While using the rocket launcher, Jinx's Attacks deal 110% AD physical damage to the target and nearby enemies, gain 100/125/150/175/200 range, cost Mana, and scale 10% less with bonus Attack Speed. While using the minigun, Jinx's Attacks grant Attack Speed for 2.5 seconds, stacking up to 3 times (+30/55/80/105/130% %i:scaleAS% max).",
+      "resolvedDescription": "Jinx swaps weapons between Fishbones the rocket launcher and Pow-Pow the minigun. While using the rocket launcher, Jinx's Attacks deal 110% AD physical damage to the target and nearby enemies, gain 100/125/150/175/200 range, cost Mana, and scale 10% less with bonus Attack Speed. While using the minigun, Jinx's Attacks grant Attack Speed for 2.5 seconds, stacking up to 3 times (+30/55/80/105/130% max).",
       "unresolved": []
     },
     "W": {

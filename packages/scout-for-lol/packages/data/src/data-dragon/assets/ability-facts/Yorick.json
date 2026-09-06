@@ -128,7 +128,7 @@
           0.5
         ]
       },
-      "resolvedDescription": "Yorick's next Attack deals an additional 30/50/70/90/110 (+50% AD) physical damage and restores 10-58 (based on level) plus 6/7/8/9/10% of his missing Health, reduced by 50% against non-Champions. If this Attack hits a Champion or large Monster or kills the target, it leaves a grave. When there are 3 or more graves nearby and this Ability has already been used, Yorick can Recast to raise Mist Walkers from all nearby graves.",
+      "resolvedDescription": "Yorick's next Attack deals an additional 30/50/70/90/110 (+50% AD) physical damage and restores 10-68 (based on level) plus 6/7/8/9/10% of his missing Health, reduced by 50% against non-Champions. If this Attack hits a Champion or large Monster or kills the target, it leaves a grave. When there are 3 or more graves nearby and this Ability has already been used, Yorick can Recast to raise Mist Walkers from all nearby graves.",
       "unresolved": []
     },
     "W": {
@@ -293,10 +293,9 @@
           0.3
         ]
       },
-      "resolvedDescription": "Yorick throws a globule of Black Mist that deals {{ calc_healthdamage }} max Health magic damage, Slows by 30% for 1.5 seconds and marks champions and monsters for 4 seconds. Marked enemies continuously Awaken nearby graves (but not exceeding the maximum of {{ spell.yorickpassive:yorickpassiveghoulmax }}) and suffer 13/16/19/22/25% reduced Armor. Yorick and his summoned units gain 18/21/24/27/30% Move Speed toward the mark. Mist Walkers will leap once at marked enemies that get away from them.",
+      "resolvedDescription": "Yorick throws a globule of Black Mist that deals {{ calc_healthdamage }} max Health magic damage, Slows by 30% for 1.5 seconds and marks champions and monsters for 4 seconds. Marked enemies continuously Awaken nearby graves (but not exceeding the maximum of 4) and suffer 13/16/19/22/25% reduced Armor. Yorick and his summoned units gain 18/21/24/27/30% Move Speed toward the mark. Mist Walkers will leap once at marked enemies that get away from them.",
       "unresolved": [
-        "calc_healthdamage",
-        "spell.yorickpassive:yorickpassiveghoulmax"
+        "calc_healthdamage"
       ]
     },
     "R": {

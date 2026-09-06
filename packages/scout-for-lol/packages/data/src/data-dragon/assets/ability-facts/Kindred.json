@@ -216,7 +216,7 @@
           0.5
         ]
       },
-      "resolvedDescription": "Passive: Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to 47-47 (based on level) Health based on their missing Health. Active: Kindred claims a territory, ordering Wolf to bite at the last enemy Lamb Attacked. Wolf's bites deal 25/30/35/40/45 (+20% bonus AD) (+20% AP) plus {{ percentwolfdamage }} current Health magic damage.",
+      "resolvedDescription": "Passive: Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to 47-81 (based on level) Health based on their missing Health. Active: Kindred claims a territory, ordering Wolf to bite at the last enemy Lamb Attacked. Wolf's bites deal 25/30/35/40/45 (+20% bonus AD) (+20% AP) plus {{ percentwolfdamage }} current Health magic damage.",
       "unresolved": [
         "percentwolfdamage"
       ]
@@ -318,7 +318,7 @@
           1
         ]
       },
-      "resolvedDescription": "Kindred weakens an enemy, Slowing them by 30 (+5% AP)% for 1 second. Kindred's third Attack against the target within 4 seconds of each other directs Wolf to pounce on the enemy, dealing an additional {{ basebitedamage }} plus {{ percentbitedamage }} missing Health physical damage.",
+      "resolvedDescription": "Kindred weakens an enemy, Slowing them by 30% (+5% AP) for 1 second. Kindred's third Attack against the target within 4 seconds of each other directs Wolf to pounce on the enemy, dealing an additional {{ basebitedamage }} plus {{ percentbitedamage }} missing Health physical damage.",
       "unresolved": [
         "basebitedamage",
         "percentbitedamage"

@@ -232,11 +232,11 @@
           60
         ],
         "MaxHealthPer100AP": [
-          0.00015,
-          0.00015,
-          0.00015,
-          0.00015,
-          0.00015
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002
         ]
       },
       "resolvedDescription": "Pantheon leaps on his target, Stunning for 1 second and dealing {{ maxhealthdamagecalc }} max Health physical damage. Mortal Will Bonus: Pantheon's next Attack strikes 3 times, dealing a total of {{ empowereddamagemultcalcmodified }} physical damage.",

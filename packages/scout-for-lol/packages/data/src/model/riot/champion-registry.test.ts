@@ -75,6 +75,14 @@ describe("champion-registry", () => {
     expect(normalizeChampionName("Nunu & Willump")).toBe("Nunu");
   });
 
+  test("tolerates malformed percent escapes in user input", () => {
+    // "100%" is not valid URI encoding; decodeURIComponent would throw.
+    expect(normalizeChampionName("100%")).toBe("100%");
+    expect(normalizeChampionName("kai%sa")).toBe("kai%sa");
+    // Valid encodings still decode.
+    expect(normalizeChampionName("Kai%27Sa")).toBe("Kaisa");
+  });
+
   test("resolves spoken-form aliases for voice input", () => {
     const spokenForms: [string, string][] = [
       ["cho gath", "Chogath"],

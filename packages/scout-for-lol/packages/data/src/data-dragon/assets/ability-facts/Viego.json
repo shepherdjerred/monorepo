@@ -423,7 +423,7 @@
           0.7
         ]
       },
-      "resolvedDescription": "Viego discards any souls he is currently Possessing and teleports. On arrival he Attacks the champion with the lowest percent Health, briefly Slowing them by 99% and dealing {{ totaldamage }} + 12/16/20 (+5% bonus AD)% missing Health physical damage. Other nearby enemies are Knocked Back and take {{ totaldamage }} physical damage.",
+      "resolvedDescription": "Viego discards any souls he is currently Possessing and teleports. On arrival he Attacks the champion with the lowest percent Health, briefly Slowing them by 99% and dealing {{ totaldamage }} + 12/16/20% (+5% bonus AD) missing Health physical damage. Other nearby enemies are Knocked Back and take {{ totaldamage }} physical damage.",
       "unresolved": [
         "totaldamage",
         "totaldamage"

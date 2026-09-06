@@ -219,7 +219,7 @@
           4
         ]
       },
-      "resolvedDescription": "Malzahar inflicts terrible visions, dealing 80/115/150/185/220 (+80% AP) magic damage over 4 seconds. Applying Call of the Void or Nether Grasp to the victim during this time refreshes the visions. If the victim dies, Malzahar gains {{ manarestore }} Mana and the visions spread to the nearest enemy. Malefic Visions executes minions below 10-10 (based on level) Health.",
+      "resolvedDescription": "Malzahar inflicts terrible visions, dealing 80/115/150/185/220 (+80% AP) magic damage over 4 seconds. Applying Call of the Void or Nether Grasp to the victim during this time refreshes the visions. If the victim dies, Malzahar gains {{ manarestore }} Mana and the visions spread to the nearest enemy. Malefic Visions executes minions below 10-30 (based on level) Health.",
       "unresolved": [
         "manarestore"
       ]

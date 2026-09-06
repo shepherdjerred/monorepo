@@ -402,7 +402,7 @@
           0.65
         ]
       },
-      "resolvedDescription": "Unburrowed: Rek'Sai bites a target, dealing 70/95/120/145/170 (+60% bonus AD) physical damage. At max Fury, the bite deals 84/114/144.00001/174.00001/204.00001 (+72.00001% bonus AD) true damage instead.",
+      "resolvedDescription": "Unburrowed: Rek'Sai bites a target, dealing 70/95/120/145/170 (+60% bonus AD) physical damage. At max Fury, the bite deals 84/114/144/174/204 (+72% bonus AD) true damage instead.",
       "unresolved": []
     },
     "R": {

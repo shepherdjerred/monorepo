@@ -242,7 +242,7 @@
           0.1
         ]
       },
-      "resolvedDescription": "Briar leaps and enters a Blood Frenzy, self-taunting to the nearest enemy for 5 seconds, prioritizing Champions. While in Blood Frenzy she gains 55/65/75/85/95% Attack Speed and 24/33/42/51/60% Move Speed, and her Attacks deal 60/70/80/90/100% AD physical damage to enemies surrounding her target. Briar can Recast this Ability to empower her next Attack. It deals 5/20/35/50/65 (+105% AD) + 9 (+2.5% bonus AD)% missing Health physical damage and heals Briar for 5% max Health + 24/28/32/36/40% of the damage dealt.",
+      "resolvedDescription": "Briar leaps and enters a Blood Frenzy, self-taunting to the nearest enemy for 5 seconds, prioritizing Champions. While in Blood Frenzy she gains 55/65/75/85/95% Attack Speed and 24/33/42/51/60% Move Speed, and her Attacks deal 60/70/80/90/100% AD physical damage to enemies surrounding her target. Briar can Recast this Ability to empower her next Attack. It deals 5/20/35/50/65 (+105% AD) + 9% (+2.5% bonus AD) missing Health physical damage and heals Briar for 5% max Health + 24/28/32/36/40% of the damage dealt.",
       "unresolved": []
     },
     "E": {
@@ -384,7 +384,7 @@
           0.16
         ]
       },
-      "resolvedDescription": "Begin Charging: Briar removes Blood Frenzy and gathers energy, gaining 35% damage reduction and restoring 10/11.5/13/14.5/16% max Health Health over 1 second. Release: Briar unleashes a scream that deals up to 80/115/150/185/220 (+100% bonus AD) (+100% AP) magic damage based on time charged, and Slows by 80% for 0.5 seconds. When fully charged, the scream Knocks Back enemies, dealing 140/215/290/365/440 (+240.00001% bonus AD) (+240.00001% AP) magic damage to those who hit a wall and Stunning them for 1.5 seconds.",
+      "resolvedDescription": "Begin Charging: Briar removes Blood Frenzy and gathers energy, gaining 35% damage reduction and restoring 10/11.5/13/14.5/16% max Health Health over 1 second. Release: Briar unleashes a scream that deals up to 80/115/150/185/220 (+100% bonus AD) (+100% AP) magic damage based on time charged, and Slows by 80% for 0.5 seconds. When fully charged, the scream Knocks Back enemies, dealing 140/215/290/365/440 (+240% bonus AD) (+240% AP) magic damage to those who hit a wall and Stunning them for 1.5 seconds.",
       "unresolved": []
     },
     "R": {

@@ -8,6 +8,7 @@ import {
   formatRankValues,
   generateAbilityFactsAssets,
   renderCalculation,
+  resolveTooltip,
   stripTooltipMarkup,
 } from "./ability-facts.ts";
 import { ChampionAbilityFactsSchema } from "#src/data-dragon/ability-facts.ts";
@@ -28,6 +29,17 @@ describe("number formatting", () => {
     expect(cleanNumber(0.025)).toBe(0.025);
   });
 
+  test("cleanNumber snaps noise propagated through multiplication", () => {
+    // 0.9 × float32(250.00001)-style products used to surface as 224.99999.
+    expect(cleanNumber(224.99999)).toBe(225);
+    expect(cleanNumber(144.00001)).toBe(144);
+    expect(cleanNumber(300.00001)).toBe(300);
+    expect(cleanNumber(900.00004)).toBe(900);
+    // Genuine decimals survive the snapping.
+    expect(cleanNumber(1.6)).toBe(1.6);
+    expect(cleanNumber(0.0125)).toBe(0.0125);
+  });
+
   test("formatRankValues collapses constants and joins varying ranks", () => {
     expect(formatRankValues([300, 475, 650])).toBe("300/475/650");
     expect(formatRankValues([1200, 1200, 1200])).toBe("1200");
@@ -42,6 +54,15 @@ describe("stripTooltipMarkup", () => {
         "deals <trueDamage>300 true damage</trueDamage><br /><br />and <healing>heals</healing>",
       ),
     ).toBe("deals 300 true damage and heals");
+  });
+
+  test("removes Riot %i:...% icon markup", () => {
+    expect(stripTooltipMarkup("gains %i:OnHit% On-Hit damage")).toBe(
+      "gains On-Hit damage",
+    );
+    expect(stripTooltipMarkup("%i:scaleAPen% Armor Penetration")).toBe(
+      "Armor Penetration",
+    );
   });
 });
 
@@ -94,6 +115,111 @@ describe("renderCalculation", () => {
       ]),
     };
     expect(renderCalculation("mystery", withUnknownPart)).toBeUndefined();
+  });
+
+  test("renders numeric bases before stat scalings regardless of bin order", () => {
+    const statFirst = {
+      ...context,
+      calculations: new Map([
+        [
+          "statfirst",
+          {
+            __type: "GameCalculation",
+            mFormulaParts: [
+              {
+                __type: "StatByCoefficientCalculationPart",
+                mCoefficient: 0.05,
+              },
+              {
+                __type: "NamedDataValueCalculationPart",
+                mDataValue: "BaseDamage",
+              },
+            ],
+          },
+        ],
+      ]),
+    };
+    expect(renderCalculation("statfirst", statFirst)).toBe(
+      "200/350/500 (+5% AP)",
+    );
+  });
+
+  test("renders negative additive terms as subtraction", () => {
+    const withNegative = {
+      ...context,
+      calculations: new Map([
+        [
+          "amplification",
+          {
+            __type: "GameCalculation",
+            mDisplayAsPercent: true,
+            mFormulaParts: [
+              { __type: "NumberCalculationPart", mNumber: 1.4 },
+              { __type: "NumberCalculationPart", mNumber: -1 },
+            ],
+          },
+        ],
+      ]),
+    };
+    expect(renderCalculation("amplification", withNegative)).toBe(
+      "140% (-100%)",
+    );
+  });
+
+  test("applies mInitialBonusPerLevel and default-0 breakpoint resets", () => {
+    // Serialization drops default fields, so a bare {mLevel: 12} breakpoint
+    // means "per-level growth becomes 0 at level 12" (Malzahar E's shape).
+    const withGrowth = {
+      ...context,
+      calculations: new Map([
+        [
+          "growth",
+          {
+            __type: "GameCalculation",
+            mFormulaParts: [
+              {
+                __type: "ByCharLevelBreakpointsCalculationPart",
+                mLevel1Value: 10,
+                mInitialBonusPerLevel: 2,
+                mBreakpoints: [{ mLevel: 12 }],
+              },
+            ],
+          },
+        ],
+      ]),
+    };
+    expect(renderCalculation("growth", withGrowth)).toBe(
+      "10-30 (based on level)",
+    );
+  });
+
+  test("folds a tooltip's trailing percent onto the base value", () => {
+    const healContext = {
+      ...context,
+      calculations: new Map([
+        [
+          "healcalc",
+          {
+            __type: "GameCalculation",
+            mFormulaParts: [
+              { __type: "NumberCalculationPart", mNumber: 30 },
+              {
+                __type: "StatByCoefficientCalculationPart",
+                mCoefficient: 0.05,
+              },
+            ],
+          },
+        ],
+      ]),
+    };
+    const resolved = resolveTooltip("heals {{ healcalc }}% of damage dealt", {
+      ddragonSpell: undefined,
+      resourceName: "Mana",
+      context: healContext,
+      spellContextsByName: new Map(),
+    });
+    expect(resolved.text).toBe("heals 30% (+5% AP) of damage dealt");
+    expect(resolved.unresolved).toEqual([]);
   });
 
   test("refuses an unknown stat id instead of guessing", () => {

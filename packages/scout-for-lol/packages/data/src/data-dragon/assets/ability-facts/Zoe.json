@@ -71,7 +71,7 @@
           1
         ]
       },
-      "resolvedDescription": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between 50/80/110/140/170 (+2-34 based on level) (+60% AP) to 125/200/275/350/425 (+5-85 based on level) (+150.00001% AP) magic damage. Zoe can Recast this Ability to redirect the missile to a new position near Zoe.",
+      "resolvedDescription": "Zoe fires a star that deals increasing damage the further it travels to the first enemy hit and surrounding enemies -- between 50/80/110/140/170 (+2-50 based on level) (+60% AP) to 125/200/275/350/425 (+5-125 based on level) (+150% AP) magic damage. Zoe can Recast this Ability to redirect the missile to a new position near Zoe.",
       "unresolved": []
     },
     "W": {

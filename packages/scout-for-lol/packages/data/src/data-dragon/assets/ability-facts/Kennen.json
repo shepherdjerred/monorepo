@@ -121,7 +121,7 @@
           0.8
         ]
       },
-      "resolvedDescription": "Passive: Every 5th Attack deals an additional {{ totaldamagepassive }} magic damage %i:OnHit% On-Hit. Active: Kennen sends out a blast of electricity, dealing 70/95/120/145/170 (+80% AP) magic damage to nearby enemies affected by Mark of the Storm.",
+      "resolvedDescription": "Passive: Every 5th Attack deals an additional {{ totaldamagepassive }} magic damage On-Hit. Active: Kennen sends out a blast of electricity, dealing 70/95/120/145/170 (+80% AP) magic damage to nearby enemies affected by Mark of the Storm.",
       "unresolved": [
         "totaldamagepassive"
       ]

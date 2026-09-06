@@ -192,7 +192,7 @@
           0.3
         ]
       },
-      "resolvedDescription": "Yuumi summons an errant missile that deals 60/95/130/165/200/235 (+20% AP) magic damage to the first enemy and Slows the target for 20%. If cast while Attached, Yuumi can control the missile using her mouse for a short period before it accelerates in a straight line. The accelerated missile deals 80/135/190/245/300/355 (+30% AP) magic damage and Slows the target for 50/53/56/59/62/65% for 2 seconds, instead. Best Friend Bonus: Prowling Projectile's Slow will always be enhanced and hitting an enemy champion also grants them 5% AP (+10/12/14/16/18/20) magic damage On-Hit %i:OnHit% for 5 seconds. The bonus On-Hit damage can be increased by 75% based her ally's Critical Strike Chance.",
+      "resolvedDescription": "Yuumi summons an errant missile that deals 60/95/130/165/200/235 (+20% AP) magic damage to the first enemy and Slows the target for 20%. If cast while Attached, Yuumi can control the missile using her mouse for a short period before it accelerates in a straight line. The accelerated missile deals 80/135/190/245/300/355 (+30% AP) magic damage and Slows the target for 50/53/56/59/62/65% for 2 seconds, instead. Best Friend Bonus: Prowling Projectile's Slow will always be enhanced and hitting an enemy champion also grants them 10/12/14/16/18/20 (+5% AP) magic damage On-Hit for 5 seconds. The bonus On-Hit damage can be increased by 75% based her ally's Critical Strike Chance.",
       "unresolved": []
     },
     "W": {
@@ -271,7 +271,7 @@
           0.05
         ]
       },
-      "resolvedDescription": "Passive: While on her Best Friend, Yuumi gains an additional 4/5/6/7/8% Heal & Shield Power and her ally also restores 3/4/5/6/7 (+3% AP) health On-Hit %i:OnHit%. Active: Yuumi dashes to an ally champion and Attaches to them. While Yuumi is Attached, she follows her partner's movement and is Untargetable except from towers. Immobilizing effects on Yuumi place this Ability on a 5 second Cooldown.",
+      "resolvedDescription": "Passive: While on her Best Friend, Yuumi gains an additional 4/5/6/7/8% Heal & Shield Power and her ally also restores 3/4/5/6/7 (+3% AP) health On-Hit . Active: Yuumi dashes to an ally champion and Attaches to them. While Yuumi is Attached, she follows her partner's movement and is Untargetable except from towers. Immobilizing effects on Yuumi place this Ability on a 5 second Cooldown.",
       "unresolved": []
     },
     "E": {
@@ -350,7 +350,7 @@
           0.4
         ]
       },
-      "resolvedDescription": "Yuumi shields herself, blocking 65/90/115/140/165 (+40% AP) damage and gains 25/27.5/30/32.5/35 (+8% AP)% Attack Speed for 3 seconds. While the shield persists, the target also gains 20% Move Speed. If Yuumi is Attached, this Ability affects her ally instead and also restores 20/24/28/32/36 Mana to them, increased by up to 100% based on the target's missing Mana.",
+      "resolvedDescription": "Yuumi shields herself, blocking 65/90/115/140/165 (+40% AP) damage and gains 25/27.5/30/32.5/35% (+8% AP) Attack Speed for 3 seconds. While the shield persists, the target also gains 20% Move Speed. If Yuumi is Attached, this Ability affects her ally instead and also restores 20/24/28/32/36 Mana to them, increased by up to 100% based on the target's missing Mana.",
       "unresolved": []
     },
     "R": {

@@ -146,10 +146,20 @@ export async function getAbilityFacts(
 
   const file = Bun.file(`${import.meta.dir}/assets/ability-facts/${key}.json`);
   if (!(await file.exists())) {
-    return {
-      status: "not_found",
-      suggestions: suggestChampionNames(championName),
-    };
+    // League Classic (Jade_) variants deliberately have no ability-facts
+    // assets — they share their modern counterpart's kit. That is a user-level
+    // not-found. For any OTHER registry-known champion a missing file is a
+    // broken internal contract (incomplete generation/packaging): fail loudly
+    // instead of misreporting it as unknown input.
+    if (key.startsWith("Jade_")) {
+      return {
+        status: "not_found",
+        suggestions: suggestChampionNames(championName),
+      };
+    }
+    throw new Error(
+      `ability-facts asset missing for known champion ${key} — regenerate with scripts/update-data-dragon.ts --ability-facts-only`,
+    );
   }
 
   const facts = ChampionAbilityFactsSchema.parse(await file.json());

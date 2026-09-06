@@ -89,7 +89,7 @@
           0.4
         ]
       },
-      "resolvedDescription": "LeBlanc projects a sigil to an enemy, dealing 65/90/115/140/165 (+40% AP) magic damage and marking them for 3.5 seconds. Damaging the marked enemy with an Ability detonates the sigil, dealing 65/90/115/140/165 (+40% AP) magic damage. If either part kills the target, Leblanc refunds 100% of the Mana cost and 30% of this spell's remaining Cooldown. The initial sigil deals an additional 10-10 (based on level) damage to minions.",
+      "resolvedDescription": "LeBlanc projects a sigil to an enemy, dealing 65/90/115/140/165 (+40% AP) magic damage and marking them for 3.5 seconds. Damaging the marked enemy with an Ability detonates the sigil, dealing 65/90/115/140/165 (+40% AP) magic damage. If either part kills the target, Leblanc refunds 100% of the Mana cost and 30% of this spell's remaining Cooldown. The initial sigil deals an additional 10-146 (based on level) damage to minions.",
       "unresolved": []
     },
     "W": {

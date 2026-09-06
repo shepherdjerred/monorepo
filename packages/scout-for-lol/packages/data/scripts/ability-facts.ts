@@ -74,11 +74,22 @@ type DataDragonSpell = z.infer<typeof DataDragonSpellSchema>;
 
 /**
  * Bin values are float32 serialized through float64 (0.699999988079071 for
- * 0.7). Game data uses at most a few decimals, so rounding at 5 decimal
- * places removes exactly the representation noise and nothing else.
+ * 0.7), and calculation rendering multiplies them, which compounds the noise
+ * (0.9 × 250.00001 → 224.99999). Game data itself uses at most a few decimal
+ * places, so snap to the fewest decimals that stays within float32-noise
+ * tolerance (relative 5e-5) of the original. Genuine decimals survive:
+ * 0.025 needs 3 decimals to stay in tolerance and is returned unchanged.
  */
 export function cleanNumber(value: number): number {
-  return Math.round(value * 100_000) / 100_000;
+  const tolerance = 5e-5 * Math.max(1, Math.abs(value));
+  for (let decimals = 0; decimals <= 5; decimals++) {
+    const factor = 10 ** decimals;
+    const rounded = Math.round(value * factor) / factor;
+    if (Math.abs(rounded - value) <= tolerance) {
+      return rounded;
+    }
+  }
+  return value;
 }
 
 function formatNumber(value: number): string {
@@ -195,21 +206,33 @@ const BREAKPOINT_KNOWN_KEYS = new Set([
   "mAdditionalBonusAtThisLevel",
 ]);
 
+const BREAKPOINT_PART_KNOWN_KEYS = new Set([
+  "__type",
+  "mLevel1Value",
+  "mInitialBonusPerLevel",
+  "mBreakpoints",
+]);
+
+/**
+ * Bin serialization drops fields equal to their engine default (0), so each
+ * breakpoint is the complete state for its level: it REPLACES the per-level
+ * growth with `mBonusPerLevelAtAndAfter ?? 0` and applies a one-time
+ * `mAdditionalBonusAtThisLevel ?? 0` step. A bare `{mLevel: 12}` therefore
+ * means "stop growing at level 12" (verified against Malzahar E's live bin).
+ */
 function breakpointValueAtLevel(
   part: z.infer<typeof CDragonCharLevelBreakpointsPartSchema>,
   level: number,
 ): number {
   let value = part.mLevel1Value ?? 0;
-  let perLevel = 0;
+  let perLevel = part.mInitialBonusPerLevel ?? 0;
   const breakpoints = part.mBreakpoints ?? [];
   for (let currentLevel = 2; currentLevel <= level; currentLevel++) {
     const breakpoint = breakpoints.find(
       (entry) => entry.mLevel === currentLevel,
     );
     if (breakpoint !== undefined) {
-      if (breakpoint.mBonusPerLevelAtAndAfter !== undefined) {
-        perLevel = breakpoint.mBonusPerLevelAtAndAfter;
-      }
+      perLevel = breakpoint.mBonusPerLevelAtAndAfter ?? 0;
       value += breakpoint.mAdditionalBonusAtThisLevel ?? 0;
     }
     value += perLevel;
@@ -308,11 +331,16 @@ function renderPart(
 
   const breakpoints = CDragonCharLevelBreakpointsPartSchema.safeParse(part);
   if (breakpoints.success) {
-    // A breakpoint carrying fields we do not understand would silently skew
-    // the arithmetic — refuse instead.
-    const allKnown = (breakpoints.data.mBreakpoints ?? []).every((entry) =>
-      Object.keys(entry).every((key) => BREAKPOINT_KNOWN_KEYS.has(key)),
+    // A part or breakpoint carrying fields we do not understand would
+    // silently skew the arithmetic — refuse instead.
+    const partKeysKnown = Object.keys(breakpoints.data).every((key) =>
+      BREAKPOINT_PART_KNOWN_KEYS.has(key),
     );
+    const allKnown =
+      partKeysKnown &&
+      (breakpoints.data.mBreakpoints ?? []).every((entry) =>
+        Object.keys(entry).every((key) => BREAKPOINT_KNOWN_KEYS.has(key)),
+      );
     if (!allKnown) {
       return undefined;
     }
@@ -475,50 +503,106 @@ function renderCalculationParts(
   return parts;
 }
 
-function partToString(part: RenderedPart, first: boolean): string {
+/** `(+X)` for additive terms, `(-X)` with absolute values for negative ones. */
+function wrapFollowing(text: string, negative: boolean): string {
+  return negative ? `(-${text})` : `(+${text})`;
+}
+
+function partToString(
+  part: RenderedPart,
+  first: boolean,
+  forcePercent: boolean,
+): string {
   const suffix =
-    part.kind !== "stat" && part.percentDisplay === true ? "%" : "";
+    (part.kind !== "stat" && part.percentDisplay === true) || forcePercent
+      ? "%"
+      : "";
   switch (part.kind) {
     case "ranks": {
-      const text = `${formatRankValues(part.values)}${suffix}`;
-      return first ? text : `(+${text})`;
+      const negative = part.values.every((value) => value < 0);
+      const values = negative
+        ? part.values.map((value) => -value)
+        : part.values;
+      const text = `${formatRankValues(values)}${suffix}`;
+      return first
+        ? `${negative ? "-" : ""}${text}`
+        : wrapFollowing(text, negative);
     }
     case "number": {
-      const text = `${formatNumber(part.value)}${suffix}`;
-      return first ? text : `(+${text})`;
+      const negative = part.value < 0;
+      const text = `${formatNumber(negative ? -part.value : part.value)}${suffix}`;
+      return first
+        ? `${negative ? "-" : ""}${text}`
+        : wrapFollowing(text, negative);
     }
     case "levelRange": {
       const range = `${formatNumber(part.from)}-${formatNumber(part.to)}${suffix}`;
       return first ? `${range} (based on level)` : `(+${range} based on level)`;
     }
     case "stat": {
-      const text = `${formatRankValues(part.percentByRank)}% ${part.label}`;
-      return first ? text : `(+${text})`;
+      const negative = part.percentByRank.every((value) => value < 0);
+      const ratios = negative
+        ? part.percentByRank.map((value) => -value)
+        : part.percentByRank;
+      const text = `${formatRankValues(ratios)}% ${part.label}`;
+      return first
+        ? `${negative ? "-" : ""}${text}`
+        : wrapFollowing(text, negative);
     }
   }
+}
+
+/**
+ * Join rendered parts into display text. Additive parts commute, so numeric
+ * base parts (rank tables, constants, level ranges) always render before stat
+ * scalings, whatever order the bin listed them in — "10/12/14 (+5% AP)",
+ * never "5% AP (+10/12/14)". A trailing `%` from the source tooltip
+ * (`{{ calc }}%`) attaches to the base value, not the parenthesized tail.
+ */
+function renderParts(
+  parts: readonly RenderedPart[],
+  percentSuffix: boolean,
+): string {
+  const ordered = [
+    ...parts.filter((part) => part.kind !== "stat"),
+    ...parts.filter((part) => part.kind === "stat"),
+  ];
+  const attachToBase =
+    percentSuffix && ordered[0] !== undefined && ordered[0].kind !== "stat";
+  const joined = ordered
+    .map((part, index) =>
+      partToString(part, index === 0, attachToBase && index === 0),
+    )
+    .join(" ");
+  return percentSuffix && !attachToBase ? `${joined}%` : joined;
 }
 
 /**
  * Render a spell calculation to display text, e.g.
  * "200/350/500 (+70% AP)" or "250-550 (based on level) (+80% bonus AD)".
  * Returns `undefined` when any formula part is not mechanically resolvable.
+ * `percentSuffix` folds a tooltip's trailing `%` onto the base value.
  */
 export function renderCalculation(
   calculationKey: string,
   context: SpellContext,
+  percentSuffix = false,
 ): string | undefined {
   const parts = renderCalculationParts(calculationKey, context, new Set());
   if (parts === undefined || parts.length === 0) {
     return undefined;
   }
-  return parts.map((part, index) => partToString(part, index === 0)).join(" ");
+  return renderParts(parts, percentSuffix);
 }
 
 // ---------------------------------------------------------------------------
 // Tooltip token resolution
 // ---------------------------------------------------------------------------
 
-const TOKEN_PATTERN = /\{\{\s*(.*?)\s*\}\}/g;
+// A token plus an optional adjacent literal `%`, which the renderer folds
+// onto the base value of a multi-part calculation ("30% (+5% AP)", never
+// "30 (+5% AP)%").
+const TOKEN_PATTERN = /\{\{\s*(.*?)\s*\}\}(%?)/g;
 // e.g. "rdamage", "slowamount*100", "spell.pykeq:totaldamage", "cost*0.5"
 const TOKEN_BODY_PATTERN =
   /^(?:spell\.(?<spell>[a-z0-9_]+):)?(?<name>[a-z0-9_]+)(?:\*(?<factor>-?\d+(?:\.\d+)?))?$/i;
@@ -527,6 +611,7 @@ export function stripTooltipMarkup(text: string): string {
   return text
     .replaceAll(/<br\s*\/?>/gi, " ")
     .replaceAll(/<[^>]+>/g, "")
+    .replaceAll(/%i:[A-Za-z0-9_]+%/g, "") // Riot inline icon markup
     .replaceAll("&nbsp;", " ")
     .replaceAll(/\s+/g, " ")
     .trim();
@@ -544,40 +629,43 @@ type TooltipResolutionInput = {
 function resolveSimpleName(
   name: string,
   input: TooltipResolutionInput,
+  percentSuffix: boolean,
 ): string | undefined {
   const lowered = name.toLowerCase();
+  const percent = percentSuffix ? "%" : "";
 
   if (lowered === "spellmodifierdescriptionappend") {
     // Engine slot for spell-modifier suffixes; empty in the base tooltip.
-    return "";
+    // A trailing literal `%` (never observed) would still be preserved.
+    return percent;
   }
   if (lowered === "abilityresourcename") {
-    return input.resourceName;
+    return `${input.resourceName}${percent}`;
   }
 
   const { ddragonSpell } = input;
   if (ddragonSpell !== undefined) {
     if (lowered === "cost") {
-      return ddragonSpell.costBurn;
+      return `${ddragonSpell.costBurn}${percent}`;
     }
     if (lowered === "cooldown") {
-      return ddragonSpell.cooldownBurn;
+      return `${ddragonSpell.cooldownBurn}${percent}`;
     }
     if (lowered === "maxrank") {
-      return String(ddragonSpell.maxrank);
+      return `${String(ddragonSpell.maxrank)}${percent}`;
     }
     const effectMatch = /^e(\d+)$/.exec(lowered);
     if (effectMatch !== null) {
       const index = Number(effectMatch[1]);
       const effect = ddragonSpell.effectBurn[index];
       if (effect !== null && effect !== undefined && effect.length > 0) {
-        return effect;
+        return `${effect}${percent}`;
       }
       return undefined;
     }
   }
 
-  const calculated = renderCalculation(lowered, input.context);
+  const calculated = renderCalculation(lowered, input.context, percentSuffix);
   if (calculated !== undefined) {
     return calculated;
   }
@@ -586,7 +674,7 @@ function resolveSimpleName(
   if (raw !== undefined) {
     const values = sliceRanks(raw, input.context.maxRank);
     if (values !== undefined) {
-      return formatRankValues(values);
+      return `${formatRankValues(values)}${percent}`;
     }
   }
 
@@ -597,20 +685,19 @@ function resolveScaledName(
   name: string,
   factor: number,
   context: SpellContext,
+  percentSuffix: boolean,
 ): string | undefined {
+  const percent = percentSuffix ? "%" : "";
   const raw = context.dataValues.get(name.toLowerCase());
   if (raw !== undefined) {
     const values = sliceRanks(raw, context.maxRank);
     if (values !== undefined) {
-      return formatRankValues(values.map((value) => value * factor));
+      return `${formatRankValues(values.map((value) => value * factor))}${percent}`;
     }
   }
   const parts = renderCalculationParts(name.toLowerCase(), context, new Set());
   if (parts !== undefined && parts.length > 0) {
-    const scaled = scaleParts(parts, factor);
-    return scaled
-      .map((part, index) => partToString(part, index === 0))
-      .join(" ");
+    return renderParts(scaleParts(parts, factor), percentSuffix);
   }
   return undefined;
 }
@@ -631,7 +718,8 @@ export function resolveTooltip(
   const unresolved: string[] = [];
   const substituted = tooltip.replaceAll(
     TOKEN_PATTERN,
-    (match: string, body: string) => {
+    (match: string, body: string, percentMark: string) => {
+      const percentSuffix = percentMark === "%";
       const parsed = TOKEN_BODY_PATTERN.exec(body);
       if (parsed?.groups === undefined) {
         unresolved.push(body);
@@ -659,10 +747,16 @@ export function resolveTooltip(
 
       const resolved =
         factor === undefined
-          ? resolveSimpleName(name, scopedInput)
-          : resolveScaledName(name, Number(factor), scopedInput.context);
+          ? resolveSimpleName(name, scopedInput, percentSuffix)
+          : resolveScaledName(
+              name,
+              Number(factor),
+              scopedInput.context,
+              percentSuffix,
+            );
       if (resolved === undefined) {
         unresolved.push(body);
+        // `match` still carries the trailing `%` the pattern consumed.
         return match;
       }
       return resolved;
@@ -813,11 +907,28 @@ export function buildChampionAbilityFacts(input: {
   const binSpells = indexChampionBin(championKey, input.bin);
   const slotsWithoutBinSpell: AbilitySlot[] = [];
 
-  // Slot contexts, plus a by-name registry for `spell.other:name` tokens.
-  // Cross-spell tokens only resolve against the champion's four slot spells,
-  // whose rank counts are known from Data Dragon — referencing a helper spell
-  // whose rank count we cannot know would mean guessing how to slice values.
+  // Slot + passive contexts, in a by-name registry for `spell.other:name`
+  // tokens. Cross-spell tokens only resolve against these five spells, whose
+  // rank counts are known (Data Dragon maxrank; passives are rank 1) —
+  // referencing a helper spell whose rank count we cannot know would mean
+  // guessing how to slice values.
   const spellContextsByName = new Map<string, SpellContext>();
+
+  // The passive is located FIRST so active tooltips can reference it (e.g.
+  // Naafiri Q's `spell.naafirip:packmatetauntduration`).
+  const passiveKey = binSpells.characterRecord.mCharacterPassiveSpell;
+  const passiveRecord =
+    passiveKey === undefined
+      ? undefined
+      : binSpells.byKey.get(passiveKey.toLowerCase());
+  const passiveContext = spellContextFrom(passiveRecord, 1);
+  if (passiveKey !== undefined && passiveRecord !== undefined) {
+    spellContextsByName.set(
+      lastSegment(passiveKey).toLowerCase(),
+      passiveContext,
+    );
+  }
+
   const slotRecords: (CDragonSpellRecord | undefined)[] = [];
   for (const [index, ddragonSpell] of champion.spells.entries()) {
     const spellName = binSpells.characterRecord.spellNames?.[index];
@@ -898,16 +1009,11 @@ export function buildChampionAbilityFacts(input: {
   }
 
   // Passive: no rank/cost/range data in Data Dragon; bin DataValues sliced at
-  // rank 1 (their arrays repeat per rank for passives).
-  const passiveKey = binSpells.characterRecord.mCharacterPassiveSpell;
-  const passiveRecord =
-    passiveKey === undefined
-      ? undefined
-      : binSpells.byKey.get(passiveKey.toLowerCase());
+  // rank 1 (their arrays repeat per rank for passives). Its record and
+  // context were located before the slot loop above.
   if (passiveRecord === undefined) {
     slotsWithoutBinSpell.push("passive");
   }
-  const passiveContext = spellContextFrom(passiveRecord, 1);
   const resolvedPassive = resolveTooltip(champion.passive.description, {
     ddragonSpell: undefined,
     resourceName: champion.partype,

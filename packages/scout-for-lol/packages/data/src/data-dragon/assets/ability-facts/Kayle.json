@@ -310,10 +310,9 @@
           0.1
         ]
       },
-      "resolvedDescription": "Passive: Attacks deal an additional 15/20/25/30/35 (+20% AP) (+10% bonus AD) magic damage. Active: Kayle's next attack becomes ranged and deals an additional {{ activetotalexecutedamage }} missing Health magic damage. This attack upgrades when Kayle reaches Level {{ spell.kaylepassive:levelforpassiverank2 }}, causing it to explode when it hits the target, dealing damage to nearby enemies.",
+      "resolvedDescription": "Passive: Attacks deal an additional 15/20/25/30/35 (+20% AP) (+10% bonus AD) magic damage. Active: Kayle's next attack becomes ranged and deals an additional {{ activetotalexecutedamage }} missing Health magic damage. This attack upgrades when Kayle reaches Level 11, causing it to explode when it hits the target, dealing damage to nearby enemies.",
       "unresolved": [
-        "activetotalexecutedamage",
-        "spell.kaylepassive:levelforpassiverank2"
+        "activetotalexecutedamage"
       ]
     },
     "R": {

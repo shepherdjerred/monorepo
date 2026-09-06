@@ -598,34 +598,51 @@ async function downloadChampionImages(
   return championImages.length;
 }
 
+/**
+ * Download every champion's per-champion Data Dragon JSON. Hard-fails when
+ * ANY champion fails: a skipped download would leave the PREVIOUS version's
+ * file on disk, and downstream steps (ability-facts generation in
+ * particular) would silently combine that stale file with the new version's
+ * CommunityDragon bins — publishing mixed-version facts.
+ */
 async function downloadChampionData(
   version: string,
   championNames: string[],
 ): Promise<number> {
   console.log("\nDownloading individual champion data files...");
   let championDataCount = 0;
+  const failedChampions: string[] = [];
   for (const championName of championNames) {
     try {
       const url = `${BASE_URL}/cdn/${version}/data/en_US/champion/${championName}.json`;
       const response = await fetchWithRetry(url);
-      if (response.ok) {
-        const data: unknown = await response.json();
-        await Bun.write(
-          `${ASSETS_DIR}/champion/${championName}.json`,
-          JSON.stringify(data, null, 2),
+      if (!response.ok) {
+        throw new Error(
+          `HTTP ${String(response.status)} ${response.statusText}`,
         );
-        championDataCount++;
-        if (championDataCount % 20 === 0) {
-          console.log(
-            `  Downloaded ${String(championDataCount)}/${String(championNames.length)} champion data files...`,
-          );
-        }
+      }
+      const data: unknown = await response.json();
+      await Bun.write(
+        `${ASSETS_DIR}/champion/${championName}.json`,
+        JSON.stringify(data, null, 2),
+      );
+      championDataCount++;
+      if (championDataCount % 20 === 0) {
+        console.log(
+          `  Downloaded ${String(championDataCount)}/${String(championNames.length)} champion data files...`,
+        );
       }
     } catch (error) {
-      console.warn(
-        `  ⚠ Failed to download champion data for ${championName}: ${String(error)}`,
+      console.error(
+        `  ❌ Failed to download champion data for ${championName}: ${String(error)}`,
       );
+      failedChampions.push(championName);
     }
+  }
+  if (failedChampions.length > 0) {
+    throw new Error(
+      `update-data-dragon: champion data downloads failed for ${String(failedChampions.length)} champion(s): ${failedChampions.join(", ")} — aborting so stale files are never mixed with new-version data`,
+    );
   }
   console.log(`✓ Downloaded ${String(championDataCount)} champion data files`);
   return championDataCount;

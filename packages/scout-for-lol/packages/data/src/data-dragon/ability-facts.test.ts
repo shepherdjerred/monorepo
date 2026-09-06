@@ -5,6 +5,7 @@ import {
   getAbilityFacts,
   suggestChampionNames,
 } from "./ability-facts.ts";
+import { getAllChampions } from "#src/model/champion-registry.ts";
 
 const ABILITY_FACTS_DIR = `${import.meta.dirname}/assets/ability-facts`;
 
@@ -20,6 +21,18 @@ describe("committed ability-facts assets", () => {
       );
       const facts = ChampionAbilityFactsSchema.parse(raw);
       expect(`${facts.championKey}.json`).toBe(file);
+    }
+  });
+
+  test("every non-Classic champion has a committed facts file", async () => {
+    // getAbilityFacts treats a missing file for a registry-known champion as a
+    // broken internal contract — this pins that the committed set is complete.
+    const entries = await readdir(ABILITY_FACTS_DIR);
+    const files = new Set(entries.filter((name) => name.endsWith(".json")));
+    const champions = getAllChampions();
+    expect(champions.length).toBeGreaterThan(150);
+    for (const champion of champions) {
+      expect(files.has(`${champion.key}.json`), champion.key).toBe(true);
     }
   });
 });
@@ -83,6 +96,15 @@ describe("getAbilityFacts", () => {
 
   test("nonsense input still produces suggestions", async () => {
     const lookup = await getAbilityFacts("xxxxqqqqzzzz");
+    expect(lookup.status).toBe("not_found");
+    if (lookup.status !== "not_found") {
+      return;
+    }
+    expect(lookup.suggestions).toHaveLength(3);
+  });
+
+  test("malformed percent escapes are unknown input, not a throw", async () => {
+    const lookup = await getAbilityFacts("100%");
     expect(lookup.status).toBe("not_found");
     if (lookup.status !== "not_found") {
       return;

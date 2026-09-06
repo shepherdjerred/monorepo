@@ -231,6 +231,8 @@ export const CDragonBreakpointSchema = z.looseObject({
 export const CDragonCharLevelBreakpointsPartSchema = z.looseObject({
   __type: z.literal("ByCharLevelBreakpointsCalculationPart"),
   mLevel1Value: z.number().optional(),
+  /** Per-level growth applied from level 2 until a breakpoint replaces it. */
+  mInitialBonusPerLevel: z.number().optional(),
   mBreakpoints: z.array(CDragonBreakpointSchema).optional(),
 });
 

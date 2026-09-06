@@ -109,7 +109,7 @@
           -0.8
         ]
       },
-      "resolvedDescription": "Begin Charging: Sion charges a heavy blow for up to 2 seconds. Release: Sion slams his axe down, briefly Slowing and dealing between 30/45/60/75/90 (+40/50/60/70/80% AD) and 90/155/220/285/350 (+120/150/180/209.99999/240.00001% AD) physical damage based on charge time. If Sion charged for at least 1 second, enemies are Knocked Up and Stunned for between 1.25 and 2.25 seconds based on charge time.",
+      "resolvedDescription": "Begin Charging: Sion charges a heavy blow for up to 2 seconds. Release: Sion slams his axe down, briefly Slowing and dealing between 30/45/60/75/90 (+40/50/60/70/80% AD) and 90/155/220/285/350 (+120/150/180/210/240% AD) physical damage based on charge time. If Sion charged for at least 1 second, enemies are Knocked Up and Stunned for between 1.25 and 2.25 seconds based on charge time.",
       "unresolved": []
     },
     "W": {

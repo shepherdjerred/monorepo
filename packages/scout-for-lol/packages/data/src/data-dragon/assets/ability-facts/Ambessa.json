@@ -346,7 +346,7 @@
           0.25
         ]
       },
-      "resolvedDescription": "Passive: Ambessa gains 10/20/30% %i:scaleAPen% Armor Penetration and her Abilities heal her for {{ calc_omnivamp }} of the damage she dealt. Active: Ambessa becomes Unstoppable and blinks to the farthest enemy champion in a line, Suppressing the target for 0.75 seconds and then slamming them into the ground, dealing 150/250/350 (+80% bonus AD) physical damage and Stunning them for 0.4 seconds.",
+      "resolvedDescription": "Passive: Ambessa gains 10/20/30% Armor Penetration and her Abilities heal her for {{ calc_omnivamp }} of the damage she dealt. Active: Ambessa becomes Unstoppable and blinks to the farthest enemy champion in a line, Suppressing the target for 0.75 seconds and then slamming them into the ground, dealing 150/250/350 (+80% bonus AD) physical damage and Stunning them for 0.4 seconds.",
       "unresolved": [
         "calc_omnivamp"
       ]

@@ -73,11 +73,8 @@
           240
         ]
       },
-      "resolvedDescription": "Veigar unleashes a bolt of dark energy, dealing 80/120/160/200/240 (+50/55/60/65/70% AP) magic damage to the first two enemies hit. If Veigar kills an enemy with this Ability, he gains {{ spell.veigarpassive:dqkillstacks }} stack of Phenomenal Evil. Large minions and large monsters grant {{ spell.veigarpassive:dqkillstackslarge }} stacks instead.",
-      "unresolved": [
-        "spell.veigarpassive:dqkillstacks",
-        "spell.veigarpassive:dqkillstackslarge"
-      ]
+      "resolvedDescription": "Veigar unleashes a bolt of dark energy, dealing 80/120/160/200/240 (+50/55/60/65/70% AP) magic damage to the first two enemies hit. If Veigar kills an enemy with this Ability, he gains 1 stack of Phenomenal Evil. Large minions and large monsters grant 3 stacks instead.",
+      "unresolved": []
     },
     "W": {
       "name": "Dark Matter",
@@ -134,11 +131,8 @@
           8
         ]
       },
-      "resolvedDescription": "Veigar summons dark matter from the sky, dealing 85/140/195/250/305 (+70/80/90/100/110% AP) magic damage. Every {{ spell.veigarpassive:pstacksperdarkmattercdr }} stacks of Phenomenal Evil reduce this Ability's Cooldown by {{ spell.veigarpassive:darkmattercdrincrement*100 }}%.",
-      "unresolved": [
-        "spell.veigarpassive:pstacksperdarkmattercdr",
-        "spell.veigarpassive:darkmattercdrincrement*100"
-      ]
+      "resolvedDescription": "Veigar summons dark matter from the sky, dealing 85/140/195/250/305 (+70/80/90/100/110% AP) magic damage. Every 50 stacks of Phenomenal Evil reduce this Ability's Cooldown by 10%.",
+      "unresolved": []
     },
     "E": {
       "name": "Event Horizon",

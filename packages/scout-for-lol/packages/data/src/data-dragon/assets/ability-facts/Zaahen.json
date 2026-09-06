@@ -371,7 +371,7 @@
           2
         ]
       },
-      "resolvedDescription": "Passive: Zaahen gains 10/20/30% %i:scaleAPen% Armor Penetration. Active: Zaahen rises, gaining 50% Damage Reduction while casting. Zaahen then stabs downward, dealing 250/400/550 (+200% bonus AD) physical damage and restoring 33% of the damage dealt to enemy champions as Health.",
+      "resolvedDescription": "Passive: Zaahen gains 10/20/30% Armor Penetration. Active: Zaahen rises, gaining 50% Damage Reduction while casting. Zaahen then stabs downward, dealing 250/400/550 (+200% bonus AD) physical damage and restoring 33% of the damage dealt to enemy champions as Health.",
       "unresolved": []
     }
   }

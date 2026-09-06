@@ -233,7 +233,7 @@
           0.05
         ]
       },
-      "resolvedDescription": "Passive: Teemo's Attacks apply poison %i:OnHit% On-Hit, dealing an additional 9/23/37/51/65 (+30% AP) (+5% bonus AD) magic damage plus 24/48/72/96/120 (+40% AP) (+10% bonus AD) magic damage over 4 seconds.",
+      "resolvedDescription": "Passive: Teemo's Attacks apply poison On-Hit, dealing an additional 9/23/37/51/65 (+30% AP) (+5% bonus AD) magic damage plus 24/48/72/96/120 (+40% AP) (+10% bonus AD) magic damage over 4 seconds.",
       "unresolved": []
     },
     "R": {

@@ -100,7 +100,7 @@
           3.5
         ]
       },
-      "resolvedDescription": "Camille's next Attack deals an additional 20/25/30/35/40% AD physical damage and grants her 25/30/35/40/45% Move Speed for 1 second. This ability can be Recast in the next 3.5 seconds. If the Recast Attack hits at least 1.5 seconds after the first, the bonus damage is increased to 40/50/60/70/80% AD and 40-40% (based on level) of the Attack's damage is converted into true damage. This Ability triggers spell effects upon dealing damage.",
+      "resolvedDescription": "Camille's next Attack deals an additional 20/25/30/35/40% AD physical damage and grants her 25/30/35/40/45% Move Speed for 1 second. This ability can be Recast in the next 3.5 seconds. If the Recast Attack hits at least 1.5 seconds after the first, the bonus damage is increased to 40/50/60/70/80% AD and 40-100% (based on level) of the Attack's damage is converted into true damage. This Ability triggers spell effects upon dealing damage.",
       "unresolved": []
     },
     "W": {
@@ -179,11 +179,11 @@
           40
         ],
         "ADRequiredTooltipOnly": [
-          0.00025,
-          0.00025,
-          0.00025,
-          0.00025,
-          0.00025
+          0.0003,
+          0.0003,
+          0.0003,
+          0.0003,
+          0.0003
         ],
         "MonsterDamageReduction": [
           50,

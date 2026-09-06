@@ -118,7 +118,7 @@
           3
         ]
       },
-      "resolvedDescription": "Rengar's next 2 Attacks gain 40% Attack Speed. The first Attack deals 20/55/90/125/160 (+100% AD) (+5% AD) physical damage. Max Ferocity: The first Attack deals 35-135 (based on level) (+100% AD) (+20% AD) physical damage and grants Rengar 50-50% (based on level) Attack Speed for 5 seconds.",
+      "resolvedDescription": "Rengar's next 2 Attacks gain 40% Attack Speed. The first Attack deals 20/55/90/125/160 (+100% AD) (+5% AD) physical damage. Max Ferocity: The first Attack deals 35-240 (based on level) (+100% AD) (+20% AD) physical damage and grants Rengar 50-101% (based on level) Attack Speed for 5 seconds.",
       "unresolved": []
     },
     "W": {
@@ -264,7 +264,7 @@
           0.8
         ]
       },
-      "resolvedDescription": "Rengar throws a bola, dealing 55/100/145/190/235 (+80% bonus AD) physical damage to the first enemy hit, revealing and Slowing them by 30/45/60/75/90% for 1.75 seconds. Max Ferocity: Deals 50-50 (based on level) (+80% bonus AD) physical damage and Roots for 1.75 seconds.",
+      "resolvedDescription": "Rengar throws a bola, dealing 55/100/145/190/235 (+80% bonus AD) physical damage to the first enemy hit, revealing and Slowing them by 30/45/60/75/90% for 1.75 seconds. Max Ferocity: Deals 50-305 (based on level) (+80% bonus AD) physical damage and Roots for 1.75 seconds.",
       "unresolved": []
     },
     "R": {

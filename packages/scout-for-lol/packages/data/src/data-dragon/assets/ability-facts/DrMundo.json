@@ -324,7 +324,7 @@
           3.2
         ]
       },
-      "resolvedDescription": "Passive: Dr Mundo gains 2/2.3/2.6/2.9/3.2% max Health Attack Damage. Active: Dr Mundo violently swings his \"medical\" bag, causing his next Attack to deal an additional 5/15/25/35/45 (+5% bonus Health) physical damage, increased by up to 140% (+-100%) based on his missing Health. If the enemy is killed, Mundo swats them away, dealing 5/15/25/35/45 (+5% bonus Health) physical damage to enemies they pass through.",
+      "resolvedDescription": "Passive: Dr Mundo gains 2/2.3/2.6/2.9/3.2% max Health Attack Damage. Active: Dr Mundo violently swings his \"medical\" bag, causing his next Attack to deal an additional 5/15/25/35/45 (+5% bonus Health) physical damage, increased by up to 140% (-100%) based on his missing Health. If the enemy is killed, Mundo swats them away, dealing 5/15/25/35/45 (+5% bonus Health) physical damage to enemies they pass through.",
       "unresolved": []
     },
     "R": {

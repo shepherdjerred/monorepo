@@ -111,11 +111,11 @@
           0.01
         ],
         "Max_Health_AD_Ratio": [
-          0.00011,
-          0.00011,
-          0.00011,
-          0.00011,
-          0.00011
+          0.0001,
+          0.0001,
+          0.0001,
+          0.0001,
+          0.0001
         ],
         "Base_Damage": [
           10,
@@ -146,7 +146,7 @@
           10
         ]
       },
-      "resolvedDescription": "Passive: Shyvana's Attacks deal {{ calc_max_health_damage }} max Health magic damage %i:OnHit% On-Hit and reduce this Ability's Cooldown by 0.5 seconds. Active: Shyvana's next Attack strikes the target and the surrounding area dealing 10/15/20/25/30 (+110% AD) (+30% AP) physical damage. This Ability may be Recast after an Attack or short delay within the next 4 seconds. Dragon Form: Shyvana gains an additional Recast, causing her to bite the target of her next Attack dealing 15/22.5/30/37.5/45 (+165% AD) (+45% AP) true damage.",
+      "resolvedDescription": "Passive: Shyvana's Attacks deal {{ calc_max_health_damage }} max Health magic damage On-Hit and reduce this Ability's Cooldown by 0.5 seconds. Active: Shyvana's next Attack strikes the target and the surrounding area dealing 10/15/20/25/30 (+110% AD) (+30% AP) physical damage. This Ability may be Recast after an Attack or short delay within the next 4 seconds. Dragon Form: Shyvana gains an additional Recast, causing her to bite the target of her next Attack dealing 15/22.5/30/37.5/45 (+165% AD) (+45% AP) true damage.",
       "unresolved": [
         "calc_max_health_damage"
       ]
@@ -428,9 +428,9 @@
           1
         ],
         "FuryDrainPerSecond": [
-          6.66666,
-          6.66666,
-          6.66666
+          6.6667,
+          6.6667,
+          6.6667
         ],
         "Fury_Generation": [
           1.25,
@@ -478,7 +478,7 @@
           0.01
         ]
       },
-      "resolvedDescription": "Passive: Shyvana generates 1.25 Dragon Fury by striking enemies with Attacks and Abilities, increased by 300% (+-100%) while in Dragon Form, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions. Active: Shyvana transforms into her Dragon Form, becoming Unstoppable, and flying to the target location breathing fire on enemies below dealing 150/250/350 (+100% AP) magic damage and causing them Flee for 0.75 seconds. While transformed, Shyvana's basic Abilities are upgraded, she gains 150/250/350 bonus Health, size, and Attack Range. Shyvana loses Dragon Fury over time and her transformation ends when she has no Dragon Fury remaining.",
+      "resolvedDescription": "Passive: Shyvana generates 1.25 Dragon Fury by striking enemies with Attacks and Abilities, increased by 300% (-100%) while in Dragon Form, and reduced {{ tt_fury_aoe_penalty }} by when striking in an area against non-champions. Active: Shyvana transforms into her Dragon Form, becoming Unstoppable, and flying to the target location breathing fire on enemies below dealing 150/250/350 (+100% AP) magic damage and causing them Flee for 0.75 seconds. While transformed, Shyvana's basic Abilities are upgraded, she gains 150/250/350 bonus Health, size, and Attack Range. Shyvana loses Dragon Fury over time and her transformation ends when she has no Dragon Fury remaining.",
       "unresolved": [
         "tt_fury_aoe_penalty"
       ]

@@ -235,7 +235,7 @@
           250
         ]
       },
-      "resolvedDescription": "Xin Zhao charges an enemy, dealing 50/75/100/125/150 (+120% AP) magic damage to nearby enemies and Slowing them by 30% for 0.5 seconds. Xin Zhao grants himself {{ f1 }}% (%i:scaleAS%%i:scaleAP%) Attack Speed for 5 seconds. This Ability's range is increased on enemies that are Challenged.",
+      "resolvedDescription": "Xin Zhao charges an enemy, dealing 50/75/100/125/150 (+120% AP) magic damage to nearby enemies and Slowing them by 30% for 0.5 seconds. Xin Zhao grants himself {{ f1 }}% () Attack Speed for 5 seconds. This Ability's range is increased on enemies that are Challenged.",
       "unresolved": [
         "f1"
       ]

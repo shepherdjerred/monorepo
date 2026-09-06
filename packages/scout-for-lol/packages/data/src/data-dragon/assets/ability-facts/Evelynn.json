@@ -369,7 +369,7 @@
           0.3
         ]
       },
-      "resolvedDescription": "Evelynn unleashes her demonic energy, dealing heavy damage, becoming Untargetable and teleporting backwards. She deals 125/250/375 (+75% AP) magic damage, increased to 300.00001/600.00002/900.00004 (+180.00001% AP) against enemies below 30% Health. Upon cast, set Demon Shade to a 1.25 second cooldown.",
+      "resolvedDescription": "Evelynn unleashes her demonic energy, dealing heavy damage, becoming Untargetable and teleporting backwards. She deals 125/250/375 (+75% AP) magic damage, increased to 300/600/900 (+180% AP) against enemies below 30% Health. Upon cast, set Demon Shade to a 1.25 second cooldown.",
       "unresolved": []
     }
   }

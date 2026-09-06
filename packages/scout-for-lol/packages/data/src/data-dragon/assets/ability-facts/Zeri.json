@@ -147,7 +147,7 @@
           0.025
         ]
       },
-      "resolvedDescription": "Zeri fires a burst of 7 rounds that deals 22/26/30/34/38 (+102/104/105.99999/108/110% AD) physical damage to the first enemy hit. This Ability is treated as an Attack.",
+      "resolvedDescription": "Zeri fires a burst of 7 rounds that deals 22/26/30/34/38 (+102/104/106/108/110% AD) physical damage to the first enemy hit. This Ability is treated as an Attack.",
       "unresolved": []
     },
     "W": {

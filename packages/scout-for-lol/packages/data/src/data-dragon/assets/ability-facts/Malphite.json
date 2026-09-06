@@ -175,7 +175,7 @@
           1.8
         ]
       },
-      "resolvedDescription": "Passive: Malphite gains 10/15/20/25/30% Armor (%i:scaleArmor%{{ f1 }}). This effect is increased to 30/45/60/75/90% (%i:scaleArmor%{{ f2 }}) while Granite Shield is active. Active: Malphite's next Attack deals an additional 30/40/50/60/70 (+20% AP) (+15% Armor) physical damage and creates an aftershock which deals 15/25/35/45/55 (+30% AP) (+15% Armor) physical damage %i:OnHit% On-Hit in their direction. His Attacks continue to create aftershocks %i:OnHit% On-Hit for the next 5 seconds.",
+      "resolvedDescription": "Passive: Malphite gains 10/15/20/25/30% Armor ({{ f1 }}). This effect is increased to 30/45/60/75/90% ({{ f2 }}) while Granite Shield is active. Active: Malphite's next Attack deals an additional 30/40/50/60/70 (+20% AP) (+15% Armor) physical damage and creates an aftershock which deals 15/25/35/45/55 (+30% AP) (+15% Armor) physical damage On-Hit in their direction. His Attacks continue to create aftershocks On-Hit for the next 5 seconds.",
       "unresolved": [
         "f1",
         "f2"
