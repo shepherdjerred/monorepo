@@ -1,0 +1,331 @@
+{
+  "championKey": "Warwick",
+  "championName": "Warwick",
+  "abilities": {
+    "passive": {
+      "name": "Eternal Hunger",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "HealingThreshold": [
+          0.5
+        ],
+        "EmpoweredHealingThreshold": [
+          0.25
+        ],
+        "HealingRatio": [
+          1
+        ],
+        "EmpoweredHealingRatio": [
+          2.5
+        ],
+        "HealthRestoreSlushTime": [
+          1.55
+        ],
+        "ADRatio": [
+          0.15
+        ],
+        "APRatio": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Warwick's basic attacks deal bonus magic damage. If Warwick is below 50% health, he heals the same amount. If Warwick is below 25% health, this healing triples.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Jaws of the Beast",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        365,
+        365,
+        365,
+        365,
+        365
+      ],
+      "dataValues": {
+        "TargetPercentHPDamage": [
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "ADRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "BiteZoneLength": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "HPDamageCap": [
+          150,
+          165,
+          180,
+          195,
+          210
+        ],
+        "APRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "LifestealPercent": [
+          25,
+          37.5,
+          50,
+          62.5,
+          75
+        ],
+        "CheatLength": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "CheatLengthMoveBlock": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "QCastRangeOverride": [
+          425,
+          425,
+          425,
+          425,
+          425
+        ]
+      },
+      "resolvedDescription": "Tap: Warwick lunges forward and bites, dealing 120% AD (+100% AP) plus 6/7/8/9/10% max Health magic damage and healing for 25/37.5/50/62.5/75% of the damage dealt. Hold: Warwick lunges and clamps his jaws on the target, leaping behind them. While clamped, Warwick follows all movement of the target. After releasing his hold, he does the same damage and healing.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Blood Hunt",
+      "maxRank": 5,
+      "cooldownByRank": [
+        80,
+        70,
+        60,
+        50,
+        40
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        4000,
+        4000,
+        4000,
+        4000,
+        4000
+      ],
+      "dataValues": {
+        "PassiveASBonus": [
+          70,
+          80,
+          90,
+          100,
+          110
+        ],
+        "Duration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "MoveSpeedBonus": [
+          15,
+          20,
+          25,
+          30,
+          35
+        ],
+        "PassiveMSBonus": [
+          35,
+          42.5,
+          50,
+          57.5,
+          65
+        ],
+        "NoTargetCDReduction": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "PassiveASDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "FirstHPThreshold": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SecondHPThreshold": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MSBonus": [
+          35,
+          42.5,
+          50,
+          57.5,
+          65
+        ],
+        "ASBonus": [
+          70,
+          80,
+          90,
+          100,
+          110
+        ]
+      },
+      "resolvedDescription": "Passive: Warwick can sense champions below 50% Health, gaining 35/42.5/50/57.5/65% Move Speed towards them. Spells and attacks against enemies below 50% Health grant 70/80/90/100/110% Attack Speed. These effects are increased by 200% against enemies below 25% Health. Active: Warwick can briefly sense all enemies, and gains this Ability's passive effect against the closest champion for 8 seconds, regardless of Health. If no champions are found, this Ability's cooldown is reduced by 30%.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Primal Howl",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        375,
+        375,
+        375,
+        375,
+        375
+      ],
+      "dataValues": {
+        "DRAmount": [
+          35,
+          40,
+          45,
+          50,
+          55
+        ],
+        "DRDuration": [
+          2.75,
+          2.75,
+          2.75,
+          2.75,
+          2.75
+        ],
+        "RecastDelay": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "FearDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DRDurationTooltipOnly": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Warwick gains 35/40/45/50/55% damage reduction for 2.75 seconds. After it ends, Warwick howls, Fearing nearby enemies for 1 second. Warwick can Recast to end the Ability early.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Infinite Duress",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        90,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "RDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "RBaseDamage": [
+          175,
+          350,
+          525
+        ]
+      },
+      "resolvedDescription": "Warwick leaps a huge distance that scales with his Move Speed, Suppressing the first champion he collides with while he channels for 1.5 seconds. He attacks that champion 3 times over the duration, dealing 175/350/525 (+167% bonus AD) magic damage. Warwick heals for 100% of all damage dealt during the channel.",
+      "unresolved": []
+    }
+  }
+}

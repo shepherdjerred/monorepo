@@ -1,0 +1,326 @@
+{
+  "championKey": "MasterYi",
+  "championName": "Master Yi",
+  "abilities": {
+    "passive": {
+      "name": "Double Strike",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "StackDuration": [
+          4
+        ],
+        "AttackCount": [
+          4
+        ]
+      },
+      "resolvedDescription": "Every few consecutive basic attack, Master Yi strikes twice.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Alpha Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19.5,
+        19,
+        18.5,
+        18
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "SubsequentHitMultiplier": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "BaseDamage": [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        "BonusMonsterDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "AttackDamageRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "BonusCritDamageRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseBasicAttackCDR": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "AlphaStrikeBounces": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BaseOnHitMultiplier": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Master Yi becomes Untargetable and teleports to rapidly strike enemies near his target, dealing 20/40/60/80/100 (+70% AD) physical damage to all enemies hit after 4 hits. This Ability can strike the same enemy repeatedly if there are no other targets, dealing 25% damage for subsequent hits (5/10/15/20/25 (+17.5% AD)), for a maximum single target total of {{ singletotaldamage }} physical damage.",
+      "unresolved": [
+        "singletotaldamage"
+      ]
+    },
+    "W": {
+      "name": "Meditate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana (+6% Max Mana per second)",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          120,
+          200,
+          280,
+          360,
+          440
+        ],
+        "HealDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MaxMissingHealthPercent": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "TickFrequency": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageReduction": [
+          0.45,
+          0.475,
+          0.5,
+          0.525,
+          0.55
+        ],
+        "DamageReductionTowerMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseManaCost": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "PercentManaCostPerSecond": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ],
+        "InitialExtraDR": [
+          0.25,
+          0.225,
+          0.2,
+          0.175,
+          0.15
+        ],
+        "InitialExtraDRDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DRLinger": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Master Yi channels, restoring 120/200/280/360/440 (+100% AP) Health over 4 seconds. This healing is increased by up to 100% based on Master Yi's missing Health. While channeling and for 0.5 seconds afterwards, he takes 45/47.5/50/52.5/55% (+25/22.5/20/17.5/15%) reduced damage, decreased to 45/47.5/50/52.5/55% after the first 0.5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Wuju Style",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "ADRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "LegacySwordVFXDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Master Yi's Attacks deal an additional 20/25/30/35/40 (+35% bonus AD) true damage for 5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Highlander",
+      "maxRank": 3,
+      "cooldownByRank": [
+        85,
+        85,
+        85
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1,
+        1,
+        1
+      ],
+      "dataValues": {
+        "RDuration": [
+          7,
+          7,
+          7
+        ],
+        "RASBonus": [
+          25,
+          45,
+          65
+        ],
+        "RMSBonus": [
+          35,
+          45,
+          55
+        ],
+        "RKillAssistExtension": [
+          7,
+          7,
+          7
+        ],
+        "RCooldownRefund": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Passive: Champion takedowns reduce the remaining Cooldown of Master Yi's basic Abilities by 70%. Active: Master Yi enters a trance, gaining 35/45/55% Move Speed, 25/45/65% Attack Speed, and immunity to Slows for 7 seconds. Champion takedowns extend the duration of this Ability by 7 seconds.",
+      "unresolved": []
+    }
+  }
+}

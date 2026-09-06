@@ -1,0 +1,254 @@
+{
+  "championKey": "Zyra",
+  "championName": "Zyra",
+  "abilities": {
+    "passive": {
+      "name": "Garden of Thorns",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PlantDuration": [
+          8
+        ],
+        "PlantBaseDmg": [
+          12
+        ],
+        "PlantLvlScaling": [
+          4
+        ],
+        "APRatio": [
+          0.2
+        ]
+      },
+      "resolvedDescription": "Seeds spawn around Zyra periodically, becoming faster with level. Zyra can cast Deadly Spines or Grasping Roots near seeds to grow plants, who fight for Zyra.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Deadly Spines",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          100,
+          140,
+          180,
+          220
+        ]
+      },
+      "resolvedDescription": "Zyra causes thick vines to spread and explode into spines, dealing 60/100/140/180/220 (+65% AP) magic damage. If this Ability is cast near a Seed, the Seed grows into a Thorn Spitter that deals {{ spell.zyrap:plantdamage }} magic damage and lasts {{ spell.zyrap:plantduration }} seconds. Thorn Spitters have 575 range.",
+      "unresolved": [
+        "spell.zyrap:plantdamage",
+        "spell.zyrap:plantduration"
+      ]
+    },
+    "W": {
+      "name": "Rampant Growth",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "1 Seed",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "KillAmmoRefundMinion": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "KillAmmoRefundChamp": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "VisionGranted": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SeedDuration": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ]
+      },
+      "resolvedDescription": "Zyra plants a Seed that lasts 60 seconds. These Seeds grant True Sight of enemy champions that step on them for 2 seconds, but are still destroyed. This Ability has 2 charges with a {{ ammorechargetime }} second recharge time. Killing an enemy minion or monster reduces the recharge time by 35%. Champion takedowns reduce the recharge time by 100% instead.",
+      "unresolved": [
+        "ammorechargetime"
+      ]
+    },
+    "E": {
+      "name": "Grasping Roots",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        11,
+        11,
+        11,
+        11
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "MaxSlowStacks": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "PheromoneDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "RootDuration": [
+          1,
+          1.25,
+          1.5,
+          1.75,
+          2
+        ],
+        "BaseDamage": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "SlowAmountPlantAttack": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "SlowDurationPlantAttack": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Zyra sends vines forward, Rooting for 1/1.25/1.5/1.75/2 second(s) and dealing 60/95/130/165/200 (+60% AP) magic damage. If this Ability passes near a Seed, the Seed grows into a Vine Lasher that deals {{ spell.zyrap:plantdamage }} magic damage and lasts {{ spell.zyrap:plantduration }} seconds. Vine Lashers have 400 range, and their Attacks Slow by 30% for 2 seconds. The Slow from multiple Vine Lashers stacks up to 2 times.",
+      "unresolved": [
+        "spell.zyrap:plantdamage",
+        "spell.zyrap:plantduration"
+      ]
+    },
+    "R": {
+      "name": "Stranglethorns",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        100,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "PlantDamageBonus": [
+          50,
+          50,
+          50
+        ],
+        "KnockupDuration": [
+          1,
+          1,
+          1
+        ],
+        "EnragedBonusHealthPercent": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "EnragePlantsBonusDamage": [
+          150,
+          150,
+          150
+        ]
+      },
+      "resolvedDescription": "Zyra summons the fury of nature, growing a twisted thicket that deals 200/300/400 (+70% AP) magic damage. After 2 seconds, the vines snap upwards, Knocking Up for 1 second. Zyra's plants within the thicket become enraged, resetting their duration, gaining 50% Health and Attacking for 50% bonus damage.",
+      "unresolved": []
+    }
+  }
+}

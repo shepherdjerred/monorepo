@@ -1,0 +1,358 @@
+{
+  "championKey": "TahmKench",
+  "championName": "Tahm Kench",
+  "abilities": {
+    "passive": {
+      "name": "An Acquired Taste",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Duration": [
+          5
+        ],
+        "MaxStacks": [
+          3
+        ],
+        "PerStackDecayTimer": [
+          1
+        ],
+        "APRatioPer100BonusHP": [
+          0.0125
+        ]
+      },
+      "resolvedDescription": "Tahm Kench puts the heft of his immense body behind his attacks, gaining extra damage based on his total health. Damaging enemy champions builds stacks of An Acquired Taste. At three stacks, he can use Devour on an enemy champion.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Tongue Lash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        50,
+        46,
+        42,
+        38,
+        34
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          120,
+          165,
+          210,
+          255
+        ],
+        "SlowAmount": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "StunDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "PercentHealthHealing": [
+          0.05,
+          0.055,
+          0.06,
+          0.065,
+          0.07
+        ],
+        "BaseHeal": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ]
+      },
+      "resolvedDescription": "Deals 75/120/165/210/255 (+100% AP) magic damage to the first enemy hit and Slows them by 50% for 2 seconds. On champion hit, heals Tahm for 10/15/20/25/30 +5/5.5/6/6.5/7% of his missing Health and applies a stack of An Acquired Taste dealing {{ spell.tahmkenchpassive:totaldamage }} extra magic damage. If that champion already had 3 stacks of An Acquired Taste, they will also be Stunned for 1.5 seconds, consuming the stacks. Activate Devour while your tongue is in midair to devour enemy champions who already have 3 stacks of An Acquired Taste from a distance when you hit them.",
+      "unresolved": [
+        "spell.tahmkenchpassive:totaldamage"
+      ]
+    },
+    "W": {
+      "name": "Abyssal Dive",
+      "maxRank": 5,
+      "cooldownByRank": [
+        21,
+        20,
+        19,
+        18,
+        17
+      ],
+      "costByRank": [
+        60,
+        75,
+        90,
+        105,
+        120
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1050,
+        1100,
+        1150,
+        1200
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          100,
+          135,
+          170,
+          205,
+          240
+        ],
+        "KnockUpDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "AoEDelayFromChannelStart": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "TotalTime": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ChannelTime": [
+          1.35,
+          1.35,
+          1.35,
+          1.35,
+          1.35
+        ],
+        "EnemyWarningDelayFromChannelStart": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "ChampRefund": [
+          0.4,
+          0.425,
+          0.45,
+          0.475,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Dive down and then re-appear at target location, dealing 100/135/170/205/240 (+150% AP) magic damage and Knock Up all enemies in an area for 1 second. Hitting at least one enemy champion refunds 40/42.5/45/47.5/50% of the Cooldown and Mana cost. Devoured allies can be taken along for the ride (but can always hop out early).",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Thick Skin",
+      "maxRank": 5,
+      "cooldownByRank": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2400,
+        2400,
+        2400,
+        2400,
+        2400
+      ],
+      "dataValues": {
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "OOCTimer": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "GreyHealthRatio": [
+          0.15,
+          0.23,
+          0.31,
+          0.39,
+          0.47
+        ],
+        "MaxHPHealRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "GreyHealthRatioEnhanced": [
+          0.42,
+          0.44,
+          0.46,
+          0.48,
+          0.5
+        ],
+        "EnhancedThreshold": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ThresholdRadius": [
+          2400,
+          2400,
+          2400,
+          2400,
+          2400
+        ]
+      },
+      "resolvedDescription": "Passive: 15/23/31/39/47% of damage Tahm Kench takes is stored by his Thick Skin, increased to 42/44/46/48/50% if there are at least 2 nearby enemy champions. If Kench has not taken damage within 4 seconds, Thick Skin will rapidly be consumed to heal Tahm for 60-100% (based on level) of its value. Active: Convert all your stored Thick Skin into a Shield, lasting 2.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Devour",
+      "maxRank": 3,
+      "cooldownByRank": [
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "EnemyDuration": [
+          3,
+          3,
+          3
+        ],
+        "BaseDamage": [
+          100,
+          250,
+          400
+        ],
+        "AllyDuration": [
+          3,
+          3,
+          3
+        ],
+        "BaseShield": [
+          650,
+          800,
+          950
+        ],
+        "SlowAmount": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BasePercentHPDamage": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "DataCooldown": [
+          120,
+          100,
+          80
+        ],
+        "DataManaCost": [
+          100,
+          100,
+          100
+        ],
+        "SpitOutRangeAlly": [
+          300,
+          300,
+          300
+        ],
+        "SpitOutRangeEnemy": [
+          300,
+          300,
+          300
+        ],
+        "CastTime": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MinimumAllyDuration": [
+          1,
+          1,
+          1
+        ],
+        "AllySpeedAmount": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "ShieldDecayPerSecond": [
+          200,
+          200,
+          200
+        ]
+      },
+      "resolvedDescription": "Tahm Kench devours a champion for a few seconds. He can Recast to spit them out. Enemy Champions: Require 3 stacks of An Acquired Taste. Are devoured for up to 3 seconds and take 100/250/400 (+{{ percenthpdamage }} of their Max Health) magic damage. Tahm Kench is Slowed by 40% and Grounded during this effect. Ally Champions: Are devoured for up to 3 seconds and are granted 650/800/950 (+100% AP) Shield which decays gradually after being spit out. Allies can also choose to exit early. Tahm Kench is Grounded during this effect, but can cast Abyssal Dive and gains 60% Move Speed for 3 seconds.",
+      "unresolved": [
+        "percenthpdamage"
+      ]
+    }
+  }
+}

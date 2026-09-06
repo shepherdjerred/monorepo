@@ -1,0 +1,341 @@
+{
+  "championKey": "Corki",
+  "championName": "Corki",
+  "abilities": {
+    "passive": {
+      "name": "Hextech Munitions",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AttackConversion": [
+          0.2
+        ],
+        "InitialCD": [
+          10
+        ],
+        "PackageDuration": [
+          45
+        ],
+        "BonusMS": [
+          0.4
+        ],
+        "SubsequentCD": [
+          5
+        ]
+      },
+      "resolvedDescription": "A percentage of Corki's basic attack damage is dealt as bonus true damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Phosphorus Bomb",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          105,
+          150,
+          195,
+          240
+        ],
+        "RevealDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "ADRatio": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "APRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Corki lobs a bomb, dealing 60/105/150/195/240 (+125% bonus AD) (+100% AP) magic damage. The area and champions hit are revealed for 6 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Valkyrie",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          225,
+          300,
+          375,
+          450
+        ],
+        "APRatio": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "TrailDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "TicksPerSecond": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MaximumTicks": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DamageRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "DashSpeedBase": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "DashSpeedRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MinimumRange": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "MaximumRange": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "ADRatio": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Corki flies over and scorches a path, burning it for 2.5 seconds. Enemies in the fire take up to 150/225/300/375/450 (+150% AP) (+200% bonus AD) magic damage over the duration.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Gatling Gun",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "ADRatio": [
+          2.4,
+          2.4,
+          2.4,
+          2.4,
+          2.4
+        ],
+        "SprayDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TicksPerSecond": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ShredMax": [
+          -12,
+          -14,
+          -16,
+          -18,
+          -20
+        ],
+        "ShredCap": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ShredDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Corki fires a gatling gun in front of him, dealing 80/130/180/230/280 (+240.00001% bonus AD) physical damage over 4 seconds and shredding up to 12/14/16/18/20 Armor and Magic Resist.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Missile Barrage",
+      "maxRank": 3,
+      "cooldownByRank": [
+        2,
+        2,
+        2
+      ],
+      "costByRank": [
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1225,
+        1225,
+        1225
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          90,
+          170,
+          250
+        ],
+        "ADRatio": [
+          0.85,
+          0.85,
+          0.85
+        ],
+        "RBaseMissileRadius": [
+          200,
+          200,
+          200
+        ],
+        "RBigOneMissileRadius": [
+          300,
+          300,
+          300
+        ],
+        "RBigOneMultiplier": [
+          2,
+          2,
+          2
+        ],
+        "CDReductionOnHit": [
+          2,
+          2,
+          2
+        ],
+        "MaxAmmoTOOLTIP": [
+          4,
+          4,
+          4
+        ],
+        "AmmoWhenLearned": [
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Corki fires a missile that explodes on the first enemy hit, dealing 90/170/250 (+85% bonus AD) physical damage to surrounding enemies. Every third missile instead deals 180/340/500 (+170% bonus AD) physical damage. This Ability has up to 4 charges. Basic attacks against champions reduce the time between charges by 2 (+400% Crit Chance) seconds on hit.",
+      "unresolved": []
+    }
+  }
+}

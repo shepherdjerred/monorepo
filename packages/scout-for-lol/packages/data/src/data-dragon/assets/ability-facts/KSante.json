@@ -1,0 +1,835 @@
+{
+  "championKey": "KSante",
+  "championName": "K'Sante",
+  "abilities": {
+    "passive": {
+      "name": "Dauntless Instinct",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MarkDuration": [
+          4
+        ],
+        "RecoveryPercent": [
+          0.8
+        ],
+        "ArmorMRMultiplier": [
+          0.002
+        ],
+        "PassiveStartingDamage": [
+          0.0035
+        ],
+        "MaxHealthDamagePercentBase": [
+          0.01
+        ],
+        "MaxHealthDamageResistRatio": [
+          0.0001
+        ],
+        "FlatDamage": [
+          12
+        ],
+        "MarkDamagePercentMin": [
+          0.01
+        ],
+        "MarkDamagePercentMax": [
+          0.02
+        ]
+      },
+      "resolvedDescription": "K'Sante's Abilities mark targets to take more damage on his next Attack. When All Out, K'Sante deals more damage with all Attacks and Abilities.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Ntofo Strikes",
+      "maxRank": 5,
+      "cooldownByRank": [
+        3.5,
+        3.5,
+        3.5,
+        3.5,
+        3.5
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "FlatDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "RectangleWidth": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "RectangleLength": [
+          465,
+          465,
+          465,
+          465,
+          465
+        ],
+        "SlowPercent": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Range": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "RecastWindow": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "RecastLockoutAO": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "KnockupDuration": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "PullSpeed": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "PullDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "KnockGrav": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxCastTime": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "MinCastTime": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "MinCastTimeQ3": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BaseCD": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "MinCD": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "RCooldownReduction": [
+          0.33333,
+          0.33333,
+          0.33333,
+          0.33333,
+          0.33333
+        ],
+        "DefenseCapforCooldown": [
+          120,
+          120,
+          120,
+          120,
+          120
+        ],
+        "PullSpeedMin": [
+          110,
+          110,
+          110,
+          110,
+          110
+        ],
+        "PullSpeedMax": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "PullDistanceMin": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "PullDistanceMax": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "LifetimeMax": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ]
+      },
+      "resolvedDescription": "K'Sante slams his weapon, dealing 70/100/130/160/190 (+40% bonus Armor) (+40% bonus Magic Resist) physical damage and Slowing enemies by 80% for 0.5s. If he hits, he gains a stack of Ntofo Strikes for 6 seconds. At 2 stacks, he instead fires a shockwave that Stuns and Pulls enemies for 1 second. All Out: Cooldown is reduced by {{ rcooldownreduction.0*100 }}%.",
+      "unresolved": [
+        "rcooldownreduction.0*100"
+      ]
+    },
+    "W": {
+      "name": "Path Maker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          45,
+          75,
+          105,
+          135,
+          165
+        ],
+        "MaxHealthDamage": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ],
+        "MaxHealthDamageResistRatio": [
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002
+        ],
+        "MaxDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "TimeToFullCharge": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "DashSpeedBase": [
+          1400,
+          1400,
+          1400,
+          1400,
+          1400
+        ],
+        "DashSpeedAO": [
+          1800,
+          1800,
+          1800,
+          1800,
+          1800
+        ],
+        "VictimDashMod": [
+          1.3,
+          1.3,
+          1.3,
+          1.3,
+          1.3
+        ],
+        "MinKnockbackDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MaxKnockbackDuration": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "KnockbackSpeed": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "KnockbackDist": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "KnockbackDistOnTopOfMod": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MinDashBase": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "MaxDashBase": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "MinDurationTOOLTIP": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "AOMinDurationTOOLTIP": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "HexflashBugfixLockout": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "MinChargeTime": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "RDamageIncreaseMin": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "RDamageIncreaseMax": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "MinimumMinionDamage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "DamageReduction": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "RDamageReduction": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MaxMonsterDamage": [
+          180,
+          260,
+          340,
+          420,
+          500
+        ]
+      },
+      "resolvedDescription": "K'Sante raises his weapons defensively for 0.4-{{ maxduration.1 }}s, becoming Unstoppable and reducing incoming damage by 30%. Then, he rams forward, dealing 45/75/105/135/165 + {{ totalmaxhealthdamage }} max Health physical damage. Enemies hit are Knocked Back and Stunned for 0.5-1.75s (based on charge time). All Out: Cooldown is refreshed. Deals an additional 10-80% damage as true damage (based on charge time), damage reduction is increased to 75% and dash speed is increased, but no longer Knocks Back or Stuns.",
+      "unresolved": [
+        "maxduration.1",
+        "totalmaxhealthdamage"
+      ]
+    },
+    "E": {
+      "name": "Footwork",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        525,
+        525,
+        525,
+        525,
+        525
+      ],
+      "dataValues": {
+        "DashDistance": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "TargetingForgiveness": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "ShieldDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "FreeTargetRangeBase": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "FreeTargetSpeedBase": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "AllySpeedBase": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ],
+        "FreeTargetRangeAO": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "FreeTargetSpeedAO": [
+          1250,
+          1250,
+          1250,
+          1250,
+          1250
+        ],
+        "AllySpeedAO": [
+          1400,
+          1400,
+          1400,
+          1400,
+          1400
+        ],
+        "ShieldBaseAmountFast": [
+          70,
+          112.5,
+          155,
+          197.5,
+          240
+        ],
+        "DashArrivial": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "ShieldHealthRatio": [
+          0.135,
+          0.135,
+          0.135,
+          0.135,
+          0.135
+        ],
+        "CooldownModAO": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "K'Sante dashes, gaining 70/112.5/155/197.5/240 (+13.5% bonus Health) Shield for 2 seconds. If dashing to an ally, the distance of the dash is significantly increased and the ally is also Shielded. All Out: Cooldown is decreased by 50% and dash speed is increased.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "All Out",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "AllOutDuration": [
+          15,
+          15,
+          15
+        ],
+        "BaseDamage": [
+          80,
+          115,
+          150
+        ],
+        "SlamDownStrikeDamage": [
+          80,
+          115,
+          150
+        ],
+        "WallStunDuration": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "NoWallStunDuration": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MaxSuppressTime": [
+          10,
+          10,
+          10
+        ],
+        "TackleRange": [
+          300,
+          300,
+          300
+        ],
+        "TackleSpeed": [
+          2000,
+          2000,
+          2000
+        ],
+        "CarrySpeed": [
+          1000,
+          1000,
+          1000
+        ],
+        "MaxWallCarry": [
+          25000,
+          25000,
+          25000
+        ],
+        "MaxWallCarrySR": [
+          5000,
+          5000,
+          5000
+        ],
+        "WallCheckDist": [
+          -25,
+          -25,
+          -25
+        ],
+        "KSanteLandingOffset": [
+          250,
+          250,
+          250
+        ],
+        "WallBuffer": [
+          350,
+          350,
+          350
+        ],
+        "HealthLost": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "DefensesLost": [
+          0.85,
+          0.85,
+          0.85
+        ],
+        "Omnivamp": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "AttackSpeed": [
+          0.4,
+          0.6,
+          0.8
+        ],
+        "ArmorPenPercent": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "KsanteArrivesFirstBySec": [
+          1,
+          1,
+          1
+        ],
+        "AfterImageArrivesFirstBySec": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ManaRegenPercent": [
+          5,
+          5,
+          5
+        ],
+        "KnockGrav": [
+          14,
+          14,
+          14
+        ],
+        "TimeToLast": [
+          0.18,
+          0.18,
+          0.18
+        ],
+        "TackleRangeOverstatedNoWall": [
+          3000,
+          3000,
+          3000
+        ],
+        "CarrySpeedUnderstatedNoWall": [
+          1600,
+          1600,
+          1600
+        ],
+        "CarrySpeedNoWall": [
+          800,
+          800,
+          800
+        ],
+        "KsanteAnimLockWall": [
+          1,
+          1,
+          1
+        ],
+        "DistanceTriggerFasterCarrySpeed": [
+          1400,
+          1400,
+          1400
+        ],
+        "FasterCarrySpeed": [
+          1500,
+          1500,
+          1500
+        ],
+        "AuraOffset": [
+          200,
+          200,
+          200
+        ],
+        "LingeringPerceptionPostStun": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "WallLookAhead": [
+          100,
+          100,
+          100
+        ],
+        "VfxInWallPerDistance": [
+          200,
+          200,
+          200
+        ],
+        "AnimationDashTime": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "DistanceRatioMin": [
+          600,
+          600,
+          600
+        ],
+        "DistanceRatioMax": [
+          2000,
+          2000,
+          2000
+        ],
+        "CarrySpeedRatioMin": [
+          900,
+          900,
+          900
+        ],
+        "CarrySpeedRatioMax": [
+          1700,
+          1700,
+          1700
+        ],
+        "CameraHoldRatioMin": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "CameraHoldRatioMax": [
+          0.7,
+          0.7,
+          0.7
+        ],
+        "InitialAnimHoldMax": [
+          0.27,
+          0.27,
+          0.27
+        ],
+        "CastTime": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "WallBufferFailCase": [
+          100,
+          100,
+          100
+        ],
+        "VictimCameraZoomMin": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "VictimCameraZoomMax": [
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "K'Sante shatters his ntofos to Knock Back an enemy champion, dealing 80/115/150 physical damage, then dashes behind them and goes All Out for 15s. If the enemy would hit a wall, they are Knocked Back through the wall and K'Sante strikes them again for 80/115/150 (+5% bonus Health) physical damage. While All Out, K'Sante's Abilities are upgraded and he gains 40/60/80% Attack Speed, 50% Bonus Armor Penetration, and 20% Omnivamp, but loses 35% max Health, 85% Bonus Armor, and 85% Bonus Magic Resistance.",
+      "unresolved": []
+    }
+  }
+}

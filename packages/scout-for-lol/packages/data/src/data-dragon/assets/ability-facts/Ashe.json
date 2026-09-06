@@ -1,0 +1,258 @@
+{
+  "championKey": "Ashe",
+  "championName": "Ashe",
+  "abilities": {
+    "passive": {
+      "name": "Frost Shot",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "SlowDuration": [
+          2
+        ]
+      },
+      "resolvedDescription": "Ashe's attacks slow their target, causing her to deal increased damage to these targets. Ashe's critical strikes deal no bonus damage but apply an empowered slow to the target.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Ranger's Focus",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "DamagePerStrike": [
+          1.1,
+          1.15,
+          1.2,
+          1.25,
+          1.3
+        ],
+        "ShotsPerStrike": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "StackDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MaxStacks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "BonusAS": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "TimerDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "StackFalloffDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Passive: Ashe's Attacks grant a stack for 4 seconds. At 4 stacks, she may activate this Ability. Active: Ashe gains 20/30/40/50/60% Attack Speed and her Attacks deal 110/115/120/125/130% AD damage instead for 6 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Volley",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        14.5,
+        11,
+        7.5,
+        4
+      ],
+      "costByRank": [
+        75,
+        70,
+        65,
+        60,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "NumberOfArrowsTooltip": [
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Ashe fires a volley of 7/8/9/10/11 arrows, each dealing 60/95/130/165/200 (+100% bonus AD) physical damage. Enemies can be hit by multiple arrows, but only take damage from the first.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Hawkshot",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseCooldown": [
+          90,
+          80,
+          70,
+          60,
+          50
+        ],
+        "VisionDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Ashe sends forth a hawk to grant vision for 5 seconds anywhere on the map. It also reveals the area around it as it flies. This Ability has 2 charges ({{ chargecooldown }} second recharge).",
+      "unresolved": [
+        "chargecooldown"
+      ]
+    },
+    "R": {
+      "name": "Enchanted Crystal Arrow",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        80,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          200,
+          400,
+          600
+        ],
+        "MinStunDuration": [
+          1,
+          1,
+          1
+        ],
+        "MaxStunDuration": [
+          3.5,
+          3.5,
+          3.5
+        ],
+        "SlowRadius": [
+          400,
+          400,
+          400
+        ],
+        "AoECoefficient": [
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          1.2,
+          1.2,
+          1.2
+        ]
+      },
+      "resolvedDescription": "Ashe launches a crystal arrow of ice that Stuns the first champion hit and deals 200/400/600 (+120% AP) magic damage. The Stun duration increases with distance travelled, up to 3.5 seconds. Surrounding enemies are Slowed by Frost Shot.",
+      "unresolved": []
+    }
+  }
+}

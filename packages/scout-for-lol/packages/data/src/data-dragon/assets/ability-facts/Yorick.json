@@ -1,0 +1,377 @@
+{
+  "championKey": "Yorick",
+  "championName": "Yorick",
+  "abilities": {
+    "passive": {
+      "name": "Shepherd of Souls",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "YorickPassiveGhoulMax": [
+          4
+        ],
+        "YorickGhoulDamageReductionVsTowers": [
+          0.5
+        ],
+        "YorickGhoulLeashRange": [
+          1600
+        ],
+        "YorickGhoulSpawnDelay": [
+          1
+        ],
+        "CherryGhoulHPMod": [
+          0.7
+        ],
+        "GhoulADRatio": [
+          0.2
+        ],
+        "GraveDuration": [
+          300
+        ],
+        "MinionMoveBonus": [
+          40
+        ],
+        "MeleeAttackDamageModifier": [
+          2
+        ],
+        "MinionDamageTakenMod": [
+          0.6
+        ],
+        "ProcDamageModifier": [
+          0.5
+        ],
+        "ARAMPassiveSpawnThreshold": [
+          5
+        ],
+        "GhoulMonsterDamageMod": [
+          0.6
+        ],
+        "GhoulHealthRatio": [
+          0.15
+        ],
+        "MonsterDamageTakenMod": [
+          1
+        ]
+      },
+      "resolvedDescription": "The Cursed Horde: Yorick can summon Mist Walkers to swarm and attack nearby enemies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Last Rites",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5.5,
+        5,
+        4.5,
+        4
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "CherryGhoulPassiveSpawnRate": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "BaseDamage": [
+          30,
+          50,
+          70,
+          90,
+          110
+        ],
+        "MissingHealthRatio": [
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "BuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "HealReduction": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "BonusDamageAD": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Yorick's next Attack deals an additional 30/50/70/90/110 (+50% AD) physical damage and restores 10-58 (based on level) plus 6/7/8/9/10% of his missing Health, reduced by 50% against non-Champions. If this Attack hits a Champion or large Monster or kills the target, it leaves a grave. When there are 3 or more graves nearby and this Ability has already been used, Yorick can Recast to raise Mist Walkers from all nearby graves.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Dark Procession",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "CircleDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "GhoulNumber": [
+          18,
+          18,
+          18,
+          18,
+          18
+        ],
+        "Delay": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "HPBonus": [
+          0,
+          0,
+          1,
+          1,
+          2
+        ],
+        "WallHealthTooltip": [
+          2,
+          2,
+          3,
+          3,
+          4
+        ]
+      },
+      "resolvedDescription": "Yorick summons a wall of spirits blocking enemies' path, but not allies'. The wall has 2/2/3/3/4 Health and disappears after 4 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Mourning Mist",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MarkDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MarkRange": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "HealthDamage": [
+          6,
+          6.5,
+          7,
+          7.5,
+          8
+        ],
+        "HealthAPRatio": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "MinimumMinionDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "MonsterMaxDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "ArmorShred": [
+          0.13,
+          0.16,
+          0.19,
+          0.22,
+          0.25
+        ],
+        "HasteAmount": [
+          0.18,
+          0.21,
+          0.24,
+          0.27,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Yorick throws a globule of Black Mist that deals {{ calc_healthdamage }} max Health magic damage, Slows by 30% for 1.5 seconds and marks champions and monsters for 4 seconds. Marked enemies continuously Awaken nearby graves (but not exceeding the maximum of {{ spell.yorickpassive:yorickpassiveghoulmax }}) and suffer 13/16/19/22/25% reduced Armor. Yorick and his summoned units gain 18/21/24/27/30% Move Speed toward the mark. Mist Walkers will leap once at marked enemies that get away from them.",
+      "unresolved": [
+        "calc_healthdamage",
+        "spell.yorickpassive:yorickpassiveghoulmax"
+      ]
+    },
+    "R": {
+      "name": "Eulogy of the Isles",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        130,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "RGhoulNumbers": [
+          2,
+          3,
+          4
+        ],
+        "RBigGhoulBonusAD": [
+          50,
+          75,
+          100
+        ],
+        "RMarkDamagePercent": [
+          2,
+          2.5,
+          3
+        ],
+        "RMarkMaxDamage": [
+          30,
+          30,
+          30
+        ],
+        "RRadius": [
+          700,
+          700,
+          700
+        ],
+        "RSummonDelay": [
+          1,
+          1,
+          1
+        ],
+        "RControlTime": [
+          25000,
+          25000,
+          25000
+        ],
+        "MinionDamageTakenModifier": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MaidenHealthRatio": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MaidenADRatio": [
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Yorick summons the Maiden of the Mist with 1050-3200 (based on level) (+60% bonus Health) Health and 50/75/100 (+30% bonus AD) Magic Attack Damage plus 2/3/4 Mist Walkers. The Maiden automatically raises Mist Walkers from nearby enemy deaths and marks enemy Champions with her attacks. When Yorick damages the Maiden's target, he deals 2/2.5/3% max Health magic damage. After 10 seconds, Yorick can Recast this Ability to free the Maiden, sending her down the nearest lane.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,371 @@
+{
+  "championKey": "Rammus",
+  "championName": "Rammus",
+  "abilities": {
+    "passive": {
+      "name": "Spiked Shell",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ArmorRatio": [
+          0.15
+        ],
+        "MagicResistRatio": [
+          0.15
+        ],
+        "BaseDamage": [
+          10
+        ]
+      },
+      "resolvedDescription": "Rammus gains bonus Attack Damage scaling with his Armor and Magic Resistance.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Powerball",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        10.5,
+        9,
+        7.5,
+        6
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "QBaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "MSMultiplier": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "RollDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "StunDuration": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "KnockbackDistance": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "HeightVariable": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "SelfStunTiming": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowPercent": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Rammus curls into a ball, gaining 25-39.1% (based on level) Move Speed, accelerating up to 150-234.6% (based on level) Move Speed over 6 seconds. Rammus stops after colliding with an enemy, dealing 80/120/160/200/240 (+100% AP) magic damage, Knocking Back, and Slowing nearby enemies by 40/50/60/70/80% for 1 second. Recast: Rammus ends this Ability early.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Defensive Ball Curl",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BonusArmorPercent": [
+          0.3,
+          0.375,
+          0.45,
+          0.525,
+          0.6
+        ],
+        "BonusMRPercent": [
+          0.3,
+          0.375,
+          0.45,
+          0.525,
+          0.6
+        ],
+        "FlatBonusArmor": [
+          27,
+          32,
+          37,
+          42,
+          47
+        ],
+        "FlatBonusMR": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "BuffDuration": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "DamageArmorRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "DamageMRRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "FlatDamageReturn": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ]
+      },
+      "resolvedDescription": "Rammus enters a defensive formation for 7 seconds, gaining {{ bonusarmortooltip }} Armor and {{ bonusmrtooltip }} Magic Resist and dealing 15 (+10% Armor) (+10% Magic Resist) magic damage to enemies that Attack him. Recast: Rammus ends this Ability early.",
+      "unresolved": [
+        "bonusarmortooltip",
+        "bonusmrtooltip"
+      ]
+    },
+    "E": {
+      "name": "Frenzying Taunt",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "Duration": [
+          1.2,
+          1.4,
+          1.6,
+          1.8,
+          2
+        ],
+        "MonsterDamage": [
+          80,
+          100,
+          120,
+          140,
+          160
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Rammus Taunts an enemy champion or monster for 1.2/1.4/1.6/1.8/2 seconds. Monsters are dealt 80/100/120/140/160 (+70% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Soaring Slam",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SlowAmount": [
+          0.3,
+          0.4,
+          0.5
+        ],
+        "TurretDamageModifier": [
+          2,
+          2,
+          2
+        ],
+        "InitialDamage": [
+          150,
+          250,
+          350
+        ],
+        "NumberOfPulses": [
+          3,
+          3,
+          3
+        ],
+        "BuffDuration": [
+          3.5,
+          3.5,
+          3.5
+        ],
+        "BaseCastRange": [
+          800,
+          800,
+          800
+        ],
+        "TremorsAoERange": [
+          400,
+          400,
+          400
+        ],
+        "TremorsKnockupRange": [
+          200,
+          200,
+          200
+        ],
+        "KnockupDuration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "DashRangeGrowth": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MaxRangeForDmgGrowth": [
+          1700,
+          1700,
+          1700
+        ],
+        "DashSpeedGrowth": [
+          1.1,
+          1.1,
+          1.1
+        ],
+        "MinDashSpeed": [
+          900,
+          900,
+          900
+        ],
+        "MaxDashSpeed": [
+          2000,
+          2000,
+          2000
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Rammus hops into the air and slams down in an area, dealing 150/250/350 (+60% AP) magic damage and Slowing by 30/40/50% for 1.5 seconds. If used during Powerball, enemies in the center take an additional 80/120/160/200/240 (+100% AP) magic damage and are Knocked Up for 0.75 seconds. Rammus then creates 3 aftershocks in the area over 3.5 seconds, repeating the Slow. The range of this Ability is increased by Rammus's Move Speed.",
+      "unresolved": []
+    }
+  }
+}

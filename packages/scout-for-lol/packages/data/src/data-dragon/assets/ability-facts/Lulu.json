@@ -1,0 +1,310 @@
+{
+  "championKey": "Lulu",
+  "championName": "Lulu",
+  "abilities": {
+    "passive": {
+      "name": "Pix, Faerie Companion",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "NumberOfBolts": [
+          3
+        ],
+        "APRatioPerHit": [
+          0.05
+        ]
+      },
+      "resolvedDescription": "Pix fires magical bolts of energy whenever the champion he's following attacks another enemy unit. These bolts are homing, but can be intercepted by other units.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Glitterlance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        925,
+        925,
+        925,
+        925,
+        925
+      ],
+      "dataValues": {
+        "MinionMod": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "DoubleHitBonus": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "SlowAmount": [
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowDecayTicks": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Lulu and Pix each fire a piercing bolt dealing 60/95/130/165/200 (+50% AP) magic damage and Slowing by 80%, decaying over 2 seconds. Enemies take 30/47.5/65/82.5/100 (+25% AP) magic damage from additional bolts.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Whimsy",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        18,
+        18,
+        18,
+        18
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseMS": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "CCDuration": [
+          1.2,
+          1.4,
+          1.6,
+          1.8,
+          2
+        ],
+        "SlowAmount": [
+          -60,
+          -60,
+          -60,
+          -60,
+          -60
+        ],
+        "MSDuration": [
+          3,
+          3.25,
+          3.5,
+          3.75,
+          4
+        ],
+        "AmountToMultiplyCoefficient2ByForPurposesOfCalculatingMovementSpeed": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "ASBonus": [
+          0.2,
+          0.225,
+          0.25,
+          0.275,
+          0.3
+        ]
+      },
+      "resolvedDescription": "When used on an ally, Lulu grants {{ totalms }} Move Speed and 20/22.5/25/27.5/30% Attack Speed for 3/3.25/3.5/3.75/4 seconds. When used on an enemy, Lulu Polymorphs them for 1.2/1.4/1.6/1.8/2 seconds.",
+      "unresolved": [
+        "totalms"
+      ]
+    },
+    "E": {
+      "name": "Help, Pix!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "DamageAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseShield": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "ShieldAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "PixOnAllyDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "PixOnEnemyDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "When used on an ally, Pix jumps to them and grants Pix, Faerie Companion for 6 seconds. If the ally is a champion, Pix also grants 70/110/150/190/230 (+50% AP) Shield for 2.5 seconds. When used on an enemy champion, Pix hampers them, dealing 70/110/150/190/230 (+50% AP) magic damage and granting True Sight of them for 4 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Wild Growth",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BonusHealth": [
+          275,
+          425,
+          575
+        ],
+        "SlowPercent": [
+          30,
+          45,
+          60
+        ],
+        "BuffDuration": [
+          7,
+          7,
+          7
+        ],
+        "AoERadius": [
+          400,
+          400,
+          400
+        ],
+        "KnockbackDuration": [
+          1,
+          1,
+          1
+        ],
+        "KnockbackDistance": [
+          275,
+          275,
+          275
+        ]
+      },
+      "resolvedDescription": "Lulu enlarges an ally, Knocking Up surrounding enemies for 1 second. The enlarged ally gains 275/425/575 (+55% AP) max Health and Slows surrounding enemies by 30/45/60% for 7 seconds.",
+      "unresolved": []
+    }
+  }
+}

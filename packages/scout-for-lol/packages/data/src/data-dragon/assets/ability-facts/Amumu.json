@@ -1,0 +1,230 @@
+{
+  "championKey": "Amumu",
+  "championName": "Amumu",
+  "abilities": {
+    "passive": {
+      "name": "Cursed Touch",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DebuffDuration": [
+          3
+        ],
+        "DamageAmp": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Amumu's basic attacks Curse his enemies, causing them to take bonus true damage from incoming magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bandage Toss",
+      "maxRank": 5,
+      "cooldownByRank": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          95,
+          120,
+          145,
+          170
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DashSpeed": [
+          1800,
+          1800,
+          1800,
+          1800,
+          1800
+        ]
+      },
+      "resolvedDescription": "Amumu launches a bandage, pulling himself to the first enemy hit, Stunning them for 1 second, and dealing 70/95/120/145/170 (+85% AP) magic damage. This Ability has 2 charges.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Despair",
+      "maxRank": 5,
+      "cooldownByRank": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "costByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costType": "Mana per Second",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "HealthDamage": [
+          1,
+          1.25,
+          1.5,
+          1.75,
+          2
+        ],
+        "APRatio": [
+          0.005,
+          0.005,
+          0.005,
+          0.005,
+          0.005
+        ]
+      },
+      "resolvedDescription": "Toggle: Amumu begins crying, dealing 10 plus 1/1.25/1.5/1.75/2 (+0.5% AP)% max Health magic damage to nearby enemies every second and refreshing Curse.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Tantrum",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "FlatDamageReductionMax": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          65,
+          95,
+          125,
+          155,
+          185
+        ],
+        "BaseDamageReduction": [
+          5,
+          7,
+          9,
+          11,
+          13
+        ],
+        "CDROnHit": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "PassiveScaling": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ]
+      },
+      "resolvedDescription": "Passive: Amumu takes 5/7/9/11/13 (+3% bonus Armor) (+3% bonus Magic Resist) reduced physical damage. Additionally, when Amumu is hit by an Attack, this Ability's Cooldown is reduced by 0.75 seconds. Active: Amumu throws a tantrum, dealing 65/95/125/155/185 (+50% AP) magic damage to nearby enemies.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Curse of the Sad Mummy",
+      "maxRank": 3,
+      "cooldownByRank": [
+        150,
+        125,
+        100
+      ],
+      "costByRank": [
+        100,
+        150,
+        200
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "RDamage": [
+          200,
+          300,
+          400
+        ],
+        "RDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "RCoefficient": [
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Amumu flares out his bandages, Stunning for 1.5 seconds, dealing 200/300/400 (+80% AP) magic damage and applying Curse.",
+      "unresolved": []
+    }
+  }
+}

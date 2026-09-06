@@ -1,0 +1,312 @@
+{
+  "championKey": "Syndra",
+  "championName": "Syndra",
+  "abilities": {
+    "passive": {
+      "name": "Transcendent",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MarkDuration": [
+          4
+        ],
+        "Q1UpgradeThreshold": [
+          40
+        ],
+        "WUpgradeThreshold": [
+          60
+        ],
+        "EUpgradeThreshold": [
+          80
+        ],
+        "RUpgradeThreshold": [
+          100
+        ],
+        "CapstoneAPPerc": [
+          0.15
+        ],
+        "MaxStackAmount": [
+          120
+        ],
+        "StackPerSiege": [
+          1
+        ],
+        "PassiveMarkCooldown": [
+          8
+        ],
+        "PassiveStacksPerLevel": [
+          5
+        ]
+      },
+      "resolvedDescription": "Syndra collects Splinters of Wrath from gaining levels and damaging enemies which upgrade her abilities. Dark Sphere: Syndra can hold an additional charge Force of Will: Bonus true damage. Scatter the Weak: Increased width and slows all targets Unleashed Power: Executes low health targets",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Dark Sphere",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "Upgrade1MaxAmmo": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Upgrade2MaxAmmo": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SphereDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "BaseDamage": [
+          90,
+          125,
+          160,
+          195,
+          230
+        ]
+      },
+      "resolvedDescription": "Syndra conjures a Dark Sphere, dealing 90/125/160/195/230 (+70% AP) magic damage. The Dark Sphere remains for 6 seconds and can be manipulated by Syndra's other Abilities. {{ spell.syndrapassive:q1upgradethreshold }} Splinters of Wrath: Syndra can store 2 charges of Dark Sphere.",
+      "unresolved": [
+        "spell.syndrapassive:q1upgradethreshold"
+      ]
+    },
+    "W": {
+      "name": "Force of Will",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        925,
+        925,
+        925,
+        925,
+        925
+      ],
+      "dataValues": {
+        "BaseSlow": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "ExtraSpherePickupRadius": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ]
+      },
+      "resolvedDescription": "Syndra grabs a Dark Sphere, enemy minion, or non-epic monster. She drags it with her and can Recast for up to 5 seconds. Recast: Syndra hurls the object, dealing 70/100/130/160/190 (+65% AP) magic damage and Slowing by 25% for {{ f2 }} seconds. {{ spell.syndrapassive:wupgradethreshold }} Splinters of Wrath: This Ability deals an additional {{ tooltiponlypassivebonuspercent }} true damage.",
+      "unresolved": [
+        "f2",
+        "spell.syndrapassive:wupgradethreshold",
+        "tooltiponlypassivebonuspercent"
+      ]
+    },
+    "E": {
+      "name": "Scatter the Weak",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "ConeAngle": [
+          56,
+          56,
+          56,
+          56,
+          56
+        ],
+        "StunDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "UpgradedSlowDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "UpgradedSlowAmount": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "UpgradedConeAngle": [
+          84,
+          84,
+          84,
+          84,
+          84
+        ],
+        "BaseDamage": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Syndra projects a wave of force, Knocking Back enemies and Dark Spheres and dealing 60/95/130/165/200 (+60% AP) magic damage. Dark Spheres that are pushed Stun enemies for 1.25 seconds and deal 60/95/130/165/200 (+60% AP) magic damage. {{ spell.syndrapassive:eupgradethreshold }} Splinters of Wrath: This Ability's width is increased and Slows enemies by 70% for 1.25 seconds.",
+      "unresolved": [
+        "spell.syndrapassive:eupgradethreshold"
+      ]
+    },
+    "R": {
+      "name": "Unleashed Power",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        675,
+        675,
+        675
+      ],
+      "dataValues": {
+        "DamagePerSphere": [
+          80,
+          120,
+          160
+        ],
+        "MaxSpheresToUse": [
+          7,
+          7,
+          7
+        ],
+        "UpgradeExecuteThreshold": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "QHastePerRank": [
+          10,
+          10,
+          10
+        ],
+        "TOOLTIPONLYTotalQHaste": [
+          10,
+          20,
+          30
+        ],
+        "MinSpheresToUse": [
+          3,
+          3,
+          3
+        ],
+        "APRatio": [
+          0.2,
+          0.2,
+          0.2
+        ]
+      },
+      "resolvedDescription": "Passive: Dark Sphere gains an additional 10 Ability Haste for each rank of Unleashed Power. Syndra draws on her full cataclysmic power, launching the 3 Dark Spheres orbiting her plus up to 4 more nearby at an enemy champion. Each Dark Sphere deals 80/120/160 (+20% AP) magic damage (max 560/840/1120 (+140% AP) magic damage). {{ spell.syndrapassive:rupgradethreshold }} Splinters of Wrath: This Ability executes enemies below 15% Health.",
+      "unresolved": [
+        "spell.syndrapassive:rupgradethreshold"
+      ]
+    }
+  }
+}

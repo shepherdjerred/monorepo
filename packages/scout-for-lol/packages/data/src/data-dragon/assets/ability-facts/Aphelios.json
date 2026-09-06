@@ -1,0 +1,192 @@
+{
+  "championKey": "Aphelios",
+  "championName": "Aphelios",
+  "abilities": {
+    "passive": {
+      "name": "The Hitman and the Seer",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaxRanksPerStat": [
+          6
+        ],
+        "ADPerRank": [
+          4
+        ],
+        "ASPerRank": [
+          0.09
+        ],
+        "APPerRank": [
+          4.5
+        ]
+      },
+      "resolvedDescription": "Aphelios wields 5 Lunari Weapons made by his sister Alune. He has access to two at a time: one main-hand and one off-hand. Each weapon has a unique Basic Attack and Ability. Attacks and abilities consume a weapon's ammo. When out of ammo, Aphelios discards the weapon and Alune summons the next of the 5.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Weapon Abilites",
+      "maxRank": 6,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1450,
+        1450,
+        1450,
+        1450,
+        1450,
+        1450
+      ],
+      "dataValues": {},
+      "resolvedDescription": "",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Phase",
+      "maxRank": 6,
+      "cooldownByRank": [
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8,
+        0.8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        250,
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "dataValues": {},
+      "resolvedDescription": "Swap main-hand and off-hand weapons, equipping Gravitum.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Weapon Queue System",
+      "maxRank": 6,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {},
+      "resolvedDescription": "",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Moonlight Vigil",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1300,
+        1300,
+        1300
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          125,
+          175,
+          225
+        ],
+        "SeverumRHealBonus": [
+          250,
+          350,
+          450
+        ],
+        "CalibrumRMarkBonusDamage": [
+          50,
+          80,
+          110
+        ],
+        "CrescendumRBonusMinis": [
+          5,
+          5,
+          5
+        ],
+        "InfernumRBonusDamageBase": [
+          50,
+          100,
+          150
+        ],
+        "GravitumRBonusSlowBase": [
+          0.99,
+          0.99,
+          0.99
+        ],
+        "CritDamageMod": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "GravitumRRootDuration": [
+          1.35,
+          1.35,
+          1.35
+        ]
+      },
+      "resolvedDescription": "Aphelios fires a concentrated blast of moonlight that explodes when it hits a champion, dealing 125/175/225 (+20% bonus AD) (+100% AP) physical damage to surrounding enemies. Then, Aphelios attacks all champions hit with his main-hand weapon. {{ Spell_ApheliosR_WeaponMod_{{ f1 }} }}",
+      "unresolved": [
+        "Spell_ApheliosR_WeaponMod_{{ f1"
+      ]
+    }
+  }
+}

@@ -1,0 +1,320 @@
+{
+  "championKey": "Irelia",
+  "championName": "Irelia",
+  "abilities": {
+    "passive": {
+      "name": "Ionian Fervor",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BuffDuration": [
+          6
+        ],
+        "MaxStacks": [
+          4
+        ],
+        "OnHitStructureMod": [
+          0.5
+        ],
+        "OnHitBaseDamage": [
+          10
+        ],
+        "OnHitPerLevel": [
+          3
+        ]
+      },
+      "resolvedDescription": "When Irelia strikes enemies with spells she gains stacking bonus Attack Speed. At maximum stacks she also gains bonus damage on hit.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bladesurge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          5,
+          25,
+          45,
+          65,
+          85
+        ],
+        "DashSpeedBonus": [
+          1400,
+          1400,
+          1400,
+          1400,
+          1400
+        ],
+        "HealTADCoefficient": [
+          0.09,
+          0.1,
+          0.11,
+          0.12,
+          0.13
+        ]
+      },
+      "resolvedDescription": "Irelia dashes to an enemy, dealing 5/25/45/65/85 (+70% AD) physical damage and restoring 9/10/11/12/13% AD Health to herself. If the enemy dies or was Unsteady, the Cooldown is refreshed. Deals 5/25/45/65/85 (+50-50 based on level) (+70% AD) damage to minions.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Defiant Dance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BasePhysicalDR": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "MaxDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MinDamage": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "MaxDamage": [
+          30,
+          60,
+          90,
+          120,
+          150
+        ],
+        "MaxBonusRatio": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ChargeTimeForMax": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MRReductionAmount": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Irelia enters a defensive stance for up to 1.5 seconds, becoming unable to act but reducing physical damage taken by 40-70 (based on level) (+7% AP)% and magic damage taken by 20-35 (based on level) (+3.5% AP)%. Release: Irelia lashes out with her blades, dealing 10/20/30/40/50 (+40% AD) (+50% AP) physical damage increased up to 30/60/90/120/150 (+120% AD) (+150% AP) based on charge time.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Flawless Duet",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "StunDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "RevTime": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BuffDuration": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "CDBetweenCast": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MaxRange": [
+          775,
+          775,
+          775,
+          775,
+          775
+        ],
+        "MinRange": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "MarkDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "APRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Irelia throws a blade into the ground and can Recast for up to 3.5 seconds. Recast: Irelia throws a second blade, then they fly towards each other Stunning for 0.75 seconds and dealing 70/110/150/190/230 (+100% AP) magic damage. Champions and large jungle monsters become Unsteady for 5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Vanguard's Edge",
+      "maxRank": 3,
+      "cooldownByRank": [
+        125,
+        105,
+        85
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseMissileDamage": [
+          125,
+          200,
+          275
+        ],
+        "BaseZoneDamage": [
+          125,
+          200,
+          275
+        ],
+        "CCDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SlowAmount": [
+          90,
+          90,
+          90
+        ],
+        "MarkDuration": [
+          5,
+          5,
+          5
+        ],
+        "ZoneDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "CooldownAmount": [
+          0.5,
+          1,
+          1.5
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Irelia launches a barrage of blades, dealing 125/200/275 (+70% AP) magic damage and making champions and large jungle monsters Unsteady for 5 seconds. The barrage explodes into a cage around the first champion hit for 2.5 seconds. The cage deals 125/200/275 (+70% AP) magic damage and Slows by 90% for 1.5 seconds.",
+      "unresolved": []
+    }
+  }
+}

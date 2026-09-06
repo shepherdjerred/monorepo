@@ -1,0 +1,315 @@
+{
+  "championKey": "Nidalee",
+  "championName": "Nidalee",
+  "abilities": {
+    "passive": {
+      "name": "Prowl",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Moving through brush increases Nidalee's Move Speed by 10% for 2 seconds, increased to 30% toward visible enemy champions within 1400 range. Hitting champions or monsters with Javelin Toss or Bushwhack triggers a Hunt, granting True Sight of them for 4 seconds. During this time, Nidalee gains 10% Move Speed (increased to 30% toward the Hunted target) and her Takedown and Pounce are enhanced against them.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Javelin Toss / Takedown",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1500,
+        1500,
+        1500,
+        1500,
+        1500
+      ],
+      "dataValues": {
+        "TooltipCougarMinimumDamage": [
+          5,
+          30,
+          55,
+          80,
+          105
+        ],
+        "SpearMinimumAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SpearMinimumDamage": [
+          70,
+          90,
+          110,
+          130,
+          150
+        ],
+        "SpearMaximumDamage": [
+          227.5,
+          292.5,
+          357.5,
+          422.5,
+          487.5
+        ],
+        "DamageMulti": [
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25
+        ],
+        "RangeThreshold": [
+          525,
+          525,
+          525,
+          525,
+          525
+        ]
+      },
+      "resolvedDescription": "Human Form: Nidalee throws her javelin, dealing 70/90/110/130/150 (+50% AP) magic damage, increased up to 227.5/292.5/357.5/422.5/487.5 (+162.5% AP) magic damage based on distance flown.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Bushwhack / Pounce",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "DotDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BaseDamagePerTick": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "TrapLifetime": [
+          120,
+          120,
+          120,
+          120,
+          120
+        ],
+        "TotalFlatDamage": [
+          40,
+          80,
+          120,
+          160,
+          200
+        ]
+      },
+      "resolvedDescription": "Human Form: Nidalee places an invisible trap for 2 minutes. When an enemy walks over it, they are dealt 10/20/30/40/50 (+5% AP) magic damage per second for 4 seconds. {{ maxtraps }} traps may be active at once.",
+      "unresolved": [
+        "maxtraps"
+      ]
+    },
+    "E": {
+      "name": "Primal Surge / Swipe",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "MaxHealMult": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxHealThreshold": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "BonusAS": [
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7
+        ],
+        "ASDuration": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ]
+      },
+      "resolvedDescription": "Human Form: Nidalee restores 50/75/100/125/150 (+35% AP) Health increased up to {{ maxhealing }} based on missing Health and grants them 30/40/50/60/70% Attack Speed for 7 seconds.",
+      "unresolved": [
+        "maxhealing"
+      ]
+    },
+    "R": {
+      "name": "Aspect Of The Cougar",
+      "maxRank": 4,
+      "cooldownByRank": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "PassivePercentMS": [
+          10,
+          10,
+          10,
+          10
+        ],
+        "TakedownBaseDamage": [
+          5,
+          30,
+          55,
+          80
+        ],
+        "TakedownADRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "TakedownAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "TakedownDamageAmp": [
+          1,
+          1.25,
+          1.5,
+          1.75
+        ],
+        "PounceCooldown": [
+          3,
+          2.5,
+          2,
+          1.5
+        ],
+        "PounceDamage": [
+          55,
+          100,
+          145,
+          190
+        ],
+        "PounceADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "PounceAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SwipeDamage": [
+          70,
+          130,
+          190,
+          250
+        ],
+        "SwipeADRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "SwipeAPRatio": [
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ]
+      },
+      "resolvedDescription": "Passive: While in Human Form, applying Hunted refreshes this Ability's Cooldown. Human Form: Nidalee transforms into Cougar Form, gaining melee Attacks and replacing her Active Abilities. Cougar Form: Nidalee transforms into Human Form, gaining ranged Attacks and replacing her Active Abilities.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "championKey": "Malzahar",
+  "championName": "Malzahar",
+  "abilities": {
+    "passive": {
+      "name": "Void Shift",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DRPercent": [
+          90
+        ],
+        "LingerDuration": [
+          0.25
+        ]
+      },
+      "resolvedDescription": "When he hasn't recently taken damage or been crowd controlled, Malzahar gains massive damage reduction and crowd control immunity, lingering for a short period after taking damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Call of the Void",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "SilenceDuration": [
+          1,
+          1.25,
+          1.5,
+          1.75,
+          2
+        ],
+        "DelayPostCast": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Malzahar opens two portals to the Void that fire projectiles inward, dealing 70/105/140/175/210 (+55% AP) magic damage and Silencing for 1/1.25/1.5/1.75/2 second(s).",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Void Swarm",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "dataValues": {
+        "VoidlingDuration": [
+          8,
+          8,
+          9,
+          9,
+          10
+        ],
+        "VoidlingBaseDamage": [
+          12,
+          14,
+          16,
+          18,
+          20
+        ],
+        "LaneMinionMod": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "EpicMonsterMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "StackCap": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "SummonDelay": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "APRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "StackDuration": [
+          25000,
+          25000,
+          25000,
+          25000,
+          25000
+        ],
+        "MaxStacks": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Passive: Malzahar's other Abilities give him a stack when cast (max 2). Active: Malzahar summons a Voidling plus an additional Voidling per stack. Voidlings last 8/8/9/9/10 seconds and deal 12/14/16/18/20 (+5-64.5 based on level) (+40% bonus AD) (+20% AP) magic damage each hit.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Malefic Visions",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "SecondsPerTick": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Malzahar inflicts terrible visions, dealing 80/115/150/185/220 (+80% AP) magic damage over 4 seconds. Applying Call of the Void or Nether Grasp to the victim during this time refreshes the visions. If the victim dies, Malzahar gains {{ manarestore }} Mana and the visions spread to the nearest enemy. Malefic Visions executes minions below 10-10 (based on level) Health.",
+      "unresolved": [
+        "manarestore"
+      ]
+    },
+    "R": {
+      "name": "Nether Grasp",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        110,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "BeamDamage": [
+          125,
+          200,
+          275
+        ],
+        "BeamAPRatio": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "BeamDamageTicks": [
+          10,
+          10,
+          10
+        ],
+        "SuppressDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "NeutralMonsterDamageCap": [
+          120,
+          120,
+          120
+        ],
+        "ZoneDuration": [
+          5,
+          5,
+          5
+        ],
+        "MaxHealthDamage": [
+          2,
+          3,
+          4
+        ],
+        "MaxHealthRatio": [
+          0.005,
+          0.005,
+          0.005
+        ],
+        "BeamTetherRange": [
+          1250,
+          1250,
+          1250
+        ],
+        "PoolDuration": [
+          5,
+          5,
+          5
+        ],
+        "CCDuration": [
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Malzahar Suppresses an enemy champion and deals 125/200/275 (+80% AP) magic damage over 2.5 seconds. A zone of negative energy is created around his target dealing {{ zonedamagetooltip }} max Health magic damage over 5 seconds.",
+      "unresolved": [
+        "zonedamagetooltip"
+      ]
+    }
+  }
+}

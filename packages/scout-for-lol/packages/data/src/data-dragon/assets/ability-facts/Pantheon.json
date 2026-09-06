@@ -1,0 +1,418 @@
+{
+  "championKey": "Pantheon",
+  "championName": "Pantheon",
+  "abilities": {
+    "passive": {
+      "name": "Mortal Will",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ActionsToEmpower": [
+          5
+        ],
+        "PhalanxDuration": [
+          3
+        ],
+        "QDamageAmp": [
+          0.4
+        ],
+        "QDamageAmpMelee": [
+          0.7
+        ],
+        "OutOfCombatTimer": [
+          15
+        ],
+        "QExtraAttacks": [
+          1
+        ],
+        "CritThreshold": [
+          -1
+        ]
+      },
+      "resolvedDescription": "Every few spells or attacks, Pantheon's next spell is empowered.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Comet Spear",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.25,
+        9.5,
+        8.75,
+        8
+      ],
+      "costByRank": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        575,
+        575,
+        575,
+        575,
+        575
+      ],
+      "dataValues": {
+        "HoldDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "TapDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "CritHealthThreshold": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "HoldRange": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ],
+        "DamageFalloff": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "TapCooldownRefund": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "HoldExecuteDamage": [
+          85,
+          130,
+          175,
+          220,
+          265
+        ],
+        "SelfSlow": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MinTimeHoldCast": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "MinionDamageMod": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "ExecuteBaseDamage": [
+          155,
+          230,
+          305,
+          380,
+          455
+        ],
+        "MonsterDamageMod": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Tap: Pantheon thrusts his spear, dealing 70/100/130/160/190 (+115% bonus AD) physical damage to enemies hit. Refunds 60% of this Ability's Cooldown. Hold: Pantheon hurls his spear, dealing 70/100/130/160/190 (+115% bonus AD) (+50% AP) physical damage to the first enemy hit and 50% less to further targets. This Ability is enhanced against enemies below 20% Health to deal 70/100/130/160/190 (+85/130/175/220/265) (+230% bonus AD) physical damage instead. Mortal Will Bonus: Deals an additional 20-240 (based on level) (+115% bonus AD) physical damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Shield Vault",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "EmpoweredNumHits": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "EmpoweredDamageMult": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MaxHealthDamage": [
+          0.06,
+          0.065,
+          0.07,
+          0.075,
+          0.08
+        ],
+        "MonsterDamageCap": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "MonsterDamageMin": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "MaxHealthPer100AP": [
+          0.00015,
+          0.00015,
+          0.00015,
+          0.00015,
+          0.00015
+        ]
+      },
+      "resolvedDescription": "Pantheon leaps on his target, Stunning for 1 second and dealing {{ maxhealthdamagecalc }} max Health physical damage. Mortal Will Bonus: Pantheon's next Attack strikes 3 times, dealing a total of {{ empowereddamagemultcalcmodified }} physical damage.",
+      "unresolved": [
+        "maxhealthdamagecalc",
+        "empowereddamagemultcalcmodified"
+      ]
+    },
+    "E": {
+      "name": "Aegis Assault",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        21,
+        20,
+        19,
+        18
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AttacksPerSecond": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ShieldBaseDamage": [
+          55,
+          105,
+          155,
+          205,
+          255
+        ],
+        "SpearStrikesRadius": [
+          525,
+          525,
+          525,
+          525,
+          525
+        ],
+        "ShieldSwipeRadius": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "MinionDamageReduction": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RecastLockout": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SpeedDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SpeedAmount": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "ResistsDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Pantheon braces his shield and engages enemies in a chosen direction for 1.5 seconds, becoming immune to non-tower damage from that direction and dealing 100% AD physical damage over the duration. After channeling Pantheon slams with his shield, dealing 55/105/155/205/255 (+150% bonus AD) physical damage. Mortal Will Bonus: When Pantheon slams his shield he gains 5-30 (based on level) (+2.5% bonus Health) Armor and 5-30 (based on level) (+2.5% bonus Health) Magic Resist for 4 seconds, and 60% Move Speed for 1.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Grand Starfall",
+      "maxRank": 3,
+      "cooldownByRank": [
+        180,
+        165,
+        150
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        5500,
+        5500,
+        5500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          300,
+          500,
+          700
+        ],
+        "EdgeDamageReduction": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Radius": [
+          450,
+          450,
+          450
+        ],
+        "SweetSpotRadius": [
+          125,
+          125,
+          125
+        ],
+        "CancelCooldown": [
+          30,
+          30,
+          30
+        ],
+        "SpearSlow": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SpearSlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "ArmorPenetration": [
+          0.1,
+          0.2,
+          0.3
+        ],
+        "APRatio": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Passive: Pantheon gains 10/20/30% Armor Penetration. Active: Pantheon gathers his strength to leap high into the air. He throws his spear from above which in a small area deals 70/100/130/160/190 (+115% bonus AD) (+50% AP) physical damage and Slows by 50% for 2 seconds. Pantheon then crashes down as a meteor at the target area. Deals up to 300/500/700 (+100% AP) magic damage to enemies in a line (decreased by up to 50% at the edges of the area). This Ability instantly readies Mortal Will.",
+      "unresolved": []
+    }
+  }
+}

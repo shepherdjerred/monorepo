@@ -1,0 +1,297 @@
+{
+  "championKey": "Twitch",
+  "championName": "Twitch",
+  "abilities": {
+    "passive": {
+      "name": "Deadly Venom",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Duration": [
+          6
+        ],
+        "MaxStacks": [
+          6
+        ],
+        "APRatio": [
+          0.03
+        ]
+      },
+      "resolvedDescription": "Twitch's basic attacks infect the target %i:OnHit% On-Hit, dealing true damage each second.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Ambush",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "AttackSpeedMod": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "AttackSpeedDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "StealthDuration": [
+          10,
+          11,
+          12,
+          13,
+          14
+        ],
+        "MaxFadeTime": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "StealthDetectionRange": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MoveSpeedMod": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "HiddenSpeed": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "MoveBonusRange": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ]
+      },
+      "resolvedDescription": "Twitch Camouflages and gains 10% Move Speed for 10/11/12/13/14 seconds. The Move Speed increases to 30% while near an enemy champion that can't see him. After exiting Camouflage, Twitch gains 40/45/50/55/60% Attack Speed for 6 seconds. When an enemy champion dies while afflicted with Venom, this Ability's Cooldown is refreshed.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Venom Cask",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseSlowAmount": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "Duration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AoERadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "SlowAPRatio": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ]
+      },
+      "resolvedDescription": "Twitch hurls a cask that adds a stack of Deadly Venom to all enemies struck and leaves behind a toxic cloud that persists for 3 seconds. Enemies that remain within the cloud are Slowed by 30/35/40/45/50 (+6% AP)% and receive an additional stack of Deadly Venom each second.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Contaminate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "BasePhysicalDamagePerStack": [
+          15,
+          20,
+          25,
+          30,
+          35
+        ],
+        "bADRatioPerStack": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "APRatioPerStack": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "MaxStacks": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "resolvedDescription": "Deals 20/30/40/50/60 physical damage to all nearby enemies affected by Deadly Venom, plus an additional 15/20/25/30/35 (+35% bonus AD) physical damage and 35% AP magical damage per stack of Deadly Venom. Max Damage: {{ maxphysicaldamage }} physical damage and 210% AP magical damage.",
+      "unresolved": [
+        "maxphysicaldamage"
+      ]
+    },
+    "R": {
+      "name": "Spray and Pray",
+      "maxRank": 3,
+      "cooldownByRank": [
+        90,
+        90,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "BonusRange": [
+          300,
+          300,
+          300
+        ],
+        "FallOffDamage": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MinimumFallOffDamage": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "BonusAD": [
+          30,
+          45,
+          60
+        ],
+        "Duration": [
+          6,
+          6,
+          6
+        ],
+        "OvershootMult": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "OvershootMin": [
+          250,
+          250,
+          250
+        ]
+      },
+      "resolvedDescription": "Twitch unleashes his crossbow, gaining 300 Attack Range and 30/45/60 Attack Damage, and causing his Attacks to become piercing bolts for 6 seconds. These bolts hit all enemies they pass through, but deal 10% less damage to subsequent targets, down to a minimum of 60% damage.",
+      "unresolved": []
+    }
+  }
+}

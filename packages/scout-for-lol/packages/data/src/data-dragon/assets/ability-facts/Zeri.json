@@ -1,0 +1,496 @@
+{
+  "championKey": "Zeri",
+  "championName": "Zeri",
+  "abilities": {
+    "passive": {
+      "name": "Living Battery",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ShieldDuration": [
+          3
+        ],
+        "HastePercent": [
+          0.1
+        ],
+        "EnergizedDuration": [
+          2
+        ],
+        "PercentShieldSteal": [
+          0.45
+        ],
+        "ChampHitHasteDuration": [
+          1.5
+        ]
+      },
+      "resolvedDescription": "Zeri's Attacks deal magic damage and are treated as Abilities. Moving and casting Burst Fire stores up energy in Zeri's Sparkpack. When fully charged her next Attack deals bonus damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Burst Fire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "MinCooldown": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "AttackSpeedCap": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ExcessAttackSpeedToADMult": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "BaseDamage": [
+          22,
+          26,
+          30,
+          34,
+          38
+        ],
+        "ActiveADRatio": [
+          1.02,
+          1.04,
+          1.06,
+          1.08,
+          1.1
+        ],
+        "NumberOfMissiles": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "EnergizedMissiles": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowPercent": [
+          0.99,
+          0.99,
+          0.99,
+          0.99,
+          0.99
+        ],
+        "ActivePercentDamageToTowers": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxPercentHealthToMonsters": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "ChargePerAttack": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "ChargeDistanceMultiplier": [
+          0.025,
+          0.025,
+          0.025,
+          0.025,
+          0.025
+        ]
+      },
+      "resolvedDescription": "Zeri fires a burst of 7 rounds that deals 22/26/30/34/38 (+102/104/105.99999/108/110% AD) physical damage to the first enemy hit. This Ability is treated as an Attack.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ultrashock Laser",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "Damage": [
+          30,
+          70,
+          110,
+          150,
+          190
+        ],
+        "ADRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "CriticalEffectiveness": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowPercent": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "WallBeamRange": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "BeamWidth": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "BeamCastTime": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "MinCastTime": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "ASpeedCastTimeScalarPerHundrethSecond": [
+          0.09,
+          0.09,
+          0.09,
+          0.09,
+          0.09
+        ],
+        "BaseCastTime": [
+          0.55,
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Zeri fires an electric pulse that deals 30/70/110/150/190 (+120% AD) (+50% AP) physical damage and Slows the first enemy hit by 30/35/40/45/50% for 2 seconds. If the pulse hits terrain, it expands into a laser that applies the effects in an area and Critically Strikes champions and monsters for {{ walldamage }} physical damage.",
+      "unresolved": [
+        "walldamage"
+      ]
+    },
+    "E": {
+      "name": "Spark Surge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        24,
+        22.5,
+        21,
+        19.5,
+        18
+      ],
+      "costByRank": [
+        90,
+        85,
+        80,
+        75,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "MaxDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "MaxDistanceOverWalls": [
+          3000,
+          3000,
+          3000,
+          3000,
+          3000
+        ],
+        "BuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "NumberOfPierceShots": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "PenDamagePercent": [
+          0.8,
+          0.85,
+          0.9,
+          0.95,
+          1
+        ],
+        "CDReductionPerHit": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ShortHopAnimCutoff": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "MediumHopAnimCutoff": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "RevealRangeOverWalls": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "BonusDamageBase": [
+          22,
+          24,
+          26,
+          28,
+          30
+        ],
+        "BonusAPRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "IndicatorRevealTime": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "CritScalingMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CritCDReductionPerHit": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "CDReductionModNonChamp": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Zeri dashes a short distance and vaults over any terrain she touches, greatly extending the dash range. For the next 5 seconds, her shots of Burst Fire pierce dealing 80/85/90/95/100% damage to enemies after the first and an additional {{ bonusdamagetotal }} magic damage On-Hit to the first target struck. Hitting an enemy with an Attack reduces this Ability's cooldown by 0.5 seconds. Critical strikes reduce the cooldown by 1.5 seconds instead.",
+      "unresolved": [
+        "bonusdamagetotal"
+      ]
+    },
+    "R": {
+      "name": "Lightning Crash",
+      "maxRank": 3,
+      "cooldownByRank": [
+        80,
+        75,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "StackDuration": [
+          5,
+          5,
+          5
+        ],
+        "MaxStacks": [
+          100000,
+          100000,
+          100000
+        ],
+        "DurationIncreasePerHit": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MaxHyperchargeDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "BaseASPercent": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MSPercent": [
+          0.015,
+          0.015,
+          0.015
+        ],
+        "RDuration": [
+          5,
+          5,
+          5
+        ],
+        "BonusMagicDamage": [
+          5,
+          10,
+          15
+        ],
+        "ActiveDamage": [
+          150,
+          250,
+          350
+        ],
+        "NovaRange": [
+          825,
+          825,
+          825
+        ],
+        "MaxChainTargets": [
+          5,
+          5,
+          5
+        ],
+        "BaseBonusMS": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "ChainADRatio": [
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Zeri discharges a nova of electricity, dealing 150/250/350 (+110% AP) (+60% bonus AD) magic damage to nearby enemies. If she hits an enemy champion, Zeri gains 30% Attack Speed and 15% Move Speed for 5 seconds. Hitting an enemy champion with an Attack or Ability extends this ability's duration and adds a stack of Overcharge for 2.5 seconds. Critical strikes add 2 additional stacks. Each stack grants 1.5% Move Speed. During this time, Burst Fire becomes a faster triple shot that chains 40% AD physical damage to nearby enemies.",
+      "unresolved": []
+    }
+  }
+}

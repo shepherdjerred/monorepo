@@ -1,0 +1,331 @@
+{
+  "championKey": "Teemo",
+  "championName": "Teemo",
+  "abilities": {
+    "passive": {
+      "name": "Guerrilla Warfare",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AttackSpeedDuration": [
+          5
+        ],
+        "StealthCooldownDuration": [
+          1.5
+        ]
+      },
+      "resolvedDescription": "If Teemo stands still and takes no actions for a short duration, he becomes Invisible indefinitely. If he's in brush, Teemo can enter and maintain his Invisibility while moving. After leaving Invisibility, Teemo gains the Element of Surprise, increasing his Attack Speed for a few seconds.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Blinding Dart",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        680,
+        680,
+        680,
+        680,
+        680
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "BlindDuration": [
+          2,
+          2.25,
+          2.5,
+          2.75,
+          3
+        ],
+        "MissChance": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MinionMonsterDurationMod": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Teemo fires a dart, Blinding the target for 2/2.25/2.5/2.75/3 seconds and dealing 80/125/170/215/260 (+70% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Move Quick",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "PassiveMoveSpeedBonus": [
+          0.12,
+          0.16,
+          0.2,
+          0.24,
+          0.28
+        ],
+        "ActiveMoveSpeedBuffDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ActiveMoveSpeedBonus": [
+          0.24,
+          0.32,
+          0.4,
+          0.48,
+          0.56
+        ],
+        "PassiveCooldownOnDamageTaken": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Passive: Teemo gains 12/16/20/24/28% Move Speed while he hasn't been damaged by a champion or turret in the last 5 seconds. Active: Teemo sprints, gaining 24/32/40/48/56% Move Speed that is not lost when struck for 3 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Toxic Shot",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Passive",
+      "rangeByRank": [
+        680,
+        680,
+        680,
+        680,
+        680
+      ],
+      "dataValues": {
+        "TickBaseDamage": [
+          6,
+          12,
+          18,
+          24,
+          30
+        ],
+        "TickAPRatio": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "ImpactBaseDamage": [
+          9,
+          23,
+          37,
+          51,
+          65
+        ],
+        "ImpactAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "PoisonDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TickFrequency": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MonsterMod": [
+          1.6,
+          1.6,
+          1.6,
+          1.6,
+          1.6
+        ],
+        "TickBonusADRatio": [
+          0.025,
+          0.025,
+          0.025,
+          0.025,
+          0.025
+        ],
+        "ImpactBonusADRatio": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ]
+      },
+      "resolvedDescription": "Passive: Teemo's Attacks apply poison %i:OnHit% On-Hit, dealing an additional 9/23/37/51/65 (+30% AP) (+5% bonus AD) magic damage plus 24/48/72/96/120 (+40% AP) (+10% bonus AD) magic damage over 4 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Noxious Trap",
+      "maxRank": 3,
+      "cooldownByRank": [
+        0.25,
+        0.25,
+        0.25
+      ],
+      "costByRank": [
+        75,
+        55,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        750,
+        900
+      ],
+      "dataValues": {
+        "TriggerRadius": [
+          160,
+          160,
+          160
+        ],
+        "MaxAmmo": [
+          3,
+          4,
+          5
+        ],
+        "MaxBounceDistance": [
+          360,
+          440,
+          550
+        ],
+        "ArmTime": [
+          1,
+          1,
+          1
+        ],
+        "MushroomDuration": [
+          5,
+          5,
+          5
+        ],
+        "BaseDamage": [
+          200,
+          325,
+          450
+        ],
+        "SlowAmount": [
+          30,
+          40,
+          50
+        ],
+        "DebuffDuration": [
+          4,
+          4,
+          4
+        ],
+        "APRatioPerTick": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ExplosionRadius": [
+          450,
+          450,
+          450
+        ],
+        "MaxTraps": [
+          25000,
+          25000,
+          25000
+        ],
+        "MinTossDistanceBounceThreshold": [
+          220,
+          500,
+          500
+        ],
+        "VisionRadius": [
+          210,
+          210,
+          210
+        ]
+      },
+      "resolvedDescription": "Teemo tosses a mushroom trap that detonates when stepped on. The traps Slow by 30/40/50% and deal 200/325/450 (+50% AP) magic damage over 4 seconds. Enemies are revealed for the same duration. Traps last 5 minutes and are stealthed. A mushroom tossed onto another mushroom bounces before landing at its position. This Ability has 3/4/5 charges ({{ ammorechargetime }} second refresh).",
+      "unresolved": [
+        "ammorechargetime"
+      ]
+    }
+  }
+}

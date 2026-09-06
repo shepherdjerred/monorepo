@@ -139,8 +139,21 @@ export {
   getChampionInfo,
   getChampionList,
   getChampionTags,
+  type ChampionInfo,
+  type ChampionSpell,
   type ChampionTag,
 } from "./data-dragon/champion.ts";
+export {
+  AbilityFactsSchema,
+  AbilitySlotSchema,
+  ChampionAbilityFactsSchema,
+  getAbilityFacts,
+  suggestChampionNames,
+  type AbilityFacts,
+  type AbilityFactsLookup,
+  type AbilitySlot,
+  type ChampionAbilityFacts,
+} from "./data-dragon/ability-facts.ts";
 export {
   getPatchChangeset,
   selectRelevantPatchChanges,

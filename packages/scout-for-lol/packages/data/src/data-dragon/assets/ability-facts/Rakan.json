@@ -1,0 +1,268 @@
+{
+  "championKey": "Rakan",
+  "championName": "Rakan",
+  "abilities": {
+    "passive": {
+      "name": "Fey Feathers",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "HitCooldown": [
+          1
+        ]
+      },
+      "resolvedDescription": "Rakan periodically gains a shield.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Gleaming Quill",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        45,
+        45,
+        45,
+        45,
+        45
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          115,
+          160,
+          205,
+          250
+        ],
+        "HealDelay": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseCDActual": [
+          11,
+          10,
+          9,
+          8,
+          7
+        ],
+        "DamageAPRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "HealAPRatio": [
+          0.55,
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ]
+      },
+      "resolvedDescription": "Rakan flings a magical feather that deals 70/115/160/205/250 (+70% AP) magic damage to the first enemy hit. If the feather hits a champion or epic jungle monster, Rakan restores 40-210 (based on level) (+55% AP) Health to himself and nearby allies after 3 seconds or when he touches an allied champion.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Grand Entrance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDashSpeed": [
+          1700,
+          1700,
+          1700,
+          1700,
+          1700
+        ],
+        "BaseDamage": [
+          70,
+          120,
+          170,
+          220,
+          270
+        ],
+        "KnockupDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Rakan dashes, then spirals into the air, Knocking Up for 1 second and dealing 70/120/170/220/270 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Battle Dance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseShield": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "RecastWindow": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "Duration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "Cooldown": [
+          20,
+          18,
+          16,
+          14,
+          12
+        ],
+        "BonusDashSpeed": [
+          1150,
+          1150,
+          1150,
+          1150,
+          1150
+        ],
+        "XayahBonusDashSpeed": [
+          1250,
+          1250,
+          1250,
+          1250,
+          1250
+        ]
+      },
+      "resolvedDescription": "Rakan dashes to an allied champion, granting them 50/75/100/125/150 (+70% AP) Shield for 3 seconds. Rakan can Recast this Ability once within 5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "The Quickness",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        110,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        150,
+        150,
+        150
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          100,
+          200,
+          300
+        ],
+        "Duration": [
+          4,
+          4,
+          4
+        ],
+        "CharmDuration": [
+          1,
+          1.25,
+          1.5
+        ],
+        "BuffExtensionDuration": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "InitialCastSpeed": [
+          75,
+          75,
+          75
+        ],
+        "TouchSpeed": [
+          150,
+          150,
+          150
+        ],
+        "TouchRadius": [
+          150,
+          150,
+          150
+        ]
+      },
+      "resolvedDescription": "Rakan gains 75% Move Speed for 4 seconds. Rakan deals 100/200/300 (+50% AP) magic damage and Charms enemies for 1/1.25/1.5 second(s) the first time he touches them. The first champion touched grants Rakan 150% decaying Move Speed.",
+      "unresolved": []
+    }
+  }
+}

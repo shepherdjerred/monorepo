@@ -1,0 +1,250 @@
+{
+  "championKey": "Orianna",
+  "championName": "Orianna",
+  "abilities": {
+    "passive": {
+      "name": "Clockwork Windup",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "StackMult": [
+          0.15
+        ],
+        "StackCount": [
+          2
+        ],
+        "StackDuration": [
+          4
+        ],
+        "APRatio": [
+          0.15
+        ]
+      },
+      "resolvedDescription": "Orianna's Attacks deal additional magic damage. This damage increases the more Orianna Attacks the same target.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Command: Attack",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        815,
+        815,
+        815,
+        815,
+        815
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "ReducedDamagePercent": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "MinimumDamagePercent": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ]
+      },
+      "resolvedDescription": "Orianna commands her Ball to move to an area, dealing 60/90/120/150/180 (+55% AP) magic damage to surrounding enemies and to enemies it passes through. Deals 30% less damage to all enemies after the first.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Command: Dissonance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        225,
+        225,
+        225,
+        225,
+        225
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowAmount": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "HasteAmount": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "FieldDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowAndHasteDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Orianna commands her Ball to release an electric pulse, dealing 70/110/150/190/230 (+80% AP) magic damage to surrounding enemies. The pulse leaves behind an energy field for 3 seconds, Slowing enemies by 20/25/30/35/40% and granting allies 20/25/30/35/40% Move Speed, decaying over 2 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Command: Protect",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1095,
+        1095,
+        1095,
+        1095,
+        1095
+      ],
+      "dataValues": {
+        "ShieldAmount": [
+          55,
+          90,
+          125,
+          160,
+          195
+        ],
+        "DefenseBonus": [
+          6,
+          12,
+          18,
+          24,
+          30
+        ],
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Passive: The Ball adds 6/12/18/24/30 Armor and 6/12/18/24/30 Magic Resist to the allied champion it is attached to. Active: Orianna commands her Ball to attach to an allied champion, granting them 55/90/125/160/195 (+45% AP) Shield for 2.5 seconds. Enemies the Ball passes through take 60/90/120/150/180 (+30% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Command: Shockwave",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        95,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        410,
+        410,
+        410
+      ],
+      "dataValues": {
+        "Damage": [
+          225,
+          350,
+          475
+        ],
+        "AoERadius": [
+          415,
+          415,
+          415
+        ],
+        "StunDuration": [
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Orianna commands her Ball to unleash a shockwave, dealing 225/350/475 (+110% AP) magic damage to nearby enemies and Knocking them in the direction of the Ball.",
+      "unresolved": []
+    }
+  }
+}

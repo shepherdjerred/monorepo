@@ -1,0 +1,250 @@
+{
+  "championKey": "Samira",
+  "championName": "Samira",
+  "abilities": {
+    "passive": {
+      "name": "Daredevil Impulse",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "SwordRange": [
+          200
+        ],
+        "VisualBonusRange": [
+          400
+        ],
+        "DurationTOOLTIP": [
+          6
+        ]
+      },
+      "resolvedDescription": "Samira builds a combo by hitting attacks or abilities unique from the previous hit. Samira's attacks in melee range deal additional magic damage. Samira's attacks against enemies affected by Immobilizing effects will dash her to her attack range. If the enemy is Knocked Up, she also keeps them Knocked Up briefly.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Flair",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5,
+        4,
+        3,
+        2
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          0,
+          5,
+          10,
+          15,
+          20
+        ],
+        "CheatingThreshold": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "CritDamageMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "LifestealMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "QADRatio": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ]
+      },
+      "resolvedDescription": "Samira fires a shot, dealing 0/5/10/15/20 (+110% AD) physical damage to the first enemy hit. If this Ability is cast towards an enemy in melee range, Samira will instead slash with her sword, dealing 0/5/10/15/20 (+110% AD) physical damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Blade Whirl",
+      "maxRank": 5,
+      "cooldownByRank": [
+        30,
+        28,
+        26,
+        24,
+        22
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          35,
+          50,
+          65,
+          80
+        ],
+        "SlashDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Samira slashes around her for 0.75 seconds, damaging enemies twice for 20/35/50/65/80 (+50% bonus AD) physical damage each and destroying any enemy missiles that enter the area.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Wild Rush",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          60,
+          70,
+          80,
+          90
+        ],
+        "BonusAttackSpeed": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "DashSpeed": [
+          1600,
+          1600,
+          1600,
+          1600,
+          1600
+        ],
+        "DashTotalDistance": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "AttackSpeedDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Samira dashes through an enemy (including structures), slashing enemies she passes through dealing 50/60/70/80/90 (+20% bonus AD) magic damage and gaining 20/25/30/35/40% Attack Speed for 5 seconds. If an enemy champion is killed within 3 seconds of Samira damaging them, This Ability's Cooldown is reset.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Inferno Trigger",
+      "maxRank": 3,
+      "cooldownByRank": [
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          40,
+          60
+        ],
+        "BaseMSBonus": [
+          0.02,
+          0.02,
+          0.02
+        ],
+        "LifestealMod": [
+          1,
+          1,
+          1
+        ],
+        "MinionDamageMod": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "ADRatio": [
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Samira can only use this Ability if her current Style rating is S. Using this Ability consumes all Style rating. Samira unleashes a torrent of shots from her weapons, wildly shooting all enemies surrounding her 10 times over 2 seconds, each shot dealing 20/40/60 (+30% AD) physical damage and applying Life Steal at 100% effectiveness. Each shot can also critically strike.",
+      "unresolved": []
+    }
+  }
+}

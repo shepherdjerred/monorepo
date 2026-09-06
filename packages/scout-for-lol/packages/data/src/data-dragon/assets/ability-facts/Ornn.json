@@ -1,0 +1,395 @@
+{
+  "championKey": "Ornn",
+  "championName": "Ornn",
+  "abilities": {
+    "passive": {
+      "name": "Living Forge",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MasterworkLevel": [
+          13
+        ],
+        "BaseStatAmp": [
+          0.1
+        ],
+        "AdditionalMythicStatAmp": [
+          0.04
+        ],
+        "GameModeInteger": [
+          1
+        ],
+        "UpgradeTotalGoldValue": [
+          1000
+        ],
+        "UpgradeADEff": [
+          35
+        ],
+        "UpgradeAPEff": [
+          20
+        ],
+        "UpgradeHPEff": [
+          2.66
+        ],
+        "UpgradeAREff": [
+          20
+        ],
+        "UpgradeMREff": [
+          18
+        ],
+        "UpgradeAHEff": [
+          31.25
+        ],
+        "UpgradeASEff": [
+          30
+        ]
+      },
+      "resolvedDescription": "Ornn gains an additional bonus Armor and Magic Resist from all sources. Ornn can spend gold to forge non-consumable items anywhere. Additionally, he can create masterwork items for himself and for his allies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Volcanic Rupture",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        45,
+        45,
+        45,
+        45,
+        45
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "PillarDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SlowAmount": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Ornn slams the ground, creating a fissure dealing 20/45/70/95/120 (+110% AD) physical damage and Slowing by 40% for 2 seconds. A pillar of rock forms at the fissure's end for 4 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Bellows Breath",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "MinimumDamagePerTick": [
+          16,
+          26,
+          36,
+          46,
+          56
+        ],
+        "NumberOfTicks": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "BaseDamageTooltip": [
+          100,
+          150,
+          200,
+          250,
+          300
+        ],
+        "BreathDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "RectangleWidth": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "RectangleLength": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MovementSpeedReduction": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "FinalTickRectangleLength": [
+          560,
+          560,
+          560,
+          560,
+          560
+        ],
+        "PercentHPPerTick": [
+          0.024,
+          0.026,
+          0.028,
+          0.03,
+          0.032
+        ],
+        "MaxPercentHPPerTickTooltip": [
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "MonsterDamagePerTickCap": [
+          52,
+          64,
+          76,
+          88,
+          100
+        ],
+        "BrittleDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Ornn stomps forward Unstoppably while breathing fire, dealing 12/13/14/15/16% max Health magic damage over 0.75 seconds. Enemies hit by the final bout of flame become Brittle for 3 seconds. Immobilizing effects on Brittle targets have their duration increased by 30% and deal an additional 9-17% (based on level) max Health magic damage. Ornn's Attacks against Brittle targets Knock them Back, dealing the additional damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Searing Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13.5,
+        13,
+        12.5,
+        12
+      ],
+      "costByRank": [
+        35,
+        40,
+        45,
+        50,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "KnockupDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "DashRange": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "ShockwaveRadius": [
+          360,
+          360,
+          360,
+          360,
+          360
+        ],
+        "DashWallCheating": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "DashSpeed": [
+          1600,
+          1600,
+          1600,
+          1600,
+          1600
+        ],
+        "DashRadius": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "ArmorRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MRRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Ornn charges, dealing 80/125/170/215/260 (+40% bonus Armor) (+40% bonus Magic Resist) physical damage. If Ornn rams into terrain, he creates a shockwave that Knocks Up enemies for 1.25 seconds and applies the same damage to those not hit by the charge. Ornn's charge destroys magma pillars and terrain created by enemies.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Call of the Forge God",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2500,
+        2500,
+        2500
+      ],
+      "dataValues": {
+        "RCastRange": [
+          2500,
+          2500,
+          2500
+        ],
+        "RBaseDamage": [
+          125,
+          175,
+          225
+        ],
+        "RMissileMaxSpeed": [
+          1200,
+          1200,
+          1200
+        ],
+        "RMissileAccelerationBase": [
+          100,
+          100,
+          100
+        ],
+        "RSlowPercentBasePreMath": [
+          40,
+          50,
+          60
+        ],
+        "RSlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "RRatio": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "BrittleDurationTOOLTIPONLY": [
+          3,
+          3,
+          3
+        ],
+        "RStunDuration": [
+          1,
+          1,
+          1
+        ],
+        "RStunReduction": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Ornn summons a massive lava elemental, which stampedes towards him, dealing 125/175/225 (+20% AP) magic damage, applying Brittle to, and Slowing enemies hit by 40/50/60% for 3 seconds. Ornn can Recast to dash with a headbutt. If he dashes into the elemental, he redirects and empowers it, causing it to Knock Up the first champion for 1 second and subsequent champions for {{ minstun }} seconds. The elemental also deals 125/175/225 (+20% AP) magic damage and reapplies Brittle.",
+      "unresolved": [
+        "minstun"
+      ]
+    }
+  }
+}

@@ -1,0 +1,408 @@
+{
+  "championKey": "Renekton",
+  "championName": "Renekton",
+  "abilities": {
+    "passive": {
+      "name": "Reign of Anger",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "FuryPerAttack": [
+          5
+        ],
+        "FuryIncreasePercent": [
+          0.5
+        ],
+        "LowHealthPercentThreshold": [
+          0.5
+        ],
+        "InCombatDuration": [
+          12
+        ],
+        "FuryCost": [
+          50
+        ]
+      },
+      "resolvedDescription": "Renekton's attacks generate Fury, increased when he is low on life. This Fury can empower his abilities with bonus effects.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Cull the Meek",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "BaseADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseMinionHeal": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "MinionHealADRatio": [
+          0.02,
+          0.02,
+          0.02,
+          0.02,
+          0.02
+        ],
+        "ChampHeal": [
+          12,
+          20,
+          28,
+          36,
+          44
+        ],
+        "ChampionHealADRatio": [
+          0.17,
+          0.17,
+          0.17,
+          0.17,
+          0.17
+        ],
+        "BasicHealCap": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "EmpoweredBaseDamage": [
+          90,
+          135,
+          180,
+          225,
+          270
+        ],
+        "EmpoweredADRatio": [
+          1.4,
+          1.4,
+          1.4,
+          1.4,
+          1.4
+        ],
+        "EmpoweredHealCap": [
+          200,
+          300,
+          400,
+          500,
+          600
+        ],
+        "EmpoweredHealMultiplier": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "Range": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "UltimateRangeMod": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "MinionFuryGain": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "ChampionFuryGain": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "FuryGainCap": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ]
+      },
+      "resolvedDescription": "Renekton swings his blade, dealing 60/90/120/150/180 (+100% bonus AD) physical damage and restoring 2/3/4/5/6 (+2% bonus AD) Health per non-champion and 12/20/28/36/44 (+17% bonus AD) per champion hit. He also generates 2.5 Fury per non-champion and 10 Fury per champion. Fury Bonus: Damage is increased to 90/135/180/225/270 (+140% bonus AD) physical damage and healing is increased to 6/9/12/15/18 (+6% bonus AD) Health against non-champions and 36/60/84/108/132 (+51% bonus AD) Health against champions. Does not generate any Fury.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ruthless Predator",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14,
+        12,
+        10,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BaseDamagePerHit": [
+          5,
+          20,
+          35,
+          50,
+          65
+        ],
+        "TotalADPerHit": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "StunDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "EnragedStunDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BonusFuryVsChamps": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "resolvedDescription": "Renekton's next Attack strikes twice, Stunning for 0.75 seconds and dealing a total of 10/40/70/100/130 (+150% AD) physical damage. Hitting a champion generates an additional 10 Fury. Fury Bonus: Renekton Attacks 3 times instead, destroying Shields before dealing 15/60/105/150/195 (+225% AD) physical damage and Stunning for 1.5 seconds. Does not generate any Fury.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Slice and Dice",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          70,
+          100,
+          130,
+          160
+        ],
+        "BaseADRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "EnragedBaseDamage": [
+          70,
+          115,
+          160,
+          205,
+          250
+        ],
+        "EnragedADRatio": [
+          1.35,
+          1.35,
+          1.35,
+          1.35,
+          1.35
+        ],
+        "EnragedArmorShred": [
+          25,
+          27.5,
+          30,
+          32.5,
+          35
+        ],
+        "ShredTimer": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MinionRageGeneration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ChampionRageGeneration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "FuryMax": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "DiceTimer": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BaseDashSpeed": [
+          750,
+          750,
+          750,
+          750,
+          750
+        ]
+      },
+      "resolvedDescription": "Renekton dashes, dealing 40/70/100/130/160 (+90% bonus AD) physical damage. He generates 2 Fury per non-champion and 10 Fury per champion hit. Hitting at least one enemy allows Renekton to Recast this Ability once for 4 seconds. Fury Bonus: The Recast dash deals 70/115/160/205/250 (+135% bonus AD) physical damage instead and removes 25/27.5/30/32.5/35% Armor for 4 seconds. Does not generate Fury.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Dominus",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "HealthGain": [
+          300,
+          500,
+          700
+        ],
+        "AuraDamagePerSecond": [
+          60,
+          150,
+          240
+        ],
+        "FuryPerSecond": [
+          5,
+          5,
+          5
+        ],
+        "FuryOnCast": [
+          20,
+          20,
+          20
+        ],
+        "BuffDuration": [
+          15,
+          15,
+          15
+        ],
+        "TickRate": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Renekton surrounds himself with dark energies for 15 seconds, gaining 300/500/700 max Health and 20 Fury. While active, he deals 60/150/240 (+10% AP) (+10% bonus AD) magic damage and gains 5 Fury per second.",
+      "unresolved": []
+    }
+  }
+}

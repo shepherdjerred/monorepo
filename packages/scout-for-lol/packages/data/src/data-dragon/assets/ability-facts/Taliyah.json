@@ -1,0 +1,369 @@
+{
+  "championKey": "Taliyah",
+  "championName": "Taliyah",
+  "abilities": {
+    "passive": {
+      "name": "Rock Surfing",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "FallOffTime": [
+          3
+        ]
+      },
+      "resolvedDescription": "Taliyah gains Move Speed near walls.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Threaded Volley",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        55,
+        60,
+        65,
+        70,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "WorkedGroundCDR": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MinimumWorkedGroundCD": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BigRockDamageMult": [
+          1.8,
+          1.8,
+          1.8,
+          1.8,
+          1.8
+        ],
+        "BaseDamage": [
+          55,
+          72.5,
+          90,
+          107.5,
+          125
+        ],
+        "ExtraMissileReducedDamagePercent": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "MonsterBonusFlatDamage": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "SlowPercent": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MonsterStunDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AoERadius": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "AoERadiusBig": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "GroundExhaustDuration": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "BigRockManaCost": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "GroundExhaustRadius": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Taliyah hurls 5 rocks, each dealing 55/72.5/90/107.5/125 (+50% AP) magic damage in an area around the first enemy hit while creating Worked Ground at that area. Subsequent hits against the same enemy deal 60% less damage. Casts on worked ground cost 10 Mana and have 50% less Cooldown, consume the Worked Ground, and hurl a boulder that Slows enemies it hits by 20/25/30/35/40% for 1.5 seconds, dealing 99/130.5/162/193.49999/224.99999 (+90% AP) magic damage to the primary target. Monsters hit by the boulder are Stunned for 3 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Seismic Shove",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12.5,
+        11,
+        9.5,
+        8
+      ],
+      "costByRank": [
+        40,
+        30,
+        20,
+        10,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "KnockupDelay": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ThrowDistance": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Taliyah quakes the earth, Knocking enemies in an area in the chosen direction.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Unraveled Earth",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          105,
+          150,
+          195,
+          240
+        ],
+        "BaseDetonationDamage": [
+          25,
+          40,
+          55,
+          70,
+          85
+        ],
+        "MonsterModPercent": [
+          2.25,
+          2.25,
+          2.25,
+          2.25,
+          2.25
+        ],
+        "StunDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MaxStunDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MineDamageFalloff": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "DelayBetweenRows": [
+          0.17,
+          0.17,
+          0.17,
+          0.17,
+          0.17
+        ],
+        "SlowPercent": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "MineLifetime": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MineRadius": [
+          85,
+          85,
+          85,
+          85,
+          85
+        ]
+      },
+      "resolvedDescription": "Taliyah scatters loose stones in an area, Slowing enemies hit by 20% and dealing 60/105/150/195/240 (+60% AP) magic damage. The stones detonate when enemies dash or are Knocked through them, Stunning for the remaining movement duration + 0.75 seconds and dealing 25/40/55/70/85 (+30% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Weaver's Wall",
+      "maxRank": 3,
+      "cooldownByRank": [
+        180,
+        150,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2500,
+        4500,
+        6500
+      ],
+      "dataValues": {
+        "DamageLockoutTime": [
+          3,
+          3,
+          3
+        ],
+        "MaxJumpRange": [
+          700,
+          700,
+          700
+        ],
+        "MinJumpRange": [
+          150,
+          150,
+          150
+        ],
+        "MaxJumpRangeOverWalls": [
+          1000,
+          1000,
+          1000
+        ],
+        "WallDuration": [
+          4,
+          4,
+          4
+        ],
+        "WallLength": [
+          2500,
+          4500,
+          6500
+        ],
+        "DCapPassive": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MissileSpeed": [
+          2000,
+          2000,
+          2000
+        ],
+        "ManaCost": [
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Taliyah creates a massive earthen wall for 4 seconds. If she immediately Recasts, she will ride along the wall as it unravels. Moving or being immobilized will end the ride. This ability cannot be cast if Taliyah has taken damage from Champions or structures within the last 3 seconds.",
+      "unresolved": []
+    }
+  }
+}

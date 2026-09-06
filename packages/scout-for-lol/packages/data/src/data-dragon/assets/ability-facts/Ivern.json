@@ -1,0 +1,330 @@
+{
+  "championKey": "Ivern",
+  "championName": "Ivern",
+  "abilities": {
+    "passive": {
+      "name": "Friend of the Forest",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "LevelForBuffShare": [
+          5
+        ],
+        "PickupDuration": [
+          60
+        ],
+        "KrugExperience": [
+          58
+        ],
+        "KrugGold": [
+          84
+        ],
+        "ModeSpeedOverride": [
+          1
+        ]
+      },
+      "resolvedDescription": "Ivern cannot attack or be attacked by non-epic monsters. Ivern can create magical groves on jungle camps which grow over time. When the grove is fully grown, Ivern may free the monsters to receive gold and experience.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Rootcaller",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1125,
+        1125,
+        1125,
+        1125,
+        1125
+      ],
+      "dataValues": {
+        "DashSpeed": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "BaseDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "RootDuration": [
+          1.6,
+          1.7,
+          1.8,
+          1.9,
+          2
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Ivern conjures a vine dealing 80/125/170/215/260 (+70% AP) magic damage and Rooting the first enemy hit for 1.6/1.7/1.8/1.9/2 seconds. Allies that Attack a Rooted enemy dash into Attack Range. Recast: Ivern dashes directly onto the Rooted enemy. Hitting non-epic monsters reduces Rootcaller's cooldown by 50%.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Brushmaker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "BuffDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AllyBuffDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseDamage": [
+          20,
+          27.5,
+          35,
+          42.5,
+          50
+        ],
+        "AllyBaseDamage": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "RevealDuration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "MaxBrushDuration": [
+          45,
+          45,
+          45,
+          45,
+          45
+        ],
+        "BrushRadius": [
+          190,
+          190,
+          190,
+          190,
+          190
+        ],
+        "BrushSpacing": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ]
+      },
+      "resolvedDescription": "Passive: While in brush and for 3 seconds after leaving, Ivern's Attacks deal an additional 20/27.5/35/42.5/50 (+20% AP) magic damage. Nearby allies will gain this effect for 1.5 seconds and deal 10/15/20/25/30 (+10% AP) magic damage. Active: Ivern grows a patch of Brush, revealing the area for 8 seconds. The Brush persists until Ivern's team loses vision within it, or up to 45 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Triggerseed",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "BaseShield": [
+          75,
+          115,
+          155,
+          195,
+          235
+        ],
+        "ShieldAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          70,
+          90,
+          110,
+          130,
+          150
+        ],
+        "DamageAPRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowAmount": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ShieldDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Ivern grants 75/115/155/195/235 (+50% AP) Shield to an ally champion or Daisy. After 2 seconds, it bursts, dealing 70/90/110/130/150 (+80% AP) magic damage and Slowing enemies by 40/45/50/55/60% for 2 seconds. If Triggerseed detonates and no enemy champions are hit while the shield still persists, the ally will be shielded for 75/115/155/195/235 (+50% AP) for 2 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Daisy!",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        130,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "SpawnBuffDuration": [
+          5,
+          5,
+          5
+        ],
+        "MSOnSpawn": [
+          40,
+          40,
+          40
+        ],
+        "DROnSpawn": [
+          25,
+          25,
+          25
+        ],
+        "DaisyAS": [
+          30,
+          45,
+          60
+        ],
+        "DaisyAD": [
+          70,
+          100,
+          130
+        ],
+        "DaisyAoeDR": [
+          25,
+          25,
+          25
+        ],
+        "DaisyDuration": [
+          45,
+          45,
+          45
+        ],
+        "ShockwaveBaseDamage": [
+          90,
+          140,
+          190
+        ],
+        "ShockwaveCCDuration": [
+          1,
+          1,
+          1
+        ],
+        "ShockwaveCD": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Ivern summons his sentinel friend Daisy to leap into the fray for 45 seconds. Daisy, Slam!: Daisy's 3rd consecutive Attack on the same champion or epic monster will launch a shockwave, dealing 90/140/190 (+50% AP) magic damage to all enemies hit as well as Knocking Up for 1 second. This effect can only occur once every 3 seconds. Recast: Instruct Daisy to Attack or move.",
+      "unresolved": []
+    }
+  }
+}

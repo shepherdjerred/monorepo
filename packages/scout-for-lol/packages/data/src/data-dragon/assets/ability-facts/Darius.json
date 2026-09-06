@@ -1,0 +1,248 @@
+{
+  "championKey": "Darius",
+  "championName": "Darius",
+  "abilities": {
+    "passive": {
+      "name": "Hemorrhage",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MonsterMod": [
+          2.5
+        ],
+        "SecondsPerTick": [
+          1.26
+        ],
+        "BleedDuration": [
+          5
+        ],
+        "MaxStacks": [
+          5
+        ]
+      },
+      "resolvedDescription": "Darius' attacks and damaging abilities cause enemies to bleed for physical damage over 5 seconds, stacking up to 5 times. Darius enrages and gains massive Attack Damage when his target reaches max stacks.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Decimate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        25,
+        30,
+        35,
+        40,
+        45
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "dataValues": {
+        "MissingHealthHeal": [
+          17,
+          17,
+          17,
+          17,
+          17
+        ],
+        "TotalADRatio": [
+          100,
+          110,
+          120,
+          130,
+          140
+        ],
+        "BaseDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ],
+        "InnerCircleDamagePercent": [
+          35,
+          35,
+          35,
+          35,
+          35
+        ],
+        "MissingHealPercent": [
+          51,
+          51,
+          51,
+          51,
+          51
+        ]
+      },
+      "resolvedDescription": "Darius hefts his axe then swings it around, dealing {{ bladedamage }} physical damage with the edge and {{ handledamage }} damage with the handle. Enemies hit with the handle do not take a Hemorrhage stack. Darius restores 17% missing Health per enemy champion and large jungle monster hit with the edge, up to a max of 51%.",
+      "unresolved": [
+        "bladedamage",
+        "handledamage"
+      ]
+    },
+    "W": {
+      "name": "Crippling Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "SlowPercent": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ],
+        "PercentCDRefund": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "ADRatio": [
+          1.4,
+          1.45,
+          1.5,
+          1.55,
+          1.6
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Darius' next Attack deals {{ empoweredattackdamage }} physical damage and Slows by 90% for 1 second. This Ability refunds its Mana cost and reduces its Cooldown by 50% if it kills the target. This Ability triggers spell effects upon dealing damage.",
+      "unresolved": [
+        "empoweredattackdamage"
+      ]
+    },
+    "E": {
+      "name": "Apprehend",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        23.5,
+        21,
+        18.5,
+        16
+      ],
+      "costByRank": [
+        70,
+        60,
+        50,
+        40,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        535,
+        535,
+        535,
+        535,
+        535
+      ],
+      "dataValues": {
+        "PassivePercentArmorPen": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "SlowPercent": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Passive: Darius gains 20/25/30/35/40% Armor Penetration. Active: Darius hooks with his axe, Pulling, and Knocking Up and Slowing by 40% for 1 second.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Noxian Guillotine",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        460,
+        460,
+        460
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          125,
+          250,
+          375
+        ],
+        "RDamagePercentPerHemoStack": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "RRecastDuration": [
+          20,
+          20,
+          20
+        ]
+      },
+      "resolvedDescription": "Darius leaps to an enemy and strikes a lethal blow, dealing 125/250/375 (+75% bonus AD) true damage. For each Hemorrhage on the target, this Ability deals an additional 20% damage, up to a max of 250/500/750 (+150% bonus AD) damage. If this kills the target, Darius may Recast this Ability once within 20 seconds. At rank 3, this Ability has no Mana cost and kills refresh the Cooldown completely.",
+      "unresolved": []
+    }
+  }
+}

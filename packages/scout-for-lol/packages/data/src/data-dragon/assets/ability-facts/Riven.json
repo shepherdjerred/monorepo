@@ -1,0 +1,215 @@
+{
+  "championKey": "Riven",
+  "championName": "Riven",
+  "abilities": {
+    "passive": {
+      "name": "Runic Blade",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Charges": [
+          3
+        ],
+        "TowerRatio": [
+          0.5
+        ],
+        "MonsterBonusDamage": [
+          50
+        ]
+      },
+      "resolvedDescription": "Riven's abilities charge her blade, and her basic attacks expend charges to deal an additional damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Broken Wings",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        13,
+        13,
+        13,
+        13
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        275,
+        275,
+        275,
+        275,
+        275
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          45,
+          75,
+          105,
+          135,
+          165
+        ],
+        "ADRatio": [
+          0.6,
+          0.65,
+          0.7,
+          0.75,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Riven dashes forward, dealing 45/75/105/135/165 (+60/65/70/75/80% bonus AD) physical damage. She can Recast this Ability twice. The first Recast is the same as the original, but the second has a different effect: Recast: Riven leaps forward and slams, dealing 45/75/105/135/165 (+60/65/70/75/80% bonus AD) physical damage and Knocks Up nearby enemies for 0.75 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ki Burst",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        260,
+        260,
+        260,
+        260,
+        260
+      ],
+      "dataValues": {
+        "StunDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseDamage": [
+          65,
+          95,
+          125,
+          155,
+          185
+        ]
+      },
+      "resolvedDescription": "Riven's sword emits a burst of runic energy, dealing 65/95/125/155/185 (+100% bonus AD) physical damage and Stunning for 0.75 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Valor",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        250,
+        250,
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "ShieldAmount": [
+          70,
+          95,
+          120,
+          145,
+          170
+        ],
+        "BaseShieldAmount": [
+          70,
+          95,
+          120,
+          145,
+          170
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Riven quickly dashes and gains 70/95/120/145/170 (+110% bonus AD) Shield for 1.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Blade of the Exile",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        90,
+        60
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        200,
+        200,
+        200
+      ],
+      "dataValues": {
+        "MinBase": [
+          100,
+          150,
+          200
+        ],
+        "MaxBase": [
+          300,
+          450,
+          600
+        ],
+        "Duration": [
+          15,
+          15,
+          15
+        ],
+        "PercentBonusAD": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "TooltipAttackRange": [
+          75,
+          75,
+          75
+        ]
+      },
+      "resolvedDescription": "Riven's weapon surges with spiritual energy, granting her 20% AD Attack Damage and increased range on damaging Abilities and Attacks for 15 seconds. While active, she can Recast. Recast: Riven fires a wind slash that deals between 100/150/200 (+55% bonus AD) and 300/450/600 (+165% bonus AD) physical damage, based on their missing Health.",
+      "unresolved": []
+    }
+  }
+}

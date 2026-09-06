@@ -1,0 +1,238 @@
+{
+  "championKey": "Jayce",
+  "championName": "Jayce",
+  "abilities": {
+    "passive": {
+      "name": "Hextech Capacitor",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "FlatMovementSpeed": [
+          30
+        ],
+        "MovementSpeedDuration": [
+          0.75
+        ]
+      },
+      "resolvedDescription": "When Jayce swaps weapons he gains Move Speed for a short duration.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "To the Skies! / Shock Blast",
+      "maxRank": 6,
+      "cooldownByRank": [
+        16,
+        14,
+        12,
+        10,
+        8,
+        6
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          110,
+          160,
+          210,
+          260,
+          310
+        ],
+        "Slow": [
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5,
+          -0.55,
+          -0.6
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MonsterBonusDamage": [
+          10,
+          10,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "resolvedDescription": "Mercury Hammer: Jayce leaps to an enemy, dealing 60/110/160/210/260/310 (+135% bonus AD) physical damage to surrounding enemies and Slowing them by 35/40/45/50/55/60% for 2 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Lightning Field / Hyper Charge",
+      "maxRank": 6,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        285,
+        285,
+        285,
+        285,
+        285,
+        285
+      ],
+      "dataValues": {
+        "ManaGain": [
+          15,
+          17,
+          19,
+          21,
+          23,
+          25
+        ],
+        "BaseDamage": [
+          140,
+          200,
+          260,
+          320,
+          380,
+          440
+        ],
+        "Duration": [
+          4,
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Mercury Hammer - Passive: Jayce's Hammer Attacks grant 15/17/19/21/23/25 Mana. Mercury Hammer - Active: Jayce creates an electric aura dealing 140/200/260/320/380/440 (+100% AP) magic damage over 4 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Thundering Blow / Acceleration Gate",
+      "maxRank": 6,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12,
+        10
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        240,
+        240,
+        240,
+        240,
+        240,
+        240
+      ],
+      "dataValues": {
+        "MonsterCap": [
+          200,
+          300,
+          400,
+          500,
+          600,
+          700
+        ],
+        "PercHPDamage": [
+          0.08,
+          0.108,
+          0.136,
+          0.164,
+          0.192,
+          0.22
+        ],
+        "KnockbackDistance": [
+          600,
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "KnockbackDuration": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Hammer Form: Jayce swings his hammer, Knocking Back his target and dealing 100% bonus AD plus 8/10.8/13.6/16.4/19.2/22% max Health magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Mercury Cannon / Mercury Hammer",
+      "maxRank": 1,
+      "cooldownByRank": [
+        6
+      ],
+      "costByRank": [
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        600
+      ],
+      "dataValues": {
+        "RangedFormRangeIncrease": [
+          375
+        ],
+        "ShredDuration": [
+          5
+        ],
+        "ADRatio": [
+          0.3
+        ]
+      },
+      "resolvedDescription": "Mercury Hammer: Jayce transforms his weapon into the Mercury Cannon, gaining Attack Range and new Abilities. Jayce's next Attack removes 20-35% (based on level) Armor and Magic Resist for 5 seconds.",
+      "unresolved": []
+    }
+  }
+}

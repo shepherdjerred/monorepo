@@ -1,0 +1,305 @@
+{
+  "championKey": "KogMaw",
+  "championName": "Kog'Maw",
+  "abilities": {
+    "passive": {
+      "name": "Icathian Surprise",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TooltipPassiveMS": [
+          0.5
+        ],
+        "TooltipPassiveDuration": [
+          4
+        ]
+      },
+      "resolvedDescription": "4 seconds after dying, Kogmaw explodes, dealing true damage to surrounding enemies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Caustic Spittle",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1175,
+        1175,
+        1175,
+        1175,
+        1175
+      ],
+      "dataValues": {
+        "AttackSpeed": [
+          0.05,
+          0.1,
+          0.15,
+          0.2,
+          0.25
+        ],
+        "BaseDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "APRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "ShredAmount": [
+          16,
+          20,
+          24,
+          28,
+          32
+        ],
+        "ShredDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Passive: Kog'Maw gains 5/10/15/20/25% Attack Speed. Active: Kog'Maw vomits a corrosive projectile that deals 80/125/170/215/260 (+90% AP) magic damage to the first enemy hit and shreds 16/20/24/28/32% Armor and Magic Resist for 4 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Bio-Arcane Barrage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        17,
+        17,
+        17,
+        17,
+        17
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        530,
+        530,
+        530,
+        530,
+        530
+      ],
+      "dataValues": {
+        "MaxHealthDamage": [
+          3,
+          3.75,
+          4.5,
+          5.25,
+          6
+        ],
+        "APRatio": [
+          0.015,
+          0.015,
+          0.015,
+          0.015,
+          0.015
+        ],
+        "Range": [
+          130,
+          150,
+          170,
+          190,
+          210
+        ],
+        "Duration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "MonsterDamageCap": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Kog'Maw gains 130/150/170/190/210 Attack Range and his Attacks deal an additional {{ totalhealthdamage }} max Health magic damage %i:OnHit% On-Hit for 8 seconds.",
+      "unresolved": [
+        "totalhealthdamage"
+      ]
+    },
+    "E": {
+      "name": "Void Ooze",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        40,
+        55,
+        70,
+        85,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "APRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "SlowAmount": [
+          40,
+          45,
+          50,
+          55,
+          60
+        ],
+        "TrailDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Kog'Maw spits bile, dealing 70/110/150/190/230 (+65% AP) magic damage and leaving a trail of ooze for 3 seconds. Enemies in the ooze are Slowed by 40/45/50/55/60%.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Living Artillery",
+      "maxRank": 3,
+      "cooldownByRank": [
+        2,
+        1.5,
+        1
+      ],
+      "costByRank": [
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1300,
+        1550,
+        1800
+      ],
+      "dataValues": {
+        "Damage": [
+          100,
+          140,
+          180
+        ],
+        "ManaCostDuration": [
+          8,
+          8,
+          8
+        ],
+        "Range": [
+          130,
+          155,
+          180
+        ],
+        "BaseCost": [
+          40,
+          40,
+          40
+        ],
+        "ManaCostCap": [
+          400,
+          400,
+          400
+        ],
+        "VisionDebuffDuration": [
+          2,
+          2,
+          2
+        ],
+        "FinalDamageMult": [
+          2,
+          2,
+          2
+        ],
+        "MaxExtraCost": [
+          360,
+          360,
+          360
+        ],
+        "VisionRadius": [
+          400,
+          400,
+          400
+        ],
+        "MidDamageMult": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "TooltipMissingHealthDamageAmp": [
+          0.83333,
+          0.83333,
+          0.83333
+        ],
+        "APRatio": [
+          0.35,
+          0.4,
+          0.45
+        ]
+      },
+      "resolvedDescription": "Kog'Maw shoots acid at an area, dealing 100/140/180 (+35/40/45% AP) (+75% bonus AD) plus 0.83333% per 1% missing Health magic damage and revealing enemies hit for 2 seconds. Enemies below 40% Health instead take 200/280/360 (+70/80/90% AP) (+150% bonus AD) magic damage. Subsequent shots within 8 seconds cost an additional 40 Mana (max: 400 Mana).",
+      "unresolved": []
+    }
+  }
+}

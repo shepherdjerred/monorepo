@@ -1,0 +1,250 @@
+{
+  "championKey": "Caitlyn",
+  "championName": "Caitlyn",
+  "abilities": {
+    "passive": {
+      "name": "Headshot",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CriticalStrikeScaling": [
+          1
+        ],
+        "TowerCap": [
+          2.5
+        ],
+        "AttacksPerHeadshot": [
+          5
+        ],
+        "BrushStackBonus": [
+          1
+        ]
+      },
+      "resolvedDescription": "Every few basic attacks, or against a target she has trapped or netted, Caitlyn will fire a headshot dealing bonus damage that scales with her critical strike chance. On trapped or netted targets, Caitlyn's Headshot attack range is doubled.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Piltover Peacemaker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        55,
+        60,
+        65,
+        70,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1250,
+        1250,
+        1250,
+        1250,
+        1250
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          90,
+          130,
+          170,
+          210
+        ],
+        "SecondaryMult": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "tADRatio": [
+          1.25,
+          1.45,
+          1.65,
+          1.85,
+          2.05
+        ]
+      },
+      "resolvedDescription": "Caitlyn revs her rifle to fire a piercing shot dealing {{ initialdamage }} physical damage. After the bolt strikes the first target, it opens into a wider shot that deals {{ secondarydamage }} physical damage. Enemies revealed by Yordle Snap Trap always take full damage.",
+      "unresolved": [
+        "initialdamage",
+        "secondarydamage"
+      ]
+    },
+    "W": {
+      "name": "Yordle Snap Trap",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          35,
+          80,
+          125,
+          170,
+          215
+        ],
+        "ADRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "TrapDuration": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "MaximumTraps": [
+          3,
+          3,
+          4,
+          4,
+          5
+        ],
+        "RootDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MaximumCharges": [
+          3,
+          3,
+          4,
+          4,
+          5
+        ]
+      },
+      "resolvedDescription": "Caitlyn sets a trap that Roots the first champion that steps on it for 1.5 seconds and granting True Sight of them for 3 seconds. Traps last for 30/35/40/45/50 seconds, and 3/3/4/4/5 traps may be active at once. This Ability has 3/3/4/4/5 charges ({{ ammorechargetime }} second refresh). Targets rooted by this Ability take an additional 35/80/125/170/215 (+30% bonus AD) physical damage from Headshot.",
+      "unresolved": [
+        "ammorechargetime"
+      ]
+    },
+    "E": {
+      "name": "90 Caliber Net",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14,
+        12,
+        10,
+        8
+      ],
+      "costByRank": [
+        75,
+        75,
+        75,
+        75,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "Damage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowAmount": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ]
+      },
+      "resolvedDescription": "Caitlyn fires a net, pushing her backwards. The net Slows the first target hit by 50% for 1 second and deals 80/130/180/230/280 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Ace in the Hole",
+      "maxRank": 3,
+      "cooldownByRank": [
+        90,
+        90,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        3500,
+        3500,
+        3500
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          300,
+          475,
+          650
+        ],
+        "RADRatio": [
+          1,
+          1,
+          1
+        ],
+        "CriticalStrikeModifier": [
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Caitlyn takes a moment to channel and line up the perfect shot, then she fires, dealing {{ rtotaldamage }} physical damage, but other enemy champions can intercept it. This Ability grants True Sight of the target during the channel. Damage scales with Caitlyn's Critical Strike chance and Critical Strike Damage.",
+      "unresolved": [
+        "rtotaldamage"
+      ]
+    }
+  }
+}

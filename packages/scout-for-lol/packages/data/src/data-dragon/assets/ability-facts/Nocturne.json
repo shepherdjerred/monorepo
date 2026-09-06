@@ -1,0 +1,276 @@
+{
+  "championKey": "Nocturne",
+  "championName": "Nocturne",
+  "abilities": {
+    "passive": {
+      "name": "Umbra Blades",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AACDR": [
+          1
+        ],
+        "AAChampMonsterCDR": [
+          3
+        ],
+        "Cooldown": [
+          12
+        ],
+        "Radius": [
+          360
+        ],
+        "DamageMinionMod": [
+          0.5
+        ],
+        "HealMinionMod": [
+          0.5
+        ],
+        "HealingAPRatio": [
+          0.3
+        ],
+        "HealLevel1Value": [
+          13
+        ],
+        "HealLevel18Value": [
+          32
+        ],
+        "TotalDamageNoCritADRatio": [
+          1.2
+        ],
+        "TotalDamageCritADRatio": [
+          1.1
+        ]
+      },
+      "resolvedDescription": "Every few seconds, Nocturne's next attack strikes surrounding enemies for bonus physical damage and heals himself. Nocturne's basic attacks reduce this cooldown.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Duskbringer",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1125,
+        1125,
+        1125,
+        1125,
+        1125
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          65,
+          105,
+          145,
+          185,
+          225
+        ],
+        "MoveSpeed": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "BonusTrailAD": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "TrailDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Nocturne throws a shadow blade, dealing 65/105/145/185/225 (+85% bonus AD) physical damage and leaving a dusk trail for 5 seconds. Enemy champions hit also leave a trail. While on the trail, Nocturne is Ghosted and gains 20/25/30/35/40% Move Speed and 15/25/35/45/55 Attack Damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Shroud of Darkness",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "ActiveAS": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "PassiveAS": [
+          0.3,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DoubleASDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Passive: Nocturne gains 30/35/40/45/50% Attack Speed. Active: Nocturne creates a shadow barrier for 1.5 seconds that blocks the next enemy Ability. If an Ability is blocked, this Ability's passive effect is increased to 60/70/80/90/100% Attack Speed for 5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Unspeakable Horror",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        425,
+        425,
+        425,
+        425,
+        425
+      ],
+      "dataValues": {
+        "TooltipFearMS": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "DamageToDeal": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "CCDuration": [
+          1.25,
+          1.5,
+          1.75,
+          2,
+          2.25
+        ],
+        "LeashDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "LeashBreakRange": [
+          465,
+          465,
+          465,
+          465,
+          465
+        ]
+      },
+      "resolvedDescription": "Passive: Nocturne gains 90% Move Speed toward Feared enemies. Active: Nocturne plants a nightmare tether into his target, dealing 80/125/170/215/260 (+100% AP) magic damage over 2 seconds. If the tether remains unbroken, the target is Feared for 1.25/1.5/1.75/2/2.25 second(s).",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Paranoia",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        115,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2500,
+        3250,
+        4000
+      ],
+      "dataValues": {
+        "ParanoiaDuration": [
+          6,
+          6,
+          6
+        ],
+        "TrackDistance": [
+          3500,
+          4250,
+          5000
+        ],
+        "BaseDamage": [
+          150,
+          275,
+          400
+        ],
+        "DashSpeed": [
+          1800,
+          1800,
+          1800
+        ]
+      },
+      "resolvedDescription": "Nocturne darkens the map, reducing the sight radius of all enemy champions and removing their vision of allies for 6 seconds. Nocturne can Recast this Ability during the duration to launch himself at an enemy champion dealing 150/275/400 (+120% bonus AD) physical damage.",
+      "unresolved": []
+    }
+  }
+}

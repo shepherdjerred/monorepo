@@ -1,0 +1,264 @@
+{
+  "championKey": "Kaisa",
+  "championName": "Kai'Sa",
+  "abilities": {
+    "passive": {
+      "name": "Second Skin",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PCoefficient": [
+          0.25
+        ],
+        "PMaxStacks": [
+          4
+        ],
+        "PDuration": [
+          4
+        ],
+        "PDamageCap": [
+          400
+        ],
+        "PAPRatioBase": [
+          0.12
+        ],
+        "PAPRatioPerStack": [
+          0.03
+        ],
+        "PExecuteRatio": [
+          0.15
+        ],
+        "PAllyStacks": [
+          1
+        ],
+        "PExecuteAPRatio": [
+          0.0006
+        ],
+        "PTotalDamageMultiplier_ForModesBalance": [
+          1
+        ]
+      },
+      "resolvedDescription": "Kai'Sa's basic attacks stack Plasma, dealing increasing bonus magic damage. Allies' immobilizing effects help stack Plasma. Additionally, Kai'Sa's item purchases upgrade her basic spells to have more powerful properties.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Icathian Rain",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "MaxDamage": [
+          90,
+          123.75,
+          157.5,
+          191.25,
+          225
+        ],
+        "MaxDamageNL": [
+          123.75,
+          157.5,
+          191.25,
+          225,
+          258.75
+        ],
+        "MaxDamageEvolved": [
+          150,
+          206.25,
+          262.5,
+          318.75,
+          375
+        ],
+        "MaxDamageEvolvedNL": [
+          206.25,
+          262.5,
+          318.75,
+          375,
+          431.25
+        ],
+        "BonusADRatio": [
+          0.55,
+          0.55,
+          0.55,
+          0.55,
+          0.55
+        ],
+        "APRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "BaseDamage": [
+          40,
+          55,
+          70,
+          85,
+          100
+        ],
+        "ExtraHitReduction": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MinionDamageMultiplier": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MinionHPThreshold": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Kai'Sa launches 6 missiles that split among nearby enemies, each dealing 40/55/70/85/100 (+55% bonus AD) (+20% AP) physical damage, up to a maximum of {{ maxdamagedisplay }}. Additional missile hits on champions or monsters deal 25% damage. Evolved: Kai'Sa instead fires 12 missiles. Current: {{ f11.1 }}/100 Bonus Attack Damage",
+      "unresolved": [
+        "maxdamagedisplay",
+        "f11.1"
+      ]
+    },
+    "W": {
+      "name": "Void Seeker",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18.5,
+        17,
+        15.5,
+        14
+      ],
+      "costByRank": [
+        55,
+        60,
+        65,
+        70,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        3000,
+        3000,
+        3000,
+        3000,
+        3000
+      ],
+      "dataValues": {},
+      "resolvedDescription": "Kai'Sa fires a void blast that deals 30/55/80/105/130 (+130% AD) (+45% AP) magic damage, applies 2 stacks of Plasma, and grants True Sight of the first enemy hit for {{ spell.kaisapassive:pduration }} seconds. Evolved: Kai'Sa instead applies 3 stacks of Plasma and hitting a champion reduces the Cooldown by 75%. Current: {{ f2.1 }}/100 Ability Power",
+      "unresolved": [
+        "spell.kaisapassive:pduration",
+        "f2.1"
+      ]
+    },
+    "E": {
+      "name": "Supercharge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "dataValues": {},
+      "resolvedDescription": "Kai'Sa supercharges her void energy, gaining {{ totalmovespeed }} Move Speed and becoming Ghosted while charging, then gaining 40/50/60/70/80% Attack Speed for 4 seconds. Attacks reduce this Ability's Cooldown by 0.5 seconds. Evolved: Kai'Sa also becomes Invisible for 0.5 seconds. Current: {{ f10.1 }}%/100% Bonus Attack Speed",
+      "unresolved": [
+        "totalmovespeed",
+        "f10.1"
+      ]
+    },
+    "R": {
+      "name": "Killer Instinct",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        100,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2000,
+        2500,
+        3000
+      ],
+      "dataValues": {
+        "RBaseValue": [
+          100,
+          150,
+          200
+        ],
+        "RRange": [
+          2000,
+          2500,
+          3000
+        ],
+        "RShieldDuration": [
+          2,
+          2,
+          2
+        ],
+        "RTotalADRatio": [
+          0.9,
+          1.35,
+          1.8
+        ],
+        "RAPRatio": [
+          1.2,
+          1.2,
+          1.2
+        ]
+      },
+      "resolvedDescription": "Kai'Sa warps near an enemy champion affected by Plasma and gains 100/150/200 (+90/135/180% AD) (+120% AP) Shield for 2 seconds.",
+      "unresolved": []
+    }
+  }
+}

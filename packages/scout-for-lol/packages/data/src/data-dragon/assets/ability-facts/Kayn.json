@@ -1,0 +1,390 @@
+{
+  "championKey": "Kayn",
+  "championName": "Kayn",
+  "abilities": {
+    "passive": {
+      "name": "The Darkin Scythe",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TransformationVariable": [
+          0.6
+        ],
+        "PAmpCooldownAss": [
+          8
+        ],
+        "PAmpDurationAss": [
+          3
+        ],
+        "PAmpPercentBaseAss": [
+          18.823
+        ],
+        "PAmpPercentPerLvlAss": [
+          1.1777
+        ],
+        "BonusHealRatio": [
+          0.00005
+        ],
+        "SlayerHealing": [
+          0.25
+        ],
+        "PassiveSecondFormDelayTooltip": [
+          4
+        ],
+        "KaynAssMinValue": [
+          0.2
+        ],
+        "KaynAssMaxValue": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "Kayn wields an ancient weapon and fights Rhaast, the darkin within it, for control. Either the Darkin will triumph, or Kayn will master Rhaast and become the Shadow Assassin. Darkin: Heal for a percentage of spell damage dealt to champions. Shadow Assassin: For the first few seconds in combat with enemy champions, deal bonus damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Reaping Slash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "SlayerBaseMaxHPDamage": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "SlayerMaxHPPer100BAD": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "SlayerMaxHPPer100BADTOOLTIPONLY": [
+          0.035,
+          0.035,
+          0.035,
+          0.035,
+          0.035
+        ],
+        "BonusADRatio": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "BaseDamage": [
+          75,
+          105,
+          135,
+          165,
+          195
+        ],
+        "SlayTADRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "MaxDmgToMonsters": [
+          200,
+          250,
+          300,
+          350,
+          400
+        ],
+        "FlatBonusDmgToMonsters": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "AoERadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ]
+      },
+      "resolvedDescription": "Kayn dashes then spins his scythe, dealing 75/105/135/165/195 (+85% bonus AD) physical damage to enemies he passes through, then deals the damage again to nearby enemies. Darkin Slayer: Instead deal 65% AD plus {{ darkinpercentdamage }} max Health physical damage.",
+      "unresolved": [
+        "darkinpercentdamage"
+      ]
+    },
+    "W": {
+      "name": "Blade's Reach",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          85,
+          130,
+          175,
+          220,
+          265
+        ],
+        "KnockupDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowIntensity": [
+          -0.9,
+          -0.9,
+          -0.9,
+          -0.9,
+          -0.9
+        ],
+        "BoxWidth": [
+          160,
+          160,
+          160,
+          160,
+          160
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AssRange": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ]
+      },
+      "resolvedDescription": "Kayn swipes his scythe upward, dealing 85/130/175/220/265 (+110% bonus AD) physical damage and Slowing enemies hit by 90%, decaying over 1.5 seconds. Shadow Assassin: Kayn can move while using this Ability and increases its range. Darkin Slayer: Additionally Knocks Up enemies hit for 1 second.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Shadow Step",
+      "maxRank": 5,
+      "cooldownByRank": [
+        21,
+        19,
+        17,
+        15,
+        13
+      ],
+      "costByRank": [
+        90,
+        90,
+        90,
+        90,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "AssassinCDReduction": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "AssMS": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ],
+        "MS": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "WallWalkDuration": [
+          7,
+          7.5,
+          8,
+          8.5,
+          9
+        ],
+        "LingerTime": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "WarningParticleRange": [
+          1250,
+          1250,
+          1250,
+          1250,
+          1250
+        ],
+        "MaxInCombatTime": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "HealAmount": [
+          90,
+          100,
+          110,
+          120,
+          130
+        ],
+        "HealBADRatio": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ]
+      },
+      "resolvedDescription": "Kayn gains 40% Move Speed, becomes Ghosted, and can move through Terrain for 7/7.5/8/8.5/9 seconds. When he first enters terrain, he restores 90/100/110/120/130 (+45% bonus AD) Health. Being Immobilized and spending more than 1.5 consecutive seconds outside of Terrain ends this Ability early. Shadow Assassin: Gain 70% Move Speed, Slow immunity, and reduce the Cooldown to 10 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Umbral Trespass",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "MinimumInfestTime": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "InfestDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "JumpOutDistance": [
+          300,
+          300,
+          300
+        ],
+        "SlayerMaxHPBaseDamage": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "SlayerMaxHPDamagerPer100AD": [
+          0.001,
+          0.001,
+          0.001
+        ],
+        "SlayerHealPercent": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "AssassinCastRange": [
+          750,
+          750,
+          750
+        ],
+        "BaseCastRange": [
+          550,
+          550,
+          550
+        ],
+        "AssassinJumpOutDistance": [
+          500,
+          500,
+          500
+        ],
+        "AssCastRange": [
+          750,
+          750,
+          750
+        ]
+      },
+      "resolvedDescription": "Passive: Champions damaged by Kayn are marked for 3.15 seconds. Kayn infests a marked enemy, becoming Untargetable. After 2.5 seconds or after Recasting, Kayn bursts out, dealing 150/250/350 (+150% bonus AD) physical damage to the enemy. Shadow Assassin: Increases this Ability's range, the distance Kayn exits, and refreshes The Darkin Scythe's Cooldown on exit. Darkin Slayer: Instead deals {{ slayerdamage }} max Health physical damage and restores {{ healvalue }} Health (75% damage amount).",
+      "unresolved": [
+        "slayerdamage",
+        "healvalue"
+      ]
+    }
+  }
+}

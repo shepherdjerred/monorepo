@@ -1,0 +1,214 @@
+{
+  "championKey": "JarvanIV",
+  "championName": "Jarvan IV",
+  "abilities": {
+    "passive": {
+      "name": "Martial Cadence",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaximumCadenceDamage": [
+          400
+        ],
+        "MinimumCadenceDamage": [
+          20
+        ],
+        "TooltipCurrentHealthDamage": [
+          0.08
+        ]
+      },
+      "resolvedDescription": "Jarvan's first basic attack on an enemy deals bonus physical damage based on their current Health. This effect cannot occur again on the same enemy for a few seconds.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Dragon Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        770,
+        770,
+        770,
+        770,
+        770
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          90,
+          130,
+          170,
+          210,
+          250
+        ],
+        "BaseARShred": [
+          0.1,
+          0.14,
+          0.18,
+          0.22,
+          0.26
+        ]
+      },
+      "resolvedDescription": "Jarvan extends his lance, dealing 90/130/170/210/250 (+145% bonus AD) physical damage and removing 10/14/18/22/26% Armor for 3 seconds. If the lance connects with Demacian Standard, Jarvan will pull himself to it, Knocking Up those in his path for 0.75 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Golden Aegis",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "BaseSlowAmount": [
+          0.15,
+          0.2,
+          0.25,
+          0.3,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Jarvan summons an aegis, Slowing nearby enemies by 15/20/25/30/35% for 2 seconds and granting him a 60/80/100/120/140 (+70% bonus AD) Shield, increased by 1.3% max Health for each enemy champion hit.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Demacian Standard",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        860,
+        860,
+        860,
+        860,
+        860
+      ],
+      "dataValues": {
+        "EDashSpeed": [
+          1400,
+          1400,
+          1400,
+          1400,
+          1400
+        ],
+        "EBehindJarvanCheck": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "EKnockUpAoE": [
+          180,
+          180,
+          180,
+          180,
+          180
+        ],
+        "PermanentAttackSpeed": [
+          0.2,
+          0.225,
+          0.25,
+          0.275,
+          0.3
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "BaseAuraAS": [
+          0.2,
+          0.225,
+          0.25,
+          0.275,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Passive: Jarvan gains 20/22.5/25/27.5/30% Attack Speed. Active: Jarvan throws a standard into the ground, dealing 80/120/160/200/240 (+80% AP) magic damage and granting allies near the standard 20/22.5/25/27.5/30% Attack Speed for 8 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Cataclysm",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          325,
+          450
+        ],
+        "WallDuration": [
+          3.5,
+          3.5,
+          3.5
+        ]
+      },
+      "resolvedDescription": "Jarvan heroically leaps to an enemy Champion, dealing 200/325/450 (+180% bonus AD) physical damage to them and surrounding enemies and creating an arena of impassable terrain around them for 3.5 seconds. Jarvan can Recast to collapse the terrain.",
+      "unresolved": []
+    }
+  }
+}

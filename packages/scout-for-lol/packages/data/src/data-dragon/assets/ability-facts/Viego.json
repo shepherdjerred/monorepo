@@ -1,0 +1,433 @@
+{
+  "championKey": "Viego",
+  "championName": "Viego",
+  "abilities": {
+    "passive": {
+      "name": "Sovereign's Domination",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MoveSpeedPercent": [
+          0.1
+        ],
+        "TransformDuration": [
+          10
+        ],
+        "BaseHealPercent": [
+          2
+        ],
+        "TakedownWindow": [
+          3
+        ],
+        "InvulnTimeWhileAttackingSoul": [
+          1
+        ],
+        "SoulDuration": [
+          8
+        ]
+      },
+      "resolvedDescription": "Enemies who fall before Viego become wraiths. By attacking a wraith, Viego temporarily seizes control of the dead enemy's body, healing for a percentage of his target's max health and gaining access to their basic abilities and items. He replaces their Ultimate with a free cast of his own.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Blade of the Ruined King",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        4.5,
+        4,
+        3.5,
+        3
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "Damage": [
+          25,
+          40,
+          55,
+          70,
+          85
+        ],
+        "ActiveADRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "ActiveCritMod": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "PercentHealthOnHit": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "MinDamageOnHit": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "MonsterCapOnHit": [
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "RectangleRange": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "RectangleWidth": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "HealModVsMinions": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "HealModVsMonsters": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "HealModVsChamps": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MarkDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "HealthCritMod": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "SecondAttackAPRatio": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ]
+      },
+      "resolvedDescription": "Passive: Viego's Attacks deal an additional 2/3/4/5/6% current Health physical damage. His first Attack against an enemy he has recently damaged with an Ability hits a second time, dealing 20% AD (+15% AP) physical damage and restoring 150% of damage dealt as Health. These bonuses are kept during Possession. Active: Viego stabs forward, dealing {{ totaldamage }} physical damage.",
+      "unresolved": [
+        "totaldamage"
+      ]
+    },
+    "W": {
+      "name": "Spectral Maw",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "Damage": [
+          80,
+          135,
+          190,
+          245,
+          300
+        ],
+        "StunMultPercent": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StunDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MaxStunTT": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "DashDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "DashSpeed": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "MinMissileRange": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MaxBonusMissileRange": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "SelfSlowPercent": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MaxChargeTime": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "CDWheninterrupted": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "APRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Viego begins gathering Mist, Slowing himself by 10%. Release: Viego dashes forward and hurls the gathered Mist. Deals 80/135/190/245/300 (+100% AP) magic damage and Stuns the first enemy hit for 0.25 to 1.25 seconds based on charge time.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Harrowed Path",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12,
+        10,
+        8,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "MistDuration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "MoveSpeed": [
+          0.25,
+          0.275,
+          0.3,
+          0.325,
+          0.35
+        ],
+        "AttackSpeed": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "CamoRadius": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "RestealthTime": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "RestealthTimeAfterHittingLargeMonster": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MSAPRatio": [
+          0.0004,
+          0.0004,
+          0.0004,
+          0.0004,
+          0.0004
+        ]
+      },
+      "resolvedDescription": "Viego sends forth a spectre to haunt the first terrain hit, surrounding it with Mist for 8 seconds. Viego gains Camouflage, {{ totalmovespeed }} Move Speed, and 30/35/40/45/50% Attack Speed while inside the Mist.",
+      "unresolved": [
+        "totalmovespeed"
+      ]
+    },
+    "R": {
+      "name": "Heartbreaker",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "MaxHealthDamage": [
+          12,
+          16,
+          20
+        ],
+        "SlowDuration": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowPercent": [
+          0.99,
+          0.99,
+          0.99
+        ],
+        "LockoutTime": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "KnockbackBonusRange": [
+          100,
+          100,
+          100
+        ],
+        "KnockbackSpeed": [
+          1000,
+          1000,
+          1000
+        ],
+        "KnockbackGravity": [
+          15,
+          15,
+          15
+        ],
+        "ADRatio": [
+          1.2,
+          1.2,
+          1.2
+        ],
+        "CritMod": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Viego discards any souls he is currently Possessing and teleports. On arrival he Attacks the champion with the lowest percent Health, briefly Slowing them by 99% and dealing {{ totaldamage }} + 12/16/20 (+5% bonus AD)% missing Health physical damage. Other nearby enemies are Knocked Back and take {{ totaldamage }} physical damage.",
+      "unresolved": [
+        "totaldamage",
+        "totaldamage"
+      ]
+    }
+  }
+}

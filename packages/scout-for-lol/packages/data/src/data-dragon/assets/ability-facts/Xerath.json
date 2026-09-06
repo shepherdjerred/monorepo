@@ -1,0 +1,310 @@
+{
+  "championKey": "Xerath",
+  "championName": "Xerath",
+  "abilities": {
+    "passive": {
+      "name": "Mana Surge",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CooldownKillRefund": [
+          3.5
+        ]
+      },
+      "resolvedDescription": "Xerath's basic attacks periodically restore Mana. Whenever Xerath kills a unit, this cooldown is reduced.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Arcanopulse",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        80,
+        90,
+        100,
+        110,
+        120
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          115,
+          155,
+          195,
+          235
+        ],
+        "ChargeTime": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "RectangleWidth": [
+          145,
+          145,
+          145,
+          145,
+          145
+        ],
+        "ManaRefundFail": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "StartingSelfSlow": [
+          -0.2,
+          -0.2,
+          -0.2,
+          -0.2,
+          -0.2
+        ],
+        "RampingSlow": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "StartRangePercent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RangeGrowthMult": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Xerath begins charging an arcane beam, Slowing himself gradually up to 50%. Release: Xerath fires the beam, dealing 75/115/155/195/235 (+90% AP) magic damage. The range increases with time charged.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Eye of Destruction",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        80,
+        90,
+        100,
+        110,
+        120
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          85,
+          120,
+          155,
+          190
+        ],
+        "SweetSpotMultiplier": [
+          1.667,
+          1.667,
+          1.667,
+          1.667,
+          1.667
+        ],
+        "SlowAmount": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SweetSpotSlowAmount": [
+          0.6,
+          0.65,
+          0.7,
+          0.75,
+          0.8
+        ],
+        "MultiplicativeSlowDecayRate": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "DamageDelay": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Xerath calls down a blast of arcane energy, dealing 50/85/120/155/190 (+65% AP) magic damage and Slowing them by 25% for 2.5 seconds. Enemies in the center take 83.35/141.695/200.04001/258.38501/316.73001 (+108.355% AP) magic damage instead and are Slowed by 60/65/70/75/80%, decaying over 2.5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Shocking Orb",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12.5,
+        12,
+        11.5,
+        11
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1050,
+        1050,
+        1050,
+        1050,
+        1050
+      ],
+      "dataValues": {
+        "MinStunDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MaxStunDuration": [
+          2.25,
+          2.25,
+          2.25,
+          2.25,
+          2.25
+        ],
+        "BaseDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "Range": [
+          1125,
+          1125,
+          1125,
+          1125,
+          1125
+        ],
+        "StunScaling_RoughAverageWillBeThisNumber_Every100RangeForTheAdditionalStun_AddedTo_5_": [
+          0.17,
+          0.17,
+          0.17,
+          0.17,
+          0.17
+        ]
+      },
+      "resolvedDescription": "Xerath fires an orb of raw magic, Stunning the first enemy hit for up to 2.25 seconds based on distance travelled, and dealing 70/100/130/160/190 (+45% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Rite of the Arcane",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        115,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        5000,
+        5000,
+        5000
+      ],
+      "dataValues": {
+        "RampBaseDamage": [
+          20,
+          25,
+          30
+        ],
+        "BaseDamage": [
+          170,
+          220,
+          270
+        ],
+        "Duration": [
+          10,
+          10,
+          10
+        ],
+        "NumberOfShots": [
+          4,
+          5,
+          6
+        ],
+        "AoESize": [
+          200,
+          200,
+          200
+        ],
+        "CDPerShot": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "FailCastRefund": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Xerath ascends to his true form and channels for 10 seconds. During this time he may Recast up to 4/5/6 times. Recast: Xerath launches a magical artillery, dealing 170/220/270 (+45% AP) magic damage. For each champion hit, the artillery deals an additional 20/25/30 (+5% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

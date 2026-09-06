@@ -1,0 +1,312 @@
+{
+  "championKey": "Karma",
+  "championName": "Karma",
+  "abilities": {
+    "passive": {
+      "name": "Gathering Fire",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Karma's damaging abilities will reduce the cooldown of Mantra.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Inner Flame",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        40,
+        50,
+        60,
+        70,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          110,
+          160,
+          210,
+          260
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "SlowAmount": [
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Karma fires a blast of energy, dealing 60/110/160/210/260 (+70% AP) magic damage to the first target hit and surrounding enemies, and Slowing them by 40% for 1.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Focused Resolve",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        675,
+        675,
+        675,
+        675,
+        675
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          65,
+          90,
+          115,
+          140
+        ],
+        "APRatio": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "RootDuration": [
+          1.6,
+          1.7,
+          1.8,
+          1.9,
+          2
+        ],
+        "TetherDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "LeashBreakRange": [
+          825,
+          825,
+          825,
+          825,
+          825
+        ]
+      },
+      "resolvedDescription": "Karma tethers herself to a champion or jungle monster, dealing 40/65/90/115/140 (+45% AP) magic damage and revealing them for 2s. If the tether remains unbroken, the target takes 40/65/90/115/140 (+45% AP) magic damage again and is Rooted for 1.6/1.7/1.8/1.9/2s.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Inspire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseShield": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "ShieldRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MoveSpeed": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MoveSpeedDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Karma grants an allied champion 80/130/180/230/280 (+60% AP) Shield for 2.5s and 40% Move Speed for 2s.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Mantra",
+      "maxRank": 4,
+      "cooldownByRank": [
+        40,
+        38,
+        36,
+        34
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "QBonusDamage": [
+          40,
+          100,
+          160,
+          220
+        ],
+        "QBonusAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "QDetonationDamage": [
+          40,
+          130,
+          220,
+          310
+        ],
+        "QDetonationAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RQSlow": [
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "RQSlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "RWBonusRoot": [
+          0.5,
+          0.75,
+          1,
+          1.25
+        ],
+        "RWBaseHeal": [
+          17,
+          17,
+          17,
+          17
+        ],
+        "RWHealRatio": [
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "EBonusShield": [
+          45,
+          85,
+          125,
+          165
+        ],
+        "EBonusShieldRatio": [
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "REMoveSpeed": [
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "RESharedRatio": [
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Karma empowers her next Ability used within 8 seconds. Inner Flame: Deals an additional 40/100/160/220 (+30% AP) magic damage and leaves behind a circle of flame, Slowing enemies and dealing an additional 40/130/220/310 (+50% AP) magic damage.Focused Resolve: Karma will restore {{ rwhealamount }} missing Health at the beginning and end of the tether, and Root for 0.5/0.75/1/1.25s longer.Inspire: Karma shields her target for 45/85/125/165 (+45% AP) more Shield, and also shields allies near her target, granting them 45/85/125/165 (+45% AP) Shield and 15% Move Speed.",
+      "unresolved": [
+        "rwhealamount"
+      ]
+    }
+  }
+}

@@ -1,0 +1,291 @@
+{
+  "championKey": "Kalista",
+  "championName": "Kalista",
+  "abilities": {
+    "passive": {
+      "name": "Martial Poise",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DashSpeedDivisor": [
+          1.5
+        ],
+        "GameModeInteger": [
+          1
+        ],
+        "ModesASCap": [
+          6
+        ],
+        "ModesAStoADRatio": [
+          0.7
+        ]
+      },
+      "resolvedDescription": "Enter a movement command while winding up Kalista's basic attack or Pierce to lunge a short distance when she launches her attack.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Pierce",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          10,
+          75,
+          140,
+          205,
+          270
+        ],
+        "TotalADRatio": [
+          1.05,
+          1.05,
+          1.05,
+          1.05,
+          1.05
+        ]
+      },
+      "resolvedDescription": "Kalista hurls a spear, dealing 10/75/140/205/270 (+105% AD) physical damage to the first target hit. If this kills the target, the spear continues onward, carrying any Rend stacks to the next target hit. Kalista can dash after using this Ability using Martial Poise.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Sentinel",
+      "maxRank": 5,
+      "cooldownByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        5000,
+        5000,
+        5000,
+        5000,
+        5000
+      ],
+      "dataValues": {
+        "MarkDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MaximumMonsterDamage": [
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "MaxHealthDamage": [
+          0.1,
+          0.12,
+          0.14,
+          0.16,
+          0.18
+        ],
+        "PerTargetCooldown": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "AmmoRechargeTooltip": [
+          90,
+          80,
+          70,
+          60,
+          50
+        ]
+      },
+      "resolvedDescription": "Passive: When Kalista and her Oathsworn both Attack the same target, she deals 10/12/14/16/18% max Health magic damage. This effect has a 10 second Cooldown per target and a cap of 100/125/150/175/200 to non-champions. Active: Kalista sends a ghost to patrol an area for three laps. Champions spotted are revealed for 4 seconds. This ability has 2 charges (90/80/70/60/50 second refresh).",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Rend",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "EpicMonsterDamageMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          5,
+          15,
+          25,
+          35,
+          45
+        ],
+        "MaxSpears": [
+          254,
+          254,
+          254,
+          254,
+          254
+        ],
+        "AdditionalBaseDamage": [
+          7,
+          14,
+          21,
+          28,
+          35
+        ],
+        "ManaRefund": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "SlowAmount": [
+          0.1,
+          0.18,
+          0.26,
+          0.34,
+          0.42
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "AdditionalADRatio": [
+          0.2,
+          0.275,
+          0.35,
+          0.425,
+          0.5
+        ],
+        "FakedCooldown": [
+          10,
+          9.5,
+          9,
+          8.5,
+          8
+        ],
+        "APRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "SlowAPRatio": [
+          0.0005,
+          0.0005,
+          0.0005,
+          0.0005,
+          0.0005
+        ],
+        "BaseADRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "AdditionalAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Passive: Kalista's spears linger in their target for 4 seconds, stacking any number of times. Active: Kalista rips the spears from nearby enemies, dealing 5/15/25/35/45 (+70% AD) (+65% AP) plus 7/14/21/28/35 (+20/27.5/35/42.5/50% AD) (+50% AP) physical damage per spear beyond the first. Slows enemies hit by {{ totalslowamount }} for 2 seconds. If this Ability kills at least one target, its Cooldown is refreshed and it refunds 10/15/20/25/30 Mana.",
+      "unresolved": [
+        "totalslowamount"
+      ]
+    },
+    "R": {
+      "name": "Fate's Call",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        140,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "KnockupDuration": [
+          1,
+          1.5,
+          2
+        ]
+      },
+      "resolvedDescription": "Kalista puts her Oathsworn into Stasis and draws them to herself for up to 4 seconds. The Oathsworn can click to launch themselves, stopping at the first champion hit and Knocking Back all nearby enemies. If the Oathsworn hits a champion, they are placed at their maximum attack range from it.",
+      "unresolved": []
+    }
+  }
+}
