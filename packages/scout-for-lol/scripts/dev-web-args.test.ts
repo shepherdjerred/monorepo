@@ -162,6 +162,20 @@ test("defaults a local boot to the consumer preview and dev login", () => {
   });
 });
 
+test("uses valid Temporal release metadata for design-audit boot", () => {
+  const parsed = parseDevWebArgs([], {});
+
+  expect(parsed.kind).toBe("options");
+  if (parsed.kind !== "options") return;
+
+  expect(
+    buildDevEnvironment({}, parsed.options, "/tmp/scout-report-lake", true),
+  ).toMatchObject({
+    GIT_SHA: "0000000000000000000000000000000000000000",
+    NODE_ENV: "test",
+  });
+});
+
 test("preserves explicit local access and auth overrides", () => {
   const parsed = parseDevWebArgs([], {
     SCOUT_DEV_AUTH_MODE: "oauth",

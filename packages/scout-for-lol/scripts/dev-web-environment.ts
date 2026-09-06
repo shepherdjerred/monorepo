@@ -119,6 +119,11 @@ export function buildDevEnvironment(
       isDesignAuditBoot || !options.discordGatewayEnabled ? "false" : "true",
     WEB_APP_ORIGIN: `http://localhost:${options.webPort.toString()}`,
     REPORT_LAKE_DIR: lakeDir,
-    ...(isDesignAuditBoot ? { NODE_ENV: "test" } : {}),
+    ...(isDesignAuditBoot
+      ? {
+          GIT_SHA: "0000000000000000000000000000000000000000",
+          NODE_ENV: "test",
+        }
+      : {}),
   };
 }

@@ -327,8 +327,15 @@ export function DuelSeries() {
     series.data.isOrganizer || perms.can("competitions", "update");
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:py-12">
-      <Link className="text-sm text-scout-subtle hover:underline" to="/">
-        ← Back to Scout
+      <Link
+        className="text-sm text-scout-subtle hover:underline"
+        to={
+          series.data.eventId === null
+            ? `/duels/${guildId}`
+            : `/duels/${guildId}/events/${series.data.eventId}`
+        }
+      >
+        ← Back
       </Link>
       <header className="space-y-2">
         <div className="flex flex-wrap items-center gap-2">

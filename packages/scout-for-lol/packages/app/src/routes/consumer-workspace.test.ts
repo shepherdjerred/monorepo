@@ -13,6 +13,13 @@ function canReadCustoms(permission: {
   return permission.resource === "customs";
 }
 
+function canReadReports(permission: {
+  resource: string;
+  action: string;
+}): boolean {
+  return permission.resource === "reports";
+}
+
 describe("consumer navigation", () => {
   test.each([
     {
@@ -65,6 +72,7 @@ describe("guild navigation", () => {
       "Players",
       "Competitions",
       "Reports",
+      "Hall settings",
       "Audit",
       "Access",
     ]);
@@ -88,6 +96,22 @@ describe("guild navigation", () => {
         (item) => item.label,
       ),
     ).toEqual(["Customs"]);
+  });
+
+  test("shows Hall settings only with the feature and both report permissions", () => {
+    expect(
+      visibleGuildNavigationItems(canReadReports, false, true).map(
+        (item) => item.label,
+      ),
+    ).toEqual(["Reports", "Hall settings"]);
+    expect(
+      visibleGuildNavigationItems(
+        (permission) =>
+          permission.resource === "reports" && permission.action === "read",
+        false,
+        true,
+      ).map((item) => item.label),
+    ).toEqual(["Reports"]);
   });
 
   test("selecting a server targets its permission-aware index route", () => {

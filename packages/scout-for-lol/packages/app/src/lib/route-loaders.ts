@@ -55,6 +55,9 @@ export function requireSessionLoader(): null {
     queryClient.query(trpcOptions.consumerPlayer.status.queryOptions()),
   );
   void preloadQuery(queryClient.query(trpcOptions.bucks.status.queryOptions()));
+  void preloadQuery(
+    queryClient.query(trpcOptions.challenge.status.queryOptions()),
+  );
   return null;
 }
 
