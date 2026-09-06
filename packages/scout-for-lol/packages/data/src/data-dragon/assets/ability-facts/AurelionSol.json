@@ -11,7 +11,7 @@
       "rangeByRank": [],
       "dataValues": {
         "QMaxHealthTrueDamagePerStack": [
-          0.0003
+          0.00031
         ],
         "BaseExecutionThreshold": [
           5
@@ -141,11 +141,11 @@
           0.375
         ],
         "QMaxHealthTrueDamagePerStack": [
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003
+          0.00031,
+          0.00031,
+          0.00031,
+          0.00031,
+          0.00031
         ],
         "MonsterDamageCap": [
           300,
@@ -420,18 +420,18 @@
           180
         ],
         "PI": [
-          3.1416,
-          3.1416,
-          3.1416,
-          3.1416,
-          3.1416
+          3.14159,
+          3.14159,
+          3.14159,
+          3.14159,
+          3.14159
         ],
         "InversePI": [
-          0.3183,
-          0.3183,
-          0.3183,
-          0.3183,
-          0.3183
+          0.31831,
+          0.31831,
+          0.31831,
+          0.31831,
+          0.31831
         ]
       },
       "resolvedDescription": "Aurelion Sol summons a black hole, dealing 10/15/20/25/30 (+12% AP) magic damage per second and Dragging enemies towards the center for 5 seconds. Enemies in the center below {{ currentexecutionthreshold }}% max Health die instantly. The black hole absorbs Stardust when enemies die within it and each second an enemy champion is inside.",
@@ -520,14 +520,14 @@
           900
         ],
         "PI": [
-          3.1416,
-          3.1416,
-          3.1416
+          3.14159,
+          3.14159,
+          3.14159
         ],
         "InversePI": [
-          0.3183,
-          0.3183,
-          0.3183
+          0.31831,
+          0.31831,
+          0.31831
         ]
       },
       "resolvedDescription": "Aurelion Sol plucks a star from the heavens and crashes it into the earth, dealing 150/250/350 (+75% AP) magic damage, Stunning enemies 1 second, and absorbing 5 Stardust for each champion hit. Gathering 75 Stardust transforms the next Falling Star into The Skies Descend. The Skies Descend: Aurelion Sol drags a constellation's worth of fury down from the cosmos, dealing 187.5/312.5/437.5 (+93.75% AP) magic damage in a larger area, Knocking Up enemies hit for 1 second, and unleashing a massive shockwave that deals 135/225/315 (+67.5% AP) magic damage to champions and Epic Monsters and Slows all enemies hit by 50% for 1 second.",

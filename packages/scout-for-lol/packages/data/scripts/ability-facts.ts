@@ -75,14 +75,24 @@ type DataDragonSpell = z.infer<typeof DataDragonSpellSchema>;
 /**
  * Bin values are float32 serialized through float64 (0.699999988079071 for
  * 0.7), and calculation rendering multiplies them, which compounds the noise
- * (0.9 × 250.00001 → 224.99999). Game data itself uses at most a few decimal
- * places, so snap to the fewest decimals that stays within float32-noise
- * tolerance (relative 5e-5) of the original. Genuine decimals survive:
- * 0.025 needs 3 decimals to stay in tolerance and is returned unchanged.
+ * (0.9 × 250.00001 → 224.99999). Game data itself uses short decimals, so
+ * snap to the fewest decimal places that stays within a strictly RELATIVE
+ * float32-noise tolerance of the original.
+ *
+ * The tolerance is relative in BOTH directions, with no absolute floor:
+ * - Scaling down preserves legitimate tiny coefficients — an absolute floor
+ *   zeroed Kayn's BonusHealRatio 0.00005 and re-rounded Camille's
+ *   ADRequiredTooltipOnly 0.00025 to 0.0003.
+ * - Scaling up keeps large values honest — a fixed 5e-5 relative bound
+ *   would have snapped a hypothetical 10000.4 to 10000.
+ * The bound of 1e-6 is ~8× the worst-case relative error of a product of
+ * two float32 values (~1.2e-7 each) yet far below any distinction the game
+ * data actually encodes, so a candidate rounding is accepted only when it
+ * differs from the source by representation noise, never by real data.
  */
 export function cleanNumber(value: number): number {
-  const tolerance = 5e-5 * Math.max(1, Math.abs(value));
-  for (let decimals = 0; decimals <= 5; decimals++) {
+  const tolerance = 1e-6 * Math.abs(value);
+  for (let decimals = 0; decimals <= 10; decimals++) {
     const factor = 10 ** decimals;
     const rounded = Math.round(value * factor) / factor;
     if (Math.abs(rounded - value) <= tolerance) {

@@ -75,11 +75,11 @@
           360
         ],
         "ChargeMultiplierInverse": [
-          0.6667,
-          0.6667,
-          0.6667,
-          0.6667,
-          0.6667
+          0.66667,
+          0.66667,
+          0.66667,
+          0.66667,
+          0.66667
         ],
         "tADRatioMax": [
           1.2,
@@ -138,7 +138,7 @@
           0.33
         ]
       },
-      "resolvedDescription": "Begin Charging: Varus draws back his next shot, Slowing himself by 20%. After 4 seconds, if not fired, Varus will cancel the Ability and refund 50% of its Mana cost. Release: Varus releases the arrow, dealing 53.334/100/146.67/193.33/240 (+80% bonus AD) physical damage, reduced by 15% per enemy hit (minimum 33%). Damage and Blight detonation effects are increased by up to 50% based on charge time (maximum 80/150/220/290/360 (+120% bonus AD)) .",
+      "resolvedDescription": "Begin Charging: Varus draws back his next shot, Slowing himself by 20%. After 4 seconds, if not fired, Varus will cancel the Ability and refund 50% of its Mana cost. Release: Varus releases the arrow, dealing 53.3336/100.0005/146.6674/193.3343/240.001 (+80.0004% bonus AD) physical damage, reduced by 15% per enemy hit (minimum 33%). Damage and Blight detonation effects are increased by up to 50% based on charge time (maximum 80/150/220/290/360 (+120% bonus AD)) .",
       "unresolved": []
     },
     "W": {

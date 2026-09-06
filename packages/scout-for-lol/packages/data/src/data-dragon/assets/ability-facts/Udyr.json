@@ -108,12 +108,12 @@
           1
         ],
         "LightningAPRatio": [
-          0.0001,
-          0.0001,
-          0.0001,
-          0.0001,
-          0.0001,
-          0.0001
+          0.00006,
+          0.00006,
+          0.00006,
+          0.00006,
+          0.00006,
+          0.00006
         ],
         "Bounces": [
           6,
@@ -140,12 +140,12 @@
           36
         ],
         "MaxHPADRatio": [
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003
+          0.00035,
+          0.00035,
+          0.00035,
+          0.00035,
+          0.00035,
+          0.00035
         ],
         "Q2MaxHPADRatio": [
           0.0005,
@@ -471,12 +471,12 @@
           100
         ],
         "StormAPRatio": [
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003,
-          0.0003
+          0.00035,
+          0.00035,
+          0.00035,
+          0.00035,
+          0.00035,
+          0.00035
         ]
       },
       "resolvedDescription": "Storm Stance: Udyr surrounds himself in a glacial storm for 4 seconds, dealing 20/36/52/68/84/100 (+35% AP) magic damage per second to nearby enemies and Slowing them by 15/18/21/24/27/30%. Additionally, Udyr's next two Attacks in this stance deal 10-40 (based on level) (+35% AP) magic damage to enemies in the storm. Awaken: Unleash the storm, causing it to follow Udyr's last Attacked enemy, deal an additional {{ percenthpblast }} max Health magic damage over the duration, and Slow by an additional 5%.",

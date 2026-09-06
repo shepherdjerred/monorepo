@@ -179,7 +179,7 @@
           0.5
         ]
       },
-      "resolvedDescription": "Xerath calls down a blast of arcane energy, dealing 50/85/120/155/190 (+65% AP) magic damage and Slowing them by 25% for 2.5 seconds. Enemies in the center take 83.35/141.7/200.04/258.39/316.73 (+108.35% AP) magic damage instead and are Slowed by 60/65/70/75/80%, decaying over 2.5 seconds.",
+      "resolvedDescription": "Xerath calls down a blast of arcane energy, dealing 50/85/120/155/190 (+65% AP) magic damage and Slowing them by 25% for 2.5 seconds. Enemies in the center take 83.35/141.695/200.04/258.385/316.73 (+108.355% AP) magic damage instead and are Slowed by 60/65/70/75/80%, decaying over 2.5 seconds.",
       "unresolved": []
     },
     "E": {

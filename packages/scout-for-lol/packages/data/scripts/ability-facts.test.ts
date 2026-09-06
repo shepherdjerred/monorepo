@@ -40,6 +40,19 @@ describe("number formatting", () => {
     expect(cleanNumber(0.0125)).toBe(0.0125);
   });
 
+  test("cleanNumber preserves legitimate tiny coefficients (relative bound)", () => {
+    // An absolute tolerance floor once zeroed Kayn's BonusHealRatio and
+    // re-rounded Camille's ADRequiredTooltipOnly — both are real bin values.
+    expect(cleanNumber(0.00005)).toBe(0.00005);
+    expect(cleanNumber(0.00025)).toBe(0.00025);
+    expect(cleanNumber(Math.fround(0.00005))).toBe(0.00005);
+    expect(cleanNumber(Math.fround(0.00025))).toBe(0.00025);
+    expect(cleanNumber(0)).toBe(0);
+    // And large values keep their genuine decimals.
+    expect(cleanNumber(10000.4)).toBe(10000.4);
+    expect(cleanNumber(Math.fround(10000.4))).toBe(10000.4);
+  });
+
   test("formatRankValues collapses constants and joins varying ranks", () => {
     expect(formatRankValues([300, 475, 650])).toBe("300/475/650");
     expect(formatRankValues([1200, 1200, 1200])).toBe("1200");

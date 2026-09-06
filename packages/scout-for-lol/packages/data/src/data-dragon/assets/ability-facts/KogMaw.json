@@ -288,9 +288,9 @@
           1.5
         ],
         "TooltipMissingHealthDamageAmp": [
-          0.8333,
-          0.8333,
-          0.8333
+          0.83333,
+          0.83333,
+          0.83333
         ],
         "APRatio": [
           0.35,
@@ -298,7 +298,7 @@
           0.45
         ]
       },
-      "resolvedDescription": "Kog'Maw shoots acid at an area, dealing 100/140/180 (+35/40/45% AP) (+75% bonus AD) plus 0.8333% per 1% missing Health magic damage and revealing enemies hit for 2 seconds. Enemies below 40% Health instead take 200/280/360 (+70/80/90% AP) (+150% bonus AD) magic damage. Subsequent shots within 8 seconds cost an additional 40 Mana (max: 400 Mana).",
+      "resolvedDescription": "Kog'Maw shoots acid at an area, dealing 100/140/180 (+35/40/45% AP) (+75% bonus AD) plus 0.83333% per 1% missing Health magic damage and revealing enemies hit for 2 seconds. Enemies below 40% Health instead take 200/280/360 (+70/80/90% AP) (+150% bonus AD) magic damage. Subsequent shots within 8 seconds cost an additional 40 Mana (max: 400 Mana).",
       "unresolved": []
     }
   }
