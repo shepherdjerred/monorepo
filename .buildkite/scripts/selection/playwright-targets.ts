@@ -37,6 +37,7 @@ const ALL_TARGET_INPUTS = [
   ".buildkite/ci-playwright/",
   ".buildkite/pipeline.yml",
   ".buildkite/scripts/bun-install.sh",
+  ".buildkite/scripts/select-image-targets-lockfile.ts",
   ".buildkite/scripts/selection/playwright-targets.ts",
   ".buildkite/scripts/selection/run-playwright.ts",
   ".buildkite/scripts/select-image-targets-workspaces.ts",

@@ -88,15 +88,20 @@ describe("Playwright target selection", () => {
   });
 
   test("selects every target for shared browser machinery", async () => {
-    const selection = await selectPlaywrightTargets(
-      [".buildkite/ci-playwright/Dockerfile"],
-      ".",
-      workspaces,
-    );
-    expect(selection.mode).toBe("all");
-    expect(packages(selection)).toEqual(
-      PLAYWRIGHT_TARGETS.map((target) => target.package),
-    );
+    for (const changedPath of [
+      ".buildkite/ci-playwright/Dockerfile",
+      ".buildkite/scripts/select-image-targets-lockfile.ts",
+    ]) {
+      const selection = await selectPlaywrightTargets(
+        [changedPath],
+        ".",
+        workspaces,
+      );
+      expect(selection.mode).toBe("all");
+      expect(packages(selection)).toEqual(
+        PLAYWRIGHT_TARGETS.map((target) => target.package),
+      );
+    }
   });
 
   test("selects only static artifact producers for deploy harness changes", async () => {

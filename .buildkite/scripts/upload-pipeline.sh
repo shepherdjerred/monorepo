@@ -124,7 +124,11 @@ fi
 # first so a healthy checkout can use exact PR step selection.
 if ! command -v bun >/dev/null 2>&1; then
   # shellcheck source=.buildkite/scripts/toolchain.sh
-  MISE_TOOLCHAIN_SCOPE=runtime . "$SCRIPT_DIR/toolchain.sh"
+  if ! MISE_TOOLCHAIN_SCOPE=runtime . "$SCRIPT_DIR/toolchain.sh"; then
+    fail_open "Bun bootstrap failed"
+    buildkite-agent pipeline upload --changed-files-path "$changed_files"
+    exit 0
+  fi
 fi
 if ! bun --no-install "$SCRIPT_DIR/selection/select-pr-pipeline.ts" "$changed_files"; then
   echo "WARN: PR pipeline selection failed; uploading the complete graph" >&2
