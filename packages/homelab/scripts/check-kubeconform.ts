@@ -27,6 +27,7 @@ const SKIPPED_CRD_KINDS = [
   "AppProject",
   "Application",
   "Certificate",
+  "ClusterIssuer",
   "ClusterQueue",
   "ClusterTunnel",
   "Issuer",

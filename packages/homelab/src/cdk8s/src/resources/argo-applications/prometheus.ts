@@ -23,6 +23,11 @@ import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/reso
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
 import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
+import {
+  ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
+  ALERTMANAGER_POSTAL_SMTP_TLS,
+  createAlertmanagerPostalSmtpCa,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/mail/postal-smtp.ts";
 
 function createPrometheusIngresses(chart: Chart): void {
   createIngress(chart, "alertmanager-ingress", {
@@ -46,11 +51,12 @@ const ALERT_DASHBOARD_SERVICE_URL =
 const ALERTMANAGER_GLOBAL = {
   resolve_timeout: "5m",
   smtp_from: "alerts@sjer.red",
-  smtp_smarthost: "postal-postal-smtp-service.postal.svc.cluster.local:25",
   smtp_auth_username: "alertmanager",
   smtp_auth_password_file:
     "/etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
-  smtp_require_tls: false,
+  smtp_smarthost: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_smarthost,
+  smtp_require_tls: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_require_tls,
+  smtp_tls_config: ALERTMANAGER_POSTAL_SMTP_TLS.smtp_tls_config,
 };
 
 function createAlertmanagerPostalSmtpSecret(chart: Chart): OnePasswordItem {
@@ -96,6 +102,7 @@ export async function createPrometheusApp(chart: Chart) {
   );
 
   const alertmanagerPostalSmtp = createAlertmanagerPostalSmtpSecret(chart);
+  createAlertmanagerPostalSmtpCa(chart);
 
   const prometheusSecrets = new OnePasswordItem(
     chart,
@@ -245,7 +252,11 @@ export async function createPrometheusApp(chart: Chart) {
             },
           },
         },
-        secrets: [alertDashboardSecrets.name, alertmanagerPostalSmtp.name],
+        secrets: [
+          alertDashboardSecrets.name,
+          alertmanagerPostalSmtp.name,
+          ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
+        ],
         logLevel: "debug",
       },
       config: {

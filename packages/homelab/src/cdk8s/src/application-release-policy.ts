@@ -15,9 +15,13 @@ export const APPLICATION_SYNC_WAVES = {
   onePassword: "-20",
   onePasswordItem: "-19",
   provider: "-18",
-  certificateIssuer: "-4",
-  certificate: "-3",
-  temporal: "-17",
+  certificateIssuer: "-5",
+  certificateAuthority: "-4",
+  clusterIssuer: "-3",
+  certificate: "-2",
+  // After the cluster CA so Alertmanager can require postal-smtp-ca.
+  prometheus: "-1",
+  temporal: "0",
   structural: "0",
   kueue: "1",
   dependentConfiguration: "2",
@@ -35,7 +39,6 @@ const PROVIDER_APPLICATIONS = new Set([
   "nfd",
   "openebs",
   "postgres-operator",
-  "prometheus",
   "tailscale",
   "velero",
 ]);
@@ -59,6 +62,24 @@ const ApplicationManifestSchema = z.object({
   }),
 });
 
+const CertificateManifestSchema = z.object({
+  spec: z
+    .object({
+      isCA: z.boolean().optional(),
+    })
+    .optional(),
+});
+
+function certificateIsCa(resource: ApiObject): boolean {
+  const parsed = CertificateManifestSchema.safeParse(resource.toJson());
+  if (!parsed.success) {
+    throw new Error(
+      `Could not inspect Certificate ${resource.node.path}: ${z.prettifyError(parsed.error)}`,
+    );
+  }
+  return parsed.data.spec?.isCA === true;
+}
+
 function applicationSyncWave(name: string): string {
   if (name === "apps") {
     return APPLICATION_SYNC_WAVES.structural;
@@ -68,6 +89,9 @@ function applicationSyncWave(name: string): string {
   }
   if (PROVIDER_APPLICATIONS.has(name)) {
     return APPLICATION_SYNC_WAVES.provider;
+  }
+  if (name === "prometheus") {
+    return APPLICATION_SYNC_WAVES.prometheus;
   }
   if (name === "temporal") {
     return APPLICATION_SYNC_WAVES.temporal;
@@ -98,9 +122,16 @@ function rootResourceSyncWave(resource: ApiObject): string {
     return APPLICATION_SYNC_WAVES.onePasswordItem;
   }
   if (resource.apiGroup === "cert-manager.io") {
-    return resource.kind === "Certificate"
-      ? APPLICATION_SYNC_WAVES.certificate
-      : APPLICATION_SYNC_WAVES.certificateIssuer;
+    if (resource.kind === "ClusterIssuer") {
+      return APPLICATION_SYNC_WAVES.clusterIssuer;
+    }
+    if (resource.kind === "Certificate") {
+      if (certificateIsCa(resource)) {
+        return APPLICATION_SYNC_WAVES.certificateAuthority;
+      }
+      return APPLICATION_SYNC_WAVES.certificate;
+    }
+    return APPLICATION_SYNC_WAVES.certificateIssuer;
   }
   if (
     resource.apiGroup === "kueue.x-k8s.io" ||
