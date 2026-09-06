@@ -39,6 +39,8 @@ export type BenchmarkImplementation = {
   packageRoot: string;
   backendRoot: string;
   gitRoot: string;
+  /** True when the target checkout predates the goal/control/ directory split. */
+  usesLegacyGoalControlLayout: boolean;
 };
 export type BenchmarkProvenanceInput = {
   inputSaveSha256: string;
@@ -156,7 +158,19 @@ async function runWorker(
   configPath: string,
   runDirectory: string,
 ): Promise<number> {
-  const source = await Bun.file(workerSource).text();
+  let source = await Bun.file(workerSource).text();
+  if (implementation.usesLegacyGoalControlLayout) {
+    // The worker's own static imports name the current goal/control/ layout;
+    // when the target implementation predates that split, its package.json
+    // #src/* alias only resolves the flat pre-split paths, so retarget the
+    // piped source to match before it runs against that checkout.
+    source = source
+      .replace(
+        "#src/goal/control/control-server.ts",
+        "#src/goal/control-server.ts",
+      )
+      .replace("#src/goal/control/pokemonctl.ts", "#src/goal/pokemonctl.ts");
+  }
   const child = Bun.spawn(["bun", "run", "-", "--config", configPath], {
     cwd: implementation.backendRoot,
     env: childEnvironment(implementation.packageRoot),
@@ -241,6 +255,7 @@ export async function runBenchmarkOnce(
   const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
     implementation.packageRoot,
     runDirectory,
+    implementation.usesLegacyGoalControlLayout,
   );
   await Bun.write(inputSavePath, input.sourceSaveBytes, { createPath: true });
   await Bun.write(runSavePath, input.sourceSaveBytes);

@@ -105,8 +105,6 @@ async function resolveImplementationRoot(
     "src/emulator/emulator.ts",
     "src/game/events/watcher.ts",
     "src/goal/goal-manager.ts",
-    "src/goal/control/control-server.ts",
-    "src/goal/control/pokemonctl.ts",
     "node_modules/@openai/codex-sdk/package.json",
     "node_modules/zod/package.json",
   ];
@@ -116,6 +114,8 @@ async function resolveImplementationRoot(
       "implementation file",
     );
   }
+  const usesLegacyGoalControlLayout =
+    await resolveGoalControlLayout(backendRoot);
   await requireFile(
     path.join(packageRoot, "wasm-src/upstream.json"),
     "implementation upstream manifest",
@@ -123,11 +123,38 @@ async function resolveImplementationRoot(
   return {
     packageRoot,
     backendRoot,
+    usesLegacyGoalControlLayout,
     gitRoot: await commandOutput(
       ["git", "rev-parse", "--show-toplevel"],
       packageRoot,
     ),
   };
+}
+
+/**
+ * A clean checkout from before the goal directory split has
+ * src/goal/control-server.ts and src/goal/pokemonctl.ts; current checkouts
+ * have both under src/goal/control/. Accept either complete layout so the
+ * benchmark can still compare this refactor against a pre-refactor target.
+ */
+async function resolveGoalControlLayout(backendRoot: string): Promise<boolean> {
+  const currentLayoutExists =
+    (await Bun.file(
+      path.join(backendRoot, "src/goal/control/control-server.ts"),
+    ).exists()) &&
+    (await Bun.file(
+      path.join(backendRoot, "src/goal/control/pokemonctl.ts"),
+    ).exists());
+  if (currentLayoutExists) return false;
+  const legacyLayoutExists =
+    (await Bun.file(
+      path.join(backendRoot, "src/goal/control-server.ts"),
+    ).exists()) &&
+    (await Bun.file(path.join(backendRoot, "src/goal/pokemonctl.ts")).exists());
+  if (legacyLayoutExists) return true;
+  throw new Error(
+    `implementation file not found: ${path.join(backendRoot, "src/goal/control/control-server.ts")}`,
+  );
 }
 
 async function main(): Promise<void> {

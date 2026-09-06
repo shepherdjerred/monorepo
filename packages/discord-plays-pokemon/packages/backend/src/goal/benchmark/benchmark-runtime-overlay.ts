@@ -15,6 +15,9 @@ const REQUIRED_RUNTIME_PATHS = [
 const OPTIONAL_RUNTIME_PATHS = OPTIONAL_CODEX_INSTRUCTION_PATHS;
 const POKEMONCTL_RELATIVE_PATH =
   "packages/backend/src/goal/control/pokemonctl.ts";
+/** A checkout from before the goal directory split has this flat path instead. */
+const LEGACY_POKEMONCTL_RELATIVE_PATH =
+  "packages/backend/src/goal/pokemonctl.ts";
 
 function pathIsInside(parent: string, candidate: string): boolean {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
@@ -89,6 +92,7 @@ export function benchmarkRuntimeOverlayDirectory(
 export async function prepareBenchmarkRuntimeOverlay(
   implementationRoot: string,
   runDirectory: string,
+  usesLegacyGoalControlLayout: boolean,
 ): Promise<string> {
   const runtimeDirectory = benchmarkRuntimeOverlayDirectory(
     implementationRoot,
@@ -96,7 +100,9 @@ export async function prepareBenchmarkRuntimeOverlay(
   );
   const pokemonctlSource = path.join(
     implementationRoot,
-    POKEMONCTL_RELATIVE_PATH,
+    usesLegacyGoalControlLayout
+      ? LEGACY_POKEMONCTL_RELATIVE_PATH
+      : POKEMONCTL_RELATIVE_PATH,
   );
   if (!(await pathExists(pokemonctlSource))) {
     throw new Error(

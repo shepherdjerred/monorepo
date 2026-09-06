@@ -93,6 +93,7 @@ export function buildEnvironment(
       "backend",
       "src",
       "goal",
+      "control",
       "pokemonctl.ts",
     ),
   };

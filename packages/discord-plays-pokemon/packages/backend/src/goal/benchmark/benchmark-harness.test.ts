@@ -1066,6 +1066,7 @@ describe("benchmark runtime overlay", () => {
       const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
         implementationRoot,
         runDirectory,
+        false,
       );
       expect(runtimeDirectory).toBe(path.join(runDirectory, "runtime"));
       expect(
@@ -1131,6 +1132,7 @@ describe("benchmark runtime overlay", () => {
       const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
         implementationRoot,
         runDirectory,
+        false,
       );
       const child = Bun.spawn(
         [
@@ -1170,6 +1172,7 @@ describe("benchmark runtime overlay", () => {
         prepareBenchmarkRuntimeOverlay(
           root,
           path.join(root, "benchmark-output", "run-001"),
+          false,
         ),
       ).rejects.toThrow(
         "benchmark runtime overlay must be outside the target implementation",
