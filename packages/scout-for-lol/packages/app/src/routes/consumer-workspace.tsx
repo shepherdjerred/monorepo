@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Loaded } from "@shepherdjerred/loaded";
 import { Outlet, useLocation, useParams } from "react-router";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
@@ -15,16 +16,21 @@ export function ConsumerWorkspace() {
 export function ConsumerGuildWorkspace() {
   const { guildId } = useParams();
   const location = useLocation();
-  const { isLoading, error } = usePermissions(guildId);
+  const { access } = usePermissions(guildId);
   const contextRoute = analyticsContextRoute(location.pathname);
 
+  // `guildId` is an unvalidated route param until the permission bootstrap
+  // resolves, so the guild super property is only registered once the server
+  // has confirmed the guild — otherwise any signed-in visitor could deep-link
+  // `/c/<anything>` and stamp an arbitrary value onto every subsequent event.
+  const analyticsGuildId = access.status === "done" ? guildId : undefined;
   useEffect(() => {
-    if (contextRoute === undefined || isLoading) return;
-    resolveGuildContext(contextRoute, error === null ? guildId : undefined);
+    if (contextRoute === undefined || access.status === "loading") return;
+    resolveGuildContext(contextRoute, analyticsGuildId);
     return () => {
       clearGuildContext();
     };
-  }, [contextRoute, error, guildId, isLoading]);
+  }, [contextRoute, access.status, analyticsGuildId]);
 
   if (guildId === undefined) {
     return (
@@ -34,12 +40,12 @@ export function ConsumerGuildWorkspace() {
       />
     );
   }
-  if (isLoading) return null;
-  if (error !== null) {
+  if (access.status === "loading") return null;
+  if (access.status === "error") {
     return (
       <ForbiddenPanel
         title="No access to this server"
-        message={error.message}
+        message={Loaded.messageOf(access.errors[0].error)}
       />
     );
   }
