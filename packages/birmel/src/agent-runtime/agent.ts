@@ -11,6 +11,7 @@ import {
 import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
+import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
@@ -172,12 +173,36 @@ export function requireGroundedAnswer(
   // succeed while the requested mutation never runs, and an answer citing
   // nothing would still pass. Supported work must cite at least one call, and
   // every cited call is already known to have succeeded by the check above.
-  if (
-    answer.disposition === "supported" &&
-    answer.reliedOnToolCallIds.length === 0
-  ) {
+  if (answer.disposition !== "supported") {
+    return;
+  }
+  if (answer.reliedOnToolCallIds.length === 0) {
     throw new Error(
       "Answer claims supported work without citing a successful tool call",
+    );
+  }
+  // Membership alone still lets the model cite an unrelated success (a
+  // harmless read) while the tool that actually mattered failed later in the
+  // same turn. toolEvents is chronological (built from result.steps in
+  // order), so a mutating tool that fails strictly after the cited evidence
+  // contradicts the claim: whatever the model did after citing its proof did
+  // not go as planned, and it never came back to fix it. A failed read after
+  // the citation is not contradictory - re-checking something incidental and
+  // having that check fail says nothing about whether the original claim
+  // holds - so only write/destructive/code-execution failures count.
+  const citedToolCallIds = new Set(answer.reliedOnToolCallIds);
+  const lastCitedIndex = toolEvents.findLastIndex((event) =>
+    citedToolCallIds.has(event.toolCallId),
+  );
+  const contradiction = toolEvents
+    .slice(lastCitedIndex + 1)
+    .find(
+      (event) =>
+        !event.success && getToolMetadata(event.toolId).riskClass !== "read",
+    );
+  if (contradiction !== undefined) {
+    throw new Error(
+      `Answer claims supported work, but ${contradiction.toolId} failed after the cited evidence`,
     );
   }
 }

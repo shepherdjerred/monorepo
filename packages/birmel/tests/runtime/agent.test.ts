@@ -222,4 +222,84 @@ describe("requireGroundedAnswer", () => {
       ),
     ).not.toThrow();
   });
+
+  const unrelatedRead = {
+    toolCallId: "call-read",
+    toolId: "get-activity-stats",
+    inputSummary: "{}",
+    resultSummary: "Leaderboard returned",
+    content: "Tool get-activity-stats call call-read succeeded",
+    success: true,
+  };
+  const mutationFailed = {
+    toolCallId: "call-mutate-1",
+    toolId: "manage-role",
+    inputSummary: "{}",
+    resultSummary: "Tool reported failure",
+    content: "Tool manage-role call call-mutate-1 failed",
+    success: false,
+  };
+  const mutationSucceeded = {
+    toolCallId: "call-mutate-2",
+    toolId: "manage-role",
+    inputSummary: "{}",
+    resultSummary: "Role added",
+    content: "Tool manage-role call call-mutate-2 succeeded",
+    success: true,
+  };
+  const laterReadFailed = {
+    toolCallId: "call-read-2",
+    toolId: "get-activity-stats",
+    inputSummary: "{}",
+    resultSummary: "Tool reported failure",
+    content: "Tool get-activity-stats call call-read-2 failed",
+    success: false,
+  };
+
+  test("rejects citing an unrelated success while the real mutation failed later", () => {
+    // The concrete hallucination this guards against: the model reads
+    // something harmless, then the mutation it was actually asked to perform
+    // fails - but it cites the harmless read as its evidence anyway.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Added the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-read"],
+        },
+        [unrelatedRead, mutationFailed],
+      ),
+    ).toThrow("manage-role failed after the cited evidence");
+  });
+
+  test("allows citing the mutation that actually succeeded after an earlier failed attempt", () => {
+    // Trying a tool, seeing it fail, and retrying is an ordinary path through
+    // a turn - the citation just has to point at the call that worked.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Added the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-mutate-2"],
+        },
+        [unrelatedRead, mutationFailed, mutationSucceeded],
+      ),
+    ).not.toThrow();
+  });
+
+  test("does not reject a citation over an unrelated read that fails afterward", () => {
+    // A failed read after the citation says nothing about whether the cited
+    // mutation actually happened - only a failed write/destructive/
+    // code-execution call after the citation is contradictory.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Added the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-mutate-2"],
+        },
+        [mutationSucceeded, laterReadFailed],
+      ),
+    ).not.toThrow();
+  });
 });
