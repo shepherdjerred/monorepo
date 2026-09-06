@@ -263,6 +263,11 @@ export class PlaybackControls {
     language?: string,
   ): PlaybackCommandResult {
     const view = this.controllableCurrent(userId);
+    if (view.state === "resolving") {
+      throw new PlaybackCommandBoundaryError(
+        "Playback is still loading; try changing subtitles again once it starts.",
+      );
+    }
     if (view.paused === true) {
       throw new PlaybackCommandBoundaryError(
         "Resume playback before changing subtitles.",

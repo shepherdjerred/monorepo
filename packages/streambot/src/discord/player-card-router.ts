@@ -25,6 +25,7 @@ import type { PlayerCardMessenger } from "@shepherdjerred/streambot/discord/play
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { CardOwner } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
+import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import {
   toUserId,
   type ChannelId,
@@ -61,6 +62,7 @@ export type PlayerCardRouterDeps = {
     interaction: MessageComponentInteraction,
     handle: SessionHandle,
   ) => Promise<void>;
+  readonly history?: MediaHistoryStore;
   /** Rollout gate for the advanced player-card controls. */
   readonly assistantV2Enabled?: (scope: DiscoveryScope) => Promise<boolean>;
 };
@@ -160,6 +162,7 @@ export class PlayerCardRouter {
         await this.deps.openSubtitlePicker(interaction, handle);
         return;
       case "dispatch":
+        this.markHistoryForCardDispatch(outcome.event.type, handle.view());
         handle.dispatch(outcome.event);
         await this.ephemeral(interaction, outcome.ack);
         this.deps.refreshCard(owner);
@@ -181,6 +184,29 @@ export class PlayerCardRouter {
         );
         this.deps.refreshCard(owner);
         return;
+      }
+    }
+  }
+
+  private markHistoryForCardDispatch(
+    eventType: string,
+    view: ReturnType<SessionHandle["view"]>,
+  ): void {
+    if (eventType === "SKIP") {
+      const requestId = view.current?.requestId;
+      if (requestId !== undefined) {
+        this.deps.history?.updateRequest(requestId, "skipped");
+      }
+      return;
+    }
+    if (eventType !== "STOP") return;
+    const currentRequestId = view.current?.requestId;
+    if (currentRequestId !== undefined) {
+      this.deps.history?.updateRequest(currentRequestId, "skipped");
+    }
+    for (const item of view.queue) {
+      if (item.requestId !== undefined) {
+        this.deps.history?.updateRequest(item.requestId, "removed");
       }
     }
   }

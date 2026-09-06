@@ -344,7 +344,7 @@ export class PlaybackCommandService extends PlaybackControls {
       scope,
       signal,
     );
-    if (matches.length === 0) return `Nothing matches ${query}.`;
+    if (matches.length === 0) return "I couldn't find any matching media.";
     if (matches.length > 1) {
       this.clarificationGeneration += 1;
       discovery.rememberCandidates(scope, matches);

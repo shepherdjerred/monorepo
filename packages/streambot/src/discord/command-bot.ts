@@ -146,6 +146,7 @@ export class CommandBot {
         this.voiceChannelOf(interaction.guild, interaction.user),
       openSubtitlePicker: (interaction, handle) =>
         this.openSubtitlePicker(interaction, handle),
+      ...(deps.history === undefined ? {} : { history: deps.history }),
       ...(deps.featureGate === undefined
         ? {}
         : { assistantV2Enabled: deps.featureGate.assistantV2 }),

@@ -25,6 +25,7 @@ const ADVANCED_TOOL_NAMES = new Set<ToolName>([
   "restart",
   "previous",
   "search_media",
+  "subtitles",
 ]);
 
 function isAdvancedPlay(name: ToolName, toolArguments: unknown): boolean {
