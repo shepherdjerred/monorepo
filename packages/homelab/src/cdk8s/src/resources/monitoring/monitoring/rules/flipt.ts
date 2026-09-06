@@ -42,10 +42,10 @@ export function getFliptRuleGroups(): PrometheusRuleSpecGroups[] {
           annotations: {
             summary: "A service failed to initialize its feature flag provider",
             message:
-              "A provider failed to initialize, so every flag in that pod reports PROVIDER_NOT_READY and resolves to its call-site default until the pod restarts. There is no retry in v1.",
+              "A provider is not ready, so every flag in that pod reports PROVIDER_NOT_READY and resolves to its call-site default while initialization retries in the background.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            'feature_flag_errors_total{operation="initialize"} > 0',
+            "feature_flag_provider_ready == 0",
           ),
           for: "5m",
           labels: { severity: "warning" },

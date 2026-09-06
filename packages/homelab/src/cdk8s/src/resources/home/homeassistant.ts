@@ -43,7 +43,7 @@ export async function createHomeAssistantDeployment(chart: Chart) {
   });
 
   const claim = new ZfsNvmeVolume(chart, "homeassistant-pvc", {
-    storage: Size.gibibytes(64),
+    storage: Size.gibibytes(96),
   });
 
   const volume = Volume.fromPersistentVolumeClaim(

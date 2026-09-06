@@ -172,7 +172,7 @@ export function getR2StorageRuleGroups(): PrometheusRuleSpecGroups[] {
               "The oldest pending two-phase GC candidate set is more than 14 days old.",
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            "time() - seaweedfs_backup_gc_oldest_candidate_timestamp_seconds > 14 * 24 * 60 * 60",
+            '(seaweedfs_backup_gc_oldest_candidate_timestamp_seconds{namespace="temporal",container="temporal-backup-worker"} > 0) and (time() - seaweedfs_backup_gc_oldest_candidate_timestamp_seconds{namespace="temporal",container="temporal-backup-worker"} > 14 * 24 * 60 * 60)',
           ),
           for: "30m",
           labels: { severity: "warning" },

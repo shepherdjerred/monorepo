@@ -1,7 +1,7 @@
 import { Counter, Gauge, Registry } from "prom-client";
 import {
+  createFlagMetricsRecorder,
   FEATURE_FLAG_METRICS,
-  type FlagMetricsRecorder,
 } from "@shepherdjerred/feature-flags/observability.ts";
 
 export const registry = new Registry();
@@ -20,23 +20,21 @@ const featureFlagErrorsTotal = new Counter({
   registers: [registry],
 });
 
+const featureFlagProviderReady = new Gauge({
+  name: FEATURE_FLAG_METRICS.providerReady,
+  help: "Whether the feature flag provider is ready to evaluate",
+  registers: [registry],
+});
+
 const featureFlagSnapshotAgeSeconds = new Gauge({
   name: FEATURE_FLAG_METRICS.snapshotAge,
   help: "Seconds since the feature flag snapshot refreshed successfully",
   registers: [registry],
 });
 
-export const featureFlagMetrics: FlagMetricsRecorder = {
-  countEvaluation: (event) => {
-    featureFlagEvaluationsTotal.inc({
-      flag: event.flag,
-      reason: event.reason,
-    });
-  },
-  countError: (operation) => {
-    featureFlagErrorsTotal.inc({ operation });
-  },
-  observeSnapshotAge: (seconds) => {
-    featureFlagSnapshotAgeSeconds.set(seconds);
-  },
-};
+export const featureFlagMetrics = createFlagMetricsRecorder({
+  evaluations: featureFlagEvaluationsTotal,
+  errors: featureFlagErrorsTotal,
+  providerReady: featureFlagProviderReady,
+  snapshotAge: featureFlagSnapshotAgeSeconds,
+});

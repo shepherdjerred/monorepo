@@ -4,7 +4,10 @@ import {
   isEnabled,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags/index.ts";
-import { FEATURE_FLAG_METRIC_LABELS } from "@shepherdjerred/feature-flags/observability.ts";
+import {
+  createFlagMetricsRecorder,
+  FEATURE_FLAG_METRIC_LABELS,
+} from "@shepherdjerred/feature-flags/observability.ts";
 import type { EvaluationEvent } from "@shepherdjerred/feature-flags/observability.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import { FliptProvider } from "@shepherdjerred/feature-flags/providers/flipt.ts";
@@ -20,6 +23,34 @@ describe("metric naming", () => {
     // It is a guild or user id, so it would be unbounded cardinality.
     const everyLabel = Object.values(FEATURE_FLAG_METRIC_LABELS).flat();
     expect(everyLabel).not.toContain("targetingKey");
+  });
+
+  test("adapts counters and gauges without owning their registry", () => {
+    const evaluations: unknown[] = [];
+    const errors: unknown[] = [];
+    const providerReadiness: number[] = [];
+    const snapshotAges: number[] = [];
+    const recorder = createFlagMetricsRecorder({
+      evaluations: { inc: (labels) => evaluations.push(labels) },
+      errors: { inc: (labels) => errors.push(labels) },
+      providerReady: { set: (value) => providerReadiness.push(value) },
+      snapshotAge: { set: (value) => snapshotAges.push(value) },
+    });
+
+    recorder.countEvaluation({
+      flag: "known-flag",
+      reason: "STATIC",
+      errorCode: undefined,
+    });
+    recorder.countError("initialize");
+    recorder.observeProviderReady(false);
+    recorder.observeProviderReady(true);
+    recorder.observeSnapshotAge(42);
+
+    expect(evaluations).toEqual([{ flag: "known-flag", reason: "STATIC" }]);
+    expect(errors).toEqual([{ operation: "initialize" }]);
+    expect(providerReadiness).toEqual([0, 1]);
+    expect(snapshotAges).toEqual([42]);
   });
 });
 
