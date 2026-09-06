@@ -46,7 +46,14 @@ const logger = createLogger("voice-assistant-session");
 
 export type VoiceQuestionObservation = {
   readonly outcome: VoiceQuestionOutcome;
-  readonly wakeToReplySeconds: number;
+  /**
+   * Seconds from accepted wake to the FIRST assistant audio handed to the
+   * reply sink (Realtime reply or local feedback clip) — the same moment the
+   * `scout_voice_wake_to_reply_seconds` histogram marks, not the end of the
+   * paced playback. Undefined when the turn produced no reply audio at all
+   * (rate-limited, or a failure before any audio).
+   */
+  readonly wakeToReplySeconds: number | undefined;
   readonly champion: string | undefined;
   readonly abilitySlot: AbilitySlot | undefined;
 };
@@ -158,12 +165,15 @@ export class ScoutVoiceSession {
   private observe(
     outcome: VoiceQuestionOutcome,
     activatedAtMs: number,
+    firstAudioAtMs: number | undefined,
     recorder: VoiceTurnFactsRecorder | undefined,
   ): void {
-    const now = this.options.now ?? (() => Date.now());
     this.options.onQuestionObserved?.({
       outcome,
-      wakeToReplySeconds: (now() - activatedAtMs) / 1000,
+      wakeToReplySeconds:
+        firstAudioAtMs === undefined
+          ? undefined
+          : (firstAudioAtMs - activatedAtMs) / 1000,
       champion: recorder?.champion,
       abilitySlot: recorder?.slot,
     });
@@ -178,20 +188,35 @@ export class ScoutVoiceSession {
     if (!rateLimit.allowed) {
       scoutVoiceRateLimitedTotal.inc({ reason: rateLimit.reason });
       scoutVoiceTurnsTotal.inc({ outcome: "cloud-rate-limited" });
-      this.observe("rate-limited", activatedAtMs, undefined);
+      // No turn ran and no reply audio exists, so there is no latency to report.
+      this.observe("rate-limited", activatedAtMs, undefined, undefined);
       return;
     }
     const recorder = new VoiceTurnFactsRecorder();
     const transaction = new AbortController();
     this.activeTransaction = transaction;
     const runTurn = this.options.runTurn ?? runRealtimeCommandTurn;
+    const now = this.options.now ?? (() => Date.now());
+    // Wrap the sink to timestamp the FIRST audio handed to it — the analytics
+    // latency must mark when the speaker starts hearing something, not when
+    // the paced playback finishes draining at 20 ms per packet.
+    const sink = this.options.createAssistantAudio();
+    let firstAudioAtMs: number | undefined;
+    const timestampedSink: AssistantAudioSink = {
+      enqueue: (pcm24k) => {
+        firstAudioAtMs ??= now();
+        sink.enqueue(pcm24k);
+      },
+      finish: () => sink.finish(),
+      cancel: () => sink.cancel(),
+    };
     try {
       const result = await runTurn(
         scoutRealtimeTurnOptions(this.options.openAiApiKey, recorder),
         {
           pcm16k,
           activatedAtMs,
-          assistantAudio: this.options.createAssistantAudio(),
+          assistantAudio: timestampedSink,
           signal: transaction.signal,
           ...(this.options.feedbackClips === undefined
             ? {}
@@ -204,10 +229,15 @@ export class ScoutVoiceSession {
       if (!result.wakeVerified) {
         this.cloudVerificationLimiter.recordTranscriptRejection();
       }
-      this.observe(turnOutcome(result), activatedAtMs, recorder);
+      this.observe(
+        turnOutcome(result),
+        activatedAtMs,
+        firstAudioAtMs,
+        recorder,
+      );
     } catch (error) {
       if (transaction.signal.aborted) {
-        this.observe("interrupted", activatedAtMs, recorder);
+        this.observe("interrupted", activatedAtMs, firstAudioAtMs, recorder);
         return;
       }
       if (isQuotaExhaustedError(error)) {
@@ -216,14 +246,14 @@ export class ScoutVoiceSession {
         logger.warn("voice cloud verification is out of quota", {
           guildId: this.options.guildId,
         });
-        this.observe("error", activatedAtMs, recorder);
+        this.observe("error", activatedAtMs, firstAudioAtMs, recorder);
         return;
       }
       logger.warn("voice question turn failed", {
         guildId: this.options.guildId,
         error: error instanceof Error ? error.message : String(error),
       });
-      this.observe("error", activatedAtMs, recorder);
+      this.observe("error", activatedAtMs, firstAudioAtMs, recorder);
     } finally {
       if (this.activeTransaction === transaction) {
         this.activeTransaction = null;

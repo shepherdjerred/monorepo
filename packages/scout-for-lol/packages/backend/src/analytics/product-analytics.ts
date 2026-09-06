@@ -114,10 +114,12 @@ type ProductAnalyticsEventProperties = {
    * identity (via the shared `guild_id` property), the grounded champion and
    * ability slot when a lookup resolved one, the outcome, and wake-to-reply
    * latency. Never transcript text, never audio, never speaker identity.
+   * `wake_to_reply_seconds` marks the FIRST assistant audio handed to the
+   * reply sink and is absent for turns that produced no reply audio.
    */
   voice_question_asked: {
     outcome: VoiceQuestionOutcome;
-    wake_to_reply_seconds: number;
+    wake_to_reply_seconds?: number | undefined;
     champion?: string | undefined;
     ability_slot?: string | undefined;
   };

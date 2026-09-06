@@ -129,7 +129,40 @@ describe("ScoutVoiceSession turns", () => {
     await session.handleCompletedTurn(pcm(), Date.now());
     expect(observations).toHaveLength(1);
     expect(observations[0]?.outcome).toBe("answered");
-    expect(observations[0]?.wakeToReplySeconds).toBeGreaterThanOrEqual(0);
+    // The stub never handed audio to the sink, so there is no first-reply
+    // latency to report — undefined, never a bogus turn duration.
+    expect(observations[0]?.wakeToReplySeconds).toBeUndefined();
+  });
+
+  test("latency marks the first audio handed to the sink, not turn end", async () => {
+    let clock = 10_000;
+    const observations: VoiceQuestionObservation[] = [];
+    const session = new ScoutVoiceSession({
+      guildId: "100000000000000001",
+      models: FAKE_MODELS,
+      openAiApiKey: "test-key",
+      createAssistantAudio: noopSink,
+      now: () => clock,
+      onQuestionObserved: (observation) => {
+        observations.push(observation);
+      },
+      runTurn: async (_options, input) => {
+        // First reply audio arrives 1.5 s after activation; the paced drain
+        // then takes far longer and must not count.
+        clock = 11_500;
+        input.assistantAudio.enqueue(new Uint8Array(2));
+        input.assistantAudio.enqueue(new Uint8Array(2));
+        clock = 40_000;
+        return {
+          transcript: "hey scout ping",
+          wakeVerified: true,
+          mutated: false,
+          normalizedCommand: "ping",
+        };
+      },
+    });
+    await session.handleCompletedTurn(pcm(), 10_000);
+    expect(observations[0]?.wakeToReplySeconds).toBe(1.5);
   });
 
   test("burst-exhausted wakes never open a turn", async () => {

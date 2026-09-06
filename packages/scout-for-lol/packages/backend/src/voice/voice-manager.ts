@@ -215,6 +215,20 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     source: SoundSource,
     volume = 1,
   ): Promise<void> {
+    if (!this.connections.has(guildId)) {
+      throw new Error(`No voice connection for guild ${guildId}`);
+    }
+
+    // Let an in-flight assistant reply finish (bounded), or duck under it.
+    const gate = await this.playbackGate?.(guildId);
+    const effectiveVolume = volume * (gate?.volumeMultiplier ?? 1);
+
+    // Re-fetched AFTER the gate wait on purpose: `/scout leave`, auto-leave,
+    // a rejoin, or connection loss can destroy and replace the connection
+    // while the gate holds this alert, and a player subscribed to the
+    // captured stale object would play into nothing while the caller records
+    // the alert as delivered. `forget()` clears the player map with the
+    // connection, so this also never reuses a player bound to a dead one.
     const connection = this.connections.get(guildId);
     if (!connection) {
       throw new Error(`No voice connection for guild ${guildId}`);
@@ -232,10 +246,6 @@ export class VoiceManager<C extends VoiceManagerConnection> {
         logger.error("Audio player error:", error);
       });
     }
-
-    // Let an in-flight assistant reply finish (bounded), or duck under it.
-    const gate = await this.playbackGate?.(guildId);
-    const effectiveVolume = volume * (gate?.volumeMultiplier ?? 1);
 
     // Get audio stream based on source type
     const stream = await getAudioStream(source);

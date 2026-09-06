@@ -14,7 +14,8 @@ export type VoiceQuestionCapture = {
   readonly guildId: string;
   readonly observation: {
     readonly outcome: VoiceQuestionOutcome;
-    readonly wakeToReplySeconds: number;
+    /** First-reply-audio latency; undefined when no reply audio existed. */
+    readonly wakeToReplySeconds: number | undefined;
     readonly champion: string | undefined;
     readonly abilitySlot: string | undefined;
   };
@@ -60,7 +61,9 @@ export async function captureVoiceQuestionAsked(
       event: "voice_question_asked",
       properties: {
         outcome: input.observation.outcome,
-        wake_to_reply_seconds: input.observation.wakeToReplySeconds,
+        ...(input.observation.wakeToReplySeconds === undefined
+          ? {}
+          : { wake_to_reply_seconds: input.observation.wakeToReplySeconds }),
         ...(input.observation.champion === undefined
           ? {}
           : { champion: input.observation.champion }),

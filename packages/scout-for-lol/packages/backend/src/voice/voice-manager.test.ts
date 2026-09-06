@@ -70,6 +70,26 @@ function managerHarness(): Harness {
   };
 }
 
+/** A playback gate whose completion the test controls. */
+function deferredGate() {
+  const state: { resolve: (value: { volumeMultiplier: number }) => void } = {
+    resolve: doNothing,
+  };
+  const promise = new Promise<{ volumeMultiplier: number }>((resolve) => {
+    state.resolve = resolve;
+  });
+  return {
+    promise,
+    release: () => {
+      state.resolve({ volumeMultiplier: 1 });
+    },
+  };
+}
+
+function doNothing(): void {
+  /* replaced synchronously by the Promise constructor */
+}
+
 describe("VoiceManager modes", () => {
   test("playback joins deafened, assistant joins undeafened", async () => {
     const h = managerHarness();
@@ -126,6 +146,23 @@ describe("VoiceManager modes", () => {
     expect(h.lost).toEqual([{ guildId: GUILD, mode: "assistant" }]);
     expect(h.manager.getConnection(GUILD)).toBeUndefined();
     expect(h.manager.getConnectionMode(GUILD)).toBeUndefined();
+  });
+
+  test("an alert held by the playback gate never plays into a torn-down connection", async () => {
+    const h = managerHarness();
+    const assistant = await h.manager.joinChannel(GUILD, "voice", "assistant");
+    const gate = deferredGate();
+    h.manager.setPlaybackGate(() => gate.promise);
+    const alert = h.manager.playSound(GUILD, {
+      type: "url",
+      url: "https://example.invalid/alert.mp3",
+    });
+    // The session ends while the gate holds the alert.
+    h.manager.leaveChannel(GUILD);
+    gate.release();
+    await expect(alert).rejects.toThrow("No voice connection");
+    // Nothing was subscribed to the destroyed connection after teardown.
+    expect(assistant.subscribed).toEqual([]);
   });
 
   test("a stale connection's loss callback cannot forget its replacement", async () => {
