@@ -60,7 +60,12 @@ export class PlaybackControls {
   }
 
   restart(userId: UserId): PlaybackCommandResult {
-    this.controllableCurrent(userId);
+    const view = this.controllableCurrent(userId);
+    if (view.state === "resolving") {
+      throw new PlaybackCommandBoundaryError(
+        "Playback is still loading; try restarting again once it starts.",
+      );
+    }
     this.deps.dispatch({ type: "RESTART" });
     return { outcome: "restarted", message: "Restarted from the beginning." };
   }

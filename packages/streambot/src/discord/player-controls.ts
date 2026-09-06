@@ -221,6 +221,15 @@ function resolveRequesterControl(
   if (view.current === null) {
     return { kind: "denied", message: "Nothing is playing." };
   }
+  if (
+    view.state === "resolving" &&
+    (action === ControlAction.Pause || action === ControlAction.Restart)
+  ) {
+    return {
+      kind: "denied",
+      message: "Playback is still loading; try again once it starts.",
+    };
+  }
   if (action === ControlAction.Skip) {
     return { kind: "dispatch", event: { type: "SKIP" }, ack: "⏭️ Skipped." };
   }

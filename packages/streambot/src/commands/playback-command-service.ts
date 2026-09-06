@@ -43,6 +43,7 @@ type PlayInput = {
   readonly source: VoicePlaySource;
   readonly placement: VoicePlayPlacement;
   readonly userId: UserId;
+  readonly sourceOverride?: Source;
   readonly signal?: AbortSignal;
   /** Slash commands may still supply supported URLs; spoken commands never may. */
   readonly spoken?: boolean;
@@ -165,6 +166,9 @@ export class PlaybackCommandService extends PlaybackControls {
     intent: MediaIntent,
     scope: DiscoveryScope | null,
   ): Promise<SelectedMedia> {
+    if (input.sourceOverride !== undefined) {
+      return { source: input.sourceOverride };
+    }
     if (input.spoken === false && isHttpUrl(query)) {
       if (input.source === "local" || input.source === "history") {
         throw new PlaybackCommandBoundaryError(
@@ -310,6 +314,7 @@ export class PlaybackCommandService extends PlaybackControls {
       source: "history",
       placement: "now",
       userId,
+      sourceOverride: candidate.source,
       ...(signal === undefined ? {} : { signal }),
     });
   }

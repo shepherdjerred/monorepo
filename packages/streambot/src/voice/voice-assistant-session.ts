@@ -153,6 +153,12 @@ export class VoiceAssistantSession {
         await turn.attempt.run(async () => {
           this.telemetry.turnStarted();
           try {
+            const consumedFollowUpCount = turn.followUp
+              ? this.followUpCount
+              : 0;
+            if (turn.followUp) {
+              this.clearFollowUp();
+            }
             const rateLimit = this.cloudVerificationLimiter.tryAcquire();
             if (!rateLimit.allowed) {
               voiceCloudVerificationRateLimitsTotal.inc({
@@ -208,7 +214,12 @@ export class VoiceAssistantSession {
               if (!result.wakeVerified) {
                 this.cloudVerificationLimiter.recordTranscriptRejection();
               }
-              this.updateFollowUp(turn.userId, turn.followUp, result);
+              this.updateFollowUp(
+                turn.userId,
+                turn.followUp,
+                result,
+                consumedFollowUpCount,
+              );
               turn.attempt.finish(voiceTurnOutcome(result));
             } catch (error) {
               if (transaction.signal.aborted) {
@@ -332,6 +343,7 @@ export class VoiceAssistantSession {
     userId: string,
     followUp: boolean,
     result: RealtimeCommandTurnResult,
+    consumedFollowUpCount = this.followUpCount,
   ): void {
     const shouldArmFollowUp =
       result.wakeVerified &&
@@ -339,7 +351,7 @@ export class VoiceAssistantSession {
       !result.mutated &&
       result.clarificationRequested === true;
     if (shouldArmFollowUp) {
-      const usedFollowUps = followUp ? this.followUpCount + 1 : 0;
+      const usedFollowUps = followUp ? consumedFollowUpCount + 1 : 0;
       if (usedFollowUps < 2) {
         this.followUpUserId = userId;
         this.followUpUntilMs = Date.now() + FOLLOW_UP_WINDOW_MS;

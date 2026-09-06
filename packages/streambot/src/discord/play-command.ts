@@ -226,6 +226,12 @@ async function runPlaylist(
   }
   const dispatchItems =
     placement === "next" || next ? items.toReversed() : items;
+  if (placement === "now" && dispatchItems.length > 0) {
+    const currentRequestId = deps.view().current?.requestId;
+    if (currentRequestId !== undefined) {
+      deps.history?.updateRequest(currentRequestId, "skipped");
+    }
+  }
   for (const [index, item] of dispatchItems.entries()) {
     const itemPlacement = playlistItemPlacement(index, placement, next);
     const source = { kind: "url", url: item.url, subtitles } as const;
