@@ -44,6 +44,8 @@ export const VOLUME_MAX_PERCENT = 200;
 export const ControlAction = {
   Back: "back",
   Forward: "forward",
+  Pause: "pause",
+  Restart: "restart",
   Skip: "skip",
   Stop: "stop",
   Loop: "loop",
@@ -124,6 +126,15 @@ export type ControlRequest = {
   readonly chapterNumber?: number | undefined;
 };
 
+const REQUESTER_CONTROL_DENIAL: Partial<Record<ControlAction, string>> = {
+  [ControlAction.Skip]: "Only the requester or an admin can skip this.",
+  [ControlAction.Pause]:
+    "Only the requester or an admin can pause or resume this.",
+  [ControlAction.Restart]: "Only the requester or an admin can restart this.",
+  [ControlAction.Subtitles]:
+    "Only the requester or an admin can change subtitles for this.",
+};
+
 /**
  * Resolve a click into an outcome. Every branch returns something — a denial is an outcome, not an
  * exception — so the caller always has an ephemeral reply to send and a click never silently fails
@@ -140,6 +151,16 @@ export function resolveControlAction(request: ControlRequest): ControlOutcome {
   }
 
   switch (action) {
+    case ControlAction.Skip:
+    case ControlAction.Pause:
+    case ControlAction.Restart:
+    case ControlAction.Subtitles:
+      return (
+        resolveRequesterControl(request) ?? {
+          kind: "denied",
+          message: "Unknown player control.",
+        }
+      );
     case ControlAction.Queue:
       return { kind: "ephemeral", text: queueSummary(view) };
     case ControlAction.Stop:
@@ -150,21 +171,6 @@ export function resolveControlAction(request: ControlRequest): ControlOutcome {
             ack: "⏹️ Stopped and cleared the queue.",
           }
         : { kind: "denied", message: "Only an admin can stop playback." };
-    case ControlAction.Skip:
-      return canControlItem(userId, view.current?.requesterId ?? null, adminIds)
-        ? { kind: "dispatch", event: { type: "SKIP" }, ack: "⏭️ Skipped." }
-        : {
-            kind: "denied",
-            message: "Only the requester or an admin can skip this.",
-          };
-    case ControlAction.Subtitles:
-      return canControlItem(userId, view.current?.requesterId ?? null, adminIds)
-        ? { kind: "subtitle-picker" }
-        : {
-            kind: "denied",
-            message:
-              "Only the requester or an admin can change subtitles for this.",
-          };
     case ControlAction.Loop: {
       const mode = nextLoopMode(view.loop);
       return {
@@ -190,6 +196,52 @@ export function resolveControlAction(request: ControlRequest): ControlOutcome {
     case ControlAction.Chapter:
       return chapterSeek(view, request.chapterNumber);
   }
+}
+
+function resolveRequesterControl(
+  request: ControlRequest,
+): ControlOutcome | null {
+  const { action, view, userId, adminIds } = request;
+  if (
+    action !== ControlAction.Skip &&
+    action !== ControlAction.Pause &&
+    action !== ControlAction.Restart &&
+    action !== ControlAction.Subtitles
+  ) {
+    return null;
+  }
+  if (!canControlItem(userId, view.current?.requesterId ?? null, adminIds)) {
+    return {
+      kind: "denied",
+      message:
+        REQUESTER_CONTROL_DENIAL[action] ??
+        "Only the requester or an admin can control this.",
+    };
+  }
+  if (view.current === null) {
+    return { kind: "denied", message: "Nothing is playing." };
+  }
+  if (action === ControlAction.Skip) {
+    return { kind: "dispatch", event: { type: "SKIP" }, ack: "⏭️ Skipped." };
+  }
+  if (action === ControlAction.Subtitles) return { kind: "subtitle-picker" };
+  if (action === ControlAction.Restart) {
+    return {
+      kind: "dispatch",
+      event: { type: "RESTART" },
+      ack: "⏮️ Restarted from the beginning.",
+    };
+  }
+  return view.paused === true
+    ? { kind: "dispatch", event: { type: "RESUME" }, ack: "▶️ Resumed." }
+    : {
+        kind: "dispatch",
+        event: {
+          type: "PAUSE",
+          positionSeconds: view.positionSeconds ?? 0,
+        },
+        ack: "⏸️ Paused.",
+      };
 }
 
 function volumeOutcome(target: number): ControlOutcome {

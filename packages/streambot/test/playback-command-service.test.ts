@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
-import {
-  PlaybackCommandBoundaryError,
-  PlaybackCommandService,
-} from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
@@ -174,10 +172,10 @@ describe("PlaybackCommandService queue and chapter surface", () => {
     };
     const { service, events } = createService({ queue: [queueItem] });
     expect(() => service.remove(OTHER, 1)).toThrow("requester or an admin");
-    expect(() => service.remove(USER, 5)).toThrow("no queue item");
+    expect(() => service.remove(USER, 5)).toThrow("no item at position");
     expect(service.remove(ADMIN, 1)).toEqual({
       outcome: "removed",
-      message: "Removed Queued Movie.",
+      message: "Removed **Queued Movie**.",
     });
     expect(() => service.clear(USER)).toThrow("Only an admin");
     expect(service.clear(ADMIN).outcome).toBe("cleared");

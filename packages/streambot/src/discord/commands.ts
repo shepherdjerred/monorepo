@@ -40,6 +40,31 @@ export const commandDefinitions = [
             .setDescription(
               "Preferred subtitle language, e.g. en, es, en.forced",
             ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("source")
+            .setDescription(
+              "Search history, local files, YouTube, or all sources",
+            )
+            .addChoices(
+              { name: "auto", value: "auto" },
+              { name: "history", value: "history" },
+              { name: "local", value: "local" },
+              { name: "youtube", value: "youtube" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("placement")
+            .setDescription(
+              "Add to queue, play next, or replace the current video",
+            )
+            .addChoices(
+              { name: "queue", value: "queue" },
+              { name: "next", value: "next" },
+              { name: "now", value: "now" },
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -71,6 +96,11 @@ export const commandDefinitions = [
     )
     .addSubcommand((sub) =>
       sub.setName("skip").setDescription("Skip the current video"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("join")
+        .setDescription("Join your voice channel and listen for requests"),
     )
     .addSubcommand((sub) =>
       sub
@@ -195,9 +225,20 @@ export const commandDefinitions = [
     .addSubcommand((sub) =>
       sub
         .setName("search")
-        .setDescription("Search the video library")
+        .setDescription("Search history, local files, and YouTube")
         .addStringOption((o) =>
           o.setName("query").setDescription("search terms").setRequired(true),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("source")
+            .setDescription("limit results to one source")
+            .addChoices(
+              { name: "auto", value: "auto" },
+              { name: "history", value: "history" },
+              { name: "local", value: "local" },
+              { name: "youtube", value: "youtube" },
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -214,6 +255,137 @@ export const commandDefinitions = [
       sub
         .setName("help")
         .setDescription("List all commands and supported sources"),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("playback")
+        .setDescription("Playback session controls")
+        .addSubcommand((sub) =>
+          sub.setName("pause").setDescription("Pause playback"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("resume").setDescription("Resume playback"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("restart").setDescription("Restart the current video"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("previous")
+            .setDescription("Play the previous server item"),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("leave").setDescription("Leave your voice channel"),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("history")
+        .setDescription("Recent playback history")
+        .addSubcommand((sub) =>
+          sub
+            .setName("list")
+            .setDescription("List recent media")
+            .addStringOption((option) =>
+              option
+                .setName("scope")
+                .setDescription("your history or this server's history")
+                .addChoices(
+                  { name: "mine", value: "mine" },
+                  { name: "server", value: "server" },
+                ),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("replay")
+            .setDescription("Replay an item from recent history")
+            .addIntegerOption((option) =>
+              option
+                .setName("index")
+                .setDescription("history position")
+                .setMinValue(1)
+                .setRequired(true),
+            )
+            .addStringOption((option) =>
+              option
+                .setName("scope")
+                .setDescription("your history or this server's history")
+                .addChoices(
+                  { name: "mine", value: "mine" },
+                  { name: "server", value: "server" },
+                ),
+            ),
+        ),
+    )
+    .addSubcommandGroup((group) =>
+      group
+        .setName("personal")
+        .setDescription("Favorites and saved queues")
+        .addSubcommand((sub) =>
+          sub
+            .setName("favorite-add")
+            .setDescription("Favorite the current video"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("favorite-remove")
+            .setDescription("Remove a favorite")
+            .addIntegerOption((option) =>
+              option
+                .setName("index")
+                .setDescription("favorite position")
+                .setMinValue(1)
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("favorites").setDescription("List your favorites"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("save-queue")
+            .setDescription("Save the current queue")
+            .addStringOption((option) =>
+              option
+                .setName("name")
+                .setDescription("queue name")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("saved-queues").setDescription("List saved queues"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("load-queue")
+            .setDescription("Load a saved queue")
+            .addStringOption((option) =>
+              option
+                .setName("name")
+                .setDescription("queue name")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("delete-queue")
+            .setDescription("Delete a saved queue")
+            .addStringOption((option) =>
+              option
+                .setName("name")
+                .setDescription("queue name")
+                .setRequired(true),
+            ),
+        )
+        .addSubcommand((sub) =>
+          sub.setName("usual").setDescription("Play your most frequent item"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("continue")
+            .setDescription("Continue your most recent series"),
+        ),
     )
     .addSubcommandGroup((group) =>
       group

@@ -1,6 +1,5 @@
 import { RealtimeAgent, RealtimeSession } from "@openai/agents/realtime";
 import type { RealtimeTransportLayer } from "@openai/agents/realtime";
-import { z } from "zod";
 import { wakePcmToOpenAiPcm } from "@shepherdjerred/discord-video-stream";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import {
@@ -17,7 +16,6 @@ import {
   voiceOpenAiFailuresTotal,
   voiceReplySendFailuresTotal,
   voiceTranscriptVerificationsTotal,
-  voiceTranscriptionUsageTotal,
   voiceTurnsTotal,
   voiceWakeToReplySeconds,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
@@ -40,13 +38,26 @@ import {
   VoiceMutationGate,
 } from "@shepherdjerred/streambot/voice/voice-tools.ts";
 import { realtimeErrorToError } from "@shepherdjerred/streambot/voice/realtime-errors.ts";
+import {
+  ConversationItemCreatedEventSchema,
+  ConversationItemDeletedEventSchema,
+  normalizeTranscript,
+  recordTranscriptionUsage,
+  TranscriptionCompletedEventSchema,
+  TranscriptionFailedEventSchema,
+  verifyWakeTranscript,
+  type CompletedTranscription,
+} from "@shepherdjerred/streambot/voice/realtime-transcript.ts";
 
 const INSTRUCTIONS = `You are Streambot, a voice-only media playback controller.
 Handle exactly one concise playback request. You may only use the supplied Streambot tools.
 Never answer general knowledge, browse, accept URLs, or invent media state.
 For a clear request, call the single best tool and briefly speak its result.
-When a spoken title is uncertain, ground it with search_library first, then play the best match.
-If the request is ambiguous, ask the speaker to try again more specifically and execute nothing.
+Default play requests to source auto, which searches history, local files, and YouTube.
+Treat “song by character” requests as likely AI covers; preserve the work and character in the query.
+For “again”, “that song”, numbered choices, and similar references, use history or the pending search context.
+When a title is uncertain, call search_media first. Read at most three choices and ask for first, second, or third.
+Use placement queue unless the speaker explicitly says next or now.
 Never call more than one mutating tool. Keep every spoken reply to one short sentence.`;
 
 function audioTokenCount(details: readonly Record<string, number>[]): number {
@@ -69,6 +80,7 @@ export type RealtimeVoiceTurnInput = {
   readonly createTransport?: () => RealtimeTransportLayer;
   readonly attempt?: VoiceAttemptHandle;
   readonly telemetry?: VoiceSessionTelemetry;
+  readonly wakeRequired?: boolean;
 };
 
 export type RealtimeCommandTurnInput = {
@@ -83,6 +95,7 @@ export type RealtimeCommandTurnInput = {
   readonly createTransport?: () => RealtimeTransportLayer;
   /** No-op in local probes/corpus evaluation. */
   readonly attempt?: VoiceAttemptHandle;
+  readonly wakeRequired?: boolean;
 };
 
 export type RealtimeCommandTurnResult = {
@@ -91,49 +104,6 @@ export type RealtimeCommandTurnResult = {
   readonly mutated: boolean;
   readonly normalizedCommand: string | null;
 };
-
-const TranscriptionCompletedEventSchema = z.object({
-  type: z.literal("conversation.item.input_audio_transcription.completed"),
-  item_id: z.string().min(1),
-  transcript: z.string(),
-  usage: z.union([
-    z.object({
-      type: z.literal("tokens"),
-      input_tokens: z.number().nonnegative(),
-      output_tokens: z.number().nonnegative(),
-      total_tokens: z.number().nonnegative(),
-      input_token_details: z
-        .object({
-          audio_tokens: z.number().nonnegative().optional(),
-          text_tokens: z.number().nonnegative().optional(),
-        })
-        .optional(),
-    }),
-    z.object({
-      type: z.literal("duration"),
-      seconds: z.number().nonnegative(),
-    }),
-  ]),
-});
-
-const TranscriptionFailedEventSchema = z.object({
-  type: z.literal("conversation.item.input_audio_transcription.failed"),
-  error: z.unknown().optional(),
-});
-
-const ConversationItemDeletedEventSchema = z.object({
-  type: z.literal("conversation.item.deleted"),
-  item_id: z.string().min(1),
-});
-
-// The Realtime GA API renamed this event from "conversation.item.created" to
-// "conversation.item.added"; the SDK forwards the raw name. Matching only the old
-// name left the command-item wait hanging until the transaction timeout, so no
-// command ever ran. Accept both so the turn works across API revisions.
-const ConversationItemCreatedEventSchema = z.object({
-  type: z.enum(["conversation.item.added", "conversation.item.created"]),
-  item: z.object({ id: z.string().min(1) }),
-});
 
 export function buildRealtimeSessionConfig() {
   return {
@@ -152,51 +122,6 @@ export function buildRealtimeSessionConfig() {
       },
     },
   };
-}
-
-export type VerifiedWakeTranscript = {
-  readonly normalized: string;
-  readonly command: string;
-};
-
-/** Strict final wake gate. The phrase must be the leading normalized words. */
-export function verifyWakeTranscript(
-  transcript: string,
-): VerifiedWakeTranscript | null {
-  const normalized = transcript
-    .toLocaleLowerCase("en-US")
-    .replaceAll(/[^a-z0-9\s]/g, " ")
-    .replaceAll(/\s+/g, " ")
-    .trim();
-  for (const prefix of ["hey streambot", "hey stream bot", "hey streamboat"]) {
-    if (normalized === prefix) return { normalized, command: "" };
-    if (normalized.startsWith(`${prefix} `)) {
-      return { normalized, command: normalized.slice(prefix.length + 1) };
-    }
-  }
-  return null;
-}
-
-type CompletedTranscription = z.infer<typeof TranscriptionCompletedEventSchema>;
-
-function recordTranscriptionUsage(
-  usage: CompletedTranscription["usage"],
-): void {
-  if (usage.type === "duration") {
-    voiceTranscriptionUsageTotal.inc(
-      { unit: "seconds", direction: "input" },
-      usage.seconds,
-    );
-    return;
-  }
-  voiceTranscriptionUsageTotal.inc(
-    { unit: "tokens", direction: "input" },
-    usage.input_tokens,
-  );
-  voiceTranscriptionUsageTotal.inc(
-    { unit: "tokens", direction: "output" },
-    usage.output_tokens,
-  );
 }
 
 function aborted(signal: AbortSignal): Promise<never> {
@@ -284,6 +209,19 @@ export async function runRealtimeCommandTurn(
     }
   })();
   const completed = new Promise<void>((resolve) => {
+    let observedToolCalls = 0;
+    let completedToolCalls = 0;
+    let resolved = false;
+
+    // The transport reports the function call before the SDK starts executing it. Counting at
+    // this boundary closes an SDK ordering race where `agent_end` for the tool-request response
+    // can arrive before `agent_tool_start`/`agent_tool_end`.
+    session.transport.on("function_call", () => {
+      observedToolCalls += 1;
+    });
+    session.on("agent_tool_end", () => {
+      completedToolCalls += 1;
+    });
     session.on("audio", (event) => {
       if (firstAudio) {
         firstAudio = false;
@@ -293,13 +231,14 @@ export async function runRealtimeCommandTurn(
       }
       input.assistantAudio.enqueue(new Uint8Array(event.data));
     });
-    // Resolve on agent_end, not audio_stopped. The SDK dispatches the model's tool
-    // call a few milliseconds AFTER audio_stopped, so resolving on audio_stopped
-    // closed the session before the command (play/skip/…) ever executed — every
-    // command turn produced zero invocations. agent_end fires once the agent's turn
-    // is fully complete: spoken reply generated and any tool call executed.
+    // An `agent_end` is response-scoped, not transaction-scoped. A response that asks for a tool
+    // may end before the SDK finishes that tool; the tool output then starts the assistant's reply
+    // response. Only the first agent_end at which every observed tool has completed is terminal.
     session.on("agent_end", () => {
-      resolve();
+      if (!resolved && completedToolCalls >= observedToolCalls) {
+        resolved = true;
+        resolve();
+      }
     });
   });
   const sessionFailure = new Promise<never>((_resolve, reject) => {
@@ -354,7 +293,13 @@ export async function runRealtimeCommandTurn(
     );
     recordTranscriptionUsage(transcriptionResult.usage);
     attempt.cloudUsage({ transcription: transcriptionResult.usage });
-    const verified = verifyWakeTranscript(transcriptionResult.transcript);
+    const verified =
+      input.wakeRequired === false
+        ? {
+            normalized: normalizeTranscript(transcriptionResult.transcript),
+            command: normalizeTranscript(transcriptionResult.transcript),
+          }
+        : verifyWakeTranscript(transcriptionResult.transcript);
     if (verified === null) {
       attempt.transcription({
         transcript: transcriptionResult.transcript,
@@ -529,5 +474,8 @@ export async function runRealtimeVoiceTurn(
     ...(input.createTransport === undefined
       ? {}
       : { createTransport: input.createTransport }),
+    ...(input.wakeRequired === undefined
+      ? {}
+      : { wakeRequired: input.wakeRequired }),
   });
 }

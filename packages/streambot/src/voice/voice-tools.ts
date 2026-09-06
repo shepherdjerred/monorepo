@@ -1,10 +1,10 @@
 import { tool } from "@openai/agents/realtime";
 import { z } from "zod";
+import { type PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import {
   PlaybackCommandBlockedError,
   PlaybackCommandBoundaryError,
-  type PlaybackCommandService,
-} from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+} from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { voiceToolCallsTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { voiceToolDurationSeconds } from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
@@ -17,8 +17,8 @@ const EmptyInputSchema = z.strictObject({});
 export const voiceToolSchemas = {
   play: z.strictObject({
     query: z.string().min(1),
-    source: z.enum(["auto", "local", "youtube"]),
-    placement: z.enum(["queue", "next"]),
+    source: z.enum(["auto", "history", "local", "youtube"]),
+    placement: z.enum(["queue", "next", "now"]),
   }),
   skip: EmptyInputSchema,
   stop: EmptyInputSchema,
@@ -39,7 +39,19 @@ export const voiceToolSchemas = {
     target: z.union([z.number().int().min(1), z.enum(["next", "previous"])]),
   }),
   subtitlesOff: EmptyInputSchema,
+  subtitles: z.strictObject({
+    mode: z.enum(["off", "auto", "language"]),
+    language: z.string().min(1).nullable(),
+  }),
+  pause: EmptyInputSchema,
+  resume: EmptyInputSchema,
+  restart: EmptyInputSchema,
+  previous: EmptyInputSchema,
   searchLibrary: z.strictObject({ query: z.string().min(1) }),
+  searchMedia: z.strictObject({
+    query: z.string().min(1),
+    source: z.enum(["auto", "history", "local", "youtube"]),
+  }),
   listChapters: EmptyInputSchema,
   getQueue: EmptyInputSchema,
   getNowPlaying: EmptyInputSchema,
@@ -58,7 +70,13 @@ type ToolName =
   | "move"
   | "chapter"
   | "subtitles_off"
+  | "subtitles"
+  | "pause"
+  | "resume"
+  | "restart"
+  | "previous"
   | "search_library"
+  | "search_media"
   | "list_chapters"
   | "get_queue"
   | "get_now_playing";
@@ -96,8 +114,20 @@ export type VoiceCommandInvocation =
       readonly arguments: Record<string, never>;
     }
   | {
+      readonly name: "subtitles";
+      readonly arguments: z.infer<typeof voiceToolSchemas.subtitles>;
+    }
+  | { readonly name: "pause"; readonly arguments: Record<string, never> }
+  | { readonly name: "resume"; readonly arguments: Record<string, never> }
+  | { readonly name: "restart"; readonly arguments: Record<string, never> }
+  | { readonly name: "previous"; readonly arguments: Record<string, never> }
+  | {
       readonly name: "search_library";
       readonly arguments: z.infer<typeof voiceToolSchemas.searchLibrary>;
+    }
+  | {
+      readonly name: "search_media";
+      readonly arguments: z.infer<typeof voiceToolSchemas.searchMedia>;
     }
   | {
       readonly name: "list_chapters";
@@ -128,7 +158,20 @@ export type VoiceCommandPort = {
     target: number | "next" | "previous",
   ) => string | Promise<string>;
   readonly subtitlesOff: () => string | Promise<string>;
+  readonly subtitles: (
+    mode: "off" | "auto" | "language",
+    language: string | null,
+  ) => string | Promise<string>;
+  readonly pause: () => string | Promise<string>;
+  readonly resume: () => string | Promise<string>;
+  readonly restart: () => string | Promise<string>;
+  readonly previous: (signal: AbortSignal) => string | Promise<string>;
   readonly searchLibrary: (query: string) => string | Promise<string>;
+  readonly searchMedia: (
+    query: string,
+    source: PlayArguments["source"],
+    signal: AbortSignal,
+  ) => string | Promise<string>;
   readonly listChapters: () => string | Promise<string>;
   readonly getQueue: () => string | Promise<string>;
   readonly getNowPlaying: () => string | Promise<string>;
@@ -167,9 +210,20 @@ export function bindPlaybackVoiceCommandPort(
       return result.message;
     },
     subtitlesOff: () => service.subtitlesOff(userId).message,
+    subtitles: (mode, language) =>
+      service.subtitles(userId, mode, language ?? undefined).message,
+    pause: () => service.pause(userId).message,
+    resume: () => service.resume(userId).message,
+    restart: () => service.restart(userId).message,
+    previous: async (signal) => {
+      const result = await service.previous(userId, signal);
+      return result.message;
+    },
     // Five grounded titles is plenty for one spoken disambiguation and keeps the tool result
     // small in the realtime context.
     searchLibrary: (query) => service.searchLibraryTitles(query, 5),
+    searchMedia: (query, source, signal) =>
+      service.searchMediaTitles(query, userId, source, signal),
     listChapters: () => service.listChapters(),
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
@@ -371,6 +425,45 @@ export function createStreambotVoiceTools(
         invoke("subtitles_off", true, input, () => commands.subtitlesOff()),
     }),
     tool({
+      name: "subtitles",
+      description:
+        "Set subtitles off, automatic, or to a requested language for the current video.",
+      parameters: voiceToolSchemas.subtitles,
+      execute: (input) =>
+        invoke("subtitles", true, input, () =>
+          commands.subtitles(input.mode, input.language),
+        ),
+    }),
+    tool({
+      name: "pause",
+      description: "Pause the current video.",
+      parameters: voiceToolSchemas.pause,
+      execute: (input) => invoke("pause", true, input, () => commands.pause()),
+    }),
+    tool({
+      name: "resume",
+      description: "Resume a paused video.",
+      parameters: voiceToolSchemas.resume,
+      execute: (input) =>
+        invoke("resume", true, input, () => commands.resume()),
+    }),
+    tool({
+      name: "restart",
+      description: "Restart the current video from the beginning.",
+      parameters: voiceToolSchemas.restart,
+      execute: (input) =>
+        invoke("restart", true, input, () => commands.restart()),
+    }),
+    tool({
+      name: "previous",
+      description: "Play the previous item from this server again.",
+      parameters: voiceToolSchemas.previous,
+      execute: (input) =>
+        invoke("previous", true, input, () =>
+          commands.previous(transactionSignal),
+        ),
+    }),
+    tool({
       name: "search_library",
       description:
         "Search the local library by title and hear the closest matches, without changing playback. Use this to disambiguate before play.",
@@ -378,6 +471,16 @@ export function createStreambotVoiceTools(
       execute: (input) =>
         invoke("search_library", false, input, () =>
           commands.searchLibrary(input.query),
+        ),
+    }),
+    tool({
+      name: "search_media",
+      description:
+        "Search playback history, local files, and YouTube and return up to five numbered matches. Use this for ambiguous titles and character covers.",
+      parameters: voiceToolSchemas.searchMedia,
+      execute: (input) =>
+        invoke("search_media", false, input, () =>
+          commands.searchMedia(input.query, input.source, transactionSignal),
         ),
     }),
     tool({

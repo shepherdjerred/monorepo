@@ -1,8 +1,4 @@
-import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import {
-  canControlItem,
-  isAdmin,
-} from "@shepherdjerred/streambot/discord/permissions.ts";
+import { canControlItem } from "@shepherdjerred/streambot/discord/permissions.ts";
 import {
   classifyPlayError,
   isHttpUrl,
@@ -12,81 +8,58 @@ import {
   isBlockedSource,
   shameMessage,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
-import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
-import {
-  chaptersText,
-  nowPlayingText,
-  queueText,
-} from "@shepherdjerred/streambot/discord/queue-text.ts";
-import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import type {
-  LoopMode,
-  PlaybackEvent,
-  ResolvedSource,
-} from "@shepherdjerred/streambot/machine/types.ts";
-import {
-  findBestMatch,
-  searchLibrary,
-  type LibraryEntry,
-} from "@shepherdjerred/streambot/sources/library.ts";
-import { findChapterAt } from "@shepherdjerred/streambot/sources/chapters.ts";
+import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import { findBestMatch } from "@shepherdjerred/streambot/sources/library.ts";
 import {
   sourceLabel,
   type Source,
+  type SubtitlePref,
+  withSubtitles,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
+import {
+  inferMediaIntent,
+  type MediaIntent,
+} from "@shepherdjerred/streambot/discovery/media-intent.ts";
+import type {
+  DiscoveryScope,
+  MediaCandidate,
+} from "@shepherdjerred/streambot/discovery/candidate.ts";
+import type { RecordMedia } from "@shepherdjerred/streambot/history/media-history.ts";
+import {
+  PlaybackCommandBlockedError,
+  PlaybackCommandBoundaryError,
+} from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import { PlaybackControls } from "@shepherdjerred/streambot/commands/playback-controls.ts";
+import type { PlaybackCommandResult } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 
 const RESOLVE_TIMEOUT_MS = 30_000;
 
-export type VoicePlaySource = "auto" | "local" | "youtube";
-export type VoicePlayPlacement = "queue" | "next";
+export type VoicePlaySource = "auto" | "history" | "local" | "youtube";
+export type VoicePlayPlacement = "queue" | "next" | "now";
 
-export type PlaybackCommandServiceDeps = {
-  readonly config: Pick<Config, "discord">;
-  readonly dispatch: (event: PlaybackEvent) => void;
-  readonly view: () => PlaybackView;
-  readonly library: () => readonly LibraryEntry[];
-  readonly setVolume: (percent: number) => Promise<boolean>;
-  readonly seek: (seconds: number) => Promise<boolean>;
-  readonly resolvePlaySource: (
-    source: Source,
-    signal: AbortSignal,
-  ) => Promise<ResolvedSource>;
-  /** Public status-channel announcement, used for blocked-source shaming parity with slash. */
-  readonly announce: (message: string) => Promise<void>;
+type PlayInput = {
+  readonly query: string;
+  readonly source: VoicePlaySource;
+  readonly placement: VoicePlayPlacement;
+  readonly userId: UserId;
+  readonly signal?: AbortSignal;
+  /** Slash commands may still supply supported URLs; spoken commands never may. */
+  readonly spoken?: boolean;
+  readonly subtitles?: SubtitlePref;
 };
 
-export class PlaybackCommandBoundaryError extends Error {}
+type SelectedMedia = {
+  readonly source: Source;
+  readonly candidate?: MediaCandidate;
+};
 
-/**
- * A blocked-source denial. Unlike ordinary boundary errors it fires a public side effect (the
- * shame announce) before throwing, so the voice mutation gate must NOT be released for it — a
- * retry in the same wake could repeat the announce or slip a second mutation in.
- */
-export class PlaybackCommandBlockedError extends PlaybackCommandBoundaryError {}
-
-/**
- * What a mutating command actually did, alongside its speakable message. Callers branch on the
- * outcome — never on the English text, which the voice assistant paraphrases and this service is
- * free to reword.
- */
-export type PlaybackCommandResult = {
-  readonly outcome:
-    | "queued"
-    | "queued-next"
-    | "skipped"
-    | "stopped"
-    | "seeked"
-    | "volume-set"
-    | "volume-deferred"
-    | "loop-set"
-    | "shuffled"
-    | "removed"
-    | "cleared"
-    | "moved"
-    | "chapter-jumped"
-    | "subtitles-off";
-  readonly message: string;
+type ResolvePlayableInput = {
+  readonly source: Source;
+  readonly play: PlayInput;
+  readonly query: string;
+  readonly intent: MediaIntent;
+  readonly scope: DiscoveryScope | null;
 };
 
 export function normalizeVoicePlayQuery(query: string): string {
@@ -100,155 +73,227 @@ export function normalizeVoicePlayQuery(query: string): string {
 }
 
 /** Permission-checked operations shared by slash commands and the voice agent. */
-export class PlaybackCommandService {
-  constructor(private readonly deps: PlaybackCommandServiceDeps) {}
-
-  async play(input: {
-    query: string;
-    source: VoicePlaySource;
-    placement: VoicePlayPlacement;
-    userId: UserId;
-    signal?: AbortSignal;
-  }): Promise<PlaybackCommandResult> {
+export class PlaybackCommandService extends PlaybackControls {
+  async play(input: PlayInput): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
-    const query = normalizeVoicePlayQuery(input.query);
-    const source = this.selectSource(query, input.source);
+    const query = this.normalizePlayQuery(input);
+    const intent = inferMediaIntent({
+      query,
+      source: input.source,
+      placement: input.placement,
+    });
+    const scope = this.scope(input.userId);
+    const selected = await this.selectMedia(input, query, intent, scope);
+    const source = withSubtitles(selected.source, input.subtitles);
     if (isBlockedSource(source)) {
       await this.announceBlocked(input.userId);
     }
-    let preResolved: ResolvedSource | undefined;
-    if (source.kind !== "file") {
-      try {
-        const signal =
-          input.signal === undefined
-            ? AbortSignal.timeout(RESOLVE_TIMEOUT_MS)
-            : AbortSignal.any([
-                input.signal,
-                AbortSignal.timeout(RESOLVE_TIMEOUT_MS),
-              ]);
-        preResolved = await this.deps.resolvePlaySource(source, signal);
-        signal.throwIfAborted();
-      } catch (error) {
-        if (error instanceof BlockedSourceError) {
-          await this.announceBlocked(input.userId);
-        }
-        throw new PlaybackCommandBoundaryError(
-          classifyPlayError(error, source.kind),
-        );
-      }
-    }
+    const preResolved = await this.resolvePlayable({
+      source,
+      play: input,
+      query,
+      intent,
+      scope,
+    });
     input.signal?.throwIfAborted();
+    this.assertCanPlayNow(input);
+    const media = this.toRecordMedia(source, preResolved, selected.candidate);
+    const requestId = await this.recordRequest(scope, query, intent, media);
+    if (input.placement === "now") {
+      this.markReplacedRequest();
+    }
     this.deps.dispatch({
-      type: input.placement === "next" ? "ADD_NEXT" : "ADD",
+      type:
+        input.placement === "now"
+          ? "PLAY_NOW"
+          : input.placement === "next"
+            ? "ADD_NEXT"
+            : "ADD",
       source,
       requesterId: input.userId,
+      ...(requestId === undefined ? {} : { requestId }),
       ...(preResolved === undefined ? {} : { preResolved }),
     });
-    return input.placement === "next"
-      ? {
-          outcome: "queued-next",
-          message: `Playing ${sourceLabel(source)} next.`,
-        }
-      : { outcome: "queued", message: `Queued ${sourceLabel(source)}.` };
+    const label =
+      selected.candidate?.title ?? preResolved?.title ?? sourceLabel(source);
+    return this.playResult(input.placement, label);
   }
 
-  skip(userId: UserId): PlaybackCommandResult {
+  private normalizePlayQuery(input: PlayInput): string {
+    const query =
+      input.spoken === false
+        ? input.query.trim()
+        : normalizeVoicePlayQuery(input.query);
+    if (query.length === 0) {
+      throw new PlaybackCommandBoundaryError("Say what you want me to play.");
+    }
+    return query;
+  }
+
+  private async selectMedia(
+    input: PlayInput,
+    query: string,
+    intent: MediaIntent,
+    scope: DiscoveryScope | null,
+  ): Promise<SelectedMedia> {
+    if (input.spoken === false && isHttpUrl(query)) {
+      return { source: { kind: "url", url: query } };
+    }
+    const discoveryEnabled = await this.discoveryEnabled(scope);
+    if (
+      !discoveryEnabled ||
+      scope === null ||
+      this.deps.discovery === undefined
+    ) {
+      return { source: this.selectSource(query, input.source) };
+    }
+    const result = await this.deps.discovery.resolve(
+      intent,
+      scope,
+      this.boundedSignal(input.signal),
+    );
+    if (result.kind === "not-found") {
+      await this.recordFailed(scope, query, intent, "not-found");
+      throw new PlaybackCommandBoundaryError(
+        `I couldn't find ${query} in history, the library, or YouTube.`,
+      );
+    }
+    if (result.kind === "ambiguous") {
+      await this.recordFailed(scope, query, intent, "ambiguous");
+      const choices = result.candidates
+        .slice(0, 3)
+        .map((item, index) => `${String(index + 1)}, ${item.title}`)
+        .join("; ");
+      throw new PlaybackCommandBoundaryError(
+        `I found a few matches: ${choices}. Say first, second, or third.`,
+      );
+    }
+    return { source: result.candidate.source, candidate: result.candidate };
+  }
+
+  private async resolvePlayable(
+    input: ResolvePlayableInput,
+  ): Promise<ResolvedSource | undefined> {
+    const { source, play, query, intent, scope } = input;
+    if (source.kind === "file") return undefined;
+    const signal = this.boundedSignal(play.signal);
+    try {
+      const resolved = await this.deps.resolvePlaySource(source, signal);
+      signal.throwIfAborted();
+      return resolved;
+    } catch (error) {
+      if (error instanceof BlockedSourceError) {
+        await this.announceBlocked(play.userId);
+      }
+      if (scope !== null) {
+        await this.recordFailed(scope, query, intent, "resolve-failed");
+      }
+      throw new PlaybackCommandBoundaryError(
+        classifyPlayError(error, source.kind),
+      );
+    }
+  }
+
+  private boundedSignal(signal: AbortSignal | undefined): AbortSignal {
+    const timeout = AbortSignal.timeout(RESOLVE_TIMEOUT_MS);
+    return signal === undefined ? timeout : AbortSignal.any([signal, timeout]);
+  }
+
+  private async discoveryEnabled(
+    scope: DiscoveryScope | null,
+  ): Promise<boolean> {
+    if (scope !== null && this.deps.featureGate !== undefined) {
+      return await this.deps.featureGate.assistantV2(scope);
+    }
+    return this.deps.discovery !== undefined;
+  }
+
+  private assertCanPlayNow(input: PlayInput): void {
+    if (input.placement !== "now") return;
     const current = this.deps.view().current;
     if (
+      current !== null &&
       !canControlItem(
-        userId,
-        current?.requesterId ?? null,
+        input.userId,
+        current.requesterId,
         this.deps.config.discord.adminIds,
       )
     ) {
       throw new PlaybackCommandBoundaryError(
-        "Only the requester or an admin can skip this.",
+        "Only the requester or an admin can replace the current video.",
       );
     }
-    this.deps.dispatch({ type: "SKIP" });
-    return { outcome: "skipped", message: "Skipped." };
   }
 
-  stop(userId: UserId): PlaybackCommandResult {
-    if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
-      throw new PlaybackCommandBoundaryError(
-        "Only an admin can stop playback.",
-      );
+  private async recordRequest(
+    scope: DiscoveryScope | null,
+    query: string,
+    intent: MediaIntent,
+    media: RecordMedia,
+  ): Promise<string | undefined> {
+    if (scope === null || this.deps.history === undefined) return undefined;
+    const enabled =
+      this.deps.featureGate === undefined ||
+      (await this.deps.featureGate.history(scope));
+    return enabled
+      ? this.deps.history.recordQueueRequest({
+          scope,
+          rawQuery: query,
+          intent,
+          media,
+        })
+      : undefined;
+  }
+
+  private markReplacedRequest(): void {
+    const requestId = this.deps.view().current?.requestId;
+    if (requestId !== undefined) {
+      this.deps.history?.updateRequest(requestId, "skipped");
     }
-    this.deps.dispatch({ type: "STOP" });
-    return { outcome: "stopped", message: "Stopped and cleared the queue." };
   }
 
-  async seek(
+  private playResult(
+    placement: VoicePlayPlacement,
+    label: string,
+  ): PlaybackCommandResult {
+    if (placement === "now") {
+      return { outcome: "playing-now", message: `Playing ${label} now.` };
+    }
+    return placement === "next"
+      ? { outcome: "queued-next", message: `Playing ${label} next.` }
+      : { outcome: "queued", message: `Queued ${label}.` };
+  }
+
+  async previous(
     userId: UserId,
-    seconds: number,
-    relative: boolean,
+    signal?: AbortSignal,
   ): Promise<PlaybackCommandResult> {
-    const view = this.deps.view();
-    if (view.current === null)
-      throw new PlaybackCommandBoundaryError("Nothing is playing.");
+    const scope = this.scope(userId);
+    if (scope === null || this.deps.history === undefined) {
+      throw new PlaybackCommandBoundaryError(
+        "Playback history is not available.",
+      );
+    }
     if (
-      !canControlItem(
-        userId,
-        view.current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
+      this.deps.featureGate !== undefined &&
+      !(await this.deps.featureGate.history(scope))
     ) {
       throw new PlaybackCommandBoundaryError(
-        "Only the requester or an admin can seek this.",
+        "Playback history is not available.",
       );
     }
-    if (relative && view.positionSeconds === null) {
-      throw new PlaybackCommandBoundaryError(
-        "The current position is unavailable.",
-      );
+    const current = this.deps.view().current;
+    const candidate = this.deps.history.previous(scope, current?.sourceId);
+    if (candidate === null) {
+      throw new PlaybackCommandBoundaryError("There is no previous item yet.");
     }
-    const target = Math.max(
-      0,
-      relative ? (view.positionSeconds ?? 0) + seconds : seconds,
-    );
-    if (!(await this.deps.seek(target)))
-      throw new PlaybackCommandBoundaryError("Nothing is playing.");
-    return {
-      outcome: "seeked",
-      message: `Seeked to ${formatTimecode(target)}.`,
-    };
-  }
-
-  async setVolume(percent: number): Promise<PlaybackCommandResult> {
-    this.deps.dispatch({ type: "SET_VOLUME", volume: percent });
-    const applied = await this.deps.setVolume(percent);
-    return applied
-      ? {
-          outcome: "volume-set",
-          message: `Volume set to ${String(percent)} percent.`,
-        }
-      : {
-          outcome: "volume-deferred",
-          message: `Volume set to ${String(percent)} percent for the next video.`,
-        };
-  }
-
-  setLoop(mode: LoopMode): PlaybackCommandResult {
-    this.deps.dispatch({ type: "SET_LOOP", mode });
-    return { outcome: "loop-set", message: `Loop set to ${mode}.` };
-  }
-
-  shuffle(): PlaybackCommandResult {
-    const count = this.deps.view().queue.length;
-    this.deps.dispatch({ type: "SHUFFLE" });
-    return {
-      outcome: "shuffled",
-      message: `Shuffled ${String(count)} items.`,
-    };
-  }
-
-  getQueue(): string {
-    return queueText(this.deps.view(), { mentions: false });
-  }
-
-  getNowPlaying(): string {
-    return nowPlayingText(this.deps.view(), { mentions: false });
+    return await this.play({
+      query: candidate.title,
+      source: "history",
+      placement: "now",
+      userId,
+      ...(signal === undefined ? {} : { signal }),
+    });
   }
 
   /**
@@ -260,151 +305,32 @@ export class PlaybackCommandService {
     throw new PlaybackCommandBlockedError("Nope. That's not allowed.");
   }
 
-  remove(userId: UserId, position: number): PlaybackCommandResult {
-    const item = this.deps.view().queue[position - 1];
-    if (item === undefined) {
-      throw new PlaybackCommandBoundaryError(
-        `There's no queue item ${String(position)}.`,
-      );
-    }
-    if (
-      !canControlItem(
-        userId,
-        item.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
-      throw new PlaybackCommandBoundaryError(
-        "Only the requester or an admin can remove this.",
-      );
-    }
-    this.deps.dispatch({ type: "REMOVE", index: position });
-    return { outcome: "removed", message: `Removed ${item.title}.` };
-  }
-
-  clear(userId: UserId): PlaybackCommandResult {
-    if (!isAdmin(userId, this.deps.config.discord.adminIds)) {
-      throw new PlaybackCommandBoundaryError(
-        "Only an admin can clear the queue.",
-      );
-    }
-    const count = this.deps.view().queue.length;
-    this.deps.dispatch({ type: "CLEAR" });
-    return {
-      outcome: "cleared",
-      message: `Cleared ${String(count)} queued items.`,
-    };
-  }
-
-  // Mirrors /stream move, which has no permission gate; voice adds bounds checks only so a
-  // misheard position gets a spoken correction instead of a silent no-op.
-  move(from: number, to: number): PlaybackCommandResult {
-    const queue = this.deps.view().queue;
-    const item = queue[from - 1];
-    if (item === undefined || to < 1 || to > queue.length) {
-      throw new PlaybackCommandBoundaryError(
-        `Those queue positions don't exist. The queue has ${String(queue.length)} items.`,
-      );
-    }
-    this.deps.dispatch({ type: "MOVE", from, to });
-    return {
-      outcome: "moved",
-      message: `Moved ${item.title} to position ${String(to)}.`,
-    };
-  }
-
-  async jumpToChapter(
+  async searchMediaTitles(
+    query: string,
     userId: UserId,
-    target: number | "next" | "previous",
-  ): Promise<PlaybackCommandResult> {
-    const view = this.deps.view();
-    const current = view.current;
-    if (current === null)
-      throw new PlaybackCommandBoundaryError("Nothing is playing.");
-    if (
-      !canControlItem(
-        userId,
-        current.requesterId,
-        this.deps.config.discord.adminIds,
+    source: VoicePlaySource,
+    signal: AbortSignal,
+  ): Promise<string> {
+    const scope = this.scope(userId);
+    if (scope === null || this.deps.discovery === undefined) {
+      return this.searchLibraryTitles(query, 5);
+    }
+    const matches = await this.deps.discovery.search(
+      inferMediaIntent({ query, source }),
+      scope,
+      signal,
+    );
+    if (matches.length === 0) return `Nothing matches ${query}.`;
+    return matches
+      .map(
+        (candidate, index) =>
+          `${String(index + 1)}. ${candidate.title}, ${candidate.reason}`,
       )
-    ) {
-      throw new PlaybackCommandBoundaryError(
-        "Only the requester or an admin can seek this.",
-      );
-    }
-    if (current.chapters.length === 0) {
-      throw new PlaybackCommandBoundaryError(
-        "No chapters for the current video.",
-      );
-    }
-    let chapter;
-    if (typeof target === "number") {
-      chapter = current.chapters[target - 1];
-      if (chapter === undefined) {
-        throw new PlaybackCommandBoundaryError(
-          `There's no chapter ${String(target)}. This video has ${String(current.chapters.length)}.`,
-        );
-      }
-    } else {
-      const at = findChapterAt(current.chapters, view.positionSeconds ?? 0);
-      const currentIndex = at?.index ?? 0;
-      const nextIndex = target === "next" ? currentIndex + 1 : currentIndex - 1;
-      chapter = current.chapters[nextIndex - 1];
-      if (chapter === undefined) {
-        throw new PlaybackCommandBoundaryError(
-          target === "next"
-            ? "There's no next chapter."
-            : "There's no previous chapter.",
-        );
-      }
-    }
-    if (!(await this.deps.seek(chapter.startSeconds)))
-      throw new PlaybackCommandBoundaryError("Nothing is playing.");
-    return {
-      outcome: "chapter-jumped",
-      message: `Chapter ${String(chapter.index)}: ${chapter.title}.`,
-    };
-  }
-
-  subtitlesOff(userId: UserId): PlaybackCommandResult {
-    const view = this.deps.view();
-    if (view.current === null)
-      throw new PlaybackCommandBoundaryError("Nothing is playing.");
-    if (
-      !canControlItem(
-        userId,
-        view.current.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
-      throw new PlaybackCommandBoundaryError(
-        "Only the requester or an admin can change subtitles for this.",
-      );
-    }
-    this.deps.dispatch({
-      type: "CHANGE_SUBTITLES",
-      subtitles: { trackRef: { kind: "off" } },
-      positionSeconds: view.positionSeconds ?? 0,
-    });
-    return {
-      outcome: "subtitles-off",
-      message: "Subtitles turned off; the video restarts at the same spot.",
-    };
-  }
-
-  /** Bounded library search so the model can ground a title before its one play. */
-  searchLibraryTitles(query: string, limit: number): string {
-    const matches = searchLibrary(this.deps.library(), query, limit);
-    if (matches.length === 0) return `Nothing in the library matches ${query}.`;
-    return matches.map((entry) => entry.title).join("; ");
-  }
-
-  listChapters(): string {
-    return chaptersText(this.deps.view());
+      .join("; ");
   }
 
   private selectSource(query: string, requested: VoicePlaySource): Source {
-    if (requested !== "youtube") {
+    if (requested !== "youtube" && requested !== "history") {
       const match = findBestMatch(this.deps.library(), query);
       if (match !== null)
         return { kind: "file", path: match.path, title: match.title };
@@ -414,6 +340,69 @@ export class PlaybackCommandService {
         );
       }
     }
+    if (requested === "history") {
+      throw new PlaybackCommandBoundaryError(
+        `I couldn't find ${query} in your history.`,
+      );
+    }
     return { kind: "search", query };
   }
+
+  private scope(userId: UserId): DiscoveryScope | null {
+    return this.deps.guildId === undefined || this.deps.channelId === undefined
+      ? null
+      : {
+          guildId: this.deps.guildId,
+          channelId: this.deps.channelId,
+          userId,
+        };
+  }
+
+  private async recordFailed(
+    scope: DiscoveryScope,
+    query: string,
+    intent: ReturnType<typeof inferMediaIntent>,
+    errorCode: string,
+  ): Promise<void> {
+    if (
+      this.deps.history === undefined ||
+      (this.deps.featureGate !== undefined &&
+        !(await this.deps.featureGate.history(scope)))
+    ) {
+      return;
+    }
+    this.deps.history.recordQueueRequest({
+      scope,
+      rawQuery: query,
+      intent,
+      status: "failed",
+      errorCode,
+    });
+  }
+
+  private toRecordMedia(
+    source: Source,
+    resolved: ResolvedSource | undefined,
+    candidate: MediaCandidate | undefined,
+  ): RecordMedia {
+    const provenance = resolved?.provenance;
+    return {
+      title: candidate?.title ?? resolved?.title ?? sourceLabel(source),
+      provider: mediaProvider(source, candidate),
+      source,
+      canonicalUrl: candidate?.canonicalUrl ?? provenance?.canonicalUrl,
+      channel: candidate?.channel ?? provenance?.channel,
+      thumbnailUrl: candidate?.thumbnailUrl ?? provenance?.thumbnailUrl,
+      durationSeconds: candidate?.durationSeconds ?? resolved?.durationSeconds,
+    };
+  }
+}
+
+function mediaProvider(
+  source: Source,
+  candidate: MediaCandidate | undefined,
+): RecordMedia["provider"] {
+  return source.kind === "file" || candidate?.provider === "local"
+    ? "local"
+    : "youtube";
 }

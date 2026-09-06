@@ -60,6 +60,8 @@ function makeContext(over: Partial<PlaybackContext> = {}): PlaybackContext {
     resumeSeekSeconds: 0,
     crashRetries: 0,
     crashNotice: null,
+    pausedPositionSeconds: null,
+    startPaused: false,
     ...over,
   };
 }

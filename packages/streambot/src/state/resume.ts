@@ -61,6 +61,9 @@ export function buildSnapshot(params: {
         : {
             source: context.current.source,
             requesterId: context.current.requesterId,
+            ...(context.current.requestId === undefined
+              ? {}
+              : { requestId: context.current.requestId }),
             ...(context.resolved?.title === undefined
               ? {}
               : { title: context.resolved.title }),
@@ -69,9 +72,11 @@ export function buildSnapshot(params: {
     queue: context.queue.map((entry) => ({
       source: entry.source,
       requesterId: entry.requesterId,
+      ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
     })),
     resumeAttempts,
     resumeKey,
+    paused: context.pausedPositionSeconds !== null,
   };
 }
 
@@ -116,6 +121,7 @@ export function buildResumeInput(
   const queue = restored.queue.map((entry) => ({
     source: entry.source,
     requesterId: entry.requesterId,
+    ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
   }));
 
   const current = restored.current;
@@ -146,12 +152,19 @@ export function buildResumeInput(
     input: {
       ...base,
       initialQueue: [
-        { source: current.source, requesterId: current.requesterId },
+        {
+          source: current.source,
+          requesterId: current.requesterId,
+          ...(current.requestId === undefined
+            ? {}
+            : { requestId: current.requestId }),
+        },
         ...queue,
       ],
       initialLoop: restored.loop,
       initialVolume: restored.volume,
       initialSeekSeconds: current.positionSeconds,
+      initialPaused: restored.paused ?? false,
     },
     resumedCurrent: true,
     droppedForCrashLoop: false,
@@ -175,7 +188,7 @@ export function buildResumeAnnouncement(
   if (decision.resumedCurrent && restored.current !== null) {
     const title =
       restored.current.title ?? sourceLabel(restored.current.source);
-    return `🔄 I was offline for a moment — resuming **${title}** from ${formatTimecode(
+    return `🔄 I was offline for a moment — ${restored.paused === true ? "restored paused" : "resuming"} **${title}** from ${formatTimecode(
       restored.current.positionSeconds,
     )}.`;
   }

@@ -33,45 +33,34 @@ export function helpText(voiceEnabled: boolean): string {
     "🎬 **Streambot** — `/stream` commands",
     "",
     "**Playback**",
-    "• `/stream play <query>` — queue a video (library title, URL, playlist, or search)",
-    "• `/stream playnext <query>` — queue it to the front",
-    "• `/stream skip` — skip the current video",
-    "• `/stream stop` — stop & clear the queue _(admin)_",
-    "• `/stream seek <pos>` — jump to a timestamp (`90`, `1:30`, `1:02:03`)",
+    "• `/stream play <query>` · `playnext <query>` · `join` · `skip` · `seek <time>`",
+    "• `/stream stop` — stop and clear _(admin)_",
     "",
     ...(voiceEnabled
       ? [
           "**Voice commands**",
-          "• During playback, say **Hey Streambot**, then one command: play, skip, stop, seek, volume, loop, shuffle, remove, move, clear, chapters, subtitles off, search, queue, or now playing.",
-          "• Wake detection stays local; only that speaker's command is sent. Say “local” or “YouTube” to force a source; use titles, not URLs.",
+          "• Say **Hey Streambot**, then play/search/control naturally. Follow-up choices from the same speaker do not need the wake phrase.",
+          "• Wake detection stays local; only that speaker's command is sent. Say “local” or “YouTube” to force a source.",
           "",
         ]
       : []),
     "**Diagnostics**",
-    "• `/stream voice-debug start [duration]`, `stop`, or `status` — private decoded-audio capture _(admin; voice must be enabled)_",
+    "• `/stream voice-debug start|stop|status` _(admin)_",
     "",
     "**Queue**",
-    "• `/stream queue` · `nowplaying` · `remove <index>` · `move <from> <to>`",
-    "• `/stream clear` _(admin)_ · `shuffle` · `loop <off|track|queue>` · `volume <0-200>`",
+    "• `/stream queue` · `nowplaying` · `remove` · `move` · `shuffle` · `loop` · `volume`",
+    "• `/stream clear` _(admin)_",
+    "• `/stream playback pause|resume|restart|previous|leave`",
+    "• `/stream history list|replay` · `/stream personal favorites|usual|continue`",
+    "• Personal queues: `favorite-add`, `favorite-remove`, `save-queue`, `saved-queues`, `load-queue`, `delete-queue`",
     "",
-    "**Library & chapters**",
-    "• `/stream list [filter]` · `search <query>` · `chapters` · `chapter <n>`",
+    "**Discovery**",
+    "• `/stream list` · `search` · `sources` · `chapters` · `chapter` · `subtitles`",
     "",
-    "**Player card** — the now-playing message carries live controls, so most of the above needs no " +
-      "typing: ⏪/⏩ jump 30s, ⏭ skips, ⏹ stops _(admin)_, 🔁 cycles loop, 🔉/🔊 change volume, " +
-      "🔀 shuffles, 📜 shows the queue, 💬 picks subtitles, and a chapter menu appears when the video " +
-      "has chapters. You must be in the voice channel to use them; skipping and subtitles are limited " +
-      "to whoever queued the video (or an admin).",
-    "",
-    "**Subtitles** — add `subtitles:on|off` and `sublang:<lang>` (e.g. `en`, `en.forced`) to `play`/`playnext`, " +
-      "or run `/stream subtitles` mid-playback to pick from the actual available tracks (brief restart).",
+    "**Player card** — pause, restart, seek, skip, volume, shuffle, queue, subtitles, stop, loop, and chapters are available as controls.",
     "",
     "📡 **Supported sources**",
-    "`/stream play` accepts a library title, search terms, or any public link yt-dlp can fetch " +
-      "without logging in — YouTube, Twitch, Vimeo, SoundCloud, Reddit, direct `.mp4`/HLS, and most " +
-      "public video sites. Playlist links expand automatically. Subscription/DRM (Netflix, Disney+…) " +
-      "and login-only sites won't work.",
-    "Browse or search the full list with `/stream sources [query]` (e.g. `/stream sources twitch`).",
+    "Search defaults to history + local files + YouTube. Direct links and playlists use yt-dlp; DRM and login-only sites are unsupported.",
     "",
     "• `/stream help` — show this message",
   ].join("\n");

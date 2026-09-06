@@ -28,6 +28,9 @@ import type {
   GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import type { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
+import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
+import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts";
 import type {
   VoiceDebugCaptureStatus,
@@ -111,6 +114,8 @@ export type Session = {
   voiceRecoveryStarted: boolean;
   /** Single-flight guard: true while a `/stream subtitles` picker is open for this session. */
   pendingSubtitleMenu: boolean;
+  /** Prevent duplicate playback-run rows during repeated snapshots of one streaming state. */
+  historyRunRecorded: boolean;
   /** Per-session wake/VAD/Realtime lifecycle, absent when the feature is disabled. */
   voiceAssistant: VoiceAssistantSession | null;
   readonly teardownHold: TeardownHold;
@@ -138,6 +143,8 @@ export const IDLE_VIEW: PlaybackView = {
   loop: "off",
   volume: 100,
   positionSeconds: null,
+  paused: false,
+  listening: false,
 };
 
 /** A no-op handle for commands that target a guild/channel with no active session. */
@@ -198,4 +205,7 @@ export type SessionManagerDeps = {
   readonly voiceFeedbackClips?: SpokenFeedbackClips | null;
   /** Process-wide diagnostic capture and attempt-correlation owner. */
   readonly voiceCaptureManager?: VoiceCaptureManager;
+  readonly discovery?: DiscoveryService;
+  readonly history?: MediaHistoryStore;
+  readonly featureGate?: MediaFeatureGate;
 };

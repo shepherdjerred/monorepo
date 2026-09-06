@@ -47,6 +47,46 @@ export const JOIN_TIMEOUT_MS = 30_000;
 export const RESOLVE_TIMEOUT_MS = 60_000;
 export const LEAVE_TIMEOUT_MS = 10_000;
 
+export const EXTERNAL_STOP_TRANSITIONS = [
+  {
+    guard: "hasVoice" as const,
+    target: "#playback.leaving" as const,
+    actions: ["clearQueue" as const, "recordExternalStop" as const],
+  },
+  {
+    target: "#playback.idle" as const,
+    actions: ["clearQueue" as const, "recordExternalStop" as const],
+  },
+];
+
+export function initialPlaybackContext(input: PlaybackInput): PlaybackContext {
+  return {
+    guildId: input.guildId,
+    channelId: input.channelId,
+    idleTimeoutMs: input.idleTimeoutMs,
+    wedgeTimeoutsMs: {
+      join: input.wedgeTimeoutsMs?.join ?? JOIN_TIMEOUT_MS,
+      resolve: input.wedgeTimeoutsMs?.resolve ?? RESOLVE_TIMEOUT_MS,
+      leave: input.wedgeTimeoutsMs?.leave ?? LEAVE_TIMEOUT_MS,
+    },
+    queue: input.initialQueue ?? [],
+    current: null,
+    voice: null,
+    resolved: null,
+    loop: input.initialLoop ?? "off",
+    volume: input.initialVolume ?? 100,
+    lastError: null,
+    lastErrorKind: null,
+    blockedNonce: 0,
+    lastBlockedRequester: null,
+    resumeSeekSeconds: input.initialSeekSeconds ?? 0,
+    crashRetries: 0,
+    crashNotice: null,
+    pausedPositionSeconds: null,
+    startPaused: input.initialPaused ?? false,
+  };
+}
+
 /** The XState `types` phantom for setup() (never read at runtime). */
 export const MACHINE_TYPES: {
   context: PlaybackContext;
@@ -75,6 +115,8 @@ export const MACHINE_TYPES: {
     resumeSeekSeconds: 0,
     crashRetries: 0,
     crashNotice: null,
+    pausedPositionSeconds: null,
+    startPaused: false,
   },
   events: { type: "SKIP" },
   input: {
@@ -129,14 +171,18 @@ export function streamCrashFrom(error: unknown): StreamCrashError | null {
 }
 
 /** A queue entry from an ADD/ADD_NEXT event payload. */
-export function queuedItem(event: {
-  source: QueuedSource["source"];
-  requesterId: QueuedSource["requesterId"];
-  preResolved?: ResolvedSource;
-}): QueuedSource {
+export function queuedItem(event: PlaybackEvent): QueuedSource {
+  if (
+    event.type !== "ADD" &&
+    event.type !== "ADD_NEXT" &&
+    event.type !== "PLAY_NOW"
+  ) {
+    throw new Error(`Cannot build a queued item from ${event.type}`);
+  }
   return {
     source: event.source,
     requesterId: event.requesterId,
+    ...(event.requestId === undefined ? {} : { requestId: event.requestId }),
     ...(event.preResolved === undefined
       ? {}
       : { preResolved: event.preResolved }),
@@ -152,7 +198,13 @@ export function queueCrashRetryUpdates(
   const attempt = context.crashRetries + 1;
   return {
     queue: [
-      { source: current.source, requesterId: current.requesterId },
+      {
+        source: current.source,
+        requesterId: current.requesterId,
+        ...(current.requestId === undefined
+          ? {}
+          : { requestId: current.requestId }),
+      },
       ...context.queue,
     ],
     resumeSeekSeconds: Math.max(0, Math.floor(info.positionSeconds)),
@@ -228,6 +280,9 @@ export function resolveDoneUpdates(
     current: {
       source: mustCurrent(context).source,
       requesterId: mustCurrent(context).requesterId,
+      ...(mustCurrent(context).requestId === undefined
+        ? {}
+        : { requestId: mustCurrent(context).requestId }),
     },
   };
 }

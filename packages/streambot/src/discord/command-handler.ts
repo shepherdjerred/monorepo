@@ -3,10 +3,7 @@ import type {
   CommandInteraction,
 } from "@shepherdjerred/streambot/discord/command-types.ts";
 import { LoopModeSchema } from "@shepherdjerred/streambot/machine/types.ts";
-import {
-  canControlItem,
-  isAdmin,
-} from "@shepherdjerred/streambot/discord/permissions.ts";
+import { canControlItem } from "@shepherdjerred/streambot/discord/permissions.ts";
 import {
   formatTimecode,
   parseTimecode,
@@ -25,11 +22,15 @@ import {
 import { runPlayCommand } from "@shepherdjerred/streambot/discord/play-command.ts";
 import { decodeTrackRef } from "@shepherdjerred/streambot/discord/subtitle-menu.ts";
 import { runVoiceDebugCommand } from "@shepherdjerred/streambot/discord/voice-debug-command.ts";
+import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import type { PlaybackCommandResult } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import { MediaCommandHandler } from "@shepherdjerred/streambot/discord/media-command-handler.ts";
 import {
-  PlaybackCommandBoundaryError,
-  PlaybackCommandService,
-  type PlaybackCommandResult,
-} from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+  inferMediaIntent,
+  MediaSourcePreferenceSchema,
+} from "@shepherdjerred/streambot/discovery/media-intent.ts";
+import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 
 const SOURCES_TIMEOUT_MS = 15_000;
 
@@ -43,16 +44,31 @@ const SUBTITLE_ENUMERATION_TIMEOUT_MS = 15_000;
 export class CommandHandler {
   private readonly deps: CommandHandlerDeps;
   private readonly playback: PlaybackCommandService;
+  private readonly media: MediaCommandHandler;
 
   constructor(deps: CommandHandlerDeps) {
     this.deps = deps;
     this.playback = new PlaybackCommandService(deps);
+    this.media = new MediaCommandHandler(deps);
   }
 
   async run(interaction: CommandInteraction): Promise<void> {
     const sub = interaction.subcommand();
-    if (interaction.subcommandGroup() === "voice-debug") {
+    const group = interaction.subcommandGroup();
+    if (group === "voice-debug") {
       await runVoiceDebugCommand(this.deps, sub, interaction);
+      return;
+    }
+    if (group === "playback") {
+      await this.media.runPlayback(sub, interaction);
+      return;
+    }
+    if (group === "history") {
+      await this.media.runHistory(sub, interaction);
+      return;
+    }
+    if (group === "personal") {
+      await this.media.runPersonal(sub, interaction);
       return;
     }
     if (await this.runPlaybackCommand(sub, interaction)) {
@@ -75,6 +91,9 @@ export class CommandHandler {
         return true;
       case "playnext":
         await runPlayCommand(this.deps, interaction, true);
+        return true;
+      case "join":
+        await interaction.reply(this.playback.join().message);
         return true;
       case "skip":
         await this.handleSkip(interaction);
@@ -133,10 +152,7 @@ export class CommandHandler {
         await this.handleList(interaction, interaction.getString("filter"));
         return true;
       case "search":
-        await this.handleList(
-          interaction,
-          interaction.getStringRequired("query"),
-        );
+        await this.handleSearch(interaction);
         return true;
       case "sources":
         await this.handleSources(interaction);
@@ -147,6 +163,57 @@ export class CommandHandler {
       default:
         return false;
     }
+  }
+
+  private async handleSearch(interaction: CommandInteraction): Promise<void> {
+    const query = interaction.getStringRequired("query");
+    const scope = this.scope(interaction);
+    if (
+      scope === null ||
+      this.deps.discovery === undefined ||
+      !(await this.assistantEnabled(interaction))
+    ) {
+      await this.handleList(interaction, query);
+      return;
+    }
+    const source = MediaSourcePreferenceSchema.parse(
+      interaction.getString("source") ?? "auto",
+    );
+    await interaction.defer();
+    const candidates = await this.deps.discovery.search(
+      inferMediaIntent({ query, source }),
+      scope,
+      AbortSignal.timeout(SOURCES_TIMEOUT_MS),
+    );
+    await interaction.editReply(
+      candidates.length === 0
+        ? `No results for **${query}**.`
+        : candidates
+            .map(
+              (candidate, index) =>
+                `${String(index + 1)}. **${candidate.title}** — ${candidate.reason}`,
+            )
+            .join("\n"),
+    );
+  }
+
+  private scope(interaction: CommandInteraction): DiscoveryScope | null {
+    return this.deps.guildId === undefined || this.deps.channelId === undefined
+      ? null
+      : {
+          guildId: this.deps.guildId,
+          channelId: this.deps.channelId,
+          userId: interaction.userId,
+        };
+  }
+
+  private async assistantEnabled(
+    interaction: CommandInteraction,
+  ): Promise<boolean> {
+    const scope = this.scope(interaction);
+    return scope !== null && this.deps.featureGate !== undefined
+      ? await this.deps.featureGate.assistantV2(scope)
+      : true;
   }
 
   private async handleList(
@@ -189,35 +256,17 @@ export class CommandHandler {
 
   private async handleRemove(interaction: CommandInteraction): Promise<void> {
     const index = interaction.getIntegerRequired("index");
-    const item = this.deps.view().queue[index - 1];
-    if (item === undefined) {
-      await interaction.reply(`There's no item at position ${String(index)}.`);
-      return;
-    }
-    if (
-      !canControlItem(
-        interaction.userId,
-        item.requesterId,
-        this.deps.config.discord.adminIds,
-      )
-    ) {
-      await interaction.reply(
-        "Only the requester or an admin can remove this.",
-      );
-      return;
-    }
-    this.deps.dispatch({ type: "REMOVE", index });
-    await interaction.reply(`Removed **${item.title}**.`);
+    const result = this.runBoundary(() =>
+      this.playback.remove(interaction.userId, index),
+    );
+    await interaction.reply(result.message);
   }
 
   private async handleClear(interaction: CommandInteraction): Promise<void> {
-    if (!isAdmin(interaction.userId, this.deps.config.discord.adminIds)) {
-      await interaction.reply("Only an admin can clear the queue.");
-      return;
-    }
-    const count = this.deps.view().queue.length;
-    this.deps.dispatch({ type: "CLEAR" });
-    await interaction.reply(`Cleared ${String(count)} item(s).`);
+    const result = this.runBoundary(() =>
+      this.playback.clear(interaction.userId),
+    );
+    await interaction.reply(result.message);
   }
 
   private async handleMove(interaction: CommandInteraction): Promise<void> {

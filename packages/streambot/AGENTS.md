@@ -49,10 +49,12 @@ patched binary ships as vendored prebuilds under
 consumer image (`streambot`, `discord-plays-pokemon`, `discord-plays-mario-kart`)
 must `COPY` that directory before `bun install` or the overlay hard-errors. The
 `assertIncomingAudioSupported()` boot guard refuses an unpatched binary. The
-realtime turn completes on the SDK `agent_end` event (not `audio_stopped`) and
-accepts the `conversation.item.added` GA event name. The fake-transport unit
-tests cannot catch real-API drift; `e2e/voice-receive-repro.ts` (transport) and
-`voice:cloud-probe` (cloud turn) are the real-API oracles.
+realtime turn completes only after every observed function call reaches
+`agent_tool_end` and a later SDK `agent_end` arrives. It never completes on
+`audio_stopped`, and it accepts the `conversation.item.added` GA event name.
+The fake-transport unit tests cannot catch real-API drift;
+`e2e/voice-receive-repro.ts` (transport) and `voice:cloud-probe` (cloud turn)
+are the real-API oracles.
 
 ## Verification
 

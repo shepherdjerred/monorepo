@@ -3,7 +3,7 @@ title: Streambot voice assistant
 description: Why Streambot combines local wake gates, bounded OpenAI turns, correlated telemetry, and short-lived private diagnostic audio.
 ---
 
-Streambot listens for voice commands only while a playback session exists. The cheap, continuous
+Streambot listens while a playback session exists or after `/stream join`. The cheap, continuous
 part stays local: each pooled streamer account uses permissive sherpa fragments to nominate a
 speaker, then a phrase-specific LiveKit/openWakeWord-compatible ONNX model verifies **Hey
 Streambot** over the rolling audio. It opens no OpenAI connection until both local layers pass.
@@ -18,7 +18,7 @@ and the cloud turn in
 ```mermaid
 flowchart LR
   accTitle: Streambot hybrid voice command lifecycle
-  accDescr: Identified Discord voice passes through a permissive sherpa candidate detector, a phrase-specific local verifier, local endpointing, and a final OpenAI transcript gate. Only a verified leading wake phrase can reach one permission-checked playback tool and a spoken reply.
+  accDescr: Identified Discord voice passes through local wake verification and endpointing before a bounded OpenAI turn. A short same-speaker clarification may reuse established conversation context without another wake phrase.
 
   D[Discord normal voice<br/>identified Opus] --> L[Local decode and<br/>per-speaker pre-roll]
   L --> K{Permissive sherpa<br/>phrase or fragment?}
@@ -34,6 +34,8 @@ flowchart LR
   T --> P[One typed, permission-checked<br/>playback tool]
   P --> R[Short spoken reply<br/>over normal voice]
   R --> L
+  P -->|needs a choice| F[Arm same-speaker follow-up<br/>15 s, at most twice]
+  F --> V
   G[Separate Go Live<br/>movie audio and video] -. duck to 20% .-> R
 ```
 
@@ -55,16 +57,17 @@ do with a slash command.
 - Discord's SSRC mapping supplies the user identity; the model can never choose a user ID. Tools
   bind the detected speaker in
   [`voice-tools.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/voice-tools.ts).
-- `auto` searches the local library first, `local` cannot fall through, and `youtube` bypasses
-  local matches. Voice tools reject URLs and expose no web search or general-purpose capability;
-  the source rules live in
+- `auto` ranks scoped history, fuzzy local matches, and YouTube together. Character-performance
+  requests also search an AI-cover spelling. `local`, `history`, and `youtube` remain strict source
+  choices. Voice tools reject URLs and expose no general-purpose web capability; the source rules live in
   [`playback-command-service.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/commands/playback-command-service.ts).
 - Anyone may request media. Skip and seek retain requester-or-admin checks; stop remains admin-only.
   Voice reuses the same
   [permission predicates](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/discord/permissions.ts)
   as the slash commands rather than defining its own.
 - One wake permits at most one mutating tool, enforced by `VoiceMutationGate`. Ambiguity produces a
-  short retry request and no change.
+  short retry request and no change. Only the same speaker may answer without another wake phrase,
+  for 15 seconds and at most twice.
 - The utterance ends locally and both it and the whole cloud transaction are capped. Cloud
   verification is rate-limited per playback session by
   [`cloud-verification-rate-limiter.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/cloud-verification-rate-limiter.ts),
@@ -110,6 +113,11 @@ also open a short, process-wide debug window to capture each speaker separately 
 missed before candidate detection. These private objects expire after 90 days and are not backed up.
 Audio uploads first; a versioned `manifest.json` uploads last, so a manifest is the commit marker for
 a complete capture. Storage or OTLP outages reduce evidence but never delay or fail a voice command.
+
+Media memory has a narrower boundary than telemetry. SQLite stores structured request intent,
+canonical source metadata, requester and guild scope, request state, and playback starts. It never stores
+transcripts, audio, credentials, or expiring direct media URLs. User-global history supports
+continuity across servers, while guild history keeps shared-room requests discoverable.
 
 ## Launch posture
 

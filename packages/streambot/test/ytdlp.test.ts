@@ -7,7 +7,7 @@ import {
   ytdlpTarget,
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 
-// Trimmed sample of real `yt-dlp --dump-single-json` output (extra fields elided; the schema
+// Trimmed sample of real `yt-dlp --dump-json` output (extra fields elided; the schema
 // strips anything it doesn't model).
 const SAMPLE = JSON.stringify({
   id: "dQw4w9WgXcQ",
@@ -37,9 +37,19 @@ describe("ytdlpTarget", () => {
 describe("buildInfoArgs", () => {
   test("requests a single muxed format with no download", () => {
     const args = buildInfoArgs({ kind: "url", url: "https://youtu.be/x" });
-    expect(args).toContain("--dump-single-json");
+    expect(args).toContain("--dump-json");
+    expect(args).not.toContain("--dump-single-json");
     expect(args).toContain("--skip-download");
     expect(args.slice(-3)).toEqual(["-f", "best", "https://youtu.be/x"]);
+  });
+
+  test("uses video-shaped JSON for searches instead of a playlist wrapper", () => {
+    const args = buildInfoArgs({
+      kind: "search",
+      query: "Beggin Plankton AI cover",
+    });
+    expect(args).toContain("--dump-json");
+    expect(args.at(-1)).toBe("ytsearch1:Beggin Plankton AI cover");
   });
 });
 

@@ -19,6 +19,7 @@ const log = logger.child("persistence");
 export const PersistedQueuedSchema = z.strictObject({
   source: SourceSchema,
   requesterId: UserIdSchema,
+  requestId: z.string().min(1).optional(),
 });
 export type PersistedQueued = z.infer<typeof PersistedQueuedSchema>;
 
@@ -30,6 +31,7 @@ export const PersistedCurrentSchema = z.strictObject({
   title: z.string().min(1).optional(),
   /** Where playback had reached (seconds) — the resume seek offset. */
   positionSeconds: z.number().int().nonnegative(),
+  requestId: z.string().min(1).optional(),
 });
 export type PersistedCurrent = z.infer<typeof PersistedCurrentSchema>;
 
@@ -58,6 +60,8 @@ export const PersistedStateSchema = z.strictObject({
   resumeAttempts: z.number().int().nonnegative().default(0),
   /** Stable key (hash of source + position) of `current`, to detect a resume that keeps crashing. */
   resumeKey: z.string().nullable().default(null),
+  /** A deliberate pause survives restart; listen-only idle sessions do not. */
+  paused: z.boolean().optional(),
 });
 export type PersistedState = z.infer<typeof PersistedStateSchema>;
 

@@ -91,12 +91,21 @@ export type ResolvedSource = {
    * Absent when the probe failed or the source has no known duration (live streams).
    */
   readonly durationSeconds?: number;
+  /** Stable display/persistence metadata. Never contains yt-dlp's signed direct media URL. */
+  readonly provenance?: {
+    readonly provider: "local" | "youtube" | "url";
+    readonly canonicalUrl?: string;
+    readonly channel?: string;
+    readonly thumbnailUrl?: string;
+  };
 };
 
 /** A queue entry: a requested source plus who asked for it. */
 export type QueuedSource = {
   readonly source: Source;
   readonly requesterId: UserId;
+  /** Durable request row associated with this queue entry, when history is enabled. */
+  readonly requestId?: string;
   /**
    * Already-resolved result from synchronous pre-validation at queue time (`/stream play`'s
    * yt-dlp call before acking). When present, the `resolving` state's actor returns it directly
@@ -143,21 +152,28 @@ export type PlaybackContext = {
   crashRetries: number;
   /** One-shot crash/retry notice for the status reporter; null until the first crash. */
   crashNotice: CrashNotice | null;
+  /** Captured stream position while paused; null in every other state. */
+  pausedPositionSeconds: number | null;
+  /** One-shot boot seed that pauses the first resumed item after voice joins. */
+  startPaused: boolean;
+};
+
+type AddEventPayload = {
+  source: Source;
+  requesterId: UserId;
+  preResolved?: ResolvedSource;
+  requestId?: string;
 };
 
 export type PlaybackEvent =
-  | {
-      type: "ADD";
-      source: Source;
-      requesterId: UserId;
-      preResolved?: ResolvedSource;
-    }
-  | {
-      type: "ADD_NEXT";
-      source: Source;
-      requesterId: UserId;
-      preResolved?: ResolvedSource;
-    }
+  | ({ type: "ADD" } & AddEventPayload)
+  | ({ type: "ADD_NEXT" } & AddEventPayload)
+  | ({ type: "PLAY_NOW" } & AddEventPayload)
+  | { type: "JOIN" }
+  | { type: "LEAVE" }
+  | { type: "PAUSE"; positionSeconds: number }
+  | { type: "RESUME" }
+  | { type: "RESTART" }
   | { type: "SKIP" }
   | { type: "STOP" }
   | { type: "REMOVE"; index: number }
@@ -190,6 +206,8 @@ export type PlaybackInput = {
   readonly initialVolume?: number;
   /** One-shot seek (seconds) for the first streamed item (resume position). */
   readonly initialSeekSeconds?: number;
+  /** Resume into a deliberately paused state instead of autoplaying after restart. */
+  readonly initialPaused?: boolean;
   /** Wedge-timeout overrides (tests use small values; production takes the defaults). */
   readonly wedgeTimeoutsMs?: {
     readonly join?: number;

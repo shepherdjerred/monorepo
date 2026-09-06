@@ -127,6 +127,68 @@ async function waitForCurrentFile(
 }
 
 describe("playback machine", () => {
+  test("JOIN enters listen-only waiting mode without a queued item", async () => {
+    const actor = startActor(makeActors(), {
+      ...INPUT,
+      idleTimeoutMs: 10_000,
+    });
+
+    actor.send({ type: "JOIN" });
+    await waitFor(actor, (snapshot) => snapshot.matches("waiting"), WAIT);
+
+    expect(actor.getSnapshot().context.voice).not.toBeNull();
+    expect(actor.getSnapshot().context.current).toBeNull();
+    actor.stop();
+  });
+
+  test("pauses at the captured position and resumes from that offset", async () => {
+    const { actor, stream } = await startFilePlayback(["movie"]);
+
+    actor.send({ type: "PAUSE", positionSeconds: 42 });
+    await waitFor(actor, (snapshot) => snapshot.matches("paused"), WAIT);
+    expect(actor.getSnapshot().context.pausedPositionSeconds).toBe(42);
+
+    actor.send({ type: "RESUME" });
+    await waitFor(
+      actor,
+      (snapshot) =>
+        snapshot.matches("streaming") && stream.invocationCount() === 2,
+      WAIT,
+    );
+    expect(stream.inputs[1]?.seekSeconds).toBe(42);
+    actor.stop();
+  });
+
+  test("PLAY_NOW replaces the current item without clearing the queue", async () => {
+    const { actor } = await startFilePlayback(["first", "queued"]);
+
+    actor.send({
+      type: "PLAY_NOW",
+      source: fileSource("replacement"),
+      requesterId: U1,
+    });
+    await waitForCurrentFile(actor, "replacement");
+
+    expect(
+      actor.getSnapshot().context.queue.map((item) => item.source),
+    ).toEqual([fileSource("queued")]);
+    actor.stop();
+  });
+
+  test("PLAY_NOW starts playback from idle", async () => {
+    const actor = startActor(makeActors(), INPUT);
+
+    actor.send({
+      type: "PLAY_NOW",
+      source: fileSource("replacement"),
+      requesterId: U1,
+    });
+    await waitForCurrentFile(actor, "replacement");
+
+    expect(actor.getSnapshot().context.queue).toHaveLength(0);
+    actor.stop();
+  });
+
   test("plays a file then winds down to idle after the grace period", async () => {
     const { actor, stream } = await startFilePlayback(["movie"]);
     expect(actor.getSnapshot().context.current?.source).toEqual(

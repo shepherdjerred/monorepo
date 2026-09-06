@@ -59,6 +59,7 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
       | "transcription-error-during-connect"
       | "response-error"
       | "disconnect"
+      | "agent-end-before-tool"
       | "timeout" = "success",
     private readonly inputTranscript: string | null = "Hey Streambot test",
   ) {}
@@ -207,6 +208,10 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
         responseId,
       });
     }
+    if (this.behavior === "agent-end-before-tool") {
+      this.complete(responseId);
+      return;
+    }
     if (this.calls.length === 0)
       queueMicrotask(() => {
         this.complete(responseId);
@@ -307,9 +312,19 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
     _startResponse: boolean,
   ): void {
     this.functionOutputs.push(output);
+    this.timeline.push("function_call_output");
     this.outputCount += 1;
     if (this.outputCount === this.calls.length) {
       queueMicrotask(() => {
+        if (this.behavior === "agent-end-before-tool") {
+          const responseId = "fake-tool-reply";
+          this.emit("turn_started", {
+            type: "response_started",
+            providerData: { response: { id: responseId } },
+          });
+          this.complete(responseId);
+          return;
+        }
         this.complete("fake-response");
       });
     }
