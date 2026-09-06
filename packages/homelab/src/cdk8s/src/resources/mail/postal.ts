@@ -26,6 +26,11 @@ import {
   PATCHED_SMTP_CLIENT_SERVER,
   PATCHED_SMTP_SENDER,
 } from "./postal-patches.ts";
+import {
+  createPostalSmtpTlsVolume,
+  POSTAL_SMTP_TLS_ENV,
+  POSTAL_SMTP_TLS_MOUNT_PATH,
+} from "./postal-smtp.ts";
 
 export type PostalDeploymentProps = {
   /**
@@ -217,6 +222,8 @@ export function createPostalDeployment(
 
   setRevisionHistoryLimit(webDeployment);
 
+  const smtpTlsVolume = createPostalSmtpTlsVolume(chart);
+
   // Create deployment for Postal SMTP Server
   const smtpDeployment = new Deployment(chart, "postal-smtp", {
     replicas: 1,
@@ -248,7 +255,10 @@ export function createPostalDeployment(
           protocol: Protocol.TCP,
         },
       ],
-      envVariables: commonEnv,
+      envVariables: {
+        ...commonEnv,
+        ...POSTAL_SMTP_TLS_ENV,
+      },
       securityContext: {
         user: UID,
         group: GID,
@@ -263,6 +273,11 @@ export function createPostalDeployment(
             "postal-data-volume-smtp",
             postalVolume.claim,
           ),
+        },
+        {
+          path: POSTAL_SMTP_TLS_MOUNT_PATH,
+          volume: smtpTlsVolume,
+          readOnly: true,
         },
       ],
       resources: {

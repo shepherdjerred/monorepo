@@ -3,6 +3,11 @@ import { App, Chart } from "cdk8s";
 import { z } from "zod";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import {
+  Certificate,
+  ClusterIssuer,
+  Issuer,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/cert-manager.io.ts";
+import {
   ARGOCD_SYNC_WAVE_ANNOTATION,
   APPLICATION_LIFECYCLE_ANNOTATION,
   APPLICATION_RESOURCES_FINALIZER,
@@ -23,6 +28,12 @@ const ManifestSchema = z.object({
         automated: z.unknown().optional(),
       })
       .optional(),
+  }),
+});
+
+const WaveAnnotationSchema = z.object({
+  metadata: z.object({
+    annotations: z.record(z.string(), z.string()),
   }),
 });
 
@@ -93,7 +104,8 @@ describe("applyApplicationReleasePolicy", () => {
       ["1password", "-20"],
       ["argocd", "-18"],
       ["tailscale", "-18"],
-      ["temporal", "-17"],
+      ["prometheus", "-1"],
+      ["temporal", "0"],
       ["kueue", "1"],
       ["buildkite", "3"],
       ["worker", "4"],
@@ -110,5 +122,56 @@ describe("applyApplicationReleasePolicy", () => {
         expectedWaves.get(manifest.metadata.name),
       );
     }
+  });
+
+  test("orders the cluster CA before ClusterIssuer and leaves it signs", () => {
+    const app = new App();
+    const chart = new Chart(app, "apps");
+    const selfSigned = new Issuer(chart, "self-signed", {
+      metadata: { name: "cert-manager-self-signed", namespace: "cert-manager" },
+      spec: { selfSigned: {} },
+    });
+    const ca = new Certificate(chart, "cluster-ca", {
+      metadata: { name: "homelab-cluster-ca", namespace: "cert-manager" },
+      spec: {
+        secretName: "homelab-cluster-ca",
+        isCa: true,
+        issuerRef: { name: "cert-manager-self-signed", kind: "Issuer" },
+      },
+    });
+    const clusterIssuer = new ClusterIssuer(chart, "cluster-issuer", {
+      metadata: { name: "homelab-ca-issuer" },
+      spec: { ca: { secretName: "homelab-cluster-ca" } },
+    });
+    const leaf = new Certificate(chart, "leaf", {
+      metadata: { name: "postal-smtp-tls", namespace: "postal" },
+      spec: {
+        secretName: "postal-smtp-tls",
+        issuerRef: { name: "homelab-ca-issuer", kind: "ClusterIssuer" },
+      },
+    });
+
+    applyApplicationReleasePolicy(app);
+
+    expect(
+      WaveAnnotationSchema.parse(selfSigned.toJson()).metadata.annotations[
+        ARGOCD_SYNC_WAVE_ANNOTATION
+      ],
+    ).toBe("-5");
+    expect(
+      WaveAnnotationSchema.parse(ca.toJson()).metadata.annotations[
+        ARGOCD_SYNC_WAVE_ANNOTATION
+      ],
+    ).toBe("-4");
+    expect(
+      WaveAnnotationSchema.parse(clusterIssuer.toJson()).metadata.annotations[
+        ARGOCD_SYNC_WAVE_ANNOTATION
+      ],
+    ).toBe("-3");
+    expect(
+      WaveAnnotationSchema.parse(leaf.toJson()).metadata.annotations[
+        ARGOCD_SYNC_WAVE_ANNOTATION
+      ],
+    ).toBe("-2");
   });
 });

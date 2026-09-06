@@ -191,6 +191,16 @@ describe("rendered Alerts receiver", () => {
     expect(renderedApps).toContain(
       "smtp_auth_password_file: /etc/alertmanager/secrets/alertmanager-postal-smtp/SMTP_PASSWORD",
     );
+    expect(renderedApps).toContain("smtp_require_tls: true");
+    expect(renderedApps).toContain(
+      "ca_file: /etc/alertmanager/secrets/alertmanager-postal-smtp-ca/ca.crt",
+    );
+    expect(renderedApps).toContain(
+      "server_name: postal-postal-smtp-service.postal.svc.cluster.local",
+    );
+    expect(renderedApps).toContain("insecure_skip_verify: false");
+    expect(renderedApps).toContain("- alertmanager-postal-smtp-ca");
+    expect(renderedApps).not.toContain("smtp_require_tls: false");
     expect(renderedApps).not.toMatch(/smtp_auth_password:\s+[^_]/u);
   });
 

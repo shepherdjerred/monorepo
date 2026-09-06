@@ -12,7 +12,7 @@ routing, grouping, inhibition, silences, or current-state authority.
 ```mermaid
 flowchart LR
   accTitle: Alert routing and durable history
-  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a WAL-mode SQLite ledger on a single-writer PVC; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger.
+  accDescr: Alertmanager remains authoritative for live state. Its authenticated webhook and snapshots feed a WAL-mode SQLite ledger on a single-writer PVC; the dashboard, read-only API, toolkit, Grafana previews, and Postal opening email use that ledger. Alertmanager also submits fallback mail to Postal over STARTTLS.
 
   AM[Alertmanager\nrouting and live state]
   LEDGER[Alerts service\nwebhook and reconciliation]
@@ -28,6 +28,7 @@ flowchart LR
   UI --> CLI
   LEDGER --> GRAFANA
   LEDGER --> POSTAL
+  AM -->|STARTTLS fallback| POSTAL
 ```
 
 ## Current deployment boundary
@@ -42,6 +43,12 @@ Activation is a separate operational step: publish and make the image public,
 pin its real digest, bootstrap reconciliation with email disabled, then verify a
 synthetic fire/resolve before changing Alertmanager. This avoids deploying a
 zero-digest image or silently replacing the working notification path.
+
+Alertmanager's Postal fallback does not use that HTTP API. It submits mail
+through Postal's inbound SMTP listener and requires STARTTLS with cluster-CA
+validation — see [Postal SMTP TLS](/explanation/homelab/postal-smtp-tls/).
+A dashboard outage can still page once Postal SMTP is healthy; queued
+dashboard opening mail is a separate `EMAIL_ENABLED` switch.
 
 ## SQLite persistence boundary
 
@@ -86,4 +93,5 @@ part of this service.
 - Service and UI: `packages/alert-dashboard/`.
 - Deployment definitions: `packages/homelab/src/cdk8s/src/resources/alert-dashboard/`.
 - Operator CLI: `packages/toolkit/src/handlers/alerts.ts`.
+- Postal SMTP fallback TLS: [Postal SMTP TLS](/explanation/homelab/postal-smtp-tls/).
 - Activation and retention work: Linear.
