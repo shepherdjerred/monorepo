@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useParams } from "react-router";
+import { Loaded } from "@shepherdjerred/loaded";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
@@ -15,16 +16,19 @@ export function ConsumerWorkspace() {
 export function ConsumerGuildWorkspace() {
   const { guildId } = useParams();
   const location = useLocation();
-  const { isLoading, error } = usePermissions(guildId);
+  const { access } = usePermissions(guildId);
   const contextRoute = analyticsContextRoute(location.pathname);
 
   useEffect(() => {
-    if (contextRoute === undefined || isLoading) return;
-    resolveGuildContext(contextRoute, error === null ? guildId : undefined);
+    if (contextRoute === undefined || access.status === "loading") return;
+    resolveGuildContext(
+      contextRoute,
+      access.status === "error" ? undefined : guildId,
+    );
     return () => {
       clearGuildContext();
     };
-  }, [contextRoute, error, guildId, isLoading]);
+  }, [contextRoute, access.status, guildId]);
 
   if (guildId === undefined) {
     return (
@@ -34,12 +38,12 @@ export function ConsumerGuildWorkspace() {
       />
     );
   }
-  if (isLoading) return null;
-  if (error !== null) {
+  if (access.status === "loading") return null;
+  if (access.status === "error") {
     return (
       <ForbiddenPanel
         title="No access to this server"
-        message={error.message}
+        message={Loaded.messageOf(access.errors[0].error)}
       />
     );
   }
