@@ -108,7 +108,7 @@ export function createScoutChart(
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Flipt, SeaweedFS S3, PostgreSQL, and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, Tempo (OTLP), Flipt, SeaweedFS S3, PostgreSQL, and external HTTPS
   new KubeNetworkPolicy(chart, "scout-egress-netpol", {
     metadata: { name: "scout-egress-netpol" },
     spec: {
@@ -128,6 +128,17 @@ export function createScoutChart(
             { port: IntOrString.fromNumber(53), protocol: "UDP" },
             { port: IntOrString.fromNumber(53), protocol: "TCP" },
           ],
+        },
+        // Tempo OTLP (tempo.tempo.svc.cluster.local:4318)
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
         },
         // SeaweedFS S3 (seaweedfs-s3.seaweedfs.svc.cluster.local:8333)
         {
