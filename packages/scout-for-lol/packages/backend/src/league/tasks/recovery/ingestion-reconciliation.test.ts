@@ -18,6 +18,14 @@ import {
   resetReconciliationState,
   runIngestionReconciliation,
 } from "#src/league/tasks/recovery/ingestion-reconciliation.ts";
+import { ingestionReconciliationSkipsTotal } from "#src/metrics/recovery.ts";
+
+async function skipCount(reason: string): Promise<number> {
+  const metric = await ingestionReconciliationSkipsTotal.get();
+  return (
+    metric.values.find((entry) => entry.labels.reason === reason)?.value ?? 0
+  );
+}
 
 describe("runIngestionReconciliation", () => {
   beforeEach(() => {
@@ -44,18 +52,33 @@ describe("runIngestionReconciliation", () => {
     await first;
   });
 
-  test("runs sequential invocations back to back", async () => {
+  test("skips the queue-serialized duplicate of a just-completed run", async () => {
+    mocks.getLastSuccessfulPollAt.mockImplementation(() =>
+      Promise.resolve(new Date()),
+    );
+    const skipsBefore = await skipCount("recent_completion");
+
+    await runIngestionReconciliation();
+    await runIngestionReconciliation();
+
+    expect(mocks.getLastSuccessfulPollAt).toHaveBeenCalledTimes(1);
+    expect(await skipCount("recent_completion")).toBe(skipsBefore + 1);
+  });
+
+  test("runs again once the completion window has passed", async () => {
+    vi.useFakeTimers();
     mocks.getLastSuccessfulPollAt.mockImplementation(() =>
       Promise.resolve(new Date()),
     );
 
     await runIngestionReconciliation();
+    vi.advanceTimersByTime(31_000);
     await runIngestionReconciliation();
 
     expect(mocks.getLastSuccessfulPollAt).toHaveBeenCalledTimes(2);
   });
 
-  test("releases the guard when a run throws", async () => {
+  test("a failed run neither holds the guard nor suppresses the retry", async () => {
     mocks.getLastSuccessfulPollAt
       .mockRejectedValueOnce(new Error("database offline"))
       .mockImplementationOnce(() => Promise.resolve(new Date()));

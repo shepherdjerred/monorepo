@@ -11,15 +11,22 @@ const logger = createLogger("ingestion-reconciliation");
 
 let isReconciliationInProgress = false;
 let reconciliationStartTime: number | undefined;
+let lastCompletedAt: number | undefined;
+
+// Under the 60-second schedule cadence ordinary scheduled runs never land
+// inside this window, but the queue-serialized duplicate of a boot+schedule
+// coincidence dequeues seconds after the prior run finished.
+const RECENT_COMPLETION_WINDOW_MS = 30_000;
 
 export function resetReconciliationState(): void {
   isReconciliationInProgress = false;
   reconciliationStartTime = undefined;
+  lastCompletedAt = undefined;
 }
 
 function shouldSkipReconciliationRun(): boolean {
   if (!isReconciliationInProgress) {
-    return false;
+    return shouldSkipRecentlyCompletedRun();
   }
 
   const elapsed =
@@ -54,15 +61,36 @@ function shouldSkipReconciliationRun(): boolean {
   return true;
 }
 
+function shouldSkipRecentlyCompletedRun(): boolean {
+  const sinceCompleted =
+    lastCompletedAt === undefined ? undefined : Date.now() - lastCompletedAt;
+  if (
+    sinceCompleted === undefined ||
+    sinceCompleted >= RECENT_COMPLETION_WINDOW_MS
+  ) {
+    return false;
+  }
+
+  logger.info(
+    `⏭️  Ingestion reconciliation completed ${Math.round(sinceCompleted / 1000).toString()}s ago, skipping this run`,
+  );
+  ingestionReconciliationSkipsTotal.inc({ reason: "recent_completion" });
+  return true;
+}
+
 export async function runIngestionReconciliation(): Promise<void> {
   // The schedule-triggered and gateway-ready workflows carry different
-  // workflow IDs, so Temporal cannot deduplicate them against each other and
-  // both can invoke this activity concurrently during downtime recovery.
-  // Exactly one backend replica executes the background activity queue
-  // (replicas: 1, Recreate strategy in the homelab scout chart), so this
-  // in-process guard is a genuine shared exclusion for both start paths.
-  // Skipping is safe: the fixed schedule retries within a minute and the
-  // boot-time start is best-effort.
+  // workflow IDs, so Temporal cannot deduplicate them against each other
+  // during downtime recovery. Exactly one backend replica executes the
+  // background activity queue (replicas: 1, Recreate strategy in the homelab
+  // scout chart) and its worker runs one activity at a time
+  // (maxConcurrentActivityTaskExecutions: 1 in connected-runtime.ts), so the
+  // overlapping start dequeues only after the prior run finished — that
+  // ordering is what lets the completion-recency check reliably observe the
+  // previous run. The in-flight flag cannot fire under that serialization;
+  // it stays as defense in case worker concurrency ever changes. Skipping is
+  // safe: the fixed schedule retries within a minute and the boot-time start
+  // is best-effort.
   if (shouldSkipReconciliationRun()) {
     return;
   }
@@ -70,6 +98,8 @@ export async function runIngestionReconciliation(): Promise<void> {
   reconciliationStartTime = Date.now();
   try {
     await reconcileIngestion();
+    // Success only: a failed run must not suppress the queued retry.
+    lastCompletedAt = Date.now();
   } finally {
     isReconciliationInProgress = false;
     reconciliationStartTime = undefined;
