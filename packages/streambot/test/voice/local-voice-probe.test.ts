@@ -6,7 +6,7 @@ import {
   parseAvfoundationAudioDevices,
   startMacMicrophoneCapture,
 } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { LocalVoiceModels } from "@shepherdjerred/voice-assistant";
 import { VoiceConfigSchema } from "@shepherdjerred/streambot/config/schema.ts";
 
 function markerModels(wake: boolean): LocalVoiceModels {

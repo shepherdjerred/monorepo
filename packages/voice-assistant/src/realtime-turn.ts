@@ -1,92 +1,54 @@
 import { RealtimeAgent, RealtimeSession } from "@openai/agents/realtime";
-import type { RealtimeTransportLayer } from "@openai/agents/realtime";
-import { wakePcmToOpenAiPcm } from "@shepherdjerred/discord-video-stream";
-import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import {
-  VOICE_ASSISTANT_VOICE,
-  VOICE_REALTIME_MODEL,
-} from "@shepherdjerred/streambot/voice/constants.ts";
-import { type PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
-import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
-import {
-  voiceAudioTokensTotal,
-  voiceActivationStageLatencySeconds,
-  voiceConcurrentTurns,
-  voiceOpenAiFailuresTotal,
-  voiceReplySendFailuresTotal,
-  voiceTranscriptVerificationsTotal,
-  voiceTurnsTotal,
-  voiceWakeToReplySeconds,
-} from "@shepherdjerred/streambot/observability/metrics.ts";
-import { voiceCloudRequestsTotal } from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
-import {
-  PacedAssistantSender,
-  type AssistantAudioSink,
-} from "@shepherdjerred/streambot/voice/assistant-sink.ts";
-import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import type {
+  RealtimeAgentConfiguration,
+  RealtimeTransportLayer,
+} from "@openai/agents/realtime";
+import { z } from "zod";
+import { wakePcmToOpenAiPcm } from "./codecs.ts";
+import type { AssistantAudioSink } from "./assistant-sink.ts";
+import type { SpokenFeedbackClips } from "./spoken-feedback.ts";
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "@shepherdjerred/streambot/voice/attempt-context.ts";
-import type { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
+} from "./attempt.ts";
+import { VoiceMutationGate } from "./mutation-gate.ts";
+import type { RealtimeTurnMetrics, VoiceObservability } from "./ports.ts";
+import { realtimeErrorToError } from "./realtime-errors.ts";
 
-import {
-  bindPlaybackVoiceCommandPort,
-  createStreambotVoiceTools,
-  type VoiceCommandPort,
-  VoiceMutationGate,
-} from "@shepherdjerred/streambot/voice/voice-tools.ts";
-import { realtimeErrorToError } from "@shepherdjerred/streambot/voice/realtime-errors.ts";
-import {
-  ConversationItemCreatedEventSchema,
-  ConversationItemDeletedEventSchema,
-  normalizeTranscript,
-  recordTranscriptionUsage,
-  TranscriptionCompletedEventSchema,
-  TranscriptionFailedEventSchema,
-  verifyWakeTranscript,
-  type CompletedTranscription,
-} from "@shepherdjerred/streambot/voice/realtime-transcript.ts";
+export type RealtimeTurnTools = NonNullable<
+  RealtimeAgentConfiguration["tools"]
+>;
 
-const INSTRUCTIONS = `You are Streambot, a voice-only media playback controller.
-Handle exactly one concise playback request. You may only use the supplied Streambot tools.
-Never answer general knowledge, browse, accept URLs, or invent media state.
-For a clear request, call the single best tool and briefly speak its result.
-Default play requests to source auto, which searches history, local files, and YouTube.
-Treat “song by character” requests as likely AI covers; preserve the work and character in the query.
-For “again”, “that song”, numbered choices, and similar references, use history or the pending search context.
-When a title is uncertain, call search_media first. Read at most three choices and ask for first, second, or third.
-Use placement queue unless the speaker explicitly says next or now.
-Never call more than one mutating tool. Keep every spoken reply to one short sentence.`;
+export type RealtimeTurnToolContext = {
+  readonly mutationGate: VoiceMutationGate;
+  readonly signal: AbortSignal;
+  readonly attempt: VoiceAttemptHandle;
+};
 
-function audioTokenCount(details: readonly Record<string, number>[]): number {
-  return details.reduce(
-    (total, item) => total + (item["audio_tokens"] ?? 0),
-    0,
-  );
-}
-
-export type RealtimeVoiceTurnInput = {
-  readonly pcm16k: Float32Array;
-  readonly activatedAtMs: number;
-  readonly userId: UserId;
-  readonly service: PlaybackCommandService;
-  readonly streamer: StreamerLike;
-  /** Local pre-rendered feedback; when absent, rejected and bare wakes stay silent (probes/tests). */
-  readonly feedbackClips?: SpokenFeedbackClips;
-  readonly signal?: AbortSignal;
-  /** Test seam; production omits this and gets the official server WebSocket transport. */
-  readonly createTransport?: () => RealtimeTransportLayer;
-  readonly attempt?: VoiceAttemptHandle;
-  readonly telemetry?: VoiceSessionTelemetry;
-  readonly wakeRequired?: boolean;
+/**
+ * Everything phrase-, product-, and account-specific about one Realtime command turn.
+ * The turn mechanics (privacy invariants, abort/timeout races, response.create-free rejected
+ * and bare-wake paths) live in {@link runRealtimeCommandTurn} and never vary per consumer.
+ */
+export type RealtimeTurnOptions = {
+  readonly apiKey: string | undefined;
+  readonly model: string;
+  readonly assistantVoice: string;
+  readonly agentName: string;
+  readonly instructions: string;
+  /** Input transcription model; defaults to "gpt-transcribe". */
+  readonly transcriptionModel?: string;
+  readonly transactionTimeoutMs: number;
+  /** Normalized leading wake prefixes accepted by the strict transcript gate. */
+  readonly wakePrefixes: readonly string[];
+  readonly tools: (context: RealtimeTurnToolContext) => RealtimeTurnTools;
+  readonly metrics: RealtimeTurnMetrics;
+  readonly observability: VoiceObservability;
 };
 
 export type RealtimeCommandTurnInput = {
   readonly pcm16k: Float32Array;
   readonly activatedAtMs: number;
-  readonly commands: VoiceCommandPort;
   readonly assistantAudio: AssistantAudioSink;
   /** Local pre-rendered feedback; when absent, rejected and bare wakes stay silent (probes/tests). */
   readonly feedbackClips?: SpokenFeedbackClips;
@@ -95,6 +57,10 @@ export type RealtimeCommandTurnInput = {
   readonly createTransport?: () => RealtimeTransportLayer;
   /** No-op in local probes/corpus evaluation. */
   readonly attempt?: VoiceAttemptHandle;
+  /**
+   * Skip the leading wake-prefix gate and treat the whole normalized transcript as the command
+   * (e.g. a follow-up turn already scoped by the caller). Defaults to true.
+   */
   readonly wakeRequired?: boolean;
 };
 
@@ -103,26 +69,138 @@ export type RealtimeCommandTurnResult = {
   readonly wakeVerified: boolean;
   readonly mutated: boolean;
   readonly normalizedCommand: string | null;
+  /**
+   * Left unset by this package — it has no concept of "clarification". A consumer whose tools
+   * can ask a clarifying question computes this itself (see streambot's `realtime-voice.ts`)
+   * and augments the result before returning it to its own callers.
+   */
   readonly clarificationRequested?: boolean;
 };
 
-export function buildRealtimeSessionConfig() {
+function audioTokenCount(details: readonly Record<string, number>[]): number {
+  return details.reduce(
+    (total, item) => total + (item["audio_tokens"] ?? 0),
+    0,
+  );
+}
+
+const TranscriptionCompletedEventSchema = z.object({
+  type: z.literal("conversation.item.input_audio_transcription.completed"),
+  item_id: z.string().min(1),
+  transcript: z.string(),
+  usage: z.union([
+    z.object({
+      type: z.literal("tokens"),
+      input_tokens: z.number().nonnegative(),
+      output_tokens: z.number().nonnegative(),
+      total_tokens: z.number().nonnegative(),
+      input_token_details: z
+        .object({
+          audio_tokens: z.number().nonnegative().optional(),
+          text_tokens: z.number().nonnegative().optional(),
+        })
+        .optional(),
+    }),
+    z.object({
+      type: z.literal("duration"),
+      seconds: z.number().nonnegative(),
+    }),
+  ]),
+});
+
+const TranscriptionFailedEventSchema = z.object({
+  type: z.literal("conversation.item.input_audio_transcription.failed"),
+  error: z.unknown().optional(),
+});
+
+const ConversationItemDeletedEventSchema = z.object({
+  type: z.literal("conversation.item.deleted"),
+  item_id: z.string().min(1),
+});
+
+// The Realtime GA API renamed this event from "conversation.item.created" to
+// "conversation.item.added"; the SDK forwards the raw name. Matching only the old
+// name left the command-item wait hanging until the transaction timeout, so no
+// command ever ran. Accept both so the turn works across API revisions.
+const ConversationItemCreatedEventSchema = z.object({
+  type: z.enum(["conversation.item.added", "conversation.item.created"]),
+  item: z.object({ id: z.string().min(1) }),
+});
+
+export function buildRealtimeSessionConfig(options: {
+  readonly assistantVoice: string;
+  readonly transcriptionModel?: string;
+}) {
   return {
     outputModalities: ["audio"] as const,
     parallelToolCalls: false,
     audio: {
       input: {
         format: { type: "audio/pcm" as const, rate: 24_000 },
-        transcription: { model: "gpt-transcribe", language: "en" },
+        transcription: {
+          model: options.transcriptionModel ?? "gpt-transcribe",
+          language: "en",
+        },
         turnDetection: null,
         noiseReduction: null,
       },
       output: {
         format: { type: "audio/pcm" as const, rate: 24_000 },
-        voice: VOICE_ASSISTANT_VOICE,
+        voice: options.assistantVoice,
       },
     },
   };
+}
+
+export type VerifiedWakeTranscript = {
+  readonly normalized: string;
+  readonly command: string;
+};
+
+export function normalizeTranscript(transcript: string): string {
+  return transcript
+    .toLocaleLowerCase("en-US")
+    .replaceAll(/[^a-z0-9\s]/g, " ")
+    .replaceAll(/\s+/g, " ")
+    .trim();
+}
+
+/** Strict final wake gate. A configured phrase must be the leading normalized words. */
+export function verifyWakeTranscript(
+  transcript: string,
+  wakePrefixes: readonly string[],
+): VerifiedWakeTranscript | null {
+  const normalized = normalizeTranscript(transcript);
+  for (const prefix of wakePrefixes) {
+    if (normalized === prefix) return { normalized, command: "" };
+    if (normalized.startsWith(`${prefix} `)) {
+      return { normalized, command: normalized.slice(prefix.length + 1) };
+    }
+  }
+  return null;
+}
+
+type CompletedTranscription = z.infer<typeof TranscriptionCompletedEventSchema>;
+
+function recordTranscriptionUsage(
+  metrics: RealtimeTurnMetrics,
+  usage: CompletedTranscription["usage"],
+): void {
+  if (usage.type === "duration") {
+    metrics.transcriptionUsage.inc(
+      { unit: "seconds", direction: "input" },
+      usage.seconds,
+    );
+    return;
+  }
+  metrics.transcriptionUsage.inc(
+    { unit: "tokens", direction: "input" },
+    usage.input_tokens,
+  );
+  metrics.transcriptionUsage.inc(
+    { unit: "tokens", direction: "output" },
+    usage.output_tokens,
+  );
 }
 
 function aborted(signal: AbortSignal): Promise<never> {
@@ -142,52 +220,46 @@ function aborted(signal: AbortSignal): Promise<never> {
   });
 }
 
-function clarificationVersionOf(commands: VoiceCommandPort): number {
-  return commands.clarificationVersion?.() ?? 0;
-}
-
-function clarificationWasRequested(
-  commands: VoiceCommandPort,
-  before: number,
-): boolean {
-  return clarificationVersionOf(commands) > before;
-}
-
-/** Shared fresh, audio-only Realtime WebSocket turn for production and local probes. */
+/** One fresh, audio-only Realtime WebSocket turn, shared by production sessions and local probes. */
 export async function runRealtimeCommandTurn(
-  config: Config["voice"],
+  options: RealtimeTurnOptions,
   input: RealtimeCommandTurnInput,
 ): Promise<RealtimeCommandTurnResult> {
-  if (config.openAiApiKey === undefined) {
+  if (options.apiKey === undefined) {
     throw new Error("Voice assistant enabled without an OpenAI API key");
   }
-  const apiKey = config.openAiApiKey;
+  const apiKey = options.apiKey;
+  const { metrics } = options;
+  const { stagePrefix } = options.observability;
   const mutationGate = new VoiceMutationGate();
-  const clarificationVersion = clarificationVersionOf(input.commands);
   const attempt = input.attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
-  const timeoutSignal = AbortSignal.timeout(config.transactionTimeoutMs);
+  const timeoutSignal = AbortSignal.timeout(options.transactionTimeoutMs);
   const transactionSignal =
     input.signal === undefined
       ? timeoutSignal
       : AbortSignal.any([input.signal, timeoutSignal]);
   const agent = new RealtimeAgent({
-    name: "Streambot",
-    instructions: INSTRUCTIONS,
-    voice: VOICE_ASSISTANT_VOICE,
-    tools: createStreambotVoiceTools(
-      input.commands,
+    name: options.agentName,
+    instructions: options.instructions,
+    voice: options.assistantVoice,
+    tools: options.tools({
       mutationGate,
-      transactionSignal,
+      signal: transactionSignal,
       attempt,
-    ),
+    }),
   });
   const session = new RealtimeSession(agent, {
     apiKey,
     transport: input.createTransport?.() ?? "websocket",
-    model: VOICE_REALTIME_MODEL,
+    model: options.model,
     historyStoreAudio: false,
     tracingDisabled: true,
-    config: buildRealtimeSessionConfig(),
+    config: buildRealtimeSessionConfig({
+      assistantVoice: options.assistantVoice,
+      ...(options.transcriptionModel === undefined
+        ? {}
+        : { transcriptionModel: options.transcriptionModel }),
+    }),
   });
   let firstAudio = true;
   let failureStage = "connect";
@@ -238,7 +310,7 @@ export async function runRealtimeCommandTurn(
     session.on("audio", (event) => {
       if (firstAudio) {
         firstAudio = false;
-        voiceWakeToReplySeconds.observe(
+        metrics.wakeToReplySeconds.observe(
           (Date.now() - input.activatedAtMs) / 1000,
         );
       }
@@ -259,21 +331,21 @@ export async function runRealtimeCommandTurn(
       reject(realtimeErrorToError(event.error));
     });
   });
-  voiceConcurrentTurns.inc();
+  metrics.concurrentTurns.inc();
   try {
     const interruption = aborted(transactionSignal);
-    voiceCloudRequestsTotal.inc({ stage: "connect", outcome: "request" });
-    await attempt.runStage("streambot.voice.openai.connect", {}, async () => {
+    metrics.cloudRequests.inc({ stage: "connect", outcome: "request" });
+    await attempt.runStage(`${stagePrefix}.openai.connect`, {}, async () => {
       await Promise.race([
         session.connect({
           apiKey,
-          model: VOICE_REALTIME_MODEL,
+          model: options.model,
         }),
         interruption,
         sessionFailure,
       ]);
     });
-    voiceCloudRequestsTotal.inc({ stage: "connect", outcome: "success" });
+    metrics.cloudRequests.inc({ stage: "connect", outcome: "success" });
     failureStage = "transcription";
     const pcm24k = wakePcmToOpenAiPcm(input.pcm16k);
     const transcriptionStartedAtMs = Date.now();
@@ -286,25 +358,25 @@ export async function runRealtimeCommandTurn(
       pcm24kCopy.fill(0);
       pcm24k.fill(0);
     }
-    voiceCloudRequestsTotal.inc({
+    metrics.cloudRequests.inc({
       stage: "transcription",
       outcome: "request",
     });
     const transcriptionResult = await attempt.runStage(
-      "streambot.voice.openai.transcription",
+      `${stagePrefix}.openai.transcription`,
       {},
       async () =>
         await Promise.race([transcription, interruption, sessionFailure]),
     );
-    voiceCloudRequestsTotal.inc({
+    metrics.cloudRequests.inc({
       stage: "transcription",
       outcome: "success",
     });
-    voiceActivationStageLatencySeconds.observe(
+    metrics.activationStageLatencySeconds.observe(
       { stage: "cloud-transcription" },
       (Date.now() - transcriptionStartedAtMs) / 1000,
     );
-    recordTranscriptionUsage(transcriptionResult.usage);
+    recordTranscriptionUsage(metrics, transcriptionResult.usage);
     attempt.cloudUsage({ transcription: transcriptionResult.usage });
     const verified =
       input.wakeRequired === false
@@ -312,7 +384,10 @@ export async function runRealtimeCommandTurn(
             normalized: normalizeTranscript(transcriptionResult.transcript),
             command: normalizeTranscript(transcriptionResult.transcript),
           }
-        : verifyWakeTranscript(transcriptionResult.transcript);
+        : verifyWakeTranscript(
+            transcriptionResult.transcript,
+            options.wakePrefixes,
+          );
     if (verified === null) {
       attempt.transcription({
         transcript: transcriptionResult.transcript,
@@ -320,11 +395,11 @@ export async function runRealtimeCommandTurn(
         outcome: "rejected",
       });
       attempt.cloudOutcome("transcript-rejected");
-      voiceTranscriptVerificationsTotal.inc({ outcome: "rejected" });
-      voiceTurnsTotal.inc({ outcome: "transcript-rejected" });
+      metrics.transcriptVerifications.inc({ outcome: "rejected" });
+      metrics.turns.inc({ outcome: "transcript-rejected" });
       // Still response.create-free: the retry line is a local pre-rendered clip, so nothing
       // about the rejected audio reaches the Realtime model — but the speaker is no longer
-      // left wondering whether Streambot heard anything at all.
+      // left wondering whether the assistant heard anything at all.
       if (input.feedbackClips === undefined) {
         await input.assistantAudio.cancel();
       } else {
@@ -336,7 +411,6 @@ export async function runRealtimeCommandTurn(
         wakeVerified: false,
         mutated: false,
         normalizedCommand: null,
-        clarificationRequested: false,
       };
     }
     attempt.transcription({
@@ -344,12 +418,12 @@ export async function runRealtimeCommandTurn(
       normalizedCommand: verified.command,
       outcome: "accepted",
     });
-    voiceTranscriptVerificationsTotal.inc({ outcome: "accepted" });
+    metrics.transcriptVerifications.inc({ outcome: "accepted" });
     if (verified.command.length === 0) {
-      // A bare "Hey Streambot" used to bill a full Realtime response just to ask what to play.
+      // A bare wake phrase used to bill a full Realtime response just to ask what to do.
       // The prompt is a local clip instead; no conversation item is created and no response is
       // requested, and the finally below closes the session immediately.
-      voiceTurnsTotal.inc({ outcome: "bare-wake" });
+      metrics.turns.inc({ outcome: "bare-wake" });
       if (input.feedbackClips === undefined) {
         await input.assistantAudio.cancel();
       } else {
@@ -361,7 +435,6 @@ export async function runRealtimeCommandTurn(
         wakeVerified: true,
         mutated: false,
         normalizedCommand: "",
-        clarificationRequested: false,
       };
     }
     failureStage = "verified-command";
@@ -407,16 +480,16 @@ export async function runRealtimeCommandTurn(
     });
     await Promise.race([created, interruption, sessionFailure]);
     failureStage = "response";
-    voiceCloudRequestsTotal.inc({ stage: "response", outcome: "request" });
+    metrics.cloudRequests.inc({ stage: "response", outcome: "request" });
     await attempt.runStage(
-      "streambot.voice.openai.response",
-      { "streambot.voice.normalized_command": verified.command },
+      `${stagePrefix}.openai.response`,
+      { [`${stagePrefix}.normalized_command`]: verified.command },
       async () => {
         session.transport.sendEvent({ type: "response.create" });
         await Promise.race([completed, interruption, sessionFailure]);
       },
     );
-    voiceCloudRequestsTotal.inc({ stage: "response", outcome: "success" });
+    metrics.cloudRequests.inc({ stage: "response", outcome: "success" });
     // `audio_stopped` only means Realtime finished generating. The sink still paces whatever it
     // queued at 20 ms per packet, so leaving this await unraced lets a long or fast-generated
     // reply drain past the transaction timeout — holding the duck down, the teardown hold open,
@@ -426,9 +499,9 @@ export async function runRealtimeCommandTurn(
     const inputAudio = audioTokenCount(session.usage.inputTokensDetails);
     const outputAudio = audioTokenCount(session.usage.outputTokensDetails);
     if (inputAudio > 0)
-      voiceAudioTokensTotal.inc({ direction: "input" }, inputAudio);
+      metrics.audioTokens.inc({ direction: "input" }, inputAudio);
     if (outputAudio > 0)
-      voiceAudioTokensTotal.inc({ direction: "output" }, outputAudio);
+      metrics.audioTokens.inc({ direction: "output" }, outputAudio);
     attempt.cloudUsage({
       transcription: transcriptionResult.usage,
       realtime: {
@@ -436,7 +509,7 @@ export async function runRealtimeCommandTurn(
         outputAudioTokens: outputAudio,
       },
     });
-    voiceTurnsTotal.inc({
+    metrics.turns.inc({
       outcome: mutationGate.hasMutated ? "command" : "no-command",
     });
     attempt.cloudOutcome("success");
@@ -445,56 +518,25 @@ export async function runRealtimeCommandTurn(
       wakeVerified: true,
       mutated: mutationGate.hasMutated,
       normalizedCommand: verified.command,
-      clarificationRequested: clarificationWasRequested(
-        input.commands,
-        clarificationVersion,
-      ),
     };
   } catch (error) {
     if (input.signal?.aborted === true) {
-      voiceTurnsTotal.inc({ outcome: "interrupted" });
+      metrics.turns.inc({ outcome: "interrupted" });
     } else {
-      voiceOpenAiFailuresTotal.inc({ stage: failureStage });
-      voiceCloudRequestsTotal.inc({ stage: failureStage, outcome: "failure" });
-      voiceTurnsTotal.inc({ outcome: "error" });
+      metrics.openAiFailures.inc({ stage: failureStage });
+      metrics.cloudRequests.inc({ stage: failureStage, outcome: "failure" });
+      metrics.turns.inc({ outcome: "error" });
     }
     try {
       await input.assistantAudio.cancel();
     } catch {
       // Cancellation is cleanup. If it fails we still owe the caller the
       // reason we got here, so never let it replace `error`.
-      voiceReplySendFailuresTotal.inc();
+      metrics.replySendFailures.inc();
     }
     throw error;
   } finally {
     session.close();
-    voiceConcurrentTurns.dec();
+    metrics.concurrentTurns.dec();
   }
-}
-
-/** Production wrapper: trusted Discord user binding plus paced normal-voice reply audio. */
-export async function runRealtimeVoiceTurn(
-  config: Config["voice"],
-  input: RealtimeVoiceTurnInput,
-): Promise<RealtimeCommandTurnResult> {
-  return await runRealtimeCommandTurn(config, {
-    pcm16k: input.pcm16k,
-    activatedAtMs: input.activatedAtMs,
-    commands: bindPlaybackVoiceCommandPort(input.service, input.userId),
-    assistantAudio: new PacedAssistantSender(input.streamer, {
-      ...(input.attempt === undefined ? {} : { attempt: input.attempt }),
-      ...(input.telemetry === undefined ? {} : { telemetry: input.telemetry }),
-    }),
-    ...(input.attempt === undefined ? {} : { attempt: input.attempt }),
-    ...(input.feedbackClips === undefined
-      ? {}
-      : { feedbackClips: input.feedbackClips }),
-    ...(input.signal === undefined ? {} : { signal: input.signal }),
-    ...(input.createTransport === undefined
-      ? {}
-      : { createTransport: input.createTransport }),
-    ...(input.wakeRequired === undefined
-      ? {}
-      : { wakeRequired: input.wakeRequired }),
-  });
 }

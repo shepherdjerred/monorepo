@@ -3,7 +3,7 @@ import {
   DiscordOpusDecoder,
   DiscordOpusEncoder,
   wakePcmToOpenAiPcm,
-} from "../src/media/DiscordVoiceCodec.ts";
+} from "@shepherdjerred/voice-assistant";
 
 describe("Discord voice codec", () => {
   test("encodes assistant PCM into Opus and decodes it to wake PCM", () => {
@@ -25,9 +25,9 @@ describe("Discord voice codec", () => {
   });
 
   test("resamples 16k float wake audio to 24k PCM16", () => {
-    const pcm = wakePcmToOpenAiPcm(new Float32Array(1_600));
-    expect(pcm.byteLength).toBeGreaterThanOrEqual(4_700);
-    expect(pcm.byteLength).toBeLessThanOrEqual(4_900);
+    const pcm = wakePcmToOpenAiPcm(new Float32Array(1600));
+    expect(pcm.byteLength).toBeGreaterThanOrEqual(4700);
+    expect(pcm.byteLength).toBeLessThanOrEqual(4900);
   });
 
   // A 440 Hz tone survives the 24k PCM16 → Opus → 16k float round-trip with its energy and

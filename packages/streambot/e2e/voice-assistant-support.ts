@@ -1,20 +1,20 @@
 import path from "node:path";
 import { Client } from "discord.js-selfbot-v13";
+import { Streamer } from "@shepherdjerred/discord-video-stream";
 import {
   DiscordOpusDecoder,
   DiscordOpusEncoder,
-  Streamer,
-} from "@shepherdjerred/discord-video-stream";
+} from "@shepherdjerred/voice-assistant";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import type { SessionHandle } from "@shepherdjerred/streambot/session/session-types.ts";
 import type { ChannelId } from "@shepherdjerred/streambot/types/ids.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { loadVoiceCorpusManifest } from "@shepherdjerred/streambot/voice/corpus-io.ts";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
 import {
   CLOUD_VERIFICATION_MAX_ATTEMPTS,
   CLOUD_VERIFICATION_WINDOW_MS,
-} from "@shepherdjerred/streambot/voice/cloud-verification-rate-limiter.ts";
+  decodeDiscordOpusContainer,
+} from "@shepherdjerred/voice-assistant";
 export const BASELINE_CLIP = "/tmp/streambot-voice-assistant-baseline.mp4";
 export const LOCAL_CLIP = "/tmp/streambot-voice-assistant-local.mp4";
 export const CORPUS_DIR = path.resolve(

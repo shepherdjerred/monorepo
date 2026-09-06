@@ -6,7 +6,7 @@ import {
   VoiceCorpusManifestSchema,
   type VoiceCorpusManifest,
 } from "@shepherdjerred/streambot/voice/corpus-schema.ts";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
+import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
 
 export const DEFAULT_VOICE_CORPUS_DIR = path.resolve(
   import.meta.dir,

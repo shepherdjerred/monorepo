@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
+import {
+  DiscordOpusEncoder,
+  type LocalVoiceModels,
+} from "@shepherdjerred/voice-assistant";
 import { evaluateDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 
 const PACKET_MS = 20;
 const CLIP_PACKETS = 200;

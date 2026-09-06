@@ -1,10 +1,11 @@
-import type { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
+import type { DiscordOpusDecoder } from "./codecs.ts";
 import type {
   KeywordDetectionEvidence,
   LocalVoiceModels,
   VoiceActivityDetector,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
-import type { VoiceAttemptHandle } from "@shepherdjerred/streambot/voice/attempt-context.ts";
+} from "./local-models.ts";
+import type { VoiceAttemptHandle } from "./attempt.ts";
+import type { VoiceLifecycleMetrics, VoiceObservability } from "./ports.ts";
 
 export type WakeCandidateEvidence = KeywordDetectionEvidence & {
   readonly userId: string;
@@ -52,6 +53,14 @@ export type VoiceAudioLifecycleOptions = {
   readonly models: LocalVoiceModels;
   readonly preRollMs: number;
   readonly maxUtteranceMs: number;
+  /**
+   * Milliseconds of audio still to come after each matched keyword fragment ends before the
+   * wake phrase is complete. One contract with the keyword file: a fragment sherpa can emit
+   * that is missing here throws at candidate time (packaging bug, not a runtime condition).
+   */
+  readonly fragmentTailMs: Readonly<Record<string, number>>;
+  readonly metrics: VoiceLifecycleMetrics;
+  readonly observability: VoiceObservability;
   readonly verificationDelayMs?: number;
   readonly postVerificationMs?: number;
   readonly onCandidate?: (evidence: WakeCandidateEvidence) => void;

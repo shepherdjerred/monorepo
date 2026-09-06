@@ -13,7 +13,7 @@ import {
   GuildIdSchema,
   UserIdSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
-import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import {
   assertDaveReadiness,
   runAuthorizationAndQueries,

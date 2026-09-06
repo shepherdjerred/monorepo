@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CloudVerificationRateLimiter } from "@shepherdjerred/streambot/voice/cloud-verification-rate-limiter.ts";
+import { CloudVerificationRateLimiter } from "@shepherdjerred/voice-assistant";
 
 describe("CloudVerificationRateLimiter", () => {
   test("allows a burst of two and at most five attempts in a rolling minute", () => {

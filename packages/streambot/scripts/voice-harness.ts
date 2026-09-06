@@ -5,7 +5,7 @@ import { VoiceConfigSchema } from "@shepherdjerred/streambot/config/schema.ts";
 import {
   initializeLocalVoiceModels,
   validateVoiceAssets,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
+} from "@shepherdjerred/streambot/voice/local-voice.ts";
 import {
   DryRunVoiceCommandPort,
   listAvfoundationAudioDevices,
@@ -14,9 +14,11 @@ import {
   startMacMicrophoneCapture,
   type MacMicrophoneCapture,
 } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import { wakePcmToOpenAiPcm } from "@shepherdjerred/discord-video-stream";
-import { runRealtimeCommandTurn } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
-import type { AssistantAudioSink } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
+import {
+  wakePcmToOpenAiPcm,
+  type AssistantAudioSink,
+} from "@shepherdjerred/voice-assistant";
+import { runRealtimeCommandTurn } from "@shepherdjerred/streambot/voice/realtime-voice.ts";
 import {
   DebugAudioRecorder,
   type DebugAudioRecording,

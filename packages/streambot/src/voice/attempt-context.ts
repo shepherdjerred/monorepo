@@ -7,6 +7,12 @@ import {
   type Context,
   type Span,
 } from "@opentelemetry/api";
+import type {
+  VoiceAttemptEndpoint,
+  VoiceAttemptHandle,
+  VoiceToolObservation,
+} from "@shepherdjerred/voice-assistant/attempt.ts";
+import { encodePcm16MonoWave } from "@shepherdjerred/voice-assistant/wave-io.ts";
 import {
   getTracer,
   markSpanError,
@@ -19,7 +25,6 @@ import {
   type VoiceCaptureManifest,
 } from "@shepherdjerred/streambot/voice/capture-manifest.ts";
 import type { VoiceCaptureUploadQueue } from "@shepherdjerred/streambot/voice/capture-store.ts";
-import { encodePcm16MonoWave } from "@shepherdjerred/streambot/voice/wave-io.ts";
 
 const log = logger.child("voice-attempt");
 const SAMPLE_RATE = 16_000;
@@ -35,86 +40,15 @@ export type VoiceAttemptCandidate = {
   readonly detectedAtMs: number;
 };
 
-export type VoiceAttemptEndpoint = {
-  readonly reason: string;
-  readonly sawSpeech: boolean;
-  readonly sampleCount: number;
-  readonly dtxSamples: number;
-  readonly pcm16k: Float32Array;
-};
-
-export type VoiceToolObservation = {
-  readonly name: string;
-  readonly arguments: unknown;
-  readonly result?: string;
-  readonly outcome: string;
-  readonly durationMs: number;
-};
-
-export type VoiceAttemptHandle = {
-  readonly captureId: string;
-  readonly traceId: string | undefined;
-  readonly run: <T>(fn: () => Promise<T>) => Promise<T>;
-  readonly runStage: <T>(
-    name: string,
-    attributes: Attributes,
-    fn: (span: Span) => Promise<T>,
-  ) => Promise<T>;
-  readonly recordStage: (
-    name: string,
-    durationMs: number,
-    attributes: Attributes,
-    error?: unknown,
-  ) => void;
-  readonly localVerification: (evidence: {
-    readonly accepted: boolean;
-    readonly score: number;
-    readonly latencyMs: number;
-  }) => void;
-  readonly endpoint: (evidence: VoiceAttemptEndpoint) => void;
-  readonly transcription: (input: {
-    readonly transcript: string;
-    readonly normalizedCommand: string | null;
-    readonly outcome: string;
-  }) => void;
-  readonly tool: (observation: VoiceToolObservation) => void;
-  readonly cloudOutcome: (outcome: string) => void;
-  readonly cloudUsage: (usage: unknown) => void;
-  readonly reply: (input: {
-    readonly outcome: string;
-    readonly packets: number;
-    readonly bytes: number;
-    readonly durationMs: number;
-  }) => void;
-  readonly finish: (outcome: string, error?: unknown) => void;
-};
-
-const noopAttempt: VoiceAttemptHandle = {
-  captureId: "offline-no-capture",
-  traceId: undefined,
-  run: async (fn) => await fn(),
-  runStage: async (_name, _attributes, fn) => {
-    const span = trace.getTracer("streambot-noop").startSpan("noop");
-    try {
-      return await fn(span);
-    } finally {
-      span.end();
-    }
-  },
-  recordStage: () => null,
-  localVerification: () => null,
-  endpoint: () => null,
-  transcription: () => null,
-  tool: () => null,
-  cloudOutcome: () => null,
-  cloudUsage: () => null,
-  reply: () => null,
-  finish: () => null,
-};
-
-export const NOOP_VOICE_ATTEMPT_OBSERVER = {
-  begin: (): VoiceAttemptHandle => noopAttempt,
-};
+// The handle types and noop observer moved to @shepherdjerred/voice-assistant with the pipeline;
+// this re-export is the one deliberate shim, so streambot's many attempt-observing modules keep
+// their import site while `ObservedVoiceAttempt` (S3 capture + root spans) stays here.
+export {
+  NOOP_VOICE_ATTEMPT_OBSERVER,
+  type VoiceAttemptEndpoint,
+  type VoiceAttemptHandle,
+  type VoiceToolObservation,
+} from "@shepherdjerred/voice-assistant/attempt.ts";
 
 export type VoiceAttemptObserver = {
   readonly begin: (candidate: VoiceAttemptCandidate) => VoiceAttemptHandle;

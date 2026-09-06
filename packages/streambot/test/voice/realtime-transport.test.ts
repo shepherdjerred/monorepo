@@ -10,16 +10,17 @@ import {
   buildRealtimeSessionConfig,
   runRealtimeCommandTurn,
   runRealtimeVoiceTurn,
-} from "@shepherdjerred/streambot/voice/realtime-agent.ts";
-import { verifyWakeTranscript } from "@shepherdjerred/streambot/voice/realtime-transcript.ts";
+  verifyWakeTranscript,
+} from "@shepherdjerred/streambot/voice/realtime-voice.ts";
 import {
+  createNoopVoiceMetrics,
   PacedAssistantSender,
   type AssistantAudioSink,
-} from "@shepherdjerred/streambot/voice/assistant-sink.ts";
+  type LocalVoiceModels,
+  type SpokenFeedbackClips,
+} from "@shepherdjerred/voice-assistant";
 import { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 import {
   FakeRealtimeTransport,
   type FakeRealtimeToolCall,
@@ -354,7 +355,10 @@ describe("custom Realtime transport", () => {
 
   test("ignores transport audio that arrives after a paced reply is sealed", async () => {
     const context = fixture();
-    const sender = new PacedAssistantSender(context.streamer);
+    const sender = new PacedAssistantSender(context.streamer, {
+      stagePrefix: "test.voice",
+      metrics: createNoopVoiceMetrics().reply,
+    });
     sender.enqueue(new Uint8Array(1920));
     await sender.finish();
     expect(() => sender.enqueue(new Uint8Array(1920))).not.toThrow();

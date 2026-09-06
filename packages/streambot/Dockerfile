@@ -71,6 +71,7 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   packages/streambot \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
+  packages/voice-assistant \
   ./
 RUN cd packages/discord-stream-lifecycle && bun run build \
  && cd /app/packages/discord-video-stream && bun run build
@@ -187,6 +188,7 @@ COPY --exclude=packages/streambot/test/fixtures/voice-corpus --parents \
   packages/streambot \
   packages/discord-stream-lifecycle \
   packages/discord-video-stream \
+  packages/voice-assistant \
   packages/config \
   packages/feature-flags \
   ./

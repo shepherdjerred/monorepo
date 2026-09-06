@@ -1,31 +1,34 @@
-import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
-import { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
-import type { KeywordDetectionEvidence } from "@shepherdjerred/streambot/voice/local-models.ts";
-import {
-  SpeakerRegistry,
-  type SpeakerState,
-} from "@shepherdjerred/streambot/voice/speaker-registry.ts";
-import { voiceTurnDeliveryFailuresTotal } from "@shepherdjerred/streambot/observability/metrics.ts";
-import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
-import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import type { VoiceAudioInput } from "./types.ts";
+import { DiscordOpusDecoder } from "./codecs.ts";
+import type { KeywordDetectionEvidence } from "./local-models.ts";
+import { SpeakerRegistry, type SpeakerState } from "./speaker-registry.ts";
 import {
   VOICE_DTX_GAP_MS,
   VOICE_DTX_TICK_MS,
   VOICE_FRAGMENT_TAIL_MARGIN_MS,
-  VOICE_FRAGMENT_TAIL_MS,
   VOICE_VERIFICATION_DELAY_MS,
-} from "@shepherdjerred/streambot/voice/constants.ts";
-import { NOOP_VOICE_ATTEMPT_OBSERVER } from "@shepherdjerred/streambot/voice/attempt-context.ts";
+} from "./constants.ts";
+import { NOOP_VOICE_ATTEMPT_OBSERVER } from "./attempt.ts";
 import type {
   CompletedVoiceTurn,
   PendingVoiceTurn,
   VoiceAudioLifecycleOptions,
   WakeCandidateEvidence,
-} from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
+} from "./audio-lifecycle-types.ts";
 
-const log = logger.child("voice-lifecycle");
 const SAMPLE_RATE = 16_000;
 const DEFAULT_POST_VERIFICATION_MS = 300;
+
+/** Normalize an unknown thrown value to a readable message (never throws). */
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
 
 function defaultSilenceTicker(
   onTick: () => void,
@@ -72,7 +75,7 @@ export class VoiceAudioLifecycle {
     );
   }
 
-  accept(audio: ReceivedVoiceAudio): void {
+  accept(audio: VoiceAudioInput): void {
     if (this.closed) {
       this.options.onInputDrop?.("closed");
       audio.opus.fill(0);
@@ -310,7 +313,7 @@ export class VoiceAudioLifecycle {
           SAMPLE_RATE,
       );
     }
-    const tailMs = VOICE_FRAGMENT_TAIL_MS[match.phrase];
+    const tailMs = this.options.fragmentTailMs[match.phrase];
     if (tailMs === undefined) {
       // The keyword file and the tail table are one contract; a fragment in one and not the other
       // is a packaging bug, not a runtime condition to paper over.
@@ -381,7 +384,7 @@ export class VoiceAudioLifecycle {
         this.options.onLocalVerificationError?.(error);
         const pcm16k = concatSamples(pending.pcm, pending.sampleCount);
         pending.attempt.recordStage(
-          "streambot.voice.local_verification",
+          `${this.options.observability.stagePrefix}.local_verification`,
           Math.max(0, (this.options.now?.() ?? Date.now()) - startedAtMs),
           {},
           error,
@@ -471,12 +474,12 @@ export class VoiceAudioLifecycle {
     } catch (error) {
       // Started with `void`, so a rejection here has nowhere to go and becomes
       // an unhandled rejection. Not every onTurn failure is caught by the turn
-      // itself: VoiceAssistantSession runs UserIdSchema.parse and holdTeardown
+      // itself: a consumer's session may validate ids and take teardown holds
       // *before* its own try/catch, so those throw straight past it. Count and
       // log it (no user or transcript context, by design) and let the finally
       // below still release the transaction.
-      voiceTurnDeliveryFailuresTotal.inc();
-      log.error("voice turn delivery failed", {
+      this.options.metrics.turnDeliveryFailures.inc();
+      this.options.observability.logger.error("voice turn delivery failed", {
         error: getErrorMessage(error),
       });
       turn.attempt.finish("delivery-error", error);

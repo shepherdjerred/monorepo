@@ -1,8 +1,5 @@
-import type { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
-import type {
-  KeywordDetector,
-  LocalVoiceModels,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
+import type { DiscordOpusDecoder } from "./codecs.ts";
+import type { KeywordDetector, LocalVoiceModels } from "./local-models.ts";
 
 /**
  * Upper bound on concurrently retained per-speaker decoder/detector state. Discord voice

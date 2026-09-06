@@ -1,0 +1,7 @@
+{
+  "src/realtime-turn.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
-import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/streambot/voice/local-models.ts";
+import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const config = loadConfig({
   BOT_TOKEN: "image-smoke",

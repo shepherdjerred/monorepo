@@ -1,4 +1,6 @@
 import { tool } from "@openai/agents/realtime";
+import { z } from "zod";
+import type { VoiceMutationGate } from "@shepherdjerred/voice-assistant/mutation-gate.ts";
 import { type PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import {
   PlaybackCommandBlockedError,
@@ -140,29 +142,9 @@ export function bindPlaybackVoiceCommandPort(
   };
 }
 
-export class VoiceMutationGate {
-  private mutated = false;
-
-  claim(): boolean {
-    if (this.mutated) return false;
-    this.mutated = true;
-    return true;
-  }
-
-  /**
-   * Undo a claim whose operation failed at the input boundary, before any playback mutation —
-   * every PlaybackCommandBoundaryError throws pre-dispatch, so the model may retry with corrected
-   * arguments instead of burning the whole wake on one bad guess. Never released for unknown
-   * errors: those may have landed after a dispatch, and a burned wake is safer than two mutations.
-   */
-  release(): void {
-    this.mutated = false;
-  }
-
-  get hasMutated(): boolean {
-    return this.mutated;
-  }
-}
+// Moved to @shepherdjerred/voice-assistant with the pipeline; re-exported so this module's
+// existing consumers (including tests) keep importing the gate from its historical home.
+export { VoiceMutationGate } from "@shepherdjerred/voice-assistant/mutation-gate.ts";
 
 export function createStreambotVoiceTools(
   commands: VoiceCommandPort,

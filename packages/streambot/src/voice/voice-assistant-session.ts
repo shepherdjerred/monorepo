@@ -5,18 +5,21 @@ import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-t
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
+import {
+  CloudVerificationRateLimiter,
+  isQuotaExhaustedError,
+  VoiceAudioLifecycle,
+  type DiscordOpusDecoder,
+  type LocalVoiceModels,
+  type RealtimeCommandTurnResult,
+  type SpokenFeedbackClips,
+} from "@shepherdjerred/voice-assistant";
 import {
   runRealtimeVoiceTurn,
-  type RealtimeCommandTurnResult,
-} from "@shepherdjerred/streambot/voice/realtime-agent.ts";
-import {
   speakClip,
-  type SpokenFeedbackClips,
-} from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+} from "@shepherdjerred/streambot/voice/realtime-voice.ts";
+import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import type { RealtimeTransportLayer } from "@openai/agents/realtime";
-import type { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
 import {
   voiceActivationStageLatencySeconds,
   voiceCloudVerificationRateLimitsTotal,
@@ -34,8 +37,6 @@ import {
   voiceUtteranceDurationSeconds,
   voiceWakeScore,
 } from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
-import { CloudVerificationRateLimiter } from "@shepherdjerred/streambot/voice/cloud-verification-rate-limiter.ts";
-import { isQuotaExhaustedError } from "@shepherdjerred/streambot/voice/quota-errors.ts";
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
@@ -92,6 +93,7 @@ export class VoiceAssistantSession {
     this.streamer = options.streamer;
     const service = new PlaybackCommandService(options.commands);
     this.lifecycle = new VoiceAudioLifecycle({
+      ...streambotVoiceLifecycleDeps(),
       models: options.models,
       preRollMs: options.config.voice.preRollMs,
       maxUtteranceMs: options.config.voice.maxUtteranceMs,

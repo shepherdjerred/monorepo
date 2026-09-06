@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { CloudVerificationRateLimiter } from "@shepherdjerred/streambot/voice/cloud-verification-rate-limiter.ts";
-import { isQuotaExhaustedError } from "@shepherdjerred/streambot/voice/quota-errors.ts";
+import {
+  CloudVerificationRateLimiter,
+  isQuotaExhaustedError,
+} from "@shepherdjerred/voice-assistant";
 
 describe("isQuotaExhaustedError", () => {
   test("matches OpenAI's spend-refusal codes wherever they are carried", () => {

@@ -9,6 +9,16 @@ This page lists the Streambot voice contracts. For rationale, see
 [Streambot voice assistant](/explanation/streambot-voice/). For an operating
 procedure, see [Diagnose Streambot voice](/how-to/diagnose-streambot-voice/).
 
+The pipeline implementation is the shared
+[`@shepherdjerred/voice-assistant` package](https://github.com/shepherdjerred/monorepo/tree/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant);
+streambot injects its transports, metric instruments, span prefix
+(`streambot.voice`), wake phrase, and playback tools through
+[`packages/streambot/src/voice/`](https://github.com/shepherdjerred/monorepo/tree/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice)
+and
+[`voice-metrics-ports.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/observability/voice-metrics-ports.ts).
+Every contract below — environment variables, metric families, span names,
+capture layout, and limits — is unchanged by that split.
+
 ## Media assistant commands
 
 | Command or phrase                                 | Result                                                        |

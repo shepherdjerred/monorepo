@@ -1,16 +1,16 @@
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import { z } from "zod";
-import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
+import {
+  DiscordOpusEncoder,
+  type LocalVoiceModels,
+} from "@shepherdjerred/voice-assistant";
 import { atomicWrite } from "@shepherdjerred/streambot/voice/corpus-io.ts";
 import {
   cloneDiscordOpusPackets,
   evaluateDiscordOpusPackets,
 } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
-import {
-  initializeLocalVoiceModelsForRuntime,
-  type LocalVoiceModels,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
+import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const ClipSchema = z.strictObject({
   file: z.string().min(1),

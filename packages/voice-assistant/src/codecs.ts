@@ -45,8 +45,8 @@ function float32FromBytes(bytes: Uint8Array): Float32Array {
 function bytesFromFloat32(samples: Float32Array): Uint8Array {
   const bytes = new Uint8Array(samples.byteLength);
   const view = new DataView(bytes.buffer);
-  for (let index = 0; index < samples.length; index += 1) {
-    view.setFloat32(index * 4, samples[index] ?? 0, true);
+  for (const [index, sample] of samples.entries()) {
+    view.setFloat32(index * 4, sample, true);
   }
   return bytes;
 }
@@ -101,7 +101,7 @@ export class DiscordOpusDecoder {
         this.context.sendPacketSync(packet),
         "decode Opus packet",
       );
-      while (true) {
+      for (;;) {
         const frame = new Frame();
         frame.alloc();
         const receiveResult = this.context.receiveFrameSync(frame);
@@ -190,8 +190,8 @@ export function wakePcmToOpenAiPcm(samples: Float32Array): Uint8Array {
 export class DiscordOpusEncoder {
   private readonly context = createOpusContext("encoder");
   private readonly resampler = new SoftwareResampleContext();
-  private pendingPcm: Uint8Array<ArrayBufferLike> = new Uint8Array();
-  private pendingFloat: Uint8Array<ArrayBufferLike> = new Uint8Array();
+  private pendingPcm: Uint8Array = new Uint8Array();
+  private pendingFloat: Uint8Array = new Uint8Array();
 
   public constructor() {
     FFmpegError.throwIfError(
@@ -255,9 +255,9 @@ export class DiscordOpusEncoder {
     const packets = this.encodeAvailableFrames();
     const flushResult = this.context.sendFrameSync(null);
     if (
-      flushResult < 0 &&
       flushResult !== AVERROR_EOF &&
-      flushResult !== AVERROR_EAGAIN
+      flushResult !== AVERROR_EAGAIN &&
+      flushResult < 0
     ) {
       FFmpegError.throwIfError(flushResult, "flush assistant Opus encoder");
     }
@@ -323,7 +323,7 @@ export class DiscordOpusEncoder {
 
   private receivePackets(): Uint8Array[] {
     const packets: Uint8Array[] = [];
-    while (true) {
+    for (;;) {
       const packet = new Packet();
       packet.alloc();
       const receiveResult = this.context.receivePacketSync(packet);

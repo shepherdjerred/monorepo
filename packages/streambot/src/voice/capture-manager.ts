@@ -17,7 +17,7 @@ import {
 import {
   encodePcm16MonoWaveBytes,
   encodePcm16Samples,
-} from "@shepherdjerred/streambot/voice/wave-io.ts";
+} from "@shepherdjerred/voice-assistant/wave-io.ts";
 
 const log = logger.child("voice-capture-manager");
 const SAMPLE_RATE = 16_000;
