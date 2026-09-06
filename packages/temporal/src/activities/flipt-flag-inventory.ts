@@ -1,4 +1,5 @@
 import { createAlertmanagerPoster } from "#lib/alertmanager.ts";
+import { applyMissingManagedFlags } from "@shepherdjerred/feature-flags/flipt-missing-flag-apply.ts";
 import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
@@ -15,6 +16,8 @@ import {
 
 export type FliptFlagInventoryResult = FliptFlagDriftAlertInput & {
   readonly observedAt: string;
+  readonly createdFlags: readonly string[];
+  readonly createdSegments: readonly string[];
 };
 
 function requiredEnvironment(name: string): string {
@@ -31,6 +34,13 @@ export const fliptFlagInventoryActivities = {
   async checkFliptFlagInventory(): Promise<FliptFlagInventoryResult[]> {
     const url = requiredEnvironment("FLIPT_URL");
     const observedAt = new Date().toISOString();
+    const created = await applyMissingManagedFlags({ url });
+    const createdByPair = new Map(
+      created.map((result) => [
+        `${result.environment}/${result.namespace}`,
+        result,
+      ]),
+    );
     const results = await Promise.all(
       managedFlagInventory.environments.flatMap((environment) =>
         managedFlagNamespaces.map(async (namespace) => {
@@ -45,12 +55,15 @@ export const fliptFlagInventoryActivities = {
             environment: environment.key,
           });
           const drift = compareManagedFlagInventory(snapshot, expectedFlags);
+          const applied = createdByPair.get(`${environment.key}/${namespace}`);
           return {
             namespace,
             environment: environment.key,
             missingInFlipt: drift.missingInFlipt,
             undeclaredInInventory: drift.undeclaredInInventory,
             contractMismatches: drift.contractMismatches,
+            createdFlags: applied?.createdFlags ?? [],
+            createdSegments: applied?.createdSegments ?? [],
             observedAt,
           };
         }),

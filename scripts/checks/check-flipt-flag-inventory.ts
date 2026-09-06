@@ -1,3 +1,4 @@
+import { applyMissingManagedFlags } from "../../packages/feature-flags/src/flipt-missing-flag-apply.ts";
 import {
   compareManagedFlagInventory,
   fetchFliptSnapshot,
@@ -111,6 +112,28 @@ async function main(): Promise<void> {
   const environmentFilter =
     argument("--environment") ?? Bun.env["FLIPT_ENVIRONMENT"];
   const url = requiredUrl();
+  if (Bun.argv.includes("--apply-missing")) {
+    const created = await applyMissingManagedFlags({
+      url,
+      ...(environmentFilter === undefined ? {} : { environmentFilter }),
+      ...(namespaceFilter === undefined ? {} : { namespaceFilter }),
+    });
+    for (const result of created) {
+      if (
+        result.createdFlags.length === 0 &&
+        result.createdSegments.length === 0 &&
+        result.createdNamespaces.length === 0
+      ) {
+        continue;
+      }
+      const namespaces = result.createdNamespaces.join(",") || "none";
+      const segments = result.createdSegments.join(",") || "none";
+      const flags = result.createdFlags.join(",") || "none";
+      console.log(
+        `created missing Flipt resources in ${result.environment}/${result.namespace}: namespaces=${namespaces} segments=${segments} flags=${flags}`,
+      );
+    }
+  }
   const messages = await checkManagedFlagMatrix({
     namespaceFilter,
     environmentFilter,
