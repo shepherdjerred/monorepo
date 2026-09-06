@@ -44,6 +44,7 @@ packages/tasknotes-core/bindings/csharp/**  linguist-generated=true whitespace=-
 
 # --- Binary files (carried over from previous .gitattributes) ---
 *.data    binary
+*.node    binary
 *.wasm    binary
 *.mp4     binary
 *.zip     binary
