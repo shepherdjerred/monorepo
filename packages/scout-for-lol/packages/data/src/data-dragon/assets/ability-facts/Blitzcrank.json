@@ -1,0 +1,273 @@
+{
+  "championKey": "Blitzcrank",
+  "championName": "Blitzcrank",
+  "abilities": {
+    "passive": {
+      "name": "Mana Barrier",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "HealthThreshold": [
+          0.3
+        ],
+        "ManaPercent": [
+          0.35
+        ],
+        "ShieldDuration": [
+          10
+        ],
+        "Cooldown": [
+          90
+        ],
+        "ManaRatio": [
+          1
+        ]
+      },
+      "resolvedDescription": "Blitzcrank gains a shield based on their mana when dropping to low health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Rocket Grab",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "costByRank": [
+        100,
+        100,
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1079,
+        1079,
+        1079,
+        1079,
+        1079
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          110,
+          160,
+          210,
+          260,
+          310
+        ],
+        "LolipopLength": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ],
+        "APRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ]
+      },
+      "resolvedDescription": "Blitzcrank fires their right hand, Pulling the first enemy hit towards them and dealing 110/160/210/260/310 (+120% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Overdrive",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        75,
+        75,
+        75,
+        75,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "dataValues": {
+        "MoveSpeedMod": [
+          0.6,
+          0.65,
+          0.7,
+          0.75,
+          0.8
+        ],
+        "AttackSpeedMod": [
+          0.3,
+          0.4,
+          0.5,
+          0.6,
+          0.7
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "MoveSpeedModReduction": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MoveSpeedModMin": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MoveSpeedModMinTime": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "PercentHealthDamage": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ]
+      },
+      "resolvedDescription": "Blitzcrank supercharges themself, gaining 60/65/70/75/80% decaying Move Speed and 30/40/50/60/70% Attack Speed for 5 seconds. Afterwards, Blitzcrank is Slowed by 30% for 1.5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Power Fist",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "CCDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Blitzcrank charges up their fist, causing their next Attack to Knock Up for 1 second(s) and deal 200% AD (+25% AP) physical damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Static Field",
+      "maxRank": 3,
+      "cooldownByRank": [
+        60,
+        40,
+        20
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "PassiveBaseDamage": [
+          50,
+          100,
+          150
+        ],
+        "ZapCountdown": [
+          1,
+          1,
+          1
+        ],
+        "ActiveRange": [
+          600,
+          600,
+          600
+        ],
+        "ActiveBaseDamage": [
+          275,
+          400,
+          525
+        ],
+        "SilenceDuration": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "PassiveAPRatio": [
+          0.3,
+          0.4,
+          0.5
+        ],
+        "ActiveAPRatio": [
+          1,
+          1,
+          1
+        ],
+        "PassiveManaRatio": [
+          0.05,
+          0.05,
+          0.05
+        ]
+      },
+      "resolvedDescription": "Passive: While this ability is available, lightning charges Blitzcrank's fists, marking those Attacked. After 1 second, they are shocked for {{ passivedamage }} magic damage. Active: Blitzcrank overcharges, dealing 275/400/525 (+100% AP) magic damage and Silencing nearby enemies for 0.5 seconds. Their shields are also destroyed.",
+      "unresolved": [
+        "passivedamage"
+      ]
+    }
+  }
+}

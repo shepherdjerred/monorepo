@@ -1,0 +1,251 @@
+{
+  "championKey": "Taric",
+  "championName": "Taric",
+  "abilities": {
+    "passive": {
+      "name": "Bravado",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Duration": [
+          5
+        ],
+        "BaseDamageMultiplierForModesBalance": [
+          1
+        ],
+        "ArmorDamageValue": [
+          0.15
+        ]
+      },
+      "resolvedDescription": "Spellcasts empower Taric's next 2 basic attacks to deal bonus magic damage, reduce his spell cooldowns, and attack in quick succession.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Starlight's Touch",
+      "maxRank": 5,
+      "cooldownByRank": [
+        3,
+        3,
+        3,
+        3,
+        3
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana, all Charges",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "Recharge": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "HealingPerStackBase": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "HealingAPRatio": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "HealingHPRatio": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "BaseHealMax": [
+          25,
+          50,
+          75,
+          100,
+          125
+        ],
+        "MaxCharges": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "resolvedDescription": "Passive: Gain a stack (max 1/2/3/4/5) every 15 seconds and when hitting a Bravado Attack. Active: Consume all stacks to restore 25 (+15% AP) (+1% max Health) Health per stack to nearby ally champions ({{ maxstackhealing }} at 1/2/3/4/5 stacks).",
+      "unresolved": [
+        "maxstackhealing"
+      ]
+    },
+    "W": {
+      "name": "Bastion",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ArmorBonusPercentage": [
+          0.06,
+          0.07,
+          0.08,
+          0.09,
+          0.1
+        ],
+        "ShieldHPRatio": [
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "LeashBreakWarningRange": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "LeashBreakActualRange": [
+          1300,
+          1300,
+          1300,
+          1300,
+          1300
+        ]
+      },
+      "resolvedDescription": "Passive: Taric gains 6/7/8/9/10% Armor Armor and forms a tether between him and the ally bound by this Ability. As long as they are near each other, the ally gains 6/7/8/9/10% Armor Armor and Taric casts all his Abilities from both himself and his linked ally. Active: Taric binds to an ally champion, granting a 7/8/9/10/11% max Health Shield for 2.5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Dazzle",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        610,
+        610,
+        610,
+        610,
+        610
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          90,
+          130,
+          170,
+          210,
+          250
+        ],
+        "StunDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ChargeDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Taric projects a beam of starlight, bursting after 1 second to deal 90/130/170/210/250 (+50% AP) (+50% bonus Armor) magic damage and Stun enemies for 1.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Cosmic Radiance",
+      "maxRank": 3,
+      "cooldownByRank": [
+        180,
+        150,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "InitialDelay": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "InvulnDuration": [
+          2.5,
+          2.5,
+          2.5
+        ]
+      },
+      "resolvedDescription": "Taric calls down protection from the heavens. After 2.5 seconds, nearby ally champions become invulnerable for 2.5 seconds.",
+      "unresolved": []
+    }
+  }
+}

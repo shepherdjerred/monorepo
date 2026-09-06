@@ -1,0 +1,355 @@
+{
+  "championKey": "Ambessa",
+  "championName": "Ambessa",
+  "abilities": {
+    "passive": {
+      "name": "Drakehound's Step",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "Buffer_Dash_Time": [
+          0.3
+        ],
+        "Buffer_Dash_Distance": [
+          350
+        ],
+        "Buffer_Dash_Min_Distance": [
+          175
+        ],
+        "Buffer_Dash_Forgiveness_Window": [
+          0.275
+        ],
+        "Buffer_Dash_W_Forgiveness_Window": [
+          0.25
+        ],
+        "Buffer_Dash_Wall_Forgiveness": [
+          500
+        ],
+        "Attack_Range_Amount": [
+          75
+        ],
+        "Attack_Range_Total": [
+          200
+        ],
+        "Attack_Buff_Max_Stacks": [
+          3
+        ],
+        "Attack_Buff_Duration": [
+          4
+        ],
+        "Attack_Speed": [
+          0.5
+        ]
+      },
+      "resolvedDescription": "Entering an attack or movement command while casting an ability will cause Ambessa to dash a short distance once the ability is cast, granting her next attack bonus range, damage, and attack speed, and refunding energy.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Cunning Sweep / Sundering Slam",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "Swap_Duration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "Swap_Static_Cooldown": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Damage_1_Base": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "Damage_1_Percent": [
+          0.04,
+          0.045,
+          0.05,
+          0.055,
+          0.06
+        ],
+        "Damage_2_Base": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "Damage_2_Percent": [
+          0.04,
+          0.045,
+          0.05,
+          0.055,
+          0.06
+        ],
+        "Damage_1_Min_Ratio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Damage_2_Min_Ratio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Damage_1_BAD_Ratio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "Damage_2_BAD_Ratio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ]
+      },
+      "resolvedDescription": "Cunning Sweep: Ambessa sweeps her blades forward, dealing 40/60/80/100/120 (+60% bonus AD) + {{ calc_damage_1_percent_max }} max Health physical damage to enemies at the edge of the strike. All other enemies take 50% damage. Striking an enemy readies a Sundering Slam. Sundering Slam: Ambessa slams her blades down, dealing 50/75/100/125/150 (+90% bonus AD) + {{ calc_damage_2_percent_max }} max Health physical damage against the first enemy hit. All other enemies take 50% damage.",
+      "unresolved": [
+        "calc_damage_1_percent_max",
+        "calc_damage_2_percent_max"
+      ]
+    },
+    "W": {
+      "name": "Repudiation",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "Dash_Delay": [
+          0.225,
+          0.225,
+          0.225,
+          0.225,
+          0.225
+        ],
+        "Buff_Duration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Shield_Duration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "HighDamageMultiplier": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DamageADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Ambessa gains 50-320 (based on level) (+150% bonus AD) Shield for 1.5 seconds and braces herself for 0.5 seconds. She then slams the ground, dealing 50/75/100/125/150 (+50% bonus AD) physical damage to nearby enemies, which increases to 75/112.5/150/187.5/225 (+75% bonus AD) physical damage if she braced herself from damage from an enemy champion, large monster, or structure.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Lacerate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "Slow_Duration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Slow_Amount": [
+          0.99,
+          0.99,
+          0.99,
+          0.99,
+          0.99
+        ],
+        "Damage_Flat_Base": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "ADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Ambessa whips her chains around, dealing 40/60/80/100/120 (+50% bonus AD) physical damage and Slowing enemies by 99%, which decays over 1 second. Initiating Drakehound's Step from this Ability will trigger an additional strike.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Public Execution",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        115,
+        100
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No cost",
+      "rangeByRank": [
+        1250,
+        1250,
+        1250
+      ],
+      "dataValues": {
+        "Damage": [
+          150,
+          250,
+          350
+        ],
+        "ADRatio": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "Suppress_Duration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "Stun_Duration": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "Armor_Penetration": [
+          0.1,
+          0.2,
+          0.3
+        ],
+        "Omnivamp": [
+          0.15,
+          0.175,
+          0.2
+        ],
+        "Omnivamp_LifeStealScaling": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Omnivamp_MinionMod": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "Omnivamp_MonsterMod": [
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Passive: Ambessa gains 10/20/30% %i:scaleAPen% Armor Penetration and her Abilities heal her for {{ calc_omnivamp }} of the damage she dealt. Active: Ambessa becomes Unstoppable and blinks to the farthest enemy champion in a line, Suppressing the target for 0.75 seconds and then slamming them into the ground, dealing 150/250/350 (+80% bonus AD) physical damage and Stunning them for 0.4 seconds.",
+      "unresolved": [
+        "calc_omnivamp"
+      ]
+    }
+  }
+}

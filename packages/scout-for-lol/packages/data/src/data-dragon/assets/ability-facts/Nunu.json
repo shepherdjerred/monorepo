@@ -1,0 +1,559 @@
+{
+  "championKey": "Nunu",
+  "championName": "Nunu & Willump",
+  "abilities": {
+    "passive": {
+      "name": "Call of the Freljord",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MonsterRadius": [
+          700
+        ],
+        "LargeRadius": [
+          1000
+        ],
+        "BloodBoilBaseDuration": [
+          4
+        ],
+        "ADRatioForAOE": [
+          0.3
+        ],
+        "ASIncrease": [
+          0.2
+        ],
+        "MSIncrease": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Nunu increases the attack speed and Move Speed of Willump and a nearby ally, and causes Willump's basic attacks to damage enemies around the target.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Consume",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        125,
+        125,
+        125,
+        125,
+        125
+      ],
+      "dataValues": {
+        "MonsterMinionDamage": [
+          400,
+          600,
+          800,
+          1000,
+          1200
+        ],
+        "BaseHealing": [
+          65,
+          95,
+          125,
+          155,
+          185
+        ],
+        "ChampionDamage": [
+          60,
+          100,
+          140,
+          180,
+          220
+        ],
+        "PercentageOfBonusHP": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "ChampionHealingScalar": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "LowHealthThreshhold": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "LowHealthHealingScalar": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BonusMaxHPDamage": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "ChampDamageAPRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "MonsterHealingAPRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ]
+      },
+      "resolvedDescription": "Nunu asks Willump to take a bite of an enemy, dealing 400/600/800/1000/1200 true damage and restoring 65/95/125/155/185 (+10% bonus Health) (+90% AP) Health when used against a minion or jungle monster. Against a champion, it instead deals 60/100/140/180/220 (+5% bonus Health) (+65% AP) magic damage and restores 39/57/75/93/111 (+6% bonus Health) (+54% AP) Health. The healing is increased by 50% when Nunu and Willump are below 50% Health.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Biggest Snowball Ever!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        7500,
+        7500,
+        7500,
+        7500,
+        7500
+      ],
+      "dataValues": {
+        "MonsterCollisionRadiusScalar": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MonsterImpactRadiusScalar": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "InitialCastRadiusScalar": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "WalkDistanceAfterThrow": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "TurnRateMultiplier1": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "TurnRateMultiplier2": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "TurnRateMultiplier3": [
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25
+        ],
+        "TurnRateMultTime1": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "TurnRateMultTime2": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "TurnRateMultTime3": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BaseDamage": [
+          180,
+          225,
+          270,
+          315,
+          360
+        ],
+        "MaxDamageTime": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "MaxDamageScalar": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxDuration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "BaseKnockupDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "AdditionalKnockupOverTime": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "AdditionalStunDurationOverTime": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "NoImpactDamageScalar": [
+          0.333,
+          0.333,
+          0.333,
+          0.333,
+          0.333
+        ],
+        "MaximumSnowballRollDistance": [
+          1750,
+          1750,
+          1750,
+          1750,
+          1750
+        ],
+        "MinimumSnowballRollDistance": [
+          750,
+          750,
+          750,
+          750,
+          750
+        ],
+        "SlowAmount": [
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MinimumSnowballRadius": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "MaximumSnowballRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "AdditionalStartingSpeed": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "AdditionalSpeedPerLevel": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "AdditionalSpeedCapPerLevel": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "MinimumSnowballMissileSpeed": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "LargeSnowballTime": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "MediumSnowballTime": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "LargeSnowballMissileWidth": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "MediumSnowballMissileWidth": [
+          137.5,
+          137.5,
+          137.5,
+          137.5,
+          137.5
+        ],
+        "SmallSnowballMissileWidth": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "MaximumAPRatio": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Nunu and Willump create a snowball that grows in size and speed as they roll it. They turn slower while rolling it, but can increase turning speed by holding the turn. The snowball does between 59.94/74.925/89.91/104.895/119.88 (+49.95% AP) and 180/225/270/315/360 (+150% AP) magic damage, and Knocks Up for between 0.5 and 0.5 (+0.75) seconds when it collides with a champion, large monster or wall. These values scale up with distance rolled. Nunu and Willump can Recast to let the snowball go early.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Snowball Barrage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          15,
+          22.5,
+          30,
+          37.5,
+          45
+        ],
+        "SlowAmount": [
+          -0.3,
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "RootDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "TotalSpellDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "DelayBetweenSnowballs": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "SplashConeLength": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "SplashConeAngle": [
+          22.5,
+          22.5,
+          22.5,
+          22.5,
+          22.5
+        ]
+      },
+      "resolvedDescription": "Nunu throws three snowballs, dealing 15/22.5/30/37.5/45 (+12% AP) magic damage per snowball and Slowing enemies hit by all three by 30/35/40/45/50% for 1 second. Nunu can Recast this up to twice more. After 3 seconds, Nunu Roots all nearby enemies that had been Slowed by the snowballs for 0.5-1.5 (based on level) seconds and deals an additional 20/30/40/50/60 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Absolute Zero",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        100,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          625,
+          925,
+          1275
+        ],
+        "SlowStartAmount": [
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "MaxSlowAmount": [
+          -0.95,
+          -0.95,
+          -0.95
+        ],
+        "ChannelDuration": [
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          3,
+          3,
+          3
+        ],
+        "MaxShieldDuration": [
+          6,
+          6,
+          6
+        ],
+        "ShieldDecayDuration": [
+          3,
+          3,
+          3
+        ],
+        "BaseShieldAmount": [
+          65,
+          75,
+          85
+        ],
+        "ShieldBonusHealthPercent": [
+          0.3,
+          0.4,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Nunu and Willump channel a powerful blizzard for up to 3 seconds. Enemies inside are Slowed by 50%, increasing to 95% over the duration. Nunu and Willump also gain 65/75/85 (+30/40/50% bonus Health) (+150% AP) Shield for the duration before decaying over 3 seconds afterwards. When the blizzard ends, it detonates, dealing up to 625/925/1275 (+300% AP) magic damage based on channel time. Nunu and Willump can Recast to end the blizzard early.",
+      "unresolved": []
+    }
+  }
+}

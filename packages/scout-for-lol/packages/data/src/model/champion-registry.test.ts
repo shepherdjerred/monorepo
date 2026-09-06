@@ -75,6 +75,53 @@ describe("champion-registry", () => {
     expect(normalizeChampionName("Nunu & Willump")).toBe("Nunu");
   });
 
+  test("resolves spoken-form aliases for voice input", () => {
+    const spokenForms: [string, string][] = [
+      ["cho gath", "Chogath"],
+      ["kai sa", "Kaisa"],
+      ["kha six", "Khazix"],
+      ["jarvan four", "JarvanIV"],
+      ["jarvan the fourth", "JarvanIV"],
+      ["j4", "JarvanIV"],
+      ["doctor mundo", "DrMundo"],
+      ["dr mundo", "DrMundo"],
+      ["mundo", "DrMundo"],
+      ["mf", "MissFortune"],
+      ["tf", "TwistedFate"],
+      ["yi", "MasterYi"],
+      ["willump", "Nunu"],
+      ["ash", "Ashe"],
+      ["vain", "Vayne"],
+      ["set", "Sett"],
+      ["asol", "AurelionSol"],
+      ["aurelion", "AurelionSol"],
+      ["blitz", "Blitzcrank"],
+      ["heimer", "Heimerdinger"],
+      ["morde", "Mordekaiser"],
+      ["kata", "Katarina"],
+      ["cass", "Cassiopeia"],
+      ["xin", "XinZhao"],
+    ];
+    for (const [spoken, key] of spokenForms) {
+      expect(normalizeChampionName(spoken), `"${spoken}"`).toBe(key);
+      expect(getChampionIdByName(spoken), `"${spoken}"`).toBeDefined();
+    }
+  });
+
+  test("punctuated names resolve from their spoken (space) form", () => {
+    // These need no alias: normalizeSearchTerm maps spaces and apostrophes
+    // to the same normalized form.
+    expect(normalizeChampionName("kha zix")).toBe("Khazix");
+    expect(normalizeChampionName("vel koz")).toBe("Velkoz");
+    expect(normalizeChampionName("kog maw")).toBe("KogMaw");
+    expect(normalizeChampionName("rek sai")).toBe("RekSai");
+    expect(normalizeChampionName("bel veth")).toBe("Belveth");
+    expect(normalizeChampionName("k sante")).toBe("KSante");
+    expect(normalizeChampionName("lee sin")).toBe("LeeSin");
+    expect(normalizeChampionName("master yi")).toBe("MasterYi");
+    expect(normalizeChampionName("aurelion sol")).toBe("AurelionSol");
+  });
+
   test("searches champions by query with proper ranking", () => {
     const yasuoResults = searchChampions("yas");
     expect(yasuoResults.length).toBeGreaterThan(0);

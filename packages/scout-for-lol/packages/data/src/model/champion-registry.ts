@@ -53,6 +53,35 @@ const CHAMPION_ALIASES: Record<string, string> = {
   wukong: "MonkeyKing",
   "renata glasc": "Renata",
   renata_glasc: "Renata",
+  // Spoken forms (voice input): what speech-to-text plausibly emits for names
+  // whose written form has punctuation, digits, or abbreviations. Punctuated
+  // names ("Kai'Sa" → "kai sa") already resolve through normalizeSearchTerm;
+  // the entries here cover the forms that do not.
+  "cho gath": "Chogath",
+  "kai sa": "Kaisa",
+  "kha six": "Khazix",
+  "jarvan four": "JarvanIV",
+  "jarvan the fourth": "JarvanIV",
+  jarvan: "JarvanIV",
+  j4: "JarvanIV",
+  "doctor mundo": "DrMundo",
+  "dr mundo": "DrMundo",
+  mundo: "DrMundo",
+  mf: "MissFortune",
+  tf: "TwistedFate",
+  yi: "MasterYi",
+  willump: "Nunu",
+  ash: "Ashe",
+  vain: "Vayne",
+  set: "Sett",
+  asol: "AurelionSol",
+  aurelion: "AurelionSol",
+  blitz: "Blitzcrank",
+  heimer: "Heimerdinger",
+  morde: "Mordekaiser",
+  kata: "Katarina",
+  cass: "Cassiopeia",
+  xin: "XinZhao",
 };
 
 /**

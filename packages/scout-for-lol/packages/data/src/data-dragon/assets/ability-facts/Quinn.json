@@ -1,0 +1,276 @@
+{
+  "championKey": "Quinn",
+  "championName": "Quinn",
+  "abilities": {
+    "passive": {
+      "name": "Harrier",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "RevealDuration": [
+          4
+        ],
+        "ModesPassiveDamageMultiplier": [
+          1
+        ],
+        "ADRatio": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "Valor, Quinn's Demacian eagle, periodically marks enemies with Harrier. Quinn's first basic attack against Harrier targets will deal bonus physical damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Blinding Assault",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.5,
+        10,
+        9.5,
+        9
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1025,
+        1025,
+        1025,
+        1025,
+        1025
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          65,
+          100,
+          135,
+          170,
+          205
+        ],
+        "ADRatio": [
+          0.8,
+          0.85,
+          0.9,
+          0.95,
+          1
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "VisionReductionRadius": [
+          -1000,
+          -1000,
+          -1000,
+          -1000,
+          -1000
+        ],
+        "VisionReductionDuration": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "BonusMonsterDmgMult": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Quinn orders Valor to dive, making the first enemy hit with Harrier, reducing their vision radius for 1.75 seconds and dealing 65/100/135/170/205 (+80/85/90/95/100% bonus AD) (+50% AP) physical damage to all surrounding enemies. If the first enemy struck is not a champion, it is Disarmed for 1.75 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Heightened Senses",
+      "maxRank": 5,
+      "cooldownByRank": [
+        50,
+        45,
+        40,
+        35,
+        30
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        2100,
+        2100,
+        2100,
+        2100,
+        2100
+      ],
+      "dataValues": {
+        "AttackSpeedBonus": [
+          0.28,
+          0.41,
+          0.54,
+          0.67,
+          0.8
+        ],
+        "CherryBonusHaste": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "BuffDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MovespeedAmount": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "VisionRadius": [
+          2100,
+          2100,
+          2100,
+          2100,
+          2100
+        ],
+        "VisionDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Passive: Attacking a Harrier target grants Quinn 28/41/54/67/80% Attack Speed and 20/25/30/35/40% Move Speed for 2 seconds. Active: Valor reveals a large area nearby for 2 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Vault",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        675,
+        675,
+        675,
+        675,
+        675
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          40,
+          65,
+          90,
+          115,
+          140
+        ],
+        "SlowDecayTime": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Quinn dashes to an enemy, dealing 40/65/90/115/140 (+20% bonus AD) physical damage and marking them with Harrier. Quinn then leaps backwards from the target, slightly Knocking them Back and Slowing them by 50%, decaying over 1.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Behind Enemy Lines",
+      "maxRank": 3,
+      "cooldownByRank": [
+        3,
+        3,
+        3
+      ],
+      "costByRank": [
+        50,
+        25,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "MovementSpeedMod": [
+          0.7,
+          1,
+          1.3
+        ],
+        "SlowDuration": [
+          3,
+          3,
+          3
+        ],
+        "HarrierCooldown": [
+          7,
+          7,
+          7
+        ],
+        "RHarrierMarkDuration": [
+          4.5,
+          4.5,
+          4.5
+        ],
+        "ADRatio": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BaseDamage": [
+          60,
+          90,
+          120
+        ]
+      },
+      "resolvedDescription": "Quinn calls to Valor, pairing up after channeling for 2 seconds gaining 70/100/130% Move Speed and allowing her to Recast this Ability. Attacking or using Blinding Assault or Vault automatically Recasts this Ability. Recast: Quinn and Valor perform an aerial maneuver, dealing 60/90/120 (+35% bonus AD) physical damage, marking champions with Harrier, and ending this Ability.",
+      "unresolved": []
+    }
+  }
+}

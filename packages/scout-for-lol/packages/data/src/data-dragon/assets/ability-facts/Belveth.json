@@ -1,0 +1,496 @@
+{
+  "championKey": "Belveth",
+  "championName": "Bel'Veth",
+  "abilities": {
+    "passive": {
+      "name": "Death in Lavender ",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MonsterStacks": [
+          1
+        ],
+        "ChampionStacks": [
+          2
+        ],
+        "ARAMBonusStacks": [
+          1
+        ],
+        "TakedownDuration": [
+          4
+        ],
+        "SheenDuration": [
+          3
+        ],
+        "BaronBuffDuration": [
+          180
+        ],
+        "SheenNumberOfAttacks": [
+          2
+        ],
+        "AttackADRatio": [
+          1
+        ],
+        "OnHitRatio": [
+          1
+        ],
+        "BrawlBonusStacks": [
+          2
+        ],
+        "ASPerStackLevel1Value": [
+          0.1
+        ],
+        "ASPerStackInitialBonusPerLevel": [
+          0.05
+        ],
+        "ASPerStackLevel6BonusPerLevel": [
+          0.1
+        ],
+        "ASPerStackLevel11BonusPerLevel": [
+          0.15
+        ]
+      },
+      "resolvedDescription": "Bel'Veth gains permanent attack speed stacks after taking down large minions and monsters and champions. She also gains temporary bonus attack speed after using an ability.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Void Surge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        3.25,
+        2.5,
+        1.75,
+        1
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "PerSideCooldown": [
+          16,
+          15,
+          14,
+          13,
+          12
+        ],
+        "PerSideCDAttackSpeedMultiplier": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "BaseDashSpeed": [
+          850,
+          850,
+          850,
+          850,
+          850
+        ],
+        "DashDistance": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "MaxDistanceOverWalls": [
+          625,
+          625,
+          625,
+          625,
+          625
+        ],
+        "RiftDashSpeed": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "CDReduction": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "AttackSpeed": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "NumberOfAttacks": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SpeedDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "AttackSpeedDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BaseHealthSteal": [
+          0.01,
+          0.02,
+          0.03,
+          0.04,
+          0.05
+        ],
+        "ADRatio": [
+          1.05,
+          1.05,
+          1.05,
+          1.05,
+          1.05
+        ],
+        "Damage": [
+          12,
+          14,
+          16,
+          18,
+          20
+        ],
+        "MonsterMod": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ],
+        "MinonMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Bel'Veth dashes, dealing 12/14/16/18/20 (+105% AD) physical damage to enemies she passes through. Each direction has an unique Cooldown of {{ f1 }} seconds that scales down based on her Attack Speed.",
+      "unresolved": [
+        "f1"
+      ]
+    },
+    "W": {
+      "name": "Above and Below",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        715,
+        715,
+        715,
+        715,
+        715
+      ],
+      "dataValues": {
+        "Duration": [
+          0.6,
+          0.7,
+          0.8,
+          0.9,
+          1
+        ],
+        "BaseDamage": [
+          80,
+          140,
+          200,
+          260,
+          320
+        ],
+        "SlowPercent": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Bel'Veth slams her tail, dealing 80/140/200/260/320 (+150% bonus AP) magic damage, Knocking Up foes for 0.6/0.7/0.8/0.9/1 seconds, and Slowing them by 30% for 2 seconds. If a champion is hit, this refreshes the Cooldown of Void Surge in that direction.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Royal Maelstrom",
+      "maxRank": 5,
+      "cooldownByRank": [
+        24,
+        21,
+        18,
+        15,
+        12
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        500,
+        500,
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "TotalDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AttackSpeedMult": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "DamagePerHit": [
+          10,
+          12,
+          14,
+          16,
+          18
+        ],
+        "OnHitRatio": [
+          0.12,
+          0.12,
+          0.12,
+          0.12,
+          0.12
+        ],
+        "NumberOfStrikes": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "MonsterMod": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MissingHealthMult": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DRPercent": [
+          0.2,
+          0.3,
+          0.4,
+          0.5,
+          0.6
+        ],
+        "BonusLifeSteal": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Bel'Veth channels and slashes around herself, gaining 20/30/40/50/60% Damage Reduction, 20/25/30/35/40% Life Steal, and Attacking {{ f2.0 }} times over 1.5 seconds with the number of Attacks increasing based on her Attack Speed. Each Attack strikes the lowest-health enemy, dealing 10/12/14/16/18 (+12% AD) to 20/24/28/32/36 (+24% AD) physical damage based on the target's missing Health. Using another Ability or Recasting ends this Ability early.",
+      "unresolved": [
+        "f2.0"
+      ]
+    },
+    "R": {
+      "name": "Endless Banquet",
+      "maxRank": 3,
+      "cooldownByRank": [
+        1,
+        1,
+        1
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "PassiveStacksOnDevour": [
+          1,
+          1,
+          1
+        ],
+        "OnHitDamage": [
+          2,
+          4,
+          6
+        ],
+        "CorpseDuration": [
+          15,
+          15,
+          15
+        ],
+        "BaseDamage": [
+          150,
+          200,
+          250
+        ],
+        "MissingHealthDamage": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "AoERange": [
+          500,
+          500,
+          500
+        ],
+        "MaxExecuteVsMonsters": [
+          1500,
+          1500,
+          1500
+        ],
+        "SteroidDuration": [
+          45,
+          45,
+          45
+        ],
+        "SteroidDurationUpgrade": [
+          90,
+          90,
+          90
+        ],
+        "StackThresholdForUpgrade": [
+          40,
+          40,
+          40
+        ],
+        "StackThresholdForPermanent": [
+          80,
+          80,
+          80
+        ],
+        "VoidDuration": [
+          180,
+          180,
+          180
+        ],
+        "MinionRadius": [
+          1000,
+          1000,
+          1000
+        ],
+        "BonusAARange": [
+          25,
+          75,
+          125
+        ],
+        "RPassiveStackDuration": [
+          5,
+          5,
+          5
+        ],
+        "BaseMaxHealth": [
+          100,
+          250,
+          400
+        ],
+        "TotalASMod": [
+          0.06,
+          0.13,
+          0.2
+        ],
+        "MaxEpicMonsterStacks": [
+          8,
+          8,
+          8
+        ],
+        "VoidlingHPScale": [
+          0.2,
+          0.45,
+          0.7
+        ],
+        "VoidlingADScale": [
+          1.1,
+          1.1,
+          1.1
+        ],
+        "MeleeVoidlingSkinScaleMod": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "VoidlingMovementSpeedMod": [
+          100,
+          100,
+          100
+        ],
+        "SizeIncreasePercent": [
+          0.05,
+          0.13,
+          0.21
+        ]
+      },
+      "resolvedDescription": "Passive: Attacks deal an additional 2/4/6 (+3% bonus AD) true damage, stacking infinitely. Takedowns against champions and epic monsters leave behind a piece of Void Coral. Active: Bel'Veth consumes a Void Coral, gaining 1 Lavender stack and activating her true form. Void Coral from void epic monsters causes minions that die nearby to become Void Remora. While casting, Bel'Veth Slows nearby enemies before exploding, dealing 150/200/250 (+150% AP) + 20% missing-Health true damage. In her true form, Bel'Veth gains 100/250/400 (+150% bonus AD) (+150% AP) max Health, 25/75/125 Attack range, 6/13/20% Total Attack Speed, and Void Surge can pass through walls. True form lasts 45 seconds, increased to 90 seconds at 40 Lavender stacks. At 80 Lavender stacks, true form lasts until death.",
+      "unresolved": []
+    }
+  }
+}

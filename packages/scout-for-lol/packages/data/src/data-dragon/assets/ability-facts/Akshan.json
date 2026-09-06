@@ -1,0 +1,465 @@
+{
+  "championKey": "Akshan",
+  "championName": "Akshan",
+  "abilities": {
+    "passive": {
+      "name": "Dirty Fighting",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaxStacks": [
+          3
+        ],
+        "DebuffDuration": [
+          4.5
+        ],
+        "ShieldBADRatio": [
+          0.35
+        ],
+        "ShieldDuration": [
+          2
+        ],
+        "SecondAutoADRatio": [
+          0.5
+        ],
+        "HasteDuration": [
+          1
+        ],
+        "SecondAutoFlexedAttackRange": [
+          200
+        ],
+        "SecondAutoCritRatio": [
+          1
+        ],
+        "APRatio": [
+          0.6
+        ]
+      },
+      "resolvedDescription": "Every three hits from Akshan's Attacks and Abilities deals bonus damage and grants him a Shield if the target was a champion. When Akshan Attacks, he fires an additional Attack for reduced damage. If he cancels the additional Attack, he instead gains Move Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Avengerang",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          45,
+          75,
+          105,
+          135,
+          165
+        ],
+        "ADRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "SecondaryTargetDamage": [
+          0.4,
+          0.5,
+          0.6,
+          0.7,
+          0.8
+        ],
+        "HasteDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "HasteValue": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ExtensionDistance": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "RevealDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "HasteAPRatio": [
+          0.0005,
+          0.0005,
+          0.0005,
+          0.0005,
+          0.0005
+        ]
+      },
+      "resolvedDescription": "Akshan throws a boomerang that deals 45/75/105/135/165 (+70% bonus AD) physical damage, extending the range each time an enemy is hit. Champion hits grant Akshan {{ totalhaste }} Move Speed decaying over 1 second.",
+      "unresolved": [
+        "totalhaste"
+      ]
+    },
+    "W": {
+      "name": "Going Rogue",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        14,
+        10,
+        6,
+        2
+      ],
+      "costByRank": [
+        40,
+        30,
+        20,
+        10,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        5500,
+        5500,
+        5500,
+        5500,
+        5500
+      ],
+      "dataValues": {
+        "VengeanceDuration": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "MSValue": [
+          80,
+          90,
+          100,
+          110,
+          120
+        ],
+        "ShredValue": [
+          15,
+          17.5,
+          20,
+          22.5,
+          25
+        ],
+        "DeathTimer": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "PassiveSecondAutoRatio": [
+          0.46,
+          0.52,
+          0.58,
+          0.64,
+          0.7
+        ],
+        "WallGracePeriod": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MissingManaRegen": [
+          0.12,
+          0.12,
+          0.12,
+          0.12,
+          0.12
+        ],
+        "GoldReward": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "RecentlyDamagedWindow": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "VFXTrailSpeed": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "PassiveWallRange": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "StealthDetectionRange": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "GameModeInteger": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ReviveHealthPercent": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "{{ Spell_AkshanW_Tooltip_{{ gamemodeinteger }} }}",
+      "unresolved": [
+        "Spell_AkshanW_Tooltip_{{ gamemodeinteger"
+      ]
+    },
+    "E": {
+      "name": "Heroic Swing",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        16.5,
+        15,
+        13.5,
+        12
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          8,
+          16,
+          24,
+          32,
+          40
+        ],
+        "ADRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "AttackSpeedCoefficient": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "CritDamageMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "OnHitDamageReduction": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "AttackFrequency": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "TimeToCastE2": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "AnchorLifetime": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "MinJumpbackDistance": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "EdgeToEdgeCollisionRadius": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "ResetCooldownToSet": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DistanceShiftTowardsWall": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "E3LockoutDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SpinDuration": [
+          25000,
+          25000,
+          25000,
+          25000,
+          25000
+        ]
+      },
+      "resolvedDescription": "First Cast: Akshan fires a grappling hook, attaching to the first terrain hit. Second Cast: Akshan swings around the terrain, repeatedly firing at the nearest enemy for {{ damagetodeal }} physical damage per shot. Third Cast: Akshan dives off the rope, firing a final shot. Colliding with an enemy Champion or terrain ends the swing early. Champion takedowns refresh this Ability's Cooldown.",
+      "unresolved": [
+        "damagetodeal"
+      ]
+    },
+    "R": {
+      "name": "Comeuppance",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        85,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2500,
+        2500,
+        2500
+      ],
+      "dataValues": {
+        "BonusDamage": [
+          25,
+          35,
+          45
+        ],
+        "ADRatio": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "CritDamageMod": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MaxIncrease": [
+          3,
+          3,
+          3
+        ],
+        "ChannelDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "GraceCooldown": [
+          5,
+          5,
+          5
+        ],
+        "CastTimePerBullet": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "MinimumChannelDuration": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "NumberOfBullets": [
+          5,
+          6,
+          7
+        ]
+      },
+      "resolvedDescription": "Akshan locks onto a champion and begins overcharging his gun for up to 2.5 seconds, storing up to 5/6/7 bullets. Recast: Akshan unleashes the stored bullets, each dealing at least {{ damageperbulletwithcrit }} physical damage to the first enemy or structure hit, increased up to {{ maxdamageperbullet }} physical damage based on missing Health.",
+      "unresolved": [
+        "damageperbulletwithcrit",
+        "maxdamageperbullet"
+      ]
+    }
+  }
+}

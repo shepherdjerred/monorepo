@@ -1,0 +1,480 @@
+{
+  "championKey": "Skarner",
+  "championName": "Skarner",
+  "abilities": {
+    "passive": {
+      "name": "Threads of Vibration",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "StacksToTriggerPassive": [
+          3
+        ],
+        "Duration": [
+          4
+        ],
+        "TickFrequency": [
+          0.5
+        ]
+      },
+      "resolvedDescription": "Skarner's Attacks, Shattered Earth, Upheaval, and Impale, apply Quaking. At max stacks of Quaking, enemies take max Health magic damage over its duration.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Shattered Earth / Upheaval",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        6.75,
+        5.5,
+        4.25,
+        3
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "RockHoldDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "AttackRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "BaseDamage": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "MaxHPPercent": [
+          0.11,
+          0.11,
+          0.11,
+          0.11,
+          0.11
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SlowPercent": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MonsterDamageCap": [
+          150,
+          200,
+          250,
+          300,
+          350
+        ],
+        "AttackRange": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "AttackSpeed": [
+          0.2,
+          0.25,
+          0.3,
+          0.35,
+          0.4
+        ],
+        "BonusHealthRatio": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "ADRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "TurretDamageMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Skarner rips a boulder from the ground, empowering his next 3 Attacks with 20/25/30/35/40% Attack Speed and dealing 10/20/30/40/50 (+90% bonus AD) (+3% bonus Health) physical damage to surrounding enemies. His final Attack will deal an additional 11% max Health physical damage and Slow affected foes by 40% for 1s. Recast: Skarner ends this Ability and throws his boulder, dealing 10/20/30/40/50 (+90% bonus AD) (+3% bonus Health) + 11% max Health physical damage, and additionally Slowing the first enemy hit — and any other surrounding enemies — by 40% for 1s.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Seismic Bastion",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "DamageAPRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "InitialShieldRatio": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "SlowEffect": [
+          -0.2,
+          -0.2,
+          -0.2,
+          -0.2,
+          -0.2
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Skarner gains 8% max Health Shield for 2.5s and triggers an earthquake that deals 50/70/90/110/130 (+80% AP) magic damage and Slows nearby enemies by 20% for 1s.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Ixtal's Impact",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        21,
+        20,
+        19,
+        18
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1700,
+        1700,
+        1700,
+        1700,
+        1700
+      ],
+      "dataValues": {
+        "ChargeDuration": [
+          2.75,
+          2.75,
+          2.75,
+          2.75,
+          2.75
+        ],
+        "InitialSpeed": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "Acceleration": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "MaximumSpeed": [
+          950,
+          950,
+          950,
+          950,
+          950
+        ],
+        "GrabHitboxRadius": [
+          160,
+          160,
+          160,
+          160,
+          160
+        ],
+        "GrabHitboxOffset": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ],
+        "WallRevealRadius": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "WallWarningRadius": [
+          1750,
+          1750,
+          1750,
+          1750,
+          1750
+        ],
+        "GrabbedMoveSpeedBonus": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "MinGrabbedSpeed": [
+          650,
+          650,
+          650,
+          650,
+          650
+        ],
+        "DistancePostGrab": [
+          675,
+          675,
+          675,
+          675,
+          675
+        ],
+        "StunDuration": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ],
+        "PinBaseDamage": [
+          30,
+          60,
+          90,
+          120,
+          150
+        ],
+        "ADRatio": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "PinDamageRatio": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ],
+        "VictimOffsetIncrease": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "RefundPercent": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "MinimumQRenew": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "InitialHitboxRadius": [
+          160,
+          160,
+          160,
+          160,
+          160
+        ],
+        "InitialHitboxOffset": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ],
+        "SecondHitboxDelay": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SecondHitboxRadius": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "SecondHitboxOffset": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "FinalHitboxDelay": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Skarner charges forward, steering toward the chosen direction and ignoring terrain. If he runs into a champion or large monster, Skarner drags them along for the rest of his charge. Colliding into a wall with an enemy in tow deals 30/60/90/120/150 (+120% bonus AD) (+6% max Health) physical damage to the enemy and Stuns them for 1.1s. Skarner can Recast this Ability to end his charge early.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Impale",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "BackwardOffset": [
+          50,
+          50,
+          50
+        ],
+        "HitboxStartHalfWidth": [
+          175,
+          175,
+          175
+        ],
+        "HitboxEndHalfWidth": [
+          100,
+          100,
+          100
+        ],
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "Duration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "HoldDistance": [
+          300,
+          300,
+          300
+        ],
+        "SpeedBoostAmount": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "SpeedBoostDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DropDistance": [
+          200,
+          200,
+          200
+        ]
+      },
+      "resolvedDescription": "Skarner's tails lash forward, dealing 150/250/350 (+100% AP) magic damage and Suppressing the first 3 champions he hits for 1.5s. Those hit are dragged along by Skarner for the duration of this Ability. If Skarner hits at least one champion he gains 40% Move Speed for 1.5 seconds. If Shattered Earth is active, Skarner will cast Upheaval first.",
+      "unresolved": []
+    }
+  }
+}

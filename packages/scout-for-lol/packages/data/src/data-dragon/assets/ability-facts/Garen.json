@@ -1,0 +1,351 @@
+{
+  "championKey": "Garen",
+  "championName": "Garen",
+  "abilities": {
+    "passive": {
+      "name": "Perseverance",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DamageTimer": [
+          8
+        ]
+      },
+      "resolvedDescription": "If Garen has not recently been struck by damage or enemy abilities, he regenerates a percentage of his total health each second.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Decisive Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          30,
+          60,
+          90,
+          120,
+          150
+        ],
+        "SilenceDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MovementSpeedDuration": [
+          1.4,
+          1.95,
+          2.5,
+          3.05,
+          3.6
+        ],
+        "MovementSpeedAmount": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "AttackWindow": [
+          4.5,
+          4.5,
+          4.5,
+          4.5,
+          4.5
+        ],
+        "tADRatio": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Garen removes all Slowing effects on him and gains 35% Move Speed for 1.4/1.95/2.5/3.05/3.6 second(s). His next Attack Silences for 1.5 seconds and does 30/60/90/120/150 (+150% AD) physical damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Courage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        19.5,
+        17,
+        14.5,
+        12
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "BuffCounterPerKill": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ResistGainOnKill": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ResistGainOnKillTooltip": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ResistMax": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "DRPercent": [
+          0.25,
+          0.29,
+          0.33,
+          0.37,
+          0.41
+        ],
+        "DRDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "UpfrontTenacity": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "UpfrontDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "LargeMonsterStacks": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "EpicMonsterStacks": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ShieldHealthRatio": [
+          0.18,
+          0.18,
+          0.18,
+          0.18,
+          0.18
+        ],
+        "BaseShield": [
+          65,
+          85,
+          105,
+          125,
+          145
+        ]
+      },
+      "resolvedDescription": "Passive: Garen has {{ resistsfortooltip }} bonus Armor and {{ resistsfortooltip }} bonus Magic Resist. Killing units permanently grants 0.2 resists, up to a max of 30. Active: Garen steels his courage for 4 seconds, reducing incoming damage by 25/29/33/37/41%. He also gains 65/85/105/125/145 (+18% bonus Health) Shield and 60% Tenacity for 0.75 seconds.",
+      "unresolved": [
+        "resistsfortooltip",
+        "resistsfortooltip"
+      ]
+    },
+    "E": {
+      "name": "Judgment",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.25,
+        7.5,
+        6.75,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "NumTicks": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "ASPerTick": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "BaseDamagePerTick": [
+          4,
+          7,
+          10,
+          13,
+          16
+        ],
+        "ADRatioPerTick": [
+          0.4,
+          0.43,
+          0.46,
+          0.49,
+          0.52
+        ],
+        "ShredDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "StacksToShred": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "Duration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ShredAmount": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "NearestEnemyBonus": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "CritMod": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Garen rapidly spins his sword for 3 seconds, dealing 4/7/10/13/16 (+40/43/46/49/52% AD) physical damage {{ f1 }} times over the duration. The nearest enemy takes 25% increased damage. Champions hit by 6 strikes lose 25% Armor for 6 seconds. Recast: Garen ends this Ability early.",
+      "unresolved": [
+        "f1"
+      ]
+    },
+    "R": {
+      "name": "Demacian Justice",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          125,
+          200,
+          275
+        ],
+        "ExecuteDamage": [
+          0.25,
+          0.3,
+          0.35
+        ],
+        "RevealDuration": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Garen calls upon the might of Demacia to slay his enemy, dealing 125/200/275 plus 25/30/35% missing Health true damage.",
+      "unresolved": []
+    }
+  }
+}

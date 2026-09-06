@@ -1,0 +1,303 @@
+{
+  "championKey": "Ekko",
+  "championName": "Ekko",
+  "abilities": {
+    "passive": {
+      "name": "Z-Drive Resonance",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ModesMultiplier": [
+          1
+        ],
+        "MonsterMod": [
+          2.7
+        ],
+        "LockoutTime": [
+          4
+        ]
+      },
+      "resolvedDescription": "Every third attack or damaging spell on the same target deals bonus magic damage, and grants Ekko a burst of speed if the target is a champion.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Timewinder",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1075,
+        1075,
+        1075,
+        1075,
+        1075
+      ],
+      "dataValues": {
+        "OutgoingDamage": [
+          80,
+          95,
+          110,
+          125,
+          140
+        ],
+        "ReturnDamage": [
+          40,
+          65,
+          90,
+          115,
+          140
+        ],
+        "SlowPercent": [
+          -0.4,
+          -0.45,
+          -0.5,
+          -0.55,
+          -0.6
+        ],
+        "SlowZoneRadius": [
+          165,
+          165,
+          165,
+          165,
+          165
+        ],
+        "ExpandDuration": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ]
+      },
+      "resolvedDescription": "Ekko throws a device dealing 80/95/110/125/140 (+30% AP) magic damage. On hitting a champion or reaching the end of its range, it expands into a field that Slows enemies inside by 40/45/50/55/60%. After it expands, Ekko recalls it, dealing 40/65/90/115/140 (+60% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Parallel Convergence",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        20,
+        18,
+        16,
+        14
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1600,
+        1600,
+        1600,
+        1600,
+        1600
+      ],
+      "dataValues": {
+        "BaseOnHitDamage": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BelowHealthThreshold": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "OnHitMinMinionDamage": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "OnHitMaxMinionDamage": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "AoERadius": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "StunDuration": [
+          2.25,
+          2.25,
+          2.25,
+          2.25,
+          2.25
+        ],
+        "ShieldBase": [
+          100,
+          120,
+          140,
+          160,
+          180
+        ],
+        "SlowZoneDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DelayBeforeDetonation": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "DelayBeforeEnemyCanSee": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowPercent": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ]
+      },
+      "resolvedDescription": "Passive: Ekko's Attacks against enemies below 30% Health deal {{ missinghealthpercent }} missing Health magic damage. Active: Ekko launches a chronosphere lasting 1.5 seconds after a delay that Slows enemies inside by 40%. If Ekko enters the sphere, he detonates it, Stunning for 2.25 seconds and gaining 100/120/140/160/180 (+150% AP) Shield.",
+      "unresolved": [
+        "missinghealthpercent"
+      ]
+    },
+    "E": {
+      "name": "Phase Dive",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        325,
+        325,
+        325,
+        325,
+        325
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "DashDistance": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "BuffDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "AttackRangeIncrease": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ]
+      },
+      "resolvedDescription": "Ekko dashes and empowers his next Attack to have bonus range, teleport him to his target, and deal an additional 50/75/100/125/150 (+40% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Chronobreak",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        80,
+        50
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "Damage": [
+          200,
+          350,
+          500
+        ],
+        "FlatHeal": [
+          100,
+          150,
+          200
+        ],
+        "AoERadius": [
+          375,
+          375,
+          375
+        ],
+        "PercentHealAmpPerPercentMissingHealth": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Ekko turns back time, entering Stasis while teleporting to where he was 4 seconds ago and dealing 200/350/500 (+175% AP) magic damage to nearby enemies. In addition, Ekko restores 100/150/200 (+60% AP) Health, increased by 3% for each 1% Health he lost in last 4 seconds.",
+      "unresolved": []
+    }
+  }
+}

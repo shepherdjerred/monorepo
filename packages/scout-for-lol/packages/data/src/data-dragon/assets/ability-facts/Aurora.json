@@ -1,0 +1,338 @@
+{
+  "championKey": "Aurora",
+  "championName": "Aurora",
+  "abilities": {
+    "passive": {
+      "name": "Spirit Abjuration",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DebuffDuration": [
+          4
+        ],
+        "SpiritModeDuration": [
+          4
+        ],
+        "BaseHPDamage": [
+          0.01
+        ],
+        "MonsterMaxDamage": [
+          90
+        ],
+        "MSIncrease": [
+          5
+        ],
+        "BonusMsIncrease": [
+          0.02
+        ]
+      },
+      "resolvedDescription": "Aurora's spells and attacks exorcise spirits from the enemies she damages. Exorcised spirits follow Aurora around and heal her.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Twofold Hex",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          45,
+          70,
+          95,
+          120,
+          145
+        ],
+        "DamageReduction": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "Q2BaseDamage": [
+          45,
+          70,
+          95,
+          120,
+          145
+        ],
+        "MarkDuration": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "MinionDamageReduction": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MissingHealthPercentMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Q2MinionMod": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Fire cursed energy in a direction, dealing 45/70/95/120/145 (+40% AP) magic damage to enemies and cursing them for 3.5 seconds. Recast: End the curse, drawing back part of the enemy's spirit to Aurora, dealing up to 67.5/105/142.5/180/217.5 (+60% AP) magic damage to enemies passed through based on their missing Health. Damage beyond the first hit is reduced to 20%. If the duration runs out, Aurora will automatically Recast the Ability.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Across the Veil",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        21,
+        20,
+        19,
+        18
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "InvisDuration": [
+          1,
+          1.15,
+          1.3,
+          1.45,
+          1.6
+        ],
+        "DashBonusSpeed": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "JumpDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "WallCheatDistance": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "MoveSpeedBonus": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ]
+      },
+      "resolvedDescription": "Hop in a direction. Upon landing, enter the spirit realm, becoming Invisible for 1/1.15/1.3/1.45/1.6 seconds and entering Realm Hopper, gaining 20/25/30/35/40% Move Speed. Scoring a takedown on an enemy champion resets this Ability's Cooldown.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "The Weirding",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "SlowPercent": [
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8
+        ],
+        "SelfKnockBackDistance": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "AoELength": [
+          825,
+          825,
+          825,
+          825,
+          825
+        ],
+        "AoEWidth": [
+          175,
+          175,
+          175,
+          175,
+          175
+        ],
+        "SlowDecay": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Converge the realms, sending out a blast of spirit magic dealing 70/110/150/190/230 (+70% AP) magic damage to enemies in the area and Slowing them by 80% decaying over 1 second. Aurora hops backwards a short distance after casting.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Between Worlds",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          175,
+          275,
+          375
+        ],
+        "SlowPercent": [
+          -0.3,
+          -0.3,
+          -0.3
+        ],
+        "ExitBaseDamage": [
+          50,
+          100,
+          150
+        ],
+        "ExitSlowPercent": [
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "AreaDuration": [
+          2.5,
+          3.25,
+          4
+        ],
+        "RBuffDuration": [
+          3.5,
+          4.25,
+          5
+        ],
+        "AoESize": [
+          700,
+          700,
+          700
+        ],
+        "StunDuration": [
+          1.5,
+          1.75,
+          2
+        ],
+        "MSMultiplier": [
+          2,
+          2,
+          2
+        ],
+        "JumpMaxDistance": [
+          250,
+          250,
+          250
+        ],
+        "JumpMinDistance": [
+          25,
+          25,
+          25
+        ]
+      },
+      "resolvedDescription": "Leap in a direction. Upon landing, Aurora converges the realms, sending out a pulse of spirit energy that deals 175/275/375 (+70% AP) magic damage and Slows enemies hit by 30% for 2 seconds. The area of convergence stays active for 2.5/3.25/4 seconds, granting Aurora Realm Hopper for 3.5/4.25/5 seconds, allowing her to jump from one edge of the area to another. Enemies attempting to enter or leave the area are Slowed by 50% for 1.5/1.75/2 seconds. Aurora can Recast this Ability to end the effect early.",
+      "unresolved": []
+    }
+  }
+}

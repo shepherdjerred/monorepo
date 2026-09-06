@@ -1,0 +1,318 @@
+{
+  "championKey": "Yasuo",
+  "championName": "Yasuo",
+  "abilities": {
+    "passive": {
+      "name": "Way of the Wanderer",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "YasuoCritToAD": [
+          50
+        ],
+        "CritChanceMultiplier": [
+          1
+        ],
+        "CritDamageMod": [
+          0.9
+        ]
+      },
+      "resolvedDescription": "Yasuo's Critical Strike Chance is increased. Additionally, Yasuo builds toward a shield whenever he is moving. The shield triggers when he takes damage from a champion or monster.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Steel Tempest",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "StabRange": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "TornadoRange": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ],
+        "Cooldown": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StabWidth": [
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "SpinWidth": [
+          260,
+          260,
+          260,
+          260,
+          260
+        ],
+        "GatheringStormDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "KnockUpDurationTOOLTIPONLY": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ADRatio": [
+          1.05,
+          1.05,
+          1.05,
+          1.05,
+          1.05
+        ]
+      },
+      "resolvedDescription": "Yasuo thrusts, dealing 20/45/70/95/120 (+105% AD) physical damage. If he hits, he gains a stack for 6 seconds. While he has 2 stacks, his next use of this Ability fires a whirlwind from range, dealing the same damage and Knocking Up for 1 second. If used while dashing, this Ability strikes in a circle rather than a stab.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Wind Wall",
+      "maxRank": 5,
+      "cooldownByRank": [
+        25,
+        23,
+        21,
+        19,
+        17
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "WallLife": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "Width": [
+          320,
+          390,
+          460,
+          530,
+          600
+        ],
+        "TravelRange": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "BubbleRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "Thickness": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Yasuo creates a drifting wall of wind that blocks all enemy projectiles for 4 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Sweeping Blade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.4,
+        0.3,
+        0.2,
+        0.1
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "MaxStacks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StackDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "BaseDamage": [
+          70,
+          85,
+          100,
+          115,
+          130
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "ADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "PerTargetCooldown": [
+          10,
+          9,
+          8,
+          7,
+          6
+        ],
+        "BaseDashSpeed": [
+          750,
+          750,
+          750,
+          750,
+          750
+        ]
+      },
+      "resolvedDescription": "Yasuo dashes through a target, dealing 70/85/100/115/130 (+20% bonus AD) (+60% AP) magic damage. Each use of this Ability grants 17.5/21.25/25/28.75/32.5 (+5% bonus AD) (+15% AP) bonus damage to subsequent uses for 5 seconds, stacking up to 4 times. This Ability has a 10/9/8/7/6 second per-target Cooldown.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Last Breath",
+      "maxRank": 3,
+      "cooldownByRank": [
+        70,
+        50,
+        30
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1400,
+        1400,
+        1400
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          200,
+          350,
+          500
+        ],
+        "RPercentArmorPen": [
+          60,
+          60,
+          60
+        ],
+        "RBuffDuration": [
+          15,
+          15,
+          15
+        ],
+        "RKnockupDuration": [
+          1,
+          1,
+          1
+        ],
+        "RRadius": [
+          400,
+          400,
+          400
+        ],
+        "RCastSearchRadius": [
+          1100,
+          1100,
+          1100
+        ]
+      },
+      "resolvedDescription": "Yasuo teleports to an Airborne enemy champion, dealing 200/350/500 (+150% bonus AD) physical damage and holding all nearby Airborne enemies up for an additional 1 second. Yasuo also gains maximum Flow, but loses all Steel Tempest stacks. Afterwards, Yasuo's critical strikes ignore 60% bonus Armor for 15 seconds.",
+      "unresolved": []
+    }
+  }
+}

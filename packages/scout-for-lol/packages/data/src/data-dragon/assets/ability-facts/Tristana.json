@@ -1,0 +1,292 @@
+{
+  "championKey": "Tristana",
+  "championName": "Tristana",
+  "abilities": {
+    "passive": {
+      "name": "Draw a Bead",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Increases Tristana's Attack Range as she levels.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Rapid Fire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "costByRank": [
+        15,
+        20,
+        25,
+        30,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "AttackSpeedMod": [
+          0.6,
+          0.75,
+          0.9,
+          1.05,
+          1.2
+        ],
+        "BuffDuration": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ]
+      },
+      "resolvedDescription": "Tristana goes full-auto, gaining 60/75/90/105/120% Attack Speed for 7 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Rocket Jump",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        20,
+        18,
+        16,
+        14
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowMod": [
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4
+        ],
+        "DamageRadius": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Tristana launches herself, dealing 70/105/140/175/210 (+100% bonus AD) (+50% AP) magic damage and Slowing by 40% for 2 seconds upon landing. Champion takedowns and max stack Explosive Charge detonations on champions refresh this Ability's Cooldown.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Explosive Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15.5,
+        15,
+        14.5,
+        14
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "PassiveBaseDamage": [
+          45,
+          60,
+          75,
+          90,
+          105
+        ],
+        "PassiveRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "ActiveBaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "ActiveBADRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "ActiveRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "ActiveTowerRadius": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "ActiveMaxStacks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ActiveDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ActivePerStackAmp": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "CritChanceModifier": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Passive: Tristana's Attacks that kill enemies deal 45/60/75/90/105 (+25% AP) magic damage to surrounding enemies. Active: Tristana attaches a bomb to an enemy or turret that deals {{ activedamage }} physical damage to surrounding enemies after 4 seconds. The damage is increased by 25% each time Tristana hits an Attack or Ability (max 4 stacks). At 4 stacks, the bomb explodes immediately (max {{ activemaxdamage }} physical damage).",
+      "unresolved": [
+        "activedamage",
+        "activemaxdamage"
+      ]
+    },
+    "R": {
+      "name": "Buster Shot",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        100,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          225,
+          275,
+          325
+        ],
+        "KnockbackDistance": [
+          600,
+          800,
+          1000
+        ],
+        "KnockbackArea": [
+          200,
+          200,
+          200
+        ],
+        "StunDuration": [
+          0.4,
+          0.55,
+          0.7
+        ],
+        "APRatio": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Tristana fires a massive cannonball, dealing 225/275/325 (+70% bonus AD) (+100% AP) magic damage to the target, Knocking Back and Stunning them and surrounding enemies for 0.4/0.55/0.7 seconds.",
+      "unresolved": []
+    }
+  }
+}

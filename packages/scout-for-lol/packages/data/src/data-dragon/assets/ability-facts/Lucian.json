@@ -1,0 +1,327 @@
+{
+  "championKey": "Lucian",
+  "championName": "Lucian",
+  "abilities": {
+    "passive": {
+      "name": "Lightslinger",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveDuration": [
+          3.5
+        ],
+        "PassiveDamageBase": [
+          15
+        ],
+        "OnhitPassiveDuration": [
+          6
+        ],
+        "NumAuto": [
+          2
+        ],
+        "MaxAutos": [
+          4
+        ],
+        "CCRange": [
+          1000
+        ]
+      },
+      "resolvedDescription": "Whenever Lucian uses an ability, his next attack becomes a double-shot. When Lucian is healed or shielded by an ally, or when a nearby enemy Champion is immobilized, his next 2 basic attacks will deal bonus magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Piercing Light",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        48,
+        56,
+        64,
+        72,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "BonusADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Range": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ],
+        "Width": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Lucian shoots a bolt of piercing light, dealing 80/115/150/185/220 (+100% bonus AD) physical damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ardent Blaze",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          110,
+          145,
+          180,
+          215
+        ],
+        "MoveSpeedAmount": [
+          60,
+          65,
+          70,
+          75,
+          80
+        ],
+        "BuffDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "VisionBubbleSize": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "VisionBubbleDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DebuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "DebuffMarkerDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ImpactRangeCheck": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ]
+      },
+      "resolvedDescription": "Lucian fires a shot that explodes at the end of its range or on the first enemy hit, dealing 75/110/145/180/215 (+90% AP) magic damage, briefly revealing enemies and marking them for 6 seconds. When Lucian or an ally damages a marked enemy, Lucian gains 60/65/70/75/80 Move Speed for 1 second. Allies triggering this effect will also grant Lucian Vigilance.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Relentless Pursuit",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15.5,
+        15,
+        14.5,
+        14
+      ],
+      "costByRank": [
+        32,
+        24,
+        16,
+        8,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        445,
+        445,
+        445,
+        445,
+        445
+      ],
+      "dataValues": {
+        "CDRefundBase": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CDRefundChampion": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MaxDistance": [
+          425,
+          425,
+          425,
+          425,
+          425
+        ],
+        "MinDistance": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "DashSpeed": [
+          1350,
+          1350,
+          1350,
+          1350,
+          1350
+        ]
+      },
+      "resolvedDescription": "Lucian dashes. Cooldown is reduced by 1 second whenever Lucian hits an enemy with Lightslinger (2 seconds for champions).",
+      "unresolved": []
+    },
+    "R": {
+      "name": "The Culling",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        100,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1400,
+        1400,
+        1400
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          15,
+          30,
+          45
+        ],
+        "DamageADRatio": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "DamageAPRatio": [
+          0.15,
+          0.15,
+          0.15
+        ],
+        "CritValueMod": [
+          1,
+          1,
+          1
+        ],
+        "PercentDamageAmpToMinions": [
+          200,
+          200,
+          200
+        ],
+        "NumShots": [
+          22,
+          22,
+          22
+        ],
+        "Duration": [
+          3,
+          3,
+          3
+        ],
+        "RecastLockout": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "RangeCheck": [
+          1050,
+          1050,
+          1050
+        ],
+        "VisionBubbleRadius": [
+          100,
+          100,
+          100
+        ],
+        "VisionBubbleDuration": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Lucian rapidly fires {{ totalnumshots }} shots in a direction for 3 seconds or until he Recasts. Each shot deals 15/30/45 (+25% AD) (+15% AP) physical damage to the first enemy hit. While firing, Lucian may use Relentless Pursuit. Total Damage: {{ totaldamage }} physical damage",
+      "unresolved": [
+        "totalnumshots",
+        "totaldamage"
+      ]
+    }
+  }
+}

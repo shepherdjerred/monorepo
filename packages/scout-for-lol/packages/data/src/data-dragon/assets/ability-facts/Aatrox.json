@@ -1,0 +1,387 @@
+{
+  "championKey": "Aatrox",
+  "championName": "Aatrox",
+  "abilities": {
+    "passive": {
+      "name": "Deathbringer Stance",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PBonusAARange": [
+          50
+        ],
+        "PChargeRate": [
+          2
+        ],
+        "PDamageTADBonusLevel1": [
+          0.15
+        ],
+        "PDamageTADBonusLevel18": [
+          0.25
+        ],
+        "PStructureCap": [
+          100
+        ],
+        "PHealShieldReduction": [
+          0.4
+        ],
+        "PDebuffDuration": [
+          3
+        ],
+        "PHealingMinionMod": [
+          0.25
+        ],
+        "PHealingRatio": [
+          1
+        ]
+      },
+      "resolvedDescription": "Periodically, Aatrox's next basic attack deals bonus magic damage and heals him, based on the target's max health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "The Darkin Blade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12,
+        10,
+        8,
+        6
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "QBaseDamage": [
+          10,
+          25,
+          40,
+          55,
+          70
+        ],
+        "QTotalADRatio": [
+          0.6,
+          0.675,
+          0.75,
+          0.825,
+          0.9
+        ],
+        "QSweetSpotBonus": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "QKnockupDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "QRampBonus": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "QMonsterBonus": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "QExtensionTime": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Aatrox slams his greatsword, dealing 10/25/40/55/70 (+60/67.5/75/82.5/90% AD) physical damage. If they are hit on the edge, they are briefly Knocked Up and they take {{ qedgedamage }} instead. This Ability can be Recast twice, each one changing shape and dealing 25% more damage than the previous one.",
+      "unresolved": [
+        "qedgedamage"
+      ]
+    },
+    "W": {
+      "name": "Infernal Chains",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "WBaseDamage": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ],
+        "WBonusADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "WSlowPercentage": [
+          -0.25,
+          -0.275,
+          -0.3,
+          -0.325,
+          -0.35
+        ],
+        "WSlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "WTotalADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Aatrox fires a chain, Slowing the first enemy hit by 25/27.5/30/32.5/35% for 1.5 seconds and dealing 30/40/50/60/70 (+40% AD) physical damage. Champions and large jungle monsters have 1.5 seconds to leave the impact area or be Pulled back to the center and damaged again for the same amount.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Umbral Dash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "ESpellVamp": [
+          16,
+          16,
+          16,
+          16,
+          16
+        ],
+        "EBonusAD": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "EResistancePerAD": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "EDashSpeed": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "EMaxRange": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "EDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "EBaseRechargeTime": [
+          26,
+          22,
+          18,
+          14,
+          10
+        ],
+        "EMinRange": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "ESpellVampEmpowered": [
+          16,
+          16,
+          16,
+          16,
+          16
+        ],
+        "EVampHPRatio": [
+          0.011,
+          0.011,
+          0.011,
+          0.011,
+          0.011
+        ]
+      },
+      "resolvedDescription": "Passive: Aatrox heals for {{ totalevamp }} of the damage he deals to Champions. Active: Aatrox dashes. He can use this Ability while winding up his other Abilities.",
+      "unresolved": [
+        "totalevamp"
+      ]
+    },
+    "R": {
+      "name": "World Ender",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "RDuration": [
+          10,
+          10,
+          10
+        ],
+        "RERechargeBonus": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RMovementSpeed": [
+          0.15,
+          0.2,
+          0.25
+        ],
+        "RMovementSpeedBonus": [
+          0.6,
+          0.8,
+          1
+        ],
+        "RTotalADAmp": [
+          0.2,
+          0.3,
+          0.4
+        ],
+        "RBonusADRange": [
+          75,
+          75,
+          75
+        ],
+        "RSpeedMinDuration": [
+          3,
+          3,
+          3
+        ],
+        "RFXExtraDuration": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "RPercentBloodWellToBoostToMax": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "RHealingAmp": [
+          0.5,
+          0.75,
+          1
+        ],
+        "RExtension": [
+          5,
+          5,
+          5
+        ],
+        "RFearRadius": [
+          600,
+          600,
+          600
+        ],
+        "RMinionFearDuration": [
+          3,
+          3,
+          3
+        ],
+        "RChampionFearDuration": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Aatrox reveals his true demonic form, Fearing nearby minions for 3 seconds and gaining 60/80/100% Move Speed decaying over 10 seconds. He also gains 20/30/40% Attack Damage and increases self-healing by 50/75/100% for the duration. Champion takedowns extend the duration of this effect by 5 seconds and refresh the Move Speed effect.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,214 @@
+{
+  "championKey": "Zilean",
+  "championName": "Zilean",
+  "abilities": {
+    "passive": {
+      "name": "Time In A Bottle",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveCooldown": [
+          120
+        ],
+        "GamemodeInteger": [
+          1
+        ]
+      },
+      "resolvedDescription": "Zilean stores time as Experience and can grant it to his allies. When he has enough Experience to finish an ally's level up, he can right-click them to impart it. Zilean receives as much Experience as he gives.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Time Bomb",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BombBaseDamage": [
+          75,
+          115,
+          165,
+          230,
+          300
+        ],
+        "APRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "StunDuration": [
+          1.1,
+          1.2,
+          1.3,
+          1.4,
+          1.5
+        ],
+        "FuseDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Zilean tosses a time-delayed bomb that sticks to the first unit which comes within a small area around it. After 3 seconds it detonates, dealing 75/115/165/230/300 (+90% AP) magic damage. Placing a second bomb on a unit that already has one detonates the first bomb immediately and Stuns enemies in the blast for 1.1/1.2/1.3/1.4/1.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Rewind",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12,
+        10,
+        8,
+        6
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "CooldownReduction": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "ManaCost": [
+          35,
+          35,
+          35,
+          35,
+          35
+        ]
+      },
+      "resolvedDescription": "Zilean turns time, reducing his other basic Ability Cooldowns by 10 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Time Warp",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "Duration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "SpeedAmount": [
+          40,
+          55,
+          70,
+          85,
+          99
+        ]
+      },
+      "resolvedDescription": "Zilean Slows an enemy champion by 40/55/70/85/99% or grants an allied champion 40/55/70/85/99% Move Speed for 2.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Chronoshift",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        90,
+        60
+      ],
+      "costByRank": [
+        125,
+        150,
+        175
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "RBaseHeal": [
+          600,
+          850,
+          1100
+        ],
+        "RDuration": [
+          5,
+          5,
+          5
+        ],
+        "APRatio": [
+          2,
+          2,
+          2
+        ],
+        "ReviveStateDuration": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Zilean grants a protective time rune to an allied champion for 5 seconds. If the target would die, the rune rewinds their timeline, putting them into Stasis for 3 seconds, then reviving them and restoring 600/850/1100 (+200% AP) Health.",
+      "unresolved": []
+    }
+  }
+}

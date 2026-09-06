@@ -1,0 +1,303 @@
+{
+  "championKey": "Galio",
+  "championName": "Galio",
+  "abilities": {
+    "passive": {
+      "name": "Colossal Smash",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ChargeRatePerHit": [
+          3
+        ],
+        "PassiveCooldown": [
+          5
+        ]
+      },
+      "resolvedDescription": "Every few seconds, Galio's next basic attack deals bonus magic damage in an area.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Winds of War",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "SuperQDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SuperQMonsterMaxDamage": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "SuperQBasePercentage": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "TornadoTicks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Galio fires two windblasts that deal 70/105/140/175/210 (+70% AP) magic damage each. When the windblasts meet, they combine into a tornado that deals 8 (+4% AP)% max Health magic damage over 2 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Shield of Durand",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        275,
+        275,
+        275,
+        275,
+        275
+      ],
+      "dataValues": {
+        "MinimumWBaseDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "MaximumWBaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "PassiveShieldHealthRatio": [
+          0.075,
+          0.09,
+          0.105,
+          0.12,
+          0.135
+        ],
+        "MRRatio": [
+          0.0008,
+          0.0008,
+          0.0008,
+          0.0008,
+          0.0008
+        ],
+        "PhysicalDRPercent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageReductionBase": [
+          0.25,
+          0.3,
+          0.35,
+          0.4,
+          0.45
+        ],
+        "MaxChargeDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SelfSlowPercent": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "CCDurationMin": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "HpRatio": [
+          0.0001,
+          0.0001,
+          0.0001,
+          0.0001,
+          0.0001
+        ],
+        "CCDurationMax": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DRLingerDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ApRatio": [
+          0.0004,
+          0.0004,
+          0.0004,
+          0.0004,
+          0.0004
+        ]
+      },
+      "resolvedDescription": "Passive: Galio gains a 7.5/9/10.5/12/13.5% max Health Magic Shield after not taking damage for 12-8 (based on level) seconds. Begin Charging: Galio reduces incoming magic damage by {{ magicdamagereduction }} and incoming physical damage by {{ physicaldamagereduction }} and Slows himself by 15%. Release: Galio Taunts enemy champions for between 0.5 to 1.5 seconds, deals between 20/30/40/50/60 (+30% AP) and 60/90/120/150/180 (+90% AP) magic damage, and refreshes the damage reduction for 2 seconds. Taunt duration, damage, and range increase with charge time.",
+      "unresolved": [
+        "magicdamagereduction",
+        "physicaldamagereduction"
+      ]
+    },
+    "E": {
+      "name": "Justice Punch",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          100,
+          135,
+          170,
+          205,
+          240
+        ],
+        "KnockupDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MinRange": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ]
+      },
+      "resolvedDescription": "Galio lunges forward with a mighty blow, Knocking Up for 0.75 seconds and dealing 100/135/170/205/240 (+100% AP) magic damage to the first champion hit. Other enemies in the way take 80/108/136/164/192 (+80% AP) magic damage. Galio's dash stops on hitting terrain.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Hero's Entrance",
+      "maxRank": 3,
+      "cooldownByRank": [
+        180,
+        160,
+        140
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        4000,
+        4750,
+        5500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "StunDurationOuter": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "TemporaryWShieldDuration": [
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Galio designates an allied champion's position as his landing spot, granting all allied champions in the area Shield of Durand's passive Shield for 5 seconds. Galio then flies to his landing zone. When Galio lands, he Knocks Up for 0.75 seconds and deals 150/250/350 (+70% AP) (+100% bonus Magic Resist) magic damage.",
+      "unresolved": []
+    }
+  }
+}

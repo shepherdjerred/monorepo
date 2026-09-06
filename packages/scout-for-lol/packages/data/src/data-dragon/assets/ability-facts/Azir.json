@@ -1,0 +1,294 @@
+{
+  "championKey": "Azir",
+  "championName": "Azir",
+  "abilities": {
+    "passive": {
+      "name": "Shurima's Legacy",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TowerDisintegrationTime": [
+          45
+        ],
+        "SoldierStabRange": [
+          350
+        ],
+        "SoldierDeactivationRange": [
+          660
+        ],
+        "APRatio": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "Azir can summon the Disc of the Sun from the ruins of allied or enemy turrets.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Conquering Sands",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12,
+        10,
+        8,
+        6
+      ],
+      "costByRank": [
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        740,
+        740,
+        740,
+        740,
+        740
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          95,
+          115,
+          135,
+          155
+        ],
+        "SlowAmount": [
+          -0.25,
+          -0.25,
+          -0.25,
+          -0.25,
+          -0.25
+        ],
+        "SpearLength": [
+          325,
+          325,
+          325,
+          325,
+          325
+        ],
+        "APRatio": [
+          0.35,
+          0.4,
+          0.45,
+          0.5,
+          0.55
+        ],
+        "SoldierDashSpeed": [
+          1600,
+          1600,
+          1600,
+          1600,
+          1600
+        ],
+        "SoldierFormationClumpDistance": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ]
+      },
+      "resolvedDescription": "Azir orders all Sand Soldiers to an area, dealing 75/95/115/135/155 (+35/40/45/50/55% AP) magic damage to enemies they pass through and Slowing them by 25% for 1 second.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Arise!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        1.5,
+        1.5,
+        1.5,
+        1.5,
+        1.5
+      ],
+      "costByRank": [
+        40,
+        35,
+        30,
+        25,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        525,
+        525,
+        525,
+        525,
+        525
+      ],
+      "dataValues": {
+        "APRatio": [
+          0.35,
+          0.425,
+          0.5,
+          0.575,
+          0.65
+        ],
+        "BaseDamage": [
+          50,
+          65,
+          80,
+          95,
+          110
+        ],
+        "OnHitMultiplier": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SoldierDuration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "SubsequentDamageMod": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "InputBufferProtection": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Azir summons a Sand Soldier for 10 seconds. When Azir Attacks an enemy near a Sand Soldier, he instead orders the soldiers to stab, dealing 50/65/80/95/110 (+0-72 based on level) (+35/42.5/50/57.5/65% AP) magic damage in their direction. This Ability has {{ maxammo }} charges.",
+      "unresolved": [
+        "maxammo"
+      ]
+    },
+    "E": {
+      "name": "Shifting Sands",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        20.5,
+        19,
+        17.5,
+        16
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "DamageRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "BaseShield": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "ShieldAPRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "DashSpeed": [
+          1700,
+          1700,
+          1700,
+          1700,
+          1700
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "CastRange": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ]
+      },
+      "resolvedDescription": "Azir grants himself 70/110/150/190/230 (+60% AP) Shield for 1.5 seconds and dashes to one of his Sand Soldiers, dealing 70/110/150/190/230 (+60% AP) magic damage to enemies he passes through. If Azir hits an enemy champion, he stops and gains a Sand Soldier charge.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Emperor's Divide",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        250,
+        250,
+        250
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          400,
+          600
+        ],
+        "WallDuration": [
+          5,
+          5,
+          5
+        ],
+        "NumberOfSoldiers": [
+          6,
+          7,
+          8
+        ]
+      },
+      "resolvedDescription": "Azir summons a wall of armored soldiers that charges forward, Knocking Back enemies and dealing 200/400/600 (+75% AP) magic damage. The soldiers remain, blocking enemy paths for 5 seconds.",
+      "unresolved": []
+    }
+  }
+}

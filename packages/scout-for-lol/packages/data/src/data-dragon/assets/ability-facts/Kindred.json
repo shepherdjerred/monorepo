@@ -1,0 +1,367 @@
+{
+  "championKey": "Kindred",
+  "championName": "Kindred",
+  "abilities": {
+    "passive": {
+      "name": "Mark of the Kindred",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BaseHealAmount": [
+          45
+        ],
+        "HealAmountPerLevel": [
+          2
+        ],
+        "InitialMarkThreshold": [
+          4
+        ],
+        "RangeIncrease": [
+          25
+        ],
+        "FirstTierMultiplier": [
+          3
+        ],
+        "ASPerMark": [
+          0.05
+        ],
+        "EDamagePerMark": [
+          0.5
+        ],
+        "AdditionalMarkThreshold": [
+          3
+        ]
+      },
+      "resolvedDescription": "Kindred can mark targets to Hunt. Successfully completing a Hunt permanently empowers Kindred's basic abilities. Every 4 hunts completed also increases Kindred's basic attack range.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Dance of Arrows",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        9,
+        9,
+        9,
+        9
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        340,
+        340,
+        340,
+        340,
+        340
+      ],
+      "dataValues": {
+        "DashSpeed": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "DashSpeedScaling": [
+          12,
+          12,
+          12,
+          12,
+          12
+        ],
+        "BaseASDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "CDNewValue": [
+          4,
+          3.5,
+          3,
+          2.5,
+          2
+        ],
+        "BaseDamage": [
+          40,
+          65,
+          90,
+          115,
+          140
+        ],
+        "BaseBonusAS": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Kindred vaults, firing an arrow at up to 3 enemies, dealing 40/65/90/115/140 (+75% bonus AD) physical damage and gaining {{ totalqattackspeed }} Attack Speed for 4 seconds. While inside of Wolf's Frenzy, this Ability's Cooldown is reduced to 4/3.5/3/2.5/2 seconds.",
+      "unresolved": [
+        "totalqattackspeed"
+      ]
+    },
+    "W": {
+      "name": "Wolf's Frenzy",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        560,
+        560,
+        560,
+        560,
+        560
+      ],
+      "dataValues": {
+        "LambToWolfAttackSpeedConversionPercent": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "RingRange": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "APRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "CloneBasePercentDamage": [
+          0.015,
+          0.015,
+          0.015,
+          0.015,
+          0.015
+        ],
+        "CloneDamageFlat": [
+          25,
+          30,
+          35,
+          40,
+          45
+        ],
+        "CloneADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ClonePercentDamagePerBounty": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "BaseCurrentHealthDamage": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ZoneDuration": [
+          8.5,
+          8.5,
+          8.5,
+          8.5,
+          8.5
+        ],
+        "MonsterBonusDmg": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MonsterSlowAmount": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Passive: Kindred gains stacks as they move and attack. At 100 stacks, Kindred's next Attack restores up to 47-47 (based on level) Health based on their missing Health. Active: Kindred claims a territory, ordering Wolf to bite at the last enemy Lamb Attacked. Wolf's bites deal 25/30/35/40/45 (+20% bonus AD) (+20% AP) plus {{ percentwolfdamage }} current Health magic damage.",
+      "unresolved": [
+        "percentwolfdamage"
+      ]
+    },
+    "E": {
+      "name": "Mounting Dread",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12.5,
+        11,
+        9.5,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "MonsterCap": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "BaseDamage": [
+          80,
+          110,
+          140,
+          170,
+          200
+        ],
+        "SlowAmount": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "TotalDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StacksToProc": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SlowAPRatio": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "BasePercentDamage": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "CritMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BonusADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Kindred weakens an enemy, Slowing them by 30 (+5% AP)% for 1 second. Kindred's third Attack against the target within 4 seconds of each other directs Wolf to pounce on the enemy, dealing an additional {{ basebitedamage }} plus {{ percentbitedamage }} missing Health physical damage.",
+      "unresolved": [
+        "basebitedamage",
+        "percentbitedamage"
+      ]
+    },
+    "R": {
+      "name": "Lamb's Respite",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        140,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "HealFlat": [
+          225,
+          300,
+          375
+        ],
+        "BuffDuration": [
+          4,
+          4,
+          4
+        ],
+        "AoERadius": [
+          530,
+          530,
+          530
+        ]
+      },
+      "resolvedDescription": "Kindred blesses the ground for 4 seconds, allowing no unit, ally, enemy, or neutral to die while inside. Upon reaching 10% Health, units can't be damaged or healed while still inside the zone. When the blessing ends, all units inside heal for 225/300/375 Health.",
+      "unresolved": []
+    }
+  }
+}

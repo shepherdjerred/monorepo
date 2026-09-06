@@ -1,0 +1,286 @@
+{
+  "championKey": "LeeSin",
+  "championName": "Lee Sin",
+  "abilities": {
+    "passive": {
+      "name": "Flurry",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveAS": [
+          40
+        ],
+        "FirstHitEnergyMult": [
+          2
+        ]
+      },
+      "resolvedDescription": "After Lee Sin uses an ability, his next 2 basic attacks gain Attack Speed and return Energy.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Sonic Wave / Resonating Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "Q1BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "Q2BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "Q1ADRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "Q2ADRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "Q2MaxMissingHealthMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ReactivateTime": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "CherryBonusHaste": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "DashSpeed": [
+          1350,
+          1350,
+          1350,
+          1350,
+          1350
+        ]
+      },
+      "resolvedDescription": "Lee Sin projects a discordant wave of sound, dealing 60/90/120/150/180 (+90% bonus AD) physical damage to the first enemy hit, granting True Sight of them, and allows Lee Sin to Recast for the next 3 seconds. Recast: Lee Sin dashes to the enemy hit by the sound wave, dealing between 60/90/120/150/180 (+90% bonus AD) to 120/180/240/300/360 (+180% bonus AD) physical damage scaling with the target's missing Health.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Safeguard / Iron Will",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "LifestealAndSpellVamp": [
+          10,
+          14,
+          18,
+          22,
+          26
+        ],
+        "ShieldValue": [
+          60,
+          105,
+          150,
+          195,
+          240
+        ],
+        "ShieldDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "DashSpeed": [
+          1350,
+          1350,
+          1350,
+          1350,
+          1350
+        ],
+        "W1ReactivateTime": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "W1CooldownRecovered": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "LifestealAndSpellVampTime": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Lee Sin dashes to an ally or ward. If the target is a champion, Lee Sin grants them and himself 60/105/150/195/240 (+80% AP) Shield for 2 seconds. Lee Sin may Recast for the next 3 seconds. Recast: Lee Sin gains 10/14/18/22/26% Omnivamp for 4 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Tempest / Cripple",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          35,
+          45,
+          55,
+          65,
+          75
+        ],
+        "E1Damage": [
+          35,
+          60,
+          85,
+          110,
+          135
+        ],
+        "ReactivateTime": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Lee Sin smashes the ground, sending out a shockwave that deals 35/60/85/110/135 (+90% AD) magic damage and reveals them for 4 seconds. If this hits an enemy, Lee Sin can Recast for the next 3 seconds. Recast: Lee Sin Slows nearby enemies struck by the shockwave by 35/45/55/65/75% decaying over 4 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Dragon's Rage",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        85,
+        60
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        375,
+        375,
+        375
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          175,
+          400,
+          625
+        ],
+        "PercentHPCarryThrough": [
+          12,
+          15,
+          18
+        ],
+        "KickDistance": [
+          800,
+          800,
+          800
+        ]
+      },
+      "resolvedDescription": "Lee Sin performs a powerful roundhouse kick Knocking Back an enemy champion and dealing 175/400/625 (+200% bonus AD) physical damage. Enemies the target collides with are briefly Knocked Up and take 175/400/625 (+200% bonus AD) plus 12/15/18% of the kicked enemy's bonus Health as physical damage.",
+      "unresolved": []
+    }
+  }
+}

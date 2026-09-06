@@ -1,0 +1,413 @@
+{
+  "championKey": "Zac",
+  "championName": "Zac",
+  "abilities": {
+    "passive": {
+      "name": "Cell Division",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ReviveCooldown": [
+          300
+        ]
+      },
+      "resolvedDescription": "Each time Zac hits an enemy with an ability, he sheds a chunk of himself that can be reabsorbed to restore Health. Upon taking fatal damage, Zac splits into 4 bloblets that attempt to recombine. If any bloblets remain, he will revive with an amount of Health depending on the Health of the surviving bloblets. Each bloblet has a percentage of Zac's maximum Health, Armor and Magic Resistance. This ability has a 5 minute cooldown.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Stretching Strikes",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        12.5,
+        11,
+        9.5,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health ({{ healthcosttooltip }})",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "APRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "HealthRatio": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "HPCost": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ],
+        "MissileRange": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "SlowAmount": [
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4,
+          -0.4
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "TetherDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "TetherFalloffDistance": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "MaxSlamDistance": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "YankDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "CollisionAoE": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ]
+      },
+      "resolvedDescription": "Zac stretches his arm out, attaching it to the first enemy hit to deal 60/90/120/150/180 (+30% AP) (+3% bonus Health) magic damage and briefly Slow them. Zac's next Attack gains increased range and applies the same damage and Slow. If Zac hits a different enemy with this Attack, he Knocks Up both towards each other. If they collide, they and surrounding enemies take 60/90/120/150/180 (+30% AP) (+3% bonus Health) magic damage and are briefly Slowed.",
+      "unresolved": [
+        "healthcosttooltip"
+      ]
+    },
+    "W": {
+      "name": "Unstable Matter",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health ({{ tooltiphealthcost }})",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "APRatioToPercentDamage": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "BaseMaxHealthDamage": [
+          0.04,
+          0.05,
+          0.06,
+          0.07,
+          0.08
+        ],
+        "HealthPercentTooltip": [
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "HPCost": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "PercentHealthDamage": [
+          0.04,
+          0.05,
+          0.06,
+          0.07,
+          0.08
+        ],
+        "RefundOnBlobPickup": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxMinionDamage": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ]
+      },
+      "resolvedDescription": "Zac's body erupts, dealing 40/50/60/70/80 + {{ displaypercentdamage }} max Health magic damage to nearby enemies. Absorbing Goo reduces this Ability's Cooldown by 1 second.",
+      "unresolved": [
+        "displaypercentdamage",
+        "tooltiphealthcost"
+      ]
+    },
+    "E": {
+      "name": "Elastic Slingshot",
+      "maxRank": 5,
+      "cooldownByRank": [
+        21,
+        18,
+        15,
+        12,
+        9
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "% of current Health ({{ healthcosttooltip }})",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          105,
+          150,
+          195,
+          240
+        ],
+        "HPCost": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "MaxRange": [
+          1200,
+          1350,
+          1500,
+          1650,
+          1800
+        ],
+        "ChannelTime": [
+          0.9,
+          1,
+          1.1,
+          1.2,
+          1.3
+        ],
+        "MinimumStun": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MinimumSpeed": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "MaximumSpeed": [
+          1350,
+          1350,
+          1350,
+          1350,
+          1350
+        ],
+        "DistanceToSpeedRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "KnockupRadius": [
+          265,
+          265,
+          265,
+          265,
+          265
+        ],
+        "VFXWarningTime": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Begin Charging: Zac pulls himself taut, charging up a dash over 0.9/1/1.1/1.2/1.3 seconds. Release: Zac launches himself and Knocks Up enemies where he lands for up to {{ maxstun }} second (based on charge time), dealing them 60/105/150/195/240 (+80% AP) magic damage. Zac spawns an extra chunk of Goo for each enemy champion hit.",
+      "unresolved": [
+        "maxstun",
+        "healthcosttooltip"
+      ]
+    },
+    "R": {
+      "name": "Let's Bounce!",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "Bounces": [
+          4,
+          4,
+          4
+        ],
+        "TimeBetweenBounces": [
+          1,
+          1,
+          1
+        ],
+        "KnockupDuration": [
+          1,
+          1,
+          1
+        ],
+        "BaseDamageBounce": [
+          120,
+          190,
+          260
+        ],
+        "DamageReductionBounce": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "KnockbackDistance": [
+          250,
+          250,
+          250
+        ],
+        "KnockbackRange": [
+          300,
+          300,
+          300
+        ],
+        "BeginningMS": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "EndingMS": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowAmount": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1
+        ],
+        "BounceAPRatioTooltip": [
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Zac bounces 4 times. The first bounce to hit each enemy Knocks them back and deals 120/190/260 (+40% AP) magic damage. Subsequent bounces deal 60/95/130 (+20% AP) magic damage and Slow by 20% for 1 second. Zac gains up to 50% Move Speed over time and can cast Unstable Matter while bouncing.",
+      "unresolved": []
+    }
+  }
+}

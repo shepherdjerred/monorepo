@@ -1,0 +1,489 @@
+{
+  "championKey": "Smolder",
+  "championName": "Smolder",
+  "abilities": {
+    "passive": {
+      "name": "Dragon Practice",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "QCritRatio": [
+          1.2
+        ],
+        "QDamagePerStack": [
+          0.25
+        ],
+        "WDamagePerStack": [
+          0.55
+        ],
+        "EDamagePerStack": [
+          0.08
+        ],
+        "EStacksPerAttackTooltip": [
+          100
+        ]
+      },
+      "resolvedDescription": "Hitting champions with Abilities and killing enemies with Super Scorcher Breath grants a stack of Dragon Practice. Stacks increase the damage of Smolders basic Abilities.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Super Scorcher Breath",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5.5,
+        5,
+        4.5,
+        4,
+        3.5
+      ],
+      "costByRank": [
+        25,
+        25,
+        25,
+        25,
+        25
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          70,
+          80,
+          90,
+          100
+        ],
+        "ADRatio": [
+          1.3,
+          1.3,
+          1.3,
+          1.3,
+          1.3
+        ],
+        "StackTier1": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "StackTier2": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "StackTier3": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "Tier1_ExplosionRadius": [
+          285,
+          285,
+          285,
+          285,
+          285
+        ],
+        "Tier2_BlowbackDistance": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ],
+        "Tier2_BlowbackAmountBase": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Tier2_BlowbackExplosionRadius": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "Tier2_BlowbackSpreadAngle": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "Tier3_TrueDamagePercent": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "Tier3_MonsterCap": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "CritRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "LifestealMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Tier3_ExecuteThresholdStart": [
+          6.5,
+          6.5,
+          6.5,
+          6.5,
+          6.5
+        ],
+        "Tier3_DotLength": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "Tier2_BlowbackPercentageDamage": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "minionmod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "Tier3_Burn_Stack_Mult": [
+          0.00005,
+          0.00005,
+          0.00005,
+          0.00005,
+          0.00005
+        ],
+        "ManaRestore": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ]
+      },
+      "resolvedDescription": "Smolder belches flame, dealing {{ totaldamage }} physical damage + {{ spell.smolderp:passive_qdamageincrease }} magic damage. If the target dies, Smolder refunds 15 Mana, once per cast. Based on stacks of Dragon Practice, this Ability evolves to gain the following effects:25 Stacks: Damages all enemies surrounding the target.125 Stacks: Sends {{ tier2_numberofblowback }} explosions beyond the target that deal 50% of this Ability's damage.225 Stacks: Burns the target, dealing {{ tier3_burn }} max Health true damage over 3 seconds. Enemy champions that drop below 6.5% total health while burning are killed instantly.",
+      "unresolved": [
+        "totaldamage",
+        "spell.smolderp:passive_qdamageincrease",
+        "tier2_numberofblowback",
+        "tier3_burn"
+      ]
+    },
+    "W": {
+      "name": "Achooo!",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1500,
+        1500,
+        1500,
+        1500,
+        1500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          70,
+          80,
+          90,
+          100
+        ],
+        "HitADRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "ExplosionBaseDamage": [
+          10,
+          35,
+          60,
+          85,
+          110
+        ],
+        "ExplosionRadius": [
+          385,
+          385,
+          385,
+          385,
+          385
+        ],
+        "SlowAmount": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ExplosionDamageMult": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ExplosionDamageMultihitPenalty": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MinionMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Smolder lets out an adorable flaming sneeze, dealing 60/70/80/90/100 (+60% bonus AD) physical damage and Slowing by 35% for 1.5 seconds. Hitting champions causes an explosion, dealing 10/35/60/85/110 (+50% bonus AD) (+80% AP) physical + {{ spell.smolderp:passive_wdamageincrease }} magic damage.",
+      "unresolved": [
+        "spell.smolderp:passive_wdamageincrease"
+      ]
+    },
+    "E": {
+      "name": "Flap, Flap, Flap",
+      "maxRank": 5,
+      "cooldownByRank": [
+        24,
+        22,
+        20,
+        18,
+        16
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "Duration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MoveSpeed": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "NumOfAttacksBase": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "BaseDamage": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "ADRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "Range": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "NumAttackStackRatio": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ]
+      },
+      "resolvedDescription": "Smolder takes flight, gaining 75% Move Speed and ignoring terrain for 1.25 seconds. While flying, Smolder bombards the lowest Health enemy {{ totalnumberofattacks }} (rounded down) times for 10/15/20/25/30 (+30% AD) physical damage + {{ spell.smolderp:ebonusdamage }} magic damage per hit.",
+      "unresolved": [
+        "totalnumberofattacks",
+        "spell.smolderp:ebonusdamage"
+      ]
+    },
+    "R": {
+      "name": "MMOOOMMMM!",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        4200,
+        4200,
+        4200
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1
+        ],
+        "MomDistBehindOffset": [
+          600,
+          600,
+          600
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "SlowAmount": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MomSpawnDelay": [
+          1,
+          1,
+          1
+        ],
+        "SweetspotPercentageIncrease": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MomHeal": [
+          100,
+          135,
+          170
+        ],
+        "SoundDistanceBehindSmolder": [
+          100,
+          100,
+          100
+        ],
+        "SoundDistanceBehindSmolderSelfOnly": [
+          1000,
+          1000,
+          1000
+        ],
+        "LingeringSimmerSoundAmount": [
+          3,
+          3,
+          3
+        ],
+        "LingeringSimmerSoundOffset": [
+          1500,
+          1500,
+          1500
+        ],
+        "MissileLandingSound": [
+          500,
+          500,
+          500
+        ],
+        "VFXNorthAngleReplacement": [
+          90,
+          90,
+          90
+        ],
+        "LingeringSimmerSoundDelay": [
+          1,
+          1,
+          1
+        ],
+        "MinionMod": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Smolder's mom breathes fire from above, dealing 150/250/350 (+100% bonus AD) (+100% AP) physical damage. Enemies in the center take 225/375/525 (+150% bonus AD) (+150% AP) physical damage instead and are Slowed by 40% for 2 seconds. Smolder's mom heals her son for 100/135/170 (+50% bonus AD) (+75% AP) Health if she hits him.",
+      "unresolved": []
+    }
+  }
+}

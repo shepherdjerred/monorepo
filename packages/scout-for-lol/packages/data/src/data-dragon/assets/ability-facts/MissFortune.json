@@ -1,0 +1,296 @@
+{
+  "championKey": "MissFortune",
+  "championName": "Miss Fortune",
+  "abilities": {
+    "passive": {
+      "name": "Love Tap",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Miss Fortune deals bonus physical damage whenever she basic attacks a new target.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Double Up",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "BounceCriticalMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Miss Fortune fires a bouncing shot, dealing 20/45/70/95/120 (+100% AD) (+35% AP) physical damage to an enemy and to another one behind them. The second shot can critically strike for {{ totaldamagecrit }} physical damage. It always critically strikes if the first shot kills its target.",
+      "unresolved": [
+        "totaldamagecrit"
+      ]
+    },
+    "W": {
+      "name": "Strut",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        45,
+        45,
+        45,
+        45,
+        45
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "PassiveBaseMS": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "PassiveMaxMS": [
+          60,
+          70,
+          80,
+          90,
+          100
+        ],
+        "LoveTapBaseRefund": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ActiveAS": [
+          0.4,
+          0.55,
+          0.7,
+          0.85,
+          1
+        ],
+        "ActiveDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "PassiveBaseMSOOC": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "PassiveMaxMSExtraOOC": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Passive: After 4 seconds of not taking damage, Miss Fortune gains 30/35/40/45/50 Move Speed. After another 3 seconds, this increases to 60/70/80/90/100. Active: Gain the passive effect's full Move Speed bonus and 40/55/70/85/100% Attack Speed for 4 seconds. Love Taps reduce the Cooldown of this Ability by {{ lovetaprefund }} seconds.",
+      "unresolved": [
+        "lovetaprefund"
+      ]
+    },
+    "E": {
+      "name": "Make It Rain",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamagePerSecond": [
+          35,
+          50,
+          65,
+          80,
+          95
+        ],
+        "BaseDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BaseSlowAmount": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "APRatioPerSecond": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "TicksPerSecond": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "CastDelay": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SlowPer100AP": [
+          0.0006,
+          0.0006,
+          0.0006,
+          0.0006,
+          0.0006
+        ]
+      },
+      "resolvedDescription": "Miss Fortune rains bullets, revealing an area, Slowing by {{ totalslowamount }} and dealing 35/50/65/80/95 (+60% AP) magic damage per second for 2 seconds (total 70/100/130/160/190 (+120% AP) magic damage).",
+      "unresolved": [
+        "totalslowamount"
+      ]
+    },
+    "R": {
+      "name": "Bullet Time",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseWaves": [
+          14,
+          16,
+          18
+        ],
+        "BaseDamage": [
+          20,
+          30,
+          40
+        ],
+        "tADRatio": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "APRatio": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "CritDamageMultiplier": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "BaseChannelDuration": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Miss Fortune channels a barrage of bullets, firing 14/16/18 waves over 3 seconds, dealing 20/30/40 (+60% AD) (+25% AP) physical damage per wave (total {{ totalphysicaldamage }} physical damage). Each wave can critically strike for %i:scaleCrit% {{ critdamageperwave }} physical damage.",
+      "unresolved": [
+        "totalphysicaldamage",
+        "critdamageperwave"
+      ]
+    }
+  }
+}

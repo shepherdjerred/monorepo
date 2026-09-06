@@ -1,0 +1,227 @@
+{
+  "championKey": "Veigar",
+  "championName": "Veigar",
+  "abilities": {
+    "passive": {
+      "name": "Phenomenal Evil Power",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "dQKillStacks": [
+          1
+        ],
+        "dAbilityStacks": [
+          1
+        ],
+        "dTakedownStacks": [
+          5
+        ],
+        "dQKillStacksLarge": [
+          3
+        ],
+        "PStacksPerDarkMatterCDR": [
+          50
+        ],
+        "DarkMatterCDRIncrement": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Veigar is the greatest Evil to ever strike at the hearts of Runeterra - and he's only getting bigger! Striking an enemy Champion with a spell or scoring a takedown grants Veigar permanently increased Ability Power.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Baleful Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5.5,
+        5,
+        4.5,
+        4
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "APRatio": [
+          0.5,
+          0.55,
+          0.6,
+          0.65,
+          0.7
+        ],
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ]
+      },
+      "resolvedDescription": "Veigar unleashes a bolt of dark energy, dealing 80/120/160/200/240 (+50/55/60/65/70% AP) magic damage to the first two enemies hit. If Veigar kills an enemy with this Ability, he gains {{ spell.veigarpassive:dqkillstacks }} stack of Phenomenal Evil. Large minions and large monsters grant {{ spell.veigarpassive:dqkillstackslarge }} stacks instead.",
+      "unresolved": [
+        "spell.veigarpassive:dqkillstacks",
+        "spell.veigarpassive:dqkillstackslarge"
+      ]
+    },
+    "W": {
+      "name": "Dark Matter",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "APRatio": [
+          0.7,
+          0.8,
+          0.9,
+          1,
+          1.1
+        ],
+        "BaseDamage": [
+          85,
+          140,
+          195,
+          250,
+          305
+        ],
+        "ImpactDelay": [
+          1.2,
+          1.2,
+          1.2,
+          1.2,
+          1.2
+        ],
+        "BaseCooldown": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Veigar summons dark matter from the sky, dealing 85/140/195/250/305 (+70/80/90/100/110% AP) magic damage. Every {{ spell.veigarpassive:pstacksperdarkmattercdr }} stacks of Phenomenal Evil reduce this Ability's Cooldown by {{ spell.veigarpassive:darkmattercdrincrement*100 }}%.",
+      "unresolved": [
+        "spell.veigarpassive:pstacksperdarkmattercdr",
+        "spell.veigarpassive:darkmattercdrincrement*100"
+      ]
+    },
+    "E": {
+      "name": "Event Horizon",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18.5,
+        17,
+        15.5,
+        14
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        725,
+        725,
+        725,
+        725,
+        725
+      ],
+      "dataValues": {
+        "StunDuration": [
+          1.5,
+          1.75,
+          2,
+          2.25,
+          2.5
+        ],
+        "CageDelay": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Veigar twists the edges of space, creating a cage that Stuns enemies that pass through for 1.5/1.75/2/2.25/2.5 seconds. The cage lasts for 3 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Primordial Burst",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        90,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "APRatio": [
+          0.65,
+          0.7,
+          0.75
+        ],
+        "BaseDamage": [
+          175,
+          250,
+          325
+        ],
+        "MaxExecuteMult": [
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Veigar blasts an enemy champion with primal magic to deal between 175/250/325 (+65/70/75% AP) and 350/500/650 (+130/140/150% AP) magic damage, increasing with the target's missing Health. Damage is maximized against enemies below 33% Health.",
+      "unresolved": []
+    }
+  }
+}

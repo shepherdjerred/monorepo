@@ -1,0 +1,315 @@
+{
+  "championKey": "Vex",
+  "championName": "Vex",
+  "abilities": {
+    "passive": {
+      "name": "Doom 'n Gloom",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "GloomDuration": [
+          6
+        ],
+        "MaxDoomCD": [
+          15
+        ],
+        "DashListenerRange": [
+          1600
+        ],
+        "DashLockoutTime": [
+          0.5
+        ],
+        "GloomCDChamp": [
+          0.25
+        ],
+        "GloomCDNonChamp": [
+          0.1
+        ],
+        "FearSlowPercentMax": [
+          0.99
+        ],
+        "FearedMinionSpeed": [
+          25
+        ],
+        "EFearedMinionSpeed": [
+          5
+        ],
+        "FearSlowPercentMin": [
+          0.6
+        ],
+        "RangeOfMaxFearSlow": [
+          800
+        ],
+        "RangeOfMinFearSlow": [
+          250
+        ],
+        "APRatio": [
+          0.25
+        ]
+      },
+      "resolvedDescription": "Vex periodically becomes empowered, causing her next basic Ability to fear enemies and interrupt dashes. Whenever a nearby enemy dashes, Vex applies a mark that can be consumed for bonus damage that also reduces the cooldown of her empowered state.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Mistral Bolt",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          115,
+          160,
+          205,
+          250
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Vex launches a wave of mist that deals 70/115/160/205/250 (+70% AP) magic damage. After a delay, the wave becomes smaller and faster. Consumes Gloom on enemies hit.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Personal Space",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        75,
+        75,
+        75,
+        75,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "ShieldAmount": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "AOERadius": [
+          475,
+          475,
+          475,
+          475,
+          475
+        ],
+        "BonusAOERadiusVsDashes": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "DamageAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Vex gains 50/75/100/125/150 (+75% AP) Shield for 2.5 seconds and emits a shockwave that deals 80/120/160/200/240 (+30% AP) magic damage. Consumes Gloom on enemies hit.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Looming Darkness",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          70,
+          90,
+          110,
+          130
+        ],
+        "SlowAmount": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "StartingRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "RadiusGrowthRate": [
+          13,
+          13,
+          13,
+          13,
+          13
+        ],
+        "APRatio": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "MaxRadius": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "GloomCDChampTooltip": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "GloomCDNonChampTooltip": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Vex commands Shadow to fly to a location, increasing in size as it travels. Upon arriving, it deals 50/70/90/110/130 (+40/45/50/55/60% AP) magic damage and Slows by 30/35/40/45/50% for 2 seconds. Killing an enemy with this ability reduces Doom'n Gloom's Cooldown by 10%. Applies Gloom to enemies hit.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Shadow Surge",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2000,
+        2500,
+        3000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          125,
+          175
+        ],
+        "RecastDamage": [
+          150,
+          250,
+          350
+        ],
+        "R2Duration": [
+          4,
+          4,
+          4
+        ],
+        "TakedownWindow": [
+          8,
+          8,
+          8
+        ],
+        "ResetWindow": [
+          12,
+          12,
+          12
+        ]
+      },
+      "resolvedDescription": "Shadow excitedly surges forward, dealing 75/125/175 (+20% AP) magic damage and marking the first enemy champion hit for 4 seconds. Recast: Dash to the marked champion, dealing 150/250/350 (+50% AP) magic damage on arrival. If the marked champion dies within 8 seconds of taking damage from this Ability, its Cooldown is temporarily reset.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,288 @@
+{
+  "championKey": "Nasus",
+  "championName": "Nasus",
+  "abilities": {
+    "passive": {
+      "name": "Soul Eater",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Nasus drains his foe's spiritual energy, giving him bonus Life Steal.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Siphoning Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7.5,
+        6.5,
+        5.5,
+        4.5,
+        3.5
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        255,
+        255,
+        255,
+        255,
+        255
+      ],
+      "dataValues": {
+        "BonusRange": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "BonusDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "BasicStacks": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BigStacks": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "BuffDuration": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "resolvedDescription": "Nasus' next Attack deals {{ totaldamage }} physical damage. Killing an enemy with this Attack permanently increases its damage by 4, increased to 10 against champions, large minions and large jungle monsters.",
+      "unresolved": [
+        "totaldamage"
+      ]
+    },
+    "W": {
+      "name": "Wither",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "SlowBase": [
+          35,
+          35,
+          35,
+          35,
+          35
+        ],
+        "SlowPerTick": [
+          3,
+          6,
+          9,
+          12,
+          15
+        ],
+        "MaxSlowTooltipOnly": [
+          47,
+          59,
+          71,
+          83,
+          95
+        ],
+        "AttackSpeedSlowMult": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Nasus ages a champion, Slowing them by 35%, increasing to 47/59/71/83/95% over 5 seconds. Their Attack Speed is also reduced by 75% of the Slow.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Spirit Fire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "DamagePerTick": [
+          10,
+          16,
+          22,
+          28,
+          34
+        ],
+        "ArmorShredPercent": [
+          -0.3,
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5
+        ],
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "InitialHitDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ]
+      },
+      "resolvedDescription": "Nasus ignites a spirit flame, dealing 50/80/110/140/170 (+60% AP) magic damage. Enemies in the area lose 30/35/40/45/50% Armor and take 50/80/110/140/170 (+60% AP) magic damage over 5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Fury of the Sands",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BonusHealth": [
+          300,
+          450,
+          600
+        ],
+        "AttackRangeIncrease": [
+          50,
+          50,
+          50
+        ],
+        "AOEDamagePercent": [
+          0.03,
+          0.04,
+          0.05
+        ],
+        "TickRate": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "InitialResistGain": [
+          40,
+          55,
+          70
+        ],
+        "MaxDamageCap": [
+          240,
+          240,
+          240
+        ],
+        "Duration": [
+          15,
+          15,
+          15
+        ],
+        "QCDR": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SizeIncreasePercent": [
+          0.3,
+          0.35,
+          0.4
+        ],
+        "BaseAoERadius": [
+          376,
+          376,
+          376
+        ],
+        "MinAoERadius": [
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Nasus becomes empowered in the sandstorm for 15 seconds, increasing his maximum Health by 300/450/600 and Armor and Magic Resistance by 40/55/70. While the storm rages, nearby enemies take {{ damagecalc }} of their maximum Health as magic damage each second and Siphoning Strike has a 50% reduced Cooldown.",
+      "unresolved": [
+        "damagecalc"
+      ]
+    }
+  }
+}

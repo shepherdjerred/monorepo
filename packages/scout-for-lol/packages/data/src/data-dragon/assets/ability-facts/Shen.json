@@ -1,0 +1,376 @@
+{
+  "championKey": "Shen",
+  "championName": "Shen",
+  "abilities": {
+    "passive": {
+      "name": "Ki Barrier",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ShieldDuration": [
+          2.5
+        ],
+        "LeashDistanceThreshold": [
+          3500
+        ],
+        "LeashPreferredResultDistance": [
+          2250
+        ],
+        "DirectionIndicatorMinimumDistance": [
+          150
+        ],
+        "PassiveCDFlexAmount": [
+          0.125
+        ],
+        "ShieldCooldown": [
+          11
+        ],
+        "ShenZedQuestShieldMultiplier": [
+          1.3
+        ]
+      },
+      "resolvedDescription": "After casting a spell, Shen gets a shield. Affecting other champions reduces the cooldown of this effect.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Twilight Assault",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.25,
+        6.5,
+        5.75,
+        5
+      ],
+      "costByRank": [
+        140,
+        130,
+        120,
+        110,
+        100
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "QBaseOnHitDamage": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "QPerLevelOnHitDamage": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "QTowerDamageModifier": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "QCollisionRadiusStart": [
+          110,
+          110,
+          110,
+          110,
+          110
+        ],
+        "QCollisionRadiusEnd": [
+          130,
+          130,
+          130,
+          130,
+          130
+        ],
+        "MonsterAmp": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BasePercentDamage": [
+          2,
+          2.5,
+          3,
+          3.5,
+          4
+        ],
+        "NumEnhancedAttacks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowPercent": [
+          25,
+          30,
+          35,
+          40,
+          45
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "EnhancedPercentDamage": [
+          5,
+          5.5,
+          6,
+          6.5,
+          7
+        ],
+        "MinionDamageCap": [
+          100,
+          125,
+          150,
+          175,
+          200
+        ],
+        "AttackBuffDuration": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "SteroidAS": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "SteroidDuration": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ]
+      },
+      "resolvedDescription": "Shen recalls his Spirit Blade. Enemies hit by the pull are Slowed by 25/30/35/40/45% while moving away from Shen for the next 2 seconds. Additionally, Shen's next 3 Attacks deal an additional 10-40 (based on level) plus {{ basepercenthealth }} max Health magic damage. If Shen hit an enemy champion with the Spirit Blade, the damage is increased to 10-40 (based on level) plus {{ emppercenthealth }} max Health magic damage and he gains 50% Attack Speed for those Attacks.",
+      "unresolved": [
+        "basepercenthealth",
+        "emppercenthealth"
+      ]
+    },
+    "W": {
+      "name": "Spirit's Refuge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "ZoneDuration": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "ZoneDelay": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Shen creates a defensive zone at his Spirit Blade for 1.75 seconds. Attacks against allied champions in the zone are blocked. If there are no champions to protect in the zone when it starts, it will wait for up to 2 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Shadow Dash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        16,
+        14,
+        12,
+        10
+      ],
+      "costByRank": [
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "costType": "Energy",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "BonusHPRatio": [
+          0.11,
+          0.11,
+          0.11,
+          0.11,
+          0.11
+        ],
+        "CCDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "CollisionPadding": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "DepartureCollisionRadius": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "ArrivalCollisionRadius": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "DashBonusSpeed": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "MinimumDistance": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ]
+      },
+      "resolvedDescription": "Passive: Dealing damage with Twilight Assault or this Ability recovers 30-50 (based on level) Energy. Active: Shen dashes, Taunting champions and jungle monsters for 1.5 seconds and dealing 60/85/110/135/160 (+11% bonus Health) physical damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Stand United",
+      "maxRank": 3,
+      "cooldownByRank": [
+        200,
+        180,
+        160
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        35000,
+        35000,
+        35000
+      ],
+      "dataValues": {
+        "ArrivalPersonalSpace": [
+          175,
+          175,
+          175
+        ],
+        "ArrivalCheckRadiusVisible": [
+          2000,
+          2000,
+          2000
+        ],
+        "ArrivalCheckRadiusInvisible": [
+          600,
+          600,
+          600
+        ],
+        "BaseShieldAmount": [
+          120,
+          220,
+          320
+        ],
+        "ShieldAPRatio": [
+          1.35,
+          1.35,
+          1.35
+        ],
+        "MaxShieldThreshold": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MaxShieldMult": [
+          1.6,
+          1.6,
+          1.6
+        ],
+        "ShieldDuration": [
+          5,
+          5,
+          5
+        ],
+        "ChannelDuration": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Shen grants an allied champion anywhere on the map between 120/220/320 (+15% bonus Health) (+135% AP) and 192/352.00001/512.00001 (+24% bonus Health) (+216.00001% AP) Shield based on their missing Health for 5 seconds (max Shield at 60% missing Health). After channeling for 3 seconds, Shen teleports to his ally's location with his Spirit Blade.",
+      "unresolved": []
+    }
+  }
+}

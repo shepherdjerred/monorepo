@@ -1,0 +1,324 @@
+{
+  "championKey": "Seraphine",
+  "championName": "Seraphine",
+  "abilities": {
+    "passive": {
+      "name": "Stage Presence",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "EchoCastDelay": [
+          0.01
+        ],
+        "AutoAPRatio": [
+          0.075
+        ],
+        "MaxNotes": [
+          4
+        ],
+        "AllyNoteDamagePercent": [
+          0.25
+        ],
+        "NoteDuration": [
+          6
+        ],
+        "BonusAARange": [
+          25
+        ],
+        "DelayBetweenNoteCasts": [
+          0.075
+        ],
+        "NoteRadius": [
+          100
+        ],
+        "DelayBetweenNoteCastsDecayRate": [
+          0.95
+        ],
+        "MinionDamageMultiplier": [
+          1
+        ],
+        "NoteAPRatio": [
+          0.04
+        ]
+      },
+      "resolvedDescription": "Every third basic spell will cast twice from Seraphine. Additionally, casting spells near allies grants her bonus magic damage and range on her next basic attack.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "High Note",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "ExecuteThreshold": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "DamageAmp": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ]
+      },
+      "resolvedDescription": "Seraphine projects a pure note, dealing 60/85/110/135/160 (+40% AP) magic damage, increased against champions and monsters by the target's missing Health percentage up to 105/148.75/192.5/236.25/280 (+70% AP) damage below 25% Health.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Surround Sound",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        22,
+        22,
+        22,
+        22
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ShieldDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "ShieldStrength": [
+          60,
+          80,
+          100,
+          120,
+          140
+        ],
+        "ShieldAPRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "WMSBonus": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "WMSBonusAPRatio": [
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002,
+          0.0002
+        ],
+        "HasteValueForAllies": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "WMissingHPBase": [
+          8,
+          10,
+          12,
+          14,
+          16
+        ],
+        "WHealSplitDelay": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "ShieldAmpForSeraphine": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Seraphine spurs her nearby allied champions in song, granting them {{ hastevalueallies }} Move Speed, herself {{ wmsbonustotal }} decaying Move Speed and both 60/80/100/120/140 (+20% AP) Shield for 2.5 seconds. If Seraphine is already Shielded, she calls out to her allies to join her, restoring 8/10/12/14/16% missing Health to them after a 2.5 second delay.",
+      "unresolved": [
+        "hastevalueallies",
+        "wmsbonustotal"
+      ]
+    },
+    "E": {
+      "name": "Beat Drop",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.5,
+        10,
+        9.5,
+        9
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1300,
+        1300,
+        1300,
+        1300,
+        1300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowValue": [
+          99,
+          99,
+          99,
+          99,
+          99
+        ],
+        "SlowDuration": [
+          1.1,
+          1.2,
+          1.3,
+          1.4,
+          1.5
+        ],
+        "MinionDamageMod": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Seraphine unleashes a heavy soundwave, dealing 70/100/130/160/190 (+50% AP) magic damage to enemies in a line and Slowing them by 99% for 1.1/1.2/1.3/1.4/1.5 seconds. Enemies that are already Slowed are Rooted instead, and Immobilized enemies are Stunned.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Encore",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        140,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "RChannelDuration": [
+          1.25,
+          1.5,
+          1.75
+        ],
+        "R1BaseDamage": [
+          150,
+          200,
+          250
+        ],
+        "R1APRatio": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "RRange": [
+          1200,
+          1200,
+          1200
+        ],
+        "RMinSlow": [
+          -0.4,
+          -0.4,
+          -0.4
+        ],
+        "RMaxSlow": [
+          -0.99,
+          -0.99,
+          -0.99
+        ]
+      },
+      "resolvedDescription": "Seraphine takes the stage, projecting a captivating force that Charms for 1.25/1.5/1.75 seconds and deals 150/200/250 (+40% AP) magic damage. Any champions struck (including allies) become part of the performance, extending the range of this Ability. Allied champions gain maximum Notes.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,294 @@
+{
+  "championKey": "Elise",
+  "championName": "Elise",
+  "abilities": {
+    "passive": {
+      "name": "Spider Queen",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "SpiderlingAPRatio": [
+          0.15
+        ],
+        "SpiderlingAoEReduction": [
+          0.75
+        ]
+      },
+      "resolvedDescription": "Human Form: When Elise's abilities hit an enemy, she gains a dormant Spiderling. Spider Form: Basic attacks deal bonus magic damage and restore health to Elise.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Neurotoxin / Venomous Bite",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        615,
+        615,
+        615,
+        615,
+        615
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          70,
+          100,
+          130,
+          160
+        ],
+        "MonsterCapDamage": [
+          65,
+          85,
+          105,
+          125,
+          145
+        ],
+        "APRatio": [
+          0.03,
+          0.03,
+          0.03,
+          0.03,
+          0.03
+        ],
+        "TargetHPDamage": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SpiderBaseDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ]
+      },
+      "resolvedDescription": "Human Form: Elise injects neurotoxin, dealing 40/70/100/130/160 plus {{ humanpercenthealth }} current Health magic damage.",
+      "unresolved": [
+        "humanpercenthealth"
+      ]
+    },
+    "W": {
+      "name": "Volatile Spiderling / Skittering Frenzy",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          100,
+          140,
+          180,
+          220
+        ],
+        "APRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "TimeToExplode": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "ExplosionSize": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ]
+      },
+      "resolvedDescription": "Human Form: Elise summons an explosive spider that moves to a location and explodes when it nears an enemy or after 3 seconds. The spider deals 60/100/140/180/220 (+75% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Cocoon / Rappel",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1075,
+        1075,
+        1075,
+        1075,
+        1075
+      ],
+      "dataValues": {
+        "BaseStunDuration": [
+          1.6,
+          1.8,
+          2,
+          2.2,
+          2.4
+        ],
+        "VisionRadius": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "RappelCooldown": [
+          22,
+          21,
+          20,
+          19,
+          18
+        ],
+        "RappelDamageAmp": [
+          40,
+          55,
+          70,
+          85,
+          100
+        ]
+      },
+      "resolvedDescription": "Human Form: Elise fires a cocoon, Stunning and revealing the first enemy hit for 1.6/1.8/2/2.2/2.4 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Spider Form",
+      "maxRank": 4,
+      "cooldownByRank": [
+        3,
+        3,
+        3,
+        3
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "PassiveBonusDamage": [
+          12,
+          22,
+          32,
+          42
+        ],
+        "PassiveHealing": [
+          6,
+          8,
+          10,
+          12
+        ],
+        "PassiveMSOnHit": [
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "BaseSpiderlingsStored": [
+          2,
+          3,
+          4,
+          5
+        ],
+        "SpiderlingBaseDamage": [
+          10,
+          20,
+          30,
+          40
+        ],
+        "SpiderlingAPRatio": [
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "SpiderlingBonusResist": [
+          0,
+          20,
+          40,
+          60
+        ],
+        "SpiderlingArmor": [
+          30,
+          50,
+          70,
+          90
+        ],
+        "SpiderlingsStoredCap": [
+          20,
+          20,
+          20,
+          20
+        ],
+        "SpiderlingMagicResist": [
+          50,
+          70,
+          90,
+          110
+        ]
+      },
+      "resolvedDescription": "Human Form: Elise transforms into a menacing spider, becoming melee, gaining access to Spider Form Abilities and summons all dormant Spiderlings.",
+      "unresolved": []
+    }
+  }
+}

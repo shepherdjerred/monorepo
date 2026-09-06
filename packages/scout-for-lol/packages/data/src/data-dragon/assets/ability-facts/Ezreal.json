@@ -1,0 +1,250 @@
+{
+  "championKey": "Ezreal",
+  "championName": "Ezreal",
+  "abilities": {
+    "passive": {
+      "name": "Rising Spell Force",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AttackSpeedPerStack": [
+          0.1
+        ],
+        "StackDuration": [
+          6
+        ],
+        "MaxStacks": [
+          5
+        ]
+      },
+      "resolvedDescription": "Ezreal gains increasing Attack Speed each time he successfully hits a spell, stacking up to 5 times.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Mystic Shot",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5.5,
+        5.25,
+        5,
+        4.75,
+        4.5
+      ],
+      "costByRank": [
+        28,
+        31,
+        34,
+        37,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "CDRefund": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "BaseDamageADRatio": [
+          1.3,
+          1.3,
+          1.3,
+          1.3,
+          1.3
+        ],
+        "BaseDamageAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Ezreal fires a bolt of energy, dealing 20/45/70/95/120 (+130% AD) (+40% AP) physical damage to the first enemy hit and reducing his Ability Cooldowns by 1.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Essence Flux",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        8,
+        8,
+        8,
+        8
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          135,
+          190,
+          245,
+          300
+        ],
+        "ManaReturn": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ],
+        "DetonationTimeout": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "APRatio": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ]
+      },
+      "resolvedDescription": "Ezreal fires a magical orb that sticks to the first champion, structure, or epic jungle monster hit for 4 seconds. If Ezreal hits that target with an Attack or Ability, it detonates, dealing 80/135/190/245/300 (+100% bonus AD) (+90% AP) magic damage. Detonating with an Ability refunds the Mana cost of that Ability plus 60 Mana.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Arcane Shift",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        23,
+        20,
+        17,
+        14
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "MissileRange": [
+          750,
+          750,
+          750,
+          750,
+          750
+        ],
+        "CherryBonusHaste": [
+          15,
+          15,
+          15,
+          15,
+          15
+        ],
+        "EAPRatio": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Ezreal teleports then fires a bolt at the nearest enemy, dealing 80/130/180/230/280 (+60% bonus AD) (+75% AP) magic damage. The bolt prioritizes enemies affected by Essence Flux.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Trueshot Barrage",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        105,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          350,
+          550,
+          750
+        ],
+        "DamageReductionPerHit": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MinimumDamagePercent": [
+          0.3,
+          0.3,
+          0.3
+        ],
+        "RAPRatio": [
+          1.1,
+          1.1,
+          1.1
+        ],
+        "BaseDamageMinionMonster": [
+          150,
+          225,
+          300
+        ]
+      },
+      "resolvedDescription": "Ezreal fires a massive energy arc that deals 350/550/750 (+100% bonus AD) (+110% AP) magic damage. Damage to minions and non-epic jungle monsters is reduced to 150/225/300 (+100% bonus AD) (+110% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

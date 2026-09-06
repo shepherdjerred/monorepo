@@ -1,0 +1,366 @@
+{
+  "championKey": "Swain",
+  "championName": "Swain",
+  "abilities": {
+    "passive": {
+      "name": "Ravenous Flock",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "SoulCollectionRange": [
+          1100
+        ],
+        "HealthIncrement": [
+          15
+        ]
+      },
+      "resolvedDescription": "Swain's ravens collect Soul Fragments that heal him and permanently increase his maximum health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Death's Hand",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        750,
+        750,
+        750,
+        750,
+        750
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "FirstBoltAPRatio": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "ExtraBoltRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "BoundaryCheckRange": [
+          725,
+          725,
+          725,
+          725,
+          725
+        ],
+        "MaxDamageMultiTOOLTIP": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Swain unleashes 5 eldritch bolts, dealing 60/90/120/150/180 (+45% AP) magic damage plus 15/22.5/30/37.5/45 (+11.25% AP) magic damage per bolt past the first (max 120/180/240/300/360 (+90% AP) magic damage).",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Vision of Empire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        21,
+        20,
+        19,
+        18
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        5500,
+        6000,
+        6500,
+        7000,
+        7500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MinionMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Slow": [
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5,
+          -0.5
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "RevealDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "EffectRadius": [
+          325,
+          325,
+          325,
+          325,
+          325
+        ],
+        "VisionRadius": [
+          420,
+          420,
+          420,
+          420,
+          420
+        ]
+      },
+      "resolvedDescription": "Swain opens a demon eye, revealing a location for 1.5 seconds, then deals 70/105/140/175/210 (+60% AP) magic damage and Slows by 50% for 1.5 seconds. Champions hit grant Swain a Soul Fragment and are revealed for 6 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Nevermove",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "E2Damage": [
+          90,
+          130,
+          170,
+          210,
+          250
+        ],
+        "E2Ratio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "RootDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "PullDistance": [
+          290,
+          290,
+          290,
+          290,
+          290
+        ],
+        "CooldownRefund": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ExplosionRadius": [
+          205,
+          205,
+          205,
+          205,
+          205
+        ]
+      },
+      "resolvedDescription": "Swain launches a wave of demonic power that returns, detonating on the first enemy hit to deal 90/130/170/210/250 (+70% AP) magic damage and Root enemies in the area for 1.5 seconds. Rooting a champion allows Swain to reactivate this ability to pull all champions Rooted by Nevermove toward him, gaining a Soul Fragment for each.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Demonic Ascension",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        120,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "DamagePerSecond": [
+          15,
+          25,
+          35
+        ],
+        "DamageAPRatio": [
+          0.04,
+          0.04,
+          0.04
+        ],
+        "HealPerSecond": [
+          15,
+          30,
+          45
+        ],
+        "HealAPRatio": [
+          0.05,
+          0.05,
+          0.05
+        ],
+        "HealHPRatio": [
+          0.015,
+          0.015,
+          0.015
+        ],
+        "MinionMonsterHealReduction": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "DemonPowerMax": [
+          50,
+          50,
+          50
+        ],
+        "DemonPowerDegen": [
+          10,
+          10,
+          10
+        ],
+        "DemonPowerRegen": [
+          20,
+          20,
+          20
+        ],
+        "DemonflareDamageBase": [
+          150,
+          250,
+          350
+        ],
+        "DemonflareDamageRatio": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "DemonflareSlowAmount": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DemonflareSlowDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AmpTime": [
+          5,
+          5,
+          5
+        ],
+        "DegenAmpAmount": [
+          15,
+          15,
+          15
+        ],
+        "DemonflareCastDelay": [
+          2,
+          2,
+          2
+        ],
+        "MaxDemonflareCast": [
+          100,
+          100,
+          100
+        ],
+        "TimeBetweenTicks": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DemonflareCooldownTooltip": [
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Swain frees the demon, which deals 15/25/35 (+4% AP) magic damage and drains 15/30/45 (+5% AP) (+1.5% bonus Health) Health per second from nearby enemies. His Demonic Energy depletes over time but can be recharged indefinitely by draining enemy Champions and is fully restored on Champion takedowns. After 2 seconds and every 8 seconds thereafter, Swain can cast Demonflare while transformed, which deals 150/250/350 (+40% AP) magic damage and Slows enemies by 50%, decaying over 1.5s.",
+      "unresolved": []
+    }
+  }
+}

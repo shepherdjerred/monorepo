@@ -1,0 +1,320 @@
+{
+  "championKey": "Milio",
+  "championName": "Milio",
+  "abilities": {
+    "passive": {
+      "name": "Fired Up!",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaxMonsterDamage": [
+          100
+        ],
+        "BurnDuration": [
+          1.5
+        ],
+        "BaseDamageStart": [
+          10
+        ],
+        "BaseDamageEnd": [
+          50
+        ]
+      },
+      "resolvedDescription": "Milio's abilities enchant allies on touch, making their next damage deal a burst of extra damage and burn the target.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Ultra Mega Fire Kick",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1200,
+        1200,
+        1200,
+        1200,
+        1200
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "FallDamage": [
+          80,
+          140,
+          200,
+          260,
+          320
+        ],
+        "FallTime": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "FallRadius": [
+          250,
+          250,
+          250,
+          250,
+          250
+        ],
+        "KnockbackDistance": [
+          140,
+          140,
+          140,
+          140,
+          140
+        ],
+        "KnockbackMinionDistance": [
+          340,
+          340,
+          340,
+          340,
+          340
+        ],
+        "ImpactAdjustment": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "ExtraVisionDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MinionFallRadius": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ],
+        "MinionFallTime": [
+          0.9,
+          0.9,
+          0.9,
+          0.9,
+          0.9
+        ],
+        "RefundRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Milio kicks a fireball, Knocking Back the first enemy hit. If it hits, the ball bounces past them and explodes, dealing 80/140/200/260/320 (+120% AP) magic damage to surrounding enemies and Slowing them by {{ slowamountpercent }} for 1.5 seconds. Hitting at least one enemy champion with Ultra Mega Fire Kick refunds 50% of it's Mana cost.",
+      "unresolved": [
+        "slowamountpercent"
+      ]
+    },
+    "W": {
+      "name": "Cozy Campfire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        29,
+        27,
+        25,
+        23,
+        21
+      ],
+      "costByRank": [
+        90,
+        100,
+        110,
+        120,
+        130
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "ZoneDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "Radius": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "RangePctIncrease": [
+          0.1,
+          0.125,
+          0.15,
+          0.175,
+          0.2
+        ],
+        "HealFrequencySeconds": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "TotalHealingOverTime": [
+          70,
+          90,
+          110,
+          130,
+          150
+        ],
+        "HealAPRatio": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ]
+      },
+      "resolvedDescription": "Milio creates a hearth that follows ally champions for 6 seconds. Ally champions nearby gain 10/12.5/15/17.5/20% Attack Range and restore 70/90/110/130/150 (+15% AP) Health over the duration. The hearth also applies Fired Up! every 3 seconds. Recast: Change the hearth's follow ally.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Warm Hugs",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "MoveSpeedAmount": [
+          0.12,
+          0.14,
+          0.16,
+          0.18,
+          0.2
+        ],
+        "MoveSpeedDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "ShieldBase": [
+          45,
+          75,
+          105,
+          135,
+          165
+        ],
+        "DecayDelay": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ]
+      },
+      "resolvedDescription": "Milio wraps an ally champion in protective flames, granting 45/75/105/135/165 (+45% AP) Shield and 12/14/16/18/20% Move Speed for 2.5 seconds. This ability has 2 charges and the effects stack on repeat targets.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Breath of Life",
+      "maxRank": 3,
+      "cooldownByRank": [
+        160,
+        145,
+        130
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "HealBase": [
+          150,
+          250,
+          350
+        ],
+        "TenacityDuration": [
+          3,
+          3,
+          3
+        ],
+        "TenacityAmount": [
+          0.65,
+          0.65,
+          0.65
+        ],
+        "HealFXDelay": [
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Milio unleashes a wave of soothing flames on nearby ally champions, cleansing Disabling and Immobilizing effects, restoring 150/250/350 (+50% AP) Health, and granting 65% Tenacity for 3 seconds.",
+      "unresolved": []
+    }
+  }
+}

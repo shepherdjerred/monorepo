@@ -1,0 +1,294 @@
+{
+  "championKey": "Hwei",
+  "championName": "Hwei",
+  "abilities": {
+    "passive": {
+      "name": "Signature of the Visionary",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "InkTimeout": [
+          25000
+        ],
+        "Duration": [
+          4
+        ]
+      },
+      "resolvedDescription": "Hwei primes enemy champions he damages with his abilities for his signature finishing touch. Hitting an enemy with a second damaging spell completes his signature, leaving it beneath them. The signature detonates after a short delay, dealing magic damage to all enemies in range.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Subject: Disaster",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        80,
+        90,
+        100,
+        110,
+        120
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Tooltip_QQBaseDamage": [
+          50,
+          80,
+          110,
+          140,
+          170
+        ],
+        "Tooltip_QQBonusDamage": [
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "Tooltip_QWBaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "Tooltip_QWBonusDamageMult": [
+          2,
+          2.375,
+          2.75,
+          3.125,
+          3.5
+        ],
+        "Tooltip_QEBaseDamage": [
+          20,
+          35,
+          50,
+          65,
+          80
+        ],
+        "Tooltip_QEBaseDPS": [
+          20,
+          35,
+          50,
+          65,
+          80
+        ]
+      },
+      "resolvedDescription": "Hwei paints visions of disaster that deal large damage to enemies. Devastating Fire Hwei launches a blazing fast fireball that explodes on the first enemy hit, dealing 50/80/110/140/170 (+80% AP) plus 3/4/5/6/7% max health magic damage. Severing Bolt Hwei strikes over far distances with a delayed lightning bolt, dealing 60/85/110/135/160 (+30% AP) magic damage. Hitting an Isolated or Immobilized target increases the damage up to {{ tooltip_qwbonusdamage }} magic damage, based on the target's missing health. Molten Fissure Hwei unleashes a path of eruptions, dealing 20/35/50/65/80 (+30% AP) magic damage in an area and leaving behind pools of lava that Slow enemies by {{ spell.hweiqe:slowpercent }}% and deal 20/35/50/65/80 (+24% AP) magic damage per second for {{ spell.hweiqe:duration }} seconds.",
+      "unresolved": [
+        "tooltip_qwbonusdamage",
+        "spell.hweiqe:slowpercent",
+        "spell.hweiqe:duration"
+      ]
+    },
+    "W": {
+      "name": "Subject: Serenity",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17.5,
+        17,
+        16.5,
+        16
+      ],
+      "costByRank": [
+        90,
+        95,
+        100,
+        105,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Tooltip_WQBaseMoveSpeed": [
+          30,
+          32.5,
+          35,
+          37.5,
+          40
+        ],
+        "Tooltip_WQAreaDuration": [
+          4,
+          4.5,
+          5,
+          5.5,
+          6
+        ],
+        "Tooltip_WWShieldAmountBase": [
+          100,
+          140,
+          180,
+          220,
+          260
+        ],
+        "Tooltip_WEBaseOnHitDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "Tooltip_WEOnHitManaRestore": [
+          45,
+          50,
+          55,
+          60,
+          65
+        ]
+      },
+      "resolvedDescription": "Hwei paints visions of serenity that provide utility for himself and allied champions. Fleeting Current Hwei launches a current of swift waters in a line that grants allies {{ tooltip_wqmovespeed }} Move Speed. Pool of Reflection Hwei forms a protective pool that grants 100/140/180/220/260 (+60% AP) Shields over time to allied champions inside reduced by {{ spell.hweiww:tooltipallymod*100 }}% for allies. Stirring Lights Hwei creates three swirling lights that empower his next three Abilities or Attacks to deal an additional 20/30/40/50/60 (+15% AP) magic damage and restore 45/50/55/60/65 Mana each.",
+      "unresolved": [
+        "tooltip_wqmovespeed",
+        "spell.hweiww:tooltipallymod*100"
+      ]
+    },
+    "E": {
+      "name": "Subject: Torment",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11.5,
+        11,
+        10.5,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "Tooltip_EQBaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "Tooltip_EWBaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "Tooltip_EWRootDuration": [
+          1.2,
+          1.4,
+          1.6,
+          1.8,
+          2
+        ],
+        "Tooltip_EEBaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "Tooltip_EESlowAmount": [
+          40,
+          47.5,
+          55,
+          62.5,
+          70
+        ],
+        "Tooltip_EQFleeDuration": [
+          1,
+          1.125,
+          1.25,
+          1.375,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Hwei paints visions of torment that control enemies. Grim Visage Hwei launches a terrifying face that causes the first enemy hit to Flee for 1/1.125/1.25/1.375/1.5 second(s) and take 70/110/150/190/230 (+65% AP) magic damage. Gaze of the Abyss Hwei forms an eye that lingers and provides vision locking onto the first enemy champion that enters and launching a homing missile that Roots the first enemy hit for 1.2/1.4/1.6/1.8/2 seconds dealing 70/110/150/190/230 (+65% AP) magic damage. Crushing Maw Hwei paints a set of jaws at a target location that Drags enemies to the center dealing 70/110/150/190/230 (+65% AP) magic damage and Slowing enemies caught by 40/47.5/55/62.5/70% decaying over 1.25 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Spiraling Despair",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1300,
+        1300,
+        1300
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          200,
+          325,
+          450
+        ],
+        "Duration": [
+          3,
+          3,
+          3
+        ],
+        "BaseDamageOverTime": [
+          10,
+          20,
+          30
+        ],
+        "SlowPercentPerStack": [
+          10,
+          10,
+          10
+        ],
+        "SlowDuration": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "MaxDamageHelper": [
+          230,
+          360,
+          490
+        ]
+      },
+      "resolvedDescription": "Hwei launches a vision of pure despair that sticks to an enemy champion for 3 seconds. The vision expands over time applying a Slow to enemies for 10% stacking every 0.25 seconds, and dealing 10/20/30 (+5% AP) magic damage per second. Upon completion, the vision shatters, dealing 200/325/450 (+80% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

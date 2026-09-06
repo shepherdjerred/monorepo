@@ -1,0 +1,341 @@
+{
+  "championKey": "Nilah",
+  "championName": "Nilah",
+  "abilities": {
+    "passive": {
+      "name": "Joy Unending",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ExperiencePercentage": [
+          0.5
+        ],
+        "HealDistance": [
+          1000
+        ],
+        "ShieldIncrease": [
+          0.15
+        ],
+        "HealingIncrease": [
+          0.075
+        ],
+        "ShieldMaxDuration": [
+          4
+        ]
+      },
+      "resolvedDescription": "Nilah gains increased experience from last-hitting minions along with the ability to enhance and share nearby healing and shielding from her allies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Formless Blade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          0,
+          10,
+          20,
+          30,
+          40
+        ],
+        "CheatingThreshold": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "QADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CastRange": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "CritHealScalar": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "CritArmorPenScalar": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "MinionMod": [
+          0.33,
+          0.33,
+          0.33,
+          0.33,
+          0.33
+        ],
+        "BuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "RangeIncrease": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "MonsterMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ShieldDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "ActiveCritScaling": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Passive: Nilah gains {{ critarmorpen }} Armor Penetration, and her Attacks against champions restore {{ critlifesteal }} damage dealt as Health. Overhealing from this is converted into a Shield for 4 seconds. Active: Nilah cracks her whip-blade, dealing {{ damagecalc }} physical damage. If an enemy unit or structure is hit, Nilah gains 125 Attack Range and 10-60 (based on level)% Attack Speed, and her Attacks hit in a cone for 4 seconds.",
+      "unresolved": [
+        "critarmorpen",
+        "critlifesteal",
+        "damagecalc"
+      ]
+    },
+    "W": {
+      "name": "Jubilant Veil",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        25,
+        24,
+        23,
+        22
+      ],
+      "costByRank": [
+        60,
+        45,
+        30,
+        15,
+        0
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        150,
+        150,
+        150,
+        150,
+        150
+      ],
+      "dataValues": {
+        "MoveSpeedPercent": [
+          0.15,
+          0.175,
+          0.2,
+          0.225,
+          0.25
+        ],
+        "BaseDuration": [
+          2.25,
+          2.25,
+          2.25,
+          2.25,
+          2.25
+        ],
+        "ShareBaseDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ExtensionBonus": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "AreaTriggerSize": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "MagicDamageReduction": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Nilah envelops herself in mist for 2.25 seconds, becoming Ghosted, gaining 15/17.5/20/22.5/25% Move Speed, dodging Attacks, and reducing magic damage taken by 25%. While active, touching allied champions envelops them in mist, granting the same benefits for 1.5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Slipstream",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          70,
+          80,
+          90,
+          100
+        ],
+        "DashSpeed": [
+          2200,
+          2200,
+          2200,
+          2200,
+          2200
+        ],
+        "DashTotalDistance": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ]
+      },
+      "resolvedDescription": "Nilah dashes through a unit, dealing 60/70/80/90/100 (+20% bonus AD) physical damage to any enemies she passes through.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Apotheosis",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        95,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "Duration": [
+          6,
+          6,
+          6
+        ],
+        "DamageBase": [
+          125,
+          225,
+          325
+        ],
+        "ShieldBase": [
+          65,
+          115,
+          165
+        ],
+        "DamagePerTick": [
+          15,
+          25,
+          35
+        ],
+        "OtherHealingPercent": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "Microslow": [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        "NumTicks": [
+          6,
+          6,
+          6
+        ],
+        "TickDelay": [
+          0.2,
+          0.2,
+          0.2
+        ]
+      },
+      "resolvedDescription": "Nilah whirls her whip-blade, dealing 60/100/140 (+40% bonus AD) physical damage over 1 second, then finishes with a burst of 125/225/325 (+100% bonus AD) physical damage that also Pulls nearby enemies toward her. Apotheosis heals Nilah and her nearby allies for {{ champhealingpercent }} (+{{ spell.nilahq:critlifesteal }} Formless Blade) of the damage dealt to enemy champions, converting any overhealing into a Shield for 6 seconds.",
+      "unresolved": [
+        "champhealingpercent",
+        "spell.nilahq:critlifesteal"
+      ]
+    }
+  }
+}

@@ -1,0 +1,312 @@
+{
+  "championKey": "Sylas",
+  "championName": "Sylas",
+  "abilities": {
+    "passive": {
+      "name": "Petricite Burst",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "AoE": [
+          300
+        ],
+        "PassiveCharges": [
+          3
+        ],
+        "PassiveDuration": [
+          4
+        ],
+        "CheatingThreshold": [
+          25
+        ],
+        "PassiveAttackSpeed": [
+          1.25
+        ],
+        "MonsterDamageMulti": [
+          1.15
+        ]
+      },
+      "resolvedDescription": "After casting a spell, Sylas stores a charge of Petricite Burst. Sylas's basic attacks will expend a charge and whirl his energized chains around him dealing bonus magic damage to enemies hit. While Sylas has a charge of Petricite Burst, he gains attack speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Chain Lash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        55,
+        55,
+        55,
+        55,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        775,
+        775,
+        775,
+        775,
+        775
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "APRatio1": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "ExplosionBaseDamage": [
+          60,
+          115,
+          170,
+          225,
+          280
+        ],
+        "APRatio2": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "SlowAmount": [
+          0.15,
+          0.2,
+          0.25,
+          0.3,
+          0.35
+        ],
+        "MinionMod": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "Q2AoE": [
+          180,
+          180,
+          180,
+          180,
+          180
+        ],
+        "DetonationDelay": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MonsterMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Sylas lashes his chains out, dealing 40/60/80/100/120 (+40% AP) magic damage and Slowing by 15/20/25/30/35% for 1.5 seconds. The place where the chains intersect explodes, dealing a further 60/115/170/225/280 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Kingslayer",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        10.5,
+        9,
+        7.5,
+        6
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "Damage": [
+          75,
+          110,
+          145,
+          180,
+          215
+        ],
+        "Healing": [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        "MaxHealingPercentAmp": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MaxExecuteThreshold": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "DamageAPRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "HealMinAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "HealMinHPRatio": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ]
+      },
+      "resolvedDescription": "Sylas lunges at an enemy with magical force dealing 75/110/145/180/215 (+60% AP) magic damage. Against champions, Sylas restores between 20/40/60/80/100 (+30% AP) (+5% bonus Health) and 40/80/120/160/200 (+60% AP) (+10% bonus Health) Health based on his missing Health (max healing at or below 40% Health).",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Abscond / Abduct",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "PullDamage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "KnockUpDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Sylas quickly dashes, and prepares a Recast for 3.5 seconds. Recast: Sylas throws his chains, pulling himself to the first enemy hit, dealing 80/130/180/230/280 (+80% AP) magic damage, and Knocking Up for 0.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Hijack",
+      "maxRank": 3,
+      "cooldownByRank": [
+        80,
+        55,
+        30
+      ],
+      "costByRank": [
+        75,
+        75,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "EnemyCooldownPercent": [
+          2,
+          2,
+          2
+        ],
+        "EnemyCooldownTooltip": [
+          200,
+          200,
+          200
+        ],
+        "MinimumEnemyCooldown": [
+          40,
+          40,
+          40
+        ],
+        "UltHoldDuration": [
+          90,
+          90,
+          90
+        ]
+      },
+      "resolvedDescription": "Sylas hijacks an enemy champion, allowing him to cast a copy of their ultimate Ability, based on his Ultimate level and using his stats. Hijacking an enemy places a Cooldown on them for {{ pertargetcooldown }}% (modified by Sylas' Ability Haste) of the enemy's ultimate's Cooldown, with a minimum of 40 seconds, during which time Sylas cannot hijack them again.",
+      "unresolved": [
+        "pertargetcooldown"
+      ]
+    }
+  }
+}
