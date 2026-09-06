@@ -1,6 +1,6 @@
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
-import { runCommand } from "./data-dragon-shell.ts";
+import { runCommand } from "#activities/data-dragon-shell.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const MAIN_BRANCH = "main";

@@ -1,5 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
+  // Each workspace has an isolated @playwright/test installation. Knip loads
+  // all Playwright configs in one process, while Playwright deliberately throws
+  // when its package is initialized more than once. Keep configs as explicit
+  // entries below and let the browser lanes own their config validation.
+  "playwright": false,
   "workspaces": {
     ".": {
       "entry": [".buildkite/scripts/**/*.ts"],
@@ -14,6 +19,7 @@
     },
     "packages/alert-dashboard": {
       "entry": [
+        "playwright.config.ts",
         "src/**/*.test.ts",
         "integration/**/*.ts",
         "e2e/**/*.ts",
@@ -59,11 +65,11 @@
       "vite": false
     },
     "packages/sjer.red": {
-      "entry": ["src/**/*.astro"],
+      "entry": ["playwright.config.ts", "src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro,css,mdx,sass,scss}"]
     },
     "packages/docs/wiki": {
-      "entry": ["public/posthog.js"]
+      "entry": ["playwright.config.ts", "public/posthog.js"]
     },
     "packages/glitter": {
       "entry": ["public/posthog.js"]
@@ -155,6 +161,9 @@
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts", "prisma/**/*.prisma"]
     },
+    "packages/scout-for-lol/packages/activity": {
+      "entry": ["playwright.config.ts"]
+    },
     "packages/scout-for-lol/packages/data": {
       "entry": ["scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
@@ -180,8 +189,19 @@
       "project": ["src/**/*.{ts,tsx,css}", "*.ts"]
     },
     "packages/scout-for-lol/packages/evals": {
-      "entry": ["src/scripts/**/*.ts", "src/**/*.test.ts", "e2e/**/*.ts"],
+      "entry": [
+        "playwright.config.ts",
+        "src/scripts/**/*.ts",
+        "src/**/*.test.ts",
+        "e2e/**/*.ts"
+      ],
       "project": ["src/**/*.{ts,tsx,css}", "e2e/**/*.ts", "*.ts"]
+    },
+    "packages/scout-for-lol/packages/design-audit": {
+      "entry": ["playwright.config.ts"]
+    },
+    "packages/scout-for-lol/packages/design-system": {
+      "entry": ["playwright.config.ts"]
     },
     "packages/scout-for-lol/packages/desktop": {
       "entry": ["src/main.tsx"],
