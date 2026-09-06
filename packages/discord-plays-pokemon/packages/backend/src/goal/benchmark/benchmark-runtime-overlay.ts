@@ -13,7 +13,32 @@ const REQUIRED_RUNTIME_PATHS = [
 ] as const;
 
 const OPTIONAL_RUNTIME_PATHS = OPTIONAL_CODEX_INSTRUCTION_PATHS;
-const POKEMONCTL_RELATIVE_PATH = "packages/backend/src/goal/pokemonctl.ts";
+const POKEMONCTL_RELATIVE_PATH =
+  "packages/backend/src/goal/control/pokemonctl.ts";
+/** A checkout from before the goal directory split has this flat path instead. */
+const LEGACY_POKEMONCTL_RELATIVE_PATH =
+  "packages/backend/src/goal/pokemonctl.ts";
+
+/**
+ * The worker's own static imports name the current goal/control/ and
+ * goal/game/ layout; when the target implementation predates that split, its
+ * package.json #src/* alias only resolves the flat pre-split paths, so
+ * retarget the piped source to match before it runs against that checkout.
+ */
+export function retargetWorkerSourceForLegacyGoalLayout(
+  source: string,
+): string {
+  return source
+    .replace(
+      "#src/goal/control/control-server.ts",
+      "#src/goal/control-server.ts",
+    )
+    .replace("#src/goal/control/pokemonctl.ts", "#src/goal/pokemonctl.ts")
+    .replace(
+      "#src/goal/game/game-observation.ts",
+      "#src/goal/game-observation.ts",
+    );
+}
 
 function pathIsInside(parent: string, candidate: string): boolean {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
@@ -88,6 +113,7 @@ export function benchmarkRuntimeOverlayDirectory(
 export async function prepareBenchmarkRuntimeOverlay(
   implementationRoot: string,
   runDirectory: string,
+  usesLegacyGoalControlLayout: boolean,
 ): Promise<string> {
   const runtimeDirectory = benchmarkRuntimeOverlayDirectory(
     implementationRoot,
@@ -95,7 +121,9 @@ export async function prepareBenchmarkRuntimeOverlay(
   );
   const pokemonctlSource = path.join(
     implementationRoot,
-    POKEMONCTL_RELATIVE_PATH,
+    usesLegacyGoalControlLayout
+      ? LEGACY_POKEMONCTL_RELATIVE_PATH
+      : POKEMONCTL_RELATIVE_PATH,
   );
   if (!(await pathExists(pokemonctlSource))) {
     throw new Error(

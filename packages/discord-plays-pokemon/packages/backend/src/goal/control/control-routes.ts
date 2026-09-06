@@ -15,9 +15,9 @@ import {
 } from "#src/game/command/chord-executor.ts";
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
-import { formatGameStateForPrompt } from "./game-state-summary.ts";
-import type { FsEntry, GrepMatch } from "./goal-memory.ts";
-import { truncateStateForToolLog } from "./goal-tool-log.ts";
+import { formatGameStateForPrompt } from "#src/goal/game/game-state-summary.ts";
+import type { FsEntry, GrepMatch } from "#src/goal/goal-memory.ts";
+import { truncateStateForToolLog } from "#src/goal/goal-tool-log.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
 import {
   mapExitsResponse,

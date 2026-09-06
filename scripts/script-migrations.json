@@ -253,7 +253,7 @@
       ]
     },
     {
-      "source": "packages/discord-plays-pokemon/packages/backend/src/goal/pokemonctl-entrypoint.sh",
+      "source": "packages/discord-plays-pokemon/packages/backend/src/goal/control/pokemonctl-entrypoint.sh",
       "disposition": "retain",
       "reason": "Minimal executable image shim delegates directly to the installed Bun CLI module"
     },

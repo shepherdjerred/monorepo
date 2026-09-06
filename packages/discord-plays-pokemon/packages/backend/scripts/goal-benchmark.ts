@@ -5,13 +5,13 @@ import { z } from "zod";
 import {
   buildBenchmarkSummary,
   parseBenchmarkArgs,
-} from "#src/goal/benchmark-harness.ts";
+} from "#src/goal/benchmark/benchmark-harness.ts";
 import {
   benchmarkGitWorktrees,
   requireBenchmarkPathOutsideGitWorktrees,
-} from "#src/goal/benchmark-output-location.ts";
-import { captureCatchBenchmarkSourceSave } from "#src/goal/benchmark-source-save.ts";
-import { runBenchmarkSeries } from "#src/goal/benchmark-series.ts";
+} from "#src/goal/benchmark/benchmark-output-location.ts";
+import { captureCatchBenchmarkSourceSave } from "#src/goal/benchmark/benchmark-source-save.ts";
+import { runBenchmarkSeries } from "#src/goal/benchmark/benchmark-series.ts";
 import {
   commandOutput,
   requireCleanGitWorktree,
@@ -20,17 +20,17 @@ import {
   sha256File,
   writeBenchmarkJson,
   type BenchmarkImplementation,
-} from "#src/goal/benchmark-run.ts";
+} from "#src/goal/benchmark/benchmark-run.ts";
 
 const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
 const WORKER_SOURCE = path.join(import.meta.dir, "goal-benchmark-worker.ts");
 const EVALUATOR_SOURCE = path.resolve(
   import.meta.dir,
-  "../src/goal/benchmark-evaluator.ts",
+  "../src/goal/benchmark/benchmark-evaluator.ts",
 );
 const SAVE_ORACLE_SOURCE = path.resolve(
   import.meta.dir,
-  "../src/goal/benchmark-save-oracle.ts",
+  "../src/goal/benchmark/benchmark-save-oracle.ts",
 );
 
 const UpstreamSchema = z.looseObject({
@@ -105,8 +105,6 @@ async function resolveImplementationRoot(
     "src/emulator/emulator.ts",
     "src/game/events/watcher.ts",
     "src/goal/goal-manager.ts",
-    "src/goal/control-server.ts",
-    "src/goal/pokemonctl.ts",
     "node_modules/@openai/codex-sdk/package.json",
     "node_modules/zod/package.json",
   ];
@@ -116,6 +114,8 @@ async function resolveImplementationRoot(
       "implementation file",
     );
   }
+  const usesLegacyGoalControlLayout =
+    await resolveGoalControlLayout(backendRoot);
   await requireFile(
     path.join(packageRoot, "wasm-src/upstream.json"),
     "implementation upstream manifest",
@@ -123,11 +123,38 @@ async function resolveImplementationRoot(
   return {
     packageRoot,
     backendRoot,
+    usesLegacyGoalControlLayout,
     gitRoot: await commandOutput(
       ["git", "rev-parse", "--show-toplevel"],
       packageRoot,
     ),
   };
+}
+
+/**
+ * A clean checkout from before the goal directory split has
+ * src/goal/control-server.ts and src/goal/pokemonctl.ts; current checkouts
+ * have both under src/goal/control/. Accept either complete layout so the
+ * benchmark can still compare this refactor against a pre-refactor target.
+ */
+async function resolveGoalControlLayout(backendRoot: string): Promise<boolean> {
+  const currentLayoutExists =
+    (await Bun.file(
+      path.join(backendRoot, "src/goal/control/control-server.ts"),
+    ).exists()) &&
+    (await Bun.file(
+      path.join(backendRoot, "src/goal/control/pokemonctl.ts"),
+    ).exists());
+  if (currentLayoutExists) return false;
+  const legacyLayoutExists =
+    (await Bun.file(
+      path.join(backendRoot, "src/goal/control-server.ts"),
+    ).exists()) &&
+    (await Bun.file(path.join(backendRoot, "src/goal/pokemonctl.ts")).exists());
+  if (legacyLayoutExists) return true;
+  throw new Error(
+    `implementation file not found: ${path.join(backendRoot, "src/goal/control/control-server.ts")}`,
+  );
 }
 
 async function main(): Promise<void> {

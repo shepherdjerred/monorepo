@@ -20,6 +20,7 @@ import {
 import {
   benchmarkRuntimeOverlayDirectory,
   prepareBenchmarkRuntimeOverlay,
+  retargetWorkerSourceForLegacyGoalLayout,
 } from "./benchmark-runtime-overlay.ts";
 import {
   artifactPaths,
@@ -39,6 +40,8 @@ export type BenchmarkImplementation = {
   packageRoot: string;
   backendRoot: string;
   gitRoot: string;
+  /** True when the target checkout predates the goal/control/ directory split. */
+  usesLegacyGoalControlLayout: boolean;
 };
 export type BenchmarkProvenanceInput = {
   inputSaveSha256: string;
@@ -156,7 +159,10 @@ async function runWorker(
   configPath: string,
   runDirectory: string,
 ): Promise<number> {
-  const source = await Bun.file(workerSource).text();
+  let source = await Bun.file(workerSource).text();
+  if (implementation.usesLegacyGoalControlLayout) {
+    source = retargetWorkerSourceForLegacyGoalLayout(source);
+  }
   const child = Bun.spawn(["bun", "run", "-", "--config", configPath], {
     cwd: implementation.backendRoot,
     env: childEnvironment(implementation.packageRoot),
@@ -241,6 +247,7 @@ export async function runBenchmarkOnce(
   const runtimeDirectory = await prepareBenchmarkRuntimeOverlay(
     implementation.packageRoot,
     runDirectory,
+    implementation.usesLegacyGoalControlLayout,
   );
   await Bun.write(inputSavePath, input.sourceSaveBytes, { createPath: true });
   await Bun.write(runSavePath, input.sourceSaveBytes);

@@ -5,15 +5,15 @@ import {
   framesFromMs,
   type CommandTiming,
 } from "#src/emulator/command-sink.ts";
-import { logGoalTool } from "./goal-tool-log.ts";
+import { logGoalTool } from "#src/goal/goal-tool-log.ts";
 import {
   type GoalControlContext,
   type GoalControlServerOptions,
 } from "./control-context.ts";
 import { jsonResponse, routeRequest } from "./control-routes.ts";
 import { withSpan } from "@shepherdjerred/discord-plays-core/observability/tracing.ts";
-import { GameController } from "./game-controller.ts";
-import { readGameObservation } from "./game-observation.ts";
+import { GameController } from "#src/goal/game/game-controller.ts";
+import { readGameObservation } from "#src/goal/game/game-observation.ts";
 import { enqueueCommand } from "#src/emulator/command-sink.ts";
 
 export type GoalControlServer = ReturnType<typeof Bun.serve>;

@@ -11,7 +11,7 @@ import {
 import {
   PREFERRED_POKEMONCTL_CAPABILITIES,
   verifyPokemonctlCapabilities,
-} from "./goal-capabilities.ts";
+} from "#src/goal/goal-capabilities.ts";
 
 const baseContext: PromptContext = {
   gameStateSummary:
@@ -212,7 +212,12 @@ test("pokemonctl advertises advance and sends one guarded request", async () => 
 
   try {
     const child = Bun.spawn(
-      ["bun", path.join(import.meta.dir, "pokemonctl.ts"), "advance", "--full"],
+      [
+        "bun",
+        path.join(import.meta.dir, "..", "control", "pokemonctl.ts"),
+        "advance",
+        "--full",
+      ],
       {
         env: {
           ...Bun.env,
@@ -244,7 +249,11 @@ test("pokemonctl advertises advance and sends one guarded request", async () => 
     });
 
     const help = Bun.spawn(
-      ["bun", path.join(import.meta.dir, "pokemonctl.ts"), "--help"],
+      [
+        "bun",
+        path.join(import.meta.dir, "..", "control", "pokemonctl.ts"),
+        "--help",
+      ],
       { stdout: "pipe", stderr: "pipe" },
     );
     expect(await help.exited).toBe(0);
