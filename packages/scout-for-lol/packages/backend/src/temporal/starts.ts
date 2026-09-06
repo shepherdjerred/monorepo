@@ -280,7 +280,7 @@ export async function startScoutDuelSeries(
   input: ScoutDuelSeriesInput,
 ): Promise<WorkflowHandle> {
   return await client.workflow.start(SCOUT_WORKFLOW_NAMES.duelSeries, {
-    ...IDEMPOTENT_START_POLICIES,
+    ...RESTART_CLOSED_START_POLICIES,
     workflowId: scoutDuelSeriesWorkflowId(input.stage, input.seriesId),
     taskQueue: scoutTaskQueues(input.stage).workflow,
     args: [input],

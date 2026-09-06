@@ -9,7 +9,8 @@ import type {
 type ObjectiveCrossing = {
   competitorId: string;
   objective: DuelObjective;
-  timestampMs: number;
+  earliestTimestampMs: number;
+  latestTimestampMs: number;
 };
 
 function competitorForPuuid(
@@ -78,7 +79,8 @@ function killCrossings(
       crossings.push({
         competitorId: competitor.id,
         objective: "kills",
-        timestampMs: kill.timestampMs,
+        earliestTimestampMs: kill.timestampMs,
+        latestTimestampMs: kill.timestampMs,
       });
     }
   }
@@ -93,11 +95,12 @@ function laneCsCrossings(
   if (ruleset.laneCsTarget === null) return [];
   const crossed = new Set<string>();
   const crossings: ObjectiveCrossing[] = [];
+  const previousTimestampByCompetitor = new Map<string, number>();
+  const previousCsByCompetitor = new Map<string, number>();
   for (const frame of input.frames.toSorted(
     (left, right) => left.timestampMs - right.timestampMs,
   )) {
     for (const competitor of competitors) {
-      if (crossed.has(competitor.id)) continue;
       const laneCs = frame.participants
         .filter((participant) =>
           competitor.accounts.some(
@@ -105,12 +108,22 @@ function laneCsCrossings(
           ),
         )
         .reduce((total, participant) => total + participant.minionsKilled, 0);
-      if (laneCs >= ruleset.laneCsTarget) {
+      const previousTimestamp =
+        previousTimestampByCompetitor.get(competitor.id) ?? 0;
+      const previousCs = previousCsByCompetitor.get(competitor.id) ?? 0;
+      previousTimestampByCompetitor.set(competitor.id, frame.timestampMs);
+      previousCsByCompetitor.set(competitor.id, laneCs);
+      if (
+        !crossed.has(competitor.id) &&
+        previousCs < ruleset.laneCsTarget &&
+        laneCs >= ruleset.laneCsTarget
+      ) {
         crossed.add(competitor.id);
         crossings.push({
           competitorId: competitor.id,
           objective: "lane_cs",
-          timestampMs: frame.timestampMs,
+          earliestTimestampMs: previousTimestamp,
+          latestTimestampMs: frame.timestampMs,
         });
       }
     }
@@ -132,26 +145,23 @@ function turretCrossings(
   return sorted
     .filter((turret) => turret.timestampMs === first.timestampMs)
     .flatMap((turret) => {
-      const defendingCompetitor = competitors.find((competitor) =>
+      const scoringCompetitor = competitors.find((competitor) =>
         competitor.accounts.some((account) =>
           input.participants.some(
             (participant) =>
               participant.puuid === account.puuid &&
-              participant.teamId === turret.destroyedTeamId,
+              participant.teamId === turret.scoringTeamId,
           ),
         ),
       );
-      const winningCompetitor = competitors.find(
-        (competitor) => competitor.id !== defendingCompetitor?.id,
-      );
-      return defendingCompetitor === undefined ||
-        winningCompetitor === undefined
+      return scoringCompetitor === undefined
         ? []
         : [
             {
-              competitorId: winningCompetitor.id,
+              competitorId: scoringCompetitor.id,
               objective: "first_turret" as const,
-              timestampMs: turret.timestampMs,
+              earliestTimestampMs: turret.timestampMs,
+              latestTimestampMs: turret.timestampMs,
             },
           ];
     });
@@ -189,7 +199,9 @@ export function evaluateDuelGame(
     ...killCrossings(ruleset, competitors, input),
     ...laneCsCrossings(ruleset, competitors, input),
     ...turretCrossings(ruleset, competitors, input),
-  ].toSorted((left, right) => left.timestampMs - right.timestampMs);
+  ].toSorted(
+    (left, right) => left.earliestTimestampMs - right.earliestTimestampMs,
+  );
   const first = crossings[0];
   if (first === undefined) {
     return reviewEvidence(
@@ -199,9 +211,28 @@ export function evaluateDuelGame(
         : "No configured objective has been reached",
     );
   }
+  if (
+    crossings.some(
+      (crossing, index) =>
+        index > 0 &&
+        (first.earliestTimestampMs !== first.latestTimestampMs ||
+          crossing.earliestTimestampMs !== crossing.latestTimestampMs) &&
+        crossing.earliestTimestampMs <= first.latestTimestampMs &&
+        first.earliestTimestampMs <= crossing.latestTimestampMs,
+    )
+  ) {
+    return reviewEvidence(
+      input,
+      "A participant-frame CS crossing overlaps another objective, so the winner order is indeterminate",
+    );
+  }
   const simultaneousCompetitors = new Set(
     crossings
-      .filter((crossing) => crossing.timestampMs === first.timestampMs)
+      .filter(
+        (crossing) =>
+          crossing.earliestTimestampMs === first.earliestTimestampMs &&
+          crossing.latestTimestampMs === first.latestTimestampMs,
+      )
       .map((crossing) => crossing.competitorId),
   );
   if (simultaneousCompetitors.size > 1) {
@@ -215,7 +246,7 @@ export function evaluateDuelGame(
     state: "verified",
     winnerCompetitorId: first.competitorId,
     objective: first.objective,
-    objectiveTimestampMs: first.timestampMs,
+    objectiveTimestampMs: first.latestTimestampMs,
     reason: null,
     participantPuuids: input.participants.map(
       (participant) => participant.puuid,

@@ -13,6 +13,7 @@ import {
 import {
   callRiotOrThrow,
   callRiotOrUndefined,
+  callRiotOrUndefinedOn404,
   type CallRiotConfig,
 } from "#src/league/api/riot-call.ts";
 import { createLogger } from "#src/logger.ts";
@@ -105,7 +106,10 @@ export async function fetchMatchData(
 export async function fetchMatchTimeline(
   matchId: MatchId,
   playerRegion: Region,
-  failureMode: "return_undefined" | "throw" = "return_undefined",
+  failureMode:
+    | "return_undefined"
+    | "return_undefined_on_404"
+    | "throw" = "return_undefined",
 ): Promise<RawTimeline | undefined> {
   const regionalRoute = platformToRegionalRoute(playerRegion);
   const config: CallRiotConfig<RawTimeline> = {
@@ -121,7 +125,12 @@ export async function fetchMatchTimeline(
     sentry: true,
   };
   const fetch = () => riotClient.match.timeline(matchId, regionalRoute);
-  return failureMode === "throw"
-    ? await callRiotOrThrow(config, fetch)
-    : await callRiotOrUndefined(config, fetch);
+  switch (failureMode) {
+    case "throw":
+      return await callRiotOrThrow(config, fetch);
+    case "return_undefined_on_404":
+      return await callRiotOrUndefinedOn404(config, fetch);
+    case "return_undefined":
+      return await callRiotOrUndefined(config, fetch);
+  }
 }

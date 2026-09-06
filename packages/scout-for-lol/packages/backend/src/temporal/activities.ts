@@ -327,13 +327,18 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           case "progression-outbox": {
             const [
               { deliverHallRecordBreakOutbox },
+              { deliverDuelStatusOutbox },
               { reconcileCompetitiveProgression },
             ] = await Promise.all([
               import("#src/progression/hall/outbox.ts"),
+              import("#src/progression/duels/outbox.ts"),
               import("#src/progression/reconcile.ts"),
             ]);
             await reconcileCompetitiveProgression(input.stage);
-            await deliverHallRecordBreakOutbox();
+            await Promise.all([
+              deliverHallRecordBreakOutbox(),
+              deliverDuelStatusOutbox(),
+            ]);
             break;
           }
           case "prediction-ingest":
@@ -410,6 +415,16 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
         reportId: input.reportId,
         phase: "complete",
       });
+    },
+    refreshDuelSeries: async (input) => {
+      const { refreshDuelSeriesWorkflowState } =
+        await import("#src/progression/duels/series-workflow-state.ts");
+      return await refreshDuelSeriesWorkflowState(input);
+    },
+    markDuelSeriesOverdue: async (input) => {
+      const { markDuelSeriesOverdue } =
+        await import("#src/progression/duels/series-workflow-state.ts");
+      await markDuelSeriesOverdue(input);
     },
   };
 }

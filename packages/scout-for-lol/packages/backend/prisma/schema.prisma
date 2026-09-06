@@ -2524,6 +2524,7 @@ model DuelSeries {
   competitorOneId    String
   competitorTwoId    String
   bestOf             Int
+  matchWindowHours   Int       @default(168)
   rulesetJson        String
   seriesState        String    @default("awaiting_acceptance")
   channelId          String

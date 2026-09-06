@@ -78,7 +78,7 @@ function contextAsTags(
 
 /**
  * Internal core: request → metric → parse → audit → policy dispatch.
- * Returns a discriminated result so the two public variants can either
+ * Returns a discriminated result so the public variants can selectively
  * fold failures into `undefined` or rethrow. All shared plumbing
  * (metrics, health updates, breadcrumbs, Sentry capture, S3 save,
  * unknown-key audit log) runs in here exactly once per call.
@@ -179,6 +179,22 @@ async function runRiotCall<T>(
   return { kind: "success", data: parsed.data };
 }
 
+function throwRiotFailure<T>(
+  config: CallRiotConfig<T>,
+  result: Exclude<CallResult<T>, { kind: "success" }>,
+): never {
+  switch (result.kind) {
+    case "validation-failure":
+      throw result.error;
+    case "http-404":
+    case "http-error":
+    case "transport-error":
+      throw result.error instanceof Error
+        ? result.error
+        : new Error(`Riot API call ${config.source} failed (${result.kind})`);
+  }
+}
+
 /**
  * Returns `T` on success; `undefined` on any failure (validation, 404,
  * upstream outage, HTTP error, timeout, transport error). All
@@ -193,6 +209,21 @@ export async function callRiotOrUndefined<T>(
 }
 
 /**
+ * Returns `T` on success and `undefined` only when Riot returns 404. All
+ * validation, upstream, HTTP, timeout, and transport failures throw after
+ * the shared metric/log/Sentry/S3 plumbing runs.
+ */
+export async function callRiotOrUndefinedOn404<T>(
+  config: CallRiotConfig<T>,
+  fn: () => Promise<unknown>,
+): Promise<T | undefined> {
+  const result = await runRiotCall(config, fn);
+  if (result.kind === "success") return result.data;
+  if (result.kind === "http-404") return undefined;
+  throwRiotFailure(config, result);
+}
+
+/**
  * Returns `T` on success; throws on any failure (after full plumbing
  * runs). Validation failures throw the `ZodError`; HTTP/transport
  * failures throw the underlying error.
@@ -202,16 +233,6 @@ export async function callRiotOrThrow<T>(
   fn: () => Promise<unknown>,
 ): Promise<T> {
   const result = await runRiotCall(config, fn);
-  switch (result.kind) {
-    case "success":
-      return result.data;
-    case "validation-failure":
-      throw result.error;
-    case "http-404":
-    case "http-error":
-    case "transport-error":
-      throw result.error instanceof Error
-        ? result.error
-        : new Error(`Riot API call ${config.source} failed (${result.kind})`);
-  }
+  if (result.kind === "success") return result.data;
+  throwRiotFailure(config, result);
 }
