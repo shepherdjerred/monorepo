@@ -116,6 +116,7 @@ const STREAMBOT_VOICE_REALTIME_PATHS = new Set([
   "packages/homelab/src/cdk8s/src/resources/streambot.ts",
   "packages/streambot/Dockerfile",
   "packages/streambot/scripts/voice-corpus-generate.ts",
+  "packages/streambot/scripts/voice-cloud-probe.ts",
   "packages/streambot/scripts/voice-harness.ts",
   "packages/streambot/scripts/voice-model-smoke.ts",
   "packages/streambot/src/config/index.ts",
