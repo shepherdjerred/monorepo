@@ -224,8 +224,8 @@
       "inputs": [
         "scripts/checks/check-script-coverage.ts",
         "scripts/misc/migration-core.ts",
-        "scripts/package.json",
         "renovate.json",
+        "scripts/package.json",
         "scripts/**/*.test.ts",
         "vitest.config.ts",
         ".buildkite/scripts/**/*.ts",
@@ -365,7 +365,7 @@
       ]
     },
     "//#gitleaks": {
-      "env": ["CI_CHANGED_BASE"],
+      "env": ["BUILDKITE_COMMIT", "CI_CHANGED_BASE"],
       "inputs": [
         "scripts/ci/gitleaks.ts",
         "**/*",
