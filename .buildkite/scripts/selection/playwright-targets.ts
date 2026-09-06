@@ -46,7 +46,7 @@ const ALL_TARGET_INPUTS = [
   "bunfig.toml",
   "package.json",
   "patches/",
-  "scripts/ci-reporting.ts",
+  "scripts/ci/ci-reporting.ts",
   "scripts/ci/namespace-playwright-reports.ts",
   "scripts/ci/write-ci-report-index.ts",
   "turbo.json",

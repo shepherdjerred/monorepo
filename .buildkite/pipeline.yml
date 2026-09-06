@@ -742,6 +742,8 @@ steps:
       . .buildkite/scripts/toolchain.sh
       bun --no-install .buildkite/scripts/validation/validate-pipeline.ts
       .buildkite/scripts/bun-install.sh --frozen-lockfile
+      export CI_CHANGED_BASE="$(buildkite-agent meta-data get ci-changed-base --default '')"
+      if [ -n "$$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$$CI_CHANGED_BASE"; fi
       # CI is the cross-machine cache producer/consumer. Developer shells use
       # local-only caching by default to avoid large transfers on weak Wi-Fi.
       export TURBO_CACHE="local:rw,remote:rw"
@@ -1163,6 +1165,7 @@ steps:
         - "scripts/release/deploy-site.ts"
         - "scripts/lib/s3-static-site.ts"
         - "scripts/lib/run.ts"
+        - "scripts/ci/ci-reporting.ts"
         - "scripts/ci/namespace-playwright-reports.ts"
         - "scripts/ci/write-ci-report-index.ts"
     depends_on: verify
