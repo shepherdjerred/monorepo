@@ -43,12 +43,14 @@ export const NotificationIntentKeySchema = z
   .min(1)
   .brand<"NotificationIntentKey">();
 
-/** An S3 object key. 1024 bytes is S3's hard key-length limit. */
+/** An S3 object key. S3's hard limit is 1024 UTF-8 BYTES, not characters. */
 export type S3ObjectKey = z.infer<typeof S3ObjectKeySchema>;
 export const S3ObjectKeySchema = z
   .string()
   .min(1)
-  .max(1024)
+  .refine((key) => new TextEncoder().encode(key).byteLength <= 1024, {
+    message: "S3 object keys are limited to 1024 UTF-8 bytes",
+  })
   .brand<"S3ObjectKey">();
 
 /** A SHA-256 digest in its canonical form: 64 lowercase hex characters. */

@@ -92,6 +92,7 @@ describe("advanceScanCursor", () => {
   test("scanning advances one page and counts it", () => {
     const next = expectApplied(
       advanceScanCursor(makeBatch(scanningState()), {
+        expectedPosition: undefined,
         nextPosition: "page-1",
       }),
     );
@@ -100,20 +101,52 @@ describe("advanceScanCursor", () => {
     );
   });
 
+  test("an advanced cursor advances again from its own position", () => {
+    const next = expectApplied(
+      advanceScanCursor(
+        makeBatch(scanningState({ position: "page-1", pagesScanned: 1 })),
+        { expectedPosition: "page-1", nextPosition: "page-2" },
+      ),
+    );
+    expect(next.state).toEqual(
+      scanningState({ position: "page-2", pagesScanned: 2 }),
+    );
+  });
+
   test("replaying the same advance is idempotent", () => {
     expect(
       advanceScanCursor(
         makeBatch(scanningState({ position: "page-1", pagesScanned: 1 })),
-        { nextPosition: "page-1" },
+        { expectedPosition: undefined, nextPosition: "page-1" },
       ),
     ).toEqual({ outcome: "already-applied" });
+  });
+
+  test("a delayed retry of an earlier page cannot rewind the cursor", () => {
+    expectConflict(
+      advanceScanCursor(
+        makeBatch(scanningState({ position: "page-2", pagesScanned: 2 })),
+        { expectedPosition: undefined, nextPosition: "page-1" },
+      ),
+      "stale-cursor",
+    );
+  });
+
+  test("a stale view of the cursor cannot advance to a new page", () => {
+    expectConflict(
+      advanceScanCursor(
+        makeBatch(scanningState({ position: "page-2", pagesScanned: 2 })),
+        { expectedPosition: "page-1", nextPosition: "page-3" },
+      ),
+      "stale-cursor",
+    );
   });
 
   test("advancing past the page budget conflicts", () => {
     expectConflict(
       advanceScanCursor(
         makeBatch(scanningState({ position: "page-3", pagesScanned: 3 })),
-        { nextPosition: "page-4" },
+        { expectedPosition: "page-3", nextPosition: "page-4" },
       ),
       "scan-budget-exhausted",
     );
@@ -123,7 +156,7 @@ describe("advanceScanCursor", () => {
     expect(
       advanceScanCursor(
         makeBatch(scanningState({ position: "page-3", pagesScanned: 3 })),
-        { nextPosition: "page-3" },
+        { expectedPosition: "page-2", nextPosition: "page-3" },
       ),
     ).toEqual({ outcome: "already-applied" });
   });
@@ -133,6 +166,7 @@ describe("advanceScanCursor", () => {
     (kind) => {
       expectConflict(
         advanceScanCursor(makeBatch(statesByKind()[kind]), {
+          expectedPosition: undefined,
           nextPosition: "page-1",
         }),
         "invalid-source-state",
@@ -145,6 +179,7 @@ describe("advanceScanCursor", () => {
     (kind) => {
       expectConflict(
         advanceScanCursor(makeBatch(statesByKind()[kind]), {
+          expectedPosition: undefined,
           nextPosition: "page-1",
         }),
         "terminal-state",
@@ -154,7 +189,19 @@ describe("advanceScanCursor", () => {
 
   test("an empty resume token is a broken caller contract", () => {
     expect(() =>
-      advanceScanCursor(makeBatch(scanningState()), { nextPosition: "" }),
+      advanceScanCursor(makeBatch(scanningState()), {
+        expectedPosition: undefined,
+        nextPosition: "",
+      }),
+    ).toThrow();
+  });
+
+  test("an empty expected position is a broken caller contract", () => {
+    expect(() =>
+      advanceScanCursor(makeBatch(scanningState()), {
+        expectedPosition: "",
+        nextPosition: "page-1",
+      }),
     ).toThrow();
   });
 });
@@ -519,7 +566,11 @@ describe("state-machine invariants", () => {
     [
       "advanceScanCursor",
       makeBatch(scanningState(), "no-external"),
-      (batch) => advanceScanCursor(batch, { nextPosition: "page-1" }),
+      (batch) =>
+        advanceScanCursor(batch, {
+          expectedPosition: undefined,
+          nextPosition: "page-1",
+        }),
     ],
     [
       "beginProcessing",
@@ -578,7 +629,11 @@ describe("state-machine invariants", () => {
     ["beginScan", (batch) => beginScan(batch, { pageBudget: 3 })],
     [
       "advanceScanCursor",
-      (batch) => advanceScanCursor(batch, { nextPosition: "page-1" }),
+      (batch) =>
+        advanceScanCursor(batch, {
+          expectedPosition: undefined,
+          nextPosition: "page-1",
+        }),
     ],
     ["beginProcessing", (batch) => beginProcessing(batch, { discovered: 10 })],
     [

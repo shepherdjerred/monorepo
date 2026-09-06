@@ -115,10 +115,18 @@ describe("S3ObjectKeySchema", () => {
     ).toBe(true);
   });
 
-  test("rejects the empty string and keys beyond S3's 1024 limit", () => {
+  test("rejects the empty string and keys beyond S3's 1024-byte limit", () => {
     expect(S3ObjectKeySchema.safeParse("").success).toBe(false);
     expect(S3ObjectKeySchema.safeParse("k".repeat(1024)).success).toBe(true);
     expect(S3ObjectKeySchema.safeParse("k".repeat(1025)).success).toBe(false);
+  });
+
+  test("measures the limit in UTF-8 bytes, not characters", () => {
+    // 600 characters but 1200 UTF-8 bytes: within a code-unit limit,
+    // over the byte limit S3 actually enforces.
+    expect(S3ObjectKeySchema.safeParse("é".repeat(600)).success).toBe(false);
+    // 512 two-byte characters = 1024 bytes: exactly at the limit.
+    expect(S3ObjectKeySchema.safeParse("é".repeat(512)).success).toBe(true);
   });
 });
 

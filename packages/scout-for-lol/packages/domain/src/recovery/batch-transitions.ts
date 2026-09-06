@@ -21,6 +21,7 @@ export const RecoveryConflictReasonSchema = z.enum([
   "invalid-source-state",
   "terminal-state",
   "scan-budget-exhausted",
+  "stale-cursor",
   "counts-regressed",
   "counts-discovered-changed",
   "counts-exceed-discovered",
@@ -106,18 +107,32 @@ export function beginScan(
   }
 }
 
+/**
+ * Advance the scan by one page. `expectedPosition` is the caller's view of the
+ * cursor it scanned FROM (`undefined` for the first page); an advance carrying
+ * a stale view — a delayed retry of an earlier page — conflicts instead of
+ * rewinding the cursor and double-counting the budget. A retry of the advance
+ * that produced the current position is recognised by its `nextPosition` and
+ * stays idempotent.
+ */
 export function advanceScanCursor(
   batch: RecoveryBatch,
-  args: { nextPosition: string },
+  args: { expectedPosition: string | undefined; nextPosition: string },
 ): RecoveryTransitionResult {
   if (args.nextPosition.length === 0) {
     throw new Error("nextPosition must be a non-empty resume token");
+  }
+  if (args.expectedPosition?.length === 0) {
+    throw new Error("expectedPosition must be undefined or a non-empty token");
   }
   const state = batch.state;
   switch (state.kind) {
     case "scanning": {
       if (state.cursor.position === args.nextPosition) {
         return alreadyApplied;
+      }
+      if (state.cursor.position !== args.expectedPosition) {
+        return conflict("stale-cursor");
       }
       if (state.cursor.pagesScanned >= state.cursor.pageBudget) {
         return conflict("scan-budget-exhausted");
