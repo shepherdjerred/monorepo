@@ -111,6 +111,20 @@ export class VoiceAudioLifecycle {
         samples,
         Math.ceil((this.options.preRollMs / 1000) * SAMPLE_RATE),
       );
+      if (this.options.isFollowUpAllowed?.(audio.userId) === true) {
+        this.provision(
+          audio.userId,
+          speaker,
+          {
+            detector: "sherpa",
+            phrase: "follow-up",
+            score: null,
+            fragmentEndSeconds: null,
+          },
+          true,
+        );
+        return;
+      }
       speaker.keywordStreamSamples += samples.length;
       const match = speaker.keyword.accept(samples);
       if (match !== null) {
@@ -158,6 +172,7 @@ export class VoiceAudioLifecycle {
     userId: string,
     speaker: SpeakerState,
     match: KeywordDetectionEvidence,
+    followUp = false,
   ): void {
     const detectedAtMs = this.options.now?.() ?? Date.now();
     const candidate: WakeCandidateEvidence = {
@@ -165,17 +180,17 @@ export class VoiceAudioLifecycle {
       userId,
       detectedAtMs,
     };
-    this.options.onCandidate?.(candidate);
+    if (!followUp) this.options.onCandidate?.(candidate);
     // Computed before anything below is allocated or mutated: it throws on a fragment missing
     // from the tail table, and throwing after the VAD exists or the timer is armed would leak
     // both while `this.pending` stays unset.
-    const verificationTargetSamples = this.verificationTargetSamples(
-      speaker,
-      match,
-    );
-    const attempt =
-      this.options.beginAttempt?.(candidate) ??
-      NOOP_VOICE_ATTEMPT_OBSERVER.begin();
+    const verificationTargetSamples = followUp
+      ? 0
+      : this.verificationTargetSamples(speaker, match);
+    const attempt = followUp
+      ? NOOP_VOICE_ATTEMPT_OBSERVER.begin()
+      : (this.options.beginAttempt?.(candidate) ??
+        NOOP_VOICE_ATTEMPT_OBSERVER.begin());
     const vad = this.options.models.createVad();
     const pcm = speaker.rolling;
     const sampleCount = speaker.rollingSamples;
@@ -199,7 +214,7 @@ export class VoiceAudioLifecycle {
       postVerificationSamples: 0,
       sawSpeech,
       vadCompleted,
-      localVerified: false,
+      localVerified: followUp,
       verificationRunning: false,
       inputEnded: false,
       // The closure captures its own turn rather than re-reading this.pending, so a stray timer
@@ -212,6 +227,7 @@ export class VoiceAudioLifecycle {
       stopSilenceTicker: () => {
         /* replaced below once the pending turn is registered */
       },
+      followUp,
     };
     this.pending = pending;
     const createTicker =
@@ -252,6 +268,9 @@ export class VoiceAudioLifecycle {
     pending.sampleCount += samples.length;
     if (dtx) pending.dtxSamples += samples.length;
     pending.postCandidateSamples += samples.length;
+    if (pending.localVerified && !pending.verificationRunning) {
+      pending.postVerificationSamples = pending.postCandidateSamples;
+    }
     if (pending.verificationRunning) {
       pending.postVerificationSamples =
         pending.postCandidateSamples - pending.verificationStartedAtSamples;
@@ -439,6 +458,7 @@ export class VoiceAudioLifecycle {
       pcm16k,
       activatedAtMs: pending.candidate.detectedAtMs,
       attempt: pending.attempt,
+      followUp: pending.followUp,
     };
     this.transactionRunning = true;
     this.speakers.clearAll();

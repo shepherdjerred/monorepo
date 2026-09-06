@@ -12,6 +12,10 @@ export type LibraryEntry = {
   readonly relativePath: string;
   /** The root this entry came from (e.g. "videos", "movies", "tv"). */
   readonly library: string;
+  readonly year?: number;
+  readonly series?: string;
+  readonly season?: number;
+  readonly episode?: number;
 };
 
 /** A scannable library root: a directory and a short label. */
@@ -47,11 +51,28 @@ export async function scanRoot(
     if (!allowed.has(extension)) {
       continue;
     }
+    const title = normalizeTitle(
+      path.basename(relative, path.extname(relative)),
+    );
+    const episode = /\bS(?<season>\d{1,2})E(?<episode>\d{1,3})\b/iu.exec(title);
+    const year = /(?:^|\D)(?<year>(?:19|20)\d{2})(?:\D|$)/u.exec(title);
+    const relativeParts = relative.split(path.sep);
     entries.push({
-      title: normalizeTitle(path.basename(relative, path.extname(relative))),
+      title,
       path: path.join(root.dir, relative),
       relativePath: relative.split(path.sep).join(posixSep),
       library: root.label,
+      ...(year?.groups?.["year"] === undefined
+        ? {}
+        : { year: Number(year.groups["year"]) }),
+      ...(episode?.groups?.["season"] === undefined ||
+      episode.groups["episode"] === undefined
+        ? {}
+        : {
+            series: relativeParts[0] ?? title,
+            season: Number(episode.groups["season"]),
+            episode: Number(episode.groups["episode"]),
+          }),
     });
   }
 
@@ -75,19 +96,50 @@ export async function scanLibrary(
   return perRoot.flat();
 }
 
-function score(title: string, query: string): number {
-  const haystack = title.toLowerCase();
-  const needle = query.toLowerCase();
+function searchable(value: string): string {
+  return value
+    .toLocaleLowerCase("en-US")
+    .replaceAll(/[^a-z0-9]+/gu, " ")
+    .trim();
+}
+
+function bigrams(value: string): Set<string> {
+  const padded = ` ${value} `;
+  const result = new Set<string>();
+  for (let index = 0; index < padded.length - 1; index += 1) {
+    result.add(padded.slice(index, index + 2));
+  }
+  return result;
+}
+
+/** Fuzzy title relevance shared with federated discovery. */
+export function scoreLibraryTitle(title: string, query: string): number {
+  const haystack = searchable(title);
+  const needle = searchable(query);
+  if (needle.length === 0) return 0;
   if (haystack === needle) {
-    return 3;
+    return 100;
   }
   if (haystack.startsWith(needle)) {
-    return 2;
+    return 92;
   }
   if (haystack.includes(needle)) {
-    return 1;
+    return 82;
   }
-  return 0;
+  const queryTokens = new Set(needle.split(" "));
+  const titleTokens = new Set(haystack.split(" "));
+  const sharedTokens = [...queryTokens].filter((token) =>
+    titleTokens.has(token),
+  );
+  const tokenScore = (sharedTokens.length / queryTokens.size) * 75;
+  const queryBigrams = bigrams(needle);
+  const titleBigrams = bigrams(haystack);
+  const sharedBigrams = [...queryBigrams].filter((item) =>
+    titleBigrams.has(item),
+  );
+  const dice =
+    (2 * sharedBigrams.length) / (queryBigrams.size + titleBigrams.size);
+  return Math.round(Math.max(tokenScore, dice * 70));
 }
 
 /**
@@ -104,8 +156,8 @@ export function searchLibrary(
     return [];
   }
   return entries
-    .map((entry) => ({ entry, score: score(entry.title, trimmed) }))
-    .filter((scored) => scored.score > 0)
+    .map((entry) => ({ entry, score: scoreLibraryTitle(entry.title, trimmed) }))
+    .filter((scored) => scored.score >= 45)
     .toSorted(
       (a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title),
     )

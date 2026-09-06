@@ -15,6 +15,9 @@ import type {
   VoiceDebugStartResult,
   VoiceDebugStopResult,
 } from "@shepherdjerred/streambot/voice/capture-manager.ts";
+import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
+import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 
 /**
  * The command layer's contract types.
@@ -110,4 +113,9 @@ export type CommandHandlerDeps = {
   ) => VoiceDebugStartResult;
   readonly stopVoiceDebugCapture: () => VoiceDebugStopResult;
   readonly voiceDebugCaptureStatus: () => VoiceDebugCaptureStatus | null;
+  readonly discovery?: DiscoveryService;
+  readonly history?: MediaHistoryStore;
+  readonly guildId?: string;
+  readonly channelId?: string;
+  readonly featureGate?: MediaFeatureGate;
 };

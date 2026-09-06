@@ -91,6 +91,7 @@ export async function resolveSource(
       title: source.title,
       ffmpegInput: source.path,
       chapters: await probeFileChapters(config, source.path, signal),
+      provenance: { provider: "local" },
       ...(subtitle === undefined ? {} : { subtitle }),
     };
   } else {

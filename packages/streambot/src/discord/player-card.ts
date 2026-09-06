@@ -118,6 +118,8 @@ function renderStatusLine(state: string, finished: boolean): string | null {
   switch (state) {
     case "streaming":
       return null;
+    case "paused":
+      return "⏸️ Paused.";
     case "joining":
       return "🔗 Joining the voice channel…";
     case "resolving":
@@ -169,6 +171,16 @@ function renderDescription(input: PlayerCardInput): string {
     }
   }
 
+  if (view.current?.provenance !== undefined) {
+    const provenance = view.current.provenance;
+    const source = provenance.channel ?? provenance.provider;
+    lines.push(
+      provenance.canonicalUrl === undefined
+        ? `Source: ${source}`
+        : `Source: [${source}](${provenance.canonicalUrl})`,
+    );
+  }
+
   lines.push(renderMetaLine(view));
   return lines.join("\n");
 }
@@ -194,10 +206,15 @@ function buildRows(view: PlaybackView): readonly (readonly ButtonSpec[])[] {
   return [
     [
       button(ControlAction.Back, "⏪ 30s", "secondary", seekDisabled),
+      button(
+        ControlAction.Pause,
+        view.paused === true ? "▶️ Resume" : "⏸️ Pause",
+        "primary",
+        noItem,
+      ),
       button(ControlAction.Forward, "⏩ 30s", "secondary", seekDisabled),
+      button(ControlAction.Restart, "⏮️ Restart", "secondary", noItem),
       button(ControlAction.Skip, "⏭ Skip", "primary", noItem),
-      button(ControlAction.Stop, "⏹ Stop", "danger", false),
-      button(ControlAction.Loop, `🔁 Loop: ${view.loop}`, "secondary", false),
     ],
     [
       button(
@@ -220,6 +237,10 @@ function buildRows(view: PlaybackView): readonly (readonly ButtonSpec[])[] {
       ),
       button(ControlAction.Queue, "📜 Queue", "secondary", false),
       button(ControlAction.Subtitles, "💬 Subtitles", "secondary", noItem),
+    ],
+    [
+      button(ControlAction.Stop, "⏹ Stop", "danger", false),
+      button(ControlAction.Loop, `🔁 Loop: ${view.loop}`, "secondary", false),
     ],
   ];
 }
@@ -283,7 +304,8 @@ export function renderPlayerCard(input: PlayerCardInput): PlayerCardPayload {
       title: input.finished ? title : `▶️ ${title}`,
       description: renderDescription(input),
       imageUrl: null,
-      thumbnailUrl: input.posterUrl,
+      thumbnailUrl:
+        input.posterUrl ?? view.current?.provenance?.thumbnailUrl ?? null,
     },
     // A finished session keeps its card as readable history, but every control is removed rather
     // than left dangling on a session that no longer exists.

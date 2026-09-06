@@ -33,6 +33,13 @@ export function createSessionVoiceAssistant(
       seek: (seconds) => userbot.seek(seconds),
       resolvePlaySource: deps.resolvePlaySource,
       announce: (message) => deps.announce(session.statusChannelId, message),
+      guildId: session.guildId,
+      channelId: session.voiceChannelId,
+      ...(deps.discovery === undefined ? {} : { discovery: deps.discovery }),
+      ...(deps.history === undefined ? {} : { history: deps.history }),
+      ...(deps.featureGate === undefined
+        ? {}
+        : { featureGate: deps.featureGate }),
     },
     announce: (message) => deps.announce(session.statusChannelId, message),
     holdTeardown: () => session.teardownHold.acquire(),

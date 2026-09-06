@@ -62,6 +62,14 @@ describe("scanLibrary", () => {
     expect(tvEntry?.path).toBe(
       path.join(TV, "The Show", "Season 01", "The Show - S01E01.mkv"),
     );
+    expect(tvEntry).toMatchObject({
+      series: "The Show",
+      season: 1,
+      episode: 1,
+    });
+    expect(
+      entries.find((entry) => entry.title === "Avengers Endgame (2019)"),
+    ).toMatchObject({ year: 2019 });
   });
 
   test("tolerates a missing root", async () => {
@@ -106,6 +114,12 @@ describe("searchLibrary", () => {
   test("matches a substring anywhere in the title", () => {
     expect(
       searchLibrary(entries, "endgame").map((entry) => entry.title),
+    ).toEqual(["Avengers Endgame"]);
+  });
+
+  test("tolerates minor title misspellings", () => {
+    expect(
+      searchLibrary(entries, "Avenger Endgam").map((entry) => entry.title),
     ).toEqual(["Avengers Endgame"]);
   });
 

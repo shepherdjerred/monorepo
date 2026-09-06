@@ -1,9 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
-import {
-  PlaybackCommandService,
-  type PlaybackCommandServiceDeps,
-} from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
@@ -12,9 +10,12 @@ import {
   buildRealtimeSessionConfig,
   runRealtimeCommandTurn,
   runRealtimeVoiceTurn,
-  verifyWakeTranscript,
 } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
-import type { AssistantAudioSink } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
+import { verifyWakeTranscript } from "@shepherdjerred/streambot/voice/realtime-transcript.ts";
+import {
+  PacedAssistantSender,
+  type AssistantAudioSink,
+} from "@shepherdjerred/streambot/voice/assistant-sink.ts";
 import { VoiceAssistantSession } from "@shepherdjerred/streambot/voice/voice-assistant-session.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
@@ -299,7 +300,66 @@ async function runLocal(
   return { ...context, transport, commands, assistantAudio, result };
 }
 
+const REALTIME_TOOL_CASES: readonly FakeRealtimeToolCall[] = [
+  {
+    name: "play",
+    arguments: JSON.stringify({
+      query: "Local Movie",
+      source: "auto",
+      placement: "queue",
+    }),
+  },
+  { name: "skip", arguments: "{}" },
+  { name: "stop", arguments: "{}" },
+  {
+    name: "seek",
+    arguments: JSON.stringify({ seconds: -30, mode: "relative" }),
+  },
+  { name: "set_volume", arguments: JSON.stringify({ percent: 70 }) },
+  { name: "set_loop", arguments: JSON.stringify({ mode: "track" }) },
+  { name: "shuffle", arguments: "{}" },
+  { name: "remove", arguments: JSON.stringify({ position: 1 }) },
+  { name: "clear", arguments: "{}" },
+  { name: "move", arguments: JSON.stringify({ from: 1, to: 2 }) },
+  { name: "chapter", arguments: JSON.stringify({ target: "next" }) },
+  { name: "subtitles_off", arguments: "{}" },
+  { name: "search_library", arguments: JSON.stringify({ query: "Local" }) },
+  { name: "list_chapters", arguments: "{}" },
+  { name: "get_queue", arguments: "{}" },
+  { name: "get_now_playing", arguments: "{}" },
+];
+
 describe("custom Realtime transport", () => {
+  test("waits for a late tool and its reply before sealing assistant audio", async () => {
+    const context = fixture();
+    const transport = new FakeRealtimeTransport(
+      [{ name: "skip", arguments: "{}" }],
+      "agent-end-before-tool",
+    );
+    const result = await runRealtimeVoiceTurn(context.config.voice, {
+      pcm16k: new Float32Array(1600),
+      activatedAtMs: Date.now(),
+      userId: USER,
+      service: context.service,
+      streamer: context.streamer,
+      createTransport: () => transport,
+    });
+
+    expect(result.mutated).toBe(true);
+    expect(context.events).toEqual([{ type: "SKIP" }]);
+    expect(transport.functionOutputs).toHaveLength(1);
+    expect(context.replyPackets.length).toBeGreaterThan(0);
+    expect(transport.closeCount).toBe(1);
+  });
+
+  test("ignores transport audio that arrives after a paced reply is sealed", async () => {
+    const context = fixture();
+    const sender = new PacedAssistantSender(context.streamer);
+    sender.enqueue(new Uint8Array(1920));
+    await sender.finish();
+    expect(() => sender.enqueue(new Uint8Array(1920))).not.toThrow();
+  });
+
   test("accepts only the three leading normalized wake-prefix variants", () => {
     expect(verifyWakeTranscript("Hey, Streambot! Skip.")?.command).toBe("skip");
     expect(verifyWakeTranscript("HEY STREAM BOT play local")?.command).toBe(
@@ -314,38 +374,7 @@ describe("custom Realtime transport", () => {
     expect(verifyWakeTranscript("hey streamer stop")).toBeNull();
   });
 
-  const cases: readonly FakeRealtimeToolCall[] = [
-    {
-      name: "play",
-      arguments: JSON.stringify({
-        query: "Local Movie",
-        source: "auto",
-        placement: "queue",
-      }),
-    },
-    { name: "skip", arguments: "{}" },
-    { name: "stop", arguments: "{}" },
-    {
-      name: "seek",
-      arguments: JSON.stringify({ seconds: -30, mode: "relative" }),
-    },
-    { name: "set_volume", arguments: JSON.stringify({ percent: 70 }) },
-    { name: "set_loop", arguments: JSON.stringify({ mode: "track" }) },
-    { name: "shuffle", arguments: "{}" },
-    // remove/move run against the fixture's empty queue and chapter against a chapterless
-    // video: the boundary denial is itself the asserted tool output path.
-    { name: "remove", arguments: JSON.stringify({ position: 1 }) },
-    { name: "clear", arguments: "{}" },
-    { name: "move", arguments: JSON.stringify({ from: 1, to: 2 }) },
-    { name: "chapter", arguments: JSON.stringify({ target: "next" }) },
-    { name: "subtitles_off", arguments: "{}" },
-    { name: "search_library", arguments: JSON.stringify({ query: "Local" }) },
-    { name: "list_chapters", arguments: "{}" },
-    { name: "get_queue", arguments: "{}" },
-    { name: "get_now_playing", arguments: "{}" },
-  ];
-
-  for (const toolCall of cases) {
+  for (const toolCall of REALTIME_TOOL_CASES) {
     test(`executes ${toolCall.name} through the actual RealtimeSession`, async () => {
       const result = await run(toolCall);
       await result.promise;
@@ -380,7 +409,7 @@ describe("custom Realtime transport", () => {
     );
     expect(
       result.transport.connectOptions?.initialSessionConfig?.tools,
-    ).toHaveLength(16);
+    ).toHaveLength(22);
   });
 
   test("deletes committed audio and inserts verified command text before response", async () => {
@@ -392,6 +421,7 @@ describe("custom Realtime transport", () => {
       "conversation.item.delete",
       "conversation.item.create",
       "response.create",
+      "function_call_output",
     ]);
     const create = result.transport.sentEvents.find(
       (event) => event.type === "conversation.item.create",

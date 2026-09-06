@@ -46,7 +46,9 @@ export class PacedAssistantSender implements AssistantAudioSink {
   }
 
   enqueue(pcm24k: Uint8Array): void {
-    if (this.cancelled) return;
+    // Realtime transport callbacks can race session teardown. Once finish/cancel has sealed the
+    // encoder, late audio is no longer part of this reply and must not touch the native encoder.
+    if (this.cancelled || this.done) return;
     this.queue.push(...this.encoder.encode(pcm24k));
     this.start();
     this.wake?.();

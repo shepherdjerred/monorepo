@@ -5,6 +5,7 @@ import {
   parseJson,
 } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
 
 const log = logger.child("chapters");
 
@@ -99,7 +100,7 @@ export async function probeFileChapters(
   signal: AbortSignal,
 ): Promise<Chapter[]> {
   try {
-    const proc = Bun.spawn(
+    const { stdout, stderr, exitCode } = await runSubprocess(
       [
         config.ffprobePath,
         "-v",
@@ -109,13 +110,8 @@ export async function probeFileChapters(
         "-show_chapters",
         filePath,
       ],
-      { stdout: "pipe", stderr: "pipe", stdin: "ignore", signal },
+      signal,
     );
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited,
-    ]);
     if (exitCode !== 0) {
       log.warn("ffprobe chapters failed", {
         filePath,

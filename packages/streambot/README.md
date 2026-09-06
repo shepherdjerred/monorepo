@@ -6,6 +6,13 @@ slash command (`/stream play`, `skip`, `queue`, `seek`, `volume`, `chapters`,
 `help`, `sources`, …). One Bun process serves many servers — and many voice
 channels per server — concurrently.
 
+Media requests default to a federated history, local-library, and YouTube
+search. Character renditions such as “Beggin by Plankton” also search explicit
+AI-cover spellings. Ambiguous results become numbered follow-ups instead of
+silently playing a weak match. `/stream join` starts an idle listening session;
+the same speaker may answer a clarification twice without repeating the wake
+phrase.
+
 ## How it works
 
 Discord bots cannot stream video into voice; only user accounts can. Streambot
@@ -21,6 +28,11 @@ therefore splits identities:
   isolated XState v5 actor with its own queue/loop/volume. Playback state is
   persisted per session and resumed across restarts, including voice-loss
   recovery with close-code classification.
+- **Media history** — `/state/streambot.sqlite` records queue requests and
+  playback starts for one year. Discovery combines the requesting user's
+  cross-server history with the current guild's history. Favorites and saved
+  queues remain until explicitly removed. Raw audio and transcripts never
+  enter this database.
 - **Streamer** — ffmpeg-driven voice streaming via
   [`@shepherdjerred/discord-video-stream`](../discord-video-stream/), the
   in-repo fork of `@dank074/discord-video-stream` (seekable player, VAAPI
@@ -30,6 +42,12 @@ The playback lifecycle is a pure, unit-tested XState machine; all I/O lives in
 invoked actors. `yt-dlp` and `ffmpeg` are system binaries baked into the
 Docker image. Prometheus metrics are served on `/metrics` (default port 9466);
 the headline signal is `streambot_ffmpeg_speed_ratio`.
+
+The assistant adds pause, resume, restart, previous, play-now, richer subtitle
+selection, favorites, saved queues, “my usual,” and local-series continuation.
+The matching slash groups are `/stream playback`, `/stream history`, and
+`/stream personal`. Assistant V2 and durable history are independently guarded
+by typed Flipt flags and default off outside their rollout targets.
 
 Active playback sessions also expose an end-to-end voice diagnostic path. Each
 wake candidate owns one correlated trace from Discord receive and local

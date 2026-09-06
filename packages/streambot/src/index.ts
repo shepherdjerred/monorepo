@@ -10,6 +10,7 @@ import { sweepSubtitleTempDir } from "@shepherdjerred/streambot/sources/subtitle
 import {
   expandPlaylist,
   listExtractors,
+  searchYoutube,
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { UserbotPool } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
@@ -35,6 +36,9 @@ import {
   shutdownDynamicConfig,
 } from "@shepherdjerred/streambot/config/dynamic.ts";
 import { featureFlagMetrics } from "@shepherdjerred/streambot/observability/metrics.ts";
+import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
+import { mediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 
 const LIBRARY_REFRESH_MS = 5 * 60 * 1000;
 
@@ -119,6 +123,18 @@ async function main(): Promise<void> {
     void refreshLibrary();
   }, LIBRARY_REFRESH_MS);
 
+  const history = new MediaHistoryStore(
+    path.join(config.state.dir, "streambot.sqlite"),
+  );
+  history.prune();
+  const discovery = new DiscoveryService({
+    library: () => library,
+    history,
+    historyEnabled: mediaFeatureGate.history,
+    searchYoutube: (query, signal, limit) =>
+      searchYoutube(config, query, signal, limit),
+  });
+
   // Log every userbot in and snapshot guild membership before anything tries to acquire one.
   const pool = new UserbotPool(config.discord.userTokens, config);
   await pool.start();
@@ -139,6 +155,9 @@ async function main(): Promise<void> {
     listSources: (signal) => listExtractors(config, signal),
     resolvePlaySource: (source, signal) =>
       resolveSource(config, source, signal),
+    discovery,
+    history,
+    featureGate: mediaFeatureGate,
   });
   const sessions = new SessionManager({
     config,
@@ -153,6 +172,9 @@ async function main(): Promise<void> {
     voiceModels,
     voiceFeedbackClips,
     voiceCaptureManager,
+    discovery,
+    history,
+    featureGate: mediaFeatureGate,
   });
   refs.sessions = sessions;
 
@@ -175,6 +197,7 @@ async function main(): Promise<void> {
     await pool.destroy();
     await voiceModels?.close();
     await voiceCaptureManager.shutdown();
+    history.close();
     await shutdownDynamicConfig();
     await shutdownTelemetry();
     await stopMetricsServer();

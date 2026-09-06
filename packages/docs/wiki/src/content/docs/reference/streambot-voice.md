@@ -9,6 +9,41 @@ This page lists the Streambot voice contracts. For rationale, see
 [Streambot voice assistant](/explanation/streambot-voice/). For an operating
 procedure, see [Diagnose Streambot voice](/how-to/diagnose-streambot-voice/).
 
+## Media assistant commands
+
+| Command or phrase                                 | Result                                                        |
+| ------------------------------------------------- | ------------------------------------------------------------- |
+| `play <title>`                                    | Searches history, local media, and YouTube by default.        |
+| `play <work> by <character>`                      | Also searches an explicit `<work> <character> AI cover` form. |
+| `first`, `second`, or `third`                     | Selects a recent scoped disambiguation candidate.             |
+| `play that … again`                               | Resolves recent conversation context, then durable history.   |
+| `/stream join`                                    | Joins voice and listens without starting media.               |
+| `/stream playback pause`<br>`resume`<br>`restart` | Controls the requester's current media.                       |
+| `/stream playback previous`                       | Plays the latest distinct guild-history item.                 |
+| `/stream history list`<br>`replay`                | Reads personal or current-guild history.                      |
+| `/stream personal …`                              | Manages favorites, saved queues, usual, and series continue.  |
+
+Spoken requests reject URLs. Slash play accepts public URLs and playlists.
+`source` can force `history`, `local`, or `youtube`; `auto` is the default.
+`placement` accepts `queue`, `next`, or requester-or-admin `now`.
+
+## Media persistence
+
+| Contract                   | Value                                                      |
+| -------------------------- | ---------------------------------------------------------- |
+| Database                   | `/state/streambot.sqlite`                                  |
+| Request/playback retention | One year                                                   |
+| Discovery scope            | Current guild plus the requesting user's global history    |
+| Persistent personal data   | Favorites and named saved queues                           |
+| Excluded content           | Raw audio, transcripts, signed media URLs, and credentials |
+
+The existing `/state` persistent volume holds both playback resume files and
+the SQLite database. SQLite uses WAL mode and foreign-key validation.
+
+`streambot-assistant-v2-enabled` gates federated discovery, follow-ups, idle
+join, and the advanced playback surface. `streambot-history-enabled` separately
+gates durable history and personal commands. Both default to false.
+
 ## Environment variables
 
 Streambot parses these variables once at boot. Invalid values and missing
@@ -145,6 +180,9 @@ recovery log. There is intentionally no inactivity alert.
 | Rejected-transcript cooldown             | 3 seconds                                                          |
 | Quota-refusal backoff                    | 1 hour                                                             |
 | Mutating tools per wake                  | 1                                                                  |
+| Same-speaker no-wake follow-up           | 15 seconds; at most 2 follow-up turns                              |
+| Conversation candidate context           | 5 minutes; at most 5 candidates                                    |
+| Queue/playback history retention         | 1 year                                                             |
 | Go Live ducking during reply             | 20% volume                                                         |
 | Manual debug duration                    | 10–300 seconds; default 60                                         |
 | Concurrent manual debug windows          | 1 per process                                                      |

@@ -35,6 +35,7 @@ import {
   ChannelIdSchema,
   GuildIdSchema,
   type ChannelId,
+  type GuildId,
 } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   getErrorMessage,
@@ -46,12 +47,40 @@ import {
   registerGatewayHealthListeners,
   registerTopologyListeners,
 } from "@shepherdjerred/streambot/discord/client-events.ts";
+import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
+import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
+import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
-const PLAY_SUBCOMMANDS = new Set(["play", "playnext"]);
+const PLAY_SUBCOMMANDS = new Set([
+  "play",
+  "playnext",
+  "join",
+  "replay",
+  "previous",
+  "load-queue",
+  "usual",
+  "continue",
+]);
+const HISTORY_START_SUBCOMMANDS = new Set([
+  "replay",
+  "previous",
+  "load-queue",
+  "usual",
+  "continue",
+]);
 /** Subcommands answerable without a playback session (library/yt-dlp lookups + static help). */
-const STATELESS_SUBCOMMANDS = new Set(["list", "search", "sources", "help"]);
+const STATELESS_SUBCOMMANDS = new Set([
+  "list",
+  "search",
+  "sources",
+  "help",
+  "favorites",
+  "favorite-remove",
+  "saved-queues",
+  "delete-queue",
+]);
 
 export type CommandBotDeps = {
   readonly config: Config;
@@ -68,6 +97,9 @@ export type CommandBotDeps = {
     source: Source,
     signal: AbortSignal,
   ) => Promise<ResolvedSource>;
+  readonly discovery?: DiscoveryService;
+  readonly history?: MediaHistoryStore;
+  readonly featureGate?: MediaFeatureGate;
 };
 
 /**
@@ -114,6 +146,10 @@ export class CommandBot {
         this.voiceChannelOf(interaction.guild, interaction.user),
       openSubtitlePicker: (interaction, handle) =>
         this.openSubtitlePicker(interaction, handle),
+      ...(deps.history === undefined ? {} : { history: deps.history }),
+      ...(deps.featureGate === undefined
+        ? {}
+        : { assistantV2Enabled: deps.featureGate.assistantV2 }),
     });
     this.voiceTopology = new VoiceTopologyWatcher({
       getSessions: () => this.deps.getSessions(),
@@ -249,16 +285,27 @@ export class CommandBot {
       ? invoked.data
       : null;
     const sessions = this.deps.getSessions();
+    const voiceChannelId = this.issuerVoiceChannel(interaction);
 
     let handle;
     let announceChannel: ChannelId | null = invokedChannel;
     if (PLAY_SUBCOMMANDS.has(sub)) {
-      const voiceChannelId = this.issuerVoiceChannel(interaction);
       if (voiceChannelId === null) {
         await interaction.reply({
-          content: "Join a voice channel first, then run `/stream play`.",
+          content:
+            "Join a voice channel first, then run that `/stream` command.",
           flags: MessageFlags.Ephemeral,
         });
+        return;
+      }
+      if (
+        await this.denyDisabledSessionStart(
+          sub,
+          guildId.data,
+          voiceChannelId,
+          interaction,
+        )
+      ) {
         return;
       }
       const statusChannelId = invokedChannel ?? voiceChannelId;
@@ -278,11 +325,11 @@ export class CommandBot {
     } else if (STATELESS_SUBCOMMANDS.has(sub)) {
       handle = EMPTY_HANDLE;
     } else {
-      const voiceChannelId = this.issuerVoiceChannel(interaction);
+      const existingVoiceChannelId = this.issuerVoiceChannel(interaction);
       handle =
-        voiceChannelId === null
+        existingVoiceChannelId === null
           ? null
-          : sessions.getExisting(guildId.data, voiceChannelId);
+          : sessions.getExisting(guildId.data, existingVoiceChannelId);
       if (handle === null) {
         await interaction.reply({
           content: "Nothing is playing in your voice channel.",
@@ -292,14 +339,79 @@ export class CommandBot {
       }
     }
 
-    await this.buildHandler(handle, announceChannel).run(
-      adaptCommandInteraction(interaction),
-    );
+    await this.runCommand({
+      handle,
+      announceChannel,
+      guildId: guildId.data,
+      channelId: voiceChannelId ?? invokedChannel,
+      interaction,
+      subcommand: sub,
+      sessions,
+      voiceChannelId,
+    });
+  }
+
+  private async runCommand(input: {
+    readonly handle: SessionHandle;
+    readonly announceChannel: ChannelId | null;
+    readonly guildId: GuildId;
+    readonly channelId: ChannelId | null;
+    readonly interaction: ChatInputCommandInteraction;
+    readonly subcommand: string;
+    readonly sessions: SessionManager;
+    readonly voiceChannelId: ChannelId | null;
+  }): Promise<void> {
+    try {
+      await this.buildHandler(
+        input.handle,
+        input.announceChannel,
+        input.guildId,
+        input.channelId,
+      ).run(adaptCommandInteraction(input.interaction));
+    } finally {
+      if (
+        input.voiceChannelId !== null &&
+        PLAY_SUBCOMMANDS.has(input.subcommand)
+      ) {
+        input.sessions.releaseUnused(input.guildId, input.voiceChannelId);
+      }
+    }
+  }
+
+  private async denyDisabledSessionStart(
+    subcommand: string,
+    guildId: string,
+    channelId: string,
+    interaction: ChatInputCommandInteraction,
+  ): Promise<boolean> {
+    const gate = this.deps.featureGate;
+    if (gate === undefined) {
+      return false;
+    }
+    const scope = {
+      guildId,
+      channelId,
+      userId: interaction.user.id,
+    };
+    const assistantDisabled =
+      subcommand === "join" && !(await gate.assistantV2(scope));
+    const historyDisabled =
+      HISTORY_START_SUBCOMMANDS.has(subcommand) && !(await gate.history(scope));
+    if (!assistantDisabled && !historyDisabled) return false;
+    await interaction.reply({
+      content: assistantDisabled
+        ? "The Streambot assistant beta is not enabled here."
+        : "Playback history is not available.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return true;
   }
 
   private buildHandler(
     handle: SessionHandle,
     announceChannel: ChannelId | null,
+    guildId?: string,
+    channelId?: string | null,
   ): CommandHandler {
     return new CommandHandler({
       config: this.deps.config,
@@ -320,6 +432,17 @@ export class CommandBot {
       startVoiceDebugCapture: handle.startVoiceDebugCapture,
       stopVoiceDebugCapture: handle.stopVoiceDebugCapture,
       voiceDebugCaptureStatus: handle.voiceDebugCaptureStatus,
+      ...(this.deps.discovery === undefined
+        ? {}
+        : { discovery: this.deps.discovery }),
+      ...(this.deps.history === undefined
+        ? {}
+        : { history: this.deps.history }),
+      ...(guildId === undefined ? {} : { guildId }),
+      ...(channelId == null ? {} : { channelId }),
+      ...(this.deps.featureGate === undefined
+        ? {}
+        : { featureGate: this.deps.featureGate }),
     });
   }
 
@@ -333,9 +456,12 @@ export class CommandBot {
     handle: SessionHandle,
   ): Promise<void> {
     const invoked = ChannelIdSchema.safeParse(interaction.channelId);
-    await this.buildHandler(handle, invoked.success ? invoked.data : null).run(
-      adaptCardInteraction(interaction, "subtitles"),
-    );
+    await this.buildHandler(
+      handle,
+      invoked.success ? invoked.data : null,
+      interaction.guildId ?? undefined,
+      handle.view().current === null ? null : undefined,
+    ).run(adaptCardInteraction(interaction, "subtitles"));
   }
 
   private async safeHandle(

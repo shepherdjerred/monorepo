@@ -1,7 +1,6 @@
 import { createActor } from "xstate";
 import { playerCardEnabled } from "@shepherdjerred/streambot/config/dynamic.ts";
 import { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
-import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 import {
   createPosterFetcher,
   type PosterFetcher,
@@ -51,6 +50,8 @@ import { TeardownHold } from "@shepherdjerred/streambot/session/teardown-hold.ts
 import { createSessionVoiceAssistant } from "@shepherdjerred/streambot/session/voice-session-factory.ts";
 import { destroySession } from "@shepherdjerred/streambot/session/destroy-session.ts";
 import { deleteSessionStateAfterFlush } from "@shepherdjerred/streambot/session/delete-session-state.ts";
+import { SessionObserver } from "@shepherdjerred/streambot/session/session-observer.ts";
+import { describeSnapshot } from "@shepherdjerred/streambot/session/status-snapshot.ts";
 
 import type { SessionManagerDeps } from "@shepherdjerred/streambot/session/session-types.ts";
 
@@ -132,6 +133,22 @@ export class SessionManager {
     return session === undefined
       ? null
       : buildSessionHandle(this.deps.config, session);
+  }
+
+  /** Release a session that was allocated for a command which produced no playback event. */
+  releaseUnused(guildId: GuildId, channelId: ChannelId): void {
+    const session = this.sessions.get(keyOf(guildId, channelId));
+    if (session === undefined || session.hasStarted) return;
+    const snapshot = session.actor.getSnapshot();
+    const { stateName } = describeSnapshot(snapshot);
+    if (
+      stateName !== "idle" ||
+      snapshot.context.current !== null ||
+      snapshot.context.queue.length > 0
+    ) {
+      return;
+    }
+    session.teardownHold.request();
   }
 
   /** Metadata for the voice-state auto-stop check, or null when no session owns that channel. */
@@ -347,6 +364,7 @@ export class SessionManager {
       recoveredFromVoiceLoss: params.recoveredFromVoiceLoss ?? false,
       voiceRecoveryStarted: false,
       pendingSubtitleMenu: false,
+      historyRunRecorded: false,
       voiceAssistant: null,
       teardownHold: new TeardownHold(() => {
         this.teardown(session);
@@ -368,20 +386,13 @@ export class SessionManager {
       });
     });
 
+    const observer = new SessionObserver({
+      session,
+      history: this.deps.history,
+      totalQueueLength: () => this.totalQueueLength(),
+    });
     const subscription = actor.subscribe((snapshot) => {
-      const { stateName, snap } = describeSnapshot(snapshot);
-      reporter.handle(snap);
-      card.refresh();
-      // Metrics are process-global (unlabeled) gauges inherited from the single-session design:
-      // playback state is last-writer across sessions and queue length is the pool-wide total.
-      // (Per-(guild,channel) labels are a follow-up if multi-session observability matters.)
-      setPlaybackState(stateName);
-      queueLength.set(this.totalQueueLength());
-      if (stateName !== "idle") {
-        session.hasStarted = true;
-      } else if (session.hasStarted && snapshot.context.queue.length === 0) {
-        session.teardownHold.request();
-      }
+      observer.handle(snapshot);
     });
     session.unsubscribe = () => {
       subscription.unsubscribe();
@@ -483,7 +494,9 @@ export class SessionManager {
     }
     const { context } = session.actor.getSnapshot();
     const live = session.entry.userbot.getPosition();
-    if (context.current === null) {
+    if (context.pausedPositionSeconds !== null) {
+      session.lastKnownPositionSeconds = context.pausedPositionSeconds;
+    } else if (context.current === null) {
       session.lastKnownPositionSeconds = 0;
     } else if (live !== null) {
       session.lastKnownPositionSeconds = live;

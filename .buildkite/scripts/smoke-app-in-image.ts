@@ -204,6 +204,7 @@ const commands: Record<
     command: [
       "set -eu",
       "mkdir -p /tmp/videos",
+      "mkdir -p /tmp/state",
       "cd /app/packages/streambot",
       "ffmpeg -version >/dev/null",
       "/usr/local/bin/yt-dlp --version >/dev/null",
@@ -220,6 +221,7 @@ const commands: Record<
       USER_TOKENS: "smoke-test-dummy",
       ADMIN_IDS: "000000000000000000",
       VIDEOS_DIR: "/tmp/videos",
+      STATE_DIR: "/tmp/state",
       FEATURE_FLAGS_MODE: "disabled",
     },
   },

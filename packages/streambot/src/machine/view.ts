@@ -1,6 +1,7 @@
 import type { SnapshotFrom } from "xstate";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
 import type { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
+import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import {
   sourceIdentity,
   sourceLabel,
@@ -30,6 +31,9 @@ export type QueueItemView = {
    * which falls back to an elapsed-only readout when this is null.
    */
   readonly durationSeconds: number | null;
+  readonly requestId?: string;
+  readonly provenance?: ResolvedSource["provenance"];
+  readonly source?: Source;
 };
 
 /**
@@ -48,6 +52,8 @@ export type PlaybackView = {
   readonly volume: number;
   /** Live elapsed seconds since playback began (segment offset + wall-clock). Null when idle/between segments. */
   readonly positionSeconds: number | null;
+  readonly paused?: boolean;
+  readonly listening?: boolean;
 };
 
 /**
@@ -61,11 +67,12 @@ export function buildPlaybackView(
   positionSeconds: number | null,
 ): PlaybackView {
   const { context } = snapshot;
+  const state =
+    typeof snapshot.value === "string"
+      ? snapshot.value
+      : JSON.stringify(snapshot.value);
   return {
-    state:
-      typeof snapshot.value === "string"
-        ? snapshot.value
-        : JSON.stringify(snapshot.value),
+    state,
     current:
       context.current === null
         ? null
@@ -77,6 +84,13 @@ export function buildPlaybackView(
             kind: context.current.source.kind,
             sourceId: sourceIdentity(context.current.source),
             durationSeconds: context.resolved?.durationSeconds ?? null,
+            ...(context.current.requestId === undefined
+              ? {}
+              : { requestId: context.current.requestId }),
+            ...(context.resolved?.provenance === undefined
+              ? {}
+              : { provenance: context.resolved.provenance }),
+            source: context.current.source,
           },
     queue: context.queue.map((entry) => ({
       title: sourceLabel(entry.source),
@@ -85,9 +99,14 @@ export function buildPlaybackView(
       kind: entry.source.kind,
       sourceId: sourceIdentity(entry.source),
       durationSeconds: null,
+      ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),
+      source: entry.source,
     })),
     loop: context.loop,
     volume: context.volume,
-    positionSeconds,
+    positionSeconds:
+      state === "paused" ? context.pausedPositionSeconds : positionSeconds,
+    paused: state === "paused",
+    listening: state === "waiting" && context.current === null,
   };
 }

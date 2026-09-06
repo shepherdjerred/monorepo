@@ -10,6 +10,7 @@ import { z } from "zod";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
 
 const log = logger.child("probe");
 
@@ -96,7 +97,7 @@ export async function probeMedia(
   const abort =
     signal === undefined ? timeout : AbortSignal.any([signal, timeout]);
   try {
-    const proc = Bun.spawn(
+    const { stdout, stderr, exitCode } = await runSubprocess(
       [
         config.ffprobePath,
         "-v",
@@ -107,15 +108,10 @@ export async function probeMedia(
         "-show_format",
         input,
       ],
-      { stdout: "pipe", stderr: "pipe", signal: abort },
+      abort,
     );
     // Drain stdout AND stderr concurrently. If stderr were only read on failure, a chatty ffprobe
     // could fill the (~64 KB) pipe buffer and block before closing stdout, hanging the stdout read.
-    const [stdout, stderr, exitCode] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited,
-    ]);
     if (exitCode !== 0) {
       log.warn("ffprobe exited non-zero", { exitCode, stderr: stderr.trim() });
       return null;

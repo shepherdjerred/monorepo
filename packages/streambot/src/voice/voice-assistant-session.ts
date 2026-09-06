@@ -1,15 +1,16 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import {
-  PlaybackCommandService,
-  type PlaybackCommandServiceDeps,
-} from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import type { PlaybackCommandServiceDeps } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
-import { runRealtimeVoiceTurn } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
+import {
+  runRealtimeVoiceTurn,
+  type RealtimeCommandTurnResult,
+} from "@shepherdjerred/streambot/voice/realtime-agent.ts";
 import {
   speakClip,
   type SpokenFeedbackClips,
@@ -49,6 +50,7 @@ import type {
 import { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
 
 const log = logger.child("voice-assistant");
+const FOLLOW_UP_WINDOW_MS = 15_000;
 
 export type VoiceAssistantSessionOptions = {
   readonly config: Config;
@@ -76,6 +78,9 @@ export class VoiceAssistantSession {
   private telemetry: VoiceSessionTelemetry;
   private readonly captureManager: VoiceCaptureManager | undefined;
   private readonly streamer: StreamerLike;
+  private followUpUserId: string | null = null;
+  private followUpUntilMs = 0;
+  private followUpCount = 0;
 
   constructor(options: VoiceAssistantSessionOptions) {
     this.identity = {
@@ -148,6 +153,12 @@ export class VoiceAssistantSession {
         await turn.attempt.run(async () => {
           this.telemetry.turnStarted();
           try {
+            const consumedFollowUpCount = turn.followUp
+              ? this.followUpCount
+              : 0;
+            if (turn.followUp) {
+              this.clearFollowUp();
+            }
             const rateLimit = this.cloudVerificationLimiter.tryAcquire();
             if (!rateLimit.allowed) {
               voiceCloudVerificationRateLimitsTotal.inc({
@@ -198,18 +209,18 @@ export class VoiceAssistantSession {
                 ...(options.createRealtimeTransport === undefined
                   ? {}
                   : { createTransport: options.createRealtimeTransport }),
+                wakeRequired: !turn.followUp,
               });
               if (!result.wakeVerified) {
                 this.cloudVerificationLimiter.recordTranscriptRejection();
               }
-              const outcome = result.wakeVerified
-                ? result.normalizedCommand === ""
-                  ? "bare-wake"
-                  : result.mutated
-                    ? "command"
-                    : "no-command"
-                : "transcript-rejected";
-              turn.attempt.finish(outcome);
+              this.updateFollowUp(
+                turn.userId,
+                turn.followUp,
+                result,
+                consumedFollowUpCount,
+              );
+              turn.attempt.finish(voiceTurnOutcome(result));
             } catch (error) {
               if (transaction.signal.aborted) {
                 turn.attempt.cloudOutcome("interrupted");
@@ -257,6 +268,10 @@ export class VoiceAssistantSession {
       ...(options.createDecoder === undefined
         ? {}
         : { createDecoder: options.createDecoder }),
+      isFollowUpAllowed: (userId) =>
+        this.followUpUserId === userId &&
+        this.followUpCount < 2 &&
+        Date.now() < this.followUpUntilMs,
     });
     // Peer userbots (other in-house bots sharing the channel) are real user accounts whose
     // audio would otherwise reach the wake detector and could trigger commands attributed to
@@ -310,10 +325,48 @@ export class VoiceAssistantSession {
   }
 
   close(): void {
+    this.clearFollowUp();
     this.abortActiveTransaction("Voice assistant session closed");
     this.lifecycle.close();
     this.captureManager?.closeSession(this.identity);
     this.streamer.setVoiceReceiveObserver(null);
     this.telemetry.close();
   }
+
+  private clearFollowUp(): void {
+    this.followUpUserId = null;
+    this.followUpUntilMs = 0;
+    this.followUpCount = 0;
+  }
+
+  private updateFollowUp(
+    userId: string,
+    followUp: boolean,
+    result: RealtimeCommandTurnResult,
+    consumedFollowUpCount = this.followUpCount,
+  ): void {
+    const shouldArmFollowUp =
+      result.wakeVerified &&
+      result.normalizedCommand !== "" &&
+      !result.mutated &&
+      result.clarificationRequested === true;
+    if (shouldArmFollowUp) {
+      const usedFollowUps = followUp ? consumedFollowUpCount + 1 : 0;
+      if (usedFollowUps < 2) {
+        this.followUpUserId = userId;
+        this.followUpUntilMs = Date.now() + FOLLOW_UP_WINDOW_MS;
+        this.followUpCount = usedFollowUps;
+      } else {
+        this.clearFollowUp();
+      }
+    } else if (followUp || result.mutated) {
+      this.clearFollowUp();
+    }
+  }
+}
+
+function voiceTurnOutcome(result: RealtimeCommandTurnResult) {
+  if (!result.wakeVerified) return "transcript-rejected" as const;
+  if (result.normalizedCommand === "") return "bare-wake" as const;
+  return result.mutated ? ("command" as const) : ("no-command" as const);
 }

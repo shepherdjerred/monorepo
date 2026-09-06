@@ -153,15 +153,17 @@ describe("player card controls", () => {
     const ids = buttonIds(render());
     expect(ids).toEqual([
       encodeControlId(ControlAction.Back),
+      encodeControlId(ControlAction.Pause),
       encodeControlId(ControlAction.Forward),
+      encodeControlId(ControlAction.Restart),
       encodeControlId(ControlAction.Skip),
-      encodeControlId(ControlAction.Stop),
-      encodeControlId(ControlAction.Loop),
       encodeControlId(ControlAction.VolumeDown),
       encodeControlId(ControlAction.VolumeUp),
       encodeControlId(ControlAction.Shuffle),
       encodeControlId(ControlAction.Queue),
       encodeControlId(ControlAction.Subtitles),
+      encodeControlId(ControlAction.Stop),
+      encodeControlId(ControlAction.Loop),
     ]);
   });
 
@@ -179,7 +181,9 @@ describe("player card controls", () => {
     });
     for (const action of [
       ControlAction.Back,
+      ControlAction.Pause,
       ControlAction.Forward,
+      ControlAction.Restart,
       ControlAction.Skip,
       ControlAction.Subtitles,
     ]) {

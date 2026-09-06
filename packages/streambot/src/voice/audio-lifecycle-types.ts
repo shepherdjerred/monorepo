@@ -37,6 +37,7 @@ export type PendingVoiceTurn = {
   timer: ReturnType<typeof setTimeout>;
   lastPacketAtMs: number;
   stopSilenceTicker: () => void;
+  readonly followUp: boolean;
 };
 
 export type CompletedVoiceTurn = {
@@ -44,6 +45,7 @@ export type CompletedVoiceTurn = {
   readonly pcm16k: Float32Array;
   readonly activatedAtMs: number;
   readonly attempt: VoiceAttemptHandle;
+  readonly followUp: boolean;
 };
 
 export type VoiceAudioLifecycleOptions = {
@@ -78,6 +80,8 @@ export type VoiceAudioLifecycleOptions = {
   }) => void;
   readonly onAbandoned?: (reason: "timeout" | "empty" | "closed") => void;
   readonly onTurn: (turn: CompletedVoiceTurn) => Promise<void>;
+  /** Same-speaker, short-lived continuation gate controlled by the conversation owner. */
+  readonly isFollowUpAllowed?: (userId: string) => boolean;
   readonly now?: () => number;
   readonly createDecoder?: () => Pick<DiscordOpusDecoder, "decode" | "close">;
   readonly createSilenceTicker?: (

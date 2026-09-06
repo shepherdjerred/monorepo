@@ -15,6 +15,7 @@ import {
 import { resolveSubtitleForYtdlp } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import { listYtdlpSubtitleCandidates } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";
+import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("ytdlp");
@@ -25,16 +26,20 @@ const log = logger.child("ytdlp");
 const YtdlpSubtitleTrackSchema = z.object({ name: z.string().optional() });
 
 /**
- * The slice of `yt-dlp --dump-single-json` output we rely on. yt-dlp emits a large object; Zod
+ * The slice of one `yt-dlp --dump-json` output line we rely on. yt-dlp emits a large object; Zod
  * keeps the fields we trust and drops the rest, so a schema drift can't smuggle unknown shapes in.
  */
 export const YtdlpInfoSchema = z.object({
+  id: z.string().min(1).optional(),
   title: z.string().min(1),
   // Direct media URL for the selected format (we request a single muxed `best`).
   url: z.string().min(1),
   duration: z.number().optional(),
   is_live: z.boolean().optional(),
   webpage_url: z.string().optional(),
+  uploader: z.string().optional(),
+  channel: z.string().optional(),
+  thumbnail: z.string().optional(),
   // Chapter markers (e.g. YouTube timestamps); yt-dlp gives seconds as numbers.
   chapters: z
     .array(
@@ -72,7 +77,10 @@ export function ytdlpTarget(source: Source): string {
 /** Build the argument list for a metadata probe (no download), selecting a single muxed format. */
 export function buildInfoArgs(source: Source): string[] {
   return [
-    "--dump-single-json",
+    // `--dump-single-json ytsearch1:query` returns a playlist wrapper whose direct media URL is
+    // nested under `entries[0]`. `--dump-json` emits the selected video as one top-level JSON line,
+    // which is the stable shape validated by YtdlpInfoSchema for URLs and searches alike.
+    "--dump-json",
     "--no-playlist",
     "--no-warnings",
     "--no-progress",
@@ -106,9 +114,11 @@ export function parseYtdlpInfo(stdout: string): YtdlpInfo {
 
 /** Map validated yt-dlp info to a {@link ResolvedSource} ffmpeg can read. */
 export function toResolvedSource(info: YtdlpInfo): ResolvedSource {
+  const channel = info.channel ?? info.uploader;
   return {
     title: info.title,
     ffmpegInput: info.url,
+    ...(info.duration === undefined ? {} : { durationSeconds: info.duration }),
     chapters: toChapters(
       (info.chapters ?? []).map((chapter) => ({
         startSeconds: chapter.start_time,
@@ -116,7 +126,86 @@ export function toResolvedSource(info: YtdlpInfo): ResolvedSource {
         title: chapter.title ?? null,
       })),
     ),
+    provenance: {
+      provider:
+        info.webpage_url?.includes("youtube.com") === true ? "youtube" : "url",
+      ...(info.webpage_url === undefined
+        ? {}
+        : { canonicalUrl: info.webpage_url }),
+      ...(channel === undefined ? {} : { channel }),
+      ...(info.thumbnail === undefined ? {} : { thumbnailUrl: info.thumbnail }),
+    },
   };
+}
+
+const YtdlpSearchResultSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  webpage_url: z.string().optional(),
+  url: z.string().optional(),
+  channel: z.string().optional(),
+  uploader: z.string().optional(),
+  thumbnail: z.string().optional(),
+  duration: z.number().optional(),
+});
+
+export type YtdlpSearchResult = {
+  readonly title: string;
+  readonly url: string;
+  readonly channel?: string;
+  readonly thumbnailUrl?: string;
+  readonly durationSeconds?: number;
+};
+
+/** Search YouTube without resolving or persisting signed media URLs. */
+export async function searchYoutube(
+  config: Pick<Config, "ytDlpPath">,
+  query: string,
+  signal: AbortSignal,
+  limit = 5,
+): Promise<YtdlpSearchResult[]> {
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [
+      config.ytDlpPath,
+      "--flat-playlist",
+      "--dump-json",
+      "--no-warnings",
+      "--no-progress",
+      "--playlist-end",
+      String(limit),
+      `ytsearch${String(limit)}:${query}`,
+    ],
+    signal,
+  );
+  if (exitCode !== 0) {
+    throw new Error(
+      `yt-dlp search failed (code ${String(exitCode)}): ${stderr.trim()}`,
+    );
+  }
+  const results: YtdlpSearchResult[] = [];
+  for (const line of stdout.split("\n")) {
+    if (line.trim().length === 0) continue;
+    const parsed = YtdlpSearchResultSchema.parse(parseJson(line));
+    const candidateUrl = parsed.webpage_url ?? parsed.url;
+    const url =
+      candidateUrl?.startsWith("http") === true
+        ? candidateUrl
+        : `https://www.youtube.com/watch?v=${parsed.id}`;
+    if (isBlockedText(parsed.title) || isBlockedUrl(url)) continue;
+    const channel = parsed.channel ?? parsed.uploader;
+    results.push({
+      title: parsed.title,
+      url,
+      ...(channel === undefined ? {} : { channel }),
+      ...(parsed.thumbnail === undefined
+        ? {}
+        : { thumbnailUrl: parsed.thumbnail }),
+      ...(parsed.duration === undefined
+        ? {}
+        : { durationSeconds: parsed.duration }),
+    });
+  }
+  return results.slice(0, limit);
 }
 
 /** True if a URL looks like a playlist that should be expanded into individual items. */
@@ -146,7 +235,7 @@ export async function expandPlaylist(
   url: string,
   signal: AbortSignal,
 ): Promise<PlaylistItem[]> {
-  const proc = Bun.spawn(
+  const { stdout, stderr, exitCode } = await runSubprocess(
     [
       config.ytDlpPath,
       "--flat-playlist",
@@ -155,13 +244,8 @@ export async function expandPlaylist(
       "%(url)s\t%(title)s",
       url,
     ],
-    { stdout: "pipe", stderr: "pipe", stdin: "ignore", signal },
+    signal,
   );
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
   if (exitCode !== 0) {
     throw new Error(
       `yt-dlp playlist expansion failed (code ${String(exitCode)}): ${stderr.trim()}`,
@@ -199,18 +283,10 @@ export async function resolveWithYtdlp(
   const args = buildInfoArgs(source);
   log.debug("probing source", { target: ytdlpTarget(source) });
 
-  const proc = Bun.spawn([config.ytDlpPath, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, ...args],
     signal,
-  });
-
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  );
 
   if (exitCode !== 0) {
     throw new Error(
@@ -261,17 +337,10 @@ export async function listSubtitleTracksForYtdlp(
   signal: AbortSignal,
 ): Promise<SubtitleCandidate[]> {
   const args = buildSubtitleEnumerationArgs(source);
-  const proc = Bun.spawn([config.ytDlpPath, ...args], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, ...args],
     signal,
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  );
   if (exitCode !== 0) {
     log.warn("subtitle enumeration failed", {
       target: ytdlpTarget(source),
@@ -326,17 +395,10 @@ export async function listExtractors(
   if (extractorCache !== undefined) {
     return extractorCache;
   }
-  const proc = Bun.spawn([config.ytDlpPath, "--list-extractors"], {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, "--list-extractors"],
     signal,
-  });
-  const [stdout, stderr, exitCode] = await Promise.all([
-    new Response(proc.stdout).text(),
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
+  );
   if (exitCode !== 0) {
     throw new Error(
       `yt-dlp --list-extractors failed (code ${String(exitCode)}): ${stderr.trim()}`,

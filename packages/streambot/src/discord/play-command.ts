@@ -31,9 +31,32 @@ import {
   shameMessage,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
+import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import {
+  inferMediaIntent,
+  MediaPlacementSchema,
+  MediaSourcePreferenceSchema,
+  type MediaPlacement,
+  type MediaSourcePreference,
+} from "@shepherdjerred/streambot/discovery/media-intent.ts";
 
 const PLAYLIST_TIMEOUT_MS = 60_000;
 const PLAY_RESOLVE_TIMEOUT_MS = 30_000;
+
+type PlayCommandInput = {
+  readonly deps: CommandHandlerDeps;
+  readonly interaction: CommandInteraction;
+  readonly query: string;
+  readonly subtitles: SubtitlePref | undefined;
+  readonly next: boolean;
+};
+
+type DiscoveredPlayInput = PlayCommandInput & {
+  readonly source: MediaSourcePreference;
+  readonly placement: MediaPlacement;
+};
 
 function ackMessage(
   label: string,
@@ -48,32 +71,225 @@ export async function runPlayCommand(
   interaction: CommandInteraction,
   next: boolean,
 ): Promise<void> {
-  const userId = interaction.userId;
   const query = interaction.getStringRequired("query");
   const subtitles = buildSubtitlePref(
     interaction.getString("subtitles"),
     interaction.getString("sublang"),
   );
+  const selectedPlacement = MediaPlacementSchema.parse(
+    interaction.getString("placement") ?? (next ? "next" : "queue"),
+  );
+  const selectedSource = MediaSourcePreferenceSchema.parse(
+    interaction.getString("source") ?? "auto",
+  );
+
+  if (
+    selectedPlacement === "now" &&
+    deps.featureGate !== undefined &&
+    deps.guildId !== undefined &&
+    deps.channelId !== undefined &&
+    !(await deps.featureGate.assistantV2({
+      guildId: deps.guildId,
+      channelId: deps.channelId,
+      userId: interaction.userId,
+    }))
+  ) {
+    await interaction.reply("Playing now is not enabled here yet.");
+    return;
+  }
 
   if (isHttpUrl(query) && isLikelyPlaylist(query)) {
-    await interaction.defer();
-    const items = await deps.expandPlaylist(
+    await runPlaylistRequest({
+      deps,
+      interaction,
       query,
-      AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
-    );
-    for (const item of items) {
-      const source = { kind: "url", url: item.url, subtitles } as const;
-      deps.dispatch({
-        type: next ? "ADD_NEXT" : "ADD",
-        source,
-        requesterId: userId,
-      });
-    }
-    await interaction.editReply(
-      `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip()}`,
+      subtitles,
+      next,
+      source: selectedSource,
+      placement: selectedPlacement,
+    });
+    return;
+  }
+
+  if (deps.discovery !== undefined) {
+    await runDiscoveredPlay({
+      deps,
+      interaction,
+      query,
+      subtitles,
+      next,
+      source: selectedSource,
+      placement: selectedPlacement,
+    });
+    return;
+  }
+
+  await runLegacyPlay({ deps, interaction, query, subtitles, next });
+}
+
+async function runPlaylistRequest(input: DiscoveredPlayInput): Promise<void> {
+  if (input.source !== "auto" && input.source !== "youtube") {
+    await input.interaction.reply(
+      "Playlist URLs can only use the auto or YouTube source.",
     );
     return;
   }
+  await runPlaylist(input);
+}
+
+function playlistItemPlacement(
+  index: number,
+  placement: MediaPlacement,
+  next: boolean,
+): MediaPlacement {
+  if (index === 0 && placement === "now") return "now";
+  if (placement === "next" || next) return "next";
+  return "queue";
+}
+
+function playlistEventType(
+  placement: MediaPlacement,
+): "PLAY_NOW" | "ADD_NEXT" | "ADD" {
+  if (placement === "now") return "PLAY_NOW";
+  if (placement === "next") return "ADD_NEXT";
+  return "ADD";
+}
+
+async function playlistHistoryEnabled(
+  deps: CommandHandlerDeps,
+  scope: {
+    readonly guildId: string;
+    readonly channelId: string;
+    readonly userId: string;
+  } | null,
+): Promise<boolean> {
+  if (scope === null || deps.history === undefined) return false;
+  return (
+    deps.featureGate === undefined || (await deps.featureGate.history(scope))
+  );
+}
+
+function playlistPlayNowDenial(
+  deps: CommandHandlerDeps,
+  userId: UserId,
+  placement: MediaPlacement,
+): string | null {
+  if (placement !== "now") return null;
+  try {
+    new PlaybackCommandService(deps).assertCanPlayNow(userId);
+    return null;
+  } catch (error) {
+    if (error instanceof PlaybackCommandBoundaryError) return error.message;
+    throw error;
+  }
+}
+
+async function runPlaylist(
+  input: PlayCommandInput & {
+    readonly source: MediaSourcePreference;
+    readonly placement: MediaPlacement;
+  },
+): Promise<void> {
+  const { deps, interaction, query, subtitles, next, placement } = input;
+  await interaction.defer();
+  const initialDenial = playlistPlayNowDenial(
+    deps,
+    interaction.userId,
+    placement,
+  );
+  if (initialDenial !== null) {
+    await interaction.editReply(initialDenial);
+    return;
+  }
+  const items = await deps.expandPlaylist(
+    query,
+    AbortSignal.timeout(PLAYLIST_TIMEOUT_MS),
+  );
+  const scope =
+    deps.guildId === undefined || deps.channelId === undefined
+      ? null
+      : {
+          guildId: deps.guildId,
+          channelId: deps.channelId,
+          userId: interaction.userId,
+        };
+  const history = deps.history;
+  const historyEnabled = await playlistHistoryEnabled(deps, scope);
+  const dispatchDenial = playlistPlayNowDenial(
+    deps,
+    interaction.userId,
+    placement,
+  );
+  if (dispatchDenial !== null) {
+    await interaction.editReply(dispatchDenial);
+    return;
+  }
+  const dispatchItems =
+    placement === "next" || next ? items.toReversed() : items;
+  if (placement === "now" && dispatchItems.length > 0) {
+    const currentRequestId = deps.view().current?.requestId;
+    if (currentRequestId !== undefined) {
+      deps.history?.updateRequest(currentRequestId, "skipped");
+    }
+  }
+  for (const [index, item] of dispatchItems.entries()) {
+    const itemPlacement = playlistItemPlacement(index, placement, next);
+    const source = { kind: "url", url: item.url, subtitles } as const;
+    const requestId =
+      historyEnabled && history !== undefined && scope !== null
+        ? history.recordQueueRequest({
+            scope,
+            rawQuery: item.title,
+            intent: inferMediaIntent({
+              query: item.title,
+              source: "youtube",
+              placement: itemPlacement,
+            }),
+            media: {
+              title: item.title,
+              provider: "youtube",
+              source,
+              canonicalUrl: item.url,
+            },
+          })
+        : undefined;
+    deps.dispatch({
+      type: playlistEventType(itemPlacement),
+      source,
+      requesterId: interaction.userId,
+      ...(requestId === undefined ? {} : { requestId }),
+    });
+  }
+  await interaction.editReply(
+    `Queued ${String(items.length)} item(s) from the playlist.${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip()}`,
+  );
+}
+
+async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
+  const { deps, interaction, query, subtitles, source, placement } = input;
+  await interaction.defer();
+  try {
+    const result = await new PlaybackCommandService(deps).play({
+      query,
+      source,
+      placement,
+      userId: interaction.userId,
+      spoken: false,
+      ...(subtitles === undefined ? {} : { subtitles }),
+    });
+    await interaction.editReply(`${result.message}\n\nTip: ${randomTip()}`);
+  } catch (error) {
+    if (error instanceof PlaybackCommandBoundaryError) {
+      await interaction.editReply(error.message);
+      return;
+    }
+    throw error;
+  }
+}
+
+async function runLegacyPlay(input: PlayCommandInput): Promise<void> {
+  const { deps, interaction, query, subtitles, next } = input;
+  const userId = interaction.userId;
 
   const source = withSubtitles(
     resolvePlayQuery(query, deps.library()),

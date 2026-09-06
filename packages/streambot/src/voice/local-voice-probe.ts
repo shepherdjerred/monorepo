@@ -6,10 +6,8 @@ import { normalizeVoicePlayQuery } from "@shepherdjerred/streambot/commands/play
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import type { RealtimeCommandTurnResult } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
-import type {
-  VoiceCommandInvocation,
-  VoiceCommandPort,
-} from "@shepherdjerred/streambot/voice/voice-tools.ts";
+import type { VoiceCommandPort } from "@shepherdjerred/streambot/voice/voice-tools.ts";
+import type { VoiceCommandInvocation } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
 import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
 import type { CompletedVoiceTurn } from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
 
@@ -234,9 +232,46 @@ export class DryRunVoiceCommandPort implements VoiceCommandPort {
     return "Dry run: subtitles would turn off.";
   }
 
+  subtitles(
+    mode: Parameters<VoiceCommandPort["subtitles"]>[0],
+    language: string | null,
+  ): string {
+    this.calls.push({ name: "subtitles", arguments: { mode, language } });
+    return "Dry run: subtitle preferences would change.";
+  }
+
+  pause(): string {
+    this.calls.push({ name: "pause", arguments: {} });
+    return "Dry run: playback would pause.";
+  }
+
+  resume(): string {
+    this.calls.push({ name: "resume", arguments: {} });
+    return "Dry run: playback would resume.";
+  }
+
+  restart(): string {
+    this.calls.push({ name: "restart", arguments: {} });
+    return "Dry run: the current item would restart.";
+  }
+
+  previous(_signal: AbortSignal): string {
+    this.calls.push({ name: "previous", arguments: {} });
+    return "Dry run: the previous item would play.";
+  }
+
   searchLibrary(query: string): string {
     this.calls.push({ name: "search_library", arguments: { query } });
     return "Dry run: the library would be searched.";
+  }
+
+  searchMedia(
+    query: string,
+    source: Parameters<VoiceCommandPort["searchMedia"]>[1],
+    _signal: AbortSignal,
+  ): string {
+    this.calls.push({ name: "search_media", arguments: { query, source } });
+    return "Dry run: media sources would be searched.";
   }
 
   listChapters(): string {

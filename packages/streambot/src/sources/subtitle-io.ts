@@ -23,6 +23,7 @@ import {
 } from "@shepherdjerred/streambot/sources/subtitles.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
 
 /**
  * Subtitle I/O glue: temp staging + ffprobe/ffmpeg/yt-dlp. Pure logic (ranking, parsing, escaping)
@@ -65,18 +66,8 @@ async function run(cmd: string[], signal: AbortSignal): Promise<ProcResult> {
   // Subtitles are best-effort: a missing binary (ENOENT from Bun.spawn), an abort, or any spawn
   // failure must degrade to "no subtitle", never throw through resolution and abort playback.
   try {
-    const proc = Bun.spawn(cmd, {
-      stdout: "pipe",
-      stderr: "pipe",
-      stdin: "ignore",
-      signal,
-    });
-    const [stdout, stderr, code] = await Promise.all([
-      new Response(proc.stdout).text(),
-      new Response(proc.stderr).text(),
-      proc.exited,
-    ]);
-    return { ok: code === 0, stdout, stderr };
+    const { stdout, stderr, exitCode } = await runSubprocess(cmd, signal);
+    return { ok: exitCode === 0, stdout, stderr };
   } catch (error) {
     log.warn("subtitle subprocess failed to run", {
       command: cmd[0],

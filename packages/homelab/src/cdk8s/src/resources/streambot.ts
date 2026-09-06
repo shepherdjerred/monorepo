@@ -92,7 +92,7 @@ export function createStreambotDeployment(
     seaweedfsItem.name,
   );
 
-  // Small persistent volume for resume state (current item + playback position + queue). Survives
+  // Small persistent volume for resume state and the media-history SQLite database. Survives
   // pod restarts so a deploy/crash mid-movie picks up where it left off. RWO + the Recreate strategy
   // below guarantees the old pod detaches before the new one attaches (a rolling update would
   // multi-attach-conflict).
@@ -187,7 +187,7 @@ export function createStreambotDeployment(
         ),
         VIDEOS_DIR: EnvValue.fromValue("/data/videos"),
         MEDIA_DIRS: EnvValue.fromValue("/media/movies,/media/tv"),
-        // Resume state lives on the persistent volume mounted at /state.
+        // Resume state and durable media history live on the persistent volume mounted at /state.
         STATE_DIR: EnvValue.fromValue("/state"),
         // Extracted embedded subtitles are cached on the persistent volume mounted at /subs-cache.
         SUBS_CACHE_DIR: EnvValue.fromValue("/subs-cache"),
