@@ -1,7 +1,12 @@
 import { z } from "zod";
 import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 
-const ChampionSpellSchema = z.object({
+/**
+ * Per-spell shape of the committed Data Dragon champion JSON. Shared with the
+ * ability-facts generator (`scripts/ability-facts.ts`), which additionally
+ * consumes `effectBurn` ("e1"-style rank tables) to resolve tooltip tokens.
+ */
+export const ChampionSpellSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
@@ -14,6 +19,8 @@ const ChampionSpellSchema = z.object({
   costType: z.string(),
   range: z.array(z.number()),
   rangeBurn: z.string(),
+  /** Rank tables for `{{ eN }}` tooltip tokens; index 0 is always null. */
+  effectBurn: z.array(z.string().nullable()),
 });
 
 export type ChampionSpell = z.infer<typeof ChampionSpellSchema>;

@@ -33,26 +33,19 @@ import {
   type AbilitySlot,
   type ChampionAbilityFacts,
 } from "#src/data-dragon/ability-facts.ts";
+import {
+  ChampionSpellSchema,
+  type ChampionSpell,
+} from "#src/data-dragon/champion.ts";
 
 // ---------------------------------------------------------------------------
 // Data Dragon input (the committed assets/champion/{Key}.json files)
 // ---------------------------------------------------------------------------
 
-const DataDragonSpellSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  tooltip: z.string(),
-  maxrank: z.number().int().min(1).max(6),
-  cooldown: z.array(z.number()),
-  cooldownBurn: z.string(),
-  cost: z.array(z.number()),
-  costBurn: z.string(),
-  costType: z.string(),
-  range: z.array(z.number()),
-  rangeBurn: z.string(),
-  effectBurn: z.array(z.string().nullable()),
-});
-
+// The per-spell shape is the reader's ChampionSpellSchema — one schema owns
+// the committed champion JSON contract. The generator additionally needs the
+// champion-level fields below (partype for {{ abilityresourcename }}, the
+// passive block), which the runtime reader does not parse.
 const DataDragonChampionFileSchema = z.object({
   data: z.record(
     z.string(),
@@ -60,13 +53,11 @@ const DataDragonChampionFileSchema = z.object({
       id: z.string(),
       name: z.string(),
       partype: z.string(),
-      spells: z.array(DataDragonSpellSchema).length(4),
+      spells: z.array(ChampionSpellSchema).length(4),
       passive: z.object({ name: z.string(), description: z.string() }),
     }),
   ),
 });
-
-type DataDragonSpell = z.infer<typeof DataDragonSpellSchema>;
 
 // ---------------------------------------------------------------------------
 // Number formatting
@@ -628,7 +619,7 @@ export function stripTooltipMarkup(text: string): string {
 }
 
 type TooltipResolutionInput = {
-  ddragonSpell: DataDragonSpell | undefined;
+  ddragonSpell: ChampionSpell | undefined;
   /** Resource name from the champion's `partype` (e.g. "Mana"). */
   resourceName: string;
   context: SpellContext;
