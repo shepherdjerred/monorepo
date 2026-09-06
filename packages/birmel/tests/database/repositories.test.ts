@@ -43,19 +43,6 @@ function setupDatabase(): void {
       UNIQUE(user_id, guild_id, preference_key)
     )
   `);
-
-  testDb.run(`
-    CREATE TABLE IF NOT EXISTS music_history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      guild_id TEXT NOT NULL,
-      channel_id TEXT NOT NULL,
-      requested_by TEXT NOT NULL,
-      track_title TEXT NOT NULL,
-      track_url TEXT NOT NULL,
-      track_duration INTEGER,
-      played_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
 }
 
 function teardownDatabase(): void {
@@ -240,94 +227,5 @@ describe("user_preferences repository", () => {
       .all("user1", "guild1");
 
     expect(results.length).toBe(2);
-  });
-});
-
-describe("music_history repository", () => {
-  beforeEach(setupDatabase);
-  afterEach(teardownDatabase);
-
-  test("recordTrackPlay inserts a track", () => {
-    const result = testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url, track_duration)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user1", "Test Song", "https://example.com", 180],
-    );
-
-    expect(result.lastInsertRowid).toBeGreaterThan(0);
-  });
-
-  test("getRecentTracks retrieves tracks", () => {
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user1", "Song 1", "https://example.com/1"],
-    );
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user2", "Song 2", "https://example.com/2"],
-    );
-
-    const results = testDb
-      .query<{ track_title: string }, [string, number]>(
-        `SELECT * FROM music_history WHERE guild_id = ? ORDER BY played_at DESC LIMIT ?`,
-      )
-      .all("guild1", 10);
-
-    expect(results.length).toBe(2);
-  });
-
-  test("getTracksByUser retrieves tracks for a specific user", () => {
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user1", "Song 1", "https://example.com/1"],
-    );
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user2", "Song 2", "https://example.com/2"],
-    );
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user1", "Song 3", "https://example.com/3"],
-    );
-
-    const results = testDb
-      .query<{ track_title: string }, [string, string, number]>(
-        `SELECT * FROM music_history WHERE guild_id = ? AND requested_by = ? ORDER BY played_at DESC LIMIT ?`,
-      )
-      .all("guild1", "user1", 10);
-
-    expect(results.length).toBe(2);
-  });
-
-  test("getMostPlayedTracks groups by track", () => {
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user1", "Popular Song", "https://example.com/1"],
-    );
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user2", "Popular Song", "https://example.com/1"],
-    );
-    testDb.run(
-      `INSERT INTO music_history (guild_id, channel_id, requested_by, track_title, track_url)
-       VALUES (?, ?, ?, ?, ?)`,
-      ["guild1", "channel1", "user1", "Other Song", "https://example.com/2"],
-    );
-
-    const results = testDb
-      .query<{ track_title: string; play_count: number }, [string, number]>(
-        `SELECT track_title, COUNT(*) as play_count FROM music_history WHERE guild_id = ? GROUP BY track_url ORDER BY play_count DESC LIMIT ?`,
-      )
-      .all("guild1", 10);
-
-    expect(results.length).toBe(2);
-    expect(results[0]?.play_count).toBe(2);
   });
 });

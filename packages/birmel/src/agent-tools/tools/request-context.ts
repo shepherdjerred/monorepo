@@ -9,8 +9,6 @@ export type RequestContext = {
   guildId: string;
   /** Compact elected persona identifier for persona-scoped memory */
   personaId?: string;
-  /** Voice channel the requesting user was in, when available */
-  voiceChannelId?: string;
   /** The user who sent the message */
   userId: string;
   /** Whether a reply has already been sent for this request (prevents spam) */

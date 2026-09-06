@@ -428,24 +428,24 @@ describe("verified tool self-memory", () => {
   test("requires a matching successful tool event for self experience", () => {
     const experience = SelfMemorySchema.parse({
       kind: "verified-tool-experience",
-      toolId: "connect-github",
-      toolCallId: "call-connect-status",
+      toolId: "web-research",
+      toolCallId: "call-research",
       scope: "persona",
       targetUserId: null,
-      subject: "GitHub connection",
-      predicate: "verified status with",
-      value: "GitHub account is connected",
+      subject: "Research lookup",
+      predicate: "looked up results with",
+      value: "Research returned results",
       confidence: 1,
       salience: 0.7,
       validFrom: null,
       validUntil: null,
     });
     const successfulToolEvent = {
-      toolCallId: "call-connect-status",
-      toolId: "connect-github",
-      inputSummary: '{"action":"status"}',
-      resultSummary: "GitHub account is connected",
-      content: "Tool connect-github succeeded",
+      toolCallId: "call-research",
+      toolId: "web-research",
+      inputSummary: '{"action":"search"}',
+      resultSummary: "Research returned results",
+      content: "Tool web-research succeeded",
       success: true,
     };
 
@@ -456,11 +456,11 @@ describe("verified tool self-memory", () => {
         assistantMessage,
         toolEvents: [
           {
-            toolCallId: "call-connect-status",
-            toolId: "connect-github",
-            inputSummary: '{"action":"status"}',
+            toolCallId: "call-research",
+            toolId: "web-research",
+            inputSummary: '{"action":"search"}',
             resultSummary: "Tool reported failure",
-            content: "Tool connect-github failed",
+            content: "Tool web-research failed",
             success: false,
           },
         ],

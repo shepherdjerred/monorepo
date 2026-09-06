@@ -191,29 +191,6 @@ export const ElectionsConfigSchema = z.object({
   dayOfWeek: z.number().int().min(0).max(6).default(3), // 0=Sunday, 3=Wednesday, 6=Saturday
 });
 
-export const EditorRepoConfigSchema = z.object({
-  name: z.string(),
-  repo: z.string(), // GitHub repo path: "owner/repo"
-  allowedPaths: z.array(z.string()).default(["**/*"]),
-  branch: z.string().default("main"),
-});
-
-export const EditorConfigSchema = z.object({
-  enabled: z.boolean().default(false),
-  allowedRepos: z.array(EditorRepoConfigSchema).default([]),
-  maxSessionDurationMs: z.number().int().positive().default(1_800_000), // 30 minutes
-  maxSessionsPerUser: z.number().int().positive().default(1),
-  oauthPort: z.number().int().min(1).max(65_535).default(4112),
-  oauthHost: z.string().default("0.0.0.0"),
-  github: z
-    .object({
-      clientId: z.string(),
-      clientSecret: z.string(),
-      callbackUrl: z.string(),
-    })
-    .optional(),
-});
-
 export const HealthConfigSchema = z.object({
   port: z.number().int().min(1).max(65_535).default(8080),
 });
@@ -236,7 +213,6 @@ export const ConfigSchema = z.object({
   birthdays: BirthdayConfigSchema,
   activityTracking: ActivityTrackingConfigSchema,
   elections: ElectionsConfigSchema,
-  editor: EditorConfigSchema,
   health: HealthConfigSchema,
 });
 
@@ -260,6 +236,4 @@ export type ActivityTrackingConfig = z.infer<
   typeof ActivityTrackingConfigSchema
 >;
 export type ElectionsConfig = z.infer<typeof ElectionsConfigSchema>;
-export type EditorRepoConfig = z.infer<typeof EditorRepoConfigSchema>;
-export type EditorConfig = z.infer<typeof EditorConfigSchema>;
 export type HealthConfig = z.infer<typeof HealthConfigSchema>;

@@ -14,11 +14,11 @@ describe("application image inputs", () => {
   });
 
   test("pins and verifies yt-dlp release assets for both architectures", async () => {
+    // Birmel dropped its music stack, so streambot is the only image that
+    // still downloads a yt-dlp binary. The loop stays so a second consumer is
+    // checked for pin drift the moment one is added back.
     const versions: string[] = [];
-    for (const path of [
-      "packages/birmel/Dockerfile",
-      "packages/streambot/Dockerfile",
-    ]) {
+    for (const path of ["packages/streambot/Dockerfile"]) {
       const dockerfile = await read(path);
       const version = /^ARG YT_DLP_VERSION=(\S+)$/m.exec(dockerfile);
       expect(version).not.toBeNull();

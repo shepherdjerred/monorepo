@@ -35,6 +35,13 @@ const RUNTIME_SQL = await Bun.file(RUNTIME_MIGRATION_URL).text();
 const ROUTE_CAPABILITY_SQL = await Bun.file(
   ROUTE_CAPABILITY_MIGRATION_URL,
 ).text();
+const REMOVE_EDITOR_AND_MUSIC_MIGRATION_URL = new URL(
+  "../../prisma/migrations/20260906000000_remove_editor_and_music/migration.sql",
+  import.meta.url,
+);
+const REMOVE_EDITOR_AND_MUSIC_SQL = await Bun.file(
+  REMOVE_EDITOR_AND_MUSIC_MIGRATION_URL,
+).text();
 
 const FINAL_TABLES = [
   "AgentJob",
@@ -44,16 +51,13 @@ const FINAL_TABLES = [
   "AgentSessionEvent",
   "Birthday",
   "DailyPostConfig",
-  "EditorSession",
   "ElectionPoll",
-  "GitHubAuth",
   "GuildOwner",
   "LegacyAgentRuntimeArchive",
   "MemoryClaim",
   "MemoryExtractionFence",
   "MemorySourceFence",
   "MemoryRevision",
-  "MusicHistory",
   "PollRecord",
   "ScheduledAnnouncement",
   "ServerEvent",
@@ -779,6 +783,7 @@ describe("Birmel database migrations", () => {
         database.run(BASELINE_SQL);
         database.run(RUNTIME_SQL);
         database.run(ROUTE_CAPABILITY_SQL);
+        database.run(REMOVE_EDITOR_AND_MUSIC_SQL);
         expectFinalSchema(database, false);
 
         const agentRunColumns = tableColumns(database, "AgentRun");

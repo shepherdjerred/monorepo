@@ -47,18 +47,6 @@ model ScheduledAnnouncement {
   @@index([scheduledAt])
 }
 
-model MusicHistory {
-  id        Int      @id @default(autoincrement())
-  guildId   String
-  trackUrl  String
-  trackName String
-  duration  Int
-  userId    String
-  createdAt DateTime @default(now())
-
-  @@index([guildId, createdAt])
-}
-
 model PollRecord {
   id        Int      @id @default(autoincrement())
   guildId   String
@@ -348,35 +336,3 @@ model LegacyAgentRuntimeArchive {
   @@index([archivedAt])
 }
 
-model EditorSession {
-  id             String   @id @default(uuid())
-  userId         String
-  guildId        String
-  channelId      String
-  threadId       String?
-  messageId      String?
-  repoName       String
-  sdkSessionId   String?
-  clonedRepoPath String? // Path to cloned repo in /tmp
-  state          String   @default("active")
-  pendingChanges String?
-  summary        String?
-  prUrl          String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  expiresAt      DateTime
-
-  @@index([userId, state])
-  @@index([guildId])
-  @@index([threadId])
-}
-
-model GitHubAuth {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  accessToken  String
-  refreshToken String?
-  expiresAt    DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-}

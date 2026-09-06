@@ -136,30 +136,30 @@ describe("capability-grounded execution instructions", () => {
 
   test("binds specialist execution to the routed primary tool", () => {
     expect(
-      specialistInstructions("editor", {
-        route: "editor",
+      specialistInstructions("automation", {
+        route: "automation",
         disposition: "supported",
-        primaryToolId: "connect-github",
+        primaryToolId: "web-research",
         confidence: 1,
-        rationale: "GitHub status",
+        rationale: "Web research",
       }),
-    ).toContain("Primary registered tool: connect-github");
+    ).toContain("Primary registered tool: web-research");
   });
 
   test("requires the routed primary tool to succeed at runtime", () => {
     const decision = {
-      route: "editor" as const,
+      route: "automation" as const,
       disposition: "supported" as const,
-      primaryToolId: "connect-github",
+      primaryToolId: "web-research",
       confidence: 1,
-      rationale: "GitHub status",
+      rationale: "Web research",
     };
     const supportingTool = {
-      toolCallId: "call-list",
-      toolId: "list-repos",
+      toolCallId: "call-service",
+      toolId: "external-service",
       inputSummary: "{}",
-      resultSummary: "Repos listed",
-      content: "Tool list-repos succeeded",
+      resultSummary: "Service called",
+      content: "Tool external-service succeeded",
       success: true,
     };
 
@@ -170,11 +170,11 @@ describe("capability-grounded execution instructions", () => {
       requireSuccessfulPrimaryTool(decision, [
         supportingTool,
         {
-          toolCallId: "call-connect",
-          toolId: "connect-github",
-          inputSummary: '{"action":"status"}',
+          toolCallId: "call-research",
+          toolId: "web-research",
+          inputSummary: '{"query":"topic"}',
           resultSummary: "Tool reported failure",
-          content: "Tool connect-github failed",
+          content: "Tool web-research failed",
           success: false,
         },
       ]),
@@ -183,11 +183,11 @@ describe("capability-grounded execution instructions", () => {
       requireSuccessfulPrimaryTool(decision, [
         supportingTool,
         {
-          toolCallId: "call-connect",
-          toolId: "connect-github",
-          inputSummary: '{"action":"status"}',
-          resultSummary: "GitHub account is connected",
-          content: "Tool connect-github succeeded",
+          toolCallId: "call-research",
+          toolId: "web-research",
+          inputSummary: '{"query":"topic"}',
+          resultSummary: "Research returned results",
+          content: "Tool web-research succeeded",
           success: true,
         },
       ]),

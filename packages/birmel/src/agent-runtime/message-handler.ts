@@ -250,9 +250,6 @@ async function processAdmittedTurn(
       userId: context.turn.userId,
       ownsSourceReply: true,
       personaId: persona,
-      ...(context.turn.voiceChannelId == null
-        ? {}
-        : { voiceChannelId: context.turn.voiceChannelId }),
     };
     const execution = await runWithRequestContext(
       requestContext,

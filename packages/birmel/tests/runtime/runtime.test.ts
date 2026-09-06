@@ -26,32 +26,21 @@ const { createSpecialistTaskPacket, executeRoutedTurn } =
   await import("@shepherdjerred/birmel/agent-runtime/runtime.ts");
 
 const SpecialistRoutesSchema = z.array(
-  z.enum([
-    "messaging",
-    "server",
-    "moderation",
-    "music",
-    "automation",
-    "editor",
-  ]),
+  z.enum(["messaging", "server", "moderation", "automation"]),
 );
 
 const specialistRoutes = SpecialistRoutesSchema.parse([
   "messaging",
   "server",
   "moderation",
-  "music",
   "automation",
-  "editor",
 ]);
 
 const primaryToolBySpecialist: Record<SpecialistId, string> = {
   messaging: "get-activity-stats",
   server: "manage-guild",
   moderation: "moderate-member",
-  music: "music-playback",
   automation: "web-research",
-  editor: "connect-github",
 };
 
 function successfulResult(text: string) {

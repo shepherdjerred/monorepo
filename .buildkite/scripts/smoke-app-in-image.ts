@@ -132,14 +132,10 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/birmel",
-      "command -v gh",
-      `bun -e 'await import("@openai/codex-sdk");'`,
+      // The shell tool advertises python3 and node by name, so their absence
+      // is a broken capability rather than a missing convenience.
       "node --version",
       "python3 --version",
-      `bun -e 'const p = require("ffmpeg-static"); if (typeof p !== "string" || p.length === 0) throw new Error("ffmpeg-static did not resolve");'`,
-      `bun -e 'await import("@snazzah/davey");'`,
-      "test -x node_modules/youtube-dl-exec/bin/yt-dlp",
-      "timeout 10s node_modules/youtube-dl-exec/bin/yt-dlp --version",
       "set +e",
       'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',
       "status=$?",

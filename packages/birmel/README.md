@@ -4,8 +4,8 @@ Discord bot built on a single explicit AI SDK agent runtime. Every message turn
 follows one pipeline: a Discord event is admitted (trusted users only),
 assembled into a context bundle, and assigned one capability-grounded route.
 Conversation and unsupported work use the tool-free direct agent. Supported
-work uses exactly one specialist (`messaging`, `server`, `moderation`, `music`,
-`automation`, or `editor`) and one registered primary tool. The runtime then
+work uses exactly one specialist (`messaging`, `server`, `moderation`, or
+`automation`) and one registered primary tool. The runtime then
 requires that primary tool to succeed and edits one Discord reply. Durable
 memory separates human claims from curated
 self-memory: accepted aliases, commitments, and experiences backed by a
@@ -22,10 +22,10 @@ tool; scoped activity questions use the activity capability. Commitments retain
 an exact commitment excerpt from the delivered reply and a grounded stable
 topic, so unrelated promises do not overwrite each other.
 
-The runtime also binds one active session to each Discord thread, runs a jobs
-system with durable effect checkpoints, and plays music through discord-player.
-Health is exposed on `/live` (process) and `/ready` (migrations applied,
-Prisma connected, Discord ready, scheduler started).
+The runtime also binds one active session to each Discord thread and runs a
+jobs system with durable effect checkpoints. Health is exposed on `/live`
+(process) and `/ready` (migrations applied, Prisma connected, Discord ready,
+scheduler started).
 
 ## Commands
 
@@ -41,8 +41,7 @@ bun run lint         # eslint (generates Prisma first)
 bun run smoke        # image smoke test (scripts/smoke.ts)
 ```
 
-End-to-end checks are separate scripts: `bun run test:e2e:music`,
-`bun run test:e2e:youtube-stream`, and `bun run test:e2e:openclaw-docker`.
+End-to-end capability checks run through `bun run test:e2e:openclaw-docker`.
 
 ## Prisma
 
@@ -60,8 +59,8 @@ unmigrated database, resolves the verified baseline when appropriate, and runs
 bun run docker:build   # builds birmel:dev from the repo root context (Dockerfile)
 ```
 
-The image includes `gh`, Node, Python, yt-dlp, and ffmpeg for the
-editor and music specialists. Production deploys go through the Buildkite
+The image is the Bun runtime plus the scoped source closure — it installs no
+CLIs or extra language runtimes. Production deploys go through the Buildkite
 image build and ArgoCD GitOps flow.
 
 See [AGENTS.md](AGENTS.md) for contributor/agent workflow notes.

@@ -4,10 +4,10 @@ import { defineArchitecture } from "@shepherdjerred/architecture";
  * Birmel is a set of feature slices sitting on a foundation.
  *
  * The feature slices are the bot's capabilities and the surfaces that drive
- * them: the agent runtime and its tools, the Discord gateway handlers, the
- * editor, elections, memory, music, personas, the scheduler, sessions, health
- * and context. The foundation is `config/`, `observability/`, `utils/` and the
- * Prisma repositories in `database/`.
+ * them: the agent runtime and its tools, the Discord gateway handlers,
+ * elections, memory, personas, the scheduler, sessions, health and context.
+ * The foundation is `config/`, `observability/`, `utils/` and the Prisma
+ * repositories in `database/`.
  *
  * The enforced direction is one-way: a feature slice may use the foundation,
  * and the foundation may not reach back into a feature slice. That is the
@@ -29,11 +29,9 @@ const featureSlices = [
   "agent-tools",
   "context",
   "discord",
-  "editor",
   "elections",
   "health",
   "memory",
-  "music",
   "persona",
   "scheduler",
   "sessions",

@@ -237,7 +237,6 @@ describe("ConfigSchema (full)", () => {
       scheduler: {},
       browser: {},
       elections: {},
-      editor: {},
       health: {},
     });
     expect(result.success).toBe(true);

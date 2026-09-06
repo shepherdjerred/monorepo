@@ -24,12 +24,8 @@ const SPECIALIST_INSTRUCTIONS: Record<SpecialistId, string> = {
     "Use guild and channel tools for Discord server state. There is no generic database or SQL capability. Verify writes with a read-back before reporting success.",
   moderation:
     "Use moderation, member, role, automod, webhook, invite, emoji, and sticker tools. Verify destructive writes before reporting success.",
-  music:
-    "Use music playback, queue, and playlist tools. Report the concrete player state returned by tools.",
   automation:
     "Use jobs, shell, browser, external service, research, event, election, and birthday tools. Durable delayed work must use manage-job.",
-  editor:
-    "Use editor tools only for allowed repositories. Report concrete files, sessions, or pull requests returned by tools.",
 };
 
 export function directInstructions(decision: RouteDecision): string {

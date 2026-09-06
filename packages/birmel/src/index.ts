@@ -16,9 +16,7 @@ import { disconnectPrisma } from "./database/index.ts";
 import { destroyDiscordClient, getDiscordClient } from "./discord/client.ts";
 import { registerEventHandlers } from "./discord/events/index.ts";
 import { setMessageHandler } from "./discord/events/message-create.ts";
-import { startOAuthServer, stopOAuthServer } from "./editor/oauth-server.ts";
 import { startHealthServer, stopHealthServer } from "./health/server.ts";
-import { destroyMusicPlayer, initializeMusicPlayer } from "./music/player.ts";
 import { captureException } from "./observability/sentry.ts";
 import {
   isSchedulerStarted,
@@ -38,8 +36,6 @@ async function shutdown(exitCode: number): Promise<void> {
   logger.info("Shutting down Birmel");
   await stopScheduler();
   await stopHealthServer();
-  await stopOAuthServer();
-  await destroyMusicPlayer();
   await destroyDiscordClient();
   await disconnectPrisma();
   await shutdownDynamicConfig();
@@ -72,10 +68,8 @@ async function main(): Promise<void> {
     isSchedulerStarted,
   });
   await client.login(config.discord.token);
-  await initializeMusicPlayer();
   setAgentJobRuntimeDependencies({ executeAgent: executeIsolatedAgentJob });
   startScheduler();
-  await startOAuthServer();
 
   process.on("SIGINT", () => void shutdown(0));
   process.on("SIGTERM", () => void shutdown(0));

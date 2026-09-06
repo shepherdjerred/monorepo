@@ -10,9 +10,6 @@ export const GATEWAY_INTENTS = [
   GatewayIntentBits.GuildMembers, // PRIVILEGED
   GatewayIntentBits.GuildModeration,
 
-  // Voice functionality
-  GatewayIntentBits.GuildVoiceStates,
-
   // Additional features
   GatewayIntentBits.GuildPresences, // PRIVILEGED
   GatewayIntentBits.GuildMessageReactions,

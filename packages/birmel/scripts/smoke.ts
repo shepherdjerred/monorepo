@@ -2,15 +2,10 @@
 /**
  * Smoke test for the birmel image.
  *
- * Translated from the old Dagger `smokeTestBirmelHelper`. Verifies, inside the
- * image, that the editor + music runtime dependencies are present, then boots
- * the bot with dummy creds and asserts the Discord login fails with the expected
- * auth error:
- *   - gh on PATH and the package-local Codex SDK importable
- *   - node + python3 (youtube-dl-exec)
- *   - ffmpeg-static resolves (audio transcode)
- *   - @snazzah/davey imports (discord-voip DAVE)
- *   - the baked yt-dlp binary is executable and runnable
+ * Translated from the old Dagger `smokeTestBirmelHelper`. Boots the bot inside
+ * the image with dummy creds and asserts the Discord login fails with the
+ * expected auth error:
+ *   - node and python3 are present, because the shell tool advertises them
  *   - the bot boots and Discord login fails with TokenInvalid/401/etc.
  *
  * One shell pipeline, run to completion (not detached). Dependency-free:
@@ -43,15 +38,10 @@ async function main(): Promise<void> {
   const script = [
     "set -e",
     "cd /app/packages/birmel",
-    // Editor + music runtime dependency checks (each hard-fails on absence).
-    "command -v gh",
-    "bun -e 'await import(\"@openai/codex-sdk\");'",
+    // The shell tool documents python3 and node by name, so a production image
+    // without them silently breaks an advertised capability.
     "node --version",
     "python3 --version",
-    String.raw`bun -e "const p = require(\"ffmpeg-static\"); if (typeof p !== \"string\" || p.length === 0) throw new Error(\"ffmpeg-static did not resolve\");"`,
-    String.raw`bun -e "await import(\"@snazzah/davey\");"`,
-    "test -x node_modules/youtube-dl-exec/bin/yt-dlp",
-    "timeout 10s node_modules/youtube-dl-exec/bin/yt-dlp --version",
     // Time-boxed boot; capture output and assert the expected auth failure.
     "set +e",
     'output="$(timeout 30s bun run scripts/start.ts 2>&1)"',
@@ -74,6 +64,10 @@ async function main(): Promise<void> {
     "OPENROUTER_API_KEY=smoke-test-dummy",
     "-e",
     "DATABASE_URL=file:/tmp/smoke-test.db",
+    // Production runs FEATURE_FLAGS_MODE=flipt, which this sandbox cannot
+    // reach. The variable has no default on purpose, so boot needs it set.
+    "-e",
+    "FEATURE_FLAGS_MODE=disabled",
     "-e",
     "TELEMETRY_ENABLED=false",
     "--entrypoint",
@@ -86,9 +80,7 @@ async function main(): Promise<void> {
   const lower = run.stdout.toLowerCase();
   const expected = EXPECTED_FAILURE.some((p) => lower.includes(p));
   if (expected || run.code === 0) {
-    console.log(
-      "Smoke test passed: editor + music deps present, and boot hit the expected auth failure.",
-    );
+    console.log("Smoke test passed: boot hit the expected auth failure.");
     return;
   }
 

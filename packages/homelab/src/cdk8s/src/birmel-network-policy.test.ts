@@ -79,7 +79,7 @@ function parseSynthesizedDocuments(yamlContent: string): unknown[] {
 }
 
 describe("birmel NetworkPolicy", () => {
-  it("allows external UDP egress for Discord voice audio", () => {
+  it("opens no wide UDP egress now that voice playback is gone", () => {
     const app = new App({ outdir: ".test-synth-birmel" });
     createBirmelChart(app);
 
@@ -99,23 +99,18 @@ describe("birmel NetworkPolicy", () => {
       throw new Error("birmel-egress-netpol was not synthesized");
     }
 
-    const allowsDiscordVoiceUdp = (birmelEgress.spec?.egress ?? []).some(
-      (rule) => {
-        const allowsExternal = (rule.to ?? []).some(
-          (peer) => peer.ipBlock?.cidr === "0.0.0.0/0",
-        );
-        const allowsUdp = (rule.ports ?? []).some(
-          (port) =>
-            port.protocol === "UDP" &&
-            port.port === 50_000 &&
-            port.endPort === 65_535,
-        );
+    const allowsExternalUdp = (birmelEgress.spec?.egress ?? []).some((rule) => {
+      const allowsExternal = (rule.to ?? []).some(
+        (peer) => peer.ipBlock?.cidr === "0.0.0.0/0",
+      );
+      const allowsUdp = (rule.ports ?? []).some(
+        (port) => port.protocol === "UDP",
+      );
 
-        return allowsExternal && allowsUdp;
-      },
-    );
+      return allowsExternal && allowsUdp;
+    });
 
-    expect(allowsDiscordVoiceUdp).toBe(true);
+    expect(allowsExternalUdp).toBe(false);
   });
 });
 
@@ -137,6 +132,9 @@ describe("birmel runtime deployment", () => {
       name: "health",
       containerPort: 8080,
     });
+    expect(container.ports).not.toContainEqual(
+      expect.objectContaining({ name: "oauth" }),
+    );
     expect(container.startupProbe).toEqual({
       failureThreshold: 24,
       httpGet: { path: "/live", port: 8080, scheme: "HTTP" },
@@ -156,5 +154,6 @@ describe("birmel runtime deployment", () => {
     expect(environmentNames).toContain("HEALTH_PORT");
     expect(environmentNames).not.toContain("MEMORY_DB_PATH");
     expect(environmentNames).not.toContain("MASTRA_MEMORY_DB_PATH");
+    expect(environmentNames).not.toContain("EDITOR_ENABLED");
   });
 });

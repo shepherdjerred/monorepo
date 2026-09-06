@@ -226,42 +226,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
     ],
   },
   {
-    id: "music-playback",
-    specialist: "music",
-    riskClass: "write",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "music-queue",
-    specialist: "music",
-    riskClass: "write",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "music-playlist",
-    specialist: "music",
-    riskClass: "write",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
     id: "execute-shell-command",
     specialist: "automation",
     riskClass: "code-execution",
@@ -369,66 +333,6 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "sourceMessageId",
     ],
   },
-  {
-    id: "edit-repo",
-    specialist: "editor",
-    riskClass: "code-execution",
-    timeoutMs: 300_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "list-repos",
-    specialist: "editor",
-    riskClass: "read",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "get-editor-session",
-    specialist: "editor",
-    riskClass: "read",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "approve-changes",
-    specialist: "editor",
-    riskClass: "code-execution",
-    timeoutMs: 300_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
-  {
-    id: "connect-github",
-    specialist: "editor",
-    riskClass: "write",
-    timeoutMs: 30_000,
-    requiredRequestContext: [
-      "guildId",
-      "channelId",
-      "userId",
-      "sourceMessageId",
-    ],
-  },
 ]);
 
 function trustedContext(
@@ -471,9 +375,7 @@ describe("tool metadata contracts", () => {
       { specialist: "messaging", tools: toolSets.messagingToolSet },
       { specialist: "server", tools: toolSets.serverToolSet },
       { specialist: "moderation", tools: toolSets.moderationToolSet },
-      { specialist: "music", tools: toolSets.musicToolSet },
       { specialist: "automation", tools: toolSets.automationToolSet },
-      { specialist: "editor", tools: toolSets.editorToolSet },
     ];
     const registrations = sets.flatMap(({ specialist, tools }) =>
       tools.map((tool) => ({
@@ -516,7 +418,7 @@ describe("tool metadata contracts", () => {
     const ids = catalog.map(({ id }) => id);
 
     expect(ids).toContain("get-activity-stats");
-    expect(ids).toContain("connect-github");
+    expect(ids).toContain("moderate-member");
     expect(ids).not.toContain("manage-database");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain("sql");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain(
