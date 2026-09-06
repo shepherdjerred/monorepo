@@ -14,13 +14,20 @@ const mocks = vi.hoisted(() => {
       return [{ runId: "run-id", revision: 2, timelineRequired: true }];
     }),
     fetchTimelineForProgression: vi.fn(async () => {
-      calls.push("fetch-timeline");
+      calls.push("fetch-required-timeline");
+    }),
+    fetchTimelineForDuelProgression: vi.fn(async () => {
+      calls.push("fetch-duel-timeline");
     }),
     launchPreparedChallengeRuns: vi.fn(async () => {
       calls.push("launch");
     }),
     queuePreparedChallengeRuns: vi.fn(async () => {
       calls.push("queue");
+    }),
+    duelMatchNeedsTimeline: vi.fn(async () => false),
+    processDuelResult: vi.fn(async () => {
+      calls.push("duel");
     }),
   };
 });
@@ -37,8 +44,13 @@ vi.mock("#src/progression/challenges/postmatch.ts", () => ({
   queuePreparedChallengeRuns: mocks.queuePreparedChallengeRuns,
 }));
 vi.mock("#src/league/tasks/postmatch/match-report-standard.ts", () => ({
+  fetchTimelineForDuelProgression: mocks.fetchTimelineForDuelProgression,
   fetchTimelineForProgression: mocks.fetchTimelineForProgression,
   persistTimelineForProgression: vi.fn(),
+}));
+vi.mock("#src/progression/duels/results.ts", () => ({
+  duelMatchNeedsTimeline: mocks.duelMatchNeedsTimeline,
+  processDuelResult: mocks.processDuelResult,
 }));
 
 const { processCompetitiveProgressionMatch } =
@@ -86,12 +98,45 @@ describe("competitive progression post-match ordering", () => {
     });
 
     expect(mocks.calls).toEqual([
-      "hall",
       "prepare",
-      "fetch-timeline",
+      "fetch-required-timeline",
+      "prepare",
+      "duel",
+      "hall",
       "prepare",
       "queue",
       "launch",
     ]);
+  });
+
+  test("lets unavailable duel-only evidence enter organizer review", async () => {
+    mocks.prepareChallengeRunsForMatch.mockImplementation(async () => {
+      mocks.calls.push("prepare");
+      return [];
+    });
+    mocks.duelMatchNeedsTimeline.mockResolvedValue(true);
+
+    await processCompetitiveProgressionMatch({
+      match: matchFixture(),
+      timeline: null,
+      trackedPlayers: [],
+    });
+
+    expect(mocks.calls).toEqual([
+      "prepare",
+      "fetch-duel-timeline",
+      "prepare",
+      "duel",
+      "hall",
+      "prepare",
+      "queue",
+      "launch",
+    ]);
+    expect(mocks.fetchTimelineForProgression).not.toHaveBeenCalled();
+    expect(mocks.processDuelResult).toHaveBeenCalledWith(
+      expect.any(Object),
+      undefined,
+      "beta",
+    );
   });
 });

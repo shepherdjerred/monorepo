@@ -10,6 +10,7 @@ import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 import { HallBreakOutboxPayloadSchema } from "#src/progression/hall/evaluate-match.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
+import { loadProgressionOutboxRows } from "#src/progression/outbox.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,
@@ -91,17 +92,20 @@ function discordNonce(outboxId: string): string {
 }
 
 export async function deliverHallRecordBreakOutbox(): Promise<void> {
-  const activeRows = await prisma.hallRecordBreakOutbox.findMany({
-    where: { deliveryStatus: { in: ["pending", "sending"] } },
-    orderBy: { createdAt: "asc" },
-    take: 50,
-  });
-  const failedRows = await prisma.hallRecordBreakOutbox.findMany({
-    where: { deliveryStatus: "failed" },
-    orderBy: { updatedAt: "asc" },
-    take: 50 - activeRows.length,
-  });
-  const rows = [...activeRows, ...failedRows];
+  const rows = await loadProgressionOutboxRows(
+    async (take) =>
+      await prisma.hallRecordBreakOutbox.findMany({
+        where: { deliveryStatus: { in: ["pending", "sending"] } },
+        orderBy: { createdAt: "asc" },
+        take,
+      }),
+    async (take) =>
+      await prisma.hallRecordBreakOutbox.findMany({
+        where: { deliveryStatus: "failed" },
+        orderBy: { updatedAt: "asc" },
+        take,
+      }),
+  );
   const deliveryErrors: unknown[] = [];
   for (const row of rows) {
     const guildId = DiscordGuildIdSchema.parse(row.guildId);

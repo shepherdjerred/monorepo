@@ -5,6 +5,7 @@ import {
   RawMatchSchema,
 } from "@scout-for-lol/data";
 import {
+  fetchTimelineForDuelProgression,
   fetchTimelineForProgression,
   fetchTimelineIfStandardMatch,
 } from "./match-report-standard.ts";
@@ -50,6 +51,9 @@ describe("required progression timelines", () => {
     ).rejects.toThrow("match processing must retry");
     await expect(
       fetchTimelineIfStandardMatch(fixture.match, matchId, fixture.players),
+    ).resolves.toBeUndefined();
+    await expect(
+      fetchTimelineForDuelProgression(fixture.match, matchId, fixture.players),
     ).resolves.toBeUndefined();
   });
 });

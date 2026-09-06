@@ -161,7 +161,9 @@ export async function findLobbyByCode(
   client: ExtendedPrismaClient,
   code: string,
 ): Promise<TournamentLobbyRecord | undefined> {
-  const row = await client.tournamentLobby.findUnique({ where: { code } });
+  const row = await client.tournamentLobby.findFirst({
+    where: { code, duelGame: { is: null } },
+  });
   return row === null ? undefined : parseLobbyRow(row);
 }
 
@@ -178,7 +180,7 @@ export async function listLobbiesForGuild(
   serverId: DiscordGuildId,
 ): Promise<TournamentLobbyRecord[]> {
   const rows = await client.tournamentLobby.findMany({
-    where: { serverId },
+    where: { serverId, duelGame: { is: null } },
     orderBy: { createdAt: "desc" },
     take: 25,
   });

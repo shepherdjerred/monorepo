@@ -57,6 +57,10 @@ export const ChallengeTemplateParamsSchema = z.object({
 });
 export const ChallengeDraftParamsSchema = z.object({ draftId: z.uuid() });
 export const ChallengeRunParamsSchema = z.object({ runId: z.uuid() });
+export const DuelSeriesParamsSchema = z.object({
+  guildId: z.string().min(1),
+  seriesId: z.uuid(),
+});
 
 /**
  * Marks validation failures that came specifically from parsing matched URL
@@ -137,4 +141,8 @@ export function useChallengeRunParams(): z.infer<
   typeof ChallengeRunParamsSchema
 > {
   return parseRouteParams(ChallengeRunParamsSchema, useParams());
+}
+
+export function useDuelSeriesParams(): z.infer<typeof DuelSeriesParamsSchema> {
+  return parseRouteParams(DuelSeriesParamsSchema, useParams());
 }

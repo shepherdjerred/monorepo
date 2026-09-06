@@ -12,12 +12,14 @@ import { recordTimelineForReportStore } from "#src/report-store/live-ingest.ts";
 
 const logger = createLogger("postmatch-match-report-standard");
 
+type TimelinePersistence = "best_effort" | "required" | "required_if_available";
+
 function requireTimelineStaging(
-  persistence: "best_effort" | "required",
+  persistence: TimelinePersistence,
   staged: boolean,
   matchId: MatchId,
 ): void {
-  if (staged || persistence !== "required") return;
+  if (staged || persistence === "best_effort") return;
   throw new Error(
     `Timeline lake staging failed for ${matchId}; match processing must retry.`,
   );
@@ -70,6 +72,21 @@ export async function fetchTimelineForProgression(
   });
 }
 
+/** Duel evidence is durable when Riot supplies it; missing evidence enters organizer review. */
+export async function fetchTimelineForDuelProgression(
+  matchData: RawMatch,
+  matchId: MatchId,
+  playersInMatch: PlayerConfigEntry[],
+): Promise<RawTimeline | undefined> {
+  return await fetchAndRecordTimeline({
+    matchData,
+    matchId,
+    playersInMatch,
+    persistence: "required_if_available",
+    source: "timeline_progression",
+  });
+}
+
 /** Reassert durable persistence when an earlier best-effort report fetch supplied the timeline. */
 export async function persistTimelineForProgression(
   timeline: RawTimeline,
@@ -84,11 +101,55 @@ export async function persistTimelineForProgression(
   requireTimelineStaging("required", staged, matchId);
 }
 
+function requireAvailableTimeline(options: {
+  readonly persistence: TimelinePersistence;
+  readonly matchId: MatchId;
+}): void {
+  if (options.persistence === "required") {
+    requireTimelineStaging(options.persistence, false, options.matchId);
+  }
+}
+
+async function stageFetchedTimeline(
+  options: {
+    readonly persistence: TimelinePersistence;
+    readonly source?: "timeline_progression";
+    readonly playersInMatch: PlayerConfigEntry[];
+    readonly matchId: MatchId;
+  },
+  timeline: RawTimeline,
+): Promise<void> {
+  logger.info(
+    `[generateMatchReport] ✅ Timeline fetched with ${timeline.info.frames.length.toString()} frames`,
+  );
+  try {
+    const trackedPlayerAliases = options.playersInMatch.map(
+      (player) => player.alias,
+    );
+    const staged = await recordTimelineForReportStore({
+      timeline,
+      source:
+        options.source ??
+        (options.persistence === "required"
+          ? "timeline_dare_v2"
+          : "timeline_live"),
+      trackedPlayerAliases,
+    });
+    requireTimelineStaging(options.persistence, staged, options.matchId);
+  } catch (error) {
+    if (options.persistence !== "best_effort") throw error;
+    logger.error(
+      `[generateMatchReport] Error saving timeline ${options.matchId} to S3:`,
+      error,
+    );
+  }
+}
+
 async function fetchAndRecordTimeline(options: {
   matchData: RawMatch;
   matchId: MatchId;
   playersInMatch: PlayerConfigEntry[];
-  persistence: "best_effort" | "required";
+  persistence: TimelinePersistence;
   source?: "timeline_progression";
 }): Promise<RawTimeline | undefined> {
   // Don't fetch timeline for arena matches
@@ -98,14 +159,14 @@ async function fetchAndRecordTimeline(options: {
       options.matchData.info.gameMode,
     )
   ) {
-    requireTimelineStaging(options.persistence, false, options.matchId);
-    return undefined;
+    requireAvailableTimeline(options);
+    return;
   }
 
   const firstPlayer = options.playersInMatch[0];
   if (!firstPlayer) {
-    requireTimelineStaging(options.persistence, false, options.matchId);
-    return undefined;
+    requireAvailableTimeline(options);
+    return;
   }
 
   const playerRegion = firstPlayer.league.leagueAccount.region;
@@ -116,43 +177,17 @@ async function fetchAndRecordTimeline(options: {
     const timelineData = await fetchMatchTimeline(
       options.matchId,
       playerRegion,
-      options.persistence === "required" ? "throw" : "return_undefined",
+      options.persistence === "required"
+        ? "throw"
+        : options.persistence === "required_if_available"
+          ? "return_undefined_on_404"
+          : "return_undefined",
     );
-    if (timelineData) {
-      logger.info(
-        `[generateMatchReport] ✅ Timeline fetched with ${timelineData.info.frames.length.toString()} frames`,
-      );
-
-      // A funded Dare makes this write authoritative evidence and therefore
-      // retryable. Report-only capture remains best-effort because the match
-      // itself was already durably saved upstream.
-      try {
-        const trackedPlayerAliases = options.playersInMatch.map(
-          (player) => player.alias,
-        );
-        const staged = await recordTimelineForReportStore({
-          timeline: timelineData,
-          source:
-            options.source ??
-            (options.persistence === "required"
-              ? "timeline_dare_v2"
-              : "timeline_live"),
-          trackedPlayerAliases,
-        });
-        requireTimelineStaging(options.persistence, staged, options.matchId);
-      } catch (error) {
-        if (options.persistence === "required") throw error;
-        logger.error(
-          `[generateMatchReport] Error saving timeline ${options.matchId} to S3:`,
-          error,
-        );
-      }
+    if (timelineData === undefined) {
+      requireAvailableTimeline(options);
+      return;
     }
-    requireTimelineStaging(
-      options.persistence,
-      timelineData !== undefined,
-      options.matchId,
-    );
+    await stageFetchedTimeline(options, timelineData);
     return timelineData;
   } catch (error) {
     logger.error(
@@ -162,7 +197,7 @@ async function fetchAndRecordTimeline(options: {
     Sentry.captureException(error, {
       tags: { source: "timeline-fetch-wrapper", matchId: options.matchId },
     });
-    if (options.persistence === "required") throw error;
+    if (options.persistence !== "best_effort") throw error;
     return undefined;
   }
 }

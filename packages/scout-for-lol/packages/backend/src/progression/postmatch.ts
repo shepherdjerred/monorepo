@@ -13,9 +13,14 @@ import {
   type PreparedChallengeRun,
 } from "#src/progression/challenges/postmatch.ts";
 import {
+  fetchTimelineForDuelProgression,
   fetchTimelineForProgression,
   persistTimelineForProgression,
 } from "#src/league/tasks/postmatch/match-report-standard.ts";
+import {
+  duelMatchNeedsTimeline,
+  processDuelResult,
+} from "#src/progression/duels/results.ts";
 
 /**
  * Last durable progression hook before account match cursors advance. Callers
@@ -40,37 +45,54 @@ export async function processCompetitiveProgressionMatch(input: {
     return prepared;
   }
   let timelinePersisted = false;
-  async function ensureChallengeTimeline(): Promise<void> {
+  const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
+  let timeline = input.timeline;
+  async function ensureProgressionTimeline(required: boolean): Promise<void> {
     if (timelinePersisted) return;
-    const matchId = MatchIdSchema.parse(input.match.metadata.matchId);
-    if (input.timeline === null || input.timeline === undefined) {
-      await fetchTimelineForProgression(
-        input.match,
-        matchId,
-        input.trackedPlayers,
-      );
+    if (timeline === null || timeline === undefined) {
+      timeline = required
+        ? await fetchTimelineForProgression(
+            input.match,
+            matchId,
+            input.trackedPlayers,
+          )
+        : await fetchTimelineForDuelProgression(
+            input.match,
+            matchId,
+            input.trackedPlayers,
+          );
     } else {
       await persistTimelineForProgression(
-        input.timeline,
+        timeline,
         input.trackedPlayers,
         matchId,
       );
     }
-    timelinePersisted = true;
+    timelinePersisted = required || timeline !== undefined;
   }
 
-  await evaluateHallMatch(input.match);
   const initiallyPrepared = await prepareCurrentRuns();
-  if (initiallyPrepared.some((revision) => revision.timelineRequired)) {
-    await ensureChallengeTimeline();
+  const initiallyRequiresTimeline = initiallyPrepared.some(
+    (revision) => revision.timelineRequired,
+  );
+  const duelNeedsTimeline = await duelMatchNeedsTimeline(input.match);
+  if (initiallyRequiresTimeline || duelNeedsTimeline) {
+    await ensureProgressionTimeline(initiallyRequiresTimeline);
   }
+  const stagedRediscovery = await prepareCurrentRuns();
+  if (stagedRediscovery.some((revision) => revision.timelineRequired)) {
+    await ensureProgressionTimeline(true);
+  }
+  await processDuelResult(input.match, timeline, configuration.environment);
+
+  await evaluateHallMatch(input.match);
   // Catch a run start or account edit that committed while evidence was being
-  // staged. Preparing a match revision supersedes its independently launched
-  // recompute, and waiting revisions are invisible to reconciliation until the
-  // required timeline is durable.
+  // staged or duel and Hall processing ran. Preparing a match revision
+  // supersedes its independently launched recompute, and waiting revisions are
+  // invisible to reconciliation until the required timeline is durable.
   const rediscovered = await prepareCurrentRuns();
   if (rediscovered.some((revision) => revision.timelineRequired)) {
-    await ensureChallengeTimeline();
+    await ensureProgressionTimeline(true);
   }
   const challengeRevisions = [...preparedByRun.values()];
   await queuePreparedChallengeRuns(challengeRevisions);
