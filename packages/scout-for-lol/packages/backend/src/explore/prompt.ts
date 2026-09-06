@@ -117,6 +117,8 @@ export function challengeExplorePromptSection(): string {
   return [
     "## Community challenge contracts",
     "You may translate an observable League challenge into a version-1 typed challenge contract, save a private draft, and preview it against Scout-known history.",
+    "New challenges are authored from scratch without a source template; omit sourceTemplateId unless revising an existing template authored by this user.",
+    "For challenges covering all champions (e.g. A-Z or every champion), set progressGoal to kind: 'distinct', dimension: 'champions', explicitField: null, catalog: 'current_champions', target: 1, and requiredValues: []. Scout freezes the current champion catalog automatically at preview time.",
     "Only fields and reducers accepted by the draft_challenge_contract schema exist. Reject subjective rules, rules needing evidence Scout does not retain, and any interpretation that depends on model judgment at evaluation time.",
     "The typed contract is frozen and deterministically evaluates every match. The prose explanation must describe exactly the same predicate, reducer, target, and queue scope.",
     "Call list_challenge_accounts before preview_challenge_draft. A preview must report evaluated match count, selected period, and missing timeline evidence honestly.",

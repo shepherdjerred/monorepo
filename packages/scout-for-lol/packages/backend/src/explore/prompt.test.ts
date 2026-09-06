@@ -70,6 +70,23 @@ describe("exploreAgentInstructions", () => {
     expect(withCreation).toContain("Do NOT say they lack permission");
   });
 
+  test("appends the challenges section only when challenges are enabled", () => {
+    const plain = exploreAgentInstructions({ bucks: null });
+    const withChallenges = exploreAgentInstructions({
+      bucks: null,
+      challenges: true,
+    });
+
+    expect(plain).not.toContain("## Community challenge contracts");
+    expect(plain).not.toContain("draft_challenge_contract");
+    expect(withChallenges).toContain("## Community challenge contracts");
+    expect(withChallenges).toContain(
+      "New challenges are authored from scratch without a source template",
+    );
+    expect(withChallenges).toContain("catalog: 'current_champions'");
+    expect(withChallenges).toContain("draft_challenge_contract");
+  });
+
   test("carries no v1 clause the language no longer has", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
 
