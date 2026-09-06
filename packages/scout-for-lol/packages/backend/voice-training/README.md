@@ -16,8 +16,9 @@ phrase-parameterized; Scout work selects it with `--phrase hey-scout` / `--phras
   threshold (`#0.15`) because "scout" is common speech; tune that line further upward if the
   evaluation candidate rate is high — never the global `keywordsThreshold`.
 - `../assets/voice/fragment-tails.json` — fragment tail table (`HEY_SCOUT: 0`, `SCOUT: 0`,
-  `HEY: 500`). The 500 ms `HEY` tail is provisional pending measurement against trained assets
-  using the method documented at `packages/streambot/src/voice/constants.ts`.
+  `HEY: 500`). `HEY`'s value carries over streambot's hey-streambot tail; step 3 below
+  re-measures it against the trained hey-scout assets using the method documented at
+  `packages/streambot/src/voice/constants.ts`.
 
 ## Machine split
 
