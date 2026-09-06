@@ -226,7 +226,7 @@ export async function fetchProgressionMatches(options: {
   const coverageJoin =
     coverage === undefined
       ? "false AS timeline_complete"
-      : "c.coverage_state = 'complete' AS timeline_complete";
+      : "CASE WHEN c.match_id IS NULL THEN false ELSE c.coverage_state = 'complete' END AS timeline_complete";
   const coverageCte =
     coverage === undefined ? "" : `, coverage AS (${coverage.sql})`;
   const coverageJoinSql =
