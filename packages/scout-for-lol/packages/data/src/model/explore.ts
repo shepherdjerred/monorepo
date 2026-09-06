@@ -469,8 +469,37 @@ export const ExploreRunSnapshotEventSchema = z
   })
   .strict();
 
+/**
+ * The newest query result, sent straight after a snapshot on reconnect.
+ *
+ * A separate member rather than a field on the snapshot, and this is a
+ * compatibility requirement rather than a preference. A browser keeps its
+ * bundle for as long as the tab stays open, and every bundle already shipped
+ * parses `ExploreRunSnapshotEventSchema` as `.strict()` — so an added key
+ * makes the snapshot itself unparseable there. The reader treats that as a
+ * corrupted stream and reconnects, receives the same rejected snapshot, and
+ * the turn stops updating for the rest of its life.
+ *
+ * Marked ignorable because it is: a client that skips it renders the table a
+ * beat later, when the next `preview` or `final` arrives, rather than
+ * rendering something wrong.
+ *
+ * Carries no visualization, matching the snapshot's own economy: a
+ * `VisualizationSnapshot` permits eight series totalling two thousand points
+ * and the durable observer re-sends this roughly once a second, while this
+ * summary is hard-bounded at 20 columns by 22 rows.
+ */
+export const ExploreRunPreviewEventSchema = z
+  .object({
+    type: z.literal("run_preview"),
+    preview: ReportAiPreviewSummarySchema.nullable(),
+    ignorable: z.literal(true).default(true),
+  })
+  .strict();
+
 export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
   ExploreRunSnapshotEventSchema,
+  ExploreRunPreviewEventSchema,
   z
     .object({
       type: z.literal("started"),

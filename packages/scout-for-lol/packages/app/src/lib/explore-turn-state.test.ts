@@ -1,5 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { ExploreMessageSchema, type ExploreMessage } from "@scout-for-lol/data";
+import {
+  ExploreMessageSchema,
+  ReportAiPreviewSummarySchema,
+  VisualizationSnapshotSchema,
+  type ExploreMessage,
+} from "@scout-for-lol/data";
 import {
   applyStreamEvent,
   createPendingTurn,
@@ -177,6 +182,8 @@ describe("visiblePending", () => {
       activity: null,
       stopping: false,
       trace: [],
+      preview: null,
+      visualization: null,
     });
   });
 
@@ -221,6 +228,8 @@ describe("visiblePending", () => {
       activity: null,
       stopping: false,
       trace: [],
+      preview: null,
+      visualization: null,
     });
   });
 });
@@ -355,5 +364,159 @@ describe("visiblePending before `started` arrives", () => {
     expect(visiblePending(turn, CONVERSATION, persisted).pendingQuestion).toBe(
       null,
     );
+  });
+});
+
+describe("streamed query results", () => {
+  const PREVIEW = ReportAiPreviewSummarySchema.parse({
+    columns: [
+      { key: "label", label: "Champion", format: "text" },
+      { key: "games", label: "Games", format: "integer" },
+    ],
+    rows: [{ label: "Jinx", values: [{ column: "games", value: 84 }] }],
+    visualizationRows: [],
+    rowsReturned: 1,
+    rowsScanned: 1284,
+    renderKind: "TABLE",
+  });
+
+  test("renders a query result as soon as the preview event arrives", () => {
+    // The regression this pins: `preview` used to be folded into the same
+    // no-op branch as `done`, so the table the server had already sent only
+    // appeared once the whole turn landed.
+    const turn = applyStreamEvent(startedTurn(), {
+      type: "preview",
+      preview: PREVIEW,
+      visualization: null,
+    });
+    expect(turn.preview?.rows).toHaveLength(1);
+    expect(turn.preview?.rowsScanned).toBe(1284);
+  });
+
+  test("a later query replaces an earlier one", () => {
+    // Last write wins, matching the agent's own `lastPreview`, so a
+    // reconnecting reader never sees an earlier query's table beside a later
+    // query's answer.
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "preview",
+      preview: PREVIEW,
+      visualization: null,
+    });
+    turn = applyStreamEvent(turn, {
+      type: "preview",
+      preview: { ...PREVIEW, rows: [], rowsReturned: 0, rowsScanned: 7 },
+      visualization: null,
+    });
+    expect(turn.preview?.rowsScanned).toBe(7);
+  });
+
+  test("a reconnect restores the table and drops a possibly stale chart", () => {
+    // The snapshot deliberately carries no visualization — it can be far
+    // larger than the table, and the durable observer re-sends the whole
+    // snapshot roughly once a second. So the chart this client is holding may
+    // belong to an earlier query than the preview the snapshot just brought,
+    // and `ExploreTurnResult` gives a chart precedence over a table: keeping
+    // it would render query A's chart above query B's numbers.
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "preview",
+      preview: PREVIEW,
+      visualization: null,
+    });
+    turn = applyStreamEvent(turn, {
+      type: "snapshot",
+      runId: RUN_ID,
+      conversationId: CONVERSATION,
+      questionMessageId: QUESTION_ID,
+      leafIdAtStart: null,
+      versionCountAtStart: 0,
+      startedAt: "2026-08-18T12:00:00.000Z",
+      answer: "Jinx",
+      activity: "Querying match data.",
+      trace: [],
+    });
+    // The snapshot clears the result; the companion event restores it.
+    expect(turn.preview).toBeNull();
+
+    turn = applyStreamEvent(turn, {
+      type: "run_preview",
+      preview: PREVIEW,
+      ignorable: true,
+    });
+    expect(turn.preview?.rowsScanned).toBe(1284);
+    expect(turn.visualization).toBeNull();
+  });
+
+  test("a reconnect after a second query does not keep the first chart", () => {
+    const chart = VisualizationSnapshotSchema.parse({
+      version: 1,
+      generatedAt: "2026-08-18T12:00:00.000Z",
+      kind: "line_chart",
+      title: "Games per week",
+      temporal: null,
+      bucket: null,
+      display: {
+        theme: null,
+        palette: null,
+        smooth: false,
+        stack: "none",
+        rollingWindow: null,
+        cumulative: false,
+        sparkline: false,
+      },
+      series: [],
+      annotations: [],
+      trends: [],
+    });
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "preview",
+      preview: PREVIEW,
+      visualization: chart,
+    });
+    expect(turn.visualization).not.toBeNull();
+
+    turn = applyStreamEvent(turn, {
+      type: "snapshot",
+      runId: RUN_ID,
+      conversationId: CONVERSATION,
+      questionMessageId: QUESTION_ID,
+      leafIdAtStart: null,
+      versionCountAtStart: 0,
+      startedAt: "2026-08-18T12:00:00.000Z",
+      answer: "Jinx",
+      activity: "Querying match data.",
+      trace: [],
+    });
+    turn = applyStreamEvent(turn, {
+      type: "run_preview",
+      preview: { ...PREVIEW, rowsScanned: 7 },
+      ignorable: true,
+    });
+
+    // The newest table with no chart, rather than the newest table under the
+    // previous query's chart.
+    expect(turn.preview?.rowsScanned).toBe(7);
+    expect(turn.visualization).toBeNull();
+  });
+
+  test("stops rendering its own copy once the turn has landed", () => {
+    let turn = applyStreamEvent(startedTurn(), {
+      type: "preview",
+      preview: PREVIEW,
+      visualization: null,
+    });
+    const persisted = message({
+      id: ANSWER_ID,
+      role: "assistant",
+      parentId: QUESTION_ID,
+    });
+    turn = applyStreamEvent(turn, {
+      type: "final",
+      message: persisted,
+      title: "Who wins?",
+      quota: [],
+    });
+    // The persisted message owns the result from here on; a pending copy
+    // beside it would render the table twice.
+    expect(visiblePending(turn, CONVERSATION, [persisted]).preview).toBeNull();
   });
 });

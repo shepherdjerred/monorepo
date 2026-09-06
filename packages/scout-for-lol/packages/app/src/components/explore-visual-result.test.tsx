@@ -157,7 +157,10 @@ describe("ExploreVisualResult", () => {
   test("renders both Chart and Table tab controls for chartable results", () => {
     const message = createMessage({ preview: chartablePreview });
     const markup = renderToStaticMarkup(
-      <ExploreVisualResult message={message} />,
+      <ExploreVisualResult
+        preview={message.preview}
+        visualization={message.visualization}
+      />,
     );
 
     expect(markup).toContain("Chart");
@@ -183,7 +186,10 @@ describe("ExploreVisualResult", () => {
     };
     const message = createMessage({ preview: ungrouped });
     const markup = renderToStaticMarkup(
-      <ExploreVisualResult message={message} />,
+      <ExploreVisualResult
+        preview={message.preview}
+        visualization={message.visualization}
+      />,
     );
 
     expect(markup).not.toContain("Chart");
@@ -200,7 +206,10 @@ describe("ExploreVisualResult", () => {
     };
     const message = createMessage({ preview: emptyPreview });
     const markup = renderToStaticMarkup(
-      <ExploreVisualResult message={message} />,
+      <ExploreVisualResult
+        preview={message.preview}
+        visualization={message.visualization}
+      />,
     );
 
     expect(markup).toBe("");

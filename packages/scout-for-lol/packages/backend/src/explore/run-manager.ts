@@ -1,6 +1,5 @@
 import {
   EXPLORE_TIMEOUT_MS,
-  ExploreRunSnapshotEventSchema,
   type DiscordAccountId,
   type ExploreActiveRun,
   type ExploreRunOutcome,
@@ -32,6 +31,8 @@ import {
   waitForDurableExploreRun,
 } from "#src/explore/durable-runs.ts";
 import {
+  attachEvents,
+  createActiveExploreRun,
   createDeferred,
   executeActiveExploreRun,
 } from "#src/explore/run-manager-helpers.ts";
@@ -205,15 +206,7 @@ export class ExploreRunManager {
     if (run?.identity.userId !== userId) {
       return null;
     }
-    subscriber(
-      ExploreRunSnapshotEventSchema.parse({
-        type: "snapshot",
-        ...run.summary,
-        answer: run.answer.length === 0 ? null : run.answer,
-        activity: run.activity,
-        trace: run.trace,
-      }),
-    );
+    for (const event of attachEvents(run)) subscriber(event);
     run.subscribers.add(subscriber);
     return () => {
       run.subscribers.delete(subscriber);
@@ -294,23 +287,14 @@ export class ExploreRunManager {
         // Rehydrated runs do not own a new quota reservation.
       },
     };
-    const deferred = createDeferred();
-    const run: ActiveRun = {
+    const run = createActiveExploreRun({
       summary: input.summary,
       identity: input.identity,
       guildIds: input.guildIds,
       ticket,
       started: input.started,
       history: transcript.messages,
-      abortController: new AbortController(),
-      subscribers: new Set(),
-      answer: "",
-      activity: "Thinking…",
-      trace: [],
-      termination: null,
-      settled: deferred.promise,
-      resolveSettled: deferred.resolve,
-    };
+    });
     this.#runs.set(run.summary.runId, run);
     this.#conversationRuns.set(run.summary.conversationId, run.summary.runId);
   }
