@@ -6,8 +6,8 @@ import {
   setExploreClientRun,
   shouldReconcileMissingExploreRun,
   type ExploreClientRun,
-} from "#src/lib/explore-client-runs.ts";
-import { createPendingTurn } from "#src/lib/explore-turn-state.ts";
+} from "#src/lib/explore/explore-client-runs.ts";
+import { createPendingTurn } from "#src/lib/explore/explore-turn-state.ts";
 
 function run(conversationId: string): ExploreClientRun {
   return {

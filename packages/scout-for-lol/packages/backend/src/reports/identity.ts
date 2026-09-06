@@ -83,12 +83,60 @@ async function runQuery<T>(
  * Scoped to the asker's own servers so this cannot be used to discover who
  * some other server tracks.
  */
+/**
+ * How a name is compared against the lake.
+ *
+ * Exact is the reference rule and the default. Prefix exists only for the
+ * composer's typeahead; it must never leak into `player('…')` resolution,
+ * where a widened match would turn "one person" into "ambiguous".
+ */
+export type PlayerMatchMode = "exact" | "prefix";
+
+/**
+ * The `LIKE` escape character, shared by the pattern and the clause.
+ *
+ * `!` rather than the conventional backslash: SQL lets the caller choose, and
+ * a backslash here would have to survive a TypeScript string, a template
+ * literal and the SQL parser, which is three chances to end up escaping
+ * nothing.
+ */
+const LIKE_ESCAPE = "!";
+
+/**
+ * The SQL comparison for a mode, with the needle escaped for `LIKE`.
+ *
+ * `%` and `_` in a typed name are literal characters to the reader and
+ * wildcards to `LIKE`, so an unescaped `%` would match every tracked player.
+ */
+function nameComparison(
+  column: string,
+  needle: string,
+  match: PlayerMatchMode,
+): { sql: string; value: string } {
+  if (match === "exact") {
+    return { sql: `${column} = ?`, value: needle };
+  }
+  // The escape character itself has to be escaped, or a name containing it
+  // would consume the character after it.
+  const escaped = needle.replaceAll(
+    new RegExp(`[${LIKE_ESCAPE}%_]`, "gu"),
+    (char) => `${LIKE_ESCAPE}${char}`,
+  );
+  return {
+    sql: `${column} LIKE ? ESCAPE '${LIKE_ESCAPE}'`,
+    value: `${escaped}%`,
+  };
+}
+
 async function lookupTrackedAccounts(
   accountsParquet: string | undefined,
   guildIds: string[],
   needle: string,
+  match: PlayerMatchMode,
 ): Promise<z.infer<typeof AccountRowSchema>[]> {
   if (accountsParquet === undefined || guildIds.length === 0) return [];
+  const playerAlias = nameComparison("lower(player_alias)", needle, match);
+  const accountAlias = nameComparison("lower(account_alias)", needle, match);
   return await runQuery(
     // Two hops on purpose. Matching `account_alias` finds one account, but the
     // question is who that account belongs to, so the match is a seed and the
@@ -100,7 +148,7 @@ async function lookupTrackedAccounts(
      ),
      seed AS (
        SELECT server_id, player_id, discord_id FROM scoped
-        WHERE lower(player_alias) = ? OR lower(account_alias) = ?
+        WHERE ${playerAlias.sql} OR ${accountAlias.sql}
      )
      SELECT DISTINCT server_id, puuid, player_id, player_alias, discord_id
        FROM scoped
@@ -110,8 +158,8 @@ async function lookupTrackedAccounts(
     [
       listParam([accountsParquet]),
       listParam(guildIds),
-      scalarParam(needle),
-      scalarParam(needle),
+      scalarParam(playerAlias.value),
+      scalarParam(accountAlias.value),
     ],
     AccountRowSchema,
   );
@@ -181,13 +229,19 @@ async function riotIdHistory(
 async function lookupByRiotId(
   source: SqlFragment,
   needle: string,
+  match: PlayerMatchMode,
 ): Promise<string[]> {
+  const full = nameComparison(
+    "lower(concat_ws('#', riot_id_game_name, riot_id_tagline))",
+    needle,
+    match,
+  );
+  const gameName = nameComparison("lower(riot_id_game_name)", needle, match);
   const rows = await runQuery(
     `SELECT DISTINCT puuid
        FROM (${source.sql})
-      WHERE lower(concat_ws('#', riot_id_game_name, riot_id_tagline)) = ?
-         OR lower(riot_id_game_name) = ?`,
-    [...source.params, scalarParam(needle), scalarParam(needle)],
+      WHERE ${full.sql} OR ${gameName.sql}`,
+    [...source.params, scalarParam(full.value), scalarParam(gameName.value)],
     z.object({ puuid: z.string() }),
   );
   return rows.map((row) => row.puuid);
@@ -274,9 +328,18 @@ export async function resolvePlayerIdentities(input: {
   /** The asker's Discord servers. Empty means Riot-ID lookup only. */
   guildIds: string[];
   lakeDir?: string | undefined;
+  /**
+   * `exact` is what `player('…')` needs: a reference either names one person
+   * or it is ambiguous, and a prefix would silently widen that. `prefix` is
+   * for a typeahead, where the whole point is answering before the reader has
+   * finished typing. It defaults to `exact` so a caller has to ask for the
+   * looser rule.
+   */
+  match?: PlayerMatchMode | undefined;
 }): Promise<ResolvedIdentity[]> {
   const needle = input.query.trim().toLowerCase();
   if (needle.length === 0) return [];
+  const match = input.match ?? "exact";
 
   const files = await resolveLakeFiles(input.lakeDir ?? resolveLakeDir());
   const source = buildMatchesSource(files, { sql: "TRUE", params: [] });
@@ -290,6 +353,7 @@ export async function resolvePlayerIdentities(input: {
     files.accountsParquet,
     input.guildIds,
     needle,
+    match,
   );
   // A PUUID joins duplicate tracking rows across servers; Discord identity
   // joins separate accounts across servers; and (server, player) joins the
@@ -303,7 +367,7 @@ export async function resolvePlayerIdentities(input: {
   }
 
   const claimed = new Set(candidates.flatMap((candidate) => candidate.puuids));
-  const riotIdMatches = await lookupByRiotId(source, needle);
+  const riotIdMatches = await lookupByRiotId(source, needle, match);
   // Expand every tracked Riot-ID match in one accounts scan. The old loop did
   // one accounts query and one complete match-history scan per candidate, so a
   // common bare name made latency grow with the number of matching accounts.

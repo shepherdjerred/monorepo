@@ -10,7 +10,7 @@ import {
   saveExploreRunMarkers,
   setExploreRunMarker,
   type ExploreRunMarker,
-} from "#src/lib/explore-run-markers.ts";
+} from "#src/lib/explore/explore-run-markers.ts";
 
 const RUN_ID = "11111111-1111-4111-8111-111111111111";
 const CONVERSATION_ID = "22222222-2222-4222-8222-222222222222";

@@ -5,7 +5,7 @@ import {
   type ExploreActiveRun,
   type ExploreMessage,
 } from "@scout-for-lol/data";
-import { findVisibleExploreRunAnswer } from "#src/lib/explore-run-completion.ts";
+import { findVisibleExploreRunAnswer } from "#src/lib/explore/explore-run-completion.ts";
 
 export const EXPLORE_RUN_MARKERS_KEY = "scout:explore-run-markers:v1";
 const MAX_EXPLORE_RUN_MARKERS = 100;

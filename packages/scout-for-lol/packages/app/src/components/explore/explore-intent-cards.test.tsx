@@ -14,7 +14,7 @@ import { ExploreTranscript } from "#src/components/explore/explore-transcript.ts
 import {
   intentCardsFromTrace,
   type CreationIntentCardData,
-} from "#src/lib/explore-intent-cards.ts";
+} from "#src/lib/explore/explore-intent-cards.ts";
 import type { CreationConfirmationOutcome } from "#src/lib/intent-confirmation.ts";
 import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
 

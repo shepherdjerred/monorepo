@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { shouldOpenStartedExploreConversation } from "#src/lib/explore-navigation.ts";
+import { shouldOpenStartedExploreConversation } from "#src/lib/explore/explore-navigation.ts";
 
 describe("shouldOpenStartedExploreConversation", () => {
   test("opens a new conversation while the submission route remains current", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { claimExploreRunFinished } from "#src/lib/explore-run-analytics.ts";
+import { claimExploreRunFinished } from "#src/lib/explore/explore-run-analytics.ts";
 
 class MemoryStorage implements Storage {
   readonly #values = new Map<string, string>();

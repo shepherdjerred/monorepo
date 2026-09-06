@@ -12,7 +12,7 @@ import {
   confirmationCardState,
   type DareDraftCardData,
   type DareIntentCardData,
-} from "#src/lib/explore-intent-cards.ts";
+} from "#src/lib/explore/explore-intent-cards.ts";
 import {
   classifyDareIntentConfirmation,
   type IntentConfirmationOutcome,

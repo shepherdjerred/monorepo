@@ -12,7 +12,7 @@ import {
   markStopping,
   turnHasLanded,
   visiblePending,
-} from "#src/lib/explore-turn-state.ts";
+} from "#src/lib/explore/explore-turn-state.ts";
 
 const CONVERSATION = "11111111-1111-4111-8111-111111111111";
 const OTHER_CONVERSATION = "22222222-2222-4222-8222-222222222222";

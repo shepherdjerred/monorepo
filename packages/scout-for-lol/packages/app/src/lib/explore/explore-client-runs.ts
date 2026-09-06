@@ -1,5 +1,5 @@
 import type { ExploreActiveRun } from "@scout-for-lol/data";
-import type { ExplorePendingTurn } from "#src/lib/explore-turn-state.ts";
+import type { ExplorePendingTurn } from "#src/lib/explore/explore-turn-state.ts";
 
 export type ExploreClientRun = {
   summary: ExploreActiveRun | null;

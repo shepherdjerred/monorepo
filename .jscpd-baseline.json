@@ -880,7 +880,7 @@
       "clones": 2,
       "tokens": 203
     },
-    "packages/scout-for-lol/packages/app/src/lib/explore-run-analytics.test.ts|packages/scout-for-lol/packages/app/src/lib/explore-run-markers.test.ts": {
+    "packages/scout-for-lol/packages/app/src/lib/explore/explore-run-analytics.test.ts|packages/scout-for-lol/packages/app/src/lib/explore/explore-run-markers.test.ts": {
       "clones": 1,
       "tokens": 147
     },
