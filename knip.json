@@ -78,7 +78,7 @@
       "project": ["src/**/*.ts"]
     },
     "packages/home-assistant": {
-      "entry": ["test/**/*.ts"],
+      "entry": ["src/index.ts", "src/codegen/cli.ts", "test/**/*.ts"],
       "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/llm-models": {
@@ -104,6 +104,7 @@
     },
     "packages/homelab/src/helm-types": {
       "entry": [
+        "src/index.ts",
         "src/types.ts",
         "src/schemas.ts",
         "src/config.ts",
