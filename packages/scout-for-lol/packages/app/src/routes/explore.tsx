@@ -21,12 +21,12 @@ import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
   visiblePending,
-} from "#src/lib/explore-turn-state.ts";
+} from "#src/lib/explore/explore-turn-state.ts";
 import {
   conversationToMarkdown,
   downloadMarkdown,
   exportFilename,
-} from "#src/lib/explore-export.ts";
+} from "#src/lib/explore/explore-export.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";

@@ -3,7 +3,7 @@ import {
   exploreShareLink,
   mintedAfterPersisted,
   resolveShareToken,
-} from "#src/lib/explore-share-link.ts";
+} from "#src/lib/explore/explore-share-link.ts";
 
 const ORIGIN = "https://scout-for-lol.com";
 const PERSISTED = "persisted-token";

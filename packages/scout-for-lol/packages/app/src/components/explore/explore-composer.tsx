@@ -11,7 +11,7 @@ import {
   applyMention,
   mergeMentionCandidates,
   staticMentionCandidates,
-} from "#src/lib/explore-mentions.ts";
+} from "#src/lib/explore/explore-mentions.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import {
   focusFirstInvalid,

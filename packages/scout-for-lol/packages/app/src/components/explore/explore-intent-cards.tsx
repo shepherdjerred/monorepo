@@ -9,7 +9,7 @@ import {
   intentCardKey,
   intentCardsFromTrace,
   type IntentCard,
-} from "#src/lib/explore-intent-cards.ts";
+} from "#src/lib/explore/explore-intent-cards.ts";
 
 /**
  * Every actionable card a turn produced, in the order the agent produced them.

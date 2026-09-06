@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { ExploreRunsContextValue } from "#src/lib/explore-runs-contract.ts";
+import type { ExploreRunsContextValue } from "#src/lib/explore/explore-runs-contract.ts";
 
 export const ExploreRunsContext = createContext<ExploreRunsContextValue | null>(
   null,

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { CheckCircle2, CircleX, Clock3 } from "lucide-react";
 import { formatDurationSeconds } from "@scout-for-lol/data";
-import type { ConfirmationCardState } from "#src/lib/explore-intent-cards.ts";
+import type { ConfirmationCardState } from "#src/lib/explore/explore-intent-cards.ts";
 
 /**
  * The shell every Explore confirmation is rendered in.

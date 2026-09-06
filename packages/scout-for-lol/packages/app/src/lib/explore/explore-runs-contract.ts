@@ -3,7 +3,7 @@ import type {
   ExploreAttachPoint,
   ExploreMessage,
 } from "@scout-for-lol/data";
-import type { ExplorePendingTurn } from "#src/lib/explore-turn-state.ts";
+import type { ExplorePendingTurn } from "#src/lib/explore/explore-turn-state.ts";
 
 /**
  * What a caller supplies to start an explore turn.

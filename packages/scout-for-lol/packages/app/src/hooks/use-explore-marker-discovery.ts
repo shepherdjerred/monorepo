@@ -2,7 +2,7 @@ import { useEffect, type Dispatch, type SetStateAction } from "react";
 import {
   hasRunningExploreRunMarker,
   type ExploreRunMarker,
-} from "#src/lib/explore-run-markers.ts";
+} from "#src/lib/explore/explore-run-markers.ts";
 
 /** Refresh process-owned runs when another tab publishes a running marker. */
 export function useMarkerDiscovery(

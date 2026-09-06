@@ -15,7 +15,7 @@ import {
   creationConfirmedEvent,
   createdEntityLink,
   type CreationIntentCardData,
-} from "#src/lib/explore-intent-cards.ts";
+} from "#src/lib/explore/explore-intent-cards.ts";
 import {
   classifyCreationIntentConfirmation,
   type CreationConfirmationOutcome,

@@ -7,7 +7,7 @@ import {
 import {
   resolveExploreRunCompletion,
   shouldClearExploreRunMarker,
-} from "#src/lib/explore-run-completion.ts";
+} from "#src/lib/explore/explore-run-completion.ts";
 
 const QUESTION_ID = "11111111-1111-4111-8111-111111111111";
 const OLD_ANSWER_ID = "22222222-2222-4222-8222-222222222222";

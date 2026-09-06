@@ -4,7 +4,7 @@ import {
   applyMention,
   mergeMentionCandidates,
   staticMentionCandidates,
-} from "#src/lib/explore-mentions.ts";
+} from "#src/lib/explore/explore-mentions.ts";
 import { ExploreMentionCandidateSchema } from "@scout-for-lol/data";
 
 function candidate(overrides: Record<string, unknown>) {

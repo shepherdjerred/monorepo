@@ -4,7 +4,7 @@ import type { ExploreTranscript as Transcript } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
-import { fetchSharedTranscript } from "#src/lib/explore-stream.ts";
+import { fetchSharedTranscript } from "#src/lib/explore/explore-stream.ts";
 
 /**
  * The read-only view of a shared conversation.

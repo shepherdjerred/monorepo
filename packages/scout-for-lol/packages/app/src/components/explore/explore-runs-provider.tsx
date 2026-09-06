@@ -19,7 +19,7 @@ import {
   applyStreamEvent,
   createPendingTurn,
   markStopping,
-} from "#src/lib/explore-turn-state.ts";
+} from "#src/lib/explore/explore-turn-state.ts";
 import {
   clearExploreClientError,
   moveExploreClientRun,
@@ -27,28 +27,28 @@ import {
   setExploreClientRun,
   shouldReconcileMissingExploreRun,
   type ExploreClientRun,
-} from "#src/lib/explore-client-runs.ts";
+} from "#src/lib/explore/explore-client-runs.ts";
 import {
   resolveExploreRunCompletion,
   shouldClearExploreRunMarker,
   type ExploreRunIdentity,
-} from "#src/lib/explore-run-completion.ts";
+} from "#src/lib/explore/explore-run-completion.ts";
 import {
   createExploreRunMarker,
   setExploreRunMarker,
-} from "#src/lib/explore-run-markers.ts";
+} from "#src/lib/explore/explore-run-markers.ts";
 import { useExploreRunMarkers } from "#src/hooks/use-explore-run-markers.ts";
 import { useMarkerDiscovery } from "#src/hooks/use-explore-marker-discovery.ts";
 import { useExploreStartMutation } from "#src/hooks/use-explore-start-mutation.ts";
 import { useExploreRunObserver } from "#src/hooks/use-explore-run-observer.ts";
 import { analyticsCaptureEnabled, track } from "#src/lib/analytics.ts";
-import { claimExploreRunFinished } from "#src/lib/explore-run-analytics.ts";
+import { claimExploreRunFinished } from "#src/lib/explore/explore-run-analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { ExploreRunsContext } from "#src/components/explore/explore-runs-context.ts";
 import type {
   ExploreRunsContextValue,
   StartExploreTurnInput,
-} from "#src/lib/explore-runs-contract.ts";
+} from "#src/lib/explore/explore-runs-contract.ts";
 
 const NEW_CONVERSATION_KEY = "new";
 function conversationKey(conversationId: string | null): string {

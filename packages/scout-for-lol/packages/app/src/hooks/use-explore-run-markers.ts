@@ -7,7 +7,7 @@ import {
   loadExploreRunMarkers,
   saveExploreRunMarkers,
   type ExploreRunMarker,
-} from "#src/lib/explore-run-markers.ts";
+} from "#src/lib/explore/explore-run-markers.ts";
 
 function initialMarkers(): ExploreRunMarker[] {
   return loadExploreRunMarkers(globalThis.localStorage);
