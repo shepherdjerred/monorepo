@@ -6,7 +6,12 @@ assembled into a context bundle, and handed to one agent that works the request
 to a conclusion. The agent sees every registered tool and decides as it goes,
 so investigating and then changing approach is normal rather than an error.
 It finishes with a structured answer whose cited tool calls must match calls
-that actually succeeded, and the runtime edits one Discord reply.
+that actually succeeded.
+
+While it works, the turn narrates into the single Discord reply it owns: a
+throttled timeline of what ran, with the agent's own one-line description of
+what it is doing, resolving to the answer. Progress edits are best-effort and
+never persisted.
 
 There is deliberately no up-front router. Routing used to pick one specialist
 and one primary tool from assembled context alone, before any tool could run,

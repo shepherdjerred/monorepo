@@ -107,6 +107,27 @@ describe("successful deterministic turn flow", () => {
     expect(result.toolCallCounts).toEqual([1]);
   });
 
+  test("a working turn narrates into its own message and still ends on the answer", () => {
+    const result = resultFor("agent-progress");
+
+    expect(result.runStatuses).toEqual(["completed"]);
+    // Still one reply. The extra edits are progress on that same message, so
+    // the "one placeholder, one final state" contract is intact.
+    expect(result.replyCalls).toBe(1);
+    expect(result.deliveredEdits.length).toBeGreaterThan(1);
+    expect(
+      result.deliveredEdits.some((edit) => edit.includes("🔎 Working…")),
+    ).toBe(true);
+    expect(
+      result.deliveredEdits.some((edit) =>
+        edit.includes("Checking who has been active."),
+      ),
+    ).toBe(true);
+    // Whatever progress showed, the last thing on screen is the answer.
+    expect(result.deliveredEdits.at(-1)).toMatch(/^agent reply/u);
+    expect(result.deliveredEdits.at(-1)).not.toContain("🔎 Working…");
+  });
+
   test("restart-safe Discord message deduplication produces only one response", () => {
     const result = resultFor("dedupe");
 

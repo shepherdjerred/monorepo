@@ -16,6 +16,7 @@ import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
+import type { ProgressReporter } from "./progress.ts";
 
 const logger = loggers.agent.child("execution");
 
@@ -71,6 +72,14 @@ export type AgentExecutionResult = {
   outputTokens: number;
   stepCount: number;
   toolEvents: SessionToolEvent[];
+};
+
+export type TurnOptions = {
+  /**
+   * Live progress sink. Absent for scheduled jobs, which own no Discord
+   * message to narrate into.
+   */
+  progress?: ProgressReporter;
 };
 
 export type IsolatedAgentOptions = {
@@ -323,7 +332,7 @@ export function requireGroundedAnswer(
 
 export async function executeTurn(
   rawPacket: TaskPacket,
-  options: IsolatedAgentOptions = {},
+  options: IsolatedAgentOptions & TurnOptions = {},
 ): Promise<AgentExecutionResult> {
   const packet = TaskPacketSchema.parse(rawPacket);
   const config = getConfig();
@@ -360,11 +369,37 @@ export async function executeTurn(
         providerOptions: getOpenRouterProviderOptions(options),
         output: Output.object({ schema: TurnAnswerSchema }),
       });
+      const progress = options.progress;
       const result = await agent.generate({
         messages: taskMessages(packet),
         abortSignal: AbortSignal.timeout(
           options.timeoutMs ?? config.agent.responseTimeoutMs,
         ),
+        ...(progress === undefined
+          ? {}
+          : {
+              onToolExecutionStart: ({ toolCall }) => {
+                progress.toolStarted(
+                  toolCall.toolCallId,
+                  toolCall.toolName,
+                  toolCall.input,
+                );
+              },
+              onToolExecutionEnd: ({
+                toolCall,
+                toolOutput,
+                toolExecutionMs,
+              }) => {
+                progress.toolFinished(
+                  toolCall.toolCallId,
+                  toolOutput.type !== "tool-error",
+                  toolExecutionMs,
+                );
+              },
+              onStepFinish: ({ text }) => {
+                progress.stepFinished(text);
+              },
+            }),
         ...runtime.callOptions({
           workload: "birmel.agent.turn",
           sessionId: packet.threadId ?? packet.channelId,
