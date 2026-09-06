@@ -12,6 +12,7 @@
     "scripts/ci/run-ci-test.ts",
     "packages/homelab/tsconfig.base.json",
     "packages/scout-for-lol/tsconfig.base.json",
+    "packages/scout-for-lol/eslint.config.ts",
     "tsconfig.base.json",
     "vitest.config.ts"
   ],
