@@ -14,9 +14,9 @@ ARG EXPECTED_CONTRACT_HASH
 
 USER 0:0
 COPY --chown=1000:1000 \
-  .buildkite/scripts/smoke-app-in-image.ts \
-  .buildkite/scripts/smoke-app-configs.ts \
-  /app/.buildkite/scripts/
+  .buildkite/scripts/images/smoke-app-in-image.ts \
+  .buildkite/scripts/images/smoke-app-configs.ts \
+  /app/.buildkite/scripts/images/
 
 # Scout's production image deliberately excludes PostgreSQL. Its exact-digest
 # smoke starts an ephemeral database to exercise the deployed migration path,
@@ -53,4 +53,4 @@ ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 ENV EXPECTED_CONTRACT_HASH=${EXPECTED_CONTRACT_HASH}
 ENV HOME=/tmp
 USER 1000:1000
-RUN bun /app/.buildkite/scripts/smoke-app-in-image.ts
+RUN bun /app/.buildkite/scripts/images/smoke-app-in-image.ts

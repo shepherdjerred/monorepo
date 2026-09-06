@@ -34,10 +34,10 @@ const config: ReturnType<typeof recommended> = [
     // script that doesn't need this escape hatch doesn't inherit it silently
     // — adding a file here is a visible, reviewable diff line.
     files: [
-      ".buildkite/scripts/select-image-targets-lockfile.ts",
-      ".buildkite/scripts/annotate-image-summary.ts",
-      ".buildkite/scripts/ci-lane-coverage.test.ts",
-      ".buildkite/scripts/macos-native-preflight.ts",
+      ".buildkite/scripts/selectors/select-image-targets-lockfile.ts",
+      ".buildkite/scripts/reporting/annotate-image-summary.ts",
+      ".buildkite/scripts/selectors/ci-lane-coverage.test.ts",
+      ".buildkite/scripts/macos/macos-native-preflight.ts",
     ],
     rules: {
       "custom-rules/no-type-guards": "off",

@@ -6,14 +6,14 @@
       "source": ".buildkite/scripts/annotate-build-summary.sh",
       "disposition": "port",
       "reason": "Buildkite runtime includes Bun",
-      "replacement": ".buildkite/scripts/annotate-build-summary.ts",
+      "replacement": ".buildkite/scripts/reporting/annotate-build-summary.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/annotate-build-summary.test.ts",
+        ".buildkite/scripts/reporting/annotate-build-summary.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -21,14 +21,14 @@
       "source": ".buildkite/scripts/bake-images.sh",
       "disposition": "port",
       "reason": "Complex image orchestration benefits from typed process handling",
-      "replacement": ".buildkite/scripts/bake-images.ts",
+      "replacement": ".buildkite/scripts/images/bake-images.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/bake-images.test.ts",
+        ".buildkite/scripts/images/bake-images.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -36,14 +36,14 @@
       "source": ".buildkite/scripts/bake-retry.sh",
       "disposition": "port",
       "reason": "Retry classification is shared with the typed image workflow",
-      "replacement": ".buildkite/scripts/bake-retry.ts",
+      "replacement": ".buildkite/scripts/images/bake-retry.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/bake-retry.test.ts",
+        ".buildkite/scripts/images/bake-retry.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -51,14 +51,14 @@
       "source": ".buildkite/scripts/bake-retry.test.sh",
       "disposition": "port",
       "reason": "Bun test replaces the shell harness",
-      "replacement": ".buildkite/scripts/bake-retry.test.ts",
+      "replacement": ".buildkite/scripts/images/bake-retry.test.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/bake-retry.test.ts",
+        ".buildkite/scripts/images/bake-retry.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -66,14 +66,14 @@
       "source": ".buildkite/scripts/build-ci-image.sh",
       "disposition": "port",
       "reason": "Buildkite runtime includes Bun",
-      "replacement": ".buildkite/scripts/build-ci-image.ts",
+      "replacement": ".buildkite/scripts/images/build-ci-image.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/build-ci-image.test.ts",
+        ".buildkite/scripts/images/build-ci-image.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -81,14 +81,14 @@
       "source": ".buildkite/scripts/buildkit-env.sh",
       "disposition": "port",
       "reason": "The sourced file only performs registry login and exports nothing",
-      "replacement": ".buildkite/scripts/buildkit-env.ts",
+      "replacement": ".buildkite/scripts/reporting/buildkit-env.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/buildkit-env.test.ts",
+        ".buildkite/scripts/reporting/buildkit-env.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -106,14 +106,14 @@
       "source": ".buildkite/scripts/ci-changed.sh",
       "disposition": "port",
       "reason": "Large lane selector benefits from typed data and fixtures",
-      "replacement": ".buildkite/scripts/ci-changed.ts",
+      "replacement": ".buildkite/scripts/selectors/ci-changed.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/ci-changed.test.ts",
+        ".buildkite/scripts/selectors/ci-changed.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -121,14 +121,14 @@
       "source": ".buildkite/scripts/ci-changed.test.sh",
       "disposition": "port",
       "reason": "Bun test replaces the shell harness",
-      "replacement": ".buildkite/scripts/ci-changed.test.ts",
+      "replacement": ".buildkite/scripts/selectors/ci-changed.test.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/ci-changed.test.ts",
+        ".buildkite/scripts/selectors/ci-changed.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },
@@ -146,14 +146,14 @@
       "source": ".buildkite/scripts/prepare-ci-changed-base.sh",
       "disposition": "port",
       "reason": "Buildkite runtime includes Bun",
-      "replacement": ".buildkite/scripts/prepare-ci-changed-base.ts",
+      "replacement": ".buildkite/scripts/selectors/prepare-ci-changed-base.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        ".buildkite/scripts/prepare-ci-changed-base.test.ts",
+        ".buildkite/scripts/selectors/prepare-ci-changed-base.test.ts",
         ".buildkite/scripts/migration-smoke.test.ts"
       ]
     },

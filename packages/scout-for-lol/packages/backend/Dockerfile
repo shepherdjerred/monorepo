@@ -160,8 +160,8 @@ USER 0
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql postgresql-client && rm -rf /var/lib/apt/lists/*
 # The smoke harness ships in CI context only — the scoped source COPY
 # excludes .buildkite, so stage it here (never in the pushed image stage).
-COPY .buildkite/scripts/smoke-app-in-image.ts /app/.buildkite/scripts/smoke-app-in-image.ts
-COPY .buildkite/scripts/smoke-app-configs.ts /app/.buildkite/scripts/smoke-app-configs.ts
+COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
+COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=scout-for-lol
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000, the app deployment convention),
@@ -173,6 +173,6 @@ ENV HOME=/tmp
 # This stage needs only its local Unix-socket Postgres. An isolated network
 # namespace prevents its fixed HTTP health port from colliding with another
 # concurrent Scout smoke on the shared remote BuildKit workers.
-RUN --network=none bun /app/.buildkite/scripts/smoke-app-in-image.ts
+RUN --network=none bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
