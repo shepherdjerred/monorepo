@@ -123,6 +123,7 @@ describe("shared persisted Explore turn", () => {
         ...prepared,
         identity: { userId },
         guildIds: [],
+        surface: "web",
         emit: () => Promise.resolve(),
       },
       {
@@ -166,6 +167,7 @@ describe("shared persisted Explore turn", () => {
         ...prepared,
         identity: { userId },
         guildIds: [],
+        surface: "web",
         emit: () => Promise.resolve(),
       },
       {
@@ -199,6 +201,7 @@ describe("shared persisted Explore turn", () => {
         ...prepared,
         identity: { userId },
         guildIds: [],
+        surface: "web",
         emit: () => Promise.resolve(),
       },
       {
@@ -242,6 +245,7 @@ describe("shared persisted Explore turn", () => {
         ...prepared,
         identity: { userId },
         guildIds: [],
+        surface: "web",
         abortSignal: caller.signal,
         abortOutcome: () => "stopped",
         emit: () => Promise.resolve(),
@@ -286,6 +290,7 @@ describe("shared persisted Explore turn", () => {
         ...prepared,
         identity: { userId },
         guildIds: [],
+        surface: "web",
         abortSignal: caller.signal,
         abortOutcome: () => "stopped",
         emit: () => Promise.resolve(),

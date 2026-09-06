@@ -16,6 +16,7 @@ import {
   type ExploreRateLimitTicket,
 } from "#src/explore/rate-limit.ts";
 import { appendExploreAnswer } from "#src/explore/store.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   applyGeneratedTitle,
   rollbackGeneratedTitle,
@@ -85,6 +86,12 @@ export async function runPersistedExploreTurn(
     history: ExploreMessage[];
     /** The asker's servers; scopes `player('…')` alias resolution. */
     guildIds: string[];
+    /**
+     * Which surface is asking. Required rather than defaulted: it decides
+     * whether creation tools exist at all, and a silent default would make a
+     * forgotten call site quietly grant them.
+     */
+    surface: ExploreSurface;
     abortSignal?: AbortSignal;
     originChannelId?: DiscordChannelId | undefined;
     abortOutcome?: () => Extract<ExploreTurnOutcome, "stopped" | "interrupted">;
@@ -167,6 +174,7 @@ export async function runPersistedExploreTurn(
       guildIds: input.guildIds,
       requesterId: input.identity.userId,
       originChannelId: input.originChannelId ?? null,
+      surface: input.surface,
       abortSignal: abortController.signal,
       emit: record,
     });

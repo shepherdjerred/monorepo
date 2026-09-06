@@ -40,6 +40,36 @@ describe("exploreAgentInstructions", () => {
     expect(withBucks).toContain("## ScoutQL reference");
   });
 
+  test("appends the creation section only when the creation tools exist", () => {
+    const plain = exploreAgentInstructions({ bucks: null });
+    const withCreation = exploreAgentInstructions({
+      bucks: null,
+      creation: true,
+    });
+
+    expect(plain).not.toContain("## Creating reports");
+    expect(plain).not.toContain("list_creation_targets");
+    expect(withCreation).toContain(
+      "## Creating reports, tracked players and competitions",
+    );
+    // The load-bearing rules: discover before proposing, ask which server,
+    // confirm the fields, and never claim an entity exists.
+    expect(withCreation).toContain(
+      "Call list_creation_targets before proposing any creation",
+    );
+    expect(withCreation).toContain("ask which one they mean");
+    expect(withCreation).toContain(
+      "Confirm every required field with the user",
+    );
+    expect(withCreation).toContain("NOTHING HAS BEEN CREATED YET");
+    expect(withCreation).toContain("expires in ten minutes");
+    expect(withCreation).toContain(
+      "NEVER say that a report, tracked player or competition exists",
+    );
+    // An outage is never reported as a denial — the same rule the tools enforce.
+    expect(withCreation).toContain("Do NOT say they lack permission");
+  });
+
   test("carries no v1 clause the language no longer has", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
 

@@ -13,6 +13,7 @@ import { scoutInteractiveWorkflowId } from "@scout-for-lol/temporal";
 import { requestStopSignal } from "@scout-for-lol/temporal/signals";
 import configuration from "#src/configuration.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import { reserveDurableExploreRun } from "#src/temporal/durable-quota.ts";
 import { currentScoutTemporalSupervisor } from "#src/temporal/runtime.ts";
 import { startScoutInteractiveRun } from "#src/temporal/starts.ts";
@@ -46,6 +47,11 @@ export async function reserveAndStartDurableExploreRun(input: {
   ownerId: DiscordAccountId;
   started: StartedTurn;
   guildIds: string[];
+  /**
+   * Serialized into the run row, so the activity answers the resumed turn on
+   * the surface that started it rather than on a default.
+   */
+  surface: ExploreSurface;
 }): Promise<DurableExploreRejection | null> {
   const rejection = await reserveDurableExploreRun({
     id: input.summary.runId,
@@ -55,6 +61,7 @@ export async function reserveAndStartDurableExploreRun(input: {
       summary: input.summary,
       started: input.started,
       guildIds: input.guildIds,
+      surface: input.surface,
     }),
     database: input.database,
   });
