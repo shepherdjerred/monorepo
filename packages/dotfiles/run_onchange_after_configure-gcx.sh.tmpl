@@ -14,7 +14,7 @@ set -eu
 # the credential inline there does work, but gcx migrates it into the macOS
 # Keychain and rewrites the file on the first command, leaving `chezmoi diff`
 # permanently dirty. gcx's own two environment variables for server and
-# credential are both banned repo-wide by scripts/environment-variable-rules.ts,
+# credential are both banned repo-wide by scripts/checks/environment-variable-rules.ts,
 # which canonicalized them to GRAFANA_URL and GRAFANA_API_KEY, so passing them
 # that way is not an option either. The context is provisioned here instead: the
 # secret goes to the Keychain, the config keeps only a `keychain:` reference,

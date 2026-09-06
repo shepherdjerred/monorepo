@@ -5,6 +5,6 @@
   "description": "LaTeX resume - built with xelatex, deployed by CI from a build artifact",
   "scripts": {
     "build": "xelatex resume.tex",
-    "deploy": "bun ../../scripts/deploy-site.ts resume"
+    "deploy": "bun ../../scripts/release/deploy-site.ts resume"
   }
 }

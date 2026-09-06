@@ -29,7 +29,7 @@ fetching — the site is fully static.
 ```bash
 bun run build    # build dist/ (requires glitter-context's dist; see below)
 bun run test     # bun run test test
-bun run deploy   # bun ../../scripts/deploy-site.ts glitter
+bun run deploy   # bun ../../scripts/release/deploy-site.ts glitter
 ```
 
 `build` imports `@shepherdjerred/glitter-context`, whose `dist/` is gitignored

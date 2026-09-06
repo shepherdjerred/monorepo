@@ -250,7 +250,7 @@
       "matchUpdateTypes": ["major"]
     },
     {
-      "description": "Keep react, react-dom and their @types in lockstep. React 19 throws 'Incompatible React versions' at runtime when react and react-dom differ, so they must always bump together in one PR to the same resolved version. Enforced by scripts/check-react-version-sync.ts.",
+      "description": "Keep react, react-dom and their @types in lockstep. React 19 throws 'Incompatible React versions' at runtime when react and react-dom differ, so they must always bump together in one PR to the same resolved version. Enforced by scripts/checks/check-react-version-sync.ts.",
       "groupName": "React",
       "matchPackageNames": [
         "react",

@@ -115,7 +115,7 @@ const FIXTURE_DIR = new URL(
 const CORPUS_PATH = new URL("corpus.jsonl", FIXTURE_DIR).pathname;
 const MANIFEST_PATH = new URL("manifest.json", FIXTURE_DIR).pathname;
 
-/** `scripts/check-large-files.ts` rejects tracked files over 5 MiB. */
+/** `scripts/checks/check-large-files.ts` rejects tracked files over 5 MiB. */
 const MAX_CORPUS_BYTES = 4 * 1_048_576;
 
 function collectInputs(): CaseInput[] {

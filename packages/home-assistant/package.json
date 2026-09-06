@@ -45,9 +45,9 @@
     "lint": "bunx eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
     "prepublishOnly": "bun run build",
-    "publish:npm": "bun ../../scripts/publish-npm.ts .",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "publish:npm": "bun ../../scripts/release/publish-npm.ts .",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "zod": "^4.4.3"

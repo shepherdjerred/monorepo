@@ -599,7 +599,7 @@
       "count": 1
     }
   },
-  "scripts/check-suppressions.ts": {
+  "scripts/checks/check-suppressions.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

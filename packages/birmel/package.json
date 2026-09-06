@@ -30,8 +30,8 @@
     "lint": "bun run generate && eslint . && check-architecture",
     "docker:build": "docker buildx build --cache-from type=registry,ref=ghcr.io/shepherdjerred/birmel:buildcache ${DOCKER_BUILD_EXTRA_ARGS:-} --load -t birmel:dev -f Dockerfile ../..",
     "smoke": "bun scripts/smoke.ts",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@openai/codex-sdk": "0.149.0",

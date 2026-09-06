@@ -8,7 +8,7 @@
     "build": "astro check && astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "postinstall": "bun run ../../../../scripts/copy-example-deps.ts ../../ astro-opengraph-images ."
+    "postinstall": "bun run ../../../../scripts/misc/copy-example-deps.ts ../../ astro-opengraph-images ."
   },
   "dependencies": {
     "@astrojs/check": "^0.9.4",

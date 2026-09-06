@@ -1,60 +1,50 @@
 {
-  "check-patched-deps.ts": {
+  "checks/check-patched-deps.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "check-react-version-sync.ts": {
+  "checks/check-react-version-sync.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "check-suppressions.ts": {
+  "checks/check-suppressions.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "check-test-standardization.ts": {
+  "checks/check-test-standardization.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "check-tunnel-dns-coverage.ts": {
+  "checks/check-tunnel-dns-coverage.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }
   },
-  "ci-reporting.test.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "ci-reporting.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
-  "compliance-check.ts": {
+  "checks/compliance-check.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 3
     }
   },
-  "coverage-cobertura.ts": {
+  "ci/ci-reporting.test.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "coverage-reporting.ts": {
+  "ci/ci-reporting.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "deploy-site.ts": {
+  "ci/coverage-cobertura.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "jscpd-check.ts": {
+  "ci/coverage-reporting.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -84,17 +74,27 @@
       "count": 1
     }
   },
-  "publish-npm.ts": {
+  "release/deploy-site.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "review-analytics.ts": {
+  "release/publish-npm.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "review/review-analytics.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 3
     }
   },
-  "wait-for-review.ts": {
+  "review/wait-for-review.ts": {
+    "sonarjs/cognitive-complexity": {
+      "count": 1
+    }
+  },
+  "tools/jscpd-check.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

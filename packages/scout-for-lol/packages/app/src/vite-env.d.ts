@@ -6,7 +6,7 @@
 // "Duplicate identifier" collision — a `type` alias cannot merge into it.
 // eslint-disable-next-line @typescript-eslint/consistent-type-definitions -- interface required for vite/client ImportMetaEnv declaration merging
 interface ImportMetaEnv {
-  // All injected at site-release build time (scripts/scout-site-release.ts);
+  // All injected at site-release build time (scripts/release/scout-site-release.ts);
   // absent in local dev, so every key is optional.
   readonly VITE_SENTRY_RELEASE?: string;
   readonly VITE_APP_VERSION?: string;

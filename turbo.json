@@ -6,10 +6,10 @@
     ".mise.toml",
     "bunfig.toml",
     "patches/**",
-    "scripts/ci-reporting.ts",
-    "scripts/coverage-cobertura.ts",
+    "scripts/ci/ci-reporting.ts",
+    "scripts/ci/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
-    "scripts/run-ci-test.ts"
+    "scripts/ci/run-ci-test.ts"
   ],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
   // (64 MB zstd) — over the default upload timeout, so those tasks
@@ -109,8 +109,8 @@
         "packages/dotfiles/private_dot_cursor/**",
         "sandbox/**/AGENTS.md",
         "sandbox/**/CLAUDE.md",
-        "scripts/check-agent-guidance.ts",
-        "scripts/check-agent-guidance.test.ts",
+        "scripts/checks/check-agent-guidance.ts",
+        "scripts/checks/check-agent-guidance.test.ts",
         "scripts/lib/agent-guidance-files.ts",
         "!**/node_modules/**"
       ]
@@ -121,7 +121,7 @@
     // `sandbox/` is negated because the check itself ignores it.
     "//#check-directory-file-counts": {
       "inputs": [
-        "scripts/check-directory-file-counts.ts",
+        "scripts/checks/check-directory-file-counts.ts",
         "scripts/lib/tracked-files.ts",
         "scripts/lib/run.ts",
         "**/*.{ts,tsx,js,jsx,mjs,cjs,rs,go,py,swift,cs,astro}",
@@ -161,7 +161,7 @@
         "packages/**/package.json",
         "scripts/package.json",
         "!**/node_modules/**",
-        "scripts/check-floating-deps.ts"
+        "scripts/checks/check-floating-deps.ts"
       ]
     },
     "//#check-patched-deps": {
@@ -170,7 +170,7 @@
         "bun.lock",
         "patches/**",
         "packages/**/patches/*.patch",
-        "scripts/check-patched-deps.ts",
+        "scripts/checks/check-patched-deps.ts",
         ".buildkite/scripts/select-image-targets.ts"
       ]
     },
@@ -182,7 +182,7 @@
       "inputs": [
         "packages/version-catalog/src/catalog.json",
         "scripts/pin-candidates-state.json",
-        "scripts/verify-worker-image-build-ids.ts"
+        "scripts/checks/verify-worker-image-build-ids.ts"
       ]
     },
     "//#check-ci-env": {
@@ -204,7 +204,7 @@
       "inputs": [
         "scripts/script-migrations.json",
         "scripts/script-migrations.schema.json",
-        "scripts/check-script-migrations.ts",
+        "scripts/checks/check-script-migrations.ts",
         "scripts/**/*.ts",
         ".buildkite/scripts/**",
         "**/*.sh",
@@ -223,8 +223,8 @@
       "cache": false,
       "inputs": [
         "scripts/bunfig.coverage.toml",
-        "scripts/check-script-coverage.ts",
-        "scripts/migration-core.ts",
+        "scripts/checks/check-script-coverage.ts",
+        "scripts/misc/migration-core.ts",
         "scripts/**/*.test.ts",
         ".buildkite/scripts/**/*.ts",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
@@ -246,8 +246,8 @@
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/scout-for-lol/**",
         "!**/node_modules/**",
@@ -263,8 +263,8 @@
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/homelab/**",
         "!**/node_modules/**",
@@ -280,8 +280,8 @@
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/**",
         "!packages/scout-for-lol/**",
@@ -299,8 +299,8 @@
       "inputs": [
         ".prettierrc.json",
         ".prettierignore",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "**/*",
         "!packages/**",
@@ -314,7 +314,11 @@
       ]
     },
     "//#shellcheck": {
-      "inputs": ["**/*.sh", "!**/node_modules/**", "scripts/shellcheck.ts"]
+      "inputs": [
+        "**/*.sh",
+        "!**/node_modules/**",
+        "scripts/tools/shellcheck.ts"
+      ]
     },
     "//#hadolint": {
       "inputs": [
@@ -323,7 +327,7 @@
         "**/*.Dockerfile",
         "!**/node_modules/**",
         ".hadolint.yaml",
-        "scripts/hadolint.ts"
+        "scripts/tools/hadolint.ts"
       ]
     },
     "//#knip": {
@@ -343,7 +347,7 @@
       ],
       "inputs": [
         "knip.json",
-        "scripts/knip.ts",
+        "scripts/tools/knip.ts",
         // Must cover every extension knip.json's entry/project globs analyze,
         // or turbo replays a stale green result when only e.g. a .css or .mdx
         // file changed. Kept in sync with the extensions listed in knip.json.
@@ -370,7 +374,7 @@
       "inputs": [
         ".jscpd.json",
         ".jscpd-baseline.json",
-        "scripts/jscpd-check.ts",
+        "scripts/tools/jscpd-check.ts",
         "packages/**/*.{ts,tsx}",
         "scripts/**/*.ts",
         "!**/node_modules/**",
@@ -381,7 +385,7 @@
     "//#quality-ratchet": {
       "inputs": [
         ".quality-baseline.json",
-        "scripts/quality-ratchet.ts",
+        "scripts/tools/quality-ratchet.ts",
         "**/*.{ts,tsx,rs}",
         "!**/node_modules/**",
         "!**/generated/**",
@@ -392,7 +396,7 @@
     "//#compliance-check": {
       "inputs": [
         "package.json",
-        "scripts/compliance-check.ts",
+        "scripts/checks/compliance-check.ts",
         "scripts/package.json",
         "packages/**/package.json",
         "!packages/**/node_modules/**",
@@ -412,7 +416,7 @@
     "//#merge-conflicts": {
       "inputs": [
         ".conflictignore",
-        "scripts/check-merge-conflicts.ts",
+        "scripts/checks/check-merge-conflicts.ts",
         "**/*.{ts,tsx,rs,json,yaml,yml,md,sh,astro,toml}",
         "!**/node_modules/**",
         "!**/dist/**",
@@ -422,7 +426,7 @@
     },
     "//#env-var-names": {
       "inputs": [
-        "scripts/check-env-var-names.ts",
+        "scripts/checks/check-env-var-names.ts",
         "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}",
         "!**/node_modules/**",
         "!**/generated/**"
@@ -431,9 +435,9 @@
     "//#line-endings-scout": {
       "inputs": [
         ".gitattributes",
-        "scripts/check-line-endings.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-line-endings.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/scout-for-lol/**",
         "!**/node_modules/**",
@@ -447,9 +451,9 @@
     "//#line-endings-homelab": {
       "inputs": [
         ".gitattributes",
-        "scripts/check-line-endings.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-line-endings.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/homelab/**",
         "!**/node_modules/**",
@@ -463,9 +467,9 @@
     "//#line-endings-packages": {
       "inputs": [
         ".gitattributes",
-        "scripts/check-line-endings.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-line-endings.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/**",
         "!packages/scout-for-lol/**",
@@ -481,9 +485,9 @@
     "//#line-endings-root": {
       "inputs": [
         ".gitattributes",
-        "scripts/check-line-endings.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-line-endings.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "**/*",
         "!packages/**",
@@ -497,7 +501,7 @@
     },
     "//#react-version-sync": {
       "inputs": [
-        "scripts/check-react-version-sync.ts",
+        "scripts/checks/check-react-version-sync.ts",
         "**/package.json",
         "bun.lock",
         "!**/node_modules/**"
@@ -506,9 +510,9 @@
     "//#large-files-scout": {
       "inputs": [
         ".largeignore",
-        "scripts/check-large-files.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-large-files.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/scout-for-lol/**",
         "!**/node_modules/**",
@@ -522,9 +526,9 @@
     "//#large-files-homelab": {
       "inputs": [
         ".largeignore",
-        "scripts/check-large-files.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-large-files.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/homelab/**",
         "!**/node_modules/**",
@@ -538,9 +542,9 @@
     "//#large-files-packages": {
       "inputs": [
         ".largeignore",
-        "scripts/check-large-files.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-large-files.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "packages/**",
         "!packages/scout-for-lol/**",
@@ -556,9 +560,9 @@
     "//#large-files-root": {
       "inputs": [
         ".largeignore",
-        "scripts/check-large-files.ts",
-        "scripts/repo-shards.ts",
-        "scripts/run-shard-check.ts",
+        "scripts/checks/check-large-files.ts",
+        "scripts/ci/repo-shards.ts",
+        "scripts/ci/run-shard-check.ts",
         "scripts/lib/run.ts",
         "**/*",
         "!packages/**",
@@ -580,7 +584,7 @@
     },
     "//#guard:migration": {
       "inputs": [
-        "scripts/guard-no-package-exclusions.ts",
+        "scripts/checks/guard-no-package-exclusions.ts",
         "package.json",
         "turbo.json"
       ]
@@ -591,7 +595,7 @@
     "//#pyright": {
       "inputs": [
         "pyrightconfig.json",
-        "scripts/pyright-check.ts",
+        "scripts/tools/pyright-check.ts",
         "scripts/python-dev-requirements.txt",
         "**/*.py",
         "!**/node_modules/**",
@@ -600,7 +604,7 @@
     },
     "//#tunnel-dns-coverage": {
       "inputs": [
-        "scripts/check-tunnel-dns-coverage.ts",
+        "scripts/checks/check-tunnel-dns-coverage.ts",
         "packages/homelab/src/cdk8s/src/**/*.ts",
         "packages/homelab/src/tofu/cloudflare/*.tf"
       ]

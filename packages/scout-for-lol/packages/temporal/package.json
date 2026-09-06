@@ -29,8 +29,8 @@
     "replay:histories": "bun scripts/replay-histories.ts",
     "replay:histories:node": "node --experimental-strip-types scripts/replay-histories-node.ts",
     "canary": "bun scripts/run-canary.ts",
-    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@temporalio/common": "1.22.0",

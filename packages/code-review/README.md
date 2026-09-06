@@ -4,7 +4,7 @@ Provider-neutral library for reasoning about automated PR code review: which
 bot posts reviews (Codex, Greptile, …), whether it has finished reviewing the
 head commit, and whether its unresolved findings should block. It is the single
 shared vocabulary behind the `review-gate` Buildkite step
-([scripts/wait-for-review.ts](../../scripts/wait-for-review.ts)) and the PR
+([scripts/review/wait-for-review.ts](../../scripts/review/wait-for-review.ts)) and the PR
 fleet controller ([packages/pr-fleet-controller](../pr-fleet-controller/)).
 
 ## Model

@@ -119,11 +119,17 @@ export function commandScopes(command: string): CommandScope[] {
  * can resolve. Shell entry points are therefore out of scope rather than
  * silently under-analyzed — if one ever needs checking it needs a different
  * mechanism, not a wider regex here.
+ *
+ * A script may sit in a sub-directory of its scripts root, so the trailing
+ * segment repeats. Matching only one level deep would drop a nested entry point
+ * from the analysis silently: the credential gate would keep passing while
+ * checking less, which is the failure this comment's "rather than silently
+ * under-analyzed" rule exists to prevent.
  */
 export function scriptPathsInCommand(command: string): string[] {
   const paths = new Set<string>();
   const pattern =
-    /(?<![\w./-])((?:scripts|\.buildkite\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)\/[\w.-]+\.ts)/gu;
+    /(?<![\w./-])((?:scripts|\.buildkite\/scripts|packages\/[\w.-]+(?:\/[\w.-]+)*?\/scripts)(?:\/[\w.-]+)*?\/[\w.-]+\.ts)/gu;
   for (const match of command.matchAll(pattern)) {
     const found = match[1];
     if (found !== undefined) paths.add(found);

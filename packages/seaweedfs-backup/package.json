@@ -22,8 +22,8 @@
     "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",
-    "test:ci": "bun ../../scripts/run-ci-test.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/run-ci-test.ts",
+    "test:ci": "bun ../../scripts/ci/run-ci-test.ts",
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"
   },
   "dependencies": {

@@ -20,13 +20,13 @@
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
-    "test:ci": "bun ../../../../scripts/run-ci-test.ts",
+    "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "lint": "bun x eslint src",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "update-data-dragon": "bun run scripts/update-data-dragon.ts",
-    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/run-ci-test.ts"
+    "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
     "@shepherdjerred/llm-runtime": "workspace:*",

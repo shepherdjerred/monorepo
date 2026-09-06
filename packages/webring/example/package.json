@@ -5,10 +5,10 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro check && astro build && bun ../../../scripts/check-built-internal-links.ts webring/example",
+    "build": "astro check && astro build && bun ../../../scripts/checks/check-built-internal-links.ts webring/example",
     "preview": "astro preview",
     "astro": "astro",
-    "postinstall": "bun run ../../../scripts/copy-example-deps.ts ../ webring ."
+    "postinstall": "bun run ../../../scripts/misc/copy-example-deps.ts ../ webring ."
   },
   "dependencies": {
     "@astrojs/mdx": "^7.0.5",

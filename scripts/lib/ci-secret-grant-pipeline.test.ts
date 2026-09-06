@@ -15,7 +15,7 @@ function pipelineWith(fragment: string): unknown {
     `
 steps:
   - key: test-step
-    command: bun scripts/release.ts
+    command: bun scripts/release/release.ts
     plugins:
       - kubernetes:
           podSpecPatch:
@@ -77,7 +77,7 @@ describe("exact Buildkite grants", () => {
       `
 steps:
   - key: test-step
-    command: bun scripts/release.ts
+    command: bun scripts/release/release.ts
     plugins:
       - kubernetes:
           podSpecPatch:
@@ -126,7 +126,7 @@ steps:
       `
 steps:
   - key: direct-secret-volume
-    command: bun scripts/release.ts
+    command: bun scripts/release/release.ts
     plugins:
       - kubernetes:
           podSpecPatch:
@@ -140,7 +140,7 @@ steps:
               - name: checkout
               - name: container-0
   - key: projected-secret-volume
-    command: bun scripts/release.ts
+    command: bun scripts/release/release.ts
     plugins:
       - kubernetes:
           podSpecPatch:
@@ -177,7 +177,7 @@ steps:
       `
 steps:
   - key: test-step
-    command: bun scripts/release.ts
+    command: bun scripts/release/release.ts
     plugins:
       - test-collector#v1.11.0: { files: reports/*.xml, format: junit }
       - kubernetes:
