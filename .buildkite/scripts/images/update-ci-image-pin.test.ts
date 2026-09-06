@@ -369,7 +369,7 @@ describe("Playwright candidate promotion", () => {
 
   test("coordinates its nested lockfile install with cache collection", async () => {
     const source = await Bun.file(
-      new URL("./update-ci-image-pin.ts", import.meta.url),
+      new URL("update-ci-image-pin.ts", import.meta.url),
     ).text();
 
     expect(source).toContain(
@@ -380,7 +380,7 @@ describe("Playwright candidate promotion", () => {
 
   test("funnels every no-promotion exit through finalizeSkippedPromotion", async () => {
     const source = await Bun.file(
-      new URL("./update-ci-image-pin.ts", import.meta.url),
+      new URL("update-ci-image-pin.ts", import.meta.url),
     ).text();
 
     // The single skip path retires any stale PR and re-verifies the main pin.
@@ -419,7 +419,7 @@ describe("Playwright candidate promotion", () => {
 
   test("dry-run reports the decision without cloning or retiring", async () => {
     const source = await Bun.file(
-      new URL("./update-ci-image-pin.ts", import.meta.url),
+      new URL("update-ci-image-pin.ts", import.meta.url),
     ).text();
 
     const dryRunIndex = source.indexOf("if (dryRun) {");
@@ -434,7 +434,7 @@ describe("Playwright candidate promotion", () => {
 
   test("the retirement helper closes the stale PR and deletes its branch", async () => {
     const github = await Bun.file(
-      new URL("./update-ci-image-pin-github.ts", import.meta.url),
+      new URL("update-ci-image-pin-github.ts", import.meta.url),
     ).text();
     const helperStart = github.indexOf(
       "export async function retireStalePromotion(",
@@ -450,7 +450,7 @@ describe("Playwright candidate promotion", () => {
 
   test("the main-pin guard re-fetches main and fails transiently on a move", async () => {
     const source = await Bun.file(
-      new URL("./update-ci-image-pin.ts", import.meta.url),
+      new URL("update-ci-image-pin.ts", import.meta.url),
     ).text();
     const helperStart = source.indexOf(
       "async function assertMainPinUnchanged(",
