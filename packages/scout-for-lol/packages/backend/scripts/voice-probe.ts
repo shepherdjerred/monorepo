@@ -51,10 +51,13 @@ Usage:
   OPENAI_API_KEY=... bun scripts/voice-probe.ts --device <index> [--assets-dir <path>]
 
 Options:
-  --device <index>     AVFoundation audio-device index
-  --assets-dir <path>  Trained hey-scout assets (default: $VOICE_ASSETS_DIR or /opt/scout/voice)
-  --list-devices       List AVFoundation microphone indices
-  -h, --help           Show this help
+  --device <index>       AVFoundation audio-device index
+  --assets-dir <path>    Trained hey-scout assets (default: $VOICE_ASSETS_DIR or /opt/scout/voice)
+  --list-devices         List AVFoundation microphone indices
+  --no-feedback-clips    Skip the feedback WAVs (pre-training runs only; a
+                         complete bundle must load them or the probe fails,
+                         exactly like production's fatal bootstrap)
+  -h, --help             Show this help
 
 Ctrl-C quits.`;
 
@@ -125,6 +128,7 @@ async function main(): Promise<void> {
       device: { type: "string" },
       "assets-dir": { type: "string" },
       "list-devices": { type: "boolean", default: false },
+      "no-feedback-clips": { type: "boolean", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
     strict: true,
@@ -158,14 +162,20 @@ async function main(): Promise<void> {
     "auto",
     NOOP_VOICE_LOGGER,
   );
+  // The probe is the trained-asset acceptance tool, so a missing or
+  // malformed feedback WAV fails it exactly like production's fatal
+  // bootstrap would — a passing probe must mean a bootable bundle. Skipping
+  // is an explicit pre-training opt-out, never a silent downgrade.
   let feedbackClips: SpokenFeedbackClips | undefined;
-  try {
+  if (values["no-feedback-clips"]) {
+    console.log(
+      "(--no-feedback-clips: rejected/bare wakes stay silent; this bundle is NOT production-complete)",
+    );
+  } else {
     feedbackClips = await loadSpokenFeedbackClips(
       assetsDir,
       VOICE_FEEDBACK_CLIP_FILES,
     );
-  } catch {
-    console.log("(no feedback clips found — rejected/bare wakes stay silent)");
   }
 
   const noop = createNoopVoiceMetrics();

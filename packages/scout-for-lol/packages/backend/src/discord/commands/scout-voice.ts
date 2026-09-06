@@ -1,4 +1,8 @@
-import { MessageFlags, type InteractionReplyOptions } from "discord.js";
+import {
+  MessageFlags,
+  type InteractionEditReplyOptions,
+  type InteractionReplyOptions,
+} from "discord.js";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {
@@ -20,6 +24,8 @@ export type ScoutVoiceInteraction = {
   guildId: string | null;
   user: { id: string };
   reply: (options: InteractionReplyOptions) => Promise<unknown>;
+  deferReply: (options: { flags: MessageFlags.Ephemeral }) => Promise<unknown>;
+  editReply: (options: InteractionEditReplyOptions) => Promise<unknown>;
 };
 
 export type ScoutVoiceAction = "join" | "leave";
@@ -134,13 +140,18 @@ export async function executeScoutVoice(
     );
     return;
   }
+  // Establishing the voice connection can take longer than Discord's
+  // interaction acknowledgement window (Ready waits up to 30 s), so
+  // acknowledge first and edit the deferred reply after the join. A join
+  // failure after this point lands in the dispatcher's deferred-error path.
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   await manager.join(guildId.data, channelId);
   logger.info("voice assistant joined by command", {
     guildId: guildId.data,
     channelId,
   });
-  await replyPrivate(
-    interaction,
-    'Scout joined your voice channel. Say "Hey Scout" followed by a question — for example, "Hey Scout, what does Cho\'Gath ult do at rank one?" I leave after 45 quiet minutes, when the channel empties, or on /scout leave.',
-  );
+  await interaction.editReply({
+    content:
+      'Scout joined your voice channel. Say "Hey Scout" followed by a question — for example, "Hey Scout, what does Cho\'Gath ult do at rank one?" I leave after 45 quiet minutes, when the channel empties, or on /scout leave.',
+  });
 }

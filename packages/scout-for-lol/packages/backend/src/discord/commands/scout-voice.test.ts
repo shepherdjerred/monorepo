@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import type { InteractionReplyOptions } from "discord.js";
+import type {
+  InteractionEditReplyOptions,
+  InteractionReplyOptions,
+} from "discord.js";
 import { executeScoutVoice } from "#src/discord/commands/scout-voice.ts";
 
 const GUILD = "100000000000000001";
@@ -14,12 +17,24 @@ type HarnessOptions = {
 
 function voiceHarness(options: HarnessOptions = {}) {
   const replies: string[] = [];
+  /** Interaction lifecycle events, in order: reply / defer / edit / join. */
+  const events: string[] = [];
   const joins: { guildId: string; channelId: string }[] = [];
   const leaves: string[] = [];
   const interaction = {
     guildId: GUILD,
     user: { id: "user-1" },
     reply: (payload: InteractionReplyOptions) => {
+      events.push("reply");
+      if (typeof payload.content === "string") replies.push(payload.content);
+      return Promise.resolve();
+    },
+    deferReply: () => {
+      events.push("defer");
+      return Promise.resolve();
+    },
+    editReply: (payload: InteractionEditReplyOptions) => {
+      events.push("edit");
       if (typeof payload.content === "string") replies.push(payload.content);
       return Promise.resolve();
     },
@@ -29,6 +44,7 @@ function voiceHarness(options: HarnessOptions = {}) {
     isRuntimeAvailable: () => options.runtimeAvailable ?? true,
     manager: () => ({
       join: (guildId: string, channelId: string) => {
+        events.push("join");
         joins.push({ guildId, channelId });
         return Promise.resolve();
       },
@@ -41,7 +57,7 @@ function voiceHarness(options: HarnessOptions = {}) {
     }),
     memberVoiceChannelId: () => options.memberChannelId ?? null,
   };
-  return { interaction, dependencies, replies, joins, leaves };
+  return { interaction, dependencies, replies, events, joins, leaves };
 }
 
 describe("/scout join and /scout leave", () => {
@@ -82,6 +98,9 @@ describe("/scout join and /scout leave", () => {
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.joins).toEqual([{ guildId: GUILD, channelId: "vc-1" }]);
     expect(h.replies[0]).toContain("Hey Scout");
+    // The interaction is acknowledged BEFORE the voice join, which can wait
+    // up to 30 s for Ready — past Discord's acknowledgement window.
+    expect(h.events).toEqual(["defer", "join", "edit"]);
   });
 
   test("join in the already-active channel does not restart the session", async () => {
