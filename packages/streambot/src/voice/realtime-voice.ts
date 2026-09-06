@@ -26,7 +26,7 @@ import {
   streambotVoiceObservability,
   streambotVoiceReplyMetrics,
 } from "@shepherdjerred/streambot/observability/voice-metrics-ports.ts";
-import type { VoiceAttemptHandle } from "@shepherdjerred/streambot/voice/attempt-context.ts";
+import type { VoiceAttemptHandle } from "@shepherdjerred/voice-assistant/attempt.ts";
 import type { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
 import {
   bindPlaybackVoiceCommandPort,

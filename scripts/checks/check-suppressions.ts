@@ -73,12 +73,6 @@ const EXCLUDED_FILES = [
   "packages/homelab/src/cdk8s/generated/imports/",
   // Intentional: compile-time type tests — @ts-expect-error is the whole point
   "packages/home-assistant/test/typed-client.test-d.ts",
-  // Intentional: sherpa-onnx ships no TypeScript declarations, so the package's
-  // ambient sherpa-onnx.d.ts must travel with local-models.ts via a triple-slash
-  // reference — an `import "./sherpa-onnx.d.ts"` would be loaded by Bun at
-  // runtime. @typescript-eslint/triple-slash-reference offers no per-line
-  // opt-out other than a disable comment (with its rationale inline).
-  "packages/voice-assistant/src/local-models.ts",
   // Documentation: AGENTS.md files and docs mention suppression patterns as things to avoid
   "AGENTS.md",
   "CLAUDE.md",

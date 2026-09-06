@@ -40,7 +40,7 @@ import {
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "@shepherdjerred/streambot/voice/attempt-context.ts";
+} from "@shepherdjerred/voice-assistant/attempt.ts";
 import type {
   VoiceCaptureManager,
   VoiceDebugCaptureStatus,

@@ -1,8 +1,7 @@
 import type { VoiceAssetManifest } from "@shepherdjerred/voice-assistant/asset-manifest.ts";
 
-// Rolling audio retained before a permissive sherpa candidate — shared pipeline constant,
-// re-exported so config/schema.ts and the corpus tooling keep their historical import site.
-export { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/voice-assistant/constants.ts";
+// VOICE_WAKE_WINDOW_MS (rolling audio retained before a permissive sherpa candidate) moved to
+// @shepherdjerred/voice-assistant/constants.ts with the pipeline; import it from there.
 
 /**
  * Milliseconds of audio still to come after a matched fragment ends, before the wake phrase is

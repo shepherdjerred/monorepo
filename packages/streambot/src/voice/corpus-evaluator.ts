@@ -18,7 +18,7 @@ import {
   initializeLocalVoiceModelsForRuntime,
   streambotVoiceLifecycleDeps,
 } from "@shepherdjerred/streambot/voice/local-voice.ts";
-import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/streambot/voice/constants.ts";
+import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/voice-assistant/constants.ts";
 
 type ClipEvaluation = {
   readonly id: string;

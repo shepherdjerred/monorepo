@@ -84,6 +84,7 @@ zero-fills every buffer it consumes.
 3. **Receive bridge**: subscribe per speaking user via `VoiceReceiver`, and for
    each Opus packet call `lifecycle.accept({ userId, opus })`.
 4. **Transport adapter** over the bot's `VoiceConnection`:
+
    ```ts
    const transport: AssistantAudioTransport = {
      setAssistantSpeaking: async (speaking) => {
@@ -94,6 +95,7 @@ zero-fills every buffer it consumes.
      },
    };
    ```
+
 5. **Metrics/observability adapters**: wrap the bot's own instruments into the
    three metric port groups (or start from `createNoopVoiceMetrics()`), and
    pass `{ logger, stagePrefix: "<bot>.voice" }`.

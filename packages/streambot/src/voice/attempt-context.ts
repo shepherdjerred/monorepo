@@ -40,16 +40,9 @@ export type VoiceAttemptCandidate = {
   readonly detectedAtMs: number;
 };
 
-// The handle types and noop observer moved to @shepherdjerred/voice-assistant with the pipeline;
-// this re-export is the one deliberate shim, so streambot's many attempt-observing modules keep
-// their import site while `ObservedVoiceAttempt` (S3 capture + root spans) stays here.
-export {
-  NOOP_VOICE_ATTEMPT_OBSERVER,
-  type VoiceAttemptEndpoint,
-  type VoiceAttemptHandle,
-  type VoiceToolObservation,
-} from "@shepherdjerred/voice-assistant/attempt.ts";
-
+// The handle types and noop observer moved to @shepherdjerred/voice-assistant with the
+// pipeline; consumers import them from the package. `ObservedVoiceAttempt` (S3 capture + root
+// spans) and the streambot-specific candidate/observer types stay here.
 export type VoiceAttemptObserver = {
   readonly begin: (candidate: VoiceAttemptCandidate) => VoiceAttemptHandle;
 };

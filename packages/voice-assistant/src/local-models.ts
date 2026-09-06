@@ -1,5 +1,9 @@
-// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- The sherpa runtimes ship no TypeScript declarations; ours live in sherpa-onnx.d.ts. A reference (unlike an import) makes those ambient declarations travel with this module when a consumer package typechecks it, while adding nothing for Bun to load at runtime.
-/// <reference path="./sherpa-onnx.d.ts" />
+// The sherpa runtimes ship no TypeScript declarations; ours live in sherpa-onnx.d.ts as ambient
+// `declare module` blocks. This side-effect import pulls that declaration file into whichever
+// program typechecks this module — including a consumer package's — so the dynamic
+// `import("sherpa-onnx-node")`/`import("sherpa-onnx")` calls below resolve everywhere. At
+// runtime the declaration file transpiles to an empty module.
+import "./sherpa-onnx.d.ts";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
 import {

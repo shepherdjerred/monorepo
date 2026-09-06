@@ -1,5 +1,4 @@
 import { tool } from "@openai/agents/realtime";
-import { z } from "zod";
 import type { VoiceMutationGate } from "@shepherdjerred/voice-assistant/mutation-gate.ts";
 import { type PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import {
@@ -12,7 +11,7 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "@shepherdjerred/streambot/voice/attempt-context.ts";
+} from "@shepherdjerred/voice-assistant/attempt.ts";
 import {
   voiceToolSchemas,
   type LoopArguments,
@@ -142,9 +141,8 @@ export function bindPlaybackVoiceCommandPort(
   };
 }
 
-// Moved to @shepherdjerred/voice-assistant with the pipeline; re-exported so this module's
-// existing consumers (including tests) keep importing the gate from its historical home.
-export { VoiceMutationGate } from "@shepherdjerred/voice-assistant/mutation-gate.ts";
+// VoiceMutationGate moved to @shepherdjerred/voice-assistant with the pipeline; consumers
+// import it from the package directly.
 
 export function createStreambotVoiceTools(
   commands: VoiceCommandPort,

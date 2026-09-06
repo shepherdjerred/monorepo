@@ -1368,14 +1368,6 @@
       "clones": 1,
       "tokens": 73
     },
-    "packages/streambot/src/sources/chapters.ts|packages/streambot/src/sources/ytdlp.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
-    "packages/streambot/src/sources/ytdlp.ts|packages/streambot/src/sources/ytdlp.ts": {
-      "clones": 3,
-      "tokens": 239
-    },
     "packages/streambot/src/voice/debug-audio-recorder.ts|packages/voice-assistant/src/wave-io.ts": {
       "clones": 1,
       "tokens": 73
