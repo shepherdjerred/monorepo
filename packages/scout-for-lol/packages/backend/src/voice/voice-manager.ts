@@ -62,8 +62,10 @@ export type EstablishVoiceConnection<C extends VoiceManagerConnection> =
 
 /**
  * Consulted before each sound-engine alert. The voice-assistant output
- * arbiter installs one that waits for assistant speech to finish and ducks
- * the alert when it cannot.
+ * arbiter installs one that waits for assistant speech to finish — a Discord
+ * voice connection carries one outbound Opus stream, so the alert and an
+ * in-flight assistant reply can never both be sending at once. The returned
+ * multiplier exists for future ducking; today's arbiter always returns 1.
  */
 export type PlaybackGate = (
   guildId: string,
@@ -296,7 +298,7 @@ export class VoiceManager<C extends VoiceManagerConnection> {
    * including a batch released together by the playback gate — would truncate
    * each other while every caller records success. Each queued alert consults
    * the gate at its own turn, so one that reaches the head mid-reply still
-   * waits or ducks on its own clock.
+   * waits its own full duration before playing.
    */
   async playSound(
     guildId: string,
@@ -316,7 +318,9 @@ export class VoiceManager<C extends VoiceManagerConnection> {
     source: SoundSource,
     volume: number,
   ): Promise<void> {
-    // Let an in-flight assistant reply finish (bounded), or duck under it.
+    // Wait for an in-flight assistant reply to fall fully silent — the two
+    // are never concurrent producers on the same connection (see
+    // VoiceOutputArbiter).
     const gate = await this.playbackGate?.(guildId);
     const effectiveVolume = volume * (gate?.volumeMultiplier ?? 1);
 

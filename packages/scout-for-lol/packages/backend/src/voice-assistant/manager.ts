@@ -177,6 +177,8 @@ export class VoiceAssistantManager {
   private readonly epochs = new Map<string, number>();
   /** Guild -> channel a join is currently establishing a connection for. */
   private readonly pendingJoinChannels = new Map<string, string>();
+  /** Set once by `closeAll()`; never cleared — the process is exiting. */
+  private closed = false;
   private readonly deps: VoiceAssistantManagerDeps;
 
   constructor(deps: VoiceAssistantManagerDeps = defaultDeps()) {
@@ -210,6 +212,17 @@ export class VoiceAssistantManager {
     guildId: DiscordGuildId,
     channelId: string,
   ): Promise<VoiceJoinOutcome> {
+    if (this.closed) {
+      // `closeAll()` is a one-time sweep of what exists AT THAT MOMENT; a
+      // command that arrives (or finishes its own flag/runtime checks) any
+      // time afterward — during the rest of process shutdown, while Discord
+      // is still connected — must never be allowed to start a new session
+      // that then keeps receiving audio through the remaining drain.
+      logger.info("voice assistant join refused: manager is shutting down", {
+        guildId,
+      });
+      return "cancelled";
+    }
     const enqueuedEpoch = this.currentEpoch(guildId);
     const previous = this.joinQueues.get(guildId);
     const run: Promise<VoiceJoinOutcome> = (async () => {
@@ -385,6 +398,13 @@ export class VoiceAssistantManager {
   }
 
   closeAll(): void {
+    // Marked FIRST and permanently: this is a one-time sweep of whatever
+    // exists at this exact moment, but shutdown's remaining drain (Temporal,
+    // worker, HTTP) can take real time with Discord still connected, and a
+    // /scout join arriving — or finishing its own flag/runtime checks —
+    // any time during that window must never be allowed to start a brand
+    // new session. `join()` checks this before it does anything else.
+    this.closed = true;
     // Union with in-flight joins for the same reason as the flag sweep: a
     // pending `/scout join` must not silently complete after shutdown.
     const guildIds = new Set([
@@ -453,7 +473,8 @@ let sharedManager: VoiceAssistantManager | undefined;
 /**
  * Lazy singleton. First access wires the whole integration: the
  * connection-lost listener (constructor) and the sound-engine playback gate,
- * so alerts wait for or duck under assistant speech instead of colliding.
+ * so alerts wait for assistant speech to fall fully silent instead of
+ * colliding on the connection's one outbound Opus stream.
  */
 export function getVoiceAssistantManager(): VoiceAssistantManager {
   if (sharedManager === undefined) {

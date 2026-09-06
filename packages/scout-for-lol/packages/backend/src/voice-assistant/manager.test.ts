@@ -358,6 +358,20 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     await expect(h.manager.join(GUILD, "channel-1")).resolves.toBe("joined");
   });
 
+  test("a join requested after shutdown is refused without ever attempting a connection", async () => {
+    const h = managerHarness();
+    await h.manager.join(GUILD, "channel-1");
+    h.manager.closeAll();
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    // A command that arrives during the rest of process shutdown — while
+    // Discord is still connected — must never start a brand new session.
+    await expect(h.manager.join(GUILD, "channel-2")).resolves.toBe("cancelled");
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.sessionEvents.filter((event) => event === "created")).toHaveLength(
+      1,
+    );
+  });
+
   test("a join queued behind an in-flight one is cancelled too when a stop arrives first", async () => {
     const pendingConnections: ((connection: AssistantConnection) => void)[] =
       [];

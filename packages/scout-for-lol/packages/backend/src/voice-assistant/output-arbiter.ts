@@ -1,30 +1,25 @@
 import type { DuckObserver } from "@shepherdjerred/voice-assistant";
 import type { PlaybackGate } from "#src/voice/voice-manager.ts";
 
-const DEFAULT_ALERT_WAIT_MS = 2500;
-const DUCKED_ALERT_VOLUME_MULTIPLIER = 0.3;
-
 /**
  * Arbitrates the one voice connection's two audio producers: the assistant's
  * paced Opus reply and the sound-engine's alert playback.
  *
- * The assistant side is a per-guild speaking latch driven by the shared
- * sender's `DuckObserver` — `PacedAssistantSender` guarantees a
+ * A Discord voice connection carries exactly one outbound Opus stream.
+ * `PacedAssistantSender` (raw `connection.playOpusPacket` calls) and the
+ * sound-engine's `AudioPlayer` (a `connection.subscribe()`-driven resource
+ * stream) are two INDEPENDENT producers onto that same stream — there is no
+ * mixer. Lowering only the alert's volume while both are still sending would
+ * not combine them; it would let their packets interleave and corrupt the
+ * outbound audio. So this never "ducks": it always waits for the assistant to
+ * fall fully silent before letting an alert's packets reach the connection.
+ * The wait is unbounded on purpose — `PacedAssistantSender` guarantees a
  * `duckChanged(false)` on every completion path (success, cancel, failure),
- * so the latch cannot stick. The sound-engine side is a bounded wait
- * (mutex) followed by ducked volume when the assistant is still talking:
- * an alert is never dropped, merely delayed briefly or played quietly.
+ * so this can never hang behind a stuck turn.
  */
 export class VoiceOutputArbiter {
   private readonly speakingGuilds = new Set<string>();
   private readonly waiters = new Map<string, (() => void)[]>();
-
-  constructor(
-    private readonly options: {
-      readonly alertWaitMs?: number;
-      readonly setTimer?: (callback: () => void, ms: number) => () => void;
-    } = {},
-  ) {}
 
   /** The duck observer for one guild's assistant reply sender. */
   assistantDuck(guildId: string): DuckObserver {
@@ -48,45 +43,25 @@ export class VoiceOutputArbiter {
 
   /**
    * The gate `VoiceManager.playSound` consults before starting an alert:
-   * waits briefly for the assistant to finish, then ducks the alert instead
-   * of colliding at full volume. Restoration is structural — every alert
-   * plays on a fresh audio resource, so the next quiet-time alert is back at
-   * full volume with no state to unwind.
+   * waits for the assistant to finish before letting the alert onto the
+   * connection, so the two producers are never concurrent. An alert is
+   * delayed, never dropped or corrupted; the returned multiplier is always 1
+   * since nothing here ever plays at a reduced volume.
    */
   playbackGate(): PlaybackGate {
     return async (guildId) => {
-      if (!this.speakingGuilds.has(guildId)) {
-        return { volumeMultiplier: 1 };
+      if (this.speakingGuilds.has(guildId)) {
+        await this.waitForQuiet(guildId);
       }
-      await this.waitForQuiet(guildId);
-      return this.speakingGuilds.has(guildId)
-        ? { volumeMultiplier: DUCKED_ALERT_VOLUME_MULTIPLIER }
-        : { volumeMultiplier: 1 };
+      return { volumeMultiplier: 1 };
     };
   }
 
   private waitForQuiet(guildId: string): Promise<void> {
-    const waitMs = this.options.alertWaitMs ?? DEFAULT_ALERT_WAIT_MS;
-    const setTimer =
-      this.options.setTimer ??
-      ((callback: () => void, ms: number) => {
-        const timer = setTimeout(callback, ms);
-        return () => {
-          clearTimeout(timer);
-        };
-      });
     return new Promise<void>((resolve) => {
-      let settled = false;
-      const settle = () => {
-        if (settled) return;
-        settled = true;
-        cancelTimer();
-        resolve();
-      };
       const pending = this.waiters.get(guildId) ?? [];
-      pending.push(settle);
+      pending.push(resolve);
       this.waiters.set(guildId, pending);
-      const cancelTimer = setTimer(settle, waitMs);
     });
   }
 }
