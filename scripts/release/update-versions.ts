@@ -338,7 +338,7 @@ async function commitBack(
     return;
   }
 
-  const root = new URL("..", import.meta.url).pathname;
+  const root = new URL("../..", import.meta.url).pathname;
   const auth = await setupGitAuth(root);
   const env = auth.env;
   const cloneDir = `${tmpBase()}/monorepo-version-bump-${crypto.randomUUID()}`;

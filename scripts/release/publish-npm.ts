@@ -372,7 +372,7 @@ async function main(): Promise<void> {
     // ROOT: in a workspace, bun resolves .npmrc from the project root (where
     // bun.lock lives) and ignores one in the package dir ("missing
     // authentication", main build 5633).
-    const npmrcPath = `${import.meta.dir}/../.npmrc`;
+    const npmrcPath = `${import.meta.dir}/../../.npmrc`;
     await Bun.write(
       npmrcPath,
       "//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n",

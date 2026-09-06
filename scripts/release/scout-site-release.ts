@@ -61,7 +61,7 @@ const RELEASE_INPUT_PATHS = [
 ] as const;
 
 function repoRoot(): string {
-  return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+  return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
 }
 
 async function marketingIdentifiers(): Promise<{

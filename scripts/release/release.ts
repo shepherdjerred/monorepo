@@ -50,9 +50,9 @@ function printReleaseDecisions(
   }
 }
 
-/** Repo root = one level up from scripts/. */
+/** Repo root = two levels up from scripts/release/. */
 function repoRoot(): string {
-  return new URL("..", import.meta.url).pathname;
+  return new URL("../..", import.meta.url).pathname;
 }
 
 type ReleaseTarget = {
@@ -155,7 +155,7 @@ async function main(): Promise<void> {
     // There is no provider or model fallback.
     console.log("--- refine CHANGELOGs");
     const prompt = await Bun.file(
-      new URL("prompts/refine-release-please.md", import.meta.url).pathname,
+      new URL("../prompts/refine-release-please.md", import.meta.url).pathname,
     ).text();
     const provider = await runReleaseRefiner({
       root,

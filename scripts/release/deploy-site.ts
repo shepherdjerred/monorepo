@@ -182,7 +182,7 @@ const DEPLOY_SITES: readonly DeploySite[] = [
 
 /** Repo root = two levels up from this file (scripts/release/deploy-site.ts). */
 function repoRoot(): string {
-  return new URL("..", import.meta.url).pathname.replace(/\/$/, "");
+  return new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
 }
 
 // ---------------------------------------------------------------------------

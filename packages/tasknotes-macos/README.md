@@ -50,7 +50,7 @@ bun run mac:e2e           # XCUITest suite
 bun run mac:e2e:ci        # signed CI suite; requires TASKNOTES_UITEST_IDENTITY
 bun run mac:verify        # generate + build + test + lint + format + app + smoke
 
-bun run mac:release       # operator-run release lane (scripts/release/release.ts)
+bun run mac:release       # operator-run release lane (scripts/release.ts)
 ```
 
 ### Signed UI tests
@@ -79,4 +79,4 @@ root lefthook `pre-commit` hook still runs the fast local subset, and
 
 See [AGENTS.md](AGENTS.md) for the host/threading invariants that must remain in
 context. The architecture and command reference live on this page; the release
-implementation is in `scripts/release/release.ts`.
+implementation is in `scripts/release.ts`.
