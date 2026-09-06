@@ -79,7 +79,7 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
     )}\n`,
     "src/index.ts": "export {};\n",
     "src/index.test.ts":
-      'import { expect, test } from "vitest";\n\ntest("package loads", async () => {\n  expect(await import("../index.ts")).toBeDefined();\n});\n',
+      'import { expect, test } from "vitest";\n\ntest("package loads", async () => {\n  expect(await import("./index.ts")).toBeDefined();\n});\n',
   };
 }
 

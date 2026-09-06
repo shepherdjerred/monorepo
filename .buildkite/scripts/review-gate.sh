@@ -80,13 +80,20 @@ if [[ "${REVIEW_PROVIDER:-codex}" == "codex" ]] && \
   ! grep -Fq 'ciProviders = new Set(["codex"])' "$WAIT_SCRIPT" && \
   ! grep -Fq 'ciProviders = new Set(["qodo", "codex"])' "$WAIT_SCRIPT"; then
   BOOTSTRAP_PATCH="${BUILDKITE_BUILD_CHECKOUT_PATH:-$PWD}/.buildkite/scripts/review-gate-codex-bootstrap.patch"
+  # The patch's own headers hard-code the pre-split scripts/wait-for-review.ts
+  # path; rewrite them to whichever layout $WAIT_SCRIPT actually resolved to
+  # above, so the patch still applies once main adopts the new location.
+  WAIT_SCRIPT_REL="${WAIT_SCRIPT#"$GATE_DIR/"}"
+  RESOLVED_BOOTSTRAP_PATCH="$(mktemp)"
+  sed "s#scripts/wait-for-review.ts#$WAIT_SCRIPT_REL#g" "$BOOTSTRAP_PATCH" \
+    > "$RESOLVED_BOOTSTRAP_PATCH"
   if [[ ! -f "$BOOTSTRAP_PATCH" ]] || \
-    ! git apply --check "$BOOTSTRAP_PATCH"; then
+    ! git apply --check "$RESOLVED_BOOTSTRAP_PATCH"; then
     echo "Codex gate bootstrap patch does not apply to the fetched main source" >&2
     exit 1
   fi
   echo "Codex gate bootstrap: applying the provider-selection patch to the main parser"
-  git apply "$BOOTSTRAP_PATCH"
+  git apply "$RESOLVED_BOOTSTRAP_PATCH"
 fi
 
 GH_TOKEN="$GITHUB_REVIEW_TOKEN" \
