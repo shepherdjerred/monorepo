@@ -12,12 +12,12 @@ import {
   AgentTaskInputSchema,
   type AgentTaskInput,
   type AgentTaskStartResult,
-} from "#shared/agent-task.ts";
+} from "#shared/agent/agent-task.ts";
 import {
   DYNAMIC_AGENT_TASK_MEMO_KEY,
   agentTaskScheduleId,
   agentTaskWorkflowId,
-} from "#shared/agent-task-identifiers.ts";
+} from "#shared/agent/agent-task-identifiers.ts";
 import {
   buildExecutionStartMetadata,
   parseTemporalBootstrapMetadata,

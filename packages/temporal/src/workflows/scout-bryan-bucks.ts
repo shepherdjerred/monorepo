@@ -2,7 +2,7 @@ import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutBryanBucksActivities,
   ScoutBryanBucksAnalyticsResult,
-} from "#activities/scout-bryan-bucks.ts";
+} from "#activities/scout/scout-bryan-bucks.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { syncScoutBryanBucksAnalytics } =

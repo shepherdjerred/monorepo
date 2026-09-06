@@ -2,13 +2,13 @@ import { patched, proxyActivities } from "@temporalio/workflow";
 import type {
   HomelabAuditActivities,
   HomelabAuditAgentInput,
-} from "#activities/homelab-audit.ts";
-import type { HomelabAuditCollectorActivities } from "#activities/homelab-audit-collectors.ts";
-import { buildHomelabAuditReport } from "#activities/homelab-audit-report.ts";
+} from "#activities/homelab/homelab-audit.ts";
+import type { HomelabAuditCollectorActivities } from "#activities/homelab/homelab-audit-collectors.ts";
+import { buildHomelabAuditReport } from "#activities/homelab/homelab-audit-report.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
-} from "#activities/report-delivery.ts";
+} from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 import { setWorkflowPhase } from "@scout-for-lol/temporal/workflow-ui-interceptor";

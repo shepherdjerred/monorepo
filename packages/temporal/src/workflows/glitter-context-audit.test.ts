@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import type { GlitterContextAuditResult } from "#activities/glitter-context-audit-schema.ts";
+import type { GlitterContextAuditResult } from "#activities/glitter/context/glitter-context-audit-schema.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runGlitterContextAudit } from "./glitter-context-audit.ts";
 

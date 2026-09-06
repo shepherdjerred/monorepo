@@ -1,6 +1,6 @@
 import { Context } from "@temporalio/activity";
 import * as k8s from "@kubernetes/client-node";
-import { kubectlExecInPod } from "#shared/kubectl-exec.ts";
+import { kubectlExecInPod } from "#shared/infra/kubectl-exec.ts";
 
 const NAMESPACE = "bugsink";
 const CONTAINER = "bugsink";

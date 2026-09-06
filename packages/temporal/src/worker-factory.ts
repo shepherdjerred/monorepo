@@ -2,9 +2,9 @@ import { VersioningBehavior } from "@temporalio/common";
 import { Worker } from "@temporalio/worker";
 import type { NativeConnection } from "@temporalio/worker";
 import type { createTemporalWorkerTracing } from "@shepherdjerred/temporal-observability/interceptors";
-import type { TemporalNamespace } from "./shared/temporal-namespace.ts";
-import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/worker-options.ts";
-import type { TemporalBootstrap } from "./shared/temporal-bootstrap.ts";
+import type { TemporalNamespace } from "./shared/infra/temporal-namespace.ts";
+import { WORKFLOW_TASK_POLLER_BEHAVIOR } from "./shared/infra/worker-options.ts";
+import type { TemporalBootstrap } from "./shared/infra/temporal-bootstrap.ts";
 import type { QueueWorkerDefinition } from "./worker-config.ts";
 
 type TemporalWorkerTracing = ReturnType<typeof createTemporalWorkerTracing>;

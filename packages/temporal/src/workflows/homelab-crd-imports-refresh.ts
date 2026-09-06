@@ -2,7 +2,7 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   HomelabCrdImportsRefreshActivities,
   HomelabCrdImportsRefreshResult,
-} from "#activities/homelab-crd-imports-refresh.ts";
+} from "#activities/homelab/homelab-crd-imports-refresh.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshHomelabCrdImports } =

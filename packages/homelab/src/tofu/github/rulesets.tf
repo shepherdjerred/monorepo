@@ -29,7 +29,7 @@ resource "github_repository_ruleset" "monorepo_main" {
       # worker, not Buildkite, so it survives the CI strip.
       #
       # ci/merge-conflict: locally-computed merge-tree result against main,
-      # posted by packages/temporal/src/activities/check-pr-merge-conflicts.ts
+      # posted by packages/temporal/src/activities/maintenance/check-pr-merge-conflicts.ts
       # whenever main moves (singleton workflow) or a PR head moves
       # (per-PR workflow). The activity NEVER reads GitHub's `mergeable`
       # field — local 3-way merge is deterministic; GitHub's lazy field is

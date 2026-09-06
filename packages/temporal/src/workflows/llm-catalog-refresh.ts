@@ -2,7 +2,7 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   LlmCatalogRefreshActivities,
   LlmCatalogRefreshResult,
-} from "#activities/llm-catalog-refresh.ts";
+} from "#activities/agent/llm-catalog-refresh.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshLlmCatalog } = proxyActivities<LlmCatalogRefreshActivities>({

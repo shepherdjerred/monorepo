@@ -1,7 +1,7 @@
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { getFirestore, doc, getDoc } from "firebase/firestore/lite";
 import { z } from "zod/v4";
-import { putS3Object } from "#shared/s3.ts";
+import { putS3Object } from "#shared/infra/s3.ts";
 
 type S3UploadConfig = {
   accessKeyId: string;

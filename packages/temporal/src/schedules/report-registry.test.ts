@@ -3,7 +3,7 @@ import { SCHEDULES } from "#schedules/schedule-definitions.ts";
 import {
   defaultReportGraceHours,
   REPORT_SCHEDULE_REGISTRY,
-} from "#shared/report-registry.ts";
+} from "#shared/reports/report-registry.ts";
 
 describe("report schedule registry", () => {
   test("uses the documented default grace periods", () => {

@@ -1,7 +1,7 @@
 import type { ScheduleOverlapPolicy } from "@temporalio/client";
 import type { Duration } from "@temporalio/common";
 import type { TaskQueue } from "#shared/task-queues.ts";
-import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
+import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 export type CatchupWindow = "5 minutes" | "1 hour" | "12 hours";
 

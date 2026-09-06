@@ -1,5 +1,5 @@
 # Root lychee configuration — used by the weekly `link-rot-scan-weekly`
-# Temporal schedule (packages/temporal/src/activities/link-rot-scan.ts) and
+# Temporal schedule (packages/temporal/src/activities/maintenance/link-rot-scan.ts) and
 # runnable locally with `lychee --config lychee.toml .` (lychee is pinned in
 # .mise.toml and baked into the temporal-worker image).
 #

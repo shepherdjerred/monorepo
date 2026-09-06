@@ -16,7 +16,7 @@ const RawArgsSchema = z.array(z.string());
 
 /**
  * Four weeks, one day above `MIN_DRIFT_LOOKBACK_DAYS`. Keep this in step with
- * `LOOKBACK_DAYS` in `packages/temporal/src/activities/scout-queue-windows.ts`
+ * `LOOKBACK_DAYS` in `packages/temporal/src/activities/scout/scout-queue-windows.ts`
  * so a dry run reproduces what the scheduled watcher proposes.
  */
 const DEFAULT_LOOKBACK_DAYS = 28;

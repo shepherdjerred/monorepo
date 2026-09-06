@@ -1,5 +1,5 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { DnsAuditActivities } from "#activities/dns-audit.ts";
+import type { DnsAuditActivities } from "#activities/homelab/dns-audit.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { DnsCheckResult } from "#shared/types.ts";
 

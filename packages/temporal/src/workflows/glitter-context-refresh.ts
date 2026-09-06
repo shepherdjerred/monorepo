@@ -3,7 +3,7 @@ import type {
   GlitterContextRefreshActivities,
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
-} from "#activities/glitter-context-refresh.ts";
+} from "#activities/glitter/context/glitter-context-refresh.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshGlitterContext } =

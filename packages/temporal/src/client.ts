@@ -3,8 +3,8 @@ import { createTemporalClientTracingInterceptor } from "@shepherdjerred/temporal
 import {
   type TemporalNamespace,
   parseTemporalNamespace,
-} from "#shared/temporal-namespace.ts";
-import type { WorkflowVisibilityClient } from "#shared/workflow-visibility-client.ts";
+} from "#shared/infra/temporal-namespace.ts";
+import type { WorkflowVisibilityClient } from "#shared/infra/workflow-visibility-client.ts";
 import { parseTemporalBootstrapMetadata } from "./shared/execution-metadata.ts";
 import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-client-interceptor.ts";
 

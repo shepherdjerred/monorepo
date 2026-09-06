@@ -24,7 +24,7 @@
  *     between runs with `git checkout -- packages/scout-for-lol/.../seasons*`.
  *   - DRY_RUN=1 writes the resulting diff to /tmp/scout-season-refresh-<uuid>.diff.
  */
-import { scoutSeasonRefreshActivities } from "#activities/scout-season-refresh.ts";
+import { scoutSeasonRefreshActivities } from "#activities/scout/scout-season-refresh.ts";
 
 type Args = {
   repo: string | undefined;

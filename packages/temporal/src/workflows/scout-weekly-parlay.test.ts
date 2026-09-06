@@ -5,7 +5,7 @@ import type { WeeklyParlayControlAction as ScoutWeeklyParlayAction } from "@scou
 import {
   buildScoutWeeklyParlayCatchupTimeline,
   type ScoutWeeklyParlayTimeline,
-} from "#activities/scout-weekly-parlay.ts";
+} from "#activities/scout/scout-weekly-parlay.ts";
 import {
   runScoutWeeklyParlayCatchupWorkflow,
   runScoutWeeklyParlayWorkflow,

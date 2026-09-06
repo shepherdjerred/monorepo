@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/bun";
-import { restoreGlitterCorpusSnapshotMetrics } from "#activities/glitter-corpus-snapshot.ts";
-import { restoreSeaweedFsBackupMetrics } from "#activities/seaweedfs-backup.ts";
-import { isTransientCorpusStorageError } from "#activities/glitter-corpus-store.ts";
+import { restoreGlitterCorpusSnapshotMetrics } from "#activities/glitter/corpus/glitter-corpus-snapshot.ts";
+import { restoreSeaweedFsBackupMetrics } from "#activities/homelab/seaweedfs-backup.ts";
+import { isTransientCorpusStorageError } from "#activities/glitter/corpus/glitter-corpus-store.ts";
 import { formatError } from "#shared/format-error.ts";
 import { retryUntilReady } from "#shared/startup-retry.ts";
 import { log as jsonLog } from "#observability/log.ts";

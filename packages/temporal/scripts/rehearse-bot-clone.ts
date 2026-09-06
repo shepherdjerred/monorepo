@@ -56,14 +56,14 @@ import {
   installScoutWorkspace,
   rootInstallWithoutHooks,
 } from "#activities/bot-clone.ts";
-import { isAllowedGlitterContextRefreshPath } from "#activities/glitter-context-refresh-paths.ts";
-import { runCommand } from "#activities/data-dragon-shell.ts";
-import { runScoutGeneratedPreflight } from "#activities/scout-generated-preflight.ts";
+import { isAllowedGlitterContextRefreshPath } from "#activities/glitter/context/glitter-context-refresh-paths.ts";
+import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
+import { runScoutGeneratedPreflight } from "#activities/scout/scout-generated-preflight.ts";
 import { z } from "zod";
 import {
   CHANGELOG_FILE,
   SEASONS_FILE,
-} from "#activities/scout-season-refresh.ts";
+} from "#activities/scout/scout-season-refresh.ts";
 
 // The exact test that failed in the scout-data-dragon-weekly-refresh runs of
 // 2026-06-20 → 2026-07-11 (via `update-data-dragon.ts`'s snapshot refresh).

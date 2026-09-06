@@ -13,8 +13,8 @@ Sources:
 [`schedule-definitions-early.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions-early.ts),
 [`schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions.ts),
 [`security-schedule-definitions.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/security-schedule-definitions.ts),
-[`report.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/report.ts),
-[`report-delivery.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/report-delivery.ts).
+[`report.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/reports/report.ts),
+[`report-delivery.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/activities/reports/report-delivery.ts).
 
 ## Human email contract
 

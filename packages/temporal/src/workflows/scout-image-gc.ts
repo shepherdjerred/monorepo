@@ -3,7 +3,7 @@ import type {
   ScoutImageGcActivities,
   ScoutImageGcInput,
   ScoutImageGcResult,
-} from "#activities/scout-image-gc.ts";
+} from "#activities/scout/scout-image-gc.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { pruneScoutImages } = proxyActivities<ScoutImageGcActivities>({

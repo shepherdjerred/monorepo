@@ -11,7 +11,7 @@ only so existing Temporal histories can replay; those results are always
 partial because they did not declare coverage.
 
 Schema and dispatcher:
-[`agent-task.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent-task.ts),
+[`agent-task.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent/agent-task.ts),
 [`agent-task-scheduler.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/lib/agent-task-scheduler.ts).
 
 ## Task fields

@@ -10,8 +10,8 @@ import {
   AgentTaskInputV2Schema,
   type AgentTaskInputV2,
   type AgentTaskStartResult,
-} from "#shared/agent-task.ts";
-import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
+} from "#shared/agent/agent-task.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";

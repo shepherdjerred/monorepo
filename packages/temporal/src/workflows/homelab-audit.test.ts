@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { ActivityFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import type { HomelabAuditCollection } from "#activities/homelab-audit-collectors.ts";
+import type { HomelabAuditCollection } from "#activities/homelab/homelab-audit-collectors.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runHomelabAuditWorkflow } from "./homelab-audit.ts";
 import { createReportCapture, runWithReportWorker } from "./test-support.ts";

@@ -2,14 +2,14 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   MainVulnScanActivities,
   MainVulnScanResult,
-} from "#activities/main-vuln-scan.ts";
-import type { MainVulnScanAlertActivities } from "#activities/main-vuln-scan-alerts.ts";
-import type { ReportDeliveryActivities } from "#activities/report-delivery.ts";
+} from "#activities/maintenance/main-vuln-scan.ts";
+import type { MainVulnScanAlertActivities } from "#activities/maintenance/main-vuln-scan-alerts.ts";
+import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
 import {
   buildMainVulnScanFailureReport,
   buildMainVulnScanReport,
   countCriticalVulnerabilities,
-} from "#activities/main-vuln-scan-report.ts";
+} from "#activities/maintenance/main-vuln-scan-report.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const RETRY = {

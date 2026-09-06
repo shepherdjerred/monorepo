@@ -11,7 +11,7 @@ import {
 import {
   buildFliptFlagDriftAlert,
   type FliptFlagDriftAlertInput,
-} from "#shared/flipt-flag-drift-alert.ts";
+} from "#shared/alerts/flipt-flag-drift-alert.ts";
 
 export type FliptFlagInventoryResult = FliptFlagDriftAlertInput & {
   readonly observedAt: string;

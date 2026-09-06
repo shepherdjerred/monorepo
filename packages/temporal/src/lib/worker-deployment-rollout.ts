@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { WorkerBuildIdSchema } from "#shared/temporal-bootstrap.ts";
+import { WorkerBuildIdSchema } from "#shared/infra/temporal-bootstrap.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { WORKFLOW_TASK_QUEUES } from "#worker-config";
 import {

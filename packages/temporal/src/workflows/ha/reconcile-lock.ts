@@ -1,6 +1,9 @@
 import { condition, defineSignal, log, setHandler } from "@temporalio/workflow";
 import { callServiceUnchecked, getEntityStateUnchecked } from "./util.ts";
-import { PRESENCE_COOLDOWN_SECONDS, shouldLock } from "#shared/presence.ts";
+import {
+  PRESENCE_COOLDOWN_SECONDS,
+  shouldLock,
+} from "#shared/infra/presence.ts";
 
 const FRONT_DOOR_LOCK = "lock.front_door" as const;
 const PERSONS = ["person.jerred", "person.shuxin"] as const;

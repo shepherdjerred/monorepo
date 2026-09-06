@@ -136,8 +136,8 @@ describe("withInstallRetry", () => {
 
 describe("Scout activity setup ownership", () => {
   for (const filename of [
-    "scout-queue-windows.ts",
-    "scout-showcase-refresh.ts",
+    "scout/scout-queue-windows.ts",
+    "scout/scout-showcase-refresh.ts",
   ]) {
     test(`${filename} delegates its only install to installScoutWorkspace`, async () => {
       const source = await Bun.file(`${import.meta.dir}/${filename}`).text();

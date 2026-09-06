@@ -72,7 +72,8 @@ describe("temporal integration", () => {
   });
 
   it("runs the dns-audit workflow end-to-end", async () => {
-    const { dnsAuditActivities } = await import("#activities/dns-audit.ts");
+    const { dnsAuditActivities } =
+      await import("#activities/homelab/dns-audit.ts");
     await runWithDomainActivityWorker(
       TASK_QUEUES.INFRA,
       dnsAuditActivities,

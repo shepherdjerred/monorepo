@@ -2,11 +2,11 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   CiIoImpactActivities,
   CiIoImpactResult,
-} from "#activities/ci-io-impact.ts";
+} from "#activities/maintenance/ci-io-impact.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
-} from "#activities/report-delivery.ts";
+} from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 

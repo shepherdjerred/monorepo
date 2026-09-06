@@ -8,7 +8,7 @@
 # kubectl (bugsink-housekeeping / zfs-maintenance `kubectl exec`),
 # github-mcp-server (pr-agent's MCP GitHub backend), talosctl / tofu / argocd /
 # velero / bk / temporal / gcx / toolkit (homelab-audit-daily runbook + preflight —
-# see src/activities/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES),
+# see src/activities/homelab/homelab-audit-preflight.ts REQUIRED_AUDIT_BINARIES),
 # and the direct maintenance runtimes Kometa, uv, and Trivy.
 # scripts/smoke.ts asserts every one of these boots + is on PATH.
 #

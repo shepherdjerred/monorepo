@@ -1,5 +1,5 @@
 import { executeChild, proxyActivities, uuid4 } from "@temporalio/workflow";
-import type { glitterCorpusActivities } from "#activities/glitter-corpus.ts";
+import type { glitterCorpusActivities } from "#activities/glitter/corpus/glitter-corpus.ts";
 import type {
   CapturePageResult,
   ChannelStateResult,
