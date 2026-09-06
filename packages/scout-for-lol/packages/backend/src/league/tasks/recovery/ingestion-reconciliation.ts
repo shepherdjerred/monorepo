@@ -4,11 +4,79 @@ import { sendOfflineNotification } from "#src/league/tasks/recovery/offline-noti
 import { backfillMatchesToS3 } from "#src/league/tasks/recovery/backfill-to-s3.ts";
 import { createLogger } from "#src/logger.ts";
 import { downtimeDetectedTotal } from "#src/metrics/index.ts";
+import { ingestionReconciliationSkipsTotal } from "#src/metrics/recovery.ts";
 import * as Sentry from "@sentry/bun";
 
 const logger = createLogger("ingestion-reconciliation");
 
+let isReconciliationInProgress = false;
+let reconciliationStartTime: number | undefined;
+
+export function resetReconciliationState(): void {
+  isReconciliationInProgress = false;
+  reconciliationStartTime = undefined;
+}
+
+function shouldSkipReconciliationRun(): boolean {
+  if (!isReconciliationInProgress) {
+    return false;
+  }
+
+  const elapsed =
+    reconciliationStartTime === undefined
+      ? 0
+      : Date.now() - reconciliationStartTime;
+
+  // Check if the lock is stale (stuck for over 30 minutes — a downtime
+  // backfill legitimately runs far longer than a poll)
+  if (elapsed > 30 * 60 * 1000) {
+    logger.error(
+      `⚠️  Reconciliation lock timeout detected after ${Math.round(elapsed / 1000).toString()}s, force-resetting stale lock`,
+    );
+    ingestionReconciliationSkipsTotal.inc({ reason: "timeout_reset" });
+    Sentry.captureMessage(
+      "Ingestion reconciliation lock timeout - force reset",
+      {
+        level: "warning",
+        tags: { source: "ingestion-reconciliation" },
+        extra: { elapsedMs: elapsed },
+      },
+    );
+    isReconciliationInProgress = false;
+    reconciliationStartTime = undefined;
+    return false;
+  }
+
+  logger.info(
+    `⏸️  Ingestion reconciliation already in progress (${Math.round(elapsed / 1000).toString()}s elapsed), skipping this run`,
+  );
+  ingestionReconciliationSkipsTotal.inc({ reason: "concurrent_run" });
+  return true;
+}
+
 export async function runIngestionReconciliation(): Promise<void> {
+  // The schedule-triggered and gateway-ready workflows carry different
+  // workflow IDs, so Temporal cannot deduplicate them against each other and
+  // both can invoke this activity concurrently during downtime recovery.
+  // Exactly one backend replica executes the background activity queue
+  // (replicas: 1, Recreate strategy in the homelab scout chart), so this
+  // in-process guard is a genuine shared exclusion for both start paths.
+  // Skipping is safe: the fixed schedule retries within a minute and the
+  // boot-time start is best-effort.
+  if (shouldSkipReconciliationRun()) {
+    return;
+  }
+  isReconciliationInProgress = true;
+  reconciliationStartTime = Date.now();
+  try {
+    await reconcileIngestion();
+  } finally {
+    isReconciliationInProgress = false;
+    reconciliationStartTime = undefined;
+  }
+}
+
+async function reconcileIngestion(): Promise<void> {
   logger.info("Running ingestion reconciliation");
 
   const lastPollAt = await getLastSuccessfulPollAt();
