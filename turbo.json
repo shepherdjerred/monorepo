@@ -10,6 +10,8 @@
     "scripts/ci/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
     "scripts/ci/run-ci-test.ts",
+    "packages/homelab/tsconfig.base.json",
+    "packages/scout-for-lol/tsconfig.base.json",
     "tsconfig.base.json",
     "vitest.config.ts"
   ],
