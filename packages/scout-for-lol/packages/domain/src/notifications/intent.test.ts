@@ -163,26 +163,44 @@ describe("NotificationIntentStateSchema", () => {
 });
 
 describe("OperatorUnknownResolutionSchema", () => {
-  test("accepts a delivered resolution", () => {
+  test("accepts a delivered resolution naming its attempt", () => {
     expect(
       OperatorUnknownResolutionSchema.parse({
         outcome: "delivered",
+        attemptNonce: "attempt-nonce-a",
         deliveredAt: "2026-09-01T12:31:00.000Z",
       }).outcome,
     ).toBe("delivered");
   });
 
-  test("accepts a confirmed-unsent resolution", () => {
+  test("accepts a confirmed-unsent resolution naming its attempt", () => {
     expect(
-      OperatorUnknownResolutionSchema.parse({ outcome: "confirmed-unsent" })
-        .outcome,
+      OperatorUnknownResolutionSchema.parse({
+        outcome: "confirmed-unsent",
+        attemptNonce: "attempt-nonce-a",
+      }).outcome,
     ).toBe("confirmed-unsent");
   });
+
+  test.each(["delivered", "confirmed-unsent"])(
+    "rejects a %s resolution without an attempt nonce",
+    (outcome) => {
+      expect(() =>
+        OperatorUnknownResolutionSchema.parse({
+          outcome,
+          ...(outcome === "delivered"
+            ? { deliveredAt: "2026-09-01T12:31:00.000Z" }
+            : {}),
+        }),
+      ).toThrow();
+    },
+  );
 
   test("rejects a confirmed-unsent resolution carrying delivery fields", () => {
     expect(() =>
       OperatorUnknownResolutionSchema.parse({
         outcome: "confirmed-unsent",
+        attemptNonce: "attempt-nonce-a",
         deliveredAt: "2026-09-01T12:31:00.000Z",
       }),
     ).toThrow();
@@ -233,6 +251,18 @@ describe("NotificationIntentSchema", () => {
       }),
     ).toThrow();
   });
+
+  test.each(["sending", "unknown-delivery"] as const)(
+    "rejects a %s intent that never began an attempt",
+    (kind) => {
+      expect(() =>
+        NotificationIntentSchema.parse({
+          ...makeIntent(statesByKind()[kind]),
+          attemptCount: 0,
+        }),
+      ).toThrow();
+    },
+  );
 
   test("rejects a non-instant freshness deadline", () => {
     expect(() =>

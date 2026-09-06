@@ -122,7 +122,9 @@ export const NotificationIntentStateSchema = z.discriminatedUnion("kind", [
 /**
  * How an operator resolves an `unknown-delivery` attempt after investigating:
  * either the message is found (delivered) or its absence is confirmed, which
- * releases the intent back to `ready` for a fresh attempt.
+ * releases the intent back to `ready` for a fresh attempt. The resolution
+ * names the attempt it investigated by nonce, so a stale operator view can
+ * never resolve a newer attempt it did not look at.
  */
 export type OperatorUnknownResolution = z.infer<
   typeof OperatorUnknownResolutionSchema
@@ -130,22 +132,37 @@ export type OperatorUnknownResolution = z.infer<
 export const OperatorUnknownResolutionSchema = z.discriminatedUnion("outcome", [
   z.strictObject({
     outcome: z.literal("delivered"),
+    attemptNonce: NotificationAttemptNonceSchema,
     messageId: DiscordMessageIdSchema.optional(),
     deliveredAt: IsoInstantSchema,
   }),
-  z.strictObject({ outcome: z.literal("confirmed-unsent") }),
+  z.strictObject({
+    outcome: z.literal("confirmed-unsent"),
+    attemptNonce: NotificationAttemptNonceSchema,
+  }),
 ]);
 
 export type NotificationIntent = z.infer<typeof NotificationIntentSchema>;
-export const NotificationIntentSchema = z.strictObject({
-  key: NotificationIntentKeySchema,
-  target: NotificationTargetSchema,
-  /** Sending after this instant is a conflict; the intent must be suppressed. */
-  freshnessDeadline: IsoInstantSchema,
-  createdAt: IsoInstantSchema,
-  /** Send attempts started so far; incremented by `beginSend`. */
-  attemptCount: z.int().nonnegative(),
-  /** Most recent recorded failure, kept for diagnosis across retries. */
-  lastFailure: NotificationFailureSchema.optional(),
-  state: NotificationIntentStateSchema,
-});
+export const NotificationIntentSchema = z
+  .strictObject({
+    key: NotificationIntentKeySchema,
+    target: NotificationTargetSchema,
+    /** Sending after this instant is a conflict; the intent must be suppressed. */
+    freshnessDeadline: IsoInstantSchema,
+    createdAt: IsoInstantSchema,
+    /** Send attempts started so far; incremented by `beginSend`. */
+    attemptCount: z.int().nonnegative(),
+    /** Most recent recorded failure, kept for diagnosis across retries. */
+    lastFailure: NotificationFailureSchema.optional(),
+    state: NotificationIntentStateSchema,
+  })
+  .refine(
+    (intent) =>
+      (intent.state.kind !== "sending" &&
+        intent.state.kind !== "unknown-delivery") ||
+      intent.attemptCount >= 1,
+    {
+      message:
+        "sending and unknown-delivery are only reachable after beginSend, so attemptCount must be at least 1",
+    },
+  );

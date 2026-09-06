@@ -51,6 +51,22 @@ describe("RecoveryScanCursorSchema", () => {
     ).toThrow();
   });
 
+  test("rejects scanned pages without a position to resume from", () => {
+    expect(() =>
+      RecoveryScanCursorSchema.parse({ pagesScanned: 2, pageBudget: 3 }),
+    ).toThrow();
+  });
+
+  test("rejects a position before any page was scanned", () => {
+    expect(() =>
+      RecoveryScanCursorSchema.parse({
+        position: "page-1",
+        pagesScanned: 0,
+        pageBudget: 3,
+      }),
+    ).toThrow();
+  });
+
   test("rejects an empty position token", () => {
     expect(() =>
       RecoveryScanCursorSchema.parse({

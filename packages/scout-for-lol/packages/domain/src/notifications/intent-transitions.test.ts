@@ -507,6 +507,7 @@ describe("operatorResolveUnknown", () => {
     const next = expectApplied(
       operatorResolveUnknown(makeIntent(unknownDeliveryState()), {
         outcome: "delivered",
+        attemptNonce: nonceA,
         messageId,
         deliveredAt,
       }),
@@ -518,6 +519,7 @@ describe("operatorResolveUnknown", () => {
     const next = expectApplied(
       operatorResolveUnknown(makeIntent(unknownDeliveryState()), {
         outcome: "delivered",
+        attemptNonce: nonceA,
         deliveredAt,
       }),
     );
@@ -528,16 +530,58 @@ describe("operatorResolveUnknown", () => {
     const next = expectApplied(
       operatorResolveUnknown(makeIntent(unknownDeliveryState()), {
         outcome: "confirmed-unsent",
+        attemptNonce: nonceA,
       }),
     );
     expect(next.state).toEqual({ kind: "ready" });
-    expect(next.attemptCount).toBe(0);
+    expect(next.attemptCount).toBe(1);
+  });
+
+  test.each(["delivered", "confirmed-unsent"] as const)(
+    "a %s resolution for another attempt conflicts as a stale view",
+    (outcome) => {
+      expectConflict(
+        operatorResolveUnknown(
+          makeIntent(unknownDeliveryState()),
+          outcome === "delivered"
+            ? { outcome, attemptNonce: nonceB, deliveredAt }
+            : { outcome, attemptNonce: nonceB },
+        ),
+        "stale-operator-view",
+      );
+    },
+  );
+
+  test("a delayed duplicate resolution cannot resolve a newer attempt", () => {
+    // resolve-as-unsent (attempt A) → fresh send (attempt B) → new unknown
+    // outcome → the duplicate of the original resolution arrives late.
+    const resolutionForAttemptA = {
+      outcome: "confirmed-unsent",
+      attemptNonce: nonceA,
+    } as const;
+    const released = expectApplied(
+      operatorResolveUnknown(
+        makeIntent(unknownDeliveryState()),
+        resolutionForAttemptA,
+      ),
+    );
+    const resent = expectApplied(
+      beginSend(released, { attemptNonce: nonceB, startedAt: beforeDeadline }),
+    );
+    const unknownAgain = expectApplied(
+      recordUnknownDelivery(resent, { attemptNonce: nonceB, observedAt }),
+    );
+    expectConflict(
+      operatorResolveUnknown(unknownAgain, resolutionForAttemptA),
+      "stale-operator-view",
+    );
   });
 
   test("replaying an identical delivered resolution is idempotent", () => {
     expect(
       operatorResolveUnknown(makeIntent(deliveredWithMessageState()), {
         outcome: "delivered",
+        attemptNonce: nonceA,
         messageId,
         deliveredAt,
       }),
@@ -548,6 +592,7 @@ describe("operatorResolveUnknown", () => {
     expectConflict(
       operatorResolveUnknown(makeIntent(deliveredWithMessageState()), {
         outcome: "delivered",
+        attemptNonce: nonceA,
         messageId: otherMessageId,
         deliveredAt,
       }),
@@ -559,6 +604,7 @@ describe("operatorResolveUnknown", () => {
     expectConflict(
       operatorResolveUnknown(makeIntent(deliveredWithMessageState()), {
         outcome: "confirmed-unsent",
+        attemptNonce: nonceA,
       }),
       "terminal-state",
     );
@@ -570,6 +616,7 @@ describe("operatorResolveUnknown", () => {
       expectConflict(
         operatorResolveUnknown(makeIntent(statesByKind()[kind]), {
           outcome: "confirmed-unsent",
+          attemptNonce: nonceA,
         }),
         "invalid-source-state",
       );
@@ -582,6 +629,7 @@ describe("operatorResolveUnknown", () => {
       expectConflict(
         operatorResolveUnknown(makeIntent(statesByKind()[kind]), {
           outcome: "confirmed-unsent",
+          attemptNonce: nonceA,
         }),
         "terminal-state",
       );
@@ -643,6 +691,7 @@ describe("state-machine invariants", () => {
       (intent) =>
         operatorResolveUnknown(intent, {
           outcome: "delivered",
+          attemptNonce: nonceA,
           messageId,
           deliveredAt,
         }),
@@ -650,7 +699,10 @@ describe("state-machine invariants", () => {
     [
       "operatorResolveUnknown (confirmed-unsent)",
       (intent) =>
-        operatorResolveUnknown(intent, { outcome: "confirmed-unsent" }),
+        operatorResolveUnknown(intent, {
+          outcome: "confirmed-unsent",
+          attemptNonce: nonceA,
+        }),
     ],
   ];
 

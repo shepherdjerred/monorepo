@@ -27,6 +27,7 @@ export const NotificationConflictReasonSchema = z.enum([
   "send-in-flight",
   "freshness-deadline-passed",
   "not-stale",
+  "stale-operator-view",
 ]);
 
 export type NotificationTransitionResult =
@@ -316,6 +317,12 @@ export function expire(
   }
 }
 
+/**
+ * The resolution binds to one attempt by nonce: an operator who investigated
+ * attempt A must not resolve attempt B, which can happen when a resolve-as-
+ * unsent, a fresh send, and a new unknown outcome interleave with a delayed
+ * duplicate of the original resolution.
+ */
 export function operatorResolveUnknown(
   intent: NotificationIntent,
   resolution: OperatorUnknownResolution,
@@ -323,6 +330,9 @@ export function operatorResolveUnknown(
   const state = intent.state;
   switch (state.kind) {
     case "unknown-delivery":
+      if (state.attemptNonce !== resolution.attemptNonce) {
+        return conflict("stale-operator-view");
+      }
       return resolution.outcome === "delivered"
         ? applied(withState(intent, deliveredState(resolution)))
         : applied(withState(intent, { kind: "ready" }));

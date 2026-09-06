@@ -41,12 +41,14 @@ export const deliveredAt = IsoInstantSchema.parse("2026-09-01T12:31:00.000Z");
 export const observedAt = IsoInstantSchema.parse("2026-09-01T12:32:00.000Z");
 
 export function makeIntent(state: NotificationIntentState): NotificationIntent {
+  const attemptBearing =
+    state.kind === "sending" || state.kind === "unknown-delivery";
   return {
     key: intentKey,
     target: { kind: "channel", channelId },
     freshnessDeadline: exactDeadline,
     createdAt,
-    attemptCount: 0,
+    attemptCount: attemptBearing ? 1 : 0,
     state,
   };
 }

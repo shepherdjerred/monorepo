@@ -38,7 +38,14 @@ export const RecoveryScanCursorSchema = z
   })
   .refine((cursor) => cursor.pagesScanned <= cursor.pageBudget, {
     message: "pagesScanned must not exceed pageBudget",
-  });
+  })
+  .refine(
+    (cursor) => (cursor.position === undefined) === (cursor.pagesScanned === 0),
+    {
+      message:
+        "position comes from an advance, so it must be present exactly when pagesScanned is positive",
+    },
+  );
 
 export type RecoveryCounts = z.infer<typeof RecoveryCountsSchema>;
 export const RecoveryCountsSchema = z
