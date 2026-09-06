@@ -1,6 +1,7 @@
 import { describe, test, expect, afterEach } from "vitest";
 import {
   parseProductAnalyticsConfiguration,
+  parseVoiceAssistantConfiguration,
   resetConfigurationForTests,
   resolveEnvironment,
 } from "#src/configuration.ts";
@@ -215,5 +216,58 @@ describe("local runtime flags", () => {
     Bun.env["EXPLORE_MODEL"] = "gpt-5.6-terra";
     resetConfigurationForTests();
     expect(configuration.exploreModel).toBe("gpt-5.6-terra");
+  });
+});
+
+describe("parseVoiceAssistantConfiguration", () => {
+  test("defaults to disabled with the production asset path", () => {
+    const config = parseVoiceAssistantConfiguration({
+      enabled: false,
+      openAiApiKey: undefined,
+      assetsDir: undefined,
+      kwsRuntime: undefined,
+    });
+    expect(config).toEqual({
+      enabled: false,
+      assetsDir: "/opt/scout/voice",
+      kwsRuntime: "auto",
+    });
+  });
+
+  test("enabled requires an OpenAI key", () => {
+    expect(() =>
+      parseVoiceAssistantConfiguration({
+        enabled: true,
+        openAiApiKey: undefined,
+        assetsDir: undefined,
+        kwsRuntime: undefined,
+      }),
+    ).toThrow(/OPENAI_API_KEY/);
+  });
+
+  test("accepts a complete enabled configuration", () => {
+    const config = parseVoiceAssistantConfiguration({
+      enabled: true,
+      openAiApiKey: "sk-test",
+      assetsDir: "/tmp/voice",
+      kwsRuntime: "wasm",
+    });
+    expect(config).toEqual({
+      enabled: true,
+      openAiApiKey: "sk-test",
+      assetsDir: "/tmp/voice",
+      kwsRuntime: "wasm",
+    });
+  });
+
+  test("a present invalid runtime throws instead of falling back", () => {
+    expect(() =>
+      parseVoiceAssistantConfiguration({
+        enabled: false,
+        openAiApiKey: undefined,
+        assetsDir: undefined,
+        kwsRuntime: "gpu",
+      }),
+    ).toThrow();
   });
 });

@@ -12,6 +12,7 @@ type HttpServerRuntime = {
 
 type BackendStartupDependencies = {
   readonly validateChampionAssets: () => Promise<void>;
+  readonly bootstrapVoiceAssistant?: () => Promise<void>;
   readonly ensureReportLakeReady?: () => Promise<void>;
   readonly startHttpServer: () => Promise<HttpServerRuntime>;
   readonly startDiscord: () => Promise<void>;
@@ -23,6 +24,13 @@ export async function runBackendStartup(
   dependencies: BackendStartupDependencies,
 ): Promise<HttpServerRuntime> {
   await dependencies.validateChampionAssets();
+  // Fatal when voice is enabled and the pinned assets fail verification, a
+  // deliberate boot gate exactly like the champion assets above — and before
+  // Discord starts, so a voice-enabled pod is never briefly reachable while
+  // half-deaf.
+  if (dependencies.bootstrapVoiceAssistant !== undefined) {
+    await dependencies.bootstrapVoiceAssistant();
+  }
   if (dependencies.ensureReportLakeReady !== undefined) {
     await dependencies.ensureReportLakeReady();
   }
@@ -52,6 +60,11 @@ export async function startBackendRuntime(): Promise<
   let temporalSupervisor: ScoutTemporalSupervisor | undefined;
   const httpRuntime = await runBackendStartup({
     validateChampionAssets,
+    bootstrapVoiceAssistant: async () => {
+      const { bootstrapVoiceAssistant } =
+        await import("#src/voice-assistant/runtime.ts");
+      await bootstrapVoiceAssistant();
+    },
     ensureReportLakeReady: async () => {
       if (!configuration.enableBackgroundJobs) {
         return;

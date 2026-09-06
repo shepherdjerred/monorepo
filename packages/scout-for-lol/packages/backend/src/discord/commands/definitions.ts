@@ -11,8 +11,10 @@ import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
 import { bbCommand } from "#src/discord/commands/bb-definition.ts";
 import {
+  buildScoutGuildCommand,
   scoutGlobalCommand,
   scoutGuildCommand,
+  type ScoutGuildFeatures,
 } from "#src/discord/commands/scout-definition.ts";
 import {
   isPolicyEnabled,
@@ -61,7 +63,38 @@ export type GuildScopedCommandGroup = {
   enabledGuildIds: () => string[];
   isEnabled?: (guildId: string) => Promise<boolean>;
   payload: RESTPostAPIApplicationCommandsJSONBody[];
+  /**
+   * Per-guild payload for a command that merges several feature gates (the
+   * `/scout` guild variant carries `ask` from the Explore allowlist and
+   * `join`/`leave` from the voice flag). When present it is the complete
+   * authority for the group's contribution — an empty array means the guild
+   * carries none of it — and the static `payload` remains the full shape for
+   * audits and tests.
+   */
+  guildPayload?: (
+    guildId: string,
+  ) => Promise<RESTPostAPIApplicationCommandsJSONBody[]>;
 };
+
+/** The per-feature gates behind the merged `/scout` guild command. */
+export async function scoutGuildFeatures(
+  guildId: string,
+): Promise<ScoutGuildFeatures> {
+  return {
+    ask: exploreGuildCommandGuildIds().includes(guildId),
+    voice: await isPolicyEnabled("voice_assistant_enabled", {
+      server: DiscordGuildIdSchema.parse(guildId),
+    }),
+  };
+}
+
+async function scoutGuildCommandPayload(
+  guildId: string,
+): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
+  const features = await scoutGuildFeatures(guildId);
+  if (!features.ask && !features.voice) return [];
+  return [buildScoutGuildCommand(features).toJSON()];
+}
 
 export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
   {
@@ -73,8 +106,14 @@ export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
     payload: [bbCommand.toJSON()],
   },
   {
-    enabledGuildIds: exploreGuildCommandGuildIds,
+    enabledGuildIds: () => [
+      ...new Set([
+        ...exploreGuildCommandGuildIds(),
+        ...listGuildsWithFlagEnabled("voice_assistant_enabled"),
+      ]),
+    ],
     payload: [scoutGuildCommand.toJSON()],
+    guildPayload: scoutGuildCommandPayload,
   },
   {
     enabledGuildIds: () =>
@@ -93,6 +132,10 @@ export async function guildCommandPayload(
 ): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
   const payload: RESTPostAPIApplicationCommandsJSONBody[] = [];
   for (const group of guildScopedCommandGroups) {
+    if (group.guildPayload !== undefined) {
+      payload.push(...(await group.guildPayload(guildId)));
+      continue;
+    }
     const enabled =
       group.isEnabled === undefined
         ? group.enabledGuildIds().includes(guildId)

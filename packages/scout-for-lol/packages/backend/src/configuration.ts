@@ -44,6 +44,58 @@ function getOptionalEnvVar(
 const EnvironmentSchema = z.enum(["dev", "beta", "prod"]);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
+/**
+ * The "Hey Scout" voice assistant's boot contract. Environment variables here
+ * are deliberately bootstrap-only: whether the pipeline loads its pinned local
+ * models is a fatal boot decision (asset verification throws), so it cannot be
+ * a Flipt flag — and unauthenticated Flipt must never control audio capture.
+ * Per-guild opt-in stays on the `voice_assistant_enabled` flag; this schema
+ * only decides whether the deployment has a voice runtime at all.
+ */
+export const VoiceAssistantConfigSchema = z
+  .object({
+    enabled: z.boolean().default(false),
+    openAiApiKey: z.string().min(1).optional(),
+    assetsDir: z.string().min(1).default("/opt/scout/voice"),
+    kwsRuntime: z.enum(["auto", "native", "wasm"]).default("auto"),
+  })
+  .superRefine((value, context) => {
+    if (value.enabled && value.openAiApiKey === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["openAiApiKey"],
+        message:
+          "VOICE_ASSISTANT_ENABLED=true requires OPENAI_API_KEY: a voice deployment without a Realtime credential could accept wakes it can never answer",
+      });
+    }
+  });
+
+export type VoiceAssistantConfig = z.infer<typeof VoiceAssistantConfigSchema>;
+
+/**
+ * Parse the voice assistant's environment surface. `enabled` arrives already
+ * boolean-parsed by env-var (a present invalid value throws there); the
+ * remaining values are optional strings where empty means absent. A present
+ * but invalid `kwsRuntime` throws here rather than falling back.
+ */
+export function parseVoiceAssistantConfiguration(values: {
+  enabled: boolean;
+  openAiApiKey: string | undefined;
+  assetsDir: string | undefined;
+  kwsRuntime: string | undefined;
+}): VoiceAssistantConfig {
+  return VoiceAssistantConfigSchema.parse({
+    enabled: values.enabled,
+    ...(values.openAiApiKey === undefined
+      ? {}
+      : { openAiApiKey: values.openAiApiKey }),
+    ...(values.assetsDir === undefined ? {} : { assetsDir: values.assetsDir }),
+    ...(values.kwsRuntime === undefined
+      ? {}
+      : { kwsRuntime: values.kwsRuntime }),
+  });
+}
+
 const TemporalScheduleReconciliationSchema = z.enum([
   "enabled",
   "disabled",
@@ -253,6 +305,12 @@ function computeConfiguration() {
       .get("TOURNAMENT_MAX_OPEN_LOBBIES")
       .default("10")
       .asIntPositive(),
+    voiceAssistant: parseVoiceAssistantConfiguration({
+      enabled: env.get("VOICE_ASSISTANT_ENABLED").default("false").asBool(),
+      openAiApiKey: getOptionalEnvVar("OPENAI_API_KEY"),
+      assetsDir: getOptionalEnvVar("VOICE_ASSETS_DIR"),
+      kwsRuntime: getOptionalEnvVar("VOICE_KWS_RUNTIME"),
+    }),
   };
   logger.info("✅ Configuration loaded successfully");
   return config;
@@ -399,6 +457,9 @@ const configuration: Configuration = {
   },
   get tournamentMaxOpenLobbies() {
     return getConfiguration().tournamentMaxOpenLobbies;
+  },
+  get voiceAssistant() {
+    return getConfiguration().voiceAssistant;
   },
 };
 

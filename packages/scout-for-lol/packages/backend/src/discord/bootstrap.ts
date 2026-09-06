@@ -22,6 +22,7 @@ import {
   setDiscordGatewayState,
 } from "#src/metrics/discord-gateway-health.ts";
 import { voiceManager } from "#src/voice/index.ts";
+import { getVoiceAssistantManager } from "#src/voice-assistant/manager.ts";
 import { createLogger } from "#src/logger.ts";
 import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";
 
@@ -73,6 +74,7 @@ export const DISCORD_EVENT_NAMES = [
   Events.ClientReady,
   Events.GuildCreate,
   Events.GuildDelete,
+  Events.VoiceStateUpdate,
 ] as const;
 
 async function registerConnectedGuildCommands(
@@ -260,6 +262,13 @@ export function registerDiscordEventHandlers(target: Client): void {
     logger.info(`[Guild Delete] Bot removed from server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
     void handleGuildDelete(guild);
+  });
+
+  // Voice-assistant auto-leave: when the session's channel holds no non-bot
+  // members any more, nobody consented to being listened to. The manager
+  // ignores guilds without an active session, so this stays a cheap check.
+  target.on(Events.VoiceStateUpdate, (_oldState, newState) => {
+    getVoiceAssistantManager().handleVoiceStateUpdate(newState.guild.id);
   });
 }
 

@@ -51,6 +51,14 @@ export type BucksMemberActivityKind =
   | "navigation"
   | "dare";
 export type BucksActivitySurface = "command" | "button" | "web" | "unknown";
+/** Hey Scout turn outcomes; the closed set is the whole analytics vocabulary. */
+export type VoiceQuestionOutcome =
+  | "answered"
+  | "bare-wake"
+  | "transcript-rejected"
+  | "rate-limited"
+  | "interrupted"
+  | "error";
 
 export type ProductAnalyticsEventOptions = {
   timestamp?: Date | undefined;
@@ -100,6 +108,18 @@ type ProductAnalyticsEventProperties = {
     pending_stake_bucks: number;
     house_balance_bucks: number;
     open_markets: number;
+  };
+  /**
+   * One Hey Scout wake that reached the cloud gate. Privacy contract: guild
+   * identity (via the shared `guild_id` property), the grounded champion and
+   * ability slot when a lookup resolved one, the outcome, and wake-to-reply
+   * latency. Never transcript text, never audio, never speaker identity.
+   */
+  voice_question_asked: {
+    outcome: VoiceQuestionOutcome;
+    wake_to_reply_seconds: number;
+    champion?: string | undefined;
+    ability_slot?: string | undefined;
   };
 };
 

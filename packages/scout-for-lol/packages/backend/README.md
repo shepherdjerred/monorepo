@@ -89,6 +89,41 @@ bun run customs:anonymize -- \
   --confirm yes
 ```
 
+## Hey Scout voice assistant (beta)
+
+`src/voice-assistant/` binds the shared `@shepherdjerred/voice-assistant`
+pipeline (wake-word cascade → one OpenAI Realtime turn per question) to the
+Discord bot. `/scout join` starts a per-guild session in the requester's voice
+channel; grounded answers come from read-only tools over the committed data
+package assets (`lookup_ability`, `lookup_champion`, `lookup_item`,
+`lookup_patch_notes`). Sessions end on `/scout leave`, after 45 minutes
+without an accepted wake, when the channel holds no non-bot members, or on
+connection loss. No transcript text or audio is ever persisted; PostHog gets
+only guild identity, outcome, the resolved champion/slot, and latency.
+
+Two independent gates:
+
+- **Deployment (env, bootstrap-only)**: `VOICE_ASSISTANT_ENABLED` (default
+  `false`), `OPENAI_API_KEY` (required when enabled), `VOICE_ASSETS_DIR`
+  (default `/opt/scout/voice`), `VOICE_KWS_RUNTIME` (`auto`/`native`/`wasm`).
+  When enabled, SHA-pinned model verification is fatal at boot — this gate can
+  never live in Flipt, because unauthenticated Flipt must not control audio
+  capture. Asset filenames are the manifest in
+  `src/voice-assistant/constants.ts`.
+- **Guild (flag)**: `voice_assistant_enabled` — beta-only
+  (production-hard-disabled); it also decides where the `/scout join`/`leave`
+  subcommands register.
+
+The guild `/scout` command is a per-guild merge: `ask` follows the Explore
+allowlist, `join`/`leave` follow the voice flag
+(`discord/commands/definitions.ts`). `VoiceManager` connections carry a mode:
+assistant sessions are undeafened and are never displaced by sound-engine
+alerts (alerts duck under assistant speech instead).
+
+Manual end-to-end probe (macOS, trained assets + `OPENAI_API_KEY` required, no
+Discord): `bun scripts/voice-probe.ts --list-devices`, then
+`bun scripts/voice-probe.ts --device <index> --assets-dir <path>`.
+
 ## Configuration
 
 Environment variables are validated with `env-var`/Zod at startup. Discord and

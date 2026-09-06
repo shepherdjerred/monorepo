@@ -161,7 +161,8 @@ export type FlagName =
   | "initial_match_history_import_enabled"
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
-  | "tournament_lobbies_enabled";
+  | "tournament_lobbies_enabled"
+  | "voice_assistant_enabled";
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
  * compatibility seed and test fixture for provider-unavailable evaluations. */
@@ -193,6 +194,7 @@ const PRODUCTION_HARD_DISABLED_FLAGS: ReadonlySet<FlagName> = new Set<FlagName>(
     "hall_of_fame_enabled",
     "tournament_lobbies_enabled",
     "scoutql_relational_enabled",
+    "voice_assistant_enabled",
   ],
 );
 
@@ -367,6 +369,20 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   "scout-consumer-player-profiles-enabled": {
     default: false,
     overrides: [],
+  },
+  /**
+   * The "Hey Scout" voice assistant (`/scout join` + `/scout leave`).
+   *
+   * Guild-level opt-in for the beta test guild only. The flag decides where
+   * the subcommands register and whether `/scout join` may start a session;
+   * whether the voice pipeline loads at all is the `VOICE_ASSISTANT_ENABLED`
+   * env gate in `configuration.ts` — model verification is fatal at boot, and
+   * unauthenticated Flipt must never control audio capture. Production's
+   * hard-disable policy wins before this registry or Flipt is evaluated.
+   */
+  voice_assistant_enabled: {
+    default: false,
+    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
   },
 };
 
