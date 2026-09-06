@@ -138,6 +138,8 @@ describe("consumer file classification", () => {
           `${webringPath}/src/parser.spec.ts`,
           `${webringPath}/src/testdata/rss.xml`,
           `${webringPath}/examples/demo.ts`,
+          `${webringPath}/demos/demo.cast`,
+          `${webringPath}/demo/record.sh`,
           `${webringPath}/.github/workflows/ci.yml`,
           `${webringPath}/tsconfig.json`,
           `${webringPath}/eslint.config.ts`,
