@@ -96,8 +96,12 @@ logger.info("Temporal call-graph tracing boot decision resolved", {
   enabled: temporalCallGraphTracing(),
 });
 
-const { shutdownHttpServer, shutdownTemporal, shutdownDiscord } =
-  await startBackendRuntime();
+const {
+  shutdownHttpServer,
+  shutdownTemporal,
+  shutdownDiscord,
+  shutdownVoiceAssistant,
+} = await startBackendRuntime();
 
 const { startScoutCompetitionActivityWorker } =
   await import("#src/league/tasks/competition/temporal-worker.ts");
@@ -121,6 +125,11 @@ const gracefullyShutdown = (signal: "SIGINT" | "SIGTERM"): void => {
   shutdownStarted = true;
   logger.info(`🛑 Received ${signal}, shutting down gracefully`);
   void (async () => {
+    // First: aborts every in-flight Realtime turn and stops audio receipt
+    // for any active Hey Scout session. Everything below can otherwise take
+    // long enough (Temporal drain, HTTP drain) that a session would keep
+    // receiving audio and running OpenAI turns through the whole sequence.
+    await shutdownVoiceAssistant();
     await shutdownTemporal();
     await competitionActivityWorker?.shutdown();
     await shutdownHttpServer();

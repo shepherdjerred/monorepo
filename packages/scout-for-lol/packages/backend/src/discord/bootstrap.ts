@@ -77,6 +77,51 @@ export const DISCORD_EVENT_NAMES = [
   Events.VoiceStateUpdate,
 ] as const;
 
+export type GuildConfigRefreshDependencies = {
+  readonly sweepDisabledVoiceSessions: () => Promise<void>;
+  readonly reconcileCommands: (guildIds: Iterable<string>) => Promise<void>;
+};
+
+function defaultGuildConfigRefreshDependencies(): GuildConfigRefreshDependencies {
+  return {
+    sweepDisabledVoiceSessions: () =>
+      getVoiceAssistantManager().closeDisabledGuildSessions(),
+    reconcileCommands: (guildIds) => reconcileGuildScopedCommands(guildIds),
+  };
+}
+
+/**
+ * The dynamic-config refresh body: reconcile per-guild commands and sweep
+ * flag-disabled voice sessions as two INDEPENDENT operations.
+ *
+ * A non-50001 Discord REST failure in command reconciliation rethrows (see
+ * `discord/rest.ts`), and sequencing the sweep after it would then skip the
+ * sweep for as long as that REST call keeps failing — an active session in a
+ * flag-disabled guild must stop receiving audio regardless of an unrelated
+ * command-registration outage. The sweep runs first since stopping capture is
+ * the more time-sensitive of the two; reconciliation still removes `/scout
+ * leave` from the guild's picker on its own success. Each failure is logged
+ * rather than rethrown, so one operation's error can never suppress the
+ * other's — and `notifyRefreshListeners` iterates every registered listener
+ * without its own per-listener try/catch, so an uncaught rejection here would
+ * also stop any later-registered refresh listener from running this cycle.
+ */
+export async function runGuildConfigRefresh(
+  guildIds: Iterable<string>,
+  dependencies: GuildConfigRefreshDependencies = defaultGuildConfigRefreshDependencies(),
+): Promise<void> {
+  try {
+    await dependencies.sweepDisabledVoiceSessions();
+  } catch (error) {
+    logger.error("voice flag-disable session sweep failed", { error });
+  }
+  try {
+    await dependencies.reconcileCommands(guildIds);
+  } catch (error) {
+    logger.error("guild command reconciliation failed", { error });
+  }
+}
+
 async function registerConnectedGuildCommands(
   guildIds: Iterable<string>,
 ): Promise<void> {
@@ -243,11 +288,7 @@ export function registerDiscordEventHandlers(target: Client): void {
 
     removeDynamicConfigRefreshListener ??= addDynamicConfigRefreshListener(
       async () => {
-        await reconcileGuildScopedCommands(target.guilds.cache.keys());
-        // The same refresh that unregisters /scout leave in a flag-disabled
-        // guild must also end that guild's live capture — otherwise a session
-        // would keep listening with no command left to stop it.
-        await getVoiceAssistantManager().closeDisabledGuildSessions();
+        await runGuildConfigRefresh(target.guilds.cache.keys());
       },
     );
 

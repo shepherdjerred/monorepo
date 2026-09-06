@@ -3,6 +3,7 @@ import { Client, Events, GatewayIntentBits, ShardEvents } from "discord.js";
 import {
   DISCORD_EVENT_NAMES,
   registerDiscordEventHandlers,
+  runGuildConfigRefresh,
   startDiscordGateway,
 } from "#src/discord/bootstrap.ts";
 
@@ -111,5 +112,52 @@ describe("discord bootstrap", () => {
     for (const event of DISCORD_EVENT_NAMES) {
       expect(client.listenerCount(event)).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("runGuildConfigRefresh", () => {
+  test("a command-reconciliation REST failure never blocks the voice sweep", async () => {
+    const calls: string[] = [];
+    await runGuildConfigRefresh(["guild-1"], {
+      sweepDisabledVoiceSessions: () => {
+        calls.push("sweep");
+        return Promise.resolve();
+      },
+      reconcileCommands: () => {
+        calls.push("reconcile");
+        return Promise.reject(new Error("Discord REST 500"));
+      },
+    });
+    expect(calls).toEqual(["sweep", "reconcile"]);
+  });
+
+  test("a voice-sweep failure never blocks command reconciliation", async () => {
+    const calls: string[] = [];
+    await runGuildConfigRefresh(["guild-1"], {
+      sweepDisabledVoiceSessions: () => {
+        calls.push("sweep");
+        return Promise.reject(new Error("flag evaluation failed"));
+      },
+      reconcileCommands: (guildIds) => {
+        calls.push(`reconcile:${[...guildIds].join(",")}`);
+        return Promise.resolve();
+      },
+    });
+    expect(calls).toEqual(["sweep", "reconcile:guild-1"]);
+  });
+
+  test("the sweep runs before command reconciliation", async () => {
+    const order: string[] = [];
+    await runGuildConfigRefresh([], {
+      sweepDisabledVoiceSessions: async () => {
+        await Bun.sleep(1);
+        order.push("sweep");
+      },
+      reconcileCommands: () => {
+        order.push("reconcile");
+        return Promise.resolve();
+      },
+    });
+    expect(order).toEqual(["sweep", "reconcile"]);
   });
 });

@@ -55,6 +55,7 @@ export async function startBackendRuntime(): Promise<
   HttpServerRuntime & {
     readonly shutdownTemporal: () => Promise<void>;
     readonly shutdownDiscord: () => Promise<void>;
+    readonly shutdownVoiceAssistant: () => Promise<void>;
   }
 > {
   let temporalSupervisor: ScoutTemporalSupervisor | undefined;
@@ -137,6 +138,16 @@ export async function startBackendRuntime(): Promise<
     shutdownDiscord: async () => {
       const { stopDiscordGateway } = await import("#src/discord/bootstrap.ts");
       stopDiscordGateway();
+    },
+    // Ends every active Hey Scout session: aborts in-flight Realtime turns,
+    // closes receiver streams, cancels inactivity timers, and records the
+    // "shutdown" lifecycle reason. Called separately from `shutdownDiscord`
+    // (and by the caller, before it) so a session cannot keep receiving
+    // audio and running OpenAI turns through the rest of the drain.
+    shutdownVoiceAssistant: async () => {
+      const { getVoiceAssistantManager } =
+        await import("#src/voice-assistant/manager.ts");
+      getVoiceAssistantManager().closeAll();
     },
   };
 }
