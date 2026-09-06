@@ -16,7 +16,7 @@ USER 0:0
 COPY --chown=1000:1000 \
   .buildkite/scripts/images/smoke-app-in-image.ts \
   .buildkite/scripts/images/smoke-app-configs.ts \
-  /app/.buildkite/scripts/
+  /app/.buildkite/scripts/images/
 
 # Scout's production image deliberately excludes PostgreSQL. Its exact-digest
 # smoke starts an ephemeral database to exercise the deployed migration path,
