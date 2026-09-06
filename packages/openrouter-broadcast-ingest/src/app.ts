@@ -9,7 +9,6 @@ import {
   canonicalOtlpJson,
   OtlpJsonPayloadSchema,
   redactOtlpPayload,
-  slimOtlpPayload,
   summarizeOtlpPayload,
   type OtlpJsonPayload,
 } from "./otlp.ts";
@@ -196,7 +195,6 @@ function createDeliveryProcessor(
   const inFlight = new Map<string, Promise<DeliveryResult>>();
 
   const deliverOnce = async (
-    payload: OtlpJsonPayload,
     redactedJson: string,
     digest: string,
   ): Promise<DeliveryResult> => {
@@ -234,9 +232,7 @@ function createDeliveryProcessor(
     }
 
     try {
-      await dependencies.forwarder.forward(
-        JSON.stringify(slimOtlpPayload(payload)),
-      );
+      await dependencies.forwarder.forward(redactedJson);
       dependencies.metrics.operationsTotal.inc({
         operation: "forward",
         outcome: "success",
@@ -305,7 +301,7 @@ function createDeliveryProcessor(
       return { ...result, duplicate: true };
     }
 
-    const delivery = deliverOnce(redacted, redactedJson, digest);
+    const delivery = deliverOnce(redactedJson, digest);
     inFlight.set(digest, delivery);
     try {
       return await delivery;

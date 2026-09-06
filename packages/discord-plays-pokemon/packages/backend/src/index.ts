@@ -44,9 +44,10 @@ const runtime = bootGameBot({
   sentryDsn: "https://9c905c2bb5924e55b4dea32e2a95f0d1@bugsink.sjer.red/8",
   logger,
   // Wrap the batch span processor with the LLM archive layer: spans carrying
-  // gen_ai.* body attributes get their bodies gzipped to SeaweedFS and replaced
-  // with a ref before the slim span reaches Tempo. No-op when
-  // LLM_OBSERVABILITY_ENABLED=false. Same shape as birmel / scout / temporal.
+  // gen_ai.* body attributes get a copy of their bodies gzipped to SeaweedFS;
+  // the span keeps the full redacted content plus the archive ref on its way
+  // to Tempo. No-op when LLM_OBSERVABILITY_ENABLED=false. Same shape as
+  // birmel / scout / temporal.
   wrapSpanProcessor: (inner) => buildArchiveSpanProcessor({ inner }),
   wiring: {
     botToken: config.bot.discord_token,

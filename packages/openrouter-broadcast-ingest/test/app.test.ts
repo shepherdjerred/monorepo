@@ -152,7 +152,7 @@ describe("OpenRouter Broadcast ingest", () => {
     expect(forwarded).toHaveLength(0);
   });
 
-  test("archives a redacted complete payload before forwarding a body-free trace", async () => {
+  test("archives a redacted complete payload before forwarding the same redacted trace", async () => {
     const { app, objects, forwarded } = createHarness();
     const response = await request(app);
     expect(response.status).toBe(204);
@@ -171,8 +171,9 @@ describe("OpenRouter Broadcast ingest", () => {
     expect(payloadEntry?.[1]).toContain("[REDACTED]");
 
     expect(forwarded).toHaveLength(1);
-    expect(forwarded[0]).not.toContain("private prompt");
-    expect(forwarded[0]).not.toContain("provider.api_key");
+    expect(forwarded[0]).toContain("private prompt");
+    expect(forwarded[0]).not.toContain("secret-provider-key");
+    expect(forwarded[0]).toContain("[REDACTED]");
     expect(forwarded[0]).toContain("gen_ai.usage.input_tokens");
     expect(forwarded[0]).toContain("gen_ai.usage.cost");
   });

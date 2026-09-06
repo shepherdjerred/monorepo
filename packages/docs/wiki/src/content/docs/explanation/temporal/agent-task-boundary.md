@@ -190,9 +190,9 @@ applied effects becomes non-retryable instead of being replayed to repair only
 its final schema.
 
 With telemetry enabled, each run's prompt and response are recorded as `gen_ai.*`
-spans whose bodies are archived to the LLM-observability store before the slim
-span is exported. The email is the human-facing output, but it is not the only
-copy.
+spans that carry the full redacted bodies, with a durable copy archived to the
+LLM-observability store. The email is the human-facing output, but it is not
+the only copy.
 
 ## Related
 

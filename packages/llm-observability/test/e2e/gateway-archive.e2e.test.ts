@@ -95,8 +95,15 @@ test("end-to-end: gateway span -> Tempo + private archive", async () => {
   );
   expect(llmSpan?.attributes["llm.archive.status"]).toBe("ok");
   expect(llmSpan?.attributes["llm.archive.s3_bucket"]).toBe("llm-archive");
-  expect(llmSpan?.attributes["gen_ai.input.messages"]).toBeUndefined();
-  expect(llmSpan?.attributes["gen_ai.output.messages"]).toBeUndefined();
+  expect(llmSpan?.attributes["gen_ai.input.messages"]).toBe(
+    serializeBodyAttribute([
+      { role: "system", content: "be brief" },
+      { role: "user", content: "say hi" },
+    ]),
+  );
+  expect(llmSpan?.attributes["gen_ai.output.messages"]).toBe(
+    serializeBodyAttribute([{ role: "assistant", content: "hi back" }]),
+  );
 
   const s3Key = llmSpan?.attributes["llm.archive.s3_key"];
   expect(typeof s3Key).toBe("string");

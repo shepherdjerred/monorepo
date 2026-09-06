@@ -8,9 +8,8 @@ repository's existing observability boundary:
 2. reject malformed or oversized OTLP before persistence;
 3. redact secrets and archive the complete payload in the private LLM
    SeaweedFS bucket;
-4. strip prompt, response, tool, content, and credential attributes;
-5. forward the correlated slim payload to Tempo;
-6. write a digest receipt and return `204`.
+4. forward the same redacted full-content payload to Tempo;
+5. write a digest receipt and return `204`.
 
 The digest receipt is independent of the payload's UTC date partition, so an
 OpenRouter retry remains idempotent across midnight, and a duplicate reports
@@ -54,7 +53,7 @@ to Tempo and SeaweedFS. Before releasing the chart:
 3. deploy this service before migrating consumers;
 4. use OpenRouter's connection test and then send one real generation;
 5. verify a payload object and digest receipt in the private archive, a
-   body-free correlated trace in Tempo, success metrics in Prometheus, and
+   full-content redacted trace in Tempo, success metrics in Prometheus, and
    body-free structured logs in Loki.
 
 The `OpenRouterBroadcastPipelineFailure` and

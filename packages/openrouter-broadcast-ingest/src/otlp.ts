@@ -62,49 +62,8 @@ export const OtlpJsonPayloadSchema = z
 
 export type OtlpJsonPayload = z.infer<typeof OtlpJsonPayloadSchema>;
 
-const BODY_ATTRIBUTE_KEYS: ReadonlySet<string> = new Set([
-  "ai.prompt",
-  "ai.prompt.messages",
-  "ai.response.object",
-  "ai.response.text",
-  "gen_ai.input.messages",
-  "gen_ai.input.tools",
-  "gen_ai.output.messages",
-  "gen_ai.system_instructions",
-  "gen_ai.tool.stderr",
-  "gen_ai.tool.stdout",
-  "http.request.body",
-  "http.response.body",
-]);
-
 const SECRET_ATTRIBUTE_KEY =
   /(?:^|[._-])(?:authorization|api[_-]?key|access[_-]?key|secret(?:[_-]?(?:key|token))?|password|token|credential)(?:$|[._-])/i;
-
-function isBodyAttribute(key: string): boolean {
-  const normalized = key.toLowerCase();
-  if (SECRET_ATTRIBUTE_KEY.test(normalized)) return true;
-  if (BODY_ATTRIBUTE_KEYS.has(normalized)) return true;
-  if (normalized.includes("prompt") || normalized.includes("completion")) {
-    return true;
-  }
-  if (
-    normalized.endsWith(".content") ||
-    normalized.endsWith(".body") ||
-    normalized.includes("message.content")
-  ) {
-    return true;
-  }
-  return (
-    normalized.includes("tool") &&
-    /argument|input|output|result/i.test(normalized)
-  );
-}
-
-function stripAttributes(
-  attributes: z.infer<typeof KeyValueSchema>[] | undefined,
-): z.infer<typeof KeyValueSchema>[] | undefined {
-  return attributes?.filter((attribute) => !isBodyAttribute(attribute.key));
-}
 
 function canonicalize(value: unknown): unknown {
   if (Array.isArray(value)) return value.map((entry) => canonicalize(entry));
@@ -128,39 +87,6 @@ function canonicalize(value: unknown): unknown {
  */
 export function canonicalOtlpJson(payload: OtlpJsonPayload): string {
   return JSON.stringify(canonicalize(payload));
-}
-
-/** Strip prompt, response, and tool bodies while retaining routing, usage, and cost data. */
-export function slimOtlpPayload(payload: OtlpJsonPayload): OtlpJsonPayload {
-  return {
-    ...payload,
-    resourceSpans: payload.resourceSpans.map((resourceSpans) => ({
-      ...resourceSpans,
-      ...(resourceSpans.resource === undefined
-        ? {}
-        : {
-            resource: {
-              ...resourceSpans.resource,
-              attributes: stripAttributes(resourceSpans.resource.attributes),
-            },
-          }),
-      scopeSpans: resourceSpans.scopeSpans.map((scopeSpans) => ({
-        ...scopeSpans,
-        spans: scopeSpans.spans.map((span) => ({
-          ...span,
-          attributes: stripAttributes(span.attributes),
-          events: span.events?.map((event) => ({
-            ...event,
-            attributes: stripAttributes(event.attributes),
-          })),
-          links: span.links?.map((link) => ({
-            ...link,
-            attributes: stripAttributes(link.attributes),
-          })),
-        })),
-      })),
-    })),
-  };
 }
 
 function redactOtlpKeyValues(value: unknown): unknown {
