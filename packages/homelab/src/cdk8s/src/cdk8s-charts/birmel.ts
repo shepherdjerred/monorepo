@@ -22,32 +22,16 @@ export function createBirmelChart(app: App) {
 
   createBirmelDeployment(chart);
 
-  // NetworkPolicy: Allow ingress from Tailscale and Cloudflare Tunnel
+  // NetworkPolicy: Birmel exposes no ingress of its own now that the editor
+  // OAuth server is gone — only Prometheus reaches in, to scrape health.
   new KubeNetworkPolicy(chart, "birmel-ingress-netpol", {
     metadata: { name: "birmel-ingress-netpol" },
     spec: {
       podSelector: {},
       policyTypes: ["Ingress"],
       ingress: [
-        {
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
-              },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: {
-                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
-                },
-              },
-            },
-          ],
-        },
-        // Allow Prometheus to scrape the health service metrics and the
-        // blackbox exporter to probe the OAuth service, without opening other
-        // pod ports to the monitoring namespace.
+        // Allow Prometheus to scrape the health service metrics, without
+        // opening other pod ports to the monitoring namespace.
         {
           from: [
             {
@@ -56,16 +40,13 @@ export function createBirmelChart(app: App) {
               },
             },
           ],
-          ports: [
-            { port: IntOrString.fromNumber(4112), protocol: "TCP" },
-            { port: IntOrString.fromNumber(8080), protocol: "TCP" },
-          ],
+          ports: [{ port: IntOrString.fromNumber(8080), protocol: "TCP" }],
         },
       ],
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Flipt, Tempo (OTLP), external HTTPS, and Discord voice UDP
+  // NetworkPolicy: Allow egress to DNS, Flipt, Tempo (OTLP), PinchTab, and external HTTPS
   new KubeNetworkPolicy(chart, "birmel-egress-netpol", {
     metadata: { name: "birmel-egress-netpol" },
     spec: {
@@ -124,17 +105,6 @@ export function createBirmelChart(app: App) {
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
           ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
-        // Discord voice media negotiates UDP ports in the high ephemeral range.
-        {
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [
-            {
-              port: IntOrString.fromNumber(50_000),
-              endPort: 65_535,
-              protocol: "UDP",
-            },
-          ],
         },
       ],
     },

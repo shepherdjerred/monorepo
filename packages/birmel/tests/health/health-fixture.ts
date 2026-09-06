@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { z } from "zod";
+import { REQUIRED_MIGRATIONS } from "@shepherdjerred/birmel/database/migration-bootstrap.ts";
 
 const InputSchema = z.object({
   scenario: z.enum([
@@ -42,26 +43,19 @@ if (databaseUnavailable) {
       )
     `);
     if (migrationsApplied) {
-      database.run(`
-        INSERT INTO "_prisma_migrations" (
+      // Seeded from REQUIRED_MIGRATIONS so the readiness fixture cannot drift
+      // out of date the next time a migration is committed.
+      const insert = database.prepare(
+        `INSERT INTO "_prisma_migrations" (
           "migration_name", "finished_at", "rolled_back_at"
-        ) VALUES
-          (
-            '20260808000000_baseline',
-            '2026-08-08T00:00:00.000Z',
-            NULL
-          ),
-          (
-            '20260808010000_birmel_3_runtime',
-            '2026-08-08T00:01:00.000Z',
-            NULL
-          ),
-          (
-            '20260818000000_agent_run_route_capability',
-            '2026-08-18T00:00:00.000Z',
-            NULL
-          )
-      `);
+        ) VALUES (?, ?, NULL)`,
+      );
+      for (const [index, migration] of REQUIRED_MIGRATIONS.entries()) {
+        insert.run(
+          migration,
+          new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
+        );
+      }
     }
   } finally {
     database.close();

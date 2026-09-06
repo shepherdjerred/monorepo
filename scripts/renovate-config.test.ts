@@ -329,7 +329,6 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
   );
   const pins = pinsByFile.flat();
   expect(pins).toEqual([
-    { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
     { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
     { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
   ]);
@@ -344,10 +343,7 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
       "Keep the yt-dlp binary pin synchronized across application images",
     groupName: "yt-dlp image binary",
     matchDepNames: ["yt-dlp/yt-dlp"],
-    matchFileNames: [
-      "packages/birmel/Dockerfile",
-      "packages/streambot/Dockerfile",
-    ],
+    matchFileNames: ["packages/streambot/Dockerfile"],
   });
 });
 

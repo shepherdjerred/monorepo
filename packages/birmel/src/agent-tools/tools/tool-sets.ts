@@ -25,9 +25,6 @@ import { automodTools } from "./discord/automod.ts";
 import { pollTools } from "./discord/polls.ts";
 import { threadTools } from "./discord/threads.ts";
 import { activityTools } from "./discord/activity.ts";
-import { playbackTools } from "./music/playback.ts";
-import { queueTools } from "./music/queue.ts";
-import { playlistTools } from "./music/playlists.ts";
 import { executeShellCommandTool } from "./automation/shell.ts";
 import { manageJobTool } from "./automation/agent-jobs.ts";
 import { browserAutomationTool } from "./automation/browser.ts";
@@ -38,11 +35,6 @@ import { manageAgentSessionTool } from "./sessions/index.ts";
 import { electionTools } from "./elections/elections.ts";
 import { getCandidateStatsTool } from "./elections/candidate-stats.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
-import { editRepoTool } from "./editor/edit-repo.ts";
-import { listReposTool } from "./editor/list-repos.ts";
-import { getSessionTool } from "./editor/get-session.ts";
-import { approveChangesTool } from "./editor/approve-changes.ts";
-import { connectGitHubTool } from "./editor/connect-github.ts";
 
 /**
  * Messaging Agent - handles messages, threads, polls, memory, and sessions
@@ -78,11 +70,6 @@ export const moderationToolSet = [
 ];
 
 /**
- * Music Agent - handles music playback
- */
-export const musicToolSet = [...playbackTools, ...queueTools, ...playlistTools];
-
-/**
  * Automation Agent - handles automation, external APIs, events, elections, birthdays
  */
 export const automationToolSet = [
@@ -95,17 +82,6 @@ export const automationToolSet = [
   ...electionTools,
   getCandidateStatsTool,
   manageBirthdayTool,
-];
-
-/**
- * Editor Agent - handles file editing in allowed repositories
- */
-export const editorToolSet = [
-  editRepoTool,
-  listReposTool,
-  getSessionTool,
-  approveChangesTool,
-  connectGitHubTool,
 ];
 
 export type AgentType = z.infer<typeof SpecialistIdSchema>;
@@ -121,12 +97,8 @@ export function getToolSet(agentType: AgentType) {
       return serverToolSet;
     case "moderation":
       return moderationToolSet;
-    case "music":
-      return musicToolSet;
     case "automation":
       return automationToolSet;
-    case "editor":
-      return editorToolSet;
   }
 }
 

@@ -51,9 +51,6 @@ const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
   ["manage-invite", metadata("manage-invite", "moderation", "write")],
   ["manage-emoji", metadata("manage-emoji", "moderation", "destructive")],
   ["manage-sticker", metadata("manage-sticker", "moderation", "destructive")],
-  ["music-playback", metadata("music-playback", "music", "write")],
-  ["music-queue", metadata("music-queue", "music", "write")],
-  ["music-playlist", metadata("music-playlist", "music", "write")],
   [
     "execute-shell-command",
     metadata("execute-shell-command", "automation", "code-execution", 300_000),
@@ -78,14 +75,6 @@ const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
     metadata("get-candidate-stats", "automation", "read"),
   ],
   ["manage-birthday", metadata("manage-birthday", "automation", "write")],
-  ["edit-repo", metadata("edit-repo", "editor", "code-execution", 300_000)],
-  ["list-repos", metadata("list-repos", "editor", "read")],
-  ["get-editor-session", metadata("get-editor-session", "editor", "read")],
-  [
-    "approve-changes",
-    metadata("approve-changes", "editor", "code-execution", 300_000),
-  ],
-  ["connect-github", metadata("connect-github", "editor", "write")],
 ]);
 
 export function getToolMetadata(toolId: string): BirmelToolMetadata {

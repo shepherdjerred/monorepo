@@ -356,7 +356,6 @@
     "@scout-for-lol/data",
     "@scout-for-lol/ui",
     "@shepherdjerred/eslint-config",
-    "@snazzah/davey",
     "@svgr/plugin-jsx",
     "@tailwindcss/forms",
     "@tailwindcss/postcss",
@@ -387,7 +386,6 @@
     "eslint-plugin-regexp",
     "eslint-plugin-unicorn",
     "express",
-    "ffmpeg-static",
     "glob",
     "globals",
     "jiti",
@@ -404,7 +402,6 @@
     "typescript-eslint",
     "vite-tsconfig-paths",
     "yoga-wasm-web",
-    "youtubei.js",
     "zod"
   ],
   "ignoreFiles": [

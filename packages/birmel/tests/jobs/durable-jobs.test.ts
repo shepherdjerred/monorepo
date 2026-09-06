@@ -38,7 +38,15 @@ const ACTOR_USER_ID = "186665676134547461";
 const GUILD_ID = "987654321098765432";
 const CHANNEL_ID = "876543210987654321";
 const SOURCE_MESSAGE_ID = "765432109876543210";
-const DURABLE_TOOL_ID = "list-repos";
+const DURABLE_TOOL_ID = "get-activity-stats";
+const TOOL_INPUT = { action: "leaderboard" };
+// The effect-checkpoint cases all schedule the same external write; only the
+// tool's behaviour differs between them.
+const WRITE_PAYLOAD = {
+  kind: "tool" as const,
+  toolId: "external-service",
+  input: { action: "fetch-url", url: "https://example.test" },
+};
 const previousTrustedUserIds = Bun.env["TRUSTED_USER_IDS"];
 const previousSchedulerEnabled = Bun.env["SCHEDULER_ENABLED"];
 const previousSchedulerShutdownTimeoutMs =
@@ -391,7 +399,7 @@ describe("durable AgentJob tool payload validation", () => {
     "rejects $name before edit persists it",
     async ({ payload, expectedMessage }) => {
       const jobId = await createDueJob({
-        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
       });
       const before = await prisma.agentJob.findUniqueOrThrow({
         where: { id: jobId },
@@ -421,7 +429,7 @@ describe("durable AgentJob tool payload validation", () => {
       payload: {
         kind: "tool",
         toolId: DURABLE_TOOL_ID,
-        input: { modelSuppliedField: "discarded" },
+        input: { ...TOOL_INPUT, modelSuppliedField: "discarded" },
       },
     });
 
@@ -431,7 +439,8 @@ describe("durable AgentJob tool payload validation", () => {
       where: { id: created.jobId },
     });
     expect(job.toolId).toBe(DURABLE_TOOL_ID);
-    expect(job.toolInput).toBe("{}");
+    const stored = parseJsonRecord(job.toolInput ?? "{}");
+    expect(stored).toEqual({ guildId: GUILD_ID, ...TOOL_INPUT });
     expect(job.guildId).toBe(GUILD_ID);
     expect(job.actorUserId).toBe(ACTOR_USER_ID);
   });
@@ -536,7 +545,7 @@ describe("durable AgentJob execution", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
     });
 
     await Promise.all([
@@ -579,7 +588,7 @@ describe("active AgentJob cancellation", () => {
         },
       });
       const jobId = await createDueJob({
-        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
         maxAttempts: 2,
       });
       const execution = runAgentJobById(jobId);
@@ -658,7 +667,7 @@ describe("durable AgentJob execution outcomes", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
       maxAttempts: 2,
     });
 
@@ -695,7 +704,7 @@ describe("durable AgentJob execution outcomes", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
       maxAttempts: 1,
       timeoutMs: 20,
     });
@@ -741,7 +750,7 @@ describe("durable AgentJob execution outcomes", () => {
         },
       });
       const jobId = await createDueJob({
-        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
         maxAttempts: 1,
         timeoutMs: 20,
       });
@@ -778,11 +787,7 @@ describe("durable AgentJob effect checkpoints", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: {
-        kind: "tool",
-        toolId: "connect-github",
-        input: { action: "disconnect" },
-      },
+      payload: WRITE_PAYLOAD,
       maxAttempts: 3,
     });
 
@@ -811,11 +816,7 @@ describe("durable AgentJob effect checkpoints", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: {
-        kind: "tool",
-        toolId: "connect-github",
-        input: { action: "disconnect" },
-      },
+      payload: WRITE_PAYLOAD,
       maxAttempts: 3,
     });
 
@@ -915,11 +916,7 @@ describe("durable AgentJob effect checkpoints", () => {
         },
       });
       const jobId = await createDueJob({
-        payload: {
-          kind: "tool",
-          toolId: "connect-github",
-          input: { action: "disconnect" },
-        },
+        payload: WRITE_PAYLOAD,
       });
       const execution = runAgentJobById(jobId);
       await started;
@@ -947,7 +944,7 @@ describe("durable job recovery and scheduling", () => {
       executeTool: async () => ({ success: true }),
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
     });
     const claimId = "dead-worker";
     await prisma.agentJob.update({
@@ -997,7 +994,7 @@ describe("durable job recovery and scheduling", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
     });
     const expiredClaimId = "expired-claim";
     const expiredAt = new Date(Date.now() - 1000);
@@ -1074,7 +1071,7 @@ describe("durable job recovery and scheduling", () => {
     });
     const before = new Date();
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
       scheduleKind: "every",
       scheduleValue: "1 second",
     });
@@ -1138,7 +1135,7 @@ describe("durable job recovery and scheduling", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
     });
 
     const first = runAgentJobsJob();
@@ -1260,7 +1257,7 @@ describe("scheduled payload delivery and session history", () => {
         executeTool: async () => ({ success }),
       });
       const jobId = await createDueJob({
-        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
         sessionId: session.id,
         maxAttempts: 1,
       });
@@ -1303,7 +1300,7 @@ describe("scheduled payload delivery and session history", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
       sessionId: session.id,
     });
 
@@ -1382,10 +1379,7 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
     try {
       for (let index = 0; index < 5; index += 1) {
         await createDueJob({
-          payload: {
-            kind: "tool",
-            toolId: DURABLE_TOOL_ID,
-          },
+          payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
         });
       }
 
@@ -1431,11 +1425,11 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
 
     try {
       const firstJobId = await createDueJob({
-        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
         timeoutMs: 20,
       });
       await createDueJob({
-        payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+        payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
       });
 
       const tick = runAgentJobsJob();
@@ -1480,7 +1474,7 @@ describe("scheduler AgentJob concurrency and shutdown", () => {
       },
     });
     const jobId = await createDueJob({
-      payload: { kind: "tool", toolId: DURABLE_TOOL_ID },
+      payload: { kind: "tool", toolId: DURABLE_TOOL_ID, input: TOOL_INPUT },
     });
     const running = runAgentJobById(jobId);
     await started;

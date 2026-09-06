@@ -3,10 +3,6 @@
 # bun.lock, isolated linker). Built via `bun run docker:build` in this package
 # (which passes `-f Dockerfile ../..`).
 #
-# birmel's editor specialist shells out to `gh` to open PRs and uses the
-# package-local Codex SDK through OpenRouter for edits; its music stack shells out through
-# youtube-dl-exec (needs Node + Python + a yt-dlp binary) and ffmpeg-static.
-#
 # Multi-stage: deps does a full (dev-inclusive) install to feed the in-image
 # prisma generate; prod-deps installs the production-only closure; runtime
 # COPYs the prod tree, the scoped source closure, and the generated Prisma
@@ -60,36 +56,18 @@ COPY --parents \
   ./
 RUN bun install --frozen-lockfile --production --filter '@shepherdjerred/birmel'
 
-# ── runtime: CLIs + COPY-only app layers — no install, no build tooling ─────
+# ── runtime: shell-tool runtimes + COPY-only app layers — no build tooling ──
 FROM base AS runtime
 
-# Fail-fast shell for every RUN in this stage: the gh install pipes curl into
-# tar, and a failed download must fail the build rather than be masked.
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# --- gh CLI (editor sub-agent) ---
-# renovate: datasource=github-releases depName=cli/cli
-ARG GH_CLI_VERSION=2.96.0
+# --- Runtimes advertised by the shell tool ---
+# `execute-shell-command` documents `python3` and `node` with worked examples
+# (src/agent-tools/tools/automation/shell.ts), so the image must actually carry
+# them. Bun ships a `node` shim at /usr/local/bun-node-fallback-bin/node that is
+# not a usable Node, so real Node is installed rather than relied upon.
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
-# into a build failure here. Reproducibility would need a snapshot archive, not
-# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
-# hadolint ignore=DL3008
-RUN set -e; \
-    apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends ca-certificates curl git; \
-    arch="$(dpkg --print-architecture)"; \
-    if [ "$arch" = "amd64" ]; then gharch=amd64; \
-    elif [ "$arch" = "arm64" ]; then gharch=arm64; \
-    else echo "unsupported architecture: $arch" >&2; exit 1; fi; \
-    curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_CLI_VERSION}/gh_${GH_CLI_VERSION}_linux_${gharch}.tar.gz" \
-      | tar xz -C /usr/local/bin --strip-components=2 "gh_${GH_CLI_VERSION}_linux_${gharch}/bin/gh"; \
-    rm -rf /var/lib/apt/lists/*
-# --- Music runtime: Node + Python for youtube-dl-exec / yt-dlp ---
-# Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
-# archive, so an exact `pkg=version` pin turns every upstream security respin
-# into a build failure here. Reproducibility would need a snapshot archive, not
-# a version pin. Acknowledged per-site so a NEW unpinned install still fails.
+# into a build failure here. Acknowledged per-site so a NEW unpinned install
+# still fails.
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
@@ -102,27 +80,6 @@ RUN set -e; \
 # root between same-rooted stages is safe. Kept BEFORE the source COPY so a
 # source edit doesn't re-push this layer.
 COPY --from=prod-deps /app/ /app/
-
-# youtube-dl-exec resolves its binary at node_modules/youtube-dl-exec/bin/yt-dlp,
-# but its own postinstall fetches that UNAUTHENTICATED from api.github.com and
-# flakes on shared runners. Provide it via the rate-limit-proof, SHA-verified
-# release-CDN download instead. Sequenced AFTER the prod-deps COPY (the target
-# dir must exist) and BEFORE the source COPY (a source edit must not re-trigger
-# this network fetch).
-# renovate: datasource=github-releases depName=yt-dlp/yt-dlp
-ARG YT_DLP_VERSION=2026.07.04
-RUN set -e; \
-    arch="$(dpkg --print-architecture)"; \
-    if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux; \
-    elif [ "$arch" = "arm64" ]; then asset=yt-dlp_linux_aarch64; \
-    else echo "unsupported architecture: $arch" >&2; exit 1; fi; \
-    base="https://github.com/yt-dlp/yt-dlp/releases/download/${YT_DLP_VERSION}"; \
-    curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/$asset" -o "/tmp/$asset"; \
-    curl -fsSL --retry 5 --retry-all-errors --retry-delay 2 "$base/SHA2-256SUMS" -o /tmp/SHA2-256SUMS; \
-    (cd /tmp && sha256sum -c --ignore-missing SHA2-256SUMS); \
-    install -D -m 0755 "/tmp/$asset" /app/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp; \
-    rm -f "/tmp/$asset" /tmp/SHA2-256SUMS; \
-    test -x /app/packages/birmel/node_modules/youtube-dl-exec/bin/yt-dlp
 
 # Scoped source closure + the generated Prisma client from the build stage.
 COPY --parents \

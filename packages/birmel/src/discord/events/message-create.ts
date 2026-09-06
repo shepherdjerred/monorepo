@@ -207,9 +207,6 @@ function toTurnInput(
       contentType: image.contentType,
       name: image.filename,
     })),
-    ...(message.member?.voice.channelId == null
-      ? {}
-      : { voiceChannelId: message.member.voice.channelId }),
     triggerKind: decision.triggerKind,
     receivedAt: message.createdAt,
   });

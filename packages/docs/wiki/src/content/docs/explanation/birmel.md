@@ -47,8 +47,8 @@ An accepted alias is a persona claim for one guild. It becomes a wake name for
 every trusted user and channel in that guild. The same name has no effect in a
 different guild.
 
-That same allowlist governs every capability, including editor, shell, and
-scheduled work. A queued job re-checks its original actor when it executes,
+That same allowlist governs every capability, including shell and scheduled
+work. A queued job re-checks its original actor when it executes,
 because authority at enqueue time is not authority at run time.
 
 Each Discord message ID identifies one
@@ -68,9 +68,7 @@ capability plainly.
 The catalog is generated from
 [executable tool registration](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-tools/tools/tool-sets.ts),
 so the router cannot advertise a stale hand-written capability. Birmel has
-scoped activity queries but no generic SQL access. GitHub connection and status
-remain per-user because OAuth authority belongs to the user, not to the shared
-persona.
+scoped activity queries but no generic SQL access.
 
 Ordinary supported writes are allowed for trusted users. The
 [core policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/birmel/src/agent-runtime/prompts.ts)

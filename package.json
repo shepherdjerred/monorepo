@@ -217,7 +217,6 @@
     "@astrojs/starlight@0.41.7": "patches/@astrojs%2Fstarlight@0.41.7.patch",
     "@astrojs/internal-helpers@0.10.4": "patches/@astrojs%2Finternal-helpers@0.10.4.patch",
     "bun-types@1.4.0": "patches/bun-types@1.4.0.patch",
-    "discord-player-youtubei@2.0.0": "patches/discord-player-youtubei@2.0.0.patch",
     "markdown-it@10.0.0": "patches/markdown-it@10.0.0.patch",
     "markdown-it@14.3.0": "patches/markdown-it@14.3.0.patch",
     "react-native-sound@0.13.0": "patches/react-native-sound@0.13.0.patch",

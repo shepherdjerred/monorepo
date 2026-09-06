@@ -17,9 +17,7 @@ import {
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
-import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
-import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 
@@ -93,10 +91,7 @@ export function createBirmelDeployment(chart: Chart) {
           request: Size.mebibytes(1280),
         },
       },
-      ports: [
-        { number: 4112, name: "oauth" },
-        { number: 8080, name: "health" },
-      ],
+      ports: [{ number: 8080, name: "health" }],
       startup: Probe.fromHttpGet("/live", {
         port: 8080,
         periodSeconds: Duration.seconds(5),
@@ -217,7 +212,6 @@ export function createBirmelDeployment(chart: Chart) {
 
         // General configuration
         LOG_LEVEL: EnvValue.fromValue("info"),
-        VOICE_ENABLED: EnvValue.fromValue("true"),
         DAILY_POSTS_ENABLED: EnvValue.fromValue("true"),
         WEB_SEARCH_PROVIDER: EnvValue.fromValue("openai"),
         BROWSER_PROVIDER: EnvValue.fromValue("pinchtab"),
@@ -236,47 +230,11 @@ export function createBirmelDeployment(chart: Chart) {
           ),
           key: "PINCHTAB_TOKEN",
         }),
-
-        // Editor configuration
-        EDITOR_ENABLED: EnvValue.fromValue("true"),
-        EDITOR_OAUTH_PORT: EnvValue.fromValue("4112"),
-        EDITOR_ALLOWED_REPOS: EnvValue.fromValue(
-          JSON.stringify([
-            {
-              name: "scout-for-lol",
-              repo: "shepherdjerred/monorepo",
-              branch: "main",
-            },
-            {
-              name: "monorepo",
-              repo: "shepherdjerred/monorepo",
-              branch: "main",
-            },
-          ]),
-        ),
-        EDITOR_GITHUB_CLIENT_ID: EnvValue.fromValue("Ov23liCMrfCR1Ggvx99o"),
-        EDITOR_GITHUB_CLIENT_SECRET: EnvValue.fromSecretValue({
-          secret: Secret.fromSecretName(
-            chart,
-            "birmel-editor-github-secret",
-            onePasswordItem.name,
-          ),
-          key: "EDITOR_GITHUB_CLIENT_SECRET",
-        }),
-        EDITOR_GITHUB_CALLBACK_URL: EnvValue.fromValue(
-          "https://birmel-oauth.tailnet-1a49.ts.net/auth/github/callback",
-        ),
       },
     }),
   );
 
   setRevisionHistoryLimit(deployment);
-
-  // Service for Editor OAuth
-  const oauthService = new Service(chart, "birmel-oauth-service", {
-    selector: deployment,
-    ports: [{ port: 4112, name: "oauth" }],
-  });
 
   const healthService = new Service(chart, "birmel-health-service", {
     metadata: { labels: { app: "birmel-health" } },
@@ -289,22 +247,5 @@ export function createBirmelDeployment(chart: Chart) {
     port: "metrics",
   });
 
-  // "/" has no route (404); /health is the OAuth server's health check
-  // (packages/birmel/src/editor/oauth-server.ts). Both registrations below
-  // share the same backend probe, so probePath must be identical.
-  new TailscaleIngress(chart, "birmel-oauth-ingress", {
-    service: oauthService,
-    host: "birmel-oauth",
-    probePath: "/health",
-  });
-
-  createCloudflareTunnelBinding(chart, "birmel-oauth-cf-tunnel", {
-    serviceName: oauthService.name,
-    subdomain: "birmel-oauth",
-    port: 4112,
-    probePath: "/health",
-    publicProbePath: "/health",
-  });
-
-  return { deployment, healthService, oauthService };
+  return { deployment, healthService };
 }

@@ -463,10 +463,19 @@ describe("patch attribution", () => {
   // These run against the REAL repo manifest + lockfile: patch keys are
   // version-exact, so a patch whose pinned version nothing resolves anymore
   // (a stale patch) correctly selects no image.
-  test("a patch for a dep resolved in one closure selects only that image", async () => {
+  test("a patch selects only the images whose closure resolves it", async () => {
+    // node-datachannel reaches exactly the three voice/streaming images and
+    // nothing else, which is the attribution property: a patch must not
+    // rebuild images that never resolve the patched package.
     expect(
-      await select(["patches/discord-player-youtubei@2.0.0.patch"]),
-    ).toEqual(["birmel"]);
+      await select([
+        "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch",
+      ]),
+    ).toEqual([
+      "discord-plays-mario-kart",
+      "discord-plays-pokemon",
+      "streambot",
+    ]);
   });
 
   test("a patch resolved through several packages selects only those images", async () => {

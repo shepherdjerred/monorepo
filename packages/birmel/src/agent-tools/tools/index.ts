@@ -1,9 +1,7 @@
 import {
   automationToolSet,
-  editorToolSet,
   messagingToolSet,
   moderationToolSet,
-  musicToolSet,
   serverToolSet,
   toolsToRecord,
 } from "./tool-sets.ts";
@@ -12,9 +10,7 @@ const registeredTools = [
   ...messagingToolSet,
   ...serverToolSet,
   ...moderationToolSet,
-  ...musicToolSet,
   ...automationToolSet,
-  ...editorToolSet,
 ];
 
 const ids = registeredTools.map(({ id }) => id);

@@ -40,7 +40,6 @@ export const TurnInputSchema = z.object({
   username: z.string().min(1),
   content: z.string(),
   attachments: z.array(TurnAttachmentSchema).default([]),
-  voiceChannelId: DiscordIdSchema.optional(),
   triggerKind: TriggerKindSchema,
   receivedAt: z.date(),
 });
@@ -101,9 +100,7 @@ export const SpecialistIdSchema = z.enum([
   "messaging",
   "server",
   "moderation",
-  "music",
   "automation",
-  "editor",
 ]);
 export type SpecialistId = z.infer<typeof SpecialistIdSchema>;
 

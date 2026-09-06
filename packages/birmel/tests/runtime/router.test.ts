@@ -5,15 +5,7 @@ import type { SpecialistId } from "@shepherdjerred/birmel/agent-runtime/contract
 import { createContextBundle, createTurnInput } from "./fixtures.ts";
 
 const ExpectedRoutesSchema = z.array(
-  z.enum([
-    "direct",
-    "messaging",
-    "server",
-    "moderation",
-    "music",
-    "automation",
-    "editor",
-  ]),
+  z.enum(["direct", "messaging", "server", "moderation", "automation"]),
 );
 
 const expectedRoutes = ExpectedRoutesSchema.parse([
@@ -21,18 +13,14 @@ const expectedRoutes = ExpectedRoutesSchema.parse([
   "messaging",
   "server",
   "moderation",
-  "music",
   "automation",
-  "editor",
 ]);
 
 const primaryToolBySpecialist: Record<SpecialistId, string> = {
   messaging: "get-activity-stats",
   server: "manage-guild",
   moderation: "moderate-member",
-  music: "music-playback",
   automation: "web-research",
-  editor: "connect-github",
 };
 
 const request = {
@@ -80,7 +68,7 @@ describe("routeTurn", () => {
     await expect(
       routeTurn(request, async () => ({
         route: "direct",
-        routes: ["direct", "music"],
+        routes: ["direct", "automation"],
         disposition: "conversation",
         primaryToolId: null,
         confidence: 0.5,
@@ -115,31 +103,15 @@ describe("routeTurn", () => {
     },
   );
 
-  test("routes GitHub connection status through the real per-user tool", async () => {
-    const decision = await routeTurn(request, async () => ({
-      route: "editor",
-      disposition: "supported",
-      primaryToolId: "connect-github",
-      confidence: 1,
-      rationale: "The registered GitHub connection tool owns status checks",
-    }));
-
-    expect(decision).toMatchObject({
-      route: "editor",
-      disposition: "supported",
-      primaryToolId: "connect-github",
-    });
-  });
-
   test("rejects supported routes whose primary tool belongs to another specialist", async () => {
     await expect(
       routeTurn(request, async () => ({
         route: "server",
         disposition: "supported",
-        primaryToolId: "connect-github",
+        primaryToolId: "web-research",
         confidence: 1,
         rationale: "Mismatched ownership",
       })),
-    ).rejects.toThrow("but editor owns it");
+    ).rejects.toThrow("but automation owns it");
   });
 });

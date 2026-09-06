@@ -47,7 +47,6 @@
       "customType": "regex",
       "description": "Pinned tool versions in application Dockerfile ARGs",
       "managerFilePatterns": [
-        "packages/birmel/Dockerfile",
         "packages/discord-plays-pokemon/Dockerfile",
         "packages/streambot/Dockerfile"
       ],
@@ -168,10 +167,7 @@
       "description": "Keep the yt-dlp binary pin synchronized across application images",
       "groupName": "yt-dlp image binary",
       "matchDepNames": ["yt-dlp/yt-dlp"],
-      "matchFileNames": [
-        "packages/birmel/Dockerfile",
-        "packages/streambot/Dockerfile"
-      ]
+      "matchFileNames": ["packages/streambot/Dockerfile"]
     },
     {
       "description": "Critical infrastructure - no delay, no automerge",

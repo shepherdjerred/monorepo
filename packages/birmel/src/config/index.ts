@@ -97,47 +97,6 @@ function loadCoreConfig(environment: Environment) {
   };
 }
 
-function loadGithubConfig(environment: Environment) {
-  const clientId = environment["EDITOR_GITHUB_CLIENT_ID"];
-  if (clientId == null || clientId.length === 0) {
-    return;
-  }
-  return {
-    clientId,
-    clientSecret: environment["EDITOR_GITHUB_CLIENT_SECRET"] ?? "",
-    callbackUrl: environment["EDITOR_GITHUB_CALLBACK_URL"] ?? "",
-  };
-}
-
-function loadEditorConfig(environment: Environment) {
-  return {
-    enabled: parseBoolean(environment["EDITOR_ENABLED"], false),
-    allowedRepos: parseJson(
-      environment["EDITOR_ALLOWED_REPOS"],
-      [],
-      z.array(
-        z.object({
-          name: z.string(),
-          repo: z.string(),
-          allowedPaths: z.array(z.string()).optional(),
-          branch: z.string().optional(),
-        }),
-      ),
-    ),
-    maxSessionDurationMs: parseNumber(
-      environment["EDITOR_MAX_SESSION_DURATION_MS"],
-      1_800_000,
-    ),
-    maxSessionsPerUser: parseNumber(
-      environment["EDITOR_MAX_SESSIONS_PER_USER"],
-      1,
-    ),
-    oauthPort: parseNumber(environment["EDITOR_OAUTH_PORT"], 4112),
-    oauthHost: environment["EDITOR_OAUTH_HOST"] ?? "0.0.0.0",
-    github: loadGithubConfig(environment),
-  };
-}
-
 function loadFeatureConfig(environment: Environment) {
   return {
     sentry: {
@@ -242,7 +201,6 @@ function loadFeatureConfig(environment: Environment) {
       timezone: environment["ELECTION_TIMEZONE"] ?? "America/Los_Angeles",
       channelId: environment["ELECTION_CHANNEL_ID"],
     },
-    editor: loadEditorConfig(environment),
     health: {
       port: parseNumber(environment["HEALTH_PORT"], 8080),
     },

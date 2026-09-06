@@ -40,10 +40,6 @@
       "clones": 1,
       "tokens": 116
     },
-    "packages/birmel/e2e/music-playback.ts|packages/birmel/e2e/youtube-stream-resource.ts": {
-      "clones": 1,
-      "tokens": 74
-    },
     "packages/birmel/scripts/generate-prisma.ts|packages/starlight-karma-bot/scripts/generate-prisma.ts": {
       "clones": 1,
       "tokens": 254
@@ -161,8 +157,8 @@
       "tokens": 78
     },
     "packages/birmel/tests/jobs/durable-jobs.test.ts|packages/birmel/tests/jobs/durable-jobs.test.ts": {
-      "clones": 4,
-      "tokens": 301
+      "clones": 3,
+      "tokens": 225
     },
     "packages/birmel/tests/jobs/job-effect-resolution.test.ts|packages/birmel/tests/jobs/job-effect-resolution.test.ts": {
       "clones": 3,

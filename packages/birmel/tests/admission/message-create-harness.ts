@@ -15,7 +15,6 @@ const CHANNEL_ID = "100000000000000005";
 const OTHER_CHANNEL_ID = "100000000000000010";
 const OTHER_GUILD_CHANNEL_ID = "100000000000000011";
 const THREAD_ID = "100000000000000006";
-const VOICE_CHANNEL_ID = "100000000000000007";
 
 const trustedUserIds = [TRUSTED_USER_ID, SECOND_TRUSTED_USER_ID];
 let recentlyEngaged = false;
@@ -151,7 +150,6 @@ function fakeMessage(
         options.mentionsBot === true && userId === BOT_ID,
       repliedUser: options.repliesToBot === true ? { id: BOT_ID } : undefined,
     },
-    member: { voice: { channelId: VOICE_CHANNEL_ID } },
     content: options.content ?? "hello",
     attachments,
     createdAt: new Date("2026-08-08T12:00:00.000Z"),
@@ -423,7 +421,6 @@ describe("Birmel 3.0 Discord admission", () => {
           name: "image.png",
         },
       ],
-      voiceChannelId: VOICE_CHANNEL_ID,
       triggerKind: "mention",
       receivedAt: new Date("2026-08-08T12:00:00.000Z"),
     });
