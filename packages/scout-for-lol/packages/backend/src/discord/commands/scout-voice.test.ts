@@ -13,6 +13,7 @@ type HarnessOptions = {
   memberChannelId?: string | null;
   activeChannelId?: string | undefined;
   leaveResult?: boolean;
+  joinOutcome?: "joined" | "cancelled";
 };
 
 function voiceHarness(options: HarnessOptions = {}) {
@@ -46,7 +47,7 @@ function voiceHarness(options: HarnessOptions = {}) {
       join: (guildId: string, channelId: string) => {
         events.push("join");
         joins.push({ guildId, channelId });
-        return Promise.resolve();
+        return Promise.resolve(options.joinOutcome ?? "joined");
       },
       leave: (guildId: string) => {
         leaves.push(guildId);
@@ -111,6 +112,17 @@ describe("/scout join and /scout leave", () => {
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.joins).toEqual([]);
     expect(h.replies[0]).toContain("already listening");
+  });
+
+  test("a cancelled join reports failure instead of claiming success", async () => {
+    const h = voiceHarness({
+      memberChannelId: "vc-1",
+      joinOutcome: "cancelled",
+    });
+    await executeScoutVoice(h.interaction, "join", h.dependencies);
+    expect(h.joins).toEqual([{ guildId: GUILD, channelId: "vc-1" }]);
+    expect(h.replies[0]).toContain("stopped joining");
+    expect(h.replies[0]).not.toContain("Hey Scout");
   });
 
   test("join from another channel moves the session", async () => {

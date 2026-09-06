@@ -292,7 +292,9 @@ describe("VoiceAssistantManager", () => {
     expect(h.left).toEqual([GUILD]);
     expect(h.sessionEvents).toContain("closed");
   });
+});
 
+describe("VoiceAssistantManager pending-join cancellation", () => {
   test("leave() during an in-flight join cancels it before it can start listening", async () => {
     const pendingConnections: ((connection: AssistantConnection) => void)[] =
       [];
@@ -308,7 +310,7 @@ describe("VoiceAssistantManager", () => {
     // but the join itself must still be prevented from starting to listen.
     expect(h.manager.leave(GUILD)).toBe(false);
     pendingConnections[0]?.(fakeConnection());
-    await join;
+    await expect(join).resolves.toBe("cancelled");
     expect(h.manager.isActive(GUILD)).toBe(false);
     expect(h.left).toEqual([GUILD]);
     expect(h.sessionEvents).not.toContain("created");
@@ -327,7 +329,7 @@ describe("VoiceAssistantManager", () => {
     h.setGuildEnabled(false);
     await h.manager.closeDisabledGuildSessions();
     pendingConnections[0]?.(fakeConnection());
-    await join;
+    await expect(join).resolves.toBe("cancelled");
     expect(h.manager.isActive(GUILD)).toBe(false);
     expect(h.left).toEqual([GUILD]);
     expect(h.sessionEvents).not.toContain("created");
@@ -345,9 +347,79 @@ describe("VoiceAssistantManager", () => {
     const join = h.manager.join(GUILD, "channel-1");
     h.manager.closeAll();
     pendingConnections[0]?.(fakeConnection());
-    await join;
+    await expect(join).resolves.toBe("cancelled");
     expect(h.manager.isActive(GUILD)).toBe(false);
     expect(h.left).toEqual([GUILD]);
     expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test('join() resolves "joined" on success', async () => {
+    const h = managerHarness();
+    await expect(h.manager.join(GUILD, "channel-1")).resolves.toBe("joined");
+  });
+
+  test("a join queued behind an in-flight one is cancelled too when a stop arrives first", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const first = h.manager.join(GUILD, "channel-1");
+    const second = h.manager.join(GUILD, "channel-2");
+    // Only the first has reached the connection step; the second is queued
+    // behind it and has not attempted to establish anything yet.
+    expect(pendingConnections).toHaveLength(1);
+    // A stop arrives while the first is still establishing and before the
+    // second has even started its own attempt.
+    h.manager.leave(GUILD);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(first).resolves.toBe("cancelled");
+    // The second must ALSO be cancelled — it predates the stop, even though
+    // it never itself attempted a connection. Without capturing the epoch at
+    // enqueue time, this request would start "fresh" once its turn came up
+    // and never notice the intervening leave.
+    await expect(second).resolves.toBe("cancelled");
+    expect(pendingConnections).toHaveLength(1);
+    expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test("an in-flight join is cancelled when its target channel empties before the connection is ready", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    // The requester (or everyone) leaves the target channel while Discord is
+    // still finishing the handshake — no session exists yet for the
+    // realized-session branch of handleVoiceStateUpdate to catch this.
+    h.setHumanCount(0);
+    h.manager.handleVoiceStateUpdate(GUILD);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(join).resolves.toBe("cancelled");
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test("handleVoiceStateUpdate leaves a pending join alone while its channel still has humans", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    h.setHumanCount(2);
+    h.manager.handleVoiceStateUpdate(GUILD);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(join).resolves.toBe("joined");
   });
 });

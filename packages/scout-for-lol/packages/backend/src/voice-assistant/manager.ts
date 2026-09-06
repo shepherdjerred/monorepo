@@ -49,6 +49,14 @@ type SessionLike = {
   close: () => void;
 };
 
+/**
+ * `"cancelled"` means a leave/flag-disable/empty-channel-check/shutdown/newer
+ * join ended this guild's session — or an earlier queued attempt for it —
+ * before this request ever started listening. A genuine connection failure
+ * still throws; this is never returned for one.
+ */
+export type VoiceJoinOutcome = "joined" | "cancelled";
+
 export type VoiceAssistantManagerDeps = {
   readonly runtime: () => VoiceAssistantRuntime | null;
   readonly joinAssistantChannel: (
@@ -154,17 +162,21 @@ function defaultDeps(): VoiceAssistantManagerDeps {
  */
 export class VoiceAssistantManager {
   private readonly sessions = new Map<string, ActiveSession>();
-  private readonly joinQueues = new Map<string, Promise<void>>();
+  private readonly joinQueues = new Map<string, Promise<unknown>>();
   /**
-   * Per-guild cancellation ticket for an in-flight join. `performJoin`
-   * captures the value right before starting the (up to 30 s) connection
-   * establishment; every teardown path bumps it via `endSession`. If the
-   * value has moved by the time the connection resolves, a leave, flag
-   * disable, empty-channel check, or shutdown arrived while this attempt was
-   * establishing — the attempt tears down what it just built instead of
-   * silently starting to listen after being told to stop.
+   * Per-guild cancellation ticket. `join()` captures it at enqueue time (to
+   * catch a teardown that lands while THIS request is still queued behind an
+   * earlier one) and `performJoin` captures a fresh value again right before
+   * starting the (up to 30 s) connection establishment (to catch one that
+   * lands while THIS request is establishing). Every teardown path bumps it
+   * via `endSession`, and `handleVoiceStateUpdate` also bumps it directly for
+   * a pending join whose target channel is already empty. If either captured
+   * value is stale by the time it's checked, the request is abandoned
+   * instead of silently starting to listen after being told to stop.
    */
   private readonly epochs = new Map<string, number>();
+  /** Guild -> channel a join is currently establishing a connection for. */
+  private readonly pendingJoinChannels = new Map<string, string>();
   private readonly deps: VoiceAssistantManagerDeps;
 
   constructor(deps: VoiceAssistantManagerDeps = defaultDeps()) {
@@ -194,9 +206,13 @@ export class VoiceAssistantManager {
    * bridge, and inactivity timer un-closed — with that stale timer later able
    * to end the newer session. The second caller simply runs after the first.
    */
-  async join(guildId: DiscordGuildId, channelId: string): Promise<void> {
+  async join(
+    guildId: DiscordGuildId,
+    channelId: string,
+  ): Promise<VoiceJoinOutcome> {
+    const enqueuedEpoch = this.currentEpoch(guildId);
     const previous = this.joinQueues.get(guildId);
-    const run = (async () => {
+    const run: Promise<VoiceJoinOutcome> = (async () => {
       if (previous !== undefined) {
         try {
           await previous;
@@ -205,11 +221,22 @@ export class VoiceAssistantManager {
           // this join starts from whatever state that attempt left behind.
         }
       }
-      await this.performJoin(guildId, channelId);
+      if (this.currentEpoch(guildId) !== enqueuedEpoch) {
+        // A leave/flag-disable/empty-channel-check/shutdown/newer join ended
+        // this guild's session (or an earlier queued attempt for it) while
+        // this request was waiting its turn. A request that predates a stop
+        // must never start listening after it — even though it never itself
+        // began establishing a connection.
+        logger.info("voice assistant join cancelled while queued", {
+          guildId,
+        });
+        return "cancelled";
+      }
+      return await this.performJoin(guildId, channelId);
     })();
     this.joinQueues.set(guildId, run);
     try {
-      await run;
+      return await run;
     } finally {
       if (this.joinQueues.get(guildId) === run) {
         this.joinQueues.delete(guildId);
@@ -220,7 +247,7 @@ export class VoiceAssistantManager {
   private async performJoin(
     guildId: DiscordGuildId,
     channelId: string,
-  ): Promise<void> {
+  ): Promise<VoiceJoinOutcome> {
     const runtime = this.deps.runtime();
     if (runtime === null) {
       throw new Error(
@@ -232,7 +259,15 @@ export class VoiceAssistantManager {
       this.endSession(guildId, "rejoined", { leaveChannel: false });
     }
     const myEpoch = this.invalidate(guildId);
-    const connection = await this.deps.joinAssistantChannel(guildId, channelId);
+    this.pendingJoinChannels.set(guildId, channelId);
+    let connection: AssistantConnection;
+    try {
+      connection = await this.deps.joinAssistantChannel(guildId, channelId);
+    } finally {
+      if (this.pendingJoinChannels.get(guildId) === channelId) {
+        this.pendingJoinChannels.delete(guildId);
+      }
+    }
     if (this.epochs.get(guildId) !== myEpoch) {
       // A leave/flag-disable/empty-channel-check/shutdown ended this guild's
       // session (or lack thereof) while the connection was still
@@ -244,7 +279,7 @@ export class VoiceAssistantManager {
         "voice assistant join abandoned: the guild's session ended before the connection was ready",
         { guildId },
       );
-      return;
+      return "cancelled";
     }
     const session = this.deps.createSession({
       guildId,
@@ -279,6 +314,7 @@ export class VoiceAssistantManager {
     scoutVoiceActiveSessions.inc();
     scoutVoiceSessionsTotal.inc({ event: "started", reason: "join" });
     logger.info("voice assistant session started", { guildId, channelId });
+    return "joined";
   }
 
   /** `/scout leave`. Returns false when no session was active. */
@@ -287,15 +323,31 @@ export class VoiceAssistantManager {
   }
 
   /**
-   * `voiceStateUpdate` hook: when the session's channel holds no non-bot
+   * `voiceStateUpdate` hook: when the relevant channel holds no non-bot
    * members any more, nobody consented to being listened to — leave.
+   *
+   * Also covers a join still establishing its connection: if the requester
+   * (or everyone else) leaves the target channel before Discord finishes
+   * handshaking, there is no session yet for the realized-session branch to
+   * end, and nothing else would ever recheck this specific channel again — a
+   * later voiceStateUpdate elsewhere in the guild, or in this channel once
+   * some UNRELATED member joins, would see a non-empty count and never
+   * trigger this method's early return path. Bumping the epoch here lets
+   * `performJoin`'s own check catch it once the connection resolves, instead
+   * of Scout starting to listen alone for up to 45 minutes.
    */
   handleVoiceStateUpdate(guildId: string): void {
     const active = this.sessions.get(guildId);
-    if (active === undefined) return;
-    const humans = this.deps.countHumanMembers(guildId, active.channelId);
+    const pendingChannelId = this.pendingJoinChannels.get(guildId);
+    const channelId = active?.channelId ?? pendingChannelId;
+    if (channelId === undefined) return;
+    const humans = this.deps.countHumanMembers(guildId, channelId);
     if (humans === null || humans > 0) return;
-    this.endSession(guildId, "empty-channel", { leaveChannel: true });
+    if (active !== undefined) {
+      this.endSession(guildId, "empty-channel", { leaveChannel: true });
+      return;
+    }
+    this.invalidate(guildId);
   }
 
   /**
@@ -364,6 +416,11 @@ export class VoiceAssistantManager {
     const next = (this.epochs.get(guildId) ?? 0) + 1;
     this.epochs.set(guildId, next);
     return next;
+  }
+
+  /** Read the guild's ticket without bumping it. */
+  private currentEpoch(guildId: string): number {
+    return this.epochs.get(guildId) ?? 0;
   }
 
   private endSession(

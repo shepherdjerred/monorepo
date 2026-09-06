@@ -145,7 +145,22 @@ export async function executeScoutVoice(
   // acknowledge first and edit the deferred reply after the join. A join
   // failure after this point lands in the dispatcher's deferred-error path.
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  await manager.join(guildId.data, channelId);
+  const outcome = await manager.join(guildId.data, channelId);
+  if (outcome === "cancelled") {
+    // A leave/flag-disable/empty-channel-check/shutdown ended this guild's
+    // session (or this very request, still queued) before Scout ever
+    // started listening — the join never happened, so say so rather than
+    // unconditionally claiming success.
+    logger.info("voice assistant join was cancelled before it could start", {
+      guildId: guildId.data,
+      channelId,
+    });
+    await interaction.editReply({
+      content:
+        "Scout stopped joining because the session ended before it could start listening. Try /scout join again if you still want it.",
+    });
+    return;
+  }
   logger.info("voice assistant joined by command", {
     guildId: guildId.data,
     channelId,
