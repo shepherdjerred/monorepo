@@ -70,10 +70,15 @@ export function createChallengeExploreTools(options: {
     }),
     draft_challenge_contract: tool({
       description:
-        "Validate and save a private typed challenge draft. The frozen contract is the only evaluator; subjective or unobservable rules are invalid.",
+        "Validate and save a private typed challenge draft. New challenges are drafted from scratch without any source template. The frozen contract is the only evaluator; subjective or unobservable rules are invalid.",
       inputSchema: z.strictObject({
         contract: ChallengeContractV1Schema,
-        sourceTemplateId: z.uuid().optional(),
+        sourceTemplateId: z
+          .uuid()
+          .optional()
+          .describe(
+            "Only provided when revising an existing challenge template authored by the requester. Omit when creating a new challenge.",
+          ),
       }),
       outputSchema: ChallengeToolResultSchema,
       execute: (input) =>
