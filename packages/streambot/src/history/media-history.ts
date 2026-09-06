@@ -111,7 +111,7 @@ export class MediaHistoryStore {
   ): void {
     this.database
       .query(
-        "UPDATE queue_requests SET status = ?1 WHERE id = ?2 AND status = 'started'",
+        "UPDATE queue_requests SET status = ?1 WHERE id = ?2 AND status IN ('queued', 'started')",
       )
       .run(status, requestId);
   }

@@ -189,6 +189,24 @@ export function queuedItem(event: PlaybackEvent): QueuedSource {
   };
 }
 
+export function playNowWhileJoiningUpdates(
+  context: PlaybackContext,
+  event: PlaybackEvent,
+): Partial<PlaybackContext> {
+  if (event.type !== "PLAY_NOW") {
+    throw new Error("playNowWhileJoiningUpdates received a non-play event");
+  }
+  return {
+    queue: [queuedItem(event), ...context.queue],
+    current: null,
+    resolved: null,
+    resumeSeekSeconds: 0,
+    pausedPositionSeconds: null,
+    crashRetries: 0,
+    startPaused: false,
+  };
+}
+
 /** Context updates that re-queue the current item for a recovery retry at `positionSeconds`. */
 export function queueCrashRetryUpdates(
   context: PlaybackContext,

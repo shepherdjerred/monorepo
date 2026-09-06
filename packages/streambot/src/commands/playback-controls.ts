@@ -35,6 +35,11 @@ export class PlaybackControls {
 
   pause(userId: UserId): PlaybackCommandResult {
     const view = this.controllableCurrent(userId);
+    if (view.state === "resolving") {
+      throw new PlaybackCommandBoundaryError(
+        "Playback is still loading; try pausing again once it starts.",
+      );
+    }
     if (view.paused === true) {
       throw new PlaybackCommandBoundaryError("Playback is already paused.");
     }
@@ -253,6 +258,11 @@ export class PlaybackControls {
     language?: string,
   ): PlaybackCommandResult {
     const view = this.controllableCurrent(userId);
+    if (view.paused === true) {
+      throw new PlaybackCommandBoundaryError(
+        "Resume playback before changing subtitles.",
+      );
+    }
     this.deps.dispatch({
       type: "CHANGE_SUBTITLES",
       subtitles:

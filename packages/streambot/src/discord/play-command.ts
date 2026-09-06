@@ -31,6 +31,7 @@ import {
   shameMessage,
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
@@ -81,6 +82,21 @@ export async function runPlayCommand(
   const selectedSource = MediaSourcePreferenceSchema.parse(
     interaction.getString("source") ?? "auto",
   );
+
+  if (
+    selectedPlacement === "now" &&
+    deps.featureGate !== undefined &&
+    deps.guildId !== undefined &&
+    deps.channelId !== undefined &&
+    !(await deps.featureGate.assistantV2({
+      guildId: deps.guildId,
+      channelId: deps.channelId,
+      userId: interaction.userId,
+    }))
+  ) {
+    await interaction.reply("Playing now is not enabled here yet.");
+    return;
+  }
 
   if (isHttpUrl(query) && isLikelyPlaylist(query)) {
     await runPlaylistRequest({
@@ -153,6 +169,21 @@ async function playlistHistoryEnabled(
   );
 }
 
+function playlistPlayNowDenial(
+  deps: CommandHandlerDeps,
+  userId: UserId,
+  placement: MediaPlacement,
+): string | null {
+  if (placement !== "now") return null;
+  try {
+    new PlaybackCommandService(deps).assertCanPlayNow(userId);
+    return null;
+  } catch (error) {
+    if (error instanceof PlaybackCommandBoundaryError) return error.message;
+    throw error;
+  }
+}
+
 async function runPlaylist(
   input: PlayCommandInput & {
     readonly source: MediaSourcePreference;
@@ -161,16 +192,14 @@ async function runPlaylist(
 ): Promise<void> {
   const { deps, interaction, query, subtitles, next, placement } = input;
   await interaction.defer();
-  if (placement === "now") {
-    try {
-      new PlaybackCommandService(deps).assertCanPlayNow(interaction.userId);
-    } catch (error) {
-      if (error instanceof PlaybackCommandBoundaryError) {
-        await interaction.editReply(error.message);
-        return;
-      }
-      throw error;
-    }
+  const initialDenial = playlistPlayNowDenial(
+    deps,
+    interaction.userId,
+    placement,
+  );
+  if (initialDenial !== null) {
+    await interaction.editReply(initialDenial);
+    return;
   }
   const items = await deps.expandPlaylist(
     query,
@@ -186,6 +215,15 @@ async function runPlaylist(
         };
   const history = deps.history;
   const historyEnabled = await playlistHistoryEnabled(deps, scope);
+  const dispatchDenial = playlistPlayNowDenial(
+    deps,
+    interaction.userId,
+    placement,
+  );
+  if (dispatchDenial !== null) {
+    await interaction.editReply(dispatchDenial);
+    return;
+  }
   const dispatchItems =
     placement === "next" || next ? items.toReversed() : items;
   for (const [index, item] of dispatchItems.entries()) {

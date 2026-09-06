@@ -18,6 +18,7 @@ import {
   mustResolved,
   mustVoice,
   pipelineForAttempt,
+  playNowWhileJoiningUpdates,
   queueCrashRetryUpdates,
   queuedItem,
   resolveDoneUpdates,
@@ -169,6 +170,9 @@ function playbackSetup(actors: PlaybackActors) {
         crashRetries: 0,
         startPaused: false,
       })),
+      playNowWhileJoining: assign(({ context, event }) =>
+        playNowWhileJoiningUpdates(context, event),
+      ),
     },
   });
 }
@@ -178,7 +182,6 @@ export function createPlaybackMachine(actors: PlaybackActors) {
     id: "playback",
     context: ({ input }) => initialPlaybackContext(input),
     initial: "idle",
-    // Queue-editing events are accepted in every state (they only touch context).
     on: {
       ADD: {
         actions: assign({
@@ -250,7 +253,6 @@ export function createPlaybackMachine(actors: PlaybackActors) {
             }),
           },
         },
-        // Bound a stuck voice handshake and abort it on state exit.
         after: {
           joinTimeout: {
             target: "failed",
@@ -261,6 +263,7 @@ export function createPlaybackMachine(actors: PlaybackActors) {
           },
         },
         on: {
+          PLAY_NOW: { actions: "playNowWhileJoining" },
           STOP: { target: "idle", actions: "clearQueue" },
           LEAVE: { target: "idle", actions: "clearQueue" },
         },

@@ -85,6 +85,27 @@ function referencedHistoryCandidate(
     : (history.search(scope, subject, 1)[0] ?? null);
 }
 
+function candidateMatchesSource(
+  candidate: MediaCandidate,
+  source: MediaIntent["source"],
+): boolean {
+  return source === "auto" || candidate.provider === source;
+}
+
+function contextualCandidate(
+  context: ConversationContextStore,
+  scope: DiscoveryScope,
+  intent: MediaIntent,
+  historyEnabled: boolean,
+): MediaCandidate | null {
+  const candidate = context.select(scope, intent.query);
+  return candidate !== null &&
+    candidateMatchesSource(candidate, intent.source) &&
+    (historyEnabled || candidate.provider !== "history")
+    ? candidate
+    : null;
+}
+
 /** Federates history, local files, and YouTube into one ranked, scoped candidate set. */
 export class DiscoveryService {
   private readonly context: ConversationContextStore;
@@ -107,11 +128,13 @@ export class DiscoveryService {
   ): Promise<MediaCandidate[]> {
     signal.throwIfAborted();
     const historyEnabled = await this.isHistoryEnabled(scope);
-    const contextual = this.context.select(scope, intent.query);
-    if (
-      contextual !== null &&
-      (historyEnabled || contextual.provider !== "history")
-    ) {
+    const contextual = contextualCandidate(
+      this.context,
+      scope,
+      intent,
+      historyEnabled,
+    );
+    if (contextual !== null) {
       return [contextual];
     }
 
