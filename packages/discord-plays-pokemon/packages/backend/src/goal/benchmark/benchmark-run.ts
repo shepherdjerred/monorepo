@@ -20,6 +20,7 @@ import {
 import {
   benchmarkRuntimeOverlayDirectory,
   prepareBenchmarkRuntimeOverlay,
+  retargetWorkerSourceForLegacyGoalLayout,
 } from "./benchmark-runtime-overlay.ts";
 import {
   artifactPaths,
@@ -160,16 +161,7 @@ async function runWorker(
 ): Promise<number> {
   let source = await Bun.file(workerSource).text();
   if (implementation.usesLegacyGoalControlLayout) {
-    // The worker's own static imports name the current goal/control/ layout;
-    // when the target implementation predates that split, its package.json
-    // #src/* alias only resolves the flat pre-split paths, so retarget the
-    // piped source to match before it runs against that checkout.
-    source = source
-      .replace(
-        "#src/goal/control/control-server.ts",
-        "#src/goal/control-server.ts",
-      )
-      .replace("#src/goal/control/pokemonctl.ts", "#src/goal/pokemonctl.ts");
+    source = retargetWorkerSourceForLegacyGoalLayout(source);
   }
   const child = Bun.spawn(["bun", "run", "-", "--config", configPath], {
     cwd: implementation.backendRoot,

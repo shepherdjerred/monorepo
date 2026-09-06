@@ -35,6 +35,7 @@ const config = [
         "src/goal/catch-evidence.test.ts",
         "src/goal/benchmark/benchmark-evaluator.test.ts",
         "src/goal/benchmark/benchmark-harness.test.ts",
+        "src/goal/benchmark/benchmark-worker-legacy-layout.test.ts",
         "src/goal/benchmark/benchmark-save-oracle.test.ts",
         "src/goal/benchmark/benchmark-telemetry.test.ts",
         "src/goal/codex/codex-jsonl.test.ts",

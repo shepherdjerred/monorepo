@@ -19,6 +19,27 @@ const POKEMONCTL_RELATIVE_PATH =
 const LEGACY_POKEMONCTL_RELATIVE_PATH =
   "packages/backend/src/goal/pokemonctl.ts";
 
+/**
+ * The worker's own static imports name the current goal/control/ and
+ * goal/game/ layout; when the target implementation predates that split, its
+ * package.json #src/* alias only resolves the flat pre-split paths, so
+ * retarget the piped source to match before it runs against that checkout.
+ */
+export function retargetWorkerSourceForLegacyGoalLayout(
+  source: string,
+): string {
+  return source
+    .replace(
+      "#src/goal/control/control-server.ts",
+      "#src/goal/control-server.ts",
+    )
+    .replace("#src/goal/control/pokemonctl.ts", "#src/goal/pokemonctl.ts")
+    .replace(
+      "#src/goal/game/game-observation.ts",
+      "#src/goal/game-observation.ts",
+    );
+}
+
 function pathIsInside(parent: string, candidate: string): boolean {
   const relative = path.relative(path.resolve(parent), path.resolve(candidate));
   return (
