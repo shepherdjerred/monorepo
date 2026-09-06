@@ -5,7 +5,7 @@ import {
   ChallengeFrozenValueSchema,
   type ChallengeFrozenValue,
 } from "#src/model/progression/challenge.ts";
-import { TimelineEventParticipantRoleSchema } from "#src/model/timeline-lake-columns.ts";
+import { TimelineEventParticipantRoleSchema } from "#src/model/reports/timeline-lake-columns.ts";
 
 export const ChallengeTemplateVersionSchema = z.strictObject({
   id: z.uuid(),

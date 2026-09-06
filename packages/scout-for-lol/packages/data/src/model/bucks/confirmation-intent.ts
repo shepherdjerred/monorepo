@@ -1,19 +1,19 @@
 import { z } from "zod";
 import { BucksStakeSchema } from "./bryan-bucks.ts";
-import { CompetitionWriteSchema } from "./competition-write.ts";
+import { CompetitionWriteSchema } from "#src/model/competitions/competition-write.ts";
 import {
   DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
-} from "./discord.ts";
-import { PlayerAliasSchema } from "./form-inputs.ts";
+} from "#src/model/core/discord.ts";
+import { PlayerAliasSchema } from "#src/model/core/form-inputs.ts";
 import {
   LeaguePuuidSchema,
   RegionSchema,
   RiotIdPartsSchema,
-} from "./league-account.ts";
-import { ReportCreateInputSchema } from "./report.ts";
-import { SubscriptionFilterSpecSchema } from "./subscription-filter.ts";
+} from "#src/model/riot/league-account.ts";
+import { ReportCreateInputSchema } from "#src/model/reports/report.ts";
+import { SubscriptionFilterSpecSchema } from "#src/model/core/subscription-filter.ts";
 
 /**
  * The arms that act on an existing dare.
