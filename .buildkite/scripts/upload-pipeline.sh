@@ -118,6 +118,14 @@ fi
 if [ -n "$resolved_base" ]; then
   buildkite-agent meta-data set ci-changed-base "$resolved_base"
 fi
+# The provider-owned bootstrap pipeline runs in the default Buildkite agent
+# container, which has git and buildkite-agent but not necessarily Bun. The
+# selector is intentionally still fail-open, but bootstrap the pinned runtime
+# first so a healthy checkout can use exact PR step selection.
+if ! command -v bun >/dev/null 2>&1; then
+  # shellcheck source=.buildkite/scripts/toolchain.sh
+  MISE_TOOLCHAIN_SCOPE=runtime . "$SCRIPT_DIR/toolchain.sh"
+fi
 if ! bun --no-install "$SCRIPT_DIR/selection/select-pr-pipeline.ts" "$changed_files"; then
   echo "WARN: PR pipeline selection failed; uploading the complete graph" >&2
   printf '.buildkite/pipeline.yml\n' > "$changed_files"
