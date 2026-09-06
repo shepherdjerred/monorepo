@@ -737,7 +737,7 @@ describe("CI reporting manifest", () => {
           "scripts/helm-release-core.test.ts",
           "scripts/helm-set-version.test.ts",
           "scripts/lint-helm.test.ts",
-          "scripts/misc/migration-smoke.test.ts",
+          "scripts/migration-smoke.test.ts",
           "scripts/velero-backups.test.ts",
         ],
       },
