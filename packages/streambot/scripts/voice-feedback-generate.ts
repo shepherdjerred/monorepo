@@ -1,21 +1,70 @@
 /**
- * Regenerate the committed spoken-feedback clips in assets/voice/. macOS-only (uses the built-in
+ * Regenerate the committed spoken-feedback clips for a wake phrase. macOS-only (uses the built-in
  * `say` voice, keyless) plus ffmpeg for the 24 kHz mono PCM16 conversion the assistant sink
  * expects. Run only when the wording changes; the WAVs are committed assets, not build outputs.
  *
- *   bun run scripts/voice-feedback-generate.ts
+ *   bun run scripts/voice-feedback-generate.ts [--phrase hey-streambot|hey-scout]
+ *
+ * The hey-scout clips have not been generated yet; per the training plan, prefer OpenAI TTS
+ * output over `say` for Scout's shipped WAVs when that step lands.
  */
 import path from "node:path";
+import { parseArgs } from "node:util";
+import { resolveVoiceWakePhrase } from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
 
-const LINES: readonly { file: string; text: string }[] = [
-  {
-    file: "feedback-retry.wav",
-    text: "Sorry, I didn't catch that. Say Hey Streambot and try again.",
+type FeedbackLine = { readonly file: string; readonly text: string };
+
+const FEEDBACK_LINES: Record<
+  "hey-streambot" | "hey-scout",
+  readonly FeedbackLine[]
+> = {
+  "hey-streambot": [
+    {
+      file: "feedback-retry.wav",
+      text: "Sorry, I didn't catch that. Say Hey Streambot and try again.",
+    },
+    { file: "feedback-prompt.wav", text: "What would you like me to play?" },
+  ],
+  "hey-scout": [
+    {
+      file: "feedback-retry.wav",
+      text: "Sorry, I didn't catch that. Say Hey Scout and try again.",
+    },
+    { file: "feedback-prompt.wav", text: "What would you like to know?" },
+  ],
+};
+
+const DESTINATIONS: Record<"hey-streambot" | "hey-scout", string> = {
+  "hey-streambot": path.join(import.meta.dir, "..", "assets", "voice"),
+  "hey-scout": path.join(
+    import.meta.dir,
+    "../../scout-for-lol/packages/backend/assets/voice",
+  ),
+};
+
+const { values } = parseArgs({
+  args: Bun.argv.slice(2),
+  options: {
+    phrase: { type: "string" },
+    help: { type: "boolean", short: "h", default: false },
   },
-  { file: "feedback-prompt.wav", text: "What would you like me to play?" },
-];
+  strict: true,
+  allowPositionals: false,
+});
 
-const assetsDir = path.join(import.meta.dir, "..", "assets", "voice");
+if (values.help) {
+  process.stdout
+    .write(`Regenerate committed spoken-feedback clips for a wake phrase.
+
+Usage:
+  bun run scripts/voice-feedback-generate.ts [--phrase hey-streambot|hey-scout]
+`);
+  process.exit(0);
+}
+
+const phrase = resolveVoiceWakePhrase(values.phrase);
+const lines = FEEDBACK_LINES[phrase.slug];
+const assetsDir = DESTINATIONS[phrase.slug];
 
 async function run(command: string[]): Promise<void> {
   const child = Bun.spawn(command, { stdout: "inherit", stderr: "inherit" });
@@ -24,7 +73,7 @@ async function run(command: string[]): Promise<void> {
   }
 }
 
-for (const line of LINES) {
+for (const line of lines) {
   const aiff = path.join("/tmp", `${line.file}.aiff`);
   await run(["say", "-v", "Samantha", "-o", aiff, line.text]);
   await run([
@@ -42,5 +91,5 @@ for (const line of LINES) {
     "s16",
     path.join(assetsDir, line.file),
   ]);
-  console.log(`wrote assets/voice/${line.file}`);
+  console.log(`wrote ${path.join(assetsDir, line.file)}`);
 }

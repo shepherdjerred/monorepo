@@ -1,11 +1,16 @@
 import path from "node:path";
 import { mkdir, rename } from "node:fs/promises";
 import {
-  VOICE_CORPUS_CLIP_COUNT,
   VOICE_CORPUS_MAX_BYTES,
-  VoiceCorpusManifestSchema,
+  voiceCorpusManifestSchema,
+  type VoiceCorpusFormat,
   type VoiceCorpusManifest,
 } from "@shepherdjerred/streambot/voice/corpus-schema.ts";
+import {
+  STREAMBOT_VOICE_PHRASE_SPEC,
+  voiceCorpusClipCount,
+  type VoiceCorpusPhraseSpec,
+} from "@shepherdjerred/streambot/voice/corpus-recipes.ts";
 import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
 
 export const DEFAULT_VOICE_CORPUS_DIR = path.resolve(
@@ -31,6 +36,7 @@ export async function atomicWrite(
 
 export async function loadVoiceCorpusManifest(
   corpusDir = DEFAULT_VOICE_CORPUS_DIR,
+  format: VoiceCorpusFormat = "streambot-discord-opus-v1",
 ): Promise<VoiceCorpusManifest> {
   const file = Bun.file(path.join(corpusDir, "manifest.json"));
   if (!(await file.exists())) {
@@ -38,7 +44,7 @@ export async function loadVoiceCorpusManifest(
       `Voice corpus manifest is missing: ${file.name ?? "manifest.json"}`,
     );
   }
-  return VoiceCorpusManifestSchema.parse(await file.json());
+  return voiceCorpusManifestSchema(format).parse(await file.json());
 }
 
 export type VoiceCorpusVerification = {
@@ -49,22 +55,24 @@ export type VoiceCorpusVerification = {
 export async function verifyVoiceCorpus(
   corpusDir = DEFAULT_VOICE_CORPUS_DIR,
   requireComplete = true,
+  spec: VoiceCorpusPhraseSpec = STREAMBOT_VOICE_PHRASE_SPEC,
 ): Promise<VoiceCorpusVerification> {
-  const manifest = await loadVoiceCorpusManifest(corpusDir);
-  if (requireComplete && manifest.entries.length !== VOICE_CORPUS_CLIP_COUNT) {
+  const manifest = await loadVoiceCorpusManifest(corpusDir, spec.format);
+  const expectedClipCount = voiceCorpusClipCount(spec);
+  if (requireComplete && manifest.entries.length !== expectedClipCount) {
     throw new Error(
-      `Voice corpus must contain ${String(VOICE_CORPUS_CLIP_COUNT)} entries, found ${String(manifest.entries.length)}`,
+      `Voice corpus must contain ${String(expectedClipCount)} entries, found ${String(manifest.entries.length)}`,
     );
   }
   if (requireComplete) {
     // Composition, not just count: recall() treats an empty bucket as 100%, so a 400-entry
     // corpus with a hollowed-out category would silently weaken every acceptance number.
     const composition: Record<string, number> = {
-      "clean-positive": 160,
-      "stress-positive": 80,
-      "near-match-negative": 60,
-      "ordinary-negative": 60,
-      "background-negative": 40,
+      "clean-positive": spec.groupCounts.cleanPositive,
+      "stress-positive": spec.groupCounts.stressPositive,
+      "near-match-negative": spec.groupCounts.nearMatchNegative,
+      "ordinary-negative": spec.groupCounts.ordinaryNegative,
+      "background-negative": spec.groupCounts.backgroundNegative,
     };
     for (const [category, expected] of Object.entries(composition)) {
       const actual = manifest.entries.filter(

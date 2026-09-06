@@ -9,8 +9,11 @@ import { atomicWrite } from "@shepherdjerred/streambot/voice/corpus-io.ts";
 import {
   cloneDiscordOpusPackets,
   evaluateDiscordOpusPackets,
+  type VoiceLifecycleDeps,
 } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
-import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/streambot/voice/local-voice.ts";
+import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/voice-assistant/local-models.ts";
+import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
+import { resolveVoiceWakePhrase } from "@shepherdjerred/streambot/voice/corpus-phrases.ts";
 
 const ClipSchema = z.strictObject({
   file: z.string().min(1),
@@ -83,6 +86,11 @@ async function rawFileToPackets(
   }
 }
 
+const phrase = resolveVoiceWakePhrase(option("--phrase"));
+const lifecycleDeps: VoiceLifecycleDeps = {
+  ...streambotVoiceLifecycleDeps(),
+  fragmentTailMs: await phrase.loadFragmentTailMs(),
+};
 const inputDir = path.resolve(z.string().min(1).parse(option("--input-dir")));
 if (!inputDir.includes(`${path.sep}.context${path.sep}`)) {
   throw new Error(
@@ -92,13 +100,9 @@ if (!inputDir.includes(`${path.sep}.context${path.sep}`)) {
 const assetsDir = path.resolve(
   option("--assets-dir") ??
     Bun.env["VOICE_ASSETS_DIR"] ??
-    "/opt/streambot/voice",
+    phrase.defaultAssetsDir,
 );
-const reportPath = path.resolve(
-  inputDir,
-  "..",
-  "streambot-human-holdout-result.json",
-);
+const reportPath = path.resolve(inputDir, "..", phrase.humanHoldoutReportName);
 // Everything that reads the holdout runs inside this cleanup scope, because the privacy contract
 // is that only the aggregate report outlives the run: a missing or malformed manifest, wrong
 // category counts, a runtime that fails to initialize, a rejected clip, and a failed validation
@@ -111,7 +115,7 @@ const report = await (async () => {
     runtime: "native" | "wasm",
   ): Promise<LocalVoiceModels> => {
     const models = await initializeLocalVoiceModelsForRuntime(
-      assetsDir,
+      phrase.assetManifest(assetsDir),
       runtime,
     );
     opened.push(models);
@@ -165,8 +169,8 @@ const report = await (async () => {
         const [nativeResult, wasmResult] = await (async () => {
           try {
             return await Promise.all([
-              evaluateDiscordOpusPackets(native, nativePackets),
-              evaluateDiscordOpusPackets(wasm, wasmPackets),
+              evaluateDiscordOpusPackets(native, nativePackets, lifecycleDeps),
+              evaluateDiscordOpusPackets(wasm, wasmPackets, lifecycleDeps),
             ]);
           } finally {
             for (const packet of packets) packet.fill(0);

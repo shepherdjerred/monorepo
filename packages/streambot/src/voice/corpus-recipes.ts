@@ -1,6 +1,7 @@
 import type {
   VoiceCorpusAugmentation,
   VoiceCorpusEntry,
+  VoiceCorpusFormat,
 } from "@shepherdjerred/streambot/voice/corpus-schema.ts";
 
 export const OPENAI_TTS_VOICES = [
@@ -35,7 +36,40 @@ export const APPLE_TTS_VOICES = [
 const STYLES = ["neutral", "quiet", "hurried", "distant", "hesitant"] as const;
 const APPLE_RATES = [130, 180, 240] as const;
 
-const POSITIVE_COMMANDS = [
+/**
+ * Everything about a corpus that is specific to one wake phrase: the spoken positives, the
+ * phrase-shaped near-match traps, and the category mix. Ordinary speech and the procedural
+ * background material are phrase-agnostic and stay shared, so two corpora differ only where the
+ * phrase itself does.
+ */
+export type VoiceCorpusGroupCounts = {
+  readonly cleanPositive: number;
+  readonly stressPositive: number;
+  readonly nearMatchNegative: number;
+  readonly ordinaryNegative: number;
+  readonly backgroundNegative: number;
+};
+
+export type VoiceCorpusPhraseSpec = {
+  readonly slug: string;
+  readonly format: VoiceCorpusFormat;
+  readonly positiveCommands: readonly string[];
+  readonly nearMatches: readonly string[];
+  readonly groupCounts: VoiceCorpusGroupCounts;
+};
+
+export function voiceCorpusClipCount(spec: VoiceCorpusPhraseSpec): number {
+  const counts = spec.groupCounts;
+  return (
+    counts.cleanPositive +
+    counts.stressPositive +
+    counts.nearMatchNegative +
+    counts.ordinaryNegative +
+    counts.backgroundNegative
+  );
+}
+
+const STREAMBOT_POSITIVE_COMMANDS = [
   "Hey Streambot, play Spirited Away from local.",
   "Hey Streambot, play Take On Me from YouTube.",
   "Hey Streambot, play The Matrix.",
@@ -59,7 +93,7 @@ const POSITIVE_COMMANDS = [
   "Hey Streambot, skip and shuffle.",
 ] as const;
 
-const NEAR_MATCHES = [
+const STREAMBOT_NEAR_MATCHES = [
   "Hey streamer, play the next thing.",
   "Okay Streambot, can you hear me?",
   "Hey dream bot, turn it up.",
@@ -71,6 +105,72 @@ const NEAR_MATCHES = [
   "Hey Stream, stop the bot.",
   "A streamboat floated by the dock.",
 ] as const;
+
+/** The canonical 400-clip category mix shared by every wake-phrase corpus design. */
+const CANONICAL_GROUP_COUNTS: VoiceCorpusGroupCounts = {
+  cleanPositive: 160,
+  stressPositive: 80,
+  nearMatchNegative: 60,
+  ordinaryNegative: 60,
+  backgroundNegative: 40,
+};
+
+export const STREAMBOT_VOICE_PHRASE_SPEC: VoiceCorpusPhraseSpec = {
+  slug: "hey-streambot",
+  format: "streambot-discord-opus-v1",
+  positiveCommands: STREAMBOT_POSITIVE_COMMANDS,
+  nearMatches: STREAMBOT_NEAR_MATCHES,
+  groupCounts: CANONICAL_GROUP_COUNTS,
+};
+
+const SCOUT_POSITIVE_COMMANDS = [
+  "Hey Scout, how much damage does Cho'Gath ult do at rank one?",
+  "Hey Scout, what's Karthus ult cooldown?",
+  "Hey Scout, is Pyke ult an execute?",
+  "Hey Scout, how much mana does Lux ult cost?",
+  "Hey Scout, what's the range on Ezreal ult?",
+  "Hey Scout, how long is Malphite ult cooldown at rank two?",
+  "Hey Scout, what does Ashe's arrow do?",
+  "Hey Scout, what's the cooldown on Thresh hook?",
+  "Hey Scout, does Garen ult do true damage?",
+  "Hey Scout, what is Kai'Sa's passive?",
+  "Hey Scout, how far does Jinx ult travel?",
+  "Hey Scout, what items are good against Zed?",
+  "Hey Scout, when does Nasus ult come back up?",
+  "Hey Scout, what's the max rank damage on Veigar ult?",
+  "Hey Scout, is Urgot ult an execute?",
+  "Hey Scout, how much does Zed ult cost?",
+  "Hey Scout, what's Amumu ult cooldown at rank three?",
+  "Hey Scout, what's Teleport's cooldown?",
+  "Hey Scout, how much armor does Rammus get in ball curl?",
+  "Hey Scout, what changed for Jinx in the latest patch?",
+  "Hey Scout, who wins level one, Darius or Garen?",
+] as const;
+
+/**
+ * "scout" is an ordinary English word, so beyond the usual homophone traps this bucket leans on
+ * bare and conversational "scout" usage — the false-wake risk called out in the training plan.
+ */
+const SCOUT_NEAR_MATCHES = [
+  "The boy scout troop meets on Thursday night.",
+  "Go scout the jungle before the next fight.",
+  "You should ask scout about the match later.",
+  "Hey Scott, are you watching the game tonight?",
+  "Hey, scoot over so I can see the map.",
+  "Send a scout to check the enemy jungle.",
+  "Hey, scout ahead and ping what you see.",
+  "The talent scout watched the entire match.",
+  "A good scout always wards the river.",
+  "He asked the scouts to skip the meeting.",
+] as const;
+
+export const SCOUT_VOICE_PHRASE_SPEC: VoiceCorpusPhraseSpec = {
+  slug: "hey-scout",
+  format: "scout-discord-opus-v1",
+  positiveCommands: SCOUT_POSITIVE_COMMANDS,
+  nearMatches: SCOUT_NEAR_MATCHES,
+  groupCounts: CANONICAL_GROUP_COUNTS,
+};
 
 const ORDINARY_SPEECH = [
   "Could somebody turn the television down?",
@@ -148,28 +248,32 @@ function speechRecipe(options: SpeechRecipeOptions): VoiceCorpusRecipe {
   };
 }
 
-function cleanPositiveRecipes(): VoiceCorpusRecipe[] {
-  return Array.from({ length: 160 }, (_, index) =>
+function cleanPositiveRecipes(
+  spec: VoiceCorpusPhraseSpec,
+): VoiceCorpusRecipe[] {
+  return Array.from({ length: spec.groupCounts.cleanPositive }, (_, index) =>
     speechRecipe({
       index,
       group: "clean-positive",
       category: "clean-positive",
       expected: "wake",
-      text: cycle(POSITIVE_COMMANDS, index),
+      text: cycle(spec.positiveCommands, index),
       effect: augmentation(index % 4 === 0 ? "moderate" : "clean"),
     }),
   );
 }
 
-function stressPositiveRecipes(): VoiceCorpusRecipe[] {
+function stressPositiveRecipes(
+  spec: VoiceCorpusPhraseSpec,
+): VoiceCorpusRecipe[] {
   const snrValues = [20, 10, 5, 0] as const;
-  return Array.from({ length: 80 }, (_, index) =>
+  return Array.from({ length: spec.groupCounts.stressPositive }, (_, index) =>
     speechRecipe({
       index,
       group: "stress-positive",
       category: "stress-positive",
       expected: "wake",
-      text: cycle(POSITIVE_COMMANDS, index),
+      text: cycle(spec.positiveCommands, index),
       effect: augmentation(
         index % 3 === 0 ? "packet-loss" : index % 2 === 0 ? "echo" : "noise",
         {
@@ -182,21 +286,25 @@ function stressPositiveRecipes(): VoiceCorpusRecipe[] {
   );
 }
 
-function nearMatchRecipes(): VoiceCorpusRecipe[] {
-  return Array.from({ length: 60 }, (_, index) =>
-    speechRecipe({
-      index,
-      group: "near-match-negative",
-      category: "near-match-negative",
-      expected: "no-wake",
-      text: cycle(NEAR_MATCHES, index),
-      effect: augmentation(index % 3 === 0 ? "moderate" : "clean"),
-    }),
+function nearMatchRecipes(spec: VoiceCorpusPhraseSpec): VoiceCorpusRecipe[] {
+  return Array.from(
+    { length: spec.groupCounts.nearMatchNegative },
+    (_, index) =>
+      speechRecipe({
+        index,
+        group: "near-match-negative",
+        category: "near-match-negative",
+        expected: "no-wake",
+        text: cycle(spec.nearMatches, index),
+        effect: augmentation(index % 3 === 0 ? "moderate" : "clean"),
+      }),
   );
 }
 
-function ordinaryNegativeRecipes(): VoiceCorpusRecipe[] {
-  return Array.from({ length: 60 }, (_, index) =>
+function ordinaryNegativeRecipes(
+  spec: VoiceCorpusPhraseSpec,
+): VoiceCorpusRecipe[] {
+  return Array.from({ length: spec.groupCounts.ordinaryNegative }, (_, index) =>
     speechRecipe({
       index,
       group: "ordinary-negative",
@@ -210,9 +318,12 @@ function ordinaryNegativeRecipes(): VoiceCorpusRecipe[] {
   );
 }
 
-function backgroundNegativeRecipe(index: number): VoiceCorpusRecipe {
+function backgroundNegativeRecipe(
+  index: number,
+  speechCount: number,
+): VoiceCorpusRecipe {
   const id = `background-negative-${String(index + 1).padStart(3, "0")}`;
-  if (index >= 32) {
+  if (index >= speechCount) {
     return {
       id,
       file: `clips/${id}.dopus`,
@@ -239,14 +350,21 @@ function backgroundNegativeRecipe(index: number): VoiceCorpusRecipe {
   });
 }
 
-export function expandVoiceCorpusRecipes(): VoiceCorpusRecipe[] {
+export function expandVoiceCorpusRecipes(
+  spec: VoiceCorpusPhraseSpec = STREAMBOT_VOICE_PHRASE_SPEC,
+): VoiceCorpusRecipe[] {
+  // The historical 40-clip background bucket split 32 overlapped-speech / 8 procedural-tone
+  // clips; the 4-in-5 ratio is the invariant, and 40 * 0.8 keeps streambot's exact split.
+  const backgroundSpeech = Math.floor(
+    spec.groupCounts.backgroundNegative * 0.8,
+  );
   return [
-    ...cleanPositiveRecipes(),
-    ...stressPositiveRecipes(),
-    ...nearMatchRecipes(),
-    ...ordinaryNegativeRecipes(),
-    ...Array.from({ length: 40 }, (_, index) =>
-      backgroundNegativeRecipe(index),
+    ...cleanPositiveRecipes(spec),
+    ...stressPositiveRecipes(spec),
+    ...nearMatchRecipes(spec),
+    ...ordinaryNegativeRecipes(spec),
+    ...Array.from({ length: spec.groupCounts.backgroundNegative }, (_, index) =>
+      backgroundNegativeRecipe(index, backgroundSpeech),
     ),
   ];
 }
