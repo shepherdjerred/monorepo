@@ -47,6 +47,16 @@ transcript read a two-store join and was reversed. The archive remains because
 Tempo's retention is 30 days: it is the durable body record, not the only one.
 Redaction happens before export, so credentials stay out of both stores.
 
+Traces enter storage through `alloy-gateway`, an unprivileged Grafana Alloy
+Deployment that receives OTLP/HTTP and forwards every span to Tempo. The
+gateway exists so that adding a trace consumer is gateway configuration rather
+than a credential and an exporter in every service. It is deliberately a
+second Alloy release: the existing `alloy` app is a privileged, hostPID eBPF
+profiler whose security boundary is having no ingress at all, and a trace
+gateway needs the opposite shape. The gateway carries no Kubernetes RBAC and
+mounts no service-account token: a network-facing pod that never calls the
+Kubernetes API gets nothing to escalate with.
+
 OpenRouter Broadcast is a correlated second source of routing, provider, token,
 and actual-cost evidence. The authenticated `openrouter-broadcast-ingest`
 service archives the complete redacted OTLP JSON payload and forwards that

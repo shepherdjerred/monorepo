@@ -74,6 +74,15 @@ export function createAlloyGatewayApp(chart: Chart) {
     crds: {
       create: false,
     },
+    // The gateway only receives OTLP and exports onward — it never calls the
+    // Kubernetes API, so a network-facing pod gets neither RBAC nor an
+    // automounted service-account token to escalate with.
+    rbac: {
+      create: false,
+    },
+    serviceAccount: {
+      automountServiceAccountToken: false,
+    },
     controller: {
       type: "deployment",
       // Must stay 1 once tail sampling lands: sampling decisions require every
