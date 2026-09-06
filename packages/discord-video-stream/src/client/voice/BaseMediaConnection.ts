@@ -797,6 +797,12 @@ a=ice-lite
       }
     }
     this._audioUsersBySsrc.set(update.ssrc, update.user_id);
+    // Tell the transport to route this speaker's incoming RTP to our audio track.
+    // Discord only announces speaker SSRCs here (not in the SDP), so an unregistered
+    // SSRC is dropped at demux before handleIncomingAudioPacket ever sees it.
+    if (this._receiveAudio) {
+      this._webRtcWrapper.registerIncomingAudioSsrc(update.ssrc);
+    }
     if (update.speaking === 0) {
       this._speakingSsrcs.delete(update.ssrc);
     } else {

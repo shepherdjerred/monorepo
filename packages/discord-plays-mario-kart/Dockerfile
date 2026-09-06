@@ -56,6 +56,7 @@ WORKDIR /app
 FROM base AS deps
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \
@@ -93,6 +94,7 @@ RUN cd packages/discord-plays-mario-kart/packages/frontend && bun run build
 FROM base AS prod-deps
 COPY --parents \
   package.json bun.lock bunfig.toml patches/ scripts/package.json \
+  packages/discord-video-stream/prebuilds-patched/ \
   packages/*/package.json packages/*/packages/*/package.json \
   packages/docs/wiki/package.json \
   packages/homelab/src/cdk8s/package.json \

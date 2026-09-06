@@ -14,6 +14,44 @@ Captures can contain other people's speech, Discord IDs, transcripts, media
 queries, and tool results. Keep downloaded files private and delete local
 copies when the investigation ends.
 
+Voice receive is functional in production: inbound Opus reaches the wake
+pipeline. Zero inbound packets while someone is speaking is now a regression in
+the patched `discord-video-stream` receive path, not the normal state.
+
+## Reproduce off Discord with the oracle probes
+
+Before the full Grafana and capture dive, isolate the failing layer with the two
+real-API probes (run from `packages/streambot`). The unit suite drives a fake
+transport that mirrors the code's own assumptions and cannot catch real-API
+drift, so these live probes are the authoritative check when the transport or
+cloud contract may have changed.
+
+Transport — does inbound audio reach the pipeline? A receiver selfbot joins and a
+sender selfbot replays a `.dopus` fixture:
+
+```bash
+REPRO_RECEIVER_TOKEN=... REPRO_SENDER_TOKEN=... \
+  REPRO_GUILD_ID=... REPRO_CHANNEL_ID=... \
+  bun run e2e/voice-receive-repro.ts
+```
+
+Healthy output reports `accepted:N` inbound packets and matching decoded audio
+events. `accepted:0` means the receive path is broken (SSRC routing or the
+patched libdatachannel binary — confirm the boot guard did not reject an
+unpatched prebuild).
+
+Cloud turn — does a wake produce an executed command? No microphone required; it
+decodes a corpus clip and runs the real Realtime turn:
+
+```bash
+OPENAI_API_KEY=... bun run voice:cloud-probe
+```
+
+Healthy output prints the transcript and the executed tool invocation (for
+example `play {...}`). An empty invocation list points at the cloud command turn
+(`item.id` length, the `conversation.item.added` event, or `agent_end`
+completion in `src/voice/realtime-agent.ts`).
+
 ## 1. Verify storage retention
 
 Check the lifecycle before recording user audio:

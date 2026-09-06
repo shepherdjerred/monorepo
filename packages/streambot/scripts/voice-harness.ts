@@ -52,6 +52,20 @@ Controls:
   Ctrl-C  Quit and clean up
 `;
 
+function describeError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.stack ?? `${error.name}: ${error.message}`;
+  }
+  if (typeof error === "object" && error !== null) {
+    try {
+      return JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
+    } catch {
+      return Bun.inspect(error, { depth: 4 });
+    }
+  }
+  return String(error);
+}
+
 class DiscardAssistantAudio implements AssistantAudioSink {
   enqueue(pcm24k: Uint8Array): void {
     pcm24k.fill(0);
@@ -324,7 +338,7 @@ async function main(): Promise<void> {
       try {
         await capture.done;
       } catch (error) {
-        console.error(error instanceof Error ? error.message : String(error));
+        console.error(describeError(error));
         await safelyStopTrial("manual");
       }
     };
@@ -338,7 +352,7 @@ async function main(): Promise<void> {
     try {
       await stopTrial(reason);
     } catch (error) {
-      console.error(error instanceof Error ? error.message : String(error));
+      console.error(describeError(error));
     }
   }
 
@@ -367,7 +381,7 @@ async function main(): Promise<void> {
     try {
       await handleInput(chunk);
     } catch (error) {
-      console.error(error instanceof Error ? error.message : String(error));
+      console.error(describeError(error));
       await requestQuit();
     }
   };
@@ -396,8 +410,6 @@ async function main(): Promise<void> {
 }
 
 await main().catch((error: unknown) => {
-  console.error(
-    `Error: ${error instanceof Error ? error.message : String(error)}`,
-  );
+  console.error(`Error: ${describeError(error)}`);
   process.exitCode = 1;
 });

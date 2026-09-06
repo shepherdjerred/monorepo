@@ -148,9 +148,12 @@ export class FakeRealtimeTransport implements RealtimeTransportLayer {
     const creation = CreateItemEventSchema.safeParse(event);
     if (creation.success) {
       queueMicrotask(() => {
+        // The Realtime GA API emits "conversation.item.added" (not the older
+        // "conversation.item.created"); emit the real name so this fake matches
+        // production and a schema that only accepts the old name would fail here.
         this.emit("*", {
-          type: "conversation.item.created",
-          event_id: "created-verified-command",
+          type: "conversation.item.added",
+          event_id: "added-verified-command",
           item: creation.data.item,
         });
       });

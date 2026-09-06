@@ -22,6 +22,7 @@ import {
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-collector.ts";
 import { initializeSentry } from "@shepherdjerred/streambot/observability/sentry.ts";
+import { assertIncomingAudioSupported } from "@shepherdjerred/discord-video-stream";
 import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
 import { loadSpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
 import {
@@ -65,6 +66,11 @@ async function main(): Promise<void> {
   // first diagnostics. The OpenAI SDK's own tracing remains explicitly disabled per turn.
   initializeTelemetry(config.observability);
   const voiceCaptureManager = new VoiceCaptureManager(config.voice.capture);
+  // Fail loud at boot if the patched node-datachannel prebuild is missing its
+  // incoming-SSRC routing — otherwise voice receive would be silently broken.
+  if (config.voice.enabled) {
+    assertIncomingAudioSupported();
+  }
   const voiceModels = await initializeLocalVoiceModels(config.voice);
   // Same posture as the models: pinned assets, loaded and validated at boot, fatal when broken.
   const voiceFeedbackClips =

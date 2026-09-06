@@ -1,3 +1,23 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 5da5c7bd9060fea8444e16948b7d586b6a199ae2..5464242d4c61a7e1052e39a40047b8fff878b7eb 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -54,10 +54,15 @@ set(USE_GNUTLS ${USE_GNUTLS} CACHE BOOL "Use GnuTLS instead of OpenSSL" FORCE)
+ include(FetchContent)
+ 
+ # Fetch libdatachannel
++# PATCH_COMMAND adds PeerConnection::registerIncomingSsrc so Discord's lazily
++# announced speaker SSRCs can be routed to a live audio track after negotiation
++# (libdatachannel otherwise drops RTP whose SSRC was not in the SDP). The script
++# is idempotent, so a re-invoked patch step is a safe no-op.
+ FetchContent_Declare(
+     libdatachannel
+     GIT_REPOSITORY https://github.com/paullouisageneau/libdatachannel.git
+     GIT_TAG a2627fb96c85c75064676ec2b1131d3779c1fc2a
++    PATCH_COMMAND sh "${CMAKE_CURRENT_SOURCE_DIR}/scripts/patch-libdatachannel.sh"
+ )
+ 
+ option(NO_MEDIA "Disable media transport support in libdatachannel" OFF)
 diff --git a/dist/cjs/lib/node-datachannel.cjs b/dist/cjs/lib/node-datachannel.cjs
 index e3abd5386b89952dde418866376c6875d3d804c8..468957855d103287584f1de81a49a55a1432fdb6 100644
 --- a/dist/cjs/lib/node-datachannel.cjs
@@ -23,4 +43,202 @@ index 2635ec3e7a9b70a02e81eb789d793972948542ec..70004d60ea6825fea80637e1ee7bda26
 +const bindingOptions = require("../../../binding-options");
  const packageRoot = __dirname + "/../../../" || __dirname + "/../../";
  const nodeDataChannel = loadBinding(packageRoot, bindingOptions);
+ 
+diff --git a/dist/types/lib/index.d.ts b/dist/types/lib/index.d.ts
+index 58e492aa85bfe6327d80aa19a27848bf6bd998b5..eb39a4a40fae5409e7a92ddceaa6dc9ef222d73a 100644
+--- a/dist/types/lib/index.d.ts
++++ b/dist/types/lib/index.d.ts
+@@ -120,6 +120,7 @@ interface PeerConnection {
+     addRemoteCandidate(candidate: string, mid: string): void;
+     createDataChannel(label: string, config?: DataChannelInitConfig): DataChannel;
+     addTrack(media: Video | Audio): Track;
++    registerIncomingSsrc(ssrc: number, mid: string): void;
+     hasMedia(): boolean;
+     state(): RTCPeerConnectionState;
+     iceState(): RTCIceConnectionState;
+diff --git a/package.json b/package.json
+index f7fd277dcbf9dd8ea868a877a1a2c97ebcfb182e..c75091085abfd298d76877bc55ba81c9fc5efc02 100644
+--- a/package.json
++++ b/package.json
+@@ -33,7 +33,7 @@
+     "node": ">=18.20.0"
+   },
+   "scripts": {
+-    "install": "pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile)",
++    "install": "sh scripts/overlay-patched-prebuild.sh && (pkg-prebuilds-verify ./binding-options.js || (npm install --ignore-scripts --production=false && npm run compile))",
+     "rebuild": "pkg-prebuilds-verify ./binding-options.js || (npm run build:mbedtls && cmake-js rebuild)",
+     "install:nice": "npm run clean && npm install --ignore-scripts --production=false && npm run build:mbedtls && cmake-js configure --CDUSE_NICE=1 && cmake-js build",
+     "install:gnu": "npm run clean && npm install --ignore-scripts --production=false && cmake-js configure --CDUSE_GNUTLS=1 && cmake-js build",
+@@ -84,7 +84,7 @@
+   ],
+   "contributors": [
+     {
+-      "name": "Murat Doğan",
++      "name": "Murat Do\u011fan",
+       "url": "https://github.com/murat-dogan"
+     },
+     {
+diff --git a/scripts/build-mbedtls.sh b/scripts/build-mbedtls.sh
+index 075c8e534f5c346ec9ccb286ad06eb486e30a28d..4ccd4923740d41bb36016b00effd9ba2194ecc06 100644
+--- a/scripts/build-mbedtls.sh
++++ b/scripts/build-mbedtls.sh
+@@ -38,7 +38,7 @@ fi
+ 
+ rm -rf "${MBEDTLS_BUILD_DIR}" "${MBEDTLS_INSTALL_DIR}"
+ 
+-CMAKE_ARGS="-S ${MBEDTLS_SRC_DIR} -B ${MBEDTLS_BUILD_DIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_STATIC_MBEDTLS_LIBRARY=ON -DUSE_SHARED_MBEDTLS_LIBRARY=OFF -DCMAKE_INSTALL_PREFIX=${MBEDTLS_INSTALL_DIR}"
++CMAKE_ARGS="-S ${MBEDTLS_SRC_DIR} -B ${MBEDTLS_BUILD_DIR} -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF -DUSE_STATIC_MBEDTLS_LIBRARY=ON -DUSE_SHARED_MBEDTLS_LIBRARY=OFF -DMBEDTLS_FATAL_WARNINGS=OFF -DCMAKE_INSTALL_PREFIX=${MBEDTLS_INSTALL_DIR}"
+ 
+ if [ -n "${NDC_MBEDTLS_CMAKE_ARGS:-}" ]; then
+   CMAKE_ARGS="${CMAKE_ARGS} ${NDC_MBEDTLS_CMAKE_ARGS}"
+diff --git a/scripts/overlay-patched-prebuild.sh b/scripts/overlay-patched-prebuild.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..a36e92fd0379e20b47e221d94116edc2fce51f1f
+--- /dev/null
++++ b/scripts/overlay-patched-prebuild.sh
+@@ -0,0 +1,54 @@
++#!/usr/bin/env sh
++# Overlay the repo's vendored PATCHED prebuild onto the registry tarball's
++# UNPATCHED one, so the loaded binary contains PeerConnection::registerIncomingSsrc
++# (Discord voice receive). Runs as node-datachannel's install script on every
++# fresh extract — including `bun install --filter` in image builds — and needs no
++# compiler or JS runtime (pure sh + cp). For a platform we vendor a patched
++# prebuild for, a missing file is a HARD ERROR: we never silently ship the
++# unpatched binary. Other platforms fall through to normal prebuild resolution.
++set -eu
++
++os=$(uname -s)
++arch=$(uname -m)
++case "$os" in
++  Darwin) osk=darwin ;;
++  Linux) osk=linux ;;
++  *) exit 0 ;;
++esac
++case "$arch" in
++  arm64 | aarch64) archk=arm64 ;;
++  x86_64 | amd64) archk=x64 ;;
++  *) exit 0 ;;
++esac
++key="${osk}-${archk}"
++
++# Only these platforms have a vendored patched prebuild.
++case "$key" in
++  darwin-arm64 | linux-x64) : ;;
++  *) exit 0 ;;
++esac
++
++script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
++pkg_dir=$(dirname -- "$script_dir")
++dest_dir="$pkg_dir/prebuilds/node_datachannel-${key}"
++dest="$dest_dir/node-napi-v8.node"
++
++# Locate the repo root by walking up until bun.lock (the unique repo marker).
++root="$pkg_dir"
++while [ "$root" != "/" ]; do
++  if [ -f "$root/bun.lock" ]; then
++    break
++  fi
++  root=$(dirname -- "$root")
++done
++
++src="$root/packages/discord-video-stream/prebuilds-patched/node_datachannel-${key}/node-napi-v8.node"
++if [ ! -f "$src" ]; then
++  echo "[overlay-patched-prebuild] ERROR: vendored patched prebuild missing for ${key}: ${src}" >&2
++  echo "[overlay-patched-prebuild] refusing to ship the unpatched binary (voice receive would be silently broken)" >&2
++  exit 1
++fi
++
++mkdir -p "$dest_dir"
++cp "$src" "$dest"
++echo "[overlay-patched-prebuild] installed patched prebuild for ${key} from ${src}"
+diff --git a/scripts/patch-libdatachannel.sh b/scripts/patch-libdatachannel.sh
+new file mode 100644
+index 0000000000000000000000000000000000000000..065a89105cf7eb9b22d4badd67d61eff7a85921b
+--- /dev/null
++++ b/scripts/patch-libdatachannel.sh
+@@ -0,0 +1,25 @@
++#!/usr/bin/env sh
++# Add rtc::PeerConnection::registerIncomingSsrc to the FetchContent'd
++# libdatachannel so a speaker's audio SSRC — which Discord announces lazily over
++# the gateway (the SPEAKING op) rather than in the SDP — can be routed to a live
++# audio track after negotiation. libdatachannel otherwise drops any RTP whose
++# SSRC was not present at setLocalDescription time. Idempotent: re-running is a
++# no-op once the method exists (FetchContent may re-invoke the patch step).
++set -eu
++
++if grep -q "registerIncomingSsrc" include/rtc/peerconnection.hpp; then
++  echo "libdatachannel: registerIncomingSsrc already present"
++  exit 0
++fi
++
++perl -0777 -i -pe 's/(\tvoid addRemoteCandidate\(Candidate candidate\);\n)/$1\tvoid registerIncomingSsrc(uint32_t ssrc, string mid);\n/' include/rtc/peerconnection.hpp
++perl -0777 -i -pe 's/(\tvoid processRemoteCandidate\(Candidate candidate\);\n)/$1\tvoid registerIncomingSsrc(uint32_t ssrc, string mid);\n/' src/impl/peerconnection.hpp
++perl -0777 -i -pe 's/(void PeerConnection::updateTrackSsrcCache\(const Description &description\) \{)/void PeerConnection::registerIncomingSsrc(uint32_t ssrc, string mid) {\n\tstd::unique_lock lock(mTracksMutex); \/\/ for safely writing to mTracksBySsrc\n\tif (auto it = mTracks.find(mid); it != mTracks.end())\n\t\tif (auto track = it->second.lock())\n\t\t\tmTracksBySsrc.insert_or_assign(ssrc, track);\n}\n\n$1/' src/impl/peerconnection.cpp
++perl -0777 -i -pe 's/(\timpl\(\)->processRemoteCandidate\(std::move\(candidate\)\);\n\}\n)/$1\nvoid PeerConnection::registerIncomingSsrc(uint32_t ssrc, string mid) {\n\timpl()->registerIncomingSsrc(ssrc, std::move(mid));\n}\n/' src/peerconnection.cpp
++
++# Fail loudly if any edit did not take (keeps a silent no-op from shipping a
++# binary that still drops inbound audio).
++for f in include/rtc/peerconnection.hpp src/impl/peerconnection.hpp src/impl/peerconnection.cpp src/peerconnection.cpp; do
++  grep -q "registerIncomingSsrc" "$f" || { echo "ERROR: failed to patch $f" >&2; exit 1; }
++done
++echo "libdatachannel: registerIncomingSsrc added"
+diff --git a/src/cpp/peer-connection-wrapper.cpp b/src/cpp/peer-connection-wrapper.cpp
+index 721fdec739bd07e282b08cdb232c6c3ff47bfd80..8623ba110c1a270bf97fc9ac21a24ade5fe954fe 100644
+--- a/src/cpp/peer-connection-wrapper.cpp
++++ b/src/cpp/peer-connection-wrapper.cpp
+@@ -47,6 +47,7 @@ Napi::Object PeerConnectionWrapper::Init(Napi::Env env, Napi::Object exports)
+ 
+ #if RTC_ENABLE_MEDIA == 1
+         InstanceMethod("addTrack", &PeerConnectionWrapper::addTrack),
++        InstanceMethod("registerIncomingSsrc", &PeerConnectionWrapper::registerIncomingSsrc),
+         InstanceMethod("onTrack", &PeerConnectionWrapper::onTrack),
+ #endif
+         InstanceMethod("hasMedia", &PeerConnectionWrapper::hasMedia),
+@@ -1211,6 +1212,35 @@ Napi::Value PeerConnectionWrapper::addTrack(const Napi::CallbackInfo &info)
+   }
+ }
+ 
++void PeerConnectionWrapper::registerIncomingSsrc(const Napi::CallbackInfo &info)
++{
++  Napi::Env env = info.Env();
++
++  if (!mRtcPeerConnPtr)
++  {
++    Napi::Error::New(env, "registerIncomingSsrc() called on destroyed peer connection").ThrowAsJavaScriptException();
++    return;
++  }
++
++  if (info.Length() < 2 || !info[0].IsNumber() || !info[1].IsString())
++  {
++    Napi::TypeError::New(env, "registerIncomingSsrc(ssrc: number, mid: string) expected").ThrowAsJavaScriptException();
++    return;
++  }
++
++  uint32_t ssrc = info[0].As<Napi::Number>().Uint32Value();
++  std::string mid = info[1].As<Napi::String>().Utf8Value();
++
++  try
++  {
++    mRtcPeerConnPtr->registerIncomingSsrc(ssrc, mid);
++  }
++  catch (std::exception &ex)
++  {
++    Napi::Error::New(env, std::string("libdatachannel error: ") + ex.what()).ThrowAsJavaScriptException();
++  }
++}
++
+ void PeerConnectionWrapper::onTrack(const Napi::CallbackInfo &info)
+ {
+   PLOG_DEBUG << "onTrack() called";
+diff --git a/src/cpp/peer-connection-wrapper.h b/src/cpp/peer-connection-wrapper.h
+index 83924ad469ec143cbcb6472e0291145e433c4558..471491113d87c2c1788da9a0255a3de2b69b15e8 100644
+--- a/src/cpp/peer-connection-wrapper.h
++++ b/src/cpp/peer-connection-wrapper.h
+@@ -28,6 +28,7 @@ public:
+ 
+ #if RTC_ENABLE_MEDIA == 1
+   Napi::Value addTrack(const Napi::CallbackInfo &info);
++  void registerIncomingSsrc(const Napi::CallbackInfo &info);
+   void onTrack(const Napi::CallbackInfo &info);
+ #endif
  

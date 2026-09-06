@@ -39,6 +39,7 @@ import {
   type VoiceCommandPort,
   VoiceMutationGate,
 } from "@shepherdjerred/streambot/voice/voice-tools.ts";
+import { realtimeErrorToError } from "@shepherdjerred/streambot/voice/realtime-errors.ts";
 
 const INSTRUCTIONS = `You are Streambot, a voice-only media playback controller.
 Handle exactly one concise playback request. You may only use the supplied Streambot tools.
@@ -125,8 +126,12 @@ const ConversationItemDeletedEventSchema = z.object({
   item_id: z.string().min(1),
 });
 
+// The Realtime GA API renamed this event from "conversation.item.created" to
+// "conversation.item.added"; the SDK forwards the raw name. Matching only the old
+// name left the command-item wait hanging until the transaction timeout, so no
+// command ever ran. Accept both so the turn works across API revisions.
 const ConversationItemCreatedEventSchema = z.object({
-  type: z.literal("conversation.item.created"),
+  type: z.enum(["conversation.item.added", "conversation.item.created"]),
   item: z.object({ id: z.string().min(1) }),
 });
 
@@ -288,17 +293,18 @@ export async function runRealtimeCommandTurn(
       }
       input.assistantAudio.enqueue(new Uint8Array(event.data));
     });
-    session.on("audio_stopped", () => {
+    // Resolve on agent_end, not audio_stopped. The SDK dispatches the model's tool
+    // call a few milliseconds AFTER audio_stopped, so resolving on audio_stopped
+    // closed the session before the command (play/skip/…) ever executed — every
+    // command turn produced zero invocations. agent_end fires once the agent's turn
+    // is fully complete: spoken reply generated and any tool call executed.
+    session.on("agent_end", () => {
       resolve();
     });
   });
   const sessionFailure = new Promise<never>((_resolve, reject) => {
     session.on("error", (event) => {
-      reject(
-        event.error instanceof Error
-          ? event.error
-          : new Error(String(event.error)),
-      );
+      reject(realtimeErrorToError(event.error));
     });
   });
   voiceConcurrentTurns.inc();
@@ -417,7 +423,11 @@ export async function runRealtimeCommandTurn(
     });
     await Promise.race([deleted, interruption, sessionFailure]);
 
-    const verifiedCommandItemId = `verified-command-${crypto.randomUUID()}`;
+    // The Realtime API rejects a conversation item.id longer than 32 chars
+    // (`string_above_max_length`). "verified-command-" + a 36-char UUID was 53,
+    // so every command insertion failed and no turn ever produced a command.
+    // A dash-stripped UUID slice keeps it unique and well under the cap.
+    const verifiedCommandItemId = `vc-${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`;
     const created = new Promise<void>((resolve) => {
       session.on("transport_event", (event) => {
         const parsed = ConversationItemCreatedEventSchema.safeParse(event);
