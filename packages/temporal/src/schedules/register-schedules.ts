@@ -13,9 +13,9 @@ import {
 import { buildScheduleState } from "./schedule-state.ts";
 import { CATCHUP_RELAXED, SCHEDULES } from "./schedule-definitions.ts";
 import type { CatchupWindow, ScheduleDefinition } from "./schedule-types.ts";
-import type { TemporalNamespace } from "#shared/temporal-namespace.ts";
+import type { TemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { AgentTaskInputSchema } from "#shared/agent-task.ts";
+import { AgentTaskInputSchema } from "#shared/agent/agent-task.ts";
 import {
   buildExecutionStartMetadata,
   type TemporalBootstrapMetadata,

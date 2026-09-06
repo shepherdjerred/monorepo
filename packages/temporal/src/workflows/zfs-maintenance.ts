@@ -1,5 +1,5 @@
 import { log, proxyActivities } from "@temporalio/workflow";
-import type { ZfsMaintenanceActivities } from "#activities/zfs-maintenance.ts";
+import type { ZfsMaintenanceActivities } from "#activities/homelab/zfs-maintenance.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runZfsMaintenance } = proxyActivities<ZfsMaintenanceActivities>({

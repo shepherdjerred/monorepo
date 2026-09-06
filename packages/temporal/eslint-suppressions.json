@@ -1,20 +1,20 @@
 {
-  "src/activities/agent-task-evidence-collectors.ts": {
+  "src/activities/agent/agent-task-evidence-collectors.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/agent-task-sdk.ts": {
+  "src/activities/agent/agent-task-sdk.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/agent-task-side-activities.ts": {
+  "src/activities/agent/agent-task-side-activities.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/agent-task.ts": {
+  "src/activities/agent/agent-task.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -24,62 +24,62 @@
       "count": 1
     }
   },
-  "src/activities/data-dragon.ts": {
+  "src/activities/data-dragon/data-dragon.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/deps-summary-release-notes.ts": {
+  "src/activities/glitter/context/glitter-context-refresh-corpus.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/deps-summary.ts": {
+  "src/activities/glitter/context/glitter-context-refresh-relationships.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter-context-refresh-corpus.ts": {
+  "src/activities/glitter/context/glitter-context-refresh-style-finalize.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter-context-refresh-relationships.ts": {
+  "src/activities/glitter/context/glitter-context-refresh.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter-context-refresh-style-finalize.ts": {
+  "src/activities/glitter/corpus/glitter-corpus-discord-client.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter-context-refresh.ts": {
+  "src/activities/homelab/velero-orphan-audit.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter-corpus-discord-client.ts": {
+  "src/activities/maintenance/deps-summary-release-notes.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/report-freshness.ts": {
+  "src/activities/maintenance/deps-summary.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/tasknotes-canary.ts": {
+  "src/activities/maintenance/tasknotes-canary.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/velero-orphan-audit.ts": {
+  "src/activities/maintenance/workflow-failure-history.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/workflow-failure-history.ts": {
+  "src/activities/reports/report-freshness.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -89,7 +89,7 @@
       "count": 1
     }
   },
-  "src/shared/agent-task-evidence.ts": {
+  "src/shared/agent/agent-task-evidence.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -99,7 +99,7 @@
       "count": 2
     }
   },
-  "src/shared/report.ts": {
+  "src/shared/reports/report.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

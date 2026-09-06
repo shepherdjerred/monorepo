@@ -1,5 +1,5 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { FreshRssActivities } from "#activities/freshrss.ts";
+import type { FreshRssActivities } from "#activities/maintenance/freshrss.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { runFreshRssSync } = proxyActivities<FreshRssActivities>({

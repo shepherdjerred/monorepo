@@ -2,11 +2,11 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   TasknotesCanaryActivities,
   TasknotesCanaryResult,
-} from "#activities/tasknotes-canary.ts";
+} from "#activities/maintenance/tasknotes-canary.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
-} from "#activities/report-delivery.ts";
+} from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 

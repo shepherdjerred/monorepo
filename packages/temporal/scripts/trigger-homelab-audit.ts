@@ -20,7 +20,7 @@
  */
 import { Client, Connection } from "@temporalio/client";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 
 const DEFAULT_TEMPORAL_ADDRESS =
   "temporal-server.temporal.svc.cluster.local:7233";

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { ActivityFailure, ApplicationFailure } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
-import type { GlitterContextRefreshResult } from "#activities/glitter-context-refresh.ts";
+import type { GlitterContextRefreshResult } from "#activities/glitter/context/glitter-context-refresh.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runGlitterContextRefresh } from "./glitter-context-refresh.ts";
 

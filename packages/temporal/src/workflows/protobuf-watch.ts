@@ -1,9 +1,9 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { ProtobufWatchActivities } from "#activities/protobuf-watch.ts";
+import type { ProtobufWatchActivities } from "#activities/maintenance/protobuf-watch.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
-} from "#activities/report-delivery.ts";
+} from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { reportActivityTaskQueue } from "./report-activity-queue.ts";
 

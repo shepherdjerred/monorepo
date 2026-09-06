@@ -9,7 +9,7 @@ import {
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
-} from "#shared/ha-errors.ts";
+} from "#shared/infra/ha-errors.ts";
 
 // Activity signatures stay monomorphic (Temporal's proxyActivities rejects
 // generic methods), so the runtime client is the loose default. Compile-time

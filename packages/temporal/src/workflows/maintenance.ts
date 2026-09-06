@@ -1,5 +1,5 @@
 import { proxyActivities } from "@temporalio/workflow";
-import type { MaintenanceActivities } from "#activities/maintenance.ts";
+import type { MaintenanceActivities } from "#activities/maintenance/maintenance.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const maintenanceRetry = {

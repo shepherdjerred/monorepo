@@ -5,7 +5,7 @@ import {
 } from "#lib/worker-deployment-rollout.ts";
 import type { RolloutCommandRunner } from "#lib/worker-deployment-proofs.ts";
 import { resolveWorkerDeploymentRolloutTarget } from "#lib/worker-deployment-target.ts";
-import { parseTemporalNamespace } from "#shared/temporal-namespace.ts";
+import { parseTemporalNamespace } from "#shared/infra/temporal-namespace.ts";
 import {
   parseFlagArguments,
   requiredEnvironment,

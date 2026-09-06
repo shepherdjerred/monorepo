@@ -1,13 +1,13 @@
 import { Context } from "@temporalio/activity";
 import { simpleGit } from "simple-git";
 import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
-import { runCommand } from "./data-dragon-shell.ts";
+import { runCommand } from "./data-dragon/data-dragon-shell.ts";
 import { rootInstallWithoutHooks } from "./bot-clone.ts";
-import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
+import { discardFormattingOnlyChanges } from "./scout/scout-generated-preflight.ts";
 import {
   changedFilesInPaths,
   openSeasonRefreshPr,
-} from "./scout-season-refresh-git.ts";
+} from "./scout/scout-season-refresh-git.ts";
 
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const REPO_SLUG = "shepherdjerred/monorepo";

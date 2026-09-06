@@ -2,7 +2,7 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutShowcaseRefreshActivities,
   ScoutShowcaseRefreshResult,
-} from "#activities/scout-showcase-refresh.ts";
+} from "#activities/scout/scout-showcase-refresh.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { refreshScoutShowcase } =

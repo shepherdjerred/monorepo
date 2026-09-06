@@ -32,7 +32,7 @@ bun run build
 
 cd ../../../temporal
 bun --no-install --bun vitest --config ../../vitest.config.ts run \
-  src/activities/freshrss-reconciler.test.ts
+  src/activities/maintenance/freshrss-reconciler.test.ts
 ```
 
 The

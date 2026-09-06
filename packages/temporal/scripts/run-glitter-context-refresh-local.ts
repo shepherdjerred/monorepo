@@ -13,8 +13,8 @@
  * the GITHUB_APP_* credentials.
  */
 import { MockActivityEnvironment } from "@temporalio/testing";
-import { glitterContextRefreshActivities } from "#activities/glitter-context-refresh.ts";
-import type { GlitterContextRefreshInput } from "#activities/glitter-context-refresh.ts";
+import { glitterContextRefreshActivities } from "#activities/glitter/context/glitter-context-refresh.ts";
+import type { GlitterContextRefreshInput } from "#activities/glitter/context/glitter-context-refresh.ts";
 
 function parseArguments(argv: readonly string[]): GlitterContextRefreshInput {
   let dryRun = true;

@@ -4,7 +4,7 @@ import { HaApiError } from "@shepherdjerred/home-assistant";
 import {
   HA_ENTITY_NOT_FOUND_ERROR_TYPE,
   HA_OPTIONAL_MEDIA_PLAYER_ERROR_TYPE,
-} from "#shared/ha-errors.ts";
+} from "#shared/infra/ha-errors.ts";
 import { haActivities } from "./ha.ts";
 
 let originalUrl: string | undefined;

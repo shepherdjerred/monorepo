@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/bun";
 import { Hono } from "hono";
 import { ZodError } from "zod/v4";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
-import { AgentTaskInputV2Schema } from "#shared/agent-task.ts";
+import { AgentTaskInputV2Schema } from "#shared/agent/agent-task.ts";
 
 const COMPONENT = "agent-task-api";
 const DEFAULT_PORT = 9467;

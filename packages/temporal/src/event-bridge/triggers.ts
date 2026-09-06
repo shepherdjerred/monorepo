@@ -15,8 +15,8 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   MOTION_LIGHT_ROOMS,
   type MotionLightRoom,
-} from "#shared/motion-light.ts";
-import { cooldownBucket } from "#shared/presence.ts";
+} from "#shared/infra/motion-light.ts";
+import { cooldownBucket } from "#shared/infra/presence.ts";
 
 const IOS_ACTION_ID_GOOD_NIGHT = "A91A15AA-479E-416C-8F51-BD983A999266";
 
