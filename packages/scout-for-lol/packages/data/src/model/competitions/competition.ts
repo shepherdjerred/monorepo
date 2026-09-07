@@ -1,0 +1,627 @@
+import { match } from "ts-pattern";
+import { z } from "zod";
+import type {
+  DiscordAccountId,
+  DiscordChannelId,
+  DiscordGuildId,
+} from "#src/model/core/discord.ts";
+import { RankSchema, RankedQueueTypeSchema } from "#src/model/riot/rank.ts";
+import type { SeasonId } from "#src/seasons.ts";
+import { ReportScheduleTimezoneSchema } from "#src/model/competitions/competition-cron.ts";
+import { ChampionIdSchema } from "#src/model/core/identifiers.ts";
+import {
+  isClassicQueueType,
+  QueueTypeSchema,
+  type QueueType,
+} from "#src/model/core/state.ts";
+
+/**
+ * Competition database row shape — mirrors backend/prisma/schema.prisma.
+ *
+ * Why this is here instead of importing from Prisma:
+ *   `data` is the base package in the dependency graph. `backend` depends on
+ *   `data`, not the other way around. The old import
+ *   `from "@scout-for-lol/backend/generated/prisma/client"` created a circular
+ *   dependency between `data` and `backend`.
+ *
+ *   Extracting Prisma into its own package was considered, but the
+ *   `brand-prisma-types` post-generation script imports branded IDs FROM this
+ *   package (`@scout-for-lol/data`), so a separate prisma package would just
+ *   recreate the cycle: prisma → data → prisma.
+ *
+ * Why this is safe:
+ *   Backend passes Prisma query results (typed by the generated client) into
+ *   `parseCompetition(raw: Competition)` exported from this package. TypeScript's
+ *   structural type system means any schema drift — added, removed, or retyped
+ *   columns — causes a compile error at every call site in backend. The drift
+ *   cannot silently pass typecheck.
+ */
+export type Competition = {
+  id: CompetitionId;
+  serverId: DiscordGuildId;
+  ownerId: DiscordAccountId;
+  title: string;
+  description: string;
+  gameVariant: string;
+  channelId: DiscordChannelId;
+  isCancelled: boolean;
+  visibility: CompetitionVisibility;
+  criteriaType: string;
+  criteriaConfig: string;
+  maxParticipants: number;
+  analysisTimezone: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  seasonId: SeasonId | null;
+  startProcessedAt: Date | null;
+  endProcessedAt: Date | null;
+  updateCronExpression: string | null;
+  scheduledUpdatesEnabled: boolean;
+  scheduleTimezone: string;
+  nextScheduledUpdateAt: Date | null;
+  lastScheduledUpdateAt: Date | null;
+  startNotifiedAt: Date | null;
+  endNotifiedAt: Date | null;
+  startNotificationMessageId: string | null;
+  endNotificationMessageId: string | null;
+  creatorDiscordId: DiscordAccountId;
+  createdTime: Date;
+  updatedTime: Date;
+};
+
+// ============================================================================
+// Branded ID Types
+// ============================================================================
+
+export type CompetitionId = z.infer<typeof CompetitionIdSchema>;
+export const CompetitionIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand("CompetitionId");
+
+export type ParticipantId = z.infer<typeof ParticipantIdSchema>;
+export const ParticipantIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand("ParticipantId");
+
+export type SnapshotId = z.infer<typeof SnapshotIdSchema>;
+export const SnapshotIdSchema = z.number().int().positive().brand("SnapshotId");
+
+export type SubscriptionId = z.infer<typeof SubscriptionIdSchema>;
+export const SubscriptionIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand("SubscriptionId");
+
+export type PermissionId = z.infer<typeof PermissionIdSchema>;
+export const PermissionIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand("PermissionId");
+
+export type PermissionErrorId = z.infer<typeof PermissionErrorIdSchema>;
+export const PermissionErrorIdSchema = z
+  .number()
+  .int()
+  .positive()
+  .brand("PermissionErrorId");
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+export type CompetitionVisibility = z.infer<typeof CompetitionVisibilitySchema>;
+export const CompetitionVisibilitySchema = z.enum([
+  "OPEN",
+  "INVITE_ONLY",
+  "SERVER_WIDE",
+]);
+
+export type ParticipantStatus = z.infer<typeof ParticipantStatusSchema>;
+export const ParticipantStatusSchema = z.enum(["INVITED", "JOINED", "LEFT"]);
+
+export type SnapshotType = z.infer<typeof SnapshotTypeSchema>;
+export const SnapshotTypeSchema = z.enum(["START", "END"]);
+
+export type PermissionType = z.infer<typeof PermissionTypeSchema>;
+export const PermissionTypeSchema = z.enum([
+  "CREATE_COMPETITION",
+  "CREATE_REPORT",
+]);
+
+export type CompetitionQueueType = z.infer<typeof CompetitionQueueTypeSchema>;
+export const CompetitionQueueTypeSchema = z.enum([
+  ...QueueTypeSchema.options,
+  "ALL",
+]);
+
+export const CompetitionGameVariantSchema = z.enum(["MODERN", "CLASSIC"]);
+export type CompetitionGameVariant = z.infer<
+  typeof CompetitionGameVariantSchema
+>;
+
+export const RankAggregationSchema = z.enum(["MAX", "SUM"]);
+export type RankAggregation = z.infer<typeof RankAggregationSchema>;
+
+const CompetitionQueuesSchema = z
+  .array(CompetitionQueueTypeSchema)
+  .min(1)
+  .superRefine((queues, context) => {
+    if (new Set(queues).size !== queues.length) {
+      context.addIssue({ code: "custom", message: "Queues must be unique" });
+    }
+    if (queues.includes("ALL") && queues.length !== 1) {
+      context.addIssue({
+        code: "custom",
+        message: "ALL cannot be combined with another queue",
+      });
+    }
+  });
+
+const RankedCompetitionQueuesSchema = z
+  .array(RankedQueueTypeSchema)
+  .min(1)
+  .superRefine((queues, context) => {
+    if (new Set(queues).size !== queues.length) {
+      context.addIssue({ code: "custom", message: "Queues must be unique" });
+    }
+  });
+
+// ============================================================================
+// Competition Criteria (Discriminated Union)
+// ============================================================================
+
+/**
+ * Criteria: Most games played in specified queue
+ */
+export const MostGamesPlayedCriteriaSchema = z.object({
+  type: z.literal("MOST_GAMES_PLAYED"),
+  queues: CompetitionQueuesSchema,
+});
+
+export type MostGamesPlayedCriteria = z.infer<
+  typeof MostGamesPlayedCriteriaSchema
+>;
+
+/**
+ * Criteria: Highest rank achieved in SOLO or FLEX queue
+ */
+export const HighestRankCriteriaSchema = z.object({
+  type: z.literal("HIGHEST_RANK"),
+  queues: RankedCompetitionQueuesSchema,
+  aggregation: RankAggregationSchema.default("MAX"),
+});
+
+export type HighestRankCriteria = z.infer<typeof HighestRankCriteriaSchema>;
+
+/**
+ * Criteria: Most rank climb (LP gained) in SOLO or FLEX queue
+ */
+export const MostRankClimbCriteriaSchema = z.object({
+  type: z.literal("MOST_RANK_CLIMB"),
+  queues: RankedCompetitionQueuesSchema,
+  aggregation: RankAggregationSchema.default("MAX"),
+});
+
+export type MostRankClimbCriteria = z.infer<typeof MostRankClimbCriteriaSchema>;
+
+/**
+ * Criteria: Most wins in specified queue (for a player)
+ */
+export const MostWinsPlayerCriteriaSchema = z.object({
+  type: z.literal("MOST_WINS_PLAYER"),
+  queues: CompetitionQueuesSchema,
+});
+
+export type MostWinsPlayerCriteria = z.infer<
+  typeof MostWinsPlayerCriteriaSchema
+>;
+
+/**
+ * Criteria: Most wins with a specific champion
+ * Queue is optional - if not specified, counts wins across all queues
+ */
+export const MostWinsChampionCriteriaSchema = z.object({
+  type: z.literal("MOST_WINS_CHAMPION"),
+  championId: ChampionIdSchema,
+  queues: CompetitionQueuesSchema,
+});
+
+export type MostWinsChampionCriteria = z.infer<
+  typeof MostWinsChampionCriteriaSchema
+>;
+
+/**
+ * Criteria: Highest win rate (minimum games required)
+ */
+export const HighestWinRateCriteriaSchema = z.object({
+  type: z.literal("HIGHEST_WIN_RATE"),
+  minGames: z.number().int().positive().default(10),
+  queues: CompetitionQueuesSchema,
+});
+
+export type HighestWinRateCriteria = z.infer<
+  typeof HighestWinRateCriteriaSchema
+>;
+
+/**
+ * Discriminated union of all competition criteria types.
+ * The 'type' field is the discriminator that allows TypeScript to narrow the type.
+ */
+export const CompetitionCriteriaSchema = z.discriminatedUnion("type", [
+  MostGamesPlayedCriteriaSchema,
+  HighestRankCriteriaSchema,
+  MostRankClimbCriteriaSchema,
+  MostWinsPlayerCriteriaSchema,
+  MostWinsChampionCriteriaSchema,
+  HighestWinRateCriteriaSchema,
+]);
+
+export type CompetitionCriteria = z.infer<typeof CompetitionCriteriaSchema>;
+
+export function queueMatchesGameVariant(
+  queue: QueueType,
+  gameVariant: CompetitionGameVariant,
+): boolean {
+  return gameVariant === "CLASSIC"
+    ? isClassicQueueType(queue)
+    : !isClassicQueueType(queue);
+}
+
+export function criteriaMatchesGameVariant(
+  criteria: CompetitionCriteria,
+  gameVariant: CompetitionGameVariant,
+): boolean {
+  if (
+    gameVariant === "CLASSIC" &&
+    (criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB")
+  ) {
+    return false;
+  }
+  return criteria.queues.every(
+    (queue) => queue === "ALL" || queueMatchesGameVariant(queue, gameVariant),
+  );
+}
+
+export const CompetitionConfigurationSchema = z
+  .object({
+    gameVariant: CompetitionGameVariantSchema,
+    criteria: CompetitionCriteriaSchema,
+  })
+  .superRefine((configuration, context) => {
+    if (
+      !criteriaMatchesGameVariant(
+        configuration.criteria,
+        configuration.gameVariant,
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["criteria", "queues"],
+        message: "Criteria queues are incompatible with the game variant",
+      });
+    }
+  });
+
+// ============================================================================
+// Competition Status (Calculated, Not Stored)
+// ============================================================================
+
+export const CompetitionStatusSchema = z.enum([
+  "DRAFT",
+  "ACTIVE",
+  "ENDED",
+  "CANCELLED",
+]);
+
+export const CompetitionAnalysisPresetSchema = z.enum([
+  "criterion_score",
+  "rank_position",
+  "games_wins",
+  "performance",
+  "champion_queue_composition",
+]);
+export type CompetitionAnalysisPreset = z.infer<
+  typeof CompetitionAnalysisPresetSchema
+>;
+
+export type CompetitionStatus = z.infer<typeof CompetitionStatusSchema>;
+
+/**
+ * Calculate competition status based on dates and cancellation flag.
+ * This is a pure function with no side effects.
+ *
+ * Note: When competitions are loaded via parseCompetition(), season-based
+ * competitions will have their startDate/endDate populated from the season,
+ * so this function should always have dates to work with.
+ *
+ * Rules:
+ * 1. If isCancelled === true → CANCELLED (regardless of dates)
+ * 2. If endDate is in the past → ENDED
+ * 3. If startDate is in the future → DRAFT
+ * 4. If startDate <= now < endDate → ACTIVE
+ */
+export function getCompetitionStatus(
+  competition: Competition | CompetitionWithCriteria,
+): CompetitionStatus {
+  // Rule 1: Cancellation overrides everything
+  if (competition.isCancelled) {
+    return "CANCELLED";
+  }
+
+  const now = new Date();
+
+  // Handle competitions with dates (both fixed-date and season-based)
+  if (competition.startDate !== null && competition.endDate !== null) {
+    const startDate = competition.startDate;
+    const endDate = competition.endDate;
+
+    // Rule 2: Competition has ended
+    if (now >= endDate) {
+      return "ENDED";
+    }
+
+    // Rule 3: Competition hasn't started yet
+    if (now < startDate) {
+      return "DRAFT";
+    }
+
+    // Rule 4: Competition is active
+    return "ACTIVE";
+  }
+
+  // Edge case: season-based competition with invalid/missing season
+  // This shouldn't happen if parseCompetition() was used, but handle gracefully
+  if (competition.seasonId !== null) {
+    return "DRAFT";
+  }
+
+  // Invalid state: no dates and no seasonId
+  throw new Error(
+    "Competition must have either (startDate AND endDate) OR seasonId",
+  );
+}
+
+// ============================================================================
+// Competition Parsing - Database to Domain Type
+// ============================================================================
+
+/**
+ * Competition with the Season relation eagerly loaded.
+ *
+ * Backend queries that flow through `parseCompetition()` must `include: { season: true }`
+ * so the dates can be resolved relationally for season-based competitions.
+ * `competitionWithSeasonInclude` in the backend keeps this consistent.
+ *
+ * The `season.id` is a plain `string`, not the branded `SeasonId` from
+ * `seasons.ts`, because Prisma's generated relation types don't propagate
+ * the brand-types post-processing through join shapes. The dates are what
+ * `parseCompetition` reads anyway.
+ */
+export type CompetitionWithSeason = Competition & {
+  season: {
+    id: string;
+    displayName: string;
+    startDate: Date;
+    endDate: Date;
+  } | null;
+};
+
+/**
+ * Competition with parsed criteria (domain type)
+ * This is what we use in application code
+ */
+export type CompetitionWithCriteria = Omit<
+  Competition,
+  | "criteriaType"
+  | "criteriaConfig"
+  | "analysisTimezone"
+  | "scheduleTimezone"
+  | "gameVariant"
+> & {
+  criteria: CompetitionCriteria;
+  gameVariant: CompetitionGameVariant;
+  analysisTimezone: string;
+  scheduleTimezone: string;
+};
+
+/**
+ * Parse raw competition from database to domain type
+ * Validates and parses criteriaConfig JSON
+ * Transparently populates startDate/endDate from the eagerly-loaded season
+ * relation if `seasonId` is set
+ *
+ * @throws {Error} if criteriaConfig is invalid JSON or doesn't match schema
+ */
+export function parseCompetition(
+  raw: CompetitionWithSeason,
+): CompetitionWithCriteria {
+  // Parse the JSON config
+  let criteriaConfig: unknown;
+  try {
+    criteriaConfig = JSON.parse(raw.criteriaConfig);
+  } catch (error) {
+    throw new Error(
+      `Invalid criteriaConfig JSON for competition ${raw.id.toString()}: ${String(error)}`,
+      { cause: error },
+    );
+  }
+
+  // Validate it's an object using Zod
+  const objectResult = z
+    .record(z.string(), z.unknown())
+    .safeParse(criteriaConfig);
+  if (!objectResult.success) {
+    throw new Error(
+      `criteriaConfig must be an object for competition ${raw.id.toString()}`,
+    );
+  }
+
+  // Combine type + config and validate
+  const criteriaData = {
+    type: raw.criteriaType,
+    ...objectResult.data,
+  };
+
+  const result = CompetitionCriteriaSchema.safeParse(criteriaData);
+  if (!result.success) {
+    throw new Error(
+      `Invalid criteria for competition ${raw.id.toString()}: ${result.error.message}`,
+    );
+  }
+
+  const { criteriaType: _type, criteriaConfig: _config, season, ...rest } = raw;
+
+  // Transparently populate dates from the relational season row when present.
+  // Season-based competitions have `startDate/endDate = null` in the DB; the
+  // effective dates live on the `Season` row pointed at by `seasonId`.
+  let startDate = raw.startDate;
+  let endDate = raw.endDate;
+
+  if (season !== null && raw.startDate === null && raw.endDate === null) {
+    startDate = season.startDate;
+    endDate = season.endDate;
+  }
+
+  return {
+    ...rest,
+    gameVariant: CompetitionGameVariantSchema.parse(raw.gameVariant),
+    analysisTimezone: ReportScheduleTimezoneSchema.parse(raw.analysisTimezone),
+    scheduleTimezone: ReportScheduleTimezoneSchema.parse(raw.scheduleTimezone),
+    startDate,
+    endDate,
+    criteria: result.data,
+  };
+}
+
+// ============================================================================
+// Snapshot Data Schemas
+// ============================================================================
+
+/**
+ * Rank data for snapshot - captures tier, division, and LP for solo/flex
+ *
+ * Uses existing RankSchema for consistency and to leverage existing utilities:
+ * - tier: lowercase enum ("iron", "bronze", "gold", etc.)
+ * - division: numeric 1-4 (4=IV, 3=III, 2=II, 1=I)
+ * - lp: league points (0-100 for most ranks, unlimited for Master+)
+ * - wins/losses: included for additional statistics
+ *
+ * Note: When fetching from Riot API, convert:
+ * - API tier "GOLD" → "gold"
+ * - API rank "II" → division 2
+ */
+export type RankSnapshotData = z.infer<typeof RankSnapshotDataSchema>;
+export const RankSnapshotDataSchema = z.object({
+  solo: RankSchema.optional(),
+  flex: RankSchema.optional(),
+  ranked5s: RankSchema.optional(),
+});
+
+/**
+ * Games played data for snapshot - captures game counts per queue
+ */
+export type GamesPlayedSnapshotData = z.infer<
+  typeof GamesPlayedSnapshotDataSchema
+>;
+export const GamesPlayedSnapshotDataSchema = z.object({
+  soloGames: z.number().int().nonnegative(),
+  flexGames: z.number().int().nonnegative(),
+  arenaGames: z.number().int().nonnegative(),
+  aramGames: z.number().int().nonnegative(),
+});
+
+/**
+ * Wins data for snapshot - captures wins and total games, optionally per champion/queue
+ */
+export type WinsSnapshotData = z.infer<typeof WinsSnapshotDataSchema>;
+export const WinsSnapshotDataSchema = z.object({
+  wins: z.number().int().nonnegative(),
+  games: z.number().int().nonnegative(),
+  championId: ChampionIdSchema.optional(),
+  queues: CompetitionQueuesSchema.optional(),
+});
+
+// ============================================================================
+// Snapshot Schema Factory
+// ============================================================================
+
+/**
+ * Returns the appropriate snapshot schema based on criteria type.
+ * Uses exhaustive pattern matching to ensure all criteria types are handled.
+ */
+export function getSnapshotSchemaForCriteria(
+  criteria: CompetitionCriteria,
+):
+  | typeof RankSnapshotDataSchema
+  | typeof GamesPlayedSnapshotDataSchema
+  | typeof WinsSnapshotDataSchema {
+  return match(criteria)
+    .with({ type: "HIGHEST_RANK" }, () => RankSnapshotDataSchema)
+    .with({ type: "MOST_RANK_CLIMB" }, () => RankSnapshotDataSchema)
+    .with({ type: "MOST_GAMES_PLAYED" }, () => GamesPlayedSnapshotDataSchema)
+    .with({ type: "MOST_WINS_PLAYER" }, () => WinsSnapshotDataSchema)
+    .with({ type: "MOST_WINS_CHAMPION" }, () => WinsSnapshotDataSchema)
+    .with({ type: "HIGHEST_WIN_RATE" }, () => WinsSnapshotDataSchema)
+    .exhaustive();
+}
+
+// ============================================================================
+// Cached Leaderboard Schema
+// ============================================================================
+
+export const PlayerIdSchema = z.number().int().positive().brand("PlayerId");
+export type PlayerId = z.infer<typeof PlayerIdSchema>;
+
+export const AccountIdSchema = z.number().int().positive().brand("AccountId");
+export type AccountId = z.infer<typeof AccountIdSchema>;
+
+/**
+ * Leaderboard entry stored in cache
+ * Supports both numeric scores and Rank objects
+ */
+export const CachedLeaderboardEntrySchema = z.object({
+  playerId: PlayerIdSchema,
+  playerName: z.string(),
+  score: z.union([z.number(), RankSchema]),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  rank: z.number().int().positive(),
+});
+
+export type CachedLeaderboardEntry = z.infer<
+  typeof CachedLeaderboardEntrySchema
+>;
+
+/**
+ * Cached leaderboard data stored in S3
+ *
+ * Schema includes:
+ * - version: For future format changes (currently v1)
+ * - competitionId: Which competition this leaderboard belongs to
+ * - calculatedAt: When this leaderboard was computed (ISO 8601 timestamp)
+ * - entries: The leaderboard entries with ranks
+ *
+ * S3 Storage Strategy:
+ * - Current leaderboard: leaderboards/competition-{id}/current.json
+ * - Historical snapshots: leaderboards/competition-{id}/snapshots/YYYY-MM-DD.json
+ *
+ * This allows:
+ * - Fast access to current leaderboard
+ * - Historical analysis of leaderboard changes over time
+ * - Version migration if we need to change the format later
+ */
+export const CachedLeaderboardSchema = z.object({
+  version: z.literal("v1"),
+  competitionId: CompetitionIdSchema,
+  calculatedAt: z.string().refine((val) => !Number.isNaN(Date.parse(val)), {
+    message: "Invalid ISO 8601 datetime",
+  }), // ISO 8601 timestamp
+  entries: z.array(CachedLeaderboardEntrySchema),
+});
+
+export type CachedLeaderboard = z.infer<typeof CachedLeaderboardSchema>;

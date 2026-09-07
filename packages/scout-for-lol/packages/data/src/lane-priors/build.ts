@@ -1,4 +1,4 @@
-import { LANE_ORDER, parseLane, type Lane } from "#src/model/lane.ts";
+import { LANE_ORDER, parseLane, type Lane } from "#src/model/riot/lane.ts";
 import type { RawMatch } from "#src/league/raw-match.schema.ts";
 import {
   LanePriorArtifactSchema,

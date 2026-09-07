@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { getAllChampions } from "#src/model/champion-registry.ts";
-import { QueueTypeSchema } from "#src/model/state.ts";
-import { TimelineEventParticipantRoleSchema } from "#src/model/timeline-lake-columns.ts";
+import { getAllChampions } from "#src/model/riot/champion-registry.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
+import { TimelineEventParticipantRoleSchema } from "#src/model/reports/timeline-lake-columns.ts";
 import type {
   ChallengeCoverage,
   ChallengeEvidenceMatch,

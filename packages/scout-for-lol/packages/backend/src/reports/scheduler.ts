@@ -3,7 +3,7 @@ import {
   type Report,
   type ReportRunId,
 } from "@scout-for-lol/data";
-import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competition-cron.ts";
+import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import * as Sentry from "@sentry/bun";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {

@@ -2,8 +2,8 @@ import {
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
-} from "#src/model/lake-columns.ts";
-import type { ReportDisplayKind } from "#src/model/report.ts";
+} from "#src/model/reports/lake-columns.ts";
+import type { ReportDisplayKind } from "#src/model/reports/report.ts";
 import {
   ScoutQlSourceSchema,
   type ScoutQlSource,

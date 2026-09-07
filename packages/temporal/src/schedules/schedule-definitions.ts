@@ -1,5 +1,5 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
-import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { GLITTER_CORPUS_STORAGE_ENV } from "./glitter-schedule-environment.ts";
 import { EARLY_SCHEDULES } from "./schedule-definitions-early.ts";

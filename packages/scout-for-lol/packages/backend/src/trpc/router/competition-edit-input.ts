@@ -16,7 +16,7 @@ import {
 } from "@scout-for-lol/data";
 import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import type { UpdateCompetitionInput } from "#src/database/competition/queries.ts";
-import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competition-cron.ts";
+import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 
 export const CompetitionEditInputSchema = z.object({
   guildId: DiscordGuildIdSchema,

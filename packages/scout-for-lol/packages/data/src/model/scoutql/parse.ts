@@ -1,5 +1,5 @@
 import type { CstNode, IRecognitionException, IToken } from "chevrotain";
-import { REPORT_QUERY_MAX_LENGTH } from "#src/model/report.ts";
+import { REPORT_QUERY_MAX_LENGTH } from "#src/model/reports/report.ts";
 import type {
   ScoutQlDiagnostic,
   ScoutQlSpan,

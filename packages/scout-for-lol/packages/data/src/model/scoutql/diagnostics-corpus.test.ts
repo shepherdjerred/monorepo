@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { REPORT_QUERY_MAX_LENGTH } from "#src/model/report.ts";
+import { REPORT_QUERY_MAX_LENGTH } from "#src/model/reports/report.ts";
 import {
   SCOUTQL_DIAGNOSTIC_CODES,
   ScoutQlError,

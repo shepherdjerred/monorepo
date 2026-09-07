@@ -9,7 +9,7 @@ import type {
 } from "#src/model/scoutql/diagnostics.ts";
 import type { ScoutQlPredicate } from "#src/model/scoutql/expression.ts";
 import type { ScoutQlTimeWindow } from "#src/model/scoutql/plan.ts";
-import { QueueTypeSchema } from "#src/model/state.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
 import type { SourceCatalog } from "#src/model/scoutql/catalog-columns.ts";
 import { closestScoutQlName } from "#src/model/scoutql/catalog-functions.ts";
 import {

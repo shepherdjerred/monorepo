@@ -24,7 +24,7 @@ const DEFAULT_LOOKBACK_DAYS = 28;
 // The committed source of truth, resolved relative to this script so the CLI
 // works regardless of cwd (Temporal runs it from packages/scout-for-lol).
 const QUEUE_WINDOWS_PATH = new URL(
-  "../../data/src/model/queue-windows.json",
+  "../../data/src/model/competitions/queue-windows.json",
   import.meta.url,
 ).pathname;
 

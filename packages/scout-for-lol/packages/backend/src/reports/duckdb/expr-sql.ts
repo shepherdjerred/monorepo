@@ -3,7 +3,7 @@ import {
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
-} from "@scout-for-lol/data/model/lake-columns.ts";
+} from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import type {
   ScoutQlPredicate,
   ScoutQlScalarExpr,

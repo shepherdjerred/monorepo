@@ -8,7 +8,7 @@ import {
 import {
   DEFAULT_COMPETITION_CRON,
   DEFAULT_SCHEDULE_TIMEZONE,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { CompetitionDatesSchema } from "#src/database/competition/competition-dates.ts";
 import { validateCompetitionConfiguration } from "#src/database/competition/configuration-validation.ts";
 import {

@@ -485,7 +485,7 @@
       "count": 1
     }
   },
-  "packages/data/src/model/queue-window-drift.ts": {
+  "packages/data/src/model/competitions/queue-window-drift.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

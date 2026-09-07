@@ -3,7 +3,7 @@ import {
   MATCH_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
-} from "#src/model/lake-columns.ts";
+} from "#src/model/reports/lake-columns.ts";
 import {
   scoutQlSourceCatalog,
   scoutQlSourceCatalogs,

@@ -1,7 +1,7 @@
 import {
   TemporalAnalysisSpecSchema,
   type TemporalAnalysisSpec,
-} from "#src/model/temporal-analysis.ts";
+} from "#src/model/reports/temporal-analysis.ts";
 
 /**
  * The legacy `ANALYZE … BUCKET BY … COMPARE TO … IN TIME ZONE …` clause parser.

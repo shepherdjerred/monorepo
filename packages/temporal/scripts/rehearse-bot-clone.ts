@@ -414,7 +414,7 @@ async function rehearseCrdImportsEnvironment(repoDir: string): Promise<void> {
 
 async function rehearseQueueWindowsEnvironment(repoDir: string): Promise<void> {
   console.error("[rehearsal] queue-windows: verifying catalog + script");
-  const windowsJson = `${repoDir}/packages/scout-for-lol/packages/data/src/model/queue-windows.json`;
+  const windowsJson = `${repoDir}/packages/scout-for-lol/packages/data/src/model/competitions/queue-windows.json`;
   if (!(await Bun.file(windowsJson).exists())) {
     throw new Error(
       `queue-windows.json missing at ${windowsJson} — ` +

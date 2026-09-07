@@ -1,7 +1,7 @@
 import {
   computeNextScheduledUpdateAt,
   DEFAULT_COMPETITION_CRON,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { getDueCompetitions } from "#src/database/competition/queries.ts";

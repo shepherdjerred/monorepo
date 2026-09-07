@@ -1,6 +1,6 @@
 import { type RawMatch, RawMatchSchema } from "#src/league/raw-match.schema.ts";
 import type { RawParticipant } from "#src/league/raw-participant.schema.ts";
-import { parseTeam } from "#src/model/team.ts";
+import { parseTeam } from "#src/model/riot/team.ts";
 
 /**
  * Derives a custom-lobby `RawMatch` from a real one by transformation.

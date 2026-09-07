@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 import {
   ReportOutputFormatSchema,
   type ReportOutputFormat,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 import {
   analyzeScoutQl,
   type ScoutQlAnalysis,

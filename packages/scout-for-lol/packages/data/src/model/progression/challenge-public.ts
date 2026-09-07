@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { QueueTypeSchema } from "#src/model/state.ts";
+import { QueueTypeSchema } from "#src/model/core/state.ts";
 import {
   ChallengeContractV1Schema,
   ChallengeFrozenValueSchema,
   type ChallengeFrozenValue,
 } from "#src/model/progression/challenge.ts";
-import { TimelineEventParticipantRoleSchema } from "#src/model/timeline-lake-columns.ts";
+import { TimelineEventParticipantRoleSchema } from "#src/model/reports/timeline-lake-columns.ts";
 
 export const ChallengeTemplateVersionSchema = z.strictObject({
   id: z.uuid(),

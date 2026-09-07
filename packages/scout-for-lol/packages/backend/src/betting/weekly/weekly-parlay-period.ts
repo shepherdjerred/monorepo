@@ -5,7 +5,7 @@ import {
   parseISO,
 } from "date-fns";
 import { POLLING_INTERVALS } from "@scout-for-lol/data/polling-config.ts";
-import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/weekly-parlay.ts";
+import { WEEKLY_PARLAY_LIFECYCLE } from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 
 export const WEEKLY_PARLAY_TIMEZONE = WEEKLY_PARLAY_LIFECYCLE.timezone;
 export const WEEKLY_PARLAY_SLOT = WEEKLY_PARLAY_LIFECYCLE.slot;

@@ -1,4 +1,4 @@
-import { LANE_ORDER, type Lane } from "#src/model/lane.ts";
+import { LANE_ORDER, type Lane } from "#src/model/riot/lane.ts";
 import {
   LaneInferenceParticipantSchema,
   LaneInferenceResultSchema,

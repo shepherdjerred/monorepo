@@ -6,7 +6,7 @@ import type {
   ReportChartOptions,
   ReportOutputFormat,
   ReportRenderChannel,
-} from "#src/model/report.ts";
+} from "#src/model/reports/report.ts";
 import type { ScoutQlTimeWindow } from "#src/model/scoutql/plan.ts";
 import { emitDiagnostic } from "#src/model/scoutql/analyze-expr-shared.ts";
 import type { AnalyzedGrouping } from "#src/model/scoutql/analyze-group.ts";

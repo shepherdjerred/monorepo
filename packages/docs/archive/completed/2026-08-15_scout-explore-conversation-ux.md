@@ -94,7 +94,7 @@ rather than a bare question.
 
 ## 4. Conversation titles
 
-**Files:** `packages/data/src/model/explore.ts`, `packages/backend/src/explore/`
+**Files:** `packages/data/src/model/reports/explore.ts`, `packages/backend/src/explore/`
 (`store.ts`, `agent.ts`, `prompt.ts`)
 
 `titleFromQuestion` uses the opening question verbatim, capped at 120 chars —

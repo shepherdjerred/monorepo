@@ -1,11 +1,11 @@
-import type { Lane } from "#src/model/lane.ts";
+import type { Lane } from "#src/model/riot/lane.ts";
 import { latestVersion } from "./version.ts";
 import {
   getChampionById,
   getChampionByKey,
   getChampionDisplayName as getChampionDisplayNameFromRegistry,
   normalizeChampionName,
-} from "#src/model/champion-registry.ts";
+} from "#src/model/riot/champion-registry.ts";
 
 export function getChampionKeyById(championId: number): string | undefined {
   return getChampionById(championId)?.key;

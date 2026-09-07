@@ -1,5 +1,5 @@
 import type { ScoutQlExprAst } from "#src/model/scoutql/ast.ts";
-import type { ReportDisplayKind } from "#src/model/report.ts";
+import type { ReportDisplayKind } from "#src/model/reports/report.ts";
 import type {
   ScoutQlAggregateExpr,
   ScoutQlEvidence,

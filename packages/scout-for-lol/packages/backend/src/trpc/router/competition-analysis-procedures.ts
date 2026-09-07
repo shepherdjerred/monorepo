@@ -4,7 +4,7 @@ import {
   CompetitionIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
-import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competition-cron.ts";
+import { ReportScheduleTimezoneSchema } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   analyzeCompetition,

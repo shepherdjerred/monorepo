@@ -10,7 +10,7 @@ import { z } from "zod";
 import {
   WEEKLY_PARLAY_LIFECYCLE,
   type WeeklyParlayControlAction as ScoutWeeklyParlayAction,
-} from "@scout-for-lol/data/model/weekly-parlay.ts";
+} from "@scout-for-lol/data/model/bucks/weekly-parlay.ts";
 import type {
   ScoutWeeklyParlayActivities,
   ScoutWeeklyParlayTimeline,

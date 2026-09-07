@@ -6,7 +6,7 @@ import {
 import {
   computeNextScheduledUpdateAt,
   DEFAULT_COMPETITION_CRON,
-} from "@scout-for-lol/data/model/competition-cron.ts";
+} from "@scout-for-lol/data/model/competitions/competition-cron.ts";
 import { prisma } from "#src/database/index.ts";
 import { competitionWithSeasonInclude } from "#src/database/competition/include.ts";
 import { createSnapshotsForAllParticipants } from "#src/league/competition/snapshots.ts";
