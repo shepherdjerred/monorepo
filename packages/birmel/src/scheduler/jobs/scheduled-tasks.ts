@@ -7,7 +7,10 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
-import { serializeCheckpointOutput } from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
+import {
+  createEffectCheckpoint,
+  serializeCheckpointOutput,
+} from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import {
   parseJsonRecord,
@@ -254,7 +257,6 @@ const defaultRuntimeDependencies: AgentJobRuntimeDependencies = {
   executeAgent: executeUnconfiguredAgent,
   deliverMessage: deliverDiscordMessage,
 };
-
 let runtimeDependencies = defaultRuntimeDependencies;
 
 export function configureAgentJobRuntime(
@@ -420,25 +422,27 @@ async function executeAgentPayload(
   const agentPrompt = job.agentPrompt;
   // allTools gives the agent manage-message now; block it from posting here.
   const channelId = await deliveryChannelFor(job);
-  const effectState: {
-    acquiredByTool: boolean;
-    checkpoint: Promise<void> | null;
-  } = { acquiredByTool: false, checkpoint: null };
-  const beforeExternalEffect = async () => {
-    effectState.checkpoint ??= beginExternalEffect(execution);
-    await effectState.checkpoint;
-    effectState.acquiredByTool = true;
+  const { effectState, beforeExternalEffect } = createEffectCheckpoint(() =>
+    beginExternalEffect(execution),
+  );
+  // channelId (resolved delivery channel) can differ from the job's original
+  // source channel. Both the guard tools check and the model's own prompt
+  // context must agree on it, or a reply to the original channel slips past
+  // enforceSingleRuntimeReply and becomes a second, unintended message.
+  const requestContext = {
+    ...execution.requestContext,
+    beforeExternalEffect,
+    ownsSourceReply: true,
+    sourceChannelId: channelId,
   };
   const result = AgentExecutionResultSchema.parse(
     await runWithRequestContext(
-      {
-        ...execution.requestContext,
-        beforeExternalEffect,
-        ownsSourceReply: true,
-        sourceChannelId: channelId,
-      },
+      requestContext,
       async () =>
-        await runtimeDependencies.executeAgent(agentPrompt, execution),
+        await runtimeDependencies.executeAgent(agentPrompt, {
+          ...execution,
+          requestContext,
+        }),
     ),
   );
   const resultData = z

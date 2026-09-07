@@ -52,6 +52,13 @@ const SessionToolEventSchema = z.strictObject({
   // full input does - the only generic, per-tool-agnostic way to tell "this
   // exact operation was retried" from "a similar-shaped one happened to run."
   inputKey: z.string(),
+  // Whether this specific call was inherently non-mutating, independent of
+  // the tool's own overall riskClass. A composite tool like manage-role
+  // exposes read actions (list, get) alongside destructive ones (create,
+  // delete) under one tool-level risk class; treating a failed list as an
+  // uncorrected write would reject a turn over a harmless read failure that
+  // says nothing about whether the actual requested mutation succeeded.
+  readOnly: z.boolean(),
 });
 
 type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
@@ -111,6 +118,27 @@ function boundedSummary(value: unknown): string {
   return boundedText(serialized, 384);
 }
 
+const ActionInputSchema = z.object({ action: z.string().max(64) }).loose();
+
+/**
+ * Whether a call was inherently non-mutating, checked per call rather than
+ * per tool. A tool's own riskClass is coarse by design (create-tool.ts uses
+ * it to gate effect checkpointing for the whole tool), so a composite tool
+ * with a "destructive" riskClass still needs its individual read actions
+ * (declared as readActions in tool metadata) recognized as reads here.
+ */
+function isReadOnlyCall(toolId: string, input: unknown): boolean {
+  const metadata = getToolMetadata(toolId);
+  if (metadata.riskClass === "read") {
+    return true;
+  }
+  const action = ActionInputSchema.safeParse(input);
+  return (
+    action.success &&
+    (metadata.readActions?.includes(action.data.action) ?? false)
+  );
+}
+
 export function summarizeToolResultForSession(
   rawToolResult: unknown,
   registeredToolIds: readonly string[],
@@ -144,6 +172,7 @@ export function summarizeToolResultForSession(
       ? {}
       : { effectDisposition: toolResult.output.effectDisposition }),
     inputKey: Bun.hash(canonicalize(toolResult.input)).toString(),
+    readOnly: isReadOnlyCall(toolResult.toolName, toolResult.input),
   });
 }
 
@@ -202,30 +231,27 @@ export function requireGroundedAnswer(
       `Answer cited tool calls that did not succeed this turn: ${ungrounded.join(", ")}`,
     );
   }
-  // Checking the global success set is not enough: a harmless lookup can
-  // succeed while the requested mutation never runs, and an answer citing
-  // nothing would still pass. Supported work must cite at least one call, and
-  // every cited call is already known to have succeeded by the check above.
-  if (answer.disposition !== "supported") {
-    return;
-  }
-  if (answer.reliedOnToolCallIds.length === 0) {
-    throw new Error(
-      "Answer claims supported work without citing a successful tool call",
-    );
-  }
-  // Membership alone still lets the model point at an unrelated success - a
-  // harmless read, or a different attempt of the same tool - while the
-  // operation that actually mattered failed and was never fixed. Checking
-  // only what happened after the citation is not enough either: the failure
-  // can come first and the unrelated success get cited afterward, which
-  // reads as "grounded" under a citation-relative check but is exactly the
-  // same lie. So this ignores citation order entirely: any write, destructive,
-  // or code-execution call that fails, with no LATER call succeeding anywhere
-  // in the turn, leaves that attempt uncorrected, and no citation of a
-  // different tool's success excuses it. A failed read is exempt - re-checking
-  // something incidental and having that check fail says nothing about
-  // whether the claimed outcome holds.
+  // Runs regardless of disposition, not only "supported": disposition is
+  // itself model-generated, so a failed mutation mislabeled "conversation" or
+  // "unsupported" - with nothing cited - would otherwise skip straight past
+  // every other check here. Membership in the success set is not enough
+  // either: a harmless lookup can succeed while the requested mutation never
+  // runs, or the model can point at an unrelated success - a harmless read,
+  // or a different attempt of the same tool - while the operation that
+  // actually mattered failed and was never fixed. Checking only what
+  // happened after a citation is not enough: the failure can come first and
+  // the unrelated success get cited afterward, which reads as "grounded"
+  // under a citation-relative check but is exactly the same lie. So this
+  // ignores citation order and citation entirely: any write, destructive, or
+  // code-execution call that fails, with no LATER call succeeding anywhere in
+  // the turn, leaves that attempt uncorrected regardless of what the answer
+  // claims or cites. A failed read is exempt - re-checking something
+  // incidental and having that check fail says nothing about whether the
+  // claimed outcome holds. That exemption is per-call, not per-tool: a
+  // composite tool like manage-role exposes read actions (list, get)
+  // alongside destructive ones (create, delete) under one tool-level risk
+  // class, so a failed list must not be treated as an uncorrected write just
+  // because the tool it belongs to can also destroy things.
   //
   // "Later call" means the same tool AND the same input: matching on the
   // action field alone is not enough, because a composite tool's action still
@@ -242,7 +268,7 @@ export function requireGroundedAnswer(
   const uncorrectedFailure = toolEvents.find(
     (event, index) =>
       !event.success &&
-      getToolMetadata(event.toolId).riskClass !== "read" &&
+      !event.readOnly &&
       !toolEvents
         .slice(index + 1)
         .some(
@@ -254,7 +280,21 @@ export function requireGroundedAnswer(
   );
   if (uncorrectedFailure !== undefined) {
     throw new Error(
-      `Answer claims supported work, but ${uncorrectedFailure.toolId} failed and was never retried successfully this turn`,
+      `Turn reported completion, but ${uncorrectedFailure.toolId} failed and was never retried successfully this turn`,
+    );
+  }
+  // Checking the global success set is not enough: a harmless lookup can
+  // succeed while the requested mutation never runs, and an answer citing
+  // nothing would still pass. Only "supported" work must cite at least one
+  // call - conversation and unsupported outcomes are allowed to cite
+  // nothing, and every cited call is already known to have succeeded by the
+  // check above.
+  if (answer.disposition !== "supported") {
+    return;
+  }
+  if (answer.reliedOnToolCallIds.length === 0) {
+    throw new Error(
+      "Answer claims supported work without citing a successful tool call",
     );
   }
 }

@@ -15,12 +15,14 @@ function metadata(
   id: string,
   riskClass: ToolRiskClass,
   timeoutMs = 30_000,
+  readActions?: readonly string[],
 ): BirmelToolMetadata {
   return BirmelToolMetadataSchema.parse({
     id,
     riskClass,
     timeoutMs,
     requiredRequestContext: REQUIRED_CONTEXT,
+    ...(readActions === undefined ? {} : { readActions }),
   });
 }
 
@@ -35,7 +37,10 @@ const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
   ["manage-guild", metadata("manage-guild", "write")],
   ["manage-channel", metadata("manage-channel", "destructive")],
   ["moderate-member", metadata("moderate-member", "destructive")],
-  ["manage-role", metadata("manage-role", "destructive")],
+  [
+    "manage-role",
+    metadata("manage-role", "destructive", 30_000, ["list", "get"]),
+  ],
   ["manage-member", metadata("manage-member", "destructive")],
   ["manage-automod-rule", metadata("manage-automod-rule", "destructive")],
   ["manage-webhook", metadata("manage-webhook", "destructive")],

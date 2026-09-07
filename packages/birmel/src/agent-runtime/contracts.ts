@@ -156,6 +156,14 @@ export const BirmelToolMetadataSchema = z.object({
   riskClass: ToolRiskClassSchema,
   timeoutMs: z.number().int().positive(),
   requiredRequestContext: z.array(RequiredRequestContextSchema),
+  /**
+   * Action values that are inherently non-mutating on a composite tool whose
+   * overall riskClass is above "read". Only needed for a tool that mixes
+   * read and write operations under one id (e.g. manage-role's "list"/"get"
+   * alongside "create"/"delete") - a tool with a uniform riskClass needs no
+   * override here.
+   */
+  readActions: z.array(z.string().min(1).max(64)).optional(),
 });
 export type BirmelToolMetadata = z.infer<typeof BirmelToolMetadataSchema>;
 

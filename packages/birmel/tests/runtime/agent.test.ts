@@ -31,6 +31,7 @@ describe("summarizeToolResultForSession", () => {
         'Tool manage-message call call-1 succeeded; input={"channelId":"123"}; result=Message sent',
       success: true,
       inputKey: expect.any(String),
+      readOnly: false,
     });
   });
 
@@ -59,21 +60,25 @@ describe("summarizeToolResultForSession", () => {
         'Tool manage-message call call-2 failed; input={"token":"[REDACTED]"}; result=Tool reported failure',
       success: false,
       inputKey: expect.any(String),
+      readOnly: false,
     });
     expect(JSON.stringify(event)).not.toContain("SECRET");
     expect(event.content.length).toBeLessThanOrEqual(1024);
   });
 
   test("bounds combined content from individually valid maximum summaries", () => {
-    const toolId = "a".repeat(64);
+    // A longer real tool id (rather than an unregistered synthetic one) so
+    // the assembled content clears the 1024 cap and actually truncates,
+    // while still resolving through the real tool-metadata table that
+    // isReadOnlyCall now depends on.
     const event = summarizeToolResultForSession(
       {
         toolCallId: "c".repeat(200),
-        toolName: toolId,
+        toolName: "manage-scheduled-event",
         input: "i".repeat(10_000),
         output: { success: true, message: "r".repeat(10_000) },
       },
-      [toolId],
+      ["manage-scheduled-event"],
     );
 
     expect(event.inputSummary.length).toBe(384);
@@ -145,6 +150,7 @@ describe("requireGroundedAnswer", () => {
     content: "Tool manage-message call call-1 succeeded",
     success: true,
     inputKey: "key-1",
+    readOnly: false,
   };
   const failed = {
     toolCallId: "call-2",
@@ -154,6 +160,19 @@ describe("requireGroundedAnswer", () => {
     content: "Tool manage-message call call-2 failed",
     success: false,
     inputKey: "key-2",
+    readOnly: false,
+  };
+  // Read-only so it never trips the uncorrected-failure check, isolating the
+  // must-cite-something rule these fixtures exist to test.
+  const failedRead = {
+    toolCallId: "call-3",
+    toolId: "get-activity-stats",
+    inputSummary: "{}",
+    resultSummary: "Tool reported failure",
+    content: "Tool get-activity-stats call call-3 failed",
+    success: false,
+    inputKey: "key-3",
+    readOnly: true,
   };
 
   test("accepts an answer grounded in a successful call", () => {
@@ -199,7 +218,7 @@ describe("requireGroundedAnswer", () => {
     expect(() =>
       requireGroundedAnswer(
         { answer: "Done.", disposition: "supported", reliedOnToolCallIds: [] },
-        [failed],
+        [failedRead],
       ),
     ).toThrow("without citing a successful tool call");
   });
@@ -209,7 +228,7 @@ describe("requireGroundedAnswer", () => {
     expect(() =>
       requireGroundedAnswer(
         { answer: "Done.", disposition: "supported", reliedOnToolCallIds: [] },
-        [succeeded, failed],
+        [succeeded, failedRead],
       ),
     ).toThrow("without citing a successful tool call");
   });
@@ -226,6 +245,22 @@ describe("requireGroundedAnswer", () => {
       ),
     ).not.toThrow();
   });
+
+  test("rejects an uncorrected mutation failure even under a conversation disposition", () => {
+    // Disposition is model-reported, not verified - a failed write relabeled
+    // "conversation" with nothing cited must not slip past the same check a
+    // "supported" claim would face.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Done.",
+          disposition: "conversation",
+          reliedOnToolCallIds: [],
+        },
+        [failed],
+      ),
+    ).toThrow("failed and was never retried successfully");
+  });
 });
 
 describe("requireGroundedAnswer: uncorrected failures", () => {
@@ -237,6 +272,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool get-activity-stats call call-read succeeded",
     success: true,
     inputKey: "read-key",
+    readOnly: true,
   };
   // Same inputKey on both: a genuine retry of the identical operation.
   const mutationFailed = {
@@ -247,6 +283,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool manage-role call call-mutate-1 failed",
     success: false,
     inputKey: "add-regulars-role",
+    readOnly: false,
   };
   const mutationSucceeded = {
     toolCallId: "call-mutate-2",
@@ -256,6 +293,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool manage-role call call-mutate-2 succeeded",
     success: true,
     inputKey: "add-regulars-role",
+    readOnly: false,
   };
   const laterReadFailed = {
     toolCallId: "call-read-2",
@@ -265,6 +303,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool get-activity-stats call call-read-2 failed",
     success: false,
     inputKey: "read-key-2",
+    readOnly: true,
   };
 
   test("rejects citing an unrelated success while the real mutation failed later", () => {
@@ -339,6 +378,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool manage-role call call-create-a failed",
     success: false,
     inputKey: "create:A",
+    readOnly: false,
   };
   const listSucceeded = {
     toolCallId: "call-list",
@@ -348,6 +388,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool manage-role call call-list succeeded",
     success: true,
     inputKey: "list",
+    readOnly: true,
   };
   const createRoleASucceeded = {
     toolCallId: "call-create-a-2",
@@ -357,6 +398,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool manage-role call call-create-a-2 succeeded",
     success: true,
     inputKey: "create:A",
+    readOnly: false,
   };
   const createRoleBSucceeded = {
     toolCallId: "call-create-b",
@@ -366,6 +408,17 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
     content: "Tool manage-role call call-create-b succeeded",
     success: true,
     inputKey: "create:B",
+    readOnly: false,
+  };
+  const listFailed = {
+    toolCallId: "call-list-failed",
+    toolId: "manage-role",
+    inputSummary: '{"action":"list"}',
+    resultSummary: "Tool reported failure",
+    content: "Tool manage-role call call-list-failed failed",
+    success: false,
+    inputKey: "list-attempt-1",
+    readOnly: true,
   };
 
   test("rejects a failed write corrected only by a different action of the same tool", () => {
@@ -408,6 +461,23 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           reliedOnToolCallIds: ["call-create-a-2"],
         },
         [createRoleAFailed, createRoleASucceeded],
+      ),
+    ).not.toThrow();
+  });
+
+  test("does not treat a failed read action on a destructive-riskClass tool as uncorrected", () => {
+    // manage-role's tool-level riskClass is "destructive" because it can
+    // delete roles, but "list" never mutates anything. A failed list must
+    // not require its own retry just because the tool it belongs to can also
+    // be destructive - only the actual requested mutation (create) does.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Created the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-create-a-2"],
+        },
+        [listFailed, createRoleAFailed, createRoleASucceeded],
       ),
     ).not.toThrow();
   });

@@ -1108,6 +1108,7 @@ describe("durable job recovery and scheduling", () => {
           ownsSourceReply: true,
           sourceChannelId: session.threadId,
         });
+        expect(execution.requestContext).toEqual(getRequestContext());
         return { message: "isolated result", data: { complete: true } };
       },
       deliverMessage: async (channelId, message) => {

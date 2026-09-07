@@ -138,6 +138,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "userId",
       "sourceMessageId",
     ],
+    readActions: ["list", "get"],
   },
   {
     id: "manage-member",

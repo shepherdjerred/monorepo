@@ -45,6 +45,7 @@ function failedEvent(effectDisposition: "not_applied" | "unknown") {
     content: "Tool manage-message failed",
     success: false,
     inputKey: "key-1",
+    readOnly: false,
     effectDisposition,
   };
 }
@@ -58,6 +59,7 @@ function succeededEvent() {
     content: "Tool manage-message succeeded",
     success: true,
     inputKey: "key-2",
+    readOnly: false,
   };
 }
 
