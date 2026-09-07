@@ -32,7 +32,7 @@ export function buildFliptFlagDriftAlert(
         `Declared keys missing from Flipt: ${formatKeys(input.missingInFlipt)}`,
         `Flipt keys absent from the inventory: ${formatKeys(input.undeclaredInInventory)}`,
         `Behavior contract mismatches: ${formatKeys(input.contractMismatches)}`,
-        "Reconcile the reviewed inventory and Flipt state, then run the operator check again.",
+        "Missing declared keys are created automatically. Remaining drift is live targeting or undeclared Flipt keys; update the inventory or the audited Flipt state.",
       ].join("\n")
     : `The repository inventory and Flipt are aligned in ${input.environment}/${input.namespace}.`;
 

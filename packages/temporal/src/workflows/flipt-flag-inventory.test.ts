@@ -17,6 +17,8 @@ describe("runFliptFlagInventory", () => {
             missingInFlipt: [],
             undeclaredInInventory: [],
             contractMismatches: [],
+            createdFlags: [],
+            createdSegments: [],
             observedAt: "2026-08-28T15:00:00.000Z",
           },
         ];

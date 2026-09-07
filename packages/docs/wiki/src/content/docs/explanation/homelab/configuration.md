@@ -123,7 +123,9 @@ back, and silently loses every one on restart. The deployment therefore gives
 beta and production separate local git backends on a ZFS PVC backed up by
 Velero. Each repository begins from a validated declarative seed with all six
 product namespaces; subsequent restarts validate existing repositories and do
-not overwrite operator changes. Environment isolation prevents a beta model or
+not overwrite operator changes. Missing inventory keys are created through
+Flipt's management API; existing flags and targeting stay under operator
+control. Environment isolation prevents a beta model or
 rollout change from altering production, while namespaces keep product flag
 catalogs separate within a stage. Regression tests assert the storage and both
 client selectors, because any omission produces a service that looks healthy

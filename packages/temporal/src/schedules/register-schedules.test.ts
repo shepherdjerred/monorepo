@@ -295,11 +295,12 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
     args: [],
     timing: {
       kind: "cron",
-      expression: "15 6 * * *",
+      expression: "*/15 * * * *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "5 minutes",
     workflowExecutionTimeout: "15 minutes",
   });
 });

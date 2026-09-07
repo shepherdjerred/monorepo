@@ -66,13 +66,14 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      expression: "15 6 * * *",
+      expression: "*/15 * * * *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
+    catchupWindow: "5 minutes",
     workflowExecutionTimeout: "15 minutes",
-    memo: "Daily Flipt managed-flag inventory drift check with Alertmanager fire/resolve",
+    memo: "Create missing managed Flipt flags, then alert on remaining inventory drift",
   },
   {
     id: "buildkite-bun-cache-gc",
