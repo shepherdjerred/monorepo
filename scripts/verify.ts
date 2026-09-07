@@ -91,10 +91,9 @@ async function readChangedFilesWithGit(
   return output.split("\n").filter((path) => path !== "");
 }
 
-function buildkiteScriptsChanged(changedFiles: readonly string[]): boolean {
+function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
   return changedFiles.some(
-    (path) =>
-      path === ".buildkite/scripts" || path.startsWith(".buildkite/scripts/"),
+    (path) => path === ".buildkite" || path.startsWith(".buildkite/"),
   );
 }
 
@@ -130,7 +129,7 @@ export async function affectedVerifyFilters(
   // hashes changed. Package tasks cover changed workspaces plus reverse
   // dependents and their task dependencies.
   const filters = [`--filter=...[${base}]`, "--filter=//"];
-  if (buildkiteScriptsChanged(changedFiles)) {
+  if (rootScriptsInputsChanged(changedFiles)) {
     filters.push("--filter=@shepherdjerred/root-scripts");
   }
   return filters;

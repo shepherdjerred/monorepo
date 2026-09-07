@@ -34,6 +34,16 @@ describe("affected verification filters", () => {
     ]);
   });
 
+  test("selects root scripts when pipeline configuration changes", async () => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () => Promise.resolve([".buildkite/pipeline.yml"]),
+      ),
+    ).toContain("--filter=@shepherdjerred/root-scripts");
+  });
+
   test("runs the complete graph when changed files cannot be read", async () => {
     expect(
       await affectedVerifyFilters(
