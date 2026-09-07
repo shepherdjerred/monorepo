@@ -6,6 +6,9 @@ import {
   BucksLedgerKindSchema,
   type BucksLedgerContext,
 } from "./bryan-bucks.ts";
+import { BucksStakeSchema } from "./bryan-bucks-money.ts";
+
+const stake = (value: number) => BucksStakeSchema.parse(value);
 
 describe("BucksLedgerKindSchema dare kinds", () => {
   test.each(["dare_stake", "dare_payout", "dare_refund", "dare_fee"] as const)(
@@ -57,8 +60,8 @@ describe("BucksLedgerContextSchema dare variant", () => {
     role: "contributor",
     targetAliases: ["virmel"],
     conditionSummary: "win 7 games on Warwick",
-    potTotal: 12,
-    amount: 5,
+    potTotal: stake(12),
+    amount: stake(5),
     payoutComponent: "contribution",
   };
 
@@ -68,8 +71,8 @@ describe("BucksLedgerContextSchema dare variant", () => {
     role: "target",
     targetAliases: ["virmel", "bryan"],
     conditionSummary: "win 7 games on Warwick",
-    potTotal: 12,
-    amount: 5,
+    potTotal: stake(12),
+    amount: stake(5),
     payoutComponent: "share",
     grossShare: 6,
     resolution: "achieved",
@@ -81,8 +84,8 @@ describe("BucksLedgerContextSchema dare variant", () => {
     role: "house",
     targetAliases: ["virmel"],
     conditionSummary: "win 7 games on Warwick",
-    potTotal: 12,
-    amount: 2,
+    potTotal: stake(12),
+    amount: stake(2),
     payoutComponent: "refund_fee",
     resolution: "unachieved",
   };
@@ -93,8 +96,8 @@ describe("BucksLedgerContextSchema dare variant", () => {
     role: "contributor",
     targetAliases: ["virmel"],
     conditionSummary: "win 7 games on Warwick",
-    potTotal: 12,
-    amount: 12,
+    potTotal: stake(12),
+    amount: stake(12),
     payoutComponent: "refund",
     resolution: "voided",
     voidReason: "evaluator version mismatch",
@@ -107,8 +110,8 @@ describe("BucksLedgerContextSchema dare variant", () => {
     role: "contributor",
     targetAliases: ["virmel"],
     conditionSummary: "win one ranked game",
-    potTotal: 20,
-    amount: 20,
+    potTotal: stake(20),
+    amount: stake(20),
     payoutComponent: "refund",
     resolution: "cancelled",
   };
@@ -120,8 +123,8 @@ describe("BucksLedgerContextSchema dare variant", () => {
     role: "target",
     targetAliases: ["virmel"],
     conditionSummary: `${"a".repeat(64)}: SELECT TRUE AS achieved`,
-    potTotal: 20,
-    amount: 20,
+    potTotal: stake(20),
+    amount: stake(20),
     payoutComponent: "share",
     resolution: "achieved",
   };

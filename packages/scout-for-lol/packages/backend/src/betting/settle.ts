@@ -1,15 +1,30 @@
 import * as Sentry from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
+  BucksAmountSchema,
   BucksPoolRosterSchema,
+  DiscordAccountIdSchema,
+  LeaguePuuidSchema,
   RiotTeamIdSchema,
+  ZERO_BUCKS,
+  subtractAmounts,
+  type BucksAmount,
   type BucksPoolParticipant,
+  type BucksStake,
   type BucksVoidReason,
+  type DiscordAccountId,
+  type LeaguePuuid,
   type RawMatch,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { settlementHouseCut } from "#src/betting/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
+import {
+  BucksCorruptIdentityError,
+  parseStoredIdentity,
+  reportCorruptBucksRow,
+} from "#src/betting/settlement/corrupt-identity.ts";
 import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
 import { creditBet } from "#src/betting/settlement/settlement-ledger.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
@@ -42,16 +57,23 @@ export type SettlementSummary = {
   bets: SettlementBet[];
 };
 
+// Pool-level aggregates sum many bettors' Int32 positions, and matching
+// permits a side to total up to Number.MAX_SAFE_INTEGER — so, like the
+// persisted settlement ledger context, they stay unbranded and unbounded. An
+// Int32 bound here would throw a plain ZodError on a legal over-Int32 pool and
+// bypass the storage-overflow refund retry.
+const BucksPoolAggregateSchema = z.number().int().nonnegative();
+
 type PendingMatchedBet = {
   id: number;
   bucksAccountId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   isHouse: boolean;
   predictedTeamId: number;
-  submittedStake: number;
-  matchedStake: number;
-  unmatchedStake: number;
-  subjectPuuid: string;
+  submittedStake: BucksStake;
+  matchedStake: BucksAmount;
+  unmatchedStake: BucksAmount;
+  subjectPuuid: LeaguePuuid;
 };
 
 async function settleWithOverflowFallback(input: {
@@ -100,9 +122,9 @@ function settleMatchedBets(input: {
         matchedStake: row.matchedStake,
         unmatchedStake: row.unmatchedStake,
         grossPayout: row.matchedStake,
-        houseCut: 0,
+        houseCut: ZERO_BUCKS,
         payout: row.matchedStake,
-        winnings: 0,
+        winnings: ZERO_BUCKS,
         won: false,
         refunded: true,
         subjectPuuid: row.subjectPuuid,
@@ -110,18 +132,21 @@ function settleMatchedBets(input: {
     }
 
     const won = row.predictedTeamId === input.winningTeamId;
-    const grossPayout = won ? row.matchedStake * 2 : 0;
-    if (grossPayout > BUCKS_INT32_MAX) {
+    const grossPayoutValue = won ? row.matchedStake * 2 : 0;
+    if (grossPayoutValue > BUCKS_INT32_MAX) {
       // Gross payout, fee, and net payout are persisted as Prisma Int fields.
       // Raise the typed error before any terminal state is written so the
       // transaction can retry through the storage-overflow refund path.
       throw new BucksStorageOverflowError(row.bucksAccountId);
     }
-    const grossProfit = won ? row.matchedStake : 0;
-    const houseCut = settlementHouseCut({
-      matchedProfit: grossProfit,
-      isHouse: row.isHouse,
-    });
+    const grossPayout = BucksAmountSchema.parse(grossPayoutValue);
+    const grossProfit = won ? row.matchedStake : ZERO_BUCKS;
+    const houseCut = BucksAmountSchema.parse(
+      settlementHouseCut({
+        matchedProfit: grossProfit,
+        isHouse: row.isHouse,
+      }),
+    );
     return {
       betId: row.id,
       bucksAccountId: row.bucksAccountId,
@@ -133,31 +158,35 @@ function settleMatchedBets(input: {
       unmatchedStake: row.unmatchedStake,
       grossPayout,
       houseCut,
-      payout: grossPayout - houseCut,
-      winnings: grossProfit - houseCut,
+      payout: subtractAmounts(grossPayout, houseCut),
+      winnings: subtractAmounts(grossProfit, houseCut),
       won,
       refunded: false,
       subjectPuuid: row.subjectPuuid,
     };
   });
 
-  const winnersPool =
+  const winnersPool = BucksPoolAggregateSchema.parse(
     input.winningTeamId === undefined
       ? 0
       : input.rows
           .filter((row) => row.predictedTeamId === input.winningTeamId)
-          .reduce((sum, row) => sum + row.matchedStake, 0);
-  const losersPool =
+          .reduce((sum, row) => sum + row.matchedStake, 0),
+  );
+  const losersPool = BucksPoolAggregateSchema.parse(
     input.winningTeamId === undefined
       ? 0
       : input.rows
           .filter((row) => row.predictedTeamId !== input.winningTeamId)
-          .reduce((sum, row) => sum + row.matchedStake, 0);
+          .reduce((sum, row) => sum + row.matchedStake, 0),
+  );
   return {
     bets,
     winnersPool,
     losersPool,
-    houseCut: bets.reduce((sum, bet) => sum + bet.houseCut, 0),
+    houseCut: BucksPoolAggregateSchema.parse(
+      bets.reduce((sum, bet) => sum + bet.houseCut, 0),
+    ),
   };
 }
 
@@ -240,18 +269,7 @@ export async function closeAndSettleBettingForMatch(
           recordSettlementObservations(summary, pool.id);
         }
       } catch (error) {
-        logger.error(
-          `❌ Could not settle Bryan Bucks pool ${pool.id.toString()} for ${matchId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "betting-settle-pool",
-            matchId,
-            serverId: pool.serverId,
-          },
-          extra: { poolId: pool.id },
-        });
+        reportPoolSettlementFailure(error, pool, matchId);
       }
     }
   } catch (error) {
@@ -262,6 +280,38 @@ export async function closeAndSettleBettingForMatch(
   }
 
   return { closures, settlements: summaries };
+}
+
+function reportPoolSettlementFailure(
+  error: unknown,
+  pool: { id: number; serverId: string },
+  matchId: string,
+): void {
+  if (error instanceof BucksCorruptIdentityError) {
+    // Deliberately not retried into the refund path: crediting a row whose
+    // identity cannot be validated risks paying the wrong account. The pool
+    // stays `closed` until an operator repairs the stored value, and every
+    // postmatch retry re-raises this signal.
+    reportCorruptBucksRow(logger, error, {
+      source: "betting-settle-corrupt-row",
+      matchId,
+      poolId: pool.id,
+      serverId: pool.serverId,
+    });
+    return;
+  }
+  logger.error(
+    `❌ Could not settle Bryan Bucks pool ${pool.id.toString()} for ${matchId}:`,
+    error,
+  );
+  Sentry.captureException(error, {
+    tags: {
+      source: "betting-settle-pool",
+      matchId,
+      serverId: pool.serverId,
+    },
+    extra: { poolId: pool.id },
+  });
 }
 
 /**
@@ -398,13 +448,20 @@ async function settleOnePool(input: {
       return {
         id: row.id,
         bucksAccountId: row.bucksAccountId,
-        discordId: row.bucksAccount.discordId,
+        discordId: parseStoredIdentity(
+          DiscordAccountIdSchema,
+          row.bucksAccount.discordId,
+          { field: "discord_id", betId: row.id },
+        ),
         isHouse: row.bucksAccount.isHouse,
         predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
-        submittedStake: row.stake,
+        submittedStake: allocation.submittedStake,
         matchedStake: allocation.matchedStake,
         unmatchedStake: allocation.unmatchedStake,
-        subjectPuuid: row.subjectPuuid,
+        subjectPuuid: parseStoredIdentity(LeaguePuuidSchema, row.subjectPuuid, {
+          field: "subject_puuid",
+          betId: row.id,
+        }),
       };
     });
     const settled = settleMatchedBets({

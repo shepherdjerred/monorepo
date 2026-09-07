@@ -1,4 +1,6 @@
 import {
+  BucksDeltaSchema,
+  BucksStakeSchema,
   DiscordGuildIdSchema,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
@@ -117,7 +119,7 @@ export async function stakeDareContributionInTransaction(
   });
   return await applyBucksDelta(tx, {
     bucksAccountId: input.bucksAccountId,
-    delta: -input.amount,
+    delta: BucksDeltaSchema.parse(-input.amount),
     kind: "dare_stake",
     context: {
       type: "dare",
@@ -125,8 +127,8 @@ export async function stakeDareContributionInTransaction(
       role: "contributor",
       targetAliases: [...facts.targetAliases],
       conditionSummary: facts.conditionSummary,
-      potTotal: facts.potTotal,
-      amount: input.amount,
+      potTotal: BucksStakeSchema.parse(facts.potTotal),
+      amount: BucksStakeSchema.parse(input.amount),
       payoutComponent: "contribution",
     },
   });
@@ -212,7 +214,7 @@ export async function refundDareContributionsInTransaction(
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,
-    potTotal: facts.potTotal,
+    potTotal: BucksStakeSchema.parse(facts.potTotal),
     resolution: input.resolution,
     ...(input.voidReason === undefined ? {} : { voidReason: input.voidReason }),
   };
@@ -220,13 +222,13 @@ export async function refundDareContributionsInTransaction(
     if (refund.refunded > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: refund.bucksAccountId,
-        delta: refund.refunded,
+        delta: BucksDeltaSchema.parse(refund.refunded),
         kind: "dare_refund",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "contributor",
-          amount: refund.contributed,
+          amount: BucksStakeSchema.parse(refund.contributed),
           payoutComponent: "refund",
         },
       });
@@ -234,13 +236,13 @@ export async function refundDareContributionsInTransaction(
     if (house !== undefined && refund.fee > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: refund.fee,
+        delta: BucksDeltaSchema.parse(refund.fee),
         kind: "dare_fee",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "house",
-          amount: refund.contributed,
+          amount: BucksStakeSchema.parse(refund.contributed),
           payoutComponent: "refund_fee",
         },
       });
@@ -321,7 +323,7 @@ export async function payDareTargetsInTransaction(
     dareId: facts.dareId,
     targetAliases: [...facts.targetAliases],
     conditionSummary: facts.conditionSummary,
-    potTotal: facts.potTotal,
+    potTotal: BucksStakeSchema.parse(facts.potTotal),
     resolution: "achieved" as const,
   };
   for (const [index, payout] of payouts.entries()) {
@@ -336,13 +338,13 @@ export async function payDareTargetsInTransaction(
     if (payout.net > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: payout.bucksAccountId,
-        delta: payout.net,
+        delta: BucksDeltaSchema.parse(payout.net),
         kind: "dare_payout",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "target",
-          amount: payout.grossShare,
+          amount: BucksStakeSchema.parse(payout.grossShare),
           payoutComponent: "share",
           grossShare: payout.grossShare,
         },
@@ -351,13 +353,13 @@ export async function payDareTargetsInTransaction(
     if (payout.fee > 0) {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: payout.fee,
+        delta: BucksDeltaSchema.parse(payout.fee),
         kind: "dare_fee",
         matchId: facts.matchId,
         context: {
           ...contextBase,
           role: "house",
-          amount: payout.grossShare,
+          amount: BucksStakeSchema.parse(payout.grossShare),
           payoutComponent: "fee",
           grossShare: payout.grossShare,
         },
@@ -367,13 +369,13 @@ export async function payDareTargetsInTransaction(
   if (remainder > 0) {
     await applyBucksDelta(tx, {
       bucksAccountId: house.id,
-      delta: remainder,
+      delta: BucksDeltaSchema.parse(remainder),
       kind: "dare_fee",
       matchId: facts.matchId,
       context: {
         ...contextBase,
         role: "house",
-        amount: remainder,
+        amount: BucksStakeSchema.parse(remainder),
         payoutComponent: "remainder",
       },
     });

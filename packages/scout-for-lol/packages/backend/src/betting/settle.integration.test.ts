@@ -1,6 +1,8 @@
-import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
+import type * as SentryModule from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   BucksMatchingSummarySchema,
   DiscordGuildIdSchema,
@@ -27,6 +29,18 @@ import {
   VOID_GRACE_MS,
 } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import { BucksCorruptIdentityError } from "#src/betting/settlement/corrupt-identity.ts";
+import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting.ts";
+
+// Sentry is spied so the corrupt-row classification can be asserted; every
+// other export on the module stays real.
+const { captureException } = vi.hoisted(() => ({
+  captureException: vi.fn((..._args: unknown[]): string => ""),
+}));
+vi.mock("@sentry/bun", async (importOriginal) => {
+  const actual = await importOriginal<typeof SentryModule>();
+  return { ...actual, captureException };
+});
 
 const { prisma: db } = createTestDatabase("bucks-settle");
 
@@ -78,7 +92,7 @@ async function makeBettor(input: {
   return await db.$transaction(async (tx) => {
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: startingBalance,
+      delta: BucksDeltaSchema.parse(startingBalance),
       kind: "seed",
       context: { type: "seed", note: "settlement test wallet" },
     });
@@ -93,7 +107,7 @@ async function makeBettor(input: {
     });
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: -input.stake,
+      delta: BucksDeltaSchema.parse(-input.stake),
       kind: "bet_stake",
       matchId: MATCH_ID,
       betId: bet.id,
@@ -132,6 +146,13 @@ function withDuration(seconds: number): RawMatch {
     ...fixture,
     info: { ...fixture.info, gameDuration: seconds },
   });
+}
+
+async function corruptRowsObserved(field: string): Promise<number> {
+  const metric = await bettingSettlementCorruptRowsTotal.get();
+  return metric.values
+    .filter((value) => value.labels.field === field)
+    .reduce((sum, value) => sum + value.value, 0);
 }
 
 async function clearAll() {
@@ -445,7 +466,7 @@ describe("refunds and house settlement", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: BUCKS_INT32_MAX,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX),
         kind: "seed",
         context: { type: "seed", note: "full house wallet" },
       });
@@ -487,7 +508,7 @@ describe("refunds and house settlement", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: 2,
+        delta: BucksDeltaSchema.parse(2),
         kind: "seed",
         context: { type: "seed", note: "limited house reserve" },
       });
@@ -615,7 +636,7 @@ describe("settlement storage bounds", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: BUCKS_INT32_MAX - 1,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX - 1),
         kind: "seed",
         context: { type: "seed", note: "nearly full house wallet" },
       });
@@ -630,6 +651,172 @@ describe("settlement storage bounds", () => {
         select: { balance: true },
       }),
     ).toEqual({ balance: BUCKS_INT32_MAX - 1 });
+  });
+
+  test("refunds through the overflow path when a side's matched total exceeds Int32", async () => {
+    // Placement lets one side aggregate past Int32 (matchBucksOffers caps a
+    // team total at Number.MAX_SAFE_INTEGER), so the pool-level sums in the
+    // settlement summary must not fail Int32 validation: the per-bet payout
+    // overflow has to reach the storage-overflow refund retry instead.
+    const stake = 2_000_000_000;
+    const pool = await makePool();
+    const bettors = [];
+    for (const [index, teamId] of [
+      WINNING_TEAM,
+      WINNING_TEAM,
+      LOSING_TEAM,
+      LOSING_TEAM,
+    ].entries()) {
+      bettors.push(
+        await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 1),
+          teamId,
+          stake,
+          startingBalance: stake,
+        }),
+      );
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.winnersPool).toBe(2 * stake);
+    expect(summary?.losersPool).toBe(2 * stake);
+    expect(summary?.houseCut).toBe(0);
+    for (const bettor of bettors) {
+      expect(
+        await db.bucksAccount.findUniqueOrThrow({
+          where: { id: bettor.account.id },
+          select: { balance: true },
+        }),
+      ).toEqual({ balance: stake });
+    }
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "voided" });
+  });
+
+  test("routes an over-Int32 aggregate house cut through the overflow refund path", async () => {
+    // Twelve winners' fees sum to 2.4e9 — past Int32 — while every per-bet
+    // value fits its Int column (gross payout 2e9). A decided settlement can
+    // never commit this pool: the guild house wallet is itself an Int column
+    // and cannot store the aggregate fees, so the wallet boundary raises the
+    // typed overflow and the refund retry voids the pool. Re-branding the
+    // summary's aggregate houseCut to Int32 would turn this into a ZodError
+    // at summary construction that bypasses the retry and wedges the pool.
+    const winnerStake = 1_000_000_000;
+    const loserStake = 2_000_000_000;
+    const pool = await makePool();
+    const bettors = [];
+    for (let index = 0; index < 12; index += 1) {
+      bettors.push({
+        stake: winnerStake,
+        ...(await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 1),
+          teamId: WINNING_TEAM,
+          stake: winnerStake,
+          startingBalance: winnerStake,
+        })),
+      });
+    }
+    for (let index = 0; index < 6; index += 1) {
+      bettors.push({
+        stake: loserStake,
+        ...(await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 13),
+          teamId: LOSING_TEAM,
+          stake: loserStake,
+          startingBalance: loserStake,
+        })),
+      });
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.winnersPool).toBe(12_000_000_000);
+    expect(summary?.losersPool).toBe(12_000_000_000);
+    expect(summary?.bets).toHaveLength(18);
+    for (const bettor of bettors) {
+      expect(
+        await db.bucksAccount.findUniqueOrThrow({
+          where: { id: bettor.account.id },
+          select: { balance: true },
+        }),
+      ).toEqual({ balance: bettor.stake });
+    }
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "voided" });
+  });
+});
+
+describe("corrupt stored identity", () => {
+  test("fails loudly and leaves the pool claimable when a stored subjectPuuid is malformed", async () => {
+    captureException.mockClear();
+    const pool = await makePool();
+    const corrupted = await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(1),
+      teamId: WINNING_TEAM,
+      stake: 10,
+    });
+    await makeBettor({
+      poolId: pool.id,
+      discordId: bucksTestDiscordId(2),
+      teamId: LOSING_TEAM,
+      stake: 10,
+    });
+    // Match first, then corrupt the stored PUUID the way a legacy row or a
+    // Riot format change would surface at settlement time.
+    await closeBettingWindowsForMatch(MATCH_ID, db);
+    await db.bucksBet.update({
+      where: { id: corrupted.bet.id },
+      data: { subjectPuuid: "only10char" },
+    });
+    const observedBefore = await corruptRowsObserved("subject_puuid");
+
+    const summaries = await settleBettingForMatch(fixture, db);
+
+    // No summary and no state change: the pool stays claimable for a retry
+    // after the row is repaired, with every matched stake still escrowed.
+    expect(summaries).toHaveLength(0);
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "closed" });
+    expect(
+      await db.bucksBet.findUniqueOrThrow({
+        where: { id: corrupted.bet.id },
+        select: { betOutcome: true },
+      }),
+    ).toEqual({ betOutcome: "pending" });
+    // The failure is classified, not swallowed: the dedicated corrupt-row
+    // metric and Sentry event identify the pool, bet, and field so an
+    // operator can repair the row.
+    expect(await corruptRowsObserved("subject_puuid")).toBe(observedBefore + 1);
+    expect(captureException).toHaveBeenCalledWith(
+      expect.any(BucksCorruptIdentityError),
+      expect.objectContaining({
+        tags: expect.objectContaining({
+          source: "betting-settle-corrupt-row",
+        }),
+        extra: {
+          poolId: pool.id,
+          betId: corrupted.bet.id,
+          field: "subject_puuid",
+        },
+      }),
+    );
   });
 });
 
@@ -883,7 +1070,7 @@ describe("reconcileBucksBalances", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: 5,
+        delta: BucksDeltaSchema.parse(5),
         kind: "seed",
         context: { type: "seed", note: "reconciliation test" },
       });

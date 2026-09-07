@@ -1,6 +1,8 @@
 import {
+  BucksDeltaSchema,
   BucksParlaySideSchema,
   BucksStakeSchema,
+  debitOf,
   type BucksParlaySide,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -178,7 +180,7 @@ async function placeWeeklyParlayBetInternal(
             });
       const balanceAfter = await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: -stake.data,
+        delta: debitOf(stake.data),
         kind: "weekly_parlay_stake",
         weeklyParlayBetId: bet.id,
         context: {
@@ -189,15 +191,15 @@ async function placeWeeklyParlayBetInternal(
           slot: market.slot,
           side: side.data,
           yesProbabilityBps: market.definition.yesProbabilityBps,
-          totalStake,
-          quotedGrossPayout: quote.grossPayout,
+          totalStake: BucksStakeSchema.parse(totalStake),
+          quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
         },
       });
       if (additionalReserve > 0) {
         try {
           await applyBucksDelta(tx, {
             bucksAccountId: house.id,
-            delta: -additionalReserve,
+            delta: BucksDeltaSchema.parse(-additionalReserve),
             kind: "weekly_parlay_reserve",
             weeklyParlayBetId: bet.id,
             context: {
@@ -208,9 +210,9 @@ async function placeWeeklyParlayBetInternal(
               slot: market.slot,
               side: side.data,
               yesProbabilityBps: market.definition.yesProbabilityBps,
-              totalStake,
+              totalStake: BucksStakeSchema.parse(totalStake),
               totalReserve: quote.houseReserve,
-              quotedGrossPayout: quote.grossPayout,
+              quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
             },
           });
         } catch (error) {
@@ -377,20 +379,20 @@ async function cancelWeeklyParlayBetInternal(
       periodKey: market.periodKey,
       slot: market.slot,
       side,
-      stake: bet.stake,
+      stake: BucksStakeSchema.parse(bet.stake),
       reserve: bet.houseReserve,
-      grossPayout: bet.grossPayout,
+      grossPayout: BucksStakeSchema.parse(bet.grossPayout),
     };
     const balanceAfter = await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: bet.stake,
+      delta: BucksDeltaSchema.parse(bet.stake),
       kind: "weekly_parlay_refund",
       weeklyParlayBetId: bet.id,
       context: { ...contextBase, credited: bet.stake },
     });
     await applyBucksDelta(tx, {
       bucksAccountId: house.id,
-      delta: bet.houseReserve,
+      delta: BucksDeltaSchema.parse(bet.houseReserve),
       kind: "weekly_parlay_release",
       weeklyParlayBetId: bet.id,
       context: { ...contextBase, credited: bet.houseReserve },

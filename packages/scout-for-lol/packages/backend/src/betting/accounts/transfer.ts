@@ -1,5 +1,6 @@
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -216,7 +217,7 @@ export async function transferBucks(
       async (tx) => {
         const senderBalance = await applyBucksDelta(tx, {
           bucksAccountId: sender.id,
-          delta: -totalAmount,
+          delta: BucksDeltaSchema.parse(-totalAmount),
           kind: "transfer_sent",
           context: BucksLedgerContextSchema.parse({
             ...baseContext,
@@ -226,7 +227,7 @@ export async function transferBucks(
         await lockBucksAccountsForCredit(tx, [recipient.id, house.id]);
         await applyBucksDelta(tx, {
           bucksAccountId: recipient.id,
-          delta: recipientAmount,
+          delta: BucksDeltaSchema.parse(recipientAmount),
           kind: "transfer_received",
           context: BucksLedgerContextSchema.parse({
             ...baseContext,
@@ -235,7 +236,7 @@ export async function transferBucks(
         });
         await applyBucksDelta(tx, {
           bucksAccountId: house.id,
-          delta: feeAmount,
+          delta: BucksDeltaSchema.parse(feeAmount),
           kind: "transfer_fee",
           context: BucksLedgerContextSchema.parse({
             ...baseContext,

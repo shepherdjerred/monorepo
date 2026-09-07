@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
+  BucksDeltaSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
@@ -305,7 +306,7 @@ async function awardClassicPrematchForGuild(input: {
       }
       await applyBucksDelta(tx, {
         bucksAccountId: accountId,
-        delta: CLASSIC_PLAYED_REWARD.amount,
+        delta: BucksDeltaSchema.parse(CLASSIC_PLAYED_REWARD.amount),
         kind: CLASSIC_PLAYED_REWARD.kind,
         matchId: input.matchId,
         context: {

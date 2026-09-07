@@ -23,6 +23,7 @@
  */
 import { z } from "zod";
 import {
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   BucksLedgerKindSchema,
   RawMatchSchema,
@@ -368,7 +369,7 @@ async function reverseSettlement(target: PendingResettlement): Promise<void> {
     for (const entry of target.entries) {
       await applyBucksDelta(tx, {
         bucksAccountId: entry.bucksAccountId,
-        delta: -entry.delta,
+        delta: BucksDeltaSchema.parse(-entry.delta),
         kind: BucksLedgerKindSchema.parse(entry.kind),
         // A reversal belongs to the same match as the row it undoes; omitting
         // this stores the corrective row with a null match, which no longer

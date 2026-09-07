@@ -3,6 +3,7 @@ import {
   BucksLedgerContextSchema,
   OPEN_BUCKS_DARE_STATES,
   OPEN_BUCKS_DARE_V2_STATES,
+  type BucksDelta,
   type BucksLedgerContext,
   type BucksLedgerKind,
 } from "@scout-for-lol/data";
@@ -49,8 +50,10 @@ export class BucksStorageOverflowError extends Error {
 
 export type ApplyBucksDeltaInput = {
   bucksAccountId: number;
-  /** Signed. Negative debits, positive credits. Zero is rejected. */
-  delta: number;
+  /** Signed. Negative debits, positive credits. The brand already excludes
+   * zero and out-of-range values; the runtime guards below stay because this
+   * is the single chokepoint every Buck moves through. */
+  delta: BucksDelta;
   kind: BucksLedgerKind;
   context: BucksLedgerContext;
   matchId?: string | undefined;
@@ -354,15 +357,18 @@ export async function applyBucksDelta(
     // version (EvalPlanQual), so the losing click matches 0 rows instead of
     // double-spending. A plain read-then-write here would race two concurrent
     // button clicks.
+    // Binary subtraction, not unary minus: no-unsafe-unary-minus cannot see
+    // through the branded number.
+    const requested = 0 - input.delta;
     const debited = await tx.bucksAccount.updateMany({
       where: {
         id: input.bucksAccountId,
-        balance: { gte: -input.delta },
+        balance: { gte: requested },
       },
       data: { balance: { increment: input.delta } },
     });
     if (debited.count !== 1) {
-      throw new InsufficientBucksError(input.bucksAccountId, -input.delta);
+      throw new InsufficientBucksError(input.bucksAccountId, requested);
     }
   } else {
     const held =

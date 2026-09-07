@@ -1,7 +1,9 @@
 import {
+  BucksDeltaSchema,
   BucksParlaySideSchema,
   BucksStakeSchema,
   BucksPoolRosterSchema,
+  debitOf,
   type BucksParlaySide,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -287,7 +289,7 @@ async function placeParlayBetInner(
 
       const balanceAfter = await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: -stake.data,
+        delta: debitOf(stake.data),
         kind: "parlay_stake",
         matchId: input.matchId,
         parlayBetId: bet.id,
@@ -295,15 +297,15 @@ async function placeParlayBetInner(
           type: "parlay_stake",
           side: side.data,
           yesProbabilityBps: market.definition.yesProbabilityBps,
-          totalStake,
-          quotedGrossPayout: quote.grossPayout,
+          totalStake: BucksStakeSchema.parse(totalStake),
+          quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
         },
       });
       if (additionalReserve > 0) {
         try {
           await applyBucksDelta(tx, {
             bucksAccountId: house.id,
-            delta: -additionalReserve,
+            delta: BucksDeltaSchema.parse(-additionalReserve),
             kind: "parlay_reserve",
             matchId: input.matchId,
             parlayBetId: bet.id,
@@ -311,9 +313,9 @@ async function placeParlayBetInner(
               type: "parlay_reserve",
               side: side.data,
               yesProbabilityBps: market.definition.yesProbabilityBps,
-              totalStake,
+              totalStake: BucksStakeSchema.parse(totalStake),
               totalReserve: quote.houseReserve,
-              quotedGrossPayout: quote.grossPayout,
+              quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
             },
           });
         } catch (error) {

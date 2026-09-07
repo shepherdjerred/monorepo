@@ -1,5 +1,7 @@
 import {
+  BucksDeltaSchema,
   BucksParlaySideSchema,
+  BucksStakeSchema,
   BucksWeeklyParlayVoidReasonSchema,
   type BucksParlaySide,
   type BucksWeeklyParlayVoidReason,
@@ -343,14 +345,14 @@ export async function settleWeeklyParlayMarket(
           periodKey: market.periodKey,
           slot: market.slot,
           side,
-          stake: bet.stake,
+          stake: BucksStakeSchema.parse(bet.stake),
           reserve: bet.houseReserve,
-          grossPayout: bet.grossPayout,
+          grossPayout: BucksStakeSchema.parse(bet.grossPayout),
         };
         if (decision.kind === "void") {
           await applyBucksDelta(tx, {
             bucksAccountId: bet.bucksAccountId,
-            delta: bet.stake,
+            delta: BucksDeltaSchema.parse(bet.stake),
             kind: "weekly_parlay_refund",
             weeklyParlayBetId: bet.id,
             context: {
@@ -362,7 +364,7 @@ export async function settleWeeklyParlayMarket(
           });
           await applyBucksDelta(tx, {
             bucksAccountId: house.id,
-            delta: bet.houseReserve,
+            delta: BucksDeltaSchema.parse(bet.houseReserve),
             kind: "weekly_parlay_release",
             weeklyParlayBetId: bet.id,
             context: {
@@ -384,7 +386,7 @@ export async function settleWeeklyParlayMarket(
           const won = side === winningSide;
           await applyBucksDelta(tx, {
             bucksAccountId: won ? bet.bucksAccountId : house.id,
-            delta: bet.grossPayout,
+            delta: BucksDeltaSchema.parse(bet.grossPayout),
             kind: won ? "weekly_parlay_payout" : "weekly_parlay_release",
             weeklyParlayBetId: bet.id,
             context: {

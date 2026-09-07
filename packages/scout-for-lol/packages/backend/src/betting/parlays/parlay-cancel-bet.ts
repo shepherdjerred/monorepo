@@ -1,5 +1,8 @@
 import {
+  BucksDeltaSchema,
   BucksParlaySideSchema,
+  BucksStakeSchema,
+  creditOf,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -123,6 +126,9 @@ async function cancelParlayBetInner(
     });
     if (bet === null) return { kind: "no_bet" };
     const side = BucksParlaySideSchema.parse(bet.side);
+    // Parse the stored position at the read boundary for the branded context.
+    const storedStake = BucksStakeSchema.parse(bet.stake);
+    const storedGrossPayout = BucksStakeSchema.parse(bet.grossPayout);
     const house = await ensureHouseAccountInTransaction(tx, input.serverId);
     // Release the stake and reserve from refund-headroom accounting before
     // crediting them. The surrounding transaction restores the pending row if
@@ -137,31 +143,31 @@ async function cancelParlayBetInner(
     });
     const balanceAfter = await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: bet.stake,
+      delta: creditOf(storedStake),
       kind: "parlay_refund",
       matchId: input.matchId,
       parlayBetId: bet.id,
       context: {
         type: "parlay_settlement",
         side,
-        stake: bet.stake,
+        stake: storedStake,
         reserve: bet.houseReserve,
-        grossPayout: bet.grossPayout,
+        grossPayout: storedGrossPayout,
         credited: bet.stake,
       },
     });
     await applyBucksDelta(tx, {
       bucksAccountId: house.id,
-      delta: bet.houseReserve,
+      delta: BucksDeltaSchema.parse(bet.houseReserve),
       kind: "parlay_release",
       matchId: input.matchId,
       parlayBetId: bet.id,
       context: {
         type: "parlay_settlement",
         side,
-        stake: bet.stake,
+        stake: storedStake,
         reserve: bet.houseReserve,
-        grossPayout: bet.grossPayout,
+        grossPayout: storedGrossPayout,
         credited: bet.houseReserve,
       },
     });

@@ -9,6 +9,8 @@ import {
 } from "vitest";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
+  BucksStakeSchema,
   DareCompiledPlanV2Schema,
   RawMatchSchema,
   type DareCompiledPlanV2,
@@ -241,7 +243,7 @@ async function fillTargetWallet(dareId: number): Promise<void> {
   await db.$transaction((tx) =>
     applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: BUCKS_INT32_MAX - account.balance,
+      delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX - account.balance),
       kind: "adjustment",
       context: {
         type: "adjustment",
@@ -311,6 +313,11 @@ async function consume(intentId: string, actor: DiscordAccountId) {
   );
 }
 
+const contribute = (amount: number) => ({
+  kind: "dare_contribute" as const,
+  amount: BucksStakeSchema.parse(amount),
+});
+
 async function makeContribution(
   dareId: number,
   actor: DiscordAccountId,
@@ -323,7 +330,7 @@ async function makeContribution(
       serverId: SERVER,
       actorDiscordId: actor,
       expectedRevision: 1,
-      payload: { kind: "dare_contribute", amount },
+      payload: contribute(amount),
       idempotencyKey: key,
     },
     deps,
@@ -726,7 +733,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { kind: "dare_contribute", amount: 5 },
+        payload: contribute(5),
         idempotencyKey: "contribute-payload",
       },
       deps,
@@ -740,7 +747,7 @@ describe("Dare v2 draft mutation and cancellation", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { kind: "dare_contribute", amount: 10 },
+        payload: contribute(10),
         idempotencyKey: "contribute-payload",
       },
       deps,
@@ -814,7 +821,7 @@ describe("Dare v2 funded lifecycle", () => {
         serverId: SERVER,
         actorDiscordId: CHALLENGER,
         expectedRevision: 1,
-        payload: { kind: "dare_contribute", amount: 5 },
+        payload: contribute(5),
         idempotencyKey: "contribution-after-deadline",
       },
       deps,
@@ -988,7 +995,7 @@ describe("Dare v2 partial settlement", () => {
         serverId: SERVER,
         actorDiscordId: CONTRIBUTOR,
         expectedRevision: 1,
-        payload: { kind: "dare_contribute", amount: 15 },
+        payload: contribute(15),
         idempotencyKey: "contribute-first-fifteen",
       },
       deps,
@@ -1000,7 +1007,7 @@ describe("Dare v2 partial settlement", () => {
         serverId: SERVER,
         actorDiscordId: CONTRIBUTOR,
         expectedRevision: 1,
-        payload: { kind: "dare_contribute", amount: 15 },
+        payload: contribute(15),
         idempotencyKey: "contribute-second-fifteen",
       },
       deps,

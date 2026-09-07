@@ -3,7 +3,7 @@ import {
   DareCompiledPlanV2Schema,
   DareDeadlineSpecV2Schema,
 } from "#src/model/bucks/dare-contract-v2.ts";
-import { BucksStakeSchema } from "#src/model/bucks/bryan-bucks.ts";
+import { BucksStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
 
 export const DARE_V2_PARAPHRASE_CORPUS_VERSION = 1;
 export const DARE_V2_PROMPT_VERSION = "explore-dare-v2-2";

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { ZERO_BUCKS } from "@scout-for-lol/data";
 import {
   ParlayConditionSchema,
   PARLAY_SUBJECT_ALIAS_MAX_LENGTH,
@@ -77,9 +78,9 @@ function parlayEmbed(
       serverId: "1337623164146155593",
       winningTeamId: undefined,
       voidReason: undefined,
-      winnersPool: 0,
-      losersPool: 0,
-      houseCut: 0,
+      winnersPool: ZERO_BUCKS,
+      losersPool: ZERO_BUCKS,
+      houseCut: ZERO_BUCKS,
       bets: [],
     },
     includeOutcome: false,

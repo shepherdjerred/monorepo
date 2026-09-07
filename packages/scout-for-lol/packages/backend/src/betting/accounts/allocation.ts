@@ -1,11 +1,25 @@
+import {
+  BucksAmountSchema,
+  BucksStakeSchema,
+  type BucksAmount,
+  type BucksStake,
+} from "@scout-for-lol/data";
+
 export type CompleteBucksAllocation = {
-  humanMatchedStake: number;
-  houseMatchedStake: number;
-  matchedStake: number;
-  unmatchedStake: number;
+  submittedStake: BucksStake;
+  humanMatchedStake: BucksAmount;
+  houseMatchedStake: BucksAmount;
+  matchedStake: BucksAmount;
+  unmatchedStake: BucksAmount;
 };
 
-/** Fail closed before any payout trusts a persisted close-time allocation. */
+/** Fail closed before any payout trusts a persisted close-time allocation.
+ *
+ * This is the storage boundary for allocation money: the conservation checks
+ * run on the raw column values, and the returned fields are parsed into the
+ * branded Bucks schemas so settlement arithmetic starts from validated
+ * values.
+ */
 export function requireValidBucksAllocation(input: {
   betId: number;
   submittedStake: number;
@@ -51,9 +65,10 @@ export function requireValidBucksAllocation(input: {
   }
 
   return {
-    humanMatchedStake,
-    houseMatchedStake,
-    matchedStake,
-    unmatchedStake,
+    submittedStake: BucksStakeSchema.parse(input.submittedStake),
+    humanMatchedStake: BucksAmountSchema.parse(humanMatchedStake),
+    houseMatchedStake: BucksAmountSchema.parse(houseMatchedStake),
+    matchedStake: BucksAmountSchema.parse(matchedStake),
+    unmatchedStake: BucksAmountSchema.parse(unmatchedStake),
   };
 }

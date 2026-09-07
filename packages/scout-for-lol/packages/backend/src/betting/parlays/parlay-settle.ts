@@ -1,9 +1,11 @@
 import * as Sentry from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksMessageRefsSchema,
   BucksParlaySideSchema,
   BucksParlayVoidReasonSchema,
+  BucksStakeSchema,
   type BucksParlaySide,
   type BucksParlayVoidReason,
   type DiscordGuildId,
@@ -171,14 +173,14 @@ async function settlePosition(
   const contextBase = {
     type: "parlay_settlement" as const,
     side,
-    stake: bet.stake,
+    stake: BucksStakeSchema.parse(bet.stake),
     reserve: bet.houseReserve,
-    grossPayout: bet.grossPayout,
+    grossPayout: BucksStakeSchema.parse(bet.grossPayout),
   };
   if (outcome === "refunded") {
     await applyBucksDelta(tx, {
       bucksAccountId: bet.bucksAccountId,
-      delta: bet.stake,
+      delta: BucksDeltaSchema.parse(bet.stake),
       kind: "parlay_refund",
       matchId: input.matchId,
       parlayBetId: bet.id,
@@ -191,7 +193,7 @@ async function settlePosition(
     });
     await applyBucksDelta(tx, {
       bucksAccountId: input.houseId,
-      delta: bet.houseReserve,
+      delta: BucksDeltaSchema.parse(bet.houseReserve),
       kind: "parlay_release",
       matchId: input.matchId,
       parlayBetId: bet.id,
@@ -215,7 +217,7 @@ async function settlePosition(
   const won = outcome === "won";
   await applyBucksDelta(tx, {
     bucksAccountId: won ? bet.bucksAccountId : input.houseId,
-    delta: bet.grossPayout,
+    delta: BucksDeltaSchema.parse(bet.grossPayout),
     kind: won ? "parlay_payout" : "parlay_release",
     matchId: input.matchId,
     parlayBetId: bet.id,

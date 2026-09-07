@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  BUCKS_INT32_MAX,
+  BucksAmountSchema,
+  BucksStakeSchema,
+} from "#src/model/bucks/bryan-bucks-money.ts";
 import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 
@@ -26,19 +31,6 @@ import { QueueTypeSchema } from "#src/model/core/state.ts";
  */
 export type RiotTeamId = z.infer<typeof RiotTeamIdSchema>;
 export const RiotTeamIdSchema = z.union([z.literal(100), z.literal(200)]);
-
-/** Prisma's SQLite `Int` client boundary. The economy intentionally remains
- * on Int32 storage for this version even though the product no longer applies
- * a smaller stake cap. */
-export const BUCKS_INT32_MAX = 2_147_483_647;
-
-/** Any positive whole-BB stake that the existing storage domain can hold. */
-export type BucksStake = z.infer<typeof BucksStakeSchema>;
-export const BucksStakeSchema = z
-  .number()
-  .int()
-  .positive()
-  .max(BUCKS_INT32_MAX);
 
 /** Why a ledger row exists. Separate `earn_*` and market movement kinds keep
  * the explanation auditable without reconstructing a combined total. */
@@ -240,12 +232,15 @@ export const BucksPoolRosterSchema = z.strictObject({
 
 export const BUCKS_MATCHING_VERSION = 1;
 
+// Per-bet money written from and read back into Prisma `Int` columns, so the
+// branded Int32 schemas restate exactly the domain the storage already
+// enforced — historical rows keep parsing.
 const MatchingAmountFields = {
-  submittedStake: z.number().int().positive(),
-  humanMatchedStake: z.number().int().nonnegative(),
-  houseMatchedStake: z.number().int().nonnegative(),
-  matchedStake: z.number().int().nonnegative(),
-  unmatchedStake: z.number().int().nonnegative(),
+  submittedStake: BucksStakeSchema,
+  humanMatchedStake: BucksAmountSchema,
+  houseMatchedStake: BucksAmountSchema,
+  matchedStake: BucksAmountSchema,
+  unmatchedStake: BucksAmountSchema,
 };
 
 export type BucksMatchingAllocation = z.infer<
@@ -332,18 +327,21 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     subjectAlias: z.string(),
     backedAliases: z.array(z.string()),
     opposingAliases: z.array(z.string()),
+    // Pool-level aggregates sum many bettors' Int32 positions, so unlike the
+    // per-bet fields below they carry no Int32 bound and stay unbranded.
     winnersPool: z.number().int(),
     losersPool: z.number().int(),
     stakeReturned: z.number().int(),
     winnings: z.number().int(),
     /** Added with house cuts. Optional so historical ledger JSON remains
-     * parseable under the current schema. */
-    grossPayout: z.number().int().nonnegative().optional(),
-    houseCut: z.number().int().nonnegative().optional(),
-    netPayout: z.number().int().nonnegative().optional(),
-    submittedStake: z.number().int().nonnegative().optional(),
-    matchedStake: z.number().int().nonnegative().optional(),
-    unmatchedStake: z.number().int().nonnegative().optional(),
+     * parseable under the current schema. Per-bet Int-column values, so the
+     * branded Int32 schemas restate the stored domain. */
+    grossPayout: BucksAmountSchema.optional(),
+    houseCut: BucksAmountSchema.optional(),
+    netPayout: BucksAmountSchema.optional(),
+    submittedStake: BucksAmountSchema.optional(),
+    matchedStake: BucksAmountSchema.optional(),
+    unmatchedStake: BucksAmountSchema.optional(),
     /** Gross payouts may be split around the fee transfer so every
      * intermediate wallet balance remains representable. */
     payoutComponent: z
@@ -366,16 +364,16 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     subjectAlias: z.string(),
     backedAliases: z.array(z.string()),
     opposingAliases: z.array(z.string()),
-    submittedStake: z.number().int().positive(),
-    fee: z.number().int().nonnegative(),
-    netRefund: z.number().int().nonnegative(),
+    submittedStake: BucksStakeSchema,
+    fee: BucksAmountSchema,
+    netRefund: BucksAmountSchema,
   }),
   z.strictObject({
     type: z.literal("house_fee"),
     source: z.enum(["settlement", "cancellation"]),
     ratePercent: z.number().int().min(0).max(100),
-    grossAmount: z.number().int().positive(),
-    fee: z.number().int().positive(),
+    grossAmount: BucksStakeSchema,
+    fee: BucksStakeSchema,
     basis: z.enum(["matched_profit", "submitted_stake"]).optional(),
   }),
   z.strictObject({

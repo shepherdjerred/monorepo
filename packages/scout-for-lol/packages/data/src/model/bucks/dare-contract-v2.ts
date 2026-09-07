@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BucksStakeSchema } from "#src/model/bucks/bryan-bucks.ts";
+import { BucksStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
 import { QueueTypeSchema } from "#src/model/core/state.ts";
 import { dareGameSetDomainIssuesV2 } from "#src/model/bucks/dare-domains.ts";
 import {

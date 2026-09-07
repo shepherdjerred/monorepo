@@ -1,5 +1,8 @@
 import {
+  creditOf,
+  debitOf,
   type BucksLedgerContext,
+  type BucksStake,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import {
@@ -43,7 +46,7 @@ export async function ensureHouseAccountInTransaction(
   });
   const balance = await applyBucksDelta(tx, {
     bucksAccountId: created.id,
-    delta: HOUSE_BANKROLL,
+    delta: creditOf(HOUSE_BANKROLL),
     kind: "seed",
     context: {
       type: "seed",
@@ -67,7 +70,7 @@ export async function transferHouseCut(
   input: {
     serverId: DiscordGuildId;
     bucksAccountId: number;
-    amount: number;
+    amount: BucksStake;
     kind: "winner_fee" | "cancel_fee";
     context: BucksLedgerContext;
     matchId: string;
@@ -82,7 +85,7 @@ export async function transferHouseCut(
   const house = await ensureHouseAccountInTransaction(tx, input.serverId);
   const balanceAfter = await applyBucksDelta(tx, {
     bucksAccountId: input.bucksAccountId,
-    delta: -input.amount,
+    delta: debitOf(input.amount),
     kind: input.kind,
     context: input.context,
     matchId: input.matchId,
@@ -90,7 +93,7 @@ export async function transferHouseCut(
   });
   await applyBucksDelta(tx, {
     bucksAccountId: house.id,
-    delta: input.amount,
+    delta: creditOf(input.amount),
     kind: input.kind,
     context: input.context,
     matchId: input.matchId,
