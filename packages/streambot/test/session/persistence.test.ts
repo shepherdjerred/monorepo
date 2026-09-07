@@ -81,6 +81,68 @@ describe("persistence round-trip", () => {
   });
 });
 
+describe("source.mode across the v2 boundary", () => {
+  // `mode` was added to SourceSchema WITHOUT a version bump, on the claim that an existing v2 file
+  // (written before the field existed) still parses and a new one round-trips. Both halves are
+  // asserted here because getting it wrong silently discards every in-flight resume on deploy.
+  test("a v2 file written before `mode` existed still loads", async () => {
+    const file = await tempFile();
+    const state = makeState();
+    await writeFile(file, JSON.stringify(state));
+    const loaded = await loadState(file, 3600, state.savedAt);
+    expect(loaded?.current?.source.mode).toBeUndefined();
+    expect(loaded?.current?.source).toEqual({
+      kind: "file",
+      path: "/videos/movie.mkv",
+      title: "Movie",
+    });
+  });
+
+  test("mode round-trips on both the current item and the queue", async () => {
+    const file = await tempFile();
+    const state = makeState({
+      current: {
+        source: {
+          kind: "file",
+          path: "/videos/movie.mkv",
+          title: "Movie",
+          mode: "video",
+        },
+        requesterId: U,
+        title: "Movie",
+        positionSeconds: 42,
+      },
+      queue: [
+        {
+          source: { kind: "url", url: "https://youtu.be/abc", mode: "music" },
+          requesterId: U,
+        },
+      ],
+    });
+    await saveState(file, state);
+    const loaded = await loadState(file, 3600, state.savedAt);
+    expect(loaded).toEqual(state);
+    expect(loaded?.current?.source.mode).toBe("video");
+    expect(loaded?.queue[0]?.source.mode).toBe("music");
+  });
+
+  test("rejects a mode outside the enum rather than dropping it", async () => {
+    const file = await tempFile();
+    const bad = makeState();
+    await writeFile(
+      file,
+      JSON.stringify({
+        ...bad,
+        current: {
+          ...bad.current,
+          source: { ...bad.current?.source, mode: "audio" },
+        },
+      }),
+    );
+    expect(await loadState(file, 3600, 1000)).toBeNull();
+  });
+});
+
 describe("loadState fail-soft cases", () => {
   test("missing file returns null", async () => {
     const file = await tempFile();

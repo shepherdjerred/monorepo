@@ -1,3 +1,5 @@
+import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
+import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { describe, expect, test } from "vitest";
 import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import type {
@@ -54,6 +56,7 @@ function makeConfig(adminIds: string[], voiceEnabled = false) {
 const RESOLVED_STUB: ResolvedSource = {
   title: "resolved",
   ffmpegInput: "resolved://input",
+  mediaKind: "video",
   chapters: [],
 };
 
@@ -101,6 +104,9 @@ function makeHandler(over: {
    * second value simulates playback advancing to a different item during the picker's wait.
    */
   currentSourceId?: string | null | (string | null)[];
+  /** Rollout gate plus a real in-memory history, for the `/stream personal usual` replay path. */
+  musicOverVoice?: boolean;
+  history?: MediaHistoryStore;
 }): Harness & { seeks: number[]; subtitleMenuPending: () => boolean } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
@@ -172,6 +178,18 @@ function makeHandler(over: {
     },
     stopVoiceDebugCapture: () => ({ outcome: "none" }),
     voiceDebugCaptureStatus: () => null,
+    guildId: GUILD,
+    channelId: CHANNEL,
+    ...(over.musicOverVoice === undefined
+      ? {}
+      : {
+          featureGate: {
+            assistantV2: () => Promise.resolve(true),
+            history: () => Promise.resolve(true),
+            musicOverVoice: () => Promise.resolve(over.musicOverVoice ?? false),
+          },
+        }),
+    ...(over.history === undefined ? {} : { history: over.history }),
   };
   return {
     handler: new CommandHandler(deps),
@@ -266,11 +284,23 @@ function viewWithCurrent(requesterId: string): PlaybackView {
       requesterId: uid(requesterId),
       chapters: [],
       kind: "search",
+      mediaKind: null,
       sourceId: "search:Current Song",
       durationSeconds: null,
     },
   };
 }
+
+/** A current item whose only chapter starts after the asserted position. */
+const SINGLE_CHAPTER_CURRENT = {
+  title: "Current Movie",
+  requesterId: uid(REQUESTER),
+  kind: "file",
+  mediaKind: null,
+  sourceId: "file:Current Movie",
+  durationSeconds: null,
+  chapters: [{ index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 }],
+} as const;
 
 describe("CommandHandler routing + acks", () => {
   test("play pre-resolves a search source (defer+edit) and acks", async () => {
@@ -468,16 +498,7 @@ describe("CommandHandler routing + acks", () => {
   test("nowplaying skips the chapter clause when position is before the first chapter", async () => {
     const view: PlaybackView = {
       ...viewWithChapters(REQUESTER),
-      current: {
-        title: "Current Movie",
-        requesterId: uid(REQUESTER),
-        kind: "file",
-        sourceId: "file:Current Movie",
-        durationSeconds: null,
-        chapters: [
-          { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
-        ],
-      },
+      current: SINGLE_CHAPTER_CURRENT,
       positionSeconds: 10,
     };
     const h = makeHandler({ view });
@@ -615,6 +636,7 @@ describe("CommandHandler permissions", () => {
           requesterId: uid(OTHER),
           chapters: [],
           kind: "search",
+          mediaKind: null,
           sourceId: "search:Item A",
           durationSeconds: null,
         },
@@ -772,6 +794,7 @@ function viewWithChapters(requesterId: string): PlaybackView {
       title: "Current Movie",
       requesterId: uid(requesterId),
       kind: "file",
+      mediaKind: null,
       sourceId: "file:Current Movie",
       durationSeconds: null,
       chapters: [
@@ -861,6 +884,96 @@ const SIDECAR_CANDIDATE: SubtitleCandidate = {
   modifier: null,
 };
 
+function seedUsual(history: MediaHistoryStore): void {
+  const media = {
+    title: "A Song",
+    provider: "youtube" as const,
+    source: { kind: "url" as const, url: "https://youtu.be/song" },
+    canonicalUrl: "https://youtu.be/song",
+  };
+  const scope = { guildId: GUILD, channelId: CHANNEL, userId: REQUESTER };
+  const requestId = history.recordQueueRequest({
+    scope,
+    rawQuery: "A Song",
+    intent: inferMediaIntent({ query: "A Song" }),
+    media,
+  });
+  history.recordPlaybackStart({ requestId, scope, media });
+}
+
+describe("CommandHandler stored-candidate rollout gate", () => {
+  test("forces a history replay to video while the flag is off", async () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      seedUsual(history);
+      const h = makeHandler({ history, musicOverVoice: false });
+      const { interaction } = fakeInteraction({
+        sub: "usual",
+        group: "personal",
+        userId: REQUESTER,
+      });
+      await h.handler.run(interaction);
+      // Favorites, saved queues, "my usual" and continue-series queue stored candidates without
+      // passing through `PlaybackCommandService.play`. Stored sources are deliberately mode-less,
+      // so without re-applying the gate they auto-classify onto the transport it disables.
+      const added = h.events.find((event) => event.type === "ADD");
+      expect(added?.source.mode).toBe("video");
+    } finally {
+      history.close();
+    }
+  });
+
+  test("leaves a history replay to the classifier while the flag is on", async () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      seedUsual(history);
+      const h = makeHandler({ history, musicOverVoice: true });
+      const { interaction } = fakeInteraction({
+        sub: "usual",
+        group: "personal",
+        userId: REQUESTER,
+      });
+      await h.handler.run(interaction);
+      // The control: a gate that stamped video unconditionally would disable music for every
+      // stored candidate while the test above stayed green.
+      const added = h.events.find((event) => event.type === "ADD");
+      expect(added?.source.mode).toBeUndefined();
+    } finally {
+      history.close();
+    }
+  });
+});
+
+describe("CommandHandler transport selection", () => {
+  test("an explicit subtitle request settles the transport as video", async () => {
+    const h = makeHandler({});
+    const { interaction } = fakeInteraction({
+      sub: "play",
+      strings: { query: "a movie", subtitles: "on" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // Subtitles only exist on a picture. Left on `auto`, the classifier could pick music and the
+    // music branch drops the burn silently — acknowledging a preference the user never sees.
+    const added = h.events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("video");
+  });
+
+  test("leaves the transport to the classifier when no subtitles were asked for", async () => {
+    const h = makeHandler({});
+    const { interaction } = fakeInteraction({
+      sub: "play",
+      strings: { query: "a song" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // The control: an over-broad version of the rule above would force every request to video and
+    // disable music playback entirely, while the subtitle test stayed green.
+    const added = h.events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBeUndefined();
+  });
+});
+
 describe("CommandHandler subtitles command (track picker)", () => {
   test("defers, lists candidates, presents the menu, and dispatches the pick", async () => {
     const h = makeHandler({
@@ -889,6 +1002,52 @@ describe("CommandHandler subtitles command (track picker)", () => {
     );
     // Single-flight slot is released after a successful pick.
     expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("refuses mode:music combined with subtitles, and allows each alone", async () => {
+    const h = makeHandler({});
+    const { interaction, replies } = fakeInteraction({
+      sub: "play",
+      strings: { query: "a song", mode: "music", subtitles: "on" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // Both options are explicit, so accepting the pair and dropping one would acknowledge a
+    // subtitle preference the user will never see — and `prepareStream` throws on the combination.
+    expect(replies[0]).toContain("audio only");
+    expect(replies[0]).toContain("mode:video");
+
+    // The control: the guard must fire on the contradiction and nothing else. An over-broad
+    // version would reject every music request, or every subtitled one, while the case above
+    // stayed green.
+    const musicOnly = fakeInteraction({
+      sub: "play",
+      strings: { query: "a song", mode: "music" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(musicOnly.interaction);
+    expect(musicOnly.replies[0] ?? "").not.toContain("audio only");
+  });
+
+  test("refuses an audio-only item and names the fix", async () => {
+    const base = viewWithCurrent(REQUESTER);
+    const h = makeHandler({
+      view:
+        base.current === null
+          ? base
+          : { ...base, current: { ...base.current, mediaKind: "music" } },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+    });
+    const { interaction, replies, state } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // `prepareStream` hard-throws when `subtitleBurn` meets `audioOnly`. Refusing here — before
+    // the picker, before any candidate lookup — turns a guaranteed failed segment into an answer.
+    expect(replies[0]).toContain("audio only");
+    expect(replies[0]).toContain("mode:video");
+    expect(state.deferred).toBe(false);
   });
 
   test("reports nothing playing when idle (no defer, no candidate lookup)", async () => {

@@ -7,6 +7,9 @@ export const voiceToolSchemas = {
     query: z.string().min(1),
     source: z.enum(["auto", "history", "local", "youtube"]),
     placement: z.enum(["queue", "next", "now"]),
+    // "watch this" vs "play this" is the clearest transport signal a speaker gives, and the model
+    // hears the verb we do not: `inferMediaIntent` only sees the query after the verb is stripped.
+    mode: z.enum(["auto", "music", "video"]),
   }),
   skip: EmptyInputSchema,
   stop: EmptyInputSchema,

@@ -81,11 +81,36 @@ export type ReceivedVoiceAudio = {
 
 export type MediaConnectionOptions = {
   receiveAudio?: boolean;
+  /**
+   * This connection intends to SEND audio even though it is not receiving any. Distinct from
+   * `receiveAudio`, which also controls `self_deaf` and the packetizer's chain root.
+   */
+  sendAudio?: boolean;
   receiveObserver?: VoiceReceiveObserver;
 };
 
-export function voiceAudioSdpDirection(receiveAudio: boolean): "sendrecv" | "inactive" {
-  return receiveAudio ? "sendrecv" : "inactive";
+/**
+ * The direction advertised for the audio m-line.
+ *
+ * **This string is written from Discord's point of view, not ours.** The SDP built here is
+ * installed with `setRemoteDescription(..., "answer")`, so it describes the REMOTE endpoint. A
+ * direction naming what we want to do is therefore backwards: to send audio we need Discord to
+ * receive it, which is `recvonly`. Saying `sendonly` would declare that Discord sends and we
+ * listen, and libdatachannel would refuse to let the local track send at all — the same silence
+ * as `inactive`, arrived at from the opposite direction.
+ *
+ * `inactive` declares a stream neither peer may use, so a connection that intends to emit audio
+ * has to say so; installing a packetizer is not enough on its own. `receiveAudio` keeps its
+ * historical `sendrecv`, which is symmetric and so reads the same from either side, and a
+ * connection asking for neither still says `inactive` — so every existing caller, Go Live among
+ * them, negotiates exactly what it always has.
+ */
+export function voiceAudioSdpDirection(
+  receiveAudio: boolean,
+  sendAudio = false,
+): "sendrecv" | "recvonly" | "inactive" {
+  if (receiveAudio) return "sendrecv";
+  return sendAudio ? "recvonly" : "inactive";
 }
 
 export function prepareReceivedOpus(options: {
@@ -131,6 +156,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
   private _davePendingTransitions = new Map<number, number>();
   private _daveDowngraded = false;
   private readonly _receiveAudio: boolean;
+  private readonly _sendAudio: boolean;
   private _receiveObserver: VoiceReceiveObserver | undefined;
   private readonly _audioUsersBySsrc = new Map<number, string>();
   private readonly _speakingSsrcs = new Set<number>();
@@ -161,6 +187,7 @@ export abstract class BaseMediaConnection extends EventEmitter<MediaConnectionEv
     this.botId = botId;
     this.ready = callback;
     this._receiveAudio = options.receiveAudio ?? false;
+    this._sendAudio = options.sendAudio ?? false;
     this._receiveObserver = options.receiveObserver;
     this._webRtcWrapper = new WebRtcConnWrapper(this);
     this.reportReceiveState();
@@ -414,7 +441,7 @@ a=extmap:3 http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extension
 a=setup:passive
 a=mid:0
 a=maxptime:60
-a=${voiceAudioSdpDirection(this._receiveAudio)}
+a=${voiceAudioSdpDirection(this._receiveAudio, this._sendAudio)}
 ${iceUsername}
 ${icePassword}
 ${fingerprint}

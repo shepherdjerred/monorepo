@@ -84,6 +84,14 @@ const config = VoiceConfigSchema.parse({
   openAiApiKey: "test-key",
 });
 
+/** A spoken play whose query is a URL — refused at the voice boundary, never queued. */
+const URL_PLAY_ARGS = {
+  query: "https://youtube.com/watch?v=not-accepted",
+  source: "youtube",
+  placement: "queue",
+  mode: "auto",
+} as const;
+
 describe("local voice probe", () => {
   test("parses only AVFoundation audio devices", () => {
     const output = `[AVFoundation indev @ 0x1] AVFoundation video devices:
@@ -236,7 +244,7 @@ Error opening input files: Input/output error`;
     const commands = new DryRunVoiceCommandPort();
     const signal = new AbortController().signal;
     await commands.play(
-      { query: "Movie", source: "youtube", placement: "next" },
+      { query: "Movie", source: "youtube", placement: "next", mode: "auto" },
       signal,
     );
     await commands.skip();
@@ -279,16 +287,9 @@ Error opening input files: Input/output error`;
   test("shares production URL refusal without constructing playback", () => {
     const commands = new DryRunVoiceCommandPort();
     const signal = new AbortController().signal;
-    expect(() =>
-      commands.play(
-        {
-          query: "https://youtube.com/watch?v=not-accepted",
-          source: "youtube",
-          placement: "queue",
-        },
-        signal,
-      ),
-    ).toThrow("Say a title instead of a URL.");
+    expect(() => commands.play(URL_PLAY_ARGS, signal)).toThrow(
+      "Say a title instead of a URL.",
+    );
     expect(commands.invocations).toEqual([]);
   });
 });

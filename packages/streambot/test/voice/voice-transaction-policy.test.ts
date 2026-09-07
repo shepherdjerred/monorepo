@@ -87,6 +87,7 @@ describe("voice transaction policy", () => {
         query: "Local Movie",
         source: "auto",
         placement: "queue",
+        mode: "auto",
       }).success,
     ).toBe(true);
     expect(

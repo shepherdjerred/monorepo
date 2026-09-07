@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  MediaModeSchema,
+  type MediaMode,
+} from "@shepherdjerred/streambot/sources/media-kind.ts";
 
 /**
  * A precise pick of ONE subtitle track (from `/stream subtitles`'s picker), as opposed to
@@ -40,7 +44,25 @@ export type SubtitlePref = z.infer<typeof SubtitlePrefSchema>;
 /**
  * A requested playback source, before resolution. `file` is a concrete local path; `url` is any
  * yt-dlp-supported link; `search` is a yt-dlp search query resolved to a video at play time. Each
- * variant may carry an optional per-request subtitle preference.
+ * variant may carry a per-request subtitle preference and a `mode` override (music vs video) for
+ * when the resolve-time classifier gets an item wrong.
+ *
+ * `mode` uses `.default("auto")` rather than `.optional()` deliberately. The default normalizes the
+ * absent case exactly once, here, so the in-memory {@link Source} type is *total*: nothing
+ * downstream ever writes `source.mode ?? "auto"`, and no consumer can forget to. The cost is that
+ * every hand-written `Source` literal must now name a mode, which the compiler enforces.
+ *
+ * `mode` is OPTIONAL rather than defaulted. Absent and `"auto"` are indistinguishable everywhere
+ * downstream — `classifyMediaKind` branches only on `"music"`/`"video"` — so a default would buy no
+ * totality worth having while forcing an explicit `mode` onto every `Source` literal in `src/` and
+ * `e2e/`. It also keeps `withMode` mirroring `withSubtitles` immediately below it, which takes
+ * `SubtitlePref | undefined` for exactly the same reason.
+ *
+ * This is NOT a schema version bump. `PersistedQueuedSchema`/`PersistedCurrentSchema`
+ * (`state/persistence.ts`, still `version: z.literal(2)`) and the history row's `source_json`
+ * (`history/media-history.ts`) both embed this schema verbatim, so an existing v2 state file simply
+ * lacks the key and parses as `undefined`. Bumping the version would instead discard every
+ * in-flight resume across the deploy, for nothing.
  */
 export const SourceSchema = z.discriminatedUnion("kind", [
   z.strictObject({
@@ -48,16 +70,19 @@ export const SourceSchema = z.discriminatedUnion("kind", [
     path: z.string().min(1),
     title: z.string().min(1),
     subtitles: SubtitlePrefSchema.optional(),
+    mode: MediaModeSchema.optional(),
   }),
   z.strictObject({
     kind: z.literal("url"),
     url: z.url(),
     subtitles: SubtitlePrefSchema.optional(),
+    mode: MediaModeSchema.optional(),
   }),
   z.strictObject({
     kind: z.literal("search"),
     query: z.string().min(1),
     subtitles: SubtitlePrefSchema.optional(),
+    mode: MediaModeSchema.optional(),
   }),
 ]);
 
@@ -85,7 +110,8 @@ export function sourceLabel(source: Source): string {
  * comparison alone would miss. The `kind:` prefix keeps two variants from ever colliding (so it also
  * subsumes the source-kind check), and the concrete locator (path/url/query) distinguishes two files
  * or URLs that happen to share a title. Ignores the per-request subtitle preference on purpose: the
- * point is to identify the underlying item, not its current subtitle setting.
+ * point is to identify the underlying item, not its current subtitle setting — and ignores `mode`
+ * for the same reason: music-vs-video is a setting on an item, not a different item.
  */
 export function sourceIdentity(source: Source): string {
   switch (source.kind) {
@@ -110,5 +136,22 @@ export function withSubtitles(
       return { ...source, subtitles };
     case "search":
       return { ...source, subtitles };
+  }
+}
+
+/**
+ * Attach a music/video mode override to a source, preserving its discriminant. Switched on `kind`
+ * rather than spread generically for the same reason {@link withSubtitles} is: TypeScript widens a
+ * spread of a discriminated union to the union of all its members, which loses the narrowing every
+ * consumer of {@link Source} relies on.
+ */
+export function withMode(source: Source, mode: MediaMode | undefined): Source {
+  switch (source.kind) {
+    case "file":
+      return { ...source, mode };
+    case "url":
+      return { ...source, mode };
+    case "search":
+      return { ...source, mode };
   }
 }

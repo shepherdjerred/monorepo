@@ -1,3 +1,4 @@
+import { withMode } from "@shepherdjerred/streambot/sources/source.ts";
 import type {
   CommandHandlerDeps,
   CommandInteraction,
@@ -79,7 +80,7 @@ export class MediaCommandHandler {
         await interaction.reply("That history entry does not exist.");
         return;
       }
-      this.dispatchCandidate(candidate, interaction, "queue");
+      await this.dispatchCandidate(candidate, interaction, "queue");
       await interaction.reply(`Queued **${candidate.title}** from history.`);
       return;
     }
@@ -188,7 +189,7 @@ export class MediaCommandHandler {
     const name = interaction.getStringRequired("name");
     const items = this.deps.history?.savedQueue(interaction.userId, name) ?? [];
     for (const item of items) {
-      this.dispatchCandidate(item, interaction, "queue");
+      await this.dispatchCandidate(item, interaction, "queue");
     }
     await interaction.reply(
       items.length === 0
@@ -206,7 +207,7 @@ export class MediaCommandHandler {
       await interaction.reply("You do not have enough playback history yet.");
       return;
     }
-    this.dispatchCandidate(candidate, interaction, "queue");
+    await this.dispatchCandidate(candidate, interaction, "queue");
     await interaction.reply(`Queued your usual: **${candidate.title}**.`);
   }
 
@@ -222,7 +223,7 @@ export class MediaCommandHandler {
         .library()
         .find((entry) => entry.title.includes(query));
       if (match === undefined) continue;
-      this.dispatchCandidate(
+      await this.dispatchCandidate(
         {
           token: crypto.randomUUID(),
           provider: "local",
@@ -242,12 +243,20 @@ export class MediaCommandHandler {
     );
   }
 
-  private dispatchCandidate(
+  private async dispatchCandidate(
     candidate: MediaCandidate,
     interaction: CommandInteraction,
     placement: "queue" | "now",
-  ): void {
+  ): Promise<void> {
     const scope = this.requireScope(interaction);
+    // History replays, favorites, saved queues, "my usual" and continue-series all arrive here
+    // without passing through `PlaybackCommandService.play`, so the rollout gate has to be applied
+    // on this path too. Stored sources are deliberately kept mode-less, so with the flag off they
+    // would otherwise auto-classify and take the voice transport the flag is meant to disable.
+    const mode = await this.playback.resolveMediaMode(
+      interaction.userId,
+      candidate.source.mode,
+    );
     const requestId = this.deps.history?.recordQueueRequest({
       scope,
       rawQuery: candidate.title,
@@ -256,7 +265,7 @@ export class MediaCommandHandler {
     });
     this.deps.dispatch({
       type: placement === "now" ? "PLAY_NOW" : "ADD",
-      source: candidate.source,
+      source: withMode(candidate.source, mode),
       requesterId: interaction.userId,
       ...(requestId === undefined ? {} : { requestId }),
     });

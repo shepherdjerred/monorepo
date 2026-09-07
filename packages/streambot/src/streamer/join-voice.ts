@@ -2,6 +2,7 @@ import {
   type MediaConnectionCloseInfo,
   type ReceivedVoiceAudio,
   type Streamer,
+  type VoiceJoinOptions,
   type VoiceReceiveObserver,
 } from "@shepherdjerred/discord-video-stream";
 import type { JoinVoiceInput } from "@shepherdjerred/streambot/machine/types.ts";
@@ -18,6 +19,30 @@ const log = logger.child("streamer");
 
 function onConnectionAudioError(error: Error): void {
   log.warn("Discord voice receive failed", { error: getErrorMessage(error) });
+}
+
+/**
+ * The options one voice join is made with, built separately from the join so the invariants below
+ * can be asserted without a live Discord client.
+ *
+ * `sendAudio` is unconditional, and separate from `receiveAudio` on purpose. The audio packetizer is
+ * installed on `receiveAudio || sendAudio`; without one `sendAudioFrame` drops every frame and
+ * returns false, so a song would be inaudible whenever the voice assistant is disabled. It cannot be
+ * derived from the first item's kind either — the join happens before anything is resolved, and a
+ * queue may alternate between music and video. `receiveAudio` is left alone because it separately
+ * drives the SDP direction, the gateway `self_deaf` state, and where the receive chain is rooted.
+ */
+export function buildVoiceJoinOptions(options: {
+  receiveAudio: boolean;
+  receiveObserver: VoiceReceiveObserver | null;
+}): VoiceJoinOptions {
+  return {
+    receiveAudio: options.receiveAudio,
+    sendAudio: true,
+    ...(options.receiveObserver === null
+      ? {}
+      : { receiveObserver: options.receiveObserver }),
+  };
 }
 
 export async function joinStreamerVoice(options: {
@@ -40,12 +65,9 @@ export async function joinStreamerVoice(options: {
       await options.streamer.joinVoice(
         options.input.guildId,
         options.input.channelId,
-        {
-          receiveAudio: options.receiveAudio,
-          ...(options.receiveObserver === null
-            ? {}
-            : { receiveObserver: options.receiveObserver }),
-        },
+        // Built by the exported function above rather than inline, so the test that pins
+        // `sendAudio: true` is pinning the object this call actually makes.
+        buildVoiceJoinOptions(options),
       );
     },
   );

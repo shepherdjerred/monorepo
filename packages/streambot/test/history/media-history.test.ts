@@ -65,6 +65,65 @@ describe("media history", () => {
     }
   });
 
+  test("normalizes a one-off mode override to auto before storing an item", () => {
+    // `mode:` is a property of ONE play, but `source_json` is what every later replay is rebuilt
+    // from — and `sourceIdentity` ignores `mode`, so this row is also what the NEXT play of the
+    // same URL overwrites. Storing the override verbatim would pin the item to that transport for
+    // everyone, forever, from a single "watch it this time" request.
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      const media = {
+        title: "Pinned By Accident",
+        provider: "youtube" as const,
+        source: {
+          kind: "url" as const,
+          url: "https://youtu.be/override",
+          mode: "video" as const,
+        },
+      };
+      const requestId = history.recordQueueRequest({
+        scope: USER_SCOPE,
+        rawQuery: media.title,
+        intent: inferMediaIntent({ query: media.title }),
+        media,
+        nowMs: 1000,
+      });
+      history.recordPlaybackStart({
+        requestId,
+        scope: USER_SCOPE,
+        media,
+        nowMs: 1000,
+      });
+
+      const found = history.search(USER_SCOPE, "Pinned");
+      expect(found).toHaveLength(1);
+      expect(found[0]?.source.mode).toBeUndefined();
+      // The rest of the source must survive the strip — this normalizes one field, not the row.
+      expect(found[0]?.source).toEqual({
+        kind: "url",
+        url: "https://youtu.be/override",
+      });
+    } finally {
+      history.close();
+    }
+  });
+
+  test("leaves a request that carried no mode byte-identical to today", () => {
+    // Every stored item lands mode-less regardless of how it was requested, so a replay's transport
+    // is decided by the classifier at play time rather than inherited from whoever queued it last.
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      record(history, "Plain Item", "https://youtu.be/plain");
+      const found = history.search(USER_SCOPE, "Plain");
+      // Length asserted first: `found[0]?.source.mode` is `undefined` for an EMPTY result too, so
+      // without this the assertion below would pass against a store that saved nothing at all.
+      expect(found).toHaveLength(1);
+      expect(found[0]?.source.mode).toBeUndefined();
+    } finally {
+      history.close();
+    }
+  });
+
   test("returns the latest distinct previous item", () => {
     const history = new MediaHistoryStore(":memory:");
     try {

@@ -21,10 +21,15 @@ import {
 import { randomTip } from "@shepherdjerred/streambot/discord/tips.ts";
 import {
   sourceLabel,
+  withMode,
   withSubtitles,
   type SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import { isLikelyPlaylist } from "@shepherdjerred/streambot/sources/ytdlp.ts";
+import {
+  MediaModeSchema,
+  type MediaMode,
+} from "@shepherdjerred/streambot/sources/media-kind.ts";
 import {
   BlockedSourceError,
   isBlockedSource,
@@ -51,6 +56,8 @@ type PlayCommandInput = {
   readonly query: string;
   readonly subtitles: SubtitlePref | undefined;
   readonly next: boolean;
+  /** Raw `mode:` option. The feature gate is applied later, per request, not here. */
+  readonly mode: MediaMode | undefined;
 };
 
 type DiscoveredPlayInput = PlayCommandInput & {
@@ -82,6 +89,28 @@ export async function runPlayCommand(
   const selectedSource = MediaSourcePreferenceSchema.parse(
     interaction.getString("source") ?? "auto",
   );
+  const requestedMode = MediaModeSchema.parse(
+    interaction.getString("mode") ?? "auto",
+  );
+
+  // Subtitles only exist on a picture. `mode:music` plays audio only, `prepareStream` throws if a
+  // burn is passed with it, and the music branch drops one silently — so an explicit subtitle
+  // request must never be quietly discarded.
+  const wantsSubtitles =
+    interaction.getString("subtitles") !== null ||
+    interaction.getString("sublang") !== null;
+  if (requestedMode === "music" && wantsSubtitles) {
+    await interaction.reply(
+      "`mode:music` plays audio only, so subtitles can't be burned in. Drop the subtitle options, or use `mode:video`.",
+    );
+    return;
+  }
+  // With `mode:auto` the classifier would otherwise be free to pick music and drop the subtitle
+  // the user explicitly asked for. Asking for subtitles IS asking for a picture, so it settles the
+  // transport — and if the item turns out to have no video track, the resolver rejects it by name
+  // rather than playing a song with the request silently ignored.
+  const effectiveMode =
+    requestedMode === "auto" && wantsSubtitles ? "video" : requestedMode;
 
   if (
     selectedPlacement === "now" &&
@@ -105,6 +134,7 @@ export async function runPlayCommand(
       query,
       subtitles,
       next,
+      mode: effectiveMode,
       source: selectedSource,
       placement: selectedPlacement,
     });
@@ -118,13 +148,21 @@ export async function runPlayCommand(
       query,
       subtitles,
       next,
+      mode: effectiveMode,
       source: selectedSource,
       placement: selectedPlacement,
     });
     return;
   }
 
-  await runLegacyPlay({ deps, interaction, query, subtitles, next });
+  await runLegacyPlay({
+    deps,
+    interaction,
+    query,
+    subtitles,
+    next,
+    mode: effectiveMode,
+  });
 }
 
 async function runPlaylistRequest(input: DiscoveredPlayInput): Promise<void> {
@@ -224,6 +262,12 @@ async function runPlaylist(
     await interaction.editReply(dispatchDenial);
     return;
   }
+  // One gate evaluation for the whole playlist: every item is queued by the same user in the same
+  // scope, so per-item lookups would be identical flag reads at up to `playlistLimit` items.
+  const itemMode = await new PlaybackCommandService(deps).resolveMediaMode(
+    interaction.userId,
+    input.mode,
+  );
   const dispatchItems =
     placement === "next" || next ? items.toReversed() : items;
   if (placement === "now" && dispatchItems.length > 0) {
@@ -234,7 +278,10 @@ async function runPlaylist(
   }
   for (const [index, item] of dispatchItems.entries()) {
     const itemPlacement = playlistItemPlacement(index, placement, next);
-    const source = { kind: "url", url: item.url, subtitles } as const;
+    const source = withMode(
+      { kind: "url", url: item.url, subtitles },
+      itemMode,
+    );
     const requestId =
       historyEnabled && history !== undefined && scope !== null
         ? history.recordQueueRequest({
@@ -266,7 +313,8 @@ async function runPlaylist(
 }
 
 async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
-  const { deps, interaction, query, subtitles, source, placement } = input;
+  const { deps, interaction, query, subtitles, source, placement, mode } =
+    input;
   await interaction.defer();
   try {
     const result = await new PlaybackCommandService(deps).play({
@@ -276,6 +324,7 @@ async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
       userId: interaction.userId,
       spoken: false,
       ...(subtitles === undefined ? {} : { subtitles }),
+      ...(mode === undefined ? {} : { mode }),
     });
     await interaction.editReply(`${result.message}\n\nTip: ${randomTip()}`);
   } catch (error) {
@@ -288,12 +337,15 @@ async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
 }
 
 async function runLegacyPlay(input: PlayCommandInput): Promise<void> {
-  const { deps, interaction, query, subtitles, next } = input;
+  const { deps, interaction, query, subtitles, next, mode } = input;
   const userId = interaction.userId;
 
-  const source = withSubtitles(
-    resolvePlayQuery(query, deps.library()),
-    subtitles,
+  // The gate lives on the service because that is where `DiscoveryScope` is assembled; this path
+  // never calls `play()`, so it asks for the decision explicitly rather than skipping it. Without
+  // this, the legacy path would ignore the rollout flag entirely.
+  const source = withMode(
+    withSubtitles(resolvePlayQuery(query, deps.library()), subtitles),
+    await new PlaybackCommandService(deps).resolveMediaMode(userId, mode),
   );
   if (isBlockedSource(source)) {
     await deps.announce(shameMessage(userId));

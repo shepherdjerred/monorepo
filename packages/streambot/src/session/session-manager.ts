@@ -249,6 +249,9 @@ export class SessionManager {
       pool: this.deps.pool,
       announce: this.deps.announce,
       spawn: (params) => this.spawn(params),
+      ...(this.deps.featureGate === undefined
+        ? {}
+        : { featureGate: this.deps.featureGate }),
     };
   }
 

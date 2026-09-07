@@ -228,10 +228,16 @@ export const streamActive = new Gauge({
   registers: [register],
 });
 
+/**
+ * `transport` distinguishes the two Discord media paths an item can take: `go-live` for video and
+ * `voice` for music sent audio-only over the normal voice connection. Without it a music segment is
+ * indistinguishable from a video one that happened to run in software, and the two have completely
+ * different health signals — a music segment has no encoder, no fps and no hardware path at all.
+ */
 export const streamSegmentsTotal = new Counter({
   name: "streambot_stream_segments_total",
-  help: "Completed stream segments, by hardware path and outcome (ended | error | crash | ended-short)",
-  labelNames: ["hardware", "outcome"] as const,
+  help: "Completed stream segments, by transport, hardware path and outcome (ended | error | crash | ended-short)",
+  labelNames: ["transport", "hardware", "outcome"] as const,
   registers: [register],
 });
 
@@ -242,8 +248,8 @@ export const streamSegmentsTotal = new Counter({
  */
 export const streamCrashesTotal = new Counter({
   name: "streambot_stream_crashes_total",
-  help: "Mid-stream segment deaths, by pipeline mode and kind (crash | ended-short | stall)",
-  labelNames: ["pipeline", "kind"] as const,
+  help: "Mid-stream segment deaths, by transport, pipeline mode and kind (crash | ended-short | stall)",
+  labelNames: ["transport", "pipeline", "kind"] as const,
   registers: [register],
 });
 
@@ -257,8 +263,8 @@ export const gatewayDisruptionsTotal = new Counter({
 
 export const streamSegmentDurationSeconds = new Histogram({
   name: "streambot_stream_segment_duration_seconds",
-  help: "Wall-clock duration of a stream segment, by hardware path and outcome",
-  labelNames: ["hardware", "outcome"] as const,
+  help: "Wall-clock duration of a stream segment, by transport, hardware path and outcome",
+  labelNames: ["transport", "hardware", "outcome"] as const,
   buckets: [1, 5, 30, 60, 300, 900, 1800, 3600, 7200],
   registers: [register],
 });
@@ -456,6 +462,43 @@ export const voiceDuckTransitionsTotal = new Counter({
   name: "streambot_voice_duck_transitions_total",
   help: "Assistant duck state transitions, without session or user labels",
   labelNames: ["state"] as const,
+  registers: [register],
+});
+
+// --- outbound voice mixer ---------------------------------------------------
+
+/**
+ * Frames the mixer put on the wire, by the path that produced them.
+ *
+ * `passthrough` is the steady state (unity gain, no assistant audio): the music frame is forwarded
+ * byte-for-byte. `mixed` means the frame was decoded, gain-adjusted, summed and re-encoded — so a
+ * sustained `mixed` count with nobody speaking says the volume is not at 100%. `assistant-solo` is
+ * a reply with no music under it; `assistant-unmixed` is a reply packet that went out on its own
+ * because no music frame arrived to carry it, which reads as music production falling behind.
+ */
+export const voiceMixerFramesTotal = new Counter({
+  name: "streambot_voice_mixer_frames_total",
+  help: "Audio frames emitted onto the voice connection, by path (passthrough | mixed | assistant-solo | assistant-unmixed)",
+  labelNames: ["path"] as const,
+  registers: [register],
+});
+
+/**
+ * Frames that never reached the wire. This is the alert for a silent song: `sendAudioFrame`
+ * returning false (no packetizer, transport not ready) used to be completely invisible, so a whole
+ * track could play to an empty channel while the playback machine reported a clean end.
+ */
+export const voiceMixerDroppedFramesTotal = new Counter({
+  name: "streambot_voice_mixer_dropped_frames_total",
+  help: "Audio frames the mixer could not emit, by reason (transport | stale-port | no-connection | frame-size | codec-error | encoder-underrun | assistant-backlog)",
+  labelNames: ["reason"] as const,
+  registers: [register],
+});
+
+/** Send-side stalls: frames arriving from ffmpeg with none of them reaching the connection. */
+export const voiceMixerSendStallsTotal = new Counter({
+  name: "streambot_voice_mixer_send_stalls_total",
+  help: "Times the mixer observed frames arriving but none reaching the voice connection",
   registers: [register],
 });
 

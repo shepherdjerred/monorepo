@@ -15,8 +15,11 @@ const __require = __createRequire(import.meta.url);
 type SharpFactory = (typeof import("sharp"))["default"];
 let __sharpModule: SharpFactory | undefined;
 const __sharpName = ["sh", "arp"].join("");
-const sharp = ((...args: Parameters<SharpFactory>): ReturnType<SharpFactory> => {
-  const factory: SharpFactory = __sharpModule ?? (__sharpModule = __require(__sharpName));
+const sharp = ((
+  ...args: Parameters<SharpFactory>
+): ReturnType<SharpFactory> => {
+  const factory: SharpFactory =
+    __sharpModule ?? (__sharpModule = __require(__sharpName));
   return factory(...args);
 }) as SharpFactory;
 import { type Packet, AV_PKT_FLAG_KEY } from "node-av";
@@ -30,6 +33,7 @@ import { createDecoder } from "./LibavDecoder.js";
 import { Encoders } from "./encoders/index.js";
 import { buildSoftwareVideoGraph } from "./videoGraph.js";
 
+import type { AudioFrameSink } from "./AudioSink.js";
 import type { Request } from "zeromq";
 import type { SupportedVideoCodec } from "../utils.js";
 import type { Streamer } from "../client/index.js";
@@ -93,6 +97,35 @@ export type PrepareStreamOptions = {
    * Enable audio output
    */
   includeAudio: boolean;
+
+  /**
+   * Produce an audio-only stream: no video mapping, no encoder, no filter graph, no decode
+   * options. The video sizing settings (`width`/`height`/`frameRate`/`videoCodec`/`bitrateVideo`/
+   * `encoder`/`hardwareAcceleratedDecoding`) are ignored, so a host with no `/dev/dri` never emits
+   * a VAAPI device init for a stream that has no picture to encode.
+   *
+   * The audio mapping also becomes REQUIRED (`-map 0:a:0`, without the optional `?` the video path
+   * uses): a source with no audio track is a broken contract here, and failing at ffmpeg startup is
+   * far better than producing an empty NUT that hangs the demuxer forever.
+   *
+   * Throws when combined with any of `subtitleBurn`, `noTranscoding`, `includeAudio: false`, `pad`,
+   * or `inputColor: "hdr"`. Each is a request that cannot mean anything without a picture, and
+   * discarding one silently is the soft failure this codebase does not allow: the caller believes
+   * it asked for something and gets no signal that it did not happen. The sizing settings above are
+   * *ignored* rather than rejected because they carry defaults every caller inherits without asking
+   * for them; these five are only ever set deliberately.
+   *
+   * Off by default; every emitted argument of a video stream is unchanged.
+   */
+  audioOnly: boolean;
+
+  /**
+   * Gain applied by the output `volume` filter, as a linear multiplier (`1` = unity, `0.5` = half
+   * amplitude, `0` = silence). Replaces the hardcoded `1.0` this filter always carried — the filter
+   * instance exists for the (Node-only) zmq control path, but its initial value was never settable,
+   * so a caller that knew its desired volume up front had no way to say so.
+   */
+  audioVolume: number;
 
   /**
    * Functions to get encoder settings
@@ -376,7 +409,9 @@ class FfmpegArgumentBuilder {
     const inputArguments = this.inputs.flatMap((input, index) => [
       ...input.options,
       "-i",
-      typeof input.source === "string" ? input.source : `pipe:${index.toString()}`,
+      typeof input.source === "string"
+        ? input.source
+        : `pipe:${index.toString()}`,
     ]);
     return [
       ...inputArguments,
@@ -457,8 +492,47 @@ function quoteCommandArgument(argument: string): string {
   return `'${argument.replaceAll("'", "'\\''")}'`;
 }
 
-function ffmpegCommandLine(executable: string, args: readonly string[]): string {
-  return [executable, ...args].map(quoteCommandArgument).join(" ");
+/**
+ * Header values ffmpeg is given verbatim but that must never reach a log.
+ *
+ * yt-dlp hands back whatever a site needs to serve a signed URL, which for some extractors is a
+ * `Cookie` or `Authorization`. Those are credentials: the argument vector is logged in full by the
+ * observer, so rendering them here would persist a session token to production logs and to CI
+ * artifacts. The value is redacted for display only — `spawn` still receives the real one.
+ */
+const SENSITIVE_HEADER_NAMES = new Set([
+  "authorization",
+  "cookie",
+  "proxy-authorization",
+  "set-cookie",
+  "x-api-key",
+]);
+
+/** Redact credential-bearing values inside an ffmpeg `-headers` argument, keeping its shape. */
+export function redactHeaderArgument(value: string): string {
+  return value
+    .split(/\r?\n/u)
+    .map((line) => {
+      const separator = line.indexOf(":");
+      if (separator === -1) return line;
+      const name = line.slice(0, separator).trim().toLowerCase();
+      return SENSITIVE_HEADER_NAMES.has(name)
+        ? `${line.slice(0, separator + 1)} <redacted>`
+        : line;
+    })
+    .join("\r\n");
+}
+
+function ffmpegCommandLine(
+  executable: string,
+  args: readonly string[],
+): string {
+  // `-headers` takes its value as the NEXT argument, so redaction keys off the preceding flag
+  // rather than trying to recognise a credential by shape.
+  const rendered = args.map((arg, index) =>
+    args[index - 1] === "-headers" ? redactHeaderArgument(arg) : arg,
+  );
+  return [executable, ...rendered].map(quoteCommandArgument).join(" ");
 }
 
 function createFfmpegStderrHandler(
@@ -537,6 +611,20 @@ function createFfmpegStderrHandler(
   };
 }
 
+/**
+ * Render a linear gain for ffmpeg's `volume` filter.
+ *
+ * Unity renders as the literal `1.0` this filter has always carried, so a caller that leaves
+ * `audioVolume` alone gets a byte-identical command line to the one before the option existed —
+ * the rawvideo bots (`discord-plays-pokemon`, `discord-plays-mario-kart`) pin that vector. Every
+ * other value renders as itself, and `0` stays `0`: silence is a volume, not a missing option, so
+ * it must never be rounded or promoted back to unity. ffmpeg parses `1` and `1.0` identically; the
+ * spelling is preserved for the diff, not for the filter.
+ */
+function formatAudioGain(gain: number): string {
+  return gain === 1 ? "1.0" : String(gain);
+}
+
 export function prepareStream(
   input: string | Readable,
   options: Partial<PrepareStreamOptions> = {},
@@ -553,6 +641,8 @@ export function prepareStream(
     bitrateVideoMax: 7000,
     bitrateAudio: 128,
     includeAudio: true,
+    audioOnly: false,
+    audioVolume: 1,
     encoder: Encoders.software(),
     hardwareAcceleratedDecoding: false,
     hardwarePipelineMode: "full",
@@ -628,6 +718,17 @@ export function prepareStream(
 
       includeAudio: opts.includeAudio ?? defaultOptions.includeAudio,
 
+      audioOnly: opts.audioOnly ?? defaultOptions.audioOnly,
+
+      // 0 is a meaningful volume (silence), so this cannot use the isFiniteNonZero guard the other
+      // numeric options use — it would silently promote a requested mute back to unity gain.
+      audioVolume:
+        typeof opts.audioVolume === "number" &&
+        Number.isFinite(opts.audioVolume) &&
+        opts.audioVolume >= 0
+          ? opts.audioVolume
+          : defaultOptions.audioVolume,
+
       hardwareAcceleratedDecoding:
         opts.hardwareAcceleratedDecoding ??
         defaultOptions.hardwareAcceleratedDecoding,
@@ -663,6 +764,43 @@ export function prepareStream(
 
   const mergedOptions = mergeOptions(options);
 
+  // `audioOnly` does not modify the video path, it deletes it. Anything that is only meaningful in
+  // terms of a video stream is therefore a contradiction rather than a setting to quietly ignore —
+  // same reasoning as the `noTranscoding` + `subtitleBurn` guard further down, and same failure
+  // mode if it were skipped: a stream that looks fine and is missing exactly what was asked for.
+  // Checked before the process is built so the caller gets the error instead of an ffmpeg exit.
+  if (mergedOptions.audioOnly) {
+    if (mergedOptions.subtitleBurn !== undefined) {
+      throw new Error(
+        "subtitleBurn cannot be applied when audioOnly is set: an audio-only stream has no video frames to burn subtitles onto. Disable audioOnly to burn in subtitles.",
+      );
+    }
+    if (mergedOptions.noTranscoding) {
+      throw new Error(
+        "noTranscoding cannot be combined with audioOnly: noTranscoding copies the input video stream through unmodified, which is the stream audioOnly removes.",
+      );
+    }
+    if (!mergedOptions.includeAudio) {
+      throw new Error(
+        "audioOnly requires includeAudio: dropping both the video and the audio stream would produce an output with no streams at all.",
+      );
+    }
+    if (mergedOptions.pad !== undefined) {
+      throw new Error(
+        "pad cannot be applied when audioOnly is set: letterboxing needs a frame to center on a canvas, and an audio-only stream has none. Drop pad for audio-only output.",
+      );
+    }
+    if (mergedOptions.inputColor === "hdr") {
+      // Note the asymmetry with the `noTranscoding` path below, which only warns here: there, the
+      // caller opted out of transcoding and the video keeps its original transfer, so the request
+      // is merely redundant. On an audio-only stream there is no picture whose colour a tonemap
+      // could describe, so the request is void rather than redundant.
+      throw new Error(
+        "inputColor 'hdr' cannot be applied when audioOnly is set: there is no video stream to tonemap. Drop inputColor for audio-only output.",
+      );
+    }
+  }
+
   let isHttpUrl = false;
   let isHls = false;
   let isSrt = false;
@@ -687,11 +825,7 @@ export function prepareStream(
   // the downstream send loop. Producer overrun is the dominant cause of unbounded NUT-side buffer
   // accumulation in the consumer process. Skip for live inputs (HTTP HLS, SRT, raw audio input)
   // where ffmpeg's own docs warn `-readrate` can cause packet loss.
-  if (
-    mergedOptions.readrate !== undefined &&
-    !isHls &&
-    !isSrt
-  ) {
+  if (mergedOptions.readrate !== undefined && !isHls && !isSrt) {
     commandBuilder.inputOption("-readrate", String(mergedOptions.readrate));
     // Only meaningful alongside readrate: how much input to burst-read before pacing engages.
     // The pre-roll gives the otherwise zero-margin realtime pipeline a cushion (see the option doc).
@@ -711,19 +845,30 @@ export function prepareStream(
     commandBuilder.inputOptions(mergedOptions.customInputOptions);
   }
 
-  const { hardwareAcceleratedDecoding, minimizeLatency, customHeaders } =
-    mergedOptions;
+  const {
+    hardwareAcceleratedDecoding,
+    minimizeLatency,
+    customHeaders,
+    audioOnly,
+  } = mergedOptions;
 
   // Resolve the encoder up front so its optional `hwPipeline` can drive both the input decode
   // options and the scale filter below. A hardware encoder that declares `hwPipeline` (e.g. VAAPI)
   // lets us decode straight into GPU surfaces and scale on the GPU, avoiding the software `scale`
   // (swscale) that would otherwise download every frame to system memory.
-  const encoderSettings = mergedOptions.noTranscoding
-    ? undefined
-    : mergedOptions.encoder(
-        mergedOptions.bitrateVideo,
-        mergedOptions.bitrateVideoMax,
-      )[mergedOptions.videoCodec];
+  //
+  // Skipped entirely on the audio-only path. Resolution is what produces the encoder's device-init
+  // arguments (`-init_hw_device`/`-vaapi_device …renderD128`) and its `hwPipeline`, so leaving it
+  // undefined is what keeps a host with no `/dev/dri` from being asked for a VAAPI device to encode
+  // a stream that has no picture. Everything downstream already treats `undefined` as "no hardware
+  // pipeline", so no further branch is needed to make `hwPipeline` fall away with it.
+  const encoderSettings =
+    mergedOptions.noTranscoding || audioOnly
+      ? undefined
+      : mergedOptions.encoder(
+          mergedOptions.bitrateVideo,
+          mergedOptions.bitrateVideoMax,
+        )[mergedOptions.videoCodec];
   // Only take the GPU pipeline when both dimensions are explicit positives: `scale_vaapi` aborts on
   // the negative aspect-ratio shorthand (`-2`) that the software `scale` accepts, so anything
   // without concrete dimensions falls back to the (correct, if slower) software path.
@@ -743,7 +888,10 @@ export function prepareStream(
     );
   }
 
-  if (hardwareAcceleratedDecoding) {
+  // Hardware DECODE options are video decode options. On the audio-only path there is nothing to
+  // decode into GPU surfaces, and `-hwaccel auto` (the no-pipeline fallback below) would ask a
+  // possibly GPU-less host to initialise an accelerator for a stream that is never demanded.
+  if (hardwareAcceleratedDecoding && !audioOnly) {
     if (hwPipeline) {
       commandBuilder.inputOptions(
         uploadMode && hwPipeline.uploadDecodeOptions
@@ -783,16 +931,22 @@ export function prepareStream(
     commandBuilder.inputOption("-scan_all_pmts", "0");
   }
 
-  // Optional second input carrying audio (for raw-video sources with no embedded audio track).
-  // Added after every input-0 option above so its inputOptions bind to this input. Mapped via
-  // `-map 1:a:0` in the audio setup below. Only wired when audio output is enabled.
+  // Optional second input carrying audio: a raw-video source with no embedded audio track, or a
+  // split yt-dlp result whose video and audio are separately signed URLs. Added after every
+  // input-0 option above so its inputOptions bind to this input. Mapped via `-map 1:a:0` below.
+  // Only wired when audio output is enabled.
   if (mergedOptions.audioInput && mergedOptions.includeAudio) {
-    commandBuilder
-      .input(mergedOptions.audioInput.source)
-      .inputOptions([
-        ...latencyInputOptions,
-        ...mergedOptions.audioInput.inputOptions,
-      ]);
+    commandBuilder.input(mergedOptions.audioInput.source).inputOptions([
+      // `-ss` is an input option: it seeks the input it precedes, and nothing else. Applying it
+      // to input 0 alone would start the picture at the requested offset while its soundtrack
+      // restarted from zero — so every resume, crash retry and live seek would play the right
+      // video against the wrong audio, and the audio would outlast the video by the offset.
+      ...(mergedOptions.startTime === undefined
+        ? []
+        : ["-ss", String(mergedOptions.startTime)]),
+      ...latencyInputOptions,
+      ...mergedOptions.audioInput.inputOptions,
+    ]);
   }
 
   // general output options
@@ -809,7 +963,14 @@ export function prepareStream(
     videoCodec,
   } = mergedOptions;
 
-  if (noTranscoding) {
+  if (audioOnly) {
+    // One guard replaces the entire video output stage: no `-map 0:v`, no `-c:v`/`-b:v`/`-bf 0`/
+    // `-force_key_frames`/`-pix_fmt`/`-r`, and no `-filter:v` or `-filter_complex` chain. `-vn`
+    // then makes the intent explicit to ffmpeg rather than relying on the absence of a mapping:
+    // with no `-map` for video and no `-vn`, ffmpeg's default stream selection would pick the
+    // input's best video stream back up and try to encode it.
+    commandBuilder.addOutputOption("-vn");
+  } else if (noTranscoding) {
     // `noTranscoding` passes the input video through unmodified, so a filter graph can't apply.
     // Fail fast instead of silently dropping a requested subtitle burn; an HDR input merely keeps
     // its original transfer (the caller opted out of transcoding), so warn rather than throw.
@@ -904,7 +1065,9 @@ export function prepareStream(
       // `globalOptions` serve the software-decode path (device init for the outFilters hwupload).
       // When the hardware pipeline is active its decodeOptions already initialized the same named
       // device, and a second -init_hw_device with that name is a hard ffmpeg error.
-      .outputOptionsList(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
+      .outputOptionsList(
+        hwPipeline ? [] : (encoderSettings.globalOptions ?? []),
+      );
   }
 
   // Per-packet muxer flush for realtime consumers (see PrepareStreamOptions.lowLatencyMux).
@@ -912,12 +1075,18 @@ export function prepareStream(
     commandBuilder.addOutputOption(["-flush_packets", "1"]);
 
   // audio setup
-  const { includeAudio, bitrateAudio, audioInput } = mergedOptions;
+  const { includeAudio, bitrateAudio, audioInput, audioVolume } = mergedOptions;
   if (includeAudio) {
+    // With a separate audio input, map its first audio stream (a required mapping — the caller
+    // promised a stream); otherwise take audio from the primary input if it has any (`?`).
+    //
+    // The `?` comes off on the audio-only path: audio is then the only output stream, so a source
+    // without one yields a NUT containing nothing, and a realtime consumer waits on it forever.
+    // Required mapping turns that into an immediate, classifiable ffmpeg startup failure
+    // ("Stream map '' matches no streams") instead of a silent hang.
+    const audioMap = audioInput ? "1:a:0" : audioOnly ? "0:a:0" : "0:a:0?";
     commandBuilder
-      // With a separate audio input, map its first audio stream (a required mapping — the caller
-      // promised a stream); otherwise take audio from the primary input if it has any (`?`).
-      .addOutputOption(["-map", audioInput ? "1:a:0" : "0:a:0?"])
+      .addOutputOption(["-map", audioMap])
       .audioChannels(2)
       /*
        * I don't have much surround sound material to test this with,
@@ -928,7 +1097,7 @@ export function prepareStream(
       .audioFrequency(48000)
       .audioCodec("libopus")
       .audioBitrate(`${bitrateAudio}k`)
-      .audioFilters("volume@internal_lib=1.0");
+      .audioFilters(`volume@internal_lib=${formatAudioGain(audioVolume)}`);
     // Realtime Opus tuning (see PrepareStreamOptions.lowDelayAudio). libopus private options —
     // they bind to the (only) audio stream, after -c:a above.
     if (mergedOptions.lowDelayAudio)
@@ -1081,9 +1250,30 @@ export function prepareStream(
 
 export type PlayStreamOptions = {
   /**
-   * Set stream type as "Go Live" or camera stream
+   * Where this media is sent.
+   *
+   * - `"go-live"` — its own Go-Live (screen share) connection, created and torn down per stream.
+   * - `"camera"` — video on the normal voice connection, announced as the camera.
+   * - `"voice"` — audio only on the normal voice connection, with plain microphone semantics: no
+   *   video is signalled and none is sent.
+   *
+   * **`"voice"` deliberately touches nothing on the connection.** Not `setPacketizer`, not
+   * `setVideoAttributes`, not `signalVideo`, not `setSpeaking`, not `createStream`/`stopStream`.
+   * That is load-bearing and not obvious:
+   *
+   * - The normal voice connection is a **shared** resource. A consumer can be speaking over it
+   *   from another source at the same time (streambot mixes a voice assistant into the same RTP
+   *   stream), so the speaking flag is arbitrated by whoever owns the connection. A segment that
+   *   cleared it when its own track ended would silence that other source mid-sentence.
+   * - `setPacketizer` is worse than redundant here: it builds a fresh `_audioPacketizer` but leaves
+   *   the `_audioMediaHandler` already bound to the track in place (only `setAudioPacketizer`
+   *   keeps those two consistent), so audio would keep flowing through a handler wrapping the
+   *   previous packetizer — and where that handler is the `RtcpReceivingSession` installed for
+   *   receive, inbound audio would break with it.
+   *
+   * The connection is configured once by whoever joined voice; a `"voice"` segment only borrows it.
    */
-  type: "go-live" | "camera";
+  type: "go-live" | "camera" | "voice";
 
   /**
    * Set format of the stream
@@ -1141,6 +1331,17 @@ export type PlayStreamOptions = {
    * video/audio send path is forwarded to the observer. No effect on behavior.
    */
   observer?: StreamObserver;
+
+  /**
+   * Where the paced Opus frames go. Defaults to the connection this stream is attached to, which
+   * is the behavior every existing caller has.
+   *
+   * Supplying a sink puts a consumer-owned stage between the pacer and the transport — the place to
+   * apply gain, or to mix a second source into the same RTP stream so both share one packetizer and
+   * one timestamp sequence. A sink is expected to forward to the connection itself; see
+   * {@link ./AudioSink.js AudioFrameSink} for why its return value must report a dropped frame.
+   */
+  audioSink?: AudioFrameSink;
 };
 
 const playStreamDefaultOptions = {
@@ -1201,6 +1402,8 @@ export function mergePlayStreamOptions(
         : playStreamDefaultOptions.videoPlayoutDelayMaxMs,
 
     ...(opts.observer !== undefined ? { observer: opts.observer } : {}),
+
+    ...(opts.audioSink !== undefined ? { audioSink: opts.audioSink } : {}),
   } satisfies PlayStreamOptions;
 }
 
@@ -1244,7 +1447,35 @@ export async function attachPipeline(
   });
   cancelSignal?.throwIfAborted();
 
-  if (!video) throw new Error("No video stream in media");
+  // Which stream this pipeline requires is a function of where it is going, not of the pipeline.
+  // A Go-Live or camera segment IS a video stream, so a source with no video track is a broken
+  // contract there — and the message stays exactly what it has always been, because callers match
+  // on it (streambot's hardware→software retry ladder among them). `type: "voice"` carries audio
+  // over the normal voice connection, where video has no meaning and its absence is the norm.
+  if (options.type === "voice") {
+    if (!audio) throw new Error("No audio stream in media");
+    if (video) {
+      // A voice segment carries audio and nothing else, so a source that still has a video track
+      // was built wrong — `prepareStream({ audioOnly: true })` emits `-vn` and cannot produce one.
+      //
+      // Rejecting it is the only safe response, and the alternatives are worse than they look:
+      //   - Wiring the video up anyway (what this did before) makes it the sync master and the
+      //     stream whose `finish` settles `done`, pacing an audio-only transport off a video clock
+      //     and sending frames at a connection with no video packetizer. Inert, until it isn't.
+      //   - Building no VideoStream and simply leaving the track alone DEADLOCKS the segment.
+      //     LibavDemuxer drives one read loop for both tracks and stops it on `!vPipe.write(...)`,
+      //     resuming only on that pipe's `drain` — so an unconsumed video pipe silently halts the
+      //     AUDIO too, a few seconds in, with no error anywhere.
+      //   - Draining the track to discard it would work, but each packet is a cloned libav Packet
+      //     that must be `free()`d, so it means paying full demux cost plus a hand-rolled free loop
+      //     to throw the result away — and hiding the caller's mistake while doing it.
+      throw new Error(
+        'Video stream in media for a "voice" play type: this transport carries audio only. Use prepareStream({ audioOnly: true }) to produce the source, or play this media with type "go-live" or "camera".',
+      );
+    }
+  } else if (!video) {
+    throw new Error("No video stream in media");
+  }
 
   const cleanupFuncs: (() => unknown)[] = [];
   const videoCodecMap: Record<number, SupportedVideoCodec> = {
@@ -1255,7 +1486,12 @@ export async function attachPipeline(
     [AVCodecID.AV_CODEC_ID_AV1]: "AV1",
   };
 
-  if (options.configureConn) {
+  // Skipped wholesale for `type: "voice"`, which owns nothing on the shared voice connection — see
+  // the ownership note on {@link PlayStreamOptions.type}. Neither guard can silently skip real
+  // work: the checks above threw if a non-voice source had no video, and if a voice source had one.
+  // Both are kept anyway — the type check states the ownership rule at the site it protects, and
+  // the `video` check is what narrows the type here.
+  if (options.configureConn && options.type !== "voice" && video) {
     const videoCodec = videoCodecMap[video.codec];
     if (videoCodec === undefined)
       throw new Error(`Unsupported video codec ID: ${String(video.codec)}`);
@@ -1271,8 +1507,14 @@ export async function attachPipeline(
     });
   }
 
-  const vStream = new VideoStream(conn, false, options.observer);
-  video.stream.pipe(vStream);
+  // Hoisted and conditional: an audio-only segment builds no video stream at all, and everything
+  // downstream that used to assume one (sync master, queue depth, preview, teardown, and the
+  // `finish` that settles `done`) branches on it below.
+  let vStream: VideoStream | undefined;
+  if (video) {
+    vStream = new VideoStream(conn, false, options.observer);
+    video.stream.pipe(vStream);
+  }
   if (options.observer?.onQueueDepth) {
     // Periodic demux→pacer queue depths (objectMode lengths = buffered packet counts). Empty
     // queues during a production dip mean the producer starved; full queues mean the pacer is the
@@ -1284,7 +1526,9 @@ export async function attachPipeline(
       s.readableLength + (s instanceof PassThrough ? s.writableLength : 0);
     const queueDepthTimer = setInterval(() => {
       options.observer?.onQueueDepth?.({
-        video: bufferedPackets(video.stream),
+        // Both halves are reported as 0 when the corresponding stream is absent, keeping the
+        // observation shape stable across segment kinds.
+        video: video ? bufferedPackets(video.stream) : 0,
         audio: audio ? bufferedPackets(audio.stream) : 0,
       });
     }, 5000);
@@ -1294,25 +1538,47 @@ export async function attachPipeline(
   // Hoisted so destroy() can tear the audio side down too (see the destroy closure below).
   let aStream: AudioStream | undefined;
   if (audio) {
-    const a = new AudioStream(conn, false, options.observer);
+    // `audioSink` defaults to the connection, so the ordinary path is byte-for-byte the previous
+    // one; a consumer that supplies a sink owns the last hop instead (gain, mixing).
+    const a = new AudioStream(
+      options.audioSink ?? conn,
+      false,
+      options.observer,
+    );
     aStream = a;
     audio.stream.pipe(a);
-    vStream.syncStream = a;
+    if (vStream) vStream.syncStream = a;
 
     const burstTime = options.readrateInitialBurst;
     if (typeof burstTime === "number") {
-      vStream.sync = false;
-      vStream.noSleep = a.noSleep = true;
+      // The burst gate hangs off whichever stream is the pipeline's clock: the video stream when
+      // there is one (audio is slaved to it through `syncStream` above), otherwise the audio stream,
+      // which is the only clock an audio-only pipeline has. Keying it on video regardless would
+      // leave an audio-only segment permanently in burst mode — no pacing, the whole track pushed
+      // at read speed.
+      //
+      // Clearing `noSleep` is also what re-anchors the schedule: BaseMediaStream's setter calls
+      // `resetTimingCompensation()` on the way to `false`, so `_startTime`/`_startPts` are taken at
+      // the moment pacing engages rather than at the start of the burst.
+      const clock = vStream ?? a;
+      a.noSleep = true;
+      if (vStream) {
+        vStream.sync = false;
+        vStream.noSleep = true;
+      }
       const stopBurst = (pts: number) => {
         if (pts < burstTime * 1000) return;
-        vStream.sync = true;
-        vStream.noSleep = a.noSleep = false;
-        vStream.off("pts", stopBurst);
+        a.noSleep = false;
+        if (vStream) {
+          vStream.sync = true;
+          vStream.noSleep = false;
+        }
+        clock.off("pts", stopBurst);
       };
-      vStream.on("pts", stopBurst);
+      clock.on("pts", stopBurst);
     }
   }
-  if (options.streamPreview && options.type === "go-live") {
+  if (options.streamPreview && options.type === "go-live" && video) {
     (async () => {
       const previewLogger = new Log("playStream:preview");
       previewLogger.debug("Initializing decoder for stream preview");
@@ -1338,7 +1604,9 @@ export async function attachPipeline(
         if (!frames.length) return;
 
         const decodeEnd = performance.now();
-        previewLogger.debug(`Decoding a frame took ${decodeEnd - decodeStart}ms`);
+        previewLogger.debug(
+          `Decoding a frame took ${decodeEnd - decodeStart}ms`,
+        );
         const frame = frames[0];
         if (frame === undefined) return;
 
@@ -1371,6 +1639,20 @@ export async function attachPipeline(
     cleanedUp = true;
     for (const f of cleanupFuncs) f();
   };
+  // The stream whose `finish` means "this segment played out": the video stream when there is one
+  // (its pacer is the clock and audio is slaved to it), otherwise the audio stream. Keying this on
+  // video alone — as it did before audio-only playback existed — would leave an audio-only `done`
+  // pending forever: not an error, a silent hang, with the caller reporting healthy playback of a
+  // track that finished minutes ago. The throw is unreachable given the require-checks at the top;
+  // it is here so that "`done` can always be settled" is an invariant the code states rather than
+  // one a future edit can quietly remove.
+  const finishStream = vStream ?? aStream;
+  if (finishStream === undefined) {
+    throw new Error(
+      "attachPipeline produced no media stream: the demuxer reported neither video nor audio",
+    );
+  }
+
   let resolveDone: (() => void) | undefined;
   const done = new Promise<void>((resolve, reject) => {
     resolveDone = () => {
@@ -1385,7 +1667,7 @@ export async function attachPipeline(
       },
       { once: true },
     );
-    vStream.once("finish", () => {
+    finishStream.once("finish", () => {
       if (cancelSignal?.aborted) return;
       cleanup();
       resolve();
@@ -1398,7 +1680,7 @@ export async function attachPipeline(
       cleanup();
       reject(err);
     };
-    video.stream.once("error", onSourceError);
+    video?.stream.once("error", onSourceError);
     audio?.stream.once("error", onSourceError);
   });
 
@@ -1408,8 +1690,10 @@ export async function attachPipeline(
       // Force-end this segment (used on seek): drop the source pipes + BOTH streams so the old
       // segment can't keep writing to `conn` while the next one starts (audio desync otherwise). The
       // `finish` handler (or this resolveDone) settles `done`; cleanup is idempotent.
-      video.stream.unpipe(vStream);
-      vStream.destroy();
+      if (video && vStream) {
+        video.stream.unpipe(vStream);
+        vStream.destroy();
+      }
       if (audio && aStream) {
         audio.stream.unpipe(aStream);
         aStream.destroy();
@@ -1436,10 +1720,15 @@ export async function playStream(
   if (mergedOptions.type === "go-live") {
     conn = await streamer.createStream();
     stopStream = () => streamer.stopStream();
-  } else {
+  } else if (mergedOptions.type === "camera") {
     conn = streamer.voiceConnection.webRtcConn;
     streamer.signalVideo(true);
     stopStream = () => streamer.signalVideo(false);
+  } else {
+    // "voice": borrow the already-joined voice connection and give it back exactly as found. No
+    // signalVideo on the way in, and nothing at all on the way out — see PlayStreamOptions.type.
+    conn = streamer.voiceConnection.webRtcConn;
+    stopStream = () => undefined;
   }
 
   const pipeline = await attachPipeline(
@@ -1456,7 +1745,9 @@ export async function playStream(
     // on both natural finish and abort).
   } finally {
     stopStream();
-    conn.mediaConnection.setSpeaking(false);
-    conn.mediaConnection.setVideoAttributes(false);
+    if (mergedOptions.type !== "voice") {
+      conn.mediaConnection.setSpeaking(false);
+      conn.mediaConnection.setVideoAttributes(false);
+    }
   }
 }

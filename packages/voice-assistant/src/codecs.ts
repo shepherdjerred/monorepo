@@ -15,9 +15,9 @@ import {
   SoftwareResampleContext,
 } from "node-av";
 
-const DISCORD_SAMPLE_RATE = 48_000;
-const DISCORD_CHANNELS = 2;
-const DISCORD_FRAME_SAMPLES = 960;
+export const DISCORD_SAMPLE_RATE = 48_000;
+export const DISCORD_CHANNELS = 2;
+export const DISCORD_FRAME_SAMPLES = 960;
 const OPENAI_SAMPLE_RATE = 24_000;
 const WAKE_SAMPLE_RATE = 16_000;
 
@@ -32,6 +32,17 @@ function concatBytes(parts: readonly Uint8Array[]): Uint8Array {
   return result;
 }
 
+export function concatFloat32(parts: readonly Float32Array[]): Float32Array {
+  const length = parts.reduce((total, part) => total + part.length, 0);
+  const result = new Float32Array(length);
+  let offset = 0;
+  for (const part of parts) {
+    result.set(part, offset);
+    offset += part.length;
+  }
+  return result;
+}
+
 function float32FromBytes(bytes: Uint8Array): Float32Array {
   if (bytes.byteLength % 4 !== 0) throw new Error("Invalid float PCM length");
   const result = new Float32Array(bytes.byteLength / 4);
@@ -42,7 +53,7 @@ function float32FromBytes(bytes: Uint8Array): Float32Array {
   return result;
 }
 
-function bytesFromFloat32(samples: Float32Array): Uint8Array {
+export function bytesFromFloat32(samples: Float32Array): Uint8Array {
   const bytes = new Uint8Array(samples.byteLength);
   const view = new DataView(bytes.buffer);
   for (const [index, sample] of samples.entries()) {
@@ -51,7 +62,16 @@ function bytesFromFloat32(samples: Float32Array): Uint8Array {
   return bytes;
 }
 
-function createOpusContext(kind: "decoder" | "encoder"): CodecContext {
+/**
+ * @param bitRate Encoder target bit rate in bits per second. Ignored for a decoder. The default
+ *   (64 kbps) is the assistant's long-standing setting — speech from a single speaker — and must
+ *   stay the default so {@link DiscordOpusEncoder} keeps producing byte-identical output. Music
+ *   callers pass their own, higher, rate.
+ */
+export function createOpusContext(
+  kind: "decoder" | "encoder",
+  bitRate = 64_000,
+): CodecContext {
   const codec =
     kind === "decoder"
       ? Codec.findDecoder(AV_CODEC_ID_OPUS)
@@ -62,11 +82,95 @@ function createOpusContext(kind: "decoder" | "encoder"): CodecContext {
   context.sampleRate = DISCORD_SAMPLE_RATE;
   context.channelLayout = AV_CHANNEL_LAYOUT_STEREO;
   if (kind === "encoder") {
+    if (!Number.isInteger(bitRate) || bitRate <= 0)
+      throw new Error(`Invalid Opus bit rate: ${String(bitRate)}`);
     context.sampleFormat = AV_SAMPLE_FMT_FLT;
-    context.bitRate = 64_000n;
+    context.bitRate = BigInt(bitRate);
   }
   FFmpegError.throwIfError(context.open2Sync(codec), `open Opus ${kind}`);
   return context;
+}
+
+/**
+ * Drive one Opus packet through `context` + `resampler` and return the resampled float samples.
+ *
+ * Shared by both decoders: the packet/frame lifecycle is identical, only the output frame's rate
+ * and channel layout differ, so the caller supplies `allocateOutput` (which owns those) and this
+ * owns the libav resource discipline.
+ */
+export type DecodeOpusPacketOptions = {
+  readonly context: CodecContext;
+  readonly resampler: SoftwareResampleContext;
+  readonly opus: Uint8Array;
+  readonly allocateOutput: (nbSamples: number) => Frame;
+  readonly label: string;
+};
+
+export function decodeOpusPacket({
+  context,
+  resampler,
+  opus,
+  allocateOutput,
+  label,
+}: DecodeOpusPacketOptions): Float32Array {
+  const packet = new Packet();
+  packet.alloc();
+  packet.data = Buffer.from(opus);
+  const outputs: Uint8Array[] = [];
+  try {
+    FFmpegError.throwIfError(
+      context.sendPacketSync(packet),
+      "decode Opus packet",
+    );
+    for (;;) {
+      const frame = new Frame();
+      frame.alloc();
+      const receiveResult = context.receiveFrameSync(frame);
+      if (receiveResult === AVERROR_EAGAIN || receiveResult === AVERROR_EOF) {
+        frame.free();
+        break;
+      }
+      FFmpegError.throwIfError(receiveResult, "receive decoded Opus frame");
+      const output = allocateOutput(resampler.getOutSamples(frame.nbSamples));
+      try {
+        FFmpegError.throwIfError(resampler.convertFrame(output, frame), label);
+        outputs.push(output.toBuffer());
+      } finally {
+        output.free();
+        frame.free();
+      }
+    }
+  } finally {
+    packet.free();
+  }
+  return float32FromBytes(concatBytes(outputs));
+}
+
+/** Drain every packet the encoder has ready. Shared by both encoders. */
+export function receiveOpusPackets(
+  context: CodecContext,
+  label: string,
+): Uint8Array[] {
+  const packets: Uint8Array[] = [];
+  for (;;) {
+    const packet = new Packet();
+    packet.alloc();
+    const receiveResult = context.receivePacketSync(packet);
+    if (receiveResult === AVERROR_EAGAIN || receiveResult === AVERROR_EOF) {
+      packet.free();
+      break;
+    }
+    try {
+      FFmpegError.throwIfError(receiveResult, label);
+      const data = packet.data;
+      if (data === null)
+        throw new Error("Opus encoder returned an empty packet");
+      packets.push(Uint8Array.from(data));
+    } finally {
+      packet.free();
+    }
+  }
+  return packets;
 }
 
 export class DiscordOpusDecoder {
@@ -92,46 +196,19 @@ export class DiscordOpusDecoder {
   }
 
   public decode(opus: Uint8Array): Float32Array {
-    const packet = new Packet();
-    packet.alloc();
-    packet.data = Buffer.from(opus);
-    const outputs: Uint8Array[] = [];
-    try {
-      FFmpegError.throwIfError(
-        this.context.sendPacketSync(packet),
-        "decode Opus packet",
-      );
-      for (;;) {
-        const frame = new Frame();
-        frame.alloc();
-        const receiveResult = this.context.receiveFrameSync(frame);
-        if (receiveResult === AVERROR_EAGAIN || receiveResult === AVERROR_EOF) {
-          frame.free();
-          break;
-        }
-        FFmpegError.throwIfError(receiveResult, "receive decoded Opus frame");
-        const outputSamples = this.resampler.getOutSamples(frame.nbSamples);
-        const output = Frame.fromAudioBuffer(Buffer.alloc(outputSamples * 4), {
+    return decodeOpusPacket({
+      context: this.context,
+      resampler: this.resampler,
+      opus,
+      allocateOutput: (nbSamples) =>
+        Frame.fromAudioBuffer(Buffer.alloc(nbSamples * 4), {
           format: AV_SAMPLE_FMT_FLT,
-          nbSamples: outputSamples,
+          nbSamples,
           sampleRate: WAKE_SAMPLE_RATE,
           channelLayout: AV_CHANNEL_LAYOUT_MONO,
-        });
-        try {
-          FFmpegError.throwIfError(
-            this.resampler.convertFrame(output, frame),
-            "resample Discord voice audio",
-          );
-          outputs.push(output.toBuffer());
-        } finally {
-          output.free();
-          frame.free();
-        }
-      }
-    } finally {
-      packet.free();
-    }
-    return float32FromBytes(concatBytes(outputs));
+        }),
+      label: "resample Discord voice audio",
+    });
   }
 
   public close(): void {
@@ -322,29 +399,7 @@ export class DiscordOpusEncoder {
   }
 
   private receivePackets(): Uint8Array[] {
-    const packets: Uint8Array[] = [];
-    for (;;) {
-      const packet = new Packet();
-      packet.alloc();
-      const receiveResult = this.context.receivePacketSync(packet);
-      if (receiveResult === AVERROR_EAGAIN || receiveResult === AVERROR_EOF) {
-        packet.free();
-        break;
-      }
-      try {
-        FFmpegError.throwIfError(
-          receiveResult,
-          "receive assistant Opus packet",
-        );
-        const data = packet.data;
-        if (data === null)
-          throw new Error("Opus encoder returned an empty packet");
-        packets.push(Uint8Array.from(data));
-      } finally {
-        packet.free();
-      }
-    }
-    return packets;
+    return receiveOpusPackets(this.context, "receive assistant Opus packet");
   }
 
   public close(): void {

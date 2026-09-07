@@ -15,6 +15,24 @@ import type { VoiceReceiveObserver } from "./voice/VoiceReceiveObserver.js";
 
 export type VoiceJoinOptions = {
   receiveAudio?: boolean;
+
+  /**
+   * Install the outbound audio RTP packetizer, so this connection can SEND audio without opting
+   * into receive. Defaults to false; `receiveAudio` already implies it.
+   *
+   * This exists as its own option because `receiveAudio` carries three unrelated meanings — the
+   * SDP direction ({@link ./voice/BaseMediaConnection.js voiceAudioSdpDirection}), `self_deaf` in
+   * the gateway voice state, and whether
+   * {@link ./voice/WebRtcWrapper.js WebRtcConnWrapper.setAudioPacketizer} roots the media-handler
+   * chain at an `RtcpReceivingSession` — so a caller that wants to talk but not listen cannot get
+   * a packetizer by reaching for it without also deafening itself to the channel and renegotiating
+   * the SDP as `sendrecv`.
+   *
+   * Without a packetizer, `sendAudioFrame` drops every frame and returns `false`: an entire track
+   * paces out at realtime into nothing while playback reports a clean end.
+   */
+  sendAudio?: boolean;
+
   receiveObserver?: VoiceReceiveObserver;
 };
 
@@ -99,7 +117,7 @@ export class Streamer {
         user_id,
         channel_id,
         (conn) => {
-          if (options.receiveAudio ?? false) {
+          if ((options.receiveAudio ?? false) || (options.sendAudio ?? false)) {
             try {
               conn.setAudioPacketizer();
             } catch (error) {

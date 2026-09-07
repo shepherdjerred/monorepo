@@ -118,6 +118,23 @@ describe("bidirectional voice policy", () => {
     expect(voiceStateAudioFlags(true)).toEqual({ self_mute: false, self_deaf: false });
   });
 
+  test("a send-only connection asks the REMOTE end to receive", () => {
+    // The direction is written from Discord's point of view: this SDP is installed as the remote
+    // `answer`. For us to send, Discord has to receive — so `recvonly`. `sendonly` would say
+    // Discord sends and we listen, leaving the local track unable to send, which is the same
+    // silence as `inactive` reached from the other side.
+    expect(voiceAudioSdpDirection(false, true)).toBe("recvonly");
+    // Symmetric, so it reads the same from either end.
+    expect(voiceAudioSdpDirection(true, true)).toBe("sendrecv");
+  });
+
+  test("every existing caller negotiates exactly what it always did", () => {
+    // The control. Go Live builds its StreamConnection without either option and must keep
+    // emitting `inactive`; widening the default would change a working production path.
+    expect(voiceAudioSdpDirection(false, false)).toBe("inactive");
+    expect(voiceAudioSdpDirection(true, false)).toBe("sendrecv");
+  });
+
   test("maps an SSRC to its speaker and removes it on disconnect", () => {
     const streamer = new Streamer(new Client());
     const connection = new VoiceConnection(
@@ -471,5 +488,94 @@ describe("bidirectional voice policy", () => {
     ).toEqual(Buffer.from([4, 5, 6]));
     expect(() => prepareAssistantOpus(frame, true)).toThrow("encryption session");
     expect(advanceRtpTimestamp(10_000, 20, 48_000)).toBe(10_960);
+  });
+});
+
+/**
+ * The send half of the audio path: whether a frame reached the transport, and whether the join
+ * installed the packetizer that makes that possible. Both were silent before — a connection with no
+ * packetizer accepted and discarded every frame, so a whole track could pace out at realtime into
+ * nothing while playback reported a clean end.
+ */
+describe("outbound voice audio", () => {
+  /** A VoiceConnection with the private transport/negotiation state a send needs, and no sockets. */
+  function connectedVoice() {
+    const streamer = new Streamer(new Client());
+    const voice = new VoiceConnection(streamer, "guild-1", "bot-1", "channel-1", () => {});
+    // The peer connection and the negotiated SSRCs normally arrive over the voice gateway. Standing
+    // them in keeps this a unit test of the send path rather than of the handshake.
+    voice.webRtcConn["_webRtcConn"] = { state: () => "connected" };
+    voice["_webRtcParams"] = {
+      address: "127.0.0.1",
+      port: 50_000,
+      audioSsrc: 11,
+      videoSsrc: 12,
+      rtxSsrc: 13,
+      supportedEncryptionModes: [],
+    };
+    return voice;
+  }
+
+  test("reports a dropped frame when the transport is not connected", () => {
+    const streamer = new Streamer(new Client());
+    const voice = new VoiceConnection(streamer, "guild-1", "bot-1", "channel-1", () => {});
+    expect(voice.webRtcConn.sendAudioFrame(Buffer.from([1, 2, 3]), 20)).toBe(false);
+  });
+
+  test("reports a dropped frame when no audio packetizer is installed", () => {
+    const voice = connectedVoice();
+    expect(voice.webRtcConn.ready).toBe(true);
+    expect(voice.webRtcConn.sendAudioFrame(Buffer.from([1, 2, 3]), 20)).toBe(false);
+  });
+
+  test("reports a sent frame once the packetizer is installed, and advances the RTP clock", () => {
+    const voice = connectedVoice();
+    voice.webRtcConn.setAudioPacketizer();
+    const packetizer = voice.webRtcConn["_audioPacketizer"];
+    const before = packetizer.rtpConfig.timestamp;
+
+    expect(voice.webRtcConn.sendAudioFrame(Buffer.from([1, 2, 3]), 20)).toBe(true);
+
+    // 20ms at the Opus 48kHz clock rate.
+    expect(packetizer.rtpConfig.timestamp - before).toBe(960);
+  });
+});
+
+describe("joinVoice audio packetizer installation", () => {
+  /** Drives joinVoice to the point its ready callback fires, with a fake connection. */
+  async function join(options: Record<string, unknown>) {
+    const client = new Client();
+    // joinVoice refuses before login; the id is all it reads.
+    client.user = { id: "bot-1" };
+    const streamer = new Streamer(client);
+    const installs: number[] = [];
+    const conn = {
+      setAudioPacketizer: () => {
+        installs.push(1);
+      },
+    };
+    const joined = streamer.joinVoice("guild-1", "channel-1", options);
+    streamer.voiceConnection.ready(conn);
+    await joined;
+    return installs.length;
+  }
+
+  test("installs it for a send-only join", async () => {
+    // The whole point of the separate option: no packetizer means sendAudioFrame returns false for
+    // every frame, and `receiveAudio` cannot be borrowed to get one without also flipping the SDP
+    // direction and self_deaf.
+    expect(await join({ sendAudio: true, receiveAudio: false })).toBe(1);
+  });
+
+  test("installs it for a receive join, as before", async () => {
+    expect(await join({ receiveAudio: true })).toBe(1);
+  });
+
+  test("installs it once when both are requested", async () => {
+    expect(await join({ receiveAudio: true, sendAudio: true })).toBe(1);
+  });
+
+  test("installs nothing for a join that asks for neither", async () => {
+    expect(await join({})).toBe(0);
   });
 });

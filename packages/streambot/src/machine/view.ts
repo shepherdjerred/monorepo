@@ -7,6 +7,7 @@ import {
   sourceLabel,
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
+import type { MediaKind } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 
 type PlaybackSnapshot = SnapshotFrom<ReturnType<typeof createPlaybackMachine>>;
@@ -18,6 +19,14 @@ export type QueueItemView = {
   readonly chapters: readonly Chapter[];
   /** Source kind — the player card only looks up TMDB posters for local files. */
   readonly kind: Source["kind"];
+  /**
+   * Transport this item resolved to, once it has been resolved. Null before resolution, and for
+   * queued items, because the kind is only known after the classifier and the final probe have
+   * both run. Drives the card's badge and disables the subtitle picker for audio-only items —
+   * `prepareStream` hard-throws when `subtitleBurn` meets `audioOnly`, so offering the button on a
+   * music item would hand the user a guaranteed failure.
+   */
+  readonly mediaKind: MediaKind | null;
   /**
    * Stable identity of the underlying source (`file:<path>` / `url:<url>` / `search:<query>`). The
    * player card keys its lifecycle on this rather than the display title, so two different files
@@ -82,6 +91,7 @@ export function buildPlaybackView(
             requesterId: context.current.requesterId,
             chapters: context.resolved?.chapters ?? [],
             kind: context.current.source.kind,
+            mediaKind: context.resolved?.mediaKind ?? null,
             sourceId: sourceIdentity(context.current.source),
             durationSeconds: context.resolved?.durationSeconds ?? null,
             ...(context.current.requestId === undefined
@@ -97,6 +107,7 @@ export function buildPlaybackView(
       requesterId: entry.requesterId,
       chapters: [],
       kind: entry.source.kind,
+      mediaKind: null,
       sourceId: sourceIdentity(entry.source),
       durationSeconds: null,
       ...(entry.requestId === undefined ? {} : { requestId: entry.requestId }),

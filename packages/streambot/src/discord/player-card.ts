@@ -171,6 +171,19 @@ function renderDescription(input: PlayerCardInput): string {
     }
   }
 
+  // Which transport the item landed on. Shown because the classifier can be wrong, and a viewer
+  // who expected a picture needs to know the fix is `mode:video` rather than a broken stream.
+  if (
+    view.current?.mediaKind !== null &&
+    view.current?.mediaKind !== undefined
+  ) {
+    lines.push(
+      view.current.mediaKind === "music"
+        ? "🎵 Audio only — use `mode:video` to force a video stream"
+        : "📺 Video stream",
+    );
+  }
+
   if (view.current?.provenance !== undefined) {
     const provenance = view.current.provenance;
     const source = provenance.channel ?? provenance.provider;
@@ -203,6 +216,10 @@ function buildRows(view: PlaybackView): readonly (readonly ButtonSpec[])[] {
   const noItem = view.current === null;
   const noPosition = view.positionSeconds === null;
   const seekDisabled = noItem || noPosition;
+  // Audio-only items have no picture to burn subtitles into, and `prepareStream` hard-throws when
+  // `subtitleBurn` meets `audioOnly`. Offering the picker here would hand the user a button whose
+  // only outcome is a failed segment.
+  const subtitlesDisabled = noItem || view.current.mediaKind === "music";
   return [
     [
       button(ControlAction.Back, "⏪ 30s", "secondary", seekDisabled),
@@ -236,7 +253,12 @@ function buildRows(view: PlaybackView): readonly (readonly ButtonSpec[])[] {
         view.queue.length < 2,
       ),
       button(ControlAction.Queue, "📜 Queue", "secondary", false),
-      button(ControlAction.Subtitles, "💬 Subtitles", "secondary", noItem),
+      button(
+        ControlAction.Subtitles,
+        "💬 Subtitles",
+        "secondary",
+        subtitlesDisabled,
+      ),
     ],
     [
       button(ControlAction.Stop, "⏹ Stop", "danger", false),
