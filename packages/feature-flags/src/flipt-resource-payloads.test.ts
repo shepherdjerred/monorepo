@@ -51,7 +51,7 @@ function testFlags() {
           },
         ],
         rules: [],
-        thresholdRollouts: [{ rank: 0, percentage: 25, result: true }],
+        thresholdRollouts: [{ rank: 1, percentage: 25, result: true }],
       },
       {
         ...metadata("variant"),
@@ -92,6 +92,39 @@ function testFlags() {
 }
 
 describe("Flipt resource payloads", () => {
+  test("accepts Flipt one-based rank for a lone threshold rollout", () => {
+    const inventory = ManagedFlagInventorySchema.parse({
+      version: 3,
+      namespaces: [
+        { key: "test", name: "Test", description: "Test namespace." },
+      ],
+      environments: [
+        { key: "beta", overrides: [] },
+        { key: "prod", overrides: [] },
+      ],
+      flags: [
+        {
+          ...metadata("ramp"),
+          type: "boolean",
+          default: false,
+          rollouts: [],
+          rules: [],
+          thresholdRollouts: [{ rank: 1, percentage: 30, result: true }],
+        },
+      ],
+      exemptions: [],
+    });
+    const flag = inventory.flags[0];
+    if (flag === undefined) throw new Error("ramp fixture is missing");
+    expect(toFliptFlagPayload(flag).rollouts).toEqual([
+      {
+        type: "THRESHOLD_ROLLOUT_TYPE",
+        description: "Managed threshold rollout at rank 1.",
+        threshold: { percentage: 30, value: true },
+      },
+    ]);
+  });
+
   test("builds boolean rollouts with threshold ranks and API segment keys", () => {
     const flag = testFlags().find((candidate) => candidate.key === "boolean");
     if (flag === undefined) throw new Error("boolean fixture is missing");

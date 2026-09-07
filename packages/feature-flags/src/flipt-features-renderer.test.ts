@@ -186,7 +186,7 @@ describe("renderFliptFeatures", () => {
           },
         ],
         rules: [],
-        thresholdRollouts: [{ rank: 0, percentage: 25, result: true }],
+        thresholdRollouts: [{ rank: 1, percentage: 25, result: true }],
       },
     ]);
     const parsed: unknown = YAML.parse(

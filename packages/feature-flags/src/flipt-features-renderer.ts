@@ -182,7 +182,7 @@ function declarativeBooleanRollouts(
   }));
   const total = segmentRollouts.length + thresholdByRank.size;
   for (const rank of thresholdByRank.keys()) {
-    if (rank >= total) {
+    if (rank < 1 || rank > total) {
       throw new Error(
         `threshold rollout rank out of range for ${flag.key}: ${rank.toString()}`,
       );
@@ -191,7 +191,7 @@ function declarativeBooleanRollouts(
 
   const rendered = [];
   let segmentIndex = 0;
-  for (let rank = 0; rank < total; rank += 1) {
+  for (let rank = 1; rank <= total; rank += 1) {
     const threshold = thresholdByRank.get(rank);
     if (threshold !== undefined) {
       rendered.push({
