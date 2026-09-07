@@ -297,6 +297,28 @@ export function requireGroundedAnswer(
       "Answer claims supported work without citing a successful tool call",
     );
   }
+  // Citing a successful call proves only that SOME call succeeded, not that
+  // it is the one the answer's claim actually describes: a model could cite
+  // a harmless, unrelated read while claiming an unrelated mutation
+  // happened, and every check above would still pass. performedMutation is a
+  // second, independent self-report that must agree with the citations - a
+  // true mutation claim has to be backed by an actually non-read cited call.
+  // A model dishonest enough to misreport performedMutation itself is not
+  // caught by this, but that is a narrower, less likely failure than citing
+  // any convenient success: it requires contradicting the answer's own text.
+  if (
+    answer.performedMutation &&
+    !toolEvents.some(
+      (event) =>
+        event.success &&
+        !event.readOnly &&
+        answer.reliedOnToolCallIds.includes(event.toolCallId),
+    )
+  ) {
+    throw new Error(
+      "Answer claims a mutation happened, but cites no successful non-read tool call",
+    );
+  }
 }
 
 export async function executeTurn(

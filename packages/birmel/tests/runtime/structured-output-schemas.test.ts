@@ -70,6 +70,7 @@ describe("Birmel provider structured-output schemas", () => {
         answer: "No registered tool can do that.",
         disposition: "unsupported",
         reliedOnToolCallIds: [],
+        performedMutation: false,
       }),
       JSON.stringify({ humanClaims: [], selfMemories: [] }),
     ];

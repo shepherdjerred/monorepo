@@ -174,6 +174,16 @@ describe("requireGroundedAnswer", () => {
     inputKey: "key-3",
     readOnly: true,
   };
+  const succeededRead = {
+    toolCallId: "call-4",
+    toolId: "get-activity-stats",
+    inputSummary: "{}",
+    resultSummary: "Leaderboard returned",
+    content: "Tool get-activity-stats call call-4 succeeded",
+    success: true,
+    inputKey: "key-4",
+    readOnly: true,
+  };
 
   test("accepts an answer grounded in a successful call", () => {
     expect(() =>
@@ -182,6 +192,7 @@ describe("requireGroundedAnswer", () => {
           answer: "Done.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-1"],
+          performedMutation: true,
         },
         [succeeded],
       ),
@@ -195,6 +206,7 @@ describe("requireGroundedAnswer", () => {
           answer: "Done.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-2"],
+          performedMutation: false,
         },
         [succeeded, failed],
       ),
@@ -208,6 +220,7 @@ describe("requireGroundedAnswer", () => {
           answer: "Done.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-invented"],
+          performedMutation: false,
         },
         [succeeded],
       ),
@@ -217,7 +230,12 @@ describe("requireGroundedAnswer", () => {
   test("rejects claimed supported work with no successful tool call", () => {
     expect(() =>
       requireGroundedAnswer(
-        { answer: "Done.", disposition: "supported", reliedOnToolCallIds: [] },
+        {
+          answer: "Done.",
+          disposition: "supported",
+          reliedOnToolCallIds: [],
+          performedMutation: false,
+        },
         [failedRead],
       ),
     ).toThrow("without citing a successful tool call");
@@ -227,7 +245,12 @@ describe("requireGroundedAnswer", () => {
     // A harmless lookup succeeding does not make an unperformed mutation real.
     expect(() =>
       requireGroundedAnswer(
-        { answer: "Done.", disposition: "supported", reliedOnToolCallIds: [] },
+        {
+          answer: "Done.",
+          disposition: "supported",
+          reliedOnToolCallIds: [],
+          performedMutation: false,
+        },
         [succeeded, failedRead],
       ),
     ).toThrow("without citing a successful tool call");
@@ -240,6 +263,7 @@ describe("requireGroundedAnswer", () => {
           answer: "Hello.",
           disposition: "conversation",
           reliedOnToolCallIds: [],
+          performedMutation: false,
         },
         [],
       ),
@@ -256,10 +280,45 @@ describe("requireGroundedAnswer", () => {
           answer: "Done.",
           disposition: "conversation",
           reliedOnToolCallIds: [],
+          performedMutation: false,
         },
         [failed],
       ),
     ).toThrow("failed and was never retried successfully");
+  });
+
+  test("rejects a mutation claim grounded only in a read citation", () => {
+    // The concrete hallucination this guards against: the model performs a
+    // harmless lookup, then claims an unrelated mutation happened while
+    // citing that lookup as its evidence. Citation-success alone cannot
+    // catch this - only a second, independent self-report can.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Added the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-4"],
+          performedMutation: true,
+        },
+        [succeededRead],
+      ),
+    ).toThrow("cites no successful non-read tool call");
+  });
+
+  test("allows an informational answer grounded only in a read citation", () => {
+    // The same citation shape is legitimate when the answer never claims a
+    // mutation happened - "supported" also covers verifying information.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "You have 42 messages this week.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-4"],
+          performedMutation: false,
+        },
+        [succeededRead],
+      ),
+    ).not.toThrow();
   });
 });
 
@@ -316,6 +375,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Added the role.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-read"],
+          performedMutation: true,
         },
         [unrelatedRead, mutationFailed],
       ),
@@ -333,6 +393,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Added the role.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-read"],
+          performedMutation: true,
         },
         [mutationFailed, unrelatedRead],
       ),
@@ -348,6 +409,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Added the role.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-mutate-2"],
+          performedMutation: true,
         },
         [unrelatedRead, mutationFailed, mutationSucceeded],
       ),
@@ -364,6 +426,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Added the role.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-mutate-2"],
+          performedMutation: true,
         },
         [mutationSucceeded, laterReadFailed],
       ),
@@ -431,6 +494,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Created the role.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-list"],
+          performedMutation: true,
         },
         [createRoleAFailed, listSucceeded],
       ),
@@ -446,6 +510,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Created role A.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-create-b"],
+          performedMutation: true,
         },
         [createRoleAFailed, createRoleBSucceeded],
       ),
@@ -459,6 +524,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Created role A.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-create-a-2"],
+          performedMutation: true,
         },
         [createRoleAFailed, createRoleASucceeded],
       ),
@@ -476,6 +542,7 @@ describe("requireGroundedAnswer: uncorrected failures", () => {
           answer: "Created the role.",
           disposition: "supported",
           reliedOnToolCallIds: ["call-create-a-2"],
+          performedMutation: true,
         },
         [listFailed, createRoleAFailed, createRoleASucceeded],
       ),

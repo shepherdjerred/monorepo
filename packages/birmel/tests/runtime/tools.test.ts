@@ -105,6 +105,7 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "userId",
       "sourceMessageId",
     ],
+    readActions: ["get-info", "get-owner", "get-audit-logs"],
   },
   {
     id: "manage-channel",

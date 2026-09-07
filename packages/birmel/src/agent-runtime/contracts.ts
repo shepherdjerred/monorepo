@@ -133,6 +133,18 @@ export const TurnAnswerSchema = z.strictObject({
   answer: z.string().min(1),
   disposition: TurnDispositionSchema,
   reliedOnToolCallIds: z.array(z.string().min(1).max(200)).max(64),
+  /**
+   * Whether the answer claims a write/destructive/code-execution outcome
+   * happened, as opposed to reporting information a read already covers.
+   * Citing a successful call proves that SOME call succeeded, not that it
+   * was the one the answer actually describes - a model could cite a
+   * harmless read while claiming an unrelated mutation. Self-reporting this
+   * separately from disposition and reliedOnToolCallIds gives
+   * requireGroundedAnswer a second, independent claim that must agree with
+   * the citations: a true mutation claim has to be backed by an actually
+   * non-read cited call, not just any successful one.
+   */
+  performedMutation: z.boolean(),
 });
 export type TurnAnswer = z.infer<typeof TurnAnswerSchema>;
 
