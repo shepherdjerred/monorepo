@@ -69,6 +69,20 @@ describe("isCountedPath", () => {
     expect(isCountedPath("packages/x/sandbox/a.ts")).toBe(true);
   });
 
+  test("excludes generated trees, which are machine output", () => {
+    expect(
+      isCountedPath("packages/homelab/src/cdk8s/generated/helm/loki.types.ts"),
+    ).toBe(false);
+    expect(isCountedPath("packages/x/generated/client.ts")).toBe(false);
+    expect(isCountedPath("generated/root.ts")).toBe(false);
+  });
+
+  test("still counts authored files whose name contains generated", () => {
+    expect(
+      isCountedPath("packages/homelab/src/cdk8s/src/version-map.generated.ts"),
+    ).toBe(true);
+  });
+
   test("is not fooled by an extension appearing mid-path", () => {
     expect(isCountedPath("packages/x.ts/notes.md")).toBe(false);
   });
@@ -97,7 +111,7 @@ describe("budgetOf", () => {
   /**
    * The budget split only means anything if a test is recognised as a test in
    * the language it is written in. Charging these to the source budget would
-   * make a directory of 30 modules and their 30 tests fail a 50-module limit it
+   * make a directory of 20 modules and their 20 tests fail a 25-module limit it
    * never exceeded.
    */
   test("recognises Go's convention", () => {
