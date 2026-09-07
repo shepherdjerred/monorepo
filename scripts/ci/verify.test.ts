@@ -68,6 +68,19 @@ describe("affected verification filters", () => {
   );
 
   test.each([
+    "packages/homelab/src/cdk8s/turbo.json",
+    "packages/foo/turbo.json",
+  ])("selects root scripts for workspace Turbo config %s", async (path) => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () => Promise.resolve([path]),
+      ),
+    ).toContain("--filter=@shepherdjerred/root-scripts");
+  });
+
+  test.each([
     "packages/discord-plays-pokemon/Dockerfile",
     "packages/streambot/Dockerfile",
     "packages/discord-plays-mario-kart/wasm-src/upstream.json",

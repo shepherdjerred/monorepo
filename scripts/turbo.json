@@ -15,7 +15,9 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/.buildkite/scripts/**",
+        "$TURBO_ROOT$/.buildkite/hooks/**",
         "$TURBO_ROOT$/packages/**/package.json",
+        "$TURBO_ROOT$/packages/**/turbo.json",
         "$TURBO_ROOT$/renovate.json",
         "$TURBO_ROOT$/packages/version-catalog/src/catalog.json",
         "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",
