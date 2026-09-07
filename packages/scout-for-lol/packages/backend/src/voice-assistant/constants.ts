@@ -31,6 +31,10 @@ export const VOICE_INACTIVITY_TIMEOUT_MS = 45 * 60_000;
  * `HEY`'s tail is a pre-training estimate ("scout" is one short syllable);
  * re-measure it against the trained assets with the M2 corpus method before
  * beta launch (streambot `constants.ts` documents the sweep).
+ *
+ * Must equal `tails` in `../../assets/voice/fragment-tails.json` — that JSON is what the M2
+ * offline evaluator and packager read, and `session.test.ts` asserts the two stay identical.
+ * Update both together; the JSON alone is not the production source of truth.
  */
 export const VOICE_FRAGMENT_TAIL_MS: Readonly<Record<string, number>> = {
   HEY_SCOUT: 0,
