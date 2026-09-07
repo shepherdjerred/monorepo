@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.7.0...helm-types-v2.0.0) (2026-09-07)
+
+
+### ⚠ BREAKING CHANGES
+
+* Helm Types now requires Node.js 24 or newer and uses compiled dist exports instead of source exports.
+
+### Features
+
+* prepare Home Assistant and Helm Types for npm ([#2734](https://github.com/shepherdjerred/monorepo/issues/2734)) ([16c7c62](https://github.com/shepherdjerred/monorepo/commit/16c7c623e8fb8cfd03b3d1eec5168f0d0636b53d))
+
 ## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.6.0...helm-types-v1.7.0) (2026-08-25)
 
 No library behavior changes. The generator produces the same output as `1.6.0`; this release exists only because of repo-level housekeeping that release-please picked up.
