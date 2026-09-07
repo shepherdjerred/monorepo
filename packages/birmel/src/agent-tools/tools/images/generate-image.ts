@@ -5,7 +5,10 @@ import {
   stageAttachment,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import { downloadImageWithRetry } from "@shepherdjerred/birmel/utils/image.ts";
+import {
+  downloadImageWithRetry,
+  sanitizeUrlForLogging,
+} from "@shepherdjerred/birmel/utils/image.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { generateImage } from "ai";
 import { z } from "zod";
@@ -30,7 +33,7 @@ export const GenerateImageInputSchema = z.object({
     .url()
     .optional()
     .describe(
-      "Optional explicit URL of an image to modify. If omitted and the user provided an image attachment or replied to a message with an image, the tool automatically uses that reference image from turn context.",
+      "Optional explicit external image URL provided by the user in message text. For user uploads or replied-to messages, leave this omitted so the tool automatically uses the reference image from turn context.",
     ),
 });
 
@@ -79,7 +82,7 @@ export const generateImageTool = createTool({
 
       if (resolvedReference != null) {
         logger.debug("Downloading reference image for image editing", {
-          url: resolvedReference.url,
+          url: sanitizeUrlForLogging(resolvedReference.url),
         });
         const downloaded = await downloadImageWithRetry(
           resolvedReference.url,

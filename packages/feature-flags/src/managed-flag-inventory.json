@@ -781,6 +781,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "birmel-image-generation-enabled",
+      "owner": "birmel",
+      "namespace": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Enable Birmel image generation and editing.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "birmel-llm-classifier-model",
       "owner": "birmel",
       "namespace": "birmel",
@@ -800,6 +812,18 @@
       "purpose": "Select the Birmel embedding model.",
       "type": "variant",
       "default": "text-embedding-3-small",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "birmel-llm-image-model",
+      "owner": "birmel",
+      "namespace": "birmel",
+      "source": "birmel-dynamic",
+      "purpose": "Select the Birmel image generation LLM model.",
+      "type": "variant",
+      "default": "gemini-3-pro-image-preview",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

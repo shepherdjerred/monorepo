@@ -15,6 +15,7 @@ vi.mock("ai", () => ({
 vi.mock("@shepherdjerred/birmel/utils/image.ts", () => ({
   downloadImageWithRetry: (...args: unknown[]) =>
     mockDownloadImageWithRetry(...args),
+  sanitizeUrlForLogging: (url: string) => url.split("?")[0] ?? url,
 }));
 
 import {

@@ -1,3 +1,5 @@
+import net from "node:net";
+import dns from "node:dns/promises";
 import type { Attachment, Message } from "discord.js";
 import { logger } from "./logger.ts";
 
@@ -136,11 +138,269 @@ function resolveDownloadedContentType(
   );
 }
 
+export function sanitizeUrlForLogging(url: string): string {
+  try {
+    const parsed = new URL(url);
+    parsed.search = "";
+    parsed.hash = "";
+    return parsed.toString();
+  } catch {
+    return "<invalid-url>";
+  }
+}
+
+function ipv4ToUint32(b0: number, b1: number, b2: number, b3: number): number {
+  return ((b0 << 24) | (b1 << 16) | (b2 << 8) | b3) >>> 0;
+}
+
+const IPV4_PRIVATE_RANGES: readonly (readonly [number, number])[] = [
+  [0x00_00_00_00, 0x00_ff_ff_ff], // 0.0.0.0/8 (Current network)
+  [0x0a_00_00_00, 0x0a_ff_ff_ff], // 10.0.0.0/8 (Private)
+  [0x64_40_00_00, 0x64_7f_ff_ff], // 100.64.0.0/10 (CGNAT)
+  [0x7f_00_00_00, 0x7f_ff_ff_ff], // 127.0.0.0/8 (Loopback)
+  [0xa9_fe_00_00, 0xa9_fe_ff_ff], // 169.254.0.0/16 (Link-local)
+  [0xac_10_00_00, 0xac_1f_ff_ff], // 172.16.0.0/12 (Private)
+  [0xc0_00_00_00, 0xc0_00_00_ff], // 192.0.0.0/24 (IETF protocol assignments)
+  [0xc0_00_02_00, 0xc0_00_02_ff], // 192.0.2.0/24 (TEST-NET-1)
+  [0xc0_58_63_00, 0xc0_58_63_ff], // 192.88.99.0/24 (6to4 relay)
+  [0xc0_a8_00_00, 0xc0_a8_ff_ff], // 192.168.0.0/16 (Private)
+  [0xc6_12_00_00, 0xc6_13_ff_ff], // 198.18.0.0/15 (Benchmark testing)
+  [0xc6_33_64_00, 0xc6_33_64_ff], // 198.51.100.0/24 (TEST-NET-2)
+  [0xcb_00_71_00, 0xcb_00_71_ff], // 203.0.113.0/24 (TEST-NET-3)
+  [0xe0_00_00_00, 0xff_ff_ff_ff], // 224.0.0.0/4 to 255.255.255.255 (Multicast & reserved / broadcast)
+];
+
+function isPrivateOrReservedIpv4(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (
+    parts.length !== 4 ||
+    parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)
+  ) {
+    return true;
+  }
+  const [b0, b1, b2, b3] = parts;
+  if (b0 == null || b1 == null || b2 == null || b3 == null) {
+    return true;
+  }
+
+  const uint = ipv4ToUint32(b0, b1, b2, b3);
+  return IPV4_PRIVATE_RANGES.some(([min, max]) => uint >= min && uint <= max);
+}
+
+function isPrivateOrReservedIpv6(ip: string): boolean {
+  const lower = ip.toLowerCase();
+  if (lower === "::1" || lower === "0:0:0:0:0:0:0:1") return true;
+  if (lower === "::" || lower === "0:0:0:0:0:0:0:0") return true;
+  if (lower.startsWith("::ffff:")) {
+    const v4Part = lower.slice(7);
+    if (net.isIP(v4Part) === 4) {
+      return isPrivateOrReservedIpv4(v4Part);
+    }
+  }
+  // Unique local addresses fc00::/7
+  if (lower.startsWith("fc") || lower.startsWith("fd")) return true;
+  // Link-local unicast fe80::/10
+  if (/^fe[89ab]/.test(lower)) return true;
+  // Multicast ff00::/8
+  if (lower.startsWith("ff")) return true;
+
+  return false;
+}
+
+export function isPrivateOrReservedIp(ip: string): boolean {
+  const family = net.isIP(ip);
+  if (family === 4) {
+    return isPrivateOrReservedIpv4(ip);
+  }
+  if (family === 6) {
+    return isPrivateOrReservedIpv6(ip);
+  }
+  return true;
+}
+
+const FORBIDDEN_HOST_PATTERNS = [
+  "localhost",
+  ".local",
+  ".internal",
+  ".cluster.local",
+  ".arpa",
+];
+
+function validateUrlProtocolAndHost(url: string): URL {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch (error) {
+    throw new Error("Invalid image URL: unable to parse", { cause: error });
+  }
+
+  if (parsed.protocol !== "https:") {
+    throw new Error(
+      `Invalid image URL protocol: only HTTPS is allowed (received ${parsed.protocol})`,
+    );
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  if (hostname.length === 0) {
+    throw new Error("Invalid image URL: empty hostname");
+  }
+
+  for (const pattern of FORBIDDEN_HOST_PATTERNS) {
+    const isForbidden = pattern.startsWith(".")
+      ? hostname.endsWith(pattern)
+      : hostname === pattern;
+    if (isForbidden) {
+      throw new Error(`Forbidden image URL: '${pattern}' is not allowed`);
+    }
+  }
+
+  return parsed;
+}
+
+export type HostResolver = (
+  hostname: string,
+) => Promise<{ address: string; family: number }[]>;
+
+export async function resolveHostAddresses(
+  hostname: string,
+): Promise<{ address: string; family: number }[]> {
+  return await dns.lookup(hostname, { all: true });
+}
+
+async function validateHostDns(
+  hostname: string,
+  resolver: HostResolver,
+): Promise<void> {
+  let addresses: { address: string; family: number }[];
+  try {
+    addresses = await resolver(hostname);
+  } catch (error) {
+    throw new Error(`Invalid image URL: host lookup failed for ${hostname}`, {
+      cause: error,
+    });
+  }
+
+  if (addresses.length === 0) {
+    throw new Error(`Invalid image URL: no DNS records found for ${hostname}`);
+  }
+
+  for (const record of addresses) {
+    if (isPrivateOrReservedIp(record.address)) {
+      throw new Error(
+        `Forbidden image URL: host ${hostname} resolves to private or reserved IP ${record.address}`,
+      );
+    }
+  }
+}
+
+export async function validateSafePublicImageUrl(
+  url: string,
+  resolver: HostResolver = resolveHostAddresses,
+): Promise<URL> {
+  const parsed = validateUrlProtocolAndHost(url);
+  const hostname = parsed.hostname.toLowerCase();
+
+  if (net.isIP(hostname) !== 0) {
+    if (isPrivateOrReservedIp(hostname)) {
+      throw new Error(
+        "Forbidden image URL: private or reserved IP address is not allowed",
+      );
+    }
+    return parsed;
+  }
+
+  await validateHostDns(hostname, resolver);
+  return parsed;
+}
+
+async function readBoundedStream(
+  body: ReadableStream<Uint8Array>,
+  maxBytes: number,
+): Promise<Buffer> {
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      totalBytes += value.byteLength;
+      if (totalBytes > maxBytes) {
+        await reader.cancel();
+        validateImageSize(totalBytes);
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  return Buffer.concat(chunks, totalBytes);
+}
+
 function getAbortMessage(reason: unknown): string {
   if (reason instanceof Error) {
     return reason.message;
   }
   return "Operation aborted";
+}
+
+const MAX_REDIRECTS = 5;
+
+function getRedirectLocation(
+  response: Response,
+  currentUrl: string,
+): string | undefined {
+  const isRedirect =
+    response.status === 301 ||
+    response.status === 302 ||
+    response.status === 303 ||
+    response.status === 307 ||
+    response.status === 308;
+
+  if (!isRedirect) {
+    return undefined;
+  }
+
+  const location = response.headers.get("location");
+  if (location == null || location.length === 0) {
+    throw new Error(`HTTP ${String(response.status)}: missing Location header`);
+  }
+
+  return new URL(location, currentUrl).toString();
+}
+
+async function fetchWithRedirects(
+  initialUrl: string,
+  signal: AbortSignal,
+  resolver: HostResolver = resolveHostAddresses,
+): Promise<Response> {
+  let currentUrl = initialUrl;
+
+  for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
+    await validateSafePublicImageUrl(currentUrl, resolver);
+
+    const response = await fetch(currentUrl, {
+      signal,
+      redirect: "manual",
+    });
+
+    const nextUrl = getRedirectLocation(response, currentUrl);
+    if (nextUrl == null) {
+      return response;
+    }
+
+    if (redirect === MAX_REDIRECTS) {
+      throw new Error("Too many redirects during image download");
+    }
+
+    currentUrl = nextUrl;
+  }
+
+  throw new Error("Failed to download image: no response received");
 }
 
 /**
@@ -149,15 +409,14 @@ function getAbortMessage(reason: unknown): string {
 export async function downloadImage(
   url: string,
   signal?: AbortSignal,
+  resolver: HostResolver = resolveHostAddresses,
 ): Promise<DownloadedImage> {
   const timeoutSignal = AbortSignal.timeout(DOWNLOAD_TIMEOUT_MS);
   const combinedSignal =
     signal == null ? timeoutSignal : AbortSignal.any([signal, timeoutSignal]);
 
   try {
-    const response = await fetch(url, {
-      signal: combinedSignal,
-    });
+    const response = await fetchWithRedirects(url, combinedSignal, resolver);
 
     if (!response.ok) {
       throw new Error(
@@ -170,8 +429,11 @@ export async function downloadImage(
       validateImageSize(Number.parseInt(contentLength, 10));
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    if (response.body == null) {
+      throw new Error("Response body is empty");
+    }
+
+    const buffer = await readBoundedStream(response.body, MAX_IMAGE_SIZE);
     validateImageSize(buffer.length);
 
     const contentType = resolveDownloadedContentType(
@@ -180,7 +442,7 @@ export async function downloadImage(
     );
 
     logger.debug("Image downloaded successfully", {
-      url,
+      url: sanitizeUrlForLogging(url),
       contentType,
       size: buffer.length,
     });
@@ -211,7 +473,10 @@ export async function downloadImageWithRetry(
     if (signal?.aborted === true) {
       throw new Error(getAbortMessage(signal.reason), { cause: error });
     }
-    logger.warn("Image download failed, retrying once", { url, error });
+    logger.warn("Image download failed, retrying once", {
+      url: sanitizeUrlForLogging(url),
+      error,
+    });
     // Retry once
     return await downloadImage(url, signal);
   }
