@@ -1,5 +1,9 @@
 import type { ChallengeProgress as ChallengeProgressValue } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
+import {
+  ChallengeChampionCoverage,
+  championCoverageFromDistinct,
+} from "#src/components/challenge/challenge-champion-coverage.tsx";
 
 export function ChallengeProgress(props: { progress: ChallengeProgressValue }) {
   const progress = props.progress;
@@ -22,6 +26,7 @@ export function ChallengeProgress(props: { progress: ChallengeProgressValue }) {
     );
   }
   if (progress.kind === "distinct") {
+    const champions = championCoverageFromDistinct(progress);
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
@@ -30,12 +35,16 @@ export function ChallengeProgress(props: { progress: ChallengeProgressValue }) {
             {progress.current.toString()} / {progress.target.toString()}
           </Badge>
         </div>
-        {progress.missing.length > 0 ? (
-          <p className="text-sm text-scout-subtle">
-            Missing: {progress.missing.map((value) => value.label).join(", ")}
-          </p>
+        {champions === null ? (
+          progress.missing.length > 0 ? (
+            <p className="text-sm text-scout-subtle">
+              Missing: {progress.missing.map((value) => value.label).join(", ")}
+            </p>
+          ) : (
+            <p className="text-sm text-scout-success">Complete</p>
+          )
         ) : (
-          <p className="text-sm text-scout-success">Complete</p>
+          <ChallengeChampionCoverage entries={champions} />
         )}
       </div>
     );

@@ -108,7 +108,7 @@ export function ChallengeCatalog() {
                 <span className="flex items-center justify-between gap-2">
                   <strong>{run.title}</strong>
                   <Badge variant="outline">
-                    {run.recomputing ? "recomputing" : run.status}
+                    {run.recomputing ? "Updating now..." : run.status}
                   </Badge>
                 </span>
                 <span className="mt-2 block text-sm text-scout-subtle">

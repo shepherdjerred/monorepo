@@ -106,7 +106,7 @@ export function ChallengeAccountEditor(props: {
           </fieldset>
           <ServerFormError error={error} />
           <FormPendingStatus pending={change.isPending}>
-            Recomputing challenge run…
+            Updating now...
           </FormPendingStatus>
           <Button type="submit" disabled={disabled}>
             Recompute with accounts
