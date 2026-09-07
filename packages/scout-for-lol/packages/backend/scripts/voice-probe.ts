@@ -23,8 +23,10 @@
 import { parseArgs } from "node:util";
 import {
   createNoopVoiceMetrics,
+  buildAvfoundationCaptureCommand,
   DiscordOpusEncoder,
   initializeLocalVoiceModels,
+  listAvfoundationAudioDevices,
   loadSpokenFeedbackClips,
   NOOP_VOICE_LOGGER,
   runRealtimeCommandTurn,
@@ -41,8 +43,6 @@ import {
 } from "#src/voice-assistant/constants.ts";
 import { scoutRealtimeTurnOptions } from "#src/voice-assistant/session.ts";
 import { VoiceTurnFactsRecorder } from "#src/voice-assistant/league-tools.ts";
-
-const PCM_SAMPLE_RATE = 24_000;
 
 const help = `Hey Scout local voice probe
 
@@ -61,6 +61,9 @@ Options:
 
 Ctrl-C quits.`;
 
+const LIST_DEVICES_OPTION = { type: "boolean", default: false } as const;
+const HELP_OPTION = { type: "boolean", short: "h", default: false } as const;
+
 class DiscardAssistantAudio implements AssistantAudioSink {
   enqueue(pcm24k: Uint8Array): void {
     pcm24k.fill(0);
@@ -73,49 +76,8 @@ class DiscardAssistantAudio implements AssistantAudioSink {
   }
 }
 
-function parseAvfoundationAudioDevices(
-  output: string,
-): { index: number; name: string }[] {
-  const devices: { index: number; name: string }[] = [];
-  let readingAudio = false;
-  for (const line of output.split(/\r?\n/u)) {
-    if (line.includes("AVFoundation audio devices:")) {
-      readingAudio = true;
-      continue;
-    }
-    if (!readingAudio) continue;
-    const match = /\[(\d+)\][ \t]+/u.exec(line);
-    if (match === null) continue;
-    const indexText = match[1];
-    const name = line.slice(match.index + match[0].length).trim();
-    if (indexText === undefined || name.length === 0) continue;
-    devices.push({ index: Number(indexText), name });
-  }
-  return devices;
-}
-
 async function listDevices(): Promise<void> {
-  const subprocess = Bun.spawn(
-    [
-      "ffmpeg",
-      "-hide_banner",
-      "-f",
-      "avfoundation",
-      "-list_devices",
-      "true",
-      "-i",
-      "",
-    ],
-    { stdin: "ignore", stdout: "ignore", stderr: "pipe" },
-  );
-  const output = await new Response(subprocess.stderr).text();
-  await subprocess.exited;
-  const devices = parseAvfoundationAudioDevices(output);
-  if (devices.length === 0) {
-    throw new Error(
-      `FFmpeg reported no AVFoundation audio devices:\n${output}`,
-    );
-  }
+  const devices = await listAvfoundationAudioDevices("ffmpeg");
   for (const device of devices) {
     console.log(`[${String(device.index)}] ${device.name}`);
   }
@@ -125,11 +87,12 @@ async function main(): Promise<void> {
   const { values } = parseArgs({
     args: Bun.argv.slice(2),
     options: {
+      // This intentionally permits an incomplete pre-training bundle.
+      "no-feedback-clips": { type: "boolean", default: false },
       device: { type: "string" },
       "assets-dir": { type: "string" },
-      "list-devices": { type: "boolean", default: false },
-      "no-feedback-clips": { type: "boolean", default: false },
-      help: { type: "boolean", short: "h", default: false },
+      "list-devices": LIST_DEVICES_OPTION,
+      help: HELP_OPTION,
     },
     strict: true,
     allowPositionals: false,
@@ -148,6 +111,10 @@ async function main(): Promise<void> {
   const deviceText = values.device;
   if (deviceText === undefined) {
     throw new Error("Pass --device <index>; find one with --list-devices");
+  }
+  const deviceIndex = Number(deviceText);
+  if (!Number.isInteger(deviceIndex) || deviceIndex < 0) {
+    throw new Error("--device must be a non-negative AVFoundation index");
   }
   const apiKey = Bun.env["OPENAI_API_KEY"];
   if (apiKey === undefined || apiKey.length === 0) {
@@ -226,24 +193,7 @@ async function main(): Promise<void> {
     `Capturing from device ${deviceText}. Say "hey scout, ..." (Ctrl-C quits)`,
   );
   const subprocess = Bun.spawn(
-    [
-      "ffmpeg",
-      "-hide_banner",
-      "-nostdin",
-      "-loglevel",
-      "error",
-      "-f",
-      "avfoundation",
-      "-i",
-      `:${deviceText}`,
-      "-ac",
-      "1",
-      "-ar",
-      String(PCM_SAMPLE_RATE),
-      "-f",
-      "s16le",
-      "pipe:1",
-    ],
+    buildAvfoundationCaptureCommand("ffmpeg", deviceIndex),
     { stdin: "ignore", stdout: "pipe", stderr: "pipe" },
   );
   process.on("SIGINT", () => {

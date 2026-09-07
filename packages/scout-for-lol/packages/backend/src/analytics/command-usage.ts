@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -8,6 +7,7 @@ import {
   type DiscordCommandStatus,
   type ProductAnalytics,
 } from "#src/analytics/product-analytics.ts";
+import { findAnalyticsGuildInstallation } from "#src/analytics/guild-installation.ts";
 
 const logger = createLogger("command-usage-analytics");
 
@@ -54,10 +54,6 @@ export async function captureDiscordCommandUsed(
     if (input.guildId === null) {
       return;
     }
-    const guildId = DiscordGuildIdSchema.safeParse(input.guildId);
-    if (!guildId.success) {
-      return;
-    }
     const commandName = DiscordCommandNameSchema.safeParse(input.commandName);
     if (!commandName.success) {
       return;
@@ -65,14 +61,7 @@ export async function captureDiscordCommandUsed(
 
     const db = options?.db ?? prisma;
     const analytics = options?.analytics ?? getProductAnalytics();
-    const install = await db.guildInstall.findUnique({
-      where: { serverId: guildId.data },
-      select: {
-        serverId: true,
-        analyticsInstallationId: true,
-        analyticsLifecycleTracked: true,
-      },
-    });
+    const install = await findAnalyticsGuildInstallation(db, input.guildId);
     if (install === null) {
       logger.warn(
         "Cannot capture command usage without a GuildInstall lifecycle row",

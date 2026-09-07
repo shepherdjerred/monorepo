@@ -111,6 +111,26 @@ function deferredGate() {
   };
 }
 
+function deferredEstablish(): {
+  readonly establish: EstablishVoiceConnection<FakeConnection>;
+  readonly releases: (() => void)[];
+  readonly calls: () => number;
+} {
+  const releases: (() => void)[] = [];
+  let calls = 0;
+  return {
+    establish: ({ channelId, selfDeaf }) =>
+      new Promise((resolve) => {
+        calls += 1;
+        releases.push(() => {
+          resolve(new FakeConnection(channelId, selfDeaf));
+        });
+      }),
+    releases,
+    calls: () => calls,
+  };
+}
+
 function doNothing(): void {
   /* replaced synchronously by the Promise constructor */
 }
@@ -147,19 +167,9 @@ describe("VoiceManager modes", () => {
   });
 
   test("ensureConnected and an assistant joinChannel never race establish() on a brand-new guild", async () => {
-    const releases: (() => void)[] = [];
-    let establishCalls = 0;
-    const establish: EstablishVoiceConnection<FakeConnection> = ({
-      channelId,
-      selfDeaf,
-    }) =>
-      new Promise((resolve) => {
-        establishCalls += 1;
-        releases.push(() => {
-          resolve(new FakeConnection(channelId, selfDeaf));
-        });
-      });
-    const manager = new VoiceManager<FakeConnection>(establish);
+    const deferred = deferredEstablish();
+    const { releases } = deferred;
+    const manager = new VoiceManager<FakeConnection>(deferred.establish);
     manager.setClient(new Client({ intents: [GatewayIntentBits.Guilds] }));
 
     // No connection exists yet for this guild: an alert's ensureConnected and
@@ -175,31 +185,21 @@ describe("VoiceManager modes", () => {
     const alertConnect = manager.ensureConnected(GUILD, "alert-channel");
 
     // Only the queued (first) attempt has reached establish() so far.
-    expect(establishCalls).toBe(1);
+    expect(deferred.calls()).toBe(1);
     releases[0]?.();
     const assistantConnection = await assistantJoin;
     // The alert's turn now runs, sees the assistant connection already in
     // place, and reuses it without ever calling establish() again.
     const alertConnection = await alertConnect;
-    expect(establishCalls).toBe(1);
+    expect(deferred.calls()).toBe(1);
     expect(alertConnection).toBe(assistantConnection);
     expect(manager.getConnectionMode(GUILD)).toBe("assistant");
   });
 
   test("a playback ensureConnected first still lets a later assistant join take over cleanly", async () => {
-    const releases: (() => void)[] = [];
-    let establishCalls = 0;
-    const establish: EstablishVoiceConnection<FakeConnection> = ({
-      channelId,
-      selfDeaf,
-    }) =>
-      new Promise((resolve) => {
-        establishCalls += 1;
-        releases.push(() => {
-          resolve(new FakeConnection(channelId, selfDeaf));
-        });
-      });
-    const manager = new VoiceManager<FakeConnection>(establish);
+    const deferred = deferredEstablish();
+    const { releases } = deferred;
+    const manager = new VoiceManager<FakeConnection>(deferred.establish);
     manager.setClient(new Client({ intents: [GatewayIntentBits.Guilds] }));
 
     const alertConnect = manager.ensureConnected(GUILD, "alert-channel");
@@ -209,19 +209,19 @@ describe("VoiceManager modes", () => {
       "assistant",
     );
 
-    expect(establishCalls).toBe(1);
+    expect(deferred.calls()).toBe(1);
     releases[0]?.();
     const playbackConnection = await alertConnect;
     // The queued assistant task's own establish() call happens as a later
     // microtask continuation, not necessarily before `await alertConnect`
     // resumes here — wait for it rather than asserting an exact tick count.
-    await waitUntil(() => establishCalls === 2);
+    await waitUntil(() => deferred.calls() === 2);
     releases[1]?.();
     const assistantConnection = await assistantJoin;
     // The assistant join runs only after the playback connection is fully
     // in place, so it correctly destroys-and-replaces it (an explicit
     // /scout join always may move the bot) instead of racing it.
-    expect(establishCalls).toBe(2);
+    expect(deferred.calls()).toBe(2);
     expect(playbackConnection.destroyed).toBe(true);
     expect(manager.getConnection(GUILD)).toBe(assistantConnection);
     expect(manager.getConnectionMode(GUILD)).toBe("assistant");

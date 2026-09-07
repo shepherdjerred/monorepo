@@ -13,6 +13,20 @@ function settledFlag(promise: Promise<unknown>): () => boolean {
   return () => settled;
 }
 
+async function expectAssistantToWaitForAlert(
+  arbiter: VoiceOutputArbiter,
+): Promise<void> {
+  const { release } = await arbiter.playbackGate()(GUILD);
+  const reserved = arbiter.reserveForAssistant(GUILD);
+  const isSettled = settledFlag(reserved);
+  await Promise.resolve();
+  await Promise.resolve();
+  expect(isSettled()).toBe(false);
+  release();
+  await reserved;
+  expect(isSettled()).toBe(true);
+}
+
 describe("VoiceOutputArbiter — alert side", () => {
   test("alerts play at full volume while the assistant is quiet", async () => {
     const arbiter = new VoiceOutputArbiter();
@@ -66,19 +80,9 @@ describe("VoiceOutputArbiter — alert side", () => {
 describe("VoiceOutputArbiter — bidirectional reservation", () => {
   test("the assistant waits for an in-flight alert to release before sending anything", async () => {
     const arbiter = new VoiceOutputArbiter();
-    const { release } = await arbiter.playbackGate()(GUILD);
-    const reserved = arbiter.reserveForAssistant(GUILD);
-    const isSettled = settledFlag(reserved);
-
     // The alert has not released yet: the assistant must not be allowed to
     // send its first packet, however long the alert takes to finish.
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(isSettled()).toBe(false);
-
-    release();
-    await reserved;
-    expect(isSettled()).toBe(true);
+    await expectAssistantToWaitForAlert(arbiter);
   });
 
   test("reserveForAssistant resolves immediately when no alert is in flight", async () => {
@@ -90,22 +94,11 @@ describe("VoiceOutputArbiter — bidirectional reservation", () => {
 
   test("an alert that starts first blocks a wake accepted mid-playback", async () => {
     const arbiter = new VoiceOutputArbiter();
-    const gate = arbiter.playbackGate();
     // The alert acquires the connection before any reply exists.
-    const { release } = await gate(GUILD);
-
     // A wake is accepted while the alert is still playing.
-    const reserved = arbiter.reserveForAssistant(GUILD);
-    const isSettled = settledFlag(reserved);
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(isSettled()).toBe(false);
-
     // The alert finishes (VoiceManager.playSound's finally calls this on
     // every completion path: idle, error, or its own timeout).
-    release();
-    await reserved;
-    expect(isSettled()).toBe(true);
+    await expectAssistantToWaitForAlert(arbiter);
   });
 
   test("reservations do not cross guilds", async () => {

@@ -1,12 +1,14 @@
 import { describe, expect, test } from "vitest";
 import {
-  buildAvfoundationCaptureCommand,
   DryRunVoiceCommandPort,
   LocalVoiceProbe,
-  parseAvfoundationAudioDevices,
   startMacMicrophoneCapture,
 } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/voice-assistant";
+import {
+  buildAvfoundationCaptureCommand,
+  parseAvfoundationAudioDevices,
+  type LocalVoiceModels,
+} from "@shepherdjerred/voice-assistant";
 import { VoiceConfigSchema } from "@shepherdjerred/streambot/config/schema.ts";
 
 function markerModels(wake: boolean): LocalVoiceModels {

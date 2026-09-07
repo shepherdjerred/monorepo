@@ -14,6 +14,7 @@ import {
   type ScoutVoiceSessionOptions,
 } from "#src/voice-assistant/session.ts";
 import type { VoiceQuestionObservation } from "#src/voice-assistant/session.ts";
+import { fakeLocalVoiceModels } from "#src/voice-assistant/test-helpers.ts";
 
 function noopSink(): AssistantAudioSink {
   return {
@@ -25,36 +26,7 @@ function noopSink(): AssistantAudioSink {
   };
 }
 
-const FAKE_MODELS: ScoutVoiceSessionOptions["models"] = {
-  runtime: "native",
-  createKeywordDetector: () => ({
-    accept: () => null,
-    reset: () => {
-      /* fake */
-    },
-    close: () => {
-      /* fake */
-    },
-  }),
-  createVad: () => ({
-    accept: () => {
-      /* fake */
-    },
-    isSpeechActive: () => false,
-    hasCompletedSpeech: () => false,
-    flush: () => {
-      /* fake */
-    },
-    reset: () => {
-      /* fake */
-    },
-    close: () => {
-      /* fake */
-    },
-  }),
-  verifyWakePhrase: () => Promise.resolve({ accepted: false, score: 0 }),
-  close: () => Promise.resolve(),
-};
+const FAKE_MODELS: ScoutVoiceSessionOptions["models"] = fakeLocalVoiceModels();
 
 type SessionHarness = {
   session: ScoutVoiceSession;
@@ -92,6 +64,19 @@ function harness(runTurn: ScoutVoiceSessionOptions["runTurn"]): SessionHarness {
 
 function pcm(): Float32Array {
   return new Float32Array(160);
+}
+
+async function expectRateLimitedAfterTwoTurns(
+  h: SessionHarness,
+  expectedOutcome: "transcript-rejected" | "error",
+): Promise<void> {
+  await h.session.handleCompletedTurn(pcm(), Date.now());
+  await h.session.handleCompletedTurn(pcm(), Date.now());
+  expect(h.turnCalls).toBe(1);
+  expect(h.observations.map((observation) => observation.outcome)).toEqual([
+    expectedOutcome,
+    "rate-limited",
+  ]);
 }
 
 describe("voice constants", () => {
@@ -194,13 +179,7 @@ describe("ScoutVoiceSession turns", () => {
         normalizedCommand: null,
       }),
     );
-    await h.session.handleCompletedTurn(pcm(), Date.now());
-    await h.session.handleCompletedTurn(pcm(), Date.now());
-    expect(h.turnCalls).toBe(1);
-    expect(h.observations.map((observation) => observation.outcome)).toEqual([
-      "transcript-rejected",
-      "rate-limited",
-    ]);
+    await expectRateLimitedAfterTwoTurns(h, "transcript-rejected");
   });
 
   test("closing the session interrupts the in-flight turn", async () => {
@@ -224,12 +203,6 @@ describe("ScoutVoiceSession turns", () => {
     const h = harness(() =>
       Promise.reject(new Error("You exceeded your current quota")),
     );
-    await h.session.handleCompletedTurn(pcm(), Date.now());
-    await h.session.handleCompletedTurn(pcm(), Date.now());
-    expect(h.turnCalls).toBe(1);
-    expect(h.observations.map((observation) => observation.outcome)).toEqual([
-      "error",
-      "rate-limited",
-    ]);
+    await expectRateLimitedAfterTwoTurns(h, "error");
   });
 });

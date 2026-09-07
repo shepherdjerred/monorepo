@@ -8,6 +8,7 @@ export * from "./codecs.ts";
 export * from "./constants.ts";
 export * from "./discord-opus-container.ts";
 export * from "./local-models.ts";
+export * from "./mac-microphone.ts";
 export * from "./mutation-gate.ts";
 export * from "./phrase-verifier.ts";
 export * from "./ports.ts";

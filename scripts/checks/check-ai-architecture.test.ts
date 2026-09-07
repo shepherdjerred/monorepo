@@ -121,6 +121,25 @@ describe("AI architecture guard", () => {
     ).toEqual(["provider-api-key"]);
   });
 
+  test("allows native OpenAI Realtime credentials only on named voice surfaces", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
+          contents: "const key = Bun.env.OPENAI_API_KEY;",
+        },
+      ]),
+    ).toEqual([]);
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/scout-for-lol/packages/backend/src/voice-assistant/session.ts",
+          contents: "const key = Bun.env.OPENAI_API_KEY;",
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["provider-api-key"]);
+  });
+
   test("does not turn a broad source path into a provider exception", () => {
     const violations = findAiArchitectureViolations([
       {

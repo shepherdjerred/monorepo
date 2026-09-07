@@ -44,7 +44,7 @@ const RULES: readonly ArchitectureRule[] = [
   {
     id: "provider-api-key",
     description:
-      "deployed inference credentials use OpenRouter except for the explicit Pokémon Codex subscription workload",
+      "deployed inference credentials use OpenRouter except for reviewed native-provider workloads",
     pattern:
       /\b(?:ANTHROPIC_API_KEY|CLAUDE_CODE_OAUTH_TOKEN|CODEX_ACCESS_TOKEN|CODEX_API_KEY|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|XAI_API_KEY)\b/,
   },
@@ -108,11 +108,11 @@ const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
 
 const WHISPER_TRANSCRIPTION_ADAPTER =
   "packages/homelab/src/cdk8s/src/resources/torrents/whisperbridge.ts";
-// Streambot's voice assistant runs on OpenAI's native agent SDK (@openai/agents Realtime) with a
-// dedicated project key — the sanctioned native-SDK credential class — and its corpus tooling
-// speaks to OpenAI TTS. Neither the Realtime WebSocket nor TTS is routable through
-// OpenRouter/llm-runtime, so these named surfaces hold the credential and the direct SDK.
-const STREAMBOT_VOICE_REALTIME_PATHS = new Set([
+// These voice assistants run one OpenAI Realtime turn through the native
+// @openai/agents SDK. Realtime's WebSocket transport is not available through
+// OpenRouter/llm-runtime, so only their named configuration, runtime, and
+// operator-probe surfaces may hold the dedicated project credential.
+const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/homelab/src/cdk8s/src/resources/streambot.ts",
   "packages/streambot/Dockerfile",
   "packages/streambot/scripts/voice-corpus-generate.ts",
@@ -121,6 +121,9 @@ const STREAMBOT_VOICE_REALTIME_PATHS = new Set([
   "packages/streambot/scripts/voice-model-smoke.ts",
   "packages/streambot/src/config/index.ts",
   "packages/streambot/src/config/schema.ts",
+  "packages/scout-for-lol/packages/backend/scripts/voice-probe.ts",
+  "packages/scout-for-lol/packages/backend/src/configuration.ts",
+  "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
 ]);
 const STREAMBOT_VOICE_TTS_PATHS = new Set([
   "packages/streambot/package.json",
@@ -155,7 +158,7 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
       POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
       HOMELAB_PLATFORM_METADATA_PATHS.has(filePath) ||
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-      STREAMBOT_VOICE_REALTIME_PATHS.has(filePath)
+      OPENAI_NATIVE_REALTIME_PATHS.has(filePath)
     );
   }
 

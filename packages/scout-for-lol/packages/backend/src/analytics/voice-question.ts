@@ -1,4 +1,3 @@
-import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
@@ -7,6 +6,7 @@ import {
   type ProductAnalytics,
   type VoiceQuestionOutcome,
 } from "#src/analytics/product-analytics.ts";
+import { findAnalyticsGuildInstallation } from "#src/analytics/guild-installation.ts";
 
 const logger = createLogger("voice-question-analytics");
 
@@ -37,20 +37,9 @@ export async function captureVoiceQuestionAsked(
   },
 ): Promise<void> {
   try {
-    const guildId = DiscordGuildIdSchema.safeParse(input.guildId);
-    if (!guildId.success) {
-      return;
-    }
     const db = options?.db ?? prisma;
     const analytics = options?.analytics ?? getProductAnalytics();
-    const install = await db.guildInstall.findUnique({
-      where: { serverId: guildId.data },
-      select: {
-        serverId: true,
-        analyticsInstallationId: true,
-        analyticsLifecycleTracked: true,
-      },
-    });
+    const install = await findAnalyticsGuildInstallation(db, input.guildId);
     if (install === null) {
       logger.warn(
         "Cannot capture voice question without a GuildInstall lifecycle row",
