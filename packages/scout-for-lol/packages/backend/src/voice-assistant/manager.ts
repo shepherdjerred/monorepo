@@ -36,7 +36,8 @@ export type SessionEndReason =
   | "connection-lost"
   | "rejoined"
   | "flag-disabled"
-  | "shutdown";
+  | "shutdown"
+  | "moved";
 
 /** What the manager needs from an assistant-mode voice connection. */
 export type AssistantConnection = AssistantVoiceConnection & {
@@ -483,6 +484,33 @@ export class VoiceAssistantManager {
     if (humans === null || humans > 0) return;
     if (active !== undefined) {
       this.endSession(guildId, "empty-channel", { leaveChannel: true });
+      return;
+    }
+    this.invalidate(guildId);
+  }
+
+  /**
+   * Discord's own `VoiceStateUpdate` for Scout's own member: `newChannelId`
+   * is wherever the underlying connection is bound now (`null` if
+   * disconnected). An admin dragging the bot to a different channel moves
+   * that connection without ever going through `join()` — nobody consented
+   * to being listened to there, and the stored channel ID here would
+   * otherwise keep pointing at the channel Scout just left, so the
+   * empty-channel check above (and any later teardown) would keep watching
+   * the wrong room. A bare disconnect is already handled by the
+   * connection-lost listener wired in the constructor; this only needs to
+   * act on a channel ID that changed to something else the manager didn't
+   * request.
+   */
+  handleBotChannelChanged(guildId: string, newChannelId: string | null): void {
+    const active = this.sessions.get(guildId);
+    const pendingChannelId = this.pendingJoinChannels.get(guildId);
+    const knownChannelId = active?.channelId ?? pendingChannelId;
+    if (knownChannelId === undefined || knownChannelId === newChannelId) {
+      return;
+    }
+    if (active !== undefined) {
+      this.endSession(guildId, "moved", { leaveChannel: true });
       return;
     }
     this.invalidate(guildId);
