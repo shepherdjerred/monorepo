@@ -6,7 +6,7 @@ import {
 import {
   isFreshConsumerProfileAccess,
   PROTECTED_CONSUMER_PROFILE_QUERY_OPTIONS,
-} from "#src/routes/consumer-player-profile.tsx";
+} from "#src/routes/consumer/consumer-player-profile.tsx";
 
 describe("consumer profile authorization cache", () => {
   test("does not render a cached access success during its membership recheck", () => {

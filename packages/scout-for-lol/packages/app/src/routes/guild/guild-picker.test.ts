@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { resolveMemberDestination } from "#src/routes/guild-picker.tsx";
+import { resolveMemberDestination } from "#src/routes/guild/guild-picker.tsx";
 
 describe("member destination", () => {
   test.each([

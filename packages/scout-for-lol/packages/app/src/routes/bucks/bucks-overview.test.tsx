@@ -1,7 +1,10 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test } from "vitest";
-import { WalletPanel, type WalletData } from "#src/routes/bucks-overview.tsx";
+import {
+  WalletPanel,
+  type WalletData,
+} from "#src/routes/bucks/bucks-overview.tsx";
 
 const noop = () => {
   /* render-only tests never submit */

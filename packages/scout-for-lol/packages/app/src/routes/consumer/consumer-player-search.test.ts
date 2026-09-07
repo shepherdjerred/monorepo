@@ -8,7 +8,7 @@ import {
   PlayerHome,
   PROTECTED_CONSUMER_SEARCH_QUERY_OPTIONS,
   shouldHideConsumerSuggestions,
-} from "#src/routes/consumer-player-search.tsx";
+} from "#src/routes/consumer/consumer-player-search.tsx";
 
 describe("consumer player typeahead", () => {
   test("starts after two trimmed characters", () => {

@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   bucksSectionItems,
   resolveBucksGuildSelection,
-} from "#src/routes/bucks-workspace.tsx";
+} from "#src/routes/bucks/bucks-workspace.tsx";
 
 describe("bucksSectionItems", () => {
   test("hides Dares when the selected guild has no Dare access", () => {

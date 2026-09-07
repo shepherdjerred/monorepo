@@ -21,7 +21,7 @@ import { useNow } from "#src/hooks/use-now.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { computeClockSkewMs } from "#src/lib/bucks/bucks-countdown.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
+import { useBucksGuild } from "#src/routes/bucks/bucks-workspace.tsx";
 
 const LIVE_QUERY_OPTIONS = {
   staleTime: 0,

@@ -15,7 +15,7 @@ import {
   previousPage,
 } from "#src/lib/bucks/bucks-ledger-paging.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
+import { useBucksGuild } from "#src/routes/bucks/bucks-workspace.tsx";
 
 /**
  * The caller's own ledger, paged against a frozen snapshot id so new entries

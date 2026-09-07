@@ -4,7 +4,10 @@ import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
 import { DareProgressSchema } from "@scout-for-lol/data";
-import { DareDetail, parseBucksDareId } from "#src/routes/bucks-dares.tsx";
+import {
+  DareDetail,
+  parseBucksDareId,
+} from "#src/routes/bucks/bucks-dares.tsx";
 import { formatDareEvidenceJson } from "#src/components/bucks/bucks-dare-progress.tsx";
 
 const noAction = vi.fn();
