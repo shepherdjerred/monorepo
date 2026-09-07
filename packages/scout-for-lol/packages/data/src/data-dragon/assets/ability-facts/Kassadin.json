@@ -1,0 +1,282 @@
+{
+  "championKey": "Kassadin",
+  "championName": "Kassadin",
+  "abilities": {
+    "passive": {
+      "name": "Void Stone",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DamageReductionPercent": [
+          0.1
+        ]
+      },
+      "resolvedDescription": "Kassadin takes reduced magic damage and ignores unit collision.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Null Sphere",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8.5,
+        8,
+        7.5,
+        7
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          65,
+          95,
+          125,
+          155,
+          185
+        ],
+        "ShieldAmount": [
+          80,
+          110,
+          140,
+          170,
+          200
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Kassadin fires an orb of void energy, dealing 65/95/125/155/185 (+70% AP) magic damage and interrupting channels. Kassadin also gains 80/110/140/170/200 (+30% AP) Magic Shield for 1.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Nether Blade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "dataValues": {
+        "ActiveBaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "PassiveBaseDamage": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "MissingManaRatio": [
+          4,
+          4.5,
+          5,
+          5.5,
+          6
+        ],
+        "ChampionMissingManaRatio": [
+          20,
+          22.5,
+          25,
+          27.5,
+          30
+        ]
+      },
+      "resolvedDescription": "Passive: Kassadin's Attacks deal an additional 25 (+10% AP) magic damage. Active: Kassadin charges his blade, causing his next Attack to deal 50/75/100/125/150 (+80% AP) magic damage and restore 4/4.5/5/5.5/6% missing Mana, increased to 20/22.5/25/27.5/30% against champions.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Force Pulse",
+      "maxRank": 5,
+      "cooldownByRank": [
+        21,
+        20,
+        19,
+        18,
+        17
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "ReductionPerSpellCast": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseDamage": [
+          70,
+          100,
+          130,
+          160,
+          190
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "SlowAmount": [
+          50,
+          55,
+          60,
+          65,
+          70
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Passive: Force Pulse's Cooldown is reduced by 0.75 second whenever any Ability is used near Kassadin. Active: Kassadin unleashes a void pulse, dealing 70/100/130/160/190 (+70% AP) magic damage and Slowing by 50/55/60/65/70% for 1 second.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Riftwalk",
+      "maxRank": 3,
+      "cooldownByRank": [
+        5,
+        3.5,
+        2
+      ],
+      "costByRank": [
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "BaseCD": [
+          5,
+          3.5,
+          2
+        ],
+        "RBaseCost": [
+          40,
+          40,
+          40
+        ],
+        "RBaseDamage": [
+          70,
+          90,
+          110
+        ],
+        "StackDamage": [
+          35,
+          45,
+          55
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "APStackRatio": [
+          0.07,
+          0.07,
+          0.07
+        ],
+        "RStackDuration": [
+          15,
+          15,
+          15
+        ],
+        "MaxStacks": [
+          4,
+          4,
+          4
+        ],
+        "RManaRatio": [
+          2,
+          2,
+          2
+        ],
+        "RStackManaRatio": [
+          1,
+          1,
+          1
+        ],
+        "RiftWalkBaseDamage": [
+          70,
+          90,
+          110
+        ],
+        "CastRange": [
+          500,
+          500,
+          500
+        ]
+      },
+      "resolvedDescription": "Kassadin teleports to a nearby location, dealing {{ basedamage }} magic damage. Each subsequent use of this Ability within the next 15 seconds doubles the Mana cost and deals an additional {{ bonusdamage }} magic damage. The cost and damage increases can stack up to 4 times.",
+      "unresolved": [
+        "basedamage",
+        "bonusdamage"
+      ]
+    }
+  }
+}

@@ -1,0 +1,326 @@
+{
+  "championKey": "Poppy",
+  "championName": "Poppy",
+  "abilities": {
+    "passive": {
+      "name": "Iron Ambassador",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BonusRange": [
+          350
+        ],
+        "ShieldDuration": [
+          3
+        ],
+        "ShieldPickUpTime": [
+          4
+        ]
+      },
+      "resolvedDescription": "Poppy throws her buckler that bounces off the target. Poppy can pick it up to gain a temporary shield.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Hammer Shock",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "costByRank": [
+        35,
+        40,
+        45,
+        50,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        430,
+        430,
+        430,
+        430,
+        430
+      ],
+      "dataValues": {
+        "HealthDamagePercent": [
+          7,
+          7.5,
+          8,
+          8.5,
+          9
+        ],
+        "BaseDamageValue": [
+          30,
+          55,
+          80,
+          105,
+          130
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseMoveSpeedMod": [
+          0.2,
+          0.23,
+          0.26,
+          0.29,
+          0.32
+        ],
+        "DelayBetweenTwoHits": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "MaxHealthDamageToNonHeroes": [
+          85,
+          120,
+          155,
+          190,
+          225
+        ]
+      },
+      "resolvedDescription": "Poppy smashes the ground, dealing 30/55/80/105/130 (+75% bonus AD) plus 7/7.5/8/8.5/9% max Health physical damage and making the ground unstable. The unstable area Slows enemies by {{ movespeedmod }}% and erupts after 1 second, dealing 30/55/80/105/130 (+75% bonus AD) plus 7/7.5/8/8.5/9% max Health physical damage again.",
+      "unresolved": [
+        "movespeedmod"
+      ]
+    },
+    "W": {
+      "name": "Steadfast Presence",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        18,
+        16,
+        14,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "GroundingDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowAmount": [
+          -0.25,
+          -0.25,
+          -0.25,
+          -0.25,
+          -0.25
+        ],
+        "PassiveResistPercent": [
+          0.16,
+          0.16,
+          0.16,
+          0.16,
+          0.16
+        ],
+        "PassiveEmpoweredHealthPercent": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "Duration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "Haste": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "KnockupDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageValue": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ]
+      },
+      "resolvedDescription": "Passive: Poppy gains 16% Armor Armor and 16% Magic Resist Magic Resist. This bonus is doubled if Poppy is below 40% Health. Active: Poppy gains 40% Move Speed and projects a field around her for 2 seconds that stops enemy dashes. Enemies who are stopped by the field are Grounded and Slowed by 25% for 2 seconds and take 70/110/150/190/230 (+70% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Heroic Charge",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "BaseDamageValue": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "WallDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "StunDuration": [
+          1.6,
+          1.7,
+          1.8,
+          1.9,
+          2
+        ],
+        "DashSpeed": [
+          1800,
+          1800,
+          1800,
+          1800,
+          1800
+        ],
+        "MaxEnemyPushbackDistance": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Poppy tackles an enemy, dealing 40/60/80/100/120 (+60% bonus AD) physical damage and carrying them forward. If Poppy tackles them into terrain, the enemy is Stunned for 1.6/1.7/1.8/1.9/2 seconds and take an additional 40/60/80/100/120 (+60% bonus AD) physical damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Keeper's Verdict",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        500,
+        500,
+        500
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "ChannelDistanceUpdateTick": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "ChannelMaxDuration": [
+          4,
+          4,
+          4
+        ],
+        "MaxKnockbackDistance": [
+          3400,
+          3400,
+          3400
+        ],
+        "KnockupDurationCharged": [
+          2,
+          2,
+          2
+        ],
+        "KnockupDurationSnap": [
+          1,
+          1,
+          1
+        ],
+        "DurationUntilFullyCharged": [
+          1,
+          1,
+          1
+        ],
+        "SelfSlow": [
+          15,
+          15,
+          15
+        ],
+        "CancelCDRefund": [
+          30,
+          30,
+          30
+        ],
+        "SnapCastDamageRatio": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Begin Casting: Poppy begins charging her hammer for up to 4 seconds, Slowing herself by 15%. Release: Poppy smashes the ground, creating a shockwave that deals 200/300/400 (+90% bonus AD) physical damage to the first champion hit and surrounding enemies, Knocks them Back towards their Nexus, and makes them Untargetable while they fly. The range and Knock Back distance increase with charge duration. An uncharged swing deals 100/150/200 (+45% bonus AD) physical damage and Knocks Up for 1 seconds.",
+      "unresolved": []
+    }
+  }
+}

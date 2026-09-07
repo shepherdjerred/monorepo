@@ -1,0 +1,222 @@
+{
+  "championKey": "Karthus",
+  "championName": "Karthus",
+  "abilities": {
+    "passive": {
+      "name": "Death Defied",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveDuration": [
+          7
+        ]
+      },
+      "resolvedDescription": "Upon dying, Karthus enters a spirit form that allows him to continue casting spells.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Lay Waste",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        20,
+        25,
+        30,
+        35,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        875,
+        875,
+        875,
+        875,
+        875
+      ],
+      "dataValues": {
+        "MonsterMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "BaseDamage": [
+          40,
+          59,
+          78,
+          97,
+          116
+        ],
+        "APRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Karthus creates a blast of magic, dealing 40/59/78/97/116 (+35% AP) magic damage. If the blast hits only one enemy, it instead deals 80/118/156/194/232 (+70% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Wall of Pain",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "MagicResistShred": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "TT_WallWidth": [
+          800,
+          900,
+          1000,
+          1100,
+          1200
+        ],
+        "SlowPercent": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "WallDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DebuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Karthus creates a wall that lasts for 5 seconds. Enemies that pass through lose 25% Magic Resist for 5 seconds and are Slowed by 40/50/60/70/80% decaying over the duration.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Defile",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0.5,
+        0.5,
+        0.5,
+        0.5,
+        0.5
+      ],
+      "costByRank": [
+        30,
+        42,
+        54,
+        66,
+        78
+      ],
+      "costType": "Mana per Second",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "DamagePerSecond": [
+          30,
+          50,
+          70,
+          90,
+          110
+        ],
+        "APRatioPerSecond": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "ManaRestoreOnKill": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ]
+      },
+      "resolvedDescription": "Passive: When Karthus kills a unit, he restores 10/20/30/40/50 Mana. Toggle: Karthus creates a necrotic aura, dealing 30/50/70/90/110 (+20% AP) magic damage per second to nearby enemies.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Requiem",
+      "maxRank": 3,
+      "cooldownByRank": [
+        200,
+        180,
+        160
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        10000,
+        10000,
+        10000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          350,
+          500
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Karthus channels for 3 seconds, then deals 200/350/500 (+70% AP) magic damage to enemy champions, regardless of distance.",
+      "unresolved": []
+    }
+  }
+}

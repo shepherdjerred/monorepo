@@ -1,0 +1,266 @@
+{
+  "championKey": "Jax",
+  "championName": "Jax",
+  "abilities": {
+    "passive": {
+      "name": "Relentless Assault",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "BuffDuration": [
+          2.5
+        ],
+        "MaxStacks": [
+          8
+        ],
+        "FallOffRate": [
+          0.35
+        ],
+        "BelvethVsJaxQuestRewardStacks": [
+          5
+        ]
+      },
+      "resolvedDescription": "Jax's consecutive basic attacks continuously increase his Attack Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Leap Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "Damage": [
+          65,
+          105,
+          145,
+          185,
+          225
+        ]
+      },
+      "resolvedDescription": "Jax leaps to a friendly or enemy unit or ward, dealing 65/105/145/185/225 (+100% bonus AD) physical damage if it is an enemy.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Empower",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "Damage": [
+          50,
+          85,
+          120,
+          155,
+          190
+        ],
+        "StructureMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Jax charges his weapon with energy, causing his next Attack or Leap Strike to deal an additional 50/85/120/155/190 (+60% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Counter Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        17,
+        15,
+        13,
+        11,
+        9
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          40,
+          70,
+          100,
+          130,
+          160
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "PercentIncreasedPerDodge": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "MaxDodgesForDamageIncrease": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "PercentHealthDamage": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "DodgeDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "AoEDamageReduction": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "APRatio": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ]
+      },
+      "resolvedDescription": "Jax enters a defensive stance for up to 2 seconds, dodging incoming Attacks and taking 25% less damage from area of effect Abilities. After 2 seconds or Recasting, Jax deals 40/70/100/130/160 (+70% bonus AP) + 4% max Health magic damage and Stuns nearby enemies for 1 second. The damage is increased by 20% per Attack dodged, up to a maximum of 80/140/200/260/320 (+140% bonus AP) + 8% max Health.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Grandmaster-at-Arms",
+      "maxRank": 3,
+      "cooldownByRank": [
+        110,
+        100,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        260,
+        260,
+        260
+      ],
+      "dataValues": {
+        "Duration": [
+          8,
+          8,
+          8
+        ],
+        "PassiveBaseDamage": [
+          75,
+          130,
+          185
+        ],
+        "PassiveFallOffTime": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "BaseResists": [
+          45,
+          60,
+          75
+        ],
+        "ResistsPerExtraTarget": [
+          20,
+          25,
+          30
+        ],
+        "MRMult": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "SwingDamageBase": [
+          100,
+          175,
+          250
+        ],
+        "AoESize": [
+          375,
+          375,
+          375
+        ],
+        "StructureMod": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Passive: Every third Attack within 2.5 seconds deals an additional 75/130/185 (+60% AP) magic damage. Active: Jax slams his lantern down, dealing 100/175/250 (+100% bonus AP) magic damage to nearby enemies. If he hits a champion he gains 45/60/75 (+40% bonus AD) Armor and 27/36/45 (+24% bonus AD) Magic Resist plus 20/25/30 (+10% bonus AD) Armor and 12/15/18 (+6% bonus AD) Magic Resist per additional champion hit for 8 seconds. During this time every second Attack deals additional magic damage instead of every third.",
+      "unresolved": []
+    }
+  }
+}

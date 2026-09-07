@@ -1,0 +1,283 @@
+{
+  "championKey": "Nautilus",
+  "championName": "Nautilus",
+  "abilities": {
+    "passive": {
+      "name": "Staggering Blow",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PerTargetCD": [
+          6
+        ]
+      },
+      "resolvedDescription": "Nautilus' first Attack against a target deals increased physical damage and roots them briefly.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Dredge Line",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1150,
+        1150,
+        1150,
+        1150,
+        1150
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          85,
+          130,
+          175,
+          220,
+          265
+        ],
+        "TerrainCDR": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "TerrainMana": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "TerrainReduction": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "TerrainManaRefund": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Nautilus hurls his anchor forward. If it hits an enemy, Nautilus drags himself and the target together, dealing 85/130/175/220/265 (+90% AP) magic damage and Stunning them briefly. If the anchor hits terrain, Nautilus will drag himself towards it.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Titan's Wrath",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        350,
+        350,
+        350,
+        350,
+        350
+      ],
+      "dataValues": {
+        "ShieldBase": [
+          50,
+          60,
+          70,
+          80,
+          90
+        ],
+        "ShieldHealthRatio": [
+          0.08,
+          0.09,
+          0.1,
+          0.11,
+          0.12
+        ],
+        "ShieldDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "DotDamageBase": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ],
+        "DotDamageAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Nautilus gains a 50/60/70/80/90 (+8/9/10/11/12% max Health) Shield for 6 seconds. While the Shield persists, Nautilus' Attacks deal an additional 30/40/50/60/70 (+40% AP) magic damage over 2 seconds to his target and all surrounding enemies.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Riptide",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "DamageBase": [
+          55,
+          90,
+          125,
+          160,
+          195
+        ],
+        "SlowPercent": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "SlowDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MultiHitReduction": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageMonsterMod": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "DamageAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ExtraWavePenalty": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageRadius": [
+          125,
+          125,
+          125,
+          125,
+          125
+        ],
+        "MonsterBonusDamage": [
+          125,
+          165,
+          205,
+          245,
+          285
+        ]
+      },
+      "resolvedDescription": "Nautilus creates three exploding waves around himself, each dealing 55/90/125/160/195 (+50% AP) magic damage to enemies in the area and Slows them by 30/35/40/45/50% decaying over 1.25 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Depth Charge",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        825,
+        825,
+        825
+      ],
+      "dataValues": {
+        "PrimaryDamage": [
+          150,
+          275,
+          400
+        ],
+        "SecondaryDamage": [
+          125,
+          175,
+          225
+        ],
+        "StunDuration": [
+          1,
+          1.5,
+          2
+        ]
+      },
+      "resolvedDescription": "Nautilus fires a shockwave that chases an enemy champion, dealing 150/275/400 (+80% AP) magic damage, Knocking them Up and Stunning them for 1/1.5/2 seconds. Other enemies hit by the shockwave are also Knocked Up and Stunned and take 125/175/225 (+40% AP) magic damage.",
+      "unresolved": []
+    }
+  }
+}

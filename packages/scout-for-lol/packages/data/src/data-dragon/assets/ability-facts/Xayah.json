@@ -1,0 +1,337 @@
+{
+  "championKey": "Xayah",
+  "championName": "Xayah",
+  "abilities": {
+    "passive": {
+      "name": "Clean Cuts",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PFeatherDuration": [
+          6
+        ],
+        "PFeatherSpacingMin": [
+          25
+        ],
+        "PFeatherSpacingMax": [
+          40
+        ],
+        "PDamageFalloffMax": [
+          0.55
+        ],
+        "PEmpoweredDuration": [
+          8
+        ],
+        "PStacksPerCast": [
+          3
+        ],
+        "PStackMax": [
+          5
+        ],
+        "PDamageFalloffMin": [
+          0.35
+        ],
+        "PDamageFalloffMid": [
+          0.45
+        ]
+      },
+      "resolvedDescription": "After using an ability, Xayah's next basic attacks will hit all targets along their path and leave a Feather.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Double Daggers",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        35,
+        35,
+        35,
+        35,
+        35
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          45,
+          60,
+          75,
+          90,
+          105
+        ],
+        "MultiHitRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "StartingCastTime": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MinCastTime": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "ASpeedCastTimeScalarPerHundrethSecond": [
+          0.07,
+          0.07,
+          0.07,
+          0.07,
+          0.07
+        ],
+        "Missile1DelayTime": [
+          0.334,
+          0.334,
+          0.334,
+          0.334,
+          0.334
+        ],
+        "Missile2DelayTime": [
+          0.584,
+          0.584,
+          0.584,
+          0.584,
+          0.584
+        ],
+        "Missile1DelaySpeed": [
+          3500,
+          3500,
+          3500,
+          3500,
+          3500
+        ],
+        "Missile2DelaySpeed": [
+          3500,
+          3500,
+          3500,
+          3500,
+          3500
+        ]
+      },
+      "resolvedDescription": "Xayah throws two daggers, dealing 45/60/75/90/105 (+50% bonus AD) physical damage each and leaving two Feathers. Targets hit after the first take 22.5/30/37.5/45/52.5 (+25% bonus AD) damage from each dagger.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Deadly Plumage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        60,
+        55,
+        50,
+        45,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BonusDamagePercent": [
+          25,
+          25,
+          25,
+          25,
+          25
+        ],
+        "WAttackSpeedAmount": [
+          35,
+          40,
+          45,
+          50,
+          55
+        ],
+        "WAttackSpeedDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "WMoveSpeedAmount": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "WMoveSpeedDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "WRakanSeekDistance": [
+          1000,
+          1000,
+          1000,
+          1000,
+          1000
+        ]
+      },
+      "resolvedDescription": "Xayah creates a storm of blades for 4 seconds that grants her 35/40/45/50/55% Attack Speed and cause her Attacks to fire a secondary blade that deals 25% damage. When the secondary blade hits a champion, she grants herself 30% Move Speed for 1.5 seconds. If Rakan is nearby he will also gain the effects of this Ability, except he gains Move Speed when Xayah strikes a target.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Bladecaller",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2000,
+        2000,
+        2000,
+        2000,
+        2000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          65,
+          80,
+          95,
+          110
+        ],
+        "bADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "CritRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "FeatherFalloff": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "MinionMultiplier": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "FeatherThreshold": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "RootDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "FeatherReturnDelay": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Xayah calls all Feathers back to her, dealing {{ featherdamage }} physical damage each. If 3 or more Feathers hit an enemy, they are Rooted for 1.25 seconds.",
+      "unresolved": [
+        "featherdamage"
+      ]
+    },
+    "R": {
+      "name": "Featherstorm",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "RAttackDelay": [
+          1,
+          1,
+          1
+        ],
+        "RUntargetable": [
+          1.25,
+          1.25,
+          1.25
+        ]
+      },
+      "resolvedDescription": "Xayah leaps into the air becoming Untargetable and Ghosted for 1.5 seconds before raining down daggers that deal 200/300/400 (+100% bonus AD) physical damage and leave behind a line of Feathers.",
+      "unresolved": []
+    }
+  }
+}

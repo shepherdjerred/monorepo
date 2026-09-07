@@ -1,0 +1,278 @@
+{
+  "championKey": "Tryndamere",
+  "championName": "Tryndamere",
+  "abilities": {
+    "passive": {
+      "name": "Battle Fury",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CherryFuryModifier": [
+          1.5
+        ]
+      },
+      "resolvedDescription": "Tryndamere gains Fury for each attack, critical strike, and killing blow he makes. Fury passively increases his Critical Strike Chance and can be consumed with his Bloodlust spell.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bloodlust",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BaseHealing": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ],
+        "BonusHealPerFury": [
+          0.5,
+          0.95,
+          1.4,
+          1.85,
+          2.3
+        ],
+        "APRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "APRatioPerFury": [
+          0.012,
+          0.012,
+          0.012,
+          0.012,
+          0.012
+        ],
+        "MaximumBonusAD": [
+          20,
+          35,
+          50,
+          65,
+          80
+        ],
+        "RemainingHealthThreshold": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "resolvedDescription": "Passive: Tryndamere thirsts for blood, gaining up to 20/35/50/65/80 Attack Damage based on his missing Health. Active: Tryndamere consumes his Fury, restoring 30/40/50/60/70 (+30% AP) plus 0.5/0.95/1.4/1.85/2.3 (+1.2% AP) Health per Fury (max: {{ maximumheal }}).",
+      "unresolved": [
+        "maximumheal"
+      ]
+    },
+    "W": {
+      "name": "Mocking Shout",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "ADReduction": [
+          -20,
+          -35,
+          -50,
+          -65,
+          -80
+        ],
+        "SlowPotency": [
+          -0.3,
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5
+        ],
+        "ReductionDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SlowDuration": [
+          3.25,
+          3.25,
+          3.25,
+          3.25,
+          3.25
+        ]
+      },
+      "resolvedDescription": "Tryndamere hurls insults, reducing champions' Attack Damage by 20/35/50/65/80 for 4 seconds and Slowing by 30/35/40/45/50% while cowering from him for 3.25 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Spinning Slash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "Damage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "ADRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "NonChampCDRefund": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ],
+        "ChampCDRefund": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "NonChampFuryGain": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ChampFuryGain": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DamageAoE": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ]
+      },
+      "resolvedDescription": "Tryndamere spins through his enemies, dealing 80/120/160/200/240 (+100% bonus AD) (+80% AP) physical damage and generating 2 Fury per enemy hit, increased to 5 Fury against enemy champions. This Ability's Cooldown is reduced by 0.75 seconds when Tryndamere critically strikes, and reduced by 1.5 seconds when critically striking a champion.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Undying Rage",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "TryndRFuryGain": [
+          50,
+          75,
+          100
+        ],
+        "TryndRMinHealth": [
+          30,
+          50,
+          70
+        ],
+        "TryndRDuration": [
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Tryndamere becomes completely immune to death for 5 seconds, refusing to be reduced below 30/50/70 Health, and instantly gains 50/75/100 Fury.",
+      "unresolved": []
+    }
+  }
+}

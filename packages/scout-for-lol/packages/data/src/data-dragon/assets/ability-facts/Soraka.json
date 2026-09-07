@@ -1,0 +1,255 @@
+{
+  "championKey": "Soraka",
+  "championName": "Soraka",
+  "abilities": {
+    "passive": {
+      "name": "Salvation",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MovementSpeed": [
+          0.9
+        ],
+        "HealthThreshold": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "Soraka runs faster towards nearby low health allies.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Starcall",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        810,
+        810,
+        810,
+        810,
+        810
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          85,
+          120,
+          155,
+          190,
+          225
+        ],
+        "BaseHoT": [
+          60,
+          75,
+          90,
+          105,
+          120
+        ],
+        "HotDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MoveSpeedSlow": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MoveSpeedHaste": [
+          0.2,
+          0.225,
+          0.25,
+          0.275,
+          0.3
+        ],
+        "MoveSpeedDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "HealAPRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ]
+      },
+      "resolvedDescription": "Soraka calls down a star, dealing 85/120/155/190/225 (+35% AP) magic damage and Slowing by 30% for 1.5 seconds. Hitting an enemy champion grants Soraka Rejuvenation, which restores 60/75/90/105/120 (+30% AP) Health over 2.5 seconds and grants 20/22.5/25/27.5/30% Move Speed decaying over the same duration.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Astral Infusion",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5,
+        4,
+        3,
+        2
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "% Max Health, 40/45/50/55/60 Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          90,
+          110,
+          130,
+          150,
+          170
+        ],
+        "PercentHealthCost": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MinimumPercentHealth": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "PercentHealthCostRefund": [
+          0.8,
+          0.85,
+          0.9,
+          0.95,
+          1
+        ]
+      },
+      "resolvedDescription": "Soraka restores 90/110/130/150/170 (+50% AP) Health to another allied champion. If Soraka is affected by Rejuvenation, the Health cost will be reduced by 80/85/90/95/100%, and the target will gain Rejuvenation for 2.5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Equinox",
+      "maxRank": 5,
+      "cooldownByRank": [
+        20,
+        19,
+        18,
+        17,
+        16
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        925,
+        925,
+        925,
+        925,
+        925
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          95,
+          120,
+          145,
+          170
+        ],
+        "RootDuration": [
+          1,
+          1.25,
+          1.5,
+          1.75,
+          2
+        ],
+        "RootDelay": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Soraka creates a starfield that deals 70/95/120/145/170 (+40% AP) magic damage to champions. The field lingers for 1.5 seconds, Silencing enemies inside. When the zone disappears, champions inside the zone are Rooted for 1/1.25/1.5/1.75/2 second(s) and take 70/95/120/145/170 (+40% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Wish",
+      "maxRank": 3,
+      "cooldownByRank": [
+        150,
+        135,
+        120
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "BaseHeal": [
+          150,
+          250,
+          350
+        ],
+        "HealingAmpForLowHealthAllies": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Soraka calls upon divine powers, restoring 150/250/350 (+50% AP) Health to all allied champions, regardless of distance. Healing is increased to {{ ampedhealing }} on targets below 40% Health.",
+      "unresolved": [
+        "ampedhealing"
+      ]
+    }
+  }
+}

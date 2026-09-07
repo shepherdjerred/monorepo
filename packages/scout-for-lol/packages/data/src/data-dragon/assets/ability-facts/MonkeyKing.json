@@ -1,0 +1,343 @@
+{
+  "championKey": "MonkeyKing",
+  "championName": "Wukong",
+  "abilities": {
+    "passive": {
+      "name": "Stone Skin",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CombatDuration": [
+          3
+        ],
+        "StackDuration": [
+          5
+        ],
+        "MaxStacks": [
+          5
+        ],
+        "StackMultiplier": [
+          1
+        ],
+        "HealthPercentPer5": [
+          0.0035
+        ],
+        "TooltipMult": [
+          6
+        ],
+        "TooltipMaxHealthPercentPer5": [
+          2.1
+        ],
+        "FallOffRate": [
+          1
+        ]
+      },
+      "resolvedDescription": "Wukong gains stacking armor and max health regeneration while fighting champions and monsters.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Crushing Blow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        250,
+        275,
+        300,
+        325,
+        350
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "ADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ArmorShredPercent": [
+          0.1,
+          0.15,
+          0.2,
+          0.25,
+          0.3
+        ],
+        "ShredDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "AttackRangeBonus": [
+          135,
+          145,
+          155,
+          165,
+          175
+        ],
+        "CooldownDecrease": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Wukong and his Clone's next Attack gains 135/145/155/165/175 range, deals an additional 20/45/70/95/120 (+50% bonus AD) physical damage, and removes 10/15/20/25/30% Armor for 3 seconds. This Ability's cooldown is reduced by 0.5 seconds every time Wukong or his Clone hit an enemy with an Attack or Ability. This Ability triggers spell effects upon dealing damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Warrior Trickster",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        21,
+        20,
+        19,
+        18
+      ],
+      "costByRank": [
+        60,
+        55,
+        50,
+        45,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        275,
+        275,
+        275,
+        275,
+        275
+      ],
+      "dataValues": {
+        "CloneDamageMod": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "StealthDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "CloneDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "DashSpeed": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "RangeClamp": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "MinRange": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ]
+      },
+      "resolvedDescription": "Wukong dashes and becomes Invisible for 1 second, leaving behind a stationary Clone for 4 seconds. The Clone Attacks nearby enemies Wukong has recently damaged and will mimic his ultimate, each dealing 40/45/50/55/60% of normal damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Nimbus Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.25,
+        8.5,
+        7.75,
+        7
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "AttackSpeed": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "AttackSpeedDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DashSpeed": [
+          1050,
+          1050,
+          1050,
+          1050,
+          1050
+        ],
+        "EndPointOffsetDistance": [
+          75,
+          75,
+          75,
+          75,
+          75
+        ],
+        "ExtraTargets": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ExtraTargetRange": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "MonsterDamageRatio": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Wukong dashes to an enemy, sending out Clones that mimic the dash to up to 2 additional enemies nearby. Each enemy struck takes 80/120/160/200/240 (+100% AP) magic damage. He and his Clone gain 40/45/50/55/60% Attack Speed for 5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Cyclone",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        110,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        315,
+        315,
+        315
+      ],
+      "dataValues": {
+        "KnockupDuration": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "SpinDuration": [
+          2,
+          2,
+          2
+        ],
+        "MoveSpeed": [
+          0.2,
+          0.2,
+          0.2
+        ],
+        "BasePercentMaxHPDmgPerSec": [
+          0.04,
+          0.06,
+          0.08
+        ],
+        "SecondsPerTick": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "RecastWindow": [
+          8,
+          8,
+          8
+        ],
+        "LockoutTimeBetweenCasts": [
+          1,
+          1,
+          1
+        ],
+        "ADRatioPerSecond": [
+          1.375,
+          1.375,
+          1.375
+        ]
+      },
+      "resolvedDescription": "Wukong gains 20% Move Speed and spins his staff, Knocking Up nearby enemies for 0.6 seconds and take 275% AD plus 8/12/16% max Health physical damage over 2 seconds. This Ability can be cast a second time within 8 seconds before going on cooldown.",
+      "unresolved": []
+    }
+  }
+}

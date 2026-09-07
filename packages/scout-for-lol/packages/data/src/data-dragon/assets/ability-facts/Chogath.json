@@ -1,0 +1,268 @@
+{
+  "championKey": "Chogath",
+  "championName": "Cho'Gath",
+  "abilities": {
+    "passive": {
+      "name": "Carnivore",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {},
+      "resolvedDescription": "Whenever Cho'Gath kills a unit, he recovers Health and Mana. The values restored increase with Cho'Gath's level.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Rupture",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          135,
+          190,
+          245,
+          300
+        ],
+        "SlowAmountPercentage": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ]
+      },
+      "resolvedDescription": "Cho'Gath ruptures the ground, Knocking Up enemies for 1 second, dealing 80/135/190/245/300 (+100% AP) magic damage, and Slowing them by 60% for 1.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Feral Scream",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.5,
+        10,
+        9.5,
+        9
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        300,
+        300,
+        300,
+        300,
+        300
+      ],
+      "dataValues": {},
+      "resolvedDescription": "Cho'Gath roars, Silencing enemies for 1.6/1.7/1.8/1.9/2 seconds and dealing 80/130/180/230/280 (+70% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Vorpal Spikes",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7,
+        6,
+        5,
+        4
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          40,
+          60,
+          80,
+          100
+        ],
+        "APRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "PercentHealthDamage": [
+          2.5,
+          2.85,
+          3.2,
+          3.55,
+          3.9
+        ],
+        "FeastStackMultiplier": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MonsterDamageCap": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "SlowAmountPercentage": [
+          30,
+          35,
+          40,
+          45,
+          50
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "AttackRangeIncrease": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "MaximumAttacks": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "ModifiedMonsterCap": [
+          80,
+          110,
+          140,
+          170,
+          200
+        ]
+      },
+      "resolvedDescription": "Cho'Gath's next 3 Attacks launch spikes that deal 20/40/60/80/100 (+30% AP) plus {{ maxhealthpercentcalc }} of the target's max Health magic damage and Slow by 30/35/40/45/50%, decaying over 1.5 seconds.",
+      "unresolved": [
+        "maxhealthpercentcalc"
+      ]
+    },
+    "R": {
+      "name": "Feast",
+      "maxRank": 3,
+      "cooldownByRank": [
+        80,
+        70,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        175,
+        175,
+        175
+      ],
+      "dataValues": {
+        "RBaseMonsterDamage": [
+          1200,
+          1200,
+          1200
+        ],
+        "RBaseDamage": [
+          300,
+          475,
+          650
+        ],
+        "RHealthPerStack": [
+          80,
+          120,
+          160
+        ],
+        "RMinionMaxStacks": [
+          6,
+          6,
+          6
+        ],
+        "RStoneplateRatio": [
+          1,
+          1,
+          1
+        ],
+        "CastRangePerStack": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MaxBonusCastRange": [
+          25,
+          25,
+          25
+        ],
+        "AttackRangePerStack": [
+          4.7,
+          6.2,
+          7.7
+        ],
+        "MaxBonusAttackRange": [
+          75,
+          75,
+          75
+        ]
+      },
+      "resolvedDescription": "Cho'Gath ravenously feeds on an enemy, dealing 300/475/650 (+50% AP) (+10% bonus Health) true damage to champions or 1200 (+50% AP) (+10% bonus Health) to minions or jungle monsters. If this kills the target, Cho'Gath gains a stack, which causes him to grow in size and gain 80/120/160 max Health. Only 6 stacks can be gained from minions and non-epic jungle monsters.",
+      "unresolved": []
+    }
+  }
+}

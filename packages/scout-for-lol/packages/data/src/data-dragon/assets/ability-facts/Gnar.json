@@ -1,0 +1,437 @@
+{
+  "championKey": "Gnar",
+  "championName": "Gnar",
+  "abilities": {
+    "passive": {
+      "name": "Rage Gene",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MegaHealthStartingValue": [
+          100
+        ],
+        "MegaHealthEndingValue": [
+          831
+        ],
+        "TiredDuration": [
+          15
+        ]
+      },
+      "resolvedDescription": "While in combat Gnar generates Rage. At maximum Rage his next ability will transform him into Mega Gnar, granting increased survivability and access to new spells.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Boomerang Throw / Boulder Toss",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14.5,
+        13,
+        11.5,
+        10
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "MiniBaseDamage": [
+          5,
+          45,
+          85,
+          125,
+          165
+        ],
+        "SlowAmount": [
+          0.15,
+          0.2,
+          0.25,
+          0.3,
+          0.35
+        ],
+        "MiniSubsequentMult": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MiniCDRefund": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MiniReturnRange": [
+          3000,
+          3000,
+          3000,
+          3000,
+          3000
+        ],
+        "MegaBaseDamage": [
+          45,
+          90,
+          135,
+          180,
+          225
+        ],
+        "MegaPickupAndLolipopRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "MegaBoulderLifetime": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "MegaCDRefund": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "MegaAoERadius": [
+          280,
+          280,
+          280,
+          280,
+          280
+        ],
+        "MegaSlowAmount": [
+          0.3,
+          0.35,
+          0.4,
+          0.45,
+          0.5
+        ],
+        "MegaSlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Mini Gnar: Gnar throws a boomerang that deals 5/45/85/125/165 (+125% AD) physical damage and Slows by 15/20/25/30/35% for 2 seconds. The boomerang returns after hitting an enemy, dealing reduced damage to subsequent targets. Each enemy can only be hit once. Catching the boomerang reduces its Cooldown by 40%.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Hyper / Wallop",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "MiniBaseDamage": [
+          0,
+          10,
+          20,
+          30,
+          40
+        ],
+        "MiniPercentHPDamage": [
+          0.06,
+          0.08,
+          0.1,
+          0.12,
+          0.14
+        ],
+        "MiniHasteDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "MiniMarkDuration": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "MiniMonsterCap": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "MegaBaseDamage": [
+          45,
+          75,
+          105,
+          135,
+          165
+        ],
+        "MegaStunDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MegaLength": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "MegaWidth": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "MiniMaxStacks": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      },
+      "resolvedDescription": "Mini Gnar Passive: Every third Attack or Ability on the same enemy deals an additional 0/10/20/30/40 (+100% AP) plus 6/8/10/12/14% max Health magic damage and grants 40/60/80% Move Speed decaying over 3 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Hop / Crunch",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        19.5,
+        17,
+        14.5,
+        12
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        475,
+        475,
+        475,
+        475,
+        475
+      ],
+      "dataValues": {
+        "MinibAS": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ],
+        "MiniASDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "MiniDamage": [
+          50,
+          85,
+          120,
+          155,
+          190
+        ],
+        "MiniRange": [
+          475,
+          475,
+          475,
+          475,
+          475
+        ],
+        "MiniBounceRange": [
+          525,
+          525,
+          525,
+          525,
+          525
+        ],
+        "MoveSpeedMod": [
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8,
+          -0.8
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MegaDamage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "MegaRange": [
+          675,
+          675,
+          675,
+          675,
+          675
+        ],
+        "MegaSlowAoE": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "MegaDamageAoE": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "TravelTime": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MiniTotalDamageHPRatio": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ],
+        "MegaTotalDamageHPRatio": [
+          0.06,
+          0.06,
+          0.06,
+          0.06,
+          0.06
+        ]
+      },
+      "resolvedDescription": "Mini Gnar: Gnar leaps, gaining 40/45/50/55/60% Attack Speed for 6 seconds. If Gnar lands on a unit he will bounce off it, traveling further. Bouncing off an enemy deals 50/85/120/155/190 (+6% max Health) physical damage and briefly Slows by 80%.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "GNAR!",
+      "maxRank": 3,
+      "cooldownByRank": [
+        90,
+        60,
+        30
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        590,
+        590,
+        590
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "RHyperMovementSpeedPercent": [
+          40,
+          60,
+          80
+        ],
+        "RCCDuration": [
+          1.25,
+          1.5,
+          1.75
+        ],
+        "RAoESize": [
+          475,
+          475,
+          475
+        ],
+        "RKnockbackDistance": [
+          500,
+          500,
+          500
+        ],
+        "RSlowPercent": [
+          45,
+          45,
+          45
+        ],
+        "RWallHitDamageMultiplier": [
+          150,
+          150,
+          150
+        ]
+      },
+      "resolvedDescription": "Mini Gnar Passive: Increase Hyper's Move Speed. Mega Gnar: Gnar tosses nearby enemies, dealing 200/300/400 (+100% AP) (+50% bonus AD) physical damage, Knocking Back, and Slowing them by 45% for 1.25/1.5/1.75 seconds. Enemies that hit a wall instead take {{ walldamage }} physical damage and are Stunned.",
+      "unresolved": [
+        "walldamage"
+      ]
+    }
+  }
+}

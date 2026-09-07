@@ -1,0 +1,343 @@
+{
+  "championKey": "Fizz",
+  "championName": "Fizz",
+  "abilities": {
+    "passive": {
+      "name": "Nimble Fighter",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "DamageReduction": [
+          4
+        ],
+        "DamageReductionMax": [
+          0.5
+        ],
+        "MonsterDamageReduction": [
+          14
+        ],
+        "APRatio": [
+          0.01
+        ]
+      },
+      "resolvedDescription": "Fizz can move through units and takes a flat amount of reduced damage from all sources",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Urchin Strike",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {},
+      "resolvedDescription": "Fizz dashes through an enemy, dealing 100% AD physical damage plus 10/25/40/55/70 (+55% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Seastone Trident",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        30,
+        40,
+        50,
+        60,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "DoTBaseDamage": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "DoTRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "ActiveBaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "ActiveRatio": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "OnHitBuffBaseDamage": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "OnHitRatio": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "BleedDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "DoTTicksPerSecond": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "ActiveDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "OnHitBuffDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "OnKillManaRefund": [
+          30,
+          40,
+          50,
+          60,
+          70
+        ],
+        "OnKillNewCooldown": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "PassiveDoTDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "TurretMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BonusMonsterDamage": [
+          90,
+          90,
+          90,
+          90,
+          90
+        ]
+      },
+      "resolvedDescription": "Passive: Fizz's Attacks cause his enemies to bleed, dealing 30/45/60/75/90 (+25% AP) magic damage over 3 seconds. Active: Fizz's next Attack deals an additional 50/75/100/125/150 (+45% AP) magic damage. If this Attack kills its target, Fizz refunds 30/40/50/60/70 Mana and reduces the cooldown of this Ability to 1 second. If it does not kill, Fizz's Attacks deal an additional 20/25/30/35/40 (+30% AP) magic damage for 5 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Playful / Trickster",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14,
+        12,
+        10,
+        8
+      ],
+      "costByRank": [
+        75,
+        80,
+        85,
+        90,
+        95
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          130,
+          180,
+          230,
+          280
+        ],
+        "SmallAoESize": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "LargeAoESize": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "SlowAmount": [
+          0.4,
+          0.45,
+          0.5,
+          0.55,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Fizz hops onto his trident, becoming Untargetable for 0.75 seconds, after which he deals 80/130/180/230/280 (+95% AP) magic damage to nearby enemies and Slows them by 40/45/50/55/60% for 2 seconds. Fizz can Recast this Ability while Untargetable to dash again, which ends the effect early, deals damage in a smaller area, and doesn't Slow.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Chum the Waters",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1300,
+        1300,
+        1300
+      ],
+      "dataValues": {
+        "SmallDamage": [
+          180,
+          300,
+          420
+        ],
+        "SmallAPRatio": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MidDamageMulti": [
+          1.25,
+          1.25,
+          1.25
+        ],
+        "LargeDamageMulti": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SmallFishSize": [
+          200,
+          200,
+          200
+        ],
+        "MidFishSize": [
+          325,
+          325,
+          325
+        ],
+        "BigFishSize": [
+          450,
+          450,
+          450
+        ],
+        "MissileWidthTiers": [
+          80,
+          120,
+          160
+        ],
+        "MaxDistance": [
+          1300,
+          1300,
+          1300
+        ],
+        "DetonationTime": [
+          2,
+          2,
+          2
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "SlowAmount": [
+          60,
+          60,
+          60
+        ]
+      },
+      "resolvedDescription": "Fizz launches a fish that attaches to the first champion hit. The victim is afflicted with True Sight and Slowed by between 40% to 80% based on how far the fish travelled before attaching. After 2 seconds a shark erupts on the target, Knocking Up the target with the fish for 1 second, Knocking Back everything else, and dealing between 180/300/420 (+60% AP) to 270/450/630 (+90% AP) magic damage based on how far the fish travelled before attaching.",
+      "unresolved": []
+    }
+  }
+}

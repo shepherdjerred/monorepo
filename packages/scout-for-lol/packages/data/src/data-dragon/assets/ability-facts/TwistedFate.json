@@ -1,0 +1,276 @@
+{
+  "championKey": "TwistedFate",
+  "championName": "Twisted Fate",
+  "abilities": {
+    "passive": {
+      "name": "Loaded Dice",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "GoldRatioMinCherry": [
+          0.02
+        ],
+        "GoldRatioMaxCherry": [
+          0.08
+        ],
+        "GameModeInteger": [
+          1
+        ]
+      },
+      "resolvedDescription": "Upon killing a unit, Twisted Fate rolls his 'lucky' dice receiving 1 to 6 bonus gold.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Wild Cards",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        5.75,
+        5.5,
+        5.25,
+        5
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        10000,
+        10000,
+        10000,
+        10000,
+        10000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          105,
+          150,
+          195,
+          240
+        ],
+        "APRatio": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ],
+        "BonusADRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Twisted Fate throws three cards that deal 60/105/150/195/240 (+50% bonus AD) (+85% AP) magic damage each.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Pick a Card",
+      "maxRank": 5,
+      "cooldownByRank": [
+        6,
+        6,
+        6,
+        6,
+        6
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        200,
+        200,
+        200,
+        200,
+        200
+      ],
+      "dataValues": {
+        "BlueBase": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "RedBase": [
+          30,
+          45,
+          60,
+          75,
+          90
+        ],
+        "GoldBase": [
+          15,
+          22.5,
+          30,
+          37.5,
+          45
+        ],
+        "BlueCritMultiplier": [
+          0.575,
+          0.575,
+          0.575,
+          0.575,
+          0.575
+        ],
+        "RedCritMultiplier": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "GoldCritMultiplier": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "ttBlueAP": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ttRedAP": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "ttGoldAP": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ttAD": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Twisted Fate begins shuffling his deck, allowing him to Recast to lock in one of three cards and enhance his next Attack. The Blue Card deals {{ bluedamage }} magic damage and restores 70/90/110/130/150 Mana.The Red Card deals {{ reddamage }} to nearby enemies and Slows by 30/35/40/45/50% for 2.5 seconds.The Gold Card deals {{ golddamage }} and Stuns for 1/1.25/1.5/1.75/2 seconds.",
+      "unresolved": [
+        "bluedamage",
+        "reddamage",
+        "golddamage"
+      ]
+    },
+    "E": {
+      "name": "Stacked Deck",
+      "maxRank": 5,
+      "cooldownByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "Passive",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "AttackSpeedBonus": [
+          15,
+          25,
+          35,
+          45,
+          55
+        ],
+        "Damage": [
+          65,
+          90,
+          115,
+          140,
+          165
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "BonusADRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "TowerEffectiveness": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Passive: Twisted Fate gains 15/25/35/45/55% Attack Speed and every 4th Attack deals an additional 65/90/115/140/165 (+20% bonus AD) (+40% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Destiny",
+      "maxRank": 3,
+      "cooldownByRank": [
+        170,
+        140,
+        110
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        5500,
+        5500,
+        5500
+      ],
+      "dataValues": {
+        "RecastDuration": [
+          6,
+          8,
+          10
+        ]
+      },
+      "resolvedDescription": "Twisted Fate focuses on his cards, granting True Sight of all enemy champions on the map for 6/8/10 seconds and allowing him to Recast. Recast: Twisted Fate teleports up to 5500 units away.",
+      "unresolved": []
+    }
+  }
+}

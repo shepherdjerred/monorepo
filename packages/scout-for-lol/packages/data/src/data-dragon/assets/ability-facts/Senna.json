@@ -1,0 +1,422 @@
+{
+  "championKey": "Senna",
+  "championName": "Senna",
+  "abilities": {
+    "passive": {
+      "name": "Absolution",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ADPerStack": [
+          0.75
+        ],
+        "StacksForBonus": [
+          20
+        ],
+        "SoulDuration": [
+          8
+        ],
+        "BonusRange": [
+          20
+        ],
+        "CritDamageMod": [
+          0.8
+        ],
+        "BonusCritChance": [
+          10
+        ],
+        "CritToLifestealConversionPercent": [
+          0.35
+        ],
+        "SoulDropPercentChance": [
+          0.32
+        ],
+        "SoulDropPercentChanceOnSennaKill": [
+          0.05
+        ],
+        "MSStealDuration": [
+          0.5
+        ],
+        "SoulTravelDistanceBad": [
+          350
+        ],
+        "SoulTravelDistanceGood": [
+          -50
+        ],
+        "SoulTravelVarianceRadiusInner": [
+          130
+        ],
+        "SoulTravelVarianceRadiusOuter": [
+          150
+        ],
+        "ChanceForGoodSoul": [
+          0.2
+        ],
+        "ThreshSoulsToTriggerQuest": [
+          50
+        ],
+        "SennaSoulsToTriggerQuest": [
+          100
+        ],
+        "QuestRewardForSennaStacks": [
+          40
+        ],
+        "QuestRewardSennaAPPerStack": [
+          1
+        ],
+        "QuestRewardSennaArmorPerStack": [
+          1
+        ],
+        "QuestRewardForThreshStacks": [
+          40
+        ],
+        "QuestAssistWindow": [
+          3
+        ],
+        "MarkDuration": [
+          4
+        ],
+        "ArmorShredDuration": [
+          6
+        ]
+      },
+      "resolvedDescription": "When units die near Senna, their souls are periodically trapped by the Black Mist. Senna can attack these souls to free them, absorbing the Mist that held them in death. Mist fuels her Relic Cannon's power with increased Attack Damage, Attack Range, and Critical Strike Chance. Attacks from Senna's Relic Cannon take longer to fire, deal bonus damage, and briefly grant her a portion of her target's Move Speed.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Piercing Darkness",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        15,
+        15,
+        15,
+        15
+      ],
+      "costByRank": [
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          30,
+          55,
+          80,
+          105,
+          130
+        ],
+        "BaseHeal": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "HealAPRatio": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "HealADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "CDReductionOnHit": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "RectangleWidthEnemy": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "RectangleWidthAlly": [
+          280,
+          280,
+          280,
+          280,
+          280
+        ],
+        "RectangleLeadDistance": [
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "RectangleRange": [
+          1300,
+          1300,
+          1300,
+          1300,
+          1300
+        ],
+        "MaxTargetingRange": [
+          1100,
+          1100,
+          1100,
+          1100,
+          1100
+        ],
+        "BaseSlow": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "SlowDuration": [
+          1,
+          1.25,
+          1.5,
+          1.75,
+          2
+        ],
+        "SlowAPRatio": [
+          0.0007,
+          0.0007,
+          0.0007,
+          0.0007,
+          0.0007
+        ]
+      },
+      "resolvedDescription": "Senna shoots a bolt of piercing shadow through an ally or enemy, dealing 30/55/80/105/130 (+60% bonus AD) physical damage to enemies and Slowing them by {{ totalslow }} for 1/1.25/1.5/1.75/2 second(s). Restores 40/60/80/100/120 (+35% AP) (+40% bonus AD) Health to allied champions. Attacks reduce this Ability's Cooldown by 1 second.",
+      "unresolved": [
+        "totalslow"
+      ]
+    },
+    "W": {
+      "name": "Last Embrace",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        11,
+        11,
+        11,
+        11
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1250,
+        1250,
+        1250,
+        1250,
+        1250
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "RootDuration": [
+          1.25,
+          1.5,
+          1.75,
+          2,
+          2.25
+        ],
+        "DelayTime": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Senna sends forth the Black Mist, dealing 70/110/150/190/230 (+90% bonus AD) physical damage to the first enemy hit. After a 1 second delay the target and other nearby enemies are Rooted for 1.25/1.5/1.75/2/2.25 second(s).",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Curse of the Black Mist",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        24.5,
+        23,
+        21.5,
+        20
+      ],
+      "costByRank": [
+        70,
+        70,
+        70,
+        70,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "BuffDuration": [
+          6,
+          6.5,
+          7,
+          7.5,
+          8
+        ],
+        "MovementSpeedPercent": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "DefenseRadius": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "DurationBeforeRestealth": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MinAllyduration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "AllyMSMult": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SmokeLinger": [
+          3.5,
+          3.5,
+          3.5,
+          3.5,
+          3.5
+        ],
+        "SmokeArmTime": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SmokeRadius": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "MSAPRatio": [
+          0.0005,
+          0.0005,
+          0.0005,
+          0.0005,
+          0.0005
+        ]
+      },
+      "resolvedDescription": "Senna dissolves into a cloud of Black Mist for 6/6.5/7/7.5/8 seconds, becoming a Wraith. Allied champions who enter the Mist are Camouflaged and become Wraiths when they leave. Wraiths gain {{ totalms }} Move Speed, are Unselectable, and hide their identities as long as no enemy champions are nearby.",
+      "unresolved": [
+        "totalms"
+      ]
+    },
+    "R": {
+      "name": "Dawning Shadow",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "Damage": [
+          250,
+          400,
+          550
+        ],
+        "Shield": [
+          120,
+          160,
+          200
+        ],
+        "ShieldDuration": [
+          3,
+          3,
+          3
+        ],
+        "PostCastAnimLock": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "DamageAPRatio": [
+          0.7,
+          0.7,
+          0.7
+        ],
+        "ShieldAPRatio": [
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Senna fires a beam of light that deals 250/400/550 (+70% AP) (+115% bonus AD) physical damage to all enemy champions hit. Allied champions hit in a wider area receive {{ totalshield }} Shield for 3 seconds.",
+      "unresolved": [
+        "totalshield"
+      ]
+    }
+  }
+}

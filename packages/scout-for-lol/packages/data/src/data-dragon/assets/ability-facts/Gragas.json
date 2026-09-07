@@ -1,0 +1,323 @@
+{
+  "championKey": "Gragas",
+  "championName": "Gragas",
+  "abilities": {
+    "passive": {
+      "name": "Happy Hour",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ArenaCooldownMod": [
+          0.5
+        ],
+        "HealRatio": [
+          0.055
+        ]
+      },
+      "resolvedDescription": "Gragas periodically heals upon using a skill.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Barrel Roll",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "SlowPercent": [
+          40,
+          45,
+          50,
+          55,
+          60
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BarrelMaxDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BarrelCookMaxTime": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "BarrelCookMaxAmp": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "MinionDamageMod": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ]
+      },
+      "resolvedDescription": "Gragas rolls a cask that explodes after 4 seconds, dealing between 80/120/160/200/240 (+80% AP) magic damage and 120/180/240/300/360 (+120% AP) magic damage and Slowing for between 40/45/50/55/60 and 60/67.5/75/82.5/90% for 2 seconds. The damage and Slow increase with time the cask spent before exploding. Gragas can Recast to detonate the cask early.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Drunken Rage",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        20,
+        20,
+        20,
+        20,
+        20
+      ],
+      "dataValues": {
+        "AttackRangeBuff": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "MaxHPPercentDamage": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "BaseDamageReduction": [
+          10,
+          14,
+          18,
+          22,
+          26
+        ],
+        "DamageReductionAP": [
+          0.04,
+          0.04,
+          0.04,
+          0.04,
+          0.04
+        ],
+        "BaseDamage": [
+          20,
+          50,
+          80,
+          110,
+          140
+        ],
+        "BaseDamageAP": [
+          0.7,
+          0.7,
+          0.7,
+          0.7,
+          0.7
+        ],
+        "MonsterDamageCap": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "DefenseDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "AttackDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "TurretDamageMod": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Gragas samples his brew, reducing incoming damage by {{ damagereduction }} for 2.5 seconds and empowering his next Attack to deal an additional 20/50/80/110/140 (+70% AP) plus 7% max Health magic damage to the target and surrounding enemies.",
+      "unresolved": [
+        "damagereduction"
+      ]
+    },
+    "E": {
+      "name": "Body Slam",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13.5,
+        13,
+        12.5,
+        12
+      ],
+      "costByRank": [
+        50,
+        50,
+        50,
+        50,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "APRatio": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "CooldownRefund": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "StunDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "DashSpeed": [
+          900,
+          900,
+          900,
+          900,
+          900
+        ],
+        "HitboxArea": [
+          180,
+          180,
+          180,
+          180,
+          180
+        ],
+        "ForwardHitbox": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ]
+      },
+      "resolvedDescription": "Gragas charges forward, colliding with the first enemy, Knocking Up nearby enemies for 1 second and dealing 80/125/170/215/260 (+60% AP) magic damage to them. This Ability's Cooldown is reduced by 40% if Gragas collides with an enemy.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Explosive Cask",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        85,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          300,
+          400
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "KnockbackDistance": [
+          900,
+          900,
+          900
+        ]
+      },
+      "resolvedDescription": "Gragas hurls his cask, dealing 200/300/400 (+80% AP) magic damage and Knocking Away enemies from the impact zone.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,348 @@
+{
+  "championKey": "Maokai",
+  "championName": "Maokai",
+  "abilities": {
+    "passive": {
+      "name": "Sap Magic",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PassiveCooldownReduction": [
+          4
+        ],
+        "PassiveHealthThreshold": [
+          0.95
+        ],
+        "JungPassCooldownReduction": [
+          1.5
+        ]
+      },
+      "resolvedDescription": "Maokai's basic attack also heals him and deals additional damage on a moderate cooldown. Each time Maokai casts a spell or is struck by an enemy's spell, this cooldown is reduced.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bramble Smash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6.5,
+        6,
+        5.5,
+        5
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          120,
+          165,
+          210,
+          255
+        ],
+        "SlowAmount": [
+          0.99,
+          0.99,
+          0.99,
+          0.99,
+          0.99
+        ],
+        "SlowDuration": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "LolipopRadius": [
+          325,
+          325,
+          325,
+          325,
+          325
+        ],
+        "KnockbackSpeed": [
+          950,
+          950,
+          950,
+          950,
+          950
+        ],
+        "KnockbackDistance": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "BasePercentHealth": [
+          0.02,
+          0.025,
+          0.03,
+          0.035,
+          0.04
+        ],
+        "NonChampMax": [
+          9999,
+          9999,
+          9999,
+          9999,
+          9999
+        ],
+        "BonusMonsterDamage": [
+          150,
+          160,
+          170,
+          180,
+          190
+        ],
+        "APRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Maokai smashes his fist into the ground, dealing 75/120/165/210/255 (+50% AP) plus 2/2.5/3/3.5/4% max Health magic damage and briefly Slowing. Nearby enemies are also Knocked Back.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Twisted Advance",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        525,
+        525,
+        525,
+        525,
+        525
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          85,
+          110,
+          135,
+          160
+        ],
+        "RootDuration": [
+          1,
+          1.1,
+          1.2,
+          1.3,
+          1.4
+        ],
+        "DashSpeed": [
+          1300,
+          1300,
+          1300,
+          1300,
+          1300
+        ]
+      },
+      "resolvedDescription": "Maokai transforms into a moving mass of roots, becoming Untargetable and dashing to an enemy. Upon arrival, he Roots the enemy for 1/1.1/1.2/1.3/1.4 second(s) and deals 60/85/110/135/160 (+40% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Sapling Toss",
+      "maxRank": 5,
+      "cooldownByRank": [
+        18,
+        17,
+        16,
+        15,
+        14
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1100,
+        1100,
+        1100,
+        1100,
+        1100
+      ],
+      "dataValues": {
+        "SaplingDuration": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "BaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "GrowthDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "SlowAmount": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "EmpoweredDoTDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "EmpoweredBaseDamage": [
+          100,
+          150,
+          200,
+          250,
+          300
+        ],
+        "SaplingDetectionRadius": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "BaseEmpoweredSlowAmount": [
+          0.45,
+          0.45,
+          0.45,
+          0.45,
+          0.45
+        ],
+        "MaxTraps": [
+          25000,
+          25000,
+          25000,
+          25000,
+          25000
+        ],
+        "BaseAPRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "EmpoweredAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Maokai flings a sapling, which stands watch for 30 seconds. Saplings chase nearby enemies, detonating on arrival to deal 50/75/100/125/150 (+25% AP) (+5% bonus Health) magic damage and Slow surrounding enemies by 45% for 2 seconds. Sap Magic's Cooldown is reduced by an additional 4 seconds if the sapling hits an enemy champion or epic monster. If placed in brush, Saplings instead last for 30 (+1.5% bonus Health) seconds and cause a larger explosion, dealing 100/150/200/250/300 (+50% AP) (+10% bonus Health) magic damage over 2 seconds and Slowing enemies by {{ empoweredslowamount }}.",
+      "unresolved": [
+        "empoweredslowamount"
+      ]
+    },
+    "R": {
+      "name": "Nature's Grasp",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        110,
+        90
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        3000,
+        3000,
+        3000
+      ],
+      "dataValues": {
+        "MinRootDuration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "MaxRootDuration": [
+          2.25,
+          2.25,
+          2.25
+        ],
+        "BaseDamage": [
+          150,
+          225,
+          300
+        ],
+        "MoveHaste": [
+          0.4,
+          0.5,
+          0.6
+        ],
+        "HasteDuration": [
+          2,
+          2,
+          2
+        ],
+        "RootDuration": [
+          0.6,
+          0.6,
+          0.6
+        ]
+      },
+      "resolvedDescription": "Maokai summons a colossal wave of brambles and thorns, Rooting enemies for 0.75 to 2.25 seconds, increasing with distance travelled, and dealing 150/225/300 (+75% AP) magic damage. Hitting a champion gives Maokai 40/50/60% Move Speed, decaying over 2 seconds.",
+      "unresolved": []
+    }
+  }
+}

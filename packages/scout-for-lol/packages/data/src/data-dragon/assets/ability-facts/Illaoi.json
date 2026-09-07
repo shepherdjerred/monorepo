@@ -1,0 +1,318 @@
+{
+  "championKey": "Illaoi",
+  "championName": "Illaoi",
+  "abilities": {
+    "passive": {
+      "name": "Prophet of an Elder God",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MissingHPPercentHeal": [
+          0.05
+        ],
+        "TentacleDisabledLifetime": [
+          30
+        ],
+        "SpawnRadius": [
+          1200
+        ],
+        "SpawnDensity": [
+          1000
+        ],
+        "PassiveTentacleLength": [
+          925
+        ],
+        "PassiveTentacleWidth": [
+          200
+        ]
+      },
+      "resolvedDescription": "Illaoi and the Vessels she creates spawn Tentacles on nearby impassible terrain. Tentacles swing at spirits, Vessels, and victims of Illaoi's Harsh lesson. Tentacles deal physical damage to enemies hit, and will heal Illaoi if they damage a champion.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Tentacle Smash",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9,
+        8,
+        7,
+        6
+      ],
+      "costByRank": [
+        40,
+        45,
+        50,
+        55,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        850,
+        850,
+        850,
+        850,
+        850
+      ],
+      "dataValues": {
+        "TentacleDamageAmp": [
+          0.1,
+          0.15,
+          0.2,
+          0.25,
+          0.3
+        ],
+        "TotalADRatio": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "TentacleLength": [
+          800,
+          800,
+          800,
+          800,
+          800
+        ],
+        "TentacleWidth": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ]
+      },
+      "resolvedDescription": "Passive: Slam damage is increased by 10/15/20/25/30% (currently {{ spell.illaoiq:tentacledamagetotal }} physical damage). Active: Illaoi swings her idol, causing a Tentacle to Slam forward.",
+      "unresolved": [
+        "spell.illaoiq:tentacledamagetotal"
+      ]
+    },
+    "W": {
+      "name": "Harsh Lesson",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        400,
+        400,
+        400,
+        400,
+        400
+      ],
+      "dataValues": {
+        "WMinDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "HealthPercentDamage": [
+          3,
+          3.5,
+          4,
+          4.5,
+          5
+        ],
+        "HealthDamageADRatio": [
+          0.035,
+          0.035,
+          0.035,
+          0.035,
+          0.035
+        ],
+        "CooldownDuringR": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MonsterDamageCap": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "DashSpeedBonus": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ]
+      },
+      "resolvedDescription": "Illaoi's next Attack causes her to leap at the target, dealing an additional {{ healthpercenttotal }} max Health physical damage. When she strikes, nearby Tentacles will Slam at the target.",
+      "unresolved": [
+        "healthpercenttotal"
+      ]
+    },
+    "E": {
+      "name": "Test of Spirit",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        35,
+        40,
+        45,
+        50,
+        55
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamageTransferPercent": [
+          0.25,
+          0.3,
+          0.35,
+          0.4,
+          0.45
+        ],
+        "VesselDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SpiritDuration": [
+          7,
+          7,
+          7,
+          7,
+          7
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SlowAmount": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "EchoTADScalar": [
+          0.0008,
+          0.0008,
+          0.0008,
+          0.0008,
+          0.0008
+        ],
+        "GraceBeforeDormantAfterELand": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "Density": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "SpiritLeashRange": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ]
+      },
+      "resolvedDescription": "Illaoi pulls the spirit from an enemy champion for 7 seconds. The spirit can be damaged like a champion, with {{ echopercent }} of that damage echoing to its owner. If the spirit dies or the target leaves its range, the target becomes marked for 4 seconds and is Slowed by 80% for 1.5 seconds. Marked enemies spawn Tentacles if possible. Tentacles will automatically Slam at spirits and marked enemies once every 4-3 (based on level) seconds.",
+      "unresolved": [
+        "echopercent"
+      ]
+    },
+    "R": {
+      "name": "Leap of Faith",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        95,
+        70
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "BuffRadius": [
+          500,
+          500,
+          500
+        ],
+        "Duration": [
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Illaoi smashes her idol into the ground, dealing 150/250/350 (+50% bonus AD) physical damage to nearby enemies and spawning a Tentacle for each enemy champion hit. For the next 8 seconds, Tentacles are untargetable and Slam 50% faster, and Harsh Lesson has a 2 second cooldown.",
+      "unresolved": []
+    }
+  }
+}

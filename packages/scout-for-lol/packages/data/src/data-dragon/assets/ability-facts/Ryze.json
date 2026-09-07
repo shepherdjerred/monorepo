@@ -1,0 +1,296 @@
+{
+  "championKey": "Ryze",
+  "championName": "Ryze",
+  "abilities": {
+    "passive": {
+      "name": "Arcane Mastery",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PercentManaIncrease": [
+          10
+        ],
+        "APAmount": [
+          100
+        ]
+      },
+      "resolvedDescription": "Ryze's spells deal extra damage based on his Bonus Mana, and he gains a percentage increase to his maximum Mana based on his Ability Power.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Overload",
+      "maxRank": 5,
+      "cooldownByRank": [
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "costByRank": [
+        40,
+        38,
+        36,
+        34,
+        32
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          95,
+          115,
+          135,
+          155
+        ],
+        "DamageAmp": [
+          40,
+          50,
+          60,
+          70,
+          80
+        ],
+        "MovementSpeedAmount": [
+          28,
+          32,
+          36,
+          40,
+          44
+        ],
+        "MovementSpeedDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MaximumRunes": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "RuneDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Passive: Rune Prison and Spell Flux refresh this Ability's Cooldown and charge a rune for 4 seconds (max 2 runes). Active: Ryze unleashes a blast, dealing {{ qdamagecalc }} magic damage to the first enemy hit. If the target has Flux on it, it is consumed, causing this Ability to deal 50/75/100% increased damage and bounces to nearby enemies with Flux. Ryze also discharges all runes, granting Ryze 28/32/36/40/44% Move Speed for 2 seconds if 2 runes were charged.",
+      "unresolved": [
+        "qdamagecalc"
+      ]
+    },
+    "W": {
+      "name": "Rune Prison",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10.5,
+        10,
+        9.5,
+        9
+      ],
+      "costByRank": [
+        50,
+        60,
+        70,
+        80,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        615,
+        615,
+        615,
+        615,
+        615
+      ],
+      "dataValues": {
+        "SlowAmount": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "CCDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ]
+      },
+      "resolvedDescription": "Ryze deals {{ wdamagecalc }} magic damage and Slows by 50% for 1.5 seconds. If the target has Flux, it is consumed and this Ability Roots instead of Slowing.",
+      "unresolved": [
+        "wdamagecalc"
+      ]
+    },
+    "E": {
+      "name": "Spell Flux",
+      "maxRank": 5,
+      "cooldownByRank": [
+        3.5,
+        3.25,
+        3,
+        2.75,
+        2.5
+      ],
+      "costByRank": [
+        35,
+        45,
+        55,
+        65,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        615,
+        615,
+        615,
+        615,
+        615
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          90,
+          120,
+          150,
+          180
+        ],
+        "DebuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "BounceRadius": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "DamageAmp": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "BounceRadiusLargeUnit": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "BounceRadiusQSmallUnit": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "BounceRadiusQLargeUnit": [
+          500,
+          500,
+          500,
+          500,
+          500
+        ]
+      },
+      "resolvedDescription": "Ryze fires an orb, dealing {{ edamagecalc }} magic damage and applies Flux for 4 seconds to the target and nearby enemies. Enemies already afflicted with Flux will cause it to spread further.",
+      "unresolved": [
+        "edamagecalc"
+      ]
+    },
+    "R": {
+      "name": "Realm Warp",
+      "maxRank": 3,
+      "cooldownByRank": [
+        180,
+        160,
+        140
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        3000,
+        3000,
+        3000
+      ],
+      "dataValues": {
+        "ChargeTime": [
+          2.1,
+          2.1,
+          2.1
+        ],
+        "TeleportTime": [
+          0.65,
+          0.65,
+          0.65
+        ],
+        "AllyIndicatorBuffDuration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "ChargeTimeTooltip": [
+          2,
+          2,
+          2
+        ],
+        "OverloadDamageBonus": [
+          50,
+          75,
+          100
+        ],
+        "OverloadHealPercent": [
+          20,
+          25,
+          30
+        ],
+        "HealPercentMinionMod": [
+          0.33,
+          0.33,
+          0.33
+        ],
+        "MinimumCastRange": [
+          1000,
+          1000,
+          1000
+        ]
+      },
+      "resolvedDescription": "Passive: Overload damage bonus against targets with Flux increased to 50/75/100%. Active: Ryze opens a portal to another location. After 2 seconds, all allies near the portal are teleported to that location.",
+      "unresolved": []
+    }
+  }
+}

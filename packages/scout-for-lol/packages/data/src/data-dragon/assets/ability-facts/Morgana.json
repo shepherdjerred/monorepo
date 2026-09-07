@@ -1,0 +1,239 @@
+{
+  "championKey": "Morgana",
+  "championName": "Morgana",
+  "abilities": {
+    "passive": {
+      "name": "Soul Siphon",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "HealPercent": [
+          18
+        ]
+      },
+      "resolvedDescription": "Morgana drains spirit from her enemies, healing as she deals damage to champions, large minions, and medium and larger jungler monsters.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Dark Binding",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        50,
+        55,
+        60,
+        65,
+        70
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1250,
+        1250,
+        1250,
+        1250,
+        1250
+      ],
+      "dataValues": {
+        "Damage": [
+          80,
+          135,
+          190,
+          245,
+          300
+        ],
+        "RootDuration": [
+          2,
+          2.25,
+          2.5,
+          2.75,
+          3
+        ]
+      },
+      "resolvedDescription": "Morgana hurls a blast of starfire that Roots the first enemy hit for 2/2.25/2.5/2.75/3 seconds and deals 80/135/190/245/300 (+90% AP) magic damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Tormented Shadow",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          18,
+          31,
+          44,
+          57,
+          70
+        ],
+        "BaseAPRatio": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "TickRate": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MissingHealthAmpPercent": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "WDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "CDRefundPercent": [
+          0.05,
+          0.05,
+          0.05,
+          0.05,
+          0.05
+        ],
+        "MonsterMod": [
+          170,
+          170,
+          170,
+          170,
+          170
+        ]
+      },
+      "resolvedDescription": "Morgana ignites the ground for 5 seconds, dealing 18/31/44/57/70 (+20% AP) magic damage per second, increased by up to {{ totalmaxdamage }} based on the targets' missing Health. This Ability's Cooldown is reduced by 5% every time Morgana is healed by Soul Siphon.",
+      "unresolved": [
+        "totalmaxdamage"
+      ]
+    },
+    "E": {
+      "name": "Black Shield",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        23.5,
+        21,
+        18.5,
+        16
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ShieldStrength": [
+          100,
+          155,
+          210,
+          265,
+          320
+        ],
+        "ShieldDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      },
+      "resolvedDescription": "Morgana grants an ally champion 100/155/210/265/320 (+70% AP) Magic Shield for 5 seconds. The shield prevents Disabling and Immobilizing effects until it breaks.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Soul Shackles",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        110,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "Damage": [
+          200,
+          275,
+          350
+        ],
+        "ChainDuration": [
+          3,
+          3,
+          3
+        ],
+        "StunDuration": [
+          1.5,
+          1.75,
+          2
+        ],
+        "SlowPercent": [
+          20,
+          20,
+          20
+        ],
+        "HastePercent": [
+          20,
+          40,
+          60
+        ]
+      },
+      "resolvedDescription": "Morgana chains herself to nearby enemy Champions, dealing 200/275/350 (+80% AP) magic damage and Slowing them by 20%. After 3 seconds, enemies unable to break the chains take an additional 200/275/350 (+80% AP) magic damage and are Stunned for 1.5/1.75/2 seconds. While casting this Ability, Morgana gains 20/40/60% Move Speed.",
+      "unresolved": []
+    }
+  }
+}

@@ -1,0 +1,265 @@
+{
+  "championKey": "Katarina",
+  "championName": "Katarina",
+  "abilities": {
+    "passive": {
+      "name": "Voracity",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "ResetWindow": [
+          3
+        ],
+        "ResetCDR": [
+          15
+        ],
+        "DaggerRadius": [
+          340
+        ],
+        "DaggerDuration": [
+          4
+        ],
+        "BonusADRatio": [
+          0.6
+        ]
+      },
+      "resolvedDescription": "Whenever an enemy champion dies that Katarina has damaged recently, her remaining ability cooldowns are dramatically reduced. If Katarina picks up a Dagger, she uses it to slash through all nearby enemies, dealing magic damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bouncing Blade",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        625,
+        625,
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "BounceOffset": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "BounceRadius": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "MaxBounces": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "QAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Katarina throws a Dagger, dealing 80/115/150/185/220 (+40% AP) magic damage to the target and 2 nearby enemies. The Dagger then ricochets onto the ground behind the primary target.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Preparation",
+      "maxRank": 5,
+      "cooldownByRank": [
+        15,
+        14,
+        13,
+        12,
+        11
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "MovespeedDuration": [
+          1.25,
+          1.25,
+          1.25,
+          1.25,
+          1.25
+        ],
+        "MovespeedAmount": [
+          50,
+          60,
+          70,
+          80,
+          90
+        ]
+      },
+      "resolvedDescription": "Katarina tosses a Dagger into the air and gains 50/60/70/80/90% Move Speed decaying over 1.25 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Shunpo",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        725,
+        725,
+        725,
+        725,
+        725
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "DataCooldown": [
+          12,
+          11,
+          10,
+          9,
+          8
+        ],
+        "EADRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "EAPRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ]
+      },
+      "resolvedDescription": "Katarina blinks in the wink of an eye to the target ally, enemy, or Dagger. If it is an enemy, Katarina strikes for 20/30/40/50/60 (+25% AP) (+40% AD) magic damage - otherwise she strikes the nearest enemy in range. Picking up a Dagger will reduce this Ability's Cooldown by {{ daggercooldownreduction }} seconds (78-96% (based on level)). Katarina can blink to any location near the target.",
+      "unresolved": [
+        "daggercooldownreduction"
+      ]
+    },
+    "R": {
+      "name": "Death Lotus",
+      "maxRank": 3,
+      "cooldownByRank": [
+        75,
+        60,
+        45
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "DamagePerTick": [
+          25,
+          37.5,
+          50
+        ],
+        "TicksPerSecond": [
+          6,
+          6,
+          6
+        ],
+        "Duration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "GrievousDuration": [
+          3,
+          3,
+          3
+        ],
+        "GrievousAmount": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "OnHitRatio": [
+          0.25,
+          0.3,
+          0.35
+        ],
+        "RAPRatio": [
+          0.19,
+          0.19,
+          0.19
+        ]
+      },
+      "resolvedDescription": "Katarina becomes a flurry of blades, rapidly attacking the three nearest enemy champions with a flurry of knives. Each knife deals 25/37.5/50 (+19% AP) magic damage and {{ addamagecalc }} physical damage, and applies 40% Grievous Wounds for 3 seconds. Total over 2.5 seconds to each enemy: {{ totaldamagecalc }} magic damage and {{ totaladdamagecalc }} physical damage.",
+      "unresolved": [
+        "addamagecalc",
+        "totaldamagecalc",
+        "totaladdamagecalc"
+      ]
+    }
+  }
+}

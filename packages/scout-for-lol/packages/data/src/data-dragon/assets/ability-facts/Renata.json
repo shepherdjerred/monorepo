@@ -1,0 +1,320 @@
+{
+  "championKey": "Renata",
+  "championName": "Renata Glasc",
+  "abilities": {
+    "passive": {
+      "name": "Leverage",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "PercentAmp": [
+          0.1
+        ],
+        "APToPercentRatio": [
+          0.0002
+        ],
+        "MonsterDamageCap": [
+          150
+        ],
+        "PassiveDuration": [
+          6
+        ]
+      },
+      "resolvedDescription": "Renata's Attacks deal bonus damage and mark enemies. Renata's allies can damage marked enemies to deal bonus damage.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Handshake",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        16,
+        16,
+        16,
+        16
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        900,
+        900,
+        900,
+        900,
+        900
+      ],
+      "dataValues": {
+        "Damage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "RootDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SelfSlow": [
+          -0.3,
+          -0.3,
+          -0.3,
+          -0.3,
+          -0.3
+        ],
+        "StunDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "PullDistance": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Renata sends out a missile from her arm, Rooting the first enemy hit for 1 second and dealing 80/125/170/215/260 (+80% AP) magic damage. Recast: Renata Pulls the enemy in a direction, dealing 80/125/170/215/260 (+80% AP) magic damage to enemies they are thrown into and Stunning for 0.5 seconds if the thrown enemy is a champion.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Bailout",
+      "maxRank": 5,
+      "cooldownByRank": [
+        28,
+        27,
+        26,
+        25,
+        24
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "Duration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "BonusAttackSpeed": [
+          10,
+          15,
+          20,
+          25,
+          30
+        ],
+        "BonusMoveSpeed": [
+          10,
+          12.5,
+          15,
+          17.5,
+          20
+        ],
+        "APToPercentRatio": [
+          0.01,
+          0.01,
+          0.01,
+          0.01,
+          0.01
+        ],
+        "TriumphPercent": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "TicksBeforeDeath": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ],
+        "MaxStatMultiplier": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "TicksPerSecond": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "TagDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ]
+      },
+      "resolvedDescription": "Renata infuses an ally champion, granting {{ ascalc }} Attack Speed and {{ mscalc }} Move Speed towards enemies, increasing to {{ finalascalc }} Attack Speed and {{ finalmscalc }} Move Speed over 5 seconds. Takedowns refresh the duration of the buff. If the ally would die, they instead return to full Health, which then decays over 3 seconds. If they get a Takedown while decaying, they will be set to 20% max Health and stop decaying. The Champion's death can be delayed by healing or similar effects while in the decaying state, but cannot be prevented unless the Champion gets a Takedown. Champions can only delay their death once.",
+      "unresolved": [
+        "ascalc",
+        "mscalc",
+        "finalascalc",
+        "finalmscalc"
+      ]
+    },
+    "E": {
+      "name": "Loyalty Program",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        13,
+        12,
+        11,
+        10
+      ],
+      "costByRank": [
+        70,
+        80,
+        90,
+        100,
+        110
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "Damage": [
+          65,
+          95,
+          125,
+          155,
+          185
+        ],
+        "SlowPercent": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "ShieldValue": [
+          50,
+          65,
+          80,
+          95,
+          110
+        ],
+        "ShieldDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "InitialAoE": [
+          325,
+          325,
+          325,
+          325,
+          325
+        ],
+        "EndAoE": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ],
+        "ShieldAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Renata sends out a pair of chemtech missiles, dealing 65/95/125/155/185 (+55% AP) magic damage and Slowing surrounding enemies and enemies hit by 30% for 2 seconds. Allies hit gain 50/65/80/95/110 (+50% AP) Shield for 3 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Hostile Takeover",
+      "maxRank": 3,
+      "cooldownByRank": [
+        150,
+        130,
+        110
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        2000,
+        2000,
+        2000
+      ],
+      "dataValues": {
+        "BerserkDuration": [
+          1.25,
+          1.75,
+          2.25
+        ],
+        "BonusAttackSpeed": [
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Renata sends out a wave of chemicals, Berserking enemies for 1.25/1.75/2.25 seconds, causing them to Attack the nearest unit, prioritizing their allies. While Berserk, enemies gain 100% Attack Speed.",
+      "unresolved": []
+    }
+  }
+}

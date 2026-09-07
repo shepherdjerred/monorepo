@@ -1,0 +1,415 @@
+{
+  "championKey": "Viktor",
+  "championName": "Viktor",
+  "abilities": {
+    "passive": {
+      "name": "Glorious Evolution",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MinionStacks": [
+          1
+        ],
+        "CannonStacks": [
+          10
+        ],
+        "ChampionStacks": [
+          20
+        ],
+        "EvolutionStackBreakpoint": [
+          100
+        ],
+        "ARAMStacksoverTime": [
+          1
+        ],
+        "ARAMStackCadence": [
+          5
+        ]
+      },
+      "resolvedDescription": "Viktor gains Hex Fragments whenever he kills an enemy. With every 100 Hex Fragments he obtains, Viktor permanently augments an active ability. After upgrading all of his basic abilities, he can gather 100 Hex Fragments to augment his ultimate ability.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Siphon Power",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "MissileDamage": [
+          60,
+          75,
+          90,
+          105,
+          120
+        ],
+        "AABonusDamage": [
+          20,
+          45,
+          70,
+          95,
+          120
+        ],
+        "BuffDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "MissileAPRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "HitAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ShieldManaRatio": [
+          0.08,
+          0.08,
+          0.08,
+          0.08,
+          0.08
+        ],
+        "ShieldAPRatio": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "AugmentShieldBonus": [
+          1.6,
+          1.6,
+          1.6,
+          1.6,
+          1.6
+        ],
+        "AugmentMoveSpeedBonus": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "TurretDamageMod": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      "resolvedDescription": "Viktor blasts an enemy, dealing 60/75/90/105/120 (+40% AP) magic damage and granting Viktor 40-140 (based on level) (+25% AP) Shield for 2.5 seconds. Viktor's next Attack within 4 seconds deals 20/45/70/95/120 (+50% AP) (+100% AD) magic damage. Upgraded: Grants 64-224 (based on level) (+40% AP) Shield and Viktor additionally gains 30% Move Speed for 2.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Gravity Field",
+      "maxRank": 5,
+      "cooldownByRank": [
+        17,
+        16,
+        15,
+        14,
+        13
+      ],
+      "costByRank": [
+        65,
+        65,
+        65,
+        65,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "SlowPotency": [
+          -33,
+          -36,
+          -39,
+          -42,
+          -45
+        ],
+        "StunDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "FieldDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "StackCadence": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "StacksForStun": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "SlowDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "AugmentSlow": [
+          20,
+          20,
+          20,
+          20,
+          20
+        ],
+        "Size": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ]
+      },
+      "resolvedDescription": "Viktor deploys a gravitational imprisonment device for 4 seconds, Slowing enemies inside it by 33/36/39/42/45%. Enemies who remain within its radius for 1.25 seconds are Stunned for 1.5 seconds. Upgraded Passive: Viktor's Abilities Slow by 20% for 1 second.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Hextech Ray",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        60,
+        70,
+        80,
+        90,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        525,
+        525,
+        525,
+        525,
+        525
+      ],
+      "dataValues": {
+        "LaserRange": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ],
+        "BaseDamageLaser": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "BaseDamageAftershock": [
+          20,
+          50,
+          80,
+          110,
+          140
+        ],
+        "Delay": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "LaserAPRatio": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "AftershockAPRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "AftershockMinionMulti": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Viktor fires a hextech ray in a chosen direction, dealing 70/110/150/190/230 (+50% AP) magic damage to any enemies it hits. Upgraded: An aftershock follows Hextech Ray, dealing 20/50/80/110/140 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Arcane Storm",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "InitialBurstBaseDamage": [
+          100,
+          175,
+          250
+        ],
+        "SubsequentBurstBaseDamage": [
+          65,
+          105,
+          145
+        ],
+        "StormDuration": [
+          6.5,
+          6.5,
+          6.5
+        ],
+        "TickCadence": [
+          1,
+          1,
+          1
+        ],
+        "MaxTicks": [
+          6,
+          6,
+          6
+        ],
+        "MaxStormSpeed": [
+          275,
+          275,
+          275
+        ],
+        "MinStormSpeed": [
+          200,
+          200,
+          200
+        ],
+        "MinDistance": [
+          300,
+          300,
+          300
+        ],
+        "MaxDistance": [
+          1000,
+          1000,
+          1000
+        ],
+        "AugmentBoost": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "StormRadius": [
+          325,
+          325,
+          325
+        ],
+        "EnhancedSizeMult": [
+          0.4,
+          0.4,
+          0.4
+        ],
+        "EnhancedSlow": [
+          40,
+          40,
+          40
+        ],
+        "EnhancedSlowDuration": [
+          2,
+          2,
+          2
+        ],
+        "MaxGrowths": [
+          6,
+          6,
+          6
+        ],
+        "SubsequentBurstAPRaio": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "InitialBurstAPRatio": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Tooltip_DurationExtension": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Viktor conjures an Arcane Storm in an area for 6.5 seconds, which instantly deals 100/175/250 (+50% AP) magic damage followed by 65/105/145 (+35% AP) magic damage per second to surrounding enemies. The storm automatically follows champions it has recently damaged. Recast: Viktor can manually move the storm. Upgraded: The storm moves 25% faster. If a champion that the storm has damaged dies, the storm increases its size and its duration by 3 seconds (up to 6 times).",
+      "unresolved": []
+    }
+  }
+}

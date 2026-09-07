@@ -1,12 +1,29 @@
 import { z } from "zod";
 import { normalizeChampionName } from "#src/model/riot/champion-registry.ts";
 
-const ChampionSpellSchema = z.object({
+/**
+ * Per-spell shape of the committed Data Dragon champion JSON. Shared with the
+ * ability-facts generator (`scripts/ability-facts.ts`), which additionally
+ * consumes `effectBurn` ("e1"-style rank tables) to resolve tooltip tokens.
+ */
+export const ChampionSpellSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
   tooltip: z.string(),
+  maxrank: z.number().int().positive(),
+  cooldown: z.array(z.number()),
+  cooldownBurn: z.string(),
+  cost: z.array(z.number()),
+  costBurn: z.string(),
+  costType: z.string(),
+  range: z.array(z.number()),
+  rangeBurn: z.string(),
+  /** Rank tables for `{{ eN }}` tooltip tokens; index 0 is always null. */
+  effectBurn: z.array(z.string().nullable()),
 });
+
+export type ChampionSpell = z.infer<typeof ChampionSpellSchema>;
 
 export const ChampionTagSchema = z.enum([
   "Assassin",
@@ -35,15 +52,14 @@ const ChampionDataSchema = z.object({
   ),
 });
 
+export type ChampionInfo = {
+  spells: ChampionSpell[];
+  passive: { name: string; description: string };
+  tags: ChampionTag[];
+};
+
 // Cache champion data to avoid repeated reads
-const championCache = new Map<
-  string,
-  {
-    spells: { name: string; description: string; tooltip: string }[];
-    passive: { name: string; description: string };
-    tags: ChampionTag[];
-  }
->();
+const championCache = new Map<string, ChampionInfo>();
 
 // Cache for champion list
 let championListCache: { id: string; name: string }[] | null = null;
@@ -90,14 +106,9 @@ export async function getChampionList(): Promise<
  * @param championName - Champion name (e.g., "Aatrox", "LeeSin")
  * @returns Champion spell and passive data, or undefined if not found
  */
-export async function getChampionInfo(championName: string): Promise<
-  | {
-      spells: { name: string; description: string; tooltip: string }[];
-      passive: { name: string; description: string };
-      tags: ChampionTag[];
-    }
-  | undefined
-> {
+export async function getChampionInfo(
+  championName: string,
+): Promise<ChampionInfo | undefined> {
   const normalized = normalizeChampionName(championName);
 
   // Check cache first
@@ -115,12 +126,8 @@ export async function getChampionInfo(championName: string): Promise<
       return undefined;
     }
 
-    const result = {
-      spells: championData.spells.map((s) => ({
-        name: s.name,
-        description: s.description,
-        tooltip: s.tooltip,
-      })),
+    const result: ChampionInfo = {
+      spells: championData.spells,
       passive: championData.passive,
       tags: championData.tags,
     };

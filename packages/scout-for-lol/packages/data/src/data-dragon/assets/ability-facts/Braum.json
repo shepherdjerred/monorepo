@@ -1,0 +1,305 @@
+{
+  "championKey": "Braum",
+  "championName": "Braum",
+  "abilities": {
+    "passive": {
+      "name": "Concussive Blows",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "StackDuration": [
+          4
+        ],
+        "StackCap": [
+          4
+        ],
+        "AlreadyStunnedDamageAmp": [
+          0.4
+        ]
+      },
+      "resolvedDescription": "Braum's basic attacks apply Concussive Blows. Once the first stack is applied, ally basic attacks also stack Concussive Blows. Upon reaching 4 stacks, the target is stunned and takes magic damage. For the next few seconds they cannot receive new stacks, but take bonus magic damage from Braum's attacks.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Winter's Bite",
+      "maxRank": 5,
+      "cooldownByRank": [
+        8,
+        7.5,
+        7,
+        6.5,
+        6
+      ],
+      "costByRank": [
+        45,
+        50,
+        55,
+        60,
+        65
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          75,
+          120,
+          165,
+          210,
+          255
+        ],
+        "MaxHPDamageValue": [
+          0.025,
+          0.025,
+          0.025,
+          0.025,
+          0.025
+        ],
+        "InitialSlow": [
+          70,
+          70,
+          70,
+          70,
+          70
+        ],
+        "MinSlow": [
+          30,
+          30,
+          30,
+          30,
+          30
+        ],
+        "SlowDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MissileRange": [
+          1050,
+          1050,
+          1050,
+          1050,
+          1050
+        ],
+        "DebuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ]
+      },
+      "resolvedDescription": "Braum propels freezing ice from his shield, dealing 75/120/165/210/255 (+2.5% max Health) magic damage to the first enemy hit and Slowing them by 70% decaying over 2 seconds. Applies a stack of Concussive Blows.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Stand Behind Me",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        11,
+        10,
+        9,
+        8
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        650,
+        650,
+        650,
+        650,
+        650
+      ],
+      "dataValues": {
+        "RangedDamageThreshold": [
+          400,
+          400,
+          400,
+          400,
+          400
+        ],
+        "AllyArmorPercent": [
+          0.12,
+          0.12,
+          0.12,
+          0.12,
+          0.12
+        ],
+        "BraumArmorPercent": [
+          0.36,
+          0.36,
+          0.36,
+          0.36,
+          0.36
+        ],
+        "BaseResists": [
+          20,
+          25,
+          30,
+          35,
+          40
+        ],
+        "Duration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "BonusDashSpeed": [
+          750,
+          750,
+          750,
+          750,
+          750
+        ]
+      },
+      "resolvedDescription": "Braum leaps to an allied champion or minion. On arrival, Braum grants the target 20/25/30/35/40 (+12% bonus Armor) Armor and 20/25/30/35/40 (+12% bonus Magic Resist) Magic Resist for 3 seconds. Braum grants himself 20/25/30/35/40 (+36% bonus Armor) Armor and 20/25/30/35/40 (+36% bonus Magic Resist) Magic Resist for the same duration.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Unbreakable",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        14,
+        12,
+        10,
+        8
+      ],
+      "costByRank": [
+        30,
+        35,
+        40,
+        45,
+        50
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "RangedReflect": [
+          0.15,
+          0.15,
+          0.15,
+          0.15,
+          0.15
+        ],
+        "ShieldHoldDuration": [
+          3,
+          3.25,
+          3.5,
+          3.75,
+          4
+        ],
+        "ShieldFacingDRAmount": [
+          35,
+          40,
+          45,
+          50,
+          55
+        ],
+        "MoveSpeedPercent": [
+          10,
+          10,
+          10,
+          10,
+          10
+        ]
+      },
+      "resolvedDescription": "Braum raises his shield for 3/3.25/3.5/3.75/4 seconds, intercepting enemy missiles from the chosen direction, causing them to hit Braum and then be destroyed. The first missile Braum blocks deals no damage, and subsequent projectiles deal 35/40/45/50/55% reduced damage. Braum gains 10% Move Speed while his shield is raised.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Glacial Fissure",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        115,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1250,
+        1250,
+        1250
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "KnockupDuration": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "FirstKnockupDuration": [
+          1,
+          1.5,
+          2
+        ],
+        "MoveSpeedMod": [
+          40,
+          50,
+          60
+        ],
+        "SlowZoneDuration": [
+          4,
+          4,
+          4
+        ],
+        "SlowDebuffDuration": [
+          0.25,
+          0.25,
+          0.25
+        ],
+        "MinKnockup": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "MaxKnockup": [
+          1,
+          1.5,
+          2
+        ],
+        "MaxKnockupRatio": [
+          0.9,
+          0.9,
+          0.9
+        ]
+      },
+      "resolvedDescription": "Braum slams the ground sending forth a fissure that Knocks Up enemies in its path and nearby Braum, and deals 150/250/350 (+60% AP) magic damage. The first target hit is Knocked Up for between 0.6 and 1/1.5/2 seconds, increasing with distance from Braum. All others hit are Knocked Up for 0.6 seconds. The fissure also creates a zone for 4 seconds, that Slows by 40/50/60%.",
+      "unresolved": []
+    }
+  }
+}

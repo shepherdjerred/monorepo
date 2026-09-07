@@ -1,0 +1,278 @@
+{
+  "championKey": "Annie",
+  "championName": "Annie",
+  "abilities": {
+    "passive": {
+      "name": "Pyromania",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MaxStacks": [
+          4
+        ],
+        "StunBaseDuration": [
+          1.25
+        ],
+        "StunDurationPerTier": [
+          0.25
+        ]
+      },
+      "resolvedDescription": "After casting 4 spells, Annie's next offensive spell will stun the target. Annie begins the game and respawns with Pyromania available.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Disintegrate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        625,
+        625,
+        625,
+        625,
+        625
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Annie hurls a fireball, dealing 80/125/170/215/260 (+80% AP) magic damage. If the target dies, Annie refunds the Mana cost and reduces the Cooldown by 50%.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Incinerate",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          110,
+          150,
+          190,
+          230
+        ],
+        "APRatio": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Annie projects a wave of fire, dealing 70/110/150/190/230 (+80% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Molten Shield",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        10,
+        10,
+        10,
+        10
+      ],
+      "costByRank": [
+        60,
+        65,
+        70,
+        75,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "ShieldDuration": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "DamageReduction": [
+          13,
+          17,
+          21,
+          25,
+          29
+        ],
+        "DamageReflection": [
+          25,
+          35,
+          45,
+          55,
+          65
+        ],
+        "MovementSpeed": [
+          0.15,
+          0.2,
+          0.25,
+          0.3,
+          0.35
+        ],
+        "MovementSpeedDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ShieldAmount": [
+          60,
+          95,
+          130,
+          165,
+          200
+        ],
+        "CastRangeGenerosity": [
+          225,
+          225,
+          225,
+          225,
+          225
+        ]
+      },
+      "resolvedDescription": "Annie grants an ally champion 60/95/130/165/200 (+40% AP) Shield for 3 seconds and 20-50% (based on level) Decaying Move Speed for 1.5 seconds. While the shield holds, enemies who hit the shielded ally with an Attack or Ability receive 25/35/45/55/65 (+40% AP) magic damage once per shield. Tibbers always gains the effects of Molten Shield when summoned.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Summon: Tibbers",
+      "maxRank": 3,
+      "cooldownByRank": [
+        130,
+        115,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        600,
+        600,
+        600
+      ],
+      "dataValues": {
+        "InitialDamage": [
+          150,
+          275,
+          400
+        ],
+        "AuraDamage": [
+          8,
+          12,
+          16
+        ],
+        "TibbersAttackDamage": [
+          30,
+          45,
+          60
+        ],
+        "TibbersAttackSpeedDecay": [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        "TibbersAttackAPRatio": [
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MovespeedBurst": [
+          1,
+          1,
+          1
+        ],
+        "EnrageDuration": [
+          3,
+          3,
+          3
+        ],
+        "AvengerEnrageDuration": [
+          10,
+          10,
+          10
+        ],
+        "TibbersLifetime": [
+          45,
+          45,
+          45
+        ],
+        "TibbersBonusMS": [
+          0,
+          25,
+          50
+        ],
+        "TibbersModeSpecificHPMod": [
+          1,
+          1,
+          1
+        ],
+        "RPercentPenBuff": [
+          0.1,
+          0.15,
+          0.2
+        ]
+      },
+      "resolvedDescription": "Passive: Annie gains 10/15/20% Magic Penetration. Annie summons her bear Tibbers, dealing 150/275/400 (+75% AP) magic damage. For the next 45 seconds, Tibbers burns nearby enemies for 8/12/16 (+4% AP) magic damage per second. Tibbers becomes enraged when summoned, if Annie stuns an enemy champion, and if Annie dies. When enraged, Tibbers gains 275% Attack Speed and 100% Move Speed decaying over 3 seconds. Recast: Manually issue orders to Tibbers.",
+      "unresolved": []
+    }
+  }
+}

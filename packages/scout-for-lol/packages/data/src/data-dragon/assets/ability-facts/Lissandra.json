@@ -1,0 +1,269 @@
+{
+  "championKey": "Lissandra",
+  "championName": "Lissandra",
+  "abilities": {
+    "passive": {
+      "name": "Iceborn Subjugation",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MoveSpeedMod": [
+          -0.25
+        ],
+        "ExplosionDelay": [
+          4
+        ],
+        "Range": [
+          1350
+        ],
+        "Radius": [
+          450
+        ]
+      },
+      "resolvedDescription": "When an enemy champion dies near Lissandra they become a Frozen Thrall. Frozen Thralls slow nearby enemies and then, after a delay, shatter from the intense cold, dealing magic damage to nearby targets.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Ice Shard",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        6,
+        5,
+        4,
+        3
+      ],
+      "costByRank": [
+        55,
+        60,
+        65,
+        70,
+        75
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        725,
+        725,
+        725,
+        725,
+        725
+      ],
+      "dataValues": {
+        "damage": [
+          80,
+          115,
+          150,
+          185,
+          220
+        ],
+        "slowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "slowPercentage": [
+          -0.2,
+          -0.24,
+          -0.28,
+          -0.32,
+          -0.36
+        ],
+        "SlowDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SlowPercentage": [
+          -0.2,
+          -0.24,
+          -0.28,
+          -0.32,
+          -0.36
+        ]
+      },
+      "resolvedDescription": "Lissandra throws a spear of ice that shatters on the first enemy hit, dealing 80/115/150/185/220 (+75% AP) magic damage, Slowing them by 20/24/28/32/36% for 1.5 seconds, and also damaging and slowing the enemies behind them.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Ring of Frost",
+      "maxRank": 5,
+      "cooldownByRank": [
+        10,
+        9.5,
+        9,
+        8.5,
+        8
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ],
+        "SnareDuration": [
+          1.25,
+          1.35,
+          1.45,
+          1.55,
+          1.65
+        ],
+        "TargetsToHit": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "FreeCastCD": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ]
+      },
+      "resolvedDescription": "Lissandra creates an ice field, Rooting nearby enemies for 1.25/1.35/1.45/1.55/1.65 seconds and dealing 70/105/140/175/210 (+70% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Glacial Path",
+      "maxRank": 5,
+      "cooldownByRank": [
+        24,
+        21,
+        18,
+        15,
+        12
+      ],
+      "costByRank": [
+        80,
+        85,
+        90,
+        95,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1050,
+        1050,
+        1050,
+        1050,
+        1050
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          70,
+          105,
+          140,
+          175,
+          210
+        ]
+      },
+      "resolvedDescription": "Lissandra casts forth an ice claw that deals 70/105/140/175/210 (+60% AP) magic damage. Lissandra can Recast while the claw travels to teleport to its location.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Frozen Tomb",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "APRatio": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "BaseDamage": [
+          150,
+          250,
+          350
+        ],
+        "SlowAmount": [
+          -0.45,
+          -0.6,
+          -0.75
+        ],
+        "SlowDuration": [
+          3,
+          3,
+          3
+        ],
+        "EnemyCastDuration": [
+          1.5,
+          1.5,
+          1.5
+        ],
+        "SelfCastDuration": [
+          2.5,
+          2.5,
+          2.5
+        ],
+        "SelfCastFlatHeal": [
+          100,
+          150,
+          200
+        ],
+        "SelfCastMissingHPRatio": [
+          1,
+          1,
+          1
+        ],
+        "SelfCastMissingHPPerAbove": [
+          1,
+          1,
+          1
+        ],
+        "StartingAoESize": [
+          292,
+          292,
+          292
+        ],
+        "PercentMissingHPRatio": [
+          0.55,
+          0.55,
+          0.55
+        ]
+      },
+      "resolvedDescription": "Lissandra encases herself or an enemy champion in ice. Enemies are Stunned for 1.5 seconds. When self cast, Lissandra enters Stasis for 2.5 seconds and restores 100/150/200 (+55% AP) Health, increased by 1% for each 1% missing Health. In either case, dark ice eminates from the target, dealing 150/250/350 (+75% AP) magic damage. The ice persists for 3 seconds, Slowing enemies by 45/60/75%.",
+      "unresolved": []
+    }
+  }
+}

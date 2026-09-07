@@ -1,0 +1,286 @@
+{
+  "championKey": "Graves",
+  "championName": "Graves",
+  "abilities": {
+    "passive": {
+      "name": "New Destiny",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CritDamageRatio": [
+          0.5
+        ],
+        "StructureDamageReduction": [
+          0.25
+        ]
+      },
+      "resolvedDescription": "Graves' shotgun has some unique properties. He must reload when he runs out of ammo. Attacks fire 4 bullets, which cannot pass through units. Non-champions struck by multiple bullets are knocked back.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "End of the Line",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        11.25,
+        9.5,
+        7.75,
+        6
+      ],
+      "costByRank": [
+        80,
+        80,
+        80,
+        80,
+        80
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        925,
+        925,
+        925,
+        925,
+        925
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          50,
+          75,
+          100,
+          125,
+          150
+        ],
+        "FirstADRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ],
+        "BaseDetonationDamage": [
+          80,
+          125,
+          170,
+          215,
+          260
+        ],
+        "bADDetonationRatio": [
+          0.55,
+          0.7,
+          0.85,
+          1,
+          1.15
+        ],
+        "TerrainCollisionDelay": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ]
+      },
+      "resolvedDescription": "Graves fires a powder round dealing 50/75/100/125/150 (+65% bonus AD) physical damage. After 1 second or after colliding with terrain, it detonates, dealing 80/125/170/215/260 (+55/70/85/100/115% bonus AD) physical damage along the travel path again and to enemies near the blast.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Smoke Screen",
+      "maxRank": 5,
+      "cooldownByRank": [
+        26,
+        24,
+        22,
+        20,
+        18
+      ],
+      "costByRank": [
+        70,
+        75,
+        80,
+        85,
+        90
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        950,
+        950,
+        950,
+        950,
+        950
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          60,
+          110,
+          160,
+          210,
+          260
+        ],
+        "SlowAmount": [
+          50,
+          50,
+          50,
+          50,
+          50
+        ],
+        "SmokeRadius": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ],
+        "SmokeDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "SlowDuration": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "resolvedDescription": "Graves creates a cloud of black smoke for 4 seconds, Slowing enemies inside by 50% and blocking their vision outside the area. The initial impact deals 60/110/160/210/260 (+60% AP) magic damage.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Quickdraw",
+      "maxRank": 5,
+      "cooldownByRank": [
+        16,
+        15,
+        14,
+        13,
+        12
+      ],
+      "costByRank": [
+        40,
+        40,
+        40,
+        40,
+        40
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        425,
+        425,
+        425,
+        425,
+        425
+      ],
+      "dataValues": {
+        "ArmorPerStack": [
+          7,
+          10,
+          13,
+          16,
+          19
+        ],
+        "MRGrantPercent": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "BuffDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "CooldownPerHit": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MaxStacks": [
+          8,
+          8,
+          8,
+          8,
+          8
+        ],
+        "DashSpeed": [
+          750,
+          750,
+          750,
+          750,
+          750
+        ],
+        "DashMaxDistance": [
+          375,
+          375,
+          375,
+          375,
+          375
+        ],
+        "DashMinDistance": [
+          275,
+          275,
+          275,
+          275,
+          275
+        ],
+        "DashAngle": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ]
+      },
+      "resolvedDescription": "Graves dashes and reloads one Shell into his shotgun. He also gains a stack for 4 seconds (max 8 stacks) or two stacks if he dashes towards an enemy champion. Stacks grant him 7/10/13/16/19 Armor and 3.5/5/6.5/8/9.5 Magic Resist. Stacks are refreshed when damaging a non-minion. Each bullet hit from Graves' Attacks reduces this Ability's Cooldown by 0.5 seconds.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Collateral Damage",
+      "maxRank": 3,
+      "cooldownByRank": [
+        100,
+        80,
+        60
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          275,
+          425,
+          575
+        ],
+        "RFalloffDamage": [
+          200,
+          320,
+          440
+        ],
+        "RKnockbackDistance": [
+          400,
+          400,
+          400
+        ]
+      },
+      "resolvedDescription": "Graves fires an explosive cartridge, blasting himself backwards. The cartridge deals 275/425/575 (+150% bonus AD) physical damage to the first enemy hit. After hitting an enemy champion or reaching the end of its range, the cartridge explodes outward, dealing 200/320/440 (+120% bonus AD) physical damage.",
+      "unresolved": []
+    }
+  }
+}

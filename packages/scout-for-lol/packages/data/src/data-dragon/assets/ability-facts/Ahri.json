@@ -1,0 +1,319 @@
+{
+  "championKey": "Ahri",
+  "championName": "Ahri",
+  "abilities": {
+    "passive": {
+      "name": "Essence Theft",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "TakedownWindow": [
+          3
+        ],
+        "MaxStacks": [
+          9
+        ]
+      },
+      "resolvedDescription": "After killing 9 minions or monsters, Ahri heals. After taking down an enemy champion, Ahri heals for a greater amount.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Orb of Deception",
+      "maxRank": 5,
+      "cooldownByRank": [
+        7,
+        7,
+        7,
+        7,
+        7
+      ],
+      "costByRank": [
+        55,
+        65,
+        75,
+        85,
+        95
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        970,
+        970,
+        970,
+        970,
+        970
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          35,
+          60,
+          85,
+          110,
+          135
+        ]
+      },
+      "resolvedDescription": "Ahri throws then pulls back her orb, dealing 35/60/85/110/135 (+50% AP) magic damage on the way out and 35/60/85/110/135 (+50% AP) true damage on the way back.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Fox-Fire",
+      "maxRank": 5,
+      "cooldownByRank": [
+        9,
+        8,
+        7,
+        6,
+        5
+      ],
+      "costByRank": [
+        30,
+        30,
+        30,
+        30,
+        30
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "MovementSpeed": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "MovementSpeedDuration": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MinionBonusDamageMultiplier": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MinionBonusDamageThreshold": [
+          0.2,
+          0.2,
+          0.2,
+          0.2,
+          0.2
+        ],
+        "BaseDamage": [
+          40,
+          60,
+          80,
+          100,
+          120
+        ],
+        "RepeatDamageMod": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "AcquisitionRange": [
+          550,
+          550,
+          550,
+          550,
+          550
+        ],
+        "BonusAcquisitionRange": [
+          725,
+          725,
+          725,
+          725,
+          725
+        ],
+        "InitialDelay": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "SecondaryDelay": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "FlameDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "OrbitRadius": [
+          150,
+          150,
+          150,
+          150,
+          150
+        ],
+        "APRatio": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ]
+      },
+      "resolvedDescription": "Ahri releases 3 fox-fires that seek nearby enemies and deal 40/60/80/100/120 (+40% AP) magic damage, reduced to 16/24/32/40/48 (+16% AP) damage beyond the first. She also gains 40% Move Speed decaying over 2 seconds.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Charm",
+      "maxRank": 5,
+      "cooldownByRank": [
+        12,
+        12,
+        12,
+        12,
+        12
+      ],
+      "costByRank": [
+        60,
+        60,
+        60,
+        60,
+        60
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        975,
+        975,
+        975,
+        975,
+        975
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          80,
+          120,
+          160,
+          200,
+          240
+        ],
+        "SlowPercent": [
+          -0.65,
+          -0.65,
+          -0.65,
+          -0.65,
+          -0.65
+        ],
+        "CharmDuration": [
+          1.2,
+          1.35,
+          1.5,
+          1.65,
+          1.8
+        ],
+        "APRatio": [
+          0.85,
+          0.85,
+          0.85,
+          0.85,
+          0.85
+        ]
+      },
+      "resolvedDescription": "Ahri blows a kiss that Charms the first enemy hit for 1.2/1.35/1.5/1.65/1.8 seconds and deals 80/120/160/200/240 (+85% AP) magic damage.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Spirit Rush",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        120,
+        100
+      ],
+      "costByRank": [
+        100,
+        100,
+        100
+      ],
+      "costType": "Mana",
+      "rangeByRank": [
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "RBaseDamage": [
+          75,
+          125,
+          175
+        ],
+        "RMaxTargetsPerCast": [
+          3,
+          3,
+          3
+        ],
+        "RMaxCasts": [
+          3,
+          3,
+          3
+        ],
+        "RDashDistance": [
+          500,
+          500,
+          500
+        ],
+        "RBaseDashSpeed": [
+          1200,
+          1200,
+          1200
+        ],
+        "RRecastWindow": [
+          15,
+          15,
+          15
+        ],
+        "RAcquisitionRange": [
+          600,
+          600,
+          600
+        ],
+        "RDashCooldown": [
+          1,
+          1,
+          1
+        ],
+        "RAPCoefficient": [
+          0.35,
+          0.35,
+          0.35
+        ],
+        "RResetCasts": [
+          1,
+          1,
+          1
+        ],
+        "PDurationExtension": [
+          10,
+          10,
+          10
+        ]
+      },
+      "resolvedDescription": "Ahri nimbly dashes, firing 3 essence bolts at nearby enemies, prioritizing champions. These bolts deal 75/125/175 (+35% AP) magic damage each. Spirit Rush can be Recast up to 2 more times within 15 seconds. Consuming a champion's Essence with Essence Theft during this period extends the recast window by up to 10 seconds and grants an additional recast of Spirit Rush (up to 3 stored).",
+      "unresolved": []
+    }
+  }
+}

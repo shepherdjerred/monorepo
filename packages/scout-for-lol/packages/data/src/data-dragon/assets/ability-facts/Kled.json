@@ -1,0 +1,393 @@
+{
+  "championKey": "Kled",
+  "championName": "Kled",
+  "abilities": {
+    "passive": {
+      "name": "Skaarl, the Cowardly Lizard",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "CourageVsChamps": [
+          15
+        ],
+        "CourageVsOther": [
+          5
+        ],
+        "CourageLastHit": [
+          5
+        ],
+        "DismountedResistRatio": [
+          0.01
+        ],
+        "DismountedMSPenalty": [
+          40
+        ],
+        "RemountDashDuration": [
+          0.25
+        ],
+        "MountReturnTime": [
+          0.25
+        ],
+        "DismountInvulnWindow": [
+          0.5
+        ],
+        "DismountDistanceBase": [
+          200
+        ],
+        "DismountSpeedRadius": [
+          1200
+        ],
+        "ResistBonusPerEnemy": [
+          0.3
+        ],
+        "ResistBonusRange": [
+          1400
+        ],
+        "MountCD": [
+          30
+        ]
+      },
+      "resolvedDescription": "Kled rides his trusty steed, Skaarl, who takes damage for him. When Skaarl's health depletes, Kled dismounts. While dismounted, Kled's abilities change and he deals less damage to champions. Kled can restore Skaarl's courage by fighting enemies. At maximum courage, Kled remounts with a portion of Skaarl's health.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Bear Trap on a Rope",
+      "maxRank": 5,
+      "cooldownByRank": [
+        11,
+        10,
+        9,
+        8,
+        7
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        800,
+        800,
+        800,
+        800,
+        800
+      ],
+      "dataValues": {
+        "GrievousAmount": [
+          0.4,
+          0.4,
+          0.4,
+          0.4,
+          0.4
+        ],
+        "GrievousDuration": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "SlowAmount": [
+          -0.3,
+          -0.35,
+          -0.4,
+          -0.45,
+          -0.5
+        ],
+        "SlowDuration": [
+          2.5,
+          2.5,
+          2.5,
+          2.5,
+          2.5
+        ],
+        "CouragePerPellet": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "DismountedBaseDamage": [
+          35,
+          50,
+          65,
+          80,
+          95
+        ],
+        "FirstHitBaseDamage": [
+          30,
+          55,
+          80,
+          105,
+          130
+        ],
+        "TetherPopTime": [
+          1.75,
+          1.75,
+          1.75,
+          1.75,
+          1.75
+        ],
+        "TetherPopDamageMultiplier": [
+          2,
+          2,
+          2,
+          2,
+          2
+        ],
+        "MinionDamageMultiplier": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "MissileSpawnCheckRadius": [
+          60,
+          60,
+          60,
+          60,
+          60
+        ]
+      },
+      "resolvedDescription": "Mounted: Kled throws a bear trap that deals 30/55/80/105/130 (+60% bonus AD) physical damage and hooks onto the first enemy champion or large jungle monster hit. If Kled stays near a hooked enemy for 1.75 seconds, he yanks out the trap, dealing 60/110/160/210/260 (+120% bonus AD) physical damage, Pulling them, and Slowing by 30/35/40/45/50% for 2.5 seconds.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Violent Tendencies",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "dataValues": {
+        "WCooldown": [
+          13,
+          12,
+          11,
+          10,
+          9
+        ],
+        "ChampCooldownRefund": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "NonChampCooldownRefund": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "AttackSpeed": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "4HitMaxHealthDamage": [
+          4.5,
+          5,
+          5.5,
+          6,
+          6.5
+        ],
+        "BaseFlatDamage": [
+          20,
+          30,
+          40,
+          50,
+          60
+        ],
+        "ActiveDuration": [
+          4,
+          4,
+          4,
+          4,
+          4
+        ],
+        "MonsterCap": [
+          200,
+          200,
+          200,
+          200,
+          200
+        ]
+      },
+      "resolvedDescription": "Passive: Kled's next Attack grants 150% Attack Speed for four Attacks or 4 seconds. The fourth hit deals an additional 20/30/40/50/60 plus {{ percentdamage }} max Health physical damage.",
+      "unresolved": [
+        "percentdamage"
+      ]
+    },
+    "E": {
+      "name": "Jousting",
+      "maxRank": 5,
+      "cooldownByRank": [
+        13,
+        12,
+        11,
+        10,
+        9
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        550,
+        550,
+        550,
+        550,
+        550
+      ],
+      "dataValues": {
+        "DashSpeed": [
+          600,
+          600,
+          600,
+          600,
+          600
+        ],
+        "BaseDamage": [
+          35,
+          60,
+          85,
+          110,
+          135
+        ],
+        "MoveSpeed": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "MoveSpeedDuration": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "RecastWindow": [
+          3,
+          3,
+          3,
+          3,
+          3
+        ],
+        "PassthroughDistance": [
+          350,
+          350,
+          350,
+          350,
+          350
+        ],
+        "TetherRange": [
+          700,
+          700,
+          700,
+          700,
+          700
+        ]
+      },
+      "resolvedDescription": "Kled dashes, dealing 35/60/85/110/135 (+55% bonus AD) physical damage to enemies he passes through, pulling minions and small monsters towards him. If this Ability hits an enemy champion or large jungle monster, Kled gains 50% Move Speed for 1 second(s) and can Recast within 3 seconds to dash back through the same target.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Chaaaaaaaarge!!!",
+      "maxRank": 3,
+      "cooldownByRank": [
+        140,
+        125,
+        110
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        3500,
+        4000,
+        4500
+      ],
+      "dataValues": {
+        "ShieldCapBase": [
+          200,
+          300,
+          400
+        ],
+        "PercentHPBase": [
+          4,
+          6,
+          8
+        ],
+        "DashAreaRange": [
+          700,
+          700,
+          700
+        ],
+        "BackwardsCheckRange": [
+          150,
+          150,
+          150
+        ],
+        "AreaTriggerRadius": [
+          500,
+          500,
+          500
+        ],
+        "TOOLTIPRange": [
+          3500,
+          4000,
+          4500
+        ],
+        "SecondsToMaxPower": [
+          3,
+          3,
+          3
+        ]
+      },
+      "resolvedDescription": "Kled charges toward an area, leaving a trail that grants allies increasing Move Speed. While charging and for 2 seconds after Kled gains up to 200/300/400 (+300% bonus AD) Shield. Skaarl rams the first enemy champion encountered, dealing {{ minimumdamagetooltip }} to {{ maximumchargedamage }} max Health magic damage (based on distance travelled) and briefly Knocking Back.",
+      "unresolved": [
+        "minimumdamagetooltip",
+        "maximumchargedamage"
+      ]
+    }
+  }
+}

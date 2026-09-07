@@ -1,0 +1,471 @@
+{
+  "championKey": "Yone",
+  "championName": "Yone",
+  "abilities": {
+    "passive": {
+      "name": "Way of the Hunter",
+      "maxRank": 1,
+      "cooldownByRank": [],
+      "costByRank": [],
+      "costType": "No Cost",
+      "rangeByRank": [],
+      "dataValues": {
+        "MagicDamageSplit": [
+          0.5
+        ],
+        "YoneCritToAD": [
+          50
+        ],
+        "CritChanceMultiplier": [
+          1
+        ],
+        "CritDamageMod": [
+          0.9
+        ]
+      },
+      "resolvedDescription": "Yone deals magic damage with every second Attack. In addition, his critical strike chance is increased.",
+      "unresolved": []
+    },
+    "Q": {
+      "name": "Mortal Steel",
+      "maxRank": 5,
+      "cooldownByRank": [
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        450,
+        450,
+        450,
+        450,
+        450
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          25,
+          50,
+          75,
+          100,
+          125
+        ],
+        "ADRatio": [
+          1.1,
+          1.1,
+          1.1,
+          1.1,
+          1.1
+        ],
+        "Width": [
+          80,
+          80,
+          80,
+          80,
+          80
+        ],
+        "BuffDuration": [
+          6,
+          6,
+          6,
+          6,
+          6
+        ],
+        "Q3MaxDistance": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "Q3MinDistance": [
+          450,
+          450,
+          450,
+          450,
+          450
+        ],
+        "Q3DashSpeed": [
+          1500,
+          1500,
+          1500,
+          1500,
+          1500
+        ],
+        "Q3AoESize": [
+          100,
+          100,
+          100,
+          100,
+          100
+        ],
+        "QAttackSpeedCDPercent": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "QAttackSpeedCDMax": [
+          0.66667,
+          0.66667,
+          0.66667,
+          0.66667,
+          0.66667
+        ],
+        "QAttackSpeedCastReductionPercent": [
+          0.41667,
+          0.41667,
+          0.41667,
+          0.41667,
+          0.41667
+        ],
+        "QAttackSpeedCastReductionMax": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "QBaseCastTime": [
+          0.35,
+          0.35,
+          0.35,
+          0.35,
+          0.35
+        ],
+        "Q3KnockupHeight": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "Q3KnockupDuration": [
+          0.75,
+          0.75,
+          0.75,
+          0.75,
+          0.75
+        ]
+      },
+      "resolvedDescription": "Yone thrusts forward, dealing 25/50/75/100/125 (+110% AD) physical damage. On hit, grants a stack for 6 seconds. At 2 stacks, this ability causes Yone to dash forward with a wave of wind that Knocks Up for 0.75 seconds and deals 25/50/75/100/125 (+110% AD) physical damage.",
+      "unresolved": []
+    },
+    "W": {
+      "name": "Spirit Cleave",
+      "maxRank": 5,
+      "cooldownByRank": [
+        14,
+        14,
+        14,
+        14,
+        14
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        700,
+        700,
+        700,
+        700,
+        700
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "MinionMod": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "HealthStealMultiplier": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "ConeWidth": [
+          40,
+          40,
+          40,
+          40,
+          40
+        ],
+        "WAttackSpeedCDPercent": [
+          0.6,
+          0.6,
+          0.6,
+          0.6,
+          0.6
+        ],
+        "WAttackSpeedCDMax": [
+          0.57142,
+          0.57142,
+          0.57142,
+          0.57142,
+          0.57142
+        ],
+        "WAttackSpeedCastReductionPercent": [
+          0.41667,
+          0.41667,
+          0.41667,
+          0.41667,
+          0.41667
+        ],
+        "WAttackSpeedCastReductionMax": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "WBaseCastTime": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "WCritMultiplier": [
+          0.8,
+          0.8,
+          0.8,
+          0.8,
+          0.8
+        ],
+        "MaxHealthDamage": [
+          0.08,
+          0.09,
+          0.1,
+          0.11,
+          0.12
+        ],
+        "BaseShield": [
+          10,
+          20,
+          30,
+          40,
+          50
+        ],
+        "FirstChampShieldMultiplier": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "SecondChampShieldMultiplier": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "ShieldDuration": [
+          1.5,
+          1.5,
+          1.5,
+          1.5,
+          1.5
+        ],
+        "ShieldbADRatio": [
+          0.65,
+          0.65,
+          0.65,
+          0.65,
+          0.65
+        ]
+      },
+      "resolvedDescription": "Yone cleaves forward, dealing 5/10/15/20/25 + 4/4.5/5/5.5/6% max Health physical damage and 5/10/15/20/25 + 4/4.5/5/5.5/6% max Health magic damage. If Yone hits, he gains 40-90 (based on level) (+65% bonus AD) Shield for 1.5 seconds. The amount of Shield increases for each champion struck.",
+      "unresolved": []
+    },
+    "E": {
+      "name": "Soul Unbound",
+      "maxRank": 5,
+      "cooldownByRank": [
+        22,
+        19,
+        16,
+        13,
+        10
+      ],
+      "costByRank": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        25000,
+        25000,
+        25000,
+        25000,
+        25000
+      ],
+      "dataValues": {
+        "ReturnTimer": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ],
+        "MovementSpeed": [
+          0.3,
+          0.3,
+          0.3,
+          0.3,
+          0.3
+        ],
+        "DeathmarkBase": [
+          20,
+          35,
+          50,
+          65,
+          80
+        ],
+        "DeathmarkPercent": [
+          0.25,
+          0.275,
+          0.3,
+          0.325,
+          0.35
+        ],
+        "RecastLockout": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "EDashRange": [
+          300,
+          300,
+          300,
+          300,
+          300
+        ],
+        "EDashSpeed": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ],
+        "OnHitIncrease": [
+          0.25,
+          0.25,
+          0.25,
+          0.25,
+          0.25
+        ],
+        "StartingMS": [
+          0.1,
+          0.1,
+          0.1,
+          0.1,
+          0.1
+        ],
+        "MissingHealthPercent": [
+          0.25,
+          0.275,
+          0.3,
+          0.325,
+          0.35
+        ]
+      },
+      "resolvedDescription": "Yone enters a spirit form for 5 seconds, leaving his body behind for the duration and gaining 10% to 30% ramping Move Speed. When the spirit form ends, Yone snaps back to his body and repeats 25/27.5/30/32.5/35% of all Attack and Ability damage he dealt to champions during this time. You may Recast this ability during spirit form. Recast: End spirit form early.",
+      "unresolved": []
+    },
+    "R": {
+      "name": "Fate Sealed",
+      "maxRank": 3,
+      "cooldownByRank": [
+        120,
+        100,
+        80
+      ],
+      "costByRank": [
+        0,
+        0,
+        0
+      ],
+      "costType": "No Cost",
+      "rangeByRank": [
+        1000,
+        1000,
+        1000
+      ],
+      "dataValues": {
+        "BaseDamage": [
+          200,
+          400,
+          600
+        ],
+        "ADRatio": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "BlinkDistanceBehindTarget": [
+          200,
+          200,
+          200
+        ],
+        "Width": [
+          225,
+          225,
+          225
+        ],
+        "RKnockupHeight": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RKnockupDuration": [
+          0.75,
+          0.75,
+          0.75
+        ],
+        "RKnockTowardsSpeed": [
+          3000,
+          3000,
+          3000
+        ],
+        "RKnockTowardsDampener": [
+          0.8,
+          0.8,
+          0.8
+        ]
+      },
+      "resolvedDescription": "Yone strikes all enemies along a path for 100/200/300 (+40% bonus AD) physical damage and 100/200/300 (+40% bonus AD) magic damage, teleporting behind the last champion hit and Knocking Up victims towards Yone.",
+      "unresolved": []
+    }
+  }
+}
