@@ -1,0 +1,66 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+  printf 'usage: herdr-stage <workspace-name-or-id> <planning|impl|pr|blocked|clear>\n' >&2
+  exit 64
+}
+
+[ $# -eq 2 ] || usage
+
+TARGET=$1
+STAGE=$2
+
+case "$STAGE" in
+planning | impl | pr | blocked | clear) ;;
+*)
+  printf 'herdr-stage: unknown stage "%s" (want planning|impl|pr|blocked|clear)\n' "$STAGE" >&2
+  exit 64
+  ;;
+esac
+
+WORKSPACES=$(herdr workspace list | jq '.result.workspaces')
+
+MATCHES=$(printf '%s' "$WORKSPACES" | jq --arg t "$TARGET" '
+  [.[] | select(.workspace_id == $t or .label == $t)]
+')
+COUNT=$(printf '%s' "$MATCHES" | jq 'length')
+
+if [ "$COUNT" -eq 0 ]; then
+  printf 'herdr-stage: no workspace matches "%s"\n' "$TARGET" >&2
+  exit 1
+fi
+
+if [ "$COUNT" -gt 1 ]; then
+  printf 'herdr-stage: "%s" matches multiple workspaces, use the workspace_id:\n' "$TARGET" >&2
+  printf '%s' "$MATCHES" | jq -r '.[] | "  \(.workspace_id)\t\(.label)"' >&2
+  exit 1
+fi
+
+WORKSPACE_ID=$(printf '%s' "$MATCHES" | jq -r '.[0].workspace_id')
+LABEL=$(printf '%s' "$MATCHES" | jq -r '.[0].label')
+
+# Written to both stores: the workspace-level token feeds herdr-board and
+# `herdr workspace list` (spaces sidebar / grouping); the pane-level token
+# on every pane in the workspace feeds the agents sidebar, which only reads
+# $name tokens from pane metadata, not workspace metadata.
+if [ "$STAGE" = clear ]; then
+  herdr workspace report-metadata "$WORKSPACE_ID" \
+    --source herdr-stage \
+    --clear-token stage >/dev/null
+  PANE_ARGS="--clear-token stage"
+else
+  herdr workspace report-metadata "$WORKSPACE_ID" \
+    --source herdr-stage \
+    --token "stage=$STAGE" >/dev/null
+  PANE_ARGS="--token stage=$STAGE"
+fi
+
+herdr pane list --workspace "$WORKSPACE_ID" | jq -r '.result.panes[].pane_id' |
+  while IFS= read -r pane_id; do
+    # shellcheck disable=SC2086 # PANE_ARGS is an intentional two-word flag+value pair
+    herdr pane report-metadata "$pane_id" --source herdr-stage $PANE_ARGS >/dev/null
+  done
+
+printf 'herdr-stage: %s (%s) -> %s\n' "$LABEL" "$WORKSPACE_ID" "$STAGE"

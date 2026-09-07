@@ -1,0 +1,42 @@
+#!/bin/sh
+
+set -eu
+
+usage() {
+  printf 'usage: herdr-board [planning|impl|pr|blocked]\n' >&2
+  exit 64
+}
+
+STAGES="planning impl pr blocked"
+
+FILTER=${1:-}
+if [ $# -gt 1 ]; then
+  usage
+fi
+if [ -n "$FILTER" ]; then
+  case "$FILTER" in
+  planning | impl | pr | blocked) STAGES=$FILTER ;;
+  *) usage ;;
+  esac
+fi
+
+WORKSPACES=$(herdr workspace list | jq '.result.workspaces')
+
+print_group() {
+  stage=$1
+  printf '\n%s\n' "$stage"
+  printf '%s' "$WORKSPACES" | jq -r --arg s "$stage" '
+    map(select((.tokens.stage // "untagged") == $s))
+    | if length == 0 then "  (none)"
+      else (.[] | "  \(.label)\t\(.agent_status)")
+      end
+  '
+}
+
+for stage in $STAGES; do
+  print_group "$stage"
+done
+
+if [ -z "$FILTER" ]; then
+  print_group untagged
+fi

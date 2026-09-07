@@ -1,0 +1,36 @@
+id = "jerred.herdr-stage"
+name = "Herdr Stage"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Manually tag the focused workspace with a planning/impl/pr/blocked stage"
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "mark-planning"
+title = "Stage: Planning"
+contexts = ["workspace"]
+command = ["sh", "mark-stage.sh", "planning"]
+
+[[actions]]
+id = "mark-impl"
+title = "Stage: Impl"
+contexts = ["workspace"]
+command = ["sh", "mark-stage.sh", "impl"]
+
+[[actions]]
+id = "mark-pr"
+title = "Stage: PR"
+contexts = ["workspace"]
+command = ["sh", "mark-stage.sh", "pr"]
+
+[[actions]]
+id = "mark-blocked"
+title = "Stage: Blocked"
+contexts = ["workspace"]
+command = ["sh", "mark-stage.sh", "blocked"]
+
+[[actions]]
+id = "mark-clear"
+title = "Stage: Clear"
+contexts = ["workspace"]
+command = ["sh", "mark-stage.sh", "clear"]
