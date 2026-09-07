@@ -102,17 +102,19 @@ export async function hashReleaseInputFiles(
 }
 
 /**
- * Content-address a Scout release by its build inputs. `sourceCommit` is part
- * of the identity on purpose: the site build bakes the commit into the
- * deployable bytes (`VITE_GIT_SHA` / `PUBLIC_GIT_SHA` in `buildSite`), so the
- * bytes are commit-dependent. Leaving the commit out let two commits with
- * otherwise-identical inputs share an archive identity yet produce different
- * bytes, tripping the immutable-archive guard — and, once a build was canceled
- * mid-archive, the orphaned record wedged every later release. Binding the
- * identity to the commit keeps content-addressing honest: same identity ⇒ same
- * bytes.
+ * Content-address a Scout release by its build inputs. `sourceCommit` and
+ * `version` are part of the identity on purpose: `buildSite` bakes both into
+ * the deployable bytes (`VITE_GIT_SHA` / `PUBLIC_GIT_SHA` and
+ * `VITE_APP_VERSION` / `PUBLIC_APP_VERSION`), so the bytes are
+ * commit- and version-dependent. Leaving either out lets two releases share
+ * an archive identity yet produce different bytes, tripping the
+ * immutable-archive guard — and, for version, leaving a reused archive
+ * displaying a stale `2.0.0-<build>` after `retagScoutReleaseState`.
+ * Binding the identity to those baked fields keeps content-addressing
+ * honest: same identity ⇒ same bytes.
  */
 export function computeReleaseInputDigest(inputs: {
+  version: string;
   sourceCommit: string;
   backendImageDigest: string;
   sourceInputsDigest: string;
@@ -123,7 +125,8 @@ export function computeReleaseInputDigest(inputs: {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(
     JSON.stringify({
-      schema: "scout-release-input/v3",
+      schema: "scout-release-input/v4",
+      version: inputs.version,
       sourceCommit: inputs.sourceCommit,
       backendImageDigest: inputs.backendImageDigest,
       sourceInputsDigest: inputs.sourceInputsDigest,
@@ -248,7 +251,9 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
     throw new Error(`source commit is not canonical: ${sourceCommit}`);
   }
   const marketing = await marketingIdentifiers();
+  const version = `2.0.0-${buildNumber.toString()}`;
   const releaseInputDigest = computeReleaseInputDigest({
+    version,
     sourceCommit,
     backendImageDigest,
     sourceInputsDigest: await releaseSourceDigest(),
@@ -259,7 +264,7 @@ async function prepareState(args: string[], dryRun: boolean): Promise<void> {
   const provisional = ScoutReleaseStateSchema.parse({
     schema: "scout-release-state/v1",
     buildNumber,
-    version: `2.0.0-${buildNumber.toString()}`,
+    version,
     sourceCommit,
     backendImageDigest,
     siteArchiveDigest: PLACEHOLDER_DIGEST,

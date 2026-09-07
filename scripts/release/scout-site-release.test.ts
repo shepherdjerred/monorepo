@@ -198,8 +198,9 @@ test("release source digest changes only with selected input content", async () 
   }
 });
 
-test("release input digest binds to the source commit", () => {
+test("release input digest binds to the source commit and displayed version", () => {
   const base = {
+    version: "2.0.0-42",
     sourceCommit: "0123456789012345678901234567890123456789",
     backendImageDigest: DIGEST,
     sourceInputsDigest: DIGEST,
@@ -219,6 +220,11 @@ test("release input digest binds to the source commit", () => {
       sourceCommit: "fedcba9876543210fedcba9876543210fedcba98",
     }),
   ).not.toBe(digest);
+  // A different displayed version must also produce a different identity —
+  // VITE_APP_VERSION / PUBLIC_APP_VERSION are baked into the site bytes.
+  expect(computeReleaseInputDigest({ ...base, version: "2.0.0-100" })).not.toBe(
+    digest,
+  );
   // A non-commit input change still changes the identity.
   expect(
     computeReleaseInputDigest({ ...base, backendImageDigest: `${DIGEST}0` }),
