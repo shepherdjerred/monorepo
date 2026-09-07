@@ -62,15 +62,41 @@ describe("Explore provider run map", () => {
     expect(state.get(NEW_CONVERSATION_KEY)).toBe(placed);
     expect(state.get("conversation-b")).toBe(placed);
 
-    const dropped = dropNewConversationAlias(state, "conversation-b");
+    const dropped = dropNewConversationAlias({
+      current: state,
+      displayedConversationId: "conversation-b",
+      isExploreRoute: true,
+    });
     expect(dropped.has(NEW_CONVERSATION_KEY)).toBe(false);
     expect(dropped.get("conversation-b")).toBe(placed);
 
     expect(
-      dropNewConversationAlias(state, "conversation-other").has(
-        NEW_CONVERSATION_KEY,
-      ),
+      dropNewConversationAlias({
+        current: state,
+        displayedConversationId: "conversation-other",
+        isExploreRoute: true,
+      }).has(NEW_CONVERSATION_KEY),
     ).toBe(true);
+  });
+
+  test("drops the new alias after leaving Explore", () => {
+    const placed = run("conversation-b");
+    const state = placeStartedExploreRun({
+      current: new Map(),
+      fromKey: NEW_CONVERSATION_KEY,
+      conversationId: "conversation-b",
+      run: placed,
+      displayedConversationId: null,
+    });
+
+    const dropped = dropNewConversationAlias({
+      current: state,
+      displayedConversationId: null,
+      isExploreRoute: false,
+    });
+
+    expect(dropped.has(NEW_CONVERSATION_KEY)).toBe(false);
+    expect(dropped.get("conversation-b")).toBe(placed);
   });
 
   test("drops the blank-explore alias when start returns on that conversation", () => {

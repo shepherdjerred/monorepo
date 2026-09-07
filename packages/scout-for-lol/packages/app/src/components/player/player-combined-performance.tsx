@@ -41,21 +41,13 @@ export function CombinedPerformance(props: {
   const historyPending =
     props.history.status === "loading" || props.historyRefetching;
   const historyError = props.history.status === "error";
-  if (
-    shouldShowPlayerPerformanceBlank({
-      championCount: props.championPool.length,
-      matchCount: props.entries.length,
-      historyPage: props.historyPage,
-      historyPending,
-      historyError,
-    })
-  ) {
-    return (
-      <p className="text-sm text-scout-subtle">
-        Scout hasn&apos;t recorded any games for this player yet.
-      </p>
-    );
-  }
+  const performanceBlank = shouldShowPlayerPerformanceBlank({
+    championCount: props.championPool.length,
+    matchCount: props.entries.length,
+    historyPage: props.historyPage,
+    historyPending,
+    historyError,
+  });
   if (historyPending && props.championPool.length === 0) {
     return <p className="text-sm text-scout-subtle">Loading games…</p>;
   }
@@ -66,30 +58,43 @@ export function CombinedPerformance(props: {
         filters={props.filters}
         onChange={props.onFiltersChange}
       />
-      <PlayerSummaryCards ranks={props.ranks} recentForm={props.recentForm} />
-      {props.championPool.length > 0 && (
-        <Section title="Champion performance">
-          <ChampionPoolTable
-            key={filterKey(props.filters)}
-            rows={props.championPool}
-            minGamesForRate={props.minGamesForRate}
-            profileSearch={props.profileSearch}
+      {performanceBlank ? (
+        <p className="text-sm text-scout-subtle">
+          {props.filters.queues === undefined
+            ? "Scout hasn't recorded any games for this player yet."
+            : "No recorded games match these filters. Try All games to see every recorded queue."}
+        </p>
+      ) : (
+        <>
+          <PlayerSummaryCards
+            ranks={props.ranks}
+            recentForm={props.recentForm}
           />
-        </Section>
+          {props.championPool.length > 0 && (
+            <Section title="Champion performance">
+              <ChampionPoolTable
+                key={filterKey(props.filters)}
+                rows={props.championPool}
+                minGamesForRate={props.minGamesForRate}
+                profileSearch={props.profileSearch}
+              />
+            </Section>
+          )}
+          <RecordedMatchHistory
+            history={props.history}
+            fetching={props.historyFetching}
+            refetching={props.historyRefetching}
+            entries={props.entries}
+            nextCursor={props.nextCursor}
+            page={props.historyPage}
+            playerId={props.playerId}
+            profileSearch={props.profileSearch}
+            onRetry={props.onRetryHistory}
+            onPrevious={props.onPreviousHistory}
+            onNext={props.onNextHistory}
+          />
+        </>
       )}
-      <RecordedMatchHistory
-        history={props.history}
-        fetching={props.historyFetching}
-        refetching={props.historyRefetching}
-        entries={props.entries}
-        nextCursor={props.nextCursor}
-        page={props.historyPage}
-        playerId={props.playerId}
-        profileSearch={props.profileSearch}
-        onRetry={props.onRetryHistory}
-        onPrevious={props.onPreviousHistory}
-        onNext={props.onNextHistory}
-      />
     </>
   );
 }

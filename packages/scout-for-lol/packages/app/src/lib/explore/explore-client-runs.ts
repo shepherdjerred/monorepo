@@ -68,23 +68,27 @@ export function placeStartedExploreRun(input: {
   return setExploreClientRun(next, input.fromKey, input.run);
 }
 
-export function dropNewConversationAlias(
-  current: Map<string, ExploreClientRun>,
-  displayedConversationId: string | null,
-): Map<string, ExploreClientRun> {
-  if (displayedConversationId === null) {
-    return current;
+export function dropNewConversationAlias(input: {
+  current: Map<string, ExploreClientRun>;
+  displayedConversationId: string | null;
+  isExploreRoute: boolean;
+}): Map<string, ExploreClientRun> {
+  if (!input.isExploreRoute) {
+    return removeExploreClientRun(input.current, NEW_CONVERSATION_KEY);
   }
-  const alias = current.get(NEW_CONVERSATION_KEY);
+  if (input.displayedConversationId === null) {
+    return input.current;
+  }
+  const alias = input.current.get(NEW_CONVERSATION_KEY);
   if (alias === undefined) {
-    return current;
+    return input.current;
   }
   const aliasConversationId =
     alias.summary?.conversationId ?? alias.turn.conversationId;
-  if (aliasConversationId !== displayedConversationId) {
-    return current;
+  if (aliasConversationId !== input.displayedConversationId) {
+    return input.current;
   }
-  return removeExploreClientRun(current, NEW_CONVERSATION_KEY);
+  return removeExploreClientRun(input.current, NEW_CONVERSATION_KEY);
 }
 
 export function clearExploreClientError(

@@ -63,6 +63,13 @@ function displayedExploreConversation(pathname: string): string | null {
   );
 }
 
+function isExploreConversationRoute(pathname: string): boolean {
+  return (
+    pathname === "/explore" ||
+    matchPath("/explore/:conversationId", pathname) !== null
+  );
+}
+
 /**
  * Keeps Explore observers above the routed page that renders them.
  *
@@ -75,6 +82,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { pathname } = useLocation();
   const displayedConversationId = displayedExploreConversation(pathname);
+  const isExploreRoute = isExploreConversationRoute(pathname);
   const displayedConversationRef = useRef(displayedConversationId);
   displayedConversationRef.current = displayedConversationId;
 
@@ -115,9 +123,13 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
 
   useEffect(() => {
     updateRuns((current) =>
-      dropNewConversationAlias(current, displayedConversationId),
+      dropNewConversationAlias({
+        current,
+        displayedConversationId,
+        isExploreRoute,
+      }),
     );
-  }, [displayedConversationId, updateRuns]);
+  }, [displayedConversationId, isExploreRoute, updateRuns]);
 
   const refreshConversation = useCallback(
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
