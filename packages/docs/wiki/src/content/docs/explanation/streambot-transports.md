@@ -92,10 +92,14 @@ Classification happens at resolve time, from
 video codec three different ways across extractors — the string `none`, `null`, or the field absent entirely — so metadata alone cannot
 decide. A container with no video stream is a fact; an extractor's opinion is a hint.
 
-That check also protects a request that asks for the impossible. A user forcing `mode:video` on a
-SoundCloud track would otherwise reach an
-[ffmpeg invocation](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/media/newApi.ts) mapping a video stream
-that does not exist, so the probe downgrades it to audio instead.
+The probe also settles a request that asks for the impossible, and the two cases are treated
+differently on purpose. An **inferred** video guess loses to the probe and becomes music — that is
+what keeps an MP3 whose metadata says nothing about its codecs playable at all.
+
+An **explicit** `mode:video` does not. It is an instruction, either from a user or from the rollout
+flag forcing the pre-split transport, so [`resolveSource`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/resolve.ts)
+rejects the item by name rather than switching it to audio. Silently switching would ignore the
+user, and would make the flag a switch that turns nothing off.
 
 ## What this rules out
 
