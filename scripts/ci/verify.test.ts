@@ -91,6 +91,7 @@ describe("affected verification filters", () => {
     "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
     "packages/homelab/mac-ci/bootstrap.sh",
     "packages/homelab/mac-ci/provision-host.sh",
+    "packages/feature-flags/src/managed-flag-inventory.ts",
   ])("selects root scripts for Renovate fixture %s", async (path) => {
     expect(
       await affectedVerifyFilters(

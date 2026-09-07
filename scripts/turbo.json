@@ -35,7 +35,8 @@
         "$TURBO_ROOT$/packages/scout-for-lol/packages/backend/Dockerfile",
         "$TURBO_ROOT$/packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
         "$TURBO_ROOT$/packages/homelab/mac-ci/bootstrap.sh",
-        "$TURBO_ROOT$/packages/homelab/mac-ci/provision-host.sh"
+        "$TURBO_ROOT$/packages/homelab/mac-ci/provision-host.sh",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.ts"
       ]
     }
   }
