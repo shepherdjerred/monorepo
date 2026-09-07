@@ -76,16 +76,29 @@ describe("planMissingFliptResources", () => {
     ]);
   });
 
-  test("returns nothing when the namespace and flags already exist", () => {
+  test("returns nothing when the namespace, flags, and segments already exist", () => {
     expect(
       planMissingFliptResources({
         namespace,
         expectedFlags: inventory.flags,
         existingNamespaceKeys: new Set(["test"]),
         existingFlagKeys: new Set(["new-flag", "existing-flag"]),
-        existingSegmentKeys: new Set(),
+        existingSegmentKeys: new Set(["operators"]),
       }),
     ).toEqual([]);
+  });
+
+  test("creates a missing segment even when every flag already exists", () => {
+    const plan = planMissingFliptResources({
+      namespace,
+      expectedFlags: inventory.flags,
+      existingNamespaceKeys: new Set(["test"]),
+      existingFlagKeys: new Set(["new-flag", "existing-flag"]),
+      existingSegmentKeys: new Set(),
+    });
+    expect(plan.map((item) => `${item.kind}:${item.key}`)).toEqual([
+      "segment:operators",
+    ]);
   });
 
   test("reuses an existing segment instead of recreating it", () => {

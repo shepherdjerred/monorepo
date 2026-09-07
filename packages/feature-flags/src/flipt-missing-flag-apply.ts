@@ -106,8 +106,12 @@ export function planMissingFliptResources(input: {
   const missingFlags = input.expectedFlags.filter(
     (flag) => !input.existingFlagKeys.has(flag.key),
   );
+  const missingSegments = collectManagedSegmentPayloads(
+    input.expectedFlags,
+  ).filter((segment) => !input.existingSegmentKeys.has(segment.key));
   if (
     missingFlags.length === 0 &&
+    missingSegments.length === 0 &&
     input.existingNamespaceKeys.has(input.namespace.key)
   ) {
     return [];
@@ -123,10 +127,7 @@ export function planMissingFliptResources(input: {
     });
   }
 
-  const existingOrPlannedSegments = new Set(input.existingSegmentKeys);
-  for (const segment of collectManagedSegmentPayloads(missingFlags)) {
-    if (existingOrPlannedSegments.has(segment.key)) continue;
-    existingOrPlannedSegments.add(segment.key);
+  for (const segment of missingSegments) {
     planned.push({ kind: "segment", key: segment.key, payload: segment });
   }
   for (const flag of missingFlags) {
