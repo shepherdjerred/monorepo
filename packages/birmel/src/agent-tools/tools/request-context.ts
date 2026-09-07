@@ -7,6 +7,12 @@ export type StagedAttachment = {
   contentType?: string;
 };
 
+export type TurnImageAttachment = {
+  url: string;
+  contentType?: string;
+  filename?: string;
+};
+
 export type RequestContext = {
   /** The channel where the user's message originated */
   sourceChannelId: string;
@@ -28,6 +34,8 @@ export type RequestContext = {
   beforeExternalEffect?: () => Promise<void>;
   /** Attachments staged by tools to be delivered with the single Discord reply. */
   stagedAttachments?: StagedAttachment[];
+  /** Source image attachments available from user message or referenced reply */
+  sourceImageAttachments?: TurnImageAttachment[];
 };
 
 const requestContextStorage = new AsyncLocalStorage<RequestContext>();

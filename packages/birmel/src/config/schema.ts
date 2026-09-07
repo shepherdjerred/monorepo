@@ -196,9 +196,14 @@ export const HealthConfigSchema = z.object({
   port: z.number().int().min(1).max(65_535).default(8080),
 });
 
+export const ImageGenerationConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+});
+
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
   openRouter: OpenRouterConfigSchema,
+  imageGeneration: ImageGenerationConfigSchema,
   agent: AgentConfigSchema,
   authority: AuthorityConfigSchema,
   telemetry: TelemetryConfigSchema,
@@ -220,6 +225,7 @@ export const ConfigSchema = z.object({
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
 export type OpenRouterConfig = z.infer<typeof OpenRouterConfigSchema>;
+export type ImageGenerationConfig = z.infer<typeof ImageGenerationConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type AuthorityConfig = z.infer<typeof AuthorityConfigSchema>;
 export type TelemetryConfig = z.infer<typeof TelemetryConfigSchema>;

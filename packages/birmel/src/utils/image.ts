@@ -55,10 +55,15 @@ export function extractImageAttachments(message: Message): ImageAttachment[] {
   return images;
 }
 
+export type DownloadedImage = {
+  buffer: Buffer;
+  contentType: string;
+};
+
 /**
  * Download an image from a URL with timeout and retry logic
  */
-export async function downloadImage(url: string): Promise<Buffer> {
+export async function downloadImage(url: string): Promise<DownloadedImage> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
@@ -88,6 +93,17 @@ export async function downloadImage(url: string): Promise<Buffer> {
       );
     }
 
+    const responseContentType = response.headers
+      .get("content-type")
+      ?.split(";")[0]
+      ?.trim()
+      .toLowerCase();
+    const contentType =
+      responseContentType != null &&
+      SUPPORTED_IMAGE_TYPES.has(responseContentType)
+        ? responseContentType
+        : "image/png";
+
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -99,10 +115,11 @@ export async function downloadImage(url: string): Promise<Buffer> {
 
     logger.debug("Image downloaded successfully", {
       url,
+      contentType,
       size: buffer.length,
     });
 
-    return buffer;
+    return { buffer, contentType };
   } catch (error) {
     clearTimeout(timeoutId);
 
@@ -117,7 +134,9 @@ export async function downloadImage(url: string): Promise<Buffer> {
 /**
  * Download an image with retry logic
  */
-export async function downloadImageWithRetry(url: string): Promise<Buffer> {
+export async function downloadImageWithRetry(
+  url: string,
+): Promise<DownloadedImage> {
   try {
     return await downloadImage(url);
   } catch (error) {

@@ -1,6 +1,9 @@
 import { createTool } from "@shepherdjerred/birmel/agent-runtime/tools/create-tool.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
-import { stageAttachment } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import {
+  getRequestContext,
+  stageAttachment,
+} from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { downloadImageWithRetry } from "@shepherdjerred/birmel/utils/image.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -27,7 +30,7 @@ export const GenerateImageInputSchema = z.object({
     .url()
     .optional()
     .describe(
-      "Optional URL of an image to modify, edit, or use as a style/subject reference (from a user upload or message reply).",
+      "Optional explicit URL of an image to modify. If omitted and the user provided an image attachment or replied to a message with an image, the tool automatically uses that reference image from turn context.",
     ),
 });
 
@@ -48,8 +51,21 @@ export const generateImageTool = createTool({
     try {
       signal.throwIfAborted();
       const config = getConfig();
+
+      if (!config.imageGeneration.enabled) {
+        return {
+          success: false,
+          message: "Image generation is disabled in configuration",
+        };
+      }
+
       const runtime = getLlmRuntime();
       const imageModel = config.openRouter.imageModel;
+      const requestContext = getRequestContext();
+      const resolvedReference =
+        input.referenceImageUrl == null
+          ? (requestContext?.sourceImageAttachments?.[0] ?? undefined)
+          : { url: input.referenceImageUrl, contentType: undefined };
 
       let files:
         | [
@@ -61,30 +77,20 @@ export const generateImageTool = createTool({
           ]
         | undefined;
 
-      if (input.referenceImageUrl != null) {
-        try {
-          logger.debug("Downloading reference image for image editing", {
-            url: input.referenceImageUrl,
-          });
-          const referenceBuffer = await downloadImageWithRetry(
-            input.referenceImageUrl,
-          );
-          files = [
-            {
-              type: "data",
-              data: new Uint8Array(referenceBuffer),
-              mediaType: "image/png",
-            },
-          ];
-        } catch (downloadError) {
-          logger.warn(
-            "Failed to download reference image; proceeding with prompt-only generation",
-            {
-              url: input.referenceImageUrl,
-              error: downloadError,
-            },
-          );
-        }
+      if (resolvedReference != null) {
+        logger.debug("Downloading reference image for image editing", {
+          url: resolvedReference.url,
+        });
+        const downloaded = await downloadImageWithRetry(resolvedReference.url);
+        const mediaType =
+          resolvedReference.contentType ?? downloaded.contentType;
+        files = [
+          {
+            type: "data",
+            data: new Uint8Array(downloaded.buffer),
+            mediaType,
+          },
+        ];
       }
 
       const { headers } = runtime.callOptions({

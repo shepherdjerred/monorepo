@@ -250,6 +250,21 @@ async function processAdmittedTurn(
       userId: context.turn.userId,
       ownsSourceReply: true,
       personaId: persona,
+      ...(context.turn.attachments.length > 0
+        ? {
+            sourceImageAttachments: context.turn.attachments.map(
+              (attachment) => ({
+                url: attachment.url,
+                ...(attachment.contentType == null
+                  ? {}
+                  : { contentType: attachment.contentType }),
+                ...(attachment.name == null
+                  ? {}
+                  : { filename: attachment.name }),
+              }),
+            ),
+          }
+        : {}),
     };
     const execution = await runWithRequestContext(
       requestContext,

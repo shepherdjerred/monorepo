@@ -5,6 +5,7 @@ import {
   SpecialistIdSchema,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { getRegisteredToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 /**
  * Specialized tool sets for different agent types.
@@ -169,8 +170,17 @@ export function getCapabilityCatalog(): CapabilityCatalogEntry[] {
       "Birmel tool metadata and executable capability inventory differ",
     );
   }
+  const config = getConfig();
+  const advertisedEntries = entries.filter((entry) => {
+    if (entry.id === "generate-image" && !config.imageGeneration.enabled) {
+      return false;
+    }
+    return true;
+  });
   return CapabilityCatalogSchema.parse(
-    entries.toSorted((left, right) => left.id.localeCompare(right.id)),
+    advertisedEntries.toSorted((left, right) =>
+      left.id.localeCompare(right.id),
+    ),
   );
 }
 

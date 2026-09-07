@@ -21,20 +21,39 @@ import {
   generateImageTool,
   GenerateImageInputSchema,
 } from "@shepherdjerred/birmel/agent-tools/tools/images/generate-image.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 const trustedUserId = "186665676134547461";
 
-describe("generateImageTool", () => {
-  const dummyContext: RequestContext = {
-    sourceChannelId: "channel-1",
-    sourceMessageId: "msg-1",
-    guildId: "guild-1",
-    userId: trustedUserId,
-    ownsSourceReply: true,
-  };
+const dummyContext: RequestContext = {
+  sourceChannelId: "channel-1",
+  sourceMessageId: "msg-1",
+  guildId: "guild-1",
+  userId: trustedUserId,
+  ownsSourceReply: true,
+};
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+beforeEach(() => {
+  vi.clearAllMocks();
+  getConfig().imageGeneration.enabled = true;
+});
+
+describe("generateImageTool - text-to-image and gating", () => {
+  test("rejects execution when image generation is disabled in configuration", async () => {
+    getConfig().imageGeneration.enabled = false;
+    const context: RequestContext = { ...dummyContext };
+    const result = await runWithRequestContext(context, async () => {
+      return await generateImageTool.execute(
+        {
+          prompt: "a cozy mountain cabin in winter",
+        },
+        { signal: new AbortController().signal },
+      );
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("disabled in configuration");
+    expect(mockGenerateImage).not.toHaveBeenCalled();
   });
 
   test("generates an image from text prompt and stages attachment in RequestContext", async () => {
@@ -78,12 +97,75 @@ describe("generateImageTool", () => {
       "generated-png-data",
     );
   });
+});
 
-  test("downloads reference image and passes file data for image-to-image edits", async () => {
+describe("generateImageTool - reference image editing", () => {
+  test("derives reference image from turn context when referenceImageUrl is omitted", async () => {
+    const referenceBytes = Buffer.from("context-reference-image");
+    const outputBytes = Buffer.from("tweaked-from-context");
+
+    mockDownloadImageWithRetry.mockResolvedValueOnce({
+      buffer: referenceBytes,
+      contentType: "image/jpeg",
+    });
+    mockGenerateImage.mockResolvedValueOnce({
+      image: {
+        base64: outputBytes.toString("base64"),
+      },
+    });
+
+    const context: RequestContext = {
+      ...dummyContext,
+      sourceImageAttachments: [
+        {
+          url: "https://cdn.discordapp.com/attachments/123/456/user-upload.jpg",
+          contentType: "image/jpeg",
+        },
+      ],
+    };
+
+    const result = await runWithRequestContext(context, async () => {
+      return await generateImageTool.execute(
+        {
+          prompt: "make this cyberpunk style",
+        },
+        { signal: new AbortController().signal },
+      );
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockDownloadImageWithRetry).toHaveBeenCalledWith(
+      "https://cdn.discordapp.com/attachments/123/456/user-upload.jpg",
+    );
+
+    expect(mockGenerateImage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: "make this cyberpunk style",
+        files: [
+          {
+            type: "data",
+            data: new Uint8Array(referenceBytes),
+            mediaType: "image/jpeg",
+          },
+        ],
+      }),
+    );
+
+    const staged = getStagedAttachments(context);
+    expect(staged).toHaveLength(1);
+    expect(Buffer.from(staged[0]?.data ?? []).toString()).toBe(
+      "tweaked-from-context",
+    );
+  });
+
+  test("downloads explicit reference image and preserves actual media type", async () => {
     const referenceBytes = Buffer.from("original-reference-image");
     const outputBytes = Buffer.from("tweaked-image-output");
 
-    mockDownloadImageWithRetry.mockResolvedValueOnce(referenceBytes);
+    mockDownloadImageWithRetry.mockResolvedValueOnce({
+      buffer: referenceBytes,
+      contentType: "image/webp",
+    });
     mockGenerateImage.mockResolvedValueOnce({
       image: {
         base64: outputBytes.toString("base64"),
@@ -91,7 +173,7 @@ describe("generateImageTool", () => {
     });
 
     const referenceUrl =
-      "https://cdn.discordapp.com/attachments/123/456/cat.png";
+      "https://cdn.discordapp.com/attachments/123/456/cat.webp";
     const context: RequestContext = { ...dummyContext };
 
     const result = await runWithRequestContext(context, async () => {
@@ -116,7 +198,7 @@ describe("generateImageTool", () => {
           {
             type: "data",
             data: new Uint8Array(referenceBytes),
-            mediaType: "image/png",
+            mediaType: "image/webp",
           },
         ],
       }),
@@ -129,17 +211,10 @@ describe("generateImageTool", () => {
     );
   });
 
-  test("falls back to text-only prompt when reference image download fails", async () => {
-    const outputBytes = Buffer.from("fallback-image-output");
-
+  test("fails the edit when reference image download fails", async () => {
     mockDownloadImageWithRetry.mockRejectedValueOnce(
       new Error("404 Not Found"),
     );
-    mockGenerateImage.mockResolvedValueOnce({
-      image: {
-        base64: outputBytes.toString("base64"),
-      },
-    });
 
     const context: RequestContext = { ...dummyContext };
     const result = await runWithRequestContext(context, async () => {
@@ -152,20 +227,16 @@ describe("generateImageTool", () => {
       );
     });
 
-    expect(result.success).toBe(true);
-    expect(mockDownloadImageWithRetry).toHaveBeenCalledWith(
-      "https://example.com/missing.png",
-    );
-    const callArgs: unknown = mockGenerateImage.mock.calls[0]?.[0];
-    expect(callArgs).toBeDefined();
-    if (callArgs != null && typeof callArgs === "object") {
-      expect("files" in callArgs).toBe(false);
-    }
+    expect(result.success).toBe(false);
+    expect(result.message).toContain("404 Not Found");
+    expect(mockGenerateImage).not.toHaveBeenCalled();
 
     const staged = getStagedAttachments(context);
-    expect(staged).toHaveLength(1);
+    expect(staged).toHaveLength(0);
   });
+});
 
+describe("generateImageTool - error handling and validation", () => {
   test("returns clean error result when generateImage throws", async () => {
     mockGenerateImage.mockRejectedValueOnce(
       new Error("OpenRouter rate limit reached"),

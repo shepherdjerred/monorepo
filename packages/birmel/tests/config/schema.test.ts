@@ -8,6 +8,7 @@ import {
   ExternalApisSchema,
   BrowserConfigSchema,
   LoggingConfigSchema,
+  ImageGenerationConfigSchema,
   ConfigSchema,
 } from "@shepherdjerred/birmel/config/schema.ts";
 
@@ -212,6 +213,24 @@ describe("LoggingConfigSchema", () => {
   });
 });
 
+describe("ImageGenerationConfigSchema", () => {
+  test("defaults to disabled", () => {
+    const result = ImageGenerationConfigSchema.safeParse({});
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.enabled).toBe(false);
+    }
+  });
+
+  test("allows explicitly enabling", () => {
+    const result = ImageGenerationConfigSchema.safeParse({ enabled: true });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.enabled).toBe(true);
+    }
+  });
+});
+
 describe("ConfigSchema (full)", () => {
   test("validates complete config with all required fields", () => {
     const result = ConfigSchema.safeParse({
@@ -222,6 +241,7 @@ describe("ConfigSchema (full)", () => {
       openRouter: {
         apiKey: "test-openrouter-key",
       },
+      imageGeneration: {},
       agent: {},
       authority: {},
       telemetry: {},
