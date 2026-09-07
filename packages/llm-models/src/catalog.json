@@ -6,9 +6,9 @@
     "description": "OpenAI flagship (current). Successor to gpt-5.5.",
     "pricing": {
       "modality": "text",
-      "input": 5,
-      "cachedInput": 0.5,
-      "output": 30
+      "input": 4,
+      "cachedInput": 0.4,
+      "output": 20
     },
     "contextWindow": 1050000,
     "capabilities": {
@@ -40,9 +40,9 @@
     "description": "Balanced GPT-5.6 tier (~2x cheaper than Sol).",
     "pricing": {
       "modality": "text",
-      "input": 2.5,
-      "cachedInput": 0.25,
-      "output": 15
+      "input": 2,
+      "cachedInput": 0.2,
+      "output": 12
     },
     "contextWindow": 1050000,
     "capabilities": {
@@ -118,7 +118,7 @@
       "cachedInput": 0.5,
       "output": 30
     },
-    "contextWindow": 400000,
+    "contextWindow": 1050000,
     "capabilities": {
       "inputModalities": ["text", "image"],
       "outputModalities": ["text"],
@@ -280,19 +280,13 @@
     "id": "claude-sonnet-5",
     "provider": "anthropic",
     "displayName": "Claude Sonnet 5",
-    "description": "Best speed/intelligence balance; adaptive thinking on by default, rejects temperature/top_p. Standard $3/$15; introductory $2/$10 per MTok through 2026-08-31.",
+    "description": "Best speed/intelligence balance; adaptive thinking on by default, rejects temperature/top_p.",
     "pricing": {
       "modality": "text",
-      "input": 3,
-      "output": 15,
-      "cacheRead": 0.3,
-      "cacheWrite": 3.75
-    },
-    "acceptedUpstreamPricing": {
-      "input": { "upstream": 2, "catalog": 3 },
-      "output": { "upstream": 10, "catalog": 15 },
-      "reason": "Upstreams list the introductory rate through 2026-08-31; the catalog holds the standard $3/$15 that billing reverts to.",
-      "expiresAt": "2026-09-01T00:00:00Z"
+      "input": 2,
+      "output": 10,
+      "cacheRead": 0.2,
+      "cacheWrite": 2.5
     },
     "contextWindow": 1000000,
     "pinnedContextWindow": true,

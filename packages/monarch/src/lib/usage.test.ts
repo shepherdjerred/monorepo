@@ -54,8 +54,9 @@ describe("createUsageTracker", () => {
     const tracker = createUsageTracker("unknown-model");
     tracker.record(1_000_000, 100_000);
     const summary = tracker.getSummary();
-    // Uses sonnet pricing as default
-    expect(summary.estimatedCost).toBeCloseTo(4.5, 2);
+    // Uses sonnet pricing as default (claude-sonnet-5: $2 input, $10 output)
+    // 1M input * $2/1M + 100K output * $10/1M = $2 + $1.00 = $3.00
+    expect(summary.estimatedCost).toBeCloseTo(3, 2);
   });
 
   test("applies long-context pricing per request", () => {

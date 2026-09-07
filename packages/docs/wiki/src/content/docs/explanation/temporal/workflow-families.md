@@ -87,9 +87,10 @@ kept, plus a required expiry. Accepting a **pair** rather than muting the field
 is what keeps it honest in three directions — a new upstream price reopens it, a
 later edit to the catalog value it was protecting reopens it, and so does the
 expiry passing. Prices are time-bound, so an acceptance that never lapses is the
-rot the expiry exists to prevent. `claude-sonnet-5` carries one: upstreams list
-its introductory rate, the catalog holds the standard price billing reverts to,
-and the acceptance dies with the promotion.
+rot the expiry exists to prevent. Historically `claude-sonnet-5` carried one:
+upstreams listed its introductory rate, the catalog held the standard price
+billing was scheduled to revert to, and the acceptance died when the promotion
+settled.
 
 Resolution needs the same rigour, and it is why the occurrence is raised **per
 (model, field)** — the unit the cross-check actually compares, and the finest

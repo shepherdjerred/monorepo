@@ -386,7 +386,7 @@ describe("OpenRouter metadata", () => {
   });
 
   test("prices Anthropic cache reads and writes with their catalog rates", () => {
-    // claude-sonnet-5: input 3, output 15, cacheRead 0.3, cacheWrite 3.75 per 1M.
+    // claude-sonnet-5: input 2, output 10, cacheRead 0.2, cacheWrite 2.5 per 1M.
     const metadata = parseOpenRouterMetadata({
       requestedModel: "claude-sonnet-5",
       responseBody: {
@@ -404,8 +404,8 @@ describe("OpenRouter metadata", () => {
 
     expect(metadata.tokens.cachedInput).toBe(800_000);
     expect(metadata.tokens.cacheWrite).toBe(100_000);
-    // 200k uncached @ $3 + 800k cache-read @ $0.30 + 100k cache-write @ $3.75.
-    expect(metadata.catalogCostUsd).toBeCloseTo(0.6 + 0.24 + 0.375, 10);
+    // 200k uncached @ $2 + 800k cache-read @ $0.20 + 100k cache-write @ $2.50.
+    expect(metadata.catalogCostUsd).toBeCloseTo(0.4 + 0.16 + 0.25, 10);
   });
 
   test("prices OpenAI cached input as a subset of the inclusive prompt count", () => {
