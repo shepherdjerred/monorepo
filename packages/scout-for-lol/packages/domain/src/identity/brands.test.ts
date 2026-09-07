@@ -26,6 +26,7 @@ import {
   type LeaguePuuid,
   LeaguePuuidSchema,
   type LeagueSummonerId,
+  LeagueSummonerIdSchema,
 } from "#src/identity/league-account.ts";
 import { PlatformRouteSchema } from "#src/identity/routes.ts";
 import {
@@ -198,6 +199,14 @@ describe("moved identity brands keep their runtime rules", () => {
   test("LeaguePuuid requires exactly 78 characters", () => {
     expect(LeaguePuuidSchema.safeParse("p".repeat(78)).success).toBe(true);
     expect(LeaguePuuidSchema.safeParse("p".repeat(77)).success).toBe(false);
+  });
+
+  test("LeagueSummonerId requires 1 to 63 characters", () => {
+    expect(LeagueSummonerIdSchema.safeParse("").success).toBe(false);
+    expect(LeagueSummonerIdSchema.safeParse("s".repeat(63)).success).toBe(true);
+    expect(LeagueSummonerIdSchema.safeParse("s".repeat(64)).success).toBe(
+      false,
+    );
   });
 
   test("PlatformRoute rejects unknown routes", () => {

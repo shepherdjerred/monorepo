@@ -102,6 +102,29 @@ describe("beginSend", () => {
     expect(next.attemptCount).toBe(1);
   });
 
+  test("every retry increments the attempt count past one", () => {
+    const firstAttempt = expectApplied(
+      beginSend(makeIntent({ kind: "ready" }), {
+        attemptNonce: nonceA,
+        startedAt: beforeDeadline,
+      }),
+    );
+    const backToReady = expectApplied(
+      recordFailure(firstAttempt, {
+        attemptNonce: nonceA,
+        failure: { classification: "retryable", reason: "network" },
+      }),
+    );
+    const secondAttempt = expectApplied(
+      beginSend(backToReady, {
+        attemptNonce: nonceB,
+        startedAt: beforeDeadline,
+      }),
+    );
+    expect(secondAttempt.attemptCount).toBe(2);
+    expect(secondAttempt.state).toEqual(sendingState(nonceB));
+  });
+
   test("a send exactly at the freshness deadline is still allowed", () => {
     const next = expectApplied(
       beginSend(makeIntent({ kind: "ready" }), {
@@ -320,6 +343,28 @@ describe("recordFailure", () => {
       reason: "dm-disabled",
     });
   });
+
+  // The collapse below is deliberate: the state union has exactly one
+  // failure-terminal kind, so splitting these reasons into distinct states is
+  // a conscious contract change, not a refactor.
+  test.each([
+    "permission-denied",
+    "dm-disabled",
+    "budget-exhausted",
+    "target-not-found",
+  ] as const)(
+    "terminal reason %s deliberately collapses into the permission-denied state",
+    (reason) => {
+      const next = expectApplied(
+        recordFailure(makeIntent(sendingState()), {
+          attemptNonce: nonceA,
+          failure: { classification: "terminal", reason },
+        }),
+      );
+      expect(next.state).toEqual({ kind: "permission-denied" });
+      expect(next.lastFailure).toEqual({ classification: "terminal", reason });
+    },
+  );
 
   test("a stale worker's failure conflicts on nonce", () => {
     expectConflict(
@@ -660,6 +705,18 @@ describe("operatorResolveUnknown", () => {
         attemptNonce: nonceA,
         messageId: otherMessageId,
         deliveredAt,
+      }),
+      "terminal-state",
+    );
+  });
+
+  test("a same-message resolution at a genuinely different instant is a redelivery signal, not a replay", () => {
+    expectConflict(
+      operatorResolveUnknown(makeIntent(deliveredWithMessageState()), {
+        outcome: "delivered",
+        attemptNonce: nonceA,
+        messageId,
+        deliveredAt: createdAt,
       }),
       "terminal-state",
     );

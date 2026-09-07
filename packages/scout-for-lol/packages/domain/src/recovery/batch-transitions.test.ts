@@ -142,6 +142,25 @@ describe("advanceScanCursor", () => {
     );
   });
 
+  test("the final budgeted advance lands exactly on the budget, then exhausts", () => {
+    const atBudget = expectApplied(
+      advanceScanCursor(
+        makeBatch(scanningState({ position: "page-2", pagesScanned: 2 })),
+        { expectedPosition: "page-2", nextPosition: "page-3" },
+      ),
+    );
+    expect(atBudget.state).toEqual(
+      scanningState({ position: "page-3", pagesScanned: 3 }),
+    );
+    expectConflict(
+      advanceScanCursor(atBudget, {
+        expectedPosition: "page-3",
+        nextPosition: "page-4",
+      }),
+      "scan-budget-exhausted",
+    );
+  });
+
   test("advancing past the page budget conflicts", () => {
     expectConflict(
       advanceScanCursor(
@@ -294,11 +313,36 @@ describe("recordProcessingProgress", () => {
     ).toEqual({ outcome: "already-applied" });
   });
 
+  test.each([
+    ["succeeded", countsOf({ succeeded: 1 })],
+    ["suppressed", countsOf({ suppressed: 1 })],
+    ["failed", countsOf({ failed: 1 })],
+  ])("%s advancing alone applies", (_counter, counts) => {
+    const next = expectApplied(
+      recordProcessingProgress(makeBatch(processingState()), { counts }),
+    );
+    expect(next.state).toEqual({ kind: "processing", counts });
+  });
+
   test("regressing a count conflicts", () => {
     expectConflict(
       recordProcessingProgress(makeBatch(processingState({ succeeded: 4 })), {
         counts: countsOf({ succeeded: 3 }),
       }),
+      "counts-regressed",
+    );
+  });
+
+  test.each([
+    ["succeeded", countsOf({ succeeded: 1, suppressed: 2, failed: 2 })],
+    ["suppressed", countsOf({ succeeded: 2, suppressed: 1, failed: 2 })],
+    ["failed", countsOf({ succeeded: 2, suppressed: 2, failed: 1 })],
+  ])("%s regressing alone conflicts", (_counter, counts) => {
+    expectConflict(
+      recordProcessingProgress(
+        makeBatch(processingState({ succeeded: 2, suppressed: 2, failed: 2 })),
+        { counts },
+      ),
       "counts-regressed",
     );
   });
@@ -484,6 +528,18 @@ describe("operatorReleasePolicy", () => {
     expect(next.policy).toBe("stale-private-only");
     expect(next.state).toEqual(batch.state);
   });
+
+  test.each(["planned", "processing", "digesting"] as const)(
+    "the release also applies on a live %s batch",
+    (kind) => {
+      const batch = makeBatch(statesByKind()[kind], "no-external");
+      const next = expectApplied(
+        operatorReleasePolicy(batch, { to: "stale-private-only" }),
+      );
+      expect(next.policy).toBe("stale-private-only");
+      expect(next.state).toEqual(batch.state);
+    },
+  );
 
   test("no-external never releases to normal", () => {
     expectConflict(

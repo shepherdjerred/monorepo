@@ -199,6 +199,45 @@ describe("defineVersionedCodec", () => {
     ).toThrow(/unknown widget envelope version 1/);
   });
 
+  test("parse cleanly rejects an envelope with no version field", () => {
+    expect(() =>
+      widgetCodec.parse({
+        kind: "widget",
+        data: { widgetId: "w-1", label: "widget one", count: 2 },
+      }),
+    ).toThrow(/version/);
+  });
+
+  test("a throwing migration surfaces its own error identifiably", () => {
+    const throwingMigrationCodec = defineVersionedCodec({
+      kind: "widget",
+      version: 3,
+      schema: WidgetV3Schema,
+      migrations: {
+        1: () => {
+          throw new Error("widget v1 payload is corrupt beyond migration");
+        },
+        2: migrateWidgetV2ToV3,
+      },
+    });
+    expect(() =>
+      throwingMigrationCodec.parse({
+        kind: "widget",
+        version: 1,
+        data: { widgetId: "w-1", count: 5 },
+      }),
+    ).toThrow(/widget v1 payload is corrupt beyond migration/);
+    expect(
+      throwingMigrationCodec.parse({
+        kind: "widget",
+        version: 2,
+        data: { widgetId: "w-2", count: 1 },
+      }),
+    ).toEqual({ widgetId: "w-2", label: "unlabeled", count: 1 });
+  });
+});
+
+describe("defineVersionedCodec definition validation", () => {
   test("definition rejects a version below 1", () => {
     expect(() =>
       defineVersionedCodec({

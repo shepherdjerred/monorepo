@@ -1,9 +1,11 @@
 import { describe, expect, test } from "vitest";
 import {
+  AssignedPipelineOwnerSchema,
   MatchProcessingStateSchema,
   matchProcessingStateCodec,
   matchProcessingReceiptIdentityKey,
   MatchProcessingReceiptSchema,
+  PipelineOwnerSchema,
   ReceiptKindSchema,
   ReceiptScopeSchema,
   receiptScopeKey,
@@ -221,6 +223,24 @@ describe("MatchProcessingStateSchema", () => {
         note: "extra",
       }),
     ).toThrow();
+  });
+});
+
+describe("AssignedPipelineOwnerSchema", () => {
+  test.each([{ kind: "legacy-v1" }, { kind: "temporal-v2" }])(
+    "accepts the $kind owner",
+    (owner) => {
+      expect(AssignedPipelineOwnerSchema.parse(owner)).toEqual(owner);
+    },
+  );
+
+  test("rejects the unowned owner, which cannot claim", () => {
+    expect(() =>
+      AssignedPipelineOwnerSchema.parse({ kind: "unowned" }),
+    ).toThrow();
+    expect(PipelineOwnerSchema.parse({ kind: "unowned" })).toEqual({
+      kind: "unowned",
+    });
   });
 });
 

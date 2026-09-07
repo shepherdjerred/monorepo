@@ -3,7 +3,7 @@ import { z } from "zod";
 export type LeagueSummonerId = z.infer<typeof LeagueSummonerIdSchema>;
 export const LeagueSummonerIdSchema = z
   .string()
-  .min(0)
+  .min(1)
   .max(63)
   .brand<"LeagueSummonerId">();
 

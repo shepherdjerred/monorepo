@@ -13,6 +13,10 @@ import * as dataRoutes from "#src/model/core/routes.ts";
  * data modules. Existing import sites rely on receiving the SAME schema
  * object — not an equivalent copy — so a value branded through one package
  * is branded through the other.
+ *
+ * MAINTENANCE: this suite is hand-enumerated. When another schema moves from
+ * data to domain behind a re-export shim, add a matching `toBe` assertion
+ * here — nothing else fails if the new shim silently exports a copy.
  */
 describe("data re-exports the identical domain schema objects", () => {
   test("discord identifier schemas", () => {
