@@ -340,15 +340,25 @@ export function PlayerAccountsTable(props: {
 export function Section(props: {
   title: string;
   action?: React.ReactNode;
+  /**
+   * Wrap the body in the shared panel border. Empty notes skip this so they
+   * do not render as a hollow outlined field.
+   */
+  framed?: boolean;
   children: React.ReactNode;
 }) {
+  const framed = props.framed ?? true;
   return (
     <section className="space-y-2">
       <div className="flex items-center justify-between">
         <h3 className="text-base font-semibold">{props.title}</h3>
         {props.action}
       </div>
-      <div className="rounded-md border border-border">{props.children}</div>
+      {framed ? (
+        <div className="rounded-md border border-border">{props.children}</div>
+      ) : (
+        props.children
+      )}
     </section>
   );
 }

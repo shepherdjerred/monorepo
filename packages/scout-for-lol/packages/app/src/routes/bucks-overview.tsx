@@ -4,9 +4,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatInteger } from "@scout-for-lol/data";
 import {
   ErrorState,
-  LoadingState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
+import { DelayedLoadingState } from "#src/components/section-skeleton.tsx";
 import { BucksCancelDialog } from "#src/components/bucks/bucks-cancel-dialog.tsx";
 import {
   BucksMarketSections,
@@ -118,7 +118,7 @@ export function WalletPanel(props: {
   onCancelOutcome: (matchId: string) => void;
 }) {
   return Loaded.match(props.wallet, {
-    loading: () => <LoadingState label="Loading your wallet…" />,
+    loading: () => <DelayedLoadingState label="Loading your wallet…" />,
     error: () => (
       <ErrorState
         message="Scout couldn't load your Bryan Bucks wallet."

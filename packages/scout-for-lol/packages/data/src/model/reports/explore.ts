@@ -121,12 +121,19 @@ export const ExploreTurnRequestSchema = z
 
 export type ExploreTurnRequest = z.infer<typeof ExploreTurnRequestSchema>;
 
+const INCLUDE_VISUALIZATION_DESCRIPTION =
+  "True only when a chart or table should be attached to this turn. False when the prose is enough, no query ran, or a table would dump the same numbers already in the answer.";
+
 /**
  * The agent's structured answer for one turn.
  *
  * `queryText` is nullable because not every turn runs a query — a follow-up
  * like "what does KDA mean here?" is answerable from the transcript. When it
  * is present it is the query the answer is actually based on.
+ *
+ * `includeVisualization` is the agent's decision to attach that query's chart
+ * or table. Running a query is not enough; the ScoutQL stays on `queryText`
+ * as collapsed evidence either way.
  */
 export const ExploreAnswerSchema = z
   .object({
@@ -149,13 +156,36 @@ export const ExploreAnswerSchema = z
     title: z.string().trim().min(1).nullable().default(null),
     queryText: ReportQueryTextSchema.nullable().default(null),
     /**
+     * Whether to attach the last query's chart or table to this turn.
+     *
+     * Default false so a missing key — tests, a salvaged partial, an older
+     * stored answer parsed through this schema — does not invent a
+     * visualization the agent never chose.
+     */
+    includeVisualization: z
+      .boolean()
+      .describe(INCLUDE_VISUALIZATION_DESCRIPTION)
+      .default(false),
+    /**
      * Limits a reader needs to judge the answer — small samples, a corpus
      * that only covers matches Scout ingested, a metric that means something
      * narrower than the question implied.
      */
     caveats: z.array(z.string().trim().min(1).max(300)).max(5).default([]),
     /** Suggested next questions, offered as chips in the UI. */
-    followUps: z.array(z.string().trim().min(1).max(200)).max(3).default([]),
+    followUps: z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(1)
+          .max(200)
+          .describe(
+            "Follow-up questions the user can ask next. Phrased from the user's perspective (e.g. 'Show win rates for ADC'), never as the bot asking the user.",
+          ),
+      )
+      .max(3)
+      .default([]),
   })
   .strict();
 
@@ -171,21 +201,36 @@ export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
  * ("'required' ... must include every key in properties"). That is a hard 400
  * on every turn, not a soft downgrade, so the defaults cannot live on the wire.
  *
- * The model must therefore supply all five keys; `title` and `queryText` stay
+ * The model must therefore supply all six keys; `title` and `queryText` stay
  * nullable because follow-ups do not rename an established conversation and
  * can be answered from the transcript without another query. Empty arrays
- * express "no caveats/follow-ups". Parse the result through
- * `ExploreAnswerSchema` to land in the domain type — the defaults there become
- * no-ops once every key is present, so the two schemas cannot drift apart in
- * what they accept.
+ * express "no caveats/follow-ups". `includeVisualization` is a required
+ * boolean — false is the correct value when the prose is the whole answer.
+ * Parse the result through `ExploreAnswerSchema` to land in the domain type
+ * — the defaults there become no-ops once every key is present, so the two
+ * schemas cannot drift apart in what they accept.
  */
 export const ExploreAnswerWireSchema = z
   .object({
     answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
     title: z.string().trim().min(1).nullable(),
     queryText: ReportQueryTextSchema.nullable(),
+    includeVisualization: z
+      .boolean()
+      .describe(INCLUDE_VISUALIZATION_DESCRIPTION),
     caveats: z.array(z.string().trim().min(1).max(300)).max(5),
-    followUps: z.array(z.string().trim().min(1).max(200)).max(3),
+    followUps: z
+      .array(
+        z
+          .string()
+          .trim()
+          .min(1)
+          .max(200)
+          .describe(
+            "Follow-up questions the user can ask next. Phrased from the user's perspective (e.g. 'Show win rates for ADC'), never as the bot asking the user.",
+          ),
+      )
+      .max(3),
   })
   .strict();
 

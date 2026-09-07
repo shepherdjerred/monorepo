@@ -13,15 +13,10 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
-import { Section } from "#src/components/player/player-detail-sections.tsx";
 import { ConsumerPlayerChallengeRuns } from "#src/components/challenge/player-challenge-runs.tsx";
-import {
-  ChampionPoolTable,
-  MatchHistoryList,
-  PlayerSummaryCards,
-  RankValue,
-} from "#src/components/player/player-profile-sections.tsx";
-import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
+import { CombinedPerformance } from "#src/components/player/player-combined-performance.tsx";
+import { RankValue } from "#src/components/player/player-profile-sections.tsx";
+import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
 import { useConsumerPlayerParams } from "#src/lib/route-params.ts";
@@ -114,12 +109,6 @@ export function ConsumerPlayerProfile() {
     />
   );
 }
-
-type HistoryCursor = {
-  gameCreationMs: number;
-  matchId: string;
-  consumed?: number | undefined;
-};
 
 const EMPTY_HISTORY: { entries: never[]; nextCursor: null } = {
   entries: [],
@@ -306,7 +295,6 @@ function ConsumerPlayerProfileContent(props: {
               {summary.accountCount === 1
                 ? "1 Riot account"
                 : `${summary.accountCount.toString()} Riot accounts combined`}
-              {" · "}Only games Scout recorded
             </p>
           </div>
         </div>
@@ -353,101 +341,35 @@ function ConsumerPlayerProfileContent(props: {
 
       <ConsumerPlayerChallengeRuns playerId={playerId} />
 
-      <div>
-        <div>
-          <h2 className="text-xl font-semibold">Combined performance</h2>
-          <p className="text-sm text-scout-subtle">
-            Accounts are combined only because this guild configured them as one
-            Scout player.
-          </p>
-        </div>
-      </div>
-
-      <PlayerProfileFilterBar
+      <CombinedPerformance
         filters={props.filters}
-        onChange={props.onFiltersChange}
-      />
-
-      <PlayerSummaryCards
+        onFiltersChange={props.onFiltersChange}
+        championPool={summary.championPool}
+        minGamesForRate={summary.minGamesForRate}
         ranks={summary.ranks}
         recentForm={summary.recentForm}
+        history={history}
+        historyFetching={historyQuery.isFetching}
+        historyRefetching={historyQuery.isRefetching}
+        entries={entries}
+        nextCursor={nextCursor}
+        historyPage={historyPage}
+        playerId={playerId}
+        profileSearch={profileSearch}
+        onRetryHistory={() => {
+          void historyQuery.refetch();
+        }}
+        onPreviousHistory={() => {
+          setHistoryPage((page) => page - 1);
+        }}
+        onNextHistory={(cursor) => {
+          setHistoryCursors((cursors) => [
+            ...cursors.slice(0, historyPage + 1),
+            cursor,
+          ]);
+          setHistoryPage((page) => page + 1);
+        }}
       />
-
-      <Section title="Champion performance">
-        <ChampionPoolTable
-          key={filterKey(props.filters)}
-          rows={summary.championPool}
-          minGamesForRate={summary.minGamesForRate}
-          profileSearch={profileSearch}
-        />
-      </Section>
-
-      <Section title="Recorded match history">
-        <p className="mb-3 text-sm text-scout-subtle">
-          This is Scout&apos;s stored coverage, not a complete Riot match
-          history. Each card identifies the account Scout observed.
-        </p>
-        {history.status === "loading" || historyQuery.isRefetching ? (
-          <p className="text-sm text-scout-subtle">Loading games…</p>
-        ) : history.status === "error" ? (
-          <div className="flex items-center gap-3">
-            <p className="text-sm text-scout-danger">
-              Match history didn&apos;t load.
-            </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => {
-                void historyQuery.refetch();
-              }}
-            >
-              Retry
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <MatchHistoryList
-              entries={entries}
-              playerId={playerId}
-              profileSearch={profileSearch}
-            />
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs text-scout-subtle">
-                Page {(historyPage + 1).toString()}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={historyPage === 0 || historyQuery.isFetching}
-                  onClick={() => {
-                    setHistoryPage((page) => page - 1);
-                  }}
-                >
-                  Previous
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  disabled={nextCursor === null || history.fetching}
-                  onClick={() => {
-                    if (nextCursor === null) return;
-                    setHistoryCursors((cursors) => [
-                      ...cursors.slice(0, historyPage + 1),
-                      nextCursor,
-                    ]);
-                    setHistoryPage((page) => page + 1);
-                  }}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </Section>
     </ProfileShell>
   );
 }

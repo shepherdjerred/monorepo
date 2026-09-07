@@ -1,8 +1,47 @@
 import { describe, expect, test } from "vitest";
 import {
+  ExploreAnswerSchema,
+  ExploreAnswerWireSchema,
   ExploreTraceEntrySchema,
   parseExploreStreamEvent,
 } from "#src/model/reports/explore.ts";
+
+describe("ExploreAnswerSchema", () => {
+  test("defaults includeVisualization to false so a missing key does not attach a chart", () => {
+    expect(
+      ExploreAnswerSchema.parse({
+        answer: "Ahri leads.",
+        queryText: null,
+        caveats: [],
+        followUps: [],
+      }).includeVisualization,
+    ).toBe(false);
+  });
+
+  test("the wire schema requires includeVisualization", () => {
+    expect(() =>
+      ExploreAnswerWireSchema.parse({
+        answer: "Ahri leads.",
+        title: null,
+        queryText: null,
+        caveats: [],
+        followUps: [],
+      }),
+    ).toThrow();
+    expect(
+      ExploreAnswerSchema.parse(
+        ExploreAnswerWireSchema.parse({
+          answer: "Ahri leads.",
+          title: null,
+          queryText: null,
+          includeVisualization: true,
+          caveats: [],
+          followUps: [],
+        }),
+      ).includeVisualization,
+    ).toBe(true);
+  });
+});
 
 describe("ExploreTraceEntrySchema", () => {
   test("normalizes a stored legacy trace entry", () => {

@@ -82,74 +82,15 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
             </p>
             <ul className="space-y-0.5">
               {group.conversations.map((conversation) => (
-                <li
+                <ConversationRow
                   key={conversation.id}
-                  className={`group relative flex items-center rounded-md transition-colors ${
-                    conversation.id === props.activeId
-                      ? "bg-scout-hover font-medium text-scout-ink"
-                      : "text-scout-ink/85 hover:bg-scout-hover hover:text-scout-ink"
-                  }`}
-                >
-                  <Link
-                    to={`/explore/${conversation.id}`}
-                    className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-1.5 text-left text-sm text-inherit no-underline outline-none"
-                    onClick={(event) => {
-                      if (
-                        event.defaultPrevented ||
-                        event.button !== 0 ||
-                        event.metaKey ||
-                        event.altKey ||
-                        event.ctrlKey ||
-                        event.shiftKey
-                      ) {
-                        return;
-                      }
-                      event.preventDefault();
-                      const targetId = conversation.id;
-                      props.onSelect(targetId);
-                    }}
-                  >
-                    <span className="min-w-0 flex-1 truncate pr-5">
-                      {conversation.title}
-                    </span>
-                    <ConversationRunStatus
-                      status={props.statusForConversation(conversation.id)}
-                    />
-                  </Link>
-                  <div className="absolute right-1 flex items-center opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          type="button"
-                          className="flex size-6 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus:outline-none"
-                          aria-label={`Actions for ${conversation.title}`}
-                        >
-                          <MoreHorizontal className="size-3.5" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-36">
-                        <DropdownMenuItem
-                          className="gap-2 text-sm"
-                          onSelect={() => {
-                            props.onRename(conversation);
-                          }}
-                        >
-                          <Pencil className="size-3.5 text-scout-subtle" />
-                          <span>Rename</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="gap-2 text-sm text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
-                          onSelect={() => {
-                            props.onDelete(conversation);
-                          }}
-                        >
-                          <Trash2 className="size-3.5 text-scout-danger" />
-                          <span>Delete</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </li>
+                  conversation={conversation}
+                  active={conversation.id === props.activeId}
+                  status={props.statusForConversation(conversation.id)}
+                  onSelect={props.onSelect}
+                  onRename={props.onRename}
+                  onDelete={props.onDelete}
+                />
               ))}
             </ul>
           </div>
@@ -166,6 +107,85 @@ export const ExploreSidebar = memo(function ExploreSidebarView(props: {
     </div>
   );
 });
+
+function ConversationRow(props: {
+  conversation: ExploreConversation;
+  active: boolean;
+  status: "running" | "completed" | "failed" | null;
+  onSelect: (conversationId: string) => void;
+  onRename: (conversation: ExploreConversation) => void;
+  onDelete: (conversation: ExploreConversation) => void;
+}) {
+  const { conversation } = props;
+  return (
+    <li
+      className={`group relative flex items-center rounded-md transition-colors ${
+        props.active
+          ? "bg-scout-hover font-medium text-scout-ink"
+          : "text-scout-ink/85 hover:bg-scout-hover hover:text-scout-ink"
+      }`}
+    >
+      <Link
+        to={`/explore/${conversation.id}`}
+        className="flex min-w-0 flex-1 items-center px-2.5 py-1.5 text-left text-sm text-inherit no-underline outline-none"
+        onClick={(event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.altKey ||
+            event.ctrlKey ||
+            event.shiftKey
+          ) {
+            return;
+          }
+          event.preventDefault();
+          props.onSelect(conversation.id);
+        }}
+      >
+        <span className="min-w-0 flex-1 truncate">{conversation.title}</span>
+      </Link>
+      <div className="relative flex size-7 shrink-0 items-center justify-center">
+        <span className="pointer-events-none group-hover:invisible group-focus-within:invisible group-has-[[data-state=open]]:invisible">
+          <ConversationRunStatus status={props.status} />
+        </span>
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 group-has-[[data-state=open]]:opacity-100">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex size-6 items-center justify-center rounded text-scout-subtle transition-colors hover:bg-scout-canvas hover:text-scout-ink focus:outline-none"
+                aria-label={`Actions for ${conversation.title}`}
+              >
+                <MoreHorizontal className="size-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
+              <DropdownMenuItem
+                className="gap-2 text-sm"
+                onSelect={() => {
+                  props.onRename(conversation);
+                }}
+              >
+                <Pencil className="size-3.5 text-scout-subtle" />
+                <span>Rename</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="gap-2 text-sm text-scout-danger focus:bg-scout-danger/10 focus:text-scout-danger"
+                onSelect={() => {
+                  props.onDelete(conversation);
+                }}
+              >
+                <Trash2 className="size-3.5 text-scout-danger" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+    </li>
+  );
+}
 
 function ConversationRunStatus(props: {
   status: "running" | "completed" | "failed" | null;

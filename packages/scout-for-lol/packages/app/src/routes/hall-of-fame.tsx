@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
+import { ErrorPanel } from "#src/components/route-error-panel.tsx";
 import { useHallParams } from "#src/lib/route-params.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 
@@ -29,10 +30,24 @@ export function HallOfFame() {
   const hall = useQuery(trpc.hall.get.queryOptions({ guildId }));
 
   if (hall.isPending) {
-    return <p className="text-sm text-scout-subtle">Building the Hall…</p>;
+    return (
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
+        <p className="text-sm text-scout-subtle">Building the Hall…</p>
+      </div>
+    );
   }
   if (hall.isError) {
-    return <p className="text-sm text-scout-danger">{hall.error.message}</p>;
+    return (
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 sm:py-12">
+        <ErrorPanel
+          title="Unable to load Hall of Fame"
+          message={hall.error.message}
+          onRetry={() => {
+            void hall.refetch();
+          }}
+        />
+      </div>
+    );
   }
   const recordById = new Map(
     hall.data.catalog.hall.records.map((record) => [record.id, record]),

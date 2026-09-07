@@ -15,6 +15,7 @@ import {
   ForbiddenPanel,
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
+import { ErrorPanel } from "#src/components/route-error-panel.tsx";
 import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 import { GUILD_NAVIGATION_ITEMS } from "#src/lib/app-navigation.ts";
@@ -195,14 +196,5 @@ export function GuildPermissionsGate(props: {
 }
 
 function PermissionLoadError(props: { message: string }) {
-  return (
-    <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
-      <h2 className="text-base font-semibold text-scout-danger">
-        Unable to load access
-      </h2>
-      <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
-        {props.message}
-      </p>
-    </div>
-  );
+  return <ErrorPanel title="Unable to load access" message={props.message} />;
 }

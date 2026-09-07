@@ -82,7 +82,7 @@ describe("DareList", () => {
           onSelect={noAction}
         />,
       ),
-    ).toContain("Loading dares");
+    ).toBe("");
     expect(
       renderToStaticMarkup(
         <DareList

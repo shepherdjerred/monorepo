@@ -32,16 +32,12 @@ export type ExplorePendingTurn = {
   /** Provider-id-keyed steps, updated in place as their results arrive. */
   trace: ExploreTraceEntry[];
   /**
-   * The newest query result, rendered while the answer is still streaming.
+   * The newest query result received while the turn is still streaming.
    *
-   * The server has these the instant a query returns and the page used to
-   * throw them away, so a table the reader could have seen seconds earlier
-   * only appeared once the whole turn landed. Last write wins, matching what
-   * `final` will persist.
-   *
-   * A reconnect restores `preview` without `visualization` — the snapshot
-   * deliberately omits the chart — so these two are independently nullable
-   * and a null chart beside a present table is a normal state, not a bug.
+   * The transcript does not render these until the persisted message lands
+   * with the agent's `includeVisualization` decision. Last write wins, and a
+   * reconnect restores `preview` without `visualization` — the snapshot
+   * deliberately omits the chart — so these two are independently nullable.
    */
   preview: ReportAiPreviewSummary | null;
   visualization: VisualizationSnapshot | null;
@@ -257,17 +253,29 @@ export function turnHasLanded(
  * What the transcript should render for this turn, given which conversation
  * is on screen and what the persisted transcript already contains.
  *
- * All-null when the turn belongs to a different conversation — that is the
- * whole fix for a stream bleeding into whichever conversation the user
- * switched to. A null turn-conversation matches only the not-yet-created
- * view (`displayedConversationId === null`), so a first turn renders while
- * `started` is still in flight.
+ * All-null when the turn belongs to a different *opened* conversation — that
+ * is the whole fix for a stream bleeding into whichever conversation the user
+ * switched to. The blank `/explore` view (`displayedConversationId === null`)
+ * still shows a turn whose id has already been minted: `started` lands before
+ * the replace-navigation, and hiding there remounts the empty-state copy.
  *
  * The optimistic question disappears the moment the fetched messages contain
  * it (the duplicate-first-question fix), and the streamed answer disappears
  * once the turn has landed — so there is never a frame showing both copies,
  * and never a frame showing neither.
  */
+export function shouldShowExploreSuggestions(input: {
+  messageCount: number;
+  pendingQuestion: string | null;
+  pendingTurn: ExplorePendingTurn | null;
+}): boolean {
+  return (
+    input.messageCount === 0 &&
+    input.pendingQuestion === null &&
+    input.pendingTurn === null
+  );
+}
+
 export function visiblePending(
   turn: ExplorePendingTurn | null,
   displayedConversationId: string | null,
@@ -298,7 +306,11 @@ export function visiblePending(
       visualization: null,
     };
   }
-  if (turn.conversationId !== displayedConversationId) {
+  if (
+    displayedConversationId !== null &&
+    turn.conversationId !== null &&
+    turn.conversationId !== displayedConversationId
+  ) {
     return {
       pendingQuestion: null,
       pendingAnswer: null,

@@ -35,6 +35,9 @@ describe("ExploreSidebar", () => {
 
     expect(html).toContain("Champion win rates");
     expect(html).toContain('aria-label="Answer running"');
+    expect(html).toContain('aria-label="Actions for Champion win rates"');
+    const link = html.slice(html.indexOf("<a "), html.indexOf("</a>") + 4);
+    expect(link).not.toContain("Answer running");
   });
 
   test("labels unread completion and failure markers", () => {

@@ -22,7 +22,9 @@ import {
 } from "#src/lib/explore/explore-turn-state.ts";
 import {
   clearExploreClientError,
-  moveExploreClientRun,
+  dropNewConversationAlias,
+  NEW_CONVERSATION_KEY,
+  placeStartedExploreRun,
   removeExploreClientRun,
   setExploreClientRun,
   shouldReconcileMissingExploreRun,
@@ -50,7 +52,6 @@ import type {
   StartExploreTurnInput,
 } from "#src/lib/explore/explore-runs-contract.ts";
 
-const NEW_CONVERSATION_KEY = "new";
 function conversationKey(conversationId: string | null): string {
   return conversationId ?? NEW_CONVERSATION_KEY;
 }
@@ -111,6 +112,12 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    updateRuns((current) =>
+      dropNewConversationAlias(current, displayedConversationId),
+    );
+  }, [displayedConversationId, updateRuns]);
 
   const refreshConversation = useCallback(
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
@@ -310,9 +317,15 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           questionMessageId: summary.questionMessageId,
         });
         updateRuns((current) => {
-          return moveExploreClientRun(current, key, summary.conversationId, {
-            summary,
-            turn: started,
+          return placeStartedExploreRun({
+            current,
+            fromKey: key,
+            conversationId: summary.conversationId,
+            run: {
+              summary,
+              turn: started,
+            },
+            displayedConversationId: displayedConversationRef.current,
           });
         });
         updateMarkers((current) =>

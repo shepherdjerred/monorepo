@@ -85,9 +85,7 @@ export async function startBackendRuntime(): Promise<
         return;
       }
       if (!configuration.enableDiscordGateway) {
-        logger.warn(
-          "⏭️  Discord gateway disabled for this local secondary instance",
-        );
+        logger.warn("⏭️  Discord gateway disabled for this local instance");
         return;
       }
       await import("@scout-for-lol/backend/discord/index.ts");

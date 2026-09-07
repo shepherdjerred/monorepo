@@ -1,9 +1,9 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import {
   ErrorState,
-  LoadingState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
+import { DelayedLoadingState } from "#src/components/section-skeleton.tsx";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import {
   BucksMarketCard,
@@ -55,7 +55,7 @@ export function MarketsStatusBanner(props: {
   isEmpty: boolean;
 }) {
   return Loaded.match(props.status, {
-    loading: () => <LoadingState label="Loading open markets…" />,
+    loading: () => <DelayedLoadingState label="Loading open markets…" />,
     error: () => (
       <ErrorState
         message="Scout couldn't load open Bryan Bucks markets."

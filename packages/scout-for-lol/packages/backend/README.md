@@ -94,7 +94,9 @@ bun run customs:anonymize -- \
 Environment variables are validated with `env-var`/Zod at startup. Discord and
 Riot API tokens are required; in test mode (`NODE_ENV=test`) placeholder values
 are used automatically. For a full local backend + web app, use
-`bun run dev:web` from the Scout package root (secrets via 1Password).
+`bun run dev:web` from the Scout package root (secrets via 1Password). Local
+`dev:web` does not own the BETA Discord gateway unless you pass
+`--discord-gateway`.
 
 See the [report-lake explanation](../../../docs/wiki/src/content/docs/explanation/scout-report-lake.md)
 and the parent [README](../../README.md) for architecture. The parent

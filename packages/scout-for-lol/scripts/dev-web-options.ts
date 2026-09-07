@@ -132,6 +132,7 @@ function parseCliOverrides(args: readonly string[]): CliOverrides | undefined {
     const argument = args[index];
     if (argument === "--help" || argument === "-h") return undefined;
     if (
+      argument === "--discord-gateway" ||
       argument === "--no-discord-gateway" ||
       argument === "--no-background-jobs" ||
       argument === "--no-web" ||
@@ -145,6 +146,11 @@ function parseCliOverrides(args: readonly string[]): CliOverrides | undefined {
     }
     values.set(argument, requireCliValue(args, index, argument));
     index += 1;
+  }
+  if (flags.has("--discord-gateway") && flags.has("--no-discord-gateway")) {
+    throw new Error(
+      "Cannot combine --discord-gateway and --no-discord-gateway",
+    );
   }
   return {
     backendPort: parseOptionalValue(values, "--backend-port", (value) =>
@@ -160,9 +166,11 @@ function parseCliOverrides(args: readonly string[]): CliOverrides | undefined {
     temporalUiPort: parseOptionalValue(values, "--temporal-ui-port", (value) =>
       parsePort(value, "--temporal-ui-port"),
     ),
-    discordGatewayEnabled: flags.has("--no-discord-gateway")
-      ? false
-      : undefined,
+    discordGatewayEnabled: flags.has("--discord-gateway")
+      ? true
+      : flags.has("--no-discord-gateway")
+        ? false
+        : undefined,
     backgroundJobsEnabled: flags.has("--no-background-jobs")
       ? false
       : undefined,
@@ -251,7 +259,9 @@ export function parseDevWebArgs(
         cli.databaseUrl ?? defaultDatabaseUrl(backendPort, environment),
       discordGatewayEnabled:
         cli.discordGatewayEnabled ??
-        environment["SCOUT_DEV_NO_GATEWAY"] !== "true",
+        (environment["SCOUT_DEV_NO_GATEWAY"] === "true"
+          ? false
+          : environment["SCOUT_DEV_DISCORD_GATEWAY"] === "true"),
       backgroundJobsEnabled:
         cli.backgroundJobsEnabled ??
         environment["SCOUT_DEV_NO_BACKGROUND_JOBS"] !== "true",

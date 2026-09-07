@@ -1,4 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
+import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -38,9 +39,7 @@ export function BucksSettings() {
   );
 
   const value = Loaded.fromQuery(query, ["bucks.settings"]);
-  if (value.status === "loading") {
-    return <LoadingState label="Loading your preferences…" />;
-  }
+  const showLoading = useDelayedLoading(value.status === "loading");
   if (value.status === "error") {
     return (
       <ErrorState
@@ -50,6 +49,12 @@ export function BucksSettings() {
         }}
       />
     );
+  }
+  if (showLoading) {
+    return <LoadingState label="Loading your preferences…" />;
+  }
+  if (value.status === "loading") {
+    return null;
   }
   return (
     <>

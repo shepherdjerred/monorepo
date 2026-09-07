@@ -341,15 +341,6 @@ export function AppNavigation() {
         className="scout-app-sidebar-section mt-auto shrink-0 border-t border-scout-border/60 pt-2 space-y-0.5"
         aria-label="Workspace"
       >
-        <NavLink
-          to="/manage"
-          end
-          className="scout-app-sidebar-link flex items-center gap-2.5 px-2.5 py-2 text-sm"
-        >
-          <Settings className="size-4 shrink-0 text-scout-subtle" />
-          <span>Manage servers</span>
-        </NavLink>
-
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button

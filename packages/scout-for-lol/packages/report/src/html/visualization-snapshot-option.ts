@@ -25,6 +25,7 @@ import {
   scatterTooltipText,
 } from "#src/html/visualization-tooltip.ts";
 import { alignedTrendValues } from "#src/html/visualization-trend-values.ts";
+import type { AnalyticsChartTheme } from "#src/html/analytics-chart-theme.ts";
 import {
   VISUALIZATION_BODY_FONT,
   VISUALIZATION_DISPLAY_FONT,
@@ -105,6 +106,7 @@ export function visualizationSnapshotToOption(
         annotations,
         horizontal,
         mode,
+        theme: presentation.theme,
       }),
     ),
     ...evidenceOverlaySeries(snapshot, categories),
@@ -333,9 +335,18 @@ function snapshotSeriesOption(context: {
   }[];
   horizontal: boolean;
   mode: VisualizationRenderMode;
+  theme: AnalyticsChartTheme;
 }): echarts.SeriesOption {
-  const { snapshot, item, index, categories, annotations, horizontal, mode } =
-    context;
+  const {
+    snapshot,
+    item,
+    index,
+    categories,
+    annotations,
+    horizontal,
+    mode,
+    theme,
+  } = context;
   if (snapshot.kind === "SCATTER_CHART") {
     return {
       id: item.id,
@@ -370,6 +381,7 @@ function snapshotSeriesOption(context: {
       {
         valueFormatter: (input) => snapshotSeriesLabel(snapshot, item, input),
         mode,
+        theme,
       },
     ),
     ...(index === 0 && annotations.length > 0

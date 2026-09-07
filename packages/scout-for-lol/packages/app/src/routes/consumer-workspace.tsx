@@ -34,19 +34,23 @@ export function ConsumerGuildWorkspace() {
 
   if (guildId === undefined) {
     return (
-      <ForbiddenPanel
-        title="Missing guild id"
-        message="This guild-scoped route requires a guild."
-      />
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
+        <ForbiddenPanel
+          title="Missing guild id"
+          message="This guild-scoped route requires a guild."
+        />
+      </div>
     );
   }
   if (access.status === "loading") return null;
   if (access.status === "error") {
     return (
-      <ForbiddenPanel
-        title="No access to this server"
-        message={Loaded.messageOf(access.errors[0].error)}
-      />
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
+        <ForbiddenPanel
+          title="No access to this server"
+          message={Loaded.messageOf(access.errors[0].error)}
+        />
+      </div>
     );
   }
   return <Outlet />;
