@@ -1,14 +1,9 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Suspense, useEffect, type ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
-import {
-  analyticsContextRoute,
-  clearGuildContext,
-  resolveGuildContext,
-} from "#src/lib/analytics.ts";
 import { useTRPC } from "#src/lib/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
@@ -16,9 +11,11 @@ import {
   permissionLabel,
 } from "#src/components/forbidden-panel.tsx";
 import { ErrorPanel } from "#src/components/route-error-panel.tsx";
+import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { permissionsForGuildActionRoute } from "#src/lib/guild-route-permissions.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
 import { GUILD_NAVIGATION_ITEMS } from "#src/lib/app-navigation.ts";
+import { analyticsContextRoute } from "#src/lib/analytics.ts";
 
 export function GuildWorkspace() {
   const { guildId } = useParams();
@@ -52,14 +49,11 @@ export function GuildWorkspace() {
   // no replacement pageview is ever sent, and that entry event is the
   // installation-to-guild signal the whole join exists for.
   const contextRoute = analyticsContextRoute(location.pathname);
-  const analyticsGuildId = hasAccess ? guildId : undefined;
-  useEffect(() => {
-    if (contextRoute === undefined || access.status === "loading") return;
-    resolveGuildContext(contextRoute, analyticsGuildId);
-    return () => {
-      clearGuildContext();
-    };
-  }, [contextRoute, access.status, analyticsGuildId]);
+  useGuildAnalyticsContext({
+    contextRoute,
+    loading: access.status === "loading",
+    guildId: hasAccess ? guildId : undefined,
+  });
 
   if (guildId === undefined) {
     return (

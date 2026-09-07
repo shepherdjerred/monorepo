@@ -1036,10 +1036,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/src/explore/http-route.e2e.test.ts|packages/scout-for-lol/packages/backend/src/explore/http-route.e2e.test.ts": {
-      "clones": 1,
-      "tokens": 117
-    },
     "packages/scout-for-lol/packages/backend/src/league/competition/analysis.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/analysis.integration.test.ts": {
       "clones": 1,
       "tokens": 85

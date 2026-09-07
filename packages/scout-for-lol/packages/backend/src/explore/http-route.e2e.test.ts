@@ -315,6 +315,28 @@ async function seedQuestion(): Promise<{
   return { conversationId: conversation.id, questionId: question.id };
 }
 
+async function appendCompleteAnswer(input: {
+  conversationId: string;
+  parentMessageId: string;
+}) {
+  return await appendExploreAnswer(trpc.prisma, {
+    conversationId: input.conversationId,
+    parentMessageId: input.parentMessageId,
+    answer: {
+      answer: "A late complete answer",
+      title: null,
+      queryText: null,
+      includeVisualization: false,
+      caveats: [],
+      followUps: [],
+    },
+    preview: null,
+    visualization: null,
+    trace: [],
+    expectedCurrentLeafId: null,
+  });
+}
+
 describe("explore salvage", () => {
   test("a stop before prose salvages nothing", async () => {
     const seeded = await seedQuestion();
@@ -392,21 +414,9 @@ describe("explore salvage", () => {
 
   test("cancellation during persistence replaces the answer instead of adding a sibling", async () => {
     const seeded = await seedQuestion();
-    const persisted = await appendExploreAnswer(trpc.prisma, {
+    const persisted = await appendCompleteAnswer({
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
-      answer: {
-        answer: "A late complete answer",
-        title: null,
-        queryText: null,
-        includeVisualization: false,
-        caveats: [],
-        followUps: [],
-      },
-      preview: null,
-      visualization: null,
-      trace: [],
-      expectedCurrentLeafId: null,
     });
 
     const salvaged = await persistPartialAnswer(trpc.prisma, {
@@ -427,21 +437,9 @@ describe("explore salvage", () => {
 
   test("cancellation during persistence removes an answer when no prose streamed", async () => {
     const seeded = await seedQuestion();
-    const persisted = await appendExploreAnswer(trpc.prisma, {
+    const persisted = await appendCompleteAnswer({
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
-      answer: {
-        answer: "A late complete answer",
-        title: null,
-        queryText: null,
-        includeVisualization: false,
-        caveats: [],
-        followUps: [],
-      },
-      preview: null,
-      visualization: null,
-      trace: [],
-      expectedCurrentLeafId: null,
     });
 
     const salvaged = await persistPartialAnswer(trpc.prisma, {

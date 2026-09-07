@@ -1,13 +1,9 @@
-import { useEffect } from "react";
 import { Loaded } from "@shepherdjerred/loaded";
 import { Outlet, useLocation, useParams } from "react-router";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
+import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import {
-  analyticsContextRoute,
-  clearGuildContext,
-  resolveGuildContext,
-} from "#src/lib/analytics.ts";
+import { analyticsContextRoute } from "#src/lib/analytics.ts";
 
 export function ConsumerWorkspace() {
   return <Outlet />;
@@ -19,18 +15,13 @@ export function ConsumerGuildWorkspace() {
   const { access } = usePermissions(guildId);
   const contextRoute = analyticsContextRoute(location.pathname);
 
-  // `guildId` is an unvalidated route param until the permission bootstrap
-  // resolves, so the guild super property is only registered once the server
-  // has confirmed the guild — otherwise any signed-in visitor could deep-link
-  // `/c/<anything>` and stamp an arbitrary value onto every subsequent event.
-  const analyticsGuildId = access.status === "done" ? guildId : undefined;
-  useEffect(() => {
-    if (contextRoute === undefined || access.status === "loading") return;
-    resolveGuildContext(contextRoute, analyticsGuildId);
-    return () => {
-      clearGuildContext();
-    };
-  }, [contextRoute, access.status, analyticsGuildId]);
+  // `guildId` is unvalidated until the permission bootstrap resolves, so the
+  // shared hook only registers the confirmed guild on analytics events.
+  useGuildAnalyticsContext({
+    contextRoute,
+    loading: access.status === "loading",
+    guildId: access.status === "done" ? guildId : undefined,
+  });
 
   if (guildId === undefined) {
     return (
