@@ -25,7 +25,12 @@ const REPOSITORY_CHART_URLS = new Set([
 // corpus/context workers. The old worker's Services, Deployment, and
 // ServiceMonitors are intentionally retired; leaving them live keeps the
 // healthy temporal Application OutOfSync and blocks the release health wait.
+// birmel is here because the editor OAuth surface was intentionally removed.
+// Its Service, TunnelBinding, and Tailscale Ingress are stateless retired
+// resources; leaving them live keeps Birmel OutOfSync and blocks the root
+// release health wait.
 const PRUNED_RELEASE_CHARTS = new Set([
+  "birmel",
   "freshrss",
   "media",
   "service-probes",

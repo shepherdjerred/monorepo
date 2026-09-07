@@ -18,10 +18,22 @@ import {
 
 test("release pruning is limited to charts with intentional resource removal", () => {
   expect(
-    ["freshrss", "media", "service-probes", "temporal", "turbo-cache"].filter(
-      releasePrunesChart,
-    ),
-  ).toEqual(["freshrss", "media", "service-probes", "temporal", "turbo-cache"]);
+    [
+      "birmel",
+      "freshrss",
+      "media",
+      "service-probes",
+      "temporal",
+      "turbo-cache",
+    ].filter(releasePrunesChart),
+  ).toEqual([
+    "birmel",
+    "freshrss",
+    "media",
+    "service-probes",
+    "temporal",
+    "turbo-cache",
+  ]);
   expect(releasePrunesChart("apps")).toBe(false);
   // Pruning stays opt-in: a chart that never intentionally removes a resource
   // must not acquire deletion authority by sitting next to one that does.
