@@ -1,4 +1,4 @@
-tap "artginzburg/tap"
+tap "artginzburg/tap", trusted: { formulae: ["sudo-touchid"] }
 tap "buildkite/buildkite"
 tap "catppuccin/tap"
 tap "cormacrelf/tap"
@@ -14,6 +14,8 @@ tap "siderolabs/tap"
 brew "actionlint"
 # GitOps Continuous Delivery for Kubernetes
 brew "argocd"
+# Record and share terminal sessions
+brew "asciinema"
 # Improved shell history for zsh, bash, fish and nushell
 brew "atuin"
 # Official Amazon AWS command-line interface
@@ -38,6 +40,8 @@ brew "crane"
 brew "difftastic"
 # Select default apps for documents and URL schemes on macOS
 brew "duti"
+# Speech synthesizer that supports more than hundred languages and accents
+brew "espeak-ng"
 # Modern, maintained replacement for ls
 brew "eza"
 # Simple, fast and user-friendly alternative to find
@@ -104,6 +108,8 @@ brew "pgcli"
 brew "pkgconf"
 # PDF rendering library (based on the xpdf-3.0 code base)
 brew "poppler"
+# Cross-platform library for audio I/O
+brew "portaudio"
 # Service monitoring system and time series database
 brew "prometheus"
 # Generic machine emulator and virtualizer
@@ -146,8 +152,6 @@ brew "yq"
 brew "yt-dlp"
 # Pluggable terminal workspace, with terminal multiplexer as the base feature
 brew "zellij"
-# Permanent TouchID support for sudo
-brew "artginzburg/tap/sudo-touchid", trusted: true
 # Work with Buildkite from the command-line
 brew "buildkite/buildkite/bk@3", trusted: true
 # Watcher for macOS 10.14+ light/dark mode changes
@@ -174,12 +178,18 @@ cask "1password-cli"
 cask "affinity"
 # Memory training application
 cask "anki"
+# Agent orchestration platform
+cask "antigravity"
+# Terminal interface for Antigravity agents
+cask "antigravity-cli"
 # Kubernetes desktop client
 cask "aptakube"
 # Utility improving 3rd party mouse performance and functionalities
 cask "bettermouse"
 # OpenAI's official ChatGPT desktop app
 cask "chatgpt"
+# Anthropic's official Claude AI desktop app
+cask "claude"
 # Terminal-based AI coding assistant
 cask "claude-code"
 # Screen capturing tool
@@ -206,6 +216,8 @@ cask "google-chrome@canary"
 cask "iina"
 # File archiver
 cask "keka"
+# Multiplayer online battle arena game
+cask "league-of-legends"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
 # IMAP email client
@@ -218,8 +230,12 @@ cask "netnewswire"
 cask "obsidian"
 # Replacement for Docker Desktop
 cask "orbstack"
+# Self-hosted daemon for AI coding agents
+cask "paseo"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
+# Window snapping tool
+cask "rectangle-pro"
 # Text editor for code, markup and prose
 cask "sublime-text"
 # Control windows and applications right from your trackpad
@@ -234,9 +250,13 @@ cask "tailscale-app"
 cask "visual-studio-code"
 # Multiplayer code editor
 cask "zed"
+vscode "catppuccin.catppuccin-vsc"
+vscode "catppuccin.catppuccin-vsc-icons"
+vscode "vscodevim.vim"
 go "cmd/go"
 go "cmd/gofmt"
 uv "docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]"
+npm "@google/gemini-cli"
 npm "@posthog/cli"
 npm "corepack"
 npm "eslint"

@@ -1,4 +1,4 @@
-model = "gpt-5.6-terra"
+model = "gpt-5.6-luna"
 model_reasoning_effort = "xhigh"
 plan_mode_reasoning_effort = "xhigh"
 approval_policy = "never"
@@ -30,6 +30,15 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/jerred/Library/Application Support/com.conductor.app/bin"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/Downloads"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/git/6035-workspace"]
+trust_level = "trusted"
+
+[projects."/Users/jerred/git/league-kart"]
 trust_level = "trusted"
 
 [plugins."github@openai-curated"]
@@ -69,6 +78,7 @@ vim_mode_default = true
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 "gpt-5.6-sol" = 4
+gpt-6-astra = 4
 
 [marketplaces.openai-bundled]
 source_type = "local"
@@ -173,3 +183,22 @@ GIT_CONFIG_GLOBAL = "/Users/jerred/.config/agent/gitconfig"
 
 [hooks.state."/Users/jerred/git/monorepo/.codex/config.toml:session_start:0:0"]
 trusted_hash = "sha256:c133fbaafb99f6e5d2050146dfe4469ae2680d261699613c09549fe3fa94642b"
+
+[hooks.state."/Users/jerred/.codex/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:e87180aa7a845a4e8671c742154d02f3336ff1693cd84353786950676a35b646"
+
+[hooks.state."/Users/jerred/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:59a36501523d6a8b85cc02c3a736ad805de653ce908e10b602125d648115300c"
+
+[hooks.state."/Users/jerred/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:1d4424675dbac0e5f5247f7637f48d3e4ad1e3f906f9fd05a92257543f684ec0"
+
+[hooks.state."/Users/jerred/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:1bbf80a578a86f31ebe527dd23122c0325a86924605bc751ce7afdc4fee2af28"
+
+[hooks.state."/Users/jerred/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:8fa5975ee559d019faf357e2e7880255e6b26a108505ece97171c4988eef96e9"
+
+[hooks.state."/Users/jerred/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:2fd60e7d52ce693fb066fd8d1377bd725975f8f8188c8fabefee39f6ae5bea6f"
+enabled = true

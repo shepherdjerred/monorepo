@@ -1,0 +1,10 @@
+---
+description: Disable native macOS window tiling (Rectangle Pro owns drag-snap)
+sudo: false
+current_host: false
+data:
+  com.apple.WindowManager:
+    EnableTilingByEdgeDrag: false
+    EnableTopTilingByEdgeDrag: false
+    EnableTilingOptionAccelerator: false
+    EnableTiledWindowMargins: false

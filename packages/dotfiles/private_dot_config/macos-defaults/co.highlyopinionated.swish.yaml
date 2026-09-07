@@ -1,7 +1,12 @@
 ---
-description: Swish — window gesture management
+description: Swish — trackpad window gestures (Rectangle Pro owns keyboard)
 sudo: false
 current_host: false
 data:
   co.highlyopinionated.swish:
+    # Off: Rectangle Pro owns snap shortcuts. Swish is title-bar / Dock gestures.
+    hotkeys: false
+    # Keep the cursor put after a snap so trackpad aim stays stable.
+    snappingMoveCursor: false
     blacklist: '["com.apple.Spotlight","com.apple.notificationcenterui","com.apple.controlcenter","com.apple.CharacterPaletteIM","com.apple.PIPAgent"]'
+    actions: '["menubarMinimize","windowMinimize","snapHalves","screensMove","menubarAppSwitcher","snapCenter","appChain","windowHide","appMinimize","windowFullscreen","screensFullscreen","snapMax","snapVertical","appNewTab","windowQuit","snapAlmost","snapSixths","snapThirds","snapQuarters","tabClose","snapNinths","tabDetach","appQuit","appUnminimize","appCycle","menubarUnsnap","windowClose","menubarUnminimize","spacesMove","menubarScrollToTop","appHide","menubarScreens","missionControlSpace"]'
