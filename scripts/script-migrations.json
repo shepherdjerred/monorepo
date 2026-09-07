@@ -303,6 +303,11 @@
       "reason": "Terraform and jq helper is intentionally distributed as a shell script for use from initialized Terraform directories"
     },
     {
+      "source": "packages/dotfiles/herdr-stage-plugin/mark-stage.sh",
+      "disposition": "retain",
+      "reason": "Herdr plugin command is invoked as sh from the plugin directory without a Bun runtime"
+    },
+    {
       "source": "packages/dotfiles/install.sh",
       "disposition": "retain",
       "reason": "Bootstrap installs the toolchain including Bun"
