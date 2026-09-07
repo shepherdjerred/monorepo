@@ -887,13 +887,21 @@ export function prepareStream(
     commandBuilder.inputOption("-scan_all_pmts", "0");
   }
 
-  // Optional second input carrying audio (for raw-video sources with no embedded audio track).
-  // Added after every input-0 option above so its inputOptions bind to this input. Mapped via
-  // `-map 1:a:0` in the audio setup below. Only wired when audio output is enabled.
+  // Optional second input carrying audio: a raw-video source with no embedded audio track, or a
+  // split yt-dlp result whose video and audio are separately signed URLs. Added after every
+  // input-0 option above so its inputOptions bind to this input. Mapped via `-map 1:a:0` below.
+  // Only wired when audio output is enabled.
   if (mergedOptions.audioInput && mergedOptions.includeAudio) {
     commandBuilder
       .input(mergedOptions.audioInput.source)
       .inputOptions([
+        // `-ss` is an input option: it seeks the input it precedes, and nothing else. Applying it
+        // to input 0 alone would start the picture at the requested offset while its soundtrack
+        // restarted from zero — so every resume, crash retry and live seek would play the right
+        // video against the wrong audio, and the audio would outlast the video by the offset.
+        ...(mergedOptions.startTime === undefined
+          ? []
+          : ["-ss", String(mergedOptions.startTime)]),
         ...latencyInputOptions,
         ...mergedOptions.audioInput.inputOptions,
       ]);

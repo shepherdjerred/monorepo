@@ -53,6 +53,61 @@ describe("prepareStream audioInput", () => {
     }
   });
 
+  test("seeks BOTH inputs when a split source starts at an offset", () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: true,
+      startTime: 42,
+      audioInput: {
+        source: "tcp://127.0.0.1:1",
+        inputOptions: ["-f", "s16le", "-ar", "44100", "-ac", "2"],
+      },
+    });
+    promise.catch(() => {});
+    try {
+      const args = ffmpegArgs(command);
+      // `-ss` is an input option — it seeks only the input it precedes. Applying it to input 0
+      // alone starts the picture at 42s while its soundtrack restarts from zero, so every resume,
+      // crash retry and live seek on a split yt-dlp source plays the right video against the wrong
+      // audio. Assert one `-ss 42` per input, positioned before its own `-i`.
+      const seekPositions = args
+        .map((arg, index) => ({ arg, index }))
+        .filter(({ arg }) => arg === "-ss")
+        .map(({ index }) => index);
+      const inputPositions = args
+        .map((arg, index) => ({ arg, index }))
+        .filter(({ arg }) => arg === "-i")
+        .map(({ index }) => index);
+      expect(inputPositions).toHaveLength(2);
+      expect(seekPositions).toHaveLength(2);
+      for (const seek of seekPositions) expect(args[seek + 1]).toBe("42");
+      expect(seekPositions[0]).toBeLessThan(inputPositions[0] ?? -1);
+      expect(seekPositions[1]).toBeGreaterThan(inputPositions[0] ?? -1);
+      expect(seekPositions[1]).toBeLessThan(inputPositions[1] ?? -1);
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
+  test("leaves the split audio input unseeked when playback starts at zero", () => {
+    const { command, output, promise } = prepareStream("video.nut", {
+      includeAudio: true,
+      audioInput: {
+        source: "tcp://127.0.0.1:1",
+        inputOptions: ["-f", "s16le", "-ar", "44100", "-ac", "2"],
+      },
+    });
+    promise.catch(() => {});
+    try {
+      // The control: no offset means no `-ss` anywhere, so the rawvideo bots' command line — which
+      // uses `audioInput` and never seeks — is byte-identical to what it was before this fix.
+      expect(ffmpegArgs(command)).not.toContain("-ss");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
   test("binds low-latency probe options to both live inputs", () => {
     const { command, output, promise } = prepareStream("video.nut", {
       includeAudio: true,
