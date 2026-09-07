@@ -7,9 +7,9 @@
       "buildNumber": 14996
     },
     "shepherdjerred/birmel": {
-      "version": "2.0.0-14996",
-      "digest": "sha256:3a3970db41268b89e4e282f803d96a6b6876484c1fe8fbc3d38b627d27dbbc00",
-      "buildNumber": 14996
+      "buildNumber": 15020,
+      "version": "2.0.0-15020",
+      "digest": "sha256:2a52dcd50a3c0e432340407635291a834a242abd5da1f217eca1e627b11f963f"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-13290",
@@ -22,9 +22,9 @@
       "buildNumber": 14996
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "version": "2.0.0-14996",
-      "digest": "sha256:7ca0de6ce7019ef0af3cdc9aa3b1a9aa0d83ebad021bacfef1fd5ab6d7e35c9a",
-      "buildNumber": 14996
+      "buildNumber": 15020,
+      "version": "2.0.0-15020",
+      "digest": "sha256:a5f4e27f75f0b94fc8937a9fc37f695de73c9713ebcd9b8089675c7ff2de3206"
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-10760",
@@ -32,9 +32,9 @@
       "buildNumber": 10760
     },
     "shepherdjerred/openrouter-broadcast-ingest": {
-      "version": "2.0.0-14996",
-      "digest": "sha256:7d190a1e590e93ac64d348bc1be75326c0a422f0cc0cd8c12b7235c45f27a6ff",
-      "buildNumber": 14996
+      "buildNumber": 15020,
+      "version": "2.0.0-15020",
+      "digest": "sha256:26b9f779744b728d8cff5c3b85afab2d1546874b9a0ab3644aaa1d61511c986c"
     },
     "shepherdjerred/redlib": {
       "version": "2.0.0-11934",
@@ -47,9 +47,9 @@
       "buildNumber": 14996
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 15005,
-      "version": "2.0.0-15005",
-      "digest": "sha256:2652b0fffd7d305b47dc7896d6ee28130e0f5e446380c4f1aedbada9bafedc13"
+      "buildNumber": 15020,
+      "version": "2.0.0-15020",
+      "digest": "sha256:b6fb3044af7e4b101d240459c717bb3cecb7010a45cb0d5e006752c9eddcee5d"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -73,9 +73,9 @@
       "buildNumber": 14996
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 15005,
-      "version": "2.0.0-15005",
-      "digest": "sha256:93411ec87c1c5c7289a40b7729e4e54aeab9ce6882056ccb7af2b1114d161390"
+      "buildNumber": 15020,
+      "version": "2.0.0-15020",
+      "digest": "sha256:b9757546445b1713c3aec8308d30146b19c7bf91ef5cbc524b98ea4f9f0b803b"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-13792",
