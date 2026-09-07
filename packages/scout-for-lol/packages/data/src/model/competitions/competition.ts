@@ -1,5 +1,6 @@
 import { match } from "ts-pattern";
 import { z } from "zod";
+import { PlayerIdSchema } from "@scout-for-lol/domain/identity/database-ids.ts";
 import type {
   DiscordAccountId,
   DiscordChannelId,
@@ -575,11 +576,12 @@ export function getSnapshotSchemaForCriteria(
 // Cached Leaderboard Schema
 // ============================================================================
 
-export const PlayerIdSchema = z.number().int().positive().brand("PlayerId");
-export type PlayerId = z.infer<typeof PlayerIdSchema>;
-
-export const AccountIdSchema = z.number().int().positive().brand("AccountId");
-export type AccountId = z.infer<typeof AccountIdSchema>;
+export {
+  type AccountId,
+  AccountIdSchema,
+  type PlayerId,
+  PlayerIdSchema,
+} from "@scout-for-lol/domain/identity/database-ids.ts";
 
 /**
  * Leaderboard entry stored in cache

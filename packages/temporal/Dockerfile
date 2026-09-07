@@ -53,6 +53,7 @@ COPY --parents \
   packages/glitter-context \
   packages/home-assistant \
   packages/llm-models \
+  packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
@@ -424,6 +425,7 @@ COPY --parents \
   packages/llm-observability \
   packages/s3-signed-request \
   packages/llm-runtime \
+  packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \
   packages/seaweedfs-backup \

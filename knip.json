@@ -182,6 +182,10 @@
       "entry": ["scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
     },
+    "packages/scout-for-lol/packages/domain": {
+      "entry": ["src/**/*.test.ts", "architecture-fixtures/**/*.ts"],
+      "project": ["src/**/*.ts", "architecture-fixtures/**/*.ts"]
+    },
     "packages/scout-for-lol/packages/report": {
       "project": ["src/**/*.{ts,tsx}"]
     },

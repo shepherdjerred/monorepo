@@ -95,6 +95,7 @@ const config = [
       "./packages/app/tsconfig.json",
       "./packages/backend/tsconfig.json",
       "./packages/data/tsconfig.json",
+      "./packages/domain/tsconfig.json",
       "./packages/report/tsconfig.json",
       "./packages/temporal/tsconfig.json",
       "./packages/desktop/tsconfig.json",
@@ -210,6 +211,19 @@ const config = [
       "packages/ui/src/components/sound-pack-editor/index.ts",
       "packages/ui/src/index.ts",
       "packages/backend/src/voice/index.ts",
+    ],
+    rules: { "custom-rules/no-re-exports": "off" },
+  },
+  // Re-export shims for identity schemas moved to @scout-for-lol/domain.
+  // Each file keeps exporting the same schema objects so the existing
+  // `@scout-for-lol/data` import sites are untouched and object identity is
+  // preserved across both packages.
+  {
+    files: [
+      "packages/data/src/model/competitions/competition.ts",
+      "packages/data/src/model/core/discord.ts",
+      "packages/data/src/model/riot/league-account.ts",
+      "packages/data/src/model/core/routes.ts",
     ],
     rules: { "custom-rules/no-re-exports": "off" },
   },

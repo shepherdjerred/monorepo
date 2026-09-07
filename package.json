@@ -139,6 +139,7 @@
     "packages/scout-for-lol/packages/desktop",
     "packages/scout-for-lol/packages/desktop/src-tauri",
     "packages/scout-for-lol/packages/docs-site",
+    "packages/scout-for-lol/packages/domain",
     "packages/scout-for-lol/packages/evals",
     "packages/scout-for-lol/packages/frontend",
     "packages/scout-for-lol/packages/report",

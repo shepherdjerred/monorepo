@@ -436,6 +436,15 @@
       ]
     },
     {
+      "package": "@scout-for-lol/domain",
+      "directory": "packages/scout-for-lol/packages/domain",
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
+    },
+    {
       "package": "@scout-for-lol/design-system",
       "directory": "packages/scout-for-lol/packages/design-system",
       "steps": [
