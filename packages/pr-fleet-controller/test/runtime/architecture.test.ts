@@ -4,7 +4,7 @@ import { assertArchitectureFixtures } from "@shepherdjerred/architecture";
 import { describe, expect, it, test } from "vitest";
 import architecture from "#architecture";
 
-const packageRoot = import.meta.dir.replace(/\/test$/u, "");
+const packageRoot = import.meta.dir.replace(/\/test(?:\/.*)?$/u, "");
 
 test("architecture fixtures prove every pr-fleet-controller boundary", async () => {
   await assertArchitectureFixtures({

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { CompositeScreenProps } from "@react-navigation/native";
 import type { Task, TaskId } from "../domain/types";
-import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { createCaptureSeed } from "../domain/quick-capture/quick-capture-seed";
 import { localTodayYmd } from "../domain/recurrence";
 import { e2eNow } from "../navigation/e2e-config";
 import type { RootStackParamList } from "../navigation/types";

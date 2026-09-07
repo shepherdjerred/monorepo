@@ -1,5 +1,5 @@
-import { deriveSavedViewTasks } from "./saved-view-collection";
-import type { SavedView } from "./saved-views";
+import { deriveSavedViewTasks } from "./saved-view/saved-view-collection";
+import type { SavedView } from "./saved-view/saved-views";
 import type { Task } from "./types";
 
 export const JOB_SEARCH_SAVED_VIEW_ID = "job-search";

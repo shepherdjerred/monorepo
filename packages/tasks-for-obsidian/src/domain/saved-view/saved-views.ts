@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { PrioritySchema, TaskStatusSchema } from "./base-schemas";
+import { PrioritySchema, TaskStatusSchema } from "../base-schemas";
 
 export const SAVED_VIEW_PREFERENCES_VERSION = 1;
 

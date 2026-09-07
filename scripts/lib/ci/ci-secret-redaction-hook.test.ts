@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 
-const repositoryRoot = path.join(import.meta.dir, "../..");
+const repositoryRoot = path.join(import.meta.dir, "../../..");
 const hookPath = path.join(repositoryRoot, ".buildkite/hooks/pre-command");
 const temporaryDirectories: string[] = [];
 

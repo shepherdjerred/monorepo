@@ -8,28 +8,31 @@ import {
   type BuildkiteClientConfig,
   type PrometheusClientConfig,
   type TimeWindow,
-} from "../lib/ci-io-api.ts";
+} from "../lib/ci/ci-io-api.ts";
 import {
   CI_IO_USAGE,
   parseCliOptions,
   type CliOptions,
-} from "../lib/ci-io-cli.ts";
-import { renderCiIoMarkdown } from "../lib/ci-io-markdown.ts";
+} from "../lib/ci/ci-io-cli.ts";
+import { renderCiIoMarkdown } from "../lib/ci/ci-io-markdown.ts";
 import {
   fetchPrometheusIoMetrics,
   filterPrometheusIoMetrics,
-} from "../lib/ci-io-prometheus.ts";
+} from "../lib/ci/ci-io-prometheus.ts";
 import {
   assertBenchmarkIntegrity,
   buildWindowIoReport,
-} from "../lib/ci-io-report.ts";
-import type { CiIoReport, WindowIoReport } from "../lib/ci-io-report-model.ts";
+} from "../lib/ci/ci-io-report.ts";
+import type {
+  CiIoReport,
+  WindowIoReport,
+} from "../lib/ci/ci-io-report-model.ts";
 import {
   selectCohortBuilds,
   selectExplicitBuilds,
   type BuildSelection,
-} from "../lib/ci-io-selection.ts";
-import { compareWindows } from "../lib/ci-io-statistics.ts";
+} from "../lib/ci/ci-io-selection.ts";
+import { compareWindows } from "../lib/ci/ci-io-statistics.ts";
 
 function requestedCohortWindow(from: string, to: string): TimeWindow {
   const window = { from: new Date(from), to: new Date(to) };

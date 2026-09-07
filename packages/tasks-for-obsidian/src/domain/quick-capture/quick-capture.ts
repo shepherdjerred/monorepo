@@ -1,13 +1,13 @@
-import { CreateTaskRequestSchema } from "./base-schemas";
-import type { CreateTaskRequest, NlpParseResult } from "./types";
-import { PRIORITY_LABELS } from "./priority";
-import { formatRelativeDate } from "../lib/dates";
+import { CreateTaskRequestSchema } from "../base-schemas";
+import type { CreateTaskRequest, NlpParseResult } from "../types";
+import { PRIORITY_LABELS } from "../priority";
+import { formatRelativeDate } from "../../lib/dates";
 import {
   parseTaskInput,
   projectNameFromInputToken,
   tokenizeTaskInput,
   type TaskInputToken,
-} from "../lib/nlp";
+} from "../../lib/nlp";
 import { recurrenceDisplayName } from "./quick-capture-recurrence";
 import {
   createCaptureSeed,

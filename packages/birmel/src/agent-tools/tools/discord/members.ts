@@ -12,7 +12,7 @@ import {
   handleModifyMember,
   handleAddRole,
   handleRemoveRole,
-} from "./member-actions.ts";
+} from "./actions/member-actions.ts";
 
 export const manageMemberTool = createTool({
   id: "manage-member",

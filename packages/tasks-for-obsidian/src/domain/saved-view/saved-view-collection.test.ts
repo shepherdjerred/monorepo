@@ -7,8 +7,8 @@ import {
 } from "./saved-view-collection";
 import { SavedViewSchema } from "./saved-views";
 import type { SavedView, SavedViewQuery } from "./saved-views";
-import { contextName, projectName, tagName, taskId } from "./types";
-import type { Task } from "./types";
+import { contextName, projectName, tagName, taskId } from "../types";
+import type { Task } from "../types";
 
 function makeTask(id: string, overrides: Partial<Task> = {}): Task {
   return {

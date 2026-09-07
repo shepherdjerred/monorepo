@@ -12,7 +12,7 @@ import {
   applyCaptureSuggestion,
   buildCaptureSuggestions,
   type CaptureSuggestion,
-} from "../../domain/quick-capture-autocomplete";
+} from "../../domain/quick-capture/quick-capture-autocomplete";
 import { deriveProjectOptions } from "../../domain/project-options";
 
 type NaturalLanguageInputProps = {

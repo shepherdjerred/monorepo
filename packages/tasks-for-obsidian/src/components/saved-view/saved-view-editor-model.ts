@@ -1,13 +1,13 @@
-import type { SavedViewDefinition } from "../../domain/saved-view-actions";
+import type { SavedViewDefinition } from "../../domain/saved-view/saved-view-actions";
 import {
   SavedViewPresentationSchema,
   SavedViewSchema,
-} from "../../domain/saved-views";
+} from "../../domain/saved-view/saved-views";
 import type {
   SavedView,
   SavedViewPresentation,
   SavedViewQuery,
-} from "../../domain/saved-views";
+} from "../../domain/saved-view/saved-views";
 import type { TaskStatus } from "../../domain/status";
 
 export const SAVED_VIEW_STATUS_OPTIONS: readonly TaskStatus[] = [

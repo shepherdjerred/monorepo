@@ -14,7 +14,7 @@ import {
   projectIdentityLabel,
   projectOptionLabel,
   resolveProjectIdentity,
-} from "./project-options";
+} from "../project-options";
 import {
   captureSeedFromInitialText,
   captureSeedFromRouteParams,
