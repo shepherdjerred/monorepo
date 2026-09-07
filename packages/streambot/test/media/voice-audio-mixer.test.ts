@@ -379,7 +379,7 @@ describe("VoiceAudioMixer assistant pacing", () => {
     ).toBeCloseTo(ASSISTANT_LEVEL, 6);
   });
 
-  test("a teardown mid-reply drains the waiting packet instead of sending it late", async () => {
+  test("a teardown mid-reply reports the abandoned packet instead of sending it late", async () => {
     const context = harness();
     const assistant = context.mixer.openAssistantAudio();
     context.mixer.openMusicPort();
@@ -387,7 +387,11 @@ describe("VoiceAudioMixer assistant pacing", () => {
 
     const pending = assistant.send(toFakeOpus(constantFrame(ASSISTANT_LEVEL)));
     context.mixer.reset();
-    await expect(pending).resolves.toBeUndefined();
+    // The packet was neither mixed nor sent solo, so the sender must not count it as delivered —
+    // the teardown path never reaches `emitMixed`, so nothing else would ever set its result.
+    // Settling at all is what matters for liveness: a rejection releases the caller just as a
+    // resolution would, so the drain this test was originally written for still holds.
+    await expect(pending).rejects.toThrow(/refused|abandoned/);
     expect(context.connection.sent).toHaveLength(0);
   });
 

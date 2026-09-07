@@ -409,7 +409,14 @@ export class VoiceAudioMixer {
     this.assistantDecoder = null;
     this.encoder?.close();
     this.encoder = null;
-    this.pendingAssistant = null;
+    // A packet still waiting on the next music tick is abandoned here — EOF, skip, crash. Marking
+    // it failed is what stops the sender reading the entry's disappearance as consumption: the
+    // teardown path never reaches `emitMixed`, so nothing else would ever set the result, and the
+    // reply would report a packet as delivered that was neither mixed nor sent on its own.
+    if (this.pendingAssistant !== null) {
+      this.pendingAssistant.sent = false;
+      this.pendingAssistant = null;
+    }
   }
 
   private createDecoder(): OpusFrameDecoder {
