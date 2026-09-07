@@ -30,7 +30,7 @@ sequence for production only after beta acceptance.
 
 Confirm that the candidate image pin is deployed and copy the exact 40-character
 Git SHA baked into that image. Keep the [stable and candidate Kubernetes
-Deployments](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/homelab/src/cdk8s/src/resources/temporal/workers/workflow-worker.ts)
+Deployments](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/homelab/src/cdk8s/src/resources/temporal/workflow-worker.ts)
 healthy. Do not remove legacy queue pollers while visibility still shows open
 executions on those queues; the [rollout preflight](https://github.com/shepherdjerred/monorepo/blob/95a219ec8fca805e0cfccf6a2ebd0dcfebc3e63a/packages/temporal/src/lib/worker-deployment-proofs.ts)
 checks the candidate poller before changing routing.
