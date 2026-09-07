@@ -447,6 +447,7 @@ describe("verified tool self-memory", () => {
       resultSummary: "Research returned results",
       content: "Tool web-research succeeded",
       success: true,
+      inputKey: "search-key",
     };
 
     expect(
@@ -462,6 +463,7 @@ describe("verified tool self-memory", () => {
             resultSummary: "Tool reported failure",
             content: "Tool web-research failed",
             success: false,
+            inputKey: "search-key",
           },
         ],
       }),

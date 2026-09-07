@@ -43,15 +43,16 @@ const SessionToolEventSchema = z.strictObject({
   content: z.string().min(1).max(1024),
   success: z.boolean(),
   effectDisposition: EffectDispositionSchema.optional(),
-  // The repo-wide convention for a composite tool's discriminator: several
-  // registered tools (manage-role, get-activity-stats, external-service, ...)
-  // expose multiple operations - reads and writes alike - under one toolId
-  // via an `action` input field. Captured here, from the raw unredacted
-  // input, so requireGroundedAnswer can tell "the same tool, retried" from
-  // "the same tool, a different operation" without re-parsing inputSummary.
-  action: z.string().max(64).optional(),
+  // A structural hash of the raw, unredacted input. Matching on the action
+  // field alone (an earlier version of this check) was not enough: composite
+  // tools like manage-role take a "create" action for many different roles,
+  // so an unrelated later create could still "correct" an earlier one that
+  // targeted something else entirely. Bun.hash is key-order independent and
+  // varies with any field's value, so two calls hash equal only when their
+  // full input does - the only generic, per-tool-agnostic way to tell "this
+  // exact operation was retried" from "a similar-shaped one happened to run."
+  inputKey: z.string(),
 });
-const ActionInputSchema = z.object({ action: z.string().max(64) }).loose();
 
 type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
 
@@ -76,6 +77,29 @@ function boundedText(value: string, maxLength: number): string {
   return value.length <= maxLength
     ? value
     : `${value.slice(0, maxLength - 1)}…`;
+}
+
+/**
+ * A JSON string with object keys sorted recursively, so two inputs that
+ * differ only in key order canonicalize identically. Bun.hash's own object
+ * overload does this internally, but its declared type only accepts
+ * string/buffer input; canonicalizing here keeps hashing on that well-typed
+ * path instead of asserting `unknown` past the type checker.
+ */
+function canonicalize(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map((entry) => canonicalize(entry)).join(",")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    const entries = Object.entries(value)
+      .toSorted(([left], [right]) => left.localeCompare(right))
+      .map(
+        ([key, entryValue]) =>
+          `${JSON.stringify(key)}:${canonicalize(entryValue)}`,
+      );
+    return `{${entries.join(",")}}`;
+  }
+  return value === undefined ? "null" : JSON.stringify(value);
 }
 
 function boundedSummary(value: unknown): string {
@@ -109,7 +133,6 @@ export function summarizeToolResultForSession(
     `Tool ${toolResult.toolName} call ${toolResult.toolCallId} ${status}; input=${inputSummary}; result=${resultSummary}`,
     1024,
   );
-  const action = ActionInputSchema.safeParse(toolResult.input);
   return SessionToolEventSchema.parse({
     toolCallId: toolResult.toolCallId,
     toolId: toolResult.toolName,
@@ -120,7 +143,7 @@ export function summarizeToolResultForSession(
     ...(toolResult.output.effectDisposition == null
       ? {}
       : { effectDisposition: toolResult.output.effectDisposition }),
-    ...(action.success ? { action: action.data.action } : {}),
+    inputKey: Bun.hash(canonicalize(toolResult.input)).toString(),
   });
 }
 
@@ -204,13 +227,18 @@ export function requireGroundedAnswer(
   // something incidental and having that check fail says nothing about
   // whether the claimed outcome holds.
   //
-  // "Later call" means the same tool AND, when the failed call carried one,
-  // the same action: a composite tool like manage-role exposes both reads and
-  // writes under one id, so a failed create is not corrected by a later list
-  // - only a later call that performed or verified that same operation
-  // counts. A tool with no action field falls back to id-only matching, the
-  // most that can be said generically about a tool this check knows nothing
-  // else about.
+  // "Later call" means the same tool AND the same input: matching on the
+  // action field alone is not enough, because a composite tool's action still
+  // covers many different targets - a failed manage-role create for one role
+  // is not corrected by a later create for a different one. Requiring the
+  // full input to match is the only generic, per-tool-agnostic way to tell
+  // "this exact operation was retried" from "a similarly-shaped one ran."
+  // The cost is real: a retry that adjusts its input to fix what the first
+  // attempt got wrong no longer counts as correcting it, so that turn is
+  // rejected rather than credited. That is the intended trade - an honest
+  // failure over a claim this check cannot actually verify - not an
+  // oversight; loosening it is what created every earlier version of this
+  // gap.
   const uncorrectedFailure = toolEvents.find(
     (event, index) =>
       !event.success &&
@@ -221,7 +249,7 @@ export function requireGroundedAnswer(
           (later) =>
             later.success &&
             later.toolId === event.toolId &&
-            (event.action === undefined || later.action === event.action),
+            later.inputKey === event.inputKey,
         ),
   );
   if (uncorrectedFailure !== undefined) {
