@@ -1,4 +1,4 @@
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type { RecoveryBatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { RecoveryBatch } from "@scout-for-lol/domain/recovery/batch.ts";
 import {
@@ -21,8 +21,6 @@ import {
  * the domain's own `stale-cursor` answer rather than rewinding the cursor.
  */
 
-type RecoveryDb = Pick<ExtendedPrismaClient, "matchRecoveryBatch">;
-
 const TRANSITION_ATTEMPTS = 3;
 
 export type CreateRecoveryBatchResult =
@@ -39,7 +37,7 @@ export type CreateRecoveryBatchResult =
  * collided with a different batch — the adoption key is already spoken for.
  */
 export async function createRecoveryBatch(
-  db: RecoveryDb,
+  db: Db,
   record: MatchRecoveryBatchRecord,
 ): Promise<CreateRecoveryBatchResult> {
   const row = matchRecoveryBatchRecordToRow(record);
@@ -68,7 +66,7 @@ export async function createRecoveryBatch(
 }
 
 export async function getRecoveryBatch(
-  db: RecoveryDb,
+  db: Db,
   args: { recoveryBatchId: RecoveryBatchId },
 ): Promise<MatchRecoveryBatchRecord | null> {
   const row = await db.matchRecoveryBatch.findUnique({
@@ -84,7 +82,7 @@ export async function getRecoveryBatch(
  * the fresh state so a lost race returns the domain's own non-applied answer.
  */
 export async function transitionRecoveryBatch(
-  db: RecoveryDb,
+  db: Db,
   args: {
     recoveryBatchId: RecoveryBatchId;
     transition: (batch: RecoveryBatch) => RecoveryTransitionResult;
@@ -125,7 +123,7 @@ export async function transitionRecoveryBatch(
  * position exactly as the domain transition defines it.
  */
 export async function advanceRecoveryCursor(
-  db: RecoveryDb,
+  db: Db,
   args: {
     recoveryBatchId: RecoveryBatchId;
     expectedPosition: string | undefined;

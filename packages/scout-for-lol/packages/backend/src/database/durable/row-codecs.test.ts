@@ -1,7 +1,15 @@
 import { describe, expect, test } from "vitest";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { PlatformRouteSchema } from "@scout-for-lol/domain/identity/routes.ts";
+import {
+  NotificationIntentSchema,
+  type NotificationIntent,
+} from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   matchObservationRecordToRow,
   matchObservationRowToRecord,
+  MatchObservationRecordSchema,
+  type MatchObservationRecord,
 } from "#src/database/durable/observation-row.ts";
 import {
   matchProcessingReceiptRecordToRow,
@@ -10,10 +18,13 @@ import {
 import {
   matchNotificationIntentRecordToRow,
   matchNotificationIntentRowToRecord,
+  type MatchNotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
 import {
   matchRecoveryBatchRecordToRow,
   matchRecoveryBatchRowToRecord,
+  MatchRecoveryBatchRecordSchema,
+  type MatchRecoveryBatchRecord,
 } from "#src/database/durable/recovery-row.ts";
 import {
   scoutWorkflowStartRecordToRow,
@@ -26,10 +37,11 @@ import {
 } from "#src/database/durable/tracked-account-row.ts";
 
 /**
- * Row -> domain record -> row round-trips for every durable model, covering
- * every member of each state vocabulary. The row is the fixed point: the
- * database normalises instants to UTC milliseconds, so a stored row must map
- * into the domain unions and back without changing a single column.
+ * Round-trips for every durable model, covering every member of each state
+ * vocabulary, in both directions: a stored row must map into the domain
+ * unions and back without changing a column, and a domain value must map to
+ * columns and back without changing at all. The database normalises instants
+ * to UTC milliseconds, so fixtures use `.000Z` instants.
  */
 
 const MATCH_ID = "NA1_5312279829";
@@ -38,13 +50,22 @@ const CHANNEL_ID = "300000000000000001";
 const ACCOUNT_DISCORD_ID = "200000000000000001";
 const MESSAGE_ID = "400000000000000001";
 const DIGEST = "a".repeat(64);
-const PAYLOAD = JSON.stringify({
-  kind: "match-report",
-  version: 1,
-  data: { body: "hello" },
-});
 const AT = new Date("2026-09-07T10:00:00.000Z");
 const LATER = new Date("2026-09-07T11:00:00.000Z");
+const AT_ISO = "2026-09-07T10:00:00.000Z";
+const LATER_ISO = "2026-09-07T11:00:00.000Z";
+
+function abandonedRecord(reason: string): MatchRecoveryBatchRecord {
+  return MatchRecoveryBatchRecordSchema.parse({
+    batch: {
+      id: "recovery-2026-09-07",
+      policy: "normal",
+      createdAt: AT_ISO,
+      state: { kind: "abandoned", reason },
+    },
+    workflowId: null,
+  });
+}
 
 describe("MatchObservation codec", () => {
   const baseRow = {
@@ -86,6 +107,42 @@ describe("MatchObservation codec", () => {
     const record = matchObservationRowToRecord(row);
     expect(matchObservationRecordToRow(record)).toEqual(row);
   });
+
+  function observationRecord(artifacts: {
+    match: { key: string; digest: string } | null;
+    timeline: { key: string; digest: string } | null;
+  }): MatchObservationRecord {
+    return MatchObservationRecordSchema.parse({
+      matchId: MATCH_ID,
+      platformRoute: "NA1",
+      policy: "ARCHIVE_ONLY",
+      owner: { kind: "unowned" },
+      promotion: null,
+      gameCreatedAt: AT_ISO,
+      observedAt: LATER_ISO,
+      artifacts,
+    });
+  }
+
+  const oneArtifactVariants = [
+    [
+      "only the match artifact stored",
+      { match: { key: "k/match.json", digest: DIGEST }, timeline: null },
+    ],
+    [
+      "only the timeline artifact stored",
+      { match: null, timeline: { key: "k/timeline.json", digest: DIGEST } },
+    ],
+  ] as const;
+
+  test.each(oneArtifactVariants)(
+    "round-trips a domain observation with %s",
+    (_name, artifacts) => {
+      const record = observationRecord(artifacts);
+      const row = matchObservationRecordToRow(record);
+      expect(matchObservationRowToRecord(row)).toEqual(record);
+    },
+  );
 
   test("rejects a promotion on an ARCHIVE_ONLY row", () => {
     expect(() =>
@@ -164,120 +221,178 @@ describe("MatchProcessingReceipt codec", () => {
       matchProcessingReceiptRowToRecord({ ...baseRow, scopeKind: "server" }),
     ).toThrow(/scopeKind/);
   });
+
+  test("rejects a kind that is not the kebab-case ReceiptKind shape", () => {
+    expect(() =>
+      matchProcessingReceiptRowToRecord({ ...baseRow, kind: "Report:Posted" }),
+    ).toThrow();
+  });
 });
 
 describe("MatchNotificationIntent codec", () => {
-  const baseRow = {
-    intentKey: "intent-NA1_5312279829-post-match",
-    riotMatchId: MATCH_ID,
-    targetKind: "channel",
-    targetId: CHANNEL_ID,
-    state: "pending",
-    attemptCount: 0,
-    attemptNonce: null,
-    sendStartedAt: null,
-    deliveredAt: null,
-    messageId: null,
-    suppressedReason: null,
-    unknownObservedAt: null,
-    lastFailure: null,
-    freshnessDeadline: LATER,
-    payload: PAYLOAD,
-    createdAt: AT,
-  };
+  function intent(
+    state: Record<string, unknown>,
+    extras: Record<string, unknown> = {},
+  ): NotificationIntent {
+    return NotificationIntentSchema.parse({
+      key: "intent-NA1_5312279829-post-match",
+      target: { kind: "channel", channelId: CHANNEL_ID },
+      freshnessDeadline: LATER_ISO,
+      createdAt: AT_ISO,
+      attemptCount: 0,
+      state,
+      ...extras,
+    });
+  }
 
-  const variants = [
-    ["pending", baseRow],
-    ["ready", { ...baseRow, state: "ready" }],
+  const intentMatchId = RiotMatchIdSchema.parse(MATCH_ID);
+
+  function record(value: NotificationIntent): MatchNotificationIntentRecord {
+    return { matchId: intentMatchId, intent: value };
+  }
+
+  const variants: readonly (readonly [string, NotificationIntent])[] = [
+    ["pending", intent({ kind: "pending" })],
+    ["ready", intent({ kind: "ready" })],
     [
       "sending",
-      {
-        ...baseRow,
-        state: "sending",
-        attemptCount: 1,
-        attemptNonce: "nonce-1",
-        sendStartedAt: AT,
-      },
+      intent(
+        { kind: "sending", attemptNonce: "nonce-1", startedAt: AT_ISO },
+        { attemptCount: 1 },
+      ),
     ],
     [
       "delivered with message id",
-      {
-        ...baseRow,
-        state: "delivered",
-        attemptCount: 1,
-        deliveredAt: LATER,
-        messageId: MESSAGE_ID,
-      },
+      intent(
+        { kind: "delivered", messageId: MESSAGE_ID, deliveredAt: LATER_ISO },
+        { attemptCount: 1 },
+      ),
     ],
     [
       "delivered without message id",
-      { ...baseRow, state: "delivered", attemptCount: 1, deliveredAt: LATER },
+      intent(
+        { kind: "delivered", deliveredAt: LATER_ISO },
+        { attemptCount: 1 },
+      ),
+    ],
+    ["suppressed stale", intent({ kind: "suppressed", reason: "stale" })],
+    [
+      "suppressed feature-disabled",
+      intent({ kind: "suppressed", reason: "feature-disabled" }),
     ],
     [
-      "suppressed",
-      { ...baseRow, state: "suppressed", suppressedReason: "stale" },
+      "suppressed recipient-preference",
+      intent({ kind: "suppressed", reason: "recipient-preference" }),
     ],
-    ["expired", { ...baseRow, state: "expired" }],
-    ["permission-denied", { ...baseRow, state: "permission-denied" }],
+    ["expired", intent({ kind: "expired" })],
     [
-      "unknown-delivery with a recorded failure",
-      {
-        ...baseRow,
-        state: "unknown-delivery",
-        attemptCount: 2,
-        attemptNonce: "nonce-2",
-        unknownObservedAt: LATER,
-        lastFailure: JSON.stringify({
-          classification: "retryable",
-          reason: "timeout",
-        }),
-      },
+      "permission-denied with a terminal failure",
+      intent(
+        { kind: "permission-denied" },
+        {
+          attemptCount: 1,
+          lastFailure: { classification: "terminal", reason: "dm-disabled" },
+        },
+      ),
+    ],
+    [
+      "unknown-delivery with a retryable failure",
+      intent(
+        {
+          kind: "unknown-delivery",
+          attemptNonce: "nonce-2",
+          observedAt: LATER_ISO,
+        },
+        {
+          attemptCount: 2,
+          lastFailure: { classification: "retryable", reason: "timeout" },
+        },
+      ),
     ],
     [
       "dm target",
-      { ...baseRow, targetKind: "dm", targetId: ACCOUNT_DISCORD_ID },
+      NotificationIntentSchema.parse({
+        key: "intent-dm",
+        target: { kind: "dm", accountId: ACCOUNT_DISCORD_ID },
+        freshnessDeadline: LATER_ISO,
+        createdAt: AT_ISO,
+        attemptCount: 0,
+        state: { kind: "pending" },
+      }),
     ],
-  ] as const;
+  ];
 
-  test.each(variants)("round-trips %s", (_name, row) => {
-    const record = matchNotificationIntentRowToRecord(row);
-    expect(matchNotificationIntentRecordToRow(record)).toEqual(row);
+  test.each(variants)("round-trips %s in both directions", (_name, value) => {
+    const original = record(value);
+    const row = matchNotificationIntentRecordToRow(original);
+    const parsed = matchNotificationIntentRowToRecord(row);
+    expect(parsed).toEqual(original);
+    expect(matchNotificationIntentRecordToRow(parsed)).toEqual(row);
   });
 
-  test("rejects sending without an attempt nonce", () => {
+  test("rejects a payload envelope that disagrees with the columns", () => {
+    const row = matchNotificationIntentRecordToRow(
+      record(intent({ kind: "pending" })),
+    );
+    const tampered = {
+      ...row,
+      payload: matchNotificationIntentRecordToRow(
+        record(intent({ kind: "ready" })),
+      ).payload,
+    };
+    expect(() => matchNotificationIntentRowToRecord(tampered)).toThrow(
+      /disagrees/,
+    );
+  });
+
+  test("rejects a payload envelope of a foreign kind", () => {
+    const row = matchNotificationIntentRecordToRow(
+      record(intent({ kind: "pending" })),
+    );
     expect(() =>
       matchNotificationIntentRowToRecord({
-        ...baseRow,
-        state: "sending",
-        attemptCount: 1,
-        sendStartedAt: AT,
+        ...row,
+        payload: JSON.stringify({
+          kind: "artifact-descriptor",
+          version: 1,
+          data: {},
+        }),
       }),
     ).toThrow();
   });
 
-  test("rejects sending with a zero attempt count", () => {
+  test("rejects sending without an attempt nonce", () => {
+    const row = matchNotificationIntentRecordToRow(
+      record(
+        intent(
+          { kind: "sending", attemptNonce: "nonce-1", startedAt: AT_ISO },
+          { attemptCount: 1 },
+        ),
+      ),
+    );
     expect(() =>
-      matchNotificationIntentRowToRecord({
-        ...baseRow,
-        state: "sending",
-        attemptNonce: "nonce-1",
-        sendStartedAt: AT,
-      }),
-    ).toThrow(/attemptCount/);
+      matchNotificationIntentRowToRecord({ ...row, attemptNonce: null }),
+    ).toThrow();
   });
 
-  test("rejects a payload column that is not a versioned envelope", () => {
+  test("rejects a half-present failure column pair", () => {
+    const row = matchNotificationIntentRecordToRow(
+      record(intent({ kind: "ready" })),
+    );
     expect(() =>
       matchNotificationIntentRowToRecord({
-        ...baseRow,
-        payload: JSON.stringify({ body: "hello" }),
+        ...row,
+        lastFailureClassification: "retryable",
       }),
     ).toThrow();
   });
 
   test("rejects an unknown state column value", () => {
+    const row = matchNotificationIntentRecordToRow(
+      record(intent({ kind: "pending" })),
+    );
     expect(() =>
-      matchNotificationIntentRowToRecord({ ...baseRow, state: "queued" }),
+      matchNotificationIntentRowToRecord({ ...row, state: "queued" }),
     ).toThrow(/state/);
   });
 });
@@ -342,6 +457,16 @@ describe("MatchRecoveryBatch codec", () => {
     expect(matchRecoveryBatchRecordToRow(record)).toEqual(row);
   });
 
+  test.each([
+    ["operator-cancelled"],
+    ["scan-budget-exhausted"],
+    ["upstream-unavailable"],
+  ])("round-trips a domain batch abandoned for %s", (reason) => {
+    const record = abandonedRecord(reason);
+    const row = matchRecoveryBatchRecordToRow(record);
+    expect(matchRecoveryBatchRowToRecord(row)).toEqual(record);
+  });
+
   test("rejects a scanning row without a page budget", () => {
     expect(() =>
       matchRecoveryBatchRowToRecord({
@@ -390,7 +515,11 @@ describe("ScoutWorkflowStart codec", () => {
     workflowType: "match-recovery",
     requestedBy: null,
     requestSource: "operator-command",
-    inputPayload: PAYLOAD,
+    inputPayload: JSON.stringify({
+      kind: "match-recovery",
+      version: 1,
+      data: { body: "hello" },
+    }),
     requestedAt: AT,
     acceptedAt: null,
     runId: null,
@@ -420,6 +549,34 @@ describe("ScoutWorkflowStart codec", () => {
       scoutWorkflowStartRowToRecord({ ...baseRow, runId: "run-abc-123" }),
     ).toThrow(/runId/);
   });
+
+  test("rejects an input payload whose kind is not the workflow type", () => {
+    expect(() =>
+      scoutWorkflowStartRowToRecord({
+        ...baseRow,
+        inputPayload: JSON.stringify({
+          kind: "hall-baseline",
+          version: 1,
+          data: {},
+        }),
+      }),
+    ).toThrow(/does not match workflowType/);
+  });
+
+  test("rejects an input payload that is not a versioned envelope", () => {
+    expect(() =>
+      scoutWorkflowStartRowToRecord({
+        ...baseRow,
+        inputPayload: JSON.stringify({ nope: true }),
+      }),
+    ).toThrow();
+  });
+
+  test("rejects an input payload that is not JSON at all", () => {
+    expect(() =>
+      scoutWorkflowStartRowToRecord({ ...baseRow, inputPayload: "not json" }),
+    ).toThrow();
+  });
 });
 
 describe("MatchTrackedAccount codec", () => {
@@ -443,17 +600,32 @@ describe("MatchTrackedAccount codec", () => {
     const record = matchTrackedAccountRowToRecord(row);
     expect(matchTrackedAccountRecordToRow(record)).toEqual(row);
   });
+
+  // This codec is the only integrity layer between these rows and the
+  // LeaguePuuid/PlayerId/AccountId brands, so malformed columns must throw.
+  test("rejects a puuid that is not 78 characters", () => {
+    expect(() =>
+      matchTrackedAccountRowToRecord({ ...baseRow, puuid: "p".repeat(77) }),
+    ).toThrow();
+  });
+
+  test("rejects a non-positive player id", () => {
+    expect(() =>
+      matchTrackedAccountRowToRecord({ ...baseRow, playerId: 0 }),
+    ).toThrow();
+  });
 });
 
 describe("ScoutOperatorAuditEvent codec", () => {
   test("parses a stored event", () => {
     const record = scoutOperatorAuditEventRowToRecord({
-      id: 1,
+      id: 1n,
       actorDiscordId: ACCOUNT_DISCORD_ID,
       action: "recovery-policy-released",
       subjectKind: "recovery-batch",
       subjectId: "recovery-2026-09-07",
       detail: JSON.stringify({ from: "no-external", to: "stale-private-only" }),
+      idempotencyKey: "release-1",
       createdAt: AT,
     });
     expect(record.actorDiscordId).toBe(ACCOUNT_DISCORD_ID);
@@ -461,20 +633,40 @@ describe("ScoutOperatorAuditEvent codec", () => {
       from: "no-external",
       to: "stale-private-only",
     });
-    expect(record.createdAt).toBe("2026-09-07T10:00:00.000Z");
+    expect(record.idempotencyKey).toBe("release-1");
+    expect(record.createdAt).toBe(AT_ISO);
   });
 
   test("rejects a detail column that is not JSON", () => {
     expect(() =>
       scoutOperatorAuditEventRowToRecord({
-        id: 2,
+        id: 2n,
         actorDiscordId: ACCOUNT_DISCORD_ID,
         action: "x",
         subjectKind: "y",
         subjectId: "z",
         detail: "not json",
+        idempotencyKey: null,
         createdAt: AT,
       }),
     ).toThrow();
+  });
+});
+
+describe("migration SQL parity", () => {
+  test("the hand-written platform route vocabulary matches PlatformRouteSchema", async () => {
+    const sql = await Bun.file(
+      `${import.meta.dir}/../../../prisma/migrations/20260907000000_durable_match_operational_facts/migration.sql`,
+    ).text();
+    const inList = /"platformRoute" IN \(([^)]+)\)/.exec(sql);
+    if (inList?.[1] === undefined) {
+      throw new Error("platform_route_check IN list not found in migration");
+    }
+    const sqlRoutes = [...inList[1].matchAll(/'([A-Z0-9]+)'/g)].map(
+      (match) => match[1] ?? "",
+    );
+    expect([...sqlRoutes].sort()).toEqual(
+      [...PlatformRouteSchema.options].sort(),
+    );
   });
 });

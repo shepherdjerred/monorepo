@@ -33,6 +33,9 @@ async function expectRejected(sql: string, constraint: string): Promise<void> {
 
 const NOW = "'2026-09-07 10:00:00'";
 const DIGEST = `'${"a".repeat(64)}'`;
+const PUUID = `'${"p".repeat(78)}'`;
+const INTENT_PAYLOAD = `'{"kind":"notification-intent","version":1,"data":{}}'`;
+const START_PAYLOAD = `'{"kind":"match-recovery","version":1,"data":{}}'`;
 
 test("the migration created every durable operational table", async () => {
   const rows: unknown = await prisma.$queryRawUnsafe(
@@ -103,20 +106,35 @@ describe("MatchObservation constraints", () => {
       "MatchObservation_match_id_platform_check",
     ],
     [
+      "a match id without a numeric game id",
+      { ...valid, riotMatchId: "'NA1_'" },
+      "MatchObservation_riot_match_id_format_check",
+    ],
+    [
+      "an empty object key",
+      {
+        ...valid,
+        riotMatchId: "'NA1_7'",
+        matchObjectKey: "''",
+        matchDigest: DIGEST,
+      },
+      "MatchObservation_object_key_length_check",
+    ],
+    [
       "unpaired match artifact",
-      { ...valid, riotMatchId: "'NA1_7'", matchObjectKey: "'k'" },
+      { ...valid, riotMatchId: "'NA1_8'", matchObjectKey: "'k'" },
       "MatchObservation_match_artifact_check",
     ],
     [
       "unpaired timeline artifact",
-      { ...valid, riotMatchId: "'NA1_8'", timelineDigest: DIGEST },
+      { ...valid, riotMatchId: "'NA1_9'", timelineDigest: DIGEST },
       "MatchObservation_timeline_artifact_check",
     ],
     [
       "match digest format",
       {
         ...valid,
-        riotMatchId: "'NA1_9'",
+        riotMatchId: "'NA1_10'",
         matchObjectKey: "'k'",
         matchDigest: "'NOTHEX'",
       },
@@ -126,7 +144,7 @@ describe("MatchObservation constraints", () => {
       "timeline digest format",
       {
         ...valid,
-        riotMatchId: "'NA1_10'",
+        riotMatchId: "'NA1_11'",
         timelineObjectKey: "'k'",
         timelineDigest: "'NOTHEX'",
       },
@@ -134,6 +152,37 @@ describe("MatchObservation constraints", () => {
     ],
   ])("rejects %s", async (_name, values, constraint) => {
     await expectRejected(insertSql("MatchObservation", values), constraint);
+  });
+});
+
+describe("MatchTrackedAccount constraints", () => {
+  const valid: Record<string, string> = {
+    riotMatchId: "'NA1_1'",
+    puuid: PUUID,
+  };
+
+  test("accepts a valid row", async () => {
+    await prisma.$executeRawUnsafe(insertSql("MatchTrackedAccount", valid));
+  });
+
+  test.each([
+    [
+      "a malformed riot match id",
+      { ...valid, riotMatchId: "'NA1_'" },
+      "MatchTrackedAccount_riot_match_id_format_check",
+    ],
+    [
+      "a puuid that is not 78 characters",
+      { ...valid, riotMatchId: "'NA1_2'", puuid: `'${"p".repeat(77)}'` },
+      "MatchTrackedAccount_puuid_length_check",
+    ],
+    [
+      "a non-positive player id",
+      { ...valid, riotMatchId: "'NA1_3'", playerId: "0" },
+      "MatchTrackedAccount_ids_positive_check",
+    ],
+  ])("rejects %s", async (_name, values, constraint) => {
+    await expectRejected(insertSql("MatchTrackedAccount", values), constraint);
   });
 });
 
@@ -153,20 +202,30 @@ describe("MatchProcessingReceipt constraints", () => {
 
   test.each([
     [
+      "a malformed riot match id",
+      { ...valid, riotMatchId: "'NA1_'" },
+      "MatchProcessingReceipt_riot_match_id_format_check",
+    ],
+    [
+      "a kind outside the kebab-case ReceiptKind shape",
+      { ...valid, version: "2", kind: "'Report:Posted'" },
+      "MatchProcessingReceipt_kind_shape_check",
+    ],
+    [
       "a zero version",
       { ...valid, version: "0" },
       "MatchProcessingReceipt_version_check",
     ],
     [
       "an unknown scope kind",
-      { ...valid, version: "2", scopeKind: "'server'", scopeKey: "'server'" },
+      { ...valid, version: "3", scopeKind: "'server'", scopeKey: "'server'" },
       "MatchProcessingReceipt_scope_kind_check",
     ],
     [
       "a guild scope without a guild id",
       {
         ...valid,
-        version: "3",
+        version: "4",
         scopeKind: "'guild'",
         scopeKey: "'guild:1'",
       },
@@ -176,29 +235,51 @@ describe("MatchProcessingReceipt constraints", () => {
       "an account scope carrying a guild id",
       {
         ...valid,
-        version: "4",
+        version: "5",
         scopeKind: "'account'",
         scopeAccountId: "42",
-        scopeGuildId: "'1'",
+        scopeGuildId: "'100000000000000001'",
         scopeKey: "'account:42'",
       },
       "MatchProcessingReceipt_scope_fields_check",
     ],
     [
       "a global scope carrying an account id",
-      { ...valid, version: "5", scopeAccountId: "42" },
+      { ...valid, version: "6", scopeAccountId: "42" },
       "MatchProcessingReceipt_scope_fields_check",
     ],
     [
       "a scope key that disagrees with the scope columns",
       {
         ...valid,
-        version: "6",
+        version: "7",
         scopeKind: "'guild'",
-        scopeGuildId: "'123'",
+        scopeGuildId: "'100000000000000001'",
         scopeKey: "'guild:456'",
       },
       "MatchProcessingReceipt_scope_key_check",
+    ],
+    [
+      "a guild id that is not a Discord snowflake",
+      {
+        ...valid,
+        version: "8",
+        scopeKind: "'guild'",
+        scopeGuildId: "'123'",
+        scopeKey: "'guild:123'",
+      },
+      "MatchProcessingReceipt_scope_id_shape_check",
+    ],
+    [
+      "a non-positive account id",
+      {
+        ...valid,
+        version: "9",
+        scopeKind: "'account'",
+        scopeAccountId: "0",
+        scopeKey: "'account:0'",
+      },
+      "MatchProcessingReceipt_scope_id_shape_check",
     ],
   ])("rejects %s", async (_name, values, constraint) => {
     await expectRejected(
@@ -217,7 +298,7 @@ describe("MatchNotificationIntent constraints", () => {
     state: "'pending'",
     attemptCount: "0",
     freshnessDeadline: NOW,
-    payload: `'{"kind":"k","version":1,"data":{}}'`,
+    payload: INTENT_PAYLOAD,
     createdAt: NOW,
     updatedAt: NOW,
   };
@@ -304,6 +385,61 @@ describe("MatchNotificationIntent constraints", () => {
         attemptNonce: "'n1'",
       },
       "MatchNotificationIntent_unknown_observed_check",
+    ],
+    [
+      "a malformed riot match id",
+      { ...valid, intentKey: "'i13'", riotMatchId: "'NA1_'" },
+      "MatchNotificationIntent_riot_match_id_format_check",
+    ],
+    [
+      "an empty intent key",
+      { ...valid, intentKey: "''" },
+      "MatchNotificationIntent_key_shape_check",
+    ],
+    [
+      "an empty attempt nonce",
+      {
+        ...valid,
+        intentKey: "'i14'",
+        state: "'sending'",
+        attemptCount: "1",
+        attemptNonce: "''",
+        sendStartedAt: NOW,
+      },
+      "MatchNotificationIntent_key_shape_check",
+    ],
+    [
+      "a target id that is not a Discord snowflake",
+      { ...valid, intentKey: "'i15'", targetId: "'abc'" },
+      "MatchNotificationIntent_discord_id_shape_check",
+    ],
+    [
+      "a payload envelope of a foreign kind",
+      {
+        ...valid,
+        intentKey: "'i16'",
+        payload: `'{"kind":"artifact-descriptor","version":1,"data":{}}'`,
+      },
+      "MatchNotificationIntent_payload_kind_check",
+    ],
+    [
+      "a failure classification without its reason",
+      {
+        ...valid,
+        intentKey: "'i17'",
+        lastFailureClassification: "'retryable'",
+      },
+      "MatchNotificationIntent_failure_pairing_check",
+    ],
+    [
+      "a failure reason outside its classification's vocabulary",
+      {
+        ...valid,
+        intentKey: "'i18'",
+        lastFailureClassification: "'retryable'",
+        lastFailureReason: "'dm-disabled'",
+      },
+      "MatchNotificationIntent_failure_vocab_check",
     ],
   ])("rejects %s", async (_name, values, constraint) => {
     await expectRejected(
@@ -399,6 +535,11 @@ describe("MatchRecoveryBatch constraints", () => {
       },
       "MatchRecoveryBatch_abandon_reason_vocab_check",
     ],
+    [
+      "an empty batch id",
+      { ...valid, recoveryBatchId: "''" },
+      "MatchRecoveryBatch_key_shape_check",
+    ],
   ])("rejects %s", async (_name, values, constraint) => {
     await expectRejected(insertSql("MatchRecoveryBatch", values), constraint);
   });
@@ -409,7 +550,7 @@ describe("ScoutWorkflowStart constraints", () => {
     requestedWorkflowId: "'wf-1'",
     workflowType: "'match-recovery'",
     requestSource: "'operator'",
-    inputPayload: `'{"kind":"k","version":1,"data":{}}'`,
+    inputPayload: START_PAYLOAD,
     requestedAt: NOW,
     updatedAt: NOW,
   };
@@ -418,14 +559,69 @@ describe("ScoutWorkflowStart constraints", () => {
     await prisma.$executeRawUnsafe(insertSql("ScoutWorkflowStart", valid));
   });
 
-  test("rejects a run id without acceptance", async () => {
-    await expectRejected(
-      insertSql("ScoutWorkflowStart", {
-        ...valid,
-        requestedWorkflowId: "'wf-2'",
-        runId: "'run-1'",
-      }),
+  test.each([
+    [
+      "a run id without acceptance",
+      { ...valid, requestedWorkflowId: "'wf-2'", runId: "'run-1'" },
       "ScoutWorkflowStart_run_id_check",
+    ],
+    [
+      "an empty request source",
+      { ...valid, requestedWorkflowId: "'wf-3'", requestSource: "''" },
+      "ScoutWorkflowStart_text_shape_check",
+    ],
+    [
+      "a requester that is not a Discord snowflake",
+      { ...valid, requestedWorkflowId: "'wf-4'", requestedBy: "'abc'" },
+      "ScoutWorkflowStart_text_shape_check",
+    ],
+    [
+      "an input payload whose kind is not the workflow type",
+      {
+        ...valid,
+        requestedWorkflowId: "'wf-5'",
+        inputPayload: `'{"kind":"hall-baseline","version":1,"data":{}}'`,
+      },
+      "ScoutWorkflowStart_input_payload_kind_check",
+    ],
+  ])("rejects %s", async (_name, values, constraint) => {
+    await expectRejected(insertSql("ScoutWorkflowStart", values), constraint);
+  });
+});
+
+describe("ScoutOperatorAuditEvent constraints", () => {
+  const valid: Record<string, string> = {
+    actorDiscordId: "'200000000000000001'",
+    action: "'recovery-policy-released'",
+    subjectKind: "'recovery-batch'",
+    subjectId: "'rb-1'",
+    detail: "'{}'",
+  };
+
+  test("accepts a valid row", async () => {
+    await prisma.$executeRawUnsafe(insertSql("ScoutOperatorAuditEvent", valid));
+  });
+
+  test.each([
+    [
+      "an actor that is not a Discord snowflake",
+      { ...valid, actorDiscordId: "'abc'" },
+      "ScoutOperatorAuditEvent_text_shape_check",
+    ],
+    [
+      "an empty action",
+      { ...valid, action: "''" },
+      "ScoutOperatorAuditEvent_text_shape_check",
+    ],
+    [
+      "an empty idempotency key",
+      { ...valid, idempotencyKey: "''" },
+      "ScoutOperatorAuditEvent_text_shape_check",
+    ],
+  ])("rejects %s", async (_name, values, constraint) => {
+    await expectRejected(
+      insertSql("ScoutOperatorAuditEvent", values),
+      constraint,
     );
   });
 });

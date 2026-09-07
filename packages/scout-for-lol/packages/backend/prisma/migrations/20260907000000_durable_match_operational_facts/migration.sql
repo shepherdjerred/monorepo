@@ -39,9 +39,17 @@ CREATE TABLE "MatchObservation" (
         'NA1', 'OC1', 'RU', 'SG2', 'TR1', 'TW2', 'VN2', 'PBE1'
       )),
     -- Riot match ids are `{platform}_{gameId}`; the row's platformRoute must
-    -- be the id's own platform prefix.
+    -- be the id's own platform prefix, and the whole id must have the shape
+    -- the RiotMatchId brand demands so a stored row is always readable.
     CONSTRAINT "MatchObservation_match_id_platform_check"
       CHECK (split_part("riotMatchId", '_', 1) = "platformRoute"),
+    CONSTRAINT "MatchObservation_riot_match_id_format_check"
+      CHECK ("riotMatchId" ~ '^[A-Z0-9]+_[0-9]+$'),
+    CONSTRAINT "MatchObservation_object_key_length_check"
+      CHECK (
+        ("matchObjectKey" IS NULL OR char_length("matchObjectKey") >= 1) AND
+        ("timelineObjectKey" IS NULL OR char_length("timelineObjectKey") >= 1)
+      ),
     -- An artifact reference is a key + digest pair; never half of one.
     CONSTRAINT "MatchObservation_match_artifact_check"
       CHECK (("matchObjectKey" IS NULL) = ("matchDigest" IS NULL)),
@@ -69,18 +77,32 @@ CREATE TABLE "MatchTrackedAccount" (
     "cursorAdvancedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "MatchTrackedAccount_pkey" PRIMARY KEY ("riotMatchId", "puuid")
+    CONSTRAINT "MatchTrackedAccount_pkey" PRIMARY KEY ("riotMatchId", "puuid"),
+    CONSTRAINT "MatchTrackedAccount_riot_match_id_format_check"
+      CHECK ("riotMatchId" ~ '^[A-Z0-9]+_[0-9]+$'),
+    -- Riot PUUIDs are exactly 78 characters; anything else is unreadable
+    -- through the LeaguePuuid brand.
+    CONSTRAINT "MatchTrackedAccount_puuid_length_check"
+      CHECK (char_length("puuid") = 78),
+    CONSTRAINT "MatchTrackedAccount_ids_positive_check"
+      CHECK (
+        ("playerId" IS NULL OR "playerId" >= 1) AND
+        ("accountId" IS NULL OR "accountId" >= 1)
+      )
 );
 
 CREATE INDEX "MatchTrackedAccount_puuid_cursorAdvancedAt_idx"
 ON "MatchTrackedAccount"("puuid", "cursorAdvancedAt");
 
--- Durable processing receipts. scopeKey is the domain's receiptScopeKey and
--- is what the unique identity uses, because the split scope columns are
--- nullable and Postgres unique indexes treat NULLs as distinct; the scope_key
--- CHECK keeps the two representations consistent so neither can drift.
+-- Durable processing receipts. The unique constraint spells out the domain's
+-- matchProcessingReceiptIdentityKey (kind:version:scopeKey) as columns.
+-- scopeKey is the domain's receiptScopeKey and stands in for the split scope
+-- columns because those are nullable and Postgres unique indexes treat NULLs
+-- as distinct; the scope_key CHECK keeps the representations consistent, and
+-- the kind CHECK pins the ReceiptKind brand's kebab-case shape (no `:`, so
+-- the composite identity encoding stays injective).
 CREATE TABLE "MatchProcessingReceipt" (
-    "id" SERIAL NOT NULL,
+    "id" BIGSERIAL NOT NULL,
     "riotMatchId" TEXT NOT NULL,
     "kind" TEXT NOT NULL,
     "version" INTEGER NOT NULL,
@@ -93,8 +115,17 @@ CREATE TABLE "MatchProcessingReceipt" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "MatchProcessingReceipt_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "MatchProcessingReceipt_riot_match_id_format_check"
+      CHECK ("riotMatchId" ~ '^[A-Z0-9]+_[0-9]+$'),
+    CONSTRAINT "MatchProcessingReceipt_kind_shape_check"
+      CHECK ("kind" ~ '^[a-z0-9][a-z0-9-]*$'),
     CONSTRAINT "MatchProcessingReceipt_version_check"
       CHECK ("version" >= 1),
+    CONSTRAINT "MatchProcessingReceipt_scope_id_shape_check"
+      CHECK (
+        ("scopeGuildId" IS NULL OR "scopeGuildId" ~ '^[0-9]{17,20}$') AND
+        ("scopeAccountId" IS NULL OR "scopeAccountId" >= 1)
+      ),
     CONSTRAINT "MatchProcessingReceipt_scope_kind_check"
       CHECK ("scopeKind" IN ('global', 'guild', 'account')),
     -- Each scope variant carries exactly its own column: guild has a guild id
@@ -124,7 +155,10 @@ ON "MatchProcessingReceipt"("kind", "recordedAt");
 -- Durable notification intents. The NotificationIntentState union is
 -- flattened: `state` is the discriminant, and every per-variant payload
 -- column is CHECKed present in exactly the states that carry it, so a row
--- always round-trips into a well-formed domain value.
+-- always round-trips into a well-formed domain value. The last failure is
+-- split into its two closed-vocabulary columns rather than stored as JSON so
+-- a bad writer cannot brick the row for every future read, and `payload`
+-- must be the notificationIntentCodec envelope of this same intent.
 CREATE TABLE "MatchNotificationIntent" (
     "intentKey" TEXT NOT NULL,
     "riotMatchId" TEXT NOT NULL,
@@ -138,13 +172,30 @@ CREATE TABLE "MatchNotificationIntent" (
     "messageId" TEXT,
     "suppressedReason" TEXT,
     "unknownObservedAt" TIMESTAMP(3),
-    "lastFailure" TEXT,
+    "lastFailureClassification" TEXT,
+    "lastFailureReason" TEXT,
     "freshnessDeadline" TIMESTAMP(3) NOT NULL,
     "payload" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "MatchNotificationIntent_pkey" PRIMARY KEY ("intentKey"),
+    CONSTRAINT "MatchNotificationIntent_riot_match_id_format_check"
+      CHECK ("riotMatchId" ~ '^[A-Z0-9]+_[0-9]+$'),
+    CONSTRAINT "MatchNotificationIntent_key_shape_check"
+      CHECK (
+        char_length("intentKey") >= 1 AND
+        ("attemptNonce" IS NULL OR char_length("attemptNonce") >= 1)
+      ),
+    -- Discord snowflakes are 17-20 digits; anything else is unreadable
+    -- through the Discord id brands.
+    CONSTRAINT "MatchNotificationIntent_discord_id_shape_check"
+      CHECK (
+        "targetId" ~ '^[0-9]{17,20}$' AND
+        ("messageId" IS NULL OR "messageId" ~ '^[0-9]{17,20}$')
+      ),
+    CONSTRAINT "MatchNotificationIntent_payload_kind_check"
+      CHECK (("payload"::jsonb ->> 'kind') = 'notification-intent'),
     CONSTRAINT "MatchNotificationIntent_state_check"
       CHECK ("state" IN (
         'pending', 'ready', 'sending', 'delivered', 'suppressed',
@@ -178,7 +229,22 @@ CREATE TABLE "MatchNotificationIntent" (
         "suppressedReason" IN ('stale', 'feature-disabled', 'recipient-preference')
       ),
     CONSTRAINT "MatchNotificationIntent_unknown_observed_check"
-      CHECK (("unknownObservedAt" IS NOT NULL) = ("state" = 'unknown-delivery'))
+      CHECK (("unknownObservedAt" IS NOT NULL) = ("state" = 'unknown-delivery')),
+    -- The failure columns come and go together, and each classification only
+    -- admits its own reason vocabulary — the whole NotificationFailure union
+    -- is CHECKed, since a persisted failure outlives the writer that made it.
+    CONSTRAINT "MatchNotificationIntent_failure_pairing_check"
+      CHECK (("lastFailureClassification" IS NULL) = ("lastFailureReason" IS NULL)),
+    CONSTRAINT "MatchNotificationIntent_failure_vocab_check"
+      CHECK (
+        "lastFailureClassification" IS NULL OR
+        ("lastFailureClassification" = 'retryable' AND "lastFailureReason" IN (
+          'network', 'rate-limited', 'service-unavailable', 'timeout'
+        )) OR
+        ("lastFailureClassification" = 'terminal' AND "lastFailureReason" IN (
+          'permission-denied', 'dm-disabled', 'budget-exhausted', 'target-not-found'
+        ))
+      )
 );
 
 CREATE INDEX "MatchNotificationIntent_state_freshnessDeadline_idx"
@@ -207,6 +273,12 @@ CREATE TABLE "MatchRecoveryBatch" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "MatchRecoveryBatch_pkey" PRIMARY KEY ("recoveryBatchId"),
+    CONSTRAINT "MatchRecoveryBatch_key_shape_check"
+      CHECK (
+        char_length("recoveryBatchId") >= 1 AND
+        ("cursorPosition" IS NULL OR char_length("cursorPosition") >= 1) AND
+        ("workflowId" IS NULL OR char_length("workflowId") >= 1)
+      ),
     CONSTRAINT "MatchRecoveryBatch_policy_check"
       CHECK ("policy" IN ('normal', 'stale-private-only', 'no-external')),
     CONSTRAINT "MatchRecoveryBatch_state_check"
@@ -284,24 +356,52 @@ CREATE TABLE "ScoutWorkflowStart" (
     CONSTRAINT "ScoutWorkflowStart_pkey" PRIMARY KEY ("requestedWorkflowId"),
     -- A run id is Temporal's acceptance evidence, so it cannot precede one.
     CONSTRAINT "ScoutWorkflowStart_run_id_check"
-      CHECK ("runId" IS NULL OR "acceptedAt" IS NOT NULL)
+      CHECK ("runId" IS NULL OR "acceptedAt" IS NOT NULL),
+    CONSTRAINT "ScoutWorkflowStart_text_shape_check"
+      CHECK (
+        char_length("requestedWorkflowId") >= 1 AND
+        char_length("workflowType") >= 1 AND
+        char_length("requestSource") >= 1 AND
+        ("runId" IS NULL OR char_length("runId") >= 1) AND
+        ("requestedBy" IS NULL OR "requestedBy" ~ '^[0-9]{17,20}$')
+      ),
+    -- Starts are typed by workflowType, and the input envelope's kind is that
+    -- type — so a stored input can never be mistaken for another workflow's.
+    CONSTRAINT "ScoutWorkflowStart_input_payload_kind_check"
+      CHECK (("inputPayload"::jsonb ->> 'kind') = "workflowType")
 );
 
 CREATE INDEX "ScoutWorkflowStart_workflowType_requestedAt_idx"
 ON "ScoutWorkflowStart"("workflowType", "requestedAt");
 
--- Append-only operator audit trail. No update path by design.
+-- Append-only operator audit trail. No update path by design. The id is a
+-- BIGSERIAL because the table only ever grows, and the nullable unique
+-- idempotency key lets a retried Temporal activity replay its append without
+-- double-writing the trail (Postgres unique indexes treat NULLs as distinct,
+-- so keyless appends are unlimited).
 CREATE TABLE "ScoutOperatorAuditEvent" (
-    "id" SERIAL NOT NULL,
+    "id" BIGSERIAL NOT NULL,
     "actorDiscordId" TEXT NOT NULL,
     "action" TEXT NOT NULL,
     "subjectKind" TEXT NOT NULL,
     "subjectId" TEXT NOT NULL,
     "detail" TEXT NOT NULL,
+    "idempotencyKey" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "ScoutOperatorAuditEvent_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ScoutOperatorAuditEvent_pkey" PRIMARY KEY ("id"),
+    CONSTRAINT "ScoutOperatorAuditEvent_text_shape_check"
+      CHECK (
+        char_length("action") >= 1 AND
+        char_length("subjectKind") >= 1 AND
+        char_length("subjectId") >= 1 AND
+        "actorDiscordId" ~ '^[0-9]{17,20}$' AND
+        ("idempotencyKey" IS NULL OR char_length("idempotencyKey") >= 1)
+      )
 );
+
+CREATE UNIQUE INDEX "ScoutOperatorAuditEvent_idempotencyKey_key"
+ON "ScoutOperatorAuditEvent"("idempotencyKey");
 
 CREATE INDEX "ScoutOperatorAuditEvent_subjectKind_subjectId_createdAt_idx"
 ON "ScoutOperatorAuditEvent"("subjectKind", "subjectId", "createdAt");

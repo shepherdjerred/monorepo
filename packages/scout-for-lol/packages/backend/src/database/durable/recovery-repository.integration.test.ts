@@ -5,8 +5,10 @@ import {
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   abandonBatch,
+  beginProcessing,
   beginScan,
   operatorReleasePolicy,
+  recordProcessingProgress,
 } from "@scout-for-lol/domain/recovery/batch-transitions.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
@@ -167,6 +169,43 @@ describe("advanceRecoveryCursor", () => {
         nextPosition: "p1",
       }),
     ).rejects.toThrow(/never created/);
+  });
+});
+
+describe("processing counts", () => {
+  test("count progress is guarded, idempotent, and monotone in Postgres", async () => {
+    await scanningBatch("rb-proc-1");
+    const id = batchId("rb-proc-1");
+    const began = await transitionRecoveryBatch(prisma, {
+      recoveryBatchId: id,
+      transition: (value) => beginProcessing(value, { discovered: 3 }),
+    });
+    expect(began.outcome).toBe("applied");
+
+    const counts = { discovered: 3, succeeded: 2, suppressed: 0, failed: 1 };
+    const progressed = await transitionRecoveryBatch(prisma, {
+      recoveryBatchId: id,
+      transition: (value) => recordProcessingProgress(value, { counts }),
+    });
+    expect(progressed.outcome).toBe("applied");
+    expect(
+      await transitionRecoveryBatch(prisma, {
+        recoveryBatchId: id,
+        transition: (value) => recordProcessingProgress(value, { counts }),
+      }),
+    ).toEqual({ outcome: "already-applied" });
+    expect(
+      await transitionRecoveryBatch(prisma, {
+        recoveryBatchId: id,
+        transition: (value) =>
+          recordProcessingProgress(value, {
+            counts: { ...counts, succeeded: 1 },
+          }),
+      }),
+    ).toEqual({ outcome: "conflict", reason: "counts-regressed" });
+
+    const stored = await getRecoveryBatch(prisma, { recoveryBatchId: id });
+    expect(stored?.batch.state).toEqual({ kind: "processing", counts });
   });
 });
 

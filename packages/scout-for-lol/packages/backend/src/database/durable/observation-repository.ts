@@ -1,4 +1,4 @@
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type {
   IsoInstant,
   RiotMatchId,
@@ -26,11 +26,7 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * result instead of an exception or a silent overwrite.
  */
 
-type ObservationDb = Pick<ExtendedPrismaClient, "matchObservation">;
-type ProcessingDb = Pick<
-  ExtendedPrismaClient,
-  "matchObservation" | "matchProcessingReceipt"
->;
+const OBSERVE_ATTEMPTS = 3;
 
 export type ObserveMatchResult =
   | { outcome: "applied" }
@@ -44,10 +40,42 @@ function ownerNeutral(row: MatchObservationRow): MatchObservationRow {
   return { ...row, pipelineOwner: null };
 }
 
+/**
+ * A promoted row seen by a delayed retry of the ORIGINAL observation: the
+ * incoming ARCHIVE_ONLY observation matches the stored row's pre-promotion
+ * form exactly. An ordinary Temporal retry of observeMatch after a promotion
+ * raced past it is benign, not upstream disagreement — only rows whose facts
+ * genuinely diverge should conflict.
+ */
+function isRetryOfPrePromotionObservation(
+  existing: MatchObservationRow,
+  incoming: MatchObservationRow,
+): boolean {
+  if (existing.processingPolicy !== "FULL" || existing.promotedAt === null) {
+    return false;
+  }
+  if (
+    incoming.processingPolicy !== "ARCHIVE_ONLY" ||
+    incoming.promotedAt !== null
+  ) {
+    return false;
+  }
+  const prePromotionForm = {
+    ...existing,
+    processingPolicy: "ARCHIVE_ONLY",
+    promotedAt: null,
+  };
+  return Bun.deepEquals(
+    ownerNeutral(prePromotionForm),
+    ownerNeutral(incoming),
+    true,
+  );
+}
+
 async function resolveObservedConflict(
-  db: ObservationDb,
+  db: Db,
   row: MatchObservationRow,
-): Promise<ObserveMatchResult> {
+): Promise<ObserveMatchResult | "retry"> {
   const existing = await db.matchObservation.findUnique({
     where: { riotMatchId: row.riotMatchId },
   });
@@ -62,7 +90,10 @@ async function resolveObservedConflict(
   if (Bun.deepEquals(existingRow, row, true)) {
     return { outcome: "already-applied" };
   }
-  if (!Bun.deepEquals(ownerNeutral(existingRow), ownerNeutral(row), true)) {
+  const sameObservation =
+    Bun.deepEquals(ownerNeutral(existingRow), ownerNeutral(row), true) ||
+    isRetryOfPrePromotionObservation(existingRow, row);
+  if (!sameObservation) {
     return { outcome: "conflict", reason: "observation-differs" };
   }
   // Same observation, different owner columns. NULL is the domain's
@@ -73,14 +104,14 @@ async function resolveObservedConflict(
       where: { riotMatchId: row.riotMatchId, pipelineOwner: null },
       data: { pipelineOwner: row.pipelineOwner },
     });
-    if (claimed.count === 1) {
-      return { outcome: "applied" };
-    }
-    return await resolveObservedConflict(db, row);
+    return claimed.count === 1 ? { outcome: "applied" } : "retry";
   }
-  if (row.pipelineOwner === null) {
-    // The observation itself is already recorded; not claiming is not a
-    // conflict with whoever did.
+  if (
+    row.pipelineOwner === null ||
+    row.pipelineOwner === existingRow.pipelineOwner
+  ) {
+    // The observation itself is already recorded, and either the retry does
+    // not claim at all or the claim it repeats is the one already held.
     return { outcome: "already-applied" };
   }
   return { outcome: "conflict", reason: "ownership-held-by-another-owner" };
@@ -89,13 +120,14 @@ async function resolveObservedConflict(
 /**
  * Record one observed match, claiming ownership when the record carries an
  * assigned owner. Exactly one of two racing writers applies; the loser gets
- * `already-applied` for an identical retry, an ownership conflict for a
- * different claimant, and `observation-differs` when the facts themselves
- * disagree (which is a bug upstream, surfaced as a conflict so the caller
- * decides how loudly to fail).
+ * `already-applied` for an identical retry — including a delayed retry of the
+ * original ARCHIVE_ONLY observation after a promotion raced past it — an
+ * ownership conflict for a different claimant, and `observation-differs` only
+ * when the facts themselves genuinely disagree (which is a bug upstream,
+ * surfaced as a conflict so the caller decides how loudly to fail).
  */
 export async function observeMatch(
-  db: ObservationDb,
+  db: Db,
   record: MatchObservationRecord,
 ): Promise<ObserveMatchResult> {
   const row = matchObservationRecordToRow(record);
@@ -106,7 +138,15 @@ export async function observeMatch(
   if (created.count === 1) {
     return { outcome: "applied" };
   }
-  return await resolveObservedConflict(db, row);
+  for (let attempt = 0; attempt < OBSERVE_ATTEMPTS; attempt += 1) {
+    const resolved = await resolveObservedConflict(db, row);
+    if (resolved !== "retry") {
+      return resolved;
+    }
+  }
+  throw new Error(
+    `Gave up observing ${row.riotMatchId} after ${String(OBSERVE_ATTEMPTS)} contended attempts`,
+  );
 }
 
 export type PromoteObservationResult =
@@ -121,7 +161,7 @@ export type PromoteObservationResult =
  * observed is a broken caller contract and throws.
  */
 export async function promoteObservation(
-  db: ObservationDb,
+  db: Db,
   args: { matchId: RiotMatchId; promotedAt: IsoInstant },
 ): Promise<PromoteObservationResult> {
   const promoted = await db.matchObservation.updateMany({
@@ -149,7 +189,7 @@ export async function promoteObservation(
 }
 
 export async function getObservation(
-  db: ObservationDb,
+  db: Db,
   args: { matchId: RiotMatchId },
 ): Promise<MatchObservationRecord | null> {
   const row = await db.matchObservation.findUnique({
@@ -159,15 +199,14 @@ export async function getObservation(
 }
 
 /**
- * Assemble the full domain MatchProcessingState for one match, scoped to one
- * receipt (kind, version). The stored receipt identity is wider than the
- * domain's (which keys receipts by scope alone), so the domain's
- * one-receipt-per-scope invariant holds per (kind, version) — the caller
- * names which receipt family it is transitioning over.
+ * Assemble the full domain MatchProcessingState for one match — owner,
+ * policy, promotion, and every receipt across all kinds. Receipt identity is
+ * `(kind, version, scope)` in both the domain and the unique constraint, so
+ * the whole set satisfies the state's uniqueness invariant directly.
  */
 export async function getProcessingState(
-  db: ProcessingDb,
-  args: { matchId: RiotMatchId; receiptKind: string; receiptVersion: number },
+  db: Db,
+  args: { matchId: RiotMatchId },
 ): Promise<MatchProcessingState | null> {
   const observation = await db.matchObservation.findUnique({
     where: { riotMatchId: args.matchId },
@@ -177,11 +216,7 @@ export async function getProcessingState(
   }
   const record = matchObservationRowToRecord(observation);
   const receiptRows = await db.matchProcessingReceipt.findMany({
-    where: {
-      riotMatchId: args.matchId,
-      kind: args.receiptKind,
-      version: args.receiptVersion,
-    },
+    where: { riotMatchId: args.matchId },
     orderBy: { id: "asc" },
   });
   const receipts = receiptRows.map((receiptRow) => {

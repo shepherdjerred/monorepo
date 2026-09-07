@@ -1,4 +1,4 @@
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type {
   IsoInstant,
   RiotMatchId,
@@ -19,8 +19,6 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * worker advances a given account's cursor off a given match.
  */
 
-type TrackedAccountDb = Pick<ExtendedPrismaClient, "matchTrackedAccount">;
-
 /** How many of the given associations were newly recorded (rest existed). */
 export type RecordTrackedAccountsResult = {
   recorded: number;
@@ -28,7 +26,7 @@ export type RecordTrackedAccountsResult = {
 };
 
 export async function recordTrackedAccounts(
-  db: TrackedAccountDb,
+  db: Db,
   records: MatchTrackedAccountRecord[],
 ): Promise<RecordTrackedAccountsResult> {
   const rows = records.map((record) => matchTrackedAccountRecordToRow(record));
@@ -40,7 +38,7 @@ export async function recordTrackedAccounts(
 }
 
 export async function listTrackedAccounts(
-  db: TrackedAccountDb,
+  db: Db,
   args: { matchId: RiotMatchId },
 ): Promise<MatchTrackedAccountRecord[]> {
   const rows = await db.matchTrackedAccount.findMany({
@@ -54,21 +52,29 @@ export type MarkCursorAdvancedResult =
   { outcome: "applied" } | { outcome: "already-applied" };
 
 /**
- * Mark that this match advanced the account's processing cursor. One-way:
- * the first writer applies, every retry is `already-applied`. Marking an
- * association that was never recorded is a broken caller contract and throws.
+ * Mark that this match advanced the account's processing cursor. The guard is
+ * monotonic, not merely one-way: the update applies only when the stored
+ * timestamp is absent or strictly earlier, so a delayed retry carrying an
+ * older instant can never rewind an advance that already moved past it (a
+ * rewind would re-open the match for re-ingestion and re-announcement).
+ * Marking an association that was never recorded is a broken caller contract
+ * and throws.
  */
 export async function markTrackedAccountCursorAdvanced(
-  db: TrackedAccountDb,
+  db: Db,
   args: { matchId: RiotMatchId; puuid: LeaguePuuid; advancedAt: IsoInstant },
 ): Promise<MarkCursorAdvancedResult> {
+  const advancedAt = dateFromIsoInstant(args.advancedAt);
   const advanced = await db.matchTrackedAccount.updateMany({
     where: {
       riotMatchId: args.matchId,
       puuid: args.puuid,
-      cursorAdvancedAt: null,
+      OR: [
+        { cursorAdvancedAt: null },
+        { cursorAdvancedAt: { lt: advancedAt } },
+      ],
     },
-    data: { cursorAdvancedAt: dateFromIsoInstant(args.advancedAt) },
+    data: { cursorAdvancedAt: advancedAt },
   });
   if (advanced.count === 1) {
     return { outcome: "applied" };

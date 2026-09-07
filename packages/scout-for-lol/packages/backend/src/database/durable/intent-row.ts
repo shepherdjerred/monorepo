@@ -5,22 +5,20 @@ import {
   type NotificationIntent,
   type NotificationTarget,
 } from "@scout-for-lol/domain/notifications/intent.ts";
-import {
-  dateFromIsoInstant,
-  parsePayloadEnvelopeColumn,
-  serializePayloadEnvelope,
-  VersionedPayloadEnvelopeSchema,
-} from "#src/database/durable/row-values.ts";
+import { notificationIntentCodec } from "@scout-for-lol/domain/notifications/intent-codec.ts";
+import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
 
 /**
  * Row codec for MatchNotificationIntent.
  *
  * The NotificationIntentState union is flattened into the discriminant
  * `state` column plus one column per variant payload; the migration CHECKs
- * pin each column to exactly the states that carry it, and this codec is the
- * only translation between the two shapes. The payload column is the
- * versioned message-content envelope — what to deliver — which the domain
- * intent deliberately does not model.
+ * pin each column to exactly the states that carry it. The payload column is
+ * the notificationIntentCodec envelope of the same intent — the versioned
+ * wire form that survives schema evolution — and every read parses it
+ * through the codec (kind and version verified, data validated) and
+ * cross-checks it against the columns, so neither representation can
+ * silently drift and no foreign envelope can hide in an intent row.
  */
 
 export type MatchNotificationIntentRecord = z.infer<
@@ -29,7 +27,6 @@ export type MatchNotificationIntentRecord = z.infer<
 export const MatchNotificationIntentRecordSchema = z.strictObject({
   matchId: RiotMatchIdSchema,
   intent: NotificationIntentSchema,
-  payload: VersionedPayloadEnvelopeSchema,
 });
 
 /** The columns owned by the state machine, written on every transition. */
@@ -42,7 +39,8 @@ export type NotificationIntentStateColumns = {
   messageId: string | null;
   suppressedReason: string | null;
   unknownObservedAt: Date | null;
-  lastFailure: string | null;
+  lastFailureClassification: string | null;
+  lastFailureReason: string | null;
 };
 
 /** Column shape of a MatchNotificationIntent row, minus DB-managed columns. */
@@ -69,7 +67,8 @@ const RawIntentRowSchema = z.object({
   messageId: z.string().nullable(),
   suppressedReason: z.string().nullable(),
   unknownObservedAt: z.date().nullable(),
-  lastFailure: z.string().nullable(),
+  lastFailureClassification: z.string().nullable(),
+  lastFailureReason: z.string().nullable(),
   freshnessDeadline: z.date(),
   payload: z.string(),
   createdAt: z.date(),
@@ -120,18 +119,30 @@ function stateCandidate(raw: RawIntentRow): Record<string, unknown> {
 }
 
 function failureCandidate(raw: RawIntentRow): Record<string, unknown> {
-  if (raw.lastFailure === null) {
+  if (
+    raw.lastFailureClassification === null &&
+    raw.lastFailureReason === null
+  ) {
     return {};
   }
-  const parsed: unknown = JSON.parse(raw.lastFailure);
-  return { lastFailure: parsed };
+  return {
+    lastFailure: {
+      classification: raw.lastFailureClassification,
+      reason: raw.lastFailureReason,
+    },
+  };
+}
+
+/** The payload column's content: the codec envelope, serialized. */
+export function serializeIntentPayload(intent: NotificationIntent): string {
+  return JSON.stringify(notificationIntentCodec.serialize(intent));
 }
 
 export function matchNotificationIntentRowToRecord(
   row: unknown,
 ): MatchNotificationIntentRecord {
   const raw = RawIntentRowSchema.parse(row);
-  return MatchNotificationIntentRecordSchema.parse({
+  const record = MatchNotificationIntentRecordSchema.parse({
     matchId: raw.riotMatchId,
     intent: {
       key: raw.intentKey,
@@ -142,8 +153,14 @@ export function matchNotificationIntentRowToRecord(
       ...failureCandidate(raw),
       state: stateCandidate(raw),
     },
-    payload: parsePayloadEnvelopeColumn(raw.payload),
   });
+  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
+  if (!Bun.deepEquals(record.intent, payloadIntent, true)) {
+    throw new Error(
+      `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,
+    );
+  }
+  return record;
 }
 
 function targetColumns(target: NotificationTarget): {
@@ -176,10 +193,8 @@ export function notificationIntentStateColumns(
     messageId: null,
     suppressedReason: null,
     unknownObservedAt: null,
-    lastFailure:
-      intent.lastFailure === undefined
-        ? null
-        : JSON.stringify(intent.lastFailure),
+    lastFailureClassification: intent.lastFailure?.classification ?? null,
+    lastFailureReason: intent.lastFailure?.reason ?? null,
   };
   switch (state.kind) {
     case "pending":
@@ -210,6 +225,19 @@ export function notificationIntentStateColumns(
   }
 }
 
+/**
+ * Everything a transition rewrites: the state-machine columns plus the
+ * payload envelope, which encodes the same intent and must move with it.
+ */
+export function notificationIntentTransitionPatch(
+  intent: NotificationIntent,
+): NotificationIntentStateColumns & { payload: string } {
+  return {
+    ...notificationIntentStateColumns(intent),
+    payload: serializeIntentPayload(intent),
+  };
+}
+
 export function matchNotificationIntentRecordToRow(
   record: MatchNotificationIntentRecord,
 ): MatchNotificationIntentRow {
@@ -219,7 +247,7 @@ export function matchNotificationIntentRecordToRow(
     ...targetColumns(record.intent.target),
     ...notificationIntentStateColumns(record.intent),
     freshnessDeadline: dateFromIsoInstant(record.intent.freshnessDeadline),
-    payload: serializePayloadEnvelope(record.payload),
+    payload: serializeIntentPayload(record.intent),
     createdAt: dateFromIsoInstant(record.intent.createdAt),
   };
 }

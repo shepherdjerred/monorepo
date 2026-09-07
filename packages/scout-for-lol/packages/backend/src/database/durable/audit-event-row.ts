@@ -7,29 +7,32 @@ import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.t
  *
  * Append-only: there is no update mapper on purpose. The detail column is
  * arbitrary JSON — it is parsed so a stored event is at least well-formed
- * JSON, and otherwise left to the reader.
+ * JSON, and otherwise left to the reader. Ids are bigints because the table
+ * only ever grows.
  */
 
 export type ScoutOperatorAuditEventRecord = z.infer<
   typeof ScoutOperatorAuditEventRecordSchema
 >;
 export const ScoutOperatorAuditEventRecordSchema = z.strictObject({
-  id: z.int().positive(),
+  id: z.bigint().positive(),
   actorDiscordId: DiscordAccountIdSchema,
   action: z.string().min(1),
   subjectKind: z.string().min(1),
   subjectId: z.string().min(1),
   detail: z.unknown(),
+  idempotencyKey: z.string().min(1).nullable(),
   createdAt: IsoInstantSchema,
 });
 
 const RawAuditEventRowSchema = z.object({
-  id: z.number().int(),
+  id: z.bigint(),
   actorDiscordId: z.string(),
   action: z.string(),
   subjectKind: z.string(),
   subjectId: z.string(),
   detail: z.string(),
+  idempotencyKey: z.string().nullable(),
   createdAt: z.date(),
 });
 
@@ -45,6 +48,7 @@ export function scoutOperatorAuditEventRowToRecord(
     subjectKind: raw.subjectKind,
     subjectId: raw.subjectId,
     detail,
+    idempotencyKey: raw.idempotencyKey,
     createdAt: raw.createdAt.toISOString(),
   });
 }

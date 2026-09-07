@@ -1,17 +1,24 @@
 import { afterAll, describe, expect, test } from "vitest";
-import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
-import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import {
+  IsoInstantSchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  NotificationAttemptNonceSchema,
+  NotificationIntentSchema,
+} from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   beginSend,
   confirmDelivered,
+  expire,
   markReady,
+  operatorResolveUnknown,
+  recordFailure,
+  recordUnknownDelivery,
   suppressStale,
 } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import {
-  matchNotificationIntentRowToRecord,
-  type MatchNotificationIntentRecord,
-} from "#src/database/durable/intent-row.ts";
+import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import {
   getIntent,
   transitionIntent,
@@ -24,33 +31,31 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
-const AT = new Date("2026-09-07T10:00:00.000Z");
-const DEADLINE = new Date("2026-09-07T11:00:00.000Z");
+const MATCH_ID = RiotMatchIdSchema.parse("NA1_9000");
+const AT_ISO = "2026-09-07T10:00:00.000Z";
+const DEADLINE_ISO = "2026-09-07T11:00:00.000Z";
 const STARTED_AT = IsoInstantSchema.parse("2026-09-07T10:30:00.000Z");
 const DELIVERED_AT = IsoInstantSchema.parse("2026-09-07T10:31:00.000Z");
+const OBSERVED_AT = IsoInstantSchema.parse("2026-09-07T10:32:00.000Z");
 const AFTER_DEADLINE = IsoInstantSchema.parse("2026-09-07T12:00:00.000Z");
 const NONCE_A = NotificationAttemptNonceSchema.parse("nonce-a");
 const NONCE_B = NotificationAttemptNonceSchema.parse("nonce-b");
 
-function intent(key: string): MatchNotificationIntentRecord {
-  return matchNotificationIntentRowToRecord({
-    intentKey: key,
-    riotMatchId: "NA1_9000",
-    targetKind: "channel",
-    targetId: "300000000000000001",
-    state: "pending",
-    attemptCount: 0,
-    attemptNonce: null,
-    sendStartedAt: null,
-    deliveredAt: null,
-    messageId: null,
-    suppressedReason: null,
-    unknownObservedAt: null,
-    lastFailure: null,
-    freshnessDeadline: DEADLINE,
-    payload: JSON.stringify({ kind: "post-match", version: 1, data: {} }),
-    createdAt: AT,
-  });
+function intent(
+  key: string,
+  target?: Record<string, unknown>,
+): MatchNotificationIntentRecord {
+  return {
+    matchId: MATCH_ID,
+    intent: NotificationIntentSchema.parse({
+      key,
+      target: target ?? { kind: "channel", channelId: "300000000000000001" },
+      freshnessDeadline: DEADLINE_ISO,
+      createdAt: AT_ISO,
+      attemptCount: 0,
+      state: { kind: "pending" },
+    }),
+  };
 }
 
 describe("upsertIntent", () => {
@@ -61,23 +66,9 @@ describe("upsertIntent", () => {
       outcome: "already-applied",
     });
 
-    const drifted = matchNotificationIntentRowToRecord({
-      intentKey: "upsert-1",
-      riotMatchId: "NA1_9000",
-      targetKind: "dm",
-      targetId: "200000000000000001",
-      state: "pending",
-      attemptCount: 0,
-      attemptNonce: null,
-      sendStartedAt: null,
-      deliveredAt: null,
-      messageId: null,
-      suppressedReason: null,
-      unknownObservedAt: null,
-      lastFailure: null,
-      freshnessDeadline: DEADLINE,
-      payload: JSON.stringify({ kind: "post-match", version: 1, data: {} }),
-      createdAt: AT,
+    const drifted = intent("upsert-1", {
+      kind: "dm",
+      accountId: "200000000000000001",
     });
     expect(await upsertIntent(prisma, drifted)).toEqual({
       outcome: "conflict",
@@ -118,6 +109,90 @@ describe("transitionIntent", () => {
       deliveredAt: DELIVERED_AT,
     });
     expect(stored?.intent.attemptCount).toBe(1);
+  });
+
+  test("a retryable failure returns the intent to ready and persists the failure", async () => {
+    await upsertIntent(prisma, intent("fail-1"));
+    const key = intent("fail-1").intent.key;
+    await transitionIntent(prisma, { intentKey: key, transition: markReady });
+    await transitionIntent(prisma, {
+      intentKey: key,
+      transition: (value) =>
+        beginSend(value, { attemptNonce: NONCE_A, startedAt: STARTED_AT }),
+    });
+    const failed = await transitionIntent(prisma, {
+      intentKey: key,
+      transition: (value) =>
+        recordFailure(value, {
+          attemptNonce: NONCE_A,
+          failure: { classification: "retryable", reason: "rate-limited" },
+        }),
+    });
+    expect(failed.outcome).toBe("applied");
+
+    const stored = await getIntent(prisma, { intentKey: key });
+    expect(stored?.intent.state).toEqual({ kind: "ready" });
+    expect(stored?.intent.lastFailure).toEqual({
+      classification: "retryable",
+      reason: "rate-limited",
+    });
+  });
+
+  test("an unknown delivery is parked until an operator resolves it", async () => {
+    await upsertIntent(prisma, intent("unknown-1"));
+    const key = intent("unknown-1").intent.key;
+    await transitionIntent(prisma, { intentKey: key, transition: markReady });
+    await transitionIntent(prisma, {
+      intentKey: key,
+      transition: (value) =>
+        beginSend(value, { attemptNonce: NONCE_A, startedAt: STARTED_AT }),
+    });
+    const unknown = await transitionIntent(prisma, {
+      intentKey: key,
+      transition: (value) =>
+        recordUnknownDelivery(value, {
+          attemptNonce: NONCE_A,
+          observedAt: OBSERVED_AT,
+        }),
+    });
+    expect(unknown.outcome).toBe("applied");
+
+    // Nothing but the operator may move it — even a fresh send attempt.
+    expect(
+      await transitionIntent(prisma, {
+        intentKey: key,
+        transition: (value) =>
+          beginSend(value, { attemptNonce: NONCE_B, startedAt: STARTED_AT }),
+      }),
+    ).toEqual({
+      outcome: "conflict",
+      reason: "unknown-delivery-requires-operator",
+    });
+
+    const resolved = await transitionIntent(prisma, {
+      intentKey: key,
+      transition: (value) =>
+        operatorResolveUnknown(value, {
+          outcome: "confirmed-unsent",
+          attemptNonce: NONCE_A,
+        }),
+    });
+    expect(resolved.outcome).toBe("applied");
+    const stored = await getIntent(prisma, { intentKey: key });
+    expect(stored?.intent.state).toEqual({ kind: "ready" });
+  });
+
+  test("expire moves an undelivered intent to its terminal state", async () => {
+    await upsertIntent(prisma, intent("expire-1"));
+    const key = intent("expire-1").intent.key;
+    const expired = await transitionIntent(prisma, {
+      intentKey: key,
+      transition: expire,
+    });
+    expect(expired.outcome).toBe("applied");
+    expect(
+      await transitionIntent(prisma, { intentKey: key, transition: markReady }),
+    ).toEqual({ outcome: "conflict", reason: "terminal-state" });
   });
 
   test("returns the domain's conflict for an illegal transition", async () => {

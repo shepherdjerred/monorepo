@@ -9,12 +9,12 @@ import {
 /**
  * Row codec for MatchProcessingReceipt.
  *
- * The stored identity widens the domain receipt with `kind` and `version`
- * (which pipeline step wrote it, under which semantics revision); within one
- * (matchId, kind, version) the domain invariant holds — one receipt per scope
- * identity, keyed by receiptScopeKey. The scopeKey column is that canonical
- * key; the migration CHECK keeps it consistent with the split scope columns,
- * and this codec recomputes it on write so the two can never disagree.
+ * The domain receipt now carries its full identity — branded kebab-case
+ * `kind`, `version`, and scope — so the row flattens exactly that identity
+ * into the unique constraint's columns. The scopeKey column is the domain's
+ * receiptScopeKey; the migration CHECK keeps it consistent with the split
+ * scope columns, and this codec recomputes it on write so the two can never
+ * disagree.
  */
 
 export type MatchProcessingReceiptRecord = z.infer<
@@ -22,8 +22,6 @@ export type MatchProcessingReceiptRecord = z.infer<
 >;
 export const MatchProcessingReceiptRecordSchema = z.strictObject({
   matchId: RiotMatchIdSchema,
-  kind: z.string().min(1),
-  version: z.int().min(1),
   receipt: MatchProcessingReceiptSchema,
   /** Raw JSON evidence, opaque here; the owning feature parses it. */
   evidence: z.string().nullable(),
@@ -79,9 +77,9 @@ export function matchProcessingReceiptRowToRecord(
   const raw = RawReceiptRowSchema.parse(row);
   const record = MatchProcessingReceiptRecordSchema.parse({
     matchId: raw.riotMatchId,
-    kind: raw.kind,
-    version: raw.version,
     receipt: {
+      kind: raw.kind,
+      version: raw.version,
       scope: scopeCandidate(raw),
       recordedAt: raw.recordedAt.toISOString(),
     },
@@ -124,8 +122,8 @@ export function matchProcessingReceiptRecordToRow(
 ): MatchProcessingReceiptRow {
   return {
     riotMatchId: record.matchId,
-    kind: record.kind,
-    version: record.version,
+    kind: record.receipt.kind,
+    version: record.receipt.version,
     ...scopeColumns(record.receipt.scope),
     scopeKey: receiptScopeKey(record.receipt.scope),
     evidence: record.evidence,

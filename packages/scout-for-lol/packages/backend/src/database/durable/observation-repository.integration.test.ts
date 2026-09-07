@@ -54,11 +54,11 @@ function observation(
   });
 }
 
-function receipt(
+function receiptRow(
   gameId: number,
   scopeKind: "global" | "guild",
-): MatchProcessingReceiptRecord {
-  return matchProcessingReceiptRowToRecord({
+): Record<string, unknown> {
+  return {
     riotMatchId: `NA1_${String(gameId)}`,
     kind: "report-posted",
     version: 1,
@@ -68,7 +68,14 @@ function receipt(
     scopeKey: scopeKind === "guild" ? "guild:100000000000000001" : "global",
     evidence: null,
     recordedAt: AT,
-  });
+  };
+}
+
+function receipt(
+  gameId: number,
+  scopeKind: "global" | "guild",
+): MatchProcessingReceiptRecord {
+  return matchProcessingReceiptRowToRecord(receiptRow(gameId, scopeKind));
 }
 
 describe("observeMatch", () => {
@@ -174,10 +181,86 @@ describe("promoteObservation", () => {
       }),
     ).rejects.toThrow(/never observed/);
   });
+
+  test("exactly one of two concurrent promotions applies", async () => {
+    const record = observation(113);
+    await observeMatch(prisma, record);
+    const otherPromotedAt = IsoInstantSchema.parse("2026-09-07T12:30:00.000Z");
+    const outcomes = await Promise.all([
+      promoteObservation(prisma, {
+        matchId: record.matchId,
+        promotedAt: PROMOTED_AT,
+      }),
+      promoteObservation(prisma, {
+        matchId: record.matchId,
+        promotedAt: otherPromotedAt,
+      }),
+    ]);
+    expect(outcomes.map((result) => result.outcome).sort()).toEqual([
+      "already-applied",
+      "applied",
+    ]);
+    const stored = await getObservation(prisma, { matchId: record.matchId });
+    expect(stored?.policy).toBe("FULL");
+    expect([PROMOTED_AT, otherPromotedAt]).toContain(
+      stored?.promotion?.promotedAt,
+    );
+  });
+
+  test("a delayed retry of the original observation after promotion is benign", async () => {
+    const original = observation(114);
+    await observeMatch(prisma, original);
+    await promoteObservation(prisma, {
+      matchId: original.matchId,
+      promotedAt: PROMOTED_AT,
+    });
+
+    // The Temporal retry replays the exact pre-promotion observation.
+    expect(await observeMatch(prisma, original)).toEqual({
+      outcome: "already-applied",
+    });
+    const stored = await getObservation(prisma, { matchId: original.matchId });
+    expect(stored?.policy).toBe("FULL");
+    expect(stored?.promotion).toEqual({ promotedAt: PROMOTED_AT });
+  });
+
+  test("genuine divergence from a promoted row still conflicts", async () => {
+    const original = observation(115);
+    await observeMatch(prisma, original);
+    await promoteObservation(prisma, {
+      matchId: original.matchId,
+      promotedAt: PROMOTED_AT,
+    });
+
+    const divergent = matchObservationRowToRecord({
+      riotMatchId: "NA1_115",
+      platformRoute: "NA1",
+      processingPolicy: "ARCHIVE_ONLY",
+      pipelineOwner: null,
+      promotedAt: null,
+      gameCreatedAt: AT,
+      observedAt: new Date("2026-09-07T14:00:00.000Z"),
+      matchObjectKey: null,
+      matchDigest: null,
+      timelineObjectKey: null,
+      timelineDigest: null,
+    });
+    expect(await observeMatch(prisma, divergent)).toEqual({
+      outcome: "conflict",
+      reason: "observation-differs",
+    });
+
+    // A born-FULL observation is not a retry of the promoted original either.
+    const bornFull = observation(115, { processingPolicy: "FULL" });
+    expect(await observeMatch(prisma, bornFull)).toEqual({
+      outcome: "conflict",
+      reason: "observation-differs",
+    });
+  });
 });
 
 describe("receipts and state assembly", () => {
-  test("recordReceipt is idempotent by scope identity", async () => {
+  test("recordReceipt is idempotent by identity and conflicts on differing evidence", async () => {
     await observeMatch(prisma, observation(120));
     const globalReceipt = receipt(120, "global");
     expect(await recordReceipt(prisma, globalReceipt)).toEqual({
@@ -186,6 +269,24 @@ describe("receipts and state assembly", () => {
     expect(await recordReceipt(prisma, globalReceipt)).toEqual({
       outcome: "already-applied",
     });
+
+    const differingEvidence = matchProcessingReceiptRowToRecord({
+      ...receiptRow(120, "global"),
+      recordedAt: new Date("2026-09-07T13:00:00.000Z"),
+    });
+    expect(await recordReceipt(prisma, differingEvidence)).toEqual({
+      outcome: "conflict",
+      reason: "receipt-evidence-mismatch",
+    });
+
+    // The table keeps the first evidence; the conflicting replay wrote nothing.
+    const listed = await listReceipts(prisma, {
+      matchId: globalReceipt.matchId,
+    });
+    expect(listed).toHaveLength(1);
+    expect(listed[0]?.receipt.recordedAt).toBe(
+      globalReceipt.receipt.recordedAt,
+    );
   });
 
   test("exactly one of two concurrent identical receipt writers applies", async () => {
@@ -201,39 +302,42 @@ describe("receipts and state assembly", () => {
     ]);
   });
 
-  test("assembles the domain MatchProcessingState with its receipts", async () => {
+  test("assembles the domain MatchProcessingState across receipt kinds", async () => {
     const record = observation(122, { pipelineOwner: "TEMPORAL_V2" });
     await observeMatch(prisma, record);
     await recordReceipt(prisma, receipt(122, "global"));
     await recordReceipt(prisma, receipt(122, "guild"));
+    await recordReceipt(
+      prisma,
+      matchProcessingReceiptRowToRecord({
+        ...receiptRow(122, "global"),
+        kind: "market-settled",
+      }),
+    );
 
     const state = await getProcessingState(prisma, {
       matchId: record.matchId,
-      receiptKind: "report-posted",
-      receiptVersion: 1,
     });
     expect(state?.owner).toEqual({ kind: "temporal-v2" });
-    expect(state?.receipts).toHaveLength(2);
+    expect(state?.receipts).toHaveLength(3);
+    expect(
+      state?.receipts
+        .map((entry) => `${entry.kind}:${entry.scope.kind}`)
+        .sort(),
+    ).toEqual([
+      "market-settled:global",
+      "report-posted:global",
+      "report-posted:guild",
+    ]);
 
     const listed = await listReceipts(prisma, { matchId: record.matchId });
-    expect(listed).toHaveLength(2);
-    expect(
-      await getProcessingState(prisma, {
-        matchId: record.matchId,
-        receiptKind: "report-posted",
-        receiptVersion: 2,
-      }),
-    ).toMatchObject({ receipts: [] });
+    expect(listed).toHaveLength(3);
   });
 
   test("returns null for a match that was never observed", async () => {
     const ghost = observation(123);
     expect(
-      await getProcessingState(prisma, {
-        matchId: ghost.matchId,
-        receiptKind: "report-posted",
-        receiptVersion: 1,
-      }),
+      await getProcessingState(prisma, { matchId: ghost.matchId }),
     ).toBeNull();
   });
 });

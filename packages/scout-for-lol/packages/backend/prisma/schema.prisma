@@ -2705,16 +2705,19 @@ model MatchTrackedAccount {
   @@index([puuid, cursorAdvancedAt])
 }
 
-/// One durable processing receipt. `scopeKey` is receiptScopeKey(scope) from
-/// the domain — the canonical scope identity — kept alongside the split scope
-/// columns so the unique constraint has no nullable members (Postgres treats
-/// NULLs as distinct in unique indexes); a CHECK ties the two representations
-/// together. Receipt identity is (riotMatchId, kind, version, scopeKey):
-/// recordReceipt is idempotent over it regardless of timestamp or evidence.
+/// One durable processing receipt. The domain identity is
+/// matchProcessingReceiptIdentityKey — `kind:version:scopeKey` — which the
+/// unique constraint spells out as columns. `scopeKey` is receiptScopeKey
+/// (scope) kept alongside the split scope columns so the unique constraint
+/// has no nullable members (Postgres treats NULLs as distinct in unique
+/// indexes); CHECKs tie the representations together and pin `kind` to the
+/// domain's kebab-case ReceiptKind brand (no `:`, so the identity encoding
+/// stays injective). recordReceipt is idempotent over the identity and
+/// conflicts when a replay carries different evidence.
 model MatchProcessingReceipt {
-  id             Int      @id @default(autoincrement())
+  id             BigInt   @id @default(autoincrement())
   riotMatchId    String
-  kind           String
+  kind           String // ReceiptKind: kebab-case brand
   version        Int
   scopeKind      String // ReceiptScope kind: global | guild | account
   scopeGuildId   String?
@@ -2731,26 +2734,29 @@ model MatchProcessingReceipt {
 /// One durable notification intent (domain NotificationIntent). The state
 /// union is flattened: `state` is the discriminant and each variant's payload
 /// lives in a dedicated column whose presence the migration CHECKs to exactly
-/// the states that carry it. `payload` is the versioned message-content
-/// envelope ({ kind, version, data }) — what to deliver, which the domain
-/// intent deliberately does not model.
+/// the states that carry it. `payload` is the notificationIntentCodec
+/// envelope of the whole intent — the versioned wire form — and the row
+/// codec cross-checks it against the columns on every read, so neither
+/// representation can silently drift. lastFailure is split into its two
+/// closed-vocabulary columns so a bad writer cannot brick the row.
 model MatchNotificationIntent {
   intentKey   String @id
   riotMatchId String
   targetKind  String // NotificationTarget kind: channel | dm
   targetId    String
 
-  state             String    @default("pending") // NotificationIntentState kind
-  attemptCount      Int       @default(0)
-  attemptNonce      String? // sending / unknown-delivery only
-  sendStartedAt     DateTime? // sending only
-  deliveredAt       DateTime? // delivered only
-  messageId         String? // delivered only (optional there)
-  suppressedReason  String? // suppressed only: stale | feature-disabled | recipient-preference
-  unknownObservedAt DateTime? // unknown-delivery only
-  lastFailure       String? // JSON NotificationFailure
-  freshnessDeadline DateTime
-  payload           String // JSON versioned codec envelope
+  state                     String    @default("pending") // NotificationIntentState kind
+  attemptCount              Int       @default(0)
+  attemptNonce              String? // sending / unknown-delivery only
+  sendStartedAt             DateTime? // sending only
+  deliveredAt               DateTime? // delivered only
+  messageId                 String? // delivered only (optional there)
+  suppressedReason          String? // suppressed only: stale | feature-disabled | recipient-preference
+  unknownObservedAt         DateTime? // unknown-delivery only
+  lastFailureClassification String? // NotificationFailure: retryable | terminal
+  lastFailureReason         String? // reason vocabulary of its classification
+  freshnessDeadline         DateTime
+  payload                   String // JSON notificationIntentCodec envelope of the intent
 
   createdAt DateTime
   updatedAt DateTime @updatedAt
@@ -2793,7 +2799,7 @@ model ScoutWorkflowStart {
   workflowType        String
   requestedBy         String? // operator/actor discord id; NULL for system requests
   requestSource       String
-  inputPayload        String // JSON versioned codec envelope
+  inputPayload        String // JSON versioned envelope; its kind must equal workflowType
   requestedAt         DateTime
   acceptedAt          DateTime?
   runId               String?
@@ -2804,14 +2810,16 @@ model ScoutWorkflowStart {
 }
 
 /// Append-only operator audit trail for the durable pipeline. No update path:
-/// rows are only ever inserted and read.
+/// rows are only ever inserted and read. `idempotencyKey` lets a retried
+/// Temporal activity replay its append without double-writing the trail.
 model ScoutOperatorAuditEvent {
-  id             Int      @id @default(autoincrement())
+  id             BigInt   @id @default(autoincrement())
   actorDiscordId String
   action         String
   subjectKind    String
   subjectId      String
   detail         String // JSON, opaque to SQL
+  idempotencyKey String?  @unique
   createdAt      DateTime @default(now())
 
   @@index([subjectKind, subjectId, createdAt])

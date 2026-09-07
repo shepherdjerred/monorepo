@@ -1,4 +1,4 @@
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type {
   IsoInstant,
   WorkflowRunId,
@@ -20,15 +20,13 @@ import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
  * payload — not when or by whom it was re-requested.
  */
 
-type WorkflowStartDb = Pick<ExtendedPrismaClient, "scoutWorkflowStart">;
-
 export type RequestWorkflowStartResult =
   | { outcome: "applied"; record: ScoutWorkflowStartRecord }
   | { outcome: "adopted"; record: ScoutWorkflowStartRecord }
   | { outcome: "conflict"; reason: "request-differs" };
 
 export async function requestWorkflowStart(
-  db: WorkflowStartDb,
+  db: Db,
   record: ScoutWorkflowStartRecord,
 ): Promise<RequestWorkflowStartResult> {
   const row = scoutWorkflowStartRecordToRow(record);
@@ -67,7 +65,7 @@ export type RecordWorkflowStartAcceptedResult =
  * different acceptance for an already-accepted start is a conflict.
  */
 export async function recordWorkflowStartAccepted(
-  db: WorkflowStartDb,
+  db: Db,
   args: {
     requestedWorkflowId: string;
     acceptedAt: IsoInstant;
@@ -108,7 +106,7 @@ export async function recordWorkflowStartAccepted(
 }
 
 export async function getWorkflowStart(
-  db: WorkflowStartDb,
+  db: Db,
   args: { requestedWorkflowId: string },
 ): Promise<ScoutWorkflowStartRecord | null> {
   const row = await db.scoutWorkflowStart.findUnique({

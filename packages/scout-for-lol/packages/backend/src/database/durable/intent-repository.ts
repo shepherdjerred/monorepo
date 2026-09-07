@@ -1,11 +1,11 @@
-import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import type { NotificationIntentKey } from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import {
   matchNotificationIntentRecordToRow,
   matchNotificationIntentRowToRecord,
-  notificationIntentStateColumns,
+  notificationIntentTransitionPatch,
   type MatchNotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
 
@@ -20,8 +20,6 @@ import {
  * `already-applied`/`conflict` answer after a re-read.
  */
 
-type IntentDb = Pick<ExtendedPrismaClient, "matchNotificationIntent">;
-
 const TRANSITION_ATTEMPTS = 3;
 
 export type UpsertIntentResult =
@@ -35,7 +33,7 @@ export type UpsertIntentResult =
  * is minted for exactly one decision to notify.
  */
 export async function upsertIntent(
-  db: IntentDb,
+  db: Db,
   record: MatchNotificationIntentRecord,
 ): Promise<UpsertIntentResult> {
   const row = matchNotificationIntentRecordToRow(record);
@@ -63,7 +61,7 @@ export async function upsertIntent(
 }
 
 export async function getIntent(
-  db: IntentDb,
+  db: Db,
   args: { intentKey: NotificationIntentKey },
 ): Promise<MatchNotificationIntentRecord | null> {
   const row = await db.matchNotificationIntent.findUnique({
@@ -91,7 +89,7 @@ function observedAttemptNonce(intent: NotificationIntent): string | null {
  * upserted is a broken caller contract and throws.
  */
 export async function transitionIntent(
-  db: IntentDb,
+  db: Db,
   args: {
     intentKey: NotificationIntentKey;
     transition: (intent: NotificationIntent) => NotificationTransitionResult;
@@ -118,7 +116,7 @@ export async function transitionIntent(
         attemptCount: record.intent.attemptCount,
         attemptNonce: observedAttemptNonce(record.intent),
       },
-      data: notificationIntentStateColumns(result.next),
+      data: notificationIntentTransitionPatch(result.next),
     });
     if (updated.count === 1) {
       return result;

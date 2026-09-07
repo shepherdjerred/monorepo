@@ -41,16 +41,17 @@ function request(
   id: string,
   overrides: Partial<{ workflowType: string }> = {},
 ): ScoutWorkflowStartRecord {
+  const workflowType = overrides.workflowType ?? "match-recovery";
   return scoutWorkflowStartRowToRecord({
     requestedWorkflowId: id,
-    workflowType: "match-recovery",
+    workflowType,
     requestedBy: null,
     requestSource: "operator-command",
-    inputPayload: JSON.stringify({ kind: "recovery", version: 1, data: {} }),
+    // The expected-kind contract: a start's input envelope kind IS its type.
+    inputPayload: JSON.stringify({ kind: workflowType, version: 1, data: {} }),
     requestedAt: AT,
     acceptedAt: null,
     runId: null,
-    ...overrides,
   });
 }
 
@@ -140,6 +141,37 @@ describe("recordWorkflowStartAccepted", () => {
       }),
     ).rejects.toThrow(/never requested/);
   });
+
+  test("exactly one of two concurrent acceptances applies", async () => {
+    const record = request("wf-acc-race");
+    await requestWorkflowStart(prisma, record);
+    const runIds = [
+      WorkflowRunIdSchema.parse("run-x"),
+      WorkflowRunIdSchema.parse("run-y"),
+    ];
+    const outcomes = await Promise.all(
+      runIds.map((runId) =>
+        recordWorkflowStartAccepted(prisma, {
+          requestedWorkflowId: record.requestedWorkflowId,
+          acceptedAt: ACCEPTED_AT,
+          runId,
+        }),
+      ),
+    );
+    expect(outcomes.map((result) => result.outcome).sort()).toEqual([
+      "applied",
+      "conflict",
+    ]);
+
+    // The stored run id is the one whose acceptance applied.
+    const appliedIndex = outcomes.findIndex(
+      (result) => result.outcome === "applied",
+    );
+    const stored = await getWorkflowStart(prisma, {
+      requestedWorkflowId: record.requestedWorkflowId,
+    });
+    expect(stored?.acceptance?.runId).toBe(runIds[appliedIndex]);
+  });
 });
 
 describe("appendAuditEvent", () => {
@@ -174,14 +206,36 @@ describe("appendAuditEvent", () => {
     });
   });
 
-  test("rejects a detail that cannot be serialized as JSON", async () => {
+  test("a replayed idempotency key returns the original event", async () => {
+    const input = {
+      actorDiscordId: OPERATOR,
+      action: "batch-created",
+      subjectKind: "recovery-batch",
+      subjectId: "rb-idem",
+      detail: { policy: "no-external" },
+      idempotencyKey: "rb-idem-create",
+    };
+    const first = await appendAuditEvent(prisma, input);
+    const replay = await appendAuditEvent(prisma, input);
+    expect(replay).toEqual(first);
+
+    const listed = await listAuditEvents(prisma, {
+      subjectKind: "recovery-batch",
+      subjectId: "rb-idem",
+    });
+    expect(listed).toHaveLength(1);
+  });
+
+  test("the Zod guard rejects a detail JSON.stringify would silently corrupt", async () => {
+    // NaN survives JSON.stringify (it becomes null), so a rejection here can
+    // only come from the z.json() guard — not from serialization failing.
     await expect(
       appendAuditEvent(prisma, {
         actorDiscordId: OPERATOR,
         action: "x",
         subjectKind: "y",
         subjectId: "z",
-        detail: { bad: 1n },
+        detail: { value: Number.NaN },
       }),
     ).rejects.toThrow();
   });
@@ -233,5 +287,98 @@ describe("tracked accounts", () => {
         advancedAt: ACCEPTED_AT,
       }),
     ).rejects.toThrow(/never recorded/);
+  });
+
+  test("a delayed retry with an earlier timestamp cannot rewind the cursor", async () => {
+    const row = matchTrackedAccountRowToRecord({
+      riotMatchId: "NA1_7002",
+      puuid: "s".repeat(78),
+      playerId: null,
+      accountId: null,
+      cursorAdvancedAt: null,
+    });
+    await recordTrackedAccounts(prisma, [row]);
+
+    const earlier = IsoInstantSchema.parse("2026-09-07T09:00:00.000Z");
+    const later = IsoInstantSchema.parse("2026-09-07T10:00:00.000Z");
+    expect(
+      await markTrackedAccountCursorAdvanced(prisma, {
+        matchId: row.matchId,
+        puuid: row.puuid,
+        advancedAt: later,
+      }),
+    ).toEqual({ outcome: "applied" });
+    expect(
+      await markTrackedAccountCursorAdvanced(prisma, {
+        matchId: row.matchId,
+        puuid: row.puuid,
+        advancedAt: earlier,
+      }),
+    ).toEqual({ outcome: "already-applied" });
+
+    const listed = await listTrackedAccounts(prisma, { matchId: row.matchId });
+    expect(listed[0]?.cursorAdvancedAt).toBe(later);
+  });
+
+  test("concurrent advances settle at the latest timestamp", async () => {
+    const row = matchTrackedAccountRowToRecord({
+      riotMatchId: "NA1_7003",
+      puuid: "t".repeat(78),
+      playerId: null,
+      accountId: null,
+      cursorAdvancedAt: null,
+    });
+    await recordTrackedAccounts(prisma, [row]);
+
+    const earlier = IsoInstantSchema.parse("2026-09-07T09:00:00.000Z");
+    const later = IsoInstantSchema.parse("2026-09-07T10:00:00.000Z");
+    const outcomes = await Promise.all([
+      markTrackedAccountCursorAdvanced(prisma, {
+        matchId: row.matchId,
+        puuid: row.puuid,
+        advancedAt: earlier,
+      }),
+      markTrackedAccountCursorAdvanced(prisma, {
+        matchId: row.matchId,
+        puuid: row.puuid,
+        advancedAt: later,
+      }),
+    ]);
+    // Either ordering applies the later advance; the earlier one either lands
+    // first and is overtaken, or arrives second and is refused. The cursor
+    // never ends up rewound.
+    expect(
+      outcomes.filter((result) => result.outcome === "applied").length,
+    ).toBeGreaterThanOrEqual(1);
+    const listed = await listTrackedAccounts(prisma, { matchId: row.matchId });
+    expect(listed[0]?.cursorAdvancedAt).toBe(later);
+  });
+
+  test("a mixed batch reports newly recorded and existing associations", async () => {
+    const matchId = "NA1_7004";
+    const rows = Array.from({ length: 10 }, (_, index) =>
+      matchTrackedAccountRowToRecord({
+        riotMatchId: matchId,
+        puuid: String(index).repeat(78).slice(0, 78),
+        playerId: null,
+        accountId: null,
+        cursorAdvancedAt: null,
+      }),
+    );
+    expect(await recordTrackedAccounts(prisma, rows.slice(0, 6))).toEqual({
+      recorded: 6,
+      existing: 0,
+    });
+    expect(await recordTrackedAccounts(prisma, rows)).toEqual({
+      recorded: 4,
+      existing: 6,
+    });
+    const listed = await listTrackedAccounts(prisma, {
+      matchId: rows[0]?.matchId ?? RiotMatchIdSchema.parse(matchId),
+    });
+    expect(listed).toHaveLength(10);
+    expect(listed.map((entry) => entry.puuid)).toEqual(
+      rows.map((entry) => entry.puuid).sort((a, b) => a.localeCompare(b)),
+    );
   });
 });

@@ -19,25 +19,40 @@ import {
  * migration CHECK also enforces. The domain has no brand for a Temporal
  * workflow id (only WorkflowRunId, the run id), so `requestedWorkflowId`
  * stays a plain non-empty string.
+ *
+ * Starts are typed by `workflowType`, and the input envelope's kind IS that
+ * type — the expected-kind contract. The schema and a migration CHECK both
+ * enforce it, so an envelope of some other kind can never be stored in, or
+ * read out of, a start row.
  */
 
 export type ScoutWorkflowStartRecord = z.infer<
   typeof ScoutWorkflowStartRecordSchema
 >;
-export const ScoutWorkflowStartRecordSchema = z.strictObject({
-  requestedWorkflowId: z.string().min(1),
-  workflowType: z.string().min(1),
-  requestedBy: DiscordAccountIdSchema.nullable(),
-  requestSource: z.string().min(1),
-  inputPayload: VersionedPayloadEnvelopeSchema,
-  requestedAt: IsoInstantSchema,
-  acceptance: z
-    .strictObject({
-      acceptedAt: IsoInstantSchema,
-      runId: WorkflowRunIdSchema.nullable(),
-    })
-    .nullable(),
-});
+export const ScoutWorkflowStartRecordSchema = z
+  .strictObject({
+    requestedWorkflowId: z.string().min(1),
+    workflowType: z.string().min(1),
+    requestedBy: DiscordAccountIdSchema.nullable(),
+    requestSource: z.string().min(1),
+    inputPayload: VersionedPayloadEnvelopeSchema,
+    requestedAt: IsoInstantSchema,
+    acceptance: z
+      .strictObject({
+        acceptedAt: IsoInstantSchema,
+        runId: WorkflowRunIdSchema.nullable(),
+      })
+      .nullable(),
+  })
+  .superRefine((record, ctx) => {
+    if (record.inputPayload.kind !== record.workflowType) {
+      ctx.addIssue({
+        code: "custom",
+        message: `input payload kind ${record.inputPayload.kind} does not match workflowType ${record.workflowType}`,
+        path: ["inputPayload", "kind"],
+      });
+    }
+  });
 
 /** Column shape of a ScoutWorkflowStart row, minus DB-managed columns. */
 export type ScoutWorkflowStartRow = {
