@@ -99,6 +99,14 @@ type Harness = {
    */
   setHumanCount: (count: number | null, channelId?: string) => void;
   setGuildEnabled: (enabled: boolean) => void;
+  /**
+   * Queues one-shot results (consumed in order, oldest first) for the next
+   * calls to `isGuildEnabled`, falling back to the plain `guildEnabled`
+   * state once the queue drains. An `Error` makes that call reject, so
+   * tests can target either the starting flag recheck or the
+   * post-connection one (`isJoinStillEligible`) independently.
+   */
+  queueGuildEnabledResult: (result: boolean | Error) => void;
   fireConnectionLost: (guildId: string, mode: ConnectionMode) => void;
 };
 
@@ -113,6 +121,7 @@ function managerHarness(options?: {
     defaultHumanCount: number | null;
     humanCountsByChannel: Map<string, number | null>;
     guildEnabled: boolean;
+    guildEnabledQueue: (boolean | Error)[];
     connectionLost:
       ((guildId: string, mode: ConnectionMode) => void) | undefined;
   } = {
@@ -120,6 +129,7 @@ function managerHarness(options?: {
     defaultHumanCount: 1,
     humanCountsByChannel: new Map(),
     guildEnabled: true,
+    guildEnabledQueue: [],
     connectionLost: undefined,
   };
   const deps: VoiceAssistantManagerDeps = {
@@ -164,7 +174,11 @@ function managerHarness(options?: {
     captureQuestion: () => {
       /* covered by analytics tests */
     },
-    isGuildEnabled: () => Promise.resolve(state.guildEnabled),
+    isGuildEnabled: () => {
+      const queued = state.guildEnabledQueue.shift();
+      if (queued instanceof Error) return Promise.reject(queued);
+      return Promise.resolve(queued ?? state.guildEnabled);
+    },
   };
   const manager = new VoiceAssistantManager(deps);
   return {
@@ -184,6 +198,9 @@ function managerHarness(options?: {
     },
     setGuildEnabled: (enabled) => {
       state.guildEnabled = enabled;
+    },
+    queueGuildEnabledResult: (result) => {
+      state.guildEnabledQueue.push(result);
     },
     fireConnectionLost: (guildId, mode) => {
       state.connectionLost?.(guildId, mode);
@@ -529,5 +546,35 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     const h = managerHarness();
     h.setHumanCount(3);
     await expect(h.manager.join(GUILD, "channel-1")).resolves.toBe("joined");
+  });
+
+  test("fails closed when the starting flag recheck cannot be evaluated", async () => {
+    const h = managerHarness();
+    h.queueGuildEnabledResult(new Error("provider broke"));
+    await expect(h.manager.join(GUILD, "channel-1")).resolves.toBe("cancelled");
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test("fails closed when the post-connection flag recheck cannot be evaluated", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    // The starting recheck succeeds; only the recheck after the connection
+    // resolves fails to evaluate.
+    h.queueGuildEnabledResult(true);
+    h.queueGuildEnabledResult(new Error("provider broke"));
+    const join = h.manager.join(GUILD, "channel-1");
+    await waitUntil(() => pendingConnections.length === 1);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(join).resolves.toBe("cancelled");
+    expect(h.left).toEqual([GUILD]);
+    expect(h.sessionEvents).not.toContain("created");
   });
 });

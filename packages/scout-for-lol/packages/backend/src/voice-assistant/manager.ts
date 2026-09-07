@@ -314,15 +314,20 @@ export class VoiceAssistantManager {
       try {
         startingEnabled = await this.deps.isGuildEnabled(guildId);
       } catch (error) {
-        // A flag-evaluation failure is not an answer; the command handler
-        // already confirmed the flag once before calling join(), so a
-        // transient evaluation hiccup here must not abandon an
-        // otherwise-legitimate request.
-        logger.warn("voice flag re-check could not evaluate a guild", {
-          guildId,
-          error: error instanceof Error ? error.message : String(error),
-        });
-        startingEnabled = true;
+        // isPolicyEnabled() already resolves an absent-or-not-ready flag
+        // silently through its local default; anything that still throws
+        // here is a malformed or otherwise broken authoritative result.
+        // Trusting that as authorization to start an undeafened listening
+        // session would treat corrupt data as consent — fail closed.
+        logger.warn(
+          "voice flag re-check failed to evaluate a guild; cancelling the join",
+          {
+            guildId,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        );
+        this.deps.leaveChannel(guildId);
+        return "cancelled";
       }
       if (!startingEnabled || this.epochs.get(guildId) !== myEpoch) {
         // Tear down whatever this attempt already committed to — the
@@ -545,15 +550,21 @@ export class VoiceAssistantManager {
     try {
       enabled = await this.deps.isGuildEnabled(guildId);
     } catch (error) {
-      // A flag-evaluation failure is not an answer; the command handler
-      // already confirmed the flag once before calling join(), so a
-      // transient evaluation hiccup here must not block or abandon an
-      // otherwise-legitimate request.
-      logger.warn("voice flag re-check could not evaluate a guild", {
-        guildId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      enabled = true;
+      // Same reasoning as performJoin's starting-flag recheck: a thrown
+      // evaluation is a broken authoritative result, not a mere hiccup —
+      // fail closed rather than trust it as authorization to keep
+      // listening.
+      logger.warn(
+        "voice flag re-check failed to evaluate a guild; cancelling the join",
+        {
+          guildId,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      );
+      return {
+        eligible: false,
+        reason: "the guild flag could not be evaluated",
+      };
     }
     if (!enabled) {
       return { eligible: false, reason: "the guild flag is disabled" };
