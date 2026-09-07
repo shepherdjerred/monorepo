@@ -13,6 +13,7 @@ const registration = {
   graceHours: 2,
   receiptRequiredAfter: "2026-08-01T00:00:00.000Z",
 };
+const EXISTING_SCHEDULE_CREATED_AT = "2026-07-01T00:00:00.000Z";
 
 afterEach(() => {
   reportFreshnessState.reset();
@@ -27,6 +28,7 @@ describe("evaluateFreshness", () => {
         now,
         acceptedAt: "2026-08-09T11:00:01.000Z",
         lastActionTakenAt: "2026-08-09T10:00:00.000Z",
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -37,6 +39,7 @@ describe("evaluateFreshness", () => {
         now,
         acceptedAt: "2026-08-09T09:59:59.000Z",
         lastActionTakenAt: "2026-08-09T10:00:00.000Z",
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -51,6 +54,7 @@ describe("evaluateFreshness", () => {
         now,
         acceptedAt: undefined,
         lastActionTakenAt: "2026-08-10T09:00:00.000Z",
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -61,6 +65,7 @@ describe("evaluateFreshness", () => {
         now,
         acceptedAt: undefined,
         lastActionTakenAt: undefined,
+        scheduleCreatedAt: undefined,
         deployed: false,
         paused: false,
       }).status,
@@ -71,6 +76,7 @@ describe("evaluateFreshness", () => {
         now,
         acceptedAt: undefined,
         lastActionTakenAt: undefined,
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: true,
       }).status,
@@ -88,6 +94,7 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-12T03:00:00.000Z"),
         acceptedAt: undefined,
         lastActionTakenAt: undefined,
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -98,6 +105,7 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-12T03:00:00.000Z"),
         acceptedAt: undefined,
         lastActionTakenAt: "2026-08-12T02:00:00.000Z",
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -108,6 +116,7 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-12T05:00:01.000Z"),
         acceptedAt: undefined,
         lastActionTakenAt: "2026-08-12T02:00:00.000Z",
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -125,6 +134,7 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-13T01:52:18.000Z"),
         acceptedAt: undefined,
         lastActionTakenAt: undefined,
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -135,6 +145,7 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-13T01:52:19.000Z"),
         acceptedAt: undefined,
         lastActionTakenAt: undefined,
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -145,6 +156,7 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-20T00:00:00.000Z"),
         acceptedAt: "2026-07-01T00:00:00.000Z",
         lastActionTakenAt: "2026-08-11T00:00:00.000Z",
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }).status,
@@ -158,10 +170,25 @@ describe("evaluateFreshness", () => {
         now: new Date("2026-08-10T12:00:00.000Z"),
         acceptedAt: undefined,
         lastActionTakenAt: undefined,
+        scheduleCreatedAt: EXISTING_SCHEDULE_CREATED_AT,
         deployed: true,
         paused: false,
       }),
     ).toThrow("unparseable receiptRequiredAfter");
+  });
+
+  test("rejects an unparseable creation timestamp for a deployed schedule", () => {
+    expect(() =>
+      evaluateFreshness({
+        registration,
+        now: new Date("2026-08-10T12:00:00.000Z"),
+        acceptedAt: undefined,
+        lastActionTakenAt: undefined,
+        scheduleCreatedAt: "not-a-date",
+        deployed: true,
+        paused: false,
+      }),
+    ).toThrow("unparseable scheduleCreatedAt");
   });
 });
 
@@ -210,10 +237,12 @@ describe("freshnessDeploymentState", () => {
     expect(
       freshnessDeploymentState({
         scheduleId: "agent-task-legacy-check-abc123",
+        createdAt: new Date("2026-08-10T00:00:00.000Z"),
         paused: false,
         memo: undefined,
       }),
     ).toEqual({
+      scheduleCreatedAt: "2026-08-10T00:00:00.000Z",
       paused: false,
       dynamic: true,
       lastActionTakenAt: undefined,
@@ -224,11 +253,13 @@ describe("freshnessDeploymentState", () => {
     expect(
       freshnessDeploymentState({
         scheduleId: "custom-agent-check",
+        createdAt: new Date("2026-08-10T00:00:00.000Z"),
         paused: true,
         memo: { dynamicAgentTask: true },
         recentActions: [{ takenAt: new Date("2026-08-11T23:52:18.000Z") }],
       }),
     ).toEqual({
+      scheduleCreatedAt: "2026-08-10T00:00:00.000Z",
       paused: true,
       dynamic: true,
       lastActionTakenAt: "2026-08-11T23:52:18.000Z",
@@ -237,12 +268,7 @@ describe("freshnessDeploymentState", () => {
 });
 
 describe("newly rolled-out schedule activation", () => {
-  // A brand-new weekly schedule has no receipt and no prior action on its
-  // first deployment. `evaluateFreshness` then bounds the pending window at
-  // receiptRequiredAfter + cadence + grace, so an activation inherited from an
-  // older worker is already expired and the 15-minute monitor reports
-  // `missing` — paging TemporalReportHeartbeatStale for a full cadence before
-  // the schedule has had any chance to run.
+  const SCHEDULE_CREATED_AT = "2026-08-31T22:10:00.000Z";
   const scannerRegistration = {
     scheduleId: "main-vuln-scan-weekly",
     reportType: "main-vuln-scan",
@@ -257,6 +283,7 @@ describe("newly rolled-out schedule activation", () => {
       now: new Date(now),
       acceptedAt: undefined,
       lastActionTakenAt: undefined,
+      scheduleCreatedAt: SCHEDULE_CREATED_AT,
       deployed: true,
       paused: false,
     }).status;
@@ -273,20 +300,52 @@ describe("newly rolled-out schedule activation", () => {
   });
 
   test("reports missing only after a full cadence plus grace elapsed", () => {
-    // 168h + 6h after activation = 2026-09-08T06:00Z.
+    // 168h + 6h after schedule creation = 2026-09-08T04:10Z.
     expect(
-      statusAtRollout("2026-09-01T00:00:00.000Z", "2026-09-08T05:59:00.000Z"),
+      statusAtRollout("2026-08-11T23:52:18.000Z", "2026-09-08T04:09:00.000Z"),
     ).toBe("pending");
     expect(
-      statusAtRollout("2026-09-01T00:00:00.000Z", "2026-09-08T06:01:00.000Z"),
+      statusAtRollout("2026-08-11T23:52:18.000Z", "2026-09-08T04:11:00.000Z"),
     ).toBe("missing");
   });
 
-  test("an inherited stale activation would page before the first run", () => {
-    // The defect this guards: the original worker activation makes the very
-    // first freshness evaluation report `missing` on rollout day.
+  test("uses schedule creation instead of an inherited stale activation", () => {
     expect(
       statusAtRollout("2026-08-11T23:52:18.000Z", "2026-09-01T00:05:00.000Z"),
-    ).toBe("missing");
+    ).toBe("pending");
+  });
+
+  test("ignores a receipt delivered before the schedule was recreated", () => {
+    expect(
+      evaluateFreshness({
+        registration: {
+          ...scannerRegistration,
+          receiptRequiredAfter: "2026-08-11T23:52:18.000Z",
+        },
+        now: new Date("2026-09-01T00:05:00.000Z"),
+        acceptedAt: "2026-08-20T00:00:00.000Z",
+        lastActionTakenAt: undefined,
+        scheduleCreatedAt: SCHEDULE_CREATED_AT,
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("pending");
+  });
+
+  test("accepts a receipt delivered by the recreated schedule", () => {
+    expect(
+      evaluateFreshness({
+        registration: {
+          ...scannerRegistration,
+          receiptRequiredAfter: "2026-08-11T23:52:18.000Z",
+        },
+        now: new Date("2026-09-07T16:30:00.000Z"),
+        acceptedAt: "2026-09-07T16:00:00.000Z",
+        lastActionTakenAt: "2026-09-07T15:59:00.000Z",
+        scheduleCreatedAt: SCHEDULE_CREATED_AT,
+        deployed: true,
+        paused: false,
+      }).status,
+    ).toBe("fresh");
   });
 });

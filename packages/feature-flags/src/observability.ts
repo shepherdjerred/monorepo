@@ -15,6 +15,7 @@ import type {
 export const FEATURE_FLAG_METRICS = {
   evaluations: "feature_flag_evaluations_total",
   errors: "feature_flag_errors_total",
+  providerReady: "feature_flag_provider_ready",
   snapshotAge: "feature_flag_snapshot_age_seconds",
 } as const;
 
@@ -26,6 +27,7 @@ export const FEATURE_FLAG_METRICS = {
 export const FEATURE_FLAG_METRIC_LABELS = {
   evaluations: ["flag", "reason"],
   errors: ["operation"],
+  providerReady: [],
   snapshotAge: [],
 } as const;
 
@@ -40,6 +42,8 @@ export type EvaluationEvent = {
 export type FlagMetricsRecorder = {
   readonly countEvaluation: (event: EvaluationEvent) => void;
   readonly countError: (operation: FlagOperation) => void;
+  /** Whether the named OpenFeature provider is currently ready to evaluate. */
+  readonly observeProviderReady: (ready: boolean) => void;
   /**
    * Seconds since the snapshot last refreshed successfully.
    *
@@ -52,3 +56,37 @@ export type FlagMetricsRecorder = {
    */
   readonly observeSnapshotAge: (seconds: number) => void;
 };
+
+type CounterMetric<Labels> = {
+  readonly inc: (labels: Labels) => void;
+};
+
+type GaugeMetric = {
+  readonly set: (value: number) => void;
+};
+
+/** Adapts process-owned Prometheus metrics to the shared lifecycle contract. */
+export function createFlagMetricsRecorder(input: {
+  readonly evaluations: CounterMetric<{
+    readonly flag: string;
+    readonly reason: FlagReason;
+  }>;
+  readonly errors: CounterMetric<{ readonly operation: FlagOperation }>;
+  readonly providerReady: GaugeMetric;
+  readonly snapshotAge: GaugeMetric;
+}): FlagMetricsRecorder {
+  return {
+    countEvaluation: (event) => {
+      input.evaluations.inc({ flag: event.flag, reason: event.reason });
+    },
+    countError: (operation) => {
+      input.errors.inc({ operation });
+    },
+    observeProviderReady: (ready) => {
+      input.providerReady.set(ready ? 1 : 0);
+    },
+    observeSnapshotAge: (seconds) => {
+      input.snapshotAge.set(seconds);
+    },
+  };
+}

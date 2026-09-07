@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CI_NODE_HOSTNAME } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import { getResourceMonitoringRuleGroups } from "./resource-monitoring.ts";
+import { getBuildkitdRuleGroups } from "./buildkitd.ts";
+import { getFliptRuleGroups } from "./flipt.ts";
 
 describe("CriticalSystemLoad alert", () => {
   it("fires on node_load1, not the slower node_load15 UnusualSystemLoad uses", () => {
@@ -234,8 +236,43 @@ describe("snapshot-aware ZFS PVC capacity alerts", () => {
       "group_left(namespace, persistentvolumeclaim)",
     );
     expect(warning?.expr.value).toContain("> 0.75");
+    expect(warning?.expr.value).toContain(
+      "unless on (namespace, persistentvolumeclaim)",
+    );
+    expect(warning?.expr.value).toContain(
+      'namespace="buildkitd",persistentvolumeclaim=~"buildkitd-cache.*"',
+    );
     expect(warning?.for).toBe("15m");
     expect(critical?.expr.value).toContain("> 0.90");
+    expect(critical?.expr.value).toContain(
+      "unless on (namespace, persistentvolumeclaim)",
+    );
+    expect(critical?.expr.value).toContain(
+      'namespace="buildkitd",persistentvolumeclaim=~"buildkitd-cache.*"',
+    );
     expect(critical?.for).toBe("5m");
+  });
+});
+
+describe("dedicated BuildKit cache capacity alert", () => {
+  it("keeps the designed cache policy at 90 percent for one hour", () => {
+    const alert = getBuildkitdRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .find((rule) => rule.alert === "BuildkitdCacheVolumeFilling");
+    expect(alert?.expr.value).toContain('namespace="buildkitd"');
+    expect(alert?.expr.value).toContain("> 0.9");
+    expect(alert?.for).toBe("1h");
+  });
+});
+
+describe("feature flag provider readiness alert", () => {
+  it("uses the recoverable readiness gauge instead of historical errors", () => {
+    const alert = getFliptRuleGroups()
+      .flatMap((group) => group.rules ?? [])
+      .find((rule) => rule.alert === "FeatureFlagProviderInitFailing");
+    expect(alert?.expr.value).toBe("feature_flag_provider_ready == 0");
+    expect(alert?.annotations?.["message"]).toContain(
+      "retries in the background",
+    );
   });
 });

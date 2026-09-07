@@ -314,11 +314,16 @@ const commands: Record<
     command: [
       "set -eu",
       "cd /app/packages/trmnl-dashboard",
+      // BuildKit can reuse a smoke network namespace while another image is
+      // probing its worker. Reserve an ephemeral port for this invocation so
+      // concurrent image builds cannot collide with the contract port.
+      `http_port="$(bun -e 'const listener = Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } }); console.log(listener.port); listener.stop();')"`,
+      'export PORT="$http_port"',
       "bun src/index.ts >/tmp/trmnl-smoke.log 2>&1 &",
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",
-      "  if grep -Fq 'listening on :18790' /tmp/trmnl-smoke.log; then exit 0; fi",
+      '  if grep -Fq "listening on :$http_port" /tmp/trmnl-smoke.log; then exit 0; fi',
       "  if ! kill -0 $pid; then cat /tmp/trmnl-smoke.log; exit 1; fi",
       "  sleep 1",
       "done",

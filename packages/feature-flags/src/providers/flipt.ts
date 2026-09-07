@@ -78,18 +78,26 @@ export class FliptProvider implements Provider {
   private knownKeys: ReadonlySet<string> = new Set();
   private lastSuccessfulRefreshMs: number | undefined;
   private snapshotAgeTimer: ReturnType<typeof setInterval> | undefined;
+  private initializationController: AbortController | undefined;
+  private closed = false;
 
   constructor(options: FliptProviderOptions) {
     this.options = options;
   }
 
   async initialize(): Promise<void> {
+    if (this.closed) {
+      throw new Error("Flipt provider was closed before initialization");
+    }
+    const initializationController = new AbortController();
+    this.initializationController = initializationController;
     const sourceFetcher =
       this.options.fetcher ??
       createFliptFetcher({
         url: this.options.url,
         namespace: this.options.namespace,
         environment: this.options.environment,
+        signal: initializationController.signal,
       });
     const fetcher: FliptFetcher = async (fetchOptions) => {
       try {
@@ -106,31 +114,45 @@ export class FliptProvider implements Provider {
       }
     };
 
-    this.client = await createFliptEvaluationClient({
-      url: this.options.url,
-      namespace: this.options.namespace,
-      environment: this.options.environment,
-      updateInterval: this.options.pollIntervalSeconds,
-      fetcher,
-    });
-    this.refreshKnownKeys();
-    this.updateSnapshotAge();
-    if (this.options.onSnapshotAge !== undefined) {
-      this.snapshotAgeTimer = setInterval(
-        () => {
-          this.updateSnapshotAge();
-        },
-        Math.min(
-          60 * 1000,
-          Math.max(1 * 1000, this.options.pollIntervalSeconds * 1000),
-        ),
-      );
+    try {
+      const client = await createFliptEvaluationClient({
+        url: this.options.url,
+        namespace: this.options.namespace,
+        environment: this.options.environment,
+        updateInterval: this.options.pollIntervalSeconds,
+        fetcher,
+      });
+      if (initializationController.signal.aborted) {
+        client.close();
+        throw new Error("Flipt provider closed during initialization");
+      }
+      this.client = client;
+      this.refreshKnownKeys();
+      this.updateSnapshotAge();
+      if (this.options.onSnapshotAge !== undefined) {
+        this.snapshotAgeTimer = setInterval(
+          () => {
+            this.updateSnapshotAge();
+          },
+          Math.min(
+            60 * 1000,
+            Math.max(1 * 1000, this.options.pollIntervalSeconds * 1000),
+          ),
+        );
+      }
+    } finally {
+      if (this.initializationController === initializationController) {
+        this.initializationController = undefined;
+      }
     }
   }
 
   onClose(): Promise<void> {
     // Clears the refresh interval. Without it `bun test` hangs on the open
     // timer and a pod leaks a poller past shutdown.
+    this.closed = true;
+    this.initializationController?.abort();
+    this.initializationController = undefined;
     this.client?.close();
     this.client = undefined;
     this.knownKeys = new Set();

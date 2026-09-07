@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createFeatureFlagMetrics } from "../feature-flag-metrics.ts";
 
 describe("feature flag metrics", () => {
-  it("exports evaluation, error, and snapshot-age signals", async () => {
+  it("exports evaluation, error, readiness, and snapshot-age signals", async () => {
     const metrics = createFeatureFlagMetrics();
 
     metrics.recorder.countEvaluation({
@@ -11,6 +11,7 @@ describe("feature flag metrics", () => {
       errorCode: undefined,
     });
     metrics.recorder.countError("refresh");
+    metrics.recorder.observeProviderReady(true);
     metrics.recorder.observeSnapshotAge(42);
 
     await expect(metrics.render()).resolves.toContain(
@@ -18,6 +19,9 @@ describe("feature flag metrics", () => {
     );
     await expect(metrics.render()).resolves.toContain(
       'feature_flag_errors_total{operation="refresh"} 1',
+    );
+    await expect(metrics.render()).resolves.toContain(
+      "feature_flag_provider_ready 1",
     );
     await expect(metrics.render()).resolves.toContain(
       "feature_flag_snapshot_age_seconds 42",

@@ -47,6 +47,20 @@ describe("SeaweedFS off-site backup alerts", () => {
     expect(expressions).toContain("0.015 > 10");
   });
 
+  test("ignores uninitialized GC gauges outside the backup worker", () => {
+    const alert = backupRules().find(
+      (rule) => rule.alert === "SeaweedFSBackupGcCandidateStuck",
+    );
+    expect(alert?.expr.value).toContain(
+      'namespace="temporal",container="temporal-backup-worker"',
+    );
+    expect(alert?.expr.value).toContain(
+      "seaweedfs_backup_gc_oldest_candidate_timestamp_seconds",
+    );
+    expect(alert?.expr.value).toContain("> 0) and (time() -");
+    expect(alert?.expr.value).toContain("> 14 * 24 * 60 * 60");
+  });
+
   test("applies existing capacity and exporter alerts to every bucket label", () => {
     const storage = getR2StorageRuleGroups().find(
       (group) => group.name === "r2-storage",

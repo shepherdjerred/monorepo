@@ -11,8 +11,8 @@
 
 import { Counter, Gauge, Histogram } from "prom-client";
 import {
+  createFlagMetricsRecorder,
   FEATURE_FLAG_METRICS,
-  type FlagMetricsRecorder,
 } from "@shepherdjerred/feature-flags/observability.ts";
 import { register } from "@shepherdjerred/streambot/observability/metrics-registry.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
@@ -33,26 +33,24 @@ export const featureFlagErrorsTotal = new Counter({
   registers: [register],
 });
 
+export const featureFlagProviderReady = new Gauge({
+  name: FEATURE_FLAG_METRICS.providerReady,
+  help: "Whether the feature flag provider is ready to evaluate",
+  registers: [register],
+});
+
 export const featureFlagSnapshotAgeSeconds = new Gauge({
   name: FEATURE_FLAG_METRICS.snapshotAge,
   help: "Seconds since the feature flag snapshot refreshed successfully",
   registers: [register],
 });
 
-export const featureFlagMetrics: FlagMetricsRecorder = {
-  countEvaluation: (event) => {
-    featureFlagEvaluationsTotal.inc({
-      flag: event.flag,
-      reason: event.reason,
-    });
-  },
-  countError: (operation) => {
-    featureFlagErrorsTotal.inc({ operation });
-  },
-  observeSnapshotAge: (seconds) => {
-    featureFlagSnapshotAgeSeconds.set(seconds);
-  },
-};
+export const featureFlagMetrics = createFlagMetricsRecorder({
+  evaluations: featureFlagEvaluationsTotal,
+  errors: featureFlagErrorsTotal,
+  providerReady: featureFlagProviderReady,
+  snapshotAge: featureFlagSnapshotAgeSeconds,
+});
 
 // --- ffmpeg transcode realtime health --------------------------------------
 

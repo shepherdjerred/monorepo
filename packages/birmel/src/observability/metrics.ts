@@ -1,7 +1,7 @@
 import { Counter, Gauge, Registry, collectDefaultMetrics } from "prom-client";
 import {
+  createFlagMetricsRecorder,
   FEATURE_FLAG_METRICS,
-  type FlagMetricsRecorder,
 } from "@shepherdjerred/feature-flags/observability.ts";
 
 export const metricsRegister = new Registry();
@@ -22,26 +22,24 @@ export const featureFlagErrorsTotal = new Counter({
   registers: [metricsRegister],
 });
 
+export const featureFlagProviderReady = new Gauge({
+  name: FEATURE_FLAG_METRICS.providerReady,
+  help: "Whether the feature flag provider is ready to evaluate",
+  registers: [metricsRegister],
+});
+
 export const featureFlagSnapshotAgeSeconds = new Gauge({
   name: FEATURE_FLAG_METRICS.snapshotAge,
   help: "Seconds since the feature flag snapshot refreshed successfully",
   registers: [metricsRegister],
 });
 
-export const featureFlagMetrics: FlagMetricsRecorder = {
-  countEvaluation: (event) => {
-    featureFlagEvaluationsTotal.inc({
-      flag: event.flag,
-      reason: event.reason,
-    });
-  },
-  countError: (operation) => {
-    featureFlagErrorsTotal.inc({ operation });
-  },
-  observeSnapshotAge: (seconds) => {
-    featureFlagSnapshotAgeSeconds.set(seconds);
-  },
-};
+export const featureFlagMetrics = createFlagMetricsRecorder({
+  evaluations: featureFlagEvaluationsTotal,
+  errors: featureFlagErrorsTotal,
+  providerReady: featureFlagProviderReady,
+  snapshotAge: featureFlagSnapshotAgeSeconds,
+});
 
 export const admissionClassifierTotal = new Counter({
   name: "birmel_admission_classifier_total",

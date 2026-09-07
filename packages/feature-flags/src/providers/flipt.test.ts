@@ -170,12 +170,27 @@ describe("createFliptFetcher", () => {
   test("pins the upstream URL and header contract", async () => {
     // This request shape is duplicated from the vendored client and is the
     // thing most likely to drift silently on a Flipt upgrade.
-    const calls: { url: string; headers: Record<string, string> }[] = [];
+    const calls: {
+      url: string;
+      headers: Record<string, string>;
+      signal: AbortSignal | undefined;
+    }[] = [];
+    const controller = new AbortController();
     const originalFetch = globalThis.fetch;
     Object.defineProperty(globalThis, "fetch", {
       configurable: true,
-      value: (url: string, init?: { headers?: Record<string, string> }) => {
-        calls.push({ url, headers: init?.headers ?? {} });
+      value: (
+        url: string,
+        init?: {
+          headers?: Record<string, string>;
+          signal?: AbortSignal | undefined;
+        },
+      ) => {
+        calls.push({
+          url,
+          headers: init?.headers ?? {},
+          signal: init?.signal,
+        });
         return Promise.resolve(
           new Response("{}", { status: 200, headers: { ETag: "abc" } }),
         );
@@ -188,6 +203,7 @@ describe("createFliptFetcher", () => {
         url: "http://flipt.flipt.svc.cluster.local:8080/",
         namespace: "default",
         environment: "beta",
+        signal: controller.signal,
       });
       await fetcher({ etag: "previous-etag" });
     } finally {
@@ -207,6 +223,7 @@ describe("createFliptFetcher", () => {
       "x-flipt-environment": "beta",
       "If-None-Match": "previous-etag",
     });
+    expect(calls[0]?.signal).toBe(controller.signal);
   });
 
   test("returns a 304 instead of throwing", async () => {
