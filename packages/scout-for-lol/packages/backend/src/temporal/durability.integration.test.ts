@@ -30,6 +30,7 @@ vi.mock("#src/explore/agent.ts", () => ({
         answer: "Recovered answer",
         title: null,
         queryText: null,
+        includeVisualization: false,
         caveats: [],
         followUps: [],
       },

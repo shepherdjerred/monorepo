@@ -37,17 +37,11 @@ export function validatePipelineClarity(
   }
 
   for (const [stepKey, required] of [
-    // The Scout design audit is deliberately absent from these steps: it runs
-    // nightly in monorepo-test-reporting instead. The scope line says where it
-    // went, so a reader does not conclude the coverage was simply dropped.
-    [
-      "playwright-e2e-pr",
-      "Browser E2E scope: sites, Scout catalog/design-system, and eval suites. The Scout design audit runs nightly in monorepo-test-reporting.",
-    ],
-    [
-      "playwright-e2e-main",
-      "Browser E2E scope: sites, Scout catalog/design-system, and eval suites. The Scout design audit runs nightly in monorepo-test-reporting.",
-    ],
+    // The target-aware runner prints the exact selected package list. The label
+    // still identifies the supported browser surface without claiming every
+    // suite executes on every change.
+    ["playwright-e2e-pr", "browser E2E — sites + Scout catalog/evals"],
+    ["playwright-e2e-main", "browser E2E — sites + Scout catalog/evals"],
     ["docker-e2e-pr", "llm-observability E2E — Tempo + MinIO"],
     ["docker-e2e-main", "llm-observability E2E — Tempo + MinIO"],
     ["codex-review-gate", "Codex review gate (required)"],

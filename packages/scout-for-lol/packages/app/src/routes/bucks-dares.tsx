@@ -1,4 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
+import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
@@ -56,7 +57,7 @@ export function parseBucksDareId(
 }
 
 export function BucksDares() {
-  const { guildId, guildName, daresAvailable } = useBucksGuild();
+  const { guildId, daresAvailable } = useBucksGuild();
   const { dareId: dareIdParam } = useParams();
   const route = parseBucksDareId(dareIdParam);
 
@@ -77,11 +78,11 @@ export function BucksDares() {
   return route.kind === "detail" ? (
     <DareDetailPage guildId={guildId} dareId={route.dareId} />
   ) : (
-    <DareListPage guildId={guildId} guildName={guildName} />
+    <DareListPage guildId={guildId} />
   );
 }
 
-function DareListPage(props: { guildId: string; guildName: string }) {
+function DareListPage(props: { guildId: string }) {
   const trpc = useTRPC();
   const navigate = useNavigate();
   const [scope, setScope] = useState<"mine" | "guild" | "needs_action">("mine");
@@ -127,13 +128,7 @@ function DareListPage(props: { guildId: string; guildName: string }) {
   return (
     <div className="space-y-6">
       <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Dares</h1>
-          <p className="text-sm text-scout-subtle">
-            Find and manage Dare contracts for {props.guildName}. Create or
-            revise one conversationally in Explore.
-          </p>
-        </div>
+        <h1 className="text-2xl font-semibold">Dares</h1>
         <Button asChild>
           <Link to="/explore">Create in Explore</Link>
         </Button>
@@ -256,7 +251,7 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
     ),
   );
   const dare = Loaded.fromQuery(detail, ["bucks.dare"]);
-  if (dare.status === "loading") return <LoadingState label="Loading dare…" />;
+  const showLoading = useDelayedLoading(dare.status === "loading");
   if (dare.status === "error") {
     return (
       <ErrorState
@@ -266,6 +261,12 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
         }}
       />
     );
+  }
+  if (showLoading) {
+    return <LoadingState label="Loading dare…" />;
+  }
+  if (dare.status === "loading") {
+    return null;
   }
   return (
     <>

@@ -24,83 +24,83 @@ function createMessage(overrides: Record<string, unknown>): ExploreMessage {
   });
 }
 
-describe("ExploreVisualResult", () => {
-  const chartablePreview = {
-    columns: [
-      { key: "label", label: "Champion", format: "text" as const },
-      { key: "win_rate", label: "Win rate", format: "percent" as const },
-      { key: "games", label: "Games", format: "integer" as const },
-    ],
-    rows: [
-      {
-        label: "Ahri",
-        games: 25,
-        values: [
-          { column: "win_rate", value: 0.54 },
-          { column: "games", value: 25 },
-        ],
-      },
-      {
-        label: "Jinx",
-        games: 40,
-        values: [
-          { column: "win_rate", value: 0.51 },
-          { column: "games", value: 40 },
-        ],
-      },
-    ],
-    visualizationRows: [],
-    rowsReturned: 2,
-    rowsScanned: 100,
-    renderKind: "TABLE" as const,
-  };
-
-  const persistedLineChart = VisualizationSnapshotSchema.parse({
-    version: 1,
-    generatedAt: "2026-08-14T12:00:30.000Z",
-    kind: "LINE_CHART",
-    title: "Win rate by patch",
-    temporal: {
-      window: { kind: "relative", days: 30 },
-      bucket: "patch",
-      timezone: "UTC",
+const CHARTABLE_PREVIEW = {
+  columns: [
+    { key: "label", label: "Champion", format: "text" as const },
+    { key: "win_rate", label: "Win rate", format: "percent" as const },
+    { key: "games", label: "Games", format: "integer" as const },
+  ],
+  rows: [
+    {
+      label: "Ahri",
+      games: 25,
+      values: [
+        { column: "win_rate", value: 0.54 },
+        { column: "games", value: 25 },
+      ],
     },
+    {
+      label: "Jinx",
+      games: 40,
+      values: [
+        { column: "win_rate", value: 0.51 },
+        { column: "games", value: 40 },
+      ],
+    },
+  ],
+  visualizationRows: [],
+  rowsReturned: 2,
+  rowsScanned: 100,
+  renderKind: "TABLE" as const,
+};
+
+const PERSISTED_LINE_CHART = VisualizationSnapshotSchema.parse({
+  version: 1,
+  generatedAt: "2026-08-14T12:00:30.000Z",
+  kind: "LINE_CHART",
+  title: "Win rate by patch",
+  temporal: {
+    window: { kind: "relative", days: 30 },
     bucket: "patch",
-    display: {
-      theme: null,
-      palette: null,
-      smooth: false,
-      stack: "none",
-      rollingWindow: null,
-      cumulative: false,
-      sparkline: false,
-      options: null,
+    timezone: "UTC",
+  },
+  bucket: "patch",
+  display: {
+    theme: null,
+    palette: null,
+    smooth: false,
+    stack: "none",
+    rollingWindow: null,
+    cumulative: false,
+    sparkline: false,
+    options: null,
+  },
+  series: [
+    {
+      id: "win_rate",
+      label: "Win rate",
+      metric: "win_rate",
+      displayKind: "percent",
+      additive: false,
+      points: [
+        {
+          key: "26.15",
+          label: "26.15",
+          start: "2026-08-01T00:00:00.000Z",
+          end: "2026-08-14T00:00:00.000Z",
+          value: 0.54,
+          evidence: { sampleSize: 25 },
+        },
+      ],
     },
-    series: [
-      {
-        id: "win_rate",
-        label: "Win rate",
-        metric: "win_rate",
-        displayKind: "percent",
-        additive: false,
-        points: [
-          {
-            key: "26.15",
-            label: "26.15",
-            start: "2026-08-01T00:00:00.000Z",
-            end: "2026-08-14T00:00:00.000Z",
-            value: 0.54,
-            evidence: { sampleSize: 25 },
-          },
-        ],
-      },
-    ],
-    annotations: [],
-    trends: [],
-  });
+  ],
+  annotations: [],
+  trends: [],
+});
 
+describe("ExploreVisualResult", () => {
   test("uses the persisted chart kind before preview defaults", () => {
-    expect(initialChartKind(persistedLineChart, chartablePreview)).toBe(
+    expect(initialChartKind(PERSISTED_LINE_CHART, CHARTABLE_PREVIEW)).toBe(
       "LINE_CHART",
     );
   });
@@ -108,23 +108,23 @@ describe("ExploreVisualResult", () => {
   test("uses the preview render kind when no snapshot is persisted", () => {
     expect(
       initialChartKind(null, {
-        ...chartablePreview,
+        ...CHARTABLE_PREVIEW,
         renderKind: "DONUT_CHART",
       }),
     ).toBe("DONUT_CHART");
   });
 
   test("uses the persisted metric when it is present in the preview", () => {
-    expect(initialMetricKey(persistedLineChart, chartablePreview.columns)).toBe(
-      "win_rate",
-    );
+    expect(
+      initialMetricKey(PERSISTED_LINE_CHART, CHARTABLE_PREVIEW.columns),
+    ).toBe("win_rate");
   });
 
   test("preserves persisted metadata and points when chart controls change", () => {
     const snapshot = resolveActiveSnapshot({
-      preview: chartablePreview,
+      preview: CHARTABLE_PREVIEW,
       isPreviewChartable: true,
-      rawChart: persistedLineChart,
+      rawChart: PERSISTED_LINE_CHART,
       hasCustomChartSelection: true,
       selectedChartKind: "BAR_CHART",
       selectedMetricKey: "win_rate",
@@ -133,13 +133,13 @@ describe("ExploreVisualResult", () => {
 
     expect(snapshot).not.toBeNull();
     expect(snapshot?.kind).toBe("BAR_CHART");
-    expect(snapshot?.generatedAt).toBe(persistedLineChart.generatedAt);
-    expect(snapshot?.title).toBe(persistedLineChart.title);
-    expect(snapshot?.temporal).toEqual(persistedLineChart.temporal);
-    expect(snapshot?.bucket).toBe(persistedLineChart.bucket);
+    expect(snapshot?.generatedAt).toBe(PERSISTED_LINE_CHART.generatedAt);
+    expect(snapshot?.title).toBe(PERSISTED_LINE_CHART.title);
+    expect(snapshot?.temporal).toEqual(PERSISTED_LINE_CHART.temporal);
+    expect(snapshot?.bucket).toBe(PERSISTED_LINE_CHART.bucket);
     expect(snapshot?.display.options?.orientation).toBe("horizontal");
     expect(snapshot?.series[0]?.points[0]?.start).toBe(
-      persistedLineChart.series[0]?.points[0]?.start,
+      PERSISTED_LINE_CHART.series[0]?.points[0]?.start,
     );
     expect(snapshot?.series[0]?.displayKind).toBe("percent");
   });
@@ -155,7 +155,7 @@ describe("ExploreVisualResult", () => {
   });
 
   test("renders both Chart and Table tab controls for chartable results", () => {
-    const message = createMessage({ preview: chartablePreview });
+    const message = createMessage({ preview: CHARTABLE_PREVIEW });
     const markup = renderToStaticMarkup(
       <ExploreVisualResult
         preview={message.preview}
@@ -198,9 +198,42 @@ describe("ExploreVisualResult", () => {
     expect(markup).toContain("50");
   });
 
+  test("renders SingleRowResult with clean values without indicative warnings or game basis spam", () => {
+    const ungrouped = {
+      columns: [
+        { key: "label", label: "Label", format: "text" as const },
+        { key: "win_rate", label: "Win rate", format: "percent" as const },
+      ],
+      rows: [
+        {
+          label: "All",
+          games: 5,
+          values: [{ column: "win_rate", value: 0.2 }],
+        },
+      ],
+      visualizationRows: [],
+      rowsReturned: 1,
+      rowsScanned: 5,
+      renderKind: "TABLE" as const,
+    };
+    const message = createMessage({ preview: ungrouped });
+    const markup = renderToStaticMarkup(
+      <ExploreVisualResult
+        preview={message.preview}
+        visualization={message.visualization}
+      />,
+    );
+
+    expect(markup).toContain("Win rate");
+    expect(markup).toContain("20.0%");
+    expect(markup).not.toContain("Based on");
+    expect(markup).not.toContain("indicative only");
+    expect(markup).not.toContain("Fewer than 10 games");
+  });
+
   test("returns null when no preview or visualization rows exist", () => {
     const emptyPreview = {
-      ...chartablePreview,
+      ...CHARTABLE_PREVIEW,
       rows: [],
       rowsReturned: 0,
     };

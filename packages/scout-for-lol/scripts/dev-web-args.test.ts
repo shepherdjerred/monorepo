@@ -27,7 +27,7 @@ test("parses isolated ports and database URL", () => {
       temporalPort: 7234,
       temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/agent_one",
-      discordGatewayEnabled: true,
+      discordGatewayEnabled: false,
       backgroundJobsEnabled: true,
       webEnabled: true,
       backendWatchEnabled: true,
@@ -53,7 +53,7 @@ test("derives an isolated database for a non-default backend port", () => {
       temporalPort: 7234,
       temporalUiPort: 8234,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3001",
-      discordGatewayEnabled: true,
+      discordGatewayEnabled: false,
       backgroundJobsEnabled: true,
       webEnabled: true,
       backendWatchEnabled: true,
@@ -73,6 +73,35 @@ test("rejects shared ports and sqlite databases", () => {
   expect(() =>
     parseDevWebArgs(["--database-url", "file:./local-web-dev.db"], {}),
   ).toThrow("postgres:// URL");
+});
+
+test("leaves the BETA Discord gateway off unless opted in", () => {
+  const parsed = parseDevWebArgs([], {});
+  expect(parsed.kind).toBe("options");
+  if (parsed.kind !== "options") return;
+  expect(parsed.options.discordGatewayEnabled).toBe(false);
+
+  const optedIn = parseDevWebArgs(["--discord-gateway"], {});
+  expect(optedIn.kind).toBe("options");
+  if (optedIn.kind !== "options") return;
+  expect(optedIn.options.discordGatewayEnabled).toBe(true);
+
+  const fromEnv = parseDevWebArgs([], { SCOUT_DEV_DISCORD_GATEWAY: "true" });
+  expect(fromEnv.kind).toBe("options");
+  if (fromEnv.kind !== "options") return;
+  expect(fromEnv.options.discordGatewayEnabled).toBe(true);
+
+  const noGatewayWins = parseDevWebArgs([], {
+    SCOUT_DEV_DISCORD_GATEWAY: "true",
+    SCOUT_DEV_NO_GATEWAY: "true",
+  });
+  expect(noGatewayWins.kind).toBe("options");
+  if (noGatewayWins.kind !== "options") return;
+  expect(noGatewayWins.options.discordGatewayEnabled).toBe(false);
+
+  expect(() =>
+    parseDevWebArgs(["--discord-gateway", "--no-discord-gateway"], {}),
+  ).toThrow("Cannot combine");
 });
 
 test("supports a stable secondary copy without the BETA gateway", () => {
@@ -121,7 +150,7 @@ test("configures alternate surface origins for a second stack", () => {
       temporalPort: 7233,
       temporalUiPort: 8233,
       databaseUrl: "postgres://scout@127.0.0.1:5471/scout_dev_3000",
-      discordGatewayEnabled: true,
+      discordGatewayEnabled: false,
       backgroundJobsEnabled: true,
       webEnabled: true,
       backendWatchEnabled: true,
@@ -159,6 +188,8 @@ test("defaults a local boot to the consumer preview and dev login", () => {
     FEATURE_FLAGS_STATIC_OVERRIDES:
       '{"scout-consumer-player-profiles-enabled":true}',
     WEB_APP_ORIGIN: "http://localhost:5180",
+    ENABLE_DISCORD_GATEWAY: "false",
+    ENABLE_BACKGROUND_JOBS: "false",
   });
 });
 
@@ -217,7 +248,12 @@ test("preserves explicit local access and auth overrides", () => {
 
 test("supports a gateway-only runtime without jobs, lake preparation, or Vite", () => {
   const parsed = parseDevWebArgs(
-    ["--no-background-jobs", "--no-web", "--no-backend-watch"],
+    [
+      "--discord-gateway",
+      "--no-background-jobs",
+      "--no-web",
+      "--no-backend-watch",
+    ],
     {},
   );
   expect(parsed.kind).toBe("options");

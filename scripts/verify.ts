@@ -56,30 +56,179 @@ const turboTasks = [
   "test:contract",
 ] as const;
 
-const forwardedArgs = process.argv
-  .slice(2)
-  .filter((argument) => argument !== "--");
-const turbo = Bun.spawn(
-  [
-    "bunx",
-    "--no-install",
-    "turbo",
-    "run",
-    ...turboTasks,
-    "--continue",
-    ...forwardedArgs,
-  ],
-  { stdin: "inherit", stdout: "inherit", stderr: "inherit" },
-);
-const turboExitCode = await turbo.exited;
-if (turboExitCode !== 0) process.exit(turboExitCode);
+type GitValidator = (command: readonly string[]) => Promise<number>;
+type ChangedFilesReader = (
+  base: string,
+) => Promise<readonly string[] | undefined>;
 
-const analyticsCheck = Bun.spawn(
-  ["bun", "scripts/checks/check-analytics-sites.ts"],
-  {
-    stdin: "inherit",
-    stdout: "inherit",
+const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
+  "packages/version-catalog/src/catalog.json",
+  "packages/tasks-for-obsidian/ios/ci_scripts/",
+  "packages/dotfiles/dot_local/bin/executable_cf",
+  "packages/discord-plays-pokemon/Dockerfile",
+  "packages/streambot/Dockerfile",
+  "packages/homelab/src/talos/liskov/patches/image.yaml",
+  "packages/homelab/src/talos/torvalds/patches/image.yaml",
+  "packages/discord-plays-pokemon/wasm-src/upstream.json",
+  "packages/discord-plays-mario-kart/wasm-src/upstream.json",
+  "packages/discord-plays-mario-kart/Dockerfile",
+  "packages/homelab/images/redlib/Dockerfile",
+  ".buildkite/ci-playwright/Dockerfile",
+  "docker-bake.hcl",
+  ".buildkite/application-image-smoke.Dockerfile",
+  "packages/scout-for-lol/packages/backend/Dockerfile",
+  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+  "packages/homelab/mac-ci/bootstrap.sh",
+  "packages/homelab/mac-ci/provision-host.sh",
+  "packages/feature-flags/src/managed-flag-inventory.ts",
+  "packages/feature-flags/src/flipt-missing-flag-apply.ts",
+  "packages/feature-flags/src/managed-flag-drift.ts",
+  "packages/feature-flags/src/flipt-resource-payloads.ts",
+  "packages/feature-flags/src/flipt-boolean-rollouts.ts",
+  "packages/feature-flags/managed-flag-inventory.json",
+] as const;
+
+async function validateBaseWithGit(
+  command: readonly string[],
+): Promise<number> {
+  const child = Bun.spawn([...command], {
+    stdin: "ignore",
+    stdout: "ignore",
     stderr: "inherit",
-  },
-);
-process.exit(await analyticsCheck.exited);
+  });
+  return child.exited;
+}
+
+async function readChangedFilesWithGit(
+  base: string,
+): Promise<readonly string[] | undefined> {
+  const child = Bun.spawn(
+    ["git", "diff", "--no-renames", "--name-only", base, "HEAD"],
+    {
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "inherit",
+    },
+  );
+  const [exitCode, output] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+  ]);
+  if (exitCode !== 0) return undefined;
+  return output.split("\n").filter((path) => path !== "");
+}
+
+function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
+  return changedFiles.some(
+    (path) =>
+      path === ".buildkite" ||
+      path.startsWith(".buildkite/") ||
+      path === "renovate.json" ||
+      path === "package.json" ||
+      path.endsWith("/package.json") ||
+      (path.startsWith("packages/") && path.endsWith("/turbo.json")) ||
+      ROOT_SCRIPTS_EXTERNAL_INPUTS.some((input) =>
+        input.endsWith("/") ? path.startsWith(input) : path === input,
+      ),
+  );
+}
+
+export async function affectedVerifyFilters(
+  environment: Readonly<Record<string, string | undefined>>,
+  validate: GitValidator = validateBaseWithGit,
+  readChangedFiles: ChangedFilesReader = readChangedFilesWithGit,
+): Promise<string[]> {
+  if (environment["CI_IO_FIXED_CORPUS"] === "true") return [];
+  const base = environment["CI_CHANGED_BASE"]?.trim();
+  if (base === undefined || base === "") return [];
+  const checks = [
+    ["git", "cat-file", "-e", `${base}^{commit}`],
+    ["git", "merge-base", "--is-ancestor", base, "HEAD"],
+  ] as const;
+  for (const command of checks) {
+    if ((await validate(command)) !== 0) {
+      console.error(
+        `WARN: CI changed-file base ${base} is invalid; running full verification`,
+      );
+      return [];
+    }
+  }
+  const changedFiles = await readChangedFiles(base);
+  if (changedFiles === undefined) {
+    console.error(
+      `WARN: could not read changed files from CI base ${base}; running full verification`,
+    );
+    return [];
+  }
+  // The affected package graph and the root namespace are a union. Root checks
+  // remain represented, but Turbo executes only the ones whose declared input
+  // hashes changed. Package tasks cover changed workspaces plus reverse
+  // dependents and their task dependencies.
+  const filters = [`--filter=...[${base}]`, "--filter=//"];
+  if (rootScriptsInputsChanged(changedFiles)) {
+    filters.push("--filter=@shepherdjerred/root-scripts");
+  }
+  return filters;
+}
+
+export async function main(
+  environment: Readonly<Record<string, string | undefined>> = Bun.env,
+): Promise<number> {
+  const forwardedArgs = process.argv
+    .slice(2)
+    .filter((argument) => argument !== "--");
+  const affectedFilters = await affectedVerifyFilters(environment);
+  const turbo = Bun.spawn(
+    [
+      "bun",
+      "x",
+      "--no-install",
+      "turbo",
+      "run",
+      ...turboTasks,
+      "--continue",
+      ...affectedFilters,
+      ...forwardedArgs,
+    ],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  const turboExitCode = await turbo.exited;
+  if (turboExitCode !== 0) return turboExitCode;
+
+  const designTokenCheck = Bun.spawn(
+    [
+      "bun",
+      "--no-install",
+      "run",
+      "--cwd",
+      "packages/scout-for-lol/packages/design-audit",
+      "check:tokens",
+    ],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  const designTokenExitCode = await designTokenCheck.exited;
+  if (designTokenExitCode !== 0) return designTokenExitCode;
+
+  const analyticsCheck = Bun.spawn(
+    ["bun", "--no-install", "scripts/checks/check-analytics-sites.ts"],
+    {
+      stdin: "inherit",
+      stdout: "inherit",
+      stderr: "inherit",
+      env: environment,
+    },
+  );
+  return analyticsCheck.exited;
+}
+
+if (import.meta.main) process.exitCode = await main();

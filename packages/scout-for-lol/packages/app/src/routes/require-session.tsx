@@ -1,4 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
+import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { Suspense } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -29,24 +30,19 @@ export function RequireSession() {
   const guardState = resolveSessionGuardState(
     Loaded.fromQuery(query, ["auth.sessionState"]),
   );
-
-  if (guardState === "loading") {
-    return (
-      <LoadingState
-        label={failureCount > 0 ? "Reconnecting to Scout…" : "Loading…"}
-      />
-    );
-  }
+  const showLoading = useDelayedLoading(guardState === "loading");
 
   if (guardState === "unavailable") {
     return (
-      <ErrorState
-        title="Reconnecting to Scout"
-        message="Scout is temporarily unavailable. Your sign-in is still intact, and this page will retry automatically."
-        onRetry={() => {
-          void refetch();
-        }}
-      />
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
+        <ErrorState
+          title="Reconnecting to Scout"
+          message="Scout is temporarily unavailable. Your sign-in is still intact, and this page will retry automatically."
+          onRetry={() => {
+            void refetch();
+          }}
+        />
+      </div>
     );
   }
 
@@ -62,6 +58,20 @@ export function RequireSession() {
         replace
       />
     );
+  }
+
+  if (showLoading) {
+    return (
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
+        <LoadingState
+          label={failureCount > 0 ? "Reconnecting to Scout…" : "Loading…"}
+        />
+      </div>
+    );
+  }
+
+  if (guardState === "loading") {
+    return null;
   }
 
   return (

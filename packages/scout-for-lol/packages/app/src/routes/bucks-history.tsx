@@ -1,4 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
+import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import {
@@ -40,9 +41,7 @@ export function BucksHistory() {
   );
 
   const value = Loaded.fromQuery(query, ["bucks.history"]);
-  if (value.status === "loading") {
-    return <LoadingState label="Loading your history…" />;
-  }
+  const showLoading = useDelayedLoading(value.status === "loading");
   if (value.status === "error") {
     return (
       <ErrorState
@@ -52,6 +51,12 @@ export function BucksHistory() {
         }}
       />
     );
+  }
+  if (showLoading) {
+    return <LoadingState label="Loading your history…" />;
+  }
+  if (value.status === "loading") {
+    return null;
   }
   const page = value.data;
   return (

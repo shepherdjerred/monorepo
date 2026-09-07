@@ -459,11 +459,16 @@ export async function appendExploreAnswer(
       queryText: input.answer.queryText,
       caveats: JSON.stringify(input.answer.caveats),
       followUps: JSON.stringify(input.answer.followUps),
-      preview: input.preview === null ? null : JSON.stringify(input.preview),
+      // Running a query is not enough to persist a chart or table. The agent
+      // must opt in via includeVisualization; ScoutQL stays on queryText.
+      preview:
+        input.answer.includeVisualization && input.preview !== null
+          ? JSON.stringify(input.preview)
+          : null,
       visualization:
-        input.visualization === null
-          ? null
-          : JSON.stringify(input.visualization),
+        input.answer.includeVisualization && input.visualization !== null
+          ? JSON.stringify(input.visualization)
+          : null,
       trace: JSON.stringify(input.trace),
     },
   });

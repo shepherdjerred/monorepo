@@ -1,4 +1,4 @@
-import type { Message } from "discord.js";
+import { AttachmentBuilder, type Message } from "discord.js";
 import {
   admitAgentRun,
   completeAgentRun,
@@ -250,6 +250,24 @@ async function processAdmittedTurn(
       userId: context.turn.userId,
       ownsSourceReply: true,
       personaId: persona,
+      ...(context.turn.referenceResolutionError == null
+        ? {}
+        : { referenceResolutionError: context.turn.referenceResolutionError }),
+      ...(context.turn.attachments.length > 0
+        ? {
+            sourceImageAttachments: context.turn.attachments.map(
+              (attachment) => ({
+                url: attachment.url,
+                ...(attachment.contentType == null
+                  ? {}
+                  : { contentType: attachment.contentType }),
+                ...(attachment.name == null
+                  ? {}
+                  : { filename: attachment.name }),
+              }),
+            ),
+          }
+        : {}),
     };
     const execution = await runWithRequestContext(
       requestContext,
@@ -263,10 +281,23 @@ async function processAdmittedTurn(
         }),
     );
     const response = validateResponse(execution.text);
+    const stagedAttachments = requestContext.stagedAttachments ?? [];
+    const files = stagedAttachments.map(
+      (attachment) =>
+        new AttachmentBuilder(Buffer.from(attachment.data), {
+          name: attachment.name,
+          ...(attachment.description == null
+            ? {}
+            : { description: attachment.description.slice(0, 1024) }),
+        }),
+    );
     await withDiscordDelivery({
       context,
       phase: "final",
-      operation: async () => await deliveredResponseMessage.edit(response),
+      operation: async () =>
+        await deliveredResponseMessage.edit(
+          files.length > 0 ? { content: response, files } : response,
+        ),
     });
     finalResponseDelivered = true;
     markEngaged(context.turn.channelId);

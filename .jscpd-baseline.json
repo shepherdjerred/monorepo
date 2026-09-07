@@ -124,14 +124,6 @@
       "clones": 2,
       "tokens": 202
     },
-    "packages/birmel/src/observability/metrics.ts|packages/scout-for-lol/packages/backend/src/metrics/feature-flags.ts": {
-      "clones": 1,
-      "tokens": 77
-    },
-    "packages/birmel/src/observability/metrics.ts|packages/streambot/src/observability/metrics.ts": {
-      "clones": 1,
-      "tokens": 79
-    },
     "packages/birmel/src/observability/tracing.integration.test.ts|packages/temporal/src/observability/tracing.integration.test.ts": {
       "clones": 1,
       "tokens": 110
@@ -1036,10 +1028,6 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/src/explore/http-route.e2e.test.ts|packages/scout-for-lol/packages/backend/src/explore/http-route.e2e.test.ts": {
-      "clones": 1,
-      "tokens": 117
-    },
     "packages/scout-for-lol/packages/backend/src/league/competition/analysis.integration.test.ts|packages/scout-for-lol/packages/backend/src/league/competition/analysis.integration.test.ts": {
       "clones": 1,
       "tokens": 85
@@ -1143,10 +1131,6 @@
     "packages/scout-for-lol/packages/backend/src/lib/subscription/filters.ts|packages/scout-for-lol/packages/backend/src/lib/subscription/mute.ts": {
       "clones": 1,
       "tokens": 112
-    },
-    "packages/scout-for-lol/packages/backend/src/metrics/feature-flags.ts|packages/starlight-karma-bot/src/metrics.ts": {
-      "clones": 1,
-      "tokens": 98
     },
     "packages/scout-for-lol/packages/backend/src/observability/tracing.ts|packages/temporal/src/observability/tracing.ts": {
       "clones": 3,

@@ -207,6 +207,6 @@ export function bucksExplorePromptSection(currentTime: string): string {
     '- If an alias-filtered query returns no rows and ambiguousSubjectAliases is non-empty, say that the historical alias belongs to multiple players and the tool cannot safely combine it. For an unfiltered subject grouping, colliding current aliases are returned with stable "[player N]" labels; preserve those labels and explain that they are distinct PUUIDs sharing the same displayed alias.',
     "- If a bet query returns zero rows for an alias listed in availableSubjectAliases and both unknownSubjectAliases and ambiguousSubjectAliases are empty, retry once with only the requested subjectAliases filter before concluding there is no data. Remove every outcome, subject-result, direction, bettor, and date filter the question did not explicitly request.",
     "- Use each filtered query's coverage for its sample size and date range. Dataset overview coverage is never a substitute. If matched coverage dates are null, say that no matched date range exists; do not quote dataset-wide dates.",
-    "A Bucks-only answer runs no ScoutQL; set queryText to null for it and choose a visualization only when the tool rows genuinely have that shape.",
+    "A Bucks-only answer runs no ScoutQL; set queryText to null and includeVisualization to false unless the tool rows genuinely need a chart or table.",
   ].join("\n");
 }

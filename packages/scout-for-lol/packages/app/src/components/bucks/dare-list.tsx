@@ -2,9 +2,9 @@ import { Loaded } from "@shepherdjerred/loaded";
 import type { DareProgress } from "@scout-for-lol/data";
 import {
   ErrorState,
-  LoadingState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
+import { DelayedLoadingState } from "#src/components/section-skeleton.tsx";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { DareStatePill as StatePill } from "#src/components/bucks/bucks-dare-display.tsx";
 
@@ -31,7 +31,7 @@ export function DareList(props: {
   onSelect: (dareId: number) => void;
 }) {
   return Loaded.match(props.dares, {
-    loading: () => <LoadingState label="Loading dares…" />,
+    loading: () => <DelayedLoadingState label="Loading dares…" />,
     error: (errors) => (
       <ErrorState
         message={Loaded.messageOf(errors[0].error)}

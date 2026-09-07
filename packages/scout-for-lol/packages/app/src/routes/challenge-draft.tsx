@@ -32,20 +32,20 @@ export function ChallengeDraft() {
 
   if (draft.isPending) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8 text-sm text-scout-subtle">
+      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-scout-subtle sm:px-8">
         Loading draft…
       </div>
     );
   }
   if (draft.isError) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-8 text-sm text-scout-danger">
+      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-scout-danger sm:px-8">
         {draft.error.message}
       </div>
     );
   }
   return (
-    <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
       <Link to="/explore" className="text-sm text-scout-subtle hover:underline">
         ← Explore
       </Link>

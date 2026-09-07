@@ -46,9 +46,8 @@ export function donutOption(
           ...visualizationSnapshotLabels(presentation.options, false, {
             defaultShow: true,
             mode,
+            theme: presentation.theme,
           }),
-          color: presentation.theme.text,
-          ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
           ...(presentation.options.labels === "percent"
             ? { formatter: "{b}: {d}%" }
             : {}),

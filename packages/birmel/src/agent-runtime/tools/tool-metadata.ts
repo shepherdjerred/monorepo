@@ -75,6 +75,7 @@ const TOOL_METADATA = new Map<string, BirmelToolMetadata>([
     metadata("get-candidate-stats", "automation", "read"),
   ],
   ["manage-birthday", metadata("manage-birthday", "automation", "write")],
+  ["generate-image", metadata("generate-image", "automation", "write", 60_000)],
 ]);
 
 export function getToolMetadata(toolId: string): BirmelToolMetadata {

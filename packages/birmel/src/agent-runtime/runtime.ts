@@ -49,6 +49,9 @@ export function createSpecialistTaskPacket(options: {
     persona: options.persona,
     context: relevantContext(options.context),
     attachments: options.turn.attachments,
+    ...(options.turn.referenceResolutionError == null
+      ? {}
+      : { referenceResolutionError: options.turn.referenceResolutionError }),
   });
 }
 

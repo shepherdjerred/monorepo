@@ -52,6 +52,7 @@ fail_open() {
   printf '.buildkite/pipeline.yml\n' > "$changed_files"
 }
 
+resolved_base=""
 write_changed_files() {
   base=$1
   if ! git cat-file -e "${base}^{commit}"; then
@@ -64,7 +65,9 @@ write_changed_files() {
   fi
   if ! git diff --no-renames --name-only "$base" HEAD > "$changed_files"; then
     fail_open "git diff failed"
+    return
   fi
+  resolved_base=$base
 }
 
 # Mirror-health guard (2026-08-02 incident): CI checkouts are reference clones
@@ -112,4 +115,23 @@ else
   fail_open "pull-request base branch could not be fetched"
 fi
 
-buildkite-agent pipeline upload --changed-files-path "$changed_files"
+if [ -n "$resolved_base" ]; then
+  buildkite-agent meta-data set ci-changed-base "$resolved_base"
+fi
+# The provider-owned bootstrap pipeline runs in the default Buildkite agent
+# container, which has git and buildkite-agent but not necessarily Bun. The
+# selector is intentionally still fail-open, but bootstrap the pinned runtime
+# first so a healthy checkout can use exact PR step selection.
+if ! command -v bun >/dev/null 2>&1; then
+  # shellcheck source=.buildkite/scripts/toolchain.sh
+  if ! MISE_TOOLCHAIN_SCOPE=runtime . "$SCRIPT_DIR/toolchain.sh"; then
+    fail_open "Bun bootstrap failed"
+    buildkite-agent pipeline upload --changed-files-path "$changed_files"
+    exit 0
+  fi
+fi
+if ! bun --no-install "$SCRIPT_DIR/selection/select-pr-pipeline.ts" "$changed_files"; then
+  echo "WARN: PR pipeline selection failed; uploading the complete graph" >&2
+  printf '.buildkite/pipeline.yml\n' > "$changed_files"
+  buildkite-agent pipeline upload --changed-files-path "$changed_files"
+fi

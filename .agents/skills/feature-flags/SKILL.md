@@ -22,7 +22,8 @@ Before adding a key:
 3. Define a Zod schema, safe production-compatible default, allowed sources,
    sensitivity, and targeting.
 4. Add the Flipt declaration and beta targeting for a new feature. Default it
-   off, ramp it, then remove the flag after rollout.
+   off, ramp it, then remove the flag after rollout. Missing declared keys are
+   created in live Flipt automatically; do not overwrite existing targeting.
 5. Test absence, explicit false/zero, invalid values, source failures, and
    provenance.
 

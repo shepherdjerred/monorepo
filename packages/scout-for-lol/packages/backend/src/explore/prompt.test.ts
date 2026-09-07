@@ -16,7 +16,18 @@ describe("exploreAgentInstructions", () => {
     expect(instructions).toContain(
       "Fewer than 10 games — treat this rate as indicative only.",
     );
+    expect(instructions).toContain(
+      "Follow-up suggestions (`followUps`) are offered as clickable chips",
+    );
+    expect(instructions).toContain(
+      "NEVER phrased as the bot asking the user a question",
+    );
     expect(instructions).not.toContain("sample size");
+    expect(instructions).toContain("includeVisualization");
+    expect(instructions).toContain(
+      "Never attach a visualization just because a query ran",
+    );
+    expect(instructions).not.toContain("Always choose an output render kind");
   });
 
   test("appends the Bryan Bucks section only for a bucks-capable turn", () => {

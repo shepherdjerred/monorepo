@@ -1,4 +1,8 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
+import {
+  ReportAiPreviewSummarySchema,
+  type ReportAiPreviewSummary,
+} from "@scout-for-lol/data";
 import type { ExploreAgentParams } from "#src/explore/agent.ts";
 import {
   getExploreQuotaStatus,
@@ -12,6 +16,24 @@ import { testAccountId } from "#src/testing/test-ids.ts";
 
 const { prisma } = createTestDatabase("explore-run-turn-test");
 const userId = testAccountId("73");
+
+const QUERY_PREVIEW: ReportAiPreviewSummary =
+  ReportAiPreviewSummarySchema.parse({
+    columns: [
+      { key: "label", label: "Champion", format: "text" },
+      { key: "games", label: "Games", format: "integer" },
+    ],
+    rows: [
+      {
+        label: "Ahri",
+        values: [{ column: "games", value: 12 }],
+      },
+    ],
+    visualizationRows: [],
+    rowsReturned: 1,
+    rowsScanned: 12,
+    renderKind: "TABLE",
+  });
 
 const successfulAgent = async (params: ExploreAgentParams) => {
   await params.emit({
@@ -37,6 +59,7 @@ const successfulAgent = async (params: ExploreAgentParams) => {
       answer: "Ahri wins most often.",
       title: "Most frequent winners",
       queryText: "SELECT champion, wins FROM match_participants",
+      includeVisualization: false,
       caveats: ["Tracked matches only."],
       followUps: [],
     },
@@ -63,6 +86,7 @@ const bucksOnlyAgent = async (params: ExploreAgentParams) => {
       answer: "You are up 12 BB this month.",
       title: "Monthly Bryan Bucks net",
       queryText: null,
+      includeVisualization: false,
       caveats: [],
       followUps: [],
     },
@@ -305,5 +329,75 @@ describe("shared persisted Explore turn", () => {
 
     expect(terminal.type).toBe("error");
     expect(terminal.outcome).toBe("interrupted");
+  });
+});
+
+describe("Explore visualization attachment", () => {
+  test("drops a query preview unless the agent opted to attach it", async () => {
+    const prepared = await preparedTurn();
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        guildIds: [],
+        surface: "web",
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: prisma,
+        executeAgent: async (params) => ({
+          ...(await successfulAgent(params)),
+          preview: QUERY_PREVIEW,
+        }),
+        now: Date.now,
+        timeoutMs: 10_000,
+      },
+    );
+
+    expect(terminal.type).toBe("final");
+    const transcript = await loadExploreTranscript(
+      prisma,
+      prepared.started.conversationId,
+      userId,
+    );
+    expect(transcript?.messages[1]?.queryText).toBe(
+      "SELECT champion, wins FROM match_participants",
+    );
+    expect(transcript?.messages[1]?.preview).toBeNull();
+    expect(transcript?.messages[1]?.visualization).toBeNull();
+  });
+
+  test("persists a query preview when the agent attaches a visualization", async () => {
+    const prepared = await preparedTurn();
+    const terminal = await runPersistedExploreTurn(
+      {
+        ...prepared,
+        identity: { userId },
+        guildIds: [],
+        surface: "web",
+        emit: () => Promise.resolve(),
+      },
+      {
+        client: prisma,
+        executeAgent: async (params) => {
+          const result = await successfulAgent(params);
+          return {
+            ...result,
+            answer: { ...result.answer, includeVisualization: true },
+            preview: QUERY_PREVIEW,
+          };
+        },
+        now: Date.now,
+        timeoutMs: 10_000,
+      },
+    );
+
+    expect(terminal.type).toBe("final");
+    const transcript = await loadExploreTranscript(
+      prisma,
+      prepared.started.conversationId,
+      userId,
+    );
+    expect(transcript?.messages[1]?.preview).toEqual(QUERY_PREVIEW);
   });
 });

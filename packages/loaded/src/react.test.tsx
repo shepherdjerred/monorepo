@@ -14,11 +14,25 @@ describe("LoadingBlock", () => {
       <LoadingBlock
         values={{ user: Loaded.done("ada"), org: Loaded.loading() }}
         fallback={<p>loading</p>}
+        delayMs={0}
+        minDurationMs={0}
       >
         {(data) => <p>{data.user}</p>}
       </LoadingBlock>,
     );
     expect(markup).toBe("<p>loading</p>");
+  });
+
+  test("does not flash a fallback on the first paint of a delayed load", () => {
+    const markup = renderToStaticMarkup(
+      <LoadingBlock
+        values={{ user: Loaded.loading() }}
+        fallback={<p>loading</p>}
+      >
+        {(data) => <p>{data.user}</p>}
+      </LoadingBlock>,
+    );
+    expect(markup).toBe("");
   });
 
   test("renders the error surface when a dependency has no data", () => {
@@ -87,10 +101,10 @@ describe("LoadingBlockDefaults", () => {
         fallback={<p>spinner</p>}
         renderError={(errors) => <p>failed:{errors.length}</p>}
       >
-        <LoadingBlock values={{ user: Loaded.loading() }}>
+        <LoadingBlock values={{ user: Loaded.loading() }} delayMs={0}>
           {(data) => <p>{data.user}</p>}
         </LoadingBlock>
-        <LoadingBlock values={{ org: Loaded.failed(boom) }}>
+        <LoadingBlock values={{ org: Loaded.failed(boom) }} delayMs={0}>
           {(data) => <p>{data.org}</p>}
         </LoadingBlock>
       </LoadingBlockDefaults>,
@@ -107,6 +121,7 @@ describe("LoadingBlockDefaults", () => {
         <LoadingBlock
           values={{ user: Loaded.loading() }}
           fallback={<p>local</p>}
+          delayMs={0}
         >
           {(data) => <p>{data.user}</p>}
         </LoadingBlock>

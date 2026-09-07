@@ -148,15 +148,6 @@ export function ConsumerPlayerSearch() {
         renderStatusContent(
           statusQuery.data.state,
           <>
-            <PlayerHome
-              home={Loaded.strict(
-                Loaded.fromQuery(homeQuery, ["consumerPlayer.home"]),
-              )}
-              onRetry={() => {
-                void homeQuery.refetch();
-              }}
-            />
-
             <div className="space-y-2">
               <label
                 className="text-sm font-medium"
@@ -185,7 +176,8 @@ export function ConsumerPlayerSearch() {
               />
               <p className="text-xs text-scout-subtle">
                 Suggestions begin after two characters. Use the arrow keys and
-                Enter to open a profile.
+                Enter to open a profile. These are Scout-configured accounts and
+                ingested games, not a complete Riot match history.
               </p>
             </div>
 
@@ -197,6 +189,15 @@ export function ConsumerPlayerSearch() {
               resultCount={suggestions.length}
               onRetry={() => {
                 void searchQuery.refetch();
+              }}
+            />
+
+            <PlayerHome
+              home={Loaded.strict(
+                Loaded.fromQuery(homeQuery, ["consumerPlayer.home"]),
+              )}
+              onRetry={() => {
+                void homeQuery.refetch();
               }}
             />
           </>,
@@ -237,18 +238,22 @@ export function PlayerHome(props: {
       />
     );
   }
+  const { yourProfiles, recentPlayers } = props.home.data;
+  if (yourProfiles.length === 0 && recentPlayers.length === 0) {
+    return null;
+  }
   return (
     <div className="space-y-6">
       <PlayerHomeSection
         title="Your profiles"
         description="Every Scout profile linked to your Discord account across enabled shared servers."
-        players={props.home.data.yourProfiles}
+        players={yourProfiles}
         empty="No Scout player is linked to your Discord account yet. You can still search everyone you share access to."
       />
       <PlayerHomeSection
         title="Recently active"
         description="Six other players with the newest matches Scout recorded."
-        players={props.home.data.recentPlayers}
+        players={recentPlayers}
         empty="No other recently active players are in Scout's stored coverage yet."
       />
     </div>
@@ -265,11 +270,7 @@ function PlayerHomeSection(props: {
     <section className="space-y-3">
       <PageSectionHeading title={props.title} description={props.description} />
       {props.players.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-sm text-scout-subtle">
-            {props.empty}
-          </CardContent>
-        </Card>
+        <p className="text-sm text-scout-subtle">{props.empty}</p>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {props.players.map((player) => (
@@ -386,17 +387,7 @@ function SearchFeedback(props: {
   onRetry: () => void;
 }) {
   if (!isConsumerTypeaheadReady(props.query)) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Scout-recorded coverage</CardTitle>
-          <CardDescription>
-            These profiles combine only accounts configured in Scout and games
-            Scout ingested. They are not a complete Riot match history.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
+    return null;
   }
   if (!props.ready || props.pending) {
     return <p className="text-sm text-scout-subtle">Searching players…</p>;

@@ -34,10 +34,12 @@ export type ReportFreshnessResult = {
 
 export function freshnessDeploymentState(input: {
   scheduleId: string;
+  createdAt: Date | undefined;
   paused: boolean;
   memo: Record<string, unknown> | undefined;
   recentActions?: readonly { takenAt: Date }[];
 }): {
+  scheduleCreatedAt: string | undefined;
   paused: boolean;
   dynamic: boolean;
   lastActionTakenAt: string | undefined;
@@ -48,6 +50,7 @@ export function freshnessDeploymentState(input: {
     undefined,
   );
   return {
+    scheduleCreatedAt: input.createdAt?.toISOString(),
     paused: input.paused,
     dynamic: isDynamicAgentTaskSchedule(input.scheduleId, input.memo),
     lastActionTakenAt: latestAction?.toISOString(),
@@ -86,6 +89,7 @@ export function evaluateFreshness(input: {
   now: Date;
   acceptedAt: string | undefined;
   lastActionTakenAt: string | undefined;
+  scheduleCreatedAt: string | undefined;
   deployed: boolean;
   paused: boolean;
 }): ReportFreshnessResult {
@@ -99,6 +103,11 @@ export function evaluateFreshness(input: {
       ageHours: undefined,
       maximumAgeHours,
     };
+  const scheduleCreatedAt = Date.parse(input.scheduleCreatedAt ?? "");
+  if (!Number.isFinite(scheduleCreatedAt))
+    throw new Error(
+      `Schedule ${input.registration.scheduleId} has an unparseable scheduleCreatedAt: ${input.scheduleCreatedAt ?? "missing"}`,
+    );
   if (input.paused)
     return {
       scheduleId: input.registration.scheduleId,
@@ -114,21 +123,21 @@ export function evaluateFreshness(input: {
     throw new Error(
       `Schedule ${input.registration.scheduleId} has an unparseable receiptRequiredAfter: ${input.registration.receiptRequiredAfter}`,
     );
+  const effectiveActivation = Math.max(receiptRequiredAfter, scheduleCreatedAt);
   const lastActionTakenAt =
     input.lastActionTakenAt === undefined
       ? undefined
       : Date.parse(input.lastActionTakenAt);
   if (
     input.acceptedAt === undefined ||
-    Date.parse(input.acceptedAt) < receiptRequiredAfter
+    Date.parse(input.acceptedAt) < effectiveActivation
   ) {
     // A schedule that never runs after activation would otherwise sit at
     // `pending` forever, which the alert deliberately does not page on. Bound
     // that window by one full cadence plus grace measured from activation.
     const graceDeadline =
-      lastActionTakenAt === undefined ||
-      lastActionTakenAt < receiptRequiredAfter
-        ? receiptRequiredAfter + maximumAgeHours * 3_600_000
+      lastActionTakenAt === undefined || lastActionTakenAt < effectiveActivation
+        ? effectiveActivation + maximumAgeHours * 3_600_000
         : lastActionTakenAt + input.registration.graceHours * 3_600_000;
     return {
       scheduleId: input.registration.scheduleId,
@@ -230,16 +239,24 @@ export async function inspectReportFreshness(): Promise<
   const deployed = new Map<
     string,
     {
+      scheduleCreatedAt: string | undefined;
       paused: boolean;
       dynamic: boolean;
       lastActionTakenAt: string | undefined;
     }
   >();
+  const registeredIds = new Set(
+    REPORT_SCHEDULE_REGISTRY.map((entry) => entry.scheduleId),
+  );
   for await (const schedule of client.schedule.list()) {
+    const description = registeredIds.has(schedule.scheduleId)
+      ? await client.schedule.getHandle(schedule.scheduleId).describe()
+      : undefined;
     deployed.set(
       schedule.scheduleId,
       freshnessDeploymentState({
         scheduleId: schedule.scheduleId,
+        createdAt: description?.info.createdAt,
         memo: schedule.memo,
         paused: schedule.state.paused,
         recentActions: schedule.info.recentActions,
@@ -256,13 +273,11 @@ export async function inspectReportFreshness(): Promise<
         now,
         acceptedAt: await latestAcceptedAt(storage, registration),
         lastActionTakenAt: live?.lastActionTakenAt,
+        scheduleCreatedAt: live?.scheduleCreatedAt,
         deployed: live !== undefined,
         paused: live?.paused === true,
       });
     }),
-  );
-  const registeredIds = new Set(
-    REPORT_SCHEDULE_REGISTRY.map((entry) => entry.scheduleId),
   );
   for (const [scheduleId, live] of deployed) {
     if (live.dynamic && !registeredIds.has(scheduleId)) {

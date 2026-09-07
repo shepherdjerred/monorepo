@@ -4,12 +4,18 @@
   // (Root package.json, turbo.json, and bun.lock are always hashed by turbo.)
   "globalDependencies": [
     ".mise.toml",
+    "global.json",
     "bunfig.toml",
     "patches/**",
     "scripts/ci/ci-reporting.ts",
     "scripts/ci/coverage-cobertura.ts",
     "scripts/ci-test-manifest.json",
-    "scripts/ci/run-ci-test.ts"
+    "scripts/ci/run-ci-test.ts",
+    "packages/homelab/tsconfig.base.json",
+    "packages/scout-for-lol/tsconfig.base.json",
+    "packages/scout-for-lol/eslint.config.ts",
+    "tsconfig.base.json",
+    "vitest.config.ts"
   ],
   // The toolkit / tasknotes-server `bun --compile` binaries are ~180 MB
   // (64 MB zstd) — over the default upload timeout, so those tasks
@@ -63,7 +69,8 @@
       "dependsOn": ["^build", "generate"]
     },
     // Browser-driven e2e (Playwright). Not in the default `test` chain and
-    // never cached: needs installed browsers and exercises a live dev server.
+    // uncached by default. Deterministic browser suites opt in from their
+    // package configs with the browser image and CI behavior in their hash.
     "test:e2e": {
       "dependsOn": ["^build"],
       "cache": false
@@ -220,15 +227,22 @@
     },
     "//#script-coverage": {
       "dependsOn": ["//#check-script-migrations"],
-      "cache": false,
       "inputs": [
-        "scripts/bunfig.coverage.toml",
         "scripts/checks/check-script-coverage.ts",
         "scripts/misc/migration-core.ts",
+        "renovate.json",
+        "scripts/package.json",
         "scripts/**/*.test.ts",
+        "vitest.config.ts",
         ".buildkite/scripts/**/*.ts",
+        ".buildkite/main-bootstrap.yml",
+        ".buildkite/pipeline.yml",
+        "packages/version-catalog/src/catalog.json",
         "packages/discord-plays-mario-kart/scripts/**/*.ts",
+        "packages/discord-plays-mario-kart/Dockerfile",
+        "packages/discord-plays-mario-kart/wasm-src/upstream.json",
         "packages/discord-plays-pokemon/scripts/**/*.ts",
+        "packages/discord-plays-pokemon/wasm-src/patches/**",
         "packages/dotfiles/bin/executable_git_cleanup.ts",
         "packages/dotfiles/scripts/**/*.ts",
         "packages/homelab/scripts/**/*.ts",
@@ -243,7 +257,12 @@
       "inputs": ["**/*.md", ".markdownlint*", "!**/node_modules/**"]
     },
     "//#prettier-scout": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
+        ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -260,7 +279,12 @@
       ]
     },
     "//#prettier-homelab": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
+        ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -277,7 +301,12 @@
       ]
     },
     "//#prettier-packages": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
+        ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -296,7 +325,12 @@
       ]
     },
     "//#prettier-root": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
+        "bun.lock",
+        "package.json",
+        ".gitignore",
+        ".editorconfig",
         ".prettierrc.json",
         ".prettierignore",
         "scripts/ci/repo-shards.ts",
@@ -359,7 +393,9 @@
       ]
     },
     "//#gitleaks": {
+      "env": ["BUILDKITE_COMMIT", "CI_CHANGED_BASE"],
       "inputs": [
+        "scripts/ci/gitleaks.ts",
         "**/*",
         ".gitleaks.toml",
         "!**/node_modules/**",
@@ -433,6 +469,7 @@
       ]
     },
     "//#line-endings-scout": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -449,6 +486,7 @@
       ]
     },
     "//#line-endings-homelab": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -465,6 +503,7 @@
       ]
     },
     "//#line-endings-packages": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -483,6 +522,7 @@
       ]
     },
     "//#line-endings-root": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".gitattributes",
         "scripts/checks/check-line-endings.ts",
@@ -508,6 +548,7 @@
       ]
     },
     "//#large-files-scout": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -524,6 +565,7 @@
       ]
     },
     "//#large-files-homelab": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -540,6 +582,7 @@
       ]
     },
     "//#large-files-packages": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",
@@ -558,6 +601,7 @@
       ]
     },
     "//#large-files-root": {
+      "env": ["CI_CHANGED_BASE"],
       "inputs": [
         ".largeignore",
         "scripts/checks/check-large-files.ts",

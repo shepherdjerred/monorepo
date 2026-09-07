@@ -187,12 +187,50 @@ async function admissionDecision(
   return { triggerKind: "engaged-follow-up" };
 }
 
-function toTurnInput(
+async function resolveMessageImages(message: Message): Promise<{
+  images: ReturnType<typeof extractImageAttachments>;
+  referenceResolutionError?: {
+    referencedMessageId: string;
+    error: string;
+  };
+}> {
+  const directImages = extractImageAttachments(message);
+  if (directImages.length > 0) {
+    return { images: directImages };
+  }
+  if (message.reference?.messageId != null) {
+    try {
+      const referencedMessage = await message.channel.messages.fetch(
+        message.reference.messageId,
+      );
+      const referencedImages = extractImageAttachments(referencedMessage);
+      return { images: referencedImages };
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.warn("Failed to fetch referenced message for image attachment", {
+        error,
+        referencedMessageId: message.reference.messageId,
+      });
+      return {
+        images: [],
+        referenceResolutionError: {
+          referencedMessageId: message.reference.messageId,
+          error: errorMessage,
+        },
+      };
+    }
+  }
+  return { images: [] };
+}
+
+async function toTurnInput(
   message: Message,
   guildId: string,
   decision: { triggerKind: TriggerKind },
-): TurnInput {
-  const images = extractImageAttachments(message);
+): Promise<TurnInput> {
+  const { images, referenceResolutionError } =
+    await resolveMessageImages(message);
   return TurnInputSchema.parse({
     discordMessageId: message.id,
     guildId,
@@ -207,6 +245,7 @@ function toTurnInput(
       contentType: image.contentType,
       name: image.filename,
     })),
+    ...(referenceResolutionError == null ? {} : { referenceResolutionError }),
     triggerKind: decision.triggerKind,
     receivedAt: message.createdAt,
   });
@@ -284,9 +323,10 @@ async function processMessageAdmission(
           return;
         }
         span.setAttribute("birmel.trigger_kind", decision.triggerKind);
+        const turn = await toTurnInput(message, guildId, decision);
         const context: MessageContext = {
           message,
-          turn: toTurnInput(message, guildId, decision),
+          turn,
           ...(decision.activeSessionId == null
             ? {}
             : { activeSessionId: decision.activeSessionId }),

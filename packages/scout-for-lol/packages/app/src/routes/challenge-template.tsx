@@ -98,24 +98,26 @@ export function ChallengeTemplate() {
 
   if (detail.isPending || accounts.isPending)
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8 text-sm text-scout-subtle">
+      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-scout-subtle sm:px-8">
         Loading challenge…
       </div>
     );
   if (detail.isError || accounts.isError)
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8 text-sm text-scout-danger">
+      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-scout-danger sm:px-8">
         {detail.error?.message ?? accounts.error?.message}
       </div>
     );
   const latest = detail.data[0];
   if (latest === undefined)
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8">Challenge not found.</div>
+      <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8">
+        Challenge not found.
+      </div>
     );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
       <Link
         className="text-sm text-scout-subtle hover:underline"
         to="/challenges"

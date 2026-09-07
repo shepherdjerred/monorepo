@@ -41,6 +41,7 @@ export async function persistPartialAnswer(
     answer: clampAnswer(trimmed),
     title: null,
     queryText: null,
+    includeVisualization: false,
     caveats: [
       input.stopped ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
     ],

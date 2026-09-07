@@ -1,9 +1,10 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useLocation, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { ArrowDown, ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
+import { ExploreSuggestionChips } from "#src/components/explore/explore-suggestion-chips.tsx";
 import {
   Collapsible,
   CollapsibleContent,
@@ -15,11 +16,13 @@ import { ExploreShareRow } from "#src/components/explore/explore-share.tsx";
 import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
 import type { ExploreTranscriptActions } from "#src/components/explore/explore-transcript-actions.ts";
 import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
+import { ErrorPanel } from "#src/components/route-error-panel.tsx";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import { useExploreConversation } from "#src/hooks/use-explore-conversation.ts";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {
   exploreTurnIsActive,
+  shouldShowExploreSuggestions,
   visiblePending,
 } from "#src/lib/explore/explore-turn-state.ts";
 import {
@@ -44,6 +47,9 @@ import { useTRPC } from "#src/lib/trpc.ts";
  * state lives in the route-level Explore provider and is keyed by conversation,
  * so navigation detaches the page without cancelling or misplacing the run.
  */
+const EXPLORE_CONTAINER_CLASS =
+  "mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col gap-4 px-6 py-8 sm:px-8 sm:py-12 [overscroll-behavior:none]";
+
 export function Explore() {
   const { conversationId: routeConversationId } = useExploreParams();
   const conversationId = routeConversationId ?? null;
@@ -207,7 +213,11 @@ export function Explore() {
   ]);
 
   if (status.status === "loading") {
-    return <SectionSkeleton />;
+    return (
+      <div className={EXPLORE_CONTAINER_CLASS}>
+        <SectionSkeleton />
+      </div>
+    );
   }
 
   // `strict` above turns a failed transcript refetch into `error`, and
@@ -216,25 +226,20 @@ export function Explore() {
   // renders as an empty composer, silently discarding the thread.
   if (conversationId !== null && conversationState.status === "error") {
     return (
-      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
-        <h2 className="text-base font-semibold text-scout-danger">
-          This conversation couldn&apos;t load
-        </h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
-          {Loaded.messageOf(conversationState.errors[0].error)}
-        </p>
-        <div className="mt-4 flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void transcript.refetch();
-            }}
-          >
-            Try again
-          </Button>
-        </div>
+      <div className={EXPLORE_CONTAINER_CLASS}>
+        <ExploreHeader title="Explore" />
+        <ErrorPanel
+          title="This conversation couldn't load"
+          message={Loaded.messageOf(conversationState.errors[0].error)}
+          onRetry={() => {
+            void transcript.refetch();
+          }}
+          action={
+            <Button asChild variant="outline" size="sm">
+              <Link to="/explore">New conversation</Link>
+            </Button>
+          }
+        />
       </div>
     );
   }
@@ -243,36 +248,27 @@ export function Explore() {
     // A failed availability check is not a denial — say so, and offer the
     // narrow retry (just this query) rather than a whole-page reload.
     return (
-      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
-        <h2 className="text-base font-semibold text-scout-danger">
-          Explore couldn&apos;t load
-        </h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
-          Checking your access failed. You can try again — if it keeps
-          happening, reload the page.
-        </p>
-        <div className="mt-4 flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void statusQuery.refetch();
-            }}
-          >
-            Try again
-          </Button>
-        </div>
+      <div className={EXPLORE_CONTAINER_CLASS}>
+        <ExploreHeader title="Explore" />
+        <ErrorPanel
+          title="Explore couldn't load"
+          message="Checking your access failed. You can try again — if it keeps happening, reload the page."
+          onRetry={() => {
+            void statusQuery.refetch();
+          }}
+        />
       </div>
     );
   }
 
   if (!enabled) {
     return (
-      <ForbiddenPanel
-        title="Explore isn't available yet"
-        message="Explore is in a limited rollout and is not available on your account yet."
-      />
+      <div className={EXPLORE_CONTAINER_CLASS}>
+        <ForbiddenPanel
+          title="Explore isn't available yet"
+          message="Explore is in a limited rollout and is not available on your account yet."
+        />
+      </div>
     );
   }
 
@@ -297,38 +293,17 @@ export function Explore() {
       : undefined;
 
   return (
-    <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col gap-4 px-6 py-8 sm:px-8 sm:py-12 [overscroll-behavior:none]">
+    <div className={EXPLORE_CONTAINER_CLASS}>
       <ExploreHeader
         title={conversationId === null ? "Explore" : title}
         {...(headerActions === undefined ? {} : { actions: headerActions })}
       />
 
-      {messages.length === 0 && pendingQuestion === null && (
-        <div className="space-y-2 rounded-lg border border-dashed p-6">
-          <p className="text-sm">
-            Ask about champions, queues, positions, patches, or players across
-            every match Scout has ingested.
-          </p>
-          <p className="text-xs text-scout-subtle">
-            This is not the whole League ladder — it is the games of tracked
-            players and everyone who was in them.
-          </p>
-          <div className="flex flex-wrap gap-2 pt-2">
-            {EXAMPLES.map((example) => (
-              <Button
-                key={example}
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  ask(example);
-                }}
-              >
-                {example}
-              </Button>
-            ))}
-          </div>
-        </div>
-      )}
+      {shouldShowExploreSuggestions({
+        messageCount: messages.length,
+        pendingQuestion,
+        pendingTurn,
+      }) && <ExploreSuggestionChips onSelect={ask} enabled={enabled} />}
 
       <div className="min-h-0 flex-1 space-y-4 pb-4">
         <ExploreTranscript
@@ -451,12 +426,6 @@ function ExploreQuota(props: {
  * Separated from the component so the route's own logic stays about handling
  * turns rather than unwrapping query state.
  */
-
-const EXAMPLES = [
-  "Which champions have the highest win rate?",
-  "How does KDA differ by position?",
-  "What is the most played queue this month?",
-];
 
 function ExploreErrorBanner(props: {
   readonly pageError: string;

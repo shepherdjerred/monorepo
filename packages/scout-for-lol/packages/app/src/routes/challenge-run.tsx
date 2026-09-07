@@ -22,13 +22,13 @@ export function ChallengeRun() {
   );
   if (run.isPending)
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8 text-sm text-scout-subtle">
+      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-scout-subtle sm:px-8">
         Loading run…
       </div>
     );
   if (run.isError)
     return (
-      <div className="mx-auto max-w-4xl px-4 py-8 text-sm text-scout-danger">
+      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-scout-danger sm:px-8">
         {run.error.message}
       </div>
     );
@@ -38,7 +38,7 @@ export function ChallengeRun() {
     throw new Error("Challenge run has no evaluation revision");
   }
   return (
-    <div className="mx-auto max-w-4xl space-y-6 px-4 py-8 sm:py-12">
+    <div className="mx-auto max-w-5xl space-y-6 px-6 py-8 sm:px-8 sm:py-12">
       <Link
         to="/challenges"
         className="text-sm text-scout-subtle hover:underline"

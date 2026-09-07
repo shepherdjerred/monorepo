@@ -6,6 +6,7 @@ import {
   ExploreTranscript,
   strandedQuestion,
 } from "#src/components/explore/explore-transcript.tsx";
+import { formatDuration } from "#src/lib/format-duration.ts";
 import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 
 const QUESTION_ID = "33333333-3333-4333-8333-333333333333";
@@ -34,6 +35,18 @@ function renderWithFollowUps(
     />,
   );
 }
+
+const STREAMING_PREVIEW = {
+  columns: [
+    { key: "label", label: "Champion", format: "text" as const },
+    { key: "games", label: "Games", format: "integer" as const },
+  ],
+  rows: [{ label: "Ahri", values: [{ column: "games", value: 12 }] }],
+  visualizationRows: [],
+  rowsReturned: 1,
+  rowsScanned: 12,
+  renderKind: "TABLE" as const,
+};
 
 describe("ExploreTranscript", () => {
   test("marks the transcript as a log with an always-mounted polite live region", () => {
@@ -327,6 +340,21 @@ describe("Explore expandable artifacts", () => {
   });
 });
 
+describe("Explore streaming visualization", () => {
+  test("does not render a query result before the agent attaches it", () => {
+    const markup = renderToStaticMarkup(
+      <ExploreTranscript
+        messages={[]}
+        pendingAnswer="Ahri leads."
+        pendingPreview={STREAMING_PREVIEW}
+      />,
+    );
+    expect(markup).toContain("Ahri leads.");
+    expect(markup).not.toContain("<table");
+    expect(markup).not.toContain("Chart");
+  });
+});
+
 describe("Explore live progress", () => {
   test("shows the status line before any prose has arrived", () => {
     const markup = renderToStaticMarkup(
@@ -365,6 +393,14 @@ describe("Explore live progress", () => {
 
     expect(markup).toContain("Querying match data.");
     expect(markup).toContain("Steps (1)");
+  });
+
+  test("formats duration with fractional seconds above one second", () => {
+    expect(formatDuration(950)).toBe("950 ms");
+    expect(formatDuration(1000)).toBe("1.0 s");
+    expect(formatDuration(1100)).toBe("1.1 s");
+    expect(formatDuration(1250)).toBe("1.3 s");
+    expect(formatDuration(2000)).toBe("2.0 s");
   });
 });
 

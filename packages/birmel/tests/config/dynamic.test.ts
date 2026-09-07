@@ -28,12 +28,16 @@ describe("Birmel dynamic config", () => {
         "birmel-persona-enabled": false,
         "birmel-llm-model": "test-model",
         "birmel-agent-max-steps": 4,
+        "birmel-image-generation-enabled": true,
+        "birmel-llm-image-model": "test-image-model",
       }),
     });
 
     expect(config.persona.enabled).toBe(false);
     expect(config.openRouter.model).toBe("test-model");
     expect(config.agent.maxSteps).toBe(4);
+    expect(config.imageGeneration.enabled).toBe(true);
+    expect(config.openRouter.imageModel).toBe("test-image-model");
     expect(config.discord.token).toBe("token");
   });
 

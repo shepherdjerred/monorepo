@@ -8,6 +8,7 @@ export type FliptFetcherTarget = {
   readonly url: string;
   readonly namespace: string;
   readonly environment: string;
+  readonly signal?: AbortSignal;
 };
 
 /**
@@ -46,7 +47,11 @@ export function createFliptFetcher(options: FliptFetcherTarget): FliptFetcher {
       headers["If-None-Match"] = fetcherOptions.etag;
     }
 
-    const response = await fetch(url, { method: "GET", headers });
+    const response = await fetch(url, {
+      method: "GET",
+      headers,
+      ...(options.signal === undefined ? {} : { signal: options.signal }),
+    });
 
     // 304 is a successful "nothing changed" and must be handed back rather
     // than thrown: the client uses it to keep the snapshot it already has.

@@ -469,7 +469,6 @@
     "buildkite-agent",
     "ffmpeg",
     "ffprobe",
-    "gitleaks",
     "go",
     "golangci-lint",
     "helm",

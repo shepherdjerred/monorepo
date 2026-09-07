@@ -19,6 +19,13 @@ max by (volumename, namespace, persistentvolumeclaim) (
   kube_persistentvolumeclaim_info
 )`;
 
+const BUILDKITD_CACHE_PVC_SELECTOR =
+  'kube_persistentvolumeclaim_info{namespace="buildkitd",persistentvolumeclaim=~"buildkitd-cache.*"}';
+
+function excludeBuildkitdCache(expression: string): string {
+  return `(${expression}) unless on (namespace, persistentvolumeclaim) ${BUILDKITD_CACHE_PVC_SELECTOR}`;
+}
+
 export function getZfsPvcRuleGroup(): PrometheusRuleSpecGroups {
   return {
     name: "resource-zfs-pvc-monitoring",
@@ -32,7 +39,7 @@ export function getZfsPvcRuleGroup(): PrometheusRuleSpecGroups {
           summary: "ZFS PVC storage usage above 75%",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `(${zfsPvcUsageExpression}) > 0.75`,
+          excludeBuildkitdCache(`(${zfsPvcUsageExpression}) > 0.75`),
         ),
         for: "15m",
         labels: { severity: "warning" },
@@ -46,7 +53,7 @@ export function getZfsPvcRuleGroup(): PrometheusRuleSpecGroups {
           summary: "ZFS PVC storage usage above 90%",
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          `(${zfsPvcUsageExpression}) > 0.90`,
+          excludeBuildkitdCache(`(${zfsPvcUsageExpression}) > 0.90`),
         ),
         for: "5m",
         labels: { severity: "critical" },
