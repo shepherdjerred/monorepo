@@ -352,7 +352,7 @@ export async function validateImageMigrationContracts(
   const scoutPort = applicationSmokePort(applicationSmoke, "scout-for-lol");
   requireAllPresent(
     applicationSmoke,
-    [`listening on :${trmnlPort.port.toString()}`],
+    ['export PORT="$http_port"', "listening on :$http_port"],
     (required) =>
       `trmnl-dashboard smoke listener and readiness check disagree: missing ${required}`,
   );
