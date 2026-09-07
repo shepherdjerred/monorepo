@@ -15,7 +15,6 @@ import {
   type FliptFlagPayload,
   type FliptSegmentPayload,
 } from "./flipt-resource-payloads.ts";
-
 const GRPC_ALREADY_EXISTS = 6;
 const GRPC_ABORTED = 10;
 const MAX_CREATE_ATTEMPTS = 3;
@@ -384,12 +383,35 @@ async function applyNamespace(input: {
     input.environment,
     input.namespace.key,
   );
-  const [namespaces, flags, segments] = await Promise.all([
-    listNamespaces({
+  const namespaces = await listNamespaces({
+    url: input.url,
+    environment: input.environment,
+    fetcher: input.fetcher,
+  });
+  const existingNamespaceKeys = new Set(
+    namespaces.items.map((item) => item.key),
+  );
+  const createdNamespaces: string[] = [];
+  if (!existingNamespaceKeys.has(input.namespace.key)) {
+    const created = await applyPlan({
       url: input.url,
       environment: input.environment,
+      namespace: input.namespace.key,
+      plan: [
+        {
+          kind: "namespace",
+          key: input.namespace.key,
+          name: input.namespace.name,
+          description: input.namespace.description,
+        },
+      ],
+      revision: namespaces.revision,
       fetcher: input.fetcher,
-    }),
+    });
+    createdNamespaces.push(...created.createdNamespaces);
+    existingNamespaceKeys.add(input.namespace.key);
+  }
+  const [flags, segments] = await Promise.all([
     listResources({
       url: input.url,
       environment: input.environment,
@@ -408,22 +430,22 @@ async function applyNamespace(input: {
   const plan = planMissingFliptResources({
     namespace: input.namespace,
     expectedFlags,
-    existingNamespaceKeys: new Set(namespaces.items.map((item) => item.key)),
+    existingNamespaceKeys,
     existingFlagKeys: new Set(flags.resources.map((resource) => resource.key)),
     existingSegmentKeys: new Set(
       segments.resources.map((resource) => resource.key),
     ),
-  });
+  }).filter((item) => item.kind !== "namespace");
   if (plan.length === 0) {
     return {
       environment: input.environment,
       namespace: input.namespace.key,
-      createdNamespaces: [],
+      createdNamespaces,
       createdSegments: [],
       createdFlags: [],
     };
   }
-  return applyPlan({
+  const created = await applyPlan({
     url: input.url,
     environment: input.environment,
     namespace: input.namespace.key,
@@ -431,6 +453,10 @@ async function applyNamespace(input: {
     revision: flags.revision,
     fetcher: input.fetcher,
   });
+  return {
+    ...created,
+    createdNamespaces: [...createdNamespaces, ...created.createdNamespaces],
+  };
 }
 
 export async function applyMissingManagedFlags(
@@ -457,9 +483,8 @@ export async function applyMissingManagedFlags(
       const namespace = inventory.namespaces.find(
         (candidate) => candidate.key === namespaceKey,
       );
-      if (namespace === undefined) {
+      if (namespace === undefined)
         throw new Error(`unknown managed namespace: ${namespaceKey}`);
-      }
       results.push(
         await applyNamespace({
           url,

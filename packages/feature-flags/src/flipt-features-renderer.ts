@@ -1,4 +1,6 @@
 import YAML from "yaml";
+import { orderedBooleanRollouts } from "./flipt-boolean-rollouts.ts";
+import { variantDefinitions as managedVariantDefinitions } from "./flipt-resource-payloads.ts";
 import {
   managedFlagInventory,
   materializeManagedNamespaceEnvironment,
@@ -98,43 +100,13 @@ function collectSegments(flags: readonly ManagedFlag[]): DeclarativeSegment[] {
   );
 }
 
-function parseAttachment(attachment: string, variantKey: string): unknown {
-  try {
-    const value: unknown = JSON.parse(attachment);
-    return value;
-  } catch (error) {
-    throw new Error(`invalid attachment JSON for variant ${variantKey}`, {
-      cause: error,
-    });
-  }
-}
-
 function variantDefinitions(flag: Extract<ManagedFlag, { type: "variant" }>) {
-  const attachments = new Map<string, string>();
-  for (const rule of flag.rules) {
-    for (const distribution of rule.distributions) {
-      const existing = attachments.get(distribution.variantKey);
-      if (
-        existing !== undefined &&
-        existing !== distribution.variantAttachment
-      ) {
-        throw new Error(
-          `conflicting variant attachment: ${flag.key}/${distribution.variantKey}`,
-        );
-      }
-      attachments.set(distribution.variantKey, distribution.variantAttachment);
-    }
-  }
-
-  const keys = new Set<string>([flag.default, ...attachments.keys()]);
-  return [...keys]
-    .sort((left, right) => left.localeCompare(right))
-    .map((key) => ({
-      default: key === flag.default,
-      key,
-      name: key,
-      attachment: parseAttachment(attachments.get(key) ?? "{}", key),
-    }));
+  return managedVariantDefinitions(flag).map((variant) => ({
+    default: variant.key === flag.default,
+    key: variant.key,
+    name: variant.name,
+    attachment: variant.attachment,
+  }));
 }
 
 function declarativeRules(flag: ManagedFlag) {
@@ -165,54 +137,25 @@ function declarativeRules(flag: ManagedFlag) {
 function declarativeBooleanRollouts(
   flag: Extract<ManagedFlag, { type: "boolean" }>,
 ) {
-  const thresholdByRank = new Map(
-    flag.thresholdRollouts.map((rollout) => [rollout.rank, rollout]),
-  );
-  if (thresholdByRank.size !== flag.thresholdRollouts.length) {
-    throw new Error(`duplicate threshold rollout rank for ${flag.key}`);
-  }
-
-  const segmentRollouts = flag.rollouts.map((rollout) => ({
-    description: `Managed segment rollout for ${rollout.segmentKey}.`,
-    segment: {
-      keys: [rollout.segmentKey],
-      operator: rollout.segmentOperator,
-      value: rollout.result,
-    },
-  }));
-  const total = segmentRollouts.length + thresholdByRank.size;
-  for (const rank of thresholdByRank.keys()) {
-    if (rank < 1 || rank > total) {
-      throw new Error(
-        `threshold rollout rank out of range for ${flag.key}: ${rank.toString()}`,
-      );
-    }
-  }
-
-  const rendered = [];
-  let segmentIndex = 0;
-  for (let rank = 1; rank <= total; rank += 1) {
-    const threshold = thresholdByRank.get(rank);
-    if (threshold !== undefined) {
-      rendered.push({
-        description: `Managed threshold rollout at rank ${rank.toString()}.`,
+  return orderedBooleanRollouts(flag).map((slot) => {
+    if (slot.kind === "threshold") {
+      return {
+        description: `Managed threshold rollout at rank ${slot.rank.toString()}.`,
         threshold: {
-          percentage: threshold.percentage,
-          value: threshold.result,
+          percentage: slot.percentage,
+          value: slot.result,
         },
-      });
-      continue;
+      };
     }
-    const segment = segmentRollouts[segmentIndex];
-    if (segment === undefined) {
-      throw new Error(
-        `missing segment rollout for ${flag.key} at rank ${rank.toString()}`,
-      );
-    }
-    rendered.push(segment);
-    segmentIndex += 1;
-  }
-  return rendered;
+    return {
+      description: `Managed segment rollout for ${slot.segmentKey}.`,
+      segment: {
+        keys: [slot.segmentKey],
+        operator: slot.segmentOperator,
+        value: slot.result,
+      },
+    };
+  });
 }
 
 function declarativeFlag(flag: ManagedFlag) {

@@ -21,7 +21,7 @@ function metadata(key: string) {
   };
 }
 
-function testFlags() {
+function inventoryWithFlags(flags: unknown[]) {
   return ManagedFlagInventorySchema.parse({
     version: 3,
     namespaces: [{ key: "test", name: "Test", description: "Test namespace." }],
@@ -29,91 +29,84 @@ function testFlags() {
       { key: "beta", overrides: [] },
       { key: "prod", overrides: [] },
     ],
-    flags: [
-      {
-        ...metadata("boolean"),
-        type: "boolean",
-        default: false,
-        rollouts: [
-          {
-            segmentKey: "operators",
-            segmentOperator: "OR_SEGMENT_OPERATOR",
-            matchType: "ALL_SEGMENT_MATCH_TYPE",
-            constraints: [
-              {
-                type: "STRING_CONSTRAINT_COMPARISON_TYPE",
-                property: "role",
-                operator: "eq",
-                value: "operator",
-              },
-            ],
-            result: true,
-          },
-        ],
-        rules: [],
-        thresholdRollouts: [{ rank: 1, percentage: 25, result: true }],
-      },
-      {
-        ...metadata("variant"),
-        type: "variant",
-        default: "blue",
-        ...behavior,
-        rules: [
-          {
-            rank: 1,
-            segmentOperator: "OR_SEGMENT_OPERATOR",
-            segments: [
-              {
-                key: "operators",
-                matchType: "ALL_SEGMENT_MATCH_TYPE",
-                constraints: [
-                  {
-                    type: "STRING_CONSTRAINT_COMPARISON_TYPE",
-                    property: "role",
-                    operator: "eq",
-                    value: "operator",
-                  },
-                ],
-              },
-            ],
-            distributions: [
-              {
-                variantKey: "green",
-                rollout: 100,
-                variantAttachment: '{"color":"green"}',
-              },
-            ],
-          },
-        ],
-      },
-    ],
+    flags,
     exemptions: [],
-  }).flags;
+  });
+}
+
+function testFlags() {
+  return inventoryWithFlags([
+    {
+      ...metadata("boolean"),
+      type: "boolean",
+      default: false,
+      rollouts: [
+        {
+          segmentKey: "operators",
+          segmentOperator: "OR_SEGMENT_OPERATOR",
+          matchType: "ALL_SEGMENT_MATCH_TYPE",
+          constraints: [
+            {
+              type: "STRING_CONSTRAINT_COMPARISON_TYPE",
+              property: "role",
+              operator: "eq",
+              value: "operator",
+            },
+          ],
+          result: true,
+        },
+      ],
+      rules: [],
+      thresholdRollouts: [{ rank: 1, percentage: 25, result: true }],
+    },
+    {
+      ...metadata("variant"),
+      type: "variant",
+      default: "blue",
+      ...behavior,
+      rules: [
+        {
+          rank: 1,
+          segmentOperator: "OR_SEGMENT_OPERATOR",
+          segments: [
+            {
+              key: "operators",
+              matchType: "ALL_SEGMENT_MATCH_TYPE",
+              constraints: [
+                {
+                  type: "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  property: "role",
+                  operator: "eq",
+                  value: "operator",
+                },
+              ],
+            },
+          ],
+          distributions: [
+            {
+              variantKey: "green",
+              rollout: 100,
+              variantAttachment: '{"color":"green"}',
+            },
+          ],
+        },
+      ],
+    },
+  ]).flags;
 }
 
 describe("Flipt resource payloads", () => {
   test("accepts Flipt one-based rank for a lone threshold rollout", () => {
-    const inventory = ManagedFlagInventorySchema.parse({
-      version: 3,
-      namespaces: [
-        { key: "test", name: "Test", description: "Test namespace." },
-      ],
-      environments: [
-        { key: "beta", overrides: [] },
-        { key: "prod", overrides: [] },
-      ],
-      flags: [
-        {
-          ...metadata("ramp"),
-          type: "boolean",
-          default: false,
-          rollouts: [],
-          rules: [],
-          thresholdRollouts: [{ rank: 1, percentage: 30, result: true }],
-        },
-      ],
-      exemptions: [],
-    });
+    const inventory = inventoryWithFlags([
+      {
+        ...metadata("ramp"),
+        type: "boolean",
+        default: false,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [{ rank: 1, percentage: 30, result: true }],
+      },
+    ]);
     const flag = inventory.flags[0];
     if (flag === undefined) throw new Error("ramp fixture is missing");
     expect(toFliptFlagPayload(flag).rollouts).toEqual([
@@ -174,46 +167,35 @@ describe("Flipt resource payloads", () => {
   });
 
   test("normalizes a JSON null variant attachment to an empty object", () => {
-    const inventory = ManagedFlagInventorySchema.parse({
-      version: 3,
-      namespaces: [
-        { key: "test", name: "Test", description: "Test namespace." },
-      ],
-      environments: [
-        { key: "beta", overrides: [] },
-        { key: "prod", overrides: [] },
-      ],
-      flags: [
-        {
-          ...metadata("model"),
-          type: "variant",
-          default: "sol",
-          rollouts: [],
-          thresholdRollouts: [],
-          rules: [
-            {
-              rank: 1,
-              segmentOperator: "OR_SEGMENT_OPERATOR",
-              segments: [
-                {
-                  key: "everyone",
-                  matchType: "ALL_SEGMENT_MATCH_TYPE",
-                  constraints: [],
-                },
-              ],
-              distributions: [
-                {
-                  variantKey: "sol",
-                  rollout: 100,
-                  variantAttachment: "null",
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      exemptions: [],
-    });
+    const inventory = inventoryWithFlags([
+      {
+        ...metadata("model"),
+        type: "variant",
+        default: "sol",
+        rollouts: [],
+        thresholdRollouts: [],
+        rules: [
+          {
+            rank: 1,
+            segmentOperator: "OR_SEGMENT_OPERATOR",
+            segments: [
+              {
+                key: "everyone",
+                matchType: "ALL_SEGMENT_MATCH_TYPE",
+                constraints: [],
+              },
+            ],
+            distributions: [
+              {
+                variantKey: "sol",
+                rollout: 100,
+                variantAttachment: "null",
+              },
+            ],
+          },
+        ],
+      },
+    ]);
     const flag = inventory.flags[0];
     if (flag === undefined) throw new Error("model fixture is missing");
     expect(toFliptFlagPayload(flag).variants).toEqual([
@@ -222,46 +204,35 @@ describe("Flipt resource payloads", () => {
   });
 
   test("rejects a zero-based variant rule rank", () => {
-    const inventory = ManagedFlagInventorySchema.parse({
-      version: 3,
-      namespaces: [
-        { key: "test", name: "Test", description: "Test namespace." },
-      ],
-      environments: [
-        { key: "beta", overrides: [] },
-        { key: "prod", overrides: [] },
-      ],
-      flags: [
-        {
-          ...metadata("model"),
-          type: "variant",
-          default: "sol",
-          rollouts: [],
-          thresholdRollouts: [],
-          rules: [
-            {
-              rank: 0,
-              segmentOperator: "OR_SEGMENT_OPERATOR",
-              segments: [
-                {
-                  key: "everyone",
-                  matchType: "ALL_SEGMENT_MATCH_TYPE",
-                  constraints: [],
-                },
-              ],
-              distributions: [
-                {
-                  variantKey: "sol",
-                  rollout: 100,
-                  variantAttachment: "{}",
-                },
-              ],
-            },
-          ],
-        },
-      ],
-      exemptions: [],
-    });
+    const inventory = inventoryWithFlags([
+      {
+        ...metadata("model"),
+        type: "variant",
+        default: "sol",
+        rollouts: [],
+        thresholdRollouts: [],
+        rules: [
+          {
+            rank: 0,
+            segmentOperator: "OR_SEGMENT_OPERATOR",
+            segments: [
+              {
+                key: "everyone",
+                matchType: "ALL_SEGMENT_MATCH_TYPE",
+                constraints: [],
+              },
+            ],
+            distributions: [
+              {
+                variantKey: "sol",
+                rollout: 100,
+                variantAttachment: "{}",
+              },
+            ],
+          },
+        ],
+      },
+    ]);
     const flag = inventory.flags[0];
     if (flag === undefined) throw new Error("model fixture is missing");
     expect(() => toFliptFlagPayload(flag)).toThrow(

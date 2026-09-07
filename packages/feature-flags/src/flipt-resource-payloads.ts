@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { orderedBooleanRollouts } from "./flipt-boolean-rollouts.ts";
 import type { ManagedFlag } from "./managed-flag-inventory.ts";
 
 export const FLIPT_FLAG_TYPE_URL = "flipt.core.Flag";
@@ -168,59 +169,32 @@ export function collectManagedSegmentPayloads(
 function booleanRollouts(
   flag: Extract<ManagedFlag, { type: "boolean" }>,
 ): FliptRolloutPayload[] {
-  const thresholdByRank = new Map(
-    flag.thresholdRollouts.map((rollout) => [rollout.rank, rollout]),
-  );
-  if (thresholdByRank.size !== flag.thresholdRollouts.length) {
-    throw new Error(`duplicate threshold rollout rank for ${flag.key}`);
-  }
-
-  const segmentRollouts = flag.rollouts.map((rollout) => ({
-    type: "SEGMENT_ROLLOUT_TYPE" as const,
-    description: `Managed segment rollout for ${rollout.segmentKey}.`,
-    segment: {
-      value: rollout.result,
-      segments: [rollout.segmentKey],
-      segmentOperator: rollout.segmentOperator,
-    },
-  }));
-  const total = segmentRollouts.length + thresholdByRank.size;
-  for (const rank of thresholdByRank.keys()) {
-    if (rank < 1 || rank > total) {
-      throw new Error(
-        `threshold rollout rank out of range for ${flag.key}: ${rank.toString()}`,
-      );
-    }
-  }
-
-  const rendered: FliptRolloutPayload[] = [];
-  let segmentIndex = 0;
-  for (let rank = 1; rank <= total; rank += 1) {
-    const threshold = thresholdByRank.get(rank);
-    if (threshold !== undefined) {
-      rendered.push({
+  return orderedBooleanRollouts(flag).map((slot) => {
+    if (slot.kind === "threshold") {
+      return {
         type: "THRESHOLD_ROLLOUT_TYPE",
-        description: `Managed threshold rollout at rank ${rank.toString()}.`,
+        description: `Managed threshold rollout at rank ${slot.rank.toString()}.`,
         threshold: {
-          percentage: threshold.percentage,
-          value: threshold.result,
+          percentage: slot.percentage,
+          value: slot.result,
         },
-      });
-      continue;
+      };
     }
-    const segment = segmentRollouts[segmentIndex];
-    if (segment === undefined) {
-      throw new Error(
-        `missing segment rollout for ${flag.key} at rank ${rank.toString()}`,
-      );
-    }
-    rendered.push(segment);
-    segmentIndex += 1;
-  }
-  return rendered;
+    return {
+      type: "SEGMENT_ROLLOUT_TYPE",
+      description: `Managed segment rollout for ${slot.segmentKey}.`,
+      segment: {
+        value: slot.result,
+        segments: [slot.segmentKey],
+        segmentOperator: slot.segmentOperator,
+      },
+    };
+  });
 }
 
-function variantDefinitions(flag: Extract<ManagedFlag, { type: "variant" }>) {
+export function variantDefinitions(
+  flag: Extract<ManagedFlag, { type: "variant" }>,
+) {
   const attachments = new Map<string, string>();
   for (const rule of flag.rules) {
     for (const distribution of rule.distributions) {

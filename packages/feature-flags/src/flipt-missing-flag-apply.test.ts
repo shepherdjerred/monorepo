@@ -115,49 +115,63 @@ describe("planMissingFliptResources", () => {
   });
 });
 
+async function applyBetaTest(
+  fetcher: (
+    input: string | URL | Request,
+    init?: RequestInit,
+  ) => Promise<Response>,
+) {
+  return applyMissingManagedFlags({
+    url: "https://flipt.example",
+    inventory,
+    environmentFilter: "beta",
+    namespaceFilter: "test",
+    fetcher,
+  });
+}
+
+function createdKey(init: RequestInit | undefined): string {
+  const parsed = z
+    .object({
+      key: z.string().optional(),
+      payload: z.object({ key: z.string().optional() }).optional(),
+    })
+    .parse(JSON.parse(requestBody(init)));
+  const key = parsed.payload?.key ?? parsed.key;
+  if (key === undefined) throw new Error("create is missing a key");
+  return key;
+}
+
 describe("applyMissingManagedFlags", () => {
   test("posts missing segments then flags and records created keys", async () => {
     const posts: string[] = [];
-    const result = await applyMissingManagedFlags({
-      url: "https://flipt.example",
-      inventory,
-      environmentFilter: "beta",
-      namespaceFilter: "test",
-      fetcher: async (input, init) => {
-        const url = requestUrl(input);
-        const method = init?.method ?? "GET";
-        if (method === "GET" && url.endsWith("/namespaces")) {
-          return json({ items: [{ key: "test" }], revision: "rev-1" });
-        }
-        if (method === "GET" && url.includes("flipt.core.Flag")) {
-          return json({
-            resources: [{ namespaceKey: "test", key: "existing-flag" }],
-            revision: "rev-1",
-          });
-        }
-        if (method === "GET" && url.includes("flipt.core.Segment")) {
-          return json({ resources: [], revision: "rev-1" });
-        }
-        if (method === "POST") {
-          const parsed = z
-            .object({
-              key: z.string().optional(),
-              payload: z.object({ key: z.string().optional() }).optional(),
-            })
-            .parse(JSON.parse(requestBody(init)));
-          const key = parsed.payload?.key ?? parsed.key;
-          if (key === undefined) throw new Error("create is missing a key");
-          posts.push(`${url} ${key}`);
-          return json(
-            {
-              resource: { namespaceKey: "test", key },
-              revision: `rev-${posts.length.toString()}`,
-            },
-            200,
-          );
-        }
-        throw new Error(`unexpected request ${method} ${url}`);
-      },
+    const result = await applyBetaTest(async (input, init) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? "GET";
+      if (method === "GET" && url.endsWith("/namespaces")) {
+        return json({ items: [{ key: "test" }], revision: "rev-1" });
+      }
+      if (method === "GET" && url.includes("flipt.core.Flag")) {
+        return json({
+          resources: [{ namespaceKey: "test", key: "existing-flag" }],
+          revision: "rev-1",
+        });
+      }
+      if (method === "GET" && url.includes("flipt.core.Segment")) {
+        return json({ resources: [], revision: "rev-1" });
+      }
+      if (method === "POST") {
+        const key = createdKey(init);
+        posts.push(`${url} ${key}`);
+        return json(
+          {
+            resource: { namespaceKey: "test", key },
+            revision: `rev-${posts.length.toString()}`,
+          },
+          200,
+        );
+      }
+      throw new Error(`unexpected request ${method} ${url}`);
     });
 
     expect(posts).toEqual([
@@ -176,34 +190,71 @@ describe("applyMissingManagedFlags", () => {
   });
 
   test("treats already-exists as success without updating the resource", async () => {
-    const result = await applyMissingManagedFlags({
-      url: "https://flipt.example",
-      inventory,
-      environmentFilter: "beta",
-      namespaceFilter: "test",
-      fetcher: async (input, init) => {
-        const url = requestUrl(input);
-        const method = init?.method ?? "GET";
-        if (method === "GET" && url.endsWith("/namespaces")) {
-          return json({ items: [{ key: "test" }], revision: "rev-1" });
-        }
-        if (method === "GET") {
-          return json({
-            resources: [{ namespaceKey: "test", key: "existing-flag" }],
-            revision: "rev-2",
-          });
-        }
-        return json(
-          {
-            code: 6,
-            message: 'create resource "flipt.core.Flag/test/new-flag"',
-          },
-          409,
-        );
-      },
+    const result = await applyBetaTest(async (input, init) => {
+      const method = init?.method ?? "GET";
+      if (method === "GET" && requestUrl(input).endsWith("/namespaces")) {
+        return json({ items: [{ key: "test" }], revision: "rev-1" });
+      }
+      if (method === "GET") {
+        return json({
+          resources: [{ namespaceKey: "test", key: "existing-flag" }],
+          revision: "rev-2",
+        });
+      }
+      return json(
+        {
+          code: 6,
+          message: 'create resource "flipt.core.Flag/test/new-flag"',
+        },
+        409,
+      );
     });
     expect(result[0]?.createdFlags).toEqual([]);
     expect(result[0]?.createdSegments).toEqual([]);
+  });
+
+  test("creates a missing namespace before listing its resources", async () => {
+    const methods: string[] = [];
+    let namespaceExists = false;
+    const result = await applyBetaTest(async (input, init) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? "GET";
+      methods.push(`${method} ${url}`);
+      if (method === "GET" && url.endsWith("/namespaces")) {
+        return json({
+          items: namespaceExists ? [{ key: "test" }] : [],
+          revision: "rev-1",
+        });
+      }
+      if (method === "POST" && url.endsWith("/namespaces")) {
+        namespaceExists = true;
+        return json(
+          {
+            resource: { namespaceKey: "test", key: "test" },
+            revision: "rev-2",
+          },
+          200,
+        );
+      }
+      if (!namespaceExists) {
+        throw new Error(`listed resources before creating namespace: ${url}`);
+      }
+      if (method === "GET") {
+        return json({ resources: [], revision: "rev-2" });
+      }
+      const key = createdKey(init);
+      return json(
+        { resource: { namespaceKey: "test", key }, revision: "rev-3" },
+        200,
+      );
+    });
+    expect(methods[0]).toBe(
+      "GET https://flipt.example/api/v2/environments/beta/namespaces",
+    );
+    expect(methods[1]).toBe(
+      "POST https://flipt.example/api/v2/environments/beta/namespaces",
+    );
+    expect(result[0]?.createdNamespaces).toEqual(["test"]);
   });
 });
 

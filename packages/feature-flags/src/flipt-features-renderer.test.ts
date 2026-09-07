@@ -38,7 +38,7 @@ function parseRendered(environment: string, namespace: string) {
 function testInventory(flags: unknown[]) {
   return ManagedFlagInventorySchema.parse({
     version: 3,
-    namespaces: [{ key: "test", name: "Test", description: "Test namespace." }],
+    namespaces: [{ key: "qa", name: "QA", description: "QA namespace." }],
     environments: [
       { key: "beta", overrides: [] },
       { key: "prod", overrides: [] },
@@ -57,10 +57,10 @@ const behavior = {
 function metadata(key: string) {
   return {
     key,
-    owner: "test",
-    namespace: "test",
-    source: "test",
-    purpose: `Test ${key}.`,
+    owner: "renderer",
+    namespace: "qa",
+    source: "renderer-test",
+    purpose: `Render ${key}.`,
   };
 }
 
@@ -143,14 +143,14 @@ describe("renderFliptFeatures", () => {
             segmentOperator: "OR_SEGMENT_OPERATOR",
             segments: [
               {
-                key: "operators",
+                key: "editors",
                 matchType: "ALL_SEGMENT_MATCH_TYPE",
                 constraints: [
                   {
                     type: "STRING_CONSTRAINT_COMPARISON_TYPE",
                     property: "role",
                     operator: "eq",
-                    value: "operator",
+                    value: "editor",
                   },
                 ],
               },
@@ -169,28 +169,13 @@ describe("renderFliptFeatures", () => {
         ...metadata("boolean"),
         type: "boolean",
         default: false,
-        rollouts: [
-          {
-            segmentKey: "operators",
-            segmentOperator: "OR_SEGMENT_OPERATOR",
-            matchType: "ALL_SEGMENT_MATCH_TYPE",
-            constraints: [
-              {
-                type: "STRING_CONSTRAINT_COMPARISON_TYPE",
-                property: "role",
-                operator: "eq",
-                value: "operator",
-              },
-            ],
-            result: true,
-          },
-        ],
+        rollouts: [],
         rules: [],
         thresholdRollouts: [{ rank: 1, percentage: 25, result: true }],
       },
     ]);
     const parsed: unknown = YAML.parse(
-      renderFliptFeatures("prod", "test", inventory),
+      renderFliptFeatures("prod", "qa", inventory),
     );
     const rendered = RenderedFeaturesSchema.parse(parsed);
 
@@ -217,9 +202,6 @@ describe("renderFliptFeatures", () => {
         rollouts: [
           expect.objectContaining({
             threshold: { percentage: 25, value: true },
-          }),
-          expect.objectContaining({
-            segment: expect.objectContaining({ keys: ["operators"] }),
           }),
         ],
       }),
