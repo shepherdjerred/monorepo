@@ -431,6 +431,19 @@ describe("parallel image smoke ports", () => {
     });
   });
 
+  test("accepts an explicit ephemeral application smoke port", () => {
+    const source = `
+  "trmnl-dashboard": {
+    env: { PORT: "0" },
+  },
+`;
+
+    expect(applicationSmokePort(source, "trmnl-dashboard")).toEqual({
+      image: "trmnl-dashboard",
+      port: 0,
+    });
+  });
+
   test("extracts exported listener ports from the smoke stage only", () => {
     const dockerfile = `
 FROM runtime AS release
@@ -480,5 +493,14 @@ FROM runtime AS image
     ).toThrow(
       "trmnl-dashboard and redlib smoke stages both bind port 8787 during parallel bake",
     );
+  });
+
+  test("allows multiple atomic ephemeral smoke listeners", () => {
+    expect(() =>
+      assertUniqueSmokePorts([
+        { image: "first", port: 0 },
+        { image: "second", port: 0 },
+      ]),
+    ).not.toThrow();
   });
 });

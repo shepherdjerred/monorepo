@@ -203,6 +203,11 @@ export function httpSmokePort(dockerfile: string, image: string): SmokePort {
 export function assertUniqueSmokePorts(ports: readonly SmokePort[]): void {
   const owners = new Map<number, string>();
   for (const { image, port } of ports) {
+    // Port zero asks the kernel to allocate a listener atomically for this
+    // process. It cannot collide with another concurrently baked smoke stage.
+    if (port === 0) {
+      continue;
+    }
     const owner = owners.get(port);
     if (owner !== undefined) {
       fail(
@@ -221,11 +226,17 @@ export function applicationSmokePort(source: string, image: string): SmokePort {
   }
   const next = source.indexOf('\n  "', start + marker.length);
   const block = source.slice(start, next === -1 ? source.length : next);
-  const rawPort = /PORT: "([1-9]\d{0,4})"/.exec(block)?.[1];
+  const rawPort = /PORT: "(\d{1,5})"/.exec(block)?.[1];
   if (rawPort === undefined) {
     fail(`${image} application smoke must set an explicit PORT`);
   }
-  return { image, port: Number.parseInt(rawPort, 10) };
+  const port = Number.parseInt(rawPort, 10);
+  if (port > 65_535) {
+    fail(
+      `${image} application smoke port ${rawPort} is outside the TCP port range`,
+    );
+  }
+  return { image, port };
 }
 
 export async function validateImageMigrationContracts(
@@ -352,9 +363,9 @@ export async function validateImageMigrationContracts(
   const scoutPort = applicationSmokePort(applicationSmoke, "scout-for-lol");
   requireAllPresent(
     applicationSmoke,
-    ['export PORT="$http_port"', "listening on :$http_port"],
+    ['PORT: "0"', "trmnl-dashboard listening on :[1-9][0-9]*$"],
     (required) =>
-      `trmnl-dashboard smoke listener and readiness check disagree: missing ${required}`,
+      `trmnl-dashboard smoke must atomically bind and report an ephemeral listener: missing ${required}`,
   );
   assertUniqueSmokePorts([
     httpSmokePort(redlibDockerfile, "redlib"),
