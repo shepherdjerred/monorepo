@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { z } from "zod";
-import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/alert-dashboard.ts";
+import { createAlertDashboardChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/alert-dashboard.ts";
 
 const SecurityContextSchema = z
   .object({

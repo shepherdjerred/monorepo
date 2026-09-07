@@ -10,10 +10,10 @@ import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-ca
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import { ciIoImpactReport } from "./ci-io-impact.ts";
-import { dataDragonReport } from "./data-dragon.ts";
+import { dataDragonReport } from "./scout/data-dragon.ts";
 import { protobufWatchReport } from "./protobuf-watch.ts";
-import { scoutQueueWindowsReport } from "./scout-queue-windows.ts";
-import { scoutSeasonReport } from "./scout-season-refresh.ts";
+import { scoutQueueWindowsReport } from "./scout/scout-queue-windows.ts";
+import { scoutSeasonReport } from "./scout/scout-season-refresh.ts";
 import { tasknotesReport } from "./tasknotes-canary.ts";
 
 const STARTED_AT = "2026-08-10T16:00:00.000Z";

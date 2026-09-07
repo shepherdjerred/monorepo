@@ -3,7 +3,7 @@ import { exportDashboardWithHelmEscaping } from "./dashboard-export.ts";
 import {
   createStatPanel,
   createTimeseriesPanel,
-} from "./buildkite-dashboard-panels.ts";
+} from "./buildkite/buildkite-dashboard-panels.ts";
 
 // PromQL-side constants so the chart shows the designed bounds from
 // resources/buildkitd.ts: GC keeps 240 GiB of the 300 GiB cache volume, and

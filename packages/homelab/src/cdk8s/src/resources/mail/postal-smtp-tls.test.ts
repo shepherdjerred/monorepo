@@ -2,7 +2,7 @@ import { App, Chart } from "cdk8s";
 import { describe, expect, test } from "vitest";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
-import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/postal.ts";
+import { createPostalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/postal.ts";
 import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import {
   createCertManagerApp,

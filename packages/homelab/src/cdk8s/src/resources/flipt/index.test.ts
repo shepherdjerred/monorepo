@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
-import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/flipt.ts";
+import { createFliptChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/flipt.ts";
 import {
   createRepositoryInitializationScript,
   createSeedValidationScript,

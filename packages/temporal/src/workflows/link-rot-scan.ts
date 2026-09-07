@@ -2,15 +2,15 @@ import { proxyActivities } from "@temporalio/workflow";
 import type {
   LinkRotScanActivities,
   LinkRotScanResult,
-} from "#activities/maintenance/link-rot-scan.ts";
-import type { LinkRotScanAlertActivities } from "#activities/maintenance/link-rot-scan-alerts.ts";
+} from "#activities/maintenance/link-rot/link-rot-scan.ts";
+import type { LinkRotScanAlertActivities } from "#activities/maintenance/link-rot/link-rot-scan-alerts.ts";
 import type { ReportDeliveryActivities } from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   buildLinkRotFailureReport,
   buildLinkRotReport,
   countCriticalReportFindings,
-} from "#activities/maintenance/link-rot-scan-report.ts";
+} from "#activities/maintenance/link-rot/link-rot-scan-report.ts";
 
 const RETRY = {
   maximumAttempts: 3,

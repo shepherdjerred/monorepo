@@ -29,22 +29,22 @@
       "count": 1
     }
   },
-  "src/activities/glitter/context/glitter-context-refresh-corpus.ts": {
+  "src/activities/glitter/context/refresh/glitter-context-refresh-corpus.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter/context/glitter-context-refresh-relationships.ts": {
+  "src/activities/glitter/context/refresh/glitter-context-refresh-relationships.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter/context/glitter-context-refresh-style-finalize.ts": {
+  "src/activities/glitter/context/refresh/glitter-context-refresh-style-finalize.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/glitter/context/glitter-context-refresh.ts": {
+  "src/activities/glitter/context/refresh/glitter-context-refresh.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -59,12 +59,12 @@
       "count": 1
     }
   },
-  "src/activities/maintenance/deps-summary-release-notes.ts": {
+  "src/activities/maintenance/deps-summary/deps-summary-release-notes.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/activities/maintenance/deps-summary.ts": {
+  "src/activities/maintenance/deps-summary/deps-summary.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -74,7 +74,7 @@
       "count": 1
     }
   },
-  "src/activities/maintenance/workflow-failure-history.ts": {
+  "src/activities/maintenance/workflow-failure/workflow-failure-history.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -114,7 +114,7 @@
       "count": 1
     }
   },
-  "src/workflows/glitter-corpus.ts": {
+  "src/workflows/glitter/glitter-corpus.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

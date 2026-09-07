@@ -1,16 +1,16 @@
 import { describe, expect, test } from "vitest";
-import { createAiProviderDashboard } from "./ai-provider-dashboard.ts";
+import { createAiProviderDashboard } from "./ai/ai-provider-dashboard.ts";
 import { createAlertDashboardGrafanaDashboard } from "./alert-dashboard.ts";
-import { createBuildkiteDashboard } from "./buildkite-dashboard.ts";
+import { createBuildkiteDashboard } from "./buildkite/buildkite-dashboard.ts";
 import { createBuildkitdDashboard } from "./buildkitd-dashboard.ts";
 import { createDiscordPlaysDashboard } from "./discord-plays-dashboard.ts";
-import { createScoutDashboard } from "./scout-dashboard.ts";
-import { createSmartctlDashboard } from "./smartctl-dashboard.ts";
+import { createScoutDashboard } from "./scout/scout-dashboard.ts";
+import { createSmartctlDashboard } from "./storage/smartctl-dashboard.ts";
 import { createTasknotesDashboard } from "./tasknotes-dashboard.ts";
-import { createTemporalDashboard } from "./temporal-dashboard.ts";
-import { createStreambotVoiceDashboard } from "./streambot-voice-dashboard.ts";
-import { createVeleroDashboard } from "./velero-dashboard.ts";
-import { createZfsDashboard } from "./zfs-dashboard.ts";
+import { createTemporalDashboard } from "./temporal/temporal-dashboard.ts";
+import { createStreambotVoiceDashboard } from "./streambot/streambot-voice-dashboard.ts";
+import { createVeleroDashboard } from "./storage/velero-dashboard.ts";
+import { createZfsDashboard } from "./storage/zfs-dashboard.ts";
 
 const dashboardJson = [
   createAiProviderDashboard(),

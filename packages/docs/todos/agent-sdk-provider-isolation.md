@@ -18,7 +18,7 @@ had, because neither SDK exposes a spawn hook the worker can wrap.
 - **uid separation.** `providerSubprocessCommand` used `setpriv --reuid=1001`
   so the agent ran as a different uid from the Temporal poller. The pod-local
   `NET_ADMIN` firewall rules in
-  `packages/homelab/src/cdk8s/src/resources/temporal/agent-worker.ts` match on
+  `packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker.ts` match on
   `--uid-owner 1001`, so they no longer constrain the agent itself — only the
   deterministic evidence collectors, which still run through `setpriv`.
 - **The per-run credential broker.** `agent-provider-credential-broker.ts`
