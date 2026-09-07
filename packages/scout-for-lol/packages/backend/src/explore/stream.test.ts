@@ -77,6 +77,7 @@ describe("explore stream mapping", () => {
         answer: "Ambessa leads.",
         title: "Champion win-rate leaders",
         queryText: null,
+        includeVisualization: false,
         caveats: [],
         followUps: [],
       }),

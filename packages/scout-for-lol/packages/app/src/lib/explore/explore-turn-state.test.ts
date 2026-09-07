@@ -10,6 +10,7 @@ import {
   createPendingTurn,
   exploreTurnIsActive,
   markStopping,
+  shouldShowExploreSuggestions,
   turnHasLanded,
   visiblePending,
 } from "#src/lib/explore/explore-turn-state.ts";
@@ -173,6 +174,32 @@ describe("applyStreamEvent", () => {
   });
 });
 
+describe("shouldShowExploreSuggestions", () => {
+  test("hides the empty-state copy while a turn is in flight", () => {
+    expect(
+      shouldShowExploreSuggestions({
+        messageCount: 0,
+        pendingQuestion: null,
+        pendingTurn: createPendingTurn({
+          conversationId: null,
+          question: "Who wins?",
+          leafIdAtStart: null,
+        }),
+      }),
+    ).toBe(false);
+  });
+
+  test("shows the empty-state copy only on a blank idle explore view", () => {
+    expect(
+      shouldShowExploreSuggestions({
+        messageCount: 0,
+        pendingQuestion: null,
+        pendingTurn: null,
+      }),
+    ).toBe(true);
+  });
+});
+
 describe("visiblePending", () => {
   test("hides everything for another conversation", () => {
     const turn = startedTurn();
@@ -194,6 +221,14 @@ describe("visiblePending", () => {
       leafIdAtStart: null,
     });
     expect(visiblePending(turn, null, []).pendingQuestion).toBe("Who wins?");
+  });
+
+  test("keeps a started new conversation on the blank explore view", () => {
+    // `started` mints the id before replace-navigation leaves `/explore`.
+    // Hiding here remounts the empty-state copy for a frame.
+    const turn = startedTurn();
+    expect(visiblePending(turn, null, []).pendingQuestion).toBe("Who wins?");
+    expect(visiblePending(turn, null, []).activity).toBe("Thinking…");
   });
 
   test("drops the question once the transcript contains it", () => {

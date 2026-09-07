@@ -8,6 +8,7 @@ import { FRAME_COLUMNS } from "#src/components/timeline-frame-table.tsx";
 import {
   ChampionPoolTable,
   MatchHistoryList,
+  PlayerSummaryCards,
   RankValue,
 } from "#src/components/player/player-profile-sections.tsx";
 
@@ -46,6 +47,33 @@ describe("player profile details", () => {
     );
     expect(champions.match(/\/champions\//g)).toHaveLength(10);
     expect(champions).toContain("Next");
+
+    const emptyPool = renderToStaticMarkup(
+      router(
+        <ChampionPoolTable rows={[]} minGamesForRate={10} profileSearch="" />,
+      ),
+    );
+    expect(emptyPool).toContain("No games in Scout");
+    expect(emptyPool).not.toContain("Previous");
+  });
+
+  test("omits unranked queue cards and an empty summary row", () => {
+    expect(
+      renderToStaticMarkup(<PlayerSummaryCards ranks={{}} recentForm={null} />),
+    ).toBe("");
+
+    const html = renderToStaticMarkup(
+      <PlayerSummaryCards
+        ranks={{
+          solo: { tier: "gold", division: 2, lp: 12, wins: 8, losses: 4 },
+        }}
+        recentForm={null}
+      />,
+    );
+    expect(html).toContain("Ranked solo/duo");
+    expect(html).toContain("Gold");
+    expect(html).not.toContain("Ranked flex");
+    expect(html).not.toContain("Unranked");
   });
 
   test("links match cards to details while preserving profile filters", () => {

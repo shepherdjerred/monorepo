@@ -1,0 +1,1162 @@
+[
+  {
+    "prompt": "How many Bryan Bucks do I have?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Who has the most Bryan Bucks in the server?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "What is my Bryan Bucks transaction history?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Show the Bryan Bucks leaderboard",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "What are the biggest winning bets in Bryan Bucks history?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Who has lost the most Bryan Bucks on bets?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "What is the weekly parlay for this week?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Who owes the most Bryan Bucks?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Show recent Bryan Bucks transfers",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "What is the server's total Bryan Bucks bankroll?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Who has the best bet win rate in Bryan Bucks?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Show open betting markets for upcoming matches",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Check if my last bet was paid out",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Who won the Bryan Bucks weekly leaderboard last week?",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "Show the biggest payouts in server betting history",
+    "category": "bucks",
+    "condition": "bucks"
+  },
+  {
+    "prompt": "What dares are currently open?",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Create a dare for someone to play Teemo support",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Create a dare for 100 bucks that our ADC gets 10+ kills",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "What dares have I completed recently?",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Show me dares waiting for confirmation",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Show my active dare stakes",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "What is the highest stake dare created?",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Create a dare that someone gets a pentakill",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "What dares are expiring soon?",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Draft a dare for our mid laner to play an assassin",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "What are the most popular dare terms?",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Show failed dares from this past week",
+    "category": "bucks",
+    "condition": "dares"
+  },
+  {
+    "prompt": "Create a competition for our server",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "What competitions are currently active?",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Show the current standings for our active competition",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Create a weekend ARAM tournament competition",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Who is leading in points in the current competition?",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Start a competition tracking solo queue climb this month",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Create a head-to-head competition between our top two players",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "What competitions have finished recently?",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Show rules and scoring for the active competition",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Create a competition for most kills across 10 games",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Who has won the most competitions in this server?",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Create a custom games competition series",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Show the leaderboard for the latest competition",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Start a competition tracking highest win rate with at least 5 games",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Who has participated in the most competitions?",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Create an objective-focused competition for dragons and barons",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Show upcoming scheduled competitions",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Compare participants in the current competition",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Create a competition with a Bryan Bucks prize pool",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "What are the historic winners of server competitions?",
+    "category": "competitions",
+    "condition": "competitions"
+  },
+  {
+    "prompt": "Who is in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who holds the record for most kills in a single game?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "What is the highest CS per minute record in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who has the most damage dealt record in a single match?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "What is the longest game recorded in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who holds the record for most assists in one game?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who has the highest vision score in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Show all current Hall of Fame records",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "What is the fastest victory in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who has the highest kill participation record?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who holds the record for most turret takedowns in a game?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "What are the newest additions to the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who has the most multi-kills in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Show the ARAM records in the Hall of Fame",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "What champion was played in the highest damage game in Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who has the highest gold earned in a single match?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Who holds the most distinct Hall of Fame records?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "What is the highest crowd control score in the Hall of Fame?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Has anyone broken a Hall of Fame record this month?",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "Show the support records in the Hall of Fame",
+    "category": "hall_of_fame",
+    "condition": "hall_of_fame"
+  },
+  {
+    "prompt": "When was our last custom night?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Who has the highest win rate in custom games?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Show the leaderboard for our custom games",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "What was the score of the last custom match?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Who plays the most custom games in our group?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Show stats from our most recent custom night",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Who has the best KDA in customs?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "What champions are most picked or banned in our customs?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Who is the best custom game captain by win rate?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Show the match history of our custom nights",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Which lane has the biggest skill gap in our customs?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "What is the highest kill game in custom night history?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Who has the most custom game MVP performances?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Compare team balance across recent custom matches",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "Who deals the most damage in our custom games?",
+    "category": "customs",
+    "condition": "customs"
+  },
+  {
+    "prompt": "What challenges are currently available?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Show my active challenge runs",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Who has completed the most challenges in the server?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "What is the hardest challenge currently active?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Show the challenge completion leaderboard",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "How close am I to completing my active challenge?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "What challenges are available for jungle mains?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Are there any ARAM-specific challenges?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "What challenges have the highest reward?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Show recently completed challenges in the server",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Draft a new challenge run",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "What challenges involve champion mastery?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Who has the highest challenge score?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Which challenges have the lowest completion rate?",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Show challenges ending soon",
+    "category": "challenges",
+    "condition": "challenges"
+  },
+  {
+    "prompt": "Create a weekly report for our server",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Subscribe to a player to track their matches",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Generate a scouting report for our next match",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "What automated reports are currently scheduled?",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Create a monthly summary report of all player stats",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Track a new summoner account",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Show our server's scheduled reports",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Generate a champion pool report for our team",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Create an ARAM report comparing all players",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "What channels are configured for report delivery?",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Create a performance review report for the last patch",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Show recently generated reports",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Subscribe to notifications for player rank promotions",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Create a weekly rivalry report between our duo lanes",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Generate a role distribution report for tracked players",
+    "category": "creation",
+    "condition": "reports"
+  },
+  {
+    "prompt": "Which champions have the highest win rate?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions are picked most frequently?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the highest ban rate?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who are the most dominant top laners in our games?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which jungle champions have the highest win rate?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What are our most successful mid lane champions?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which ADC has the highest average damage per game?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which support champions have the best win rate?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the highest average KDA?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who are the best counter picks against Yasuo in our match history?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the lowest win rate across all matches?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What champion has the highest average CS per minute?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the highest first blood rate?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who is our group's most played champion overall?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is our collective win rate on newly released champions?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions scale best into late game based on our data?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What are the best blind pick champions according to our games?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which assassin champion has the highest win rate in our group?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "How do tank supports compare to enchanter supports in win rate?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions deal the most physical vs magic damage?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the highest kill participation?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What champion is most likely to win when getting first blood?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champion has the highest average gold lead at 15 minutes?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champion has the highest objective damage?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who are the best split-push champions in our match data?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the highest win rate in games over 35 minutes?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is our group's win rate with hypercarry ADCs?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champion has the highest average vision score?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "What are the most frequent champion matchups in top lane?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions have the highest pentakill frequency?",
+    "category": "champions",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does KDA differ by position?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which position has the highest average kill participation?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the average game duration across all modes?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does win rate correlate with getting first dragon?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What percentage of games are won by the team with first Baron?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How important is first tower to winning the match?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which role deals the highest percentage of team damage on average?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the average CS per minute for each position?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does vision score differ between supports and other roles?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which position dies the most on average?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the average game length in Ranked versus Normal games?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does red side versus blue side win rate compare?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What role has the biggest impact on early game gold leads?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How often does a team comeback after losing the first inhibitor?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which position receives the most post-game honors or MVP votes?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the average time first dragon is taken in our games?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does jungle objective control affect game outcome?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the average number of kills per minute by game mode?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How often does elder dragon decide the game?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which lane snowballs the hardest after an early kill lead?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the average vision score per minute across roles?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does game length affect ADC damage share?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which role contributes most to tower damage?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the surrender rate in our matches?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does KDA correlate with overall win rate across all players?",
+    "category": "roles",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the most played queue this month?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does win rate differ between Ranked Solo and Ranked Flex?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "What are the most popular champions in ARAM?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the highest win rate in ARAM?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does average game duration compare between Rift and ARAM?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is our group's overall win rate in Arena mode?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions are strongest in Arena based on our match data?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How have champion win rates changed on the latest patch?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which patch had the highest average kills per game?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How many total games have we played on the current patch?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "What queue has the highest average damage per minute?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How does player KDA compare between ARAM and Summoner's Rift?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is our collective Ranked win rate this season?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which game mode has the most chaotic kill counts?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the most common game mode played on weekends?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How has the current patch affected average game length?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who is our most active ARAM player?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is our win rate in 5-stack Ranked Flex games?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which champions perform significantly better in ARAM than Rift?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "How many unique champions have we played this season across all queues?",
+    "category": "queues",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which duo has the highest win rate together?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who is my best duo partner by win rate?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has played the most games together as a duo?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which bot lane duo combination has the best synergy?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the deepest champion pool in our group?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which player has the highest overall win rate this month?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Compare the champion pools of our top two mid laners",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the highest average KDA among all tracked players?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which player deals the most damage per minute on average?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who places the most control wards per game?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the head-to-head record between our top two players?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who is our most consistent player based on KDA variance?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which mid-jungle duo has the best win rate?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the highest first blood participation among all players?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the highest average CS at 10 minutes?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which player plays the widest variety of roles?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the most multi-kills this season?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which player has the highest solo kill count?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who dies the least on average across all games?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is our group's win rate when our top players play together?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the highest objective damage among junglers?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which player has improved their win rate the most this month?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the most games played on their one-trick champion?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Compare vision score between our support players",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who is our highest-winrate player in games that go past 40 minutes?",
+    "category": "players",
+    "condition": "always"
+  },
+  {
+    "prompt": "What was the longest game ever recorded in our history?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What was the shortest victory we ever had?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What match had the highest total combined kills?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Has anyone ever won a game with more than 15 deaths?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the highest number of kills in a single game?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has achieved the most pentakills in our match history?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What was our biggest comeback victory in terms of gold deficit?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the most damage anyone has ever dealt in a single match?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Which player has the most total time spent dead?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the most unusual champion pick that actually won a game?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has bought the most control wards in total?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What match had the most dragons killed?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What was the bloodiest match of the past week?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has stolen the most Barons or Elder Dragons?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the highest vision score ever recorded in a single game?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What game had the most tower takedowns?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the highest win rate on late night games?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the longest win streak anyone in our group has had?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "What is the most kills in an ARAM match?",
+    "category": "trivia",
+    "condition": "always"
+  },
+  {
+    "prompt": "Who has the most total assists across all recorded matches?",
+    "category": "trivia",
+    "condition": "always"
+  }
+]

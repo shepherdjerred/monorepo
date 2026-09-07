@@ -77,11 +77,15 @@ export function exploreAgentInstructions(options: {
     "For fewer than 10 games, say exactly: 'Fewer than 10 games — treat this rate as indicative only.'",
     "Describe results as matches Scout recorded, not League-wide truth. Do not extrapolate or make unsupported statistical claims. Use plain language instead of statistical terminology.",
     "",
-    "## Choosing a visualization",
-    "Explore presents answers with interactive charts and tables. Always choose an output render kind that best matches the data structure:",
+    "## Attaching a visualization",
+    "The answer is prose. A chart or table is optional supporting evidence, not the default.",
+    "Set `includeVisualization` to true only when a chart or table would help the reader see a comparison, ranking, trend, distribution, or many rows they would otherwise have to scan in the prose.",
+    "Set `includeVisualization` to false when the answer is a single fact, a short list, a yes/no, an explanation, a handful of numbers that fit in a sentence, when the query returned 0 or 1 interesting rows, when you did not run a query, or when a table would merely dump the same numbers already in the prose.",
+    "Never attach a visualization just because a query ran. The ScoutQL stays available as collapsed evidence either way.",
+    "When `includeVisualization` is true, choose a RENDER kind that matches the data:",
     "- Ranking or comparing categories (champions, queues, positions, accounts, players): prefer `RENDER bar_chart` (or `RENDER leaderboard` when order with @mentions is the primary focus). Bar charts give users an immediate, interactive visual comparison.",
     "- A value moving over time: use `RENDER line_chart` or `RENDER area_chart` — and ONLY when the query groups by a `DATE_TRUNC(...)` bucket, which produces a temporal axis.",
-    "- A single metric or scalar figure: `RENDER kpi_card` or `RENDER table`.",
+    "- A single metric or scalar figure: `RENDER kpi_card`.",
     "- Part of a whole across a small set of categories: `RENDER donut_chart`.",
     "- The spread of a numeric column: `RENDER histogram` over `FLOOR(x / width) * width` buckets, or `RENDER box_plot` when five-number summary metrics are projected.",
     "- Two metrics against each other: `RENDER scatter_chart`. Two dimensions at once: `RENDER heatmap`.",
@@ -90,7 +94,7 @@ export function exploreAgentInstructions(options: {
     "",
     "## Style",
     "Answer in prose first: lead with the direct answer, then the supporting numbers. Keep it to a few short paragraphs.",
-    "Follow-up suggestions should be questions a curious reader would actually ask next, not restatements of what you just answered.",
+    "Follow-up suggestions (`followUps`) are offered as clickable chips that the user can send as their NEXT turn in the chat. They MUST be phrased from the user's perspective as questions the user is asking Scout (e.g. 'How does that win rate compare in ranked solo?', 'Which top laner deals the most physical damage?'), NEVER phrased as the bot asking the user a question (e.g. NEVER 'Which player would you like to investigate?', 'Do you want a recent analysis?', or 'Would you like help creating a dare?').",
     "Set `title` to a short name for the conversation as a whole — at most six words, no trailing punctuation, and specific enough to tell apart from a neighbouring question about the same subject (`Top ADCs by win rate`, not `Win rates`). It is used only for the conversation's first turn; sending it every turn is harmless.",
     "",
     "## Limits",
@@ -123,7 +127,7 @@ export function challengeExplorePromptSection(): string {
     "The typed contract is frozen and deterministically evaluates every match. The prose explanation must describe exactly the same predicate, reducer, target, and queue scope.",
     "Call list_challenge_accounts before preview_challenge_draft. A preview must report evaluated match count, selected period, and missing timeline evidence honestly.",
     "Never publish a challenge from Explore. After a successful preview, link the user to the returned confirmationPath; publication requires their explicit web confirmation.",
-    "For challenge-only answers, set queryText to null. The challenge contract belongs in the answer prose or tool card, not in an Explore report query.",
+    "For challenge-only answers, set queryText to null and includeVisualization to false. The challenge contract belongs in the answer prose or tool card, not in an Explore report query.",
   ].join("\n");
 }
 
@@ -177,6 +181,6 @@ export function dareExplorePromptSection(): string {
     "If an absolute deadline has no explicit IANA timezone, ask for one before validating. Do not guess a timezone.",
     "Draft creation and revision may run directly. fund, accept, decline, contribute, and cancel must use prepare_dare_action; clearly tell the user that its single-use confirmation expires in ten minutes and has not executed yet.",
     "When explaining a draft or revision, repeat the original wording, readable summary, same-game/cross-game scope, deadline, stake, and canonical SQL, explicitly saying that the SQL is binding. If the wording is ambiguous, ask a focused question instead of creating a draft.",
-    "For Dare-only answers, set the report queryText to null. The dare's canonical SQL belongs in the answer prose or tool card; it is not an Explore report query.",
+    "For Dare-only answers, set the report queryText to null and includeVisualization to false. The dare's canonical SQL belongs in the answer prose or tool card; it is not an Explore report query.",
   ].join("\n");
 }

@@ -202,6 +202,8 @@ function cartesianOption(
         show: showLabels(props.labels),
         position: horizontal ? "right" : "top",
         color: theme.text,
+        textBorderColor: "transparent",
+        textBorderWidth: 0,
         fontSize: 17,
         ...(props.valueSuffix === undefined
           ? {}

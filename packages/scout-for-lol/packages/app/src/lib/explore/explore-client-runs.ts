@@ -6,6 +6,9 @@ export type ExploreClientRun = {
   turn: ExplorePendingTurn;
 };
 
+/** Map key for a turn that started on `/explore` before the conversation id exists. */
+export const NEW_CONVERSATION_KEY = "new";
+
 export function setExploreClientRun(
   current: Map<string, ExploreClientRun>,
   key: string,
@@ -35,6 +38,57 @@ export function moveExploreClientRun(
   next.delete(fromKey);
   next.set(toKey, run);
   return next;
+}
+
+/**
+ * Place a newly started run under its conversation id without dropping the
+ * blank `/explore` alias until that route is on screen.
+ *
+ * `startTurn` learns the id before `navigate` replaces `/explore`. If the
+ * alias is deleted in that window, the empty-state copy remounts for a frame.
+ */
+export function placeStartedExploreRun(input: {
+  current: Map<string, ExploreClientRun>;
+  fromKey: string;
+  conversationId: string;
+  run: ExploreClientRun;
+  displayedConversationId: string | null;
+}): Map<string, ExploreClientRun> {
+  const next = setExploreClientRun(
+    input.current,
+    input.conversationId,
+    input.run,
+  );
+  if (input.fromKey === input.conversationId) {
+    return next;
+  }
+  if (input.displayedConversationId === input.conversationId) {
+    return removeExploreClientRun(next, input.fromKey);
+  }
+  return setExploreClientRun(next, input.fromKey, input.run);
+}
+
+export function dropNewConversationAlias(input: {
+  current: Map<string, ExploreClientRun>;
+  displayedConversationId: string | null;
+  isExploreRoute: boolean;
+}): Map<string, ExploreClientRun> {
+  if (!input.isExploreRoute) {
+    return removeExploreClientRun(input.current, NEW_CONVERSATION_KEY);
+  }
+  if (input.displayedConversationId === null) {
+    return input.current;
+  }
+  const alias = input.current.get(NEW_CONVERSATION_KEY);
+  if (alias === undefined) {
+    return input.current;
+  }
+  const aliasConversationId =
+    alias.summary?.conversationId ?? alias.turn.conversationId;
+  if (aliasConversationId !== input.displayedConversationId) {
+    return input.current;
+  }
+  return removeExploreClientRun(input.current, NEW_CONVERSATION_KEY);
 }
 
 export function clearExploreClientError(

@@ -97,6 +97,7 @@ const successfulAgent = async (_params: ExploreAgentParams) => ({
     answer: "Ahri wins most often.",
     title: "Most frequent winners",
     queryText: "SELECT champion, wins FROM match_participants",
+    includeVisualization: true,
     caveats: ["Tracked matches only."],
     followUps: [],
   },

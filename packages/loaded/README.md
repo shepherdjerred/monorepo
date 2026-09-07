@@ -73,6 +73,11 @@ unrendered by omission.
 
 Set the app-wide spinner and error surface once with `LoadingBlockDefaults`.
 
+`LoadingBlock` delays that spinner: it stays empty until the load has lasted
+300ms, then keeps the indicator visible for at least 200ms so a fast request
+never flashes. Pass `delayMs={0}` to acknowledge immediately. Errors are never
+delayed. Refresh (`done`/`degraded` with `fetching`) still renders data.
+
 ## Join precedence
 
 `Loaded.all` resolves `error` → `loading` → `degraded` → `done`, with

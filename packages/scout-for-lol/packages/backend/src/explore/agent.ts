@@ -233,8 +233,8 @@ async function streamExploreAgentInternal(
 
   return {
     answer,
-    preview: state.lastPreview,
-    visualization: state.lastVisualization,
+    preview: answer.includeVisualization ? state.lastPreview : null,
+    visualization: answer.includeVisualization ? state.lastVisualization : null,
   };
 }
 

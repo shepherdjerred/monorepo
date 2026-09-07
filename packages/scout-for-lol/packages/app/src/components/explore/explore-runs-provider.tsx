@@ -22,7 +22,9 @@ import {
 } from "#src/lib/explore/explore-turn-state.ts";
 import {
   clearExploreClientError,
-  moveExploreClientRun,
+  dropNewConversationAlias,
+  NEW_CONVERSATION_KEY,
+  placeStartedExploreRun,
   removeExploreClientRun,
   setExploreClientRun,
   shouldReconcileMissingExploreRun,
@@ -50,7 +52,6 @@ import type {
   StartExploreTurnInput,
 } from "#src/lib/explore/explore-runs-contract.ts";
 
-const NEW_CONVERSATION_KEY = "new";
 function conversationKey(conversationId: string | null): string {
   return conversationId ?? NEW_CONVERSATION_KEY;
 }
@@ -59,6 +60,13 @@ function displayedExploreConversation(pathname: string): string | null {
   return (
     matchPath("/explore/:conversationId", pathname)?.params.conversationId ??
     null
+  );
+}
+
+function isExploreConversationRoute(pathname: string): boolean {
+  return (
+    pathname === "/explore" ||
+    matchPath("/explore/:conversationId", pathname) !== null
   );
 }
 
@@ -74,6 +82,7 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { pathname } = useLocation();
   const displayedConversationId = displayedExploreConversation(pathname);
+  const isExploreRoute = isExploreConversationRoute(pathname);
   const displayedConversationRef = useRef(displayedConversationId);
   displayedConversationRef.current = displayedConversationId;
 
@@ -111,6 +120,16 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
     },
     [],
   );
+
+  useEffect(() => {
+    updateRuns((current) =>
+      dropNewConversationAlias({
+        current,
+        displayedConversationId,
+        isExploreRoute,
+      }),
+    );
+  }, [displayedConversationId, isExploreRoute, updateRuns]);
 
   const refreshConversation = useCallback(
     async (conversationId: string): Promise<ExploreTranscript | undefined> => {
@@ -310,9 +329,15 @@ export function ExploreRunsProvider(props: { children: ReactNode }) {
           questionMessageId: summary.questionMessageId,
         });
         updateRuns((current) => {
-          return moveExploreClientRun(current, key, summary.conversationId, {
-            summary,
-            turn: started,
+          return placeStartedExploreRun({
+            current,
+            fromKey: key,
+            conversationId: summary.conversationId,
+            run: {
+              summary,
+              turn: started,
+            },
+            displayedConversationId: displayedConversationRef.current,
           });
         });
         updateMarkers((current) =>

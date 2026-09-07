@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import {
   isRouteErrorResponse,
   useLocation,
@@ -8,6 +8,7 @@ import {
 import * as Sentry from "@sentry/react";
 import { z } from "zod";
 import { Button } from "@scout-for-lol/design-system/components/button";
+import { cn } from "#src/lib/cn.ts";
 import { queryClient } from "#src/lib/query-client.ts";
 import { RouteParameterError } from "#src/lib/route-params.ts";
 
@@ -46,6 +47,57 @@ export function isExpectedRouteError(error: unknown): boolean {
   );
 }
 
+/** A friendly, self-contained error panel with retry affordance. */
+export function ErrorPanel(props: {
+  title?: string;
+  message?: ReactNode;
+  detail?: ReactNode;
+  onRetry?: () => void;
+  retryLabel?: string;
+  action?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center",
+        props.className,
+      )}
+    >
+      <h2 className="text-base font-semibold text-scout-danger">
+        {props.title ?? "Something went wrong"}
+      </h2>
+      {props.message !== undefined && (
+        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
+          {props.message}
+        </p>
+      )}
+      {props.detail !== undefined && props.detail !== null && (
+        <p className="mx-auto mt-2 max-w-sm text-xs text-scout-subtle">
+          {props.detail}
+        </p>
+      )}
+      {props.children}
+      {(props.onRetry !== undefined || props.action !== undefined) && (
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {props.onRetry !== undefined && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={props.onRetry}
+            >
+              {props.retryLabel ?? "Try again"}
+            </Button>
+          )}
+          {props.action}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * `errorElement` for data-router routes. Reports the caught error to Sentry
  * once, shows a friendly panel, and offers a "Try again" that clears every
@@ -65,40 +117,22 @@ export function RouteErrorPanel() {
   const detail = errorDetail(error);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:py-12">
-      <div className="rounded-lg border border-scout-danger/40 bg-scout-surface p-8 text-center">
-        <h2 className="text-base font-semibold text-scout-danger">
-          Something went wrong
-        </h2>
-        <p className="mx-auto mt-2 max-w-sm text-sm text-scout-subtle">
-          This section failed to load. You can try again — if it keeps
-          happening, reload the page.
-        </p>
-        {detail !== null && (
-          <p className="mx-auto mt-2 max-w-sm text-xs text-scout-subtle">
-            {detail}
-          </p>
-        )}
-        <div className="mt-4 flex justify-center">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              // Drop every errored query so the re-navigation refetches from a
-              // clean slate instead of resurfacing the cached failure.
-              void queryClient.resetQueries({
-                predicate: (query) => query.state.status === "error",
-              });
-              void navigate(`${location.pathname}${location.search}`, {
-                replace: true,
-              });
-            }}
-          >
-            Try again
-          </Button>
-        </div>
-      </div>
+    <div className="mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-12">
+      <ErrorPanel
+        title="Something went wrong"
+        message="This section failed to load. You can try again — if it keeps happening, reload the page."
+        detail={detail}
+        onRetry={() => {
+          // Drop every errored query so the re-navigation refetches from a
+          // clean slate instead of resurfacing the cached failure.
+          void queryClient.resetQueries({
+            predicate: (query) => query.state.status === "error",
+          });
+          void navigate(`${location.pathname}${location.search}`, {
+            replace: true,
+          });
+        }}
+      />
     </div>
   );
 }

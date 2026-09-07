@@ -1,4 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
+import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useQuery } from "@tanstack/react-query";
 import { formatInteger } from "@scout-for-lol/data";
 import {
@@ -41,9 +42,7 @@ export function BucksLeaderboard() {
   );
 
   const value = Loaded.fromQuery(query, ["bucks.leaderboard"]);
-  if (value.status === "loading") {
-    return <LoadingState label="Loading the weekly leaderboard…" />;
-  }
+  const showLoading = useDelayedLoading(value.status === "loading");
   if (value.status === "error") {
     return (
       <ErrorState
@@ -53,6 +52,12 @@ export function BucksLeaderboard() {
         }}
       />
     );
+  }
+  if (showLoading) {
+    return <LoadingState label="Loading the weekly leaderboard…" />;
+  }
+  if (value.status === "loading") {
+    return null;
   }
   const snapshot = value.data;
   if (snapshot.kind !== "snapshot") {
@@ -70,8 +75,7 @@ export function BucksLeaderboard() {
       <StaleState errors={value.status === "degraded" ? value.errors : []} />
       <div className="space-y-2">
         <p className="text-scout-subtle text-sm">
-          As of {formatDate(snapshot.postedAt)} — the standings the weekly
-          Discord post disclosed, not live balances.
+          As of {formatDate(snapshot.postedAt)}
         </p>
         <Table>
           <TableHeader>

@@ -21,6 +21,7 @@ describe("WalletPanel", () => {
         onCancelOutcome={noop}
       />,
     );
+    expect(html).toBe("");
     expect(html).not.toContain("tracked");
     expect(html).not.toContain("No wallet yet");
   });

@@ -84,6 +84,7 @@ export function histogramOption(
                 valueFormatter: (input) =>
                   seriesValueLabel(snapshot, distribution, input),
                 mode,
+                theme: presentation.theme,
               }),
             },
           ],

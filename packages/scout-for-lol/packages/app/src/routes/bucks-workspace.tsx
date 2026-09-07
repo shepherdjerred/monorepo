@@ -1,4 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
+import { useDelayedLoading } from "@shepherdjerred/loaded/react.tsx";
 import { useEffect, useState, type ReactNode } from "react";
 import {
   Link,
@@ -173,13 +174,7 @@ export function BucksWorkspace() {
   const statusValue = Loaded.strict(
     Loaded.fromQuery(statusQuery, ["bucks.status"]),
   );
-  if (statusValue.status === "loading") {
-    return (
-      <BucksPage>
-        <LoadingState label="Checking Bryan Bucks availability…" />
-      </BucksPage>
-    );
-  }
+  const showLoading = useDelayedLoading(statusValue.status === "loading");
   if (statusValue.status === "error") {
     return (
       <BucksPage>
@@ -192,6 +187,16 @@ export function BucksWorkspace() {
         />
       </BucksPage>
     );
+  }
+  if (showLoading) {
+    return (
+      <BucksPage>
+        <LoadingState label="Checking Bryan Bucks availability…" />
+      </BucksPage>
+    );
+  }
+  if (statusValue.status === "loading") {
+    return null;
   }
   const status = statusValue.data;
   if (status.state !== "available") {

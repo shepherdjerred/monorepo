@@ -17,7 +17,6 @@ import { ExploreToolTrace } from "#src/components/explore/explore-tool-trace.tsx
 import { ExploreVersionSwitcher } from "#src/components/explore/explore-version-switcher.tsx";
 import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
 import { AssistantTurn } from "#src/components/explore/explore-assistant-turn.tsx";
-import { ExploreVisualResult } from "#src/components/explore/explore-visual-result.tsx";
 import { useNow } from "#src/hooks/use-now.ts";
 import { formatDuration } from "#src/lib/format-duration.ts";
 
@@ -26,8 +25,9 @@ import { formatDuration } from "#src/lib/format-duration.ts";
  *
  * Used by both the live page and the read-only shared page, which is what
  * keeps a shared link looking like what the asker saw. The prose is the
- * answer; the chart and table support it; the ScoutQL and the tool trace are
- * evidence, collapsed by default so they do not compete with the answer.
+ * answer; a chart or table is attached only when the agent opted in; the
+ * ScoutQL and the tool trace are evidence, collapsed by default so they do
+ * not compete with the answer.
  *
  * Actions are opt-in per callback, so the shared view gets the same rendering
  * with none of the controls simply by passing none of them. The turns are
@@ -48,7 +48,11 @@ export function ExploreTranscript(props: {
   /** The status describes a deliberate stop, not work still in flight. */
   stopping?: boolean;
   pendingTrace?: ExploreTraceEntry[];
-  /** The streaming turn's newest query result, rendered before it lands. */
+  /**
+   * The newest query result received while streaming. Kept on the API so a
+   * reconnect still restores it, but not rendered — the agent decides whether
+   * a chart or table belongs, and that only lands with the persisted message.
+   */
   pendingPreview?: ReportAiPreviewSummary | null;
   pendingVisualization?: VisualizationSnapshot | null;
   /** True while a turn is running, so a trailing question is not "interrupted". */
@@ -99,8 +103,6 @@ export function ExploreTranscript(props: {
         activity={props.activity ?? null}
         stopping={props.stopping ?? false}
         trace={props.pendingTrace ?? []}
-        preview={props.pendingPreview ?? null}
-        visualization={props.pendingVisualization ?? null}
         showRawTrace={props.showRawTrace ?? false}
       />
     </div>
@@ -164,8 +166,6 @@ const PendingTurn = memo(function PendingTurnView(props: {
   activity: string | null;
   stopping: boolean;
   trace: ExploreTraceEntry[];
-  preview: ReportAiPreviewSummary | null;
-  visualization: VisualizationSnapshot | null;
   showRawTrace: boolean;
 }) {
   /**
@@ -193,13 +193,10 @@ const PendingTurn = memo(function PendingTurnView(props: {
         <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
       )}
       {props.showRawTrace && <ExploreIntentCards trace={props.trace} />}
-      {/* The query result the moment the query returns, rather than at the end
-          of the turn. The same component renders it after the turn lands, so
-          the hand-off to the persisted message does not reflow the table. */}
-      <ExploreVisualResult
-        preview={props.preview}
-        visualization={props.visualization}
-      />
+      {/* A query result is not shown here. The agent decides whether a chart
+          or table belongs on the turn, and that decision only lands with the
+          persisted message. Rendering the last query the moment it returns
+          would show a table the agent then opted not to attach. */}
       {/* Status and steps are one unit — the line says what is happening now,
           the disclosure holds how it got here — so they sit closer together
           than the surrounding `space-y-6` rhythm. */}
@@ -243,7 +240,7 @@ function ActivityLine(props: { activity: string }) {
   if (span.activity !== props.activity) {
     setSpan({ activity: props.activity, startedAt: Date.now() });
   }
-  const now = useNow(1000);
+  const now = useNow(100);
   const elapsedMs = Math.max(0, now - span.startedAt);
   return (
     <p className="flex items-center gap-2 text-sm text-scout-subtle">
@@ -251,7 +248,7 @@ function ActivityLine(props: { activity: string }) {
       <span>{props.activity}</span>
       {elapsedMs >= ELAPSED_VISIBLE_AFTER_MS && (
         // Hidden from the live region this sits inside: it changes every
-        // second, and a screen reader announcing "3.0 s", "4.0 s" … would
+        // 100 ms, and a screen reader announcing every tick would
         // talk over the streamed answer and the status text that actually
         // says something.
         <span aria-hidden="true" className="tabular-nums">
@@ -263,11 +260,11 @@ function ActivityLine(props: { activity: string }) {
 }
 
 /**
- * Below this the counter is noise — every step shows "0 s" for a moment on the
- * way past, and a number that flickers in and out draws the eye away from the
- * text that actually says what is happening.
+ * Below this the counter is noise — every step shows a number for a moment on
+ * the way past, and a counter that flickers in and out for fast steps draws
+ * the eye away from the text that actually says what is happening.
  */
-const ELAPSED_VISIBLE_AFTER_MS = 2000;
+const ELAPSED_VISIBLE_AFTER_MS = 1000;
 
 function UserBubble(props: { content: string }) {
   return (

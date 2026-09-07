@@ -36,7 +36,8 @@ Options:
                          the shared local dev server, port 5471 / SCOUT_PG_PORT)
   --temporal-port <port> Temporal gRPC port (default: backend port + 4233)
   --temporal-ui-port <port> Temporal UI port (default: backend port + 5233)
-  --no-discord-gateway   Run as a secondary UI/API copy without BETA gateway
+  --discord-gateway      Own the BETA Discord gateway (default: off)
+  --no-discord-gateway   Leave the BETA Discord gateway off (default)
   --no-background-jobs   Skip scheduled workers and report-lake preparation
   --no-web               Skip the Vite SPA
   --no-backend-watch     Keep the backend stable until this command is restarted
@@ -47,10 +48,9 @@ Options:
   --help                 Show this help
 
 For a second copy, choose different ports. Its database defaults to
-scout_dev_<backend-port> on the shared local Postgres. The BETA Discord gateway still has one
-owner: run one gateway owner and pass --no-discord-gateway to secondary copies.
-Secondary copies do not have the live bot guild/channel cache, so guild-picker
-and channel-picker flows require the gateway owner.`);
+scout_dev_<backend-port> on the shared local Postgres. The BETA Discord
+gateway has one owner: local \`dev:web\` does not take it unless you pass
+--discord-gateway. Guild-picker and channel-picker flows need that owner.`);
 }
 
 async function waitForBackend(

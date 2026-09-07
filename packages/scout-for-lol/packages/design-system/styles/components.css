@@ -845,7 +845,7 @@ button.scout-control > span:first-child {
   top: 4rem;
   align-self: start;
   height: calc(100vh - 4rem);
-  padding: 1.25rem 0.875rem;
+  padding: 1.25rem 0.875rem 0.5rem;
   display: flex;
   flex-direction: column;
   overflow: visible;

@@ -88,6 +88,7 @@ function successfulResult(answer: string): ExploreAgentResult {
       answer,
       title: null,
       queryText: null,
+      includeVisualization: false,
       caveats: [],
       followUps: [],
     },

@@ -203,6 +203,9 @@ type VisualizationLabelOptions = {
   defaultShow?: boolean;
   valueFormatter?: (input: unknown) => string;
   mode?: VisualizationRenderMode;
+  theme?: AnalyticsChartTheme;
+  color?: string;
+  fontSize?: number;
 };
 
 export function visualizationSnapshotLabels(
@@ -210,7 +213,15 @@ export function visualizationSnapshotLabels(
   horizontal: boolean,
   labelOptions: VisualizationLabelOptions = {},
 ): object {
-  const { defaultShow = false, valueFormatter, mode = "static" } = labelOptions;
+  const {
+    defaultShow = false,
+    valueFormatter,
+    mode = "static",
+    theme,
+    color,
+    fontSize = 12,
+  } = labelOptions;
+  const textColor = color ?? theme?.text;
   return {
     show:
       options.labels === undefined || options.labels === "auto"
@@ -219,6 +230,10 @@ export function visualizationSnapshotLabels(
           options.labels === "value" ||
           options.labels === "percent",
     position: horizontal ? "right" : "top",
+    ...(textColor === undefined ? {} : { color: textColor }),
+    textBorderColor: "transparent",
+    textBorderWidth: 0,
+    fontSize,
     ...visualizationSnapshotFont(mode, VISUALIZATION_BODY_FONT),
     ...(options.labels === "percent"
       ? { formatter: percentLabel }

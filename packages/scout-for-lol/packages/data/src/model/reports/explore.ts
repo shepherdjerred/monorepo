@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
 import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
+import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -17,7 +18,6 @@ import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
 
 export const EXPLORE_REQUEST_MAX_BYTES = 16 * 1024;
 export const EXPLORE_QUESTION_MAX_LENGTH = 2000;
-export const EXPLORE_ANSWER_MAX_LENGTH = 4000;
 export const EXPLORE_MAX_STEPS = 12;
 export const EXPLORE_MAX_TOOL_CALLS = 30;
 export const EXPLORE_MAX_PREVIEW_CALLS = 8;
@@ -120,74 +120,6 @@ export const ExploreTurnRequestSchema = z
   .strict();
 
 export type ExploreTurnRequest = z.infer<typeof ExploreTurnRequestSchema>;
-
-/**
- * The agent's structured answer for one turn.
- *
- * `queryText` is nullable because not every turn runs a query — a follow-up
- * like "what does KDA mean here?" is answerable from the transcript. When it
- * is present it is the query the answer is actually based on.
- */
-export const ExploreAnswerSchema = z
-  .object({
-    answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
-    /**
-     * A short name for the whole conversation, used only for its first turn.
-     *
-     * Deliberately not first: `answer` must stay the first field or streaming
-     * stops (a partial snapshot only carries the keys emitted so far), which
-     * is why this is appended rather than placed where it reads best.
-     *
-     * Unbounded and nullable on purpose — a `max()` here would turn an
-     * over-long title into a schema failure that costs the reader the whole
-     * answer, because the same schema both instructs the model and parses its
-     * output. `titleFromQuestion` clamps to EXPLORE_TITLE_MAX_LENGTH before
-     * anything is stored or displayed, so the bound is enforced where it
-     * cannot destroy the answer. The persisted and tRPC schemas below stay
-     * strict — they see already-clamped titles.
-     */
-    title: z.string().trim().min(1).nullable().default(null),
-    queryText: ReportQueryTextSchema.nullable().default(null),
-    /**
-     * Limits a reader needs to judge the answer — small samples, a corpus
-     * that only covers matches Scout ingested, a metric that means something
-     * narrower than the question implied.
-     */
-    caveats: z.array(z.string().trim().min(1).max(300)).max(5).default([]),
-    /** Suggested next questions, offered as chips in the UI. */
-    followUps: z.array(z.string().trim().min(1).max(200)).max(3).default([]),
-  })
-  .strict();
-
-export type ExploreAnswer = z.infer<typeof ExploreAnswerSchema>;
-
-/**
- * The same answer contract, shaped for a strict structured-output request.
- *
- * The runtime asks OpenRouter for `structuredOutputs: { strict: true }`, and
- * OpenAI's strict mode requires *every* property to appear in `required` —
- * a field carrying `.default()` is emitted as optional and the provider
- * rejects the whole request with `invalid_json_schema`
- * ("'required' ... must include every key in properties"). That is a hard 400
- * on every turn, not a soft downgrade, so the defaults cannot live on the wire.
- *
- * The model must therefore supply all five keys; `title` and `queryText` stay
- * nullable because follow-ups do not rename an established conversation and
- * can be answered from the transcript without another query. Empty arrays
- * express "no caveats/follow-ups". Parse the result through
- * `ExploreAnswerSchema` to land in the domain type — the defaults there become
- * no-ops once every key is present, so the two schemas cannot drift apart in
- * what they accept.
- */
-export const ExploreAnswerWireSchema = z
-  .object({
-    answer: z.string().trim().min(1).max(EXPLORE_ANSWER_MAX_LENGTH),
-    title: z.string().trim().min(1).nullable(),
-    queryText: ReportQueryTextSchema.nullable(),
-    caveats: z.array(z.string().trim().min(1).max(300)).max(5),
-    followUps: z.array(z.string().trim().min(1).max(200)).max(3),
-  })
-  .strict();
 
 export const EXPLORE_TRACE_PAYLOAD_MAX_BYTES = 64 * 1024;
 export const EXPLORE_TRACE_TOTAL_MAX_BYTES = 256 * 1024;

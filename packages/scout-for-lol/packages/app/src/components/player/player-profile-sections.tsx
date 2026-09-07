@@ -125,16 +125,24 @@ export function PlayerSummaryCards(props: {
   ranks: { solo?: Rank; flex?: Rank; ranked5s?: Rank };
   recentForm: RecentForm | null;
 }) {
-  return (
-    <div className="grid gap-4 md:grid-cols-4">
-      <RankCard label="Ranked solo/duo" rank={props.ranks.solo} />
-      <RankCard label="Ranked flex" rank={props.ranks.flex} />
-      <RankCard label="Ranked 5s" rank={props.ranks.ranked5s} />
-      {props.recentForm === null ? null : (
-        <RecentFormCard form={props.recentForm} />
-      )}
-    </div>
-  );
+  const cards = [
+    props.ranks.solo === undefined ? null : (
+      <RankCard key="solo" label="Ranked solo/duo" rank={props.ranks.solo} />
+    ),
+    props.ranks.flex === undefined ? null : (
+      <RankCard key="flex" label="Ranked flex" rank={props.ranks.flex} />
+    ),
+    props.ranks.ranked5s === undefined ? null : (
+      <RankCard key="ranked5s" label="Ranked 5s" rank={props.ranks.ranked5s} />
+    ),
+    props.recentForm === null ? null : (
+      <RecentFormCard key="form" form={props.recentForm} />
+    ),
+  ].filter((card) => card !== null);
+  if (cards.length === 0) {
+    return null;
+  }
+  return <div className="grid gap-4 md:grid-cols-4">{cards}</div>;
 }
 
 type ChampionRow = {
@@ -156,7 +164,7 @@ export function ChampionPoolTable(props: {
   const [page, setPage] = useState(0);
   if (props.rows.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-scout-subtle">
         No games in Scout&apos;s history for this player yet.
       </p>
     );
@@ -302,7 +310,7 @@ export function MatchHistoryList(props: {
 }) {
   if (props.entries.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground">
+      <p className="text-sm text-scout-subtle">
         Scout hasn&apos;t recorded any games for this player yet.
       </p>
     );

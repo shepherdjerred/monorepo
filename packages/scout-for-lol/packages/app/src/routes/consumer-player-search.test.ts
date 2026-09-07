@@ -73,8 +73,38 @@ describe("consumer player hub states", () => {
         }),
       ),
     );
-    expect(empty).toContain("No Scout player is linked");
-    expect(empty).toContain("No other recently active players");
+    expect(empty).toBe("");
+    expect(empty).not.toContain("No Scout player is linked");
+    expect(empty).not.toContain("Recently active");
+  });
+
+  test("keeps a compact note when only one hub list is empty", () => {
+    const html = renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        undefined,
+        createElement(PlayerHome, {
+          home: Loaded.done({
+            yourProfiles: [
+              {
+                playerId: 1,
+                alias: "North",
+                guild: { name: "Scout" },
+                accounts: [],
+                lastMatchTime: null,
+              },
+            ],
+            recentPlayers: [],
+          }),
+          onRetry: vi.fn(),
+        }),
+      ),
+    );
+    expect(html).toContain("North");
+    expect(html).toContain(
+      'class="text-sm text-scout-subtle">No other recently active players',
+    );
+    expect(html).not.toContain("No Scout player is linked");
   });
 });
 
