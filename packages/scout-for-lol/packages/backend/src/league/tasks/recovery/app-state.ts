@@ -18,6 +18,23 @@ export async function setLastSuccessfulPollAt(date: Date): Promise<void> {
   });
 }
 
+export async function getReconciliationCompletedAt(): Promise<
+  Date | undefined
+> {
+  const row = await prisma.botState.findUnique({
+    where: { id: BOT_STATE_ID },
+  });
+  return row?.reconciliationCompletedAt ?? undefined;
+}
+
+export async function setReconciliationCompletedAt(date: Date): Promise<void> {
+  await prisma.botState.upsert({
+    where: { id: BOT_STATE_ID },
+    update: { reconciliationCompletedAt: date },
+    create: { id: BOT_STATE_ID, reconciliationCompletedAt: date },
+  });
+}
+
 export async function markPostMatchPollStarted(
   startedAt: Date,
   prismaClient: ExtendedPrismaClient = prisma,

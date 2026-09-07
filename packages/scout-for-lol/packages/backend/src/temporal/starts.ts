@@ -1,12 +1,14 @@
 import {
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
   WorkflowIdReusePolicy,
   type WorkflowHandle,
+  type WorkflowStartOptions,
 } from "@temporalio/client";
 import type { Client } from "@temporalio/client";
 import {
   SCOUT_WORKFLOW_NAMES,
-  scoutFixedScheduleId,
+  scoutIngestionReconciliationGatewayReadyWorkflowId,
   scoutInitialHistoryWorkflowId,
   scoutDetachedWorkWorkflowId,
   scoutInteractiveWorkflowId,
@@ -17,6 +19,7 @@ import {
   scoutChallengeRunRecomputeWorkflowId,
   scoutDuelSeriesWorkflowId,
   scoutTaskQueues,
+  type ScoutIngestionReconciliationInput,
   type ScoutInitialHistoryInput,
   type ScoutDetachedWorkInput,
   type ScoutInteractiveRunInput,
@@ -37,6 +40,9 @@ import {
   type ExecutionTrigger,
 } from "@scout-for-lol/temporal/execution-metadata";
 import configuration from "#src/configuration.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("temporal-starts");
 
 const IDEMPOTENT_START_POLICIES = {
   workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
@@ -152,13 +158,53 @@ export async function startScoutDetachedWork(
   });
 }
 
-export async function triggerScoutIngestionReconciliationSchedule(
-  client: Client,
+/**
+ * The slice of `Client` the gateway-ready start needs. Structural so a test
+ * can pass a plain object; the real Client satisfies it.
+ */
+export type ScoutWorkflowStarter = {
+  readonly workflow: {
+    readonly start: (
+      workflowType: string,
+      options: WorkflowStartOptions,
+    ) => Promise<unknown>;
+  };
+};
+
+export async function startScoutGatewayReadyIngestionReconciliation(
+  client: ScoutWorkflowStarter,
   stage: ScoutStage,
 ): Promise<void> {
-  await client.schedule
-    .getHandle(scoutFixedScheduleId(stage, "ingestion-reconciliation"))
-    .trigger();
+  const input: ScoutIngestionReconciliationInput = {
+    stage,
+    trigger: "gateway-ready",
+  };
+  const workflowId = scoutIngestionReconciliationGatewayReadyWorkflowId(stage);
+  try {
+    await client.workflow.start(SCOUT_WORKFLOW_NAMES.ingestionReconciliation, {
+      // A completed run from an earlier boot must not block this one, and the
+      // one-minute schedule or a concurrent boot may already have a run going
+      // — reuse that run rather than failing the boot path.
+      ...RESTART_CLOSED_START_POLICIES,
+      workflowId,
+      taskQueue: scoutTaskQueues(stage).workflow,
+      args: [input],
+      ...startMetadata(
+        stage,
+        "api",
+        "Reconcile Scout ingestion on gateway ready",
+        "Runs one ingestion reconciliation as soon as the Discord gateway is ready.",
+      ),
+    });
+  } catch (error: unknown) {
+    // USE_EXISTING absorbs a running duplicate on servers that support
+    // conflict policies; a server without them answers already-started, which
+    // means the same thing here: a reconciliation run is already going.
+    if (!(error instanceof WorkflowExecutionAlreadyStartedError)) throw error;
+    logger.debug("Gateway-ready ingestion reconciliation is already running", {
+      workflowId,
+    });
+  }
 }
 
 export async function startScoutInteractiveRun(

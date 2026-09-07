@@ -97,15 +97,15 @@ export async function startBackendRuntime(): Promise<
         temporalSupervisor?.enableDiscordWorkers();
         if (temporalSupervisor !== undefined) {
           try {
-            const { triggerScoutIngestionReconciliationSchedule } =
+            const { startScoutGatewayReadyIngestionReconciliation } =
               await import("#src/temporal/starts.ts");
-            await triggerScoutIngestionReconciliationSchedule(
+            await startScoutGatewayReadyIngestionReconciliation(
               temporalSupervisor.client(),
               configuration.environment,
             );
           } catch (error: unknown) {
             logger.warn(
-              "Temporal gateway-ready reconciliation signal was not accepted; the fixed reconciliation Schedule will retry",
+              "Temporal gateway-ready reconciliation start was not accepted; the fixed reconciliation Schedule will retry",
               { error },
             );
           }
