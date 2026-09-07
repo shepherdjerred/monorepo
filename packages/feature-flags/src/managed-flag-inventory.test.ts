@@ -116,7 +116,7 @@ describe("ManagedFlagInventorySchema", () => {
     expect(prodFlag.rollouts).toEqual([]);
   });
 
-  test("enables Birmel image generation in beta and disables in prod", () => {
+  test("enables Birmel image generation in beta and prod", () => {
     const betaFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "beta",
@@ -129,7 +129,7 @@ describe("ManagedFlagInventorySchema", () => {
       "prod",
       "birmel",
     ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
-    expect(prodFlag?.default).toBe(false);
+    expect(prodFlag?.default).toBe(true);
   });
 
   test("materializes a full-state environment override", () => {

@@ -7,7 +7,6 @@ export type OpenRouterProviderOptions = {
       effort: "minimal" | "low" | "medium" | "high";
       exclude: false;
     };
-    verbosity?: "low" | "medium" | "high";
   };
 };
 
@@ -21,9 +20,12 @@ export type OpenRouterProviderOverrides = {
  * may route between upstream providers, but the runtime keeps the selected
  * catalog model exact and denies data collection.
  *
- * The provider spreads every `openrouter` key into the request body, so a
- * stored job's text-verbosity setting maps to OpenRouter's `verbosity`
- * request field rather than being silently dropped.
+ * Do not send `verbosity`. llm-runtime sets `require_parameters` for tool and
+ * structured-output turns, and gpt-5.6-sol OpenRouter endpoints do not
+ * advertise `verbosity`, so including it 404s with "No endpoints found that
+ * can handle the requested parameters". Job records may still store a
+ * text-verbosity preference; it is not forwarded until the routed model
+ * advertises the parameter.
  */
 export function getOpenRouterProviderOptions(
   overrides: OpenRouterProviderOverrides = {},
@@ -36,9 +38,6 @@ export function getOpenRouterProviderOptions(
         effort: overrides.reasoningEffort ?? config.openRouter.reasoningEffort,
         exclude: false,
       },
-      ...(overrides.textVerbosity === undefined
-        ? {}
-        : { verbosity: overrides.textVerbosity }),
     },
   };
 }

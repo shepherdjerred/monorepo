@@ -814,7 +814,7 @@
       "source": "birmel-dynamic",
       "purpose": "Enable Birmel image generation and editing.",
       "type": "boolean",
-      "default": false,
+      "default": true,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
@@ -1335,14 +1335,6 @@
               "result": true
             }
           ],
-          "rules": [],
-          "thresholdRollouts": []
-        },
-        {
-          "key": "birmel-image-generation-enabled",
-          "type": "boolean",
-          "default": true,
-          "rollouts": [],
           "rules": [],
           "thresholdRollouts": []
         }

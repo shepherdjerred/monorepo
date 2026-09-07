@@ -19,4 +19,14 @@ describe("getOpenRouterProviderOptions", () => {
       exclude: false,
     });
   });
+
+  test("does not forward text verbosity because gpt-5.6-sol endpoints reject it", () => {
+    const options = getOpenRouterProviderOptions({
+      reasoningEffort: "low",
+      textVerbosity: "low",
+    });
+
+    expect(options.openrouter.reasoning.effort).toBe("low");
+    expect(options.openrouter).not.toHaveProperty("verbosity");
+  });
 });

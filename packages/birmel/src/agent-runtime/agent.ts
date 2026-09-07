@@ -8,7 +8,7 @@ import {
   type TurnAnswer,
   type TurnDisposition,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import { allTools } from "@shepherdjerred/birmel/agent-tools/tools/index.ts";
+import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
@@ -338,7 +338,8 @@ export async function executeTurn(
   const packet = TaskPacketSchema.parse(rawPacket);
   const config = getConfig();
   const runtime = getLlmRuntime();
-  const registeredToolIds = Object.keys(allTools);
+  const tools = toolsForTurn();
+  const registeredToolIds = Object.keys(tools);
   return await withSpan(
     "birmel.agent.turn",
     {
@@ -357,7 +358,7 @@ export async function executeTurn(
           "tools",
         ]),
         instructions: `${AGENT_INSTRUCTIONS}\n\n${packet.persona}`,
-        tools: allTools,
+        tools,
         stopWhen: stepCountIs(maxSteps),
         // Spend the last step answering rather than starting work that cannot
         // finish. Without this the run can end mid-tool-call, and `output`
