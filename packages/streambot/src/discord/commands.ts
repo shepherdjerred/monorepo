@@ -56,6 +56,18 @@ export const commandDefinitions = [
         )
         .addStringOption((o) =>
           o
+            .setName("mode")
+            .setDescription(
+              "Play as audio only, or as a Go Live video stream (default: auto)",
+            )
+            .addChoices(
+              { name: "auto", value: "auto" },
+              { name: "music", value: "music" },
+              { name: "video", value: "video" },
+            ),
+        )
+        .addStringOption((o) =>
+          o
             .setName("placement")
             .setDescription(
               "Add to queue, play next, or replace the current video",
@@ -91,6 +103,18 @@ export const commandDefinitions = [
             .setName("sublang")
             .setDescription(
               "Preferred subtitle language, e.g. en, es, en.forced",
+            ),
+        )
+        .addStringOption((o) =>
+          o
+            .setName("mode")
+            .setDescription(
+              "Play as audio only, or as a Go Live video stream (default: auto)",
+            )
+            .addChoices(
+              { name: "auto", value: "auto" },
+              { name: "music", value: "music" },
+              { name: "video", value: "video" },
             ),
         ),
     )

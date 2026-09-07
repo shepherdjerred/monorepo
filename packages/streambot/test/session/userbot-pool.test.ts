@@ -53,6 +53,15 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     runStream: () => Promise.resolve(),
     leaveVoice: () => Promise.resolve(),
     setVolume: () => Promise.resolve(true),
+    openAssistantAudio: () => ({
+      send: () => Promise.resolve(),
+      setSpeaking: () => {
+        /* voice is disabled in this fake */
+      },
+      close: () => {
+        /* voice is disabled in this fake */
+      },
+    }),
     setAssistantSpeaking: () => Promise.resolve(),
     sendAssistantOpus: () => {
       /* voice is disabled in this fake */

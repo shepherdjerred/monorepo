@@ -22,6 +22,7 @@ function createService(overrides: Partial<PlaybackView> = {}) {
       requesterId: USER,
       chapters: [],
       kind: "file",
+      mediaKind: null,
       sourceId: "file:/current.mkv",
       durationSeconds: 600,
     },
@@ -59,6 +60,7 @@ function createService(overrides: Partial<PlaybackView> = {}) {
       return Promise.resolve({
         title: "YouTube result",
         ffmpegInput: "https://media.invalid/video",
+        mediaKind: "video",
         chapters: [],
       });
     },
@@ -147,6 +149,7 @@ describe("PlaybackCommandService", () => {
           requesterId: OTHER,
           chapters: [],
           kind: "file",
+          mediaKind: null,
           sourceId: "file:/queued.mkv",
           durationSeconds: 60,
         },
@@ -167,6 +170,7 @@ describe("PlaybackCommandService queue and chapter surface", () => {
       requesterId: USER,
       chapters: [],
       kind: "file" as const,
+      mediaKind: null,
       sourceId: "file:/queued.mkv",
       durationSeconds: 60,
     };
@@ -203,6 +207,7 @@ describe("PlaybackCommandService queue and chapter surface", () => {
         requesterId: USER,
         chapters,
         kind: "file",
+        mediaKind: null,
         sourceId: "file:/current.mkv",
         durationSeconds: 600,
       },
@@ -303,6 +308,7 @@ describe("PlaybackCommandService queue and chapter surface", () => {
         return {
           title: "late",
           ffmpegInput: "https://media.invalid/late",
+          mediaKind: "video",
           chapters: [],
         };
       },

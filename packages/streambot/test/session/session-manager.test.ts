@@ -43,6 +43,7 @@ const USER = UserIdSchema.parse("100000000000000099");
 const RESOLVED: ResolvedSource = {
   title: "Clip",
   ffmpegInput: "/clip.mkv",
+  mediaKind: "video",
   chapters: [],
 };
 
@@ -105,6 +106,15 @@ function fakeStreamer(): FakeStreamer {
       }),
     leaveVoice: () => Promise.resolve(),
     setVolume: () => Promise.resolve(true),
+    openAssistantAudio: () => ({
+      send: () => Promise.resolve(),
+      setSpeaking: () => {
+        /* voice is disabled in this fake */
+      },
+      close: () => {
+        /* voice is disabled in this fake */
+      },
+    }),
     setAssistantSpeaking: () => Promise.resolve(),
     sendAssistantOpus: () => {
       /* voice is disabled in this fake */

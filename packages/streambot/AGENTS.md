@@ -16,6 +16,15 @@ architecture, media, voice, and diagnostics reference.
   deterministic terminal transition.
 - Use the in-repo `discord-video-stream` fork. Profile real ffmpeg/VAAPI output
   before changing timing, queues, copying, subtitles, HDR, or buffers.
+- Transport is per item: music over the ordinary voice connection, video over
+  Go Live. Exactly one component may call `sendAudioFrame` — two writers on one
+  RTP timestamp interleave into noise, and both writers succeed while doing it.
+  An eslint rule enforces this; do not add an exemption.
+- A dropped audio frame is silent: the pacer keeps pace and playback reports a
+  clean end while nobody hears anything. Keep the boolean send result and the
+  send-side watchdog; they are the only signal that path has.
+- ffprobe decides whether media has video, not yt-dlp metadata. `vcodec` comes
+  back as `"none"`, `null`, or absent depending on the extractor.
 
 ## Voice assistant
 

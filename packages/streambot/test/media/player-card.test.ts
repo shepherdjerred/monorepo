@@ -26,6 +26,7 @@ function view(over: Partial<PlaybackView> = {}): PlaybackView {
       requesterId: REQUESTER,
       chapters: CHAPTERS,
       kind: "file",
+      mediaKind: null,
       sourceId: "file:Heat (1995)",
       durationSeconds: 600,
     },
@@ -61,6 +62,13 @@ function buttonIds(payload: PlayerCardPayload): string[] {
 function findButton(payload: PlayerCardPayload, action: ControlAction) {
   const id = encodeControlId(action);
   return payload.rows.flat().find((button) => button.id === id);
+}
+
+/** The default current item, re-typed to one transport. Narrows rather than spreading a nullable. */
+function currentWithKind(mediaKind: "music" | "video") {
+  const current = view().current;
+  if (current === null) throw new Error("fixture has a current item");
+  return { ...current, mediaKind };
 }
 
 describe("renderProgressBar", () => {
@@ -107,6 +115,7 @@ describe("player card body", () => {
           requesterId: REQUESTER,
           chapters: [],
           kind: "url",
+          mediaKind: null,
           sourceId: "url:Live Stream",
           durationSeconds: null,
         },
@@ -124,6 +133,7 @@ describe("player card body", () => {
           requesterId: REQUESTER,
           chapters: [],
           kind: "search",
+          mediaKind: null,
           sourceId: "search:Next Up",
           durationSeconds: null,
         },
@@ -173,6 +183,23 @@ describe("player card controls", () => {
     ).toBe("🔁 Loop: queue");
   });
 
+  test("an audio-only item disables subtitles and says why", () => {
+    const music = render({ current: currentWithKind("music") });
+    // `prepareStream` hard-throws when `subtitleBurn` meets `audioOnly`, so an enabled button here
+    // would be a guaranteed failed segment rather than a no-op.
+    expect(findButton(music, ControlAction.Subtitles)?.disabled).toBe(true);
+    expect(music.embed?.description).toContain("Audio only");
+    expect(music.embed?.description).toContain("mode:video");
+  });
+
+  test("a video item keeps subtitles available and is labelled as a stream", () => {
+    const video = render({ current: currentWithKind("video") });
+    // The control proving the guard does not overreach: an over-broad disable would break
+    // subtitles for every ordinary movie while the audio-only test above stayed green.
+    expect(findButton(video, ControlAction.Subtitles)?.disabled).toBe(false);
+    expect(video.embed?.description).toContain("Video stream");
+  });
+
   test("item controls are disabled while nothing is playing", () => {
     const waiting = render({
       state: "waiting",
@@ -220,6 +247,7 @@ describe("chapter menu", () => {
         requesterId: REQUESTER,
         chapters: [],
         kind: "file",
+        mediaKind: null,
         sourceId: "file:Heat (1995)",
         durationSeconds: 600,
       },
@@ -249,6 +277,7 @@ describe("chapter menu", () => {
         requesterId: REQUESTER,
         chapters: many,
         kind: "file",
+        mediaKind: null,
         sourceId: "file:Long Movie",
         durationSeconds: 2400,
       },

@@ -11,6 +11,7 @@ import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import { runSubprocess } from "@shepherdjerred/streambot/sources/subprocess.ts";
+import { httpHeaderInputOptions } from "@shepherdjerred/streambot/sources/format-select.ts";
 
 const log = logger.child("probe");
 
@@ -87,11 +88,18 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
 /**
  * Run ffprobe on `input` and return parsed media info, or null on any failure (missing binary,
  * non-zero exit, timeout, unparseable output, abort). Honors `signal` and an internal timeout.
+ *
+ * `headers` carries yt-dlp's per-format `http_headers` (User-Agent, Referer, Cookie, …). Without
+ * them a signed CDN URL answers 403 and the probe silently returns null, which costs more than the
+ * source-info metric: `resolveSource` uses this probe as the authoritative "does it have a picture"
+ * check that keeps an audio-only source with `mode: "video"` from reaching the fork's hard throw,
+ * and that check is only as good as the probe's ability to actually fetch the input.
  */
 export async function probeMedia(
   config: Config,
   input: string,
   signal?: AbortSignal,
+  headers?: Readonly<Record<string, string>>,
 ): Promise<MediaInfo | null> {
   const timeout = AbortSignal.timeout(PROBE_TIMEOUT_MS);
   const abort =
@@ -106,6 +114,7 @@ export async function probeMedia(
         "json",
         "-show_streams",
         "-show_format",
+        ...httpHeaderInputOptions(headers),
         input,
       ],
       abort,

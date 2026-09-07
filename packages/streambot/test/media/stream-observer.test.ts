@@ -5,8 +5,10 @@ import {
   parseTimemarkSeconds,
 } from "@shepherdjerred/streambot/observability/stream-observer.ts";
 import {
+  ffmpegFps,
   ffmpegSpeedRatio,
   hwDecodeEngaged,
+  pipelineQueueDepth,
   sendLateFramesTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
 
@@ -115,7 +117,7 @@ function stallWatchdogHarness() {
     true,
     () => wall.value,
     (lastMediaSeconds) => stalls.push(lastMediaSeconds),
-    2,
+    { progressTickMs: 2 },
   );
   streamObserver.observer.onCommand?.("ffmpeg -i in.mkv out");
   return { ...streamObserver, wall, stalls };
@@ -188,5 +190,81 @@ describe("createStreamObserver stall watchdog", () => {
 
     expect(stalls).toHaveLength(1);
     dispose();
+  });
+});
+
+async function engagedValue(): Promise<number | undefined> {
+  const metric = await hwDecodeEngaged.get();
+  return metric.values[0]?.value;
+}
+
+describe("audio-only segments suppress the video-only gauges", () => {
+  /**
+   * Absent, not zero. A music segment has no picture, and writing `0` into these series makes a
+   * dashboard read "hardware decode broke" and "the encoder froze" — both of which are alarming and
+   * neither of which is true. Each assertion below is paired with the video control that proves the
+   * suppression is conditional rather than a gauge that simply stopped working.
+   */
+  test("hw_decode_engaged is left alone by a music segment", async () => {
+    // This gauge carries no labels, so prom-client exports it from the moment it is first written
+    // and there is no such thing as "absent" for it. What suppression buys is that a song does not
+    // overwrite the last video segment's reading with a 0 that means "hardware decode broke".
+    const video = createStreamObserver(false);
+    video.observer.onCommand?.("ffmpeg -hwaccel vaapi -i in.mkv out");
+    await expect(engagedValue()).resolves.toBe(1);
+    video.dispose();
+
+    const music = createStreamObserver(false, undefined, undefined, {
+      audioOnly: true,
+    });
+    music.observer.onCommand?.("ffmpeg -i in.webm -vn -c:a libopus out");
+    await expect(engagedValue()).resolves.toBe(1);
+    music.dispose();
+
+    // The control: the same command through a video observer DOES write the 0, so the assertion
+    // above is about the audioOnly flag rather than about the command line.
+    const videoAgain = createStreamObserver(false);
+    videoAgain.observer.onCommand?.("ffmpeg -i in.webm -vn -c:a libopus out");
+    await expect(engagedValue()).resolves.toBe(0);
+    videoAgain.dispose();
+  });
+
+  test("ffmpeg_fps is not written for a music segment", async () => {
+    ffmpegFps.reset();
+    const music = createStreamObserver(false, undefined, undefined, {
+      audioOnly: true,
+    });
+    music.observer.onProgress?.({ timemark: "00:00:01.00", currentFps: 0 });
+    const duringMusic = await ffmpegFps.get();
+    expect(duringMusic.values).toEqual([]);
+    music.dispose();
+
+    const video = createStreamObserver(false);
+    video.observer.onProgress?.({ timemark: "00:00:01.00", currentFps: 30 });
+    const duringVideo = await ffmpegFps.get();
+    expect(duringVideo.values[0]?.value).toBe(30);
+    video.dispose();
+  });
+
+  test("only the audio queue depth is reported, and dispose leaves the video series alone", async () => {
+    pipelineQueueDepth.reset();
+    const video = createStreamObserver(false);
+    video.observer.onQueueDepth?.({ video: 7, audio: 3 });
+
+    const music = createStreamObserver(false, undefined, undefined, {
+      audioOnly: true,
+    });
+    music.observer.onQueueDepth?.({ video: 0, audio: 5 });
+    const during = await pipelineQueueDepth.get();
+    expect(during.values.find((v) => v.labels.kind === "video")?.value).toBe(7);
+    expect(during.values.find((v) => v.labels.kind === "audio")?.value).toBe(5);
+
+    // The music segment ends. A blanket reset here would wipe the concurrent video session's
+    // series — a gauge the music segment never wrote and has no business clearing.
+    music.dispose();
+    const after = await pipelineQueueDepth.get();
+    expect(after.values.find((v) => v.labels.kind === "video")?.value).toBe(7);
+    expect(after.values.find((v) => v.labels.kind === "audio")).toBeUndefined();
+    video.dispose();
   });
 });

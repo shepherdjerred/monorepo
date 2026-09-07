@@ -2,7 +2,21 @@ import { z } from "zod";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
-import { toChapters } from "@shepherdjerred/streambot/sources/chapters.ts";
+import type {
+  MediaKind,
+  MediaKindPass,
+} from "@shepherdjerred/streambot/sources/media-kind.ts";
+import {
+  buildFormatSelector,
+  NoUsableFormatError,
+} from "@shepherdjerred/streambot/sources/format-select.ts";
+import {
+  classifyYtdlpInfo,
+  isNoPlayableFormatIssue,
+  parseYtdlpInfo,
+  toResolvedSource,
+  type YtdlpInfo,
+} from "@shepherdjerred/streambot/sources/ytdlp-info.ts";
 import {
   getErrorMessage,
   parseJson,
@@ -20,45 +34,6 @@ import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 
 const log = logger.child("ytdlp");
 
-// yt-dlp's `subtitles`/`automatic_captions` dict entries carry `ext`/`url` too, but those are
-// deliberately NOT modeled here — the `url` is signed/time-limited, and burning always
-// re-converts to SRT anyway, so `name` (for menu labels) is all this schema needs.
-const YtdlpSubtitleTrackSchema = z.object({ name: z.string().optional() });
-
-/**
- * The slice of one `yt-dlp --dump-json` output line we rely on. yt-dlp emits a large object; Zod
- * keeps the fields we trust and drops the rest, so a schema drift can't smuggle unknown shapes in.
- */
-export const YtdlpInfoSchema = z.object({
-  id: z.string().min(1).optional(),
-  title: z.string().min(1),
-  // Direct media URL for the selected format (we request a single muxed `best`).
-  url: z.string().min(1),
-  duration: z.number().optional(),
-  is_live: z.boolean().optional(),
-  webpage_url: z.string().optional(),
-  uploader: z.string().optional(),
-  channel: z.string().optional(),
-  thumbnail: z.string().optional(),
-  // Chapter markers (e.g. YouTube timestamps); yt-dlp gives seconds as numbers.
-  chapters: z
-    .array(
-      z.object({
-        start_time: z.number(),
-        end_time: z.number().optional(),
-        title: z.string().optional(),
-      }),
-    )
-    .nullish(),
-  // Available subtitle tracks, keyed by language — used only for `/stream subtitles`'s picker.
-  subtitles: z.record(z.string(), z.array(YtdlpSubtitleTrackSchema)).optional(),
-  automatic_captions: z
-    .record(z.string(), z.array(YtdlpSubtitleTrackSchema))
-    .optional(),
-});
-
-export type YtdlpInfo = z.infer<typeof YtdlpInfoSchema>;
-
 /** The yt-dlp target string for a source: a URL/file passthrough or a `ytsearch1:` query. */
 export function ytdlpTarget(source: Source): string {
   switch (source.kind) {
@@ -74,9 +49,33 @@ export function ytdlpTarget(source: Source): string {
   }
 }
 
-/** Build the argument list for a metadata probe (no download), selecting a single muxed format. */
-export function buildInfoArgs(source: Source): string[] {
+/**
+ * Ignore any `yt-dlp.conf` on the host. Every invocation below passes this, and it is not
+ * defensive tidiness: a user config that sets `-o "%(title)s [%(id)s].%(ext)s"` makes yt-dlp read
+ * the template fragment as a second URL and the resolve dies with
+ * `ERROR: [generic] '[%(id)s].%(ext)s' is not a valid URL`. Two people hit exactly that on this
+ * repo while trying to reproduce a resolve locally.
+ *
+ * Production is unaffected either way — the container has no user config — so this changes nothing
+ * that runs today. What it buys is that a local reproduction behaves like production instead of
+ * like whoever's dotfiles are on the machine, which is precisely when someone is reaching for it.
+ */
+const IGNORE_HOST_CONFIG = "--ignore-config";
+
+/**
+ * Build the argument list for a metadata probe (no download), asking for one specific format
+ * selection.
+ *
+ * The selector is a PARAMETER rather than a constant because resolution runs the same probe twice
+ * with different selectors — see {@link resolveWithYtdlp}. It replaces a hardcoded `-f best`, which
+ * most of YouTube can no longer satisfy at all; `format-select.ts` carries the measurements.
+ */
+export function buildInfoArgs(
+  source: Source,
+  formatSelector: string,
+): string[] {
   return [
+    IGNORE_HOST_CONFIG,
     // `--dump-single-json ytsearch1:query` returns a playlist wrapper whose direct media URL is
     // nested under `entries[0]`. `--dump-json` emits the selected video as one top-level JSON line,
     // which is the stable shape validated by YtdlpInfoSchema for URLs and searches alike.
@@ -86,18 +85,19 @@ export function buildInfoArgs(source: Source): string[] {
     "--no-progress",
     "--skip-download",
     "-f",
-    "best",
+    formatSelector,
     ytdlpTarget(source),
   ];
 }
 
 /**
  * Build the argument list for a subtitle-enumeration-only probe: same shape as
- * {@link buildInfoArgs} but without `-f best`, which is meaningless once `--skip-download` is set
- * and nothing reads `info.url` from this call.
+ * {@link buildInfoArgs}, but `--dump-single-json` and no `-f` — this call only reads the subtitle
+ * dicts, which a playlist wrapper carries just as well and which no format selection affects.
  */
 export function buildSubtitleEnumerationArgs(source: Source): string[] {
   return [
+    IGNORE_HOST_CONFIG,
     "--dump-single-json",
     "--no-playlist",
     "--no-warnings",
@@ -105,37 +105,6 @@ export function buildSubtitleEnumerationArgs(source: Source): string[] {
     "--skip-download",
     ytdlpTarget(source),
   ];
-}
-
-/** Parse yt-dlp stdout into validated info (JSON → unknown → Zod). */
-export function parseYtdlpInfo(stdout: string): YtdlpInfo {
-  return YtdlpInfoSchema.parse(parseJson(stdout));
-}
-
-/** Map validated yt-dlp info to a {@link ResolvedSource} ffmpeg can read. */
-export function toResolvedSource(info: YtdlpInfo): ResolvedSource {
-  const channel = info.channel ?? info.uploader;
-  return {
-    title: info.title,
-    ffmpegInput: info.url,
-    ...(info.duration === undefined ? {} : { durationSeconds: info.duration }),
-    chapters: toChapters(
-      (info.chapters ?? []).map((chapter) => ({
-        startSeconds: chapter.start_time,
-        endSeconds: chapter.end_time ?? null,
-        title: chapter.title ?? null,
-      })),
-    ),
-    provenance: {
-      provider:
-        info.webpage_url?.includes("youtube.com") === true ? "youtube" : "url",
-      ...(info.webpage_url === undefined
-        ? {}
-        : { canonicalUrl: info.webpage_url }),
-      ...(channel === undefined ? {} : { channel }),
-      ...(info.thumbnail === undefined ? {} : { thumbnailUrl: info.thumbnail }),
-    },
-  };
 }
 
 const YtdlpSearchResultSchema = z.object({
@@ -157,6 +126,25 @@ export type YtdlpSearchResult = {
   readonly durationSeconds?: number;
 };
 
+/**
+ * Argument list for a flat YouTube search. Extracted from {@link searchYoutube} for the same reason
+ * the two probe builders exist: an argument array assembled inline inside an async function that
+ * spawns a subprocess cannot be asserted on by any unit test, so `--ignore-config` could be dropped
+ * from it and nothing would fail. Coverage that cannot fail is not coverage.
+ */
+export function buildSearchArgs(query: string, limit: number): string[] {
+  return [
+    IGNORE_HOST_CONFIG,
+    "--flat-playlist",
+    "--dump-json",
+    "--no-warnings",
+    "--no-progress",
+    "--playlist-end",
+    String(limit),
+    `ytsearch${String(limit)}:${query}`,
+  ];
+}
+
 /** Search YouTube without resolving or persisting signed media URLs. */
 export async function searchYoutube(
   config: Pick<Config, "ytDlpPath">,
@@ -165,16 +153,7 @@ export async function searchYoutube(
   limit = 5,
 ): Promise<YtdlpSearchResult[]> {
   const { stdout, stderr, exitCode } = await runSubprocess(
-    [
-      config.ytDlpPath,
-      "--flat-playlist",
-      "--dump-json",
-      "--no-warnings",
-      "--no-progress",
-      "--playlist-end",
-      String(limit),
-      `ytsearch${String(limit)}:${query}`,
-    ],
+    [config.ytDlpPath, ...buildSearchArgs(query, limit)],
     signal,
   );
   if (exitCode !== 0) {
@@ -227,6 +206,21 @@ const PlaylistLineSchema = z.object({
 export type PlaylistItem = z.infer<typeof PlaylistLineSchema>;
 
 /**
+ * Argument list for flat playlist expansion. `--print` renders one `url\ttitle` row per entry, which
+ * is cheaper than `--dump-json` for a listing that only needs those two fields.
+ */
+export function buildPlaylistArgs(url: string): string[] {
+  return [
+    IGNORE_HOST_CONFIG,
+    "--flat-playlist",
+    "--no-warnings",
+    "--print",
+    "%(url)s\t%(title)s",
+    url,
+  ];
+}
+
+/**
  * Expand a playlist URL into individual `{ url, title }` items via `yt-dlp --flat-playlist`, capped
  * at `config.playlistLimit`. Adult items are dropped here too (defense before they reach the queue).
  */
@@ -236,14 +230,7 @@ export async function expandPlaylist(
   signal: AbortSignal,
 ): Promise<PlaylistItem[]> {
   const { stdout, stderr, exitCode } = await runSubprocess(
-    [
-      config.ytDlpPath,
-      "--flat-playlist",
-      "--no-warnings",
-      "--print",
-      "%(url)s\t%(title)s",
-      url,
-    ],
+    [config.ytDlpPath, ...buildPlaylistArgs(url)],
     signal,
   );
   if (exitCode !== 0) {
@@ -272,43 +259,128 @@ export async function expandPlaylist(
 }
 
 /**
+ * Run one `--dump-json` metadata pass with a given `-f` selector and validate the result. Every
+ * failure mode is fatal: a non-zero exit carries yt-dlp's own message (which `classifyPlayError`
+ * buckets), and an unparseable payload — including one with no playable format, which the schema's
+ * refinement rejects — is a broken contract, not something to paper over.
+ */
+async function runInfoPass(
+  config: Config,
+  source: Source,
+  selection: { readonly kind: MediaKind; readonly formatSelector: string },
+  signal: AbortSignal,
+): Promise<YtdlpInfo> {
+  const { stdout, stderr, exitCode } = await runSubprocess(
+    [config.ytDlpPath, ...buildInfoArgs(source, selection.formatSelector)],
+    signal,
+  );
+  if (exitCode !== 0) {
+    throw new Error(
+      `yt-dlp exited with code ${String(exitCode)}: ${stderr.trim()}`,
+    );
+  }
+  try {
+    return parseYtdlpInfo(stdout);
+  } catch (error) {
+    // "yt-dlp selected nothing playable" is a normal outcome of a selector that missed on every
+    // branch, and it deserves a reply the user can act on. Everything else really is a shape
+    // mismatch — a broken contract — and keeps the generic parse-failure message.
+    if (isNoPlayableFormatIssue(error)) {
+      throw new NoUsableFormatError(
+        selection.kind,
+        `selector: ${selection.formatSelector}`,
+      );
+    }
+    throw new Error(
+      `could not parse yt-dlp output: ${getErrorMessage(error)}`,
+      {
+        cause: error,
+      },
+    );
+  }
+}
+
+/**
  * Resolve a URL/search source to a streamable {@link ResolvedSource} by shelling out to the system
- * `yt-dlp`. Honours the {@link AbortSignal} so SKIP/STOP cancels promptly.
+ * `yt-dlp`.
+ *
+ * Chicken-and-egg: the `-f` selector depends on whether the item is music, and the metadata that
+ * decides that comes back from the very call the selector is for. Resolved by asking for **audio
+ * first** and paying for a second call only when the answer turns out to be video:
+ *
+ * | `mode`    | calls | why                                                                  |
+ * |-----------|-------|----------------------------------------------------------------------|
+ * | `music`   | 1     | the kind is already known; ask for audio                              |
+ * | `video`   | 1     | the kind is already known; ask for video                              |
+ * | `auto`    | 1-2   | audio first — a song, the common case, stops here                     |
+ *
+ * The audio-first pass is classified with `pass: "audio-first"`, which blinds the classifier to
+ * "the selected stream has no picture" — trivially true of an audio selection, and left in it would
+ * make every item music. The second pass re-classifies with the real answer, which is also what
+ * catches an explicit `mode: "video"` on a source that has no video at all (the selector's `/best`
+ * tail lands on an audio format, rule 1 downgrades to music) instead of crashing the fork.
+ *
+ * Both passes share the caller's {@link AbortSignal}, so the machine's resolve wedge guard and
+ * `/stream play`'s pre-ack timeout bound the pair, not each half. That is affordable here because
+ * `play-command.ts` defers the interaction before calling this.
  */
 export async function resolveWithYtdlp(
   config: Config,
   source: Source,
   signal: AbortSignal,
 ): Promise<ResolvedSource> {
-  const args = buildInfoArgs(source);
-  log.debug("probing source", { target: ytdlpTarget(source) });
+  const maxHeight = config.stream.height;
+  const firstKind: MediaKind = source.mode === "video" ? "video" : "music";
+  const firstPass: MediaKindPass =
+    source.mode === "video" ? "video" : "audio-first";
+  log.debug("probing source", {
+    target: ytdlpTarget(source),
+    pass: firstPass,
+  });
 
-  const { stdout, stderr, exitCode } = await runSubprocess(
-    [config.ytDlpPath, ...args],
+  let info = await runInfoPass(
+    config,
+    source,
+    {
+      kind: firstKind,
+      formatSelector: buildFormatSelector({ kind: firstKind, maxHeight }),
+    },
     signal,
   );
-
-  if (exitCode !== 0) {
-    throw new Error(
-      `yt-dlp exited with code ${String(exitCode)}: ${stderr.trim()}`,
-    );
-  }
-
-  let info: YtdlpInfo;
-  try {
-    info = parseYtdlpInfo(stdout);
-  } catch (error) {
-    throw new Error(
-      `could not parse yt-dlp output: ${getErrorMessage(error)}`,
-      { cause: error },
-    );
-  }
 
   // Defense in depth: a search/redirect can land on an adult site the request text didn't reveal.
   if (isBlockedUrl(info.webpage_url ?? "") || isBlockedText(info.title)) {
     throw new BlockedSourceError(info.webpage_url ?? info.title);
   }
-  const base = toResolvedSource(info);
+
+  let decision = classifyYtdlpInfo(info, source.mode, firstPass);
+  let passes = 1;
+  if (firstKind === "music" && decision.kind === "video") {
+    info = await runInfoPass(
+      config,
+      source,
+      {
+        kind: "video",
+        formatSelector: buildFormatSelector({ kind: "video", maxHeight }),
+      },
+      signal,
+    );
+    decision = classifyYtdlpInfo(info, source.mode, "video");
+    passes = 2;
+  }
+
+  const base = toResolvedSource(info, { mediaKind: decision.kind });
+  // The only durable record of a classification. `decidedBy` explains a music/video call a user
+  // disputes, and the split-input flag explains a silent or picture-less play — both long after the
+  // signed URLs in this response have expired and the resolve can no longer be reproduced.
+  log.info("source classified", {
+    title: info.title,
+    mediaKind: decision.kind,
+    decidedBy: decision.decidedBy,
+    mode: source.mode,
+    passes,
+    splitAudioInput: base.audioInput !== undefined,
+  });
   // Live streams have no fetchable subtitle file; skip subtitle resolution for them.
   if (info.is_live === true) {
     return base;
@@ -383,6 +455,11 @@ export function parseExtractors(stdout: string): string[] {
 
 let extractorCache: readonly string[] | undefined;
 
+/** Argument list for the extractor listing behind `/stream sources`. Needs no network. */
+export function buildExtractorListArgs(): string[] {
+  return [IGNORE_HOST_CONFIG, "--list-extractors"];
+}
+
 /**
  * The source/site names yt-dlp can extract (`yt-dlp --list-extractors`), backing `/stream sources`.
  * Memoized for the process lifetime — the set only changes when yt-dlp itself is upgraded, which
@@ -396,7 +473,7 @@ export async function listExtractors(
     return extractorCache;
   }
   const { stdout, stderr, exitCode } = await runSubprocess(
-    [config.ytDlpPath, "--list-extractors"],
+    [config.ytDlpPath, ...buildExtractorListArgs()],
     signal,
   );
   if (exitCode !== 0) {

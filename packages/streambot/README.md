@@ -1,10 +1,11 @@
 # streambot
 
-Discord video-streaming orchestrator: streams local media files and yt-dlp/URL
-sources into Discord voice channels, controlled entirely through a `/stream`
-slash command (`/stream play`, `skip`, `queue`, `seek`, `volume`, `chapters`,
-`help`, `sources`, …). One Bun process serves many servers — and many voice
-channels per server — concurrently.
+Discord media orchestrator: streams local media files and yt-dlp/URL sources
+into Discord voice channels, controlled entirely through a `/stream` slash
+command (`/stream play`, `skip`, `queue`, `seek`, `volume`, `chapters`, `help`,
+`sources`, …). Music plays as audio over the voice connection; video plays as a
+Go Live stream. One Bun process serves many servers — and many voice channels
+per server — concurrently.
 
 Media requests default to a federated history, local-library, and YouTube
 search. Character renditions such as “Beggin by Plankton” also search explicit
@@ -33,6 +34,17 @@ therefore splits identities:
   cross-server history with the current guild's history. Favorites and saved
   queues remain until explicitly removed. Raw audio and transcripts never
   enter this database.
+- **Transports** — the userbot emits media two ways, chosen per item. Music
+  plays as microphone audio over the ordinary voice connection (`speaking: 1`,
+  a green ring); video plays as a Go Live stream. Both share the one voice
+  connection the session already joined, so a queue alternates between them
+  without rejoining. A single mixer owns every outbound audio frame, because
+  the assistant speaks over that same connection and two Opus writers on one
+  RTP timestamp interleave into noise rather than mixing. Which one an item is
+  comes from yt-dlp metadata plus an ffprobe of the chosen input, overridable
+  with `/stream play mode:`, and gated by a typed Flipt flag that forces video
+  when off. See the
+  [transports explanation](../docs/wiki/src/content/docs/explanation/streambot-transports.md).
 - **Streamer** — ffmpeg-driven voice streaming via
   [`@shepherdjerred/discord-video-stream`](../discord-video-stream/), the
   in-repo fork of `@dank074/discord-video-stream` (seekable player, VAAPI

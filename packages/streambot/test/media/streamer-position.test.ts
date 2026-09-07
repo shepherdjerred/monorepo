@@ -19,6 +19,7 @@ import {
 const RESOLVED: ResolvedSource = {
   title: "Movie",
   ffmpegInput: "/videos/movie.mkv",
+  mediaKind: "video",
   chapters: [],
 };
 

@@ -5,6 +5,7 @@ import {
   resolvePlayQuery,
 } from "@shepherdjerred/streambot/discord/resolve.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
+import { NoUsableFormatError } from "@shepherdjerred/streambot/sources/format-select.ts";
 
 const entries: LibraryEntry[] = [
   {
@@ -49,6 +50,22 @@ describe("resolvePlayQuery", () => {
 });
 
 describe("classifyPlayError", () => {
+  test("explains an item with no playable format, per media kind", () => {
+    // Matched by class rather than by message text: this is our own failure, not yt-dlp stderr.
+    expect(
+      classifyPlayError(
+        new NoUsableFormatError("music", "selector: bestaudio/best"),
+        "url",
+      ),
+    ).toBe("That item has no audio stream I can play.");
+    expect(
+      classifyPlayError(
+        new NoUsableFormatError("video", "selector: best"),
+        "url",
+      ),
+    ).toContain("mode:music");
+  });
+
   test("recognizes an unsupported site", () => {
     const message = classifyPlayError(
       new Error(

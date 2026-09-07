@@ -10,8 +10,10 @@ import {
 } from "@shepherdjerred/streambot/moderation/adult-block.ts";
 import type { ResolvedSource } from "@shepherdjerred/streambot/machine/types.ts";
 import { findBestMatch } from "@shepherdjerred/streambot/sources/library.ts";
+import type { MediaMode } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import {
   sourceLabel,
+  withMode,
   type Source,
   type SubtitlePref,
   withSubtitles,
@@ -48,6 +50,8 @@ type PlayInput = {
   /** Slash commands may still supply supported URLs; spoken commands never may. */
   readonly spoken?: boolean;
   readonly subtitles?: SubtitlePref;
+  /** Per-request transport override; `undefined` and `"auto"` both mean "let the classifier decide". */
+  readonly mode?: MediaMode;
 };
 
 type SelectedMedia = {
@@ -104,6 +108,34 @@ export class PlaybackCommandService extends PlaybackControls {
     }
   }
 
+  /**
+   * The transport mode actually stamped onto a request.
+   *
+   * When `streambot-music-over-voice-enabled` is off for this scope, every item is forced to
+   * `video`, which is exactly the behaviour that shipped before the transport split — so turning
+   * the feature off is a flag flip rather than a deploy. The mode is stamped onto the `Source` here
+   * rather than consulted at play time, so an item already sitting in the queue keeps the transport
+   * it was queued with instead of changing under a flag flip mid-queue.
+   *
+   * An explicit `video` request short-circuits: it needs no flag lookup, because it asks for the
+   * behaviour the flag falls back to anyway.
+   */
+  async resolveMediaMode(
+    userId: UserId,
+    requested: MediaMode | undefined,
+  ): Promise<MediaMode | undefined> {
+    if (requested === "video") return "video";
+    // `"auto"` is the slash command's default, not a choice: normalize it away so an untouched
+    // option does not write a redundant `"mode":"auto"` into every persisted source and history
+    // row. `undefined` and `"auto"` are already indistinguishable to the classifier.
+    const explicit = requested === "auto" ? undefined : requested;
+    const scope = this.scope(userId);
+    if (scope === null || this.deps.featureGate === undefined) return explicit;
+    return (await this.deps.featureGate.musicOverVoice(scope))
+      ? explicit
+      : "video";
+  }
+
   async play(input: PlayInput): Promise<PlaybackCommandResult> {
     input.signal?.throwIfAborted();
     const query = this.normalizePlayQuery(input);
@@ -114,7 +146,18 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     const scope = this.scope(input.userId);
     const selected = await this.selectMedia(input, query, intent, scope);
-    const source = withSubtitles(selected.source, input.subtitles);
+    // Precedence: an explicit `music`/`video` beats the verb, the verb beats nothing. `"auto"` is
+    // the slash command's default rather than a choice anyone made, so it defers to the spoken
+    // verb instead of suppressing it — otherwise "watch the trailer" would be overridden by an
+    // option the speaker never touched.
+    const requestedMode =
+      input.mode === undefined || input.mode === "auto"
+        ? intent.mode
+        : input.mode;
+    const source = withMode(
+      withSubtitles(selected.source, input.subtitles),
+      await this.resolveMediaMode(input.userId, requestedMode),
+    );
     if (isBlockedSource(source)) {
       await this.announceBlocked(input.userId);
     }

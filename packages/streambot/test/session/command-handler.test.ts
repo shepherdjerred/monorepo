@@ -54,6 +54,7 @@ function makeConfig(adminIds: string[], voiceEnabled = false) {
 const RESOLVED_STUB: ResolvedSource = {
   title: "resolved",
   ffmpegInput: "resolved://input",
+  mediaKind: "video",
   chapters: [],
 };
 
@@ -266,11 +267,23 @@ function viewWithCurrent(requesterId: string): PlaybackView {
       requesterId: uid(requesterId),
       chapters: [],
       kind: "search",
+      mediaKind: null,
       sourceId: "search:Current Song",
       durationSeconds: null,
     },
   };
 }
+
+/** A current item whose only chapter starts after the asserted position. */
+const SINGLE_CHAPTER_CURRENT = {
+  title: "Current Movie",
+  requesterId: uid(REQUESTER),
+  kind: "file",
+  mediaKind: null,
+  sourceId: "file:Current Movie",
+  durationSeconds: null,
+  chapters: [{ index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 }],
+} as const;
 
 describe("CommandHandler routing + acks", () => {
   test("play pre-resolves a search source (defer+edit) and acks", async () => {
@@ -468,16 +481,7 @@ describe("CommandHandler routing + acks", () => {
   test("nowplaying skips the chapter clause when position is before the first chapter", async () => {
     const view: PlaybackView = {
       ...viewWithChapters(REQUESTER),
-      current: {
-        title: "Current Movie",
-        requesterId: uid(REQUESTER),
-        kind: "file",
-        sourceId: "file:Current Movie",
-        durationSeconds: null,
-        chapters: [
-          { index: 1, title: "Intro", startSeconds: 30, endSeconds: 90 },
-        ],
-      },
+      current: SINGLE_CHAPTER_CURRENT,
       positionSeconds: 10,
     };
     const h = makeHandler({ view });
@@ -615,6 +619,7 @@ describe("CommandHandler permissions", () => {
           requesterId: uid(OTHER),
           chapters: [],
           kind: "search",
+          mediaKind: null,
           sourceId: "search:Item A",
           durationSeconds: null,
         },
@@ -772,6 +777,7 @@ function viewWithChapters(requesterId: string): PlaybackView {
       title: "Current Movie",
       requesterId: uid(requesterId),
       kind: "file",
+      mediaKind: null,
       sourceId: "file:Current Movie",
       durationSeconds: null,
       chapters: [
@@ -889,6 +895,27 @@ describe("CommandHandler subtitles command (track picker)", () => {
     );
     // Single-flight slot is released after a successful pick.
     expect(h.subtitleMenuPending()).toBe(false);
+  });
+
+  test("refuses an audio-only item and names the fix", async () => {
+    const base = viewWithCurrent(REQUESTER);
+    const h = makeHandler({
+      view:
+        base.current === null
+          ? base
+          : { ...base, current: { ...base.current, mediaKind: "music" } },
+      subtitleCandidates: [SIDECAR_CANDIDATE],
+    });
+    const { interaction, replies, state } = fakeInteraction({
+      sub: "subtitles",
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // `prepareStream` hard-throws when `subtitleBurn` meets `audioOnly`. Refusing here — before
+    // the picker, before any candidate lookup — turns a guaranteed failed segment into an answer.
+    expect(replies[0]).toContain("audio only");
+    expect(replies[0]).toContain("mode:video");
+    expect(state.deferred).toBe(false);
   });
 
   test("reports nothing playing when idle (no defer, no candidate lookup)", async () => {

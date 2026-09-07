@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  MediaModeSchema,
+  type MediaMode,
+} from "@shepherdjerred/streambot/sources/media-kind.ts";
 
 export const MediaSourcePreferenceSchema = z.enum([
   "auto",
@@ -21,6 +25,12 @@ export const MediaIntentSchema = z.strictObject({
   selection: z.enum(["specific", "anything"]),
   subtitleLanguage: z.string().min(1).optional(),
   subtitles: z.enum(["auto", "off"]).optional(),
+  /**
+   * Transport implied by the verb the speaker used, when they used one. Absent means no signal —
+   * NOT "auto" — because an explicit `mode:` option must be able to outrank a bare query, and a
+   * defaulted value here would be indistinguishable from a deliberate choice.
+   */
+  mode: MediaModeSchema.optional(),
 });
 export type MediaIntent = z.infer<typeof MediaIntentSchema>;
 
@@ -29,6 +39,20 @@ function normalizeWork(value: string): string {
     .trim()
     .replaceAll(/\bbegging\b/giu, "Beggin")
     .replaceAll(/\s+/gu, " ");
+}
+
+/**
+ * The transport a leading verb implies. "watch" is the only one that asks for a picture; "listen
+ * to" and "put on" ask for the opposite. "play" and "queue" are transport-neutral in ordinary
+ * speech — people say "play this" about songs and films alike — so they deliberately yield no
+ * signal rather than a weak one that would outrank the classifier's metadata.
+ */
+function verbMode(verb: string | undefined): MediaMode | undefined {
+  if (verb === undefined) return undefined;
+  const normalized = verb.trim().toLocaleLowerCase("en-US");
+  if (normalized === "watch") return "video";
+  if (normalized === "listen to" || normalized === "put on") return "music";
+  return undefined;
 }
 
 /** Turn the compact command surface into a structured, provider-neutral search intent. */
@@ -41,8 +65,9 @@ export function inferMediaIntent(input: {
   const explicitAiCover = /\bai[ -]?covers?\b/iu.test(query);
   const explicitCover = explicitAiCover || /\bcovers?\b/iu.test(query);
   const explicitOriginal = /\boriginal(?: version)?\b/iu.test(query);
+  const verb = /^(?:play|watch|queue|listen to|put on)\s+/iu.exec(query)?.[0];
   const cleaned = query
-    .replace(/^(?:play|watch|queue)\s+/iu, "")
+    .replace(/^(?:play|watch|queue|listen to|put on)\s+/iu, "")
     .replaceAll(/\bai[ -]?covers?\b/giu, "")
     .replaceAll(/\bcovers?\b/giu, "")
     .replaceAll(/\boriginal(?: version)?\b/giu, "")
@@ -71,6 +96,7 @@ export function inferMediaIntent(input: {
     selection: /\b(?:anything|whatever|surprise me)\b/iu.test(query)
       ? "anything"
       : "specific",
+    ...(verbMode(verb) === undefined ? {} : { mode: verbMode(verb) }),
   });
 }
 

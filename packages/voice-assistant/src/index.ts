@@ -5,6 +5,7 @@ export * from "./audio-lifecycle.ts";
 export * from "./audio-lifecycle-types.ts";
 export * from "./cloud-verification-rate-limiter.ts";
 export * from "./codecs.ts";
+export * from "./frame-codecs.ts";
 export * from "./constants.ts";
 export * from "./discord-opus-container.ts";
 export * from "./local-models.ts";

@@ -1,9 +1,7 @@
 import { rm } from "node:fs/promises";
 import { Client } from "discord.js-selfbot-v13";
 import {
-  Encoders,
   Streamer,
-  Utils,
   createSeekablePlayer,
   type Player,
   type ReceivedVoiceAudio,
@@ -23,7 +21,7 @@ import {
   StreamCrashError,
   type StallInfo,
 } from "@shepherdjerred/streambot/streamer/stream-errors.ts";
-import { computeElapsed } from "@shepherdjerred/streambot/streamer/elapsed.ts";
+import { SegmentClock } from "@shepherdjerred/streambot/streamer/segment-clock.ts";
 import {
   GuildIdSchema,
   type GuildId,
@@ -43,6 +41,14 @@ import {
   streamSegmentDurationSeconds,
   streamSegmentsTotal,
 } from "@shepherdjerred/streambot/observability/metrics.ts";
+import type { AssistantAudioPort } from "@shepherdjerred/streambot/streamer/audio-ports.ts";
+import { AssistantTransport } from "@shepherdjerred/streambot/streamer/assistant-transport.ts";
+import { buildStallReport } from "@shepherdjerred/streambot/streamer/stall-report.ts";
+import { VoiceAudioMixer } from "@shepherdjerred/streambot/streamer/voice-audio-mixer.ts";
+import {
+  buildMusicPrepareOptions,
+  buildVideoPrepareOptions,
+} from "@shepherdjerred/streambot/streamer/prepare-options.ts";
 import {
   EMPTY_VOICE_CLOSE_SOURCE,
   type VoiceCloseInfo,
@@ -55,7 +61,6 @@ import type {
   StreamerLike,
   StreamObserverFactory,
 } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
-import { AssistantAudioOutput } from "@shepherdjerred/streambot/streamer/assistant-audio-output.ts";
 import { joinStreamerVoice } from "@shepherdjerred/streambot/streamer/join-voice.ts";
 import { observeUserbotGateway } from "@shepherdjerred/streambot/streamer/gateway-observability.ts";
 const log = logger.child("streamer");
@@ -85,19 +90,8 @@ export class StreambotStreamer implements StreamerLike {
   private player: Player | null = null;
   /** Last known playback offset (seconds), captured per segment so a HW→SW retry can resume there. */
   private lastPlaybackPositionSeconds = 0;
-  /** Offset (seconds) the current segment started playing at (initial resume seek or last live seek). */
-  private segmentStartOffsetSeconds = 0;
-  /**
-   * Seek target visible to the synchronously-starting observer before the replacement attach
-   * succeeds. Public position tracking continues from the prior anchor until seek() commits.
-   */
-  private pendingSeekOffsetSeconds: number | null = null;
-  /** Last delivered public position, frozen while a replacement seek pipeline attaches. */
-  private pendingSeekPreviousPositionSeconds: number | null = null;
-  /** Monotonic owner for overlapping seek completions; only the newest request may update anchors. */
-  private seekGeneration = 0;
-  /** Wall-clock (ms) when the current segment began playing; null when nothing is playing. */
-  private segmentStartedAtMs: number | null = null;
+  /** Position tracking and seek ownership for the active segment. */
+  private readonly clock: SegmentClock;
   /** Close state for the current connection; retained recovery leases outlive pool reuse. */
   private voiceCloseTracker: VoiceCloseTracker | null = null;
   /** Session-layer callback for Discord-side voice closes; cleared between sessions. */
@@ -107,7 +101,14 @@ export class StreambotStreamer implements StreamerLike {
   private voiceAudioListener: ((audio: ReceivedVoiceAudio) => void) | null =
     null;
   private voiceReceiveObserver: VoiceReceiveObserver | null = null;
-  private readonly assistantOutput: AssistantAudioOutput;
+  /**
+   * The sole writer on the userbot's outbound voice track: music frames, assistant replies, gain,
+   * ducking and the RTP speaking flag all pass through it. One per userbot, outliving individual
+   * segments so that a track change does not blink the speaking flag off and on.
+   */
+  private readonly mixer: VoiceAudioMixer;
+  /** Adapts the shared voice pipeline's transport shape onto one long-lived mixer port. */
+  private readonly assistantTransport: AssistantTransport;
   constructor(
     userToken: UserToken,
     config: Pick<Config, "stream" | "voice">,
@@ -129,11 +130,15 @@ export class StreambotStreamer implements StreamerLike {
       typeof dependencies === "function"
         ? joinStreamerVoice
         : (dependencies.joinStreamerVoice ?? joinStreamerVoice);
+    this.clock = new SegmentClock(this.now);
     this.client = new Client();
     this.streamer = new Streamer(this.client);
-    this.assistantOutput = new AssistantAudioOutput(
-      () => this.player,
-      () => this.streamer.voiceConnection,
+    this.mixer = new VoiceAudioMixer({
+      connection: () => this.streamer.voiceConnection,
+      musicBitrateBps: config.stream.bitrateAudioKbps * 1000,
+    });
+    this.assistantTransport = new AssistantTransport(() =>
+      this.mixer.openAssistantAudio(),
     );
     observeUserbotGateway(this.client);
   }
@@ -185,15 +190,23 @@ export class StreambotStreamer implements StreamerLike {
     }
     await Promise.resolve();
   }
-  /** Apply a volume percentage (0-200) to the live stream; false when nothing is playing. */
-  async setVolume(percent: number): Promise<boolean> {
-    return this.assistantOutput.setVolume(percent);
+  /**
+   * Apply a volume percentage (0-200). True when it reached live audio — a music segment, where the
+   * mixer scales the samples themselves. False for Go Live, whose gain is fixed for the life of a
+   * segment by the `audioVolume` its ffmpeg command was built with, and therefore takes effect on
+   * the next item rather than this one.
+   */
+  setVolume(percent: number): Promise<boolean> {
+    return Promise.resolve(this.mixer.setVolume(percent));
   }
-  async setAssistantSpeaking(speaking: boolean): Promise<void> {
-    await this.assistantOutput.setSpeaking(speaking);
+  openAssistantAudio(): AssistantAudioPort {
+    return this.mixer.openAssistantAudio();
+  }
+  setAssistantSpeaking(speaking: boolean): Promise<void> {
+    return this.assistantTransport.setSpeaking(speaking);
   }
   sendAssistantOpus(opus: Uint8Array): void {
-    this.assistantOutput.sendOpus(opus);
+    this.assistantTransport.send(opus);
   }
   assistantUserId(): string {
     return this.userId();
@@ -218,53 +231,26 @@ export class StreambotStreamer implements StreamerLike {
     const player = this.player;
     const target = Math.max(0, seconds);
     const previousPositionSeconds = this.getPosition();
-    const seekGeneration = ++this.seekGeneration;
     // The replacement observer can begin synchronously inside player.seek(), so expose the target
     // to stall accounting immediately. Do not commit the public position anchor until the real
     // player confirms its replacement pipeline attached successfully.
-    this.pendingSeekOffsetSeconds = target;
-    this.pendingSeekPreviousPositionSeconds = previousPositionSeconds;
+    const generation = this.clock.beginSeek(target, previousPositionSeconds);
     try {
       await player.seek(target);
     } catch (error) {
-      if (this.seekGeneration === seekGeneration && this.player === player) {
-        this.pendingSeekOffsetSeconds = null;
-        this.pendingSeekPreviousPositionSeconds = null;
-        // A replacement attach failure also rejects player.finished. If the playback owner won that
-        // race, it has already cleared this.player and stopped the clock; do not restart a clock for
-        // dead media while the machine prepares recovery.
-        if (previousPositionSeconds !== null) {
-          this.segmentStartOffsetSeconds = previousPositionSeconds;
-          this.segmentStartedAtMs = this.now();
-        }
+      if (this.clock.owns(generation) && this.player === player) {
+        this.clock.abortSeek(previousPositionSeconds);
       }
       throw error;
     }
-    if (this.seekGeneration === seekGeneration && this.player === player) {
-      this.segmentStartOffsetSeconds = target;
-      this.segmentStartedAtMs = this.now();
-      this.pendingSeekOffsetSeconds = null;
-      this.pendingSeekPreviousPositionSeconds = null;
+    if (this.clock.owns(generation) && this.player === player) {
+      this.clock.commitSeek(target);
     }
     return true;
   }
-  /**
-   * Current playback position in seconds (segment start offset + real time since it began playing),
-   * or null when nothing is playing. Used to checkpoint resume state — unlike the fork's
-   * `Player.position`, this advances with the clock.
-   */
+  /** Current playback position in seconds, or null when nothing is playing. */
   getPosition(): number | null {
-    if (this.pendingSeekPreviousPositionSeconds !== null) {
-      return this.pendingSeekPreviousPositionSeconds;
-    }
-    if (this.segmentStartedAtMs === null) {
-      return null;
-    }
-    return computeElapsed(
-      this.segmentStartOffsetSeconds,
-      this.segmentStartedAtMs,
-      this.now(),
-    );
+    return this.clock.position();
   }
   lastVoiceCloseInfo(): VoiceCloseInfo | null {
     return this.voiceCloseTracker?.lastVoiceCloseInfo() ?? null;
@@ -281,26 +267,23 @@ export class StreambotStreamer implements StreamerLike {
   setStallListener(listener: ((info: StallInfo) => void) | null): void {
     this.stallListener = listener;
   }
-  /** Revoke ownership from every in-flight seek and clear its shared public-position state. */
-  private invalidatePendingSeek(): void {
-    this.seekGeneration += 1;
-    this.pendingSeekOffsetSeconds = null;
-    this.pendingSeekPreviousPositionSeconds = null;
-  }
   private safeStop(): void {
-    this.invalidatePendingSeek();
+    this.clock.invalidate();
     try {
       this.player?.stop();
     } catch (error) {
       log.warn("player stop failed", { error: getErrorMessage(error) });
     }
     this.player = null;
-    this.segmentStartedAtMs = null;
+    this.clock.stopClock();
     this.voiceCloseTracker?.release();
     this.voiceCloseTracker = null;
     this.voiceAudioListener = null;
     this.voiceReceiveObserver = null;
-    this.assistantOutput.reset();
+    // Drops the music claim, drains any assistant packet waiting on the music clock (without which
+    // a stop mid-reply leaves the paced sender awaiting a promise nothing will resolve), and
+    // releases the speaking flag.
+    this.mixer.reset();
     try {
       this.streamer.stopStream();
     } catch (error) {
@@ -340,9 +323,16 @@ export class StreambotStreamer implements StreamerLike {
     // (libass alpha canvas → hwupload → overlay_vaapi), so decode, scale, tonemap, and encode all
     // stay on the GPU even with burned-in subs. The startup fallback below remains the safety net
     // for graph features the device lacks (tonemap_vaapi/overlay_vaapi on older iGPUs).
-    const pipelineMode: PipelineMode = this.config.stream.hardwareAcceleration
-      ? input.pipelineMode
-      : "sw";
+    // `PipelineMode` is a *video encoder* ladder — hw → hw-upload → sw. A music segment has no
+    // encoder at all, so it is pinned to "sw" here rather than inside streamOnce: doing it here is
+    // what stops the startup-failure branch below from announcing a pointless "retrying in
+    // software" attempt for a song, which would reach users through CrashNotice and operators
+    // through streamCrashesTotal{pipeline}.
+    const pipelineMode: PipelineMode =
+      input.resolved.mediaKind === "music" ||
+      !this.config.stream.hardwareAcceleration
+        ? "sw"
+        : input.pipelineMode;
     try {
       try {
         // Start at the resume offset (0 for a fresh play; >0 when resuming after a restart).
@@ -387,6 +377,16 @@ export class StreambotStreamer implements StreamerLike {
     }
   }
 
+  /**
+   * Turn a detected stall into the machine's stall recovery.
+   *
+   * Two detectors feed this. The ffmpeg progress watchdog sees a producer that stopped producing
+   * and supplies its last delivered timemark. The mixer's send-side watchdog sees the opposite
+   * failure — frames arriving and none of them reaching the wire — which the ffmpeg watchdog
+   * cannot see at all, because from its side everything is healthy. That second case is how a whole
+   * song plays to an empty channel while the segment ends cleanly, so it resolves to the same
+   * bounded retry rather than to nothing.
+   */
   private async streamOnce(
     input: RunStreamInput,
     signal: AbortSignal,
@@ -394,49 +394,34 @@ export class StreambotStreamer implements StreamerLike {
     startSeconds: number,
   ): Promise<void> {
     const { stream } = this.config;
+    // Which Discord transport carries this item, decided once at resolve time and never re-derived
+    // here. Music is audio-only over the normal voice connection (the userbot appears to be talking
+    // into its mic); video is Go Live, exactly as before.
+    const isMusic = input.resolved.mediaKind === "music";
+    const transport = isMusic ? "voice" : "go-live";
     const useHardware = pipelineMode !== "sw";
     // A pooled userbot may begin a new session while an old seek's replacement pipeline is still
     // attaching. Revoke that continuation before exposing any state for this segment.
-    this.invalidatePendingSeek();
-    const prepareOpts = {
-      width: stream.width,
-      height: stream.height,
-      frameRate: stream.fps,
-      bitrateVideo: stream.bitrateKbps,
-      bitrateVideoMax: stream.bitrateKbps * 2,
-      bitrateAudio: stream.bitrateAudioKbps,
-      includeAudio: true,
-      videoCodec: Utils.normalizeVideoCodec("H264"),
-      hardwareAcceleratedDecoding: useHardware,
-      minimizeLatency: false,
-      // Bound ffmpeg's input demux to a multiple of realtime. Without this, a fast GPU encoder
-      // runs the source at 3-5× realtime and the NUT-pipe consumer cannot drain that fast,
-      // causing the downstream JS buffer pool to grow at ~25 MB/s until major GC pauses the
-      // send loop ≥ 200 ms and the Discord receiver's jitter buffer shows a ~1 s freeze.
-      readrate: stream.readrate,
-      // Pre-roll this many seconds at full speed before readrate pacing engages. The play-side
-      // pacer (readrateInitialBurst below) forwards the pre-roll into the receiver's jitter
-      // buffer, which absorbs transient production dips on heavy-bitrate scenes — without it the
-      // realtime-paced pipeline has zero margin and every dip stutters playback.
-      readrateInitialBurst: stream.readrateInitialBurst,
-      ...(startSeconds > 0 ? { startTime: startSeconds } : {}),
-      ...(input.resolved.subtitle
-        ? { subtitleBurn: { path: input.resolved.subtitle.path } }
-        : {}),
-      // HDR sources get tonemapped to BT.709 SDR by the pipeline (tonemap_vaapi on the GPU path,
-      // a zimg chain on the software path) — without it, PQ/HLG content looks washed out.
-      inputColor:
-        input.resolved.hdr === true ? ("hdr" as const) : ("sdr" as const),
-      ...(useHardware
-        ? { encoder: Encoders.vaapi({ device: stream.vaapiDevice }) }
-        : {}),
-      // "hw-upload": GPU decode to system memory + hwupload back onto the device for the GPU
-      // filters/encode — the recovery pipeline for sources whose mid-stream hwaccel flip crashes
-      // the full-GPU graph (ffmpeg exit 218). See PipelineMode.
-      ...(pipelineMode === "hw-upload"
-        ? { hardwarePipelineMode: "upload" as const }
-        : {}),
-    };
+    this.clock.invalidate();
+    // Set before the options are built and before playback attaches: a music segment reads it on
+    // its very first frame through the mixer, and a video segment bakes it into the ffmpeg command
+    // line as `audioVolume`. Either way the first sample the viewer hears is already at the
+    // requested level, rather than at 100% until some later apply() lands.
+    this.mixer.setDesiredVolume(input.volume);
+    const prepareOpts = isMusic
+      ? buildMusicPrepareOptions({
+          stream,
+          resolved: input.resolved,
+          startSeconds,
+          volumePercent: input.volume,
+        })
+      : buildVideoPrepareOptions({
+          stream,
+          resolved: input.resolved,
+          startSeconds,
+          volumePercent: input.volume,
+          pipelineMode,
+        });
 
     log.info("starting stream", {
       title: input.resolved.title,
@@ -448,47 +433,63 @@ export class StreambotStreamer implements StreamerLike {
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats). The stall
     // watchdog routes to the session layer, which converts it into the machine's stall recovery.
     // The observer can begin a progress epoch synchronously during player construction/startup, so
-    // establish the requested media offset first. Keep segmentStartedAtMs null until start()
-    // succeeds: public checkpoint time must not advance before playback is actually attached.
-    this.segmentStartOffsetSeconds = startSeconds;
-    this.segmentStartedAtMs = null;
+    // establish the requested media offset first. `beginSegment` deliberately leaves the elapsed
+    // clock stopped: public checkpoint time must not advance before playback is actually attached.
+    this.clock.beginSegment(startSeconds);
     const { observer, dispose: disposeObserver } = this.createObserver(
       useHardware,
       this.now,
       (lastMediaSeconds) => {
-        // A detected stall IS a mid-stream segment death — count it alongside crash/ended-short so
-        // the advertised `stall` kind on the crash counter actually populates (aborting the actor
-        // otherwise leaves the segment outcome at "ended" and the recovery goes uncounted).
-        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "stall" });
-        // Resume from the producer's last DELIVERED media position — the observer's timemark, which
-        // is relative to the current ffmpeg `-ss`, so add the segment's start offset (kept current
-        // across live seeks). We deliberately do NOT derive this from `getPosition()`: the wall-clock
-        // tracker over-counts when ffmpeg was producing below realtime before it froze, which would
-        // skip unseen media. Fall back to the segment start if no media time was parsed yet.
-        const segmentStartOffsetSeconds =
-          this.pendingSeekOffsetSeconds ?? this.segmentStartOffsetSeconds;
-        const positionSeconds =
-          lastMediaSeconds === undefined
-            ? segmentStartOffsetSeconds
-            : segmentStartOffsetSeconds + lastMediaSeconds;
-        this.stallListener?.({
-          positionSeconds,
-          reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,
-        });
+        this.stallListener?.(
+          buildStallReport({
+            pipelineMode,
+            transport,
+            lastMediaSeconds,
+            offsetSeconds: this.clock.stallOffsetSeconds,
+            reason: `ffmpeg produced no output for ${String(STALL_AFTER_SECONDS)}s`,
+          }),
+        );
       },
+      // A music segment must leave the video-only gauges alone rather than writing zeros into them:
+      // `hw_decode_engaged` pinned at 0 reads as "hardware decode broke", not "there is no video".
+      { audioOnly: isMusic },
     );
 
-    // The seekable player owns prepare+play on a single Go-Live connection. `finished` resolves at
-    // the true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
-    // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg at
-    // a new offset without dropping the Go-Live stream.
+    // Music borrows the already-joined voice connection through the mixer, which is the only thing
+    // permitted to write to it. Opening the port here supersedes any previous segment's claim, so a
+    // frame still in flight from a torn-down pipeline is dropped rather than sent.
+    const musicPort = isMusic
+      ? this.mixer.openMusicPort({
+          onSendStall: () => {
+            this.stallListener?.(
+              buildStallReport({
+                pipelineMode,
+                transport,
+                lastMediaSeconds: undefined,
+                offsetSeconds: this.clock.stallOffsetSeconds,
+                reason: "no audio frame reached the voice connection",
+              }),
+            );
+          },
+        })
+      : null;
+
+    // The seekable player owns prepare+play on one media connection. `finished` resolves at the
+    // true end of playback (or on stop) and rejects on an ffmpeg/encode failure — folding in the
+    // play/ffmpeg-failure race the old code did by hand, and letting `/stream seek` restart ffmpeg
+    // at a new offset without dropping the connection.
     const player = this.createPlayer(
       this.streamer,
       input.resolved.ffmpegInput,
       {
         prepare: { ...prepareOpts, observer },
         play: {
-          type: "go-live",
+          // "voice" sends over the normal voice connection with plain microphone semantics and
+          // touches nothing on it — no signalVideo, no setSpeaking, no createStream/stopStream —
+          // because the assistant is sharing that connection and this segment only borrows it.
+          ...(musicPort === null
+            ? { type: "go-live" as const }
+            : { type: "voice" as const, audioSink: musicPort }),
           observer,
           // Must match prepare.readrateInitialBurst: the pacer free-runs (no per-frame sleep)
           // until this many seconds of pts have been sent, pushing the ffmpeg-side burst into
@@ -510,7 +511,7 @@ export class StreambotStreamer implements StreamerLike {
         // Intentionally swallowed here; real error handling happens on the awaited paths below.
       } finally {
         if (this.player === player) {
-          this.invalidatePendingSeek();
+          this.clock.invalidate();
         }
       }
     })();
@@ -527,20 +528,16 @@ export class StreambotStreamer implements StreamerLike {
     const segmentHardware = useHardware ? "true" : "false";
     const segmentStartedMs = this.now();
     streamActive.set(1);
-    streamHardware.set(useHardware ? 1 : 0);
+    // Suppressed, not zeroed, for music: there is no encoder on this path at all, and a 0 here is
+    // read on the dashboard as "the hardware path failed and we fell back".
+    if (!isMusic) streamHardware.set(useHardware ? 1 : 0);
     let outcome: "ended" | "ended-short" | "crash" | "error" = "ended";
     let playbackStarted = false;
     try {
       await player.start();
       playbackStarted = true;
-      this.assistantOutput.setDesiredVolume(input.volume);
       // Start the public elapsed clock only after playback attaches successfully.
-      this.segmentStartedAtMs = this.now();
-      try {
-        await this.assistantOutput.apply();
-      } catch (error) {
-        log.warn("initial setVolume failed", { error: getErrorMessage(error) });
-      }
+      this.clock.markPlaying();
       await player.finished;
       // `finished` resolving means ffmpeg exited 0 — but exit 0 far short of the probed duration
       // is a truncation (network URL expiry, container short-read), not a completed track. Without
@@ -555,7 +552,11 @@ export class StreambotStreamer implements StreamerLike {
           );
       if (shortEnd !== null) {
         outcome = "ended-short";
-        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "ended-short" });
+        streamCrashesTotal.inc({
+          transport,
+          pipeline: pipelineMode,
+          kind: "ended-short",
+        });
         throw shortEnd;
       }
     } catch (error) {
@@ -565,7 +566,11 @@ export class StreambotStreamer implements StreamerLike {
         // Mid-stream death (non-zero ffmpeg exit or demuxer error) after playback was up.
         outcome = "crash";
         const positionSeconds = this.getPosition() ?? startSeconds;
-        streamCrashesTotal.inc({ pipeline: pipelineMode, kind: "crash" });
+        streamCrashesTotal.inc({
+          transport,
+          pipeline: pipelineMode,
+          kind: "crash",
+        });
         const crash = StreamCrashError.fromCause(error, {
           positionSeconds,
           pipelineMode,
@@ -593,15 +598,22 @@ export class StreambotStreamer implements StreamerLike {
       // `Player.position`, falling back to the requested offset if playback never started.
       if (this.player === player) {
         this.lastPlaybackPositionSeconds = this.getPosition() ?? startSeconds;
-        this.invalidatePendingSeek();
-        this.segmentStartedAtMs = null;
+        this.clock.invalidate();
+        this.clock.stopClock();
         this.player = null;
       }
+      // Release the outbound track before the next segment (or the next session's userbot) claims
+      // it. Closing is what makes the port inert, so a late frame from this pipeline is dropped.
+      musicPort?.close();
       streamActive.set(0);
       const durationSeconds = (this.now() - segmentStartedMs) / 1000;
-      streamSegmentsTotal.inc({ hardware: segmentHardware, outcome });
+      streamSegmentsTotal.inc({
+        transport,
+        hardware: segmentHardware,
+        outcome,
+      });
       streamSegmentDurationSeconds.observe(
-        { hardware: segmentHardware, outcome },
+        { transport, hardware: segmentHardware, outcome },
         durationSeconds,
       );
     }

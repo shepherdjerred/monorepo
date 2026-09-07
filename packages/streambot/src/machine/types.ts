@@ -8,6 +8,7 @@ import type {
   SubtitlePref,
 } from "@shepherdjerred/streambot/sources/source.ts";
 import type { Chapter } from "@shepherdjerred/streambot/sources/chapters.ts";
+import type { MediaKind } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import type {
   ChannelId,
   GuildId,
@@ -76,6 +77,33 @@ export type ResolvedSubtitle = {
 export type ResolvedSource = {
   readonly title: string;
   readonly ffmpegInput: string;
+  /**
+   * Which transport carries this item: `music` audio-only over the voice connection, `video` over
+   * Go Live. REQUIRED, not optional — an optional field would push a `?? "video"` default into the
+   * streamer, the one place where guessing wrong is a user-visible bug (a song opening a Go Live
+   * tile, or worse, a video-typed play with no video track hard-throwing inside the fork).
+   */
+  readonly mediaKind: MediaKind;
+  /**
+   * HTTP headers the primary input must be fetched with (yt-dlp's `http_headers` for the format it
+   * selected: User-Agent, Referer, Cookie, …). Maps onto `prepareStream`'s `customHeaders`. Absent
+   * for local files and for sources whose extractor set no headers.
+   */
+  readonly ffmpegInputHeaders?: Readonly<Record<string, string>>;
+  /**
+   * Second ffmpeg input, carrying audio only. Set when yt-dlp satisfied the video selector with a
+   * `+` merge — the normal case on YouTube, where muxed formats have all but disappeared — and
+   * consumed by `prepareStream`'s second input (`-map 1:a:0`). Absent for music (whose single input
+   * is already the audio) and for muxed sources (direct `.mp4`, HLS), where one input carries both.
+   */
+  readonly audioInput?: string;
+  /**
+   * Headers for {@link audioInput}, which is a *separately signed* URL with its own header set —
+   * a merge result carries no shared top-level `http_headers` to reuse. These belong on the second
+   * input specifically, which is what `prepareStream`'s `audioInput.inputOptions` exists for;
+   * `httpHeaderInputOptions` in `sources/format-select.ts` renders them.
+   */
+  readonly audioInputHeaders?: Readonly<Record<string, string>>;
   /** Chapter markers (ffprobe for files, yt-dlp for URLs); empty when none are available. */
   readonly chapters: readonly Chapter[];
   /** Burnable subtitle for this source, if one was found and subtitles are enabled. */

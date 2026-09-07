@@ -178,6 +178,7 @@ function fixture(transactionTimeoutMs = 1000) {
         requesterId: USER,
         chapters: [],
         kind: "file",
+        mediaKind: null,
         sourceId: "file:/current.mkv",
         durationSeconds: 600,
       },
@@ -200,6 +201,7 @@ function fixture(transactionTimeoutMs = 1000) {
       Promise.resolve({
         title: "YouTube",
         ffmpegInput: "https://media.invalid/video",
+        mediaKind: "video",
         chapters: [],
       }),
     announce: () => Promise.resolve(),
@@ -214,11 +216,27 @@ function fixture(transactionTimeoutMs = 1000) {
     runStream: () => Promise.resolve(),
     leaveVoice: () => Promise.resolve(),
     setVolume: () => Promise.resolve(true),
+    openAssistantAudio: () => ({
+      send: (packet) => {
+        replyPackets.push(packet);
+        return Promise.resolve();
+      },
+      setSpeaking: (value) => {
+        speaking.push(value);
+      },
+      close: () => {
+        /* the fake holds no per-port state */
+      },
+    }),
+    // The shared voice pipeline speaks through this pair, not through the port, so the fake has to
+    // record here for a reply to be observable at all.
     setAssistantSpeaking: (value) => {
       speaking.push(value);
       return Promise.resolve();
     },
-    sendAssistantOpus: (packet) => replyPackets.push(packet),
+    sendAssistantOpus: (packet) => {
+      replyPackets.push(packet);
+    },
     assistantUserId: () => "200000000000000001",
     assistantDaveReady: () => true,
     setVoiceAudioListener: (listener) => {
@@ -308,6 +326,7 @@ const REALTIME_TOOL_CASES: readonly FakeRealtimeToolCall[] = [
       query: "Local Movie",
       source: "auto",
       placement: "queue",
+      mode: "auto",
     }),
   },
   { name: "skip", arguments: "{}" },
@@ -495,6 +514,7 @@ describe("custom Realtime transport", () => {
           query: "porn compilation",
           source: "youtube",
           placement: "queue",
+          mode: "auto",
         }),
       },
       { name: "skip", arguments: "{}" },
@@ -788,6 +808,7 @@ describe("local Realtime probe", () => {
             query: "The Matrix",
             source: "local",
             placement: "queue",
+            mode: "auto",
           }),
         },
       ],
@@ -804,6 +825,7 @@ describe("local Realtime probe", () => {
           query: "The Matrix",
           source: "local",
           placement: "queue",
+          mode: "auto",
         },
       },
     ]);
@@ -881,6 +903,7 @@ describe("local Realtime probe", () => {
             query: "https://youtube.com/watch?v=not-accepted",
             source: "youtube",
             placement: "queue",
+            mode: "auto",
           }),
         },
         { name: "skip", arguments: "{}" },

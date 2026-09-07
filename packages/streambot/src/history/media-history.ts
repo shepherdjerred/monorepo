@@ -5,6 +5,7 @@ import type { MediaCandidate } from "@shepherdjerred/streambot/discovery/candida
 import {
   SourceSchema,
   sourceIdentity,
+  withMode,
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
@@ -315,6 +316,17 @@ export class MediaHistoryStore {
 
   private upsertMedia(media: RecordMedia): string {
     const identity = sourceIdentity(media.source);
+    // Store the item, not the request. A `mode:` override is a property of ONE play — "this time,
+    // watch it" — and `source_json` is what every later replay (favorites, /stream again, history
+    // requeue) is rebuilt from. Persisting the override verbatim would pin the item to that
+    // transport forever, and because `sourceIdentity` ignores `mode`, the very next play of the
+    // same URL would overwrite this row and silently inherit it. Resume state is the opposite case
+    // and deliberately keeps the real mode: it is the same play continuing, not a new one.
+    //
+    // Stripped rather than set to `"auto"`, which is the same thing to every reader of `Source` and
+    // additionally keeps this column byte-identical to what it holds today for any item requested
+    // without a mode — no silent rewrite of every history row on deploy.
+    const source = withMode(media.source, undefined);
     const id = crypto.randomUUID();
     this.database
       .query(
@@ -334,7 +346,7 @@ export class MediaHistoryStore {
         id,
         media.provider,
         identity,
-        JSON.stringify(media.source),
+        JSON.stringify(source),
         media.title,
         media.canonicalUrl ?? null,
         media.channel ?? null,

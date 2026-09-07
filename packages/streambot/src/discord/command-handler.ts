@@ -391,6 +391,15 @@ export class CommandHandler {
       await interaction.reply("Nothing is playing.");
       return;
     }
+    // An audio-only item has no picture to burn a track into, and `prepareStream` hard-throws when
+    // `subtitleBurn` meets `audioOnly`. Refuse here with the fix rather than letting the request
+    // reach the streamer and fail the segment.
+    if (current.mediaKind === "music") {
+      await interaction.reply(
+        "This is playing as audio only, so there's no picture to burn subtitles into. Requeue it with `mode:video` for a video stream.",
+      );
+      return;
+    }
     if (
       !canControlItem(
         interaction.userId,

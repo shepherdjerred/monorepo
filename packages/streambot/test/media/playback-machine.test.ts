@@ -7,6 +7,7 @@ import {
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
 import type {
   PlaybackInput,
+  ResolvedSource,
   RunStreamInput,
 } from "@shepherdjerred/streambot/machine/types.ts";
 import { BlockedSourceError } from "@shepherdjerred/streambot/moderation/adult-block.ts";
@@ -80,6 +81,7 @@ function makeActors(overrides: Partial<PlaybackActors> = {}): PlaybackActors {
       return Promise.resolve({
         title,
         ffmpegInput: `resolved:${title}`,
+        mediaKind: "video",
         chapters: [],
       });
     },
@@ -333,7 +335,12 @@ describe("playback machine", () => {
         resolveSource: (input) =>
           input.source.kind === "search"
             ? Promise.reject(new BlockedSourceError(input.source.query))
-            : Promise.resolve({ title: "ok", ffmpegInput: "ok", chapters: [] }),
+            : Promise.resolve({
+                title: "ok",
+                ffmpegInput: "ok",
+                mediaKind: "video",
+                chapters: [],
+              }),
       }),
     );
     actor.send({
@@ -527,9 +534,10 @@ function urlSource(query: string): Source {
 }
 
 function addPreResolvedSource(actor: ReturnType<typeof startActor>) {
-  const preResolved = {
+  const preResolved: ResolvedSource = {
     title: "pre",
     ffmpegInput: "pre://input",
+    mediaKind: "video",
     chapters: [],
   };
   actor.send({
@@ -550,6 +558,7 @@ describe("preResolved (synchronous pre-validation short-circuit)", () => {
         input.preResolved ?? {
           title: "fallback",
           ffmpegInput: "should-not-be-used",
+          mediaKind: "video",
           chapters: [],
         },
       );
@@ -569,6 +578,7 @@ describe("preResolved (synchronous pre-validation short-circuit)", () => {
         input.preResolved ?? {
           title: "re-resolved",
           ffmpegInput: "re-resolved://input",
+          mediaKind: "video",
           chapters: [],
         },
       );
