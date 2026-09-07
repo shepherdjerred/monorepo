@@ -3,10 +3,10 @@ import * as domainDatabaseIds from "@scout-for-lol/domain/identity/database-ids.
 import * as domainDiscord from "@scout-for-lol/domain/identity/discord.ts";
 import * as domainLeagueAccount from "@scout-for-lol/domain/identity/league-account.ts";
 import * as domainRoutes from "@scout-for-lol/domain/identity/routes.ts";
-import * as dataCompetition from "#src/model/competition.ts";
-import * as dataDiscord from "#src/model/discord.ts";
-import * as dataLeagueAccount from "#src/model/league-account.ts";
-import * as dataRoutes from "#src/model/routes.ts";
+import * as dataCompetition from "#src/model/competitions/competition.ts";
+import * as dataDiscord from "#src/model/core/discord.ts";
+import * as dataLeagueAccount from "#src/model/riot/league-account.ts";
+import * as dataRoutes from "#src/model/core/routes.ts";
 
 /**
  * The schemas moved to @scout-for-lol/domain are re-exported by their old

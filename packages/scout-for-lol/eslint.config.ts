@@ -220,10 +220,10 @@ const config = [
   // preserved across both packages.
   {
     files: [
-      "packages/data/src/model/competition.ts",
-      "packages/data/src/model/discord.ts",
-      "packages/data/src/model/league-account.ts",
-      "packages/data/src/model/routes.ts",
+      "packages/data/src/model/competitions/competition.ts",
+      "packages/data/src/model/core/discord.ts",
+      "packages/data/src/model/riot/league-account.ts",
+      "packages/data/src/model/core/routes.ts",
     ],
     rules: { "custom-rules/no-re-exports": "off" },
   },
