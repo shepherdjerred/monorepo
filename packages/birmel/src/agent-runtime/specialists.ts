@@ -149,7 +149,11 @@ export function requireSuccessfulPrimaryTool(
 }
 
 function taskPrompt(packet: SpecialistTaskPacket): string {
-  return `Current request from ${packet.username} (${packet.userId}):\n${packet.request}\n\nDiscord context:\nguild=${packet.guildId}\nchannel=${packet.channelId}${packet.threadId == null ? "" : `\nthread=${packet.threadId}`}\n\nRelevant context:\n${packet.context}`;
+  const referenceFailureText =
+    packet.referenceResolutionError == null
+      ? ""
+      : `\n\nReference warning:\nFailed to resolve referenced message ${packet.referenceResolutionError.referencedMessageId}: ${packet.referenceResolutionError.error}`;
+  return `Current request from ${packet.username} (${packet.userId}):\n${packet.request}\n\nDiscord context:\nguild=${packet.guildId}\nchannel=${packet.channelId}${packet.threadId == null ? "" : `\nthread=${packet.threadId}`}\n\nRelevant context:\n${packet.context}${referenceFailureText}`;
 }
 
 function taskMessages(packet: SpecialistTaskPacket) {

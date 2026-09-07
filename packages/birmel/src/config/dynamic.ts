@@ -73,6 +73,15 @@ const DEFINITION = {
     default: true,
     names: { flag: "birmel-elections-enabled", env: "ELECTIONS_ENABLED" },
   },
+  imageGenerationEnabled: {
+    schema: DynamicBooleanSchema,
+    sources: ["flag", "env", "default"],
+    default: false,
+    names: {
+      flag: "birmel-image-generation-enabled",
+      env: "IMAGE_GENERATION_ENABLED",
+    },
+  },
   llmModel: {
     schema: StringSchema,
     sources: ["flag", "env", "default"],
@@ -96,6 +105,12 @@ const DEFINITION = {
     sources: ["flag", "env", "default"],
     default: "text-embedding-3-small",
     names: { flag: "birmel-llm-embedding-model", env: "LLM_EMBEDDING_MODEL" },
+  },
+  imageModel: {
+    schema: StringSchema,
+    sources: ["flag", "env", "default"],
+    default: "gemini-3-pro-image-preview",
+    names: { flag: "birmel-llm-image-model", env: "LLM_IMAGE_MODEL" },
   },
   personaStyleModel: {
     schema: StringSchema,
@@ -190,10 +205,12 @@ function createSnapshot(
           birthdaysEnabled: "boolean",
           activityTrackingEnabled: "boolean",
           electionsEnabled: "boolean",
+          imageGenerationEnabled: "boolean",
           llmModel: "string",
           classifierModel: "string",
           memoryModel: "string",
           embeddingModel: "string",
+          imageModel: "string",
           personaStyleModel: "string",
           reasoningEffort: "string",
           maxTokens: "number",
@@ -222,10 +239,12 @@ function createSnapshot(
       birthdaysEnabled: config.birthdays.enabled,
       activityTrackingEnabled: config.activityTracking.enabled,
       electionsEnabled: config.elections.enabled,
+      imageGenerationEnabled: config.imageGeneration.enabled,
       llmModel: config.openRouter.model,
       classifierModel: config.openRouter.classifierModel,
       memoryModel: config.openRouter.memoryModel,
       embeddingModel: config.openRouter.embeddingModel,
+      imageModel: config.openRouter.imageModel,
       personaStyleModel: config.persona.styleModel,
       reasoningEffort: config.openRouter.reasoningEffort,
       maxTokens: config.openRouter.maxTokens,
@@ -250,10 +269,12 @@ function applySnapshot(snapshot: Snapshot, config: Config): void {
   config.birthdays.enabled = snapshot.get("birthdaysEnabled");
   config.activityTracking.enabled = snapshot.get("activityTrackingEnabled");
   config.elections.enabled = snapshot.get("electionsEnabled");
+  config.imageGeneration.enabled = snapshot.get("imageGenerationEnabled");
   config.openRouter.model = snapshot.get("llmModel");
   config.openRouter.classifierModel = snapshot.get("classifierModel");
   config.openRouter.memoryModel = snapshot.get("memoryModel");
   config.openRouter.embeddingModel = snapshot.get("embeddingModel");
+  config.openRouter.imageModel = snapshot.get("imageModel");
   config.persona.styleModel = snapshot.get("personaStyleModel");
   config.openRouter.reasoningEffort = snapshot.get("reasoningEffort");
   config.openRouter.maxTokens = snapshot.get("maxTokens");

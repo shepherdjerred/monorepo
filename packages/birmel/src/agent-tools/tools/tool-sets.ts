@@ -5,6 +5,7 @@ import {
   SpecialistIdSchema,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { getRegisteredToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
+import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 
 /**
  * Specialized tool sets for different agent types.
@@ -35,6 +36,7 @@ import { manageAgentSessionTool } from "./sessions/index.ts";
 import { electionTools } from "./elections/elections.ts";
 import { getCandidateStatsTool } from "./elections/candidate-stats.ts";
 import { manageBirthdayTool } from "./birthdays/index.ts";
+import { generateImageTool } from "./images/generate-image.ts";
 
 /**
  * Messaging Agent - handles messages, threads, polls, memory, and sessions
@@ -82,6 +84,7 @@ export const automationToolSet = [
   ...electionTools,
   getCandidateStatsTool,
   manageBirthdayTool,
+  generateImageTool,
 ];
 
 export type AgentType = z.infer<typeof SpecialistIdSchema>;
@@ -167,8 +170,17 @@ export function getCapabilityCatalog(): CapabilityCatalogEntry[] {
       "Birmel tool metadata and executable capability inventory differ",
     );
   }
+  const config = getConfig();
+  const advertisedEntries = entries.filter((entry) => {
+    if (entry.id === "generate-image" && !config.imageGeneration.enabled) {
+      return false;
+    }
+    return true;
+  });
   return CapabilityCatalogSchema.parse(
-    entries.toSorted((left, right) => left.id.localeCompare(right.id)),
+    advertisedEntries.toSorted((left, right) =>
+      left.id.localeCompare(right.id),
+    ),
   );
 }
 

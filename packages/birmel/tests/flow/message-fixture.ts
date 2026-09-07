@@ -37,13 +37,19 @@ export function createFlowMessageContext(
       return Promise.resolve({
         id: responseMessageId,
         author: { id: "55555555555555555" },
-        edit: (editedPayload: string) => {
-          state.editAttempts.push(editedPayload);
+        edit: (
+          editedPayload: string | { content: string; files?: unknown[] },
+        ) => {
+          const text =
+            typeof editedPayload === "string"
+              ? editedPayload
+              : editedPayload.content;
+          state.editAttempts.push(text);
           state.deliveryOrder.push(`edit:${options.messageId}`);
           if (state.scenario === "final-delivery-failure") {
             return Promise.reject(new Error("DELIVERY_SECRET_EXCEPTION"));
           }
-          state.deliveredEdits.push(editedPayload);
+          state.deliveredEdits.push(text);
           return Promise.resolve();
         },
       });

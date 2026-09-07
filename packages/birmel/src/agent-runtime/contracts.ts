@@ -31,6 +31,14 @@ export const TurnAttachmentSchema = z.object({
   name: z.string().nullable(),
 });
 
+export const ReferenceResolutionErrorSchema = z.object({
+  referencedMessageId: DiscordIdSchema,
+  error: z.string().min(1),
+});
+export type ReferenceResolutionError = z.infer<
+  typeof ReferenceResolutionErrorSchema
+>;
+
 export const TurnInputSchema = z.object({
   discordMessageId: DiscordIdSchema,
   guildId: DiscordIdSchema,
@@ -40,6 +48,7 @@ export const TurnInputSchema = z.object({
   username: z.string().min(1),
   content: z.string(),
   attachments: z.array(TurnAttachmentSchema).default([]),
+  referenceResolutionError: ReferenceResolutionErrorSchema.optional(),
   triggerKind: TriggerKindSchema,
   receivedAt: z.date(),
 });
@@ -265,5 +274,6 @@ export const SpecialistTaskPacketSchema = z.object({
   persona: z.string().max(CONTEXT_BUDGETS.persona),
   context: z.string().max(CONTEXT_BUDGETS.total),
   attachments: z.array(TurnAttachmentSchema).default([]),
+  referenceResolutionError: ReferenceResolutionErrorSchema.optional(),
 });
 export type SpecialistTaskPacket = z.infer<typeof SpecialistTaskPacketSchema>;

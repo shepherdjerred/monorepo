@@ -9,7 +9,7 @@ import {
   getRegisteredToolMetadata,
   getToolMetadata,
 } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
-import { resetConfig } from "@shepherdjerred/birmel/config/index.ts";
+import { getConfig, resetConfig } from "@shepherdjerred/birmel/config/index.ts";
 import {
   runWithRequestContext,
   type RequestContext,
@@ -333,6 +333,18 @@ const expectedMetadata = BirmelToolMetadataSchema.array().parse([
       "sourceMessageId",
     ],
   },
+  {
+    id: "generate-image",
+    specialist: "automation",
+    riskClass: "write",
+    timeoutMs: 60_000,
+    requiredRequestContext: [
+      "guildId",
+      "channelId",
+      "userId",
+      "sourceMessageId",
+    ],
+  },
 ]);
 
 function trustedContext(
@@ -423,6 +435,18 @@ describe("tool metadata contracts", () => {
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain("sql");
     expect(JSON.stringify(catalog).toLocaleLowerCase()).not.toContain(
       "database",
+    );
+  });
+
+  test("gates generate-image advertising in the capability catalog based on configuration", () => {
+    getConfig().imageGeneration.enabled = false;
+    expect(getCapabilityCatalog().map(({ id }) => id)).not.toContain(
+      "generate-image",
+    );
+
+    getConfig().imageGeneration.enabled = true;
+    expect(getCapabilityCatalog().map(({ id }) => id)).toContain(
+      "generate-image",
     );
   });
 });
