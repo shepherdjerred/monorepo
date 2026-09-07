@@ -136,10 +136,11 @@ describe("probeMedia sends yt-dlp's signed headers to ffprobe", () => {
    * than read it.
    *
    * What this protects is subtle and worth stating: `resolveSource` uses the ffprobe of the FINAL
-   * chosen input as the authoritative "does this have a picture" check, which is what stops an
-   * audio-only source with `mode: "video"` from reaching the fork's `attachPipeline` hard-throw.
-   * A signed URL that 403s makes `probeMedia` return `null`, and `null` means "no evidence", so the
-   * guard silently stops guarding while still looking present. That is worse than not having it.
+   * chosen input as the authoritative "does this have a picture" check, which is what stops a
+   * picture-less input from reaching the fork's `attachPipeline` hard-throw — demoted when the
+   * video classification was inferred, rejected when it was explicitly requested. A signed URL
+   * that 403s makes `probeMedia` return `null`, and `null` means "no evidence", so the guard
+   * silently stops guarding while still looking present. That is worse than not having it.
    */
   test("the fake CDN really does reject an unsigned request", async () => {
     // Asserted directly so a later failure cannot be blamed on a server that accepts everything —
@@ -175,20 +176,32 @@ describe("probeMedia sends yt-dlp's signed headers to ffprobe", () => {
 });
 
 describe("resolveSource wires the classifier to the real probe", () => {
-  test("an audio-only local file requested as mode: video resolves to music", async () => {
-    // The file branch probes before it classifies, so rule 1 fires during classification here.
-    // `mode: "video"` is honoured everywhere EXCEPT this case, because the fork's `attachPipeline`
-    // hard-throws "No video stream in media" on a video-typed play with no video track — after
-    // ffmpeg has spawned and Go Live is open. Obeying the user into a guaranteed crash is worse
-    // than overriding them.
+  test("an audio-only local file requested as mode: video is rejected, not switched", async () => {
+    // `mode: "video"` is an instruction, not a guess — either a user typed it, or the rollout flag
+    // is off and forced the pre-split transport. Quietly playing it as music would ignore both,
+    // and in the rollout case would make the flag a switch that switches nothing off. It fails
+    // here, on the real probe, rather than at the fork's `attachPipeline` hard-throw with ffmpeg
+    // already spawned.
+    await expect(
+      resolveSource(
+        config,
+        {
+          kind: "file",
+          path: audioOnlyPath,
+          title: "A Song",
+          mode: "video",
+        },
+        NEVER_ABORT,
+      ),
+    ).rejects.toThrow(/no video track/);
+  }, 60_000);
+
+  test("an audio-only local file with no explicit mode is demoted on the probe", async () => {
+    // The control for the test above: an INFERRED video classification still loses to the probe,
+    // which is what keeps an MP3 whose metadata says nothing about its codecs playable at all.
     const resolved = await resolveSource(
       config,
-      {
-        kind: "file",
-        path: audioOnlyPath,
-        title: "A Song",
-        mode: "video",
-      },
+      { kind: "file", path: audioOnlyPath, title: "A Song" },
       NEVER_ABORT,
     );
     expect(resolved.mediaKind).toBe("music");
@@ -234,8 +247,10 @@ describe("resolveSource re-checks a pre-resolved item against its real input", (
    *
    * `preResolved` does. It carries a result yt-dlp produced during `/stream play`'s synchronous
    * pre-validation, and `resolveSource` trusts its kind but still probes the input it names. A
-   * video-typed pre-resolution whose input turns out to have no picture is exactly the shape rule 1
-   * exists to catch, and here it is caught by the probe rather than by metadata.
+   * video-typed pre-resolution whose input turns out to have no picture is exactly the shape the
+   * reconciliation exists to catch, and here it is caught by the probe rather than by metadata.
+   * It carries no explicit `mode`, so this is the INFERRED case and demotion is correct — the
+   * explicit case is rejected instead, above.
    */
   test("downgrades to music and drops the second input", async () => {
     const resolved = await resolveSource(
