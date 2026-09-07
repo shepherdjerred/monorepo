@@ -1,0 +1,8 @@
+{
+  "note": "Milliseconds of wake-phrase audio still to come after each matched sherpa fragment ends; consumed by the voice lifecycle's fragmentTailMs option. Measurement method: packages/streambot/src/voice/constants.ts (VOICE_FRAGMENT_TAIL_MS). HEY_SCOUT and SCOUT end with the phrase and take no tail; HEY carries over streambot's hey-streambot value, not independently measured against hey-scout audio.",
+  "tails": {
+    "HEY_SCOUT": 0,
+    "SCOUT": 0,
+    "HEY": 500
+  }
+}

@@ -171,6 +171,14 @@ Packaging requires the minimum training counts, the complete ACAV100M general-sp
 a generated positive smoke WAV. Both local runtimes must accept that checksum-pinned smoke sample;
 successfully loading an ONNX graph is insufficient.
 
+The corpus, keywords, packaging, and evaluation tooling stays in streambot but serves every
+trained wake phrase: each phrase is a self-contained
+[profile](https://github.com/shepherdjerred/monorepo/blob/8cf8056934b7fa7d9238f5d43ae88c63afeacd8e/packages/streambot/src/voice/corpus-phrases.ts),
+and the [hey-streambot defaults](https://github.com/shepherdjerred/monorepo/blob/8cf8056934b7fa7d9238f5d43ae88c63afeacd8e/packages/streambot/src/voice/corpus-recipes.ts)
+are unchanged. Scout's "hey scout" verifier trains through the same tools; its recipe and operator
+procedure live in
+[`packages/scout-for-lol/packages/backend/voice-training/`](https://github.com/shepherdjerred/monorepo/tree/8cf8056934b7fa7d9238f5d43ae88c63afeacd8e/packages/scout-for-lol/packages/backend/voice-training).
+
 The production image requires both sherpa runtimes and the in-process phrase-verifier graph to
 complete inference as the deployment user; merely opening model files is not a successful smoke.
 Corpus evaluation is deliberately not a build step: it is a multi-hour acceptance measurement an

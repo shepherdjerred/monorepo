@@ -3,7 +3,7 @@ import { rm } from "node:fs/promises";
 import OpenAI from "openai";
 import { DiscordOpusEncoder } from "@shepherdjerred/voice-assistant/codecs.ts";
 import {
-  VoiceCorpusManifestSchema,
+  voiceCorpusManifestSchema,
   type VoiceCorpusEntry,
   type VoiceCorpusManifest,
 } from "@shepherdjerred/streambot/voice/corpus-schema.ts";
@@ -14,6 +14,8 @@ import {
 } from "@shepherdjerred/streambot/voice/corpus-io.ts";
 import {
   expandVoiceCorpusRecipes,
+  STREAMBOT_VOICE_PHRASE_SPEC,
+  type VoiceCorpusPhraseSpec,
   type VoiceCorpusRecipe,
 } from "@shepherdjerred/streambot/voice/corpus-recipes.ts";
 import { encodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
@@ -353,6 +355,8 @@ export type GenerateVoiceCorpusOptions = {
   readonly corpusDir?: string;
   readonly ffmpegPath?: string;
   readonly refresh?: boolean;
+  /** Which wake phrase's corpus to generate; defaults to streambot's canonical corpus. */
+  readonly spec?: VoiceCorpusPhraseSpec;
   readonly recipes?: readonly VoiceCorpusRecipe[];
   readonly normalize?: (pcm: Uint8Array) => Promise<Uint8Array>;
   readonly encode?: (pcm: Uint8Array) => Uint8Array[];
@@ -365,20 +369,22 @@ export type GenerateVoiceCorpusOptions = {
 export async function generateVoiceCorpus(
   options: GenerateVoiceCorpusOptions,
 ): Promise<VoiceCorpusManifest> {
+  const spec = options.spec ?? STREAMBOT_VOICE_PHRASE_SPEC;
+  const ManifestSchema = voiceCorpusManifestSchema(spec.format);
   const corpusDir = options.corpusDir ?? DEFAULT_VOICE_CORPUS_DIR;
   const manifestPath = path.join(corpusDir, "manifest.json");
   const existingFile = Bun.file(manifestPath);
   const existing = (await existingFile.exists())
-    ? VoiceCorpusManifestSchema.parse(await existingFile.json())
-    : VoiceCorpusManifestSchema.parse({
+    ? ManifestSchema.parse(await existingFile.json())
+    : ManifestSchema.parse({
         version: 1,
-        format: "streambot-discord-opus-v1",
+        format: spec.format,
         disclosure:
           "AI-generated and procedurally generated speech/audio; no recordings of people or copyrighted media.",
         entries: [],
       });
   const entries = new Map(existing.entries.map((entry) => [entry.id, entry]));
-  for (const recipe of options.recipes ?? expandVoiceCorpusRecipes()) {
+  for (const recipe of options.recipes ?? expandVoiceCorpusRecipes(spec)) {
     const destination = path.join(corpusDir, recipe.file);
     const previous = entries.get(recipe.id);
     if (
@@ -421,7 +427,7 @@ export async function generateVoiceCorpus(
       packetCount: packets.length,
       sha256: sha256(container),
     });
-    const manifest = VoiceCorpusManifestSchema.parse({
+    const manifest = ManifestSchema.parse({
       ...existing,
       entries: [...entries.values()].sort((left, right) =>
         left.id.localeCompare(right.id),
@@ -429,5 +435,5 @@ export async function generateVoiceCorpus(
     });
     await atomicWrite(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
-  return VoiceCorpusManifestSchema.parse(await Bun.file(manifestPath).json());
+  return ManifestSchema.parse(await Bun.file(manifestPath).json());
 }
