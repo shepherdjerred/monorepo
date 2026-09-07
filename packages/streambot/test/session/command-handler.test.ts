@@ -1,3 +1,5 @@
+import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
+import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { describe, expect, test } from "vitest";
 import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
 import type {
@@ -102,6 +104,9 @@ function makeHandler(over: {
    * second value simulates playback advancing to a different item during the picker's wait.
    */
   currentSourceId?: string | null | (string | null)[];
+  /** Rollout gate plus a real in-memory history, for the `/stream personal usual` replay path. */
+  musicOverVoice?: boolean;
+  history?: MediaHistoryStore;
 }): Harness & { seeks: number[]; subtitleMenuPending: () => boolean } {
   const events: PlaybackEvent[] = [];
   const announces: string[] = [];
@@ -173,6 +178,18 @@ function makeHandler(over: {
     },
     stopVoiceDebugCapture: () => ({ outcome: "none" }),
     voiceDebugCaptureStatus: () => null,
+    guildId: GUILD,
+    channelId: CHANNEL,
+    ...(over.musicOverVoice === undefined
+      ? {}
+      : {
+          featureGate: {
+            assistantV2: () => Promise.resolve(true),
+            history: () => Promise.resolve(true),
+            musicOverVoice: () => Promise.resolve(over.musicOverVoice ?? false),
+          },
+        }),
+    ...(over.history === undefined ? {} : { history: over.history }),
   };
   return {
     handler: new CommandHandler(deps),
@@ -866,6 +883,66 @@ const SIDECAR_CANDIDATE: SubtitleCandidate = {
   lang: "en",
   modifier: null,
 };
+
+function seedUsual(history: MediaHistoryStore): void {
+  const media = {
+    title: "A Song",
+    provider: "youtube" as const,
+    source: { kind: "url" as const, url: "https://youtu.be/song" },
+    canonicalUrl: "https://youtu.be/song",
+  };
+  const scope = { guildId: GUILD, channelId: CHANNEL, userId: REQUESTER };
+  const requestId = history.recordQueueRequest({
+    scope,
+    rawQuery: "A Song",
+    intent: inferMediaIntent({ query: "A Song" }),
+    media,
+  });
+  history.recordPlaybackStart({ requestId, scope, media });
+}
+
+describe("CommandHandler stored-candidate rollout gate", () => {
+  test("forces a history replay to video while the flag is off", async () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      seedUsual(history);
+      const h = makeHandler({ history, musicOverVoice: false });
+      const { interaction } = fakeInteraction({
+        sub: "usual",
+        group: "personal",
+        userId: REQUESTER,
+      });
+      await h.handler.run(interaction);
+      // Favorites, saved queues, "my usual" and continue-series queue stored candidates without
+      // passing through `PlaybackCommandService.play`. Stored sources are deliberately mode-less,
+      // so without re-applying the gate they auto-classify onto the transport it disables.
+      const added = h.events.find((event) => event.type === "ADD");
+      expect(added?.source.mode).toBe("video");
+    } finally {
+      history.close();
+    }
+  });
+
+  test("leaves a history replay to the classifier while the flag is on", async () => {
+    const history = new MediaHistoryStore(":memory:");
+    try {
+      seedUsual(history);
+      const h = makeHandler({ history, musicOverVoice: true });
+      const { interaction } = fakeInteraction({
+        sub: "usual",
+        group: "personal",
+        userId: REQUESTER,
+      });
+      await h.handler.run(interaction);
+      // The control: a gate that stamped video unconditionally would disable music for every
+      // stored candidate while the test above stayed green.
+      const added = h.events.find((event) => event.type === "ADD");
+      expect(added?.source.mode).toBeUndefined();
+    } finally {
+      history.close();
+    }
+  });
+});
 
 describe("CommandHandler transport selection", () => {
   test("an explicit subtitle request settles the transport as video", async () => {

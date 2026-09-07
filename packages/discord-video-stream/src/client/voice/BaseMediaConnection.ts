@@ -92,17 +92,25 @@ export type MediaConnectionOptions = {
 /**
  * The direction advertised for the audio m-line.
  *
- * `inactive` declares a stream neither peer may send on, so a connection that intends to emit
- * audio has to say so — installing a packetizer is not enough on its own. `receiveAudio` keeps its
- * historical `sendrecv`, and a connection that asks for neither still says `inactive`, so every
- * existing caller (Go Live among them) negotiates exactly what it always has.
+ * **This string is written from Discord's point of view, not ours.** The SDP built here is
+ * installed with `setRemoteDescription(..., "answer")`, so it describes the REMOTE endpoint. A
+ * direction naming what we want to do is therefore backwards: to send audio we need Discord to
+ * receive it, which is `recvonly`. Saying `sendonly` would declare that Discord sends and we
+ * listen, and libdatachannel would refuse to let the local track send at all — the same silence
+ * as `inactive`, arrived at from the opposite direction.
+ *
+ * `inactive` declares a stream neither peer may use, so a connection that intends to emit audio
+ * has to say so; installing a packetizer is not enough on its own. `receiveAudio` keeps its
+ * historical `sendrecv`, which is symmetric and so reads the same from either side, and a
+ * connection asking for neither still says `inactive` — so every existing caller, Go Live among
+ * them, negotiates exactly what it always has.
  */
 export function voiceAudioSdpDirection(
   receiveAudio: boolean,
   sendAudio = false,
-): "sendrecv" | "sendonly" | "inactive" {
+): "sendrecv" | "recvonly" | "inactive" {
   if (receiveAudio) return "sendrecv";
-  return sendAudio ? "sendonly" : "inactive";
+  return sendAudio ? "recvonly" : "inactive";
 }
 
 export function prepareReceivedOpus(options: {

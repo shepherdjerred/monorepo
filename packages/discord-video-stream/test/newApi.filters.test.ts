@@ -1,3 +1,4 @@
+import { redactHeaderArgument } from "../src/media/newApi.ts";
 import { describe, expect, test } from "vitest";
 import {
   type FfmpegProcessHandle,
@@ -25,6 +26,28 @@ function ffmpegArgs(command: FfmpegProcessHandle): readonly string[] {
 function killQuietly(command: FfmpegProcessHandle): void {
   command.kill("SIGKILL");
 }
+
+describe("ffmpeg command redaction", () => {
+  test("redacts credential headers but keeps the rest of the line", () => {
+    const rendered = redactHeaderArgument(
+      "User-Agent: Mozilla/5.0\r\nCookie: session=abc123\r\nAuthorization: Bearer tok\r\nAccept: */*",
+    );
+    // The observer forwards the whole argument vector to production logs and CI artifacts, so a
+    // signed URL's session token would be persisted verbatim without this.
+    expect(rendered).not.toContain("abc123");
+    expect(rendered).not.toContain("Bearer tok");
+    expect(rendered).toContain("Cookie: <redacted>");
+    expect(rendered).toContain("Authorization: <redacted>");
+    // The control: redaction must not swallow the ordinary headers that make a log useful.
+    expect(rendered).toContain("User-Agent: Mozilla/5.0");
+    expect(rendered).toContain("Accept: */*");
+  });
+
+  test("leaves a header block with nothing sensitive untouched", () => {
+    const plain = "User-Agent: Mozilla/5.0\r\nAccept-Language: en-us";
+    expect(redactHeaderArgument(plain)).toBe(plain);
+  });
+});
 
 describe("prepareStream audioInput", () => {
   test("maps audio from a separate second input when audioInput is set", () => {
@@ -206,9 +229,7 @@ describe("prepareStream realtime latency opt-ins", () => {
       expect(joined).toContain("-application lowdelay");
       expect(joined).toContain("-frame_duration 10");
       // The libopus private options must bind after the audio codec selection.
-      expect(args.indexOf("lowdelay")).toBeGreaterThan(
-        args.indexOf("libopus"),
-      );
+      expect(args.indexOf("lowdelay")).toBeGreaterThan(args.indexOf("libopus"));
     } finally {
       killQuietly(command);
       output.destroy();
@@ -440,29 +461,51 @@ describe("prepareStream default argument vector (regression lock)", () => {
     promise.catch(() => {});
     try {
       expect([...ffmpegArgs(command)]).toEqual([
-        "-i", "video.mkv",
-        "-map", "0:v",
-        "-b:v", "5000k",
-        "-maxrate:v", "7000k",
-        "-bufsize:v", "2500k",
-        "-bf", "0",
-        "-pix_fmt", "yuv420p",
-        "-force_key_frames", "expr:gte(t,n_forced*1)",
-        "-c:v", "libx264",
-        "-forced-idr", "1",
-        "-tune", "film",
-        "-preset", "superfast",
-        "-map", "0:a:0?",
-        "-ac", "2",
-        "-lfe_mix_level", "1",
-        "-ar", "48000",
-        "-c:a", "libopus",
-        "-b:a", "128k",
-        "-filter:v", "scale=-2:-2",
-        "-filter:a", "volume@internal_lib=1.0",
-        "-progress", "pipe:2",
+        "-i",
+        "video.mkv",
+        "-map",
+        "0:v",
+        "-b:v",
+        "5000k",
+        "-maxrate:v",
+        "7000k",
+        "-bufsize:v",
+        "2500k",
+        "-bf",
+        "0",
+        "-pix_fmt",
+        "yuv420p",
+        "-force_key_frames",
+        "expr:gte(t,n_forced*1)",
+        "-c:v",
+        "libx264",
+        "-forced-idr",
+        "1",
+        "-tune",
+        "film",
+        "-preset",
+        "superfast",
+        "-map",
+        "0:a:0?",
+        "-ac",
+        "2",
+        "-lfe_mix_level",
+        "1",
+        "-ar",
+        "48000",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "128k",
+        "-filter:v",
+        "scale=-2:-2",
+        "-filter:a",
+        "volume@internal_lib=1.0",
+        "-progress",
+        "pipe:2",
         "-nostats",
-        "-f", "nut",
+        "-f",
+        "nut",
         "pipe:1",
       ]);
     } finally {
@@ -487,42 +530,77 @@ describe("prepareStream default argument vector (regression lock)", () => {
     promise.catch(() => {});
     try {
       expect([...ffmpegArgs(command)]).toEqual([
-        "-readrate", "1",
-        "-readrate_initial_burst", "2.5",
-        "-fflags", "nobuffer",
-        "-analyzeduration", "0",
-        "-i", "video.mkv",
-        "-fflags", "nobuffer",
-        "-analyzeduration", "0",
-        "-f", "s16le",
-        "-ar", "44100",
-        "-ac", "2",
-        "-i", "tcp://127.0.0.1:1",
-        "-map", "0:v",
-        "-b:v", "5000k",
-        "-maxrate:v", "7000k",
-        "-bufsize:v", "2500k",
-        "-bf", "0",
-        "-pix_fmt", "yuv420p",
-        "-force_key_frames", "expr:gte(t,n_forced*1)",
-        "-c:v", "libx264",
-        "-forced-idr", "1",
-        "-tune", "film",
-        "-preset", "superfast",
-        "-flush_packets", "1",
-        "-map", "1:a:0",
-        "-ac", "2",
-        "-lfe_mix_level", "1",
-        "-ar", "48000",
-        "-c:a", "libopus",
-        "-b:a", "128k",
-        "-application", "lowdelay",
-        "-frame_duration", "10",
-        "-filter:v", "scale=-2:-2",
-        "-filter:a", "volume@internal_lib=1.0",
-        "-progress", "pipe:2",
+        "-readrate",
+        "1",
+        "-readrate_initial_burst",
+        "2.5",
+        "-fflags",
+        "nobuffer",
+        "-analyzeduration",
+        "0",
+        "-i",
+        "video.mkv",
+        "-fflags",
+        "nobuffer",
+        "-analyzeduration",
+        "0",
+        "-f",
+        "s16le",
+        "-ar",
+        "44100",
+        "-ac",
+        "2",
+        "-i",
+        "tcp://127.0.0.1:1",
+        "-map",
+        "0:v",
+        "-b:v",
+        "5000k",
+        "-maxrate:v",
+        "7000k",
+        "-bufsize:v",
+        "2500k",
+        "-bf",
+        "0",
+        "-pix_fmt",
+        "yuv420p",
+        "-force_key_frames",
+        "expr:gte(t,n_forced*1)",
+        "-c:v",
+        "libx264",
+        "-forced-idr",
+        "1",
+        "-tune",
+        "film",
+        "-preset",
+        "superfast",
+        "-flush_packets",
+        "1",
+        "-map",
+        "1:a:0",
+        "-ac",
+        "2",
+        "-lfe_mix_level",
+        "1",
+        "-ar",
+        "48000",
+        "-c:a",
+        "libopus",
+        "-b:a",
+        "128k",
+        "-application",
+        "lowdelay",
+        "-frame_duration",
+        "10",
+        "-filter:v",
+        "scale=-2:-2",
+        "-filter:a",
+        "volume@internal_lib=1.0",
+        "-progress",
+        "pipe:2",
         "-nostats",
-        "-f", "nut",
+        "-f",
+        "nut",
         "pipe:1",
       ]);
     } finally {

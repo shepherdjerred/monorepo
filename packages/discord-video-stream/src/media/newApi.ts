@@ -15,8 +15,11 @@ const __require = __createRequire(import.meta.url);
 type SharpFactory = (typeof import("sharp"))["default"];
 let __sharpModule: SharpFactory | undefined;
 const __sharpName = ["sh", "arp"].join("");
-const sharp = ((...args: Parameters<SharpFactory>): ReturnType<SharpFactory> => {
-  const factory: SharpFactory = __sharpModule ?? (__sharpModule = __require(__sharpName));
+const sharp = ((
+  ...args: Parameters<SharpFactory>
+): ReturnType<SharpFactory> => {
+  const factory: SharpFactory =
+    __sharpModule ?? (__sharpModule = __require(__sharpName));
   return factory(...args);
 }) as SharpFactory;
 import { type Packet, AV_PKT_FLAG_KEY } from "node-av";
@@ -406,7 +409,9 @@ class FfmpegArgumentBuilder {
     const inputArguments = this.inputs.flatMap((input, index) => [
       ...input.options,
       "-i",
-      typeof input.source === "string" ? input.source : `pipe:${index.toString()}`,
+      typeof input.source === "string"
+        ? input.source
+        : `pipe:${index.toString()}`,
     ]);
     return [
       ...inputArguments,
@@ -487,8 +492,47 @@ function quoteCommandArgument(argument: string): string {
   return `'${argument.replaceAll("'", "'\\''")}'`;
 }
 
-function ffmpegCommandLine(executable: string, args: readonly string[]): string {
-  return [executable, ...args].map(quoteCommandArgument).join(" ");
+/**
+ * Header values ffmpeg is given verbatim but that must never reach a log.
+ *
+ * yt-dlp hands back whatever a site needs to serve a signed URL, which for some extractors is a
+ * `Cookie` or `Authorization`. Those are credentials: the argument vector is logged in full by the
+ * observer, so rendering them here would persist a session token to production logs and to CI
+ * artifacts. The value is redacted for display only — `spawn` still receives the real one.
+ */
+const SENSITIVE_HEADER_NAMES = new Set([
+  "authorization",
+  "cookie",
+  "proxy-authorization",
+  "set-cookie",
+  "x-api-key",
+]);
+
+/** Redact credential-bearing values inside an ffmpeg `-headers` argument, keeping its shape. */
+export function redactHeaderArgument(value: string): string {
+  return value
+    .split(/\r?\n/u)
+    .map((line) => {
+      const separator = line.indexOf(":");
+      if (separator === -1) return line;
+      const name = line.slice(0, separator).trim().toLowerCase();
+      return SENSITIVE_HEADER_NAMES.has(name)
+        ? `${line.slice(0, separator + 1)} <redacted>`
+        : line;
+    })
+    .join("\r\n");
+}
+
+function ffmpegCommandLine(
+  executable: string,
+  args: readonly string[],
+): string {
+  // `-headers` takes its value as the NEXT argument, so redaction keys off the preceding flag
+  // rather than trying to recognise a credential by shape.
+  const rendered = args.map((arg, index) =>
+    args[index - 1] === "-headers" ? redactHeaderArgument(arg) : arg,
+  );
+  return [executable, ...rendered].map(quoteCommandArgument).join(" ");
 }
 
 function createFfmpegStderrHandler(
@@ -781,11 +825,7 @@ export function prepareStream(
   // the downstream send loop. Producer overrun is the dominant cause of unbounded NUT-side buffer
   // accumulation in the consumer process. Skip for live inputs (HTTP HLS, SRT, raw audio input)
   // where ffmpeg's own docs warn `-readrate` can cause packet loss.
-  if (
-    mergedOptions.readrate !== undefined &&
-    !isHls &&
-    !isSrt
-  ) {
+  if (mergedOptions.readrate !== undefined && !isHls && !isSrt) {
     commandBuilder.inputOption("-readrate", String(mergedOptions.readrate));
     // Only meaningful alongside readrate: how much input to burst-read before pacing engages.
     // The pre-roll gives the otherwise zero-margin realtime pipeline a cushion (see the option doc).
@@ -805,8 +845,12 @@ export function prepareStream(
     commandBuilder.inputOptions(mergedOptions.customInputOptions);
   }
 
-  const { hardwareAcceleratedDecoding, minimizeLatency, customHeaders, audioOnly } =
-    mergedOptions;
+  const {
+    hardwareAcceleratedDecoding,
+    minimizeLatency,
+    customHeaders,
+    audioOnly,
+  } = mergedOptions;
 
   // Resolve the encoder up front so its optional `hwPipeline` can drive both the input decode
   // options and the scale filter below. A hardware encoder that declares `hwPipeline` (e.g. VAAPI)
@@ -892,19 +936,17 @@ export function prepareStream(
   // input-0 option above so its inputOptions bind to this input. Mapped via `-map 1:a:0` below.
   // Only wired when audio output is enabled.
   if (mergedOptions.audioInput && mergedOptions.includeAudio) {
-    commandBuilder
-      .input(mergedOptions.audioInput.source)
-      .inputOptions([
-        // `-ss` is an input option: it seeks the input it precedes, and nothing else. Applying it
-        // to input 0 alone would start the picture at the requested offset while its soundtrack
-        // restarted from zero — so every resume, crash retry and live seek would play the right
-        // video against the wrong audio, and the audio would outlast the video by the offset.
-        ...(mergedOptions.startTime === undefined
-          ? []
-          : ["-ss", String(mergedOptions.startTime)]),
-        ...latencyInputOptions,
-        ...mergedOptions.audioInput.inputOptions,
-      ]);
+    commandBuilder.input(mergedOptions.audioInput.source).inputOptions([
+      // `-ss` is an input option: it seeks the input it precedes, and nothing else. Applying it
+      // to input 0 alone would start the picture at the requested offset while its soundtrack
+      // restarted from zero — so every resume, crash retry and live seek would play the right
+      // video against the wrong audio, and the audio would outlast the video by the offset.
+      ...(mergedOptions.startTime === undefined
+        ? []
+        : ["-ss", String(mergedOptions.startTime)]),
+      ...latencyInputOptions,
+      ...mergedOptions.audioInput.inputOptions,
+    ]);
   }
 
   // general output options
@@ -1023,7 +1065,9 @@ export function prepareStream(
       // `globalOptions` serve the software-decode path (device init for the outFilters hwupload).
       // When the hardware pipeline is active its decodeOptions already initialized the same named
       // device, and a second -init_hw_device with that name is a hard ffmpeg error.
-      .outputOptionsList(hwPipeline ? [] : (encoderSettings.globalOptions ?? []));
+      .outputOptionsList(
+        hwPipeline ? [] : (encoderSettings.globalOptions ?? []),
+      );
   }
 
   // Per-packet muxer flush for realtime consumers (see PrepareStreamOptions.lowLatencyMux).
@@ -1496,7 +1540,11 @@ export async function attachPipeline(
   if (audio) {
     // `audioSink` defaults to the connection, so the ordinary path is byte-for-byte the previous
     // one; a consumer that supplies a sink owns the last hop instead (gain, mixing).
-    const a = new AudioStream(options.audioSink ?? conn, false, options.observer);
+    const a = new AudioStream(
+      options.audioSink ?? conn,
+      false,
+      options.observer,
+    );
     aStream = a;
     audio.stream.pipe(a);
     if (vStream) vStream.syncStream = a;
@@ -1556,7 +1604,9 @@ export async function attachPipeline(
         if (!frames.length) return;
 
         const decodeEnd = performance.now();
-        previewLogger.debug(`Decoding a frame took ${decodeEnd - decodeStart}ms`);
+        previewLogger.debug(
+          `Decoding a frame took ${decodeEnd - decodeStart}ms`,
+        );
         const frame = frames[0];
         if (frame === undefined) return;
 

@@ -118,12 +118,13 @@ describe("bidirectional voice policy", () => {
     expect(voiceStateAudioFlags(true)).toEqual({ self_mute: false, self_deaf: false });
   });
 
-  test("a send-only connection negotiates a direction it may actually send on", () => {
-    // `inactive` declares a stream neither peer may send on. A connection that installs a
-    // packetizer but advertises `inactive` can report every frame as sent while nothing reaches
-    // the far side — the exact silent failure this transport is most prone to.
-    expect(voiceAudioSdpDirection(false, true)).toBe("sendonly");
-    // Receiving already implied sendrecv, and still does.
+  test("a send-only connection asks the REMOTE end to receive", () => {
+    // The direction is written from Discord's point of view: this SDP is installed as the remote
+    // `answer`. For us to send, Discord has to receive — so `recvonly`. `sendonly` would say
+    // Discord sends and we listen, leaving the local track unable to send, which is the same
+    // silence as `inactive` reached from the other side.
+    expect(voiceAudioSdpDirection(false, true)).toBe("recvonly");
+    // Symmetric, so it reads the same from either end.
     expect(voiceAudioSdpDirection(true, true)).toBe("sendrecv");
   });
 

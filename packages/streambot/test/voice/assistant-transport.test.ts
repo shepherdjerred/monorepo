@@ -109,13 +109,28 @@ describe("AssistantTransport", () => {
     transport.send(PACKET);
     await Promise.resolve();
     await Promise.resolve();
-    void transport.setSpeaking(false);
+    // The end boundary is the last moment this failure can be attributed to the reply that caused
+    // it, and `PacedAssistantSender` awaits exactly this call — so it reports there.
+    await expect(transport.setSpeaking(false)).rejects.toThrow(
+      "tail packet lost",
+    );
+
     // The next reply is healthy and must not inherit the previous one's failure.
     fail = false;
-    void transport.setSpeaking(true);
+    await expect(transport.setSpeaking(true)).resolves.toBeUndefined();
     expect(() => {
       transport.send(PACKET);
     }).not.toThrow();
+  });
+
+  test("releasing the flag after a clean reply does not reject", async () => {
+    const transport = new AssistantTransport(() => fakePort());
+    await transport.setSpeaking(true);
+    transport.send(PACKET);
+    await Promise.resolve();
+    // The control: an end boundary that always rejected would fail every reply while the
+    // tail-failure test above stayed green.
+    await expect(transport.setSpeaking(false)).resolves.toBeUndefined();
   });
 
   test("reset closes the port and clears a pending failure", async () => {
