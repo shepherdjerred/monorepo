@@ -36,7 +36,12 @@
         "$TURBO_ROOT$/packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
         "$TURBO_ROOT$/packages/homelab/mac-ci/bootstrap.sh",
         "$TURBO_ROOT$/packages/homelab/mac-ci/provision-host.sh",
-        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.ts"
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/flipt-missing-flag-apply.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-drift.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/flipt-resource-payloads.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/flipt-boolean-rollouts.ts",
+        "$TURBO_ROOT$/packages/feature-flags/managed-flag-inventory.json"
       ]
     }
   }
