@@ -19,7 +19,13 @@
     // task hash.
     "test:e2e": {
       "dependsOn": ["build", "^build"],
-      "cache": false,
+      "cache": true,
+      "env": [
+        "CI",
+        "CI_PLAYWRIGHT_IMAGE",
+        "CI_REPORTING_BUILD_ID",
+        "PLAYWRIGHT_BRANDED_BROWSERS"
+      ],
       "passThroughEnv": ["PLAYWRIGHT_BROWSERS_PATH"]
     }
   }

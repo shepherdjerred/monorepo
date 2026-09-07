@@ -125,4 +125,31 @@ describe("runShardCheck", () => {
       ],
     ]);
   });
+
+  test("git-index checks receive only changed files when a base is available", async () => {
+    const ran: RanCommand[] = [];
+    await runShardCheck("line-endings", "packages", {
+      runner: recordingRunner(ran),
+      changedFileResolver: async () => [
+        "packages/alert-dashboard/src/index.ts",
+      ],
+    });
+    expect(ran).toEqual([
+      [
+        "bun",
+        "--no-install",
+        "scripts/checks/check-line-endings.ts",
+        "packages/alert-dashboard/src/index.ts",
+      ],
+    ]);
+  });
+
+  test("a shard with no changed files performs no work", async () => {
+    const ran: RanCommand[] = [];
+    await runShardCheck("large-files", "homelab", {
+      runner: recordingRunner(ran),
+      changedFileResolver: async () => [],
+    });
+    expect(ran).toEqual([]);
+  });
 });

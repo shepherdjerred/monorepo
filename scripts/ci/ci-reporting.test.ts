@@ -841,6 +841,9 @@ describe("CI reporting manifest", () => {
       expect(rootTurbo).toContain(`"${reportingInput}"`);
     }
     expect(rootTurbo).toContain(
+      '"//#script-coverage": {\n      "dependsOn": ["//#check-script-migrations"],\n      "inputs": [',
+    );
+    expect(rootTurbo).not.toContain(
       '"//#script-coverage": {\n      "dependsOn": ["//#check-script-migrations"],\n      "cache": false,',
     );
 

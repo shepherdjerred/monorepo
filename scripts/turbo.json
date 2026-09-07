@@ -12,7 +12,37 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.buildkite/scripts/**"]
     },
     "test:ci": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.buildkite/scripts/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.buildkite/**",
+        "$TURBO_ROOT$/packages/**/package.json",
+        "$TURBO_ROOT$/packages/**/turbo.json",
+        "$TURBO_ROOT$/renovate.json",
+        "$TURBO_ROOT$/packages/version-catalog/src/catalog.json",
+        "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",
+        "$TURBO_ROOT$/packages/dotfiles/dot_local/bin/executable_cf",
+        "$TURBO_ROOT$/packages/discord-plays-pokemon/Dockerfile",
+        "$TURBO_ROOT$/packages/streambot/Dockerfile",
+        "$TURBO_ROOT$/packages/homelab/src/talos/liskov/patches/image.yaml",
+        "$TURBO_ROOT$/packages/homelab/src/talos/torvalds/patches/image.yaml",
+        "$TURBO_ROOT$/packages/discord-plays-pokemon/wasm-src/upstream.json",
+        "$TURBO_ROOT$/packages/discord-plays-mario-kart/wasm-src/upstream.json",
+        "$TURBO_ROOT$/packages/discord-plays-mario-kart/Dockerfile",
+        "$TURBO_ROOT$/packages/homelab/images/redlib/Dockerfile",
+        "$TURBO_ROOT$/.buildkite/ci-playwright/Dockerfile",
+        "$TURBO_ROOT$/docker-bake.hcl",
+        "$TURBO_ROOT$/.buildkite/application-image-smoke.Dockerfile",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/backend/Dockerfile",
+        "$TURBO_ROOT$/packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+        "$TURBO_ROOT$/packages/homelab/mac-ci/bootstrap.sh",
+        "$TURBO_ROOT$/packages/homelab/mac-ci/provision-host.sh",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/flipt-missing-flag-apply.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-drift.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/flipt-resource-payloads.ts",
+        "$TURBO_ROOT$/packages/feature-flags/src/flipt-boolean-rollouts.ts",
+        "$TURBO_ROOT$/packages/feature-flags/managed-flag-inventory.json"
+      ]
     }
   }
 }

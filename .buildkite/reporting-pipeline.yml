@@ -11,6 +11,7 @@ env:
   TURBO_API: "http://turbo-cache-turbo-cache-service.turbo-cache.svc.cluster.local:3000"
   TURBO_TEAM: "monorepo"
   CI_REPORTING_SCOPE: "full"
+  CI_PLAYWRIGHT_IMAGE: "${CI_PLAYWRIGHT_IMAGE}"
 
 steps:
   - label: ":performing_arts: complete Playwright reporting"
@@ -18,6 +19,7 @@ steps:
     timeout_in_minutes: 30
     command: |
       bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
+      export CI_REPORTING_BUILD_ID="$$BUILDKITE_BUILD_ID"
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
       if [ ! -s .ci-reports/junit/sjer.red/playwright.xml ]; then
         echo "complete reporting run did not emit the sjer.red Playwright JUnit report" >&2
