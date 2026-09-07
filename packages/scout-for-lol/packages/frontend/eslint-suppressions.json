@@ -14,6 +14,11 @@
       "count": 1
     }
   },
+  "src/data/changelog.tsx": {
+    "max-lines": {
+      "count": 1
+    }
+  },
   "src/lib/review-tool/s3.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

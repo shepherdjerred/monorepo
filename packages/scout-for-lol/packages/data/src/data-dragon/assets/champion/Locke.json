@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.16.1",
+  "version": "16.17.1",
   "data": {
     "Locke": {
       "id": "Locke",
@@ -91,10 +91,7 @@
       "blurb": "A nail-slinging exorcist versed in forbidden rites, Corvin Locke is the progeny of Demacian occultists. Born into lies and hypocrisy, he learned young that demons aren't the cause of humanity's darkness, but the consequence. Now, Locke tears through...",
       "allytips": [],
       "enemytips": [],
-      "tags": [
-        "Assassin",
-        "Mage"
-      ],
+      "tags": ["Assassin", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 6,
@@ -131,11 +128,7 @@
           "description": "Locke readies a set of Soul Nails to throw, dealing damage to and marking enemies hit. Locke can consume the marks to deal bonus damage with his attacks.",
           "tooltip": "Locke readies a set of <keywordMajor>Soul Nails</keywordMajor> to throw, dealing <magicDamage>{{ missiledamage }} magic damage</magicDamage> and marking enemies hit. Nails apply a {{ slowamount1*100 }}/{{ slowamount2*100 }}/{{ slowamount3*100 }}% <status>Slow</status> for {{ slowduration1 }}/{{ slowduration2 }}/{{ slowduration3 }} seconds, stacking with the amount of nails hit.<br /><br />Attacking the enemy consumes the <keywordMajor>Soul Nails</keywordMajor>, dealing <magicDamage>{{ naildamage }} magic damage</magicDamage> per stack, increased by {{ twomarkbonuspercent }}% and {{ threemarkbonuspercent }}% for two and three nails respectively.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Damage",
-              "Cooldown",
-              "Damage per Stack"
-            ],
+            "label": ["Damage", "Cooldown", "Damage per Stack"],
             "effect": [
               "{{ basemissiledamage }} -> {{ basemissiledamageNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}",
@@ -143,95 +136,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            9,
-            8,
-            7,
-            6
-          ],
+          "cooldown": [10, 9, 8, 7, 6],
           "cooldownBurn": "10/9/8/7/6",
-          "cost": [
-            70,
-            70,
-            70,
-            70,
-            70
-          ],
+          "cost": [70, 70, 70, 70, 70],
           "costBurn": "70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -249,13 +170,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            950,
-            950,
-            950,
-            950,
-            950
-          ],
+          "range": [950, 950, 950, 950, 950],
           "rangeBurn": "950",
           "image": {
             "full": "LockeQ.png",
@@ -286,95 +201,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            18,
-            17,
-            16,
-            15,
-            14
-          ],
+          "cooldown": [18, 17, 16, 15, 14],
           "cooldownBurn": "18/17/16/15/14",
-          "cost": [
-            50,
-            55,
-            60,
-            65,
-            70
-          ],
+          "cost": [50, 55, 60, 65, 70],
           "costBurn": "50/55/60/65/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -392,13 +235,7 @@
           "vars": [],
           "costType": " Mana and {{ healthcost*100 }}% Current Health Per Second",
           "maxammo": "-1",
-          "range": [
-            250,
-            250,
-            250,
-            250,
-            250
-          ],
+          "range": [250, 250, 250, 250, 250],
           "rangeBurn": "250",
           "image": {
             "full": "LockeW.png",
@@ -429,95 +266,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            10,
-            10,
-            10,
-            10,
-            10
-          ],
+          "cooldown": [10, 10, 10, 10, 10],
           "cooldownBurn": "10",
-          "cost": [
-            30,
-            40,
-            50,
-            60,
-            70
-          ],
+          "cost": [30, 40, 50, 60, 70],
           "costBurn": "30/40/50/60/70",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -535,13 +300,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            425,
-            425,
-            425,
-            425,
-            425
-          ],
+          "range": [425, 425, 425, 425, 425],
           "rangeBurn": "425",
           "image": {
             "full": "LockeE.png",
@@ -560,11 +319,7 @@
           "description": "Locke throws a binding artifact that deals damage and potentially executes enemies hit. Locke gains additional power for sealing away enemy champions.",
           "tooltip": "Locke throws a binding artifact to a location, dealing <magicDamage>{{ damage }} magic damage</magicDamage> and <status>Slowing</status> enemies in the area by {{ slowamount*100 }}%, decaying over {{ slowduration }} seconds. The artifact marks enemies hit for {{ duration }} seconds, sealing away marked enemy champions brought below <spellName>{{ executetooltipcalc }}</spellName>, and resetting the duration of the mark on other affected champions.<br /><br />After the duration ends, if at least one champion was sealed, the artifact lands on the ground. Locke can pick up the artifact to permanently increase its execution threshold by {{ executethresholdperstack*100 }}%, and refund {{ cooldownreduction }}% of his total Cooldown, for each champion sealed.<br />{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Cooldown",
-              "Damage",
-              "Execute Threshold"
-            ],
+            "label": ["Cooldown", "Damage", "Execute Threshold"],
             "effect": [
               "{{ cooldown }} -> {{ cooldownNL }}",
               "{{ basedamage }} -> {{ basedamageNL }}",
@@ -572,71 +327,23 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            120,
-            100,
-            80
-          ],
+          "cooldown": [120, 100, 80],
           "cooldownBurn": "120/100/80",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -654,11 +361,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            1000,
-            1000,
-            1000
-          ],
+          "range": [1000, 1000, 1000],
           "rangeBurn": "1000",
           "image": {
             "full": "LockeR.png",

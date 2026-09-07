@@ -12,6 +12,25 @@ export function renderChangelogToHtml(content: ReactNode): string {
 }
 
 export const changelog: ChangelogEntry[] = [
+  buildChangelogEntry({
+    date: "2026 09 07",
+    banner: "Updated for League patch 26.17",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.17",
+          "ARAM: Mayhem adds new fighter Augments Ultra Hydra and Upgrade Death's Dance; Double Tap moves to Prismatic and Upgrade Infinity Edge loses its crit chance.",
+          "League Classic adds Champion and Role swapping in Champion Select plus the first in-client Council vote.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.17 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-17-notes",
+    },
+  }),
   newScoutChangelogEntry,
   buildChangelogEntry({
     date: "2026 08 18",
