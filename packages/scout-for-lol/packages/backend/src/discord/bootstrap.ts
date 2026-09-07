@@ -310,9 +310,20 @@ export function registerDiscordEventHandlers(target: Client): void {
   });
 
   // Voice-assistant auto-leave: when the session's channel holds no non-bot
-  // members any more, nobody consented to being listened to. The manager
-  // ignores guilds without an active session, so this stays a cheap check.
+  // members any more, nobody consented to being listened to. Also covers
+  // Scout's OWN voice state: an admin dragging the bot to a different
+  // channel moves its connection without ever going through `/scout join`,
+  // so that must end the session too rather than silently keep listening
+  // wherever the connection ends up. The manager ignores guilds without an
+  // active or pending session, so both checks stay cheap.
   target.on(Events.VoiceStateUpdate, (_oldState, newState) => {
+    if (newState.member?.id === target.user?.id) {
+      getVoiceAssistantManager().handleBotChannelChanged(
+        newState.guild.id,
+        newState.channelId,
+      );
+      return;
+    }
     getVoiceAssistantManager().handleVoiceStateUpdate(newState.guild.id);
   });
 }
