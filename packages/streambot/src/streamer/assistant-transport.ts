@@ -20,6 +20,8 @@ const log = logger.child("assistant-transport");
  */
 export class AssistantTransport {
   private port: AssistantAudioPort | null = null;
+  /** Latched delivery failure, rethrown from the next {@link send} so the reply can fail. */
+  private failure: Error | null = null;
 
   constructor(private readonly openPort: () => AssistantAudioPort) {}
 
@@ -34,12 +36,26 @@ export class AssistantTransport {
   }
 
   /**
-   * Fire-and-forget by contract: the shared pipeline's transport returns `void` and paces itself,
-   * so there is no caller to await this and no caller that could act on a failure. A rejection
-   * means the connection went away mid-reply, which that reply's own failure accounting already
-   * records; logging it here keeps it visible without turning it into an unhandled rejection.
+   * Send one packet, and surface any earlier failure to the caller.
+   *
+   * The shared pipeline's transport returns `void`, so the delivery itself cannot be awaited here.
+   * But `PacedAssistantSender` decides a reply failed by catching a SYNCHRONOUS throw from this
+   * method — swallowing the rejection instead would let it increment the sent counters and finish
+   * a reply that nobody heard, which is exactly the silent success this package's guidance says
+   * must never be possible on the audio path.
+   *
+   * So a rejection is latched and thrown from the NEXT call. The sender pumps on a 20 ms tick, so
+   * the signal arrives within one packet — early enough for it to stop pumping and count the
+   * failure, which is all it does with the information. A failure on the very last packet of a
+   * reply has no next call to surface through; that one is caught by the mixer's dropped-frame
+   * counter instead, which is why both signals exist.
    */
   send(opus: Uint8Array): void {
+    const pending = this.failure;
+    if (pending !== null) {
+      this.failure = null;
+      throw pending;
+    }
     void this.deliver(opus);
   }
 
@@ -50,6 +66,7 @@ export class AssistantTransport {
       log.warn("assistant audio frame dropped", {
         error: getErrorMessage(error),
       });
+      this.failure = error instanceof Error ? error : new Error(String(error));
     }
   }
 
@@ -57,5 +74,8 @@ export class AssistantTransport {
   reset(): void {
     this.port?.close();
     this.port = null;
+    // A torn-down connection is not a reply failure to report into the next reply, which will open
+    // a fresh port against a fresh connection.
+    this.failure = null;
   }
 }

@@ -20,6 +20,13 @@ const PROBE_TIMEOUT_MS = 15_000;
 
 const StreamSchema = z.object({
   codec_type: z.string().optional(),
+  /**
+   * ffprobe reports embedded cover art as a `video` stream carrying `attached_pic: 1`. It is a
+   * single still frame, not a picture to play — treating it as video routes an MP3 with album
+   * artwork through a full Go Live encode instead of the audio path, which is the opposite of
+   * what the transport classifier is for.
+   */
+  disposition: z.object({ attached_pic: z.number().optional() }).optional(),
   codec_name: z.string().optional(),
   width: z.number().optional(),
   height: z.number().optional(),
@@ -65,7 +72,9 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
   if (!parsed.success) {
     return null;
   }
-  const video = parsed.data.streams.find((s) => s.codec_type === "video");
+  const video = parsed.data.streams.find(
+    (s) => s.codec_type === "video" && s.disposition?.attached_pic !== 1,
+  );
   const audio = parsed.data.streams.find((s) => s.codec_type === "audio");
   const rawDuration = parsed.data.format?.duration;
   const durationSeconds =

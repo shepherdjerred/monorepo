@@ -7,12 +7,15 @@ Streambot plays a song as microphone audio and a film as a Go Live stream, from 
 account. The transport is chosen per item, not per session.
 
 Both paths share one Discord voice connection that the userbot already joined. Only the media
-connection carrying the item differs, so a queue can alternate between them without rejoining.
+connection carrying the item differs, so a queue can alternate between them without rejoining. The
+choice is made per segment in
+[`streamer/`](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/streamer), from the kind the resolver settled on.
 
 ## The problem with one transport
 
 Every item used to take the same route: an ffmpeg pipeline encoding H.264 through VAAPI into a Go
-Live stream. That is the right shape for a film and the wrong shape for a song.
+Live stream, built by
+[`prepareStream`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/media/newApi.ts). That is the right shape for a film and the wrong shape for a song.
 
 A three-minute track paid for a full video encode and a second WebRTC connection to carry content
 with no picture. It also consumed one of the scarce pooled userbot accounts, which bound how many
@@ -29,9 +32,12 @@ Discord exposes two ways for a user account to emit media, and they differ in wh
 | Client shows  | a green ring on the avatar    | a watchable stream tile              |
 | ffmpeg        | audio only, `-vn`             | decode, scale, tonemap, H.264 encode |
 
-The microphone semantics come free. `BaseMediaConnection` sends speaking flag `1`, and only
-`StreamConnection` overrides it to `2`, so routing through the voice connection is already what a
-person talking sounds like to every client in the channel.
+The microphone semantics come free.
+[`BaseMediaConnection`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/client/voice/BaseMediaConnection.ts)
+sends speaking flag `1`, and only
+[`StreamConnection`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/client/voice/StreamConnection.ts)
+overrides it to `2`, so routing through the voice connection is already what a person talking
+sounds like to every client in the channel.
 
 ```mermaid
 flowchart LR
@@ -48,7 +54,9 @@ flowchart LR
 
 ## Why one component owns the outbound audio
 
-The voice connection carries a single RTP timestamp sequence, one packetizer and one SSRC. Two
+The voice connection carries a single RTP timestamp sequence, one packetizer and one SSRC, all
+owned by
+[`WebRtcConnWrapper`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/client/voice/WebRtcWrapper.ts). Two
 writers on it do not mix — they interleave two Opus streams into noise.
 
 That matters because the voice assistant already speaks over this connection. Music arriving as a
@@ -62,8 +70,9 @@ rejects any other reference to `sendAudioFrame`, because the failure it prevents
 
 ## The failure mode worth knowing
 
-An audio frame can be dropped before it reaches the wire. If no audio packetizer is installed, the
-send is a no-op that returns cleanly.
+An audio frame can be dropped before it reaches the wire. If no audio packetizer is installed,
+[`sendAudioFrame`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/client/voice/WebRtcWrapper.ts) returns
+`false` rather than raising.
 
 The pacer keeps feeding frames at realtime and playback reports a normal end. A four-minute song
 plays to complete silence and every layer above calls it a success.
@@ -73,16 +82,19 @@ watchdog fails the segment when frames stop landing while ffmpeg is still produc
 
 ## Deciding which an item is
 
-Classification happens at resolve time, from yt-dlp metadata and an ffprobe of the chosen input. A
-`mode` option on `/stream play` overrides it.
+Classification happens at resolve time, from
+[yt-dlp metadata](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/ytdlp.ts) and an
+[ffprobe](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/probe.ts) of the chosen input. A `mode` option on
+`/stream play` overrides it.
 
-ffprobe is authoritative. yt-dlp reports a missing video codec three different ways across
-extractors — the string `none`, `null`, or the field absent entirely — so metadata alone cannot
+[ffprobe](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/probe.ts) is authoritative. yt-dlp reports a missing
+video codec three different ways across extractors — the string `none`, `null`, or the field absent entirely — so metadata alone cannot
 decide. A container with no video stream is a fact; an extractor's opinion is a hint.
 
 That check also protects a request that asks for the impossible. A user forcing `mode:video` on a
-SoundCloud track would otherwise reach an ffmpeg invocation mapping a video stream that does not
-exist, so the probe downgrades it to audio instead.
+SoundCloud track would otherwise reach an
+[ffmpeg invocation](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/media/newApi.ts) mapping a video stream
+that does not exist, so the probe downgrades it to audio instead.
 
 ## What this rules out
 
@@ -93,7 +105,8 @@ and shows a stream tile nobody can watch. The saving is the connection, not just
 the transport at session start would force one of them onto the wrong path.
 
 **A second bot account for music.** A Discord bot cannot Go Live, so the split would become two
-identities with two failure modes, two token sets and two voice states to reconcile.
+identities with two failure modes, two token sets and two voice states to reconcile. The
+[userbot pool](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/pool) already bounds how many accounts exist.
 
 ## Related
 

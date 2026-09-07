@@ -145,17 +145,26 @@ async function waitFor(
   }
 }
 
+/**
+ * Parameter types taken from the functions themselves rather than asserted away. A fake that has
+ * drifted from the real `attachPipeline` interface then fails to compile here, which is the whole
+ * point of the harness — `as never` would erase exactly the mismatch worth catching.
+ */
+type AttachConn = Parameters<typeof attachPipeline>[0];
+type AttachStreamer = Parameters<typeof attachPipeline>[1];
+type PlayOptions = Parameters<typeof mergePlayStreamOptions>[0];
+
 function attach(
-  conn: unknown,
-  streamer: unknown,
-  play: Record<string, unknown>,
+  conn: AttachConn,
+  streamer: AttachStreamer,
+  play: PlayOptions,
   cancelSignal?: AbortSignal,
 ) {
   return attachPipeline(
-    conn as never,
-    streamer as never,
+    conn,
+    streamer,
     new PassThrough(),
-    { ...mergePlayStreamOptions(play as never), configureConn: true },
+    { ...mergePlayStreamOptions(play), configureConn: true },
     cancelSignal,
   );
 }
