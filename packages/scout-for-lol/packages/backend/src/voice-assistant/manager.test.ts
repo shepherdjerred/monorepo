@@ -649,4 +649,34 @@ describe("VoiceAssistantManager handleBotChannelChanged", () => {
     await expect(join).resolves.toBe("cancelled");
     expect(h.sessionEvents).not.toContain("created");
   });
+
+  test("does not cancel a join over its own manager-initiated null transition", async () => {
+    const pendingConnections: ((connection: AssistantConnection) => void)[] =
+      [];
+    const h = managerHarness({
+      joinAssistantChannel: () =>
+        new Promise((resolve) => {
+          pendingConnections.push(resolve);
+        }),
+    });
+    const join = h.manager.join(GUILD, "channel-1");
+    await waitUntil(() => pendingConnections.length === 1);
+    // `join()` always destroys any existing connection before establishing
+    // the requested one, which briefly reports no channel while the old
+    // connection tears down — a transient `null`, not an external move.
+    h.manager.handleBotChannelChanged(GUILD, null);
+    pendingConnections[0]?.(fakeConnection());
+    await expect(join).resolves.toBe("joined");
+    expect(h.sessionEvents).toContain("created");
+  });
+
+  test("does not end an active session on a null transition", async () => {
+    const h = managerHarness();
+    await h.manager.join(GUILD, "channel-1");
+    // A genuine full disconnect is the connection-lost listener's job, not
+    // this one's.
+    h.manager.handleBotChannelChanged(GUILD, null);
+    expect(h.manager.isActive(GUILD)).toBe(true);
+    expect(h.left).toEqual([]);
+  });
 });
