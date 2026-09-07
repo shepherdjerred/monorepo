@@ -54,6 +54,21 @@ describe("affected verification filters", () => {
     ).toContain("--filter=@shepherdjerred/root-scripts");
   });
 
+  test.each([
+    "packages/discord-plays-pokemon/Dockerfile",
+    "packages/streambot/Dockerfile",
+    "packages/discord-plays-mario-kart/wasm-src/upstream.json",
+    "packages/homelab/images/redlib/Dockerfile",
+  ])("selects root scripts for Renovate fixture %s", async (path) => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () => Promise.resolve([path]),
+      ),
+    ).toContain("--filter=@shepherdjerred/root-scripts");
+  });
+
   test("runs the complete graph when changed files cannot be read", async () => {
     expect(
       await affectedVerifyFilters(

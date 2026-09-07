@@ -61,6 +61,21 @@ type ChangedFilesReader = (
   base: string,
 ) => Promise<readonly string[] | undefined>;
 
+const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
+  "packages/version-catalog/src/catalog.json",
+  "packages/tasks-for-obsidian/ios/ci_scripts/",
+  "packages/dotfiles/dot_local/bin/executable_cf",
+  "packages/discord-plays-pokemon/Dockerfile",
+  "packages/streambot/Dockerfile",
+  "packages/homelab/src/talos/liskov/patches/image.yaml",
+  "packages/homelab/src/talos/torvalds/patches/image.yaml",
+  "packages/discord-plays-pokemon/wasm-src/upstream.json",
+  "packages/discord-plays-mario-kart/wasm-src/upstream.json",
+  "packages/discord-plays-mario-kart/Dockerfile",
+  "packages/homelab/images/redlib/Dockerfile",
+  ".buildkite/ci-playwright/Dockerfile",
+] as const;
+
 async function validateBaseWithGit(
   command: readonly string[],
 ): Promise<number> {
@@ -96,7 +111,10 @@ function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
     (path) =>
       path === ".buildkite" ||
       path.startsWith(".buildkite/") ||
-      path === "renovate.json",
+      path === "renovate.json" ||
+      ROOT_SCRIPTS_EXTERNAL_INPUTS.some((input) =>
+        input.endsWith("/") ? path.startsWith(input) : path === input,
+      ),
   );
 }
 
