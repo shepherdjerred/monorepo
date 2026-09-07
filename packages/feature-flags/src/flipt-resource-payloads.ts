@@ -35,6 +35,7 @@ export type FliptFlagPayload = {
     readonly attachment: Readonly<Record<string, unknown>>;
   }[];
   readonly rules: readonly {
+    readonly rank: number;
     readonly segmentOperator: string;
     readonly segments: readonly string[];
     readonly distributions: readonly {
@@ -89,7 +90,9 @@ function parseAttachment(
   variantKey: string,
 ): Readonly<Record<string, unknown>> {
   try {
-    return AttachmentSchema.parse(JSON.parse(attachment));
+    const value: unknown = JSON.parse(attachment);
+    if (value === null) return {};
+    return AttachmentSchema.parse(value);
   } catch (error) {
     throw new Error(`invalid attachment JSON for variant ${variantKey}`, {
       cause: error,
@@ -247,24 +250,30 @@ function variantDefinitions(flag: Extract<ManagedFlag, { type: "variant" }>) {
 
 function variantRules(flag: ManagedFlag) {
   const ranks = new Set<number>();
-  return [...flag.rules]
-    .sort((left, right) => left.rank - right.rank)
-    .map((rule) => {
-      if (ranks.has(rule.rank)) {
-        throw new Error(
-          `duplicate rule rank for ${flag.key}: ${rule.rank.toString()}`,
-        );
-      }
-      ranks.add(rule.rank);
-      return {
-        segmentOperator: rule.segmentOperator,
-        segments: rule.segments.map((segment) => segment.key),
-        distributions: rule.distributions.map((distribution) => ({
-          variant: distribution.variantKey,
-          rollout: distribution.rollout,
-        })),
-      };
-    });
+  const ordered = [...flag.rules].sort((left, right) => left.rank - right.rank);
+  return ordered.map((rule, index) => {
+    const expectedRank = index + 1;
+    if (ranks.has(rule.rank)) {
+      throw new Error(
+        `duplicate rule rank for ${flag.key}: ${rule.rank.toString()}`,
+      );
+    }
+    ranks.add(rule.rank);
+    if (rule.rank !== expectedRank) {
+      throw new Error(
+        `variant rule rank must be contiguous and one-based for ${flag.key}: expected ${expectedRank.toString()}, got ${rule.rank.toString()}`,
+      );
+    }
+    return {
+      rank: rule.rank,
+      segmentOperator: rule.segmentOperator,
+      segments: rule.segments.map((segment) => segment.key),
+      distributions: rule.distributions.map((distribution) => ({
+        variant: distribution.variantKey,
+        rollout: distribution.rollout,
+      })),
+    };
+  });
 }
 
 export function toFliptFlagPayload(flag: ManagedFlag): FliptFlagPayload {

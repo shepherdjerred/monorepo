@@ -60,7 +60,7 @@ function testFlags() {
         ...behavior,
         rules: [
           {
-            rank: 0,
+            rank: 1,
             segmentOperator: "OR_SEGMENT_OPERATOR",
             segments: [
               {
@@ -164,12 +164,109 @@ describe("Flipt resource payloads", () => {
       ],
       rules: [
         {
+          rank: 1,
           segmentOperator: "OR_SEGMENT_OPERATOR",
           segments: ["operators"],
           distributions: [{ variant: "green", rollout: 100 }],
         },
       ],
     });
+  });
+
+  test("normalizes a JSON null variant attachment to an empty object", () => {
+    const inventory = ManagedFlagInventorySchema.parse({
+      version: 3,
+      namespaces: [
+        { key: "test", name: "Test", description: "Test namespace." },
+      ],
+      environments: [
+        { key: "beta", overrides: [] },
+        { key: "prod", overrides: [] },
+      ],
+      flags: [
+        {
+          ...metadata("model"),
+          type: "variant",
+          default: "sol",
+          rollouts: [],
+          thresholdRollouts: [],
+          rules: [
+            {
+              rank: 1,
+              segmentOperator: "OR_SEGMENT_OPERATOR",
+              segments: [
+                {
+                  key: "everyone",
+                  matchType: "ALL_SEGMENT_MATCH_TYPE",
+                  constraints: [],
+                },
+              ],
+              distributions: [
+                {
+                  variantKey: "sol",
+                  rollout: 100,
+                  variantAttachment: "null",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      exemptions: [],
+    });
+    const flag = inventory.flags[0];
+    if (flag === undefined) throw new Error("model fixture is missing");
+    expect(toFliptFlagPayload(flag).variants).toEqual([
+      { key: "sol", name: "sol", description: "", attachment: {} },
+    ]);
+  });
+
+  test("rejects a zero-based variant rule rank", () => {
+    const inventory = ManagedFlagInventorySchema.parse({
+      version: 3,
+      namespaces: [
+        { key: "test", name: "Test", description: "Test namespace." },
+      ],
+      environments: [
+        { key: "beta", overrides: [] },
+        { key: "prod", overrides: [] },
+      ],
+      flags: [
+        {
+          ...metadata("model"),
+          type: "variant",
+          default: "sol",
+          rollouts: [],
+          thresholdRollouts: [],
+          rules: [
+            {
+              rank: 0,
+              segmentOperator: "OR_SEGMENT_OPERATOR",
+              segments: [
+                {
+                  key: "everyone",
+                  matchType: "ALL_SEGMENT_MATCH_TYPE",
+                  constraints: [],
+                },
+              ],
+              distributions: [
+                {
+                  variantKey: "sol",
+                  rollout: 100,
+                  variantAttachment: "{}",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      exemptions: [],
+    });
+    const flag = inventory.flags[0];
+    if (flag === undefined) throw new Error("model fixture is missing");
+    expect(() => toFliptFlagPayload(flag)).toThrow(
+      "variant rule rank must be contiguous and one-based for model: expected 1, got 0",
+    );
   });
 
   test("collects unique segments with Flipt comparison enums", () => {
