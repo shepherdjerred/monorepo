@@ -14,8 +14,7 @@
     "test:ci": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/.buildkite/scripts/**",
-        "$TURBO_ROOT$/.buildkite/hooks/**",
+        "$TURBO_ROOT$/.buildkite/**",
         "$TURBO_ROOT$/packages/**/package.json",
         "$TURBO_ROOT$/packages/**/turbo.json",
         "$TURBO_ROOT$/renovate.json",
@@ -33,7 +32,10 @@
         "$TURBO_ROOT$/.buildkite/ci-playwright/Dockerfile",
         "$TURBO_ROOT$/docker-bake.hcl",
         "$TURBO_ROOT$/.buildkite/application-image-smoke.Dockerfile",
-        "$TURBO_ROOT$/packages/scout-for-lol/packages/backend/Dockerfile"
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/backend/Dockerfile",
+        "$TURBO_ROOT$/packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+        "$TURBO_ROOT$/packages/homelab/mac-ci/bootstrap.sh",
+        "$TURBO_ROOT$/packages/homelab/mac-ci/provision-host.sh"
       ]
     }
   }

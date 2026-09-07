@@ -88,6 +88,9 @@ describe("affected verification filters", () => {
     "docker-bake.hcl",
     ".buildkite/application-image-smoke.Dockerfile",
     "packages/scout-for-lol/packages/backend/Dockerfile",
+    "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+    "packages/homelab/mac-ci/bootstrap.sh",
+    "packages/homelab/mac-ci/provision-host.sh",
   ])("selects root scripts for Renovate fixture %s", async (path) => {
     expect(
       await affectedVerifyFilters(
