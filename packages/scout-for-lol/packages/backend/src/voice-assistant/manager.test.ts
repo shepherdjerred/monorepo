@@ -540,14 +540,7 @@ describe("VoiceAssistantManager handleBotChannelChanged", () => {
   });
 
   test("cancels a pending join when Scout is moved before the connection resolves", async () => {
-    const pendingConnections: ((connection: AssistantConnection) => void)[] =
-      [];
-    const h = managerHarness({
-      joinAssistantChannel: () =>
-        new Promise((resolve) => {
-          pendingConnections.push(resolve);
-        }),
-    });
+    const { h, pendingConnections } = pendingConnectionHarness();
     const join = h.manager.join(GUILD, "channel-1");
     await waitUntil(() => pendingConnections.length === 1);
     // Scout gets dragged to a different channel while the first connection
@@ -560,14 +553,7 @@ describe("VoiceAssistantManager handleBotChannelChanged", () => {
   });
 
   test("does not cancel a join over its own manager-initiated null transition", async () => {
-    const pendingConnections: ((connection: AssistantConnection) => void)[] =
-      [];
-    const h = managerHarness({
-      joinAssistantChannel: () =>
-        new Promise((resolve) => {
-          pendingConnections.push(resolve);
-        }),
-    });
+    const { h, pendingConnections } = pendingConnectionHarness();
     const join = h.manager.join(GUILD, "channel-1");
     await waitUntil(() => pendingConnections.length === 1);
     // `join()` always destroys any existing connection before establishing
