@@ -34,6 +34,7 @@ COPY --parents \
   packages/scout-for-lol/tsconfig.base.json \
   packages/glitter-context \
   packages/llm-models \
+  packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/backend \
   ./
@@ -88,6 +89,7 @@ COPY --parents \
   packages/scout-for-lol/packages/backend \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/design-system \
+  packages/scout-for-lol/packages/domain \
   packages/scout-for-lol/packages/report \
   packages/scout-for-lol/packages/temporal \
   packages/config \
