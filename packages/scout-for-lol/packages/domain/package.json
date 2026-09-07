@@ -6,6 +6,7 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "build": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
