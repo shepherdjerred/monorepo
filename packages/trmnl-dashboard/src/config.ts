@@ -30,7 +30,10 @@ export type AppConfig = {
 };
 
 const EnvSchema = z.object({
-  PORT: z.coerce.number().int().positive().default(3000),
+  // Port zero asks the operating system to atomically allocate an ephemeral
+  // listener. Production keeps its explicit positive port, while the image
+  // smoke can avoid racing concurrent BuildKit stages for a fixed port.
+  PORT: z.coerce.number().int().nonnegative().default(3000),
   TRMNL_API_KEY: z.string().min(1),
   DISPLAY_TIME_ZONE: z.string().min(1).default("America/Los_Angeles"),
   HA_URL: z

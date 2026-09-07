@@ -315,15 +315,13 @@ const commands: Record<
       "set -eu",
       "cd /app/packages/trmnl-dashboard",
       // BuildKit can reuse a smoke network namespace while another image is
-      // probing its worker. Reserve an ephemeral port for this invocation so
-      // concurrent image builds cannot collide with the contract port.
-      `http_port="$(bun -e 'const listener = Bun.listen({ hostname: "127.0.0.1", port: 0, socket: { data() {} } }); console.log(listener.port); listener.stop();')"`,
-      'export PORT="$http_port"',
+      // probing its worker. PORT=0 makes Bun bind an OS-assigned port in the
+      // server process itself, avoiding the reserve-then-release race.
       "bun src/index.ts >/tmp/trmnl-smoke.log 2>&1 &",
       "pid=$!",
       "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
       "for _ in $(seq 1 30); do",
-      '  if grep -Fq "listening on :$http_port" /tmp/trmnl-smoke.log; then exit 0; fi',
+      '  if grep -Eq "trmnl-dashboard listening on :[1-9][0-9]*$" /tmp/trmnl-smoke.log; then exit 0; fi',
       "  if ! kill -0 $pid; then cat /tmp/trmnl-smoke.log; exit 1; fi",
       "  sleep 1",
       "done",
@@ -335,7 +333,7 @@ const commands: Record<
       HA_TOKEN: "smoke-test-dummy",
       HA_URL: "http://127.0.0.1:9999",
       FEATURE_FLAGS_MODE: "disabled",
-      PORT: "18790",
+      PORT: "0",
     },
   },
   "scout-for-lol": {

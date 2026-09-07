@@ -35,6 +35,16 @@ describe("loadConfig", () => {
     );
     expect(config.homeAssistant.unavailableIgnoredDomains).toContain("scene");
   });
+
+  it("accepts port zero for an OS-assigned listener", () => {
+    const config = loadConfig({
+      PORT: "0",
+      TRMNL_API_KEY: "secret",
+      HA_TOKEN: "ha-token",
+    });
+
+    expect(config.port).toBe(0);
+  });
 });
 
 describe("worstStatus", () => {
