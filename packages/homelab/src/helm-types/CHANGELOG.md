@@ -3,13 +3,11 @@
 ## [2.0.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.7.0...helm-types-v2.0.0) (2026-09-07)
 
 
-### ⚠ BREAKING CHANGES
+Breaking packaging and runtime compatibility changes for consumers adopting the npm package.
 
-* Helm Types now requires Node.js 24 or newer and uses compiled dist exports instead of source exports.
-
-### Features
-
-* prepare Home Assistant and Helm Types for npm ([#2734](https://github.com/shepherdjerred/monorepo/issues/2734)) ([16c7c62](https://github.com/shepherdjerred/monorepo/commit/16c7c623e8fb8cfd03b3d1eec5168f0d0636b53d))
+- Requires Node.js 24 or newer (or Bun), and now publishes compiled ESM from `dist/` with declaration files; consumers importing workspace source paths must switch to the package entry point ([16c7c62](https://github.com/shepherdjerred/monorepo/commit/16c7c623e8fb8cfd03b3d1eec5168f0d0636b53d))
+- `fetchHelmChart` now runs on Node.js using standard child-process and filesystem APIs, and exposes the fetched chart result through the public package API ([16c7c62](https://github.com/shepherdjerred/monorepo/commit/16c7c623e8fb8cfd03b3d1eec5168f0d0636b53d))
+- The npm package now includes its CLI, README, license, demos, and examples, with `helm-types` resolving to the compiled CLI ([16c7c62](https://github.com/shepherdjerred/monorepo/commit/16c7c623e8fb8cfd03b3d1eec5168f0d0636b53d))
 
 ## [1.7.0](https://github.com/shepherdjerred/monorepo/compare/helm-types-v1.6.0...helm-types-v1.7.0) (2026-08-25)
 
