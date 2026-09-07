@@ -1,10 +1,15 @@
 import { OpenFeature, type Provider } from "@openfeature/server-sdk";
 import {
   FlagErrorCodeSchema,
+  FlagNotFoundError,
   FlagReasonSchema,
   type FlagEvaluationOptions,
   type FlagResult,
 } from "@shepherdjerred/feature-flags/flag-result.ts";
+import type {
+  ManagedBooleanFlagKey,
+  ManagedVariantFlagKey,
+} from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { loadFeatureFlagConfiguration } from "@shepherdjerred/feature-flags/config/load.ts";
 import { NoopProvider } from "@shepherdjerred/feature-flags/providers/noop.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
@@ -148,15 +153,12 @@ async function initializeProvider(
   try {
     await Promise.race([initialization, boundary]);
   } catch (error) {
+    try {
+      OpenFeature.setProvider(CLIENT_NAME, new NoopProvider());
+    } catch {
+      requestProviderClose(provider);
+    }
     if (error instanceof ProviderInitializationTimedOutError) {
-      // Unbind the timed-out wrapper before it can complete late and publish a
-      // stale READY transition. Installing the no-op preserves normal
-      // lower-layer fallback while the next fresh provider waits to retry.
-      try {
-        OpenFeature.setProvider(CLIENT_NAME, new NoopProvider());
-      } catch {
-        requestProviderClose(provider);
-      }
       void closeProviderAfterInitialization(initialization, provider);
     }
     throw error;
@@ -287,7 +289,6 @@ function recordEvaluation(event: EvaluationEvent): void {
   metricsRecorder?.countEvaluation(event);
   if (
     event.errorCode !== undefined &&
-    event.errorCode !== "FLAG_NOT_FOUND" &&
     event.errorCode !== "PROVIDER_NOT_READY"
   ) {
     metricsRecorder?.countError("evaluate");
@@ -323,8 +324,32 @@ function toResult<T>(details: {
   };
 }
 
-export async function isEnabled(
+function evaluateFlag<T>(
   key: string,
+  details: {
+    readonly value: T;
+    readonly reason?: string | undefined;
+    readonly errorCode?: string | undefined;
+    readonly errorMessage?: string | undefined;
+  },
+): FlagResult<T> {
+  const result = toResult(details);
+  recordEvaluation({
+    flag: key,
+    reason: result.reason,
+    errorCode: result.errorCode,
+  });
+  if (result.errorCode === "FLAG_NOT_FOUND") {
+    throw new FlagNotFoundError(
+      key,
+      details.errorMessage ?? `Feature flag "${key}" was not found in Flipt`,
+    );
+  }
+  return result;
+}
+
+export async function isEnabled(
+  key: ManagedBooleanFlagKey,
   options: FlagEvaluationOptions<boolean>,
 ): Promise<FlagResult<boolean>> {
   const details = await OpenFeature.getClient(CLIENT_NAME).getBooleanDetails(
@@ -332,17 +357,11 @@ export async function isEnabled(
     options.default,
     toContext(options),
   );
-  const result = toResult(details);
-  recordEvaluation({
-    flag: key,
-    reason: result.reason,
-    errorCode: result.errorCode,
-  });
-  return result;
+  return evaluateFlag(key, details);
 }
 
 export async function stringValue(
-  key: string,
+  key: ManagedVariantFlagKey,
   options: FlagEvaluationOptions<string>,
 ): Promise<FlagResult<string>> {
   const details = await OpenFeature.getClient(CLIENT_NAME).getStringDetails(
@@ -350,17 +369,11 @@ export async function stringValue(
     options.default,
     toContext(options),
   );
-  const result = toResult(details);
-  recordEvaluation({
-    flag: key,
-    reason: result.reason,
-    errorCode: result.errorCode,
-  });
-  return result;
+  return evaluateFlag(key, details);
 }
 
 export async function numberValue(
-  key: string,
+  key: ManagedVariantFlagKey,
   options: FlagEvaluationOptions<number>,
 ): Promise<FlagResult<number>> {
   const details = await OpenFeature.getClient(CLIENT_NAME).getNumberDetails(
@@ -368,13 +381,7 @@ export async function numberValue(
     options.default,
     toContext(options),
   );
-  const result = toResult(details);
-  recordEvaluation({
-    flag: key,
-    reason: result.reason,
-    errorCode: result.errorCode,
-  });
-  return result;
+  return evaluateFlag(key, details);
 }
 
 /**

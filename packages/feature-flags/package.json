@@ -8,6 +8,7 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "generate": "bun run scripts/generate-flag-types.ts",
     "build": "bun build ./src/index.ts --target bun --outdir dist",
     "lint": "bunx --no-install eslint --cache .",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run",

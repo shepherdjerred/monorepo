@@ -6,7 +6,10 @@ import {
   shutdownFeatureFlags,
   stringValue,
 } from "@shepherdjerred/feature-flags/index.ts";
-import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
+import {
+  FlagNotFoundError,
+  isAbsent,
+} from "@shepherdjerred/feature-flags/flag-result.ts";
 import { StaticProvider } from "@shepherdjerred/feature-flags/providers/static.ts";
 import type { FlagMetricsRecorder } from "@shepherdjerred/feature-flags/observability.ts";
 
@@ -48,12 +51,12 @@ afterEach(async () => {
 describe("disabled mode", () => {
   test("reports every flag absent so callers fall through to lower layers", async () => {
     await initFeatureFlags({ environment: DISABLED });
-    const result = await isEnabled("anything", {
+    const result = await isEnabled("ai_reports_enabled", {
       default: false,
       targetingKey: "service",
     });
     expect(result.value).toBe(false);
-    expect(result.errorCode).toBe("FLAG_NOT_FOUND");
+    expect(result.errorCode).toBe("PROVIDER_NOT_READY");
     expect(isAbsent(result)).toBe(true);
   });
 
@@ -62,7 +65,7 @@ describe("disabled mode", () => {
     // The default IS the answer when nothing is configured, so a `true` default
     // must survive. Returning `false` here would silently disable features the
     // moment flags were introduced.
-    const result = await isEnabled("anything", {
+    const result = await isEnabled("ai_reports_enabled", {
       default: true,
       targetingKey: "service",
     });
@@ -74,9 +77,9 @@ describe("static mode", () => {
   test("a defined flag RESOLVES and is not absent", async () => {
     await initFeatureFlags({
       environment: DISABLED,
-      provider: new StaticProvider({ "known-flag": true }),
+      provider: new StaticProvider({ ai_reports_enabled: true }),
     });
-    const result = await isEnabled("known-flag", {
+    const result = await isEnabled("ai_reports_enabled", {
       default: false,
       targetingKey: "service",
     });
@@ -91,9 +94,9 @@ describe("static mode", () => {
     // and silently re-enable the thing an operator just disabled.
     await initFeatureFlags({
       environment: DISABLED,
-      provider: new StaticProvider({ "kill-switch": false }),
+      provider: new StaticProvider({ ai_reports_enabled: false }),
     });
-    const result = await isEnabled("kill-switch", {
+    const result = await isEnabled("ai_reports_enabled", {
       default: true,
       targetingKey: "service",
     });
@@ -102,16 +105,17 @@ describe("static mode", () => {
     expect(isAbsent(result)).toBe(false);
   });
 
-  test("an undefined flag is absent even when others are defined", async () => {
+  test("an undefined flag throws FlagNotFoundError", async () => {
     await initFeatureFlags({
       environment: DISABLED,
-      provider: new StaticProvider({ "known-flag": true }),
+      provider: new StaticProvider({ ai_reports_enabled: true }),
     });
-    const result = await isEnabled("missing-flag", {
-      default: false,
-      targetingKey: "service",
-    });
-    expect(isAbsent(result)).toBe(true);
+    await expect(
+      isEnabled("betting_enabled", {
+        default: false,
+        targetingKey: "service",
+      }),
+    ).rejects.toThrow(FlagNotFoundError);
   });
 
   test("a type mismatch is an error, NOT absence", async () => {
@@ -119,9 +123,11 @@ describe("static mode", () => {
     // Falling through would mask a real configuration bug behind a lower layer.
     await initFeatureFlags({
       environment: DISABLED,
-      provider: new StaticProvider({ "wrong-type": "not-a-boolean" }),
+      provider: new StaticProvider({
+        ai_reports_enabled: "not-a-boolean",
+      }),
     });
-    const result = await isEnabled("wrong-type", {
+    const result = await isEnabled("ai_reports_enabled", {
       default: false,
       targetingKey: "service",
     });
@@ -132,13 +138,22 @@ describe("static mode", () => {
   test("resolves string and number flags", async () => {
     await initFeatureFlags({
       environment: DISABLED,
-      provider: new StaticProvider({ model: "gpt-5.6-sol", threshold: 0.33 }),
+      provider: new StaticProvider({
+        "scout-report-ai-model": "gpt-5.6-sol",
+        "llm-hourly-token-budget": 0.33,
+      }),
     });
     await expect(
-      stringValue("model", { default: "fallback", targetingKey: "service" }),
+      stringValue("scout-report-ai-model", {
+        default: "fallback",
+        targetingKey: "service",
+      }),
     ).resolves.toMatchObject({ value: "gpt-5.6-sol", reason: "STATIC" });
     await expect(
-      numberValue("threshold", { default: 1, targetingKey: "service" }),
+      numberValue("llm-hourly-token-budget", {
+        default: 1,
+        targetingKey: "service",
+      }),
     ).resolves.toMatchObject({ value: 0.33, reason: "STATIC" });
   });
 });
@@ -196,7 +211,7 @@ describe("initialization", () => {
       providerFactory: () => {
         attempts++;
         const provider = new StaticProvider(
-          attempts < 3 ? {} : { "known-flag": true },
+          attempts < 3 ? {} : { ai_reports_enabled: true },
         );
         if (attempts < 3) {
           Object.defineProperty(provider, "initialize", {
@@ -207,7 +222,7 @@ describe("initialization", () => {
       },
     });
 
-    const unavailable = await isEnabled("known-flag", {
+    const unavailable = await isEnabled("ai_reports_enabled", {
       default: false,
       targetingKey: "service",
     });
@@ -221,7 +236,7 @@ describe("initialization", () => {
     expect(attempts).toBe(3);
 
     await expect(
-      isEnabled("known-flag", {
+      isEnabled("ai_reports_enabled", {
         default: false,
         targetingKey: "service",
       }),
@@ -283,7 +298,7 @@ describe("initialization", () => {
       providerFactory: () => {
         attempts++;
         const provider = new StaticProvider(
-          attempts === 3 ? { "known-flag": true } : {},
+          attempts === 3 ? { ai_reports_enabled: true } : {},
         );
         Object.defineProperty(provider, "initialize", {
           value:
@@ -302,7 +317,7 @@ describe("initialization", () => {
     await vi.advanceTimersByTimeAsync(12_000);
     expect(attempts).toBe(3);
     await expect(
-      isEnabled("known-flag", {
+      isEnabled("ai_reports_enabled", {
         default: false,
         targetingKey: "service",
       }),

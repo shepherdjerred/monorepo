@@ -7,7 +7,7 @@ import {
 } from "@openfeature/server-sdk";
 
 /**
- * Resolves nothing. Every evaluation reports `FLAG_NOT_FOUND`, which is the
+ * Resolves nothing. Every evaluation reports `PROVIDER_NOT_READY`, which is the
  * signal `@shepherdjerred/config` uses to fall through to the next layer.
  *
  * That is the point: with `FEATURE_FLAGS_MODE=disabled` a service behaves
@@ -21,8 +21,8 @@ export class NoopProvider implements Provider {
   private absent<T>(defaultValue: T): ResolutionDetails<T> {
     return {
       value: defaultValue,
-      reason: "ERROR",
-      errorCode: ErrorCode.FLAG_NOT_FOUND,
+      reason: "DISABLED",
+      errorCode: ErrorCode.PROVIDER_NOT_READY,
       errorMessage: "feature flags are disabled (FEATURE_FLAGS_MODE=disabled)",
     };
   }

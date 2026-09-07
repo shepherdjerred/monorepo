@@ -35,12 +35,14 @@ describe("dynamic config", () => {
     await expect(karmaEmoji("guild-1")).resolves.toBe("🔥");
   });
 
-  test("an undefined flag falls through to env rather than blanking the value", async () => {
+  test("a flag missing from an active provider fails loudly rather than falling through", async () => {
     await initializeConfig({
       environment: { ...DISABLED, KARMA_EMOJI: "🌟" },
       provider: new StaticProvider({ "some-other-flag": true }),
     });
-    await expect(karmaEmoji("guild-1")).resolves.toBe("🌟");
+    await expect(karmaEmoji("guild-1")).rejects.toThrow(
+      /no static override for "karma-emoji"/,
+    );
   });
 
   test("the flag key is derived from the config key", async () => {

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "generate": {
+      "inputs": [
+        "src/managed-flag-inventory.json",
+        "scripts/generate-flag-types.ts",
+        "src/managed-flag-inventory.ts"
+      ],
+      "outputs": ["src/managed-flag-keys.generated.ts"]
+    }
+  }
+}
