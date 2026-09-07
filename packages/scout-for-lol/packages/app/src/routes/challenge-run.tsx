@@ -51,7 +51,7 @@ export function ChallengeRun() {
             {run.data.title}
           </h1>
           <Badge variant="outline">
-            {run.data.recomputing ? "recomputing" : run.data.status}
+            {run.data.recomputing ? "Updating now..." : run.data.status}
           </Badge>
         </div>
         <p className="text-scout-subtle">{run.data.summary}</p>
@@ -62,17 +62,13 @@ export function ChallengeRun() {
       <Card>
         <CardHeader>
           <CardTitle>Progress</CardTitle>
-          <CardDescription>
-            {run.data.recomputing
-              ? "Showing the last complete snapshot while revision work continues."
-              : "Deterministically evaluated from Scout's retained match evidence."}
-          </CardDescription>
+          {run.data.recomputing ? (
+            <CardDescription>Updating now...</CardDescription>
+          ) : null}
         </CardHeader>
         <CardContent>
           {snapshot === null ? (
-            <p className="text-sm text-scout-subtle">
-              The first snapshot is still building.
-            </p>
+            <p className="text-sm text-scout-subtle">Updating now...</p>
           ) : (
             <div className="space-y-4">
               <ChallengeProgress progress={snapshot.progress} />

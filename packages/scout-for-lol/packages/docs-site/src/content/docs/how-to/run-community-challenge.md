@@ -44,16 +44,17 @@ partial history never looks complete by implication.
 
 The built-in **Win on every current champion A–Z** challenge freezes the current
 champion list when you start. A champion released later does not move that
-run's finish line.
+run's finish line. Champion coverage is shown as portraits: completed in color,
+remaining in grayscale.
 
 ## Change contributing accounts
 
 Open the run and change the selected linked accounts. Scout creates a new
 evaluation revision and recomputes from the run's original start date.
 
-While that work runs, the page keeps showing the last complete snapshot with a
-**Recomputing** marker. Scout replaces it atomically only after the new revision
-is complete.
+While that work runs, the page keeps showing the last complete snapshot with an
+**Updating now...** indicator. Scout replaces it atomically only after the new
+revision is complete.
 
 ## Restart or run something else
 

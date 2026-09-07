@@ -28,7 +28,7 @@ function ChallengeRunSection(props: {
             >
               <span className="font-medium">{run.title}</span>
               <Badge variant="outline">
-                {run.recomputing ? "recomputing" : run.status}
+                {run.recomputing ? "Updating now..." : run.status}
               </Badge>
             </Link>
           </li>
