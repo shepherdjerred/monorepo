@@ -1,10 +1,19 @@
 import * as Sentry from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
+  BucksAmountSchema,
   BucksPoolRosterSchema,
+  DiscordAccountIdSchema,
+  LeaguePuuidSchema,
   RiotTeamIdSchema,
+  ZERO_BUCKS,
+  subtractAmounts,
+  type BucksAmount,
   type BucksPoolParticipant,
+  type BucksStake,
   type BucksVoidReason,
+  type DiscordAccountId,
+  type LeaguePuuid,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
@@ -36,22 +45,22 @@ export type SettlementSummary = {
   serverId: string;
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
-  winnersPool: number;
-  losersPool: number;
-  houseCut: number;
+  winnersPool: BucksAmount;
+  losersPool: BucksAmount;
+  houseCut: BucksAmount;
   bets: SettlementBet[];
 };
 
 type PendingMatchedBet = {
   id: number;
   bucksAccountId: number;
-  discordId: string;
+  discordId: DiscordAccountId;
   isHouse: boolean;
   predictedTeamId: number;
-  submittedStake: number;
-  matchedStake: number;
-  unmatchedStake: number;
-  subjectPuuid: string;
+  submittedStake: BucksStake;
+  matchedStake: BucksAmount;
+  unmatchedStake: BucksAmount;
+  subjectPuuid: LeaguePuuid;
 };
 
 async function settleWithOverflowFallback(input: {
@@ -82,9 +91,9 @@ function settleMatchedBets(input: {
   voidReason: BucksVoidReason | undefined;
 }): {
   bets: SettlementBet[];
-  winnersPool: number;
-  losersPool: number;
-  houseCut: number;
+  winnersPool: BucksAmount;
+  losersPool: BucksAmount;
+  houseCut: BucksAmount;
 } {
   const voided =
     input.voidReason !== undefined || input.winningTeamId === undefined;
@@ -100,9 +109,9 @@ function settleMatchedBets(input: {
         matchedStake: row.matchedStake,
         unmatchedStake: row.unmatchedStake,
         grossPayout: row.matchedStake,
-        houseCut: 0,
+        houseCut: ZERO_BUCKS,
         payout: row.matchedStake,
-        winnings: 0,
+        winnings: ZERO_BUCKS,
         won: false,
         refunded: true,
         subjectPuuid: row.subjectPuuid,
@@ -110,18 +119,21 @@ function settleMatchedBets(input: {
     }
 
     const won = row.predictedTeamId === input.winningTeamId;
-    const grossPayout = won ? row.matchedStake * 2 : 0;
-    if (grossPayout > BUCKS_INT32_MAX) {
+    const grossPayoutValue = won ? row.matchedStake * 2 : 0;
+    if (grossPayoutValue > BUCKS_INT32_MAX) {
       // Gross payout, fee, and net payout are persisted as Prisma Int fields.
       // Raise the typed error before any terminal state is written so the
       // transaction can retry through the storage-overflow refund path.
       throw new BucksStorageOverflowError(row.bucksAccountId);
     }
-    const grossProfit = won ? row.matchedStake : 0;
-    const houseCut = settlementHouseCut({
-      matchedProfit: grossProfit,
-      isHouse: row.isHouse,
-    });
+    const grossPayout = BucksAmountSchema.parse(grossPayoutValue);
+    const grossProfit = won ? row.matchedStake : ZERO_BUCKS;
+    const houseCut = BucksAmountSchema.parse(
+      settlementHouseCut({
+        matchedProfit: grossProfit,
+        isHouse: row.isHouse,
+      }),
+    );
     return {
       betId: row.id,
       bucksAccountId: row.bucksAccountId,
@@ -133,31 +145,35 @@ function settleMatchedBets(input: {
       unmatchedStake: row.unmatchedStake,
       grossPayout,
       houseCut,
-      payout: grossPayout - houseCut,
-      winnings: grossProfit - houseCut,
+      payout: subtractAmounts(grossPayout, houseCut),
+      winnings: subtractAmounts(grossProfit, houseCut),
       won,
       refunded: false,
       subjectPuuid: row.subjectPuuid,
     };
   });
 
-  const winnersPool =
+  const winnersPool = BucksAmountSchema.parse(
     input.winningTeamId === undefined
       ? 0
       : input.rows
           .filter((row) => row.predictedTeamId === input.winningTeamId)
-          .reduce((sum, row) => sum + row.matchedStake, 0);
-  const losersPool =
+          .reduce((sum, row) => sum + row.matchedStake, 0),
+  );
+  const losersPool = BucksAmountSchema.parse(
     input.winningTeamId === undefined
       ? 0
       : input.rows
           .filter((row) => row.predictedTeamId !== input.winningTeamId)
-          .reduce((sum, row) => sum + row.matchedStake, 0);
+          .reduce((sum, row) => sum + row.matchedStake, 0),
+  );
   return {
     bets,
     winnersPool,
     losersPool,
-    houseCut: bets.reduce((sum, bet) => sum + bet.houseCut, 0),
+    houseCut: BucksAmountSchema.parse(
+      bets.reduce((sum, bet) => sum + bet.houseCut, 0),
+    ),
   };
 }
 
@@ -398,13 +414,13 @@ async function settleOnePool(input: {
       return {
         id: row.id,
         bucksAccountId: row.bucksAccountId,
-        discordId: row.bucksAccount.discordId,
+        discordId: DiscordAccountIdSchema.parse(row.bucksAccount.discordId),
         isHouse: row.bucksAccount.isHouse,
         predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
-        submittedStake: row.stake,
+        submittedStake: allocation.submittedStake,
         matchedStake: allocation.matchedStake,
         unmatchedStake: allocation.unmatchedStake,
-        subjectPuuid: row.subjectPuuid,
+        subjectPuuid: LeaguePuuidSchema.parse(row.subjectPuuid),
       };
     });
     const settled = settleMatchedBets({

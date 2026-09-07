@@ -1,5 +1,9 @@
 import {
+  BucksAmountSchema,
   BucksPoolRosterSchema,
+  BucksStakeSchema,
+  amountToStake,
+  creditOf,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -192,8 +196,11 @@ async function cancelBetInner(
         .map((participant) => participant.trackedAlias)
         .filter((alias) => alias !== undefined);
 
-    const houseCut = cancellationHouseCut(bet.stake);
-    const refunded = bet.stake - houseCut;
+    // Parse the stored offer at the read boundary; the fee arithmetic then
+    // stays in the branded domain.
+    const submittedStake = BucksStakeSchema.parse(bet.stake);
+    const houseCut = BucksAmountSchema.parse(cancellationHouseCut(bet.stake));
+    const refunded = BucksAmountSchema.parse(bet.stake - houseCut);
     if (refunded + houseCut !== bet.stake) {
       bettingSettlementConservationFailuresTotal.inc({ stage: "cancellation" });
       throw new Error(
@@ -222,7 +229,7 @@ async function cancelBetInner(
     });
     const refundBalance = await applyBucksDelta(tx, {
       bucksAccountId,
-      delta: bet.stake,
+      delta: creditOf(submittedStake),
       kind: "bet_cancel_refund",
       matchId: input.matchId,
       betId: bet.id,
@@ -232,7 +239,7 @@ async function cancelBetInner(
         subjectAlias: "cancelled before close",
         backedAliases: aliasesFor(bet.predictedTeamId),
         opposingAliases: aliasesFor(bet.predictedTeamId === 100 ? 200 : 100),
-        submittedStake: bet.stake,
+        submittedStake,
         fee: houseCut,
         netRefund: refunded,
       },
@@ -244,7 +251,7 @@ async function cancelBetInner(
         : await transferHouseCut(tx, {
             serverId: input.serverId,
             bucksAccountId,
-            amount: houseCut,
+            amount: amountToStake(houseCut),
             kind: "cancel_fee",
             matchId: input.matchId,
             betId: bet.id,
@@ -252,8 +259,8 @@ async function cancelBetInner(
               type: "house_fee",
               source: "cancellation",
               ratePercent: HOUSE_CUT_PERCENT,
-              grossAmount: bet.stake,
-              fee: houseCut,
+              grossAmount: submittedStake,
+              fee: amountToStake(houseCut),
               basis: "submitted_stake",
             },
           });

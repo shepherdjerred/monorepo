@@ -1,12 +1,16 @@
 import * as Sentry from "@sentry/bun";
 import {
   BUCKS_MATCHING_VERSION,
+  BucksAmountSchema,
+  BucksDeltaSchema,
   BucksMatchingSummarySchema,
   BucksMessageRefsSchema,
   BucksPoolRosterSchema,
+  BucksStakeSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
   RiotTeamIdSchema,
+  ZERO_BUCKS,
   type BucksMatchingSummary,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
@@ -138,7 +142,7 @@ async function matchPoolAtClose(input: {
       if (allocation.unmatchedStake > 0) {
         await applyBucksDelta(tx, {
           bucksAccountId: allocation.bucksAccountId,
-          delta: allocation.unmatchedStake,
+          delta: BucksDeltaSchema.parse(allocation.unmatchedStake),
           kind: "bet_unmatched_refund",
           matchId: pool.matchId,
           betId: allocation.betId,
@@ -154,11 +158,15 @@ async function matchPoolAtClose(input: {
               roster,
               allocation.predictedTeamId === 100 ? 200 : 100,
             ),
-            submittedStake: allocation.submittedStake,
-            humanMatchedStake: allocation.humanMatchedStake,
-            houseMatchedStake: allocation.houseMatchedStake,
-            matchedStake: allocation.matchedStake,
-            unmatchedStake: allocation.unmatchedStake,
+            submittedStake: BucksStakeSchema.parse(allocation.submittedStake),
+            humanMatchedStake: BucksAmountSchema.parse(
+              allocation.humanMatchedStake,
+            ),
+            houseMatchedStake: BucksAmountSchema.parse(
+              allocation.houseMatchedStake,
+            ),
+            matchedStake: BucksAmountSchema.parse(allocation.matchedStake),
+            unmatchedStake: BucksAmountSchema.parse(allocation.unmatchedStake),
           },
         });
       }
@@ -193,7 +201,7 @@ async function matchPoolAtClose(input: {
       houseBetId = houseBet.id;
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: -matched.houseFill,
+        delta: BucksDeltaSchema.parse(-matched.houseFill),
         kind: "house_match",
         matchId: pool.matchId,
         betId: houseBet.id,
@@ -206,11 +214,11 @@ async function matchPoolAtClose(input: {
           subjectPuuid: LeaguePuuidSchema.parse(representative.subjectPuuid),
           backedAliases: aliasesForTeam(roster, matched.houseTeamId),
           opposingAliases: aliasesForTeam(roster, humanTeamId),
-          submittedStake: matched.houseFill,
-          humanMatchedStake: matched.houseFill,
-          houseMatchedStake: 0,
-          matchedStake: matched.houseFill,
-          unmatchedStake: 0,
+          submittedStake: BucksStakeSchema.parse(matched.houseFill),
+          humanMatchedStake: BucksAmountSchema.parse(matched.houseFill),
+          houseMatchedStake: ZERO_BUCKS,
+          matchedStake: BucksAmountSchema.parse(matched.houseFill),
+          unmatchedStake: ZERO_BUCKS,
         },
       });
     }

@@ -60,7 +60,12 @@ const LegacyDarePayloadSchema = z
 // prepare procedure and skip the creation gate entirely.
 export const DarePayloadInputSchema = z.union([
   DareIntentPayloadSchema,
-  LegacyDarePayloadSchema.pipe(DareIntentPayloadSchema),
+  // Semantically `.pipe(DareIntentPayloadSchema)`, spelled as a parse because
+  // the branded `amount` makes the pipe's invariant input/output typing
+  // reject the already-narrowed legacy transform result.
+  LegacyDarePayloadSchema.transform((payload) =>
+    DareIntentPayloadSchema.parse(payload),
+  ),
 ]);
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });

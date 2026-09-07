@@ -6,6 +6,8 @@ import {
   BucksPoolRosterSchema,
   BucksPoolStateSchema,
   RiotTeamIdSchema,
+  creditOf,
+  debitOf,
   type BucksLedgerKind,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -151,7 +153,7 @@ export async function ensureBucksAccount(
       try {
         await applyBucksDelta(tx, {
           bucksAccountId: house.id,
-          delta: -SEED_GRANT,
+          delta: debitOf(SEED_GRANT),
           kind: "seed",
           context: {
             type: "seed",
@@ -168,7 +170,7 @@ export async function ensureBucksAccount(
       }
       const balance = await applyBucksDelta(tx, {
         bucksAccountId: created.id,
-        delta: SEED_GRANT,
+        delta: creditOf(SEED_GRANT),
         kind: "seed",
         context: {
           type: "seed",

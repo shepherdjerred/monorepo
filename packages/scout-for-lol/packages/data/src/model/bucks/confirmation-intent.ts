@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BucksStakeSchema } from "./bryan-bucks.ts";
+import { BucksStakeSchema } from "./bryan-bucks-money.ts";
 import { CompetitionWriteSchema } from "#src/model/competitions/competition-write.ts";
 import {
   DiscordAccountIdSchema,

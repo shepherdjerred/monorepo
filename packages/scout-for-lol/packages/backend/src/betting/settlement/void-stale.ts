@@ -1,5 +1,12 @@
 import * as Sentry from "@sentry/bun";
-import { BucksPoolRosterSchema } from "@scout-for-lol/data";
+import {
+  BucksPoolRosterSchema,
+  DiscordAccountIdSchema,
+  LeaguePuuidSchema,
+  ZERO_BUCKS,
+  creditOf,
+  stakeToAmount,
+} from "@scout-for-lol/data";
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
@@ -53,6 +60,7 @@ async function pendingMatchedBets(tx: Db, poolId: number) {
     }
     return {
       ...row,
+      submittedStake: allocation.submittedStake,
       matchedStake: allocation.matchedStake,
       unmatchedStake: allocation.unmatchedStake,
     };
@@ -100,7 +108,7 @@ async function refundMatchedPool(
       });
       await applyBucksDelta(tx, {
         bucksAccountId: bet.bucksAccountId,
-        delta: bet.matchedStake,
+        delta: creditOf(bet.matchedStake),
         kind: "bet_void_refund",
         matchId,
         betId: bet.id,
@@ -118,9 +126,9 @@ async function refundMatchedPool(
           stakeReturned: bet.matchedStake,
           winnings: 0,
           grossPayout: bet.matchedStake,
-          houseCut: 0,
+          houseCut: ZERO_BUCKS,
           netPayout: bet.matchedStake,
-          submittedStake: bet.stake,
+          submittedStake: stakeToAmount(bet.submittedStake),
           matchedStake: bet.matchedStake,
           unmatchedStake: bet.unmatchedStake,
           voidReason: "expired",
@@ -129,19 +137,19 @@ async function refundMatchedPool(
       settledBets.push({
         betId: bet.id,
         bucksAccountId: bet.bucksAccountId,
-        discordId: bet.bucksAccount.discordId,
+        discordId: DiscordAccountIdSchema.parse(bet.bucksAccount.discordId),
         isHouse: bet.bucksAccount.isHouse,
         predictedTeamId: bet.predictedTeamId,
-        submittedStake: bet.stake,
+        submittedStake: bet.submittedStake,
         matchedStake: bet.matchedStake,
         unmatchedStake: bet.unmatchedStake,
         grossPayout: bet.matchedStake,
-        houseCut: 0,
+        houseCut: ZERO_BUCKS,
         payout: bet.matchedStake,
-        winnings: 0,
+        winnings: ZERO_BUCKS,
         won: false,
         refunded: true,
-        subjectPuuid: bet.subjectPuuid,
+        subjectPuuid: LeaguePuuidSchema.parse(bet.subjectPuuid),
       });
     }
     return {
@@ -149,9 +157,9 @@ async function refundMatchedPool(
       serverId: pool.serverId,
       winningTeamId: undefined,
       voidReason: "expired",
-      winnersPool: 0,
-      losersPool: 0,
-      houseCut: 0,
+      winnersPool: ZERO_BUCKS,
+      losersPool: ZERO_BUCKS,
+      houseCut: ZERO_BUCKS,
       bets: settledBets,
     };
   });

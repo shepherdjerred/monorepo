@@ -8,6 +8,7 @@ import {
 } from "vitest";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   RawMatchSchema,
@@ -396,7 +397,7 @@ describe("Bryan Bucks parlay funding and settlement", () => {
       db.$transaction((tx) =>
         applyBucksDelta(tx, {
           bucksAccountId: user.id,
-          delta: 1,
+          delta: BucksDeltaSchema.parse(1),
           kind: "adjustment",
           context: {
             type: "adjustment",

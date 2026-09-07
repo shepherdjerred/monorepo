@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/bun";
 import {
+  BucksDeltaSchema,
   BucksMessageRefsSchema,
   BucksParlaySideSchema,
+  BucksStakeSchema,
 } from "@scout-for-lol/data";
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
@@ -134,14 +136,14 @@ export async function voidStaleParlayMarkets(
           const context = {
             type: "parlay_settlement" as const,
             side,
-            stake: bet.stake,
+            stake: BucksStakeSchema.parse(bet.stake),
             reserve: bet.houseReserve,
-            grossPayout: bet.grossPayout,
+            grossPayout: BucksStakeSchema.parse(bet.grossPayout),
             voidReason: "expired" as const,
           };
           await applyBucksDelta(tx, {
             bucksAccountId: bet.bucksAccountId,
-            delta: bet.stake,
+            delta: BucksDeltaSchema.parse(bet.stake),
             kind: "parlay_refund",
             matchId: market.matchId,
             parlayBetId: bet.id,
@@ -149,7 +151,7 @@ export async function voidStaleParlayMarkets(
           });
           await applyBucksDelta(tx, {
             bucksAccountId: house.id,
-            delta: bet.houseReserve,
+            delta: BucksDeltaSchema.parse(bet.houseReserve),
             kind: "parlay_release",
             matchId: market.matchId,
             parlayBetId: bet.id,

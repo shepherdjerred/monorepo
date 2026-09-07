@@ -1,4 +1,8 @@
-import { DiscordAccountIdSchema, type QueueType } from "@scout-for-lol/data";
+import {
+  BucksStakeSchema,
+  DiscordAccountIdSchema,
+  type QueueType,
+} from "@scout-for-lol/data";
 
 /**
  * Tuning constants for Bryan Bucks.
@@ -54,14 +58,14 @@ export const VOID_GRACE_MS = 6 * 60 * 60 * 1000;
  * meaning anything. The house debit keeps the grant inside the existing
  * bankroll instead of minting new Bucks.
  */
-export const SEED_GRANT = 25;
+export const SEED_GRANT = BucksStakeSchema.parse(25);
 
 /**
  * The per-server bankroll available to match a one-sided market. It is seeded
  * once through the same ledger as every other account, so house risk and house
  * winnings remain auditable rather than being implicit minting.
  */
-export const HOUSE_BANKROLL = 10_000;
+export const HOUSE_BANKROLL = BucksStakeSchema.parse(10_000);
 
 /** Maximum aggregate house exposure added to one guild's game pool. */
 export const HOUSE_MATCH_LIMIT = 5;

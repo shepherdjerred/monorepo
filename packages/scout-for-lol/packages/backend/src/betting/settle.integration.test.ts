@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
+  BucksDeltaSchema,
   BucksLedgerContextSchema,
   BucksMatchingSummarySchema,
   DiscordGuildIdSchema,
@@ -78,7 +79,7 @@ async function makeBettor(input: {
   return await db.$transaction(async (tx) => {
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: startingBalance,
+      delta: BucksDeltaSchema.parse(startingBalance),
       kind: "seed",
       context: { type: "seed", note: "settlement test wallet" },
     });
@@ -93,7 +94,7 @@ async function makeBettor(input: {
     });
     await applyBucksDelta(tx, {
       bucksAccountId: account.id,
-      delta: -input.stake,
+      delta: BucksDeltaSchema.parse(-input.stake),
       kind: "bet_stake",
       matchId: MATCH_ID,
       betId: bet.id,
@@ -445,7 +446,7 @@ describe("refunds and house settlement", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: BUCKS_INT32_MAX,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX),
         kind: "seed",
         context: { type: "seed", note: "full house wallet" },
       });
@@ -487,7 +488,7 @@ describe("refunds and house settlement", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: 2,
+        delta: BucksDeltaSchema.parse(2),
         kind: "seed",
         context: { type: "seed", note: "limited house reserve" },
       });
@@ -615,7 +616,7 @@ describe("settlement storage bounds", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: house.id,
-        delta: BUCKS_INT32_MAX - 1,
+        delta: BucksDeltaSchema.parse(BUCKS_INT32_MAX - 1),
         kind: "seed",
         context: { type: "seed", note: "nearly full house wallet" },
       });
@@ -883,7 +884,7 @@ describe("reconcileBucksBalances", () => {
     await db.$transaction(async (tx) => {
       await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: 5,
+        delta: BucksDeltaSchema.parse(5),
         kind: "seed",
         context: { type: "seed", note: "reconciliation test" },
       });

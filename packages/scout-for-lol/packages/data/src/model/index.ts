@@ -55,6 +55,7 @@ export * from "./progression/duel-evidence.ts";
 export * from "./progression/duel-events.ts";
 export * from "./progression/hall.ts";
 export * from "./bucks/bryan-bucks.ts";
+export * from "./bucks/bryan-bucks-money.ts";
 export * from "./bucks/bucks-display.ts";
 export * from "./bucks/weekly-parlay.ts";
 export * from "./permissions/catalog.ts";

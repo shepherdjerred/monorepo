@@ -1,6 +1,7 @@
 import {
   BucksStakeSchema,
   BucksPoolRosterSchema,
+  debitOf,
   type BucksPoolParticipant,
   type DiscordAccountId,
   type DiscordGuildId,
@@ -287,7 +288,7 @@ async function placeBetInner(
 
       const balanceAfter = await applyBucksDelta(tx, {
         bucksAccountId: account.id,
-        delta: -stake.data,
+        delta: debitOf(stake.data),
         kind: "bet_stake",
         matchId: input.matchId,
         betId: bet.id,

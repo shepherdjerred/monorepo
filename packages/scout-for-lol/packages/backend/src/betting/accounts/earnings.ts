@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/bun";
 import {
+  BucksDeltaSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   LeaguePuuidSchema,
@@ -392,7 +393,7 @@ export async function awardForGuild(input: {
           const reward = EARNED_REWARDS[reason];
           await applyBucksDelta(tx, {
             bucksAccountId: accountId,
-            delta: reward.amount,
+            delta: BucksDeltaSchema.parse(reward.amount),
             kind: reward.kind,
             matchId: input.matchId,
             context: {
