@@ -17,6 +17,9 @@ export const FlowScenarioSchema = z.enum([
   "agent-run-persistence",
   "session-persistence-failure",
   "agent-run-completion-failure",
+  // Appended: scenario order derives fixture message IDs, so inserting in the
+  // middle renumbers every existing expectation.
+  "agent-progress",
 ]);
 
 export type FlowScenario = z.infer<typeof FlowScenarioSchema>;

@@ -16,8 +16,10 @@ the architecture and capability surface.
   cites in `reliedOnToolCallIds` must have actually succeeded; that check
   (`requireGroundedAnswer`) is the anti-hallucination gate and must not be
   weakened. Missing capability is an honest limitation, not a safety refusal.
-- One source message gets one placeholder and one final edit. Source-channel
-  tools must not send a second final response.
+- One source message gets one reply, and that reply ends on the answer. The
+  runtime may edit it while the turn runs to show progress; those edits are
+  coalesced, must never persist, and a failed progress edit must not fail the
+  turn. Source-channel tools must not send a second response.
 - Keep stable tool IDs and Zod schemas. Validate model-facing tool results.
   Tool metadata and the executable registry must stay identical; startup calls
   `getCapabilityCatalog` and refuses to boot on a mismatch.

@@ -21,6 +21,48 @@ import {
 } from "./message-fixture.ts";
 import { suppressAutomaticMemoryExtraction } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { memoryExtractionErrorCount } from "./metrics-inspection.ts";
+const ProgressReporterSchema = z.custom<{
+  stepStarted: (stepNumber: number) => void;
+  stepFinished: (stepNumber: number, text: string) => void;
+  toolStarted: (id: string, toolId: string, input: unknown) => void;
+  toolFinished: (id: string, ok: boolean, ms: number) => void;
+  flush: () => Promise<void>;
+}>(
+  (value) =>
+    typeof value === "object" &&
+    value !== null &&
+    [
+      "stepStarted",
+      "stepFinished",
+      "toolStarted",
+      "toolFinished",
+      "flush",
+    ].every((key) => typeof Reflect.get(value, key) === "function"),
+  "Invalid progress reporter",
+);
+const ProgressOptionsSchema = z.object({ progress: ProgressReporterSchema });
+
+function successfulToolTurn(text: string) {
+  return {
+    text,
+    disposition: "supported",
+    finishReason: "stop",
+    inputTokens: 20,
+    outputTokens: 8,
+    stepCount: 2,
+    toolEvents: [
+      {
+        toolCallId: "flow-tool-call-1",
+        toolId: "manage-message",
+        inputSummary: "{}",
+        resultSummary: "Message completed",
+        content: "Tool manage-message completed",
+        success: true,
+      },
+    ],
+  };
+}
+
 // The agent now receives a task packet, not a turn plus a route decision.
 const AgentPacketSchema = z.object({
   request: z.string(),
@@ -114,11 +156,23 @@ vi.doMock("@shepherdjerred/birmel/context/turn-context.ts", () => ({
     return createContextBundle();
   },
 }));
-
 vi.doMock("@shepherdjerred/birmel/agent-runtime/agent.ts", () => ({
-  executeTurn: (rawPacket: unknown) => {
+  executeTurn: async (rawPacket: unknown, options?: unknown) => {
     const packet = AgentPacketSchema.parse(rawPacket);
     state.agentCalls += 1;
+
+    // Only this scenario drives progress, so every other flow assertion keeps
+    // observing exactly one delivered edit.
+    if (state.scenario === "agent-progress") {
+      const { progress } = ProgressOptionsSchema.parse(options);
+      progress.stepStarted(0);
+      progress.stepFinished(0, "Checking who has been active.");
+      progress.toolStarted("flow-tool-call-1", "get-activity-stats", {});
+      progress.toolFinished("flow-tool-call-1", true, 42);
+      await progress.flush();
+      state.toolCalls += 1;
+      return successfulToolTurn(`agent reply for ${packet.request}`);
+    }
 
     if (state.scenario === "agent-failure") {
       throw new Error("AGENT_SECRET_EXCEPTION");
@@ -170,27 +224,9 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/agent.ts", () => ({
       );
     }
 
-    return {
-      text: `agent reply for ${packet.request}`,
-      disposition: "supported",
-      finishReason: "stop",
-      inputTokens: 20,
-      outputTokens: 8,
-      stepCount: 2,
-      toolEvents: [
-        {
-          toolCallId: "flow-tool-call-1",
-          toolId: "manage-message",
-          inputSummary: "{}",
-          resultSummary: "Message completed",
-          content: "Tool manage-message completed",
-          success: true,
-        },
-      ],
-    };
+    return successfulToolTurn(`agent reply for ${packet.request}`);
   },
 }));
-
 vi.doMock("@shepherdjerred/birmel/agent-runtime/memory-extraction.ts", () => ({
   extractAndApplyTurnMemory: () => {
     state.memoryExtractionCalls += 1;
@@ -200,11 +236,9 @@ vi.doMock("@shepherdjerred/birmel/agent-runtime/memory-extraction.ts", () => ({
     return Promise.resolve();
   },
 }));
-
 vi.doMock("@shepherdjerred/birmel/persona/guild-persona.ts", () => ({
   getGuildPersona: () => Promise.resolve("Compact elected persona"),
 }));
-
 vi.doMock("@shepherdjerred/birmel/discord/utils/channel-history.ts", () => ({
   getConversationTranscriptResult: () =>
     Promise.resolve({
@@ -212,18 +246,16 @@ vi.doMock("@shepherdjerred/birmel/discord/utils/channel-history.ts", () => ({
       fetchFailed: false,
     }),
 }));
-
 vi.doMock("@shepherdjerred/birmel/discord/engagement-tracker.ts", () => ({
   markEngaged: () => null,
 }));
-
 vi.doMock("@shepherdjerred/birmel/config/index.ts", () => ({
   getConfig: () => ({
     responder: { transcriptWindowMs: 3_600_000, transcriptMaxMessages: 50 },
     persona: { enabled: true },
+    agent: { maxSteps: 12 },
   }),
 }));
-
 vi.doMock("@shepherdjerred/birmel/sessions/service.ts", () => ({
   appendSessionEvent: (rawOptions: unknown) => {
     const options = SessionEventOptionsSchema.parse(rawOptions);
@@ -254,17 +286,14 @@ vi.doMock("@shepherdjerred/birmel/sessions/service.ts", () => ({
     return Promise.resolve(state.sessionActive);
   },
 }));
-
 vi.doMock("@shepherdjerred/birmel/sessions/summarization.ts", () => ({
   summarizeSessionIfNeeded: () => Promise.resolve(),
 }));
-
 vi.doMock("@shepherdjerred/birmel/observability/sentry.ts", () => ({
   captureException: () => null,
   clearSentryContext: () => null,
   setSentryContext: () => null,
 }));
-
 vi.doMock("@shepherdjerred/birmel/observability/tracing.ts", () => ({
   withSpan: async (
     _name: string,
@@ -272,7 +301,6 @@ vi.doMock("@shepherdjerred/birmel/observability/tracing.ts", () => ({
     operation: (span: typeof fakeSpan) => Promise<unknown>,
   ) => await operation(fakeSpan),
 }));
-
 vi.doMock("@shepherdjerred/birmel/utils/logger.ts", () => ({
   logger: {
     info: (..._values: unknown[]) => null,
