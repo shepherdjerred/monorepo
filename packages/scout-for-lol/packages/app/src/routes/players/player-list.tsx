@@ -27,7 +27,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { DiscordUser } from "#src/components/discord-user.tsx";
-import { LoadMore } from "#src/components/load-more.tsx";
+import { LoadMore } from "#src/components/chrome/load-more.tsx";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 
 function channelLabel(

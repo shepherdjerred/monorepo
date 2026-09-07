@@ -10,9 +10,9 @@ import type {
   CustomNightSnapshot,
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
-import { type CustomActivityActor } from "#src/customs/activity-actor.ts";
-import type { CustomRevisionInput as RevisionInput } from "#src/customs/activity-mutation-context.ts";
-import { gameContext } from "#src/customs/game-context.ts";
+import { type CustomActivityActor } from "#src/customs/activity/activity-actor.ts";
+import type { CustomRevisionInput as RevisionInput } from "#src/customs/activity/activity-mutation-context.ts";
+import { gameContext } from "#src/customs/game/game-context.ts";
 import { commitCustomMutation } from "#src/customs/repository.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { publishCustomNightSnapshot } from "#src/customs/socket.ts";

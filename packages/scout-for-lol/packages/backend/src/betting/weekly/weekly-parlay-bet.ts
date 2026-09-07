@@ -27,7 +27,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   bettingWeeklyParlayBetCancellationsTotal,
   bettingWeeklyParlayBetPlacementsTotal,
-} from "#src/metrics/betting-weekly-parlay.ts";
+} from "#src/metrics/betting/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 export type PlaceWeeklyParlayBetResult =

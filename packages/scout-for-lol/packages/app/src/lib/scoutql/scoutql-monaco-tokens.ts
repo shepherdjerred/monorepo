@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 import type {
   ScoutQlSemanticToken,
   ScoutQlTokenKind,
-} from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
+} from "@scout-for-lol/data/model/scoutql/editor/semantic-tokens.ts";
 
 // ── Semantic token encoding ──────────────────────────────────────────────────
 // Monaco wants semantic tokens as a flat `Uint32Array` of 5-tuples

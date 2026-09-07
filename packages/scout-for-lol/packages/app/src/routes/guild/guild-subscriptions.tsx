@@ -34,7 +34,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@scout-for-lol/design-system/components/dropdown-menu";
-import { LoadMore } from "#src/components/load-more.tsx";
+import { LoadMore } from "#src/components/chrome/load-more.tsx";
 import {
   Table,
   TableBody,

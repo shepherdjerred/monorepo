@@ -1,5 +1,5 @@
 import { P, type CreationIntentPayload } from "@scout-for-lol/data";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import {
   creationRefusal,
   lookupGuildAccess,

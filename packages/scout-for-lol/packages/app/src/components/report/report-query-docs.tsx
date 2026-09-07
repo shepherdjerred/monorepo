@@ -1,11 +1,11 @@
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql-idioms.ts";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import {
   SCOUTQL_SHAPE_EXAMPLE,
   scoutQlClauseSummary,

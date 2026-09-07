@@ -14,8 +14,8 @@ import { handleReportAiRoute } from "#src/reports/ai/http-route.ts";
 import {
   EXPLORE_STREAM_PATH,
   handleExploreRoute,
-} from "#src/explore/http-route.ts";
-import { exploreRunManager } from "#src/explore/run-manager.ts";
+} from "#src/explore/http/http-route.ts";
+import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { handleVersion } from "#src/http/version.ts";
 import { handleTournamentCallback } from "#src/http/tournament-callback.ts";
 import {
@@ -23,9 +23,12 @@ import {
   classifyRoute,
   statusClass,
 } from "#src/http/route-label.ts";
-import { httpRequestDuration, httpRequestsTotal } from "#src/metrics/web.ts";
+import {
+  httpRequestDuration,
+  httpRequestsTotal,
+} from "#src/metrics/platform/web.ts";
 import { handleWeeklyParlayControl } from "#src/http/weekly-parlay-control.ts";
-import { handleCustomAuthRoutes } from "#src/customs/activity-auth-http.ts";
+import { handleCustomAuthRoutes } from "#src/customs/activity/activity-auth-http.ts";
 import {
   CUSTOMS_SOCKET_PATH,
   customSocketHandlers,

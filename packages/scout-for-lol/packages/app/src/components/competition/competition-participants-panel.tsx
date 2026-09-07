@@ -16,7 +16,7 @@ import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { DiscordUser } from "#src/components/discord-user.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
-import { Section } from "#src/components/section.tsx";
+import { Section } from "#src/components/chrome/section.tsx";
 import {
   Field,
   FieldError,

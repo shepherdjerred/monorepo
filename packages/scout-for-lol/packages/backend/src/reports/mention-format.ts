@@ -1,4 +1,4 @@
-import type { ReportMentionIdentity } from "#src/reports/query-types.ts";
+import type { ReportMentionIdentity } from "#src/reports/query/query-types.ts";
 
 // Fallback rank count used when a `RENDER leaderboard` clause doesn't specify
 // `WITH (mentions = ...)`.

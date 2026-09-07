@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { createLogger } from "#src/logger.ts";
-import { tournamentCallbacksTotal } from "#src/metrics/tournament.ts";
+import { tournamentCallbacksTotal } from "#src/metrics/platform/tournament.ts";
 
 const logger = createLogger("tournament-callback");
 

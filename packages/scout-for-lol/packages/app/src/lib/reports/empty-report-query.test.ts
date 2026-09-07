@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
-import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
-import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
-import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
+import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/editor/lint.ts";
+import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/editor/presets.ts";
 import {
   EMPTY_REPORT_STATE,
   STARTER_REPORT_QUERY,

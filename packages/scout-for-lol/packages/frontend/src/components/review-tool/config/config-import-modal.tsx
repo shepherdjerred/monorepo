@@ -1,0 +1,306 @@
+/**
+ * Modal for importing config bundles
+ */
+import { useState } from "react";
+import { z } from "zod";
+import type { ConfigBundle } from "#src/lib/review-tool/config-export.ts";
+import type { TabConfig } from "#src/lib/review-tool/config/schema.ts";
+import {
+  importAllConfigFromJSON,
+  applyConfigBundle,
+  getConfigBundleSummary,
+} from "#src/lib/review-tool/config-export.ts";
+import { ReviewToolModal } from "#src/components/review-tool/review-tool-modal.tsx";
+
+const ErrorSchema = z.object({ message: z.string() });
+
+type ConfigImportModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onImportSuccess: (tabConfig?: TabConfig) => void;
+};
+
+export function ConfigImportModal({
+  isOpen,
+  onClose,
+  onImportSuccess,
+}: ConfigImportModalProps) {
+  const [jsonInput, setJsonInput] = useState("");
+  const [parsedBundle, setParsedBundle] = useState<ConfigBundle | null>(null);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [importTabConfig, setImportTabConfig] = useState(true);
+  const [importPersonalities, setImportPersonalities] = useState(true);
+  const [importArtStyles, setImportArtStyles] = useState(true);
+  const [mergeWithExisting, setMergeWithExisting] = useState(true);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  // Parse a JSON string into a bundle, updating the parsed/error state. Shared
+  // by the "Parse JSON" button and the file-upload handler.
+  const parseAndSetBundle = (input: string) => {
+    try {
+      const bundle = importAllConfigFromJSON(input);
+      setParsedBundle(bundle);
+      setParseError(null);
+    } catch (error) {
+      const errorResult = ErrorSchema.safeParse(error);
+      setParseError(
+        errorResult.success ? errorResult.data.message : String(error),
+      );
+      setParsedBundle(null);
+    }
+  };
+
+  const handleParseJSON = () => {
+    parseAndSetBundle(jsonInput);
+  };
+
+  const handleImport = () => {
+    if (!parsedBundle) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const importedTabConfig = await applyConfigBundle(parsedBundle, {
+          importTabConfig,
+          importPersonalities,
+          importArtStyles,
+          mergeWithExisting,
+        });
+
+        alert("Config imported successfully!");
+        onImportSuccess(importedTabConfig);
+        handleClose();
+      } catch (error) {
+        const errorResult = ErrorSchema.safeParse(error);
+        alert(
+          `Failed to import config: ${errorResult.success ? errorResult.data.message : String(error)}`,
+        );
+      }
+    })();
+  };
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const content = await file.text();
+    setJsonInput(content);
+    parseAndSetBundle(content);
+  };
+
+  const handleClose = () => {
+    setJsonInput("");
+    setParsedBundle(null);
+    setParseError(null);
+    setImportTabConfig(true);
+    setImportPersonalities(true);
+    setImportArtStyles(true);
+    setMergeWithExisting(true);
+    onClose();
+  };
+
+  const summary = parsedBundle ? getConfigBundleSummary(parsedBundle) : null;
+
+  return (
+    <ReviewToolModal
+      title="Import Configuration"
+      subtitle="Import shared config from JSON"
+      onClose={handleClose}
+      maxWidthClassName="max-w-3xl"
+      footer={
+        <div className="sticky bottom-0 bg-scout-raised border-t border-scout-border px-6 py-4 flex justify-end gap-3">
+          <button
+            onClick={handleClose}
+            className="px-4 py-2 bg-scout-canvas text-scout-ink rounded-lg hover:bg-scout-canvas transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleImport}
+            className="px-4 py-2 bg-scout-brand text-scout-brand-ink rounded-lg hover:bg-scout-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            disabled={!parsedBundle}
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+              />
+            </svg>
+            Import Configuration
+          </button>
+        </div>
+      }
+    >
+      {/* Content */}
+      <div className="p-6 space-y-4">
+        {/* File Upload */}
+        <div>
+          <label
+            htmlFor="upload-config-file"
+            className="block text-sm font-medium text-scout-ink mb-2"
+          >
+            Upload Config File
+          </label>
+          <input
+            id="upload-config-file"
+            type="file"
+            accept=".json"
+            onChange={(e) => void handleFileUpload(e)}
+            className="block w-full text-sm text-scout-subtle
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-lg file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-scout-raised file:text-scout-brand
+                  hover:file:bg-scout-raised
+                  cursor-pointer"
+          />
+        </div>
+
+        {/* Or Paste JSON */}
+        <div>
+          <label
+            htmlFor="or-paste-json"
+            className="block text-sm font-medium text-scout-ink mb-2"
+          >
+            Or Paste JSON
+          </label>
+          <textarea
+            id="or-paste-json"
+            value={jsonInput}
+            onChange={(e) => {
+              setJsonInput(e.target.value);
+            }}
+            placeholder="Paste your config JSON here..."
+            className="w-full h-32 px-3 py-2 border border-scout-border rounded-lg focus:outline-none focus:ring-2 focus:ring-scout-focus font-mono text-sm"
+          />
+          <button
+            onClick={handleParseJSON}
+            className="mt-2 px-4 py-2 bg-scout-brand text-scout-brand-ink rounded-lg hover:bg-scout-brand transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!jsonInput.trim()}
+          >
+            Parse JSON
+          </button>
+        </div>
+
+        {/* Parse Error */}
+        {parseError !== null && parseError.length > 0 && (
+          <div className="bg-scout-danger border border-scout-danger rounded-lg p-4">
+            <p className="text-sm text-scout-danger-ink font-medium">
+              Failed to parse JSON:
+            </p>
+            <p className="text-sm text-scout-danger-ink mt-1 font-mono">
+              {parseError}
+            </p>
+          </div>
+        )}
+
+        {/* Summary */}
+        {summary && (
+          <div className="bg-scout-raised border border-scout-brand rounded-lg p-4">
+            <p className="text-sm font-semibold text-scout-brand mb-2">
+              Config Bundle Summary:
+            </p>
+            <ul className="text-sm text-scout-brand space-y-1">
+              <li>
+                • Exported: {new Date(summary.exportedAt).toLocaleString()}
+              </li>
+              <li>
+                • Settings:{" "}
+                {summary.hasTabConfig ? "✓ Included" : "✗ Not included"}
+              </li>
+              <li>• Custom Personalities: {summary.personalitiesCount}</li>
+              <li>• Custom Art Styles: {summary.artStylesCount}</li>
+            </ul>
+          </div>
+        )}
+
+        {/* Import Options */}
+        {parsedBundle && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium text-scout-ink">
+              Import Options:
+            </p>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={importTabConfig}
+                onChange={(e) => {
+                  setImportTabConfig(e.target.checked);
+                }}
+                className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
+              />
+              <span className="text-sm text-scout-ink">
+                Import Settings (text/image generation, prompts)
+              </span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={importPersonalities}
+                onChange={(e) => {
+                  setImportPersonalities(e.target.checked);
+                }}
+                className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
+              />
+              <span className="text-sm text-scout-ink">
+                Import Custom Personalities ({summary?.personalitiesCount ?? 0})
+              </span>
+            </label>
+
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={importArtStyles}
+                onChange={(e) => {
+                  setImportArtStyles(e.target.checked);
+                }}
+                className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
+              />
+              <span className="text-sm text-scout-ink">
+                Import Custom Art Styles ({summary?.artStylesCount ?? 0})
+              </span>
+            </label>
+
+            <div className="pt-2 border-t border-scout-border">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={mergeWithExisting}
+                  onChange={(e) => {
+                    setMergeWithExisting(e.target.checked);
+                  }}
+                  className="w-4 h-4 text-scout-brand rounded focus:ring-2 focus:ring-scout-focus"
+                />
+                <span className="text-sm text-scout-ink font-medium">
+                  Merge with existing data (uncheck to replace)
+                </span>
+              </label>
+              <p className="text-xs text-scout-subtle ml-6 mt-1">
+                {mergeWithExisting
+                  ? "New items will be added, existing items will be kept"
+                  : "All existing custom data will be replaced"}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </ReviewToolModal>
+  );
+}

@@ -34,7 +34,7 @@ import {
 import { client } from "#src/discord/client.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import { createLogger } from "#src/logger.ts";
-import { bettingSettlementDmsTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementDmsTotal } from "#src/metrics/betting/betting.ts";
 
 const logger = createLogger("betting-settlement-dm");
 

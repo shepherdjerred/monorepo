@@ -1,9 +1,9 @@
 import type { DuckDBValue } from "@duckdb/node-api";
-import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type {
   ScoutQlGroupSize,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   compileGroupFactsProjection,
@@ -44,7 +44,7 @@ import type {
   PlanAggregationResult,
   PlanOutputEvidence,
   PlanOutputValue,
-} from "#src/reports/plan-rows.ts";
+} from "#src/reports/query/plan-rows.ts";
 
 /**
  * Execute a compiled ScoutQL v2 plan against the report lake.

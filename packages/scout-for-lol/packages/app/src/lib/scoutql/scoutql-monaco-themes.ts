@@ -1,7 +1,7 @@
 import type * as Monaco from "monaco-editor";
 import { match } from "ts-pattern";
 import { scoutThemes } from "@scout-for-lol/design-system/themes";
-import type { ScoutQlTokenKind } from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
+import type { ScoutQlTokenKind } from "@scout-for-lol/data/model/scoutql/editor/semantic-tokens.ts";
 import { SCOUTQL_SEMANTIC_TOKEN_TYPES } from "#src/lib/scoutql/scoutql-monaco-tokens.ts";
 
 // ── ScoutQL editor themes ────────────────────────────────────────────────────

@@ -4,8 +4,8 @@ import { ReportRunIdSchema, type ReportRunId } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { deliverPendingReportDispatches } from "#src/reports/discord-dispatcher.ts";
 import { runReport } from "#src/reports/runner.ts";
-import { runScheduledReportOccurrence } from "#src/reports/scheduler.ts";
-import { InvalidSavedQueryError } from "#src/reports/query-engine.ts";
+import { runScheduledReportOccurrence } from "#src/reports/schedule/scheduler.ts";
+import { InvalidSavedQueryError } from "#src/reports/query/query-engine.ts";
 
 type ScoutReportRecord = Awaited<
   ReturnType<ExtendedPrismaClient["report"]["findUnique"]>

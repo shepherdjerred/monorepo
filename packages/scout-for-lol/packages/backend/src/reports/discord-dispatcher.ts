@@ -18,7 +18,7 @@ import { recordCoreOutputDelivered } from "#src/analytics/guild-lifecycle.ts";
 import type {
   runDueReports,
   ScheduledReportDispatch,
-} from "#src/reports/scheduler.ts";
+} from "#src/reports/schedule/scheduler.ts";
 import {
   claimScoutEffect,
   completeScoutEffect,

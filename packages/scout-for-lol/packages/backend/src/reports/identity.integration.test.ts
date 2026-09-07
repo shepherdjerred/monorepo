@@ -7,10 +7,10 @@ import {
   writeTestLake,
   type TestLakeMatchFact,
 } from "#src/testing/test-report-lake.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
-import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
 
 /**
  * Identity: one person, several accounts, several names.

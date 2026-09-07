@@ -6,7 +6,7 @@ import {
   ConfirmationOutcomeMessage,
   ExploreConfirmationCard,
 } from "#src/components/explore/explore-confirmation-card.tsx";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import { useNow } from "#src/hooks/use-now.ts";
 import {
   confirmationCardState,

@@ -125,7 +125,7 @@ describe("recordBucksDeliverySkip", () => {
 
 describe("betting metric naming", () => {
   test("every betting metric is snake_case with the right suffix", async () => {
-    await import("#src/metrics/betting.ts");
+    await import("#src/metrics/betting/betting.ts");
     const metrics = await registry.getMetricsAsJSON();
     const betting = metrics.filter((metric) =>
       metric.name.startsWith("betting_"),
@@ -145,7 +145,7 @@ describe("betting metric naming", () => {
   });
 
   test("no betting metric declares an identifier label", async () => {
-    await import("#src/metrics/betting.ts");
+    await import("#src/metrics/betting/betting.ts");
     const metrics = await registry.getMetricsAsJSON();
     const forbidden = [
       "match_id",

@@ -1,5 +1,5 @@
 import { ReportAiFinalDraftWireSchema } from "@scout-for-lol/data";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);

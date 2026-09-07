@@ -13,7 +13,7 @@ import {
   FormSection,
   Label,
 } from "@scout-for-lol/design-system/components/input";
-import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
+import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
 import {
   COMPETITION_CRITERIA_OPTIONS,
   RANKED_COMPETITION_QUEUES,

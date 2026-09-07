@@ -1,5 +1,5 @@
 import type * as Monaco from "monaco-editor";
-import { SCOUTQL_KEYWORDS } from "@scout-for-lol/data/model/scoutql/tokens.ts";
+import { SCOUTQL_KEYWORDS } from "@scout-for-lol/data/model/scoutql/parse/tokens.ts";
 
 // ── ScoutQL language registration ────────────────────────────────────────────
 // Registration is deliberately split from the providers (semantic tokens,

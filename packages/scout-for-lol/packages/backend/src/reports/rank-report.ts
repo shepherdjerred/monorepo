@@ -7,7 +7,7 @@ import {
 import type {
   ScoutQlOutput,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import { calculateLeaderboard } from "#src/league/competition/leaderboard.ts";
 import type { RankedLeaderboardEntry } from "#src/league/competition/leaderboard-types.ts";
@@ -21,15 +21,15 @@ import {
   effectiveRowLimit,
   resultFromPlanRows,
   withoutComparison,
-} from "#src/reports/query-aggregates.ts";
-import type { ReportQueryResult } from "#src/reports/query-types.ts";
+} from "#src/reports/query/query-aggregates.ts";
+import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 import {
   evaluateAggregate,
   evaluateHaving,
   evaluatePredicate,
   type AggregateEvalContext,
   type FactRow,
-} from "#src/reports/aggregate-eval.ts";
+} from "#src/reports/query/aggregate-eval.ts";
 import {
   compareOutputs,
   groupEvidence,
@@ -38,7 +38,7 @@ import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 import type {
   PlanAggregateRow,
   PlanOutputValue,
-} from "#src/reports/plan-rows.ts";
+} from "#src/reports/query/plan-rows.ts";
 
 /**
  * The rank snapshot sources (`rank_current`, `competition_rank`).

@@ -1,5 +1,5 @@
 import { match } from "ts-pattern";
-import type { ScoutQlScalarFunction } from "@scout-for-lol/data/model/scoutql/expression.ts";
+import type { ScoutQlScalarFunction } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import { scalarParam } from "#src/reports/duckdb/lake.ts";
 import type { BoundParam, SqlFragment } from "#src/reports/duckdb/lake.ts";
 

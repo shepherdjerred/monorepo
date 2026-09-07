@@ -1,7 +1,7 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { Copy, CornerDownLeft, Plus, Trash2 } from "lucide-react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ClipboardError } from "#src/components/clipboard-error.tsx";
 import { Input } from "@scout-for-lol/design-system/components/input";

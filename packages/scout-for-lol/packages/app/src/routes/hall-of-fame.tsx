@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { ErrorPanel } from "#src/components/route-error-panel.tsx";
+import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { useHallParams } from "#src/lib/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 

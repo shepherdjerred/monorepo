@@ -12,7 +12,7 @@ import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useGuildParams } from "#src/lib/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
+import { ReportRunStatusBadge } from "#src/components/chrome/status-badge.tsx";
 import {
   Table,
   TableBody,

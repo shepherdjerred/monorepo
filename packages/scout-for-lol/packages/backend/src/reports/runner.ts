@@ -21,8 +21,8 @@ import {
   scheduledReportRowsReturnedTotal,
   scheduledReportRowsScannedTotal,
   scoutScheduledReportLastSuccessTimestamp,
-} from "#src/metrics/report-runs.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+} from "#src/metrics/reports/report-runs.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   renderReportOutput,

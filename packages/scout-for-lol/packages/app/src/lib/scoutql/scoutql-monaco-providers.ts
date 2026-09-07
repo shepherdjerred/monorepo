@@ -4,14 +4,14 @@ import type {
   ScoutQlDiagnostic,
   ScoutQlFix,
   ScoutQlSeverity,
-} from "@scout-for-lol/data/model/scoutql/diagnostics.ts";
-import type { ScoutQlCompletionKind } from "@scout-for-lol/data/model/scoutql/complete-items.ts";
-import { completeScoutQl } from "@scout-for-lol/data/model/scoutql/complete.ts";
-import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
-import { hoverScoutQl } from "@scout-for-lol/data/model/scoutql/hover.ts";
-import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
-import { scoutQlSemanticTokens } from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
-import { signatureHelpScoutQl } from "@scout-for-lol/data/model/scoutql/signature.ts";
+} from "@scout-for-lol/data/model/scoutql/editor/diagnostics.ts";
+import type { ScoutQlCompletionKind } from "@scout-for-lol/data/model/scoutql/editor/complete-items.ts";
+import { completeScoutQl } from "@scout-for-lol/data/model/scoutql/editor/complete.ts";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
+import { hoverScoutQl } from "@scout-for-lol/data/model/scoutql/editor/hover.ts";
+import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/editor/lint.ts";
+import { scoutQlSemanticTokens } from "@scout-for-lol/data/model/scoutql/editor/semantic-tokens.ts";
+import { signatureHelpScoutQl } from "@scout-for-lol/data/model/scoutql/editor/signature.ts";
 import { SCOUTQL_LANGUAGE_ID } from "#src/lib/scoutql/scoutql-monaco-language.ts";
 import {
   encodeScoutQlSemanticTokens,

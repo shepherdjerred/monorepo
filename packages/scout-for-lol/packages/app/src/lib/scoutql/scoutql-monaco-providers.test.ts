@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { ScoutQlDiagnostic } from "@scout-for-lol/data/model/scoutql/diagnostics.ts";
-import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
+import type { ScoutQlDiagnostic } from "@scout-for-lol/data/model/scoutql/editor/diagnostics.ts";
+import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/editor/lint.ts";
 import { scoutQlFixesForMarker } from "#src/lib/scoutql/scoutql-monaco-providers.ts";
 
 // Monaco markers carry no payload slot, so a quick fix cannot ride along on

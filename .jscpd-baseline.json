@@ -884,19 +884,19 @@
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts": {
       "clones": 1,
       "tokens": 70
     },
-    "packages/scout-for-lol/packages/backend/scripts/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/update-queue-windows.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/lane-priors/lane-prior-cli.ts|packages/scout-for-lol/packages/backend/scripts/update-queue-windows.ts": {
       "clones": 1,
       "tokens": 81
     },
-    "packages/scout-for-lol/packages/backend/scripts/register-tournament-provider.ts|packages/scout-for-lol/packages/backend/scripts/tournament-stub-smoke.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/register-tournament-provider.ts|packages/scout-for-lol/packages/backend/scripts/smoke/tournament-stub-smoke.ts": {
       "clones": 1,
       "tokens": 74
     },
-    "packages/scout-for-lol/packages/backend/scripts/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
+    "packages/scout-for-lol/packages/backend/scripts/scoutql/scoutql-v2-rewrite-render.ts|packages/scout-for-lol/packages/data/src/model/legacy/report-query-render.ts": {
       "clones": 1,
       "tokens": 70
     },
@@ -1032,11 +1032,11 @@
       "clones": 1,
       "tokens": 71
     },
-    "packages/scout-for-lol/packages/backend/src/explore/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
+    "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/reports/ai/http-route.ts": {
       "clones": 1,
       "tokens": 203
     },
-    "packages/scout-for-lol/packages/backend/src/explore/http-auth.ts|packages/scout-for-lol/packages/backend/src/trpc/trpc.ts": {
+    "packages/scout-for-lol/packages/backend/src/explore/http/http-auth.ts|packages/scout-for-lol/packages/backend/src/trpc/trpc.ts": {
       "clones": 1,
       "tokens": 81
     },
@@ -1172,7 +1172,7 @@
       "clones": 2,
       "tokens": 176
     },
-    "packages/scout-for-lol/packages/backend/src/reports/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
+    "packages/scout-for-lol/packages/backend/src/reports/schedule/temporal-labels.ts|packages/scout-for-lol/packages/report/src/html/visualization-snapshot-calendar-option.ts": {
       "clones": 1,
       "tokens": 122
     },
@@ -1256,11 +1256,11 @@
       "clones": 1,
       "tokens": 70
     },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/tokens.ts": {
+    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-lexer.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/tokens.ts": {
       "clones": 1,
       "tokens": 124
     },
-    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/plan.ts": {
+    "packages/scout-for-lol/packages/data/src/model/legacy/report-query-spec.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/plan.ts": {
       "clones": 1,
       "tokens": 78
     },
@@ -1272,7 +1272,7 @@
       "clones": 1,
       "tokens": 76
     },
-    "packages/scout-for-lol/packages/data/src/model/reports/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog-functions.ts": {
+    "packages/scout-for-lol/packages/data/src/model/reports/report-query-champions.ts|packages/scout-for-lol/packages/data/src/model/scoutql/catalog/catalog-functions.ts": {
       "clones": 1,
       "tokens": 181
     },
@@ -1280,7 +1280,7 @@
       "clones": 1,
       "tokens": 129
     },
-    "packages/scout-for-lol/packages/data/src/model/scoutql/cst-to-ast-expr.ts|packages/scout-for-lol/packages/data/src/model/scoutql/cst-to-ast.ts": {
+    "packages/scout-for-lol/packages/data/src/model/scoutql/parse/cst-to-ast-expr.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/cst-to-ast.ts": {
       "clones": 1,
       "tokens": 77
     },
@@ -1300,7 +1300,7 @@
       "clones": 2,
       "tokens": 253
     },
-    "packages/scout-for-lol/packages/frontend/src/components/review-tool/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/ratings-analytics.tsx": {
+    "packages/scout-for-lol/packages/frontend/src/components/review-tool/results/history-panel.tsx|packages/scout-for-lol/packages/frontend/src/components/review-tool/results/ratings-analytics.tsx": {
       "clones": 1,
       "tokens": 151
     },

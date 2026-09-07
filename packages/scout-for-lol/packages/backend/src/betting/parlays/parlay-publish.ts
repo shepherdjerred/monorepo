@@ -20,7 +20,7 @@ import { createLogger } from "#src/logger.ts";
 import {
   bettingParlayMarketsOpenedTotal,
   bettingParlayMarketsPublishedTotal,
-} from "#src/metrics/betting-parlay.ts";
+} from "#src/metrics/betting/betting-parlay.ts";
 
 const logger = createLogger("betting-parlay-publish");
 type PreparationMessage = Awaited<ReturnType<typeof send>>;

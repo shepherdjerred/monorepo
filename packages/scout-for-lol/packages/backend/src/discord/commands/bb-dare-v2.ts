@@ -23,7 +23,7 @@ import { getExploreConversationUrl } from "#src/discord/commands/links.ts";
 import type { BbCommandInteraction } from "#src/discord/commands/bb-interaction.ts";
 import { isExploreGuildAllowed } from "#src/explore/access.ts";
 import { tryStartExploreTurn } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
+import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { loadExploreTranscript, startExploreTurn } from "#src/explore/store.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import {

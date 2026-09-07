@@ -18,7 +18,7 @@ import type {
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
 import type { Db } from "#src/database/index.ts";
-import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting/betting.ts";
 
 export type DareV2LedgerFacts = {
   contractVersion: 2 | 3;

@@ -1,6 +1,6 @@
 import { match } from "ts-pattern";
-import type { ScoutQlGrouping } from "@scout-for-lol/data/model/scoutql/plan.ts";
-import type { ScoutQlScalarExpr } from "@scout-for-lol/data/model/scoutql/expression.ts";
+import type { ScoutQlGrouping } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import type { ScoutQlScalarExpr } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import { scalarParam } from "#src/reports/duckdb/lake.ts";
 import type { SqlFragment } from "#src/reports/duckdb/lake.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";

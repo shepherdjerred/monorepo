@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
+import { CompetitionStatusBadge } from "#src/components/chrome/status-badge.tsx";
 import { CompetitionLeaderboardPanel } from "#src/components/competition/competition-leaderboard-panel.tsx";
 import { CompetitionParticipantsPanel } from "#src/components/competition/competition-participants-panel.tsx";
 

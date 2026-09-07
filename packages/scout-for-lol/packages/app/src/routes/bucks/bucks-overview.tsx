@@ -6,7 +6,7 @@ import {
   ErrorState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
-import { DelayedLoadingState } from "#src/components/section-skeleton.tsx";
+import { DelayedLoadingState } from "#src/components/chrome/section-skeleton.tsx";
 import { BucksCancelDialog } from "#src/components/bucks/bucks-cancel-dialog.tsx";
 import {
   BucksMarketSections,

@@ -17,16 +17,16 @@
  */
 import path from "node:path";
 import { CompetitionCriteriaSchema } from "@scout-for-lol/data";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
-import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
 import { renderReportOutput } from "@scout-for-lol/backend/reports/output.ts";
-import { planResultColumnNames } from "@scout-for-lol/backend/reports/plan-columns.ts";
+import { planResultColumnNames } from "@scout-for-lol/backend/reports/query/plan-columns.ts";
 import {
   resolveTemporalContext,
   windowRange,
-} from "@scout-for-lol/backend/reports/temporal-plan.ts";
-import { buildVisualizationSnapshot } from "@scout-for-lol/backend/reports/visualization-snapshot.ts";
-import type { ReportQueryResult } from "@scout-for-lol/backend/reports/query-types.ts";
+} from "@scout-for-lol/backend/reports/schedule/temporal-plan.ts";
+import { buildVisualizationSnapshot } from "@scout-for-lol/backend/reports/visualization/visualization-snapshot.ts";
+import type { ReportQueryResult } from "@scout-for-lol/backend/reports/query/query-types.ts";
 import { RENDER_SAMPLES } from "./render-sample-data.ts";
 
 const OUT_DIR = path.join(import.meta.dir, "..", "src", "assets", "generated");

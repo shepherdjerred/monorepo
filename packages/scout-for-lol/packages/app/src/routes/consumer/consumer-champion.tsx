@@ -14,12 +14,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { ChampionIcon } from "#src/components/champion-icon.tsx";
+import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
 import {
   ChampionComparisonTable,
   type ChampionComparisonRow,
-} from "#src/components/champion-comparison-table.tsx";
-import { PageSectionHeading } from "#src/components/page-section-heading.tsx";
+} from "#src/components/match/champion-comparison-table.tsx";
+import { PageSectionHeading } from "#src/components/chrome/page-section-heading.tsx";
 import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {

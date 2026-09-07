@@ -6,7 +6,7 @@ import {
   VisualizationSnapshotSchema,
   UNGROUPED_LABEL_COLUMN_LABEL,
 } from "@scout-for-lol/data";
-import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
+import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
 
 export function plottableMetricColumns(
   columns: ReportResultColumn[],

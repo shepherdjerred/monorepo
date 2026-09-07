@@ -1,10 +1,10 @@
 import { describe, expect, test } from "vitest";
 import path from "node:path";
-import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
-import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
-import { SCOUTQL_FUNCTIONS } from "@scout-for-lol/data/model/scoutql/catalog-functions.ts";
-import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/render-options.ts";
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
+import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
+import { SCOUTQL_FUNCTIONS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-functions.ts";
+import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/editor/render-options.ts";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql-idioms.ts";
 import { ALL_PERMISSIONS } from "@scout-for-lol/data/model/permissions/catalog.ts";
 
 /**
@@ -318,15 +318,19 @@ describe("cross-package facts the prose depends on", () => {
     const scoutql = new URL("../../data/src/model/scoutql/", import.meta.url)
       .pathname;
     const claims: [string, string, string][] = [
-      ["1\u{2013}20 outputs", "analyze-select.ts", "const MAX_OUTPUTS = 20;"],
+      [
+        "1\u{2013}20 outputs",
+        "analyze/analyze-select.ts",
+        "const MAX_OUTPUTS = 20;",
+      ],
       [
         "1\u{2013}3 order keys",
-        "analyze-order.ts",
+        "analyze/analyze-order.ts",
         "const MAX_ORDER_KEYS = 3;",
       ],
       [
         "0\u{2013}3 groupings",
-        "analyze-group.ts",
+        "analyze/analyze-group.ts",
         "A query may group by at most 3 dimensions",
       ],
     ];

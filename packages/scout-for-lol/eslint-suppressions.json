@@ -9,7 +9,7 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/backfill-overdue-season-comps.ts": {
+  "packages/backend/scripts/backfill/backfill-overdue-season-comps.ts": {
     "@typescript-eslint/prefer-optional-chain": {
       "count": 1
     }
@@ -48,12 +48,12 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/evaluate-lane-priors.ts": {
+  "packages/backend/scripts/lane-priors/evaluate-lane-priors.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 1
     }
   },
-  "packages/backend/scripts/generate-lane-priors.ts": {
+  "packages/backend/scripts/lane-priors/generate-lane-priors.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 1
     }
@@ -78,7 +78,7 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/lane-prior-cli.ts": {
+  "packages/backend/scripts/lane-priors/lane-prior-cli.ts": {
     "@typescript-eslint/no-deprecated": {
       "count": 1
     }
@@ -117,7 +117,7 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/scoutql-v2-rewrite-render.ts": {
+  "packages/backend/scripts/scoutql/scoutql-v2-rewrite-render.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -127,7 +127,7 @@
       "count": 1
     }
   },
-  "packages/backend/scripts/smoke.ts": {
+  "packages/backend/scripts/smoke/smoke.ts": {
     "custom-rules/prefer-structured-logging": {
       "count": 2
     }
@@ -276,7 +276,7 @@
       "count": 1
     }
   },
-  "packages/backend/src/explore/run-turn.ts": {
+  "packages/backend/src/explore/runs/run-turn.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -396,7 +396,7 @@
       "count": 1
     }
   },
-  "packages/backend/src/trpc/router/competition.router.ts": {
+  "packages/backend/src/trpc/router/competitions/competition.router.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -490,27 +490,27 @@
       "count": 2
     }
   },
-  "packages/data/src/model/scoutql/analyze-display.ts": {
+  "packages/data/src/model/scoutql/analyze/analyze-display.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "packages/data/src/model/scoutql/analyze-lower-aggregate.ts": {
+  "packages/data/src/model/scoutql/analyze/analyze-lower-aggregate.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "packages/data/src/model/scoutql/ast.ts": {
+  "packages/data/src/model/scoutql/parse/ast.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "packages/data/src/model/scoutql/cst-to-ast-expr.ts": {
+  "packages/data/src/model/scoutql/parse/cst-to-ast-expr.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "packages/data/src/model/scoutql/plan.ts": {
+  "packages/data/src/model/scoutql/parse/plan.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -545,17 +545,17 @@
       "count": 1
     }
   },
-  "packages/frontend/src/components/review-tool/match-reviewer-info.tsx": {
+  "packages/frontend/src/components/review-tool/match/match-reviewer-info.tsx": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "packages/frontend/src/components/review-tool/rank-config-panel.tsx": {
+  "packages/frontend/src/components/review-tool/config/rank-config-panel.tsx": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "packages/frontend/src/components/review-tool/use-match-browser.ts": {
+  "packages/frontend/src/components/review-tool/match/use-match-browser.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

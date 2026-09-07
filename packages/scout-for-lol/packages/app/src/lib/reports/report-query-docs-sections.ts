@@ -1,14 +1,14 @@
 import { match } from "ts-pattern";
 import { QueueTypeSchema, queueTypeToDisplayString } from "@scout-for-lol/data";
-import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalogs } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import {
   SCOUTQL_FUNCTIONS,
   type ScoutQlFunctionInfo,
   type ScoutQlFunctionKind,
-} from "@scout-for-lol/data/model/scoutql/catalog-functions.ts";
-import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
-import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/render-options.ts";
-import { SCOUTQL_KEYWORDS } from "@scout-for-lol/data/model/scoutql/tokens.ts";
+} from "@scout-for-lol/data/model/scoutql/catalog/catalog-functions.ts";
+import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
+import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/editor/render-options.ts";
+import { SCOUTQL_KEYWORDS } from "@scout-for-lol/data/model/scoutql/parse/tokens.ts";
 
 // ── The in-app reference, as data ────────────────────────────────────────────
 // Every section here is BUILT from the same registries the parser, analyzer

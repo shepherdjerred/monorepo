@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { ScoutQlSemanticToken } from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
-import { scoutQlSemanticTokens } from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
+import type { ScoutQlSemanticToken } from "@scout-for-lol/data/model/scoutql/editor/semantic-tokens.ts";
+import { scoutQlSemanticTokens } from "@scout-for-lol/data/model/scoutql/editor/semantic-tokens.ts";
 import {
   encodeScoutQlSemanticTokens,
   scoutQlLineRanges,

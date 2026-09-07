@@ -11,8 +11,8 @@ import { formatDate } from "#src/lib/format.ts";
 import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { LoadMore } from "#src/components/load-more.tsx";
-import { CompetitionStatusBadge } from "#src/components/status-badge.tsx";
+import { LoadMore } from "#src/components/chrome/load-more.tsx";
+import { CompetitionStatusBadge } from "#src/components/chrome/status-badge.tsx";
 import {
   Table,
   TableBody,

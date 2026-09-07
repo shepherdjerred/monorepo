@@ -7,7 +7,7 @@ import {
   type ReportResultColumn,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
+import { isChartRenderKind } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Select,
@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@scout-for-lol/design-system/components/select";
-import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
+import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";
 import {
   SingleRowResult,

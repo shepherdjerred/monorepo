@@ -19,7 +19,7 @@ import {
   scoutVoiceTurnDeliveryFailuresTotal,
   scoutVoiceTurnsTotal,
   scoutVoiceWakeToReplySeconds,
-} from "#src/metrics/voice.ts";
+} from "#src/metrics/platform/voice.ts";
 import { createLogger } from "#src/logger.ts";
 
 /**

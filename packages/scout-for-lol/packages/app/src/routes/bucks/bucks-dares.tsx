@@ -25,7 +25,7 @@ import {
   DareStatePill as StatePill,
   isNonterminalDareState,
 } from "#src/components/bucks/bucks-dare-display.tsx";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import {

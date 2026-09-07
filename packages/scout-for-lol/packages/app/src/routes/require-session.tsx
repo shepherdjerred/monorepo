@@ -8,7 +8,7 @@ import {
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
+import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
 import {
   resolveSessionGuardState,
   SESSION_QUERY_OPTIONS,

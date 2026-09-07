@@ -15,9 +15,9 @@ import { ExploreHeader } from "#src/components/explore/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore/explore-share.tsx";
 import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
 import type { ExploreTranscriptActions } from "#src/components/explore/explore-transcript-actions.ts";
-import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
-import { ErrorPanel } from "#src/components/route-error-panel.tsx";
-import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
+import { ForbiddenPanel } from "#src/components/chrome/forbidden-panel.tsx";
+import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
+import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
 import { useExploreConversation } from "#src/hooks/use-explore-conversation.ts";
 import { useExploreTurnActions } from "#src/hooks/use-explore-turn-actions.ts";
 import {

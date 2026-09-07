@@ -20,7 +20,7 @@ import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   missingPermissionFromError,
   permissionLabel,
-} from "#src/components/forbidden-panel.tsx";
+} from "#src/components/chrome/forbidden-panel.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import {
   CustomPermissionsForm,

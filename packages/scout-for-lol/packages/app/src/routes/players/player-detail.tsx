@@ -27,12 +27,12 @@ import {
   PlayerAccountsTable,
   Section,
 } from "#src/components/player/player-detail-sections.tsx";
-import { RenamePlayerDialog } from "#src/components/rename-player-dialog.tsx";
-import { LinkDiscordDialog } from "#src/components/link-discord-dialog.tsx";
-import { AddAccountDialog } from "#src/components/add-account-dialog.tsx";
-import { EditAccountDialog } from "#src/components/edit-account-dialog.tsx";
-import { MergePlayersDialog } from "#src/components/merge-players-dialog.tsx";
-import { TransferAccountDialog } from "#src/components/transfer-account-dialog.tsx";
+import { RenamePlayerDialog } from "#src/components/dialogs/rename-player-dialog.tsx";
+import { LinkDiscordDialog } from "#src/components/dialogs/link-discord-dialog.tsx";
+import { AddAccountDialog } from "#src/components/dialogs/add-account-dialog.tsx";
+import { EditAccountDialog } from "#src/components/dialogs/edit-account-dialog.tsx";
+import { MergePlayersDialog } from "#src/components/dialogs/merge-players-dialog.tsx";
+import { TransferAccountDialog } from "#src/components/dialogs/transfer-account-dialog.tsx";
 
 type EditableAccount = { id: number; alias: string; region: string };
 

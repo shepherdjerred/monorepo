@@ -20,7 +20,7 @@ import {
   bettingBetCancellationsTotal,
   bettingSettlementConservationFailuresTotal,
   bettingStakeBucksTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-cancel-bet");

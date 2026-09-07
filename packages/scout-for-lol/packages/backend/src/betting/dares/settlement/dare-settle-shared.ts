@@ -23,7 +23,7 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   bettingDareSettlementsTotal,
   bettingDaresTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 
 /**
  * Types and refund/void helpers shared between `dare-settle.ts` (match-driven

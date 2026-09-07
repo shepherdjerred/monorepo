@@ -17,7 +17,7 @@ import {
   fetchUserGuilds,
   type PartialGuild,
 } from "#src/lib/discord-rest.ts";
-import { discordUserGuildsFailures } from "#src/metrics/web.ts";
+import { discordUserGuildsFailures } from "#src/metrics/platform/web.ts";
 
 /**
  * Map a {@link DiscordUpstreamError} onto the tRPC error the user should see.

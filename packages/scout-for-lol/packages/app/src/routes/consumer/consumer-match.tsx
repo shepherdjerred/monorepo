@@ -11,8 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { MatchScoreboards } from "#src/components/match-scoreboard.tsx";
-import { MatchTimeline } from "#src/components/match-timeline.tsx";
+import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
 import { track } from "#src/lib/analytics.ts";
 import {
   parsePlayerProfileFilters,

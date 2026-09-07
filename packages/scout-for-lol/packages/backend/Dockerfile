@@ -149,7 +149,7 @@ WORKDIR /app/packages/scout-for-lol/packages/backend
 # so it must finish — or fail loudly — before the application accepts
 # traffic. `prisma` is a runtime dependency of the backend, so `bun x`
 # resolves it from the installed tree without a network fetch.
-CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
+CMD ["/bin/sh", "-c", "bun x prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts && bun run scripts/scoutql/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts"]
 
 FROM runtime AS smoke
 # The smoke boots the backend against a throwaway local Postgres (the app no

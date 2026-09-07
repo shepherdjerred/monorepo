@@ -10,7 +10,7 @@ import {
   TimelineParticipantFrameLakeRowSchema,
 } from "@scout-for-lol/data";
 import { createLogger } from "#src/logger.ts";
-import { reportLakeCompactionSkippedTotal } from "#src/metrics/report-lake.ts";
+import { reportLakeCompactionSkippedTotal } from "#src/metrics/reports/report-lake.ts";
 import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
 import type { StagingParseResult } from "#src/report-lake/fold-parquet.ts";
 import {

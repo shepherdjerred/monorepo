@@ -1,6 +1,6 @@
 import { Loaded } from "@shepherdjerred/loaded";
 import { Outlet, useLocation, useParams } from "react-router";
-import { ForbiddenPanel } from "#src/components/forbidden-panel.tsx";
+import { ForbiddenPanel } from "#src/components/chrome/forbidden-panel.tsx";
 import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { analyticsContextRoute } from "#src/lib/analytics.ts";

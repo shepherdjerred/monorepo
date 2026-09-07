@@ -42,9 +42,9 @@ import {
 import { prisma } from "#src/database/index.ts";
 import { runAuditedMutation } from "#src/lib/audit/audited-mutation.ts";
 import { createReportInTransaction } from "#src/lib/reports/create.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
-import { planResultColumns } from "#src/reports/plan-columns.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { planResultColumns } from "#src/reports/query/plan-columns.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { renderReportOutput } from "#src/reports/output.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
@@ -54,14 +54,14 @@ import {
   browseReportData,
   reportDataExplorerSchema,
   ReportDataBrowseInputSchema,
-} from "#src/reports/data-explorer.ts";
-import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/data-explorer-columns.ts";
+} from "#src/reports/query/data-explorer.ts";
+import { ACCOUNT_IDENTITY_COLUMN_IDS } from "#src/reports/query/data-explorer-columns.ts";
 import {
   enqueueReportScheduleDeletion,
   enqueueReportScheduleUpsert,
   notifyReportScheduleReconciler,
-} from "#src/reports/temporal-schedules.ts";
-import { runManualReportWithTemporal } from "#src/reports/manual-temporal-run.ts";
+} from "#src/reports/schedule/temporal-schedules.ts";
+import { runManualReportWithTemporal } from "#src/reports/schedule/manual-temporal-run.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 const ReportIdInput = GuildInput.extend({ reportId: ReportIdSchema });

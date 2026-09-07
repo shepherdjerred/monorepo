@@ -1,5 +1,5 @@
-import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 
 /**
  * A saved query, shown rather than edited.

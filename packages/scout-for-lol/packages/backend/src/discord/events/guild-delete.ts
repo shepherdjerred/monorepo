@@ -18,7 +18,7 @@ import { cleanupRemovedGuild } from "#src/league/tasks/cleanup/remove-guild.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
 import { buildFeedbackRequestMessage } from "#src/discord/utils/feedback.ts";
 import { getErrorMessage } from "#src/utils/errors.ts";
-import { guildsLeftTotal } from "#src/metrics/web.ts";
+import { guildsLeftTotal } from "#src/metrics/platform/web.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("guild-delete");

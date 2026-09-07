@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
-import { competitionQueryRange } from "#src/reports/query-engine.ts";
-import { clampTemporalRange } from "#src/reports/temporal-range.ts";
-import { resolveTemporalContext } from "#src/reports/temporal-plan.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { competitionQueryRange } from "#src/reports/query/query-engine.ts";
+import { clampTemporalRange } from "#src/reports/schedule/temporal-range.ts";
+import { resolveTemporalContext } from "#src/reports/schedule/temporal-plan.ts";
 
 const NOW = new Date("2026-09-01T00:00:00.000Z");
 const COMPETITION = {

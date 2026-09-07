@@ -1,5 +1,5 @@
-import type { ScoutQlQueryAst } from "@scout-for-lol/data/model/scoutql/ast.ts";
-import { parseScoutQl } from "@scout-for-lol/data/model/scoutql/parse.ts";
+import type { ScoutQlQueryAst } from "@scout-for-lol/data/model/scoutql/parse/ast.ts";
+import { parseScoutQl } from "@scout-for-lol/data/model/scoutql/parse/parse.ts";
 
 // ── The clause-order summary ─────────────────────────────────────────────────
 // The in-app reference used to carry a hand-typed grammar string, and it had

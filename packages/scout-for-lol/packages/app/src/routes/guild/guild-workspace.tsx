@@ -2,15 +2,15 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Suspense, type ReactNode } from "react";
-import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
+import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
 import type { Permission } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
   ForbiddenPanel,
   permissionLabel,
-} from "#src/components/forbidden-panel.tsx";
-import { ErrorPanel } from "#src/components/route-error-panel.tsx";
+} from "#src/components/chrome/forbidden-panel.tsx";
+import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { permissionsForGuildActionRoute } from "#src/lib/player/guild-route-permissions.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
