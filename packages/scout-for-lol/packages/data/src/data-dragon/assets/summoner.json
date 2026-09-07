@@ -1,6 +1,6 @@
 {
   "type": "summoner",
-  "version": "16.16.1",
+  "version": "16.17.1",
   "data": {
     "SummonerBarrier": {
       "id": "SummonerBarrier",
@@ -8,61 +8,13 @@
       "description": "Gain a brief Shield.",
       "tooltip": "Gain a <shield>{{ shieldstrength }} damage Shield</shield> for {{ shieldduration }} seconds.",
       "maxrank": 1,
-      "cooldown": [
-        180
-      ],
+      "cooldown": [180],
       "cooldownBurn": "180",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "21",
       "summonerLevel": 4,
@@ -90,9 +42,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        1200
-      ],
+      "range": [1200],
       "rangeBurn": "1200",
       "image": {
         "full": "SummonerBarrier.png",
@@ -111,72 +61,20 @@
       "description": "Gain a short duration shield. Summoner's Resolve: Barrier's Shield is increased.",
       "tooltip": "Gain a <shield>{{ shieldstrengthfinal }} damage Shield</shield> for {{ shieldduration }} seconds.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        210
-      ],
+      "cooldown": [210],
       "cooldownBurn": "210",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "721",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        1200
-      ],
+      "range": [1200],
       "rangeBurn": "1200",
       "image": {
         "full": "SummonerBarrier_Jade.png",
@@ -195,72 +93,20 @@
       "description": "Temporarily empowers your champion, granting Attack Speed  and Ability Power for the duration. Summoner's Wrath: Increases the Attack Speed bonus by 5% and the Ability Power bonus by 10%.",
       "tooltip": "Empowers your champion, granting <attackSpeed>{{ totalasactual }} Attack Speed</attackSpeed>  and <scaleAP>{{ totalapactual }} Ability Power</scaleAP> for 12 seconds.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        180
-      ],
+      "cooldown": [180],
       "cooldownBurn": "180",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "716",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerBattleCry_Jade.png",
@@ -279,61 +125,13 @@
       "description": "Removes all disables (excluding suppression and airborne) and summoner spell debuffs affecting your champion and gives Tenacity.",
       "tooltip": "Removes all crowd control debuffs (excluding <keyword>Suppression</keyword> and <keyword>Airborne</keyword>) and summoner spell debuffs from you and grants {{ tenacityvalue*100 }}% Tenacity for {{ tenacityduration }} seconds.",
       "maxrank": 1,
-      "cooldown": [
-        240
-      ],
+      "cooldown": [240],
       "cooldownBurn": "240",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "1",
       "summonerLevel": 9,
@@ -360,9 +158,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerBoost.png",
@@ -381,72 +177,20 @@
       "description": "Removes all disables and summoner spell debuffs affecting your champion and temporarily lowers the duration of incoming disables. Summoner's Resolve: Extends the Tenacity buff duration.",
       "tooltip": "Removes all disables and summoner spell debuffs affecting your champion and reduces the duration of disables by 65% for the next {{ tenacitydurationfinalcalc }} seconds.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        210
-      ],
+      "cooldown": [210],
       "cooldownBurn": "210",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "71",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerBoost_Jade.png",
@@ -465,72 +209,20 @@
       "description": "Teleports your champion a short distance toward your cursor's location.",
       "tooltip": "Teleports your champion a short distance toward your cursor's location.<br /><br />Cannot be cast again for one full round <rules>(a round consists of both a buy phase and a combat phase).</rules>",
       "maxrank": 1,
-      "cooldown": [
-        0.25
-      ],
+      "cooldown": [0.25],
       "cooldownBurn": "0.25",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          400
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "400",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [400], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "400", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "2202",
       "summonerLevel": 1,
-      "modes": [
-        "CHERRY"
-      ],
+      "modes": ["CHERRY"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        425
-      ],
+      "range": [425],
       "rangeBurn": "425",
       "image": {
         "full": "SummonerCherryFlash.png",
@@ -549,72 +241,20 @@
       "description": "Gain a short burst of Move Speed, increased while running away from enemy champions.",
       "tooltip": "<keywordMajor>Active Spell Slot:</keywordMajor> Augments that grant a Summoner Spell will replace this slot.<br /><br />Gain <moveSpeed>{{ basems*100 }}% Move Speed</moveSpeed> for {{ duration }} seconds, increased by {{ bonusmsperenemybehind*100 }}% for each enemy behind you.",
       "maxrank": 1,
-      "cooldown": [
-        45
-      ],
+      "cooldown": [45],
       "cooldownBurn": "45",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          20
-        ],
-        [
-          10
-        ],
-        [
-          3
-        ],
-        [
-          5
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "20",
-        "10",
-        "3",
-        "5",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [20], [10], [3], [5], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "20", "10", "3", "5", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "2201",
       "summonerLevel": 1,
-      "modes": [
-        "CHERRY"
-      ],
+      "modes": ["CHERRY"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        25000
-      ],
+      "range": [25000],
       "rangeBurn": "25000",
       "image": {
         "full": "SummonerCherryHold.png",
@@ -633,72 +273,20 @@
       "description": "Reveals a small area of the map for your team for a short duration. Summoner's Insight: Retain sight on units revealed by Clairvoyance for 5 seconds.",
       "tooltip": "Reveals a small area of the map for your team for 5 seconds.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        60
-      ],
+      "cooldown": [60],
       "cooldownBurn": "60",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "75",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        25000
-      ],
+      "range": [25000],
       "rangeBurn": "25000",
       "image": {
         "full": "SummonerClairvoyance_Jade.png",
@@ -717,61 +305,13 @@
       "description": "Deals true damage over time to target enemy champion and reduces healing effects on them for the duration.",
       "tooltip": "Deals <trueDamage>{{ tooltiptruedamagecalculation }} true damage</trueDamage> to target enemy champion over 5 seconds and applies <keyword>{{ grievousamount*100 }}% Grievous Wounds</keyword> for the duration.<br /><br /><keyword>Wounds</keyword>: Reduces the effectiveness of Healing and Regeneration effects.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        180
-      ],
+      "cooldown": [180],
       "cooldownBurn": "180",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "14",
       "summonerLevel": 9,
@@ -799,9 +339,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        600
-      ],
+      "range": [600],
       "rangeBurn": "600",
       "image": {
         "full": "SummonerDot.png",
@@ -820,72 +358,20 @@
       "description": "Deals true damage over time to target enemy champion and reduces healing effects on them for the duration. Summoner's Wrath: While Ignite is on cooldown, gain 5 Ability Power and Attack Damage.",
       "tooltip": "Deals <trueDamage>{{ tooltiptruedamagecalculation }} true damage</trueDamage> to target enemy champion over 5 seconds and applies <keyword>{{ grievousamount*100 }}% Grievous Wounds</keyword> for the duration.<br /><br /><keyword>Wounds</keyword>: Reduces the effectiveness of Healing and Regeneration effects.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        210
-      ],
+      "cooldown": [210],
       "cooldownBurn": "210",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "714",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        600
-      ],
+      "range": [600],
       "rangeBurn": "600",
       "image": {
         "full": "SummonerDot_Jade.png",
@@ -904,61 +390,13 @@
       "description": "Slows target enemy champion and reduces their damage dealt.",
       "tooltip": "<keyword>Slows</keyword> target enemy champion by {{ slow }}% and reduces their damage dealt by {{ damagereduction }}% for {{ debuffduration }} seconds.",
       "maxrank": 1,
-      "cooldown": [
-        240
-      ],
+      "cooldown": [240],
       "cooldownBurn": "240",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "3",
       "summonerLevel": 4,
@@ -983,9 +421,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        650
-      ],
+      "range": [650],
       "rangeBurn": "650",
       "image": {
         "full": "SummonerExhaust.png",
@@ -1004,72 +440,20 @@
       "description": "Slows target enemy champion and reduces their Attack Speed and damage dealt. Summoner's Wrath: Exhaust also reduces the target's Armor and Magic Resist by 10.",
       "tooltip": "Exhausts target enemy champion, reducing their Movement Speed and Damage dealt by {{ damagereduction }}% for 2.5 seconds and reducing their Attack Speed by {{ attackspeedreduction }}% for the duration.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        210
-      ],
+      "cooldown": [210],
       "cooldownBurn": "210",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "73",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        550
-      ],
+      "range": [550],
       "rangeBurn": "550",
       "image": {
         "full": "SummonerExhaust_Jade.png",
@@ -1088,61 +472,13 @@
       "description": "Teleports you a short distance toward your cursor.",
       "tooltip": "Teleports you a short distance toward your cursor.",
       "maxrank": 1,
-      "cooldown": [
-        300
-      ],
+      "cooldown": [300],
       "cooldownBurn": "300",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          400
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "400",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [400], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "400", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "4",
       "summonerLevel": 7,
@@ -1171,9 +507,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        425
-      ],
+      "range": [425],
       "rangeBurn": "425",
       "image": {
         "full": "SummonerFlash.png",
@@ -1192,72 +526,20 @@
       "description": "Teleports you a short distance toward your cursor. Summoner's Insight: Reduces Flash's Cooldown by 15 seconds.",
       "tooltip": "Teleports you a short distance toward your cursor.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        300
-      ],
+      "cooldown": [300],
       "cooldownBurn": "300",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          400
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "400",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [400], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "400", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "74",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        425
-      ],
+      "range": [425],
       "rangeBurn": "425",
       "image": {
         "full": "SummonerFlash_Jade.png",
@@ -1276,72 +558,20 @@
       "description": "Grants invulnerability to all Allied Turrets and causes them to attack 100% faster for 6 seconds. Summoner's Resolve: Turrets deal splash damage around their target.",
       "tooltip": "<spellPassive>Passive</spellPassive>: While Fortify is off cooldown, deal <scaleAD>{{ bonusminiondamage }} bonus damage</scaleAD> to minions on-hit.<br /><br /><spellActive>Active</spellActive>: Grants invulnerability to all Allied Turrets and causes them to attack {{ attackspeed*100 }}% faster for {{ duration }} seconds.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        180
-      ],
+      "cooldown": [180],
       "cooldownBurn": "180",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "705",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        25000
-      ],
+      "range": [25000],
       "rangeBurn": "25000",
       "image": {
         "full": "SummonerFortify_Jade.png",
@@ -1360,61 +590,13 @@
       "description": "Gain Move Speed and ignore unit collision for the duration.",
       "tooltip": "Gain <speed>{{ movespeedmod }} Move Speed</speed> and become <keyword>Ghosted</keyword> for {{ duration }} seconds.<br /><br /><keyword>Ghost</keyword>: Ignore collision with other units.",
       "maxrank": 1,
-      "cooldown": [
-        240
-      ],
+      "cooldown": [240],
       "cooldownBurn": "240",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "6",
       "summonerLevel": 1,
@@ -1444,9 +626,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerHaste.png",
@@ -1465,72 +645,20 @@
       "description": "Gain Move Speed and ignore unit collision for the duration. Summoner's Wrath: Bonus Move Speed granted by Ghost is increased.",
       "tooltip": "Gain <speed>{{ movespeedmodfinal }} Move Speed</speed> and become <keyword>Ghosted</keyword> for {{ duration }} seconds.<br /><br /><keyword>Ghost</keyword>: Ignore collision with other units.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        240
-      ],
+      "cooldown": [240],
       "cooldownBurn": "240",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "76",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerHaste_Jade.png",
@@ -1549,61 +677,13 @@
       "description": "Restores Health and grants Move Speed to you and target allied champion.",
       "tooltip": "Restores <healing>{{ totalheal }} Health</healing> and grants <speed>{{ movespeed*100 }}% Move Speed</speed> for {{ movespeedduration }} second to you and target allied champion.<br /><br /><rules>If cast without a target, it will cast on the most wounded allied champion in range.<br />Healing is halved on units recently affected by Summoner Heal.</rules>",
       "maxrank": 1,
-      "cooldown": [
-        240
-      ],
+      "cooldown": [240],
       "cooldownBurn": "240",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "7",
       "summonerLevel": 1,
@@ -1632,9 +712,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        875
-      ],
+      "range": [875],
       "rangeBurn": "875",
       "image": {
         "full": "SummonerHeal.png",
@@ -1653,72 +731,20 @@
       "description": "Restores Health to your champion and to nearby allies. Summoner's Resolve: Gain 5 Health per level.",
       "tooltip": "Restores {{ totalheal }} Health to your champion and nearby allies.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        300
-      ],
+      "cooldown": [300],
       "cooldownBurn": "300",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "77",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        600
-      ],
+      "range": [600],
       "rangeBurn": "600",
       "image": {
         "full": "SummonerHeal_Jade.png",
@@ -1737,75 +763,20 @@
       "description": "Restores your and ally champion's Mana.",
       "tooltip": "Restores {{ e1 }}% maximum Mana to your Champion and {{ e2 }}% to nearby allies.",
       "maxrank": 1,
-      "cooldown": [
-        240
-      ],
+      "cooldown": [240],
       "cooldownBurn": "240",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          50
-        ],
-        [
-          25
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "50",
-        "25",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [50], [25], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "50", "25", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "13",
       "summonerLevel": 6,
-      "modes": [
-        "KIWI",
-        "FIRSTBLOOD",
-        "ARAM",
-        "KIWI_JADE"
-      ],
+      "modes": ["KIWI", "FIRSTBLOOD", "ARAM", "KIWI_JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        600
-      ],
+      "range": [600],
       "rangeBurn": "600",
       "image": {
         "full": "SummonerMana.png",
@@ -1824,72 +795,20 @@
       "description": "Restores all nearby allied champions' mana. Summoner's Insight: Restores 25% more mana.",
       "tooltip": "Restores <scaleMana>{{ selfmanaactual }}% maximum Mana</scaleMana> to your Champion and <scaleMana>{{ allymanaactual }}%</scaleMana> to nearby allies.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        135
-      ],
+      "cooldown": [135],
       "cooldownBurn": "135",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          40
-        ],
-        [
-          40
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "40",
-        "40",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [40], [40], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "40", "40", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "713",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        600
-      ],
+      "range": [600],
       "rangeBurn": "600",
       "image": {
         "full": "SummonerMana_Jade.png",
@@ -1908,72 +827,20 @@
       "description": "Quickly travel to the Poro King's side.",
       "tooltip": "<span class=\"colorFFE076\">Passive:</span> Hitting an enemy champion with a Poro gives your team a Poro Mark. Upon reaching 10 Poro Marks, your team summons the Poro King to fight alongside them. While the Poro King is active, no Poro Marks can be scored by either team.<br /><br /><span class=\"colorFFE076\">Active:</span> Quickly dash to King Poro's side. Can only be cast while the Poro King is summoned for your team. <br /><br /><i><span class=\"colorFDD017\">''Poros tug the heartstrings. The rest of you just comes along for the ride.''</span></i></mainText>",
       "maxrank": 1,
-      "cooldown": [
-        10
-      ],
+      "cooldown": [10],
       "cooldownBurn": "10",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          3000
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "3000",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [3000], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "3000", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "30",
       "summonerLevel": 1,
-      "modes": [
-        "KINGPORO"
-      ],
+      "modes": ["KINGPORO"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerPoroRecall.png",
@@ -1992,72 +859,20 @@
       "description": "Toss a Poro at your enemies. If it hits, you can quickly travel to your target as a follow up.",
       "tooltip": "Toss a Poro a long distance, dealing {{ f2 }} true damage to the first enemy unit hit, granting <span class=\"coloree91d7\">True Sight</span> of the target.<br /><br />This ability can be recast for 3 seconds if it hits an enemy to dash to the target hit, dealing {{ f2 }} more true damage and reducing the cooldown of the next Poro Toss by {{ e4 }} seconds.<br /><br />Poros are not blocked by spell shields or wind walls because they are animals, not spells!<br /><br /><i><span class=\"colorFDD017\">''Poros are a model for Runeterran aerodynamics.''</span></i></mainText>",
       "maxrank": 1,
-      "cooldown": [
-        20
-      ],
+      "cooldown": [20],
       "cooldownBurn": "20",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          20
-        ],
-        [
-          10
-        ],
-        [
-          3
-        ],
-        [
-          5
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "20",
-        "10",
-        "3",
-        "5",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [20], [10], [3], [5], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "20", "10", "3", "5", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "31",
       "summonerLevel": 1,
-      "modes": [
-        "KINGPORO"
-      ],
+      "modes": ["KINGPORO"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        2500
-      ],
+      "range": [2500],
       "rangeBurn": "2500",
       "image": {
         "full": "SummonerPoroThrow.png",
@@ -2076,72 +891,20 @@
       "description": "Summons a temporary beacon which increases allied Attack damage in an area. Summoner's Wrath: Rally additionally gives Ability Power.",
       "tooltip": "Summons a beacon with <scaleHealth>{{ hpcalc }} Health</scaleHealth> for 15 seconds which creates an aura that increases allied <scaleAD>Attack damage by {{ adcalc }}</scaleAD>.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        270
-      ],
+      "cooldown": [270],
       "cooldownBurn": "270",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "709",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        25000
-      ],
+      "range": [25000],
       "rangeBurn": "25000",
       "image": {
         "full": "SummonerRally_Jade.png",
@@ -2160,72 +923,20 @@
       "description": "Instantly revives your champion at your team's Summoner Platform and increases their Movement Speed for a short duration. Summoner's Insight: Revive temporarily grants the user 220-560 Health.",
       "tooltip": "Instantly revives your champion at your team's Summoner Platform and grants <speed>+{{ spell.summonerrevive_jade:bonusmovespeed*100 }}%</speed> Movement Speed that decays over 12 seconds.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        510
-      ],
+      "cooldown": [510],
       "cooldownBurn": "510",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "777",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        200
-      ],
+      "range": [200],
       "rangeBurn": "200",
       "image": {
         "full": "SummonerRevive_Jade.png",
@@ -2244,61 +955,13 @@
       "description": "Deals true damage to a monster or minion.",
       "tooltip": "Deals <trueDamage>{{ smitebasedamage }} true damage</trueDamage> to target large monster or lane minion.<br /><br />Deals <trueDamage>{{ firstpvpdamage }} true damage</trueDamage> to champion pets.",
       "maxrank": 1,
-      "cooldown": [
-        15
-      ],
+      "cooldown": [15],
       "cooldownBurn": "15",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          15
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "15",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [15], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "15", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "11",
       "summonerLevel": 3,
@@ -2315,9 +978,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "2",
-      "range": [
-        500
-      ],
+      "range": [500],
       "rangeBurn": "500",
       "image": {
         "full": "SummonerSmite.png",
@@ -2336,72 +997,20 @@
       "description": "Deals true damage to target enemy minion or pet. Summoner's Resolve: Smite grants 10 gold per cast.",
       "tooltip": "Deals {{ smitedamage }} true damage to target enemy minion or pet.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        70
-      ],
+      "cooldown": [70],
       "cooldownBurn": "70",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "711",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        760
-      ],
+      "range": [760],
       "rangeBurn": "760",
       "image": {
         "full": "SummonerSmite_Jade.png",
@@ -2420,72 +1029,20 @@
       "description": "Throw a snowball in a straight line at your enemies. If it hits an enemy, they become marked, granting True Sight, and your champion can quickly travel to the marked target as a follow up.",
       "tooltip": "Throw a snowball a long distance, dealing {{ tooltipdamagetotal }} true damage to the first enemy unit hit and granting <span class=\"coloree91d7\">True Sight</span> of the target. If it hits an enemy, this ability can be recast for {{ e3 }} seconds to Dash to the tagged unit, dealing an additional {{ tooltipdamagetotal }} true damage. Dashing to the target will reduce the cooldown of Mark by {{ e4 }}%.<br /><br /><span class=\"colorFFFF00\">Mark projectiles are not stopped by spell shields or projectile mitigation.</span>",
       "maxrank": 1,
-      "cooldown": [
-        80
-      ],
+      "cooldown": [80],
       "cooldownBurn": "80",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          10
-        ],
-        [
-          5
-        ],
-        [
-          3
-        ],
-        [
-          25
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "10",
-        "5",
-        "3",
-        "25",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [10], [5], [3], [25], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "10", "5", "3", "25", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "39",
       "summonerLevel": 6,
-      "modes": [
-        "SNOWURF"
-      ],
+      "modes": ["SNOWURF"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        8000
-      ],
+      "range": [8000],
       "rangeBurn": "8000",
       "image": {
         "full": "SummonerSnowURFSnowball_Mark.png",
@@ -2504,75 +1061,20 @@
       "description": "Throw a snowball in a straight line at your enemies. If it hits an enemy, they become marked, granting True Sight, and your champion can quickly travel to the marked target as a follow up.",
       "tooltip": "Throw a snowball a long distance, dealing {{ tooltipdamagetotal }} true damage to the first enemy unit hit and granting <span class=\"coloree91d7\">True Sight</span> of the target. If it hits an enemy, this ability can be recast for {{ e3 }} seconds to Dash to the tagged unit, dealing an additional {{ tooltipdamagetotal }} true damage. Dashing to the target will reduce the cooldown of Mark by {{ e4 }}%.<br /><br /><span class=\"colorFFFF00\">Mark projectiles are not stopped by spell shields or projectile mitigation.</span>",
       "maxrank": 1,
-      "cooldown": [
-        80
-      ],
+      "cooldown": [80],
       "cooldownBurn": "80",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          10
-        ],
-        [
-          5
-        ],
-        [
-          3
-        ],
-        [
-          25
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "10",
-        "5",
-        "3",
-        "25",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [10], [5], [3], [25], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "10", "5", "3", "25", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "32",
       "summonerLevel": 6,
-      "modes": [
-        "KIWI",
-        "KIWI_JADE",
-        "ARAM",
-        "FIRSTBLOOD"
-      ],
+      "modes": ["KIWI", "KIWI_JADE", "ARAM", "FIRSTBLOOD"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        1600
-      ],
+      "range": [1600],
       "rangeBurn": "1600",
       "image": {
         "full": "SummonerSnowball.png",
@@ -2591,72 +1093,20 @@
       "description": "Promotes a minion, granting it bonus stats, an empowering aura, and causing it to grant the caster gold for its kills. Summoner's Wrath: The Siege Rider's bonus Attack Damage aura also affects Champions.",
       "tooltip": "Promotes an allied minion to a <keywordMajor>Siege Rider</keywordMajor> with <healing>{{ unithealth }} Health</healing> and <physicalDamage>{{ unitdamage }} Attack Damage</physicalDamage> who grants the caster gold for its kills.<br /><br />The <keywordMajor>Siege Rider</keywordMajor> has an aura that provides <physicalDamage>{{ damageaura }} Attack Damage</physicalDamage> and <scaleArmor>{{ armoraura }} Armor</scaleArmor> to nearby minions.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        270
-      ],
+      "cooldown": [270],
       "cooldownBurn": "270",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "720",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        4294967295
-      ],
+      "range": [4294967295],
       "rangeBurn": "4294967295",
       "image": {
         "full": "SummonerSpell_Promote_Jade.png",
@@ -2675,61 +1125,13 @@
       "description": "After a brief channel, become untargetable and travel to an allied unit. Upgrades into Unleashed Teleport, which significantly increases travel speed. ",
       "tooltip": "After channeling for {{ channelduration }} seconds, become <keyword>Untargetable</keyword> and travel to target allied structure, minion, or ward. <br /><br />Upgrades into Unleashed Teleport at {{ upgrademinute }} minutes, which significantly increases travel speed.",
       "maxrank": 1,
-      "cooldown": [
-        300
-      ],
+      "cooldown": [300],
       "cooldownBurn": "300",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "12",
       "summonerLevel": 7,
@@ -2751,9 +1153,7 @@
       ],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        25000
-      ],
+      "range": [25000],
       "rangeBurn": "25000",
       "image": {
         "full": "SummonerTeleport.png",
@@ -2772,72 +1172,20 @@
       "description": "After a short channel, your champion teleports to a target allied minion, turret, or ward. Summoner's Insight: Teleport's channel time is reduced.",
       "tooltip": "After channeling for {{ channeltimefinal }} seconds, your champion teleports to target allied minion, turret, or ward.<br /><br />",
       "maxrank": 1,
-      "cooldown": [
-        300
-      ],
+      "cooldown": [300],
       "cooldownBurn": "300",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "712",
       "summonerLevel": 1,
-      "modes": [
-        "JADE"
-      ],
+      "modes": ["JADE"],
       "costType": "No Cost",
       "maxammo": "-1",
-      "range": [
-        25000
-      ],
+      "range": [25000],
       "rangeBurn": "25000",
       "image": {
         "full": "SummonerTeleport_Jade.png",
@@ -2856,72 +1204,20 @@
       "description": "This slot will be replaced by another champion's ultimate selected at the start of the game. There will be 30 seconds to select an ultimate. Be prepared!",
       "tooltip": "Will be replaced by your Ultimate Summoner Spell selection.{{ spellmodifierdescriptionappend }}",
       "maxrank": 1,
-      "cooldown": [
-        0
-      ],
+      "cooldown": [0],
       "cooldownBurn": "0",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "54",
       "summonerLevel": 1,
-      "modes": [
-        "ULTBOOK"
-      ],
+      "modes": ["ULTBOOK"],
       "costType": "&nbsp;",
       "maxammo": "-1",
-      "range": [
-        400
-      ],
+      "range": [400],
       "rangeBurn": "400",
       "image": {
         "full": "Summoner_UltBookPlaceholder.png",
@@ -2940,72 +1236,20 @@
       "description": "This slot will be replaced by another champion's ultimate and you will gain Attack-Smite. There will be 30 seconds to select an ultimate. Be prepared!",
       "tooltip": "Will be replaced by your Ultimate Summoner Spell.<br /><br />Gain Attack-Smite. Attack-Smite will execute allied Buff Monsters, Epic Monsters, and Scuttle Crabs when you attack them.<br /><br /><attention>Attack-Smite does not have a cooldown.</attention>{{ spellmodifierdescriptionappend }}",
       "maxrank": 1,
-      "cooldown": [
-        0
-      ],
+      "cooldown": [0],
       "cooldownBurn": "0",
-      "cost": [
-        0
-      ],
+      "cost": [0],
       "costBurn": "0",
       "datavalues": {},
-      "effect": [
-        null,
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ],
-        [
-          0
-        ]
-      ],
-      "effectBurn": [
-        null,
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0",
-        "0"
-      ],
+      "effect": [null, [0], [0], [0], [0], [0], [0], [0], [0], [0], [0]],
+      "effectBurn": [null, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0"],
       "vars": [],
       "key": "55",
       "summonerLevel": 1,
-      "modes": [
-        "ULTBOOK"
-      ],
+      "modes": ["ULTBOOK"],
       "costType": "&nbsp;",
       "maxammo": "-1",
-      "range": [
-        400
-      ],
+      "range": [400],
       "rangeBurn": "400",
       "image": {
         "full": "Summoner_UltBookSmitePlaceholder.png",

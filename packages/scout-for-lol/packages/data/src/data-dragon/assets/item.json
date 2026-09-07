@@ -1429,23 +1429,13 @@
       }
     },
     "3095": {
-      "name": "Deprecated item",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Movement Speed</speed> for 1.5 seconds.<br></mainText>",
+      "name": "Stormrazor",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>25%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Movement Speed</speed> for 1.5 seconds.<br></mainText>",
       "plaintext": "Tremendously empower other Energized effects.",
       "stats": {
         "FlatCritChanceMod": 0.25,
         "FlatPhysicalDamageMod": 50,
-        "PercentAttackSpeedMod": 0.2
-      }
-    },
-    "3097": {
-      "name": "Stormrazor",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Movement Speed</speed> for 1.5 seconds.<br></mainText>",
-      "plaintext": "Periodically kill enemy minions to heal and grant gold to a nearby ally",
-      "stats": {
-        "FlatCritChanceMod": 0.25,
-        "FlatPhysicalDamageMod": 50,
-        "PercentAttackSpeedMod": 0.2
+        "PercentAttackSpeedMod": 0.25
       }
     },
     "3100": {
@@ -1814,7 +1804,7 @@
     },
     "3170": {
       "name": "Swiftmarch",
-      "description": "<mainText><stats><attention>65</attention> Move Speed</stats><br><br><passive>Fleetfooted</passive><br>Reduce the effectiveness of <keyword>Slows</keyword> by 40%.<br><br><passive>Noxian Fervor</passive><br>Gain 5% of your <speed>Move Speed</speed> as Adaptive Force.</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Move Speed</stats><br><br><passive>Fleetfooted</passive><br>Reduce the effectiveness of <keyword>Slows</keyword> by 25%.<br><br><passive>Noxian Fervor</passive><br>Gain 5% of your <speed>Move Speed</speed> as Adaptive Force.</mainText>",
       "plaintext": "Improves defense and reduces duration of disabling effects",
       "stats": {
         "FlatMovementSpeedMod": 65
@@ -2618,11 +2608,11 @@
     },
     "6610": {
       "name": "Sundered Sky",
-      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>450</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>400</attention> Health<br><attention>10</attention> Ability Haste</stats><br><br><passive>Lightshield Strike</passive><br>Your first Attack against a champion <attention>Critically Strikes</attention> and <healing>restores Health</healing>.</mainText>",
       "plaintext": "",
       "stats": {
-        "FlatHPPoolMod": 450,
-        "FlatPhysicalDamageMod": 45
+        "FlatHPPoolMod": 400,
+        "FlatPhysicalDamageMod": 40
       }
     },
     "6616": {
@@ -3759,20 +3749,20 @@
     },
     "223033": {
       "name": "Mortal Reminder",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>30%</attention> Armor Penetration<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Sepsis</passive><br>Dealing physical damage applies <status>40% Grievous Wounds</status> to enemy champions for 3 seconds.<br><br><buffedStat>If an enemy heals for more than 60% of their maximum health while continously affected by <status>Grievous Wounds</status>, it is increased to <status>80% Grievous Wounds</status>.</buffedStat><br><br><rules><status>Grievous Wounds</status> reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>",
+      "description": "<mainText><stats><attention>40</attention> Attack Damage<br><attention>30%</attention> Armor Penetration<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Sepsis</passive><br>Dealing physical damage applies <status>40% Grievous Wounds</status> to enemy champions for 3 seconds.<br><br><buffedStat>If an enemy heals for more than 60% of their maximum health while continously affected by <status>Grievous Wounds</status>, it is increased to <status>80% Grievous Wounds</status>.</buffedStat><br><br><rules><status>Grievous Wounds</status> reduces the effectiveness of Healing and Regeneration effects.</rules></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
-        "FlatPhysicalDamageMod": 30
+        "FlatPhysicalDamageMod": 40
       }
     },
     "223036": {
       "name": "Lord Dominik's Regards",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>25%</attention> Critical Strike Chance</stats><br><br></mainText>",
+      "description": "<mainText><stats><attention>45</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>25%</attention> Critical Strike Chance</stats><br><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
-        "FlatPhysicalDamageMod": 30
+        "FlatPhysicalDamageMod": 45
       }
     },
     "223039": {
@@ -3995,12 +3985,12 @@
     },
     "223095": {
       "name": "Stormrazor",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>20%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Move Speed</speed> for 2s.<br><br><buffedStat>Energized stacks twice as fast in Arena.</buffedStat><br></mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>25%</attention> Attack Speed<br><attention>25%</attention> Critical Strike Chance</stats><br><br><passive>Energized</passive><br>Moving and Attacking generates an <keyword>Energized Attack</keyword>.<br><br><passive>Bolt</passive><br>Your <keyword>Energized Attack</keyword> applies <magicDamage> bonus magic damage</magicDamage> and grants <speed>45% Move Speed</speed> for 2s.<br><br><buffedStat>Energized stacks twice as fast in Arena.</buffedStat><br></mainText>",
       "plaintext": "",
       "stats": {
         "FlatCritChanceMod": 0.25,
         "FlatPhysicalDamageMod": 50,
-        "PercentAttackSpeedMod": 0.2
+        "PercentAttackSpeedMod": 0.25
       }
     },
     "223100": {
@@ -4032,7 +4022,7 @@
     },
     "223107": {
       "name": "Redemption",
-      "description": "<mainText><stats><attention>30</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>100%</attention> Base Mana Regen<br><attention>12%</attention> Heal and Shield Power</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Intervention</active><br>Target an area within. After 2.5 seconds, call down a beam of light to restore Health to allies and damage enemy champions.</mainText>",
+      "description": "<mainText><stats><attention>30</attention> Ability Power<br><attention>15</attention> Ability Haste<br><attention>100%</attention> Base Mana Regen<br><attention>10%</attention> Heal and Shield Power</stats><br><br><br><br><active>ACTIVE</active> (0s)<br><active>Intervention</active><br>Target an area within. After 2.5 seconds, call down a beam of light to restore Health to allies and damage enemy champions.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 30
@@ -4328,7 +4318,7 @@
     },
     "223504": {
       "name": "Ardent Censer",
-      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>12%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>6%</attention> Move Speed</stats><br><br><passive>Sanctify</passive><br>Healing or Shielding another ally enhances you both for 6 seconds, granting your Attacks <attackSpeed>40% Attack Speed</attackSpeed> and <magicDamage>25 magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>",
+      "description": "<mainText><stats><attention>40</attention> Ability Power<br><attention>10%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>6%</attention> Move Speed</stats><br><br><passive>Sanctify</passive><br>Healing or Shielding another ally enhances you both for 6 seconds, granting your Attacks <attackSpeed>40% Attack Speed</attackSpeed> and <magicDamage>25 magic damage</magicDamage> <OnHit>On-Hit</OnHit>.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 40,
@@ -4525,7 +4515,7 @@
     },
     "226616": {
       "name": "Staff of Flowing Water",
-      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>14%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>15</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6 seconds.</mainText>",
+      "description": "<mainText><stats><attention>65</attention> Ability Power<br><attention>10%</attention> Heal and Shield Power<br><attention>150%</attention> Base Mana Regen<br><attention>15</attention> Ability Haste</stats><br><br><passive>Rapids</passive><br>Healing or Shielding an ally grants you both <magicDamage>40 Ability Power</magicDamage> and <attention>15 Ability Haste</attention> for 6 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 65
@@ -4669,6 +4659,15 @@
         "FlatArmorMod": 30
       }
     },
+    "226668": {
+      "name": "Ultra Hydra",
+      "description": "<mainText><stats><attention>200</attention> Attack Damage<br><attention>25</attention> Ability Haste<br><attention>25</attention> Lethality<br><attention>1000</attention> Health<br><attention>15%</attention> Omnivamp</stats><br><br><active>Ultra Hydra</active>(0s)<br>On active, enhance your next basic attack to deal <physicalDamage>physical damage</physicalDamage> to enemies around you and to enemies behind the target.<active>Ultra Hydra</active>(0s)<br>On active, enhance your next basic attack to deal <physicalDamage>physical damage</physicalDamage> to enemies around you and to enemies behind the target.</mainText>",
+      "plaintext": "",
+      "stats": {
+        "FlatHPPoolMod": 1000,
+        "FlatPhysicalDamageMod": 200
+      }
+    },
     "226671": {
       "name": "Galeforce",
       "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>15%</attention> Attack Speed<br><attention>20%</attention> Critical Strike Chance<br><attention>7%</attention> Move Speed</stats><br><br><br><br><rarityMythic>Mythic Passive:</rarityMythic> Grants all other <rarityLegendary>Legendary</rarityLegendary> items <attention>5</attention> Attack Damage.<br><br><rules>Maximum missile damage dealt when enemy Health is below 25%.<br>Cloudburst's dash cannot pass through terrain.</rules><br><br><active>Active -</active> <active>Cloudburst:</active> Dash in target direction, firing three missiles at the lowest Health enemy near your destination. Deals physical damage, increased against low Health targets.</mainText>",
@@ -4744,7 +4743,7 @@
     },
     "226694": {
       "name": "Serylda's Grudge",
-      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>40%</attention> Armor Penetration<br><attention>15</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging Abilities <status>Slow</status> enemies <scaleHealth>below 50% Health</scaleHealth> by 50% for 1 second.</mainText>",
+      "description": "<mainText><stats><attention>50</attention> Attack Damage<br><attention>45%</attention> Armor Penetration<br><attention>15</attention> Ability Haste</stats><br><br><passive>Bitter Cold</passive><br>Damaging Abilities <status>Slow</status> enemies <scaleHealth>below 60% Health</scaleHealth> by 50% for 1 second.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatPhysicalDamageMod": 50
@@ -6455,11 +6454,11 @@
     },
     "773084": {
       "name": "Innervating Locket",
-      "description": "<mainText><stats><attention>430</attention> Health<br><attention>450</attention> Mana</stats><br><br><jadeUnique>Innervation</jadeUnique>: Restore <healing>50 Health</healing> and <scaleMana>20 Mana</scaleMana> over 2 seconds to the lowest-Health nearby allied Champion whenever you use an Ability. <keywordMajor>Innervation</keywordMajor> has a 3 second cooldown.</mainText>",
+      "description": "<mainText><stats><attention>500</attention> Health<br><attention>450</attention> Mana<br><attention>10%</attention> Cooldown Reduction</stats><br><br><jadeUnique>Innervation</jadeUnique>: Restore <healing>60 Health</healing> and <scaleMana>25 Mana</scaleMana> over 2 seconds to the lowest-Health nearby allied Champion whenever you use an Ability. <keywordMajor>Innervation</keywordMajor> has a 3 second cooldown.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMPPoolMod": 450,
-        "FlatHPPoolMod": 430
+        "FlatHPPoolMod": 500
       }
     },
     "773085": {
@@ -6834,11 +6833,11 @@
     },
     "773154": {
       "name": "Wriggle's Lantern",
-      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>25</attention> Armor<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks have a 25% chance to deal <magicDamage>500 bonus magic damage</magicDamage> to minions and monsters On-Hit.<br><br><jadeLimit>Transforms into <attention>Feral Flare</attention> after earning 30 large Monsters kills or Champion takedowns.</jadeLimit><jadeUnique>Active</jadeUnique> 180s<br>Places an invisible Sight Ward that reveals the surrounding area for 180 seconds.</mainText>",
+      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>25</attention> Armor<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Passive:</jadeUnique> Basic Attacks have a 25% chance to deal <magicDamage>500 bonus magic damage</magicDamage> to minions and monsters On-Hit.<br><br><jadeLimit>Transforms into <attention>Feral Flare</attention> after earning 30 large Monsters kills or Champion takedowns.</jadeLimit><jadeUnique>Active</jadeUnique> 180s<br>Places an invisible Sight Ward that reveals the surrounding area for 180 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatArmorMod": 25,
-        "FlatPhysicalDamageMod": 25,
+        "PercentAttackSpeedMod": 0.3,
         "PercentLifeStealMod": 0.15
       }
     },
@@ -6877,11 +6876,11 @@
     },
     "773160": {
       "name": "Feral Flare",
-      "description": "<mainText><stats><attention>25</attention> Attack Damage<br><attention>25</attention> Armor<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Feral Mark:</jadeUnique> Gain a Feral stack for each champion takedown scored and large monster killed. Basic Attacks deal <magicDamage>25 (+1 per Feral stack) bonus magic damage</magicDamage> on-hit. Minions and monsters have a 25% chance to take 425 more damage.<jadeUnique>Active</jadeUnique> 180s<br>Places an invisible Sight Ward that reveals the surrounding area for 180 seconds.</mainText>",
+      "description": "<mainText><stats><attention>30%</attention> Attack Speed<br><attention>25</attention> Armor<br><attention>15%</attention> Life Steal</stats><br><br><jadeUnique>Feral Mark:</jadeUnique> Gain a Feral stack for each champion takedown scored and large monster killed. Basic Attacks deal <magicDamage>25 (+1 per Feral stack) bonus magic damage</magicDamage> on-hit. Minions and monsters have a 25% chance to take 425 more damage.<jadeUnique>Active</jadeUnique> 180s<br>Places an invisible Sight Ward that reveals the surrounding area for 180 seconds.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatArmorMod": 25,
-        "FlatPhysicalDamageMod": 25,
+        "PercentAttackSpeedMod": 0.3,
         "PercentLifeStealMod": 0.15
       }
     },

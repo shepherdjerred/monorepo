@@ -437,6 +437,68 @@
           "name": "Reaper Soraka (Doom)",
           "chromas": false,
           "parentSkin": 4
+        },
+        {
+          "id": "16063",
+          "num": 63,
+          "name": "Ocean Song Soraka",
+          "chromas": true
+        },
+        {
+          "id": "16064",
+          "num": 64,
+          "name": "Ocean Song Soraka (Ruby)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16065",
+          "num": 65,
+          "name": "Ocean Song Soraka (Catseye)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16066",
+          "num": 66,
+          "name": "Ocean Song Soraka (Emerald)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16067",
+          "num": 67,
+          "name": "Ocean Song Soraka (Turquoise)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16068",
+          "num": 68,
+          "name": "Ocean Song Soraka (Sapphire)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16069",
+          "num": 69,
+          "name": "Ocean Song Soraka (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16070",
+          "num": 70,
+          "name": "Ocean Song Soraka (Obsidian)",
+          "chromas": false,
+          "parentSkin": 63
+        },
+        {
+          "id": "16071",
+          "num": 71,
+          "name": "Ocean Song Soraka (Pearl)",
+          "chromas": false,
+          "parentSkin": 63
         }
       ],
       "lore": "A wanderer from the celestial dimensions beyond Mount Targon, Soraka gave up her immortality to protect the mortal races from their own more violent instincts. She endeavors to spread the virtues of compassion and mercy to everyone she meets—even healing those who would wish harm upon her. And, for all Soraka has seen of this world's struggles, she still believes the people of Runeterra have yet to reach their full potential.",
@@ -451,10 +513,7 @@
         "Take advantage of Soraka's long cooldown on Equinox if she uses it to harass.",
         "It's easier to focus Soraka than the ally she is healing."
       ],
-      "tags": [
-        "Support",
-        "Mage"
-      ],
+      "tags": ["Support", "Mage"],
       "partype": "Mana",
       "info": {
         "attack": 2,
@@ -507,95 +566,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            8,
-            7,
-            6,
-            5,
-            4
-          ],
+          "cooldown": [8, 7, 6, 5, 4],
           "cooldownBurn": "8/7/6/5/4",
-          "cost": [
-            45,
-            50,
-            55,
-            60,
-            65
-          ],
+          "cost": [45, 50, 55, 60, 65],
           "costBurn": "45/50/55/60/65",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -613,13 +600,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            810,
-            810,
-            810,
-            810,
-            810
-          ],
+          "range": [810, 810, 810, 810, 810],
           "rangeBurn": "810",
           "image": {
             "full": "SorakaQ.png",
@@ -652,95 +633,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            6,
-            5,
-            4,
-            3,
-            2
-          ],
+          "cooldown": [6, 5, 4, 3, 2],
           "cooldownBurn": "6/5/4/3/2",
-          "cost": [
-            40,
-            45,
-            50,
-            55,
-            60
-          ],
+          "cost": [40, 45, 50, 55, 60],
           "costBurn": "40/45/50/55/60",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -758,13 +667,7 @@
           "vars": [],
           "costType": "% Max Health, {{ cost }} Mana",
           "maxammo": "-1",
-          "range": [
-            550,
-            550,
-            550,
-            550,
-            550
-          ],
+          "range": [550, 550, 550, 550, 550],
           "rangeBurn": "550",
           "image": {
             "full": "SorakaW.png",
@@ -797,95 +700,23 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [
-            20,
-            19,
-            18,
-            17,
-            16
-          ],
+          "cooldown": [20, 19, 18, 17, 16],
           "cooldownBurn": "20/19/18/17/16",
-          "cost": [
-            70,
-            75,
-            80,
-            85,
-            90
-          ],
+          "cost": [70, 75, 80, 85, 90],
           "costBurn": "70/75/80/85/90",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -903,13 +734,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            925,
-            925,
-            925,
-            925,
-            925
-          ],
+          "range": [925, 925, 925, 925, 925],
           "rangeBurn": "925",
           "image": {
             "full": "SorakaE.png",
@@ -928,81 +753,30 @@
           "description": "Soraka fills her allies with hope, instantly restoring health to herself and all allied champions.",
           "tooltip": "Soraka calls upon divine powers, restoring <healing>{{ healingcalc }} Health</healing> to all allied champions, regardless of distance. Healing is increased to <healing>{{ ampedhealing }}</healing> on targets below 40% Health.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": [
-              "Healing",
-              "Cooldown"
-            ],
+            "label": ["Healing", "Cooldown"],
             "effect": [
               "{{ baseheal }} -> {{ basehealNL }}",
               "{{ cooldown }} -> {{ cooldownNL }}"
             ]
           },
           "maxrank": 3,
-          "cooldown": [
-            150,
-            135,
-            120
-          ],
+          "cooldown": [150, 135, 120],
           "cooldownBurn": "150/135/120",
-          "cost": [
-            100,
-            100,
-            100
-          ],
+          "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},
           "effect": [
             null,
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ],
-            [
-              0,
-              0,
-              0
-            ]
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0],
+            [0, 0, 0]
           ],
           "effectBurn": [
             null,
@@ -1020,11 +794,7 @@
           "vars": [],
           "costType": " {{ abilityresourcename }}",
           "maxammo": "-1",
-          "range": [
-            25000,
-            25000,
-            25000
-          ],
+          "range": [25000, 25000, 25000],
           "rangeBurn": "25000",
           "image": {
             "full": "SorakaR.png",
