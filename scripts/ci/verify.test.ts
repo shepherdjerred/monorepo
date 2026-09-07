@@ -10,6 +10,7 @@ describe("affected verification filters", () => {
         commands.push([...command]);
         return Promise.resolve(0);
       },
+      () => Promise.resolve(["packages/example/src/index.ts"]),
     );
 
     expect(filters).toEqual(["--filter=...[abc123]", "--filter=//"]);
@@ -17,6 +18,30 @@ describe("affected verification filters", () => {
       ["git", "cat-file", "-e", "abc123^{commit}"],
       ["git", "merge-base", "--is-ancestor", "abc123", "HEAD"],
     ]);
+  });
+
+  test("selects root scripts when Buildkite scripts change", async () => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () => Promise.resolve([".buildkite/scripts/selectors/ci-changed.ts"]),
+      ),
+    ).toEqual([
+      "--filter=...[abc123]",
+      "--filter=//",
+      "--filter=@shepherdjerred/root-scripts",
+    ]);
+  });
+
+  test("runs the complete graph when changed files cannot be read", async () => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () => Promise.resolve(undefined),
+      ),
+    ).toEqual([]);
   });
 
   test("runs the complete graph without a trustworthy base", async () => {

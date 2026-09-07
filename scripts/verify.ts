@@ -57,6 +57,9 @@ const turboTasks = [
 ] as const;
 
 type GitValidator = (command: readonly string[]) => Promise<number>;
+type ChangedFilesReader = (
+  base: string,
+) => Promise<readonly string[] | undefined>;
 
 async function validateBaseWithGit(
   command: readonly string[],
@@ -69,9 +72,33 @@ async function validateBaseWithGit(
   return child.exited;
 }
 
+async function readChangedFilesWithGit(
+  base: string,
+): Promise<readonly string[] | undefined> {
+  const child = Bun.spawn(["git", "diff", "--name-only", base, "HEAD"], {
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "inherit",
+  });
+  const [exitCode, output] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+  ]);
+  if (exitCode !== 0) return undefined;
+  return output.split("\n").filter((path) => path !== "");
+}
+
+function buildkiteScriptsChanged(changedFiles: readonly string[]): boolean {
+  return changedFiles.some(
+    (path) =>
+      path === ".buildkite/scripts" || path.startsWith(".buildkite/scripts/"),
+  );
+}
+
 export async function affectedVerifyFilters(
   environment: Readonly<Record<string, string | undefined>>,
   validate: GitValidator = validateBaseWithGit,
+  readChangedFiles: ChangedFilesReader = readChangedFilesWithGit,
 ): Promise<string[]> {
   if (environment["CI_IO_FIXED_CORPUS"] === "true") return [];
   const base = environment["CI_CHANGED_BASE"]?.trim();
@@ -88,11 +115,22 @@ export async function affectedVerifyFilters(
       return [];
     }
   }
+  const changedFiles = await readChangedFiles(base);
+  if (changedFiles === undefined) {
+    console.error(
+      `WARN: could not read changed files from CI base ${base}; running full verification`,
+    );
+    return [];
+  }
   // The affected package graph and the root namespace are a union. Root checks
   // remain represented, but Turbo executes only the ones whose declared input
   // hashes changed. Package tasks cover changed workspaces plus reverse
   // dependents and their task dependencies.
-  return [`--filter=...[${base}]`, "--filter=//"];
+  const filters = [`--filter=...[${base}]`, "--filter=//"];
+  if (buildkiteScriptsChanged(changedFiles)) {
+    filters.push("--filter=@shepherdjerred/root-scripts");
+  }
+  return filters;
 }
 
 export async function main(
