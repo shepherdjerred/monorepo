@@ -78,7 +78,17 @@ export type VoiceAudioMixerDeps = {
  * One assistant packet waiting for a music frame to carry it. At most one exists at a time, and it
  * is tagged with the port that queued it so a second port closing cannot abandon it.
  */
-type PendingAssistant = { readonly opus: Uint8Array; readonly owner: symbol };
+type PendingAssistant = {
+  readonly opus: Uint8Array;
+  readonly owner: symbol;
+  /**
+   * Whether the frame this packet was mixed into actually reached the connection. Undefined until
+   * the music clock consumes it. The sender waits on airtime rather than on consumption, so
+   * without this a refused mixed frame would look identical to a delivered one — and a reply
+   * nobody heard would be counted as sent, which is the failure the solo path already throws on.
+   */
+  sent?: boolean;
+};
 
 function defaultWatchdog(tick: () => void, intervalMs: number): () => void {
   const timer = setInterval(tick, intervalMs);
@@ -300,9 +310,14 @@ export class VoiceAudioMixer {
     }
     if (music.length !== FRAME_SAMPLE_COUNT) return this.drop("frame-size");
 
+    // Keep the reference: `takeAssistantFrame` clears `pendingAssistant`, so this is the only way
+    // to report the send outcome back to the sender still waiting on this packet's airtime.
+    const consumed = pending;
     const assistant =
-      pending === null ? null : this.takeAssistantFrame(pending);
-    return this.emitMixed(connection, mixFrame(music, gain, assistant));
+      consumed === null ? null : this.takeAssistantFrame(consumed);
+    const sent = this.emitMixed(connection, mixFrame(music, gain, assistant));
+    if (consumed !== null) consumed.sent = sent;
+    return sent;
   }
 
   private decodeMusic(frame: Buffer): Float32Array | null {
@@ -457,7 +472,17 @@ export class VoiceAudioMixer {
     const entry: PendingAssistant = { opus, owner };
     this.pendingAssistant = entry;
     await this.pace();
-    if (this.pendingAssistant !== entry) return;
+    if (this.pendingAssistant !== entry) {
+      // Consumed by the music clock. It reported whether the mixed frame reached the wire; a
+      // refusal has to surface here, or `AssistantTransport` and `PacedAssistantSender` complete a
+      // reply that was never heard.
+      if (entry.sent === false) {
+        throw new Error(
+          "Assistant audio frame was refused by the voice connection",
+        );
+      }
+      return;
+    }
     // No music frame arrived within the packet's own airtime. That means the music pipeline is
     // starting up, seeking, or stalled — none of which may silence a reply — so the packet goes out
     // on its own. Labelled separately because a run of these is the signal that music production is

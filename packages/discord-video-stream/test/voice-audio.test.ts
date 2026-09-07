@@ -118,6 +118,22 @@ describe("bidirectional voice policy", () => {
     expect(voiceStateAudioFlags(true)).toEqual({ self_mute: false, self_deaf: false });
   });
 
+  test("a send-only connection negotiates a direction it may actually send on", () => {
+    // `inactive` declares a stream neither peer may send on. A connection that installs a
+    // packetizer but advertises `inactive` can report every frame as sent while nothing reaches
+    // the far side — the exact silent failure this transport is most prone to.
+    expect(voiceAudioSdpDirection(false, true)).toBe("sendonly");
+    // Receiving already implied sendrecv, and still does.
+    expect(voiceAudioSdpDirection(true, true)).toBe("sendrecv");
+  });
+
+  test("every existing caller negotiates exactly what it always did", () => {
+    // The control. Go Live builds its StreamConnection without either option and must keep
+    // emitting `inactive`; widening the default would change a working production path.
+    expect(voiceAudioSdpDirection(false, false)).toBe("inactive");
+    expect(voiceAudioSdpDirection(true, false)).toBe("sendrecv");
+  });
+
   test("maps an SSRC to its speaker and removes it on disconnect", () => {
     const streamer = new Streamer(new Client());
     const connection = new VoiceConnection(

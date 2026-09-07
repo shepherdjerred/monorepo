@@ -93,19 +93,24 @@ export async function runPlayCommand(
     interaction.getString("mode") ?? "auto",
   );
 
-  // `mode:music` plays audio only, so there is no picture to burn a subtitle track into and
-  // `prepareStream` hard-throws if one is passed. Both options are explicit here, so accepting the
-  // pair and quietly dropping one would acknowledge a subtitle preference the user will never see.
-  if (
-    requestedMode === "music" &&
-    (interaction.getString("subtitles") !== null ||
-      interaction.getString("sublang") !== null)
-  ) {
+  // Subtitles only exist on a picture. `mode:music` plays audio only, `prepareStream` throws if a
+  // burn is passed with it, and the music branch drops one silently — so an explicit subtitle
+  // request must never be quietly discarded.
+  const wantsSubtitles =
+    interaction.getString("subtitles") !== null ||
+    interaction.getString("sublang") !== null;
+  if (requestedMode === "music" && wantsSubtitles) {
     await interaction.reply(
       "`mode:music` plays audio only, so subtitles can't be burned in. Drop the subtitle options, or use `mode:video`.",
     );
     return;
   }
+  // With `mode:auto` the classifier would otherwise be free to pick music and drop the subtitle
+  // the user explicitly asked for. Asking for subtitles IS asking for a picture, so it settles the
+  // transport — and if the item turns out to have no video track, the resolver rejects it by name
+  // rather than playing a song with the request silently ignored.
+  const effectiveMode =
+    requestedMode === "auto" && wantsSubtitles ? "video" : requestedMode;
 
   if (
     selectedPlacement === "now" &&
@@ -129,7 +134,7 @@ export async function runPlayCommand(
       query,
       subtitles,
       next,
-      mode: requestedMode,
+      mode: effectiveMode,
       source: selectedSource,
       placement: selectedPlacement,
     });
@@ -143,7 +148,7 @@ export async function runPlayCommand(
       query,
       subtitles,
       next,
-      mode: requestedMode,
+      mode: effectiveMode,
       source: selectedSource,
       placement: selectedPlacement,
     });
@@ -156,7 +161,7 @@ export async function runPlayCommand(
     query,
     subtitles,
     next,
-    mode: requestedMode,
+    mode: effectiveMode,
   });
 }
 

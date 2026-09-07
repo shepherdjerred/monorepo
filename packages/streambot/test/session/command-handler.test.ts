@@ -867,6 +867,36 @@ const SIDECAR_CANDIDATE: SubtitleCandidate = {
   modifier: null,
 };
 
+describe("CommandHandler transport selection", () => {
+  test("an explicit subtitle request settles the transport as video", async () => {
+    const h = makeHandler({});
+    const { interaction } = fakeInteraction({
+      sub: "play",
+      strings: { query: "a movie", subtitles: "on" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // Subtitles only exist on a picture. Left on `auto`, the classifier could pick music and the
+    // music branch drops the burn silently — acknowledging a preference the user never sees.
+    const added = h.events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBe("video");
+  });
+
+  test("leaves the transport to the classifier when no subtitles were asked for", async () => {
+    const h = makeHandler({});
+    const { interaction } = fakeInteraction({
+      sub: "play",
+      strings: { query: "a song" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // The control: an over-broad version of the rule above would force every request to video and
+    // disable music playback entirely, while the subtitle test stayed green.
+    const added = h.events.find((event) => event.type === "ADD");
+    expect(added?.source.mode).toBeUndefined();
+  });
+});
+
 describe("CommandHandler subtitles command (track picker)", () => {
   test("defers, lists candidates, presents the menu, and dispatches the pick", async () => {
     const h = makeHandler({

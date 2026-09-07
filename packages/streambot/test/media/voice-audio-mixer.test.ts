@@ -186,6 +186,20 @@ function lastDecoded(harnessed: Harness): Float32Array {
   return fromFakeOpus(last.frame);
 }
 
+/**
+ * A ducked segment: music playing, the assistant claiming the flag, one assistant packet offered
+ * and one music frame driving the mix. Shared because the interesting differences between these
+ * tests are what the connection does and what the mix contains, not how the segment is built.
+ */
+function duckedMix(context: ReturnType<typeof harness>) {
+  const assistant = context.mixer.openAssistantAudio();
+  const port = context.mixer.openMusicPort();
+  assistant.setSpeaking(true);
+  const pending = assistant.send(toFakeOpus(constantFrame(ASSISTANT_LEVEL)));
+  port.sendAudioFrame(Buffer.from(toFakeOpus(constantFrame(MUSIC_LEVEL))), 20);
+  return { assistant, port, pending };
+}
+
 describe("VoiceAudioMixer passthrough", () => {
   test("forwards the exact music frame and its frametime at unity gain", () => {
     const context = harness();
@@ -291,15 +305,7 @@ describe("VoiceAudioMixer mixing", () => {
 
   test("an assistant underrun mixes silence, never a repeat of the previous packet", async () => {
     const context = harness();
-    const assistant = context.mixer.openAssistantAudio();
-    const port = context.mixer.openMusicPort();
-    assistant.setSpeaking(true);
-
-    const pending = assistant.send(toFakeOpus(constantFrame(ASSISTANT_LEVEL)));
-    port.sendAudioFrame(
-      Buffer.from(toFakeOpus(constantFrame(MUSIC_LEVEL))),
-      20,
-    );
+    const { port, pending } = duckedMix(context);
     await pending;
     const withAssistant = rms(lastDecoded(context));
 
@@ -438,6 +444,41 @@ describe("VoiceAudioMixer assistant pacing", () => {
     await expect(
       assistant.send(toFakeOpus(constantFrame(ASSISTANT_LEVEL))),
     ).rejects.toThrow("refused");
+  });
+
+  test("a refused MIXED frame is reported too, not just a solo one", async () => {
+    const context = harness();
+    const assistant = context.mixer.openAssistantAudio();
+    const port = context.mixer.openMusicPort();
+    assistant.setSpeaking(true);
+    context.connection.accept = false;
+
+    // The packet is consumed by the music clock rather than sent on its own, so the sender is no
+    // longer waiting on its own emit. Without the outcome being reported back, consumption looks
+    // identical to delivery and `PacedAssistantSender` completes a reply nobody heard — the same
+    // silent success the solo path above already refuses, one layer deeper.
+    const pending = assistant.send(toFakeOpus(constantFrame(ASSISTANT_LEVEL)));
+    port.sendAudioFrame(
+      Buffer.from(toFakeOpus(constantFrame(MUSIC_LEVEL))),
+      20,
+    );
+    await expect(pending).rejects.toThrow("refused");
+  });
+
+  test("a mixed frame the connection accepts still resolves", async () => {
+    const context = harness();
+    const assistant = context.mixer.openAssistantAudio();
+    const port = context.mixer.openMusicPort();
+    assistant.setSpeaking(true);
+
+    // The control: reporting the outcome must not reject a delivery that worked, or every ducked
+    // reply would be counted as failed while the test above stayed green.
+    const pending = assistant.send(toFakeOpus(constantFrame(ASSISTANT_LEVEL)));
+    port.sendAudioFrame(
+      Buffer.from(toFakeOpus(constantFrame(MUSIC_LEVEL))),
+      20,
+    );
+    await expect(pending).resolves.toBeUndefined();
   });
 });
 
