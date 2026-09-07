@@ -44,6 +44,16 @@ describe("affected verification filters", () => {
     ).toContain("--filter=@shepherdjerred/root-scripts");
   });
 
+  test("selects root scripts when Renovate configuration changes", async () => {
+    expect(
+      await affectedVerifyFilters(
+        { CI_CHANGED_BASE: "abc123" },
+        () => Promise.resolve(0),
+        () => Promise.resolve(["renovate.json"]),
+      ),
+    ).toContain("--filter=@shepherdjerred/root-scripts");
+  });
+
   test("runs the complete graph when changed files cannot be read", async () => {
     expect(
       await affectedVerifyFilters(

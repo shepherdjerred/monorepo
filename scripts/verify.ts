@@ -93,7 +93,10 @@ async function readChangedFilesWithGit(
 
 function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
   return changedFiles.some(
-    (path) => path === ".buildkite" || path.startsWith(".buildkite/"),
+    (path) =>
+      path === ".buildkite" ||
+      path.startsWith(".buildkite/") ||
+      path === "renovate.json",
   );
 }
 
