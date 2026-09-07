@@ -139,6 +139,18 @@ describe("Playwright target selection", () => {
     ).toEqual(["sjer.red", "@shepherdjerred/docs-wiki"]);
   });
 
+  test("selects sjer.red for its build checker changes", async () => {
+    expect(
+      packages(
+        await selectPlaywrightTargets(
+          ["scripts/checks/check-built-internal-links.ts"],
+          ".",
+          workspaces,
+        ),
+      ),
+    ).toEqual(["sjer.red"]);
+  });
+
   test("selects no browser suite for an unrelated package", async () => {
     expect(
       packages(

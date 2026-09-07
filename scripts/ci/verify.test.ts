@@ -54,6 +54,19 @@ describe("affected verification filters", () => {
     ).toContain("--filter=@shepherdjerred/root-scripts");
   });
 
+  test.each(["package.json", "packages/leetcode/package.json"])(
+    "selects root scripts for workspace manifest %s",
+    async (path) => {
+      expect(
+        await affectedVerifyFilters(
+          { CI_CHANGED_BASE: "abc123" },
+          () => Promise.resolve(0),
+          () => Promise.resolve([path]),
+        ),
+      ).toContain("--filter=@shepherdjerred/root-scripts");
+    },
+  );
+
   test.each([
     "packages/discord-plays-pokemon/Dockerfile",
     "packages/streambot/Dockerfile",

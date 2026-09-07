@@ -115,6 +115,8 @@ function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
       path === ".buildkite" ||
       path.startsWith(".buildkite/") ||
       path === "renovate.json" ||
+      path === "package.json" ||
+      path.endsWith("/package.json") ||
       ROOT_SCRIPTS_EXTERNAL_INPUTS.some((input) =>
         input.endsWith("/") ? path.startsWith(input) : path === input,
       ),

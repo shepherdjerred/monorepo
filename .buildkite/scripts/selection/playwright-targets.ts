@@ -68,6 +68,9 @@ const SITE_ARTIFACT_INPUTS = [
   "scripts/lib/run.ts",
   "scripts/lib/s3-static-site.ts",
 ] as const;
+const SJER_RED_INPUTS = [
+  "scripts/checks/check-built-internal-links.ts",
+] as const;
 
 const SCOUT_TARGETS = new Set([
   "@scout-for-lol/activity",
@@ -223,6 +226,14 @@ export async function selectPlaywrightTargets(
       targetPackages: SITE_ARTIFACT_TARGETS,
       inputs: SITE_ARTIFACT_INPUTS,
       label: "site artifact input",
+      reasons,
+    });
+    addConfiguredInputReasons({
+      target,
+      changedPaths,
+      targetPackages: new Set(["sjer.red"]),
+      inputs: SJER_RED_INPUTS,
+      label: "sjer.red build input",
       reasons,
     });
   }

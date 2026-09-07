@@ -296,6 +296,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "scripts/ci-test-manifest.json",
     "scripts/ci/namespace-playwright-reports.ts",
     "scripts/ci/write-ci-report-index.ts",
+    "scripts/checks/check-built-internal-links.ts",
     "packages/alert-dashboard",
     "packages/birmel",
     "packages/sjer.red",
