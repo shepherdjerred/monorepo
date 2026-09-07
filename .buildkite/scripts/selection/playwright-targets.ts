@@ -79,6 +79,15 @@ const SITE_ARTIFACT_TARGETS = new Set([
   "@shepherdjerred/docs-wiki",
 ]);
 
+// Turbo has a synthetic edge from Scout backend generation to Birmel's Prisma
+// generation. It serializes the shared Prisma engine cache, but is not a
+// package dependency and therefore cannot be discovered from package.json.
+const SYNTHETIC_WORKSPACE_DEPENDENCIES: Readonly<
+  Record<string, readonly string[]>
+> = {
+  "@scout-for-lol/activity": ["@shepherdjerred/birmel"],
+};
+
 export type PlaywrightSelection = {
   readonly mode: "selected" | "all";
   readonly globalReason: string | null;
@@ -128,6 +137,10 @@ function addWorkspaceClosureReasons(
   reasons: Map<string, string[]>,
 ): void {
   const closure = dependencyClosure(target.package, packages);
+  for (const dependency of SYNTHETIC_WORKSPACE_DEPENDENCIES[target.package] ??
+    []) {
+    closure.add(dependency);
+  }
   for (const dependency of closure) {
     const workspace = packages.get(dependency);
     if (workspace === undefined) {
@@ -144,6 +157,18 @@ function addWorkspaceClosureReasons(
       );
     }
   }
+}
+
+export function additionalPlaywrightInstallFilters(
+  selectedPackages: readonly string[],
+): readonly string[] {
+  return [
+    ...new Set(
+      selectedPackages.flatMap(
+        (packageName) => SYNTHETIC_WORKSPACE_DEPENDENCIES[packageName] ?? [],
+      ),
+    ),
+  ];
 }
 
 function addConfiguredInputReasons(options: {

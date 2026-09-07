@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { WorkspacePackage } from "../selectors/select-image-targets-workspaces.ts";
 import {
   PLAYWRIGHT_TARGETS,
+  additionalPlaywrightInstallFilters,
   selectPlaywrightTargets,
 } from "./playwright-targets.ts";
 
@@ -31,6 +32,10 @@ const workspaces = new Map<string, WorkspacePackage>([
       dir: "packages/scout-for-lol/packages/backend/",
       workspaceDependencies: [],
     },
+  ],
+  [
+    "@shepherdjerred/birmel",
+    { dir: "packages/birmel/", workspaceDependencies: [] },
   ],
   [
     "@scout-for-lol/design-system",
@@ -85,6 +90,22 @@ describe("Playwright target selection", () => {
       "@scout-for-lol/design-system",
       "@scout-for-lol/evals",
     ]);
+  });
+
+  test("selects Activity when its synthetic Prisma prerequisite changes", async () => {
+    expect(
+      packages(
+        await selectPlaywrightTargets(
+          ["packages/birmel/src/index.ts"],
+          ".",
+          workspaces,
+        ),
+      ),
+    ).toEqual(["@scout-for-lol/activity"]);
+    expect(
+      additionalPlaywrightInstallFilters(["@scout-for-lol/activity"]),
+    ).toEqual(["@shepherdjerred/birmel"]);
+    expect(additionalPlaywrightInstallFilters(["sjer.red"])).toEqual([]);
   });
 
   test("selects every target for shared browser machinery", async () => {

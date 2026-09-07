@@ -1169,6 +1169,7 @@ steps:
         - "scripts/**"
         - "packages/docs/wiki/**"
         - "packages/alert-dashboard/**"
+        - "packages/birmel/**"
         - "packages/eslint-config/**"
         - "packages/scout-for-lol/eslint.config.ts"
         - "packages/scout-for-lol/tsconfig.base.json"

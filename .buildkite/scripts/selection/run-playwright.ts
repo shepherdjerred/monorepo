@@ -6,6 +6,7 @@ import { asRecord } from "../../../scripts/lib/json.ts";
 import {
   allPlaywrightTargets,
   PLAYWRIGHT_TARGETS,
+  additionalPlaywrightInstallFilters,
   selectPlaywrightTargets,
   type PlaywrightSelection,
 } from "./playwright-targets.ts";
@@ -184,6 +185,7 @@ async function main(): Promise<number> {
     "@shepherdjerred/monorepo",
     "@shepherdjerred/root-scripts",
     ...selectedPackages,
+    ...additionalPlaywrightInstallFilters(selectedPackages),
   ]);
   if (selectedPackages.some((name) => name.startsWith("@scout-for-lol/"))) {
     installFilters.add("scout-for-lol");
