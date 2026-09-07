@@ -1177,6 +1177,7 @@ steps:
         - "scripts/ci/namespace-playwright-reports.ts"
         - "scripts/ci/write-ci-report-index.ts"
         - "scripts/lib/json.ts"
+        - "config/analytics-sites.json"
     depends_on: verify
     cancel_on_build_failing: true
     env:

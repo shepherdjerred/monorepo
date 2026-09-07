@@ -138,6 +138,10 @@ export function changedFilesForShard(
     .filter((file) => file !== "");
   if (
     changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file)) ||
+    (check === "prettier" &&
+      changed.some(
+        (file) => file === ".editorconfig" || file.endsWith("/.editorconfig"),
+      )) ||
     (check === "line-endings" &&
       changed.some(
         (file) => file === ".gitattributes" || file.endsWith("/.gitattributes"),
