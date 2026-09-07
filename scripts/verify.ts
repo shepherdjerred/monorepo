@@ -74,6 +74,9 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/discord-plays-mario-kart/Dockerfile",
   "packages/homelab/images/redlib/Dockerfile",
   ".buildkite/ci-playwright/Dockerfile",
+  "docker-bake.hcl",
+  ".buildkite/application-image-smoke.Dockerfile",
+  "packages/scout-for-lol/packages/backend/Dockerfile",
 ] as const;
 
 async function validateBaseWithGit(

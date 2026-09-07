@@ -59,6 +59,9 @@ describe("affected verification filters", () => {
     "packages/streambot/Dockerfile",
     "packages/discord-plays-mario-kart/wasm-src/upstream.json",
     "packages/homelab/images/redlib/Dockerfile",
+    "docker-bake.hcl",
+    ".buildkite/application-image-smoke.Dockerfile",
+    "packages/scout-for-lol/packages/backend/Dockerfile",
   ])("selects root scripts for Renovate fixture %s", async (path) => {
     expect(
       await affectedVerifyFilters(
