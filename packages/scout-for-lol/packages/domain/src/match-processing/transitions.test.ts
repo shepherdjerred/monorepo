@@ -32,10 +32,17 @@ function makeState(overrides?: Record<string, unknown>): MatchProcessingState {
   });
 }
 
-function makeReceipt(scope: Record<string, unknown>) {
+function makeReceipt(args: {
+  scope: Record<string, unknown>;
+  kind?: string;
+  version?: number;
+  recordedAt?: string;
+}) {
   return MatchProcessingReceiptSchema.parse({
-    scope,
-    recordedAt: "2025-10-16T12:01:00Z",
+    kind: args.kind ?? "report-delivered",
+    version: args.version ?? 1,
+    scope: args.scope,
+    recordedAt: args.recordedAt ?? "2025-10-16T12:01:00Z",
   });
 }
 
@@ -142,7 +149,7 @@ describe("promoteArchiveOnlyToFull", () => {
 
     const receipted = recordReceipt({
       state: full,
-      receipt: makeReceipt({ kind: "global" }),
+      receipt: makeReceipt({ scope: { kind: "global" } }),
     });
     expect(receipted.outcome).toBe("applied");
     if (receipted.outcome === "applied") {
@@ -163,7 +170,7 @@ describe("recordReceipt", () => {
     { scope: { kind: "account", accountId: 42 }, description: "account" },
   ])("applies a new $description receipt", ({ scope }) => {
     const state = makeState();
-    const receipt = makeReceipt(scope);
+    const receipt = makeReceipt({ scope });
     const result = recordReceipt({ state, receipt });
     expect(result.outcome).toBe("applied");
     if (result.outcome === "applied") {
@@ -173,7 +180,10 @@ describe("recordReceipt", () => {
 
   test("does not mutate the input state when recording", () => {
     const state = makeState();
-    recordReceipt({ state, receipt: makeReceipt({ kind: "global" }) });
+    recordReceipt({
+      state,
+      receipt: makeReceipt({ scope: { kind: "global" } }),
+    });
     expect(state.receipts).toEqual([]);
   });
 
@@ -182,33 +192,70 @@ describe("recordReceipt", () => {
     { scope: { kind: "guild", guildId: GUILD_ID }, description: "guild" },
     { scope: { kind: "account", accountId: 42 }, description: "account" },
   ])(
-    "treats a repeat $description receipt as already applied even with a different timestamp",
+    "treats an exact replay of a $description receipt as already applied",
     ({ scope }) => {
-      const state = makeState({
-        receipts: [{ scope, recordedAt: "2025-10-16T12:01:00Z" }],
-      });
-      const retry = MatchProcessingReceiptSchema.parse({
-        scope,
-        recordedAt: "2025-10-16T18:00:00Z",
-      });
-      expect(recordReceipt({ state, receipt: retry })).toEqual({
-        outcome: "already-applied",
-      });
+      const receipt = makeReceipt({ scope });
+      const state = makeState({ receipts: [receipt] });
+      expect(recordReceipt({ state, receipt: makeReceipt({ scope }) })).toEqual(
+        { outcome: "already-applied" },
+      );
     },
   );
 
-  test("applies receipts for distinct scopes of the same kind", () => {
+  test("conflicts when the same identity arrives with different evidence", () => {
     const state = makeState({
-      receipts: [
-        {
-          scope: { kind: "guild", guildId: GUILD_ID },
-          recordedAt: "2025-10-16T12:01:00Z",
-        },
-      ],
+      receipts: [makeReceipt({ scope: { kind: "global" } })],
+    });
+    const divergent = makeReceipt({
+      scope: { kind: "global" },
+      recordedAt: "2025-10-16T18:00:00Z",
+    });
+    expect(recordReceipt({ state, receipt: divergent })).toEqual({
+      outcome: "conflict",
+      reason: "receipt-evidence-mismatch",
+    });
+  });
+
+  test("applies a second kind for the same scope", () => {
+    const state = makeState({
+      receipts: [makeReceipt({ scope: { kind: "global" } })],
     });
     const result = recordReceipt({
       state,
-      receipt: makeReceipt({ kind: "guild", guildId: OTHER_GUILD_ID }),
+      receipt: makeReceipt({
+        scope: { kind: "global" },
+        kind: "settlement-recorded",
+      }),
+    });
+    expect(result.outcome).toBe("applied");
+    if (result.outcome === "applied") {
+      expect(result.next.receipts).toHaveLength(2);
+    }
+  });
+
+  test("applies a second version of the same kind for the same scope", () => {
+    const state = makeState({
+      receipts: [makeReceipt({ scope: { kind: "global" } })],
+    });
+    const result = recordReceipt({
+      state,
+      receipt: makeReceipt({ scope: { kind: "global" }, version: 2 }),
+    });
+    expect(result.outcome).toBe("applied");
+    if (result.outcome === "applied") {
+      expect(result.next.receipts).toHaveLength(2);
+    }
+  });
+
+  test("applies receipts for distinct scopes of the same kind", () => {
+    const state = makeState({
+      receipts: [makeReceipt({ scope: { kind: "guild", guildId: GUILD_ID } })],
+    });
+    const result = recordReceipt({
+      state,
+      receipt: makeReceipt({
+        scope: { kind: "guild", guildId: OTHER_GUILD_ID },
+      }),
     });
     expect(result.outcome).toBe("applied");
     if (result.outcome === "applied") {
@@ -223,7 +270,7 @@ describe("recordReceipt", () => {
       { kind: "guild", guildId: GUILD_ID },
       { kind: "account", accountId: 42 },
     ]) {
-      const result = recordReceipt({ state, receipt: makeReceipt(scope) });
+      const result = recordReceipt({ state, receipt: makeReceipt({ scope }) });
       expect(result.outcome).toBe("applied");
       if (result.outcome === "applied") {
         state = result.next;
@@ -236,7 +283,7 @@ describe("recordReceipt", () => {
     const state = makeState();
     const result = recordReceipt({
       state,
-      receipt: makeReceipt({ kind: "global" }),
+      receipt: makeReceipt({ scope: { kind: "global" } }),
     });
     expect(result.outcome).toBe("applied");
     if (result.outcome === "applied") {

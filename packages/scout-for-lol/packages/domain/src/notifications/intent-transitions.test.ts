@@ -15,7 +15,10 @@ import {
   afterDeadline,
   afterDeadlineWithOffset,
   beforeDeadline,
+  createdAt,
   deliveredAt,
+  deliveredAtNoMillis,
+  deliveredAtWithOffset,
   deliveredWithMessageState,
   exactDeadline,
   makeIntent,
@@ -23,6 +26,8 @@ import {
   nonceA,
   nonceB,
   observedAt,
+  observedAtNoMillis,
+  observedAtWithOffset,
   otherMessageId,
   sendingState,
   statesByKind,
@@ -217,6 +222,30 @@ describe("confirmDelivered", () => {
     ).toEqual({ outcome: "already-applied" });
   });
 
+  test.each([deliveredAtNoMillis, deliveredAtWithOffset])(
+    "a replayed confirmation spelling the same instant as %s is idempotent",
+    (retryDeliveredAt) => {
+      expect(
+        confirmDelivered(makeIntent(deliveredWithMessageState()), {
+          attemptNonce: nonceA,
+          messageId,
+          deliveredAt: retryDeliveredAt,
+        }),
+      ).toEqual({ outcome: "already-applied" });
+    },
+  );
+
+  test("a confirmation at a genuinely different instant conflicts", () => {
+    expectConflict(
+      confirmDelivered(makeIntent(deliveredWithMessageState()), {
+        attemptNonce: nonceA,
+        messageId,
+        deliveredAt: createdAt,
+      }),
+      "terminal-state",
+    );
+  });
+
   test("a differing confirmation on a delivered intent conflicts", () => {
     expectConflict(
       confirmDelivered(makeIntent(deliveredWithMessageState()), {
@@ -361,6 +390,28 @@ describe("recordUnknownDelivery", () => {
         observedAt,
       }),
     ).toEqual({ outcome: "already-applied" });
+  });
+
+  test.each([observedAtNoMillis, observedAtWithOffset])(
+    "a replayed observation spelling the same instant as %s is idempotent",
+    (retryObservedAt) => {
+      expect(
+        recordUnknownDelivery(makeIntent(unknownDeliveryState()), {
+          attemptNonce: nonceA,
+          observedAt: retryObservedAt,
+        }),
+      ).toEqual({ outcome: "already-applied" });
+    },
+  );
+
+  test("a same-nonce observation at a different instant requires the operator", () => {
+    expectConflict(
+      recordUnknownDelivery(makeIntent(unknownDeliveryState()), {
+        attemptNonce: nonceA,
+        observedAt: createdAt,
+      }),
+      "unknown-delivery-requires-operator",
+    );
   });
 
   test("a differing observation on unknown-delivery requires the operator", () => {
@@ -587,6 +638,20 @@ describe("operatorResolveUnknown", () => {
       }),
     ).toEqual({ outcome: "already-applied" });
   });
+
+  test.each([deliveredAtNoMillis, deliveredAtWithOffset])(
+    "a replayed resolution spelling the same instant as %s is idempotent",
+    (retryDeliveredAt) => {
+      expect(
+        operatorResolveUnknown(makeIntent(deliveredWithMessageState()), {
+          outcome: "delivered",
+          attemptNonce: nonceA,
+          messageId,
+          deliveredAt: retryDeliveredAt,
+        }),
+      ).toEqual({ outcome: "already-applied" });
+    },
+  );
 
   test("a differing delivered resolution conflicts as terminal", () => {
     expectConflict(

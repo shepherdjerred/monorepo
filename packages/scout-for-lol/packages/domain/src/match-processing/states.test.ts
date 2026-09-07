@@ -2,6 +2,9 @@ import { describe, expect, test } from "vitest";
 import {
   MatchProcessingStateSchema,
   matchProcessingStateCodec,
+  matchProcessingReceiptIdentityKey,
+  MatchProcessingReceiptSchema,
+  ReceiptKindSchema,
   ReceiptScopeSchema,
   receiptScopeKey,
 } from "#src/match-processing/states.ts";
@@ -33,13 +36,49 @@ describe("MatchProcessingStateSchema", () => {
       policy: "FULL",
       promotion: { promotedAt: "2025-10-16T12:00:00Z" },
       receipts: [
-        { scope: { kind: "global" }, recordedAt: "2025-10-16T12:01:00Z" },
         {
+          kind: "report-delivered",
+          version: 1,
+          scope: { kind: "global" },
+          recordedAt: "2025-10-16T12:01:00Z",
+        },
+        {
+          kind: "report-delivered",
+          version: 1,
           scope: { kind: "guild", guildId: GUILD_ID },
           recordedAt: "2025-10-16T12:02:00Z",
         },
         {
+          kind: "settlement-recorded",
+          version: 2,
           scope: { kind: "account", accountId: 42 },
+          recordedAt: "2025-10-16T12:03:00Z",
+        },
+      ],
+    });
+    expect(parsed.receipts).toHaveLength(3);
+  });
+
+  test("accepts receipts spanning multiple kinds and versions for one scope", () => {
+    const parsed = MatchProcessingStateSchema.parse({
+      ...validStateInput,
+      receipts: [
+        {
+          kind: "report-delivered",
+          version: 1,
+          scope: { kind: "global" },
+          recordedAt: "2025-10-16T12:01:00Z",
+        },
+        {
+          kind: "settlement-recorded",
+          version: 1,
+          scope: { kind: "global" },
+          recordedAt: "2025-10-16T12:02:00Z",
+        },
+        {
+          kind: "report-delivered",
+          version: 2,
+          scope: { kind: "global" },
           recordedAt: "2025-10-16T12:03:00Z",
         },
       ],
@@ -78,33 +117,74 @@ describe("MatchProcessingStateSchema", () => {
       scope: { kind: "account", accountId: 42 },
       description: "account",
     },
-  ])("rejects duplicate $description receipt scopes", ({ scope }) => {
-    expect(() =>
-      MatchProcessingStateSchema.parse({
-        ...validStateInput,
-        receipts: [
-          { scope, recordedAt: "2025-10-16T12:01:00Z" },
-          { scope, recordedAt: "2025-10-16T12:02:00Z" },
-        ],
-      }),
-    ).toThrow(/duplicate receipt scope/);
-  });
+  ])(
+    "rejects duplicate (kind, version, $description scope) identities even with different evidence",
+    ({ scope }) => {
+      expect(() =>
+        MatchProcessingStateSchema.parse({
+          ...validStateInput,
+          receipts: [
+            {
+              kind: "report-delivered",
+              version: 1,
+              scope,
+              recordedAt: "2025-10-16T12:01:00Z",
+            },
+            {
+              kind: "report-delivered",
+              version: 1,
+              scope,
+              recordedAt: "2025-10-16T12:02:00Z",
+            },
+          ],
+        }),
+      ).toThrow(/duplicate receipt identity/);
+    },
+  );
 
-  test("accepts distinct scopes of the same kind", () => {
+  test("accepts distinct scopes for the same kind and version", () => {
     const parsed = MatchProcessingStateSchema.parse({
       ...validStateInput,
       receipts: [
         {
+          kind: "report-delivered",
+          version: 1,
           scope: { kind: "guild", guildId: GUILD_ID },
           recordedAt: "2025-10-16T12:01:00Z",
         },
         {
+          kind: "report-delivered",
+          version: 1,
           scope: { kind: "guild", guildId: OTHER_GUILD_ID },
           recordedAt: "2025-10-16T12:02:00Z",
         },
       ],
     });
     expect(parsed.receipts).toHaveLength(2);
+  });
+
+  test.each([
+    { receiptKind: "", reason: "empty" },
+    { receiptKind: "Report-Delivered", reason: "uppercase" },
+    { receiptKind: "report:delivered", reason: "colon" },
+    { receiptKind: "-leading", reason: "leading hyphen" },
+  ])("rejects a receipt kind that is $reason", ({ receiptKind }) => {
+    expect(() => ReceiptKindSchema.parse(receiptKind)).toThrow();
+  });
+
+  test.each([
+    { version: 0, reason: "zero" },
+    { version: -1, reason: "negative" },
+    { version: 1.5, reason: "non-integer" },
+  ])("rejects a receipt version that is $reason", ({ version }) => {
+    expect(() =>
+      MatchProcessingReceiptSchema.parse({
+        kind: "report-delivered",
+        version,
+        scope: { kind: "global" },
+        recordedAt: "2025-10-16T12:01:00Z",
+      }),
+    ).toThrow();
   });
 
   test("rejects an unknown owner kind", () => {
@@ -176,6 +256,42 @@ describe("receiptScopeKey", () => {
   });
 });
 
+describe("matchProcessingReceiptIdentityKey", () => {
+  const baseReceipt = MatchProcessingReceiptSchema.parse({
+    kind: "report-delivered",
+    version: 1,
+    scope: { kind: "global" },
+    recordedAt: "2025-10-16T12:01:00Z",
+  });
+
+  test("differs when any identity component differs", () => {
+    const baseKey = matchProcessingReceiptIdentityKey(baseReceipt);
+    const variants = [
+      { ...baseReceipt, kind: ReceiptKindSchema.parse("settlement-recorded") },
+      { ...baseReceipt, version: 2 },
+      {
+        ...baseReceipt,
+        scope: ReceiptScopeSchema.parse({ kind: "guild", guildId: GUILD_ID }),
+      },
+    ];
+    for (const variant of variants) {
+      expect(matchProcessingReceiptIdentityKey(variant)).not.toBe(baseKey);
+    }
+  });
+
+  test("ignores evidence: same identity with different recordedAt shares a key", () => {
+    const later = MatchProcessingReceiptSchema.parse({
+      kind: "report-delivered",
+      version: 1,
+      scope: { kind: "global" },
+      recordedAt: "2025-10-16T18:00:00Z",
+    });
+    expect(matchProcessingReceiptIdentityKey(later)).toBe(
+      matchProcessingReceiptIdentityKey(baseReceipt),
+    );
+  });
+});
+
 describe("matchProcessingStateCodec", () => {
   test("round-trips a state through the versioned envelope", () => {
     const state = MatchProcessingStateSchema.parse({
@@ -184,7 +300,12 @@ describe("matchProcessingStateCodec", () => {
       policy: "FULL",
       promotion: { promotedAt: "2025-10-16T12:00:00Z" },
       receipts: [
-        { scope: { kind: "global" }, recordedAt: "2025-10-16T12:01:00Z" },
+        {
+          kind: "report-delivered",
+          version: 1,
+          scope: { kind: "global" },
+          recordedAt: "2025-10-16T12:01:00Z",
+        },
       ],
     });
     const envelope = matchProcessingStateCodec.serialize(state);

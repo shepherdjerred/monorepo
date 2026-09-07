@@ -38,7 +38,23 @@ export const afterDeadlineWithOffset = IsoInstantSchema.parse(
   "2026-09-01T15:00:00.001+02:00",
 );
 export const deliveredAt = IsoInstantSchema.parse("2026-09-01T12:31:00.000Z");
+/** Same instant as {@link deliveredAt}, without milliseconds. */
+export const deliveredAtNoMillis = IsoInstantSchema.parse(
+  "2026-09-01T12:31:00Z",
+);
+/** Same instant as {@link deliveredAt}, written with a non-UTC offset. */
+export const deliveredAtWithOffset = IsoInstantSchema.parse(
+  "2026-09-01T18:01:00.000+05:30",
+);
 export const observedAt = IsoInstantSchema.parse("2026-09-01T12:32:00.000Z");
+/** Same instant as {@link observedAt}, without milliseconds. */
+export const observedAtNoMillis = IsoInstantSchema.parse(
+  "2026-09-01T12:32:00Z",
+);
+/** Same instant as {@link observedAt}, written with a non-UTC offset. */
+export const observedAtWithOffset = IsoInstantSchema.parse(
+  "2026-09-01T18:02:00.000+05:30",
+);
 
 export function makeIntent(state: NotificationIntentState): NotificationIntent {
   const attemptBearing =

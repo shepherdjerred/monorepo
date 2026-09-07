@@ -4,7 +4,7 @@ import {
   type AssignedPipelineOwner,
   type MatchProcessingReceipt,
   type MatchProcessingState,
-  receiptScopeKey,
+  matchProcessingReceiptIdentityKey,
 } from "#src/match-processing/states.ts";
 
 /**
@@ -17,6 +17,7 @@ export type MatchProcessingConflictReason = z.infer<
 export const MatchProcessingConflictReasonSchema = z.enum([
   "ownership-held-by-another-owner",
   "promotion-target-born-full",
+  "receipt-evidence-mismatch",
 ]);
 
 /**
@@ -79,21 +80,26 @@ export function promoteArchiveOnlyToFull(args: {
 }
 
 /**
- * Record a processing receipt. Idempotent by receipt identity: the scope key
- * is the identity, so a second receipt for the same scope is
- * `already-applied` regardless of its timestamp.
+ * Record a processing receipt. Idempotent by the full receipt identity
+ * `(kind, version, scope)`: an exact replay — same identity, same evidence —
+ * is `already-applied`, while a receipt that shares an identity but carries
+ * different evidence (`recordedAt`) is a conflict: something recorded the
+ * same fact twice with disagreeing observations, and the state keeps the
+ * first.
  */
 export function recordReceipt(args: {
   state: MatchProcessingState;
   receipt: MatchProcessingReceipt;
 }): TransitionResult<MatchProcessingState> {
   const { state, receipt } = args;
-  const scopeKey = receiptScopeKey(receipt.scope);
-  const alreadyRecorded = state.receipts.some(
-    (candidate) => receiptScopeKey(candidate.scope) === scopeKey,
+  const identityKey = matchProcessingReceiptIdentityKey(receipt);
+  const existing = state.receipts.find(
+    (candidate) => matchProcessingReceiptIdentityKey(candidate) === identityKey,
   );
-  if (alreadyRecorded) {
-    return { outcome: "already-applied" };
+  if (existing !== undefined) {
+    return existing.recordedAt === receipt.recordedAt
+      ? { outcome: "already-applied" }
+      : { outcome: "conflict", reason: "receipt-evidence-mismatch" };
   }
   return {
     outcome: "applied",

@@ -70,6 +70,15 @@ function isInstantAfter(instant: IsoInstant, reference: IsoInstant): boolean {
   return instantEpochMs(instant) > instantEpochMs(reference);
 }
 
+/**
+ * Instants are compared by the moment they name, never by string: storage
+ * normalizes representation (millisecond padding, offsets rewritten to UTC),
+ * so a replayed command may carry a different spelling of the same instant.
+ */
+function instantsEqual(a: IsoInstant, b: IsoInstant): boolean {
+  return instantEpochMs(a) === instantEpochMs(b);
+}
+
 export function markReady(
   intent: NotificationIntent,
 ): NotificationTransitionResult {
@@ -162,7 +171,7 @@ export function confirmDelivered(
       }
       return applied(withState(intent, deliveredState(args)));
     case "delivered":
-      return state.deliveredAt === args.deliveredAt &&
+      return instantsEqual(state.deliveredAt, args.deliveredAt) &&
         state.messageId === args.messageId
         ? alreadyApplied
         : conflict("terminal-state");
@@ -240,7 +249,7 @@ export function recordUnknownDelivery(
       );
     case "unknown-delivery":
       return state.attemptNonce === args.attemptNonce &&
-        state.observedAt === args.observedAt
+        instantsEqual(state.observedAt, args.observedAt)
         ? alreadyApplied
         : conflict("unknown-delivery-requires-operator");
     case "pending":
@@ -338,7 +347,7 @@ export function operatorResolveUnknown(
         : applied(withState(intent, { kind: "ready" }));
     case "delivered":
       return resolution.outcome === "delivered" &&
-        state.deliveredAt === resolution.deliveredAt &&
+        instantsEqual(state.deliveredAt, resolution.deliveredAt) &&
         state.messageId === resolution.messageId
         ? alreadyApplied
         : conflict("terminal-state");
