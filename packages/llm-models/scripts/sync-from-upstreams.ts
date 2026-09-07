@@ -22,15 +22,14 @@
  * A withheld edit is not a failure, and it is not a correction waiting to be
  * applied either — it is the script saying a human should read the provider's
  * own pricing page and decide. The catalog value can be the deliberate one:
- * `claude-sonnet-5` holds the standard $3/$15 while upstreams list the
- * introductory $2/$10, so the guard fires every week on a divergence that is
- * working as intended. Anything that tells an operator to apply the upstream
- * value unconditionally is wrong. It must never be reduced to stdout,
- * though: a run that withholds everything writes no catalog diff, so the
- * unattended caller would otherwise see a clean no-op and a real repricing
- * would sit unreviewed forever. `--report-json` gives that caller a typed
- * signal to act on, and `--check` exits non-zero on withheld edits as well as
- * on drift.
+ * for example, holding a standard rate while upstream lists a promotional one,
+ * where the guard fires on a divergence that is working as intended. Anything
+ * that tells an operator to apply the upstream value unconditionally is wrong.
+ * It must never be reduced to stdout, though: a run that withholds everything
+ * writes no catalog diff, so the unattended caller would otherwise see a clean
+ * no-op and a real repricing would sit unreviewed forever. `--report-json` gives
+ * that caller a typed signal to act on, and `--check` exits non-zero on
+ * withheld edits as well as on drift.
  *
  * Deliberately NOT cross-checked:
  *   - cache prices: providers name them differently (OpenAI cached-input vs

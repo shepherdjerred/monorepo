@@ -62,9 +62,9 @@ that instant; the divergence is reported again if either half moves — a new
 upstream price, or a later edit to the catalog value being protected — or once
 the expiry passes. `expiresAt` is required on purpose: prices are time-bound, so
 an acceptance that never lapses is the rot the field exists to prevent.
-`claude-sonnet-5` is the worked example — upstreams list its introductory rate,
-the catalog holds the standard one, and the acceptance expires when the
-promotion does. A run that withholds everything writes
+Historically `claude-sonnet-5` was the worked example — upstreams listed its
+introductory rate, the catalog held the standard one, and the acceptance
+expired when the promotion did. A run that withholds everything writes
 no catalog diff, so both entry points give that outcome its own signal:
 `--check` exits non-zero on withheld edits as well as on drift, and
 `--report-json` writes the typed report for an unattended caller.
