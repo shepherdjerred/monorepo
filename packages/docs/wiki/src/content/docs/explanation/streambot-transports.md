@@ -18,8 +18,9 @@ Live stream, built by
 [`prepareStream`](https://github.com/shepherdjerred/monorepo/blob/main/packages/discord-video-stream/src/media/newApi.ts). That is the right shape for a film and the wrong shape for a song.
 
 A three-minute track paid for a full video encode and a second WebRTC connection to carry content
-with no picture. It also consumed one of the scarce pooled userbot accounts, which bound how many
-servers could listen at once.
+with no picture. It also consumed one of the
+[pooled userbot accounts](https://github.com/shepherdjerred/monorepo/tree/main/packages/streambot/src/pool), which are scarce — the pool's size is
+what bounds how many servers can listen at once.
 
 ## What each transport is
 

@@ -1,3 +1,4 @@
+import { runCommand } from "./run-command.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
@@ -63,28 +64,11 @@ let signedVideoUrl: string;
 /** Signed URL serving the audio-only file. */
 let signedAudioUrl: string;
 
-async function run(cmd: string[]): Promise<void> {
-  const proc = Bun.spawn(cmd, {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
-  });
-  const [stderr, code] = await Promise.all([
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  if (code !== 0) {
-    throw new Error(
-      `command failed (${String(code)}): ${cmd.join(" ")}\n${stderr.trim().slice(-800)}`,
-    );
-  }
-}
-
 beforeAll(async () => {
   dir = await mkdtemp(path.join(os.tmpdir(), "streambot-media-kind-"));
   audioOnlyPath = path.join(dir, "song.m4a");
   videoPath = path.join(dir, "clip.mp4");
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     "-f",
@@ -95,7 +79,7 @@ beforeAll(async () => {
     "aac",
     audioOnlyPath,
   ]);
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     "-f",

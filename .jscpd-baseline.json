@@ -1340,10 +1340,6 @@
       "clones": 1,
       "tokens": 78
     },
-    "packages/streambot/src/discord/commands.ts|packages/streambot/src/discord/commands.ts": {
-      "clones": 1,
-      "tokens": 91
-    },
     "packages/streambot/src/discord/interaction-adapters.ts|packages/streambot/src/discord/interaction-adapters.ts": {
       "clones": 1,
       "tokens": 71
@@ -1355,10 +1351,6 @@
     "packages/streambot/src/voice/debug-audio-recorder.ts|packages/voice-assistant/src/wave-io.ts": {
       "clones": 1,
       "tokens": 73
-    },
-    "packages/streambot/test/media/player-card.test.ts|packages/streambot/test/media/player-controls.test.ts": {
-      "clones": 1,
-      "tokens": 118
     },
     "packages/streambot/test/media/streamer-position.test.ts|packages/streambot/test/media/streamer-position.test.ts": {
       "clones": 1,
@@ -1375,10 +1367,6 @@
     "packages/streambot/test/session/session-manager.test.ts|packages/streambot/test/session/session-manager.test.ts": {
       "clones": 4,
       "tokens": 301
-    },
-    "packages/streambot/test/session/session-manager.test.ts|packages/streambot/test/session/userbot-pool.test.ts": {
-      "clones": 1,
-      "tokens": 91
     },
     "packages/streambot/test/unit/config-dynamic.test.ts|packages/streambot/test/unit/config-dynamic.test.ts": {
       "clones": 1,

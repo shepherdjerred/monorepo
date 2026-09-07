@@ -1,3 +1,4 @@
+import { runCommand } from "./run-command.ts";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
@@ -34,23 +35,6 @@ const FORCED_CUE = "FORCED ONLY LINE";
 const FORCED_SRT = `1\n00:00:00,000 --> 00:00:03,000\n${FORCED_CUE}\n`;
 /** A cue that exists only AFTER the seek target — for the -ss PTS-compensation regression. */
 const LATE_SRT = "1\n00:00:04,000 --> 00:00:06,000\nLATE CUE\n";
-
-async function run(cmd: string[]): Promise<void> {
-  const proc = Bun.spawn(cmd, {
-    stdout: "pipe",
-    stderr: "pipe",
-    stdin: "ignore",
-  });
-  const [stderr, code] = await Promise.all([
-    new Response(proc.stderr).text(),
-    proc.exited,
-  ]);
-  if (code !== 0) {
-    throw new Error(
-      `command failed (${String(code)}): ${cmd.join(" ")}\n${stderr.trim().slice(-800)}`,
-    );
-  }
-}
 
 async function runWithin(cmd: string[], timeoutMs: number): Promise<void> {
   const proc = Bun.spawn(cmd, {
@@ -90,7 +74,7 @@ async function grabFrame(
   out: string,
   ss?: number,
 ): Promise<Buffer> {
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...(ss === undefined ? [] : ["-ss", String(ss)]),
@@ -150,7 +134,7 @@ beforeAll(async () => {
   hdrClip = path.join(dir, "HDR Movie (2021) Remux-2160p.mkv");
 
   // Embedded: mux the SRT in as a subrip subtitle stream tagged English.
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...lavfi(3),
@@ -171,7 +155,7 @@ beforeAll(async () => {
   ]);
 
   // Sidecar: no embedded subs; a sibling `.en.srt` instead.
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...lavfi(3),
@@ -189,7 +173,7 @@ beforeAll(async () => {
   );
 
   // Plain: no subtitles anywhere.
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...lavfi(3),
@@ -202,7 +186,7 @@ beforeAll(async () => {
   ]);
 
   // Endgame shape: full English subs embedded; forced-only sidecar next to the file.
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...lavfi(3),
@@ -230,7 +214,7 @@ beforeAll(async () => {
   // Late cue: 8s video, embedded cue only at 4–6s (seek-compensation regression fixture).
   const lateSrtPath = path.join(dir, "late.srt");
   await writeFile(lateSrtPath, LATE_SRT, "utf8");
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...lavfi(8),
@@ -252,7 +236,7 @@ beforeAll(async () => {
 
   // HDR: flag the stream/frames as PQ + BT.2020 (8-bit is fine — the tonemap chain and the probe
   // both key off the color metadata, not the bit depth).
-  await run([
+  await runCommand([
     config.ffmpegPath,
     "-y",
     ...lavfi(3),
@@ -474,7 +458,7 @@ describe("software video graph (real ffmpeg)", () => {
     // Run the full chain (zscale linearize → tonemap hable → zscale bt709 → subtitles) against
     // real HDR-flagged frames and verify the encoded output is SDR BT.709.
     const out = path.join(dir, "tonemapped.mkv");
-    await run([
+    await runCommand([
       config.ffmpegPath,
       "-y",
       "-i",
@@ -546,7 +530,7 @@ describe("VAAPI graph canvas branch (real ffmpeg, GPU stages swapped for softwar
     expect(proxyGraph.join(";")).not.toContain("vaapi");
 
     const out = path.join(dir, "overlay-proxy.png");
-    await run([
+    await runCommand([
       config.ffmpegPath,
       "-y",
       "-ss",

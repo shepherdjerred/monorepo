@@ -31,6 +31,11 @@ export class AssistantTransport {
   }
 
   setSpeaking(speaking: boolean): Promise<void> {
+    // A reply claims the flag before its first packet, so this is the reply boundary. Clearing the
+    // latch here scopes a failure to the reply that caused it: without this, a rejection on a
+    // reply's LAST packet has no later send to surface through, and would instead be thrown by the
+    // first packet of the next, healthy reply — failing a turn that never had a problem.
+    if (speaking) this.failure = null;
     this.current().setSpeaking(speaking);
     return Promise.resolve();
   }

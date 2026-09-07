@@ -1,3 +1,4 @@
+import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -27,6 +28,7 @@ import {
   stateFilePath,
   type PersistedState,
 } from "@shepherdjerred/streambot/state/persistence.ts";
+import { voiceDisabledStreamerParts } from "./fake-streamer-voice.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -105,31 +107,8 @@ function fakeStreamer(): FakeStreamer {
         });
       }),
     leaveVoice: () => Promise.resolve(),
-    setVolume: () => Promise.resolve(true),
-    openAssistantAudio: () => ({
-      send: () => Promise.resolve(),
-      setSpeaking: () => {
-        /* voice is disabled in this fake */
-      },
-      close: () => {
-        /* voice is disabled in this fake */
-      },
-    }),
-    setAssistantSpeaking: () => Promise.resolve(),
-    sendAssistantOpus: () => {
-      /* voice is disabled in this fake */
-    },
-    assistantUserId: () => "200000000000000000",
-    assistantDaveReady: () => false,
-    setVoiceAudioListener: () => {
-      /* voice is disabled in this fake */
-    },
-    setVoiceReceiveObserver: () => {
-      /* voice is disabled in this fake */
-    },
-    seek: () => Promise.resolve(true),
+    ...voiceDisabledStreamerParts(),
     getPosition: () => positionSeconds.value,
-    userId: () => "200000000000000000",
     destroy: () => Promise.resolve(),
     lastVoiceCloseInfo: () => connections.at(-1)?.close.value ?? null,
     captureVoiceCloseSource: () => {
@@ -268,13 +247,18 @@ function recordingCardPort(): {
   };
 }
 
-function makeManager(config: Config, pool: UserbotProvider) {
+function makeManager(
+  config: Config,
+  pool: UserbotProvider,
+  featureGate?: MediaFeatureGate,
+) {
   const announced: { channelId: string | null; message: string }[] = [];
   const cards = recordingCardPort();
   const manager = new SessionManager({
     config,
     pool,
     cards: cards.port,
+    ...(featureGate === undefined ? {} : { featureGate }),
     resolveSource: () => Promise.resolve(RESOLVED),
     announce: (channelId, message) => {
       announced.push({ channelId, message });
@@ -469,6 +453,28 @@ describe("SessionManager", () => {
 
     await manager.resumeAll();
     expect(await Bun.file(file).exists()).toBe(false);
+  });
+
+  test("resumeAll forces restored items to video while the rollout flag is off", async () => {
+    const config = await makeConfig();
+    const file = stateFilePath(config.state.dir, GUILD, CHANNEL_A);
+    await saveState(file, persistedWithQueue());
+    const pool = fakePool(1);
+    const { manager } = makeManager(config, pool.provider, {
+      assistantV2: () => Promise.resolve(true),
+      history: () => Promise.resolve(false),
+      musicOverVoice: () => Promise.resolve(false),
+    });
+
+    await manager.resumeAll();
+    // State written by the previous binary carries no `mode`, so without re-applying the gate here
+    // a restored song would be classified fresh and could take the voice transport in a guild the
+    // feature is switched off for — a rollback that does not roll back.
+    const view = manager.getExisting(GUILD, CHANNEL_A)?.view();
+    const restored = view?.queue[0] ?? view?.current ?? null;
+    if (restored === null) throw new Error("nothing was restored to inspect");
+    expect(restored.source?.mode).toBe("video");
+    await manager.destroyAll();
   });
 
   test("resumeAll keeps a persisted session when a member userbot is merely busy", async () => {

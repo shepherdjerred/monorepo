@@ -169,6 +169,22 @@ function attach(
   );
 }
 
+/**
+ * The audio-only voice segment every test in this file starts from: no video track, a recording
+ * sink, and an attached pipeline. Declared once so a change to how a voice segment is built is a
+ * single edit rather than one per test.
+ */
+async function voiceSegment() {
+  const audio = audioTrack();
+  demuxState.next = { video: undefined, audio };
+  const sink = makeSink();
+  const pipeline = await attach(makeConn(), makeStreamer(), {
+    type: "voice",
+    audioSink: sink,
+  });
+  return { audio, sink, pipeline };
+}
+
 describe("attachPipeline with an audio-only source", () => {
   test("plays through the audio stream and resolves done when it finishes", async () => {
     const audio = audioTrack();
@@ -197,14 +213,7 @@ describe("attachPipeline with an audio-only source", () => {
   });
 
   test("hands each frame a 20 ms frametime, not 0", async () => {
-    const audio = audioTrack();
-    demuxState.next = { video: undefined, audio };
-    const sink = makeSink();
-
-    const pipeline = await attach(makeConn(), makeStreamer(), {
-      type: "voice",
-      audioSink: sink,
-    });
+    const { audio, sink, pipeline } = await voiceSegment();
     audio.stream.write(opusPacket(0));
     audio.stream.write(opusPacket(20));
     audio.stream.end();
@@ -355,14 +364,7 @@ describe("attachPipeline with an audio-only source", () => {
   });
 
   test("destroy() tears the audio side down and settles done", async () => {
-    const audio = audioTrack();
-    demuxState.next = { video: undefined, audio };
-    const sink = makeSink();
-
-    const pipeline = await attach(makeConn(), makeStreamer(), {
-      type: "voice",
-      audioSink: sink,
-    });
+    const { audio, sink, pipeline } = await voiceSegment();
     audio.stream.write(opusPacket(0));
     pipeline.destroy();
     await pipeline.done;

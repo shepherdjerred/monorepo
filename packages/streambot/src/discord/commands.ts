@@ -1,7 +1,50 @@
 import {
   SlashCommandBuilder,
+  type SlashCommandSubcommandBuilder,
   type RESTPostAPIChatInputApplicationCommandsJSONBody,
 } from "discord.js";
+
+/**
+ * Options `/stream play` and `/stream playnext` share.
+ *
+ * The two subcommands take the same request, differing only in where the item lands, so their
+ * option lists have to agree — a `mode` or `sublang` added to one and forgotten on the other is a
+ * silent asymmetry a user only discovers by trying it. Declaring them once makes that impossible.
+ */
+function withRequestOptions(
+  sub: SlashCommandSubcommandBuilder,
+): SlashCommandSubcommandBuilder {
+  return sub
+    .addStringOption((o) =>
+      o
+        .setName("query")
+        .setDescription("library title, URL, or search terms")
+        .setRequired(true),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("subtitles")
+        .setDescription("Burn in subtitles (default: server setting)")
+        .addChoices({ name: "on", value: "on" }, { name: "off", value: "off" }),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("sublang")
+        .setDescription("Preferred subtitle language, e.g. en, es, en.forced"),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("mode")
+        .setDescription(
+          "Play as audio only, or as a Go Live video stream (default: auto)",
+        )
+        .addChoices(
+          { name: "auto", value: "auto" },
+          { name: "music", value: "music" },
+          { name: "video", value: "video" },
+        ),
+    );
+}
 
 /**
  * Slash command definitions. A single top-level `/stream` command with subcommands
@@ -14,33 +57,13 @@ export const commandDefinitions = [
     .setName("stream")
     .setDescription("Control the video stream")
     .addSubcommand((sub) =>
-      sub
-        .setName("play")
-        .setDescription(
-          "Queue and play a video (library title, URL, playlist, or search)",
-        )
-        .addStringOption((o) =>
-          o
-            .setName("query")
-            .setDescription("library title, URL, or search terms")
-            .setRequired(true),
-        )
-        .addStringOption((o) =>
-          o
-            .setName("subtitles")
-            .setDescription("Burn in subtitles (default: server setting)")
-            .addChoices(
-              { name: "on", value: "on" },
-              { name: "off", value: "off" },
-            ),
-        )
-        .addStringOption((o) =>
-          o
-            .setName("sublang")
-            .setDescription(
-              "Preferred subtitle language, e.g. en, es, en.forced",
-            ),
-        )
+      withRequestOptions(
+        sub
+          .setName("play")
+          .setDescription(
+            "Queue and play a video (library title, URL, playlist, or search)",
+          ),
+      )
         .addStringOption((o) =>
           o
             .setName("source")
@@ -52,18 +75,6 @@ export const commandDefinitions = [
               { name: "history", value: "history" },
               { name: "local", value: "local" },
               { name: "youtube", value: "youtube" },
-            ),
-        )
-        .addStringOption((o) =>
-          o
-            .setName("mode")
-            .setDescription(
-              "Play as audio only, or as a Go Live video stream (default: auto)",
-            )
-            .addChoices(
-              { name: "auto", value: "auto" },
-              { name: "music", value: "music" },
-              { name: "video", value: "video" },
             ),
         )
         .addStringOption((o) =>
@@ -80,43 +91,11 @@ export const commandDefinitions = [
         ),
     )
     .addSubcommand((sub) =>
-      sub
-        .setName("playnext")
-        .setDescription("Queue a video to play next (front of the queue)")
-        .addStringOption((o) =>
-          o
-            .setName("query")
-            .setDescription("library title, URL, or search terms")
-            .setRequired(true),
-        )
-        .addStringOption((o) =>
-          o
-            .setName("subtitles")
-            .setDescription("Burn in subtitles (default: server setting)")
-            .addChoices(
-              { name: "on", value: "on" },
-              { name: "off", value: "off" },
-            ),
-        )
-        .addStringOption((o) =>
-          o
-            .setName("sublang")
-            .setDescription(
-              "Preferred subtitle language, e.g. en, es, en.forced",
-            ),
-        )
-        .addStringOption((o) =>
-          o
-            .setName("mode")
-            .setDescription(
-              "Play as audio only, or as a Go Live video stream (default: auto)",
-            )
-            .addChoices(
-              { name: "auto", value: "auto" },
-              { name: "music", value: "music" },
-              { name: "video", value: "video" },
-            ),
-        ),
+      withRequestOptions(
+        sub
+          .setName("playnext")
+          .setDescription("Queue a video to play next (front of the queue)"),
+      ),
     )
     .addSubcommand((sub) =>
       sub.setName("skip").setDescription("Skip the current video"),

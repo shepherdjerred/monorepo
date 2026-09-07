@@ -5,6 +5,7 @@ import {
 } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import { voiceDisabledStreamerParts } from "./fake-streamer-voice.ts";
 import {
   GuildIdSchema,
   UserTokenSchema,
@@ -52,29 +53,7 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
       Promise.resolve({ guildId: input.guildId, channelId: input.channelId }),
     runStream: () => Promise.resolve(),
     leaveVoice: () => Promise.resolve(),
-    setVolume: () => Promise.resolve(true),
-    openAssistantAudio: () => ({
-      send: () => Promise.resolve(),
-      setSpeaking: () => {
-        /* voice is disabled in this fake */
-      },
-      close: () => {
-        /* voice is disabled in this fake */
-      },
-    }),
-    setAssistantSpeaking: () => Promise.resolve(),
-    sendAssistantOpus: () => {
-      /* voice is disabled in this fake */
-    },
-    assistantUserId: () => "200000000000000000",
-    assistantDaveReady: () => false,
-    setVoiceAudioListener: () => {
-      /* voice is disabled in this fake */
-    },
-    setVoiceReceiveObserver: () => {
-      /* voice is disabled in this fake */
-    },
-    seek: () => Promise.resolve(true),
+    ...voiceDisabledStreamerParts(),
     getPosition: () => null,
     lastVoiceCloseInfo: () => null,
     captureVoiceCloseSource: () => ({
@@ -87,7 +66,6 @@ function fakeStreamer(guilds: GuildId[], onLogin?: () => Promise<void>) {
     setStallListener: () => {
       /* pool tests never simulate stalls */
     },
-    userId: () => "200000000000000000",
     destroy: () => {
       destroyed = true;
       return Promise.resolve();

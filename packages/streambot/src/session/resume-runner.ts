@@ -1,4 +1,7 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
+import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import type { QueuedSource } from "@shepherdjerred/streambot/machine/types.ts";
+import { withMode } from "@shepherdjerred/streambot/sources/source.ts";
 import type { PlaybackInput } from "@shepherdjerred/streambot/machine/types.ts";
 import type { UserbotProvider } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import {
@@ -32,7 +35,41 @@ export type ResumeRunnerDeps = {
     message: string,
   ) => Promise<void>;
   readonly spawn: (params: SpawnParams) => Session;
+  /**
+   * Rollout gate, when the process has one. Restored items were queued by a previous binary, so
+   * their sources carry no `mode` — without re-applying the gate here they would be classified
+   * fresh on resume and could pick the voice transport in a guild the feature is off for. The flag
+   * is the rollback mechanism; a path that ignores it is a rollback that does not roll back.
+   */
+  readonly featureGate?: MediaFeatureGate;
 };
+
+/**
+ * Force restored sources to the pre-split transport when the rollout flag is off for the requester
+ * who queued them. Evaluated per item because the flag targets users, and a queue can hold items
+ * from several. Leaves the source untouched when the gate is on, so a restored song still gets
+ * classified on its merits.
+ */
+async function applyRolloutGate(
+  gate: MediaFeatureGate | undefined,
+  guildId: GuildId,
+  channelId: ChannelId,
+  queue: readonly QueuedSource[] | undefined,
+): Promise<QueuedSource[] | undefined> {
+  if (gate === undefined || queue === undefined) return queue?.slice();
+  const gated: QueuedSource[] = [];
+  for (const entry of queue) {
+    const enabled = await gate.musicOverVoice({
+      guildId,
+      channelId,
+      userId: entry.requesterId,
+    });
+    gated.push(
+      enabled ? entry : { ...entry, source: withMode(entry.source, "video") },
+    );
+  }
+  return gated;
+}
 
 /**
  * Load, decide, and respawn one persisted `(guild, channel)` session. Shared between boot
@@ -88,12 +125,21 @@ export async function resumeSession(
     await deleteState(filePath);
     return "unresumable";
   }
+  const gatedQueue = await applyRolloutGate(
+    deps.featureGate,
+    guildId,
+    channelId,
+    decision.input.initialQueue,
+  );
   const session = deps.spawn({
     guildId,
     voiceChannelId: channelId,
     statusChannelId: restored.statusChannelId,
     entry,
-    input: decision.input,
+    input:
+      gatedQueue === undefined
+        ? decision.input
+        : { ...decision.input, initialQueue: gatedQueue },
     resumeKey: decision.resumeKey,
     resumeAttempts: decision.resumeAttempts,
     seekSeconds: decision.input.initialSeekSeconds ?? 0,

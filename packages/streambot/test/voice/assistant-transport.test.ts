@@ -94,6 +94,30 @@ describe("AssistantTransport", () => {
     expect(sent).toHaveLength(2);
   });
 
+  test("a tail failure does not fail the next reply", async () => {
+    let fail = true;
+    const transport = new AssistantTransport(() =>
+      fakePort({
+        send: () =>
+          fail
+            ? Promise.reject(new Error("tail packet lost"))
+            : Promise.resolve(),
+      }),
+    );
+    // A reply whose LAST packet fails has no later send of its own to surface the latch through.
+    void transport.setSpeaking(true);
+    transport.send(PACKET);
+    await Promise.resolve();
+    await Promise.resolve();
+    void transport.setSpeaking(false);
+    // The next reply is healthy and must not inherit the previous one's failure.
+    fail = false;
+    void transport.setSpeaking(true);
+    expect(() => {
+      transport.send(PACKET);
+    }).not.toThrow();
+  });
+
   test("reset closes the port and clears a pending failure", async () => {
     let closed = 0;
     const transport = new AssistantTransport(() =>

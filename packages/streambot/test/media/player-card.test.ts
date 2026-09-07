@@ -10,33 +10,11 @@ import {
 } from "@shepherdjerred/streambot/discord/player-controls.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";
+import { playerView } from "./player-view-fixture.ts";
 
 const REQUESTER = UserIdSchema.parse("100000000000000002");
 
-const CHAPTERS = [
-  { index: 1, title: "Intro", startSeconds: 0, endSeconds: 90 },
-  { index: 2, title: "The Heist", startSeconds: 90, endSeconds: 600 },
-];
-
-function view(over: Partial<PlaybackView> = {}): PlaybackView {
-  return {
-    state: "streaming",
-    current: {
-      title: "Heat (1995)",
-      requesterId: REQUESTER,
-      chapters: CHAPTERS,
-      kind: "file",
-      mediaKind: null,
-      sourceId: "file:Heat (1995)",
-      durationSeconds: 600,
-    },
-    queue: [],
-    loop: "off",
-    volume: 100,
-    positionSeconds: 300,
-    ...over,
-  };
-}
+const view = playerView;
 
 function render(
   over: Partial<PlaybackView> = {},
