@@ -870,7 +870,7 @@
     },
     "packages/homelab/src/helm-types": {
       "name": "@shepherdjerred/helm-types",
-      "version": "1.7.0",
+      "version": "2.0.0",
       "bin": {
         "helm-types": "dist/cli.js",
       },
@@ -1289,6 +1289,7 @@
         "@prisma/client": "^7.9.1",
         "@prisma/client-runtime-utils": "7.9.1",
         "@scout-for-lol/data": "workspace:*",
+        "@scout-for-lol/domain": "workspace:*",
         "@scout-for-lol/report": "workspace:*",
         "@scout-for-lol/temporal": "workspace:*",
         "@sentry/bun": "^10.70.0",
