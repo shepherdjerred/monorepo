@@ -2,6 +2,8 @@ import { describe, expect, test } from "vitest";
 import {
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
+} from "#src/model/reports/explore-answer.ts";
+import {
   ExploreTraceEntrySchema,
   parseExploreStreamEvent,
 } from "#src/model/reports/explore.ts";
