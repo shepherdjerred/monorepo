@@ -1152,6 +1152,7 @@ steps:
         - "packages/sjer.red/**"
         - "packages/astro-opengraph-images/**"
         - "packages/webring/**"
+        - "packages/loaded/**"
         - "packages/docs/wiki/**"
         - "packages/alert-dashboard/**"
         - "packages/eslint-config/**"

@@ -273,6 +273,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   playwright: [
     ...workspacePaths,
     "config/analytics-sites.json",
+    "packages/loaded",
     ".buildkite/scripts/bun-install.sh",
     ".buildkite/scripts/selectors/select-image-targets-lockfile.ts",
     ".buildkite/scripts/selectors/select-image-targets-workspaces.ts",
