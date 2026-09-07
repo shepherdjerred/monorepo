@@ -12,7 +12,25 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.buildkite/scripts/**"]
     },
     "test:ci": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.buildkite/scripts/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.buildkite/scripts/**",
+        "$TURBO_ROOT$/packages/version-catalog/src/catalog.json",
+        "$TURBO_ROOT$/packages/tasks-for-obsidian/ios/ci_scripts/**",
+        "$TURBO_ROOT$/packages/dotfiles/dot_local/bin/executable_cf",
+        "$TURBO_ROOT$/packages/discord-plays-pokemon/Dockerfile",
+        "$TURBO_ROOT$/packages/streambot/Dockerfile",
+        "$TURBO_ROOT$/packages/homelab/src/talos/liskov/patches/image.yaml",
+        "$TURBO_ROOT$/packages/homelab/src/talos/torvalds/patches/image.yaml",
+        "$TURBO_ROOT$/packages/discord-plays-pokemon/wasm-src/upstream.json",
+        "$TURBO_ROOT$/packages/discord-plays-mario-kart/wasm-src/upstream.json",
+        "$TURBO_ROOT$/packages/discord-plays-mario-kart/Dockerfile",
+        "$TURBO_ROOT$/packages/homelab/images/redlib/Dockerfile",
+        "$TURBO_ROOT$/.buildkite/ci-playwright/Dockerfile",
+        "$TURBO_ROOT$/docker-bake.hcl",
+        "$TURBO_ROOT$/.buildkite/application-image-smoke.Dockerfile",
+        "$TURBO_ROOT$/packages/scout-for-lol/packages/backend/Dockerfile"
+      ]
     }
   }
 }
