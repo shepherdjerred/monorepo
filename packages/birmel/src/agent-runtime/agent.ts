@@ -43,7 +43,15 @@ const SessionToolEventSchema = z.strictObject({
   content: z.string().min(1).max(1024),
   success: z.boolean(),
   effectDisposition: EffectDispositionSchema.optional(),
+  // The repo-wide convention for a composite tool's discriminator: several
+  // registered tools (manage-role, get-activity-stats, external-service, ...)
+  // expose multiple operations - reads and writes alike - under one toolId
+  // via an `action` input field. Captured here, from the raw unredacted
+  // input, so requireGroundedAnswer can tell "the same tool, retried" from
+  // "the same tool, a different operation" without re-parsing inputSummary.
+  action: z.string().max(64).optional(),
 });
+const ActionInputSchema = z.object({ action: z.string().max(64) }).loose();
 
 type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
 
@@ -101,6 +109,7 @@ export function summarizeToolResultForSession(
     `Tool ${toolResult.toolName} call ${toolResult.toolCallId} ${status}; input=${inputSummary}; result=${resultSummary}`,
     1024,
   );
+  const action = ActionInputSchema.safeParse(toolResult.input);
   return SessionToolEventSchema.parse({
     toolCallId: toolResult.toolCallId,
     toolId: toolResult.toolName,
@@ -111,6 +120,7 @@ export function summarizeToolResultForSession(
     ...(toolResult.output.effectDisposition == null
       ? {}
       : { effectDisposition: toolResult.output.effectDisposition }),
+    ...(action.success ? { action: action.data.action } : {}),
   });
 }
 
@@ -188,18 +198,31 @@ export function requireGroundedAnswer(
   // can come first and the unrelated success get cited afterward, which
   // reads as "grounded" under a citation-relative check but is exactly the
   // same lie. So this ignores citation order entirely: any write, destructive,
-  // or code-execution call that fails, with no LATER call of that same tool
-  // succeeding anywhere in the turn, leaves that attempt uncorrected, and no
-  // citation of a different tool's success excuses it. A failed read is
-  // exempt - re-checking something incidental and having that check fail
-  // says nothing about whether the claimed outcome holds.
+  // or code-execution call that fails, with no LATER call succeeding anywhere
+  // in the turn, leaves that attempt uncorrected, and no citation of a
+  // different tool's success excuses it. A failed read is exempt - re-checking
+  // something incidental and having that check fail says nothing about
+  // whether the claimed outcome holds.
+  //
+  // "Later call" means the same tool AND, when the failed call carried one,
+  // the same action: a composite tool like manage-role exposes both reads and
+  // writes under one id, so a failed create is not corrected by a later list
+  // - only a later call that performed or verified that same operation
+  // counts. A tool with no action field falls back to id-only matching, the
+  // most that can be said generically about a tool this check knows nothing
+  // else about.
   const uncorrectedFailure = toolEvents.find(
     (event, index) =>
       !event.success &&
       getToolMetadata(event.toolId).riskClass !== "read" &&
       !toolEvents
         .slice(index + 1)
-        .some((later) => later.success && later.toolId === event.toolId),
+        .some(
+          (later) =>
+            later.success &&
+            later.toolId === event.toolId &&
+            (event.action === undefined || later.action === event.action),
+        ),
   );
   if (uncorrectedFailure !== undefined) {
     throw new Error(

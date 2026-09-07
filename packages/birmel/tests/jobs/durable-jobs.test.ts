@@ -1101,7 +1101,13 @@ describe("durable job recovery and scheduling", () => {
       executeAgent: async (prompt, execution) => {
         expect(prompt).toBe("summarize the thread");
         expect(execution.sessionId).toBe(session.id);
-        expect(getRequestContext()).toMatchObject(requestContext);
+        // Overridden to the resolved delivery channel (the session's thread)
+        // so the agent's own manage-message cannot also post there.
+        expect(getRequestContext()).toMatchObject({
+          ...requestContext,
+          ownsSourceReply: true,
+          sourceChannelId: session.threadId,
+        });
         return { message: "isolated result", data: { complete: true } };
       },
       deliverMessage: async (channelId, message) => {

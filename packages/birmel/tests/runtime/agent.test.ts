@@ -222,7 +222,9 @@ describe("requireGroundedAnswer", () => {
       ),
     ).not.toThrow();
   });
+});
 
+describe("requireGroundedAnswer: uncorrected failures", () => {
   const unrelatedRead = {
     toolCallId: "call-read",
     toolId: "get-activity-stats",
@@ -318,5 +320,90 @@ describe("requireGroundedAnswer", () => {
         [mutationSucceeded, laterReadFailed],
       ),
     ).not.toThrow();
+  });
+
+  const createFailed = {
+    toolCallId: "call-create",
+    toolId: "manage-role",
+    inputSummary: '{"action":"create"}',
+    resultSummary: "Tool reported failure",
+    content: "Tool manage-role call call-create failed",
+    success: false,
+    action: "create",
+  };
+  const listSucceeded = {
+    toolCallId: "call-list",
+    toolId: "manage-role",
+    inputSummary: '{"action":"list"}',
+    resultSummary: "Roles listed",
+    content: "Tool manage-role call call-list succeeded",
+    success: true,
+    action: "list",
+  };
+  const createRetrySucceeded = {
+    toolCallId: "call-create-2",
+    toolId: "manage-role",
+    inputSummary: '{"action":"create"}',
+    resultSummary: "Role created",
+    content: "Tool manage-role call call-create-2 succeeded",
+    success: true,
+    action: "create",
+  };
+
+  test("rejects a failed write corrected only by a different action of the same tool", () => {
+    // manage-role exposes both reads (list, get) and writes (create, modify,
+    // delete) under one toolId. A later list succeeding is not evidence that
+    // an earlier failed create ever happened - only a later create would be.
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Created the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-list"],
+        },
+        [createFailed, listSucceeded],
+      ),
+    ).toThrow("manage-role failed and was never retried successfully");
+  });
+
+  test("allows a failed write corrected by a later success of the same action", () => {
+    expect(() =>
+      requireGroundedAnswer(
+        {
+          answer: "Created the role.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call-create-2"],
+        },
+        [createFailed, createRetrySucceeded],
+      ),
+    ).not.toThrow();
+  });
+});
+
+describe("summarizeToolResultForSession: action capture", () => {
+  test("records the action field from a composite tool's input", () => {
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-1",
+        toolName: "manage-message",
+        input: { action: "send", channelId: "123" },
+        output: { success: true, message: "Sent" },
+      },
+      registeredToolIds,
+    );
+    expect(event.action).toBe("send");
+  });
+
+  test("leaves action undefined when the input has none", () => {
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-1",
+        toolName: "manage-message",
+        input: { channelId: "123" },
+        output: { success: true, message: "Sent" },
+      },
+      registeredToolIds,
+    );
+    expect(event.action).toBeUndefined();
   });
 });

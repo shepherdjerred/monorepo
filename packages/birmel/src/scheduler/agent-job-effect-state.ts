@@ -31,6 +31,10 @@ export function serializeAgentJobOutput(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+export function serializeCheckpointOutput(value: unknown): string {
+  return serializeAgentJobOutput(value).slice(0, 20_000);
+}
+
 export async function finalizeCheckpointedEffect(options: {
   transaction: Prisma.TransactionClient;
   job: AgentJob;
