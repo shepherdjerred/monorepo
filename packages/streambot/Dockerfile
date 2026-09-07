@@ -149,7 +149,7 @@ RUN set -e; \
 # installed at the config-default path /usr/local/bin/yt-dlp. Per-arch asset,
 # pinned checksum, retries. Independent of the app layers below.
 # renovate: datasource=github-releases depName=yt-dlp/yt-dlp
-ARG YT_DLP_VERSION=2026.07.04
+ARG YT_DLP_VERSION=2026.08.19
 RUN set -e; \
     arch="$(dpkg --print-architecture)"; \
     if [ "$arch" = "amd64" ]; then asset=yt-dlp_linux; \
@@ -161,6 +161,15 @@ RUN set -e; \
     (cd /tmp && sha256sum -c --ignore-missing SHA2-256SUMS); \
     install -D -m 0755 "/tmp/$asset" /usr/local/bin/yt-dlp; \
     rm -f "/tmp/$asset" /tmp/SHA2-256SUMS
+
+# YouTube now 403s the android_vr client yt-dlp used to reach for a muxed
+# (single-file, video+audio) format, and every other default client (web,
+# mweb, ios, tv*, visionos) only offers split video-only/audio-only streams —
+# so `-f best` (what ytdlp.ts requests) fails outright without this. android
+# is the one client left that still serves a working muxed stream; ios/web
+# are kept as fallbacks. yt-dlp reads /etc/yt-dlp.conf automatically.
+RUN printf '%s\n' '--extractor-args "youtube:player_client=android,ios,web"' \
+      > /etc/yt-dlp.conf
 
 # Production node_modules + workspace manifests. The isolated-linker tree uses
 # relative symlinks (store at node_modules/.bun), so copying the whole install
