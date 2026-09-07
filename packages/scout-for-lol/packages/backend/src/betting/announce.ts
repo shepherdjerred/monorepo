@@ -6,7 +6,6 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   RiotTeamIdSchema,
-  ZERO_BUCKS,
   type BucksMessageRefs,
   type DiscordChannelId,
   type DiscordGuildId,
@@ -288,9 +287,9 @@ function zeroSummary(matchId: string, serverId: string): SettlementSummary {
     serverId,
     winningTeamId: undefined,
     voidReason: undefined,
-    winnersPool: ZERO_BUCKS,
-    losersPool: ZERO_BUCKS,
-    houseCut: ZERO_BUCKS,
+    winnersPool: 0,
+    losersPool: 0,
+    houseCut: 0,
     bets: [],
   };
 }

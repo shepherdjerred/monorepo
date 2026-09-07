@@ -16,6 +16,7 @@ import {
   type LeaguePuuid,
   type RawMatch,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { settlementHouseCut } from "#src/betting/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
@@ -45,11 +46,18 @@ export type SettlementSummary = {
   serverId: string;
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
-  winnersPool: BucksAmount;
-  losersPool: BucksAmount;
-  houseCut: BucksAmount;
+  winnersPool: number;
+  losersPool: number;
+  houseCut: number;
   bets: SettlementBet[];
 };
+
+// Pool-level aggregates sum many bettors' Int32 positions, and matching
+// permits a side to total up to Number.MAX_SAFE_INTEGER — so, like the
+// persisted settlement ledger context, they stay unbranded and unbounded. An
+// Int32 bound here would throw a plain ZodError on a legal over-Int32 pool and
+// bypass the storage-overflow refund retry.
+const BucksPoolAggregateSchema = z.number().int().nonnegative();
 
 type PendingMatchedBet = {
   id: number;
@@ -91,9 +99,9 @@ function settleMatchedBets(input: {
   voidReason: BucksVoidReason | undefined;
 }): {
   bets: SettlementBet[];
-  winnersPool: BucksAmount;
-  losersPool: BucksAmount;
-  houseCut: BucksAmount;
+  winnersPool: number;
+  losersPool: number;
+  houseCut: number;
 } {
   const voided =
     input.voidReason !== undefined || input.winningTeamId === undefined;
@@ -153,14 +161,14 @@ function settleMatchedBets(input: {
     };
   });
 
-  const winnersPool = BucksAmountSchema.parse(
+  const winnersPool = BucksPoolAggregateSchema.parse(
     input.winningTeamId === undefined
       ? 0
       : input.rows
           .filter((row) => row.predictedTeamId === input.winningTeamId)
           .reduce((sum, row) => sum + row.matchedStake, 0),
   );
-  const losersPool = BucksAmountSchema.parse(
+  const losersPool = BucksPoolAggregateSchema.parse(
     input.winningTeamId === undefined
       ? 0
       : input.rows
@@ -171,7 +179,7 @@ function settleMatchedBets(input: {
     bets,
     winnersPool,
     losersPool,
-    houseCut: BucksAmountSchema.parse(
+    houseCut: BucksPoolAggregateSchema.parse(
       bets.reduce((sum, bet) => sum + bet.houseCut, 0),
     ),
   };

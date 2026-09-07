@@ -4,7 +4,6 @@ import {
   creditOf,
   stakeToAmount,
   subtractAmounts,
-  type BucksAmount,
   type BucksDelta,
   type BucksLedgerContext,
   type BucksPoolParticipant,
@@ -23,8 +22,10 @@ type CreditBetInput = {
   roster: readonly BucksPoolParticipant[];
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
-  winnersPool: BucksAmount;
-  losersPool: BucksAmount;
+  // Pool-level aggregates: unbounded multi-bettor sums, matching the
+  // unbranded fields in the persisted settlement ledger context.
+  winnersPool: number;
+  losersPool: number;
 };
 
 type PayoutComponent = "gross" | "principal" | "profit" | "refund";

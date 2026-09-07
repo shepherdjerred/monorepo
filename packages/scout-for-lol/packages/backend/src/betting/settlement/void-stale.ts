@@ -157,9 +157,9 @@ async function refundMatchedPool(
       serverId: pool.serverId,
       winningTeamId: undefined,
       voidReason: "expired",
-      winnersPool: ZERO_BUCKS,
-      losersPool: ZERO_BUCKS,
-      houseCut: ZERO_BUCKS,
+      winnersPool: 0,
+      losersPool: 0,
+      houseCut: 0,
       bets: settledBets,
     };
   });

@@ -632,6 +632,52 @@ describe("settlement storage bounds", () => {
       }),
     ).toEqual({ balance: BUCKS_INT32_MAX - 1 });
   });
+
+  test("refunds through the overflow path when a side's matched total exceeds Int32", async () => {
+    // Placement lets one side aggregate past Int32 (matchBucksOffers caps a
+    // team total at Number.MAX_SAFE_INTEGER), so the pool-level sums in the
+    // settlement summary must not fail Int32 validation: the per-bet payout
+    // overflow has to reach the storage-overflow refund retry instead.
+    const stake = 2_000_000_000;
+    const pool = await makePool();
+    const bettors = [];
+    for (const [index, teamId] of [
+      WINNING_TEAM,
+      WINNING_TEAM,
+      LOSING_TEAM,
+      LOSING_TEAM,
+    ].entries()) {
+      bettors.push(
+        await makeBettor({
+          poolId: pool.id,
+          discordId: bucksTestDiscordId(index + 1),
+          teamId,
+          stake,
+          startingBalance: stake,
+        }),
+      );
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary?.voidReason).toBe("storage_overflow");
+    expect(summary?.winnersPool).toBe(2 * stake);
+    expect(summary?.losersPool).toBe(2 * stake);
+    expect(summary?.houseCut).toBe(0);
+    for (const bettor of bettors) {
+      expect(
+        await db.bucksAccount.findUniqueOrThrow({
+          where: { id: bettor.account.id },
+          select: { balance: true },
+        }),
+      ).toEqual({ balance: stake });
+    }
+    expect(
+      await db.bucksMatchPool.findUniqueOrThrow({
+        where: { id: pool.id },
+        select: { poolState: true },
+      }),
+    ).toEqual({ poolState: "voided" });
+  });
 });
 
 describe("voidStaleBettingPools", () => {
