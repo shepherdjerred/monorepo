@@ -2650,3 +2650,170 @@ model DuelStatusOutbox {
 
   @@index([deliveryStatus, createdAt])
 }
+
+// =============================================================================
+// Durable match pipeline: operational facts and receipts
+//
+// Persistence for the @scout-for-lol/domain unions (match-processing,
+// notifications, recovery). Enum-shaped and JSON columns are TEXT validated by
+// the domain schemas at every read/write boundary (src/database/durable/), per
+// the provider-neutral convention above; the hand-authored migration adds
+// CHECK constraints mirroring each union's vocabulary and per-variant field
+// presence, following the InitialMatchHistoryImport precedent.
+// =============================================================================
+
+/// One row per observed Riot match. Match ownership lives here: the unique
+/// riotMatchId is the claim key, `pipelineOwner` NULL is the domain's
+/// `unowned` variant, and promotion mirrors promoteArchiveOnlyToFull — a FULL
+/// row with NULL promotedAt was born FULL and can never have been promoted.
+model MatchObservation {
+  riotMatchId      String    @id
+  platformRoute    String
+  processingPolicy String // MatchProcessingPolicy: ARCHIVE_ONLY | FULL
+  pipelineOwner    String? // LEGACY_V1 | TEMPORAL_V2; NULL = unowned
+  promotedAt       DateTime?
+  gameCreatedAt    DateTime
+  observedAt       DateTime
+
+  // Raw capture artifact references (S3 object key + SHA-256 digest, always
+  // paired). NULL means the artifact has not been stored yet.
+  matchObjectKey    String?
+  matchDigest       String?
+  timelineObjectKey String?
+  timelineDigest    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([processingPolicy, observedAt])
+  @@index([gameCreatedAt])
+}
+
+/// Association between an observation and one tracked account seen in the
+/// match. FK-by-value on riotMatchId (no relation) so ingestion can record
+/// participants before/independently of any other table. playerId/accountId
+/// are NULL when the puuid was tracked but not registered at observation time.
+model MatchTrackedAccount {
+  riotMatchId      String
+  puuid            String
+  playerId         Int?
+  accountId        Int?
+  cursorAdvancedAt DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@id([riotMatchId, puuid])
+  @@index([puuid, cursorAdvancedAt])
+}
+
+/// One durable processing receipt. `scopeKey` is receiptScopeKey(scope) from
+/// the domain — the canonical scope identity — kept alongside the split scope
+/// columns so the unique constraint has no nullable members (Postgres treats
+/// NULLs as distinct in unique indexes); a CHECK ties the two representations
+/// together. Receipt identity is (riotMatchId, kind, version, scopeKey):
+/// recordReceipt is idempotent over it regardless of timestamp or evidence.
+model MatchProcessingReceipt {
+  id             Int      @id @default(autoincrement())
+  riotMatchId    String
+  kind           String
+  version        Int
+  scopeKind      String // ReceiptScope kind: global | guild | account
+  scopeGuildId   String?
+  scopeAccountId Int?
+  scopeKey       String // receiptScopeKey(scope), e.g. "guild:123"
+  evidence       String? // JSON, opaque to SQL
+  recordedAt     DateTime
+  createdAt      DateTime @default(now())
+
+  @@unique([riotMatchId, kind, version, scopeKey])
+  @@index([kind, recordedAt])
+}
+
+/// One durable notification intent (domain NotificationIntent). The state
+/// union is flattened: `state` is the discriminant and each variant's payload
+/// lives in a dedicated column whose presence the migration CHECKs to exactly
+/// the states that carry it. `payload` is the versioned message-content
+/// envelope ({ kind, version, data }) — what to deliver, which the domain
+/// intent deliberately does not model.
+model MatchNotificationIntent {
+  intentKey   String @id
+  riotMatchId String
+  targetKind  String // NotificationTarget kind: channel | dm
+  targetId    String
+
+  state             String    @default("pending") // NotificationIntentState kind
+  attemptCount      Int       @default(0)
+  attemptNonce      String? // sending / unknown-delivery only
+  sendStartedAt     DateTime? // sending only
+  deliveredAt       DateTime? // delivered only
+  messageId         String? // delivered only (optional there)
+  suppressedReason  String? // suppressed only: stale | feature-disabled | recipient-preference
+  unknownObservedAt DateTime? // unknown-delivery only
+  lastFailure       String? // JSON NotificationFailure
+  freshnessDeadline DateTime
+  payload           String // JSON versioned codec envelope
+
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([state, freshnessDeadline])
+  @@index([riotMatchId])
+}
+
+/// One recovery batch (domain RecoveryBatch). Cursor and count columns mirror
+/// the state union's per-variant payloads, so they are nullable and CHECKed
+/// present exactly in the variant that carries them (cursor in `scanning`,
+/// counts in `processing`). workflowId is the Temporal retry-adoption business
+/// key, minted when a workflow takes the batch over.
+model MatchRecoveryBatch {
+  recoveryBatchId String  @id
+  policy          String // RecoveryPolicy: normal | stale-private-only | no-external
+  state           String  @default("planned") // RecoveryBatchState kind
+  cursorPosition  String? // scanning only, and only after the first advance
+  pagesScanned    Int? // scanning only
+  pageBudget      Int? // scanning only
+  discoveredCount Int? // processing only
+  succeededCount  Int? // processing only
+  suppressedCount Int? // processing only
+  failedCount     Int? // processing only
+  abandonReason   String? // abandoned only
+  workflowId      String? @unique
+
+  createdAt DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([state, createdAt])
+}
+
+/// A requested Temporal workflow start and its acknowledgement. Deliberately
+/// separate from ScoutTemporalWork: this records only "start requested" /
+/// "start accepted" so a crashed requester can adopt its own request by
+/// requestedWorkflowId instead of starting a duplicate workflow.
+model ScoutWorkflowStart {
+  requestedWorkflowId String    @id
+  workflowType        String
+  requestedBy         String? // operator/actor discord id; NULL for system requests
+  requestSource       String
+  inputPayload        String // JSON versioned codec envelope
+  requestedAt         DateTime
+  acceptedAt          DateTime?
+  runId               String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([workflowType, requestedAt])
+}
+
+/// Append-only operator audit trail for the durable pipeline. No update path:
+/// rows are only ever inserted and read.
+model ScoutOperatorAuditEvent {
+  id             Int      @id @default(autoincrement())
+  actorDiscordId String
+  action         String
+  subjectKind    String
+  subjectId      String
+  detail         String // JSON, opaque to SQL
+  createdAt      DateTime @default(now())
+
+  @@index([subjectKind, subjectId, createdAt])
+  @@index([actorDiscordId, createdAt])
+}
