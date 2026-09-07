@@ -19,6 +19,7 @@ import { executeList } from "#src/discord/commands/list.ts";
 import { executeTrack } from "#src/discord/commands/track.ts";
 import { executeBb } from "#src/discord/commands/bb.ts";
 import { executeScout } from "#src/discord/commands/scout.ts";
+import { executeScoutVoice } from "#src/discord/commands/scout-voice.ts";
 import { executeLobby } from "#src/discord/commands/lobby.ts";
 
 const logger = createLogger("discord-commands");
@@ -69,9 +70,17 @@ export async function handleChatInputCommand(
       case "bb":
         await executeBb(interaction);
         break;
-      case "scout":
+      case "scout": {
+        // The voice subcommands are their own module: they share the /scout
+        // name for discoverability, not the Explore ask flow.
+        const subcommand = interaction.options.getSubcommand(false);
+        if (subcommand === "join" || subcommand === "leave") {
+          await executeScoutVoice(interaction, subcommand);
+          break;
+        }
         await executeScout(interaction);
         break;
+      }
       case "lobby":
         await executeLobby(interaction);
         break;

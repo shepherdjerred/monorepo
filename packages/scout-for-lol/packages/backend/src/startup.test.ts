@@ -62,6 +62,35 @@ describe("backend startup", () => {
     await runtime.shutdownHttpServer();
   });
 
+  test("bootstraps the voice assistant after assets and before Discord", async () => {
+    const calls: string[] = [];
+    const runtime = await runBackendStartup({
+      validateChampionAssets: async () => {
+        calls.push("champion-assets");
+      },
+      bootstrapVoiceAssistant: async () => {
+        calls.push("voice-assistant");
+      },
+      startHttpServer: async () => {
+        calls.push("http-server");
+        return { shutdownHttpServer: () => Promise.resolve() };
+      },
+      startDiscord: async () => {
+        calls.push("discord");
+      },
+    });
+
+    // Fatal voice-model verification must land before the gateway connects, so
+    // a voice-enabled pod is never reachable while half-deaf.
+    expect(calls).toEqual([
+      "champion-assets",
+      "voice-assistant",
+      "discord",
+      "http-server",
+    ]);
+    await runtime.shutdownHttpServer();
+  });
+
   test("propagates asset-validation failure before health or Discord start", async () => {
     const assetFailure = new Error("champion asset missing");
     const startHttpServer = vi.fn(async () => ({

@@ -22,6 +22,7 @@ import {
   setDiscordGatewayState,
 } from "#src/metrics/discord-gateway-health.ts";
 import { voiceManager } from "#src/voice/index.ts";
+import { getVoiceAssistantManager } from "#src/voice-assistant/manager.ts";
 import { createLogger } from "#src/logger.ts";
 import { addDynamicConfigRefreshListener } from "#src/config/dynamic.ts";
 
@@ -73,7 +74,53 @@ export const DISCORD_EVENT_NAMES = [
   Events.ClientReady,
   Events.GuildCreate,
   Events.GuildDelete,
+  Events.VoiceStateUpdate,
 ] as const;
+
+export type GuildConfigRefreshDependencies = {
+  readonly sweepDisabledVoiceSessions: () => Promise<void>;
+  readonly reconcileCommands: (guildIds: Iterable<string>) => Promise<void>;
+};
+
+function defaultGuildConfigRefreshDependencies(): GuildConfigRefreshDependencies {
+  return {
+    sweepDisabledVoiceSessions: () =>
+      getVoiceAssistantManager().closeDisabledGuildSessions(),
+    reconcileCommands: (guildIds) => reconcileGuildScopedCommands(guildIds),
+  };
+}
+
+/**
+ * The dynamic-config refresh body: reconcile per-guild commands and sweep
+ * flag-disabled voice sessions as two INDEPENDENT operations.
+ *
+ * A non-50001 Discord REST failure in command reconciliation rethrows (see
+ * `discord/rest.ts`), and sequencing the sweep after it would then skip the
+ * sweep for as long as that REST call keeps failing — an active session in a
+ * flag-disabled guild must stop receiving audio regardless of an unrelated
+ * command-registration outage. The sweep runs first since stopping capture is
+ * the more time-sensitive of the two; reconciliation still removes `/scout
+ * leave` from the guild's picker on its own success. Each failure is logged
+ * rather than rethrown, so one operation's error can never suppress the
+ * other's — and `notifyRefreshListeners` iterates every registered listener
+ * without its own per-listener try/catch, so an uncaught rejection here would
+ * also stop any later-registered refresh listener from running this cycle.
+ */
+export async function runGuildConfigRefresh(
+  guildIds: Iterable<string>,
+  dependencies: GuildConfigRefreshDependencies = defaultGuildConfigRefreshDependencies(),
+): Promise<void> {
+  try {
+    await dependencies.sweepDisabledVoiceSessions();
+  } catch (error) {
+    logger.error("voice flag-disable session sweep failed", { error });
+  }
+  try {
+    await dependencies.reconcileCommands(guildIds);
+  } catch (error) {
+    logger.error("guild command reconciliation failed", { error });
+  }
+}
 
 async function registerConnectedGuildCommands(
   guildIds: Iterable<string>,
@@ -241,7 +288,7 @@ export function registerDiscordEventHandlers(target: Client): void {
 
     removeDynamicConfigRefreshListener ??= addDynamicConfigRefreshListener(
       async () => {
-        await reconcileGuildScopedCommands(target.guilds.cache.keys());
+        await runGuildConfigRefresh(target.guilds.cache.keys());
       },
     );
 
@@ -260,6 +307,13 @@ export function registerDiscordEventHandlers(target: Client): void {
     logger.info(`[Guild Delete] Bot removed from server: ${guild.name}`);
     discordGuildsGauge.set(target.guilds.cache.size);
     void handleGuildDelete(guild);
+  });
+
+  // Voice-assistant auto-leave: when the session's channel holds no non-bot
+  // members any more, nobody consented to being listened to. The manager
+  // ignores guilds without an active session, so this stays a cheap check.
+  target.on(Events.VoiceStateUpdate, (_oldState, newState) => {
+    getVoiceAssistantManager().handleVoiceStateUpdate(newState.guild.id);
   });
 }
 

@@ -12,6 +12,7 @@ type HttpServerRuntime = {
 
 type BackendStartupDependencies = {
   readonly validateChampionAssets: () => Promise<void>;
+  readonly bootstrapVoiceAssistant?: () => Promise<void>;
   readonly ensureReportLakeReady?: () => Promise<void>;
   readonly startHttpServer: () => Promise<HttpServerRuntime>;
   readonly startDiscord: () => Promise<void>;
@@ -23,6 +24,13 @@ export async function runBackendStartup(
   dependencies: BackendStartupDependencies,
 ): Promise<HttpServerRuntime> {
   await dependencies.validateChampionAssets();
+  // Fatal when voice is enabled and the pinned assets fail verification, a
+  // deliberate boot gate exactly like the champion assets above — and before
+  // Discord starts, so a voice-enabled pod is never briefly reachable while
+  // half-deaf.
+  if (dependencies.bootstrapVoiceAssistant !== undefined) {
+    await dependencies.bootstrapVoiceAssistant();
+  }
   if (dependencies.ensureReportLakeReady !== undefined) {
     await dependencies.ensureReportLakeReady();
   }
@@ -47,11 +55,17 @@ export async function startBackendRuntime(): Promise<
   HttpServerRuntime & {
     readonly shutdownTemporal: () => Promise<void>;
     readonly shutdownDiscord: () => Promise<void>;
+    readonly shutdownVoiceAssistant: () => Promise<void>;
   }
 > {
   let temporalSupervisor: ScoutTemporalSupervisor | undefined;
   const httpRuntime = await runBackendStartup({
     validateChampionAssets,
+    bootstrapVoiceAssistant: async () => {
+      const { bootstrapVoiceAssistant } =
+        await import("#src/voice-assistant/runtime.ts");
+      await bootstrapVoiceAssistant();
+    },
     ensureReportLakeReady: async () => {
       if (!configuration.enableBackgroundJobs) {
         return;
@@ -122,6 +136,16 @@ export async function startBackendRuntime(): Promise<
     shutdownDiscord: async () => {
       const { stopDiscordGateway } = await import("#src/discord/bootstrap.ts");
       stopDiscordGateway();
+    },
+    // Ends every active Hey Scout session: aborts in-flight Realtime turns,
+    // closes receiver streams, cancels inactivity timers, and records the
+    // "shutdown" lifecycle reason. Called separately from `shutdownDiscord`
+    // (and by the caller, before it) so a session cannot keep receiving
+    // audio and running OpenAI turns through the rest of the drain.
+    shutdownVoiceAssistant: async () => {
+      const { getVoiceAssistantManager } =
+        await import("#src/voice-assistant/manager.ts");
+      getVoiceAssistantManager().closeAll();
     },
   };
 }

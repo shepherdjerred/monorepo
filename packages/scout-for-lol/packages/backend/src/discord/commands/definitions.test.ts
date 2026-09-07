@@ -3,6 +3,7 @@ import { ApplicationIntegrationType, InteractionContextType } from "discord.js";
 import {
   baseCommandDefinitions,
   globalCommandPayload,
+  guildCommandPayload,
   guildScopedCommandGroups,
 } from "#src/discord/commands/definitions.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
@@ -57,12 +58,15 @@ describe("registered Discord commands", () => {
       "list",
       "scout",
     ]);
-    expect(payload.find((command) => command.name === "scout")).toEqual(
+    const scout = payload.find((command) => command.name === "scout");
+    expect(scout).toEqual(
       expect.objectContaining({
         contexts: [InteractionContextType.Guild],
         integration_types: [ApplicationIntegrationType.GuildInstall],
       }),
     );
+    // Voice is beta-only: the production global /scout never carries it.
+    expect(scout?.options?.map((option) => option.name)).toEqual(["ask"]);
   });
 
   test("keeps beta-only commands out of the global surface", () => {
@@ -90,7 +94,12 @@ describe("registered Discord commands", () => {
       ]),
     );
     expect(byCommand.get("bb")?.length).toBeGreaterThan(0);
-    expect(byCommand.get("scout")).toEqual(["100000000000000001"]);
+    // The /scout registration set is the union of its per-feature gates: the
+    // Explore allowlist plus every voice_assistant_enabled guild.
+    expect(byCommand.get("scout")).toEqual([
+      "100000000000000001",
+      ...listGuildsWithFlagEnabled("voice_assistant_enabled"),
+    ]);
   });
 
   test("defines /scout ask with the Explore question bounds", () => {
@@ -100,7 +109,7 @@ describe("registered Discord commands", () => {
     expect(scout).toEqual(
       expect.objectContaining({
         name: "scout",
-        options: [
+        options: expect.arrayContaining([
           expect.objectContaining({
             name: "ask",
             options: [
@@ -112,18 +121,9 @@ describe("registered Discord commands", () => {
               }),
             ],
           }),
-        ],
+        ]),
       }),
     );
-  });
-
-  test("keeps global-only fields out of beta's guild /scout payload", () => {
-    const scout = guildScopedCommandGroups
-      .flatMap((group) => group.payload)
-      .find((command) => command.name === "scout");
-    const wirePayload = JSON.stringify(scout);
-    expect(wirePayload).not.toContain('"contexts"');
-    expect(wirePayload).not.toContain('"integration_types"');
   });
 
   test("registers no /bb ask subcommand — analysis lives in /scout ask", () => {
@@ -233,5 +233,68 @@ describe("registered Discord commands", () => {
     for (const absent of ["redeem", "redemption", "donate", "burn", "claim"]) {
       expect(serialized).not.toContain(`"name":"${absent}"`);
     }
+  });
+});
+
+describe("guild /scout payload merge", () => {
+  test("defines /scout join and /scout leave without options", () => {
+    const scout = guildScopedCommandGroups
+      .flatMap((group) => group.payload)
+      .find((command) => command.name === "scout");
+    const names = scout?.options?.map((option) => option.name);
+    expect(names).toEqual(["ask", "join", "leave"]);
+  });
+
+  test("keeps global-only fields out of beta's guild /scout payload", () => {
+    const scout = guildScopedCommandGroups
+      .flatMap((group) => group.payload)
+      .find((command) => command.name === "scout");
+    const wirePayload = JSON.stringify(scout);
+    expect(wirePayload).not.toContain('"contexts"');
+    expect(wirePayload).not.toContain('"integration_types"');
+  });
+
+  test("merges per-feature gates into one per-guild /scout payload", async () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "100000000000000001";
+    resetConfigurationForTests();
+
+    // Explore-only guild: /scout carries ask alone — no dead voice entries.
+    const exploreOnly = await guildCommandPayload("100000000000000001");
+    const exploreScout = exploreOnly.find(
+      (command) => command.name === "scout",
+    );
+    expect(exploreScout?.options?.map((option) => option.name)).toEqual([
+      "ask",
+    ]);
+
+    // Voice-flag guild (also Explore-allowlisted? not here): join/leave only.
+    const voiceGuild = listGuildsWithFlagEnabled("voice_assistant_enabled")[0];
+    if (voiceGuild === undefined) {
+      throw new Error("voice_assistant_enabled must target the beta guild");
+    }
+    const voiceOnly = await guildCommandPayload(voiceGuild);
+    const voiceScout = voiceOnly.find((command) => command.name === "scout");
+    expect(voiceScout?.options?.map((option) => option.name)).toEqual([
+      "join",
+      "leave",
+    ]);
+
+    // Both gates on: the full merge, ask first.
+    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = voiceGuild;
+    resetConfigurationForTests();
+    const merged = await guildCommandPayload(voiceGuild);
+    const mergedScout = merged.find((command) => command.name === "scout");
+    expect(mergedScout?.options?.map((option) => option.name)).toEqual([
+      "ask",
+      "join",
+      "leave",
+    ]);
+
+    // Neither gate: no /scout registration at all.
+    Bun.env["EXPLORE_GUILD_ALLOWLIST"] = "";
+    resetConfigurationForTests();
+    const neither = await guildCommandPayload("300000000000000003");
+    expect(neither.map((command) => command.name)).not.toContain("scout");
   });
 });

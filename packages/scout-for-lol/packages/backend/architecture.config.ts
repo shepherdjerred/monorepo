@@ -58,6 +58,7 @@ const layers = [
   "trpc",
   "utils",
   "voice",
+  "voice-assistant",
 ];
 
 /**
