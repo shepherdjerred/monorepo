@@ -53,6 +53,17 @@ describe("VersionResponseSchema", () => {
     });
   });
 
+  test("lifts a raw bake number from an older backend image", () => {
+    expect(
+      VersionResponseSchema.parse({
+        version: "14999",
+        gitSha: "abcdef1234567890",
+        contractHash: "cafebabe",
+        canViewContractMismatch: true,
+      }),
+    ).toMatchObject({ version: "2.0.0-14999" });
+  });
+
   test("rejects a payload missing the hash", () => {
     expect(
       VersionResponseSchema.safeParse({

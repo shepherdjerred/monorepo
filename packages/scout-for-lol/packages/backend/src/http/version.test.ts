@@ -41,6 +41,19 @@ describe("versionBody", () => {
       contractHash: "cafebabe",
     });
   });
+
+  test("lifts a raw bake number to 2.0.0-<build>", () => {
+    setBuildEnv({
+      VERSION: "14999",
+      GIT_SHA: "abcdef1234567890",
+      CONTRACT_HASH: "cafebabe",
+    });
+    expect(versionBody()).toEqual({
+      version: "2.0.0-14999",
+      gitSha: "abcdef1234567890",
+      contractHash: "cafebabe",
+    });
+  });
 });
 
 describe("handleVersion", () => {

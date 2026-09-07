@@ -174,8 +174,10 @@ async function buildSite(
   const env: Record<string, string> = {
     VITE_SENTRY_RELEASE: identity,
     PUBLIC_SENTRY_RELEASE: identity,
-    VITE_APP_VERSION: identity,
-    PUBLIC_APP_VERSION: identity,
+    // Footer / mismatch chip: 2.0.0-<build>. Sentry and the archive keep
+    // `identity` (scout-site@sha256:…), which is the content-addressed id.
+    VITE_APP_VERSION: state.version,
+    PUBLIC_APP_VERSION: state.version,
     VITE_GIT_SHA: sourceCommit,
     PUBLIC_GIT_SHA: sourceCommit,
     VITE_CONTRACT_HASH: await contractHash(),

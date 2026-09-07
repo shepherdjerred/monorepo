@@ -78,7 +78,9 @@ function versionCatalogSource(name: string, value: string): string {
 
 test("strict Scout release state binds version to build number", () => {
   const state = parseScoutReleaseState(stateJson());
+  expect(state.version).toBe("2.0.0-42");
   expect(siteReleaseIdentity(state)).toBe(`scout-site@${DIGEST}`);
+  expect(siteReleaseIdentity(state)).not.toBe(state.version);
   expect(() =>
     parseScoutReleaseState(stateJson({ version: "2.0.0-41" })),
   ).toThrow("does not match");
