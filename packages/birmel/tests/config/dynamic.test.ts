@@ -65,6 +65,6 @@ describe("Birmel dynamic config", () => {
       provider: new StaticProvider({ "birmel-agent-max-steps": "four" }),
     });
 
-    expect(config.agent.maxSteps).toBe(8);
+    expect(config.agent.maxSteps).toBe(12);
   });
 });

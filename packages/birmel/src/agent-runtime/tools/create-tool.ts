@@ -189,7 +189,6 @@ export function createTool<
           span.setAttribute("tool.duration_ms", performance.now() - startedAt);
           logger.info("Birmel tool call completed", {
             toolId: metadata.id,
-            specialist: metadata.specialist,
             riskClass: metadata.riskClass,
             durationMs: performance.now() - startedAt,
           });
@@ -202,7 +201,6 @@ export function createTool<
           );
           logger.error("Birmel tool call failed", error, {
             toolId: metadata.id,
-            specialist: metadata.specialist,
             riskClass: metadata.riskClass,
             errorClass: error instanceof Error ? error.name : "UnknownError",
           });

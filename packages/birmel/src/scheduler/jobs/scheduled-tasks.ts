@@ -7,7 +7,10 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
 import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
-import { serializeAgentJobOutput } from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
+import {
+  createEffectCheckpoint,
+  serializeCheckpointOutput,
+} from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
 import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
 import {
   parseJsonRecord,
@@ -80,10 +83,6 @@ function requireSuccessfulDelivery(delivery: unknown) {
     );
   }
   return parsedDelivery;
-}
-
-function serializeCheckpointOutput(value: unknown): string {
-  return serializeAgentJobOutput(value).slice(0, 20_000);
 }
 
 async function beginExternalEffect(
@@ -258,7 +257,6 @@ const defaultRuntimeDependencies: AgentJobRuntimeDependencies = {
   executeAgent: executeUnconfiguredAgent,
   deliverMessage: deliverDiscordMessage,
 };
-
 let runtimeDependencies = defaultRuntimeDependencies;
 
 export function configureAgentJobRuntime(
@@ -422,20 +420,29 @@ async function executeAgentPayload(
     throw new Error("agentPrompt is required for agent jobs");
   }
   const agentPrompt = job.agentPrompt;
-  const effectState: {
-    acquiredByTool: boolean;
-    checkpoint: Promise<void> | null;
-  } = { acquiredByTool: false, checkpoint: null };
-  const beforeExternalEffect = async () => {
-    effectState.checkpoint ??= beginExternalEffect(execution);
-    await effectState.checkpoint;
-    effectState.acquiredByTool = true;
+  // allTools gives the agent manage-message now; block it from posting here.
+  const channelId = await deliveryChannelFor(job);
+  const { effectState, beforeExternalEffect } = createEffectCheckpoint(() =>
+    beginExternalEffect(execution),
+  );
+  // channelId (resolved delivery channel) can differ from the job's original
+  // source channel. Both the guard tools check and the model's own prompt
+  // context must agree on it, or a reply to the original channel slips past
+  // enforceSingleRuntimeReply and becomes a second, unintended message.
+  const requestContext = {
+    ...execution.requestContext,
+    beforeExternalEffect,
+    ownsSourceReply: true,
+    sourceChannelId: channelId,
   };
   const result = AgentExecutionResultSchema.parse(
     await runWithRequestContext(
-      { ...execution.requestContext, beforeExternalEffect },
+      requestContext,
       async () =>
-        await runtimeDependencies.executeAgent(agentPrompt, execution),
+        await runtimeDependencies.executeAgent(agentPrompt, {
+          ...execution,
+          requestContext,
+        }),
     ),
   );
   const resultData = z
@@ -448,7 +455,6 @@ async function executeAgentPayload(
   if (resultData.effectDisposition != null) {
     throw new Error(result.message);
   }
-  const channelId = await deliveryChannelFor(job);
   if (!effectState.acquiredByTool) {
     effectState.checkpoint ??= beginExternalEffect(execution);
     await effectState.checkpoint;

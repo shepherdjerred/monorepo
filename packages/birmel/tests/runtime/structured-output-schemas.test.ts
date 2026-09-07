@@ -4,7 +4,7 @@ import {
   createOpenRouterRuntime,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
-import { RouteDecisionSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
+import { TurnAnswerSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { ExtractionSchema } from "@shepherdjerred/birmel/agent-runtime/memory-extraction.ts";
 import { ClassificationSchema } from "@shepherdjerred/birmel/discord/should-respond-classifier.ts";
 
@@ -67,11 +67,10 @@ describe("Birmel provider structured-output schemas", () => {
     const responses = [
       JSON.stringify({ shouldRespond: false, reason: null }),
       JSON.stringify({
-        route: "direct",
+        answer: "No registered tool can do that.",
         disposition: "unsupported",
-        primaryToolId: null,
-        confidence: 1,
-        rationale: "No registered capability",
+        reliedOnToolCallIds: [],
+        performedMutation: false,
       }),
       JSON.stringify({ humanClaims: [], selfMemories: [] }),
     ];
@@ -107,10 +106,10 @@ describe("Birmel provider structured-output schemas", () => {
     });
     await generateValidatedObject(runtime, {
       model: "gpt-5.6-luna",
-      schema: RouteDecisionSchema,
-      schemaName: "birmel_route_decision",
-      prompt: "Route.",
-      workload: "schema-test.route",
+      schema: TurnAnswerSchema,
+      schemaName: "birmel_turn_answer",
+      prompt: "Answer.",
+      workload: "schema-test.answer",
     });
     await generateValidatedObject(runtime, {
       model: "gpt-5.6-luna",

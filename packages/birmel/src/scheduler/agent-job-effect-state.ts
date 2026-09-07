@@ -31,6 +31,36 @@ export function serializeAgentJobOutput(value: unknown): string {
   return typeof value === "string" ? value : JSON.stringify(value);
 }
 
+export function serializeCheckpointOutput(value: unknown): string {
+  return serializeAgentJobOutput(value).slice(0, 20_000);
+}
+
+export type EffectCheckpointState = {
+  acquiredByTool: boolean;
+  checkpoint: Promise<void> | null;
+};
+
+/**
+ * A checkpoint a tool can acquire mid-run (beforeExternalEffect) or, if no
+ * tool ever did, the caller acquires itself once the run finishes - either
+ * way exactly once, via the shared `checkpoint` promise both paths read.
+ */
+export function createEffectCheckpoint(begin: () => Promise<void>): {
+  effectState: EffectCheckpointState;
+  beforeExternalEffect: () => Promise<void>;
+} {
+  const effectState: EffectCheckpointState = {
+    acquiredByTool: false,
+    checkpoint: null,
+  };
+  const beforeExternalEffect = async () => {
+    effectState.checkpoint ??= begin();
+    await effectState.checkpoint;
+    effectState.acquiredByTool = true;
+  };
+  return { effectState, beforeExternalEffect };
+}
+
 export async function finalizeCheckpointedEffect(options: {
   transaction: Prisma.TransactionClient;
   job: AgentJob;

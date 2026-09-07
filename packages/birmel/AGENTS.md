@@ -6,16 +6,21 @@ the architecture and capability surface.
 ## Turn and authority boundaries
 
 - The only turn pipeline is admission and restart-safe `AgentRun` dedup,
-  `ContextBundle`, capability-grounded routing, at most one specialist, one
-  edited Discord reply, then curated memory extraction.
+  `ContextBundle`, one agent with every registered tool, one edited Discord
+  reply, then curated memory extraction. There is no pre-flight router: the
+  agent may change approach mid-turn, and that is the point.
 - Only configured trusted users may trigger the bot or any tool. Guild, channel,
   and actor identity come from `RequestContext`, never model arguments.
-- The router returns one of `conversation`, `supported`, or `unsupported`.
-  Supported routes name a registered primary tool owned by that specialist.
+- The agent reports `conversation`, `supported`, or `unsupported` as an outcome
+  when the turn ends, never as an up-front classification. Every tool call it
+  cites in `reliedOnToolCallIds` must have actually succeeded; that check
+  (`requireGroundedAnswer`) is the anti-hallucination gate and must not be
+  weakened. Missing capability is an honest limitation, not a safety refusal.
 - One source message gets one placeholder and one final edit. Source-channel
   tools must not send a second final response.
 - Keep stable tool IDs and Zod schemas. Validate model-facing tool results.
-  Missing capability is an honest limitation, not a fabricated safety refusal.
+  Tool metadata and the executable registry must stay identical; startup calls
+  `getCapabilityCatalog` and refuses to boot on a mismatch.
 
 ## Context, memory, and jobs
 

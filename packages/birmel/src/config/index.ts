@@ -63,13 +63,13 @@ function loadCoreConfig(environment: Environment) {
       enabled: environment["IMAGE_GENERATION_ENABLED"] === "true",
     },
     agent: {
-      maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 8),
+      maxSteps: parseNumber(environment["AGENT_MAX_STEPS"], 12),
       responseTimeoutMs: parseNumber(
         environment["AGENT_RESPONSE_TIMEOUT_MS"],
-        120_000,
+        300_000,
       ),
-      routerTimeoutMs: parseNumber(
-        environment["AGENT_ROUTER_TIMEOUT_MS"],
+      auxiliaryTimeoutMs: parseNumber(
+        environment["AGENT_AUXILIARY_TIMEOUT_MS"],
         30_000,
       ),
     },

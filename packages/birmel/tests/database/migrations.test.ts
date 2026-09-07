@@ -42,6 +42,13 @@ const REMOVE_EDITOR_AND_MUSIC_MIGRATION_URL = new URL(
 const REMOVE_EDITOR_AND_MUSIC_SQL = await Bun.file(
   REMOVE_EDITOR_AND_MUSIC_MIGRATION_URL,
 ).text();
+const AGENT_TURN_OUTCOME_MIGRATION_URL = new URL(
+  "../../prisma/migrations/20260906010000_agent_turn_outcome/migration.sql",
+  import.meta.url,
+);
+const AGENT_TURN_OUTCOME_SQL = await Bun.file(
+  AGENT_TURN_OUTCOME_MIGRATION_URL,
+).text();
 
 const FINAL_TABLES = [
   "AgentJob",
@@ -216,8 +223,11 @@ function expectFinalSchema(
     "sourceDiscordMessageIds",
   );
   expect(tableColumns(database, "AgentRun")).toEqual(
-    expect.arrayContaining(["routeDisposition", "primaryToolId"]),
+    expect.arrayContaining(["routeDisposition", "toolCallCount"]),
   );
+  // The router is gone, so a turn is never assigned one of these up front.
+  expect(tableColumns(database, "AgentRun")).not.toContain("route");
+  expect(tableColumns(database, "AgentRun")).not.toContain("primaryToolId");
 
   const foreignKeyViolations = database
     .query<Record<string, unknown>, []>("PRAGMA foreign_key_check")
@@ -784,6 +794,7 @@ describe("Birmel database migrations", () => {
         database.run(RUNTIME_SQL);
         database.run(ROUTE_CAPABILITY_SQL);
         database.run(REMOVE_EDITOR_AND_MUSIC_SQL);
+        database.run(AGENT_TURN_OUTCOME_SQL);
         expectFinalSchema(database, false);
 
         const agentRunColumns = tableColumns(database, "AgentRun");

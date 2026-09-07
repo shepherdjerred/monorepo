@@ -7,7 +7,7 @@ import {
   type MemoryCandidate,
   type TurnInput,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
-import type { AgentExecutionResult } from "@shepherdjerred/birmel/agent-runtime/specialists.ts";
+import type { AgentExecutionResult } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
