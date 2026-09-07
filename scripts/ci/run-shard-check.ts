@@ -86,6 +86,7 @@ const CHECK_GLOBAL_INPUTS: Record<CheckName, readonly string[]> = {
   prettier: [
     "bun.lock",
     "package.json",
+    ".gitignore",
     ".prettierignore",
     ".prettierrc.json",
     "scripts/lib/run.ts",
@@ -140,7 +141,10 @@ export function changedFilesForShard(
     changed.some((file) => CHECK_GLOBAL_INPUTS[check].includes(file)) ||
     (check === "prettier" &&
       changed.some(
-        (file) => file === ".editorconfig" || file.endsWith("/.editorconfig"),
+        (file) =>
+          file === ".editorconfig" ||
+          file.endsWith("/.editorconfig") ||
+          file === ".gitignore",
       )) ||
     (check === "line-endings" &&
       changed.some(

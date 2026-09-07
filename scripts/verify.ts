@@ -75,11 +75,14 @@ async function validateBaseWithGit(
 async function readChangedFilesWithGit(
   base: string,
 ): Promise<readonly string[] | undefined> {
-  const child = Bun.spawn(["git", "diff", "--name-only", base, "HEAD"], {
-    stdin: "ignore",
-    stdout: "pipe",
-    stderr: "inherit",
-  });
+  const child = Bun.spawn(
+    ["git", "diff", "--no-renames", "--name-only", base, "HEAD"],
+    {
+      stdin: "ignore",
+      stdout: "pipe",
+      stderr: "inherit",
+    },
+  );
   const [exitCode, output] = await Promise.all([
     child.exited,
     new Response(child.stdout).text(),
