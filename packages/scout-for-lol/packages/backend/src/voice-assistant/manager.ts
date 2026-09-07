@@ -199,6 +199,19 @@ export class VoiceAssistantManager {
   }
 
   /**
+   * Snapshot this guild's cancellation ticket for a caller that must itself
+   * await gates (flag lookup, deferred reply) before it can call `join()`.
+   * Those awaits happen entirely before `join()` is ever invoked, so they
+   * sit outside the queue's own epoch protection — a `/scout leave` landing
+   * in that gap would otherwise be invisible to the join that follows.
+   * Capture this as the first synchronous step, before any such await, and
+   * pass it to `join()`'s `expectedEpoch` parameter.
+   */
+  captureJoinEpoch(guildId: string): number {
+    return this.currentEpoch(guildId);
+  }
+
+  /**
    * Join the requester's voice channel and start listening. The caller has
    * already answered the user boundaries (flag, runtime, channel membership);
    * an unavailable runtime here is a broken internal contract.
@@ -208,10 +221,17 @@ export class VoiceAssistantManager {
    * and the second map write would strand the first session's lifecycle,
    * bridge, and inactivity timer un-closed — with that stale timer later able
    * to end the newer session. The second caller simply runs after the first.
+   *
+   * @param expectedEpoch From `captureJoinEpoch()`, taken before the
+   * caller's own pre-`join()` awaits. A mismatch means a
+   * leave/flag-disable/newer-join ended this guild's session during that
+   * gap — cancel exactly as if this request had been sitting in the queue
+   * the whole time.
    */
   async join(
     guildId: DiscordGuildId,
     channelId: string,
+    expectedEpoch?: number,
   ): Promise<VoiceJoinOutcome> {
     if (this.closed) {
       // `closeAll()` is a one-time sweep of what exists AT THAT MOMENT; a
@@ -222,6 +242,19 @@ export class VoiceAssistantManager {
       logger.info("voice assistant join refused: manager is shutting down", {
         guildId,
       });
+      return "cancelled";
+    }
+    if (
+      expectedEpoch !== undefined &&
+      this.currentEpoch(guildId) !== expectedEpoch
+    ) {
+      // Nothing has been committed to yet at this point (no rejoin
+      // teardown, no pendingJoinChannels entry) — unlike the checks inside
+      // `performJoin`, there is nothing of this attempt's own to leave.
+      logger.info(
+        "voice assistant join cancelled: the guild's session ended before this request entered the queue",
+        { guildId },
+      );
       return "cancelled";
     }
     const enqueuedEpoch = this.currentEpoch(guildId);

@@ -35,7 +35,7 @@ type ScoutVoiceDependencies = {
   isRuntimeAvailable: () => boolean;
   manager: () => Pick<
     VoiceAssistantManager,
-    "join" | "leave" | "isActive" | "activeChannelId"
+    "join" | "leave" | "isActive" | "activeChannelId" | "captureJoinEpoch"
   >;
   /** The requester's current voice channel in this guild, if any. */
   memberVoiceChannelId: (
@@ -107,6 +107,11 @@ export async function executeScoutVoice(
     return;
   }
 
+  // Captured BEFORE the flag lookup below — the first async gate on the join
+  // path — so a `/scout leave` that lands during that await (or the deferred
+  // reply further down) is not invisible to the `join()` call at the end of
+  // this function. See `captureJoinEpoch()`.
+  const joinEpoch = manager.captureJoinEpoch(guildId.data);
   if (!(await dependencies.isVoiceEnabledForGuild(guildId.data))) {
     await replyPrivate(
       interaction,
@@ -145,7 +150,7 @@ export async function executeScoutVoice(
   // acknowledge first and edit the deferred reply after the join. A join
   // failure after this point lands in the dispatcher's deferred-error path.
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const outcome = await manager.join(guildId.data, channelId);
+  const outcome = await manager.join(guildId.data, channelId, joinEpoch);
   if (outcome === "cancelled") {
     // A leave/flag-disable/empty-channel-check/shutdown ended this guild's
     // session (or this very request, still queued) before Scout ever

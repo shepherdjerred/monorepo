@@ -14,6 +14,13 @@ type HarnessOptions = {
   activeChannelId?: string | undefined;
   leaveResult?: boolean;
   joinOutcome?: "joined" | "cancelled";
+  /**
+   * Simulates a `/scout leave` landing while the flag lookup below is still
+   * pending — the real manager bumps its per-guild epoch on every teardown,
+   * even a no-op leave. `join()`'s `expectedEpoch` mismatch check is what
+   * must turn this into a cancellation instead of a silent join.
+   */
+  leaveDuringFlagCheck?: boolean;
 };
 
 function voiceHarness(options: HarnessOptions = {}) {
@@ -22,6 +29,7 @@ function voiceHarness(options: HarnessOptions = {}) {
   const events: string[] = [];
   const joins: { guildId: string; channelId: string }[] = [];
   const leaves: string[] = [];
+  let epoch = 0;
   const interaction = {
     guildId: GUILD,
     user: { id: "user-1" },
@@ -41,15 +49,23 @@ function voiceHarness(options: HarnessOptions = {}) {
     },
   };
   const dependencies = {
-    isVoiceEnabledForGuild: () => Promise.resolve(options.flagEnabled ?? true),
+    isVoiceEnabledForGuild: async () => {
+      if (options.leaveDuringFlagCheck) epoch++;
+      return options.flagEnabled ?? true;
+    },
     isRuntimeAvailable: () => options.runtimeAvailable ?? true,
     manager: () => ({
-      join: (guildId: string, channelId: string) => {
+      captureJoinEpoch: () => epoch,
+      join: (guildId: string, channelId: string, expectedEpoch?: number) => {
         events.push("join");
         joins.push({ guildId, channelId });
+        if (expectedEpoch !== undefined && expectedEpoch !== epoch) {
+          return Promise.resolve("cancelled" as const);
+        }
         return Promise.resolve(options.joinOutcome ?? "joined");
       },
       leave: (guildId: string) => {
+        epoch++;
         leaves.push(guildId);
         return options.leaveResult ?? true;
       },
@@ -112,6 +128,19 @@ describe("/scout join and /scout leave", () => {
     await executeScoutVoice(h.interaction, "join", h.dependencies);
     expect(h.joins).toEqual([]);
     expect(h.replies[0]).toContain("already listening");
+  });
+
+  test("a leave landing during the flag lookup cancels the join instead of ignoring it", async () => {
+    // The epoch is captured before `isVoiceEnabledForGuild` is ever awaited;
+    // if that capture happened after instead, this leave's bump would be
+    // invisible and the join would proceed as "joined".
+    const h = voiceHarness({
+      memberChannelId: "vc-1",
+      leaveDuringFlagCheck: true,
+    });
+    await executeScoutVoice(h.interaction, "join", h.dependencies);
+    expect(h.replies[0]).toContain("stopped joining");
+    expect(h.replies[0]).not.toContain("Hey Scout");
   });
 
   test("a cancelled join reports failure instead of claiming success", async () => {

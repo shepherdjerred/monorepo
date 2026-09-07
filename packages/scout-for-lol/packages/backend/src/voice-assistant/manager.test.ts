@@ -547,7 +547,9 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     h.setHumanCount(3);
     await expect(h.manager.join(GUILD, "channel-1")).resolves.toBe("joined");
   });
+});
 
+describe("VoiceAssistantManager flag-evaluation failures and external epochs", () => {
   test("fails closed when the starting flag recheck cannot be evaluated", async () => {
     const h = managerHarness();
     h.queueGuildEnabledResult(new Error("provider broke"));
@@ -555,6 +557,31 @@ describe("VoiceAssistantManager pending-join cancellation", () => {
     expect(h.manager.isActive(GUILD)).toBe(false);
     expect(h.left).toEqual([GUILD]);
     expect(h.sessionEvents).not.toContain("created");
+  });
+
+  test("join() cancels immediately when a caller-supplied epoch is already stale", async () => {
+    const h = managerHarness();
+    // Simulates the pre-`join()` gap in scout-voice.ts: capture the epoch,
+    // then something ends the guild's session (here, a bare leave() with no
+    // active session) before `join()` is ever called.
+    const capturedEpoch = h.manager.captureJoinEpoch(GUILD);
+    h.manager.leave(GUILD);
+    await expect(
+      h.manager.join(GUILD, "channel-1", capturedEpoch),
+    ).resolves.toBe("cancelled");
+    expect(h.manager.isActive(GUILD)).toBe(false);
+    expect(h.sessionEvents).not.toContain("created");
+    // Nothing was committed to by this attempt, so there is nothing to
+    // leave — unlike the checks inside performJoin.
+    expect(h.left).toEqual([]);
+  });
+
+  test("join() proceeds normally when the caller-supplied epoch still matches", async () => {
+    const h = managerHarness();
+    const capturedEpoch = h.manager.captureJoinEpoch(GUILD);
+    await expect(
+      h.manager.join(GUILD, "channel-1", capturedEpoch),
+    ).resolves.toBe("joined");
   });
 
   test("fails closed when the post-connection flag recheck cannot be evaluated", async () => {
