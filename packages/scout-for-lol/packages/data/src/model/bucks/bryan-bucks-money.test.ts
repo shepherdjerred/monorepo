@@ -1,4 +1,5 @@
 import { describe, expect, expectTypeOf, test } from "vitest";
+import { z } from "zod";
 import {
   BUCKS_INT32_MAX,
   BucksAmountSchema,
@@ -20,6 +21,12 @@ import {
 const stake = (value: number) => BucksStakeSchema.parse(value);
 const amount = (value: number) => BucksAmountSchema.parse(value);
 const delta = (value: number) => BucksDeltaSchema.parse(value);
+
+describe("BUCKS_INT32_MAX", () => {
+  test("is exactly the Int32 storage bound Prisma's Int columns enforce", () => {
+    expect(BUCKS_INT32_MAX).toBe(2_147_483_647);
+  });
+});
 
 describe("BucksStakeSchema", () => {
   test.each([1, 25, BUCKS_INT32_MAX])("accepts %d", (value) => {
@@ -68,16 +75,18 @@ describe("checked arithmetic", () => {
     expect(addAmounts(amount(3), amount(4), amount(0))).toBe(7);
   });
 
-  test("addAmounts throws when the sum leaves Int32", () => {
-    expect(() => addAmounts(amount(BUCKS_INT32_MAX), amount(1))).toThrow();
+  test("addAmounts throws a ZodError when the sum leaves Int32", () => {
+    expect(() => addAmounts(amount(BUCKS_INT32_MAX), amount(1))).toThrow(
+      z.ZodError,
+    );
   });
 
   test("subtractAmounts subtracts", () => {
     expect(subtractAmounts(amount(10), amount(4))).toBe(6);
   });
 
-  test("subtractAmounts throws when the result would be negative", () => {
-    expect(() => subtractAmounts(amount(4), amount(10))).toThrow();
+  test("subtractAmounts throws a ZodError when the result would be negative", () => {
+    expect(() => subtractAmounts(amount(4), amount(10))).toThrow(z.ZodError);
   });
 
   test("applyDelta credits and debits", () => {
@@ -85,12 +94,14 @@ describe("checked arithmetic", () => {
     expect(applyDelta(amount(10), delta(-10))).toBe(0);
   });
 
-  test("applyDelta throws when the result would be negative", () => {
-    expect(() => applyDelta(amount(3), delta(-4))).toThrow();
+  test("applyDelta throws a ZodError when the result would be negative", () => {
+    expect(() => applyDelta(amount(3), delta(-4))).toThrow(z.ZodError);
   });
 
-  test("applyDelta throws when the result overflows Int32", () => {
-    expect(() => applyDelta(amount(BUCKS_INT32_MAX), delta(1))).toThrow();
+  test("applyDelta throws a ZodError when the result overflows Int32", () => {
+    expect(() => applyDelta(amount(BUCKS_INT32_MAX), delta(1))).toThrow(
+      z.ZodError,
+    );
   });
 
   test("stakeToAmount and amountToStake round-trip a positive value", () => {
@@ -99,8 +110,8 @@ describe("checked arithmetic", () => {
     expect(amountToStake(asAmount)).toBe(9);
   });
 
-  test("amountToStake throws on the zero amount", () => {
-    expect(() => amountToStake(ZERO_BUCKS)).toThrow();
+  test("amountToStake throws a ZodError on the zero amount", () => {
+    expect(() => amountToStake(ZERO_BUCKS)).toThrow(z.ZodError);
   });
 
   test("creditOf and debitOf produce signed non-zero deltas", () => {
@@ -110,9 +121,9 @@ describe("checked arithmetic", () => {
     expect(debitOf(amount(7))).toBe(-7);
   });
 
-  test("creditOf and debitOf throw on the zero amount", () => {
-    expect(() => creditOf(ZERO_BUCKS)).toThrow();
-    expect(() => debitOf(ZERO_BUCKS)).toThrow();
+  test("creditOf and debitOf throw a ZodError on the zero amount", () => {
+    expect(() => creditOf(ZERO_BUCKS)).toThrow(z.ZodError);
+    expect(() => debitOf(ZERO_BUCKS)).toThrow(z.ZodError);
   });
 });
 

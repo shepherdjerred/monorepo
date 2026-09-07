@@ -69,6 +69,18 @@ export const bettingSettlementConservationFailuresTotal = new Counter({
   registers: [registry],
 });
 
+/**
+ * A settlement or stale-pool refund refused because a stored row failed
+ * validation. These pools wedge — every retry fails the same way until an
+ * operator repairs the row — so any non-zero rate is an alert condition.
+ */
+export const bettingSettlementCorruptRowsTotal = new Counter({
+  name: "betting_settlement_corrupt_rows_total",
+  help: "Bryan Bucks settlements blocked by a stored row that fails validation, by field.",
+  labelNames: ["field"] as const,
+  registers: [registry],
+});
+
 /* ---------------------------------------------------------------- bets -- */
 
 export const bettingBetPlacementsTotal = new Counter({

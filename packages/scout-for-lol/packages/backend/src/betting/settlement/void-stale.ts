@@ -10,6 +10,11 @@ import {
 import { VOID_GRACE_MS } from "#src/betting/constants.ts";
 import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
+import {
+  BucksCorruptIdentityError,
+  parseStoredIdentity,
+  reportCorruptBucksRow,
+} from "#src/betting/settlement/corrupt-identity.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import { closeBettingPoolById } from "#src/betting/settlement/sweep.ts";
@@ -137,7 +142,11 @@ async function refundMatchedPool(
       settledBets.push({
         betId: bet.id,
         bucksAccountId: bet.bucksAccountId,
-        discordId: DiscordAccountIdSchema.parse(bet.bucksAccount.discordId),
+        discordId: parseStoredIdentity(
+          DiscordAccountIdSchema,
+          bet.bucksAccount.discordId,
+          { field: "discord_id", betId: bet.id },
+        ),
         isHouse: bet.bucksAccount.isHouse,
         predictedTeamId: bet.predictedTeamId,
         submittedStake: bet.submittedStake,
@@ -149,7 +158,10 @@ async function refundMatchedPool(
         winnings: ZERO_BUCKS,
         won: false,
         refunded: true,
-        subjectPuuid: LeaguePuuidSchema.parse(bet.subjectPuuid),
+        subjectPuuid: parseStoredIdentity(LeaguePuuidSchema, bet.subjectPuuid, {
+          field: "subject_puuid",
+          betId: bet.id,
+        }),
       });
     }
     return {
@@ -186,6 +198,17 @@ function reportStalePoolError(
   stage: "close" | "refund",
   error: unknown,
 ): void {
+  if (error instanceof BucksCorruptIdentityError) {
+    // Never silently retried away: the refund transaction rolled back and
+    // every future sweep fails the same way until an operator repairs the
+    // stored value.
+    reportCorruptBucksRow(logger, error, {
+      source: "betting-sweep-corrupt-row",
+      matchId: pool.matchId,
+      poolId: pool.id,
+    });
+    return;
+  }
   logger.error(
     `❌ Could not ${stage} stale Bryan Bucks pool ${pool.id.toString()} for match ${pool.matchId}:`,
     error,

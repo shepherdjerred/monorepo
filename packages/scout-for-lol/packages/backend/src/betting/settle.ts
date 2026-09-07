@@ -20,6 +20,11 @@ import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { settlementHouseCut } from "#src/betting/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
+import {
+  BucksCorruptIdentityError,
+  parseStoredIdentity,
+  reportCorruptBucksRow,
+} from "#src/betting/settlement/corrupt-identity.ts";
 import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts";
 import { creditBet } from "#src/betting/settlement/settlement-ledger.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
@@ -264,18 +269,7 @@ export async function closeAndSettleBettingForMatch(
           recordSettlementObservations(summary, pool.id);
         }
       } catch (error) {
-        logger.error(
-          `❌ Could not settle Bryan Bucks pool ${pool.id.toString()} for ${matchId}:`,
-          error,
-        );
-        Sentry.captureException(error, {
-          tags: {
-            source: "betting-settle-pool",
-            matchId,
-            serverId: pool.serverId,
-          },
-          extra: { poolId: pool.id },
-        });
+        reportPoolSettlementFailure(error, pool, matchId);
       }
     }
   } catch (error) {
@@ -286,6 +280,38 @@ export async function closeAndSettleBettingForMatch(
   }
 
   return { closures, settlements: summaries };
+}
+
+function reportPoolSettlementFailure(
+  error: unknown,
+  pool: { id: number; serverId: string },
+  matchId: string,
+): void {
+  if (error instanceof BucksCorruptIdentityError) {
+    // Deliberately not retried into the refund path: crediting a row whose
+    // identity cannot be validated risks paying the wrong account. The pool
+    // stays `closed` until an operator repairs the stored value, and every
+    // postmatch retry re-raises this signal.
+    reportCorruptBucksRow(logger, error, {
+      source: "betting-settle-corrupt-row",
+      matchId,
+      poolId: pool.id,
+      serverId: pool.serverId,
+    });
+    return;
+  }
+  logger.error(
+    `❌ Could not settle Bryan Bucks pool ${pool.id.toString()} for ${matchId}:`,
+    error,
+  );
+  Sentry.captureException(error, {
+    tags: {
+      source: "betting-settle-pool",
+      matchId,
+      serverId: pool.serverId,
+    },
+    extra: { poolId: pool.id },
+  });
 }
 
 /**
@@ -422,13 +448,20 @@ async function settleOnePool(input: {
       return {
         id: row.id,
         bucksAccountId: row.bucksAccountId,
-        discordId: DiscordAccountIdSchema.parse(row.bucksAccount.discordId),
+        discordId: parseStoredIdentity(
+          DiscordAccountIdSchema,
+          row.bucksAccount.discordId,
+          { field: "discord_id", betId: row.id },
+        ),
         isHouse: row.bucksAccount.isHouse,
         predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
         submittedStake: allocation.submittedStake,
         matchedStake: allocation.matchedStake,
         unmatchedStake: allocation.unmatchedStake,
-        subjectPuuid: LeaguePuuidSchema.parse(row.subjectPuuid),
+        subjectPuuid: parseStoredIdentity(LeaguePuuidSchema, row.subjectPuuid, {
+          field: "subject_puuid",
+          betId: row.id,
+        }),
       };
     });
     const settled = settleMatchedBets({
