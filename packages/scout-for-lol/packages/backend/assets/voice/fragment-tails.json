@@ -1,5 +1,5 @@
 {
-  "note": "Milliseconds of wake-phrase audio still to come after each matched sherpa fragment ends; consumed by the voice lifecycle's fragmentTailMs option. Measurement method: packages/streambot/src/voice/constants.ts (VOICE_FRAGMENT_TAIL_MS). HEY_SCOUT and SCOUT end with the phrase and take no tail; HEY carries over streambot's hey-streambot value, not independently measured against hey-scout audio.",
+  "note": "Milliseconds of wake-phrase audio still to come after each matched sherpa fragment ends; consumed by the voice lifecycle's fragmentTailMs option. Measurement method: packages/streambot/src/voice/constants.ts (VOICE_FRAGMENT_TAIL_MS). HEY_SCOUT and SCOUT end with the phrase and take no tail; HEY carries over streambot's hey-streambot value, not independently measured against hey-scout audio. Not the production source of truth by itself: production reads the separate VOICE_FRAGMENT_TAIL_MS in packages/scout-for-lol/packages/backend/src/voice-assistant/constants.ts, which session.test.ts asserts stays identical to this file's tails. Update both together.",
   "tails": {
     "HEY_SCOUT": 0,
     "SCOUT": 0,

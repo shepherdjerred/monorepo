@@ -1,4 +1,6 @@
+import path from "node:path";
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   VOICE_WAKE_WINDOW_MS,
@@ -90,6 +92,21 @@ describe("voice constants", () => {
       SCOUT: 0,
       HEY: 500,
     });
+  });
+
+  test("the runtime fragment-tail table matches the committed measurement asset", async () => {
+    // Production reads this hard-coded constant; the M2 offline evaluator and packager read
+    // ../../assets/voice/fragment-tails.json. Nothing wires them together, so a re-measurement
+    // that updates only one of them would let the corpus pass acceptance with timing production
+    // never uses. This assertion is the single source-of-truth check for both.
+    const assetPath = path.resolve(
+      import.meta.dir,
+      "../../assets/voice/fragment-tails.json",
+    );
+    const asset = z
+      .object({ tails: z.record(z.string(), z.number()) })
+      .parse(await Bun.file(assetPath).json());
+    expect(VOICE_FRAGMENT_TAIL_MS).toEqual(asset.tails);
   });
 });
 

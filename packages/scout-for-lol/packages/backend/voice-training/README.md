@@ -81,7 +81,10 @@ training corpus provenance counts and the full ACAV artifact first.
    ```
 
    Commit the dated report to `reports/` in this directory and review it. Re-measure the `HEY`
-   fragment tail and update `fragment-tails.json` if endpoint numbers demand it.
+   fragment tail if endpoint numbers demand it, and update **both** `fragment-tails.json` here
+   and the separate `VOICE_FRAGMENT_TAIL_MS` constant in
+   `packages/scout-for-lol/packages/backend/src/voice-assistant/constants.ts` — the evaluator
+   reads the former, production reads the latter, and `session.test.ts` asserts they match.
 
 4. Human holdout — 3 speakers x 10 clips (5 positive / 3 near-match / 2 background), recordings
    kept under `.context/` and deleted by the tool after the aggregate report:
