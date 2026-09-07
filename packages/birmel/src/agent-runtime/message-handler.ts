@@ -13,7 +13,10 @@ import {
   type AgentExecutionResult,
 } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import { createTaskPacket } from "@shepherdjerred/birmel/agent-runtime/runtime.ts";
-import { createProgressReporter } from "@shepherdjerred/birmel/agent-runtime/progress.ts";
+import {
+  createProgressReporter,
+  type ProgressReporter,
+} from "@shepherdjerred/birmel/agent-runtime/progress.ts";
 import { withTurnQueue } from "@shepherdjerred/birmel/agent-runtime/turn-queue.ts";
 import {
   runWithRequestContext,
@@ -199,6 +202,7 @@ async function processAdmittedTurn(
 ): Promise<void> {
   let responseMessage: Message | undefined;
   let finalResponseDelivered = false;
+  let progress: ProgressReporter | undefined;
   const discordContext: DiscordContext = {
     guildId: context.turn.guildId,
     channelId: context.turn.channelId,
@@ -270,7 +274,7 @@ async function processAdmittedTurn(
     // The turn narrates into the message it already owns. Still one reply and
     // one final state; the intermediate edits are what make a multi-step turn
     // legible instead of a silent wait behind a placeholder.
-    const progress = createProgressReporter({
+    progress = createProgressReporter({
       maxSteps: getConfig().agent.maxSteps,
       publish: async (body) => {
         await deliveredResponseMessage.edit(body);
@@ -381,6 +385,10 @@ async function processAdmittedTurn(
       });
       return;
     }
+    // A launched-but-not-yet-settled progress edit must not land after the
+    // incident edit below - that would leave "Working…" on screen forever
+    // even though the turn already failed and reported it.
+    await progress?.flush();
     const reference = incidentId();
     if (responseMessage != null) {
       try {

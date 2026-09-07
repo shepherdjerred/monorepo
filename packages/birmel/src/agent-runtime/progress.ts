@@ -114,7 +114,10 @@ export type ProgressReporter = {
     succeeded: boolean,
     durationMs: number,
   ) => void;
-  stepFinished: (stepText: string) => void;
+  /** stepNumber is the AI SDK's own 0-based step index, from onStepStart. */
+  stepStarted: (stepNumber: number) => void;
+  /** stepNumber must match the stepStarted call for the same step. */
+  stepFinished: (stepNumber: number, stepText: string) => void;
   /** Publish anything still pending. Safe to call more than once. */
   flush: () => Promise<void>;
   snapshot: () => ProgressState;
@@ -133,7 +136,10 @@ export function createProgressReporter(options: {
   const startedAt = now();
   const entries: ProgressEntry[] = [];
   let narration: string | undefined;
-  let stepNumber = 0;
+  // Which displayed step (1-based) the current narration was written for, so
+  // it can be hidden once a newer step starts - see stepStarted below.
+  let narrationStepNumber = 0;
+  let displayStepNumber = 0;
   let lastPublishedAt = Number.NEGATIVE_INFINITY;
   let pending = false;
   let inFlight: Promise<void> = Promise.resolve();
@@ -141,8 +147,9 @@ export function createProgressReporter(options: {
   function snapshot(): ProgressState {
     return {
       entries: [...entries],
-      narration,
-      stepNumber,
+      narration:
+        narrationStepNumber === displayStepNumber ? narration : undefined,
+      stepNumber: displayStepNumber,
       maxSteps: options.maxSteps,
       elapsedMs: now() - startedAt,
     };
@@ -193,11 +200,15 @@ export function createProgressReporter(options: {
       }
       notify();
     },
-    stepFinished(stepText) {
-      stepNumber += 1;
+    stepStarted(stepNumber) {
+      displayStepNumber = stepNumber + 1;
+      notify();
+    },
+    stepFinished(stepNumber, stepText) {
       const trimmed = stepText.trim();
       if (trimmed.length > 0) {
         narration = trimmed;
+        narrationStepNumber = stepNumber + 1;
       }
       notify();
     },

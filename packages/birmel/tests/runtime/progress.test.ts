@@ -164,7 +164,8 @@ describe("createProgressReporter", () => {
 
   test("uses the model's own narration when it gives one", async () => {
     const { reporter, published, advance } = harness();
-    reporter.stepFinished("Looking up who has been active this week.");
+    reporter.stepStarted(0);
+    reporter.stepFinished(0, "Looking up who has been active this week.");
     advance(1500);
     reporter.toolStarted("call-1", "get-activity-stats", {});
     await reporter.flush();
@@ -174,14 +175,31 @@ describe("createProgressReporter", () => {
     );
   });
 
-  test("keeps the previous narration when a step adds none", async () => {
+  test("keeps narration visible while its own step's tool is still running", async () => {
     const { reporter, published, advance } = harness();
-    reporter.stepFinished("First thing.");
+    reporter.stepStarted(0);
+    reporter.stepFinished(0, "First thing.");
     advance(1500);
-    reporter.stepFinished("   ");
+    reporter.toolStarted("call-1", "manage-role", {});
     await reporter.flush();
 
     expect(published.at(-1)).toContain("> First thing.");
+  });
+
+  test("hides narration once a newer step starts without giving one", async () => {
+    // The narration describes the step it came from. Leaving it on screen
+    // once a different step's tool is running would mislabel that new work
+    // as whatever the old text described - exactly the staleness a
+    // throttled, coalesced timeline has to avoid.
+    const { reporter, published, advance } = harness();
+    reporter.stepStarted(0);
+    reporter.stepFinished(0, "First thing.");
+    advance(1500);
+    reporter.stepStarted(1);
+    reporter.toolStarted("call-1", "manage-role", {});
+    await reporter.flush();
+
+    expect(published.at(-1)).not.toContain("First thing.");
   });
 
   test("reports a failed edit without failing the turn", async () => {
@@ -206,13 +224,26 @@ describe("createProgressReporter", () => {
     expect(errors).toHaveLength(1);
   });
 
-  test("counts steps against the budget", async () => {
+  test("counts steps against the budget as each one starts", async () => {
     const { reporter, published, advance } = harness();
-    reporter.stepFinished("one");
+    reporter.stepStarted(0);
     advance(1500);
-    reporter.stepFinished("two");
+    reporter.stepStarted(1);
     await reporter.flush();
 
     expect(published.at(-1)).toContain("step 2/12");
+  });
+
+  test("advances the displayed step before that step's tool has finished", async () => {
+    // The old design bumped the counter in stepFinished, so the very first
+    // progress edit under-counted by one - "step 0/12" while a tool from
+    // step 1 was already running. onStepStart fires before any of that
+    // step's tools do, so the counter has to move there instead.
+    const { reporter, published } = harness();
+    reporter.stepStarted(0);
+    reporter.toolStarted("call-1", "get-activity-stats", {});
+    await reporter.flush();
+
+    expect(published.at(-1)).toContain("step 1/12");
   });
 });

@@ -26,15 +26,16 @@ const ToolIdSchema = z
   .max(64)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
+const ToolDomainResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string().min(1),
+  effectDisposition: EffectDispositionSchema.optional(),
+});
 const ToolResultForSessionSchema = z.object({
   toolCallId: z.string().min(1).max(200),
   toolName: ToolIdSchema,
   input: z.unknown(),
-  output: z.object({
-    success: z.boolean(),
-    message: z.string().min(1),
-    effectDisposition: EffectDispositionSchema.optional(),
-  }),
+  output: ToolDomainResultSchema,
 });
 const SessionToolEventSchema = z.strictObject({
   toolCallId: z.string().min(1).max(200),
@@ -79,7 +80,7 @@ export type TurnOptions = {
    * Live progress sink. Absent for scheduled jobs, which own no Discord
    * message to narrate into.
    */
-  progress?: ProgressReporter;
+  progress?: ProgressReporter | undefined;
 };
 
 export type IsolatedAgentOptions = {
@@ -390,14 +391,37 @@ export async function executeTurn(
                 toolOutput,
                 toolExecutionMs,
               }) => {
+                // A tool that resolves rather than throws still reports its
+                // own success/failure inside the resolved value (the same
+                // field summarizeToolResultForSession reads), so a validation
+                // failure inside the tool would otherwise render as a
+                // misleading ✓. Fall back to "resolved at all" only for a
+                // shape this check does not recognize.
+                const domainResult = ToolDomainResultSchema.safeParse(
+                  toolOutput.type === "tool-result"
+                    ? toolOutput.output
+                    : undefined,
+                );
+                const succeeded = domainResult.success
+                  ? domainResult.data.success
+                  : toolOutput.type !== "tool-error";
                 progress.toolFinished(
                   toolCall.toolCallId,
-                  toolOutput.type !== "tool-error",
+                  succeeded,
                   toolExecutionMs,
                 );
               },
-              onStepFinish: ({ text }) => {
-                progress.stepFinished(text);
+              onStepStart: ({ stepNumber }) => {
+                progress.stepStarted(stepNumber);
+              },
+              onStepFinish: ({ stepNumber, text, toolCalls }) => {
+                // The finishing step answers with structured TurnAnswer JSON
+                // and calls no tool, so its "text" is wire JSON, not the
+                // requested plain-language sentence. Narration only ever
+                // comes from a step that actually did something.
+                if (toolCalls.length > 0) {
+                  progress.stepFinished(stepNumber, text);
+                }
               },
             }),
         ...runtime.callOptions({
