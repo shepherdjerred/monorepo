@@ -309,6 +309,32 @@ describe("generateImageTool - error handling and validation", () => {
     expect(mockGenerateImage).not.toHaveBeenCalled();
   });
 
+  test("rejects image edit when referenced message resolution failed", async () => {
+    const context: RequestContext = {
+      ...dummyContext,
+      referenceResolutionError: {
+        referencedMessageId: "999888777",
+        error: "Unknown Message",
+      },
+    };
+
+    const result = await runWithRequestContext(context, async () => {
+      return await generateImageTool.execute(
+        {
+          prompt: "make this image brighter",
+        },
+        { signal: new AbortController().signal },
+      );
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.message).toContain(
+      "failed to resolve referenced message 999888777",
+    );
+    expect(result.message).toContain("Unknown Message");
+    expect(mockGenerateImage).not.toHaveBeenCalled();
+  });
+
   describe("GenerateImageInputSchema", () => {
     test("accepts valid aspect ratios", () => {
       const valid = GenerateImageInputSchema.parse({

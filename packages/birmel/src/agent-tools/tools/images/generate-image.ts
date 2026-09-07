@@ -63,6 +63,18 @@ export const generateImageTool = createTool({
       const runtime = getLlmRuntime();
       const imageModel = config.openRouter.imageModel;
       const requestContext = getRequestContext();
+
+      if (
+        input.referenceImageUrl == null &&
+        (requestContext?.sourceImageAttachments == null ||
+          requestContext.sourceImageAttachments.length === 0) &&
+        requestContext?.referenceResolutionError != null
+      ) {
+        return {
+          success: false,
+          message: `Cannot edit image: failed to resolve referenced message ${requestContext.referenceResolutionError.referencedMessageId} (${requestContext.referenceResolutionError.error})`,
+        };
+      }
       const resolvedReference =
         input.referenceImageUrl == null
           ? (requestContext?.sourceImageAttachments?.[0] ?? undefined)

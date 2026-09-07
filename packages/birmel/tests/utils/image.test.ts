@@ -6,6 +6,7 @@ import {
 } from "@shepherdjerred/birmel/utils/image.ts";
 import {
   isPrivateOrReservedIp,
+  resolveHostAddresses,
   sanitizeUrlForLogging,
   validateSafePublicImageUrl,
 } from "@shepherdjerred/birmel/utils/safe-url.ts";
@@ -29,6 +30,24 @@ const mockPrivateResolver = async () => [
 const mockPublicResolver = async () => [
   { address: "93.184.216.34", family: 4 },
 ];
+const mockHangingResolver = async (
+  _hostname: string,
+  signal?: AbortSignal,
+): Promise<{ address: string; family: number }[]> => {
+  return await new Promise<never>((_, reject) => {
+    signal?.addEventListener("abort", () => {
+      reject(
+        signal.reason instanceof Error
+          ? signal.reason
+          : new Error(
+              typeof signal.reason === "string"
+                ? signal.reason
+                : "The operation was aborted",
+            ),
+      );
+    });
+  });
+};
 
 describe("isImageAttachment", () => {
   test("accepts supported image mime types", () => {
@@ -335,5 +354,42 @@ describe("validateSafePublicImageUrl", () => {
     );
     expect(result.url.hostname).toBe("safe.example.com");
     expect(result.pinnedIp).toBe("93.184.216.34");
+  });
+
+  test("aborts resolution when signal is aborted", async () => {
+    const controller = new AbortController();
+    controller.abort(new Error("Resolution cancelled"));
+
+    await expect(
+      validateSafePublicImageUrl(
+        "https://safe.example.com/test.png",
+        mockPublicResolver,
+        controller.signal,
+      ),
+    ).rejects.toThrow("Resolution cancelled");
+  });
+
+  test("races host resolution against an active abort signal", async () => {
+    const controller = new AbortController();
+
+    setTimeout(() => {
+      controller.abort(new Error("Lookup timed out"));
+    }, 20);
+
+    await expect(
+      validateSafePublicImageUrl(
+        "https://slow.example.com/test.png",
+        mockHangingResolver,
+        controller.signal,
+      ),
+    ).rejects.toThrow("Lookup timed out");
+  });
+
+  test("resolveHostAddresses rejects immediately when signal is already aborted", async () => {
+    const controller = new AbortController();
+    controller.abort(new Error("Already aborted"));
+    await expect(
+      resolveHostAddresses("example.com", controller.signal),
+    ).rejects.toThrow("Already aborted");
   });
 });

@@ -13,6 +13,11 @@ export type TurnImageAttachment = {
   filename?: string;
 };
 
+export type ReferenceResolutionError = {
+  referencedMessageId: string;
+  error: string;
+};
+
 export type RequestContext = {
   /** The channel where the user's message originated */
   sourceChannelId: string;
@@ -36,6 +41,8 @@ export type RequestContext = {
   stagedAttachments?: StagedAttachment[];
   /** Source image attachments available from user message or referenced reply */
   sourceImageAttachments?: TurnImageAttachment[];
+  /** Failure details if resolving a referenced message's attachments failed */
+  referenceResolutionError?: ReferenceResolutionError;
 };
 
 const requestContextStorage = new AsyncLocalStorage<RequestContext>();

@@ -250,6 +250,9 @@ async function processAdmittedTurn(
       userId: context.turn.userId,
       ownsSourceReply: true,
       personaId: persona,
+      ...(context.turn.referenceResolutionError == null
+        ? {}
+        : { referenceResolutionError: context.turn.referenceResolutionError }),
       ...(context.turn.attachments.length > 0
         ? {
             sourceImageAttachments: context.turn.attachments.map(

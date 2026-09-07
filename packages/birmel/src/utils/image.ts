@@ -212,6 +212,7 @@ async function fetchWithRedirects(
     const { url: parsedUrl, pinnedIp } = await validateSafePublicImageUrl(
       currentUrl,
       resolver,
+      signal,
     );
 
     const targetUrl = new URL(currentUrl);
@@ -306,9 +307,10 @@ export async function downloadImage(
 export async function downloadImageWithRetry(
   url: string,
   signal?: AbortSignal,
+  resolver: HostResolver = resolveHostAddresses,
 ): Promise<DownloadedImage> {
   try {
-    return await downloadImage(url, signal);
+    return await downloadImage(url, signal, resolver);
   } catch (error) {
     if (signal?.aborted === true) {
       throw new Error(getAbortMessage(signal.reason), { cause: error });
@@ -318,6 +320,6 @@ export async function downloadImageWithRetry(
       error,
     });
     // Retry once
-    return await downloadImage(url, signal);
+    return await downloadImage(url, signal, resolver);
   }
 }

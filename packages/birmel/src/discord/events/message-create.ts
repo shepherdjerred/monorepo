@@ -187,12 +187,16 @@ async function admissionDecision(
   return { triggerKind: "engaged-follow-up" };
 }
 
-async function resolveMessageImages(
-  message: Message,
-): Promise<ReturnType<typeof extractImageAttachments>> {
+async function resolveMessageImages(message: Message): Promise<{
+  images: ReturnType<typeof extractImageAttachments>;
+  referenceResolutionError?: {
+    referencedMessageId: string;
+    error: string;
+  };
+}> {
   const directImages = extractImageAttachments(message);
   if (directImages.length > 0) {
-    return directImages;
+    return { images: directImages };
   }
   if (message.reference?.messageId != null) {
     try {
@@ -200,17 +204,24 @@ async function resolveMessageImages(
         message.reference.messageId,
       );
       const referencedImages = extractImageAttachments(referencedMessage);
-      if (referencedImages.length > 0) {
-        return referencedImages;
-      }
+      return { images: referencedImages };
     } catch (error) {
-      logger.debug("Failed to fetch referenced message for image attachment", {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.warn("Failed to fetch referenced message for image attachment", {
         error,
         referencedMessageId: message.reference.messageId,
       });
+      return {
+        images: [],
+        referenceResolutionError: {
+          referencedMessageId: message.reference.messageId,
+          error: errorMessage,
+        },
+      };
     }
   }
-  return [];
+  return { images: [] };
 }
 
 async function toTurnInput(
@@ -218,7 +229,8 @@ async function toTurnInput(
   guildId: string,
   decision: { triggerKind: TriggerKind },
 ): Promise<TurnInput> {
-  const images = await resolveMessageImages(message);
+  const { images, referenceResolutionError } =
+    await resolveMessageImages(message);
   return TurnInputSchema.parse({
     discordMessageId: message.id,
     guildId,
@@ -233,6 +245,7 @@ async function toTurnInput(
       contentType: image.contentType,
       name: image.filename,
     })),
+    ...(referenceResolutionError == null ? {} : { referenceResolutionError }),
     triggerKind: decision.triggerKind,
     receivedAt: message.createdAt,
   });

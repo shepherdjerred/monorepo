@@ -8,12 +8,42 @@ export type ValidatedSafeUrl = {
 
 export type HostResolver = (
   hostname: string,
+  signal?: AbortSignal,
 ) => Promise<{ address: string; family: number }[]>;
+
+function toAbortError(reason: unknown): Error {
+  if (reason instanceof Error) {
+    return reason;
+  }
+  return new Error(
+    typeof reason === "string" ? reason : "The operation was aborted",
+  );
+}
+
+async function waitForAbort(signal: AbortSignal): Promise<never> {
+  if (signal.aborted) {
+    throw toAbortError(signal.reason);
+  }
+
+  return await new Promise<never>((_, reject) => {
+    const onAbort = () => {
+      reject(toAbortError(signal.reason));
+    };
+
+    signal.addEventListener("abort", onAbort, { once: true });
+  });
+}
 
 export async function resolveHostAddresses(
   hostname: string,
+  signal?: AbortSignal,
 ): Promise<{ address: string; family: number }[]> {
-  return await dns.lookup(hostname, { all: true });
+  signal?.throwIfAborted();
+  const lookupPromise = dns.lookup(hostname, { all: true });
+  if (signal == null) {
+    return await lookupPromise;
+  }
+  return await Promise.race([lookupPromise, waitForAbort(signal)]);
 }
 
 export function sanitizeUrlForLogging(url: string): string {
@@ -286,11 +316,16 @@ function validateUrlProtocolAndHost(url: string): URL {
 async function validateHostDns(
   hostname: string,
   resolver: HostResolver,
+  signal?: AbortSignal,
 ): Promise<string> {
+  signal?.throwIfAborted();
   let addresses: { address: string; family: number }[];
   try {
-    addresses = await resolver(hostname);
+    addresses = await resolver(hostname, signal);
   } catch (error) {
+    if (signal?.aborted === true) {
+      throw error;
+    }
     throw new Error(`Invalid image URL: host lookup failed for ${hostname}`, {
       cause: error,
     });
@@ -325,7 +360,9 @@ async function validateHostDns(
 export async function validateSafePublicImageUrl(
   url: string,
   resolver: HostResolver = resolveHostAddresses,
+  signal?: AbortSignal,
 ): Promise<ValidatedSafeUrl> {
+  signal?.throwIfAborted();
   const parsed = validateUrlProtocolAndHost(url);
   const hostname = parsed.hostname.toLowerCase();
 
@@ -338,6 +375,6 @@ export async function validateSafePublicImageUrl(
     return { url: parsed, pinnedIp: hostname };
   }
 
-  const pinnedIp = await validateHostDns(hostname, resolver);
+  const pinnedIp = await validateHostDns(hostname, resolver, signal);
   return { url: parsed, pinnedIp };
 }
