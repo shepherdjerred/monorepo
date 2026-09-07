@@ -285,7 +285,7 @@ async function processAdmittedTurn(
           name: attachment.name,
           ...(attachment.description == null
             ? {}
-            : { description: attachment.description }),
+            : { description: attachment.description.slice(0, 1024) }),
         }),
     );
     await withDiscordDelivery({

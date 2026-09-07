@@ -81,7 +81,10 @@ export const generateImageTool = createTool({
         logger.debug("Downloading reference image for image editing", {
           url: resolvedReference.url,
         });
-        const downloaded = await downloadImageWithRetry(resolvedReference.url);
+        const downloaded = await downloadImageWithRetry(
+          resolvedReference.url,
+          signal,
+        );
         const mediaType =
           resolvedReference.contentType ?? downloaded.contentType;
         files = [
@@ -114,7 +117,7 @@ export const generateImageTool = createTool({
       stageAttachment({
         data: imageBuffer,
         name: filename,
-        description: input.prompt,
+        description: input.prompt.slice(0, 1024),
         contentType: "image/png",
       });
 

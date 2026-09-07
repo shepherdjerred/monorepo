@@ -97,6 +97,32 @@ describe("generateImageTool - text-to-image and gating", () => {
       "generated-png-data",
     );
   });
+
+  test("truncates attachment description to 1024 characters for long prompts", async () => {
+    const longPrompt = "a".repeat(1500);
+    const fakeImageBytes = Buffer.from("generated-png-data");
+    mockGenerateImage.mockResolvedValueOnce({
+      image: {
+        base64: fakeImageBytes.toString("base64"),
+      },
+    });
+
+    const context: RequestContext = { ...dummyContext };
+    const result = await runWithRequestContext(context, async () => {
+      return await generateImageTool.execute(
+        {
+          prompt: longPrompt,
+        },
+        { signal: new AbortController().signal },
+      );
+    });
+
+    expect(result.success).toBe(true);
+    const staged = getStagedAttachments(context);
+    expect(staged).toHaveLength(1);
+    expect(staged[0]?.description).toHaveLength(1024);
+    expect(staged[0]?.description).toBe("a".repeat(1024));
+  });
 });
 
 describe("generateImageTool - reference image editing", () => {
@@ -136,6 +162,7 @@ describe("generateImageTool - reference image editing", () => {
     expect(result.success).toBe(true);
     expect(mockDownloadImageWithRetry).toHaveBeenCalledWith(
       "https://cdn.discordapp.com/attachments/123/456/user-upload.jpg",
+      expect.any(Object),
     );
 
     expect(mockGenerateImage).toHaveBeenCalledWith(
@@ -188,7 +215,10 @@ describe("generateImageTool - reference image editing", () => {
     });
 
     expect(result.success).toBe(true);
-    expect(mockDownloadImageWithRetry).toHaveBeenCalledWith(referenceUrl);
+    expect(mockDownloadImageWithRetry).toHaveBeenCalledWith(
+      referenceUrl,
+      expect.any(Object),
+    );
 
     expect(mockGenerateImage).toHaveBeenCalledWith(
       expect.objectContaining({
