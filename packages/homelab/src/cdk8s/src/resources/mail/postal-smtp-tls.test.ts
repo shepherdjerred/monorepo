@@ -7,6 +7,7 @@ import { applyApplicationReleasePolicy } from "@shepherdjerred/homelab/cdk8s/src
 import {
   createCertManagerApp,
   HOMELAB_CLUSTER_CA_FILE,
+  HOMELAB_CLUSTER_ISSUER_NAME,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/cert-manager.ts";
 import { createPrometheusApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/prometheus.ts";
 import {
@@ -176,6 +177,13 @@ describe("Alertmanager Postal SMTP TLS", () => {
         })
         .parse(ca.spec),
     ).toMatchObject({ isCA: true });
+
+    const clusterIssuer = findResource(
+      resources,
+      "ClusterIssuer",
+      HOMELAB_CLUSTER_ISSUER_NAME,
+    );
+    expect(clusterIssuer.metadata).not.toHaveProperty("namespace");
 
     const trust = findResource(
       resources,
