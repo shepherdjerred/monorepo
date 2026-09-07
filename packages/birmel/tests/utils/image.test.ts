@@ -3,10 +3,12 @@ import {
   downloadImage,
   downloadImageWithRetry,
   isImageAttachment,
+} from "@shepherdjerred/birmel/utils/image.ts";
+import {
   isPrivateOrReservedIp,
   sanitizeUrlForLogging,
   validateSafePublicImageUrl,
-} from "@shepherdjerred/birmel/utils/image.ts";
+} from "@shepherdjerred/birmel/utils/safe-url.ts";
 
 const PNG_HEADER = Buffer.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,
@@ -196,6 +198,30 @@ describe("downloadImage", () => {
     expect(result.contentType).toBe("image/png");
     expect(Buffer.from(result.buffer)).toEqual(PNG_HEADER);
   });
+
+  test("pins validated DNS IP and preserves host header and SNI", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(PNG_HEADER, {
+        status: 200,
+        headers: { "content-type": "image/png" },
+      }),
+    );
+
+    const result = await downloadImage(
+      "https://example.com/test.png",
+      undefined,
+      mockPublicResolver,
+    );
+    expect(result.contentType).toBe("image/png");
+    expect(fetchSpy).toHaveBeenCalledWith(
+      "https://93.184.216.34/test.png",
+      expect.objectContaining({
+        headers: { host: "example.com" },
+        tls: { serverName: "example.com" },
+        redirect: "manual",
+      }),
+    );
+  });
 });
 
 describe("sanitizeUrlForLogging", () => {
@@ -204,6 +230,14 @@ describe("sanitizeUrlForLogging", () => {
       "https://cdn.discordapp.com/attachments/123/456/sample.png?ex=66e3b5e4&is=66e26464&hm=abc12345def#preview";
     expect(sanitizeUrlForLogging(discordUrl)).toBe(
       "https://cdn.discordapp.com/attachments/123/456/sample.png",
+    );
+  });
+
+  test("strips username and password credentials from URLs", () => {
+    const urlWithCredentials =
+      "https://token:secret123@example.com/private/image.png?token=query-secret#hash";
+    expect(sanitizeUrlForLogging(urlWithCredentials)).toBe(
+      "https://example.com/private/image.png",
     );
   });
 
@@ -231,6 +265,17 @@ describe("isPrivateOrReservedIp", () => {
     expect(isPrivateOrReservedIp("::ffff:127.0.0.1")).toBe(true);
   });
 
+  test("identifies hexadecimal IPv4-mapped private and loopback addresses", () => {
+    expect(isPrivateOrReservedIp("::ffff:7f00:1")).toBe(true);
+    expect(isPrivateOrReservedIp("::ffff:7f00:0001")).toBe(true);
+    expect(isPrivateOrReservedIp("0:0:0:0:0:ffff:7f00:1")).toBe(true);
+    expect(isPrivateOrReservedIp("::ffff:0a00:0001")).toBe(true);
+    expect(isPrivateOrReservedIp("::ffff:c0a8:0101")).toBe(true);
+    expect(isPrivateOrReservedIp("::ffff:a9fe:a9fe")).toBe(true);
+    expect(isPrivateOrReservedIp("::ffff:ac10:0001")).toBe(true);
+    expect(isPrivateOrReservedIp("::ffff:0808:0808")).toBe(false);
+  });
+
   test("allows public IP addresses", () => {
     expect(isPrivateOrReservedIp("8.8.8.8")).toBe(false);
     expect(isPrivateOrReservedIp("1.1.1.1")).toBe(false);
@@ -243,6 +288,12 @@ describe("validateSafePublicImageUrl", () => {
     await expect(
       validateSafePublicImageUrl("http://example.com/test.png"),
     ).rejects.toThrow("only HTTPS is allowed");
+  });
+
+  test("rejects URLs with credentials", async () => {
+    await expect(
+      validateSafePublicImageUrl("https://user:pass@example.com/test.png"),
+    ).rejects.toThrow("credentials are not allowed");
   });
 
   test("rejects forbidden hostnames", async () => {
@@ -277,11 +328,12 @@ describe("validateSafePublicImageUrl", () => {
     ).rejects.toThrow("resolves to private or reserved IP");
   });
 
-  test("accepts hostnames resolving to public IPs via DNS", async () => {
+  test("accepts hostnames resolving to public IPs via DNS and returns pinned IP", async () => {
     const result = await validateSafePublicImageUrl(
       "https://safe.example.com/test.png",
       mockPublicResolver,
     );
-    expect(result.hostname).toBe("safe.example.com");
+    expect(result.url.hostname).toBe("safe.example.com");
+    expect(result.pinnedIp).toBe("93.184.216.34");
   });
 });

@@ -116,6 +116,22 @@ describe("ManagedFlagInventorySchema", () => {
     expect(prodFlag.rollouts).toEqual([]);
   });
 
+  test("enables Birmel image generation in beta and disables in prod", () => {
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "birmel",
+    ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
+    expect(betaFlag?.default).toBe(true);
+
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "birmel",
+    ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
+    expect(prodFlag?.default).toBe(false);
+  });
+
   test("materializes a full-state environment override", () => {
     const parsed = ManagedFlagInventorySchema.parse(inventory([fullOverride]));
     expect(

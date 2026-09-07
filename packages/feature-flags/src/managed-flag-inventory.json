@@ -1269,6 +1269,14 @@
           ],
           "rules": [],
           "thresholdRollouts": []
+        },
+        {
+          "key": "birmel-image-generation-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     },

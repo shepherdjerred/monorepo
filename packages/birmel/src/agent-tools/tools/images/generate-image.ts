@@ -5,10 +5,8 @@ import {
   stageAttachment,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
-import {
-  downloadImageWithRetry,
-  sanitizeUrlForLogging,
-} from "@shepherdjerred/birmel/utils/image.ts";
+import { downloadImageWithRetry } from "@shepherdjerred/birmel/utils/image.ts";
+import { sanitizeUrlForLogging } from "@shepherdjerred/birmel/utils/safe-url.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { generateImage } from "ai";
 import { z } from "zod";
@@ -143,7 +141,7 @@ export const generateImageTool = createTool({
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       logger.error("Image generation failed", error, {
-        prompt: input.prompt,
+        promptLength: input.prompt.length,
         aspectRatio: input.aspectRatio,
         hasReferenceImage: input.referenceImageUrl != null,
       });
