@@ -141,25 +141,36 @@ actor TokenRoutingTransport: HTTPTransport {
 final class FakeKeychain: KeychainClient, @unchecked Sendable {
   private let lock = NSLock()
   private var values: [String: Data] = [:]
-  var failureStatus: Int32?
+  private var storedFailureStatus: Int32?
+
+  var failureStatus: Int32? {
+    get { lock.withLock { storedFailureStatus } }
+    set { lock.withLock { storedFailureStatus = newValue } }
+  }
 
   func read(service: String, account: String?) throws -> Data? {
     try lock.withLock {
-      if let failureStatus { throw QuotaError.keychain(status: failureStatus) }
+      if let storedFailureStatus {
+        throw QuotaError.keychain(status: storedFailureStatus)
+      }
       return values[key(service: service, account: account)]
     }
   }
 
   func write(_ data: Data, service: String, account: String) throws {
     try lock.withLock {
-      if let failureStatus { throw QuotaError.keychain(status: failureStatus) }
+      if let storedFailureStatus {
+        throw QuotaError.keychain(status: storedFailureStatus)
+      }
       values[key(service: service, account: account)] = data
     }
   }
 
   func delete(service: String, account: String) throws {
     try lock.withLock {
-      if let failureStatus { throw QuotaError.keychain(status: failureStatus) }
+      if let storedFailureStatus {
+        throw QuotaError.keychain(status: storedFailureStatus)
+      }
       values.removeValue(forKey: key(service: service, account: account))
     }
   }

@@ -21,7 +21,7 @@
     "test:watch": "bun --no-install --bun vitest --config ../../../../vitest.config.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --coverage",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "bun x eslint src",
+    "lint": "bun x eslint src --max-warnings=0",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

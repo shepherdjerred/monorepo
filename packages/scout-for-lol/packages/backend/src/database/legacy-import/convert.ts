@@ -206,7 +206,7 @@ export function defineImportModel<T extends Record<string, unknown>>(
     normalizeForDigest(
       Object.fromEntries(
         Object.entries(record).filter(
-          ([key]) => !definition.digestIgnoreColumns?.has(key),
+          ([key]) => definition.digestIgnoreColumns?.has(key) !== true,
         ),
       ),
     );

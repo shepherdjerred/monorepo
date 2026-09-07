@@ -71,7 +71,9 @@ function isExcludedCommentedKey(keyValue: string): boolean {
   const isURL =
     keyValue.trim().startsWith("http://") ||
     keyValue.trim().startsWith("https://");
-  return isDocReference || isURL;
+  const value = keyValue.slice(keyValue.indexOf(":") + 1).trim();
+  const isFilesystemPath = value.startsWith("/");
+  return isDocReference || isURL || isFilesystemPath;
 }
 
 /**
@@ -82,11 +84,16 @@ function isLikelyExample(lines: string[], i: number): boolean {
   const prevTrimmed = prevLine?.trim() ?? "";
   const prevIsCommentedKey = /^#+\s*[\w.-]+:\s/.test(prevTrimmed);
   const prevIsBlank = !prevTrimmed;
-  const prevIsListItem =
-    prevTrimmed.startsWith("#") && prevTrimmed.slice(1).trim().startsWith("-");
+  const prevIsListItem = /^#\s*-\s+[^-]/.test(prevTrimmed);
+  const prevIsHelmDocumentation = /^#+\s*--/.test(prevTrimmed);
+  const prevIsCommentSeparator = /^#+\s*$/.test(prevTrimmed);
 
   return (
-    (!prevIsBlank && !prevIsCommentedKey && prevTrimmed.startsWith("#")) ||
+    (!prevIsBlank &&
+      !prevIsCommentedKey &&
+      !prevIsHelmDocumentation &&
+      !prevIsCommentSeparator &&
+      prevTrimmed.startsWith("#")) ||
     prevIsListItem
   );
 }

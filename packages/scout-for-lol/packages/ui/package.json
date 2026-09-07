@@ -9,7 +9,7 @@
   },
   "scripts": {
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
-    "lint": "bunx eslint src",
+    "lint": "bunx eslint src --max-warnings=0",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src"
   },

@@ -38,7 +38,7 @@
     "build": "astro build && bun run scripts/emit-shared-assets.ts",
     "dev": "astro dev",
     "format": "prettier --check .",
-    "lint": "astro check && eslint src && check-architecture",
+    "lint": "astro check && eslint src --max-warnings=0 && check-architecture",
     "preview": "astro preview",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",

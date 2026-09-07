@@ -144,19 +144,15 @@ function chromaFingerprint(
   return acc;
 }
 
-// Skip when explicitly disabled, or when the wasm isn't present (plain
-// `bun run test` on a clean checkout — the wasm is built from source in the
-// Docker image build and locally by scripts/build-wasm.ts, where this gate runs).
-// `Bun.file().size` is synchronous and returns 0 for a missing file — used
-// instead of node:fs (banned by the bun-runtime lint rule).
-if (Bun.env.SKIP_AUDIO_FINGERPRINT === "1" || Bun.file(WASM_PATH).size === 0) {
-  describe.skip("audio fingerprint (skipped: SKIP_AUDIO_FINGERPRINT or wasm not built)", () => {
-    test("noop", () => {
-      expect(true).toBe(true);
-    });
-  });
-} else {
-  describe("audio fingerprint vs title-bgm-baseline.wav", () => {
+// This source test is conditional because a clean checkout does not contain
+// the gitignored artifact. The Docker wasm-abi-test stage always supplies it
+// and therefore executes this suite against the built binary.
+const shouldSkip =
+  Bun.env.SKIP_AUDIO_FINGERPRINT === "1" || Bun.file(WASM_PATH).size === 0;
+
+describe.skipIf(shouldSkip)(
+  "audio fingerprint vs title-bgm-baseline.wav",
+  () => {
     test("fresh PCM matches committed baseline across mel + chroma + onset", async () => {
       const baseline = await loadBaseline();
       const captured = await captureClip(CAPTURE_FRAMES);
@@ -198,5 +194,5 @@ if (Bun.env.SKIP_AUDIO_FINGERPRINT === "1" || Bun.file(WASM_PATH).size === 0) {
       const onsetDelta = Math.abs(onsetA - onsetB) / onsetB;
       expect(onsetDelta).toBeLessThanOrEqual(ONSET_TOLERANCE);
     }, 120_000);
-  });
-}
+  },
+);

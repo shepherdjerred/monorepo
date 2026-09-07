@@ -69,7 +69,7 @@ func (p *asuswrtProvider) Schema(_ context.Context, _ provider.SchemaRequest, re
 				Optional:    true,
 			},
 			"insecure": schema.BoolAttribute{
-				Description: "Skip TLS certificate verification. Default: false.",
+				Description: "Skip TLS certificate and hostname verification when HTTPS is enabled. Default: false.",
 				Optional:    true,
 			},
 		},
@@ -92,6 +92,16 @@ func (p *asuswrtProvider) Configure(ctx context.Context, req provider.ConfigureR
 		return
 	}
 
+	if !insecureTLSAllowed(config.HTTPS.ValueBool(), config.Insecure.ValueBool()) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("insecure"),
+			"Insecure TLS requires HTTPS",
+			"`insecure = true` disables TLS certificate and hostname verification and requires `https = true`.",
+		)
+
+		return
+	}
+
 	cfg := client.Config{
 		Host:     config.Host.ValueString(),
 		Username: config.Username.ValueString(),
@@ -105,6 +115,10 @@ func (p *asuswrtProvider) Configure(ctx context.Context, req provider.ConfigureR
 
 	resp.DataSourceData = c
 	resp.ResourceData = c
+}
+
+func insecureTLSAllowed(https, insecure bool) bool {
+	return !insecure || https
 }
 
 func (p *asuswrtProvider) Resources(_ context.Context) []func() resource.Resource {

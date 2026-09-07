@@ -41,7 +41,7 @@ public protocol OpenRouterTransport: Sendable {
   func send(_ request: OpenRouterRequest) async throws -> OpenRouterResponse
 }
 
-public final class URLSessionOpenRouterTransport: OpenRouterTransport, @unchecked Sendable {
+public final class URLSessionOpenRouterTransport: OpenRouterTransport, Sendable {
   private let session: URLSession
 
   public init(session: URLSession? = nil) {

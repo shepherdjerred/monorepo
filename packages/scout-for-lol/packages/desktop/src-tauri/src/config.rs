@@ -69,7 +69,6 @@ impl Config {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
     use std::env;
@@ -82,7 +81,11 @@ mod tests {
             backend_url: Some("https://api.example.com".to_string()),
         };
 
-        let json = serde_json::to_string(&config).expect("test should serialize");
+        let result = serde_json::to_string(&config);
+        assert!(result.is_ok(), "test should serialize: {result:?}");
+        let Some(json) = result.ok() else {
+            return;
+        };
         assert!(json.contains("clientId"));
         assert!(json.contains("apiToken"));
         assert!(json.contains("backendUrl"));
@@ -94,7 +97,11 @@ mod tests {
     #[test]
     fn test_config_deserialization() {
         let json = r#"{"clientId":"client-123","apiToken":"token-456","backendUrl":"https://example.com"}"#;
-        let config: Config = serde_json::from_str(json).expect("test should deserialize");
+        let result: Result<Config, serde_json::Error> = serde_json::from_str(json);
+        assert!(result.is_ok(), "test should deserialize: {result:?}");
+        let Some(config) = result.ok() else {
+            return;
+        };
 
         assert_eq!(config.client_id, "client-123");
         assert_eq!(config.api_token, Some("token-456".to_string()));
@@ -126,7 +133,7 @@ mod tests {
         };
 
         // Save
-        config.save(&config_path).expect("test should save");
+        assert!(config.save(&config_path).is_ok(), "test should save");
 
         // Load
         let loaded = Config::load(&config_path);

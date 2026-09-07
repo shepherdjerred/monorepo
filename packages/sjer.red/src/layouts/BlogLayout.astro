@@ -4,11 +4,15 @@ import { BlogSchema } from "@src/content/schemas";
 import BlogContent from "@components/blog/BlogContent.astro";
 import BlogWebring from "@components/blog/BlogWebring.astro";
 import Container from "@components/Container.astro";
+import { z } from "astro/zod";
 
+const AstroPropsSchema = z
+  .object({ frontmatter: z.record(z.string(), z.unknown()).optional() })
+  .passthrough();
+const { frontmatter, ...directProps } = AstroPropsSchema.parse(Astro.props);
 const props = BlogSchema.parse({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-  ...Astro.props.frontmatter,
-  ...Astro.props,
+  ...frontmatter,
+  ...directProps,
 });
 ---
 

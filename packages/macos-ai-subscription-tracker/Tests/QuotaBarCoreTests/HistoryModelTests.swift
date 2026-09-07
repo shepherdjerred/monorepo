@@ -80,13 +80,16 @@ import XCTest
 }
 
 private final class HistoryModelSnapshotStore: SnapshotPersisting, @unchecked Sendable {
+  private let lock = NSLock()
   private var snapshots: [ProviderID: UsageSnapshot] = [:]
 
-  func load() throws -> [ProviderID: UsageSnapshot] { snapshots }
-  func save(_ snapshots: [ProviderID: UsageSnapshot]) throws { self.snapshots = snapshots }
+  func load() throws -> [ProviderID: UsageSnapshot] { lock.withLock { snapshots } }
+  func save(_ snapshots: [ProviderID: UsageSnapshot]) throws {
+    lock.withLock { self.snapshots = snapshots }
+  }
 }
 
-private final class HistoryModelSettingsStore: SettingsPersisting, @unchecked Sendable {
+private final class HistoryModelSettingsStore: SettingsPersisting, Sendable {
   private let enabled: Set<ProviderID>
 
   init(enabled: Set<ProviderID>) {

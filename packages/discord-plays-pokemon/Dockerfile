@@ -140,7 +140,8 @@ COPY --from=wasm-builder /src/build/wasm/pokeemerald.wasm \
   /app/packages/discord-plays-pokemon/packages/backend/assets/pokeemerald.wasm
 RUN cd /app/packages/discord-plays-pokemon/packages/backend && \
   bun --no-install --bun vitest --config ../../../../vitest.config.ts run \
-  src/emulator/emulator-symbols.integration.test.ts
+  src/emulator/emulator-symbols.integration.test.ts \
+  src/emulator/audio/audio-fingerprint.test.ts
 
 # ── prod-deps: production-only node_modules, cached on manifests ────────────
 FROM base AS prod-deps

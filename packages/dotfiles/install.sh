@@ -174,8 +174,7 @@ sudo touch /.dockerenv
 
 (
     echo
-    # shellcheck disable=SC2016 # Intentionally single-quoted: written literally to .bashrc
-    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"'
+    printf '%s\n' "eval \"\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\""
 ) >>~/.bashrc
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 

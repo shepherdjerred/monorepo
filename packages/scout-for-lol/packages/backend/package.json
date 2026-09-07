@@ -20,7 +20,7 @@
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:fast": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --bail=3",
     "test:debug": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run --sequence.shuffle",
-    "lint": "bun x eslint src && check-architecture",
+    "lint": "bun x eslint src --max-warnings=0 && check-architecture",
     "format": "bun x prettier --check src",
     "format:write": "bun x prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
