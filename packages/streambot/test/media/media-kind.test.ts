@@ -29,10 +29,12 @@ const CASES: readonly {
   readonly expected: MediaKindDecision;
 }[] = [
   {
-    name: "no video stream beats an explicit mode: video on the video pass",
+    // An instruction, not a guess: the classifier honours it and `reconcileMediaKind` reports the
+    // combination as unsupported, rather than switching transport behind the caller's back.
+    name: "an explicit mode: video outranks the missing picture on the video pass",
     input: { mode: "video", hasVideoStream: false },
     pass: "video",
-    expected: { kind: "music", decidedBy: "no-video-stream" },
+    expected: { kind: "video", decidedBy: "mode" },
   },
   {
     name: "no video stream beats every yt-dlp signal pointing at video",
@@ -244,40 +246,53 @@ describe("classifyMediaKind — the audio-first pass suppresses rule 1", () => {
     ).toEqual({ kind: "video", decidedBy: "mode" });
   });
 
-  test("the same input flips on the video pass, where the observation is real", () => {
+  test("the same input is left for the reconciler on the video pass", () => {
+    // The classifier honours the instruction; it is `reconcileMediaKind` that decides an explicit
+    // video request on a picture-less input is unsupported rather than quietly switching it to
+    // music, which would make the rollout flag a switch that switches nothing off.
     expect(
       classifyMediaKind({ mode: "video", hasVideoStream: false }, "video"),
-    ).toEqual({ kind: "music", decidedBy: "no-video-stream" });
+    ).toEqual({ kind: "video", decidedBy: "mode" });
   });
 });
 
 describe("reconcileMediaKind", () => {
-  // The end of the story the two tests above start: an audio-only source with `mode: "video"`
-  // reaches here still typed as video, and the ffprobe of the FINAL chosen input is what catches
-  // it — before the fork's attachPipeline hard-throws "No video stream in media" with ffmpeg
-  // already spawned and the Go Live connection already open.
-  test("downgrades an explicit mode: video on an audio-only source to music", () => {
-    expect(reconcileMediaKind("video", false)).toEqual({
-      kind: "music",
-      decidedBy: "no-video-stream",
+  // The end of the story the two tests above start: an audio-only source typed as video reaches
+  // here, and the ffprobe of the FINAL chosen input is what catches it — before the fork's
+  // attachPipeline hard-throws "No video stream in media" with ffmpeg already spawned.
+  test("demotes an INFERRED video guess the probe contradicts", () => {
+    expect(reconcileMediaKind("video", false, undefined)).toEqual({
+      outcome: "demote",
+      decision: { kind: "music", decidedBy: "no-video-stream" },
+    });
+  });
+
+  test("reports an EXPLICIT video request on an audio-only source as unsupported", () => {
+    // Not demotable. `"video"` is only ever explicit here — a user typed `mode:video`, or the
+    // rollout flag is off and forced the pre-split transport. Quietly playing it as music ignores
+    // both, and in the rollout case makes the flag a switch that switches nothing off.
+    expect(reconcileMediaKind("video", false, "video")).toEqual({
+      outcome: "unsupported",
     });
   });
 
   test("leaves a video item alone when the probe found a picture", () => {
-    expect(reconcileMediaKind("video", true)).toBeUndefined();
+    expect(reconcileMediaKind("video", true, undefined)).toBeUndefined();
+    expect(reconcileMediaKind("video", true, "video")).toBeUndefined();
   });
 
   test("leaves a video item alone when the probe could not tell", () => {
     // A failed probe (403 on a signed URL, unreadable container) is not evidence of absence.
-    expect(reconcileMediaKind("video", undefined)).toBeUndefined();
+    expect(reconcileMediaKind("video", undefined, undefined)).toBeUndefined();
+    expect(reconcileMediaKind("video", undefined, "video")).toBeUndefined();
   });
 
   test("never promotes music to video, whatever the probe saw", () => {
     // The metadata pass already weighed every signal that says "this is a song"; finding a picture
     // says nothing against them — a music video has one.
-    expect(reconcileMediaKind("music", true)).toBeUndefined();
-    expect(reconcileMediaKind("music", false)).toBeUndefined();
-    expect(reconcileMediaKind("music", undefined)).toBeUndefined();
+    expect(reconcileMediaKind("music", true, undefined)).toBeUndefined();
+    expect(reconcileMediaKind("music", false, undefined)).toBeUndefined();
+    expect(reconcileMediaKind("music", undefined, undefined)).toBeUndefined();
   });
 });
 
@@ -319,7 +334,7 @@ describe("finalizeResolved — folding the final probe into the resolved source"
   test("drops the second input when it downgrades to music", () => {
     // The reason this matters: the music pipeline runs ONE input with `-vn`. A leftover `audioInput`
     // would have `prepareStream` emit `-map 1:a:0` against an input the audio path never opens.
-    const finalized = finalizeResolved(SPLIT_VIDEO, noVideo);
+    const finalized = finalizeResolved(SPLIT_VIDEO, noVideo, undefined);
     expect(finalized.mediaKind).toBe("music");
     expect(finalized.audioInput).toBeUndefined();
     expect(finalized.audioInputHeaders).toBeUndefined();
@@ -331,7 +346,7 @@ describe("finalizeResolved — folding the final probe into the resolved source"
   });
 
   test("leaves a real video item untouched, second input and all", () => {
-    const finalized = finalizeResolved(SPLIT_VIDEO, withVideo);
+    const finalized = finalizeResolved(SPLIT_VIDEO, withVideo, undefined);
     expect(finalized.mediaKind).toBe("video");
     expect(finalized.audioInput).toBe("https://cdn.invalid/audio");
     expect(finalized.audioInputHeaders).toEqual({
@@ -342,7 +357,7 @@ describe("finalizeResolved — folding the final probe into the resolved source"
   test("a failed probe changes nothing at all", () => {
     // `null` is "could not look", not "looked and found nothing" — a 403 on a signed URL must not
     // silently reroute a movie to the music transport.
-    const finalized = finalizeResolved(SPLIT_VIDEO, null);
+    const finalized = finalizeResolved(SPLIT_VIDEO, null, undefined);
     expect(finalized.mediaKind).toBe("video");
     expect(finalized.audioInput).toBe("https://cdn.invalid/audio");
     expect(finalized.hdr).toBeUndefined();
@@ -350,16 +365,19 @@ describe("finalizeResolved — folding the final probe into the resolved source"
   });
 
   test("threads the probed duration and HDR flag through", () => {
-    const finalized = finalizeResolved(SPLIT_VIDEO, {
-      ...withVideo,
-      hdr: true,
-    });
+    const finalized = finalizeResolved(
+      SPLIT_VIDEO,
+      { ...withVideo, hdr: true },
+      undefined,
+    );
     expect(finalized.durationSeconds).toBe(1800);
     expect(finalized.hdr).toBe(true);
   });
 
   test("leaves hdr unset for an SDR source rather than writing false", () => {
-    expect(finalizeResolved(SPLIT_VIDEO, withVideo).hdr).toBeUndefined();
+    expect(
+      finalizeResolved(SPLIT_VIDEO, withVideo, undefined).hdr,
+    ).toBeUndefined();
   });
 
   test("never promotes a music item to video, even on a probe that found a picture", () => {
@@ -369,11 +387,13 @@ describe("finalizeResolved — folding the final probe into the resolved source"
       mediaKind: "music",
       chapters: [],
     };
-    expect(finalizeResolved(music, withVideo).mediaKind).toBe("music");
+    expect(finalizeResolved(music, withVideo, undefined).mediaKind).toBe(
+      "music",
+    );
   });
 
   test("still threads duration onto a music item it downgraded", () => {
-    const finalized = finalizeResolved(SPLIT_VIDEO, noVideo);
+    const finalized = finalizeResolved(SPLIT_VIDEO, noVideo, undefined);
     expect(finalized.durationSeconds).toBe(1800);
   });
 });

@@ -515,18 +515,18 @@ describe("classifyYtdlpInfo", () => {
       kind: "video",
       decidedBy: "default",
     });
-    expect(reconcileMediaKind("video", false)).toEqual({
-      kind: "music",
-      decidedBy: "no-video-stream",
+    expect(reconcileMediaKind("video", false, undefined)).toEqual({
+      outcome: "demote",
+      decision: { kind: "music", decidedBy: "no-video-stream" },
     });
   });
 
-  test("on the video pass, an audio-only selection downgrades an explicit mode: video", () => {
+  test("on the video pass, an audio-only selection keeps an explicit mode: video for the reconciler", () => {
     // The `/best` tail of the video selector landed on an audio format, which on this pass is a
     // real fact about the item rather than an artifact of what we asked for.
     expect(
       classifyYtdlpInfo(parseYtdlpInfo(AUDIO_ONLY), "video", "video"),
-    ).toEqual({ kind: "music", decidedBy: "no-video-stream" });
+    ).toEqual({ kind: "video", decidedBy: "mode" });
   });
 
   test("a non-YouTube direct file defaults to video", () => {

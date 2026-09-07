@@ -487,14 +487,18 @@ export class StreambotStreamer implements StreamerLike {
           // "voice" sends over the normal voice connection with plain microphone semantics and
           // touches nothing on it — no signalVideo, no setSpeaking, no createStream/stopStream —
           // because the assistant is sharing that connection and this segment only borrows it.
+          // The burst has to match `prepare.readrateInitialBurst` on both sides: the pacer
+          // free-runs until that many seconds of pts have been sent, pushing the ffmpeg-side
+          // burst into the receiver's jitter buffer rather than holding it in local queues. Only
+          // Go Live sets one — see `buildMusicPrepareOptions` for why the voice path stays paced
+          // until someone has profiled it — so the two travel together in one branch.
           ...(musicPort === null
-            ? { type: "go-live" as const }
+            ? {
+                type: "go-live" as const,
+                readrateInitialBurst: stream.readrateInitialBurst,
+              }
             : { type: "voice" as const, audioSink: musicPort }),
           observer,
-          // Must match prepare.readrateInitialBurst: the pacer free-runs (no per-frame sleep)
-          // until this many seconds of pts have been sent, pushing the ffmpeg-side burst into
-          // the receiver's jitter buffer instead of holding it in local queues.
-          readrateInitialBurst: stream.readrateInitialBurst,
         },
       },
     );

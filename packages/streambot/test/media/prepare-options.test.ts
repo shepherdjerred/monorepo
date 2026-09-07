@@ -47,7 +47,7 @@ describe("buildMusicPrepareOptions", () => {
     expect(options.hardwarePipelineMode).toBeUndefined();
   });
 
-  test("keeps the readrate pacing a music segment needs just as much", () => {
+  test("keeps readrate pacing, but never bursts an unprofiled transport", () => {
     const options = buildMusicPrepareOptions({
       stream,
       resolved: MUSIC,
@@ -56,7 +56,11 @@ describe("buildMusicPrepareOptions", () => {
     });
 
     expect(options.readrate).toBe(stream.readrate);
-    expect(options.readrateInitialBurst).toBe(stream.readrateInitialBurst);
+    // The burst makes `attachPipeline` set the lone AudioStream to `noSleep`, so 2.5 s would push
+    // ~125 Opus packets back-to-back down the ordinary voice connection before pacing engages —
+    // on the first audio a listener hears, over a path nobody has measured. This package requires
+    // profiling real output before changing timing or buffers, so music stays paced until then.
+    expect(options.readrateInitialBurst).toBeUndefined();
   });
 
   test("passes no audioVolume, because the mixer owns music gain", () => {

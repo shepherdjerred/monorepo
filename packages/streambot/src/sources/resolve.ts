@@ -9,6 +9,7 @@ import { resolveWithYtdlp } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import {
   classifyMediaKind,
   reconcileMediaKind,
+  type MediaMode,
 } from "@shepherdjerred/streambot/sources/media-kind.ts";
 import { resolveSubtitleForFile } from "@shepherdjerred/streambot/sources/subtitle-io.ts";
 import {
@@ -85,6 +86,24 @@ function demoteToMusic(resolved: ResolvedSource): ResolvedSource {
 }
 
 /**
+ * A request explicitly asked for video and the input has no picture.
+ *
+ * Thrown rather than quietly demoted because `"video"` is only ever explicit here: a user typed
+ * `mode:video`, or `streambot-music-over-voice-enabled` is off and the rollout gate forced the
+ * pre-split transport. Silently playing it as music would ignore both — and in the rollout case
+ * would make the flag a switch that does not switch anything off. An inferred video guess is a
+ * different thing and is still demoted on the probe's evidence.
+ */
+export class UnsupportedVideoRequestError extends Error {
+  constructor(title: string) {
+    super(
+      `"${title}" has no video track, so it cannot play as a video stream. Requeue it without \`mode:video\`, or ask an admin to enable music playback for this server.`,
+    );
+    this.name = "UnsupportedVideoRequestError";
+  }
+}
+
+/**
  * Fold the final ffprobe result into a resolved source: apply rule 1's last word (see
  * {@link reconcileMediaKind}), then thread the probed HDR flag and duration.
  *
@@ -96,13 +115,18 @@ function demoteToMusic(resolved: ResolvedSource): ResolvedSource {
 export function finalizeResolved(
   resolved: ResolvedSource,
   info: MediaInfo | null,
+  requestedMode: MediaMode | undefined,
 ): ResolvedSource {
   const reconciled = reconcileMediaKind(
     resolved.mediaKind,
     // ffprobe reports `"unknown"` only when it found no video stream at all. A FAILED probe is
     // `null` and reports nothing, so it changes nothing.
     info === null ? undefined : info.videoCodec !== "unknown",
+    requestedMode,
   );
+  if (reconciled?.outcome === "unsupported") {
+    throw new UnsupportedVideoRequestError(resolved.title);
+  }
   return {
     ...(reconciled === undefined ? resolved : demoteToMusic(resolved)),
     ...(info?.hdr === true ? { hdr: true } : {}),
@@ -197,7 +221,7 @@ export async function resolveSource(
   // video selector's `/bestaudio` tail lands on an audio format. This probe of the chosen input is
   // the last place that can be caught before the fork's `attachPipeline` hard-throws "No video
   // stream in media" with ffmpeg already spawned and Go Live already open.
-  const finalized = finalizeResolved(resolved, info);
+  const finalized = finalizeResolved(resolved, info, source.mode);
   if (finalized.mediaKind !== resolved.mediaKind) {
     log.warn("media kind downgraded after probing the chosen input", {
       title: resolved.title,

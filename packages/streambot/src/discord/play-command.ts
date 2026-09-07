@@ -93,6 +93,20 @@ export async function runPlayCommand(
     interaction.getString("mode") ?? "auto",
   );
 
+  // `mode:music` plays audio only, so there is no picture to burn a subtitle track into and
+  // `prepareStream` hard-throws if one is passed. Both options are explicit here, so accepting the
+  // pair and quietly dropping one would acknowledge a subtitle preference the user will never see.
+  if (
+    requestedMode === "music" &&
+    (interaction.getString("subtitles") !== null ||
+      interaction.getString("sublang") !== null)
+  ) {
+    await interaction.reply(
+      "`mode:music` plays audio only, so subtitles can't be burned in. Drop the subtitle options, or use `mode:video`.",
+    );
+    return;
+  }
+
   if (
     selectedPlacement === "now" &&
     deps.featureGate !== undefined &&

@@ -165,14 +165,29 @@ function categorySignal(
  * about whether the item is a song — the metadata pass already weighed every signal that does — so
  * agreement returns `undefined`, meaning "the existing decision stands".
  */
+export type MediaKindReconciliation =
+  /** The probe disagreed with an INFERRED video classification; trust the probe. */
+  | { readonly outcome: "demote"; readonly decision: MediaKindDecision }
+  /**
+   * The caller explicitly asked for video and the input has no picture. Not demotable: `"video"`
+   * here was a deliberate instruction — from a user typing `mode:video`, or from the rollout flag
+   * forcing the pre-split transport — and quietly playing it as music would ignore both. The
+   * rollout case is the one that matters: silently falling back is a flag that does not switch the
+   * feature off.
+   */
+  | { readonly outcome: "unsupported" };
+
 export function reconcileMediaKind(
   classified: MediaKind,
   hasVideoStream: boolean | undefined,
-): MediaKindDecision | undefined {
-  if (classified === "video" && hasVideoStream === false) {
-    return { kind: "music", decidedBy: "no-video-stream" };
-  }
-  return undefined;
+  requestedMode: MediaMode | undefined,
+): MediaKindReconciliation | undefined {
+  if (classified !== "video" || hasVideoStream !== false) return undefined;
+  if (requestedMode === "video") return { outcome: "unsupported" };
+  return {
+    outcome: "demote",
+    decision: { kind: "music", decidedBy: "no-video-stream" },
+  };
 }
 
 /**
@@ -183,13 +198,19 @@ export function classifyMediaKind(
   input: MediaKindInput,
   pass: MediaKindPass,
 ): MediaKindDecision {
-  // 1. No picture at all beats everything, INCLUDING an explicit `mode: "video"`. The fork's
-  //    `attachPipeline` hard-throws "No video stream in media" on a video-typed play with no video
-  //    track, so honouring `mode: "video"` on (say) a SoundCloud link would be a guaranteed crash.
-  //    Refusing to obey the user here is strictly better than obeying them into a failed play.
+  // 1. No picture at all beats every INFERRED signal: the fork's `attachPipeline` hard-throws on a
+  //    video-typed play with no video track, so guessing video for (say) a SoundCloud link would be
+  //    a guaranteed crash. It deliberately does NOT beat an explicit `mode: "video"` — that is an
+  //    instruction, from a user or from the rollout flag forcing the pre-split transport, and
+  //    quietly playing it as music would ignore both. `reconcileMediaKind` reports that
+  //    combination as unsupported instead, so it fails with a reason rather than a silent switch.
   //    Suppressed on the audio-first pass, where the answer is `false` for every item by
   //    construction — see MediaKindPass.
-  if (pass === "video" && input.hasVideoStream === false) {
+  if (
+    pass === "video" &&
+    input.hasVideoStream === false &&
+    input.mode !== "video"
+  ) {
     return { kind: "music", decidedBy: "no-video-stream" };
   }
   // 2. An explicit override beats every inferred signal — that is what it is for.

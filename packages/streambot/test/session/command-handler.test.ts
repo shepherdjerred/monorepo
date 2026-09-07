@@ -897,6 +897,31 @@ describe("CommandHandler subtitles command (track picker)", () => {
     expect(h.subtitleMenuPending()).toBe(false);
   });
 
+  test("refuses mode:music combined with subtitles, and allows each alone", async () => {
+    const h = makeHandler({});
+    const { interaction, replies } = fakeInteraction({
+      sub: "play",
+      strings: { query: "a song", mode: "music", subtitles: "on" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(interaction);
+    // Both options are explicit, so accepting the pair and dropping one would acknowledge a
+    // subtitle preference the user will never see — and `prepareStream` throws on the combination.
+    expect(replies[0]).toContain("audio only");
+    expect(replies[0]).toContain("mode:video");
+
+    // The control: the guard must fire on the contradiction and nothing else. An over-broad
+    // version would reject every music request, or every subtitled one, while the case above
+    // stayed green.
+    const musicOnly = fakeInteraction({
+      sub: "play",
+      strings: { query: "a song", mode: "music" },
+      userId: REQUESTER,
+    });
+    await h.handler.run(musicOnly.interaction);
+    expect(musicOnly.replies[0] ?? "").not.toContain("audio only");
+  });
+
   test("refuses an audio-only item and names the fix", async () => {
     const base = viewWithCurrent(REQUESTER);
     const h = makeHandler({

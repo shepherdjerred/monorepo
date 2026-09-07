@@ -60,11 +60,18 @@ export function buildMusicPrepareOptions(
     audioOnly: true,
     includeAudio: true,
     bitrateAudio: input.stream.bitrateAudioKbps,
-    // Both readrate settings carry over unchanged. Audio is a fraction of a video stream's
-    // bitrate, but the pipeline shape is identical — an unpaced demux still outruns the send loop
-    // and still grows the buffer pool until GC pauses it.
+    // `readrate` carries over: an unpaced demux outruns the send loop and grows the buffer pool
+    // until GC pauses it, and that shape is identical whatever the bitrate.
+    //
+    // `readrateInitialBurst` deliberately does NOT. On Go Live the burst pre-rolls a cushion into
+    // the receiver's jitter buffer, and it was tuned against real ffmpeg output there. This
+    // transport is different in the way that matters: `attachPipeline` makes the lone AudioStream
+    // `noSleep` for the burst window, so 2.5 s would push ~125 Opus packets back-to-back down the
+    // ordinary voice connection before pacing starts — a burst onto a path whose behaviour nobody
+    // has measured, on the very first audio a listener hears. This package's rule is to profile
+    // real output before changing timing or buffers; until someone has, the safe default is the
+    // paced one. Enable it here once there is a live measurement to point at.
     readrate: input.stream.readrate,
-    readrateInitialBurst: input.stream.readrateInitialBurst,
     ...startTimeOption(input.startSeconds),
     ...headerOptions(input.resolved.ffmpegInputHeaders),
   };

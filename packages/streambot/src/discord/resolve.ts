@@ -4,6 +4,7 @@ import {
   type LibraryEntry,
 } from "@shepherdjerred/streambot/sources/library.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
+import { UnsupportedVideoRequestError } from "@shepherdjerred/streambot/sources/resolve.ts";
 import { NoUsableFormatError } from "@shepherdjerred/streambot/sources/format-select.ts";
 
 /** True for an `http(s)://` URL. */
@@ -45,7 +46,10 @@ export function classifyPlayError(
   error: unknown,
   sourceKind: Source["kind"],
 ): string {
-  // Our own failure, not yt-dlp's, so it is matched by class rather than by stderr phrasing.
+  // Our own failures, not yt-dlp's, so they are matched by class rather than by stderr phrasing.
+  if (error instanceof UnsupportedVideoRequestError) {
+    return error.message;
+  }
   if (error instanceof NoUsableFormatError) {
     return error.kind === "music"
       ? "That item has no audio stream I can play."
