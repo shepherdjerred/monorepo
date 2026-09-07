@@ -4,7 +4,7 @@ import {
   getChampionByKey,
   normalizeChampionName,
   searchChampions,
-} from "#src/model/champion-registry.ts";
+} from "#src/model/riot/champion-registry.ts";
 
 /**
  * Grounded per-ability facts generated from Data Dragon (cooldowns, costs,

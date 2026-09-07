@@ -44,7 +44,7 @@ per-ability numbers for the voice assistant and other fact-answering features:
 Read them through `getAbilityFacts(championName)` in
 `src/data-dragon/ability-facts.ts`. The input is a user boundary: it accepts
 any casing/punctuation and the spoken aliases in
-`src/model/champion-registry.ts`, and returns closest-match suggestions for
+`src/model/riot/champion-registry.ts`, and returns closest-match suggestions for
 unknown names instead of throwing.
 
 Regenerate just these assets (pinned to the committed `version.json`, requires

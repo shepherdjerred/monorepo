@@ -5,7 +5,7 @@ import {
   getAbilityFacts,
   suggestChampionNames,
 } from "./ability-facts.ts";
-import { getAllChampions } from "#src/model/champion-registry.ts";
+import { getAllChampions } from "#src/model/riot/champion-registry.ts";
 
 const ABILITY_FACTS_DIR = `${import.meta.dirname}/assets/ability-facts`;
 
