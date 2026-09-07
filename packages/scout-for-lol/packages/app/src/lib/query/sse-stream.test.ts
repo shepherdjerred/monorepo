@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "vitest";
-import { postEventStream } from "#src/lib/sse-stream.ts";
+import { postEventStream } from "#src/lib/query/sse-stream.ts";
 
 /**
  * The property worth pinning is teardown, not parsing.

@@ -13,8 +13,8 @@ import {
   adoptSnapshot,
   nextPage,
   previousPage,
-} from "#src/lib/bucks-ledger-paging.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+} from "#src/lib/bucks/bucks-ledger-paging.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 
 /**

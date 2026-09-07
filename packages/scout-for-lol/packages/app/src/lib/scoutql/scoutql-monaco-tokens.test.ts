@@ -7,7 +7,7 @@ import {
   scoutQlLineTokens,
   scoutQlTokenTypeIndex,
   SCOUTQL_SEMANTIC_TOKEN_TYPES,
-} from "#src/lib/scoutql-monaco-tokens.ts";
+} from "#src/lib/scoutql/scoutql-monaco-tokens.ts";
 
 /** Reads the flat uint32 stream back into absolute positions. */
 function decode(

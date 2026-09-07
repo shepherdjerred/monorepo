@@ -16,7 +16,7 @@ import {
   type CreationIntentCardData,
 } from "#src/lib/explore/explore-intent-cards.ts";
 import type { CreationConfirmationOutcome } from "#src/lib/intent-confirmation.ts";
-import { TRPCProvider, trpcClient } from "#src/lib/trpc.ts";
+import { TRPCProvider, trpcClient } from "#src/lib/query/trpc.ts";
 
 const QUESTION_ID = "33333333-3333-4333-8333-333333333333";
 const ANSWER_ID = "44444444-4444-4444-8444-444444444444";

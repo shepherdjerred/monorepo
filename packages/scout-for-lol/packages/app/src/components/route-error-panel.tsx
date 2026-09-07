@@ -9,7 +9,7 @@ import * as Sentry from "@sentry/react";
 import { z } from "zod";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { cn } from "#src/lib/cn.ts";
-import { queryClient } from "#src/lib/query-client.ts";
+import { queryClient } from "#src/lib/query/query-client.ts";
 import { RouteParameterError } from "#src/lib/route-params.ts";
 
 const ErrorMessageSchema = z.object({ message: z.string() });

@@ -10,7 +10,7 @@ import {
   TimelinePagination,
   type TimelineCursor,
 } from "#src/components/timeline-pagination.tsx";
-import type { RouterOutputs } from "#src/lib/trpc.ts";
+import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 
 type TimelineFrame = RouterOutputs["consumerMatch"]["frames"]["rows"][number];
 

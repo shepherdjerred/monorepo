@@ -21,7 +21,7 @@ import {
   resolveGuildContext,
 } from "#src/lib/analytics.ts";
 import { cn } from "#src/lib/cn.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export type BucksOutletContext = {
   guildId: string;

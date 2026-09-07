@@ -4,10 +4,10 @@ import {
   buildCompetitionSubmission,
   competitionBuilderReducer,
   initialCompetitionBuilderState,
-} from "#src/lib/competition-builder-state.ts";
-import { buildCompetitionScenarios } from "#src/lib/competition-scenarios.ts";
-import { COMPETITION_EXAMPLES } from "#src/lib/onboarding-examples.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
+} from "#src/lib/bucks/competition-builder-state.ts";
+import { buildCompetitionScenarios } from "#src/lib/bucks/competition-scenarios.ts";
+import { COMPETITION_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
+import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
 import { competitionReviewSummary } from "#src/components/competition/competition-builder-review.tsx";
 
 const NOW = new Date("2026-08-23T18:00:00.000Z");

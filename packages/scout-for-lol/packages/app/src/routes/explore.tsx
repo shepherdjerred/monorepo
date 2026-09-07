@@ -35,7 +35,7 @@ import { useExploreParams } from "#src/lib/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreRuns } from "#src/components/explore/explore-runs-context.ts";
 import { usePinnedScroll } from "#src/hooks/use-pinned-scroll.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
  * Explore: ask questions of every match Scout has ingested.

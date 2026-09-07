@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   resolvePermissionQueryError,
   shouldQueryScopedPermissions,
-} from "#src/lib/permission-query-state.ts";
+} from "#src/lib/player/permission-query-state.ts";
 
 describe("permission query state", () => {
   test("a list failure enables the scoped fallback", () => {

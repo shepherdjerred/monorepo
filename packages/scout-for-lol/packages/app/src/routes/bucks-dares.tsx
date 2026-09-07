@@ -39,9 +39,9 @@ import {
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
-import { dareDeadlineDescription } from "#src/lib/dare-deadline.ts";
-import { dareEditorInstanceKey } from "#src/lib/dare-editor-state.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { dareDeadlineDescription } from "#src/lib/bucks/dare-deadline.ts";
+import { dareEditorInstanceKey } from "#src/lib/bucks/dare-editor-state.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 
 const DareIdSchema = z.coerce.number().int().positive();

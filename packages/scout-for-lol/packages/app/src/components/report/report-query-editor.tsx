@@ -3,19 +3,19 @@ import type * as Monaco from "monaco-editor";
 import Editor, { type OnChange } from "@monaco-editor/react";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { useScoutTheme } from "@scout-for-lol/design-system/runtime";
-import "#src/lib/monaco-setup.ts";
+import "#src/lib/scoutql/monaco-setup.ts";
 import {
   registerScoutQlLanguage,
   SCOUTQL_LANGUAGE_ID,
-} from "#src/lib/scoutql-monaco-language.ts";
+} from "#src/lib/scoutql/scoutql-monaco-language.ts";
 import {
   registerScoutQlProviders,
   updateScoutQlDiagnostics,
-} from "#src/lib/scoutql-monaco-providers.ts";
+} from "#src/lib/scoutql/scoutql-monaco-providers.ts";
 import {
   defineScoutQlThemes,
   scoutQlThemeName,
-} from "#src/lib/scoutql-monaco-themes.ts";
+} from "#src/lib/scoutql/scoutql-monaco-themes.ts";
 
 // Monaco-backed editor for ScoutQL. Semantic highlighting, context-aware
 // completion (with snippets), signature help, hover docs, quick fixes and

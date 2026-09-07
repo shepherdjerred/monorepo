@@ -33,11 +33,11 @@ import {
   useUnsavedForm,
 } from "#src/hooks/use-unsaved-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
-import { calendarDateInTimezone } from "#src/lib/competition-time.ts";
+import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
+import { calendarDateInTimezone } from "#src/lib/bucks/competition-time.ts";
 import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
-import type { CompetitionExample } from "#src/lib/onboarding-examples.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import type { CompetitionExample } from "#src/lib/onboarding/onboarding-examples.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CompetitionForm() {
   const { guildId, competitionId: idParam } = useParams();

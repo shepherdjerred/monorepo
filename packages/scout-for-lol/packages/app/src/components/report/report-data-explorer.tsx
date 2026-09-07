@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 import { copyToClipboard } from "#src/lib/clipboard.ts";
 

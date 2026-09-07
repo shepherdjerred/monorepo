@@ -6,7 +6,7 @@ import {
   resolveShareToken,
 } from "#src/lib/explore/explore-share-link.ts";
 import { track } from "#src/lib/analytics.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
  * TS types `navigator.clipboard` as always present, but insecure origins and

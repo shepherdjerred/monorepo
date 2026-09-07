@@ -11,9 +11,9 @@ import {
   QueueTypeSchema,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { competitionAnalysisDateInput } from "#src/lib/competition-analysis-date.ts";
+import { competitionAnalysisDateInput } from "#src/lib/bucks/competition-analysis-date.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";

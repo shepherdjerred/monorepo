@@ -16,7 +16,7 @@ import { PageSectionHeading } from "#src/components/page-section-heading.tsx";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export const PROTECTED_CONSUMER_SEARCH_QUERY_OPTIONS = {
   staleTime: 0,

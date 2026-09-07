@@ -27,7 +27,7 @@ import {
   plottableMetricColumns,
   previewToVisualizationSnapshot,
   visualizationSnapshotWithControls,
-} from "#src/lib/preview-to-visualization.ts";
+} from "#src/lib/scoutql/preview-to-visualization.ts";
 
 function chartableSnapshot(
   snapshot: VisualizationSnapshot | null,

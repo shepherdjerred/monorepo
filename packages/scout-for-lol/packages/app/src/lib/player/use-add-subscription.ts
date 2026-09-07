@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
 import {
   SubscriptionFormSchema,

@@ -19,7 +19,7 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { useGuildParams } from "#src/lib/route-params.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 function toggleValue(
   values: readonly string[],

@@ -8,7 +8,7 @@ import {
   ParticipantStatusSchema,
   PlayerIdSchema,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";

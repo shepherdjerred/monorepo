@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { competitionAnalysisDateInput } from "#src/lib/competition-analysis-date.ts";
+import { competitionAnalysisDateInput } from "#src/lib/bucks/competition-analysis-date.ts";
 
 describe("competitionAnalysisDateInput", () => {
   test("formats competition bounds in the configured analysis timezone", () => {

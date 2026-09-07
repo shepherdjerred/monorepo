@@ -7,12 +7,12 @@ import {
   ErrorState,
   LoadingState,
 } from "@scout-for-lol/design-system/domain/states";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { SectionSkeleton } from "#src/components/section-skeleton.tsx";
 import {
   resolveSessionGuardState,
   SESSION_QUERY_OPTIONS,
-} from "#src/lib/session-query.ts";
+} from "#src/lib/query/session-query.ts";
 
 /**
  * Route guard that redirects to /login if the user has no valid web

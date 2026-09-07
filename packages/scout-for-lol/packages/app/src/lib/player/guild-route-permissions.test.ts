@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   GUILD_ACTION_ROUTE_PERMISSIONS,
   permissionsForGuildActionRoute,
-} from "#src/lib/guild-route-permissions.ts";
+} from "#src/lib/player/guild-route-permissions.ts";
 
 describe("permissionsForGuildActionRoute", () => {
   test.each([

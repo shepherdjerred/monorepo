@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { RiotIdSchema } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { regionLabel, type RegionValue } from "#src/lib/regions.ts";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { Combobox } from "@scout-for-lol/design-system/components/combobox";

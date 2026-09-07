@@ -7,7 +7,7 @@ import { useNavigate } from "react-router";
 import { PlayerSubscriptionsManager } from "#src/components/player/player-subscriptions-manager.tsx";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CompetitionStatusSchema } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";

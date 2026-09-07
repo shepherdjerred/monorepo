@@ -6,7 +6,7 @@ import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { StaleState } from "@scout-for-lol/design-system/domain/states";
 import { ReportIdSchema } from "@scout-for-lol/data";
 import { CronPresets } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useGuildParams } from "#src/lib/route-params.ts";
@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 
 function cronLabel(cron: string): string {
   const preset = CronPresets.find((entry) => entry.value === cron);

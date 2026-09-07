@@ -13,7 +13,7 @@ import { DirectDuelForm } from "#src/components/competition/direct-duel-form.tsx
 import { DuelEventCreateForm } from "#src/components/competition/duel-event-create-form.tsx";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { useDuelGuildParams } from "#src/lib/route-params.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 function competitorLabel(competitor: {
   teamName: string | null;

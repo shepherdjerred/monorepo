@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ReportIdSchema } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ReportQueryPreview } from "#src/components/report/report-query-preview.tsx";

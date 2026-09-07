@@ -3,7 +3,7 @@ import {
   SubscriptionFields,
   subscriptionFormOptions,
 } from "#src/components/subscription/subscription-fields.tsx";
-import { useAddSubscription } from "#src/lib/use-add-subscription.ts";
+import { useAddSubscription } from "#src/lib/player/use-add-subscription.ts";
 import {
   emptySubscriptionFormValue,
   SubscriptionFormSchema,

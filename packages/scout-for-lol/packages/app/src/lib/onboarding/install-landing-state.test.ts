@@ -4,7 +4,7 @@ import {
   installContinueTarget,
   installLandingCopy,
   installLandingResult,
-} from "#src/lib/install-landing-state.ts";
+} from "#src/lib/onboarding/install-landing-state.ts";
 
 const GUILD = "100000000000000042";
 

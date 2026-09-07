@@ -17,9 +17,9 @@ import { track } from "#src/lib/analytics.ts";
 import {
   parsePlayerProfileFilters,
   playerProfileSearch,
-} from "#src/lib/player-profile-filters.ts";
+} from "#src/lib/player/player-profile-filters.ts";
 import { useConsumerMatchParams } from "#src/lib/route-params.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 function duration(seconds: number): string {
   return `${Math.floor(seconds / 60).toString()}m ${(seconds % 60).toString()}s`;

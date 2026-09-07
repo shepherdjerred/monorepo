@@ -3,7 +3,7 @@ import {
   addCalendarDays,
   calendarDateInTimezone,
   fixedDateRangeInTimezone,
-} from "#src/lib/competition-time.ts";
+} from "#src/lib/bucks/competition-time.ts";
 
 describe("competition calendar time", () => {
   test("uses local day start and inclusive local day end", () => {

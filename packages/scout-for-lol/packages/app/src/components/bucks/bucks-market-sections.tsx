@@ -11,7 +11,7 @@ import {
 } from "#src/components/bucks/bucks-market-card.tsx";
 import { BucksParlayCard } from "#src/components/bucks/bucks-parlay-card.tsx";
 import type { BucksBetSubmission } from "#src/components/bucks/bucks-bet-form.tsx";
-import { remainingMs } from "#src/lib/bucks-countdown.ts";
+import { remainingMs } from "#src/lib/bucks/bucks-countdown.ts";
 
 export type BucksMatchParlayRow = {
   matchId: string;

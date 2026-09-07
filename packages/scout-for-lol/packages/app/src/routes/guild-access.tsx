@@ -12,7 +12,7 @@ import {
   canDelegateRole,
   permissionsForRole,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
@@ -36,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 import { useGuildParams } from "#src/lib/route-params.ts";
 import {
   fieldErrorMessage,

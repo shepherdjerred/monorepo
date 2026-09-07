@@ -18,7 +18,7 @@ import {
 } from "@scout-for-lol/design-system/components/table";
 import { ErrorPanel } from "#src/components/route-error-panel.tsx";
 import { useHallParams } from "#src/lib/route-params.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 function recordValue(value: number | null, precision: number): string {
   return value === null ? "—" : value.toFixed(precision);

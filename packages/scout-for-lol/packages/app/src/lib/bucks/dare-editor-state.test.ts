@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { dareEditorInstanceKey } from "#src/lib/dare-editor-state.ts";
+import { dareEditorInstanceKey } from "#src/lib/bucks/dare-editor-state.ts";
 
 describe("Dare editor instance state", () => {
   test("changes the editor instance when the fetched revision changes", () => {

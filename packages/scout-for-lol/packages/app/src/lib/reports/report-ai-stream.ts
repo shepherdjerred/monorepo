@@ -4,9 +4,9 @@ import {
   type ReportAiEditRequest,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
-import { postEventStream } from "#src/lib/sse-stream.ts";
-import { httpErrorMessage } from "#src/lib/stream-http-error.ts";
-import { readCsrfCookie } from "#src/lib/trpc.ts";
+import { postEventStream } from "#src/lib/query/sse-stream.ts";
+import { httpErrorMessage } from "#src/lib/query/stream-http-error.ts";
+import { readCsrfCookie } from "#src/lib/query/trpc.ts";
 
 export async function streamReportAiEdit(params: {
   input: ReportAiEditRequest;

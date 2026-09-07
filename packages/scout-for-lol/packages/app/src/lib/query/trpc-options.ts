@@ -1,7 +1,7 @@
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { AppRouter } from "@scout-for-lol/backend/trpc/router/index.ts";
-import { trpcClient } from "#src/lib/trpc.ts";
-import { queryClient } from "#src/lib/query-client.ts";
+import { trpcClient } from "#src/lib/query/trpc.ts";
+import { queryClient } from "#src/lib/query/query-client.ts";
 
 /**
  * Context-free tRPC options proxy for use outside React — specifically the

@@ -4,7 +4,7 @@ import {
   parsePlayerProfileFilters,
   playerProfileSearchParams,
   type PlayerProfileFilters,
-} from "#src/lib/player-profile-filters.ts";
+} from "#src/lib/player/player-profile-filters.ts";
 
 export function usePlayerProfileUrlState(): {
   filters: PlayerProfileFilters;

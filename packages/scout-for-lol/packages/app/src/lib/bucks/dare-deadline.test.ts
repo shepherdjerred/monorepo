@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { dareDeadlineDescription } from "#src/lib/dare-deadline.ts";
+import { dareDeadlineDescription } from "#src/lib/bucks/dare-deadline.ts";
 
 describe("dareDeadlineDescription", () => {
   test("renders an absolute deadline with its explicit timezone", () => {

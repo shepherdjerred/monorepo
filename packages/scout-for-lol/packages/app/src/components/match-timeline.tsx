@@ -16,7 +16,7 @@ import {
   TimelinePagination,
   type TimelineCursor,
 } from "#src/components/timeline-pagination.tsx";
-import { useTRPC, type RouterOutputs } from "#src/lib/trpc.ts";
+import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
 
 type Coverage =
   RouterOutputs["consumerMatch"]["detail"]["timeline"]["coverage"];

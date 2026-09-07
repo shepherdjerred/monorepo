@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReportId } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { channelLabel } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";

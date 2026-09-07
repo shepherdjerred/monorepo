@@ -27,7 +27,7 @@ import {
   fieldErrorMessage,
   withScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { browserTimezone } from "#src/lib/competition-time.ts";
+import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
 import type { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
 
 export type FormState = z.input<typeof CompetitionFormValueSchema>;

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { ScoutQlDiagnostic } from "@scout-for-lol/data/model/scoutql/diagnostics.ts";
 import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
-import { scoutQlFixesForMarker } from "#src/lib/scoutql-monaco-providers.ts";
+import { scoutQlFixesForMarker } from "#src/lib/scoutql/scoutql-monaco-providers.ts";
 
 // Monaco markers carry no payload slot, so a quick fix cannot ride along on
 // the marker. These tests pin the identity the code-action provider uses to

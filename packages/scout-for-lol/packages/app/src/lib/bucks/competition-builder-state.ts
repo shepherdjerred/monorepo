@@ -11,9 +11,9 @@ import { EMPTY_STATE } from "#src/components/competition/competition-form-fields
 import {
   buildCompetitionScenarios,
   type CompetitionScenario,
-} from "#src/lib/competition-scenarios.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
-import type { DatesValue } from "#src/lib/competition-form-state.ts";
+} from "#src/lib/bucks/competition-scenarios.ts";
+import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
+import type { DatesValue } from "#src/lib/bucks/competition-form-state.ts";
 import {
   CompetitionBuilderFormValueSchema,
   type CompetitionBuilderFormValue,

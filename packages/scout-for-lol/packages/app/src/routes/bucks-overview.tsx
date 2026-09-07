@@ -19,8 +19,8 @@ import type { BucksBetSubmission } from "#src/components/bucks/bucks-bet-form.ts
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { useNow } from "#src/hooks/use-now.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { computeClockSkewMs } from "#src/lib/bucks-countdown.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { computeClockSkewMs } from "#src/lib/bucks/bucks-countdown.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 
 const LIVE_QUERY_OPTIONS = {

@@ -25,10 +25,10 @@ import { track } from "#src/lib/analytics.ts";
 import {
   playerProfileSearch,
   type PlayerProfileFilters,
-} from "#src/lib/player-profile-filters.ts";
+} from "#src/lib/player/player-profile-filters.ts";
 import { useConsumerChampionParams } from "#src/lib/route-params.ts";
-import { useTRPC, type RouterOutputs } from "#src/lib/trpc.ts";
-import { usePlayerProfileUrlState } from "#src/lib/use-player-profile-url-state.ts";
+import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
+import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url-state.ts";
 
 type Cursor = { offset: number };
 type ComparisonOutput = RouterOutputs["consumerChampion"]["compare"];

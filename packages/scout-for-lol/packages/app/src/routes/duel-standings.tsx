@@ -10,7 +10,7 @@ import {
 } from "@scout-for-lol/design-system/components/table";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { useDuelEventParams } from "#src/lib/route-params.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function DuelStandings() {
   const { guildId, eventId } = useDuelEventParams();

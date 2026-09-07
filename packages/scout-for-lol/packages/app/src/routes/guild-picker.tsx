@@ -2,7 +2,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { Link } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Compass, Settings } from "lucide-react";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,

@@ -18,8 +18,8 @@ import {
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { useDiscordNames } from "#src/hooks/use-discord-names.ts";
 import { formatDate } from "#src/lib/format.ts";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { useBucksGuild } from "#src/routes/bucks-workspace.tsx";
 
 /**

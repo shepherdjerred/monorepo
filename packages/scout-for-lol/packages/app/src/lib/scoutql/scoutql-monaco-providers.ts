@@ -12,12 +12,12 @@ import { hoverScoutQl } from "@scout-for-lol/data/model/scoutql/hover.ts";
 import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
 import { scoutQlSemanticTokens } from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
 import { signatureHelpScoutQl } from "@scout-for-lol/data/model/scoutql/signature.ts";
-import { SCOUTQL_LANGUAGE_ID } from "#src/lib/scoutql-monaco-language.ts";
+import { SCOUTQL_LANGUAGE_ID } from "#src/lib/scoutql/scoutql-monaco-language.ts";
 import {
   encodeScoutQlSemanticTokens,
   SCOUTQL_SEMANTIC_TOKEN_MODIFIERS,
   SCOUTQL_SEMANTIC_TOKEN_TYPES,
-} from "#src/lib/scoutql-monaco-tokens.ts";
+} from "#src/lib/scoutql/scoutql-monaco-tokens.ts";
 
 // ── Monaco ↔ ScoutQL language services ───────────────────────────────────────
 // Every provider here is a thin adapter over an editor-agnostic pure function

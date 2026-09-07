@@ -4,7 +4,7 @@ import {
   filterKey,
   parsePlayerProfileFilters,
   playerProfileSearch,
-} from "#src/lib/player-profile-filters.ts";
+} from "#src/lib/player/player-profile-filters.ts";
 
 const competitive = [...PLAYER_PROFILE_QUEUE_PRESETS.competitive];
 

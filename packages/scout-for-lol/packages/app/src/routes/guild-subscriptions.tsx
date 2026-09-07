@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-query";
 import { MoreHorizontal } from "lucide-react";
 
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/subscription/add-subscription-dialog.tsx";
@@ -43,7 +43,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 
 function accountLabel(account: {
   alias: string;

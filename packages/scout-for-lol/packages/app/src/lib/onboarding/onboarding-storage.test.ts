@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { shouldRedirectToOnboarding } from "#src/lib/onboarding-storage.ts";
+import { shouldRedirectToOnboarding } from "#src/lib/onboarding/onboarding-storage.ts";
 
 describe("shouldRedirectToOnboarding", () => {
   test("always redirects users without a manageable server", () => {

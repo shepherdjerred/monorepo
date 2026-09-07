@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   resolveSessionGuardState,
   SESSION_QUERY_OPTIONS,
-} from "#src/lib/session-query.ts";
+} from "#src/lib/query/session-query.ts";
 
 describe("session query", () => {
   test("only a successful anonymous response means signed out", () => {

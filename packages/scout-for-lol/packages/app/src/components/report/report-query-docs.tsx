@@ -9,7 +9,7 @@ import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
 import {
   SCOUTQL_SHAPE_EXAMPLE,
   scoutQlClauseSummary,
-} from "#src/lib/scoutql-clause-summary.ts";
+} from "#src/lib/scoutql/scoutql-clause-summary.ts";
 import {
   scoutQlFunctionSections,
   scoutQlKeywordList,
@@ -19,7 +19,7 @@ import {
   scoutQlSourceSections,
   scoutQlTimeBoundItems,
   type DocsDefinition,
-} from "#src/lib/report-query-docs-sections.ts";
+} from "#src/lib/reports/report-query-docs-sections.ts";
 
 // ── The in-app ScoutQL reference ─────────────────────────────────────────────
 // Presentation only: every list on this page is built in

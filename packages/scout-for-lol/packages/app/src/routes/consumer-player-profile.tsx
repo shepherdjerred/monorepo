@@ -20,13 +20,13 @@ import type { HistoryCursor } from "#src/components/player/recorded-match-histor
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
 import { useConsumerPlayerParams } from "#src/lib/route-params.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
   filterKey,
   playerProfileSearch,
   type PlayerProfileFilters,
-} from "#src/lib/player-profile-filters.ts";
-import { usePlayerProfileUrlState } from "#src/lib/use-player-profile-url-state.ts";
+} from "#src/lib/player/player-profile-filters.ts";
+import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url-state.ts";
 
 const EntryStateSchema = z.object({
   entrySurface: z.enum(["search_results", "direct_link"]),

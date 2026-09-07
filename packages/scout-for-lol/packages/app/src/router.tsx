@@ -57,7 +57,7 @@ import { DuelSeries } from "#src/routes/duel-series.tsx";
 import { DuelStandings } from "#src/routes/duel-standings.tsx";
 import { DuelHeadToHead } from "#src/routes/duel-head-to-head.tsx";
 import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
-import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
+import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/player/guild-route-permissions.ts";
 import {
   accessLoader,
   auditLoader,

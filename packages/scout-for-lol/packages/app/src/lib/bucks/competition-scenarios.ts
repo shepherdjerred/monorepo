@@ -4,7 +4,7 @@ import type { DatesState } from "#src/components/competition/competition-dates-f
 import {
   addCalendarDays,
   calendarDateInTimezone,
-} from "#src/lib/competition-time.ts";
+} from "#src/lib/bucks/competition-time.ts";
 
 export type CompetitionScenarioValue = {
   title: string;
