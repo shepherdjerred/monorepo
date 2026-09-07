@@ -1352,13 +1352,9 @@
       "clones": 1,
       "tokens": 73
     },
-    "packages/streambot/src/voice/debug-audio-recorder.ts|packages/streambot/src/voice/wave-io.ts": {
+    "packages/streambot/src/voice/debug-audio-recorder.ts|packages/voice-assistant/src/wave-io.ts": {
       "clones": 1,
       "tokens": 73
-    },
-    "packages/streambot/src/voice/local-models.ts|packages/streambot/src/voice/local-models.ts": {
-      "clones": 2,
-      "tokens": 175
     },
     "packages/streambot/test/media/player-card.test.ts|packages/streambot/test/media/player-controls.test.ts": {
       "clones": 1,
@@ -1396,7 +1392,7 @@
       "clones": 1,
       "tokens": 89
     },
-    "packages/streambot/test/voice/realtime-transport.test.ts|packages/streambot/test/voice/voice-audio-lifecycle.test.ts": {
+    "packages/streambot/test/voice/realtime-transport.test.ts|packages/voice-assistant/test/voice-audio-lifecycle.test.ts": {
       "clones": 2,
       "tokens": 154
     },
@@ -1631,6 +1627,10 @@
     "packages/toolkit/test/lib/http.test.ts|packages/toolkit/test/lib/http.test.ts": {
       "clones": 2,
       "tokens": 166
+    },
+    "packages/voice-assistant/src/local-models.ts|packages/voice-assistant/src/local-models.ts": {
+      "clones": 2,
+      "tokens": 175
     },
     "scripts/lib/ci-io-fixed-corpus.test.ts|scripts/lib/ci-io-fixed-corpus.test.ts": {
       "clones": 2,

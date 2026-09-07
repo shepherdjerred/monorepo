@@ -163,6 +163,7 @@
     "packages/toolkit",
     "packages/trmnl-dashboard",
     "packages/version-catalog",
+    "packages/voice-assistant",
     "packages/webring",
     "scripts"
   ],

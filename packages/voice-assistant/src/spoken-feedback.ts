@@ -1,20 +1,18 @@
 import path from "node:path";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
-import { PacedAssistantSender } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
-import { readPcm16MonoWave } from "@shepherdjerred/streambot/voice/wave-io.ts";
+import { readPcm16MonoWave } from "./wave-io.ts";
 
 const FEEDBACK_SAMPLE_RATE = 24_000;
 
 /**
  * Pre-rendered local feedback lines, spoken without any Realtime response. A rejected transcript
  * and a rate-limited wake stay response.create-free by design — these clips are the only way the
- * speaker hears anything on those paths, and their bytes never leave the process except as Discord
- * reply audio. Regenerate with scripts/voice-feedback-generate.ts.
+ * speaker hears anything on those paths, and their bytes never leave the process except as the
+ * assistant's reply audio. Consumers own the clip files and their generation tooling.
  */
 export type SpokenFeedbackClips = {
-  /** "Sorry, I didn't catch that — say Hey Streambot and try again." */
+  /** "Sorry, I didn't catch that — say <wake phrase> and try again." */
   readonly retry: Uint8Array;
-  /** "What would you like me to play?" */
+  /** "What would you like me to do?" */
   readonly prompt: Uint8Array;
 };
 
@@ -42,20 +40,11 @@ async function loadClip(filename: string): Promise<Uint8Array> {
 /** Fatal when missing or malformed, like every other pinned voice asset. */
 export async function loadSpokenFeedbackClips(
   assetsDir: string,
+  files: { readonly retry: string; readonly prompt: string },
 ): Promise<SpokenFeedbackClips> {
   const [retry, prompt] = await Promise.all([
-    loadClip(path.join(assetsDir, "feedback-retry.wav")),
-    loadClip(path.join(assetsDir, "feedback-prompt.wav")),
+    loadClip(path.join(assetsDir, files.retry)),
+    loadClip(path.join(assetsDir, files.prompt)),
   ]);
   return { retry, prompt };
-}
-
-/** Speak one local clip over normal voice with the standard paced sender and duck handling. */
-export async function speakClip(
-  streamer: StreamerLike,
-  clip: Uint8Array,
-): Promise<void> {
-  const sender = new PacedAssistantSender(streamer);
-  sender.enqueue(clip);
-  await sender.finish();
 }

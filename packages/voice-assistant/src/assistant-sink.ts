@@ -1,18 +1,13 @@
-import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
-import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-types.ts";
-import {
-  voiceReplyPacketsTotal,
-  voiceReplySendFailuresTotal,
-} from "@shepherdjerred/streambot/observability/metrics.ts";
-import {
-  voiceReplyBytesTotal,
-  voiceReplyDurationSeconds,
-} from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
+import { DiscordOpusEncoder } from "./codecs.ts";
+import type {
+  AssistantAudioTransport,
+  DuckObserver,
+  ReplyMetrics,
+} from "./ports.ts";
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "@shepherdjerred/streambot/voice/attempt-context.ts";
-import type { VoiceSessionTelemetry } from "@shepherdjerred/streambot/observability/voice-session.ts";
+} from "./attempt.ts";
 
 export type AssistantAudioSink = {
   readonly enqueue: (pcm24k: Uint8Array) => void;
@@ -20,6 +15,15 @@ export type AssistantAudioSink = {
   readonly cancel: () => Promise<void>;
 };
 
+export type PacedAssistantSenderOptions = {
+  /** Prefix for the reply-delivery span and outcome attribute (`${stagePrefix}.reply_delivery`). */
+  readonly stagePrefix: string;
+  readonly metrics: ReplyMetrics;
+  readonly attempt?: VoiceAttemptHandle;
+  readonly duck?: DuckObserver;
+};
+
+/** Encodes 24 kHz PCM16 reply audio to Discord Opus and paces it at one packet per 20 ms. */
 export class PacedAssistantSender implements AssistantAudioSink {
   private readonly encoder = new DiscordOpusEncoder();
   private readonly queue: Uint8Array[] = [];
@@ -32,17 +36,18 @@ export class PacedAssistantSender implements AssistantAudioSink {
   private sentPackets = 0;
   private sentBytes = 0;
   private readonly attempt: VoiceAttemptHandle;
-  private readonly telemetry: VoiceSessionTelemetry | undefined;
+  private readonly duck: DuckObserver | undefined;
+  private readonly metrics: ReplyMetrics;
+  private readonly stagePrefix: string;
 
   constructor(
-    private readonly streamer: StreamerLike,
-    options: {
-      readonly attempt?: VoiceAttemptHandle;
-      readonly telemetry?: VoiceSessionTelemetry;
-    } = {},
+    private readonly transport: AssistantAudioTransport,
+    options: PacedAssistantSenderOptions,
   ) {
     this.attempt = options.attempt ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin();
-    this.telemetry = options.telemetry;
+    this.duck = options.duck;
+    this.metrics = options.metrics;
+    this.stagePrefix = options.stagePrefix;
   }
 
   enqueue(pcm24k: Uint8Array): void {
@@ -87,7 +92,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
     let outcome = this.cancelled ? "cancelled" : "success";
     try {
       await this.attempt.runStage(
-        "streambot.voice.reply_delivery",
+        `${this.stagePrefix}.reply_delivery`,
         {},
         async (span) => {
           try {
@@ -105,11 +110,11 @@ export class PacedAssistantSender implements AssistantAudioSink {
           } finally {
             this.encoder.close();
             try {
-              await this.streamer.setAssistantSpeaking(false);
+              await this.transport.setAssistantSpeaking(false);
             } finally {
-              this.telemetry?.duckChanged(false, outcome);
+              this.duck?.duckChanged(false, outcome);
             }
-            span.setAttribute("streambot.voice.reply.outcome", outcome);
+            span.setAttribute(`${this.stagePrefix}.reply.outcome`, outcome);
           }
         },
       );
@@ -123,7 +128,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
       });
       throw error;
     } finally {
-      voiceReplyDurationSeconds.observe(
+      this.metrics.replyDurationSeconds.observe(
         { outcome },
         (performance.now() - startedAt) / 1000,
       );
@@ -143,8 +148,8 @@ export class PacedAssistantSender implements AssistantAudioSink {
   }
 
   private async run(): Promise<void> {
-    await this.streamer.setAssistantSpeaking(true);
-    this.telemetry?.duckChanged(true);
+    await this.transport.setAssistantSpeaking(true);
+    this.duck?.duckChanged(true);
     while (!this.done || this.queue.length > 0) {
       const packet = this.queue.shift();
       if (packet === undefined) {
@@ -154,19 +159,19 @@ export class PacedAssistantSender implements AssistantAudioSink {
         continue;
       }
       try {
-        this.streamer.sendAssistantOpus(packet);
+        this.transport.sendAssistantOpus(packet);
       } catch {
         // sendOpus throws once the voice connection is gone, and this runs on
         // a 20ms tick, so a mid-reply disconnect would reject this background
         // task. That rejection later surfaces as a cancel() failure and masks
         // whatever actually ended the turn. There is nothing left to send to,
         // so count it and stop pumping.
-        voiceReplySendFailuresTotal.inc();
+        this.metrics.replySendFailures.inc();
         this.sendFailed = true;
         return;
       }
-      voiceReplyPacketsTotal.inc();
-      voiceReplyBytesTotal.inc(packet.byteLength);
+      this.metrics.replyPackets.inc();
+      this.metrics.replyBytes.inc(packet.byteLength);
       this.sentPackets += 1;
       this.sentBytes += packet.byteLength;
       await Bun.sleep(20);

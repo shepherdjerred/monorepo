@@ -2606,6 +2606,7 @@ steps:
         - "packages/temporal/**"
         - "packages/toolkit/**"
         - "packages/trmnl-dashboard/**"
+        - "packages/voice-assistant/**"
     depends_on: verify
     cancel_on_build_failing: true
     command: |

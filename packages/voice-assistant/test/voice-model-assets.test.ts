@@ -1,7 +1,10 @@
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
-import { validateVoiceAssets } from "@shepherdjerred/streambot/voice/local-models.ts";
+import {
+  validateVoiceAssets,
+  type VoiceAssetManifest,
+} from "@shepherdjerred/voice-assistant";
 
 const temporaryDirectories: string[] = [];
 
@@ -17,6 +20,28 @@ async function sha256(filename: string): Promise<string> {
   const hasher = new Bun.CryptoHasher("sha256");
   hasher.update(new Uint8Array(await Bun.file(filename).arrayBuffer()));
   return hasher.digest("hex");
+}
+
+function testManifest(directory: string): VoiceAssetManifest {
+  return {
+    assetsDir: directory,
+    files: {
+      encoder: "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+      decoder: "decoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+      joiner: "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
+      tokens: "tokens.txt",
+      bpe: "bpe.model",
+      keywords: "hey-streambot.txt",
+      smokeKeywords: path.join("test_wavs", "test_keywords.txt"),
+      smokePositive: path.join("test_wavs", "0.wav"),
+      vad: "silero_vad.onnx",
+      wakeMel: "melspectrogram.onnx",
+      wakeEmbedding: "embedding_model.onnx",
+      wakeClassifier: "hey_streambot.onnx",
+      wakeSmokePositive: "hey-streambot-smoke.wav",
+      wakeManifest: "wake-verifier.json",
+    },
+  };
 }
 
 async function fixture(): Promise<string> {
@@ -72,14 +97,16 @@ async function fixture(): Promise<string> {
 describe("voice verifier assets", () => {
   test("accepts checksum-pinned assets with the minimum training provenance", async () => {
     const directory = await fixture();
-    const assets = await validateVoiceAssets(directory);
+    const assets = await validateVoiceAssets(testManifest(directory));
     expect(assets.wakeThreshold).toBe(0.73);
   });
 
   test("rejects a changed classifier and undersized training provenance", async () => {
     const changed = await fixture();
     await Bun.write(path.join(changed, "hey_streambot.onnx"), "changed");
-    await expect(validateVoiceAssets(changed)).rejects.toThrow("checksum");
+    await expect(validateVoiceAssets(testManifest(changed))).rejects.toThrow(
+      "checksum",
+    );
 
     const undersized = await fixture();
     const manifestPath = path.join(undersized, "wake-verifier.json");
@@ -93,6 +120,8 @@ describe("voice verifier assets", () => {
     }
     Reflect.set(training, "positiveUtterances", 19_999);
     await Bun.write(manifestPath, JSON.stringify(manifest));
-    await expect(validateVoiceAssets(undersized)).rejects.toThrow();
+    await expect(
+      validateVoiceAssets(testManifest(undersized)),
+    ).rejects.toThrow();
   });
 });

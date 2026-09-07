@@ -1,7 +1,7 @@
 import path from "node:path";
 import { rm } from "node:fs/promises";
 import OpenAI from "openai";
-import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
+import { DiscordOpusEncoder } from "@shepherdjerred/voice-assistant/codecs.ts";
 import {
   VoiceCorpusManifestSchema,
   type VoiceCorpusEntry,
@@ -16,7 +16,7 @@ import {
   expandVoiceCorpusRecipes,
   type VoiceCorpusRecipe,
 } from "@shepherdjerred/streambot/voice/corpus-recipes.ts";
-import { encodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
+import { encodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
 
 const SAMPLE_RATE = 24_000;
 const TRAILING_SILENCE_MS = 1800;

@@ -1,14 +1,27 @@
 import { describe, expect, test } from "vitest";
 import { trace } from "@opentelemetry/api";
-import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
-import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
-import type { WakeCandidateEvidence } from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
-import type { VoiceAttemptHandle } from "@shepherdjerred/streambot/voice/attempt-context.ts";
+import {
+  createNoopVoiceMetrics,
+  NOOP_VOICE_LOGGER,
+  VoiceAudioLifecycle,
+  type LocalVoiceModels,
+  type VoiceAttemptHandle,
+  type VoiceAudioInput,
+  type WakeCandidateEvidence,
+} from "@shepherdjerred/voice-assistant";
 
-function audio(userId: string, marker: number): ReceivedVoiceAudio {
-  return { userId, ssrc: marker, opus: new Uint8Array([marker]) };
+function audio(userId: string, marker: number): VoiceAudioInput {
+  return { userId, opus: new Uint8Array([marker]) };
 }
+
+// The consumer-injected equivalents of streambot's production wiring: a test tail table
+// (one contract with the fake detector's fragments) and noop metric/observability ports.
+const TEST_FRAGMENT_TAIL_MS: Readonly<Record<string, number>> = { HEY: 600 };
+const TEST_PORTS = {
+  fragmentTailMs: TEST_FRAGMENT_TAIL_MS,
+  metrics: createNoopVoiceMetrics().lifecycle,
+  observability: { logger: NOOP_VOICE_LOGGER, stagePrefix: "test.voice" },
+} as const;
 
 function fakeModels(wakeOn: number, vadEndsOn: number): LocalVoiceModels {
   return {
@@ -89,6 +102,7 @@ function createLifecycle(
   { useProductionVerificationDelay = false } = {},
 ): VoiceAudioLifecycle {
   return new VoiceAudioLifecycle({
+    ...TEST_PORTS,
     models: fakeModels(2, 4),
     preRollMs: 1200,
     maxUtteranceMs: 15_000,
@@ -241,6 +255,7 @@ describe("VoiceAudioLifecycle", () => {
     let verifierSamples = 0;
     const models = fakeModels(2, 4);
     const lifecycle = new VoiceAudioLifecycle({
+      ...TEST_PORTS,
       models: {
         ...models,
         verifyWakePhrase: (samples) => {
@@ -331,6 +346,7 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
     let speech = false;
     let completed = false;
     const lifecycle = new VoiceAudioLifecycle({
+      ...TEST_PORTS,
       models: {
         runtime: "native",
         createKeywordDetector: () => ({
@@ -405,6 +421,7 @@ describe("VoiceAudioLifecycle endpointing and cleanup", () => {
     const abandoned: string[] = [];
     const models = fakeModels(2, 4);
     const lifecycle = new VoiceAudioLifecycle({
+      ...TEST_PORTS,
       models: {
         ...models,
         createVad: () => ({
@@ -457,6 +474,7 @@ describe("VoiceAudioLifecycle timeout isolation", () => {
     let attemptIndex = 0;
     const models = fakeModels(2, 4);
     const lifecycle = new VoiceAudioLifecycle({
+      ...TEST_PORTS,
       models: {
         ...models,
         verifyWakePhrase: () => {
@@ -668,6 +686,7 @@ describe("VoiceAudioLifecycle failure containment", () => {
     const turns: string[] = [];
     let decodeCalls = 0;
     const lifecycle = new VoiceAudioLifecycle({
+      ...TEST_PORTS,
       models: fakeModels(2, 4),
       preRollMs: 1200,
       maxUtteranceMs: 15_000,
@@ -708,6 +727,7 @@ describe("VoiceAudioLifecycle failure containment", () => {
     let vadCloses = 0;
     const models = fakeModels(2, 4);
     const lifecycle = new VoiceAudioLifecycle({
+      ...TEST_PORTS,
       models: {
         ...models,
         createKeywordDetector: () => ({

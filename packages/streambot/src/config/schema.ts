@@ -4,7 +4,7 @@ import {
   UserIdSchema,
   UserTokenSchema,
 } from "@shepherdjerred/streambot/types/ids.ts";
-import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/streambot/voice/constants.ts";
+import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/voice-assistant/constants.ts";
 
 /** Local wake-word activation plus a one-shot, server-side OpenAI Realtime command turn. */
 export const VoiceConfigSchema = z

@@ -530,6 +530,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/voice-assistant",
+      "directory": "packages/voice-assistant",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test"]
+        }
+      ]
+    },
+    {
       "package": "tasknotes-core",
       "directory": "packages/tasknotes-core",
       "steps": [

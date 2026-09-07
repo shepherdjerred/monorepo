@@ -8,12 +8,29 @@ part stays local: each pooled streamer account uses permissive sherpa fragments 
 speaker, then a phrase-specific LiveKit/openWakeWord-compatible ONNX model verifies **Hey
 Streambot** over the rolling audio. It opens no OpenAI connection until both local layers pass.
 
-The whole cascade lives in
-[`src/voice/`](https://github.com/shepherdjerred/monorepo/tree/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice),
-with the per-session state machine in
-[`audio-lifecycle.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/audio-lifecycle.ts)
+The pipeline mechanics are shared, not streambot-specific: they live in
+[`packages/voice-assistant`](https://github.com/shepherdjerred/monorepo/tree/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant)
+(`@shepherdjerred/voice-assistant`), with the per-session state machine in
+[`audio-lifecycle.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant/src/audio-lifecycle.ts)
 and the cloud turn in
-[`realtime-agent.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/realtime-agent.ts).
+[`realtime-turn.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant/src/realtime-turn.ts).
+Discord transports, prom-client metrics, logging, OTel span prefixes, the wake phrase, and the
+playback tools are all injected
+[ports](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant/src/ports.ts),
+so streambot's series and trace names survived the extraction byte-identical. Streambot's own
+bindings and composition stay in `packages/streambot/src/voice/`: the hey-streambot constants and
+asset manifest
+([`constants.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice/constants.ts)),
+the model-loading and lifecycle-port bindings
+([`local-voice.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice/local-voice.ts)),
+the production Realtime turn binding
+([`realtime-voice.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice/realtime-voice.ts)),
+the playback tools
+([`voice-tools.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice/voice-tools.ts)),
+and the session composition root
+([`voice-assistant-session.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/voice/voice-assistant-session.ts)),
+with the metric adapters in
+[`voice-metrics-ports.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/streambot/src/observability/voice-metrics-ports.ts).
 
 ```mermaid
 flowchart LR
@@ -69,8 +86,8 @@ do with a slash command.
   short retry request and no change. Only the same speaker may answer without another wake phrase,
   for 15 seconds and at most twice.
 - The utterance ends locally and both it and the whole cloud transaction are capped. Cloud
-  verification is rate-limited per playback session by
-  [`cloud-verification-rate-limiter.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/cloud-verification-rate-limiter.ts),
+  verification is rate-limited per playback session by the shared package's
+  [`cloud-verification-rate-limiter.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant/src/cloud-verification-rate-limiter.ts),
   with a cooldown after a rejected transcript. Working PCM and verifier features are erased after
   accepted, rejected, interrupted, and timed-out trials; the exact bounded diagnostic clip is
   separately queued for private, time-limited storage.
@@ -88,9 +105,10 @@ reason ducking is a multiplier over the desired volume rather than a saved-and-r
 Model assets are pinned into the image and checksum-verified at build time by
 [the Dockerfile's `voice-models` stage](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/Dockerfile).
 Voice-enabled startup fails if the dedicated OpenAI key, KWS model, phrase-verifier
-manifest/checksums, ONNX runtime, or Silero VAD model is invalid —
-[`local-models.ts`](https://github.com/shepherdjerred/monorepo/blob/6b8aa36e58656850415e2a040160ad96937e4a67/packages/streambot/src/voice/local-models.ts)
-treats every one of those as fatal rather than degrading to a weaker gate.
+manifest/checksums, ONNX runtime, or Silero VAD model is invalid — the shared package's
+[`local-models.ts`](https://github.com/shepherdjerred/monorepo/blob/35c991ecd1665794e0f684f40de05b4ee69b78d4/packages/voice-assistant/src/local-models.ts)
+(loading the manifest streambot builds in `constants.ts`) treats every one of those as fatal
+rather than degrading to a weaker gate.
 
 Each locally verified candidate is transcribed with no prompt naming Streambot. A
 local false accept therefore transmits the ~2 s pre-roll plus the utterance to the transcription

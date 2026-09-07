@@ -9,13 +9,16 @@ import type {
   VoiceCorpusEntry,
   VoiceCorpusManifest,
 } from "@shepherdjerred/streambot/voice/corpus-schema.ts";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
-import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
+import {
+  decodeDiscordOpusContainer,
+  VoiceAudioLifecycle,
+  type LocalVoiceModels,
+} from "@shepherdjerred/voice-assistant";
 import {
   initializeLocalVoiceModelsForRuntime,
-  type LocalVoiceModels,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
-import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/streambot/voice/constants.ts";
+  streambotVoiceLifecycleDeps,
+} from "@shepherdjerred/streambot/voice/local-voice.ts";
+import { VOICE_WAKE_WINDOW_MS } from "@shepherdjerred/voice-assistant/constants.ts";
 
 type ClipEvaluation = {
   readonly id: string;
@@ -134,6 +137,7 @@ export async function evaluateDiscordOpusPackets(
   // simulated timestamp on the frame the turn actually completed at.
   const verification = verificationBarrier();
   const lifecycle = new VoiceAudioLifecycle({
+    ...streambotVoiceLifecycleDeps(),
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,
@@ -239,6 +243,7 @@ async function negativeSoak(
   let activations = 0;
   const verification = verificationBarrier();
   const lifecycle = new VoiceAudioLifecycle({
+    ...streambotVoiceLifecycleDeps(),
     models,
     preRollMs: VOICE_WAKE_WINDOW_MS,
     maxUtteranceMs: 15_000,

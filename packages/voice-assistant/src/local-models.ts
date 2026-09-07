@@ -1,16 +1,24 @@
+// The sherpa runtimes ship no TypeScript declarations; ours live in sherpa-onnx.d.ts as ambient
+// `declare module` blocks. This side-effect import pulls that declaration file into whichever
+// program typechecks this module — including a consumer package's — so the dynamic
+// `import("sherpa-onnx-node")`/`import("sherpa-onnx")` calls below resolve everywhere. At
+// runtime the declaration file transpiles to an empty module.
+import "./sherpa-onnx.d.ts";
 import path from "node:path";
 import { readFile } from "node:fs/promises";
-import { z } from "zod";
-import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import {
+  WakeVerifierManifestSchema,
+  type VoiceAssetManifest,
+} from "./asset-manifest.ts";
+import type { VoiceLogger } from "./ports.ts";
 import {
   createWakePhraseVerifier,
   type WakePhraseVerification,
   type WakePhraseVerifier,
-} from "@shepherdjerred/streambot/voice/phrase-verifier.ts";
-import { readPcm16MonoWave } from "@shepherdjerred/streambot/voice/wave-io.ts";
+} from "./phrase-verifier.ts";
+import { readPcm16MonoWave } from "./wave-io.ts";
+import { z } from "zod";
 
-const log = logger.child("voice-models");
 const SAMPLE_RATE = 16_000;
 
 export type KeywordDetector = {
@@ -69,48 +77,25 @@ type AssetPaths = {
   wakeThreshold: number;
 };
 
-const WakeVerifierManifestSchema = z.strictObject({
-  version: z.literal(1),
-  threshold: z.number().min(0).max(1),
-  assets: z.strictObject({
-    melspectrogram: z.string().regex(/^[a-f0-9]{64}$/u),
-    embedding: z.string().regex(/^[a-f0-9]{64}$/u),
-    classifier: z.string().regex(/^[a-f0-9]{64}$/u),
-    smokePositive: z.string().regex(/^[a-f0-9]{64}$/u),
-  }),
-  training: z.strictObject({
-    positiveUtterances: z.number().int().min(20_000),
-    adversarialUtterances: z.number().int().min(40_000),
-    generalNegativeHours: z.number().min(25),
-    humanHoldoutIncluded: z.literal(false),
-  }),
-});
-
-function assetPaths(assetsDir: string): Omit<AssetPaths, "wakeThreshold"> {
+function assetPaths(
+  manifest: VoiceAssetManifest,
+): Omit<AssetPaths, "wakeThreshold"> {
+  const { assetsDir, files } = manifest;
   return {
-    encoder: path.join(
-      assetsDir,
-      "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
-    ),
-    decoder: path.join(
-      assetsDir,
-      "decoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
-    ),
-    joiner: path.join(
-      assetsDir,
-      "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx",
-    ),
-    tokens: path.join(assetsDir, "tokens.txt"),
-    bpe: path.join(assetsDir, "bpe.model"),
-    keywords: path.join(assetsDir, "hey-streambot.txt"),
-    smokeKeywords: path.join(assetsDir, "test_wavs", "test_keywords.txt"),
-    smokePositive: path.join(assetsDir, "test_wavs", "0.wav"),
-    vad: path.join(assetsDir, "silero_vad.onnx"),
-    wakeMel: path.join(assetsDir, "melspectrogram.onnx"),
-    wakeEmbedding: path.join(assetsDir, "embedding_model.onnx"),
-    wakeClassifier: path.join(assetsDir, "hey_streambot.onnx"),
-    wakeSmokePositive: path.join(assetsDir, "hey-streambot-smoke.wav"),
-    wakeManifest: path.join(assetsDir, "wake-verifier.json"),
+    encoder: path.join(assetsDir, files.encoder),
+    decoder: path.join(assetsDir, files.decoder),
+    joiner: path.join(assetsDir, files.joiner),
+    tokens: path.join(assetsDir, files.tokens),
+    bpe: path.join(assetsDir, files.bpe),
+    keywords: path.join(assetsDir, files.keywords),
+    smokeKeywords: path.join(assetsDir, files.smokeKeywords),
+    smokePositive: path.join(assetsDir, files.smokePositive),
+    vad: path.join(assetsDir, files.vad),
+    wakeMel: path.join(assetsDir, files.wakeMel),
+    wakeEmbedding: path.join(assetsDir, files.wakeEmbedding),
+    wakeClassifier: path.join(assetsDir, files.wakeClassifier),
+    wakeSmokePositive: path.join(assetsDir, files.wakeSmokePositive),
+    wakeManifest: path.join(assetsDir, files.wakeManifest),
   };
 }
 
@@ -183,9 +168,9 @@ async function assertKeywordRuntimeWorks(
 }
 
 export async function validateVoiceAssets(
-  assetsDir: string,
+  manifest: VoiceAssetManifest,
 ): Promise<AssetPaths> {
-  const paths = assetPaths(assetsDir);
+  const paths = assetPaths(manifest);
   const missing: string[] = [];
   for (const filename of Object.values(paths)) {
     if (!(await Bun.file(filename).exists())) {
@@ -195,7 +180,7 @@ export async function validateVoiceAssets(
   if (missing.length > 0) {
     throw new Error(`Voice model assets missing: ${missing.join(", ")}`);
   }
-  const manifest = WakeVerifierManifestSchema.parse(
+  const wakeManifest = WakeVerifierManifestSchema.parse(
     await Bun.file(paths.wakeManifest).json(),
   );
   const checksums = await Promise.all([
@@ -205,14 +190,14 @@ export async function validateVoiceAssets(
     sha256(paths.wakeSmokePositive),
   ]);
   if (
-    checksums[0] !== manifest.assets.melspectrogram ||
-    checksums[1] !== manifest.assets.embedding ||
-    checksums[2] !== manifest.assets.classifier ||
-    checksums[3] !== manifest.assets.smokePositive
+    checksums[0] !== wakeManifest.assets.melspectrogram ||
+    checksums[1] !== wakeManifest.assets.embedding ||
+    checksums[2] !== wakeManifest.assets.classifier ||
+    checksums[3] !== wakeManifest.assets.smokePositive
   ) {
     throw new Error("Wake verifier asset checksum verification failed");
   }
-  return { ...paths, wakeThreshold: manifest.threshold };
+  return { ...paths, wakeThreshold: wakeManifest.threshold };
 }
 
 /**
@@ -404,10 +389,10 @@ async function createWasmModels(
 
 /** Explicit runtime selection for corpus/image acceptance; never falls back across runtimes. */
 export async function initializeLocalVoiceModelsForRuntime(
-  assetsDir: string,
+  manifest: VoiceAssetManifest,
   runtime: "native" | "wasm",
 ): Promise<LocalVoiceModels> {
-  const assets = await validateVoiceAssets(assetsDir);
+  const assets = await validateVoiceAssets(manifest);
   await assertKeywordRuntimeWorks(assets, runtime);
   const verifier = await createWakePhraseVerifier(
     {
@@ -447,24 +432,27 @@ export async function initializeLocalVoiceModelsForRuntime(
   }
 }
 
-/** Load and smoke-test the selected in-process local runtime. No model is downloaded here. */
+/**
+ * Load and smoke-test the selected in-process local runtime. No model is downloaded here.
+ * Whether voice is enabled at all is the consumer's boot decision — this always initializes.
+ * "auto" tries native and falls back to WASM (logging the fallback); an explicit runtime never
+ * falls back across runtimes.
+ */
 export async function initializeLocalVoiceModels(
-  config: Config["voice"],
-): Promise<LocalVoiceModels | null> {
-  if (!config.enabled) return null;
-  if (config.runtime === "wasm") {
-    return await initializeLocalVoiceModelsForRuntime(config.assetsDir, "wasm");
+  manifest: VoiceAssetManifest,
+  runtime: "auto" | "native" | "wasm",
+  logger: VoiceLogger,
+): Promise<LocalVoiceModels> {
+  if (runtime === "wasm") {
+    return await initializeLocalVoiceModelsForRuntime(manifest, "wasm");
   }
   try {
-    return await initializeLocalVoiceModelsForRuntime(
-      config.assetsDir,
-      "native",
-    );
+    return await initializeLocalVoiceModelsForRuntime(manifest, "native");
   } catch (error) {
-    if (config.runtime === "native") throw error;
-    log.warn("native sherpa-onnx smoke test failed; using in-process WASM", {
+    if (runtime === "native") throw error;
+    logger.warn("native sherpa-onnx smoke test failed; using in-process WASM", {
       error: error instanceof Error ? error.message : String(error),
     });
-    return await initializeLocalVoiceModelsForRuntime(config.assetsDir, "wasm");
+    return await initializeLocalVoiceModelsForRuntime(manifest, "wasm");
   }
 }

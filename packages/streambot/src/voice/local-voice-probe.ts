@@ -1,15 +1,16 @@
+import type { ReceivedVoiceAudio } from "@shepherdjerred/discord-video-stream";
 import {
   DiscordOpusEncoder,
-  type ReceivedVoiceAudio,
-} from "@shepherdjerred/discord-video-stream";
+  VoiceAudioLifecycle,
+  type CompletedVoiceTurn,
+  type LocalVoiceModels,
+  type RealtimeCommandTurnResult,
+} from "@shepherdjerred/voice-assistant";
 import { normalizeVoicePlayQuery } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
-import type { RealtimeCommandTurnResult } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
 import type { VoiceCommandPort } from "@shepherdjerred/streambot/voice/voice-tools.ts";
 import type { VoiceCommandInvocation } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
-import { VoiceAudioLifecycle } from "@shepherdjerred/streambot/voice/audio-lifecycle.ts";
-import type { CompletedVoiceTurn } from "@shepherdjerred/streambot/voice/audio-lifecycle-types.ts";
+import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const SILENCE_DURATION_MS = 2000;
 const PCM_SAMPLE_RATE = 24_000;
@@ -341,6 +342,7 @@ export class LocalVoiceProbe {
       this.rejectResult = reject;
     });
     this.lifecycle = new VoiceAudioLifecycle({
+      ...streambotVoiceLifecycleDeps(),
       models: options.models,
       preRollMs: options.config.preRollMs,
       maxUtteranceMs: options.config.maxUtteranceMs,

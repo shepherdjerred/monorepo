@@ -8,11 +8,13 @@
  */
 import path from "node:path";
 import { VoiceConfigSchema } from "@shepherdjerred/streambot/config/schema.ts";
-import { DiscordOpusDecoder } from "@shepherdjerred/discord-video-stream";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
-import { runRealtimeCommandTurn } from "@shepherdjerred/streambot/voice/realtime-agent.ts";
+import {
+  decodeDiscordOpusContainer,
+  DiscordOpusDecoder,
+  type AssistantAudioSink,
+} from "@shepherdjerred/voice-assistant";
+import { runRealtimeCommandTurn } from "@shepherdjerred/streambot/voice/realtime-voice.ts";
 import { DryRunVoiceCommandPort } from "@shepherdjerred/streambot/voice/local-voice-probe.ts";
-import type { AssistantAudioSink } from "@shepherdjerred/streambot/voice/assistant-sink.ts";
 
 class DiscardAssistantAudio implements AssistantAudioSink {
   enqueue(pcm24k: Uint8Array): void {

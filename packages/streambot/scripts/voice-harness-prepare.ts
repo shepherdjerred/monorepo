@@ -1,7 +1,7 @@
 import path from "node:path";
 import { mkdir, mkdtemp, rename, rm, stat } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { validateVoiceAssets } from "@shepherdjerred/streambot/voice/local-models.ts";
+import { validateVoiceAssets } from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "../../..");
 const contextDir = path.join(repositoryRoot, ".context");

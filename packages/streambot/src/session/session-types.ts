@@ -7,8 +7,10 @@ import type {
 } from "@shepherdjerred/streambot/machine/types.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
-import type { LocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
-import type { SpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import type {
+  LocalVoiceModels,
+  SpokenFeedbackClips,
+} from "@shepherdjerred/voice-assistant";
 import type { VoiceCaptureManager } from "@shepherdjerred/streambot/voice/capture-manager.ts";
 import type { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import type {

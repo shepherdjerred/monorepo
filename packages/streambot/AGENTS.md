@@ -20,10 +20,15 @@ architecture, media, voice, and diagnostics reference.
 ## Voice assistant
 
 Voice wake detection is local and layered before cloud transcription. The
-two-second phrase-verifier window is end-aligned from token timestamps; do not
-replace it with a fixed post-detection delay. Missing required models, keys, or
-recognition smoke fails startup when voice is enabled. Assets are pinned in the
-image and never downloaded at runtime.
+pipeline mechanics live in `@shepherdjerred/voice-assistant`; streambot injects
+its transports, metric instruments, span prefix (`streambot.voice`), wake
+phrase, and tools through `src/voice/` and
+`src/observability/voice-metrics-ports.ts` — keep metric series and trace names
+byte-identical through those ports. The two-second phrase-verifier window is
+end-aligned from token timestamps; do not replace it with a fixed
+post-detection delay. Missing required models, keys, or recognition smoke fails
+startup when voice is enabled. Assets are pinned in the image and never
+downloaded at runtime.
 
 After a verified wake, the native OpenAI Realtime path may perform at most one
 typed playback mutation. Actor identity comes from the detected speaker.

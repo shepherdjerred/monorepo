@@ -62,6 +62,7 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
+| [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |
 
 ## Plugins & extensions
 

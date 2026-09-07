@@ -25,7 +25,7 @@ import type {
   VoiceReceiveObserver,
   VoiceReceivePacketOutcome,
 } from "@shepherdjerred/discord-video-stream";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/streambot/voice/discord-opus-container.ts";
+import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
 
 function required(name: string): string {
   const value = Bun.env[name];

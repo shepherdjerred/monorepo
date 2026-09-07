@@ -24,8 +24,9 @@ import {
 import { startGpuCollector } from "@shepherdjerred/streambot/observability/gpu-collector.ts";
 import { initializeSentry } from "@shepherdjerred/streambot/observability/sentry.ts";
 import { assertIncomingAudioSupported } from "@shepherdjerred/discord-video-stream";
-import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-models.ts";
-import { loadSpokenFeedbackClips } from "@shepherdjerred/streambot/voice/spoken-feedback.ts";
+import { initializeLocalVoiceModels } from "@shepherdjerred/streambot/voice/local-voice.ts";
+import { loadSpokenFeedbackClips } from "@shepherdjerred/voice-assistant/spoken-feedback.ts";
+import { VOICE_FEEDBACK_CLIP_FILES } from "@shepherdjerred/streambot/voice/constants.ts";
 import {
   initializeTelemetry,
   shutdownTelemetry,
@@ -80,7 +81,10 @@ async function main(): Promise<void> {
   const voiceFeedbackClips =
     voiceModels === null
       ? null
-      : await loadSpokenFeedbackClips(config.voice.assetsDir);
+      : await loadSpokenFeedbackClips(
+          config.voice.assetsDir,
+          VOICE_FEEDBACK_CLIP_FILES,
+        );
   logger.info("starting streambot", {
     userTokenCount: config.discord.userTokens.length,
     videosDir: config.library.videosDir,

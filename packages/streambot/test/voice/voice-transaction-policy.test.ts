@@ -2,9 +2,9 @@ import { describe, expect, test } from "vitest";
 import {
   bindPlaybackVoiceCommandPort,
   createStreambotVoiceTools,
-  VoiceMutationGate,
 } from "@shepherdjerred/streambot/voice/voice-tools.ts";
 import { voiceToolSchemas } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
+import { VoiceMutationGate } from "@shepherdjerred/voice-assistant/mutation-gate.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import { UserIdSchema } from "@shepherdjerred/streambot/types/ids.ts";

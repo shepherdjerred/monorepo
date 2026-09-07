@@ -1,13 +1,15 @@
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { parseArgs } from "node:util";
-import { DiscordOpusEncoder } from "@shepherdjerred/discord-video-stream";
+import {
+  DiscordOpusEncoder,
+  type LocalVoiceModels,
+} from "@shepherdjerred/voice-assistant";
 import { evaluateDiscordOpusPackets } from "@shepherdjerred/streambot/voice/corpus-evaluator.ts";
 import {
   initializeLocalVoiceModelsForRuntime,
   validateVoiceAssets,
-  type LocalVoiceModels,
-} from "@shepherdjerred/streambot/voice/local-models.ts";
+} from "@shepherdjerred/streambot/voice/local-voice.ts";
 
 const AUDIO_EXTENSIONS = new Set([
   ".aac",
