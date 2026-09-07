@@ -972,7 +972,7 @@
       "clones": 1,
       "tokens": 70
     },
-    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-leaderboard.integration.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/bucks.router.test.ts": {
+    "packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-leaderboard.integration.test.ts|packages/scout-for-lol/packages/backend/src/trpc/router/bucks/bucks.router.test.ts": {
       "clones": 1,
       "tokens": 80
     },
@@ -1176,7 +1176,7 @@
       "clones": 1,
       "tokens": 122
     },
-    "packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts|packages/scout-for-lol/packages/backend/src/reports/visualization-snapshot.test.ts": {
+    "packages/scout-for-lol/packages/backend/src/reports/visualization/visualization-snapshot.test.ts|packages/scout-for-lol/packages/backend/src/reports/visualization/visualization-snapshot.test.ts": {
       "clones": 1,
       "tokens": 95
     },
@@ -1276,7 +1276,7 @@
       "clones": 1,
       "tokens": 181
     },
-    "packages/scout-for-lol/packages/data/src/model/scoutql/corpus.test.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse-recovery.test.ts": {
+    "packages/scout-for-lol/packages/data/src/model/scoutql/parse/corpus.test.ts|packages/scout-for-lol/packages/data/src/model/scoutql/parse/parse-recovery.test.ts": {
       "clones": 1,
       "tokens": 129
     },

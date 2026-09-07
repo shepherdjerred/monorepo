@@ -12,7 +12,7 @@ const s3Mock = mockClient(S3Client);
 const ORIGINAL_AWS_REGION = Bun.env["AWS_REGION"];
 const ORIGINAL_S3_REGION = Bun.env["S3_REGION"];
 const FIXTURE_URL = new URL(
-  "../src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
+  "../../src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
   import.meta.url,
 );
 

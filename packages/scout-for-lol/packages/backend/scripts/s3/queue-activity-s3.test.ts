@@ -6,7 +6,7 @@ import {
 } from "./queue-activity-s3.ts";
 
 const FIXTURE_URL = new URL(
-  "../src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
+  "../../src/league/model/__tests__/testdata/matches_2025_09_19_NA1_5370969615.json",
   import.meta.url,
 );
 
