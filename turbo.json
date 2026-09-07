@@ -4,6 +4,7 @@
   // (Root package.json, turbo.json, and bun.lock are always hashed by turbo.)
   "globalDependencies": [
     ".mise.toml",
+    "global.json",
     "bunfig.toml",
     "patches/**",
     "scripts/ci/ci-reporting.ts",
