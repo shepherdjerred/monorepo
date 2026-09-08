@@ -63,13 +63,14 @@ or in-process timers.
   fail.
 - After roughly two failed attempts at the same workaround, step back and
   reconsider the design instead of layering more exceptions.
-- No directory may exceed 50 code files, counted per directory with source and
-  colocated tests holding separate budgets
-  (`scripts/checks/check-directory-file-counts.ts`). Split the directory into
-  sub-domains rather than raising `CEILING`, which has no allowlist to add to.
-  `CEILING` is a ratchet lowered by each reorganization PR toward the
-  permanent `TARGET` of 50; until it reaches `TARGET`, some directories may
-  still legally sit above 50 and below the current `CEILING`.
+- No authored directory may exceed 25 code files, counted per directory with
+  source and colocated tests holding separate budgets
+  (`scripts/checks/check-directory-file-counts.ts`). Generated directories and
+  `sandbox/` do not count. Split into sub-domains rather than raising
+  `CEILING`, which has no allowlist to add to. `CEILING` is a ratchet lowered
+  by each reorganization PR toward the permanent `TARGET` of 25; until it
+  reaches `TARGET`, some directories may still legally sit above 25 and below
+  the current `CEILING`.
 
 Automation under `scripts/`, `.buildkite/`, and deploy/build scripts must not
 hide failures or credentials. In particular, do not add `|| true`,
