@@ -41,6 +41,9 @@ export type PrometheusadapterHelmValuesPrometheus = {
 
 export type PrometheusadapterHelmValuesPodSecurityContext = {
   /**
+   * k8s 1.21 needs fsGroup to be set for non root deployments
+   * ref: https://github.com/kubernetes/kubernetes/issues/70679
+   *
    * @default 10001
    */
   fsGroup?: number;
@@ -427,9 +430,6 @@ export type PrometheusadapterHelmValues = {
    */
   replicas?: number;
   /**
-   * k8s 1.21 needs fsGroup to be set for non root deployments
-   * ref: https://github.com/kubernetes/kubernetes/issues/70679
-   *
    * @default {"fsGroup":10001}
    */
   podSecurityContext?: PrometheusadapterHelmValuesPodSecurityContext;

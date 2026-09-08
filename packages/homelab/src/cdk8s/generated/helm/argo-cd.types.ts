@@ -284,9 +284,11 @@ export type ArgocdHelmValuesConfigs = {
    */
   cm?: ArgocdHelmValuesConfigsCm;
   /**
+   * Argo CD configuration parameters
    * Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/argocd-cmd-params-cm.yaml
    * You can customize parameters by adding parameters here.
    * (e.g.)
+   * Argo CD RBAC policy configuration
    * Ref: https://github.com/argoproj/argo-cd/blob/master/docs/operator-manual/rbac.md
    *
    * @default {"create":true,"annotations":{}}
@@ -317,6 +319,7 @@ export type ArgocdHelmValuesConfigs = {
    */
   tls?: ArgocdHelmValuesConfigsTls;
   /**
+   * ConfigMap for Config Management Plugins
    * Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/config-management-plugins/
    *
    * @default {"create":false,"annotations":{},"plugins":{}}
@@ -4032,12 +4035,14 @@ export type ArgocdHelmValuesServer = {
    */
   deploymentStrategy?: ArgocdHelmValuesServerDeploymentStrategy;
   /**
+   * TLS certificate configuration via cert-manager
    * Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/#tls-certificates-used-by-argocd-server
    *
    * @default {...} (10 keys)
    */
   certificate?: ArgocdHelmValuesServerCertificate;
   /**
+   * TLS certificate configuration via Secret
    * Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/#tls-certificates-used-by-argocd-server
    *
    * @default {...} (5 keys)
@@ -6782,6 +6787,7 @@ export type ArgocdHelmValuesApplicationSet = {
    */
   priorityClassName?: string;
   /**
+   * TLS certificate configuration via cert-manager
    * Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/#tls-configuration
    *
    * @default {...} (8 keys)
@@ -9121,6 +9127,7 @@ export type ArgocdHelmValuesCommitServerVpaContainerPolicy = object;
 
 export type ArgocdHelmValues = {
   /**
+   * Argo CD configuration
    * Ref: https://github.com/argoproj/argo-cd
    * Provide a name in place of `argocd`
    *

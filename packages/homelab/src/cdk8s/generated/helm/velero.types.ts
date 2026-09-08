@@ -1178,10 +1178,6 @@ export type VeleroHelmValues = {
    */
   cleanUpCRDs?: boolean;
   /**
-   * End of deployment-related settings.
-   * Parameters for the `default` BackupStorageLocation and VolumeSnapshotLocation,
-   * and additional server settings.
-   *
    * @default {...} (34 keys)
    */
   configuration?: VeleroHelmValuesConfiguration;
@@ -1196,10 +1192,6 @@ export type VeleroHelmValues = {
    */
   serviceAccount?: VeleroHelmValuesServiceAccount;
   /**
-   * Info about the secret to be used by the Velero deployment, which
-   * should contain credentials for the cloud provider IAM account you've
-   * set up for Velero.
-   *
    * @default {...} (6 keys)
    */
   credentials?: VeleroHelmValuesCredentials;

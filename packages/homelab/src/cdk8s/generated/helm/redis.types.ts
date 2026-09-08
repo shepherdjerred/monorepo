@@ -2,7 +2,10 @@
 
 export type RedisHelmValuesGlobal = {
   /**
-   * Global Docker image registry
+   * Copyright Broadcom, Inc. All Rights Reserved.
+   * Global Docker image parameters
+   * Please, note that this will override the image parameters, including dependencies, configured to use the global value
+   * Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
    *
    * @default ""
    */
@@ -477,6 +480,7 @@ export type RedisHelmValuesMaster = {
    */
   serviceAccount?: RedisHelmValuesMasterServiceAccount;
   /**
+   * Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb
    *
    * @default {"create":true,"minAvailable":"","maxUnavailable":""}
@@ -1367,6 +1371,7 @@ export type RedisHelmValuesReplica = {
    */
   serviceAccount?: RedisHelmValuesReplicaServiceAccount;
   /**
+   * Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb
    *
    * @default {"create":true,"minAvailable":"","maxUnavailable":""}
@@ -3820,12 +3825,6 @@ export type RedisHelmValuesVolumePermissions = {
    */
   fips?: RedisHelmValuesVolumePermissionsFips;
   /**
-   * Init container Container Security Context
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
-   * NOTE: when runAsUser is set to special value "auto", init container will try to chown the
-   * data folder to auto-determined user&group, using commands: `id -u`:`id -G | cut -d" " -f2`
-   * "auto" is especially useful for OpenShift which has scc with dynamic user ids (and 0 is not allowed)
-   *
    * @default {"seLinuxOptions":{},"runAsUser":0}
    */
   containerSecurityContext?: RedisHelmValuesVolumePermissionsContainerSecurityContext;
@@ -3875,7 +3874,11 @@ export type RedisHelmValuesVolumePermissionsFips = {
 
 export type RedisHelmValuesVolumePermissionsContainerSecurityContext = {
   /**
-   * [object,nullable] Set SELinux options in container
+   * Init container Container Security Context
+   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
+   * NOTE: when runAsUser is set to special value "auto", init container will try to chown the
+   * data folder to auto-determined user&group, using commands: `id -u`:`id -G | cut -d" " -f2`
+   * "auto" is especially useful for OpenShift which has scc with dynamic user ids (and 0 is not allowed)
    *
    * @default {}
    */
@@ -4158,11 +4161,6 @@ export type RedisHelmValuesUseExternalDNSAdditionalAnnotations = object;
 
 export type RedisHelmValues = {
   /**
-   * Copyright Broadcom, Inc. All Rights Reserved.
-   * Global Docker image parameters
-   * Please, note that this will override the image parameters, including dependencies, configured to use the global value
-   * Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
-   *
    * @default {...} (8 keys)
    */
   global?: RedisHelmValuesGlobal;
@@ -4312,12 +4310,14 @@ loadmodule /opt/bi..."
    */
   serviceBindings?: RedisHelmValuesServiceBindings;
   /**
+   * Network Policy configuration
    * ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
    *
    * @default {...} (8 keys)
    */
   networkPolicy?: RedisHelmValuesNetworkPolicy;
   /**
+   * PodSecurityPolicy configuration
    * ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
    *
    * @default {"create":false,"enabled":false}
@@ -4336,6 +4336,7 @@ loadmodule /opt/bi..."
    */
   serviceAccount?: RedisHelmValuesServiceAccount;
   /**
+   * Redis(R) Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
    * @default {}
