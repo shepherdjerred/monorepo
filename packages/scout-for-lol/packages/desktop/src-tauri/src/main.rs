@@ -83,7 +83,24 @@ struct AppState {
 async fn get_lcu_status(state: State<'_, AppState>) -> Result<lcu::LcuStatus, String> {
     let connection = state.lcu_connection.lock().await.clone();
     match connection {
-        Some(conn) => Ok(conn.get_status().await),
+        Some(conn) => {
+            let status = conn.get_status().await;
+            let is_current = state
+                .lcu_connection
+                .lock()
+                .await
+                .as_ref()
+                .is_some_and(|current| current.is_same_instance(&conn));
+            if is_current {
+                Ok(status)
+            } else {
+                Ok(lcu::LcuStatus {
+                    connected: false,
+                    summoner_name: None,
+                    in_game: false,
+                })
+            }
+        }
         None => Ok(lcu::LcuStatus {
             connected: false,
             summoner_name: None,

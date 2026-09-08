@@ -17,9 +17,8 @@
 //
 //   bun run scripts/audio-e2e.ts --update-baseline
 //
-// Then commit the updated WAV. Auto-skips when the wasm isn't built yet (e.g.
-// plain `bun run test` on a clean checkout); force-skip with
-// `SKIP_AUDIO_FINGERPRINT=1`.
+// Then commit the updated WAV. Run this integration test after building the
+// artifact with `bun ../../scripts/build-wasm.ts`.
 
 import { describe, expect, test } from "vitest";
 
@@ -144,55 +143,46 @@ function chromaFingerprint(
   return acc;
 }
 
-// This source test is conditional because a clean checkout does not contain
-// the gitignored artifact. The Docker wasm-abi-test stage always supplies it
-// and therefore executes this suite against the built binary.
-const shouldSkip =
-  Bun.env.SKIP_AUDIO_FINGERPRINT === "1" || Bun.file(WASM_PATH).size === 0;
+describe("audio fingerprint vs title-bgm-baseline.wav", () => {
+  test("fresh PCM matches committed baseline across mel + chroma + onset", async () => {
+    const baseline = await loadBaseline();
+    const captured = await captureClip(CAPTURE_FRAMES);
 
-describe.skipIf(shouldSkip)(
-  "audio fingerprint vs title-bgm-baseline.wav",
-  () => {
-    test("fresh PCM matches committed baseline across mel + chroma + onset", async () => {
-      const baseline = await loadBaseline();
-      const captured = await captureClip(CAPTURE_FRAMES);
+    expect(captured.sampleRate).toBe(baseline.sampleRate);
 
-      expect(captured.sampleRate).toBe(baseline.sampleRate);
+    // Truncate both to the same comparison window so the metrics are
+    // computed over equal-length signals.
+    const n = Math.min(
+      captured.mono.length,
+      baseline.mono.length,
+      COMPARE_SECONDS * baseline.sampleRate,
+    );
+    const a = captured.mono.subarray(0, n);
+    const b = baseline.mono.subarray(0, n);
 
-      // Truncate both to the same comparison window so the metrics are
-      // computed over equal-length signals.
-      const n = Math.min(
-        captured.mono.length,
-        baseline.mono.length,
-        COMPARE_SECONDS * baseline.sampleRate,
-      );
-      const a = captured.mono.subarray(0, n);
-      const b = baseline.mono.subarray(0, n);
+    // Floor: both clips should carry real audible energy.
+    expect(rms(a)).toBeGreaterThan(0.02);
+    expect(rms(b)).toBeGreaterThan(0.02);
 
-      // Floor: both clips should carry real audible energy.
-      expect(rms(a)).toBeGreaterThan(0.02);
-      expect(rms(b)).toBeGreaterThan(0.02);
+    // Mel fingerprint — the strongest signal.
+    const melA = melFingerprint(a, baseline.sampleRate);
+    const melB = melFingerprint(b, baseline.sampleRate);
+    const melCos = meanFrameCosine(melA, melB);
+    expect(melCos).toBeGreaterThan(MEL_COSINE_MIN);
 
-      // Mel fingerprint — the strongest signal.
-      const melA = melFingerprint(a, baseline.sampleRate);
-      const melB = melFingerprint(b, baseline.sampleRate);
-      const melCos = meanFrameCosine(melA, melB);
-      expect(melCos).toBeGreaterThan(MEL_COSINE_MIN);
+    // Chroma fingerprint — gain-invariant, catches pitch errors.
+    const chromaA = chromaFingerprint(a, baseline.sampleRate);
+    const chromaB = chromaFingerprint(b, baseline.sampleRate);
+    const chromaCos = cosineSimilarity(chromaA, chromaB);
+    expect(chromaCos).toBeGreaterThan(CHROMA_COSINE_MIN);
 
-      // Chroma fingerprint — gain-invariant, catches pitch errors.
-      const chromaA = chromaFingerprint(a, baseline.sampleRate);
-      const chromaB = chromaFingerprint(b, baseline.sampleRate);
-      const chromaCos = cosineSimilarity(chromaA, chromaB);
-      expect(chromaCos).toBeGreaterThan(CHROMA_COSINE_MIN);
-
-      // Onset count — tempo / rhythm.
-      const onsetA = onsetCount(stft(a, FFT_WIN, FFT_HOP));
-      const onsetB = onsetCount(stft(b, FFT_WIN, FFT_HOP));
-      // Avoid divide-by-zero when the baseline happens to have zero
-      // onsets (shouldn't, but fail loud if so).
-      expect(onsetB).toBeGreaterThan(0);
-      const onsetDelta = Math.abs(onsetA - onsetB) / onsetB;
-      expect(onsetDelta).toBeLessThanOrEqual(ONSET_TOLERANCE);
-    }, 120_000);
-  },
-);
+    // Onset count — tempo / rhythm.
+    const onsetA = onsetCount(stft(a, FFT_WIN, FFT_HOP));
+    const onsetB = onsetCount(stft(b, FFT_WIN, FFT_HOP));
+    // Avoid divide-by-zero when the baseline happens to have zero
+    // onsets (shouldn't, but fail loud if so).
+    expect(onsetB).toBeGreaterThan(0);
+    const onsetDelta = Math.abs(onsetA - onsetB) / onsetB;
+    expect(onsetDelta).toBeLessThanOrEqual(ONSET_TOLERANCE);
+  }, 120_000);
+});
