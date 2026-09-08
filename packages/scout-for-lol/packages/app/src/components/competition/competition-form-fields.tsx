@@ -13,7 +13,7 @@ import {
   FormSection,
   Label,
 } from "@scout-for-lol/design-system/components/input";
-import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
+import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
 import {
   COMPETITION_CRITERIA_OPTIONS,
   RANKED_COMPETITION_QUEUES,
@@ -27,7 +27,7 @@ import {
   fieldErrorMessage,
   withScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { browserTimezone } from "#src/lib/competition-time.ts";
+import { browserTimezone } from "#src/lib/bucks/competition-time.ts";
 import type { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
 
 export type FormState = z.input<typeof CompetitionFormValueSchema>;

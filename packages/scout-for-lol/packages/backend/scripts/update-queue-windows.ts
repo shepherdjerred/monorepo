@@ -6,7 +6,7 @@ import {
   type QueueWindowEdit,
   type QueueWindowWarning,
 } from "@scout-for-lol/data/index.ts";
-import { collectQueueActivity } from "./queue-activity-s3.ts";
+import { collectQueueActivity } from "./s3/queue-activity-s3.ts";
 // riot-patch.ts is a data-package script (not part of the package's src export
 // surface), so it is referenced by path. This CLI is not in the ESLint `src`
 // scope; keep it byte-clean for prettier/typecheck.

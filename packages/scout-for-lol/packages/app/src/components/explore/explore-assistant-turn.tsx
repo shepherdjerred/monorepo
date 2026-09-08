@@ -17,11 +17,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@scout-for-lol/design-system/components/dropdown-menu";
-import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
+import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
 import { ExploreToolTrace } from "#src/components/explore/explore-tool-trace.tsx";
 import { ExploreIntentCards } from "#src/components/explore/explore-intent-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore/explore-version-switcher.tsx";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import {
   ExploreVisualResult,
   exploreVisualResultHasContent,

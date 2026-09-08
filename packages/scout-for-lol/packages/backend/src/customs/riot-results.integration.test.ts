@@ -15,7 +15,7 @@ import {
 } from "#src/league/tournament/lobby-store.ts";
 import { finalizeTournamentResult } from "#src/customs/riot-results.ts";
 import { clearCustomsTestData } from "#src/customs/test-database.ts";
-import { projectTournamentLobbyToCustoms } from "#src/customs/lobby-projection.ts";
+import { projectTournamentLobbyToCustoms } from "#src/customs/game/lobby-projection.ts";
 
 const { prisma: testPrisma } = createTestDatabase("customs-riot-results");
 const fixture = RawMatchSchema.parse(

@@ -1,6 +1,6 @@
 import { fetcherActivities } from "./fetcher.ts";
-import { depsSummaryActivities } from "./maintenance/deps-summary.ts";
-import { depsSummaryLegacyActivities } from "./maintenance/deps-summary-legacy.ts";
+import { depsSummaryActivities } from "./maintenance/deps-summary/deps-summary.ts";
+import { depsSummaryLegacyActivities } from "./maintenance/deps-summary/deps-summary-legacy.ts";
 import { dnsAuditActivities } from "./homelab/dns-audit.ts";
 import {
   golinkClusterActivities,
@@ -27,15 +27,15 @@ import { scoutShowcaseRefreshActivities } from "./scout/scout-showcase-refresh.t
 import { scheduleRehearsalActivities } from "./scout/schedule-rehearsal.ts";
 import { scoutQueueWindowsActivities } from "./scout/scout-queue-windows.ts";
 import { glitterCorpusActivities } from "./glitter/corpus/glitter-corpus.ts";
-import { glitterContextRefreshActivities } from "./glitter/context/glitter-context-refresh.ts";
-import { glitterContextAuditActivities } from "./glitter/context/glitter-context-audit.ts";
+import { glitterContextRefreshActivities } from "./glitter/context/refresh/glitter-context-refresh.ts";
+import { glitterContextAuditActivities } from "./glitter/context/audit/glitter-context-audit.ts";
 import { weatherActivities } from "./weather.ts";
-import { workflowFailureWatchActivities } from "./maintenance/workflow-failure-watch-activity.ts";
+import { workflowFailureWatchActivities } from "./maintenance/workflow-failure/workflow-failure-watch-activity.ts";
 import { maintenanceActivities } from "./maintenance/maintenance.ts";
 import { mainVulnScanActivities } from "./maintenance/main-vuln-scan.ts";
 import { mainVulnScanAlertActivities } from "./maintenance/main-vuln-scan-alerts.ts";
-import { linkRotScanActivities } from "./maintenance/link-rot-scan.ts";
-import { linkRotScanAlertActivities } from "./maintenance/link-rot-scan-alerts.ts";
+import { linkRotScanActivities } from "./maintenance/link-rot/link-rot-scan.ts";
+import { linkRotScanAlertActivities } from "./maintenance/link-rot/link-rot-scan-alerts.ts";
 import { reportDeliveryActivities } from "./reports/report-delivery.ts";
 import { protobufWatchActivities } from "./maintenance/protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";

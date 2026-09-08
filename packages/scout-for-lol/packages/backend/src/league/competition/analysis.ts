@@ -12,7 +12,7 @@ import {
   type TemporalAnalysisSpec,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   competitionAnnotations,
@@ -27,13 +27,13 @@ import {
   temporalPresetQuery,
 } from "#src/league/competition/analysis-queries.ts";
 import { standingsFromResult } from "#src/league/competition/analysis-results.ts";
-import { executeCompiledReportQuery } from "#src/reports/query-engine.ts";
-import type { ReportQueryResult } from "#src/reports/query-types.ts";
+import { executeCompiledReportQuery } from "#src/reports/query/query-engine.ts";
+import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {
   clampTemporalRange,
   resolveTemporalRanges,
-} from "#src/reports/temporal-range.ts";
+} from "#src/reports/schedule/temporal-range.ts";
 import { createBoundedAsyncCache } from "#src/utils/bounded-async-cache.ts";
 
 export type CompetitionAnalysisResult = {

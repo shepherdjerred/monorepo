@@ -55,7 +55,7 @@ import {
   bettingParlayGenerationDurationSeconds,
   bettingParlayGenerationTotal,
   bettingParlayTokensTotal,
-} from "#src/metrics/betting-parlay.ts";
+} from "#src/metrics/betting/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 import { enqueueParlayGeneration } from "#src/temporal/work-store.ts";
 import type { StartParlayGenerationInput } from "#src/betting/parlays/parlay-generation-types.ts";

@@ -10,7 +10,7 @@ import {
   handleModifyWebhook,
   handleDeleteWebhook,
   handleExecuteWebhook,
-} from "./webhook-actions.ts";
+} from "./actions/webhook-actions.ts";
 
 export const manageWebhookTool = createTool({
   id: "manage-webhook",

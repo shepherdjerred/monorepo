@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import type { PlayerId } from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { Section } from "#src/components/player/player-detail-sections.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 type ChallengeRunSummary = {
   readonly id: string;

@@ -4,7 +4,7 @@ import {
   type ReportRenderSpec,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { planResultColumns } from "#src/reports/plan-columns.ts";
+import { planResultColumns } from "#src/reports/query/plan-columns.ts";
 import {
   analyticsChartToImage,
   visualizationSnapshotToImage,
@@ -12,7 +12,7 @@ import {
 import type {
   ReportQueryResult,
   ReportResultRow,
-} from "#src/reports/query-types.ts";
+} from "#src/reports/query/query-types.ts";
 import {
   formatRankedLabel,
   resolveMentionCount,

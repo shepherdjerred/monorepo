@@ -1,7 +1,7 @@
 import * as Sentry from "@sentry/bun";
 import type { Logger, ILogObj } from "tslog";
 import { z } from "zod";
-import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting/betting.ts";
 
 /** Which stored column failed validation. Closed union so it can double as a
  * bounded Prometheus label. */

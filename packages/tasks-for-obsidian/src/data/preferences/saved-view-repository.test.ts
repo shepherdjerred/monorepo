@@ -5,12 +5,12 @@ import {
   createDefaultSavedViewPreferences,
   decodeSavedViewPreferences,
   encodeSavedViewPreferences,
-} from "../../domain/saved-views";
-import type { SavedViewPreferences } from "../../domain/saved-views";
+} from "../../domain/saved-view/saved-views";
+import type { SavedViewPreferences } from "../../domain/saved-view/saved-views";
 import {
   duplicateSavedView,
   setSavedViewFavorite,
-} from "../../domain/saved-view-actions";
+} from "../../domain/saved-view/saved-view-actions";
 import {
   SAVED_VIEW_PREFERENCES_STORAGE_KEY,
   SavedViewRepository,

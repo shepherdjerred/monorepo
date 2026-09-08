@@ -121,7 +121,7 @@ const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/streambot/scripts/voice-model-smoke.ts",
   "packages/streambot/src/config/index.ts",
   "packages/streambot/src/config/schema.ts",
-  "packages/scout-for-lol/packages/backend/scripts/voice-probe.ts",
+  "packages/scout-for-lol/packages/backend/scripts/smoke/voice-probe.ts",
   "packages/scout-for-lol/packages/backend/src/configuration.ts",
   "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
 ]);
@@ -130,7 +130,7 @@ const STREAMBOT_VOICE_TTS_PATHS = new Set([
   "packages/streambot/src/voice/corpus-generator.ts",
 ]);
 const SUBSCRIPTION_QUOTA_ENDPOINTS =
-  "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/ProviderEndpoints.swift";
+  "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/ProviderEndpoints.swift";
 // The billing monitor uses OpenAI's official organization Usage and Costs APIs
 // as the payment authority; this is not an inference path.
 const OPENAI_BILLING_RECONCILIATION_PATH =

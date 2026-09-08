@@ -1,5 +1,5 @@
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { formatRemaining } from "#src/lib/bucks-countdown.ts";
+import { formatRemaining } from "#src/lib/bucks/bucks-countdown.ts";
 
 /**
  * The betting-window countdown. Purely cosmetic — the caller computes the

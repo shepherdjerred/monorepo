@@ -42,7 +42,7 @@ import {
 import { stakeDareContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
-import { bettingDaresTotal } from "#src/metrics/betting.ts";
+import { bettingDaresTotal } from "#src/metrics/betting/betting.ts";
 
 /**
  * Creating, confirming, and abandoning a dare proposal.

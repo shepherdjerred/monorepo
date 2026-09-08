@@ -5,7 +5,7 @@ import type {
   ExploreTraceRawValue,
   ExploreTraceStatus,
 } from "@scout-for-lol/data";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import { formatDuration } from "#src/lib/format-duration.ts";
 
 export function ExploreToolTrace(props: {

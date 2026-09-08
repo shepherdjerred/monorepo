@@ -13,7 +13,7 @@ import { resolveLobbyPlayerNames } from "#src/league/tournament/player-identitie
 import {
   tournamentPrematchTotal,
   tournamentRosterIdentityTotal,
-} from "#src/metrics/tournament.ts";
+} from "#src/metrics/platform/tournament.ts";
 
 const logger = createLogger("tournament-prematch");
 

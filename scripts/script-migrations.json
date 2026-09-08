@@ -305,7 +305,7 @@
     {
       "source": "packages/dotfiles/herdr-stage-plugin/mark-stage.sh",
       "disposition": "retain",
-      "reason": "Herdr plugin hook is invoked as POSIX sh by the workspace host"
+      "reason": "Herdr plugin command is invoked as sh from the plugin directory without a Bun runtime"
     },
     {
       "source": "packages/dotfiles/install.sh",

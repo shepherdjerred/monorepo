@@ -12,7 +12,7 @@ import { z } from "zod";
 import { DiscordGuildIdSchema, FeedbackBodySchema } from "@scout-for-lol/data";
 import { router, webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 import { prisma } from "#src/database/index.ts";
-import { feedbackSubmittedTotal } from "#src/metrics/web.ts";
+import { feedbackSubmittedTotal } from "#src/metrics/platform/web.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("feedback-router");

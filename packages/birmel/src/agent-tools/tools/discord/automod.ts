@@ -15,7 +15,7 @@ import {
   handleModifyRule,
   handleDeleteRule,
   handleToggleRule,
-} from "./automod-actions.ts";
+} from "./actions/automod-actions.ts";
 
 type AutomodInput = {
   guildId: string;

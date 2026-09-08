@@ -1,9 +1,9 @@
 import type { ReportId, VisualizationSnapshot } from "@scout-for-lol/data";
 import { formatDate } from "#src/lib/format.ts";
-import { ChartImage } from "#src/components/chart-image.tsx";
-import { Section } from "#src/components/section.tsx";
-import { ReportRunStatusBadge } from "#src/components/status-badge.tsx";
-import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
+import { ChartImage } from "#src/components/scoutql/chart-image.tsx";
+import { Section } from "#src/components/chrome/section.tsx";
+import { ReportRunStatusBadge } from "#src/components/chrome/status-badge.tsx";
+import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 
 type Run = {
   id: number;

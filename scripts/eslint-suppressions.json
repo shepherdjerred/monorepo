@@ -49,17 +49,17 @@
       "count": 1
     }
   },
-  "lib/ci-env-command.ts": {
+  "lib/ci/ci-env-command.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "lib/ci-env-pipeline.ts": {
+  "lib/ci/ci-env-pipeline.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "lib/ci-secret-grant-pipeline.ts": {
+  "lib/ci/ci-secret-grant-pipeline.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

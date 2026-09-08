@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { scoutTemporalDuplicateEffectClaims } from "#src/metrics/temporal.ts";
+import { scoutTemporalDuplicateEffectClaims } from "#src/metrics/platform/temporal.ts";
 
 const UniqueViolationSchema = z.object({ code: z.literal("P2002") });
 

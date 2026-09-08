@@ -21,9 +21,9 @@ import { TaskList } from "../components/task/TaskList";
 import {
   deriveSavedViewTasks,
   savedViewGroupLabel,
-} from "../domain/saved-view-collection";
-import type { SavedViewDefinition } from "../domain/saved-view-actions";
-import type { SavedView } from "../domain/saved-views";
+} from "../domain/saved-view/saved-view-collection";
+import type { SavedViewDefinition } from "../domain/saved-view/saved-view-actions";
+import type { SavedView } from "../domain/saved-view/saved-views";
 import { EMPTY_FILTER, applyFilter, applySort } from "../domain/filters";
 import type { FilterConfig, SortConfig } from "../domain/filters";
 import { localTodayYmd } from "../domain/recurrence";

@@ -17,7 +17,7 @@ import {
 } from "#src/reports/ai/rate-limit.ts";
 import { getReportAiEditStatus } from "#src/reports/ai/status.ts";
 import { readBodyWithinLimit } from "#src/utils/bounded-request-body.ts";
-import { scoutReportAiRunsTotal } from "#src/metrics/report-ai.ts";
+import { scoutReportAiRunsTotal } from "#src/metrics/reports/report-ai.ts";
 import { createTemporalReportAiResponse } from "#src/reports/ai/temporal-runtime.ts";
 
 const STREAM_PATH = "/api/reports/query-agent/stream";

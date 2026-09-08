@@ -15,7 +15,7 @@ import {
   bettingParlayBetSettlementsTotal,
   bettingParlayMarketsClosedTotal,
   bettingParlayVoidsTotal,
-} from "#src/metrics/betting-parlay.ts";
+} from "#src/metrics/betting/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 

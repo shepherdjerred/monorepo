@@ -11,21 +11,21 @@ import {
   QueueTypeSchema,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { competitionAnalysisDateInput } from "#src/lib/competition-analysis-date.ts";
+import { competitionAnalysisDateInput } from "#src/lib/bucks/competition-analysis-date.ts";
 import { formatDate } from "#src/lib/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { ChartImage } from "#src/components/chart-image.tsx";
-import { Section } from "#src/components/section.tsx";
+import { ChartImage } from "#src/components/scoutql/chart-image.tsx";
+import { Section } from "#src/components/chrome/section.tsx";
 import {
   Field,
   FormActions,
   Input,
   Label,
 } from "@scout-for-lol/design-system/components/input";
-import { InteractiveVisualization } from "#src/components/interactive-visualization.tsx";
+import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 import {
   Table,
   TableBody,

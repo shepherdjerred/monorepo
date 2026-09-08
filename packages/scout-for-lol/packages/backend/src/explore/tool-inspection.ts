@@ -27,7 +27,7 @@ import {
   DareScoutQlToolInputSchema,
   DareToolResultSchema,
   ReviseDareToolInputSchema,
-} from "#src/explore/dare-tool-schemas.ts";
+} from "#src/explore/tools/dare-tool-schemas.ts";
 import {
   CreationChannelsResultSchema,
   CreationToolKindSchema,

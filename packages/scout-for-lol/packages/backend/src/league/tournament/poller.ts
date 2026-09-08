@@ -42,11 +42,11 @@ import {
   tournamentLobbyTransitionsTotal,
   tournamentMatchLinkTotal,
   tournamentUnknownLobbyEventsTotal,
-} from "#src/metrics/tournament.ts";
+} from "#src/metrics/platform/tournament.ts";
 import {
   projectTournamentLobbyToCustoms,
   resolvedCustomLobbyProjectionCandidates,
-} from "#src/customs/lobby-projection.ts";
+} from "#src/customs/game/lobby-projection.ts";
 import { publishCustomNightSnapshot } from "#src/customs/socket.ts";
 
 const logger = createLogger("tournament-poller");

@@ -5,10 +5,10 @@ import {
   PlayerIdSchema,
   ReportIdSchema,
 } from "@scout-for-lol/data";
-import { queryClient } from "#src/lib/query-client.ts";
-import { trpcOptions } from "#src/lib/trpc-options.ts";
-import { STALE_TIME_SLOW_LIST } from "#src/lib/stale-times.ts";
-import { SESSION_QUERY_OPTIONS } from "#src/lib/session-query.ts";
+import { queryClient } from "#src/lib/query/query-client.ts";
+import { trpcOptions } from "#src/lib/query/trpc-options.ts";
+import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
+import { SESSION_QUERY_OPTIONS } from "#src/lib/query/session-query.ts";
 
 /**
  * Data-router loaders. Every loader is **non-blocking**: it kicks off a

@@ -6,7 +6,7 @@ import {
   scoutTemporalReconnects,
   scoutTemporalStartsRejected,
   scoutTemporalWorkers,
-} from "#src/metrics/temporal.ts";
+} from "#src/metrics/platform/temporal.ts";
 import { setScoutTemporalHealth } from "./health.ts";
 import {
   closeConnectedRuntime,

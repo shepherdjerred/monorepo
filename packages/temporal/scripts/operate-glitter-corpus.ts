@@ -4,8 +4,8 @@ import {
   ChannelStateResultSchema,
   InventoryResultSchema,
 } from "#shared/glitter-corpus-activity-types.ts";
-import { GlitterContextAuditResultSchema } from "#activities/glitter/context/glitter-context-audit-schema.ts";
-import { GlitterCorpusSnapshotPinSchema } from "#activities/glitter/context/glitter-context-refresh-corpus.ts";
+import { GlitterContextAuditResultSchema } from "#activities/glitter/context/audit/glitter-context-audit-schema.ts";
+import { GlitterCorpusSnapshotPinSchema } from "#activities/glitter/context/refresh/glitter-context-refresh-corpus.ts";
 import { temporalConnectionOptions } from "#lib/temporal-connection.ts";
 import { GuildSnapshotSchema } from "#shared/glitter-corpus.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";

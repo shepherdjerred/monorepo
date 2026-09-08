@@ -1,15 +1,15 @@
 {
-  "src/components/review-tool/match-reviewer-info.tsx": {
+  "src/components/review-tool/match/match-reviewer-info.tsx": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/components/review-tool/rank-config-panel.tsx": {
+  "src/components/review-tool/config/rank-config-panel.tsx": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/components/review-tool/use-match-browser.ts": {
+  "src/components/review-tool/match/use-match-browser.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

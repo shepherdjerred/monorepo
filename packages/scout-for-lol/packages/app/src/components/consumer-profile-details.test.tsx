@@ -1,10 +1,10 @@
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router";
-import { ChampionComparisonTable } from "#src/components/champion-comparison-table.tsx";
-import { MatchScoreboards } from "#src/components/match-scoreboard.tsx";
-import { retainedEventFields } from "#src/components/match-timeline.tsx";
-import { FRAME_COLUMNS } from "#src/components/timeline-frame-table.tsx";
+import { ChampionComparisonTable } from "#src/components/match/champion-comparison-table.tsx";
+import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import { retainedEventFields } from "#src/components/match/match-timeline.tsx";
+import { FRAME_COLUMNS } from "#src/components/match/timeline-frame-table.tsx";
 import {
   ChampionPoolTable,
   MatchHistoryList,

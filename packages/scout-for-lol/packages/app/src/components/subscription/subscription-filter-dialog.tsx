@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Dialog } from "@scout-for-lol/design-system/components/dialog";
 import { Field, Label } from "@scout-for-lol/design-system/components/input";

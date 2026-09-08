@@ -6,13 +6,13 @@
 
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { webSessionRejectedTotal } from "#src/metrics/web.ts";
+import { webSessionRejectedTotal } from "#src/metrics/platform/web.ts";
 import type { ApiToken, User } from "#generated/prisma/client/index.js";
 import { verifySession } from "#src/trpc/jwt.ts";
 import {
   isCustomActivityTokenCandidate,
   verifyCustomActivityToken,
-} from "#src/customs/activity-auth.ts";
+} from "#src/customs/activity/activity-auth.ts";
 import type { CustomActivityClaims } from "@scout-for-lol/data";
 
 const logger = createLogger("trpc-context");

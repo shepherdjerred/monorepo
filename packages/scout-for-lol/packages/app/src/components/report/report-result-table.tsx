@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { tableToCsv, downloadCsv } from "#src/lib/table-export.ts";
+import { tableToCsv, downloadCsv } from "#src/lib/reports/table-export.ts";
 
 // Accepts both the AI preview rows (non-null values) and the live tRPC preview
 // rows, whose values are nullable when a column is absent for a row.

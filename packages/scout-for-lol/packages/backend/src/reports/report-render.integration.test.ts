@@ -15,7 +15,7 @@ import {
   writeTestLake,
   type TestLakeMatchFact,
 } from "#src/testing/test-report-lake.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import {
   renderReportOutput,
   type RenderedReportOutput,

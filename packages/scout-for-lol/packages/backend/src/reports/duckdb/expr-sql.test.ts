@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import type {
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   buildPlanColumnMap,
   compilePredicate,

@@ -6,7 +6,7 @@ import {
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
-import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/message-actions.ts";
+import { handleSend } from "@shepherdjerred/birmel/agent-tools/tools/discord/actions/message-actions.ts";
 import {
   createEffectCheckpoint,
   serializeCheckpointOutput,

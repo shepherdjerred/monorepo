@@ -11,7 +11,7 @@ import {
   handleModifyEvent,
   handleDeleteEvent,
   handleGetEventUsers,
-} from "./event-actions.ts";
+} from "./actions/event-actions.ts";
 
 type EventInput = {
   guildId: string;

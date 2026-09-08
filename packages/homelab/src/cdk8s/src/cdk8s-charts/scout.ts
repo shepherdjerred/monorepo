@@ -9,7 +9,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { FLIPT_PORT } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
 import { createScoutWorkflowWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/workflow-worker.ts";
-import { createDnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-network-policies.ts";
+import { createDnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export type Stage = "prod" | "beta";

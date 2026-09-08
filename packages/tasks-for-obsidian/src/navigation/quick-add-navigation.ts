@@ -1,4 +1,4 @@
-import type { CaptureSeed } from "../domain/quick-capture-seed";
+import type { CaptureSeed } from "../domain/quick-capture/quick-capture-seed";
 
 export function quickAddCaptureKey(
   routeKey: string,

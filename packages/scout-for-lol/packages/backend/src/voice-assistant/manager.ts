@@ -24,7 +24,7 @@ import { captureVoiceQuestionAsked } from "#src/analytics/voice-question.ts";
 import {
   scoutVoiceActiveSessions,
   scoutVoiceSessionsTotal,
-} from "#src/metrics/voice.ts";
+} from "#src/metrics/platform/voice.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("voice-assistant-manager");

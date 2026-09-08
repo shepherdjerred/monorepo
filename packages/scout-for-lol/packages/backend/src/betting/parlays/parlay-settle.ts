@@ -31,7 +31,7 @@ import {
   bettingParlayBetSettlementsTotal,
   bettingParlayMarketSettlementsTotal,
   bettingParlayVoidsTotal,
-} from "#src/metrics/betting-parlay.ts";
+} from "#src/metrics/betting/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("betting-parlay-settle");

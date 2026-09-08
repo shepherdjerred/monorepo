@@ -4,7 +4,7 @@ import {
   projectPath,
 } from "tasknotes-types/v2";
 
-import type { SavedView } from "../../domain/saved-views";
+import type { SavedView } from "../../domain/saved-view/saved-views";
 import { isActiveStatus } from "../../domain/status";
 import type { Task } from "../../domain/types";
 

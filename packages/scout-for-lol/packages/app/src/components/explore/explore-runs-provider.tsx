@@ -45,7 +45,7 @@ import { useExploreStartMutation } from "#src/hooks/use-explore-start-mutation.t
 import { useExploreRunObserver } from "#src/hooks/use-explore-run-observer.ts";
 import { analyticsCaptureEnabled, track } from "#src/lib/analytics.ts";
 import { claimExploreRunFinished } from "#src/lib/explore/explore-run-analytics.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { ExploreRunsContext } from "#src/components/explore/explore-runs-context.ts";
 import type {
   ExploreRunsContextValue,

@@ -20,17 +20,17 @@ import type {
   ScoutInteractiveRunInput,
 } from "@scout-for-lol/temporal";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { exploreRunManager } from "#src/explore/run-manager.ts";
+import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { persistPartialAnswer } from "#src/explore/partial-answer.ts";
 import { loadExploreTranscript } from "#src/explore/store.ts";
-import { ExploreDurablePayloadSchema } from "#src/explore/durable-payload.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
+import { ExploreDurablePayloadSchema } from "#src/explore/runs/durable-payload.ts";
+import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { streamExploreAgent } from "#src/explore/agent.ts";
 import type { ExploreRateLimitTicket } from "#src/explore/rate-limit.ts";
 import { recordExploreTraceEvent } from "#src/explore/trace.ts";
 import { streamReportQueryAgent } from "#src/reports/ai/report-query-agent.ts";
 import { getReportAiQuotaStatus } from "#src/reports/ai/rate-limit.ts";
-import { scoutTemporalInterruptedProviderAttempts } from "#src/metrics/temporal.ts";
+import { scoutTemporalInterruptedProviderAttempts } from "#src/metrics/platform/temporal.ts";
 import type { ScoutInteractiveRun } from "#generated/prisma/client/index.js";
 
 const ReportAiPayloadSchema = z.strictObject({

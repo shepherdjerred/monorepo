@@ -16,7 +16,7 @@ import {
   handleAddMember,
   handleGetThreadMessages,
   handleSummarizeThread,
-} from "./thread-actions.ts";
+} from "./actions/thread-actions.ts";
 
 const logger = loggers.tools.child("discord.threads");
 

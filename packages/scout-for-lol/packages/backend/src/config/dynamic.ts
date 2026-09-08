@@ -10,7 +10,7 @@ import {
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createLogger } from "#src/logger.ts";
-import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
+import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import configuration from "#src/configuration.ts";
 import {
   TournamentApiModeSchema,

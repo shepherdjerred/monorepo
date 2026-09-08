@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type {
   DeadLink,
   LinkRotScanResult,
-} from "#activities/maintenance/link-rot-scan.ts";
+} from "#activities/maintenance/link-rot/link-rot-scan.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import { runLinkRotScanWorkflow } from "./link-rot-scan.ts";
 import * as scannerTest from "./scanner-workflow-test-support.ts";

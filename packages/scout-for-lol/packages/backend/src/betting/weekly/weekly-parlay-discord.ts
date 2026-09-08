@@ -27,7 +27,7 @@ import { formatWeeklyParlayCustomId } from "#src/betting/weekly/weekly-parlay-cu
 import {
   bettingWeeklyParlayDeliveriesTotal,
   bettingWeeklyParlayMarketsOpenedTotal,
-} from "#src/metrics/betting-weekly-parlay.ts";
+} from "#src/metrics/betting/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";

@@ -1,10 +1,10 @@
 import { match } from "ts-pattern";
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type {
   ScoutQlAggregateExpr,
   ScoutQlEvidence,
   ScoutQlPredicate,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   buildMatchesSource,
   buildPrematchSource,

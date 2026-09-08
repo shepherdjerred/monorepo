@@ -3,11 +3,11 @@ import { DEFAULT_RENDER_SPEC } from "@scout-for-lol/data/model/reports/report.ts
 import type {
   ScoutQlOutput,
   ScoutQlPlan,
-} from "@scout-for-lol/data/model/scoutql/plan.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import type {
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   compileGroupFactsProjection,
   compileScoutQlPlanQuery,

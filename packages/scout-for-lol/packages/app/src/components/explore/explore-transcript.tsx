@@ -15,7 +15,7 @@ import { Disclosure } from "#src/components/explore/explore-disclosure.tsx";
 import { ExploreIntentCards } from "#src/components/explore/explore-intent-cards.tsx";
 import { ExploreToolTrace } from "#src/components/explore/explore-tool-trace.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore/explore-version-switcher.tsx";
-import { MarkdownAnswer } from "#src/components/markdown-answer.tsx";
+import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
 import { AssistantTurn } from "#src/components/explore/explore-assistant-turn.tsx";
 import { useNow } from "#src/hooks/use-now.ts";
 import { formatDuration } from "#src/lib/format-duration.ts";

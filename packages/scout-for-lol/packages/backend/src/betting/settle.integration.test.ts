@@ -30,7 +30,7 @@ import {
 } from "#src/betting/constants.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { BucksCorruptIdentityError } from "#src/betting/settlement/corrupt-identity.ts";
-import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting/betting.ts";
 
 // Sentry is spied so the corrupt-row classification can be asserted; every
 // other export on the module stays real.

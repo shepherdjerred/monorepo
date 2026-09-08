@@ -1,12 +1,12 @@
 import { match } from "ts-pattern";
-import { analyzeScoutQl } from "@scout-for-lol/data/model/scoutql/analyze.ts";
+import { analyzeScoutQl } from "@scout-for-lol/data/model/scoutql/analyze/analyze.ts";
 import {
   applyReportTimeSpec,
   readReportTimeSpec,
   type ReportTimeSpec,
   type ReportTimeWindow,
-} from "@scout-for-lol/data/model/scoutql/report-time-spec.ts";
-import type { ReportTimeBucket } from "@scout-for-lol/data/model/scoutql/report-time-spec-bucket.ts";
+} from "@scout-for-lol/data/model/scoutql/editor/report-time-spec.ts";
+import type { ReportTimeBucket } from "@scout-for-lol/data/model/scoutql/editor/report-time-spec-bucket.ts";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import { Label } from "@scout-for-lol/design-system/components/label";
 

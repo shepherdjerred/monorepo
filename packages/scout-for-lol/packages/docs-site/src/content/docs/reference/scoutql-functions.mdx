@@ -6,7 +6,7 @@ sidebar:
 ---
 
 import DataTable from "../../../components/DataTable.astro";
-import { SCOUTQL_FUNCTIONS } from "@scout-for-lol/data/model/scoutql/catalog-functions.ts";
+import { SCOUTQL_FUNCTIONS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-functions.ts";
 
 export const byKind = (kind) =>
   SCOUTQL_FUNCTIONS.filter((fn) => fn.kind === kind);

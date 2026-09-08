@@ -19,7 +19,7 @@ import {
 import { stakeDareContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger.ts";
 import { InsufficientBucksError } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
-import { bettingDareContributionsTotal } from "#src/metrics/betting.ts";
+import { bettingDareContributionsTotal } from "#src/metrics/betting/betting.ts";
 
 /**
  * Piling Bucks onto a dare's pot.

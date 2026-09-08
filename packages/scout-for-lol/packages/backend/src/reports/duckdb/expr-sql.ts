@@ -7,7 +7,7 @@ import {
 import type {
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import { listParam, scalarParam } from "#src/reports/duckdb/lake.ts";
 import type { SqlFragment } from "#src/reports/duckdb/lake.ts";
 import {

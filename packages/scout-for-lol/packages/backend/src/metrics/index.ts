@@ -2,12 +2,12 @@ import { Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
-import { updateBettingMetrics } from "#src/metrics/betting-sweep.ts";
+import { updateBettingMetrics } from "#src/metrics/betting/betting-sweep.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
 import "#src/metrics/product-analytics.ts";
-import "#src/metrics/feature-flags.ts";
-import "#src/metrics/discord-gateway-health.ts";
+import "#src/metrics/platform/feature-flags.ts";
+import "#src/metrics/platform/discord-gateway-health.ts";
 import "#src/metrics/progression.ts";
 
 const logger = createLogger("metrics");
@@ -766,7 +766,7 @@ export async function getMetrics(): Promise<string> {
   await updateLimitMetrics();
   await updateBettingMetrics();
   const { updateScoutTemporalDurabilityMetrics } =
-    await import("#src/metrics/temporal.ts");
+    await import("#src/metrics/platform/temporal.ts");
   await updateScoutTemporalDurabilityMetrics();
   return await registry.metrics();
 }

@@ -25,7 +25,7 @@ import {
   submitThenChangeValidation,
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const ReadableSummarySchema = z.strictObject({
   plainLanguage: z.string().trim().min(1).max(4000),

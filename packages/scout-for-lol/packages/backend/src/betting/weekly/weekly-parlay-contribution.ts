@@ -21,7 +21,7 @@ import {
 } from "#src/betting/weekly/weekly-parlay-discord.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { bettingWeeklyParlayContributionsTotal } from "#src/metrics/betting-weekly-parlay.ts";
+import { bettingWeeklyParlayContributionsTotal } from "#src/metrics/betting/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 const logger = createLogger("betting-weekly-parlay-contribution");

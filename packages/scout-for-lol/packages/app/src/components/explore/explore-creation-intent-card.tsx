@@ -20,7 +20,7 @@ import {
   classifyCreationIntentConfirmation,
   type CreationConfirmationOutcome,
 } from "#src/lib/intent-confirmation.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
  * The card that turns a prepared report, subscription or competition into a

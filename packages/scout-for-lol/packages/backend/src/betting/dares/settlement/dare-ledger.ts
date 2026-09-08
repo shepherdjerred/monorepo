@@ -14,7 +14,7 @@ import {
   lockBucksAccountsForCredit,
 } from "#src/betting/ledger.ts";
 import type { Db } from "#src/database/index.ts";
-import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting.ts";
+import { bettingSettlementConservationFailuresTotal } from "#src/metrics/betting/betting.ts";
 
 /**
  * The money paths every dare resolution shares.

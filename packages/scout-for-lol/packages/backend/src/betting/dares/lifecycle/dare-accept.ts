@@ -25,7 +25,7 @@ import { logBucksTransition } from "#src/betting/transition-log.ts";
 import {
   bettingDareSettlementsTotal,
   bettingDaresTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 
 /**
  * Target consent: accepting a dare, and chickening out of one.

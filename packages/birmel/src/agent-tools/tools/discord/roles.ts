@@ -12,7 +12,7 @@ import {
   handleModifyRole,
   handleDeleteRole,
   handleReorderRoles,
-} from "./role-actions.ts";
+} from "./actions/role-actions.ts";
 
 export const manageRoleTool = createTool({
   id: "manage-role",

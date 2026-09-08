@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { EXPLORE_ACTIVITY_MAX_LENGTH } from "@scout-for-lol/data";
-import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type { ExploreToolResultInspection } from "#src/explore/tool-inspection.ts";
 
 /**

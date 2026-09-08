@@ -4,12 +4,12 @@ import {
   PlayerIdSchema,
   type CachedLeaderboard,
 } from "@scout-for-lol/data";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import {
   mergeCompetitionRankHistory,
   standingsFromResult,
 } from "#src/league/competition/analysis-results.ts";
-import type { ReportQueryResult } from "#src/reports/query-types.ts";
+import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 
 const competitionId = CompetitionIdSchema.parse(1);
 const playerId = PlayerIdSchema.parse(10);
