@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  groundTurnAnswer,
   requireGroundedAnswer,
   summarizeToolResultForSession,
 } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
@@ -319,6 +320,68 @@ describe("requireGroundedAnswer", () => {
         [succeededRead],
       ),
     ).not.toThrow();
+  });
+});
+
+describe("groundTurnAnswer", () => {
+  const succeeded = {
+    toolCallId: "call-1",
+    toolId: "generate-image",
+    inputSummary: "{}",
+    resultSummary: "Image staged",
+    content: "Tool generate-image call call-1 succeeded",
+    success: true,
+    inputKey: "key-1",
+    readOnly: false,
+  };
+  const failedRead = {
+    toolCallId: "call-3",
+    toolId: "get-activity-stats",
+    inputSummary: "{}",
+    resultSummary: "Tool reported failure",
+    content: "Tool get-activity-stats call call-3 failed",
+    success: false,
+    inputKey: "key-3",
+    readOnly: true,
+  };
+
+  test("fills omitted supported citations from successful tool events", () => {
+    const grounded = groundTurnAnswer(
+      {
+        answer: "third time’s the charm.",
+        disposition: "supported",
+        reliedOnToolCallIds: [],
+        performedMutation: false,
+      },
+      [succeeded, failedRead],
+    );
+
+    expect(grounded.reliedOnToolCallIds).toEqual(["call-1"]);
+    expect(() =>
+      requireGroundedAnswer(grounded, [succeeded, failedRead]),
+    ).not.toThrow();
+  });
+
+  test("does not invent citations when no tool succeeded", () => {
+    const answer = {
+      answer: "Done.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: [],
+      performedMutation: false,
+    };
+
+    expect(groundTurnAnswer(answer, [failedRead])).toEqual(answer);
+  });
+
+  test("leaves explicit citations unchanged", () => {
+    const answer = {
+      answer: "Done.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: ["call-1"],
+      performedMutation: true,
+    };
+
+    expect(groundTurnAnswer(answer, [succeeded])).toEqual(answer);
   });
 });
 

@@ -331,6 +331,43 @@ export function requireGroundedAnswer(
   }
 }
 
+/**
+ * Fill omitted citations from tool events that actually succeeded.
+ *
+ * The final structured answer is written after Discord progress has already
+ * been told not to mention tool names or IDs. Models then leave
+ * `reliedOnToolCallIds` empty even when generate-image (or another tool)
+ * succeeded, and the grounding gate throws the staged result away. Empty
+ * citations after a real success are a missing ID, not an ungrounded claim.
+ * Invented IDs and uncorrected write failures still fail in
+ * `requireGroundedAnswer`.
+ */
+export function groundTurnAnswer(
+  answer: TurnAnswer,
+  toolEvents: SessionToolEvent[],
+): TurnAnswer {
+  if (
+    answer.disposition !== "supported" ||
+    answer.reliedOnToolCallIds.length > 0
+  ) {
+    return answer;
+  }
+  const successfulIds = [
+    ...new Set(
+      toolEvents
+        .filter((event) => event.success)
+        .map((event) => event.toolCallId),
+    ),
+  ];
+  if (successfulIds.length === 0) {
+    return answer;
+  }
+  return {
+    ...answer,
+    reliedOnToolCallIds: successfulIds,
+  };
+}
+
 export async function executeTurn(
   rawPacket: TaskPacket,
   options: IsolatedAgentOptions & TurnOptions = {},
@@ -435,7 +472,10 @@ export async function executeTurn(
           summarizeToolResultForSession(toolResult, registeredToolIds),
         ),
       );
-      const answer = TurnAnswerSchema.parse(result.output);
+      const answer = groundTurnAnswer(
+        TurnAnswerSchema.parse(result.output),
+        toolEvents,
+      );
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute(
