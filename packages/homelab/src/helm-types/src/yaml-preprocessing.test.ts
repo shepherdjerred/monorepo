@@ -272,6 +272,13 @@ setting: value`;
 });
 
 describe("YAML Preprocessing - Directives and Patterns", () => {
+  test("uncomments an absolute-path option when it is not an example", () => {
+    const preprocessed = preprocessYAMLComments(
+      "settings:\n  enabled: true\n  # mountPath: /data",
+    );
+    expect(preprocessed).toContain("mountPath: /data");
+  });
+
   describe("Commented-out Keys Behavior", () => {
     test("documents that preprocessing is conservative by design", () => {
       // The preprocessor is intentionally conservative to avoid false positives

@@ -81,26 +81,38 @@ struct AppState {
 
 #[tauri::command]
 async fn get_lcu_status(state: State<'_, AppState>) -> Result<lcu::LcuStatus, String> {
-    let connection = state.lcu_connection.lock().await.clone();
-    match connection {
-        Some(conn) => {
-            let status = conn.get_status().await;
-            let is_current = state
-                .lcu_connection
-                .lock()
-                .await
-                .as_ref()
-                .is_some_and(|current| current.is_same_instance(&conn));
-            if is_current {
-                Ok(status)
-            } else {
-                Ok(lcu::LcuStatus {
-                    connected: false,
-                    summoner_name: None,
-                    in_game: false,
-                })
+    for _ in 0..3 {
+        let connection = state.lcu_connection.lock().await.clone();
+        let Some(conn) = connection else {
+            return Ok(lcu::LcuStatus {
+                connected: false,
+                summoner_name: None,
+                in_game: false,
+            });
+        };
+
+        let status = conn.get_status().await;
+        let current = state.lcu_connection.lock().await.clone();
+        if let Some(current) = current {
+            if current.is_same_instance(&conn) {
+                return Ok(status);
             }
+            // The connection was replaced while the request was in flight.
+            // Retry against the replacement rather than publishing a stale
+            // disconnected result over a successful reconnect.
+            continue;
         }
+
+        return Ok(lcu::LcuStatus {
+            connected: false,
+            summoner_name: None,
+            in_game: false,
+        });
+    }
+
+    let current = state.lcu_connection.lock().await.clone();
+    match current {
+        Some(conn) => Ok(conn.get_status().await),
         None => Ok(lcu::LcuStatus {
             connected: false,
             summoner_name: None,
