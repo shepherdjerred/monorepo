@@ -18,7 +18,7 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { ChallengeAccountSelection } from "#src/components/challenge/challenge-account-selection.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const AccountSelectionSchema = z.strictObject({
   accountIds: z.array(z.number().int().positive()).min(1),

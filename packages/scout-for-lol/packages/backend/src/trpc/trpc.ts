@@ -11,8 +11,8 @@ import {
 } from "@scout-for-lol/data";
 import type { Context } from "#src/trpc/context.ts";
 import configuration from "#src/configuration.ts";
-import { trpcCallDuration, trpcCallsTotal } from "#src/metrics/web.ts";
-import { assertCustomActivityPolicy } from "#src/customs/activity-auth.ts";
+import { trpcCallDuration, trpcCallsTotal } from "#src/metrics/platform/web.ts";
+import { assertCustomActivityPolicy } from "#src/customs/activity/activity-auth.ts";
 
 /**
  * Find the missing `{ resource, action }` a FORBIDDEN carries. The

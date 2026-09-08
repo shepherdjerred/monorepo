@@ -25,7 +25,7 @@ import {
 } from "#src/betting/weekly/weekly-parlay-period.ts";
 import { settleWeeklyParlayMarket } from "#src/betting/weekly/weekly-parlay-settle.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { bettingWeeklyParlayControlActionsTotal } from "#src/metrics/betting-weekly-parlay.ts";
+import { bettingWeeklyParlayControlActionsTotal } from "#src/metrics/betting/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { syncBucksAnalytics } from "#src/analytics/bryan-bucks-sync.ts";
 export const WEEKLY_PARLAY_CONTROL_PATH =

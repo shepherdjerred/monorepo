@@ -359,7 +359,7 @@ const commands: Record<
       // Mirror the full image CMD: migrate → legacy import (which must take
       // its fresh-install marker path here) → ScoutQL v2 boot-time migration
       // → boot.
-      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
+      String.raw`output="$(timeout 45s sh -c "bun x --no-install prisma migrate deploy && bun run scripts/import-legacy-sqlite.ts --allow-fresh-install && bun run scripts/scoutql/migrate-scoutql-v2.ts --database \"$DATABASE_URL\" --fix && bun run src/index.ts" 2>&1)"`,
       "status=$?",
       String.raw`printf '%s\n' "$output"`,
       String.raw`printf '%s\n' "$output" | grep -q "Legacy import: fresh" || { echo "importer did not take the fresh-install path"; exit 1; }`,

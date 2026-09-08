@@ -22,7 +22,7 @@ import type { Context } from "#src/trpc/context.ts";
 import {
   onboardingOutcomeTotal,
   onboardingStepTotal,
-} from "#src/metrics/web.ts";
+} from "#src/metrics/platform/web.ts";
 
 /**
  * Fixed-window limiter, applied **per caller** with a global safety cap on top.

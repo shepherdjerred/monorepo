@@ -10,7 +10,7 @@ import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { bettingParlayBetCancellationsTotal } from "#src/metrics/betting-parlay.ts";
+import { bettingParlayBetCancellationsTotal } from "#src/metrics/betting/betting-parlay.ts";
 
 export type CancelParlayBetResult =
   | { kind: "cancelled"; refunded: number; balanceAfter: number }

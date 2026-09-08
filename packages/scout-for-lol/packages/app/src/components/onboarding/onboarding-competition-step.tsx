@@ -27,10 +27,10 @@ import {
   useUnsavedFormTransition,
 } from "#src/hooks/use-unsaved-form.tsx";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { validateForm } from "#src/lib/competition-form-state.ts";
+import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
 import { CompetitionFormValueSchema } from "#src/lib/form-schemas.ts";
-import { COMPETITION_EXAMPLES } from "#src/lib/onboarding-examples.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { COMPETITION_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const TITLE = "Start a competition";
 const DESCRIPTION =

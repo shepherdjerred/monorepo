@@ -17,7 +17,7 @@ import {
   bettingMessageRefsRecordedTotal,
   bettingPoolOpenFailuresTotal,
   bettingPoolsOpenedTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 /** Prometheus label values must be bounded; a queue with spaces is normalised. */

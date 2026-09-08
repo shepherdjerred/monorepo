@@ -121,7 +121,7 @@ const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/streambot/scripts/voice-model-smoke.ts",
   "packages/streambot/src/config/index.ts",
   "packages/streambot/src/config/schema.ts",
-  "packages/scout-for-lol/packages/backend/scripts/voice-probe.ts",
+  "packages/scout-for-lol/packages/backend/scripts/smoke/voice-probe.ts",
   "packages/scout-for-lol/packages/backend/src/configuration.ts",
   "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
 ]);

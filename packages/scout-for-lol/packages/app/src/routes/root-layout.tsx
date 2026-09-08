@@ -5,7 +5,7 @@ import {
   AppWorkspaceFrame,
   GlobalFooter,
 } from "@scout-for-lol/design-system/layout";
-import { ContractMismatchBanner } from "#src/components/version-info.tsx";
+import { ContractMismatchBanner } from "#src/components/chrome/version-info.tsx";
 import {
   analyticsContextRoute,
   normalizePath,
@@ -16,11 +16,11 @@ import {
   trackPageview,
 } from "#src/lib/analytics.ts";
 import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
-import { FeedbackPrompt } from "#src/components/feedback-prompt.tsx";
-import { UserMenu } from "#src/components/user-menu.tsx";
+import { FeedbackPrompt } from "#src/components/dialogs/feedback-prompt.tsx";
+import { UserMenu } from "#src/components/chrome/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
 import { docsOrigin, marketingOrigin } from "#src/lib/surface-origins.ts";
-import { AppNavigation } from "#src/components/app-navigation.tsx";
+import { AppNavigation } from "#src/components/chrome/app-navigation.tsx";
 import {
   resolveAppShellMode,
   shouldRenderGlobalFooter,

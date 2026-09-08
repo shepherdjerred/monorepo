@@ -1,6 +1,9 @@
-import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/plan.ts";
-import { columnLabel, planDisplayKind } from "#src/reports/plan-columns.ts";
-import type { ReportResultRow } from "#src/reports/query-types.ts";
+import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import {
+  columnLabel,
+  planDisplayKind,
+} from "#src/reports/query/plan-columns.ts";
+import type { ReportResultRow } from "#src/reports/query/query-types.ts";
 
 /**
  * Chart-side reading of result values. How a column reads is the plan's

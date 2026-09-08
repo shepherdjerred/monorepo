@@ -3,7 +3,7 @@ import {
   type CompetitionWithCriteria,
   type TemporalAnalysisSpec,
 } from "@scout-for-lol/data";
-import { localCalendarDate } from "#src/reports/temporal-labels.ts";
+import { localCalendarDate } from "#src/reports/schedule/temporal-labels.ts";
 
 export function resolveCompetitionAnalysisDates(params: {
   competition: CompetitionWithCriteria;

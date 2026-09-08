@@ -4,8 +4,8 @@ import {
   ReportAiPreviewSummarySchema,
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
-import { planResultColumns } from "#src/reports/plan-columns.ts";
-import type { ReportQueryResult } from "#src/reports/query-types.ts";
+import { planResultColumns } from "#src/reports/query/plan-columns.ts";
+import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 
 function previewRow(
   row: ReportQueryResult["rows"][number],

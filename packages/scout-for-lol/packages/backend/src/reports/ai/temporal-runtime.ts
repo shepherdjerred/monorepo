@@ -21,7 +21,7 @@ import {
   scoutReportAiActiveRuns,
   scoutReportAiRunDurationSeconds,
   scoutReportAiRunsTotal,
-} from "#src/metrics/report-ai.ts";
+} from "#src/metrics/reports/report-ai.ts";
 import { createLogger } from "#src/logger.ts";
 
 const encoder = new TextEncoder();

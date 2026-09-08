@@ -320,7 +320,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "custom-nights-expiry": {
             const { expireCustomNights } =
-              await import("#src/customs/expiry.ts");
+              await import("#src/customs/game/expiry.ts");
             await expireCustomNights();
             break;
           }
@@ -392,7 +392,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             );
           }
           const { drainReportScheduleOutbox } =
-            await import("#src/reports/schedule-reconciler.ts");
+            await import("#src/reports/schedule/schedule-reconciler.ts");
           return await drainReportScheduleOutbox(
             supervisor.client(),
             input.stage,

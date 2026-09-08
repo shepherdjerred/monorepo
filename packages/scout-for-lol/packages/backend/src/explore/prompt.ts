@@ -1,4 +1,4 @@
-import { bucksExplorePromptSection } from "#src/explore/bucks-tools.ts";
+import { bucksExplorePromptSection } from "#src/explore/tools/bucks-tools.ts";
 import { DARE_V2_PROMPT_VERSION } from "@scout-for-lol/data";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";

@@ -3,7 +3,7 @@ import { Input } from "@scout-for-lol/design-system/components/input";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import { PlayerIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function CompetitionBuilderEntrants(props: {
   guildId: string;

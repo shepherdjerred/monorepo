@@ -20,7 +20,7 @@ import {
   getDiscordGatewayHealth,
   recordDiscordGatewayHeartbeat,
   setDiscordGatewayState,
-} from "#src/metrics/discord-gateway-health.ts";
+} from "#src/metrics/platform/discord-gateway-health.ts";
 import { voiceManager } from "#src/voice/index.ts";
 import { getVoiceAssistantManager } from "#src/voice-assistant/manager.ts";
 import { createLogger } from "#src/logger.ts";

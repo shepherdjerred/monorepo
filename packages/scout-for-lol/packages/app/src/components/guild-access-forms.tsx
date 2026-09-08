@@ -13,7 +13,7 @@ import {
   Field,
   FieldError,
 } from "@scout-for-lol/design-system/components/input";
-import { permissionLabel } from "#src/components/forbidden-panel.tsx";
+import { permissionLabel } from "#src/components/chrome/forbidden-panel.tsx";
 import {
   fieldErrorMessage,
   focusFirstInvalid,

@@ -25,7 +25,7 @@ import {
 import { provisionTournamentLobby } from "#src/league/tournament/provision-lobby.ts";
 import { describeLobby } from "#src/league/tournament/prematch-card.ts";
 import { isTerminal } from "#src/league/tournament/lifecycle.ts";
-import { tournamentLobbiesTotal } from "#src/metrics/tournament.ts";
+import { tournamentLobbiesTotal } from "#src/metrics/platform/tournament.ts";
 
 const logger = createLogger("lobby-command");
 

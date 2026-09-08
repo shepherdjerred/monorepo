@@ -36,7 +36,7 @@ import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import {
   bettingWeeklyParlayGenerationDurationSeconds,
   bettingWeeklyParlayGenerationTotal,
-} from "#src/metrics/betting-weekly-parlay.ts";
+} from "#src/metrics/betting/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 
 export type OpenWeeklyParlayResult =

@@ -37,7 +37,7 @@ import {
   scoutVoiceTurnsTotal,
   scoutVoiceWakeCandidatesTotal,
   scoutVoiceWakeDetectionsTotal,
-} from "#src/metrics/voice.ts";
+} from "#src/metrics/platform/voice.ts";
 import { createLogger } from "#src/logger.ts";
 import type { LocalVoiceModels } from "@shepherdjerred/voice-assistant";
 import type { VoiceQuestionOutcome } from "#src/analytics/product-analytics.ts";

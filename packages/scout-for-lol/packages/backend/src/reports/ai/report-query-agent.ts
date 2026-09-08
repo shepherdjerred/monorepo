@@ -13,8 +13,8 @@ import {
   type ReportAiFinalDraft,
   type ReportAiStreamEvent,
 } from "@scout-for-lol/data";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
-import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
 import { reportAiModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -24,12 +24,12 @@ import {
 import {
   scoutReportAiToolCallsTotal,
   scoutReportAiTokensUsedTotal,
-} from "#src/metrics/report-ai.ts";
+} from "#src/metrics/reports/report-ai.ts";
 import { emitReportAgentStreamChunk } from "#src/reports/ai/report-query-agent-stream.ts";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { finalizeReportDraft } from "#src/reports/ai/report-query-finalizer.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import {

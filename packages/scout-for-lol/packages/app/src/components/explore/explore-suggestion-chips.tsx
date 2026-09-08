@@ -8,7 +8,7 @@ import {
   pickDiverseSuggestions,
   type ExploreFeatureContext,
 } from "#src/components/explore/explore-suggestions.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ExploreSuggestionChips(props: {
   readonly onSelect: (prompt: string) => void;

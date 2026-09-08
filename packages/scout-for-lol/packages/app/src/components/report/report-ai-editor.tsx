@@ -17,9 +17,9 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { track } from "#src/lib/analytics.ts";
-import { streamReportAiEdit } from "#src/lib/report-ai-stream.ts";
+import { streamReportAiEdit } from "#src/lib/reports/report-ai-stream.ts";
 import { type ReportFormState } from "#src/components/report/report-form-fields.tsx";
 import { ReportQueryViewer } from "#src/components/report/report-query-viewer.tsx";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";

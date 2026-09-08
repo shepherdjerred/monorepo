@@ -10,7 +10,7 @@ import {
   type AbilitySlot,
 } from "@scout-for-lol/data";
 import type { RealtimeTurnTools } from "@shepherdjerred/voice-assistant";
-import { scoutVoiceToolCallsTotal } from "#src/metrics/voice.ts";
+import { scoutVoiceToolCallsTotal } from "#src/metrics/platform/voice.ts";
 
 /**
  * Read-only League tools for one Hey Scout turn, all over committed data-

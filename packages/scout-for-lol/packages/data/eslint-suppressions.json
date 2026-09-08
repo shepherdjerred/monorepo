@@ -88,27 +88,27 @@
       "count": 2
     }
   },
-  "src/model/scoutql/analyze-display.ts": {
+  "src/model/scoutql/analyze/analyze-display.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/model/scoutql/analyze-lower-aggregate.ts": {
+  "src/model/scoutql/analyze/analyze-lower-aggregate.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/model/scoutql/ast.ts": {
+  "src/model/scoutql/parse/ast.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/model/scoutql/cst-to-ast-expr.ts": {
+  "src/model/scoutql/parse/cst-to-ast-expr.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "src/model/scoutql/plan.ts": {
+  "src/model/scoutql/parse/plan.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

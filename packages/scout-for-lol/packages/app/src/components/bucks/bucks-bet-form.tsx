@@ -12,7 +12,7 @@ import {
 import {
   BUCKS_QUICK_STAKES,
   bucksStakeFormSchema,
-} from "#src/lib/bucks-forms.ts";
+} from "#src/lib/bucks/bucks-forms.ts";
 
 export type BucksBetSubmission = { side: string; stake: number };
 

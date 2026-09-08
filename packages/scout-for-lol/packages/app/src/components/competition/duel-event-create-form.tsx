@@ -19,7 +19,7 @@ import {
   submitThenChangeValidation,
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const OptionalBestOfSchema = z.enum(["", "1", "3", "5"]);
 

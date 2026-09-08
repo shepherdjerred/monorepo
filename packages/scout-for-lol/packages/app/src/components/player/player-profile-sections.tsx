@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
-import { ChampionIcon } from "#src/components/champion-icon.tsx";
+import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
 import { formatRiotId } from "#src/lib/riot-id-format.ts";
 import { RankDisplay } from "@scout-for-lol/design-system/domain/rank-display";
 

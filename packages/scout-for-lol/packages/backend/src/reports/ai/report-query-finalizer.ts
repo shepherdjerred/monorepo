@@ -6,7 +6,7 @@ import {
 } from "@shepherdjerred/llm-runtime";
 import { REPORT_AI_MAX_OUTPUT_TOKENS } from "@scout-for-lol/data";
 import { recordTokenUsage } from "#src/league/review/openai-budget.ts";
-import { scoutReportAiTokensUsedTotal } from "#src/metrics/report-ai.ts";
+import { scoutReportAiTokensUsedTotal } from "#src/metrics/reports/report-ai.ts";
 import { ValidatedReportAiFinalDraftSchema } from "#src/reports/ai/report-query-final-schema.ts";
 
 const FINALIZER_SYSTEM_PROMPT =

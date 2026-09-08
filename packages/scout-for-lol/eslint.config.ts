@@ -52,7 +52,7 @@ const restrictedTwistedPattern = {
  * The ScoutQL v1 language, kept alive for exactly one consumer.
  *
  * `data/src/model/legacy/` holds the v1 lexer/parser/compiler because the
- * boot-time migration (`backend/scripts/migrate-scoutql-v2.ts`) verifies each
+ * boot-time migration (`backend/scripts/scoutql/migrate-scoutql-v2.ts`) verifies each
  * rewrite along two independent routes, and route A is "legacy text → legacy
  * plan → IR translation". Nothing else may reach it: it is deliberately absent
  * from the `@scout-for-lol/data` barrel, and this rule is what keeps a new
@@ -69,7 +69,7 @@ const restrictedLegacyScoutQlPattern = {
   // misses the third.
   regex: "(^|[./])legacy/",
   message:
-    "ScoutQL v1 is retired. Use @scout-for-lol/data/model/scoutql/* instead; only backend/scripts/scoutql-legacy-bridge.ts may reach the legacy language.",
+    "ScoutQL v1 is retired. Use @scout-for-lol/data/model/scoutql/* instead; only backend/scripts/scoutql/scoutql-legacy-bridge.ts may reach the legacy language.",
 };
 
 /**
@@ -78,8 +78,8 @@ const restrictedLegacyScoutQlPattern = {
  */
 const legacyScoutQlImportSites = [
   "packages/data/src/model/legacy/**/*.ts",
-  "packages/backend/scripts/scoutql-legacy-bridge.ts",
-  "packages/backend/scripts/scoutql-legacy-bridge.test.ts",
+  "packages/backend/scripts/scoutql/scoutql-legacy-bridge.ts",
+  "packages/backend/scripts/scoutql/scoutql-legacy-bridge.test.ts",
 ];
 
 const config = [

@@ -121,8 +121,8 @@ assistant sessions are undeafened and are never displaced by sound-engine
 alerts (alerts duck under assistant speech instead).
 
 Manual end-to-end probe (macOS, trained assets + `OPENAI_API_KEY` required, no
-Discord): `bun scripts/voice-probe.ts --list-devices`, then
-`bun scripts/voice-probe.ts --device <index> --assets-dir <path>`.
+Discord): `bun scripts/smoke/voice-probe.ts --list-devices`, then
+`bun scripts/smoke/voice-probe.ts --device <index> --assets-dir <path>`.
 
 ## Configuration
 

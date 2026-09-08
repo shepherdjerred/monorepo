@@ -7,8 +7,8 @@ import {
   submitThenChangeValidation,
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
-import { BucksContributionFormSchema } from "#src/lib/bucks-forms.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { BucksContributionFormSchema } from "#src/lib/bucks/bucks-forms.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 type PreparedAction = {
   intentId: string;

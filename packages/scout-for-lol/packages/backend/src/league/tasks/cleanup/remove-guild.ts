@@ -20,7 +20,7 @@ import { captureGuildRemoval } from "#src/analytics/guild-lifecycle.ts";
 import {
   enqueueReportScheduleDeletion,
   notifyReportScheduleReconciler,
-} from "#src/reports/temporal-schedules.ts";
+} from "#src/reports/schedule/temporal-schedules.ts";
 
 const logger = createLogger("cleanup-removed-guild");
 

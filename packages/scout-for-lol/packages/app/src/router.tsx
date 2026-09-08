@@ -5,59 +5,59 @@ import {
   type RouteObject,
 } from "react-router";
 import { Login } from "#src/routes/login.tsx";
-import { GuildPicker } from "#src/routes/guild-picker.tsx";
+import { GuildPicker } from "#src/routes/guild/guild-picker.tsx";
 import { ManageServers } from "#src/routes/manage-servers.tsx";
-import { GuildSubscriptions } from "#src/routes/guild-subscriptions.tsx";
-import { GuildAudit } from "#src/routes/guild-audit.tsx";
-import { GuildAccess } from "#src/routes/guild-access.tsx";
+import { GuildSubscriptions } from "#src/routes/guild/guild-subscriptions.tsx";
+import { GuildAudit } from "#src/routes/guild/guild-audit.tsx";
+import { GuildAccess } from "#src/routes/guild/guild-access.tsx";
 import { CustomsHistory } from "#src/routes/customs-history.tsx";
 import {
   GuildPermissionsGate,
   GuildSectionIndex,
   GuildWorkspace,
-} from "#src/routes/guild-workspace.tsx";
-import { PlayerList } from "#src/routes/player-list.tsx";
-import { PlayerDetail } from "#src/routes/player-detail.tsx";
-import { CompetitionList } from "#src/routes/competition-list.tsx";
-import { CompetitionDetail } from "#src/routes/competition-detail.tsx";
-import { CompetitionForm } from "#src/routes/competition-form.tsx";
-import { ReportList } from "#src/routes/report-list.tsx";
-import { ReportDetail } from "#src/routes/report-detail.tsx";
-import { ReportForm } from "#src/routes/report-form.tsx";
-import { ReportHelp } from "#src/routes/report-help.tsx";
+} from "#src/routes/guild/guild-workspace.tsx";
+import { PlayerList } from "#src/routes/players/player-list.tsx";
+import { PlayerDetail } from "#src/routes/players/player-detail.tsx";
+import { CompetitionList } from "#src/routes/competitions/competition-list.tsx";
+import { CompetitionDetail } from "#src/routes/competitions/competition-detail.tsx";
+import { CompetitionForm } from "#src/routes/competitions/competition-form.tsx";
+import { ReportList } from "#src/routes/reports/report-list.tsx";
+import { ReportDetail } from "#src/routes/reports/report-detail.tsx";
+import { ReportForm } from "#src/routes/reports/report-form.tsx";
+import { ReportHelp } from "#src/routes/reports/report-help.tsx";
 import { Explore } from "#src/routes/explore.tsx";
 import { ExploreShared } from "#src/routes/explore-shared.tsx";
-import { ConsumerPlayerSearch } from "#src/routes/consumer-player-search.tsx";
-import { ConsumerPlayerProfile } from "#src/routes/consumer-player-profile.tsx";
-import { ConsumerChampion } from "#src/routes/consumer-champion.tsx";
-import { ConsumerMatch } from "#src/routes/consumer-match.tsx";
+import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-search.tsx";
+import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
+import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
+import { ConsumerMatch } from "#src/routes/consumer/consumer-match.tsx";
 import {
   ConsumerGuildWorkspace,
   ConsumerWorkspace,
-} from "#src/routes/consumer-workspace.tsx";
-import { BucksWorkspace } from "#src/routes/bucks-workspace.tsx";
-import { BucksOverview } from "#src/routes/bucks-overview.tsx";
-import { BucksDares } from "#src/routes/bucks-dares.tsx";
-import { BucksHistory } from "#src/routes/bucks-history.tsx";
-import { BucksLeaderboard } from "#src/routes/bucks-leaderboard.tsx";
-import { BucksSettings } from "#src/routes/bucks-settings.tsx";
+} from "#src/routes/consumer/consumer-workspace.tsx";
+import { BucksWorkspace } from "#src/routes/bucks/bucks-workspace.tsx";
+import { BucksOverview } from "#src/routes/bucks/bucks-overview.tsx";
+import { BucksDares } from "#src/routes/bucks/bucks-dares.tsx";
+import { BucksHistory } from "#src/routes/bucks/bucks-history.tsx";
+import { BucksLeaderboard } from "#src/routes/bucks/bucks-leaderboard.tsx";
+import { BucksSettings } from "#src/routes/bucks/bucks-settings.tsx";
 import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
 import { HallOfFame } from "#src/routes/hall-of-fame.tsx";
 import { HallSettings } from "#src/routes/hall-settings.tsx";
-import { ChallengeCatalog } from "#src/routes/challenge-catalog.tsx";
-import { ChallengeTemplate } from "#src/routes/challenge-template.tsx";
-import { ChallengeDraft } from "#src/routes/challenge-draft.tsx";
-import { ChallengeRun } from "#src/routes/challenge-run.tsx";
-import { DuelOverview } from "#src/routes/duel-overview.tsx";
-import { DuelEvent } from "#src/routes/duel-event.tsx";
-import { DuelSeries } from "#src/routes/duel-series.tsx";
-import { DuelStandings } from "#src/routes/duel-standings.tsx";
-import { DuelHeadToHead } from "#src/routes/duel-head-to-head.tsx";
-import { RouteErrorPanel } from "#src/components/route-error-panel.tsx";
-import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/guild-route-permissions.ts";
+import { ChallengeCatalog } from "#src/routes/challenges/challenge-catalog.tsx";
+import { ChallengeTemplate } from "#src/routes/challenges/challenge-template.tsx";
+import { ChallengeDraft } from "#src/routes/challenges/challenge-draft.tsx";
+import { ChallengeRun } from "#src/routes/challenges/challenge-run.tsx";
+import { DuelOverview } from "#src/routes/competitions/duel-overview.tsx";
+import { DuelEvent } from "#src/routes/competitions/duel-event.tsx";
+import { DuelSeries } from "#src/routes/competitions/duel-series.tsx";
+import { DuelStandings } from "#src/routes/competitions/duel-standings.tsx";
+import { DuelHeadToHead } from "#src/routes/competitions/duel-head-to-head.tsx";
+import { RouteErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
+import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/player/guild-route-permissions.ts";
 import {
   accessLoader,
   auditLoader,

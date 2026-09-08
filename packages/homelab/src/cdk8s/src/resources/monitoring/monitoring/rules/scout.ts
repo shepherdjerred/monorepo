@@ -326,7 +326,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
               "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected daily.",
             ),
             runbook_url:
-              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
+              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/schedule/scheduler.ts",
           },
           // 25h = one day + 1h grace. system_source=COMPETITION uses 0 0 * * *.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
@@ -347,7 +347,7 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
               "Scout {{ $labels.environment }} report {{ $labels.title }} (id={{ $labels.report_id }}, source={{ $labels.system_source }}) has not successfully run on schedule for {{ $value | humanizeDuration }}. Expected weekly (Sunday).",
             ),
             runbook_url:
-              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/scheduler.ts",
+              "https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/schedule/scheduler.ts",
           },
           // 8d2h grace. system_source=COMMON_DENOMINATOR uses 0 18 * * 0.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(

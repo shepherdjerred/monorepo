@@ -27,7 +27,7 @@ vi.doMock("#src/discord/utils/dm.ts", () => ({
 
 const { handleGuildDelete } =
   await import("#src/discord/events/guild-delete.ts");
-const { guildsLeftTotal } = await import("#src/metrics/web.ts");
+const { guildsLeftTotal } = await import("#src/metrics/platform/web.ts");
 
 const SERVER_ID = testGuildId("600");
 

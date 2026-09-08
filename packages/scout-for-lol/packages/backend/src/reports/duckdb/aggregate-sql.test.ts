@@ -3,7 +3,7 @@ import type {
   ScoutQlAggregateExpr,
   ScoutQlPredicate,
   ScoutQlScalarExpr,
-} from "@scout-for-lol/data/model/scoutql/expression.ts";
+} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   collectAggregateColumnNames,
   compileAggregateExpr,

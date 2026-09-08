@@ -18,7 +18,7 @@ import {
   type ScoutAskInteraction,
 } from "#src/discord/commands/scout.ts";
 import { resetExploreRateLimitStateForTests } from "#src/explore/rate-limit.ts";
-import { runPersistedExploreTurn } from "#src/explore/run-turn.ts";
+import { runPersistedExploreTurn } from "#src/explore/runs/run-turn.ts";
 import { scoutTestVisualization } from "#src/discord/scout/test-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";

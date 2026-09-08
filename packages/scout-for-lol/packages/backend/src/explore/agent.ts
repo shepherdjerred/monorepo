@@ -19,19 +19,19 @@ import {
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
-import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/format-expr.ts";
+import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/format-expr.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import {
   createBucksExploreTools,
   resolveBucksCapability,
-} from "#src/explore/bucks-tools.ts";
-import { createDareExploreTools } from "#src/explore/dare-tool-definitions.ts";
-import { dareExploreEnabled } from "#src/explore/dare-tool-context.ts";
+} from "#src/explore/tools/bucks-tools.ts";
+import { createDareExploreTools } from "#src/explore/tools/dare-tool-definitions.ts";
+import { dareExploreEnabled } from "#src/explore/tools/dare-tool-context.ts";
 import {
   challengeExploreEnabled,
   createChallengeExploreTools,
-} from "#src/explore/challenge-tools.ts";
+} from "#src/explore/tools/challenge-tools.ts";
 import {
   resolveCreationCapability,
   type CreationCapability,
@@ -60,7 +60,7 @@ import {
 } from "#src/reports/ai/scoutql-tools.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
-import { executeReportQuery } from "#src/reports/query-engine.ts";
+import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import {
   withLlmSubjectSpan,

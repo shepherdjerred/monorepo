@@ -4,7 +4,7 @@ import {
   ErrorState,
   StaleState,
 } from "@scout-for-lol/design-system/domain/states";
-import { DelayedLoadingState } from "#src/components/section-skeleton.tsx";
+import { DelayedLoadingState } from "#src/components/chrome/section-skeleton.tsx";
 import { EmptyState } from "@scout-for-lol/design-system/layout";
 import { DareStatePill as StatePill } from "#src/components/bucks/bucks-dare-display.tsx";
 

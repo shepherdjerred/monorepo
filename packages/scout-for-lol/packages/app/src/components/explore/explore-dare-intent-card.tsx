@@ -6,7 +6,7 @@ import {
   ConfirmationOutcomeMessage,
   ExploreConfirmationCard,
 } from "#src/components/explore/explore-confirmation-card.tsx";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import { useNow } from "#src/hooks/use-now.ts";
 import {
   confirmationCardState,
@@ -17,7 +17,7 @@ import {
   classifyDareIntentConfirmation,
   type IntentConfirmationOutcome,
 } from "#src/lib/intent-confirmation.ts";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 
 /**
  * The Bryan Bucks half of the Explore confirmation cards.

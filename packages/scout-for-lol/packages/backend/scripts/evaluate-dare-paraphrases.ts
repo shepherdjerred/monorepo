@@ -11,13 +11,13 @@ import {
   canonicalDarePlanV2,
 } from "#src/betting/dares/evaluation/dare-plan-canonical-v2.ts";
 import { renderDarePlanV2 } from "#src/betting/dares/presentation/dare-render-v2.ts";
-import { DareDefinitionV2ToolInputSchema } from "#src/explore/dare-tool-schemas.ts";
+import { DareDefinitionV2ToolInputSchema } from "#src/explore/tools/dare-tool-schemas.ts";
 import {
   DARE_V2_EVAL_MODEL,
   DareModelEvalReportSchema,
   dareModelEvalSha256,
   resolveDareModelEvalTargets,
-} from "#src/explore/dare-model-eval-v2.ts";
+} from "#src/explore/tools/dare-model-eval-v2.ts";
 import { dareExplorePromptSection } from "#src/explore/prompt.ts";
 
 const CORPUS_URL = new URL(

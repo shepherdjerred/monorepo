@@ -22,11 +22,11 @@ import type {
   ReportCreateInput,
 } from "@scout-for-lol/data";
 import { computeNextScheduledUpdateAt } from "@scout-for-lol/data/model/competitions/competition-cron.ts";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import type { Report } from "#generated/prisma/client/index.js";
 import type { Db } from "#src/database/index.ts";
 import { canCreateAnotherUserReport } from "#src/lib/reports/authorization.ts";
-import { enqueueReportScheduleUpsert } from "#src/reports/temporal-schedules.ts";
+import { enqueueReportScheduleUpsert } from "#src/reports/schedule/temporal-schedules.ts";
 
 export type CreateReportResult =
   /** The report row and its schedule-outbox entry are staged in `tx`. */

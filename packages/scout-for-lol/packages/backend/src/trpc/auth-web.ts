@@ -21,7 +21,7 @@ import { z } from "zod";
 import * as Sentry from "@sentry/bun";
 import { prisma } from "#src/database/index.ts";
 import { CSRF_COOKIE, SESSION_COOKIE } from "#src/trpc/context.ts";
-import { webSigninTotal } from "#src/metrics/web.ts";
+import { webSigninTotal } from "#src/metrics/platform/web.ts";
 import { signSession, verifySession } from "#src/trpc/jwt.ts";
 import {
   DiscordAccountIdSchema,

@@ -2,7 +2,7 @@ import path from "node:path";
 import {
   reportLakeCompactionRowsTotal,
   reportLakeLastPublishTimestamp,
-} from "#src/metrics/report-lake.ts";
+} from "#src/metrics/reports/report-lake.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
 
 export type CompactionSummary = {

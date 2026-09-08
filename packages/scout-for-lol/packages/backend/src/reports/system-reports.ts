@@ -2,7 +2,7 @@ import type { ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   enqueueReportScheduleUpsert,
   notifyReportScheduleReconciler,
-} from "#src/reports/temporal-schedules.ts";
+} from "#src/reports/schedule/temporal-schedules.ts";
 
 export type SystemReportSyncResult = {
   created: number;

@@ -19,7 +19,7 @@ import {
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { bettingTransfersTotal } from "#src/metrics/betting.ts";
+import { bettingTransfersTotal } from "#src/metrics/betting/betting.ts";
 
 export const BucksTransferAmountSchema = z
   .number()

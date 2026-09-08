@@ -9,7 +9,7 @@ import {
   isCompetitionQueueCurrentlyAvailable,
   queueMatchesGameVariant,
 } from "@scout-for-lol/data";
-import { ChampionCombobox } from "#src/components/champion-combobox.tsx";
+import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
 import { Input } from "@scout-for-lol/design-system/components/input";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import {

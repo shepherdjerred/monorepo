@@ -7,7 +7,7 @@ import {
   strandedQuestion,
 } from "#src/components/explore/explore-transcript.tsx";
 import { formatDuration } from "#src/lib/format-duration.ts";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 
 const QUESTION_ID = "33333333-3333-4333-8333-333333333333";
 const ANSWER_ID = "44444444-4444-4444-8444-444444444444";

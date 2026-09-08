@@ -40,7 +40,7 @@ import {
   bettingDareGamesCapturedTotal,
   bettingDareSettlementsTotal,
   bettingDaresTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 
 const logger = createLogger("betting-dare-settle");
 

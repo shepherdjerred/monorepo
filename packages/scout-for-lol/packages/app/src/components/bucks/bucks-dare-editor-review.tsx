@@ -1,5 +1,5 @@
 import type { DareDeadlineSpecV2 } from "@scout-for-lol/data";
-import { ScoutQlCode } from "#src/components/scoutql-code.tsx";
+import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 
 export type ValidatedDareDraft = {
   canonicalScoutQl: string;

@@ -8,7 +8,7 @@ import {
   shutdownDynamicConfig,
   temporalCallGraphTracing,
 } from "#src/config/dynamic.ts";
-import { featureFlagMetrics } from "#src/metrics/feature-flags.ts";
+import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 
 const logger = createLogger("app");
 
@@ -113,7 +113,7 @@ import { seedSeasons } from "#src/database/season-seeder.ts";
 await seedSeasons(prisma);
 
 logger.info("📈 Seeding scheduled-report freshness gauge from DB");
-import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule-metric-seed.ts";
+import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule/schedule-metric-seed.ts";
 await seedScheduledReportLastSuccessMetric(prisma);
 
 logger.info("✅ Backend application startup complete");

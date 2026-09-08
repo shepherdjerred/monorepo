@@ -19,7 +19,7 @@ import { deliverSettlementDms } from "#src/betting/settlement/settlement-dm-deli
 import {
   bettingSettlementSuppressedTotal,
   bettingSettlementUndeliverableTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 import type { ParlaySettlementSummary } from "#src/betting/parlays/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";

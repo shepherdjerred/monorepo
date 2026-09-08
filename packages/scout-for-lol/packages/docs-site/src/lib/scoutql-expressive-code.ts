@@ -8,7 +8,7 @@ import { scoutThemes } from "@scout-for-lol/design-system/themes";
 import {
   scoutQlTokenSpans,
   type ScoutQlTokenKind,
-} from "@scout-for-lol/data/model/scoutql/semantic-tokens.ts";
+} from "@scout-for-lol/data/model/scoutql/editor/semantic-tokens.ts";
 
 // ── ScoutQL syntax highlighting for the docs ─────────────────────────────────
 // Shiki has no ScoutQL grammar, and writing a TextMate one would be a fourth

@@ -30,7 +30,7 @@ import { createLogger } from "#src/logger.ts";
 import {
   bettingEarningsAwardedTotal,
   bettingEarningsBucksTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import { z } from "zod";
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation } from "@tanstack/react-query";
-import { useTRPC } from "#src/lib/trpc.ts";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
@@ -11,7 +11,7 @@ import {
   ReportFormFields,
   type ReportFormState,
 } from "#src/components/report/report-form-fields.tsx";
-import { REPORT_EXAMPLES } from "#src/lib/onboarding-examples.ts";
+import { REPORT_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
 import { OnboardingStepFrame } from "#src/components/onboarding/onboarding-step-frame.tsx";
 import {
   focusFirstInvalid,

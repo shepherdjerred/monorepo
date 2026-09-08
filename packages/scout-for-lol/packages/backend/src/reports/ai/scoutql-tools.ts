@@ -9,27 +9,27 @@ import {
   QueueTypeSchema,
   queueTypeToDisplayString,
 } from "@scout-for-lol/data/model/core/state.ts";
-import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog-render-kinds.ts";
+import { SCOUTQL_RENDER_KINDS } from "@scout-for-lol/data/model/scoutql/catalog/catalog-render-kinds.ts";
 import {
   scoutQlSourceCatalogs,
   type ScoutQlColumnInfo,
-} from "@scout-for-lol/data/model/scoutql/catalog-columns.ts";
+} from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import {
   SCOUTQL_FUNCTIONS,
   type ScoutQlFunctionInfo,
-} from "@scout-for-lol/data/model/scoutql/catalog-functions.ts";
-import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/compile.ts";
+} from "@scout-for-lol/data/model/scoutql/catalog/catalog-functions.ts";
+import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
 import {
   firstScoutQlError,
   ScoutQlDiagnosticCodeSchema,
   ScoutQlSeveritySchema,
   type ScoutQlDiagnostic,
-} from "@scout-for-lol/data/model/scoutql/diagnostics.ts";
-import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/format.ts";
-import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/lint.ts";
-import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/presets.ts";
-import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/render-options.ts";
-import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/scoutql-idioms.ts";
+} from "@scout-for-lol/data/model/scoutql/editor/diagnostics.ts";
+import { formatScoutQl } from "@scout-for-lol/data/model/scoutql/editor/format.ts";
+import { lintScoutQl } from "@scout-for-lol/data/model/scoutql/editor/lint.ts";
+import { SCOUTQL_PRESETS } from "@scout-for-lol/data/model/scoutql/editor/presets.ts";
+import { SCOUTQL_CHART_OPTION_NAMES } from "@scout-for-lol/data/model/scoutql/editor/render-options.ts";
+import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql-idioms.ts";
 
 /**
  * ScoutQL agent tools that do not depend on which population a query runs

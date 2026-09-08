@@ -4,7 +4,7 @@ import type {
   RawTimeline,
 } from "@scout-for-lol/data";
 import * as Sentry from "@sentry/bun";
-import { reportStoreIngestTotal } from "#src/metrics/report-store.ts";
+import { reportStoreIngestTotal } from "#src/metrics/reports/report-store.ts";
 import {
   ingestMatch,
   ingestPrematch,

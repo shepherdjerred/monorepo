@@ -1,7 +1,7 @@
 import {
   bettingMessageOperationDurationSeconds,
   bettingMessageOperationsTotal,
-} from "#src/metrics/betting.ts";
+} from "#src/metrics/betting/betting.ts";
 import { ChannelSendError } from "#src/league/discord/channel.ts";
 import {
   isMissingChannelError,
