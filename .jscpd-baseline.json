@@ -440,7 +440,7 @@
       "clones": 1,
       "tokens": 101
     },
-    "packages/homelab/src/cdk8s/grafana/buildkite-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/buildkite/buildkite-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
       "clones": 1,
       "tokens": 70
     },
@@ -448,75 +448,75 @@
       "clones": 3,
       "tokens": 281
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts": {
       "clones": 1,
       "tokens": 78
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 1,
       "tokens": 78
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
       "clones": 1,
       "tokens": 89
     },
-    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 1,
       "tokens": 95
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts": {
       "clones": 2,
       "tokens": 163
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-api-competition-rows.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 1,
       "tokens": 77
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout-dashboard-scheduled-report-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts|packages/homelab/src/cdk8s/grafana/scout/scout-dashboard-scheduled-report-panels.ts": {
       "clones": 1,
       "tokens": 88
     },
-    "packages/homelab/src/cdk8s/grafana/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
       "tokens": 141
     },
-    "packages/homelab/src/cdk8s/grafana/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/seaweedfs-backup-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
       "clones": 1,
       "tokens": 72
     },
-    "packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/smartctl-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/smartctl-dashboard.ts": {
       "clones": 3,
       "tokens": 264
     },
-    "packages/homelab/src/cdk8s/grafana/smartctl-panels.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/smartctl-panels.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts": {
       "clones": 1,
       "tokens": 72
     },
-    "packages/homelab/src/cdk8s/grafana/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/grafana/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/velero-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-panels.ts": {
       "clones": 1,
       "tokens": 101
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-panels.ts": {
       "clones": 3,
       "tokens": 211
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-performance-panels.ts": {
       "clones": 1,
       "tokens": 80
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard-performance-panels.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard.ts": {
       "clones": 1,
       "tokens": 80
     },
-    "packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts|packages/homelab/src/cdk8s/grafana/zfs-dashboard.ts": {
+    "packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/zfs-dashboard.ts": {
       "clones": 1,
       "tokens": 76
     },
@@ -600,7 +600,7 @@
       "clones": 4,
       "tokens": 478
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/flipt.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/flipt.ts": {
       "clones": 1,
       "tokens": 82
     },
@@ -652,7 +652,7 @@
       "clones": 1,
       "tokens": 131
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
       "clones": 1,
       "tokens": 77
     },
@@ -660,11 +660,11 @@
       "clones": 1,
       "tokens": 87
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/agent-worker-network-policy.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/openrouter-broadcast-ingest.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts": {
       "clones": 1,
       "tokens": 87
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/postal.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/postal.ts": {
       "clones": 3,
       "tokens": 339
     },
@@ -680,7 +680,7 @@
       "clones": 1,
       "tokens": 75
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
       "clones": 1,
       "tokens": 88
     },
@@ -720,7 +720,7 @@
       "clones": 1,
       "tokens": 87
     },
-    "packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/resource-monitoring.test.ts|packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/resource-monitoring.test.ts": {
+    "packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring.test.ts|packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/platform/resource-monitoring.test.ts": {
       "clones": 1,
       "tokens": 80
     },
@@ -744,7 +744,7 @@
       "clones": 1,
       "tokens": 82
     },
-    "packages/homelab/src/cdk8s/src/resources/temporal/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/worker.ts": {
+    "packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts": {
       "clones": 1,
       "tokens": 82
     },
@@ -1552,7 +1552,7 @@
       "clones": 1,
       "tokens": 95
     },
-    "packages/temporal/src/activities/maintenance/deps-summary.ts|packages/version-catalog/src/index.ts": {
+    "packages/temporal/src/activities/maintenance/deps-summary/deps-summary.ts|packages/version-catalog/src/index.ts": {
       "clones": 1,
       "tokens": 79
     },
@@ -1576,7 +1576,7 @@
       "clones": 1,
       "tokens": 143
     },
-    "packages/temporal/src/workflows/data-dragon.test.ts|packages/temporal/src/workflows/data-dragon.test.ts": {
+    "packages/temporal/src/workflows/scout/data-dragon.test.ts|packages/temporal/src/workflows/scout/data-dragon.test.ts": {
       "clones": 1,
       "tokens": 75
     },

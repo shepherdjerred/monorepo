@@ -1,14 +1,14 @@
 import { patched, proxyActivities } from "@temporalio/workflow";
-import type { DepsSummaryActivities } from "#activities/maintenance/deps-summary.ts";
+import type { DepsSummaryActivities } from "#activities/maintenance/deps-summary/deps-summary.ts";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
-import type { DepsSummaryLegacyActivities } from "#activities/maintenance/deps-summary-legacy.ts";
-import type { MissingReleaseNote } from "#activities/maintenance/deps-summary-release-notes.ts";
+import type { DepsSummaryLegacyActivities } from "#activities/maintenance/deps-summary/deps-summary-legacy.ts";
+import type { MissingReleaseNote } from "#activities/maintenance/deps-summary/deps-summary-release-notes.ts";
 import type {
   ActivityReportInput,
   ReportDeliveryActivities,
 } from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { reportActivityTaskQueue } from "./report-activity-queue.ts";
+import { reportActivityTaskQueue } from "./scout/report-activity-queue.ts";
 
 const RETRY = {
   maximumAttempts: 3,

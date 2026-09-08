@@ -1,0 +1,351 @@
+import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
+import * as common from "@grafana/grafana-foundation-sdk/common";
+import * as timeseries from "@grafana/grafana-foundation-sdk/timeseries";
+import * as stat from "@grafana/grafana-foundation-sdk/stat";
+import * as prometheus from "@grafana/grafana-foundation-sdk/prometheus";
+import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-export.ts";
+import { addPreMatchRow } from "./scout-dashboard-prematch-panels.ts";
+import { addApiAndCompetitionRows } from "./scout-dashboard-api-competition-rows.ts";
+import { addScheduledReportRows } from "./scout-dashboard-scheduled-report-panels.ts";
+import { addGuildHealthRows } from "./scout-dashboard-health-panels.ts";
+import {
+  addAdoptionFunnelRows,
+  addWebSurfaceRows,
+} from "./scout-dashboard-web-panels.ts";
+
+// Helper function to build filter expression
+function buildFilter() {
+  return 'environment=~"$environment",instance=~"$server"';
+}
+
+/**
+ * Creates a Grafana dashboard for Scout for LoL usage and performance metrics
+ * Uses Grafana Foundation SDK to define the dashboard programmatically
+ */
+export function createScoutDashboard() {
+  // Create Prometheus datasource reference
+  const prometheusDatasource = {
+    type: "prometheus",
+    uid: "Prometheus",
+  };
+
+  // Create environment variable for filtering
+  const environmentVariable = new dashboard.QueryVariableBuilder("environment")
+    .label("Environment")
+    .query("label_values(discord_guilds, environment)")
+    .datasource(prometheusDatasource)
+    .multi(true)
+    .includeAll(true)
+    .allValue(".*");
+
+  // Create server variable for optional filtering
+  const serverVariable = new dashboard.QueryVariableBuilder("server")
+    .label("Server")
+    .query(
+      'label_values(discord_guilds{environment=~"$environment"}, instance)',
+    )
+    .datasource(prometheusDatasource)
+    .multi(true)
+    .includeAll(true)
+    .allValue(".*");
+
+  // Build the main dashboard
+  const builder = new dashboard.DashboardBuilder(
+    "Scout for LoL - Usage & Performance",
+  )
+    .uid("scout-for-lol-dashboard")
+    .tags(["scout", "discord", "gaming"])
+    .time({ from: "now-24h", to: "now" })
+    .refresh("30s")
+    .timezone("browser")
+    .editable()
+    .withVariable(environmentVariable)
+    .withVariable(serverVariable);
+
+  const createStatPanel = (options: {
+    title: string;
+    query: string;
+    legend: string;
+    gridPos: { x: number; y: number; w: number; h: number };
+    unit?: string;
+    graphMode?: common.BigValueGraphMode;
+  }) => {
+    return new stat.PanelBuilder()
+      .title(options.title)
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(options.query)
+          .legendFormat(options.legend),
+      )
+      .unit(options.unit ?? "short")
+      .colorMode(common.BigValueColorMode.Value)
+      .graphMode(options.graphMode ?? common.BigValueGraphMode.Area)
+      .gridPos(options.gridPos);
+  };
+
+  // Row 1: Overview Stats
+  builder.withRow(
+    new dashboard.RowBuilder("Overview").gridPos({ x: 0, y: 0, w: 24, h: 1 }),
+  );
+
+  // Guild Count
+  builder.withPanel(
+    createStatPanel({
+      title: "Discord Guilds",
+      query: `sum by (environment) (discord_guilds{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: {
+        x: 0,
+        y: 1,
+        w: 4,
+        h: 4,
+      },
+    }),
+  );
+
+  // User Count
+  builder.withPanel(
+    createStatPanel({
+      title: "Discord Users",
+      query: `sum by (environment) (discord_users{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: {
+        x: 4,
+        y: 1,
+        w: 4,
+        h: 4,
+      },
+    }),
+  );
+
+  // Players Tracked
+  builder.withPanel(
+    createStatPanel({
+      title: "Players Tracked",
+      query: `sum by (environment) (players_tracked_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 8, y: 1, w: 4, h: 4 },
+    }),
+  );
+
+  // Accounts Tracked
+  builder.withPanel(
+    createStatPanel({
+      title: "Accounts Tracked",
+      query: `sum by (environment) (accounts_tracked_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 12, y: 1, w: 4, h: 4 },
+    }),
+  );
+
+  // Servers with Data
+  builder.withPanel(
+    createStatPanel({
+      title: "Servers with Data",
+      query: `sum by (environment) (servers_with_data_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 16, y: 1, w: 4, h: 4 },
+    }),
+  );
+
+  // Connection Status
+  builder.withPanel(
+    new stat.PanelBuilder()
+      .title("Connection Status")
+      .description("1 = Connected, 0 = Disconnected (min across servers)")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `min by (environment) (discord_connection_status{${buildFilter()}})`,
+          )
+          .legendFormat("{{environment}}"),
+      )
+      .unit("short")
+      .colorMode(common.BigValueColorMode.Value)
+      .graphMode(common.BigValueGraphMode.None)
+      .thresholds(
+        new dashboard.ThresholdsConfigBuilder()
+          .mode(dashboard.ThresholdsMode.Absolute)
+          .steps([
+            { value: 0, color: "red" },
+            { value: 1, color: "green" },
+          ]),
+      )
+      .gridPos({ x: 20, y: 1, w: 4, h: 4 }),
+  );
+
+  // Row 2: Discord Metrics
+  builder.withRow(
+    new dashboard.RowBuilder("Discord Metrics").gridPos({
+      x: 0,
+      y: 5,
+      w: 24,
+      h: 1,
+    }),
+  );
+
+  // WebSocket Latency
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("WebSocket Latency")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(`avg by (environment) (discord_latency_ms{${buildFilter()}})`)
+          .legendFormat("{{environment}}"),
+      )
+      .unit("ms")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 0, y: 6, w: 12, h: 8 }),
+  );
+
+  // Command Rate
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Command Rate")
+      .description("Discord commands per second")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (environment) (rate(discord_commands_total{${buildFilter()}}[5m])) or on() vector(0)`,
+          )
+          .legendFormat("{{environment}}"),
+      )
+      .unit("reqps")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 12, y: 6, w: 12, h: 8 }),
+  );
+
+  // Row 3: Application Performance
+  builder.withRow(
+    new dashboard.RowBuilder("Application Performance").gridPos({
+      x: 0,
+      y: 14,
+      w: 24,
+      h: 1,
+    }),
+  );
+
+  // Uptime
+  builder.withPanel(
+    createStatPanel({
+      title: "Uptime",
+      query: `max by (environment) (application_uptime_seconds{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 0, y: 15, w: 6, h: 4 },
+      unit: "s",
+    }),
+  );
+
+  // Active Competitions
+  builder.withPanel(
+    createStatPanel({
+      title: "Active Competitions",
+      query: `sum by (environment) (competitions_active_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 6, y: 15, w: 6, h: 4 },
+    }),
+  );
+
+  // Total Subscriptions
+  builder.withPanel(
+    createStatPanel({
+      title: "Active Subscriptions",
+      query: `sum by (environment) (subscriptions_total{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 12, y: 15, w: 6, h: 4 },
+    }),
+  );
+
+  // Average Accounts per Player
+  builder.withPanel(
+    createStatPanel({
+      title: "Avg Accounts/Player",
+      query: `avg by (environment) (avg_accounts_per_player{${buildFilter()}})`,
+      legend: "{{environment}}",
+      gridPos: { x: 18, y: 15, w: 6, h: 4 },
+      unit: "short",
+      graphMode: common.BigValueGraphMode.None,
+    }).decimals(2),
+  );
+
+  // Cron Job Performance
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Cron Job Duration (95th percentile)")
+      .description("Duration of cron job execution")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum(rate(cron_job_duration_seconds_sum{${buildFilter()}}[5m])) by (environment, job_name) / sum(rate(cron_job_duration_seconds_count{${buildFilter()}}[5m])) by (environment, job_name)`,
+          )
+          .legendFormat("{{environment}} - {{job_name}}"),
+      )
+      .unit("s")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 0, y: 19, w: 12, h: 8 }),
+  );
+
+  // Cron Job Execution Rate
+  builder.withPanel(
+    new timeseries.PanelBuilder()
+      .title("Cron Job Success Rate")
+      .description("Successful cron job executions per minute")
+      .datasource(prometheusDatasource)
+      .withTarget(
+        new prometheus.DataqueryBuilder()
+          .expr(
+            `sum by (environment, job_name) (rate(cron_job_executions_total{status="success",${buildFilter()}}[5m]))`,
+          )
+          .legendFormat("{{environment}} - {{job_name}}"),
+      )
+      .unit("reqps")
+      .lineWidth(2)
+      .fillOpacity(10)
+      .gridPos({ x: 12, y: 19, w: 12, h: 8 }),
+  );
+
+  // Row 4: Pre-match — extracted into addPreMatchRow to keep this function
+  // under the 400-line ESLint cap. The helper owns both the original baseline
+  // panels (active games / detection rate / loading-screen outcomes /
+  // spectator-payload save outcomes + p95) and the bug-fix observability
+  // panels (subsequent-match counter, skin-fallback rate, top fallback
+  // skins, polling-skip reasons, spectator call rate + circuit breaker).
+  addPreMatchRow(builder, prometheusDatasource);
+
+  // Rows 5 + 6: API Activity + Competition leaderboard chart — extracted
+  // for the same line-cap reason as the pre-match row above.
+  addApiAndCompetitionRows(builder, prometheusDatasource);
+
+  // Row 7: Scheduled report engine: generic report execution metrics
+  // shared by user-managed reports, competition reports, and Common
+  // Denominator reports.
+  addScheduledReportRows(builder, prometheusDatasource);
+
+  // Row 8: Guild health — servers the bot can't deliver to + unhealthy
+  // competitions.
+  addGuildHealthRows(builder, prometheusDatasource);
+
+  // Web surface + adoption funnel: HTTP/tRPC health and install → first
+  // subscription conversion.
+  addWebSurfaceRows(builder, prometheusDatasource);
+  addAdoptionFunnelRows(builder, prometheusDatasource);
+
+  return builder.build();
+}
+
+/**
+ * Exports the dashboard as JSON string for use in ConfigMaps or API calls
+ * Uses Helm-escaped Grafana template variables for compatibility
+ */
+export function exportScoutDashboardJson(): string {
+  const dashboardModel = createScoutDashboard();
+  return exportDashboardWithHelmEscaping(dashboardModel);
+}

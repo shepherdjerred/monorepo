@@ -1,0 +1,459 @@
+import { exportDashboardWithHelmEscaping } from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-export.ts";
+import {
+  statPanel,
+  timeseriesPanel,
+} from "@shepherdjerred/homelab/cdk8s/grafana/dashboard-panels.ts";
+import {
+  createTemporalPlatformPanels,
+  temporalDashboardLinks,
+  temporalDashboardVariables,
+} from "./temporal-platform-panels.ts";
+
+function createGlitterContextPanels() {
+  return [
+    statPanel({
+      id: 406,
+      title: "Glitter Context People Refreshed",
+      description:
+        "Style cards refreshed by the latest checksum-verified weekly context run.",
+      expr: 'max(glitter_context_refresh_people{state="refreshed"}) or on() vector(0)',
+      legend: "people",
+      x: 0,
+      y: 96,
+      w: 6,
+      h: 4,
+    }),
+    timeseriesPanel({
+      id: 407,
+      title: "Glitter Context Refresh Outcomes",
+      description:
+        "Weekly context workflow outcomes and evidence-backed relationship updates.",
+      targets: [
+        {
+          expr: "sum by (outcome) (increase(glitter_context_refresh_runs_total[30d])) or on() vector(0)",
+          legend: "runs {{outcome}}",
+        },
+        {
+          expr: "max(glitter_context_refresh_relationship_proposals) or on() vector(0)",
+          legend: "relationship proposals",
+        },
+      ],
+      x: 6,
+      y: 96,
+      w: 18,
+      h: 4,
+    }),
+  ];
+}
+
+export function createTemporalDashboard() {
+  return {
+    uid: "temporal-dashboard",
+    title: "Temporal - Workflows",
+    tags: ["temporal", "workflow", "scout"],
+    timezone: "browser",
+    schemaVersion: 40,
+    version: 1,
+    refresh: "1m",
+    time: { from: "now-7d", to: "now" },
+    links: temporalDashboardLinks(),
+    templating: temporalDashboardVariables(),
+    panels: [
+      statPanel({
+        id: 1,
+        title: "Temporal Server Scrape",
+        description: "Prometheus scrape health for Temporal server metrics",
+        expr: 'max(up{namespace="temporal", service=~".*temporal.*server.*metrics.*"})',
+        legend: "server",
+        x: 0,
+        y: 0,
+        w: 8,
+        h: 4,
+      }),
+      statPanel({
+        id: 2,
+        title: "Temporal Worker Scrape",
+        description: "Prometheus scrape health for Temporal worker SDK metrics",
+        expr: 'absent(up{namespace="temporal", service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) or count(up{namespace="temporal", service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) < 9 or min(up{namespace="temporal", service=~".*temporal-(gateway|home-worker|reports-worker|infra-worker|repo-worker|scout-worker|agent-worker|glitter-corpus-worker|glitter-context-worker)-metrics-service"}) == 0',
+        legend: "worker",
+        x: 8,
+        y: 0,
+        w: 8,
+        h: 4,
+      }),
+      statPanel({
+        id: 3,
+        title: "Data Dragon Version Current",
+        description:
+          "Latest Data Dragon version-check result. 1 means the recorded current/latest label pair is present.",
+        expr: "max by (current_version, latest_version) (scout_data_dragon_version_info) or on() vector(0)",
+        legend: "{{current_version}} / {{latest_version}}",
+        x: 16,
+        y: 0,
+        w: 8,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 4,
+        title: "Data Dragon Run Outcomes",
+        description: "Updater runs by mode, outcome, and reason",
+        targets: [
+          {
+            expr: "max by (mode, outcome, reason) (scout_data_dragon_runs) or on() vector(0)",
+            legend: "{{mode}} {{outcome}} {{reason}}",
+          },
+        ],
+        x: 0,
+        y: 4,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 5,
+        title: "Data Dragon Duration",
+        description: "Updater runtime p95",
+        targets: [
+          {
+            expr: "histogram_quantile(0.95, sum by (le) (rate(scout_data_dragon_duration_s_bucket[7d]))) or on() vector(0)",
+            legend: "p95",
+          },
+        ],
+        x: 12,
+        y: 4,
+        w: 12,
+        h: 8,
+        unit: "s",
+      }),
+      timeseriesPanel({
+        id: 6,
+        title: "Temporal Activity Failures",
+        description:
+          "Temporal server activity task failures by namespace, workflow, and activity",
+        targets: [
+          {
+            expr: 'sum by (exported_namespace, workflowType, activityType) (increase(activity_task_fail{exported_namespace=~"prod|beta"}[1h])) or on() vector(0)',
+            legend: "{{exported_namespace}} {{workflowType}} {{activityType}}",
+          },
+        ],
+        x: 0,
+        y: 12,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 7,
+        title: "Data Dragon Changed Files And PRs",
+        description: "Changed files from the latest run and PR creation count",
+        targets: [
+          {
+            expr: "max by (mode, outcome) (scout_data_dragon_changed_files) or on() vector(0)",
+            legend: "files {{mode}} {{outcome}}",
+          },
+          {
+            expr: "max(scout_data_dragon_prs) or on() vector(0)",
+            legend: "prs",
+          },
+        ],
+        x: 12,
+        y: 12,
+        w: 12,
+        h: 8,
+      }),
+      ...createTemporalPlatformPanels(),
+      // -----------------------------------------------------------------
+      // GitHub webhook row (y >= 48) — the merge-conflict check + PR-closed
+      // Buildkite build-cancellation ingress. Metrics emitted by
+      // packages/temporal/src/event-bridge/github-webhook.ts.
+      // -----------------------------------------------------------------
+      statPanel({
+        id: 200,
+        title: "PR Webhooks (24h)",
+        description:
+          "Total accepted GitHub pull_request webhook deliveries in the last 24h (post signature verify).",
+        expr: 'sum(increase(pr_webhook_received_total{event="pull_request"}[24h]))',
+        legend: "deliveries",
+        x: 0,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 201,
+        title: "Signature Failures (24h)",
+        description:
+          "Count of webhook deliveries rejected for missing/invalid X-Hub-Signature-256. Drives PrWebhookSignatureFailures alert.",
+        expr: "sum(increase(pr_webhook_signature_failures_total[24h]))",
+        legend: "rejects",
+        x: 6,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 202,
+        title: "Skipped (24h)",
+        description:
+          "Webhook deliveries that passed signature verification but were skipped (non-pull_request events, non-main pushes, unparseable payloads).",
+        expr: "sum(increase(pr_webhook_skipped_total[24h]))",
+        legend: "skipped",
+        x: 12,
+        y: 48,
+        w: 6,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 204,
+        title: "Webhook Volume by Action",
+        description: "pull_request events received, broken down by action.",
+        targets: [
+          {
+            expr: 'sum by (action) (increase(pr_webhook_received_total{event="pull_request"}[1h])) or on() vector(0)',
+            legend: "{{action}}",
+          },
+        ],
+        x: 0,
+        y: 52,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 205,
+        title: "Skipped Reasons",
+        description:
+          "Why webhook deliveries are skipped (non-pull-request-event, push:non-main-ref, schema-parse-failed).",
+        targets: [
+          {
+            expr: "sum by (reason) (increase(pr_webhook_skipped_total[1h])) or on() vector(0)",
+            legend: "{{reason}}",
+          },
+        ],
+        x: 12,
+        y: 52,
+        w: 12,
+        h: 8,
+      }),
+      // -----------------------------------------------------------------
+      // Agent execution row (y >= 68). Historical subprocess series stay on
+      // the panels while native SDK series provide post-cutover continuity.
+      // -----------------------------------------------------------------
+      timeseriesPanel({
+        id: 300,
+        title: "Homelab Agent Wall-clock p50 / p95 / p99",
+        description:
+          "Wall-clock duration distribution of homelab-audit Claude Agent SDK runs over 7d. The historical metric name is retained across the native SDK cutover so the timeline remains continuous.",
+        targets: [
+          {
+            expr: "histogram_quantile(0.5, sum by (le) (rate(homelab_audit_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
+            legend: "homelab-audit p50",
+          },
+          {
+            expr: "histogram_quantile(0.95, sum by (le) (rate(homelab_audit_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
+            legend: "homelab-audit p95",
+          },
+          {
+            expr: "histogram_quantile(0.99, sum by (le) (rate(homelab_audit_subprocess_duration_seconds_bucket[7d]))) or on() vector(0)",
+            legend: "homelab-audit p99",
+          },
+        ],
+        x: 0,
+        y: 68,
+        w: 12,
+        h: 8,
+        unit: "s",
+      }),
+      timeseriesPanel({
+        id: 301,
+        title: "Agent Failures by Runtime",
+        description:
+          "Native SDK failures plus historical pre-cutover subprocess exits. Separate targets preserve the old series while making current failures visible.",
+        targets: [
+          {
+            expr: 'sum by (provider, outcome) (increase(agent_task_sdk_runs_total{outcome!="success"}[1h])) or on() vector(0)',
+            legend: "SDK {{provider}} {{outcome}}",
+          },
+          {
+            expr: 'sum by (provider, exit_code) (increase(agent_task_subprocess_exit_total{exit_code!="0"}[1h])) or on() vector(0)',
+            legend: "historical CLI {{provider}} exit_code={{exit_code}}",
+          },
+        ],
+        x: 12,
+        y: 68,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 302,
+        title: "Agent Progress-event Idle Seconds (p95, 1h)",
+        description:
+          "p95 of the longest period without a native SDK progress event over the last hour. The historical metric name is retained; histogram shape ensures concurrent runs all contribute observations.",
+        targets: [
+          {
+            expr: "histogram_quantile(0.95, sum by (workflow_type, le) (rate(agent_subprocess_idle_seconds_bucket[1h]))) or on() vector(0)",
+            legend: "{{workflow_type}}",
+          },
+        ],
+        x: 0,
+        y: 76,
+        w: 12,
+        h: 8,
+        unit: "s",
+      }),
+      statPanel({
+        id: 303,
+        title: "Historical CLI Soft-Kills (1h)",
+        description:
+          "Pre-cutover CLI SIGINT soft-kills retained for historical investigation. Native SDK cancellation is reported through SDK and common LLM outcome metrics.",
+        expr: "sum by (workflow_type) (increase(agent_subprocess_soft_kills_total[1h])) or on() vector(0)",
+        legend: "{{workflow_type}}",
+        x: 12,
+        y: 76,
+        w: 12,
+        h: 8,
+      }),
+      // -----------------------------------------------------------------
+      // Glitter Discord corpus (y >= 84)
+      // -----------------------------------------------------------------
+      statPanel({
+        id: 400,
+        title: "Glitter Corpus Messages",
+        description:
+          "Unique messages in the most recently published complete guild snapshot.",
+        expr: "max(glitter_corpus_snapshot_messages) or on() vector(0)",
+        legend: "messages",
+        x: 0,
+        y: 84,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 401,
+        title: "Glitter Snapshot Age",
+        description:
+          "Seconds since the most recently published complete snapshot.",
+        expr: "time() - max(glitter_corpus_last_snapshot_timestamp_seconds) or on() vector(-1)",
+        legend: "age",
+        x: 6,
+        y: 84,
+        w: 6,
+        h: 4,
+        unit: "s",
+      }),
+      statPanel({
+        id: 402,
+        title: "Storage Integrity Healthy",
+        description:
+          "1 means no missing, collided, or checksum-invalid SeaweedFS objects were detected in the last 24 hours.",
+        expr: "1 - clamp_max((sum(increase(glitter_corpus_storage_integrity_failures_total[24h])) or on() vector(0)), 1)",
+        legend: "healthy",
+        x: 12,
+        y: 84,
+        w: 6,
+        h: 4,
+      }),
+      statPanel({
+        id: 403,
+        title: "Discord Rate Limit Healthy",
+        description:
+          "1 means Discord returned no 429 responses in the last 24 hours under the global one-request-per-second ceiling.",
+        expr: '1 - clamp_max((sum(increase(glitter_corpus_discord_requests_total{outcome="rate-limited"}[24h])) or on() vector(0)), 1)',
+        legend: "healthy",
+        x: 18,
+        y: 84,
+        w: 6,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 404,
+        title: "Corpus Pages And Messages",
+        description:
+          "Immutable pages and message observations captured by traversal direction.",
+        targets: [
+          {
+            expr: "sum by (direction) (increase(glitter_corpus_pages_total[1h])) or on() vector(0)",
+            legend: "pages {{direction}}",
+          },
+          {
+            expr: "sum by (direction) (increase(glitter_corpus_messages_observed_total[1h])) or on() vector(0)",
+            legend: "messages {{direction}}",
+          },
+        ],
+        x: 0,
+        y: 88,
+        w: 12,
+        h: 8,
+      }),
+      timeseriesPanel({
+        id: 405,
+        title: "Corpus Inventory And REST Outcomes",
+        description:
+          "Latest channel/thread scope decisions and Discord REST outcomes.",
+        targets: [
+          {
+            expr: "max by (decision) (glitter_corpus_inventory_entries) or on() vector(0)",
+            legend: "inventory {{decision}}",
+          },
+          {
+            expr: "max by (change) (glitter_corpus_inventory_scope_changes) or on() vector(0)",
+            legend: "scope change {{change}}",
+          },
+          {
+            expr: "sum by (outcome) (increase(glitter_corpus_discord_requests_total[1h])) or on() vector(0)",
+            legend: "REST {{outcome}}",
+          },
+        ],
+        x: 12,
+        y: 88,
+        w: 12,
+        h: 8,
+      }),
+      ...createGlitterContextPanels(),
+      statPanel({
+        id: 408,
+        title: "Report Heartbeats Fresh",
+        description:
+          "Minimum registry heartbeat state. 2 is pending activation, 1 is fresh, 0 is stale/missing, and -1 is absent, paused, or unregistered.",
+        expr: "min(temporal_report_freshness_state) or on() vector(-1)",
+        legend: "minimum state",
+        x: 0,
+        y: 104,
+        w: 8,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 409,
+        title: "Report Freshness by Schedule",
+        description: "Every source-defined report schedule's freshness state.",
+        targets: [
+          {
+            expr: "temporal_report_freshness_state",
+            legend: "{{schedule_id}}",
+          },
+        ],
+        x: 8,
+        y: 104,
+        w: 16,
+        h: 4,
+      }),
+      timeseriesPanel({
+        id: 410,
+        title: "Report Delivery Outcomes",
+        description:
+          "Accepted, deduplicated, and failed shared report deliveries.",
+        targets: [
+          {
+            expr: "sum by (report_type, outcome) (increase(temporal_report_delivery_total[24h])) or on() vector(0)",
+            legend: "{{report_type}} {{outcome}}",
+          },
+        ],
+        x: 0,
+        y: 108,
+        w: 24,
+        h: 6,
+      }),
+    ],
+  };
+}
+
+export function exportTemporalDashboardJson(): string {
+  return exportDashboardWithHelmEscaping(createTemporalDashboard());
+}

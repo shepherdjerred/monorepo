@@ -1,10 +1,10 @@
 // Temporal requires workflows to be exported from a single entry point.
 // These wrapper functions delegate to the actual workflow implementations
 // to satisfy the no-re-exports lint rule.
-import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./fetcher.ts";
+import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
-import { runDnsAudit as _runDnsAudit } from "./dns-audit.ts";
-import { syncGolinks as _syncGolinks } from "./golink-sync.ts";
+import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
+import { syncGolinks as _syncGolinks } from "./homelab/golink-sync.ts";
 import {
   goodMorningGetUp as _goodMorningGetUp,
   goodMorningPreheat as _goodMorningPreheat,
@@ -19,16 +19,16 @@ import { motionLight as _motionLight } from "./ha/motion-light.ts";
 import { sleepAc as _sleepAc, sleepMusic as _sleepMusic } from "./ha/sleep.ts";
 import type { MotionLightRoom } from "#shared/infra/motion-light.ts";
 import type { SleepAutomationInput } from "#shared/schemas.ts";
-import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./zfs-maintenance.ts";
+import { runZfsMaintenanceWorkflow as _runZfsMaintenanceWorkflow } from "./homelab/zfs-maintenance.ts";
 import { runBugsinkHousekeepingWorkflow as _runBugsinkHousekeepingWorkflow } from "./bugsink.ts";
-import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout-image-gc.ts";
+import { runScoutImageGcWorkflow as _runScoutImageGcWorkflow } from "./scout/scout-image-gc.ts";
 import type {
   ScoutImageGcInput,
   ScoutImageGcResult,
 } from "#activities/scout/scout-image-gc.ts";
-import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./velero-orphan-audit.ts";
-import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./data-dragon.ts";
-import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./lane-prior-refresh.ts";
+import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./homelab/velero-orphan-audit.ts";
+import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./scout/data-dragon.ts";
+import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./scout/lane-prior-refresh.ts";
 import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
 import type {
   LanePriorRefreshResult,
@@ -36,45 +36,45 @@ import type {
 } from "#activities/lane-prior-refresh.ts";
 import { runLlmCatalogRefresh as _runLlmCatalogRefresh } from "./llm-catalog-refresh.ts";
 import type { LlmCatalogRefreshResult } from "#activities/agent/llm-catalog-refresh.ts";
-import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab-crd-imports-refresh.ts";
+import { runHomelabCrdImportsRefresh as _runHomelabCrdImportsRefresh } from "./homelab/homelab-crd-imports-refresh.ts";
 import type { HomelabCrdImportsRefreshResult } from "#activities/homelab/homelab-crd-imports-refresh.ts";
 import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-pokeemerald-data-refresh.ts";
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
-import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout-showcase-refresh.ts";
+import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout/scout-showcase-refresh.ts";
 import {
   runScoutWeeklyParlayCatchupWorkflow as _runScoutWeeklyParlayCatchupWorkflow,
   runScoutWeeklyParlayWorkflow as _runScoutWeeklyParlayWorkflow,
-} from "./scout-weekly-parlay.ts";
-import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout-queue-windows.ts";
-import { runScoutCompetitionUpdatesWorkflow as _runScoutCompetitionUpdatesWorkflow } from "./scout-competition-updates.ts";
-import type { ScoutCompetitionUpdateDispatchResult } from "./scout-competition-updates.ts";
+} from "./scout/scout-weekly-parlay.ts";
+import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout/scout-queue-windows.ts";
+import { runScoutCompetitionUpdatesWorkflow as _runScoutCompetitionUpdatesWorkflow } from "./scout/scout-competition-updates.ts";
+import type { ScoutCompetitionUpdateDispatchResult } from "./scout/scout-competition-updates.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout/scout-showcase-refresh.ts";
 import type {
   ScoutWeeklyParlayCatchupWorkflowInput,
   ScoutWeeklyParlayWorkflowInput,
-} from "./scout-weekly-parlay.ts";
-import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout-bryan-bucks.ts";
+} from "./scout/scout-weekly-parlay.ts";
+import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout/scout-bryan-bucks.ts";
 import type { ScoutBryanBucksAnalyticsResult } from "#activities/scout/scout-bryan-bucks.ts";
-import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout-season-refresh.ts";
+import { runScoutSeasonRefreshWorkflow as _runScoutSeasonRefreshWorkflow } from "./scout/scout-season-refresh.ts";
 import type {
   ScoutSeasonRefreshInput,
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
-import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab-audit.ts";
+import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
 import { runProtobufWatch as _runProtobufWatch } from "./protobuf-watch.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
-import { monitorReportFreshness as _monitorReportFreshness } from "./report-freshness.ts";
+import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
 import { runCiIoImpact as _runCiIoImpact } from "./ci-io-impact.ts";
-import { deliverReportWorkflow as _deliverReportWorkflow } from "./report-delivery.ts";
+import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
 import type { ReportDeliveryResult } from "#activities/reports/report-delivery.ts";
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
-import type { RunHomelabAuditWorkflowInput } from "./homelab-audit.ts";
+import type { RunHomelabAuditWorkflowInput } from "./homelab/homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
 import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
 import { pollWorkflowFailuresWorkflow as _pollWorkflowFailuresWorkflow } from "./workflow-failure-watch.ts";
-import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure-watch.ts";
+import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure/workflow-failure-watch.ts";
 import type {
   CancelBuildkiteBuildsInput,
   CheckPrMergeConflictsInput,
@@ -86,27 +86,27 @@ import {
   runGlitterCorpusChannelOverlap as _runGlitterCorpusChannelOverlap,
   runGlitterCorpusDaily as _runGlitterCorpusDaily,
   runGlitterCorpusInventory as _runGlitterCorpusInventory,
-} from "./glitter-corpus.ts";
+} from "./glitter/glitter-corpus.ts";
 import type {
   GlitterCorpusBackfillInput,
   GlitterCorpusChannelBackfillInput,
   GlitterCorpusChannelOverlapInput,
   GlitterCorpusSnapshotResult,
-} from "./glitter-corpus.ts";
+} from "./glitter/glitter-corpus.ts";
 import type {
   ChannelStateResult,
   InventoryResult,
 } from "#shared/glitter-corpus-activity-types.ts";
-import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter-context-refresh.ts";
+import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter/glitter-context-refresh.ts";
 import type {
   GlitterContextRefreshInput,
   GlitterContextRefreshResult,
-} from "#activities/glitter/context/glitter-context-refresh.ts";
-import { runGlitterContextAudit as _runGlitterContextAudit } from "./glitter-context-audit.ts";
+} from "#activities/glitter/context/refresh/glitter-context-refresh.ts";
+import { runGlitterContextAudit as _runGlitterContextAudit } from "./glitter/glitter-context-audit.ts";
 import type {
   GlitterContextAuditInput,
   GlitterContextAuditResult,
-} from "#activities/glitter/context/glitter-context-audit-schema.ts";
+} from "#activities/glitter/context/audit/glitter-context-audit-schema.ts";
 import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
 import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
 import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
@@ -118,7 +118,7 @@ import {
   runTrivyDbRefreshWorkflow as runTrivyDbRefreshWorkflowImplementation,
   runTurboCacheCleanWorkflow as runTurboCacheCleanWorkflowImplementation,
 } from "./maintenance.ts";
-import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./freshrss.ts";
+import { runFreshRssSyncWorkflow as _runFreshRssSyncWorkflow } from "./homelab/freshrss.ts";
 import { runFliptFlagInventory as _runFliptFlagInventory } from "./flipt-flag-inventory.ts";
 import type { FliptFlagInventoryResult } from "#activities/flipt-flag-inventory.ts";
 import {
@@ -129,7 +129,7 @@ import {
 import {
   runSeaweedFsBackupRetentionAndGcWorkflow as _runSeaweedFsBackupRetentionAndGcWorkflow,
   runSeaweedFsBackupWorkflow as _runSeaweedFsBackupWorkflow,
-} from "./seaweedfs-backup.ts";
+} from "./homelab/seaweedfs-backup.ts";
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
 import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";

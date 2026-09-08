@@ -1,21 +1,21 @@
 import type { Chart } from "cdk8s";
 import { ConfigMap } from "cdk8s-plus-31";
-import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai-provider-dashboard.ts";
+import { exportAiProviderDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/ai/ai-provider-dashboard.ts";
 import { exportGitckupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/gitckup-dashboard.ts";
-import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout-dashboard.ts";
-import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/smartctl-dashboard.ts";
-import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/velero-dashboard.ts";
+import { exportScoutDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/scout/scout-dashboard.ts";
+import { exportSmartctlDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/smartctl-dashboard.ts";
+import { exportVeleroDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/velero-dashboard.ts";
 import { exportTasknotesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/tasknotes-dashboard.ts";
-import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkite-dashboard.ts";
+import { exportBuildkiteDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkite/buildkite-dashboard.ts";
 import { exportBuildkitdDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/buildkitd-dashboard.ts";
-import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/zfs-dashboard.ts";
-import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal-dashboard.ts";
-import { exportStreambotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-dashboard.ts";
-import { exportStreambotVoiceDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot-voice-dashboard.ts";
+import { exportZfsDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/zfs-dashboard.ts";
+import { exportTemporalDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/temporal/temporal-dashboard.ts";
+import { exportStreambotDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot/streambot-dashboard.ts";
+import { exportStreambotVoiceDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/streambot/streambot-voice-dashboard.ts";
 import { exportStaticSiteProbesDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/static-site-probes-dashboard.ts";
 import { exportDiscordPlaysDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/discord-plays-dashboard.ts";
 import { exportAlertDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/alert-dashboard.ts";
-import { exportSeaweedFsBackupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/seaweedfs-backup-dashboard.ts";
+import { exportSeaweedFsBackupDashboardJson } from "@shepherdjerred/homelab/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts";
 
 /**
  * Dashboard configuration for creating Grafana dashboard ConfigMaps

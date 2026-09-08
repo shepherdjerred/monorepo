@@ -2,7 +2,7 @@ import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
-import { createTemporalChart } from "./cdk8s-charts/temporal.ts";
+import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
 
 export const ScoutTestResourceSchema = z
   .object({

@@ -55,7 +55,7 @@ Added in `packages/backend/src/metrics/index.ts`:
 
 Extended the existing Scout Grafana dashboard in:
 
-- `packages/homelab/src/cdk8s/grafana/scout-dashboard.ts`
+- `packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts`
 
 Added a `Pre-match` row with:
 

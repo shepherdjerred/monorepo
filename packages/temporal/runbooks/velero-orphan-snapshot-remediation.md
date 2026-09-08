@@ -292,5 +292,5 @@ If the trigger for orphan accumulation was a Velero re-deploy, follow this proce
 
 ## Cross-References
 
-- Workflow source: `packages/temporal/src/workflows/velero-orphan-audit.ts`
-- Alert rules: `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/velero.ts`
+- Workflow source: `packages/temporal/src/workflows/homelab/velero-orphan-audit.ts`
+- Alert rules: `packages/homelab/src/cdk8s/src/resources/monitoring/monitoring/rules/storage/velero.ts`

@@ -5,7 +5,7 @@ import type {
   ReportDeliveryActivities,
 } from "#activities/reports/report-delivery.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
-import { reportActivityTaskQueue } from "./report-activity-queue.ts";
+import { reportActivityTaskQueue } from "./scout/report-activity-queue.ts";
 
 const { collectProtobufWatch } = proxyActivities<ProtobufWatchActivities>({
   taskQueue: TASK_QUEUES.REPO_AUTOMATION,
