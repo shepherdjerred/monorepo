@@ -16,9 +16,9 @@ import { createAppRouter } from "#src/router.tsx";
 import { initAnalytics, track } from "#src/lib/analytics.ts";
 import "#src/styles/global.css";
 
-// VITE_SENTRY_RELEASE is injected at build time by the CI site-deploy step
-// (2.0.0-<build>). Guard the untyped env access so `release` stays
-// `string | undefined`, never `any`.
+// VITE_SENTRY_RELEASE is the content-addressed site archive
+// (`scout-site@sha256:…`). Human-facing 2.0.0-<build> is VITE_APP_VERSION.
+// Guard the untyped env access so `release` stays `string | undefined`.
 const sentryRelease =
   typeof import.meta.env.VITE_SENTRY_RELEASE === "string"
     ? import.meta.env.VITE_SENTRY_RELEASE

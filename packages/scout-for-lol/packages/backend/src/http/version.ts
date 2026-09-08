@@ -1,7 +1,10 @@
 import configuration from "#src/configuration.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/data";
-import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
+import {
+  DEV_PLACEHOLDER,
+  scoutReleaseVersion,
+} from "@scout-for-lol/data/build-identity.ts";
 import { SESSION_COOKIE } from "#src/trpc/context.ts";
 import { verifySession } from "#src/trpc/jwt.ts";
 
@@ -42,9 +45,10 @@ async function canViewContractMismatch(request: Request): Promise<boolean> {
 /**
  * Body of GET /api/version — the deploy identity of this backend process.
  *
- * `version`/`gitSha` label the build that produced the image (the backend is
+ * `version` is the human-facing `2.0.0-<build>` label (image bakes stamp the
+ * raw Buildkite number; `gitSha` remains the commit). The backend is
  * content-gated, so this legitimately lags the site's build number in a
- * healthy release pair). `contractHash` fingerprints the tRPC contract
+ * healthy release pair. `contractHash` fingerprints the tRPC contract
  * sources (packages/scout-for-lol/scripts/contract-hash.ts); the SPA
  * compares it against its own baked hash and nudges a reload on mismatch —
  * version equality is NOT the compatibility signal, the hash is.
@@ -55,7 +59,7 @@ export function versionBody(): {
   contractHash: string;
 } {
   return {
-    version: configuration.version,
+    version: scoutReleaseVersion(configuration.version),
     gitSha: configuration.gitSha,
     contractHash: configuration.contractHash,
   };

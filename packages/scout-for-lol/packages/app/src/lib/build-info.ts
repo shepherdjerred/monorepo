@@ -1,10 +1,14 @@
 import { z } from "zod";
-import { DEV_PLACEHOLDER } from "@scout-for-lol/data/build-identity.ts";
+import {
+  DEV_PLACEHOLDER,
+  scoutReleaseVersion,
+} from "@scout-for-lol/data/build-identity.ts";
 
 /**
  * Build identity stamped into this bundle at site-release build time
- * (scripts/release/scout-site-release.ts → VITE_APP_VERSION / VITE_GIT_SHA /
- * VITE_CONTRACT_HASH). All absent in local dev, where the fallback "dev"
+ * (scripts/release/scout-site-release.ts → VITE_APP_VERSION is 2.0.0-<build>,
+ * VITE_GIT_SHA, VITE_CONTRACT_HASH). Sentry keeps the archive digest via
+ * VITE_SENTRY_RELEASE. All absent in local dev, where the fallback "dev"
  * values also disable the contract-mismatch banner.
  */
 const EnvSchema = z.object({
@@ -23,7 +27,7 @@ function readBuildInfo(): BuildInfo {
   const parsed = EnvSchema.safeParse(import.meta.env);
   const env = parsed.success ? parsed.data : {};
   return {
-    version: env.VITE_APP_VERSION ?? DEV_PLACEHOLDER,
+    version: scoutReleaseVersion(env.VITE_APP_VERSION ?? DEV_PLACEHOLDER),
     gitSha: env.VITE_GIT_SHA ?? DEV_PLACEHOLDER,
     contractHash: env.VITE_CONTRACT_HASH ?? DEV_PLACEHOLDER,
   };
@@ -34,7 +38,7 @@ export const buildInfo: BuildInfo = readBuildInfo();
 
 /** Shape of GET /api/version (the backend's build identity). */
 export const VersionResponseSchema = z.object({
-  version: z.string().min(1),
+  version: z.string().min(1).transform(scoutReleaseVersion),
   gitSha: z.string().min(1),
   contractHash: z.string().min(1),
   // Older backend images predate this owner-only diagnostic capability.

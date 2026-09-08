@@ -57,15 +57,15 @@ export default defineConfig({
         access: "public",
         optional: true,
       }),
-      // Injected at build time by the CI site-deploy step (2.0.0-<build>).
-      // Optional: unset in local/dev builds, where Sentry release stays undefined.
+      // Content-addressed site archive (`scout-site@sha256:…`). Optional:
+      // unset in local/dev builds, where Sentry release stays undefined.
       PUBLIC_SENTRY_RELEASE: envField.string({
         context: "client",
         access: "public",
         optional: true,
       }),
-      // Build identity for the footer version line (2.0.0-<build> + commit
-      // SHA). Optional: unset in local/dev builds, where the footer omits it.
+      // Footer version line (2.0.0-<build> + commit SHA). Optional: unset in
+      // local/dev builds, where the footer omits it.
       PUBLIC_APP_VERSION: envField.string({
         context: "client",
         access: "public",
