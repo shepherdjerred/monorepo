@@ -12,16 +12,15 @@
  * Authored directories have no allowlist. Generated trees and `sandbox/` are
  * not authored domains: generated output is machine-written, and
  * `sandbox/archive` is do-not-modify, so a rule that could block either is a
- * rule that cannot be obeyed. While the repository is being reorganized,
- * `CEILING` sits above `TARGET` and is lowered by each reorganization PR; it
- * is a single global number, so no authored directory is ever individually
- * excused, and nothing new may exceed today's worst case.
+ * rule that cannot be obeyed. `CEILING` is a ratchet lowered by each
+ * reorganization PR until it reaches `TARGET`. When they are equal, no
+ * authored directory may exceed twenty-five files.
  */
 
 import { trackedExistingFiles } from "../lib/tracked-files.ts";
 
 /** Lowered by each reorganization PR until it reaches `TARGET`. */
-export const CEILING = 41;
+export const CEILING = 25;
 
 /** The permanent limit. When `CEILING` reaches this, the workstream is done. */
 export const TARGET = 25;

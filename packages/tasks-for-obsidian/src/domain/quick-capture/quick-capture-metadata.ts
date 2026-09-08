@@ -1,13 +1,13 @@
-import { formatRelativeDate } from "../lib/dates";
+import { formatRelativeDate } from "../../lib/dates";
 import { projectMatches } from "tasknotes-types/v2";
-import { PRIORITY_LABELS } from "./priority";
+import { PRIORITY_LABELS } from "../priority";
 import type {
   CaptureChipKind,
   CaptureMetadataChip,
   CaptureSeedMetadataChip,
 } from "./quick-capture";
 import type { CaptureSeed, CaptureSeedField } from "./quick-capture-seed";
-import type { NlpParseResult } from "./types";
+import type { NlpParseResult } from "../types";
 
 const CAPTURE_CHIP_ORDER: Record<CaptureChipKind, number> = {
   scheduled: 0,

@@ -89,7 +89,7 @@ describe("AI architecture guard", () => {
           ].join("\n"),
         },
         {
-          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/ProviderEndpoints.swift",
+          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/ProviderEndpoints.swift",
           contents:
             'let usage = URL(string: "https://api.anthropic.com/api/oauth/usage")',
         },

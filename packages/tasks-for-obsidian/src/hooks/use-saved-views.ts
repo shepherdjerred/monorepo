@@ -8,12 +8,15 @@ import {
   moveSavedView,
   setSavedViewFavorite,
   updateSavedView,
-} from "../domain/saved-view-actions";
+} from "../domain/saved-view/saved-view-actions";
 import type {
   SavedViewDefinition,
   SavedViewMoveDirection,
-} from "../domain/saved-view-actions";
-import type { SavedView, SavedViewPreferences } from "../domain/saved-views";
+} from "../domain/saved-view/saved-view-actions";
+import type {
+  SavedView,
+  SavedViewPreferences,
+} from "../domain/saved-view/saved-views";
 
 function errorFromUnknown(value: unknown): Error {
   return value instanceof Error

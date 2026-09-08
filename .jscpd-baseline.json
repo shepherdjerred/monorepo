@@ -88,11 +88,11 @@
       "clones": 1,
       "tokens": 72
     },
-    "packages/birmel/src/agent-tools/tools/discord/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
+    "packages/birmel/src/agent-tools/tools/discord/actions/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
       "clones": 1,
       "tokens": 90
     },
-    "packages/birmel/src/agent-tools/tools/discord/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/thread-actions.ts": {
+    "packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts": {
       "clones": 1,
       "tokens": 73
     },
@@ -1460,7 +1460,7 @@
       "clones": 1,
       "tokens": 77
     },
-    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view-collection.test.ts": {
+    "packages/tasks-for-obsidian/src/domain/agenda.test.ts|packages/tasks-for-obsidian/src/domain/saved-view/saved-view-collection.test.ts": {
       "clones": 1,
       "tokens": 83
     },
@@ -1632,11 +1632,11 @@
       "clones": 2,
       "tokens": 175
     },
-    "scripts/lib/ci-io-fixed-corpus.test.ts|scripts/lib/ci-io-fixed-corpus.test.ts": {
+    "scripts/lib/ci/ci-io-fixed-corpus.test.ts|scripts/lib/ci/ci-io-fixed-corpus.test.ts": {
       "clones": 2,
       "tokens": 156
     },
-    "scripts/lib/ci-io-report.test.ts|scripts/lib/ci-io-report.test.ts": {
+    "scripts/lib/ci/ci-io-report.test.ts|scripts/lib/ci/ci-io-report.test.ts": {
       "clones": 2,
       "tokens": 182
     },

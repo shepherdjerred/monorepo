@@ -1,8 +1,8 @@
 import { projectDisplayName, projectMatches } from "tasknotes-types/v2";
 
-import { comparePriority, PRIORITY_LABELS } from "./priority";
-import type { Task } from "./types";
-import { isActiveStatus, isCompletedStatus, STATUS_LABELS } from "./status";
+import { comparePriority, PRIORITY_LABELS } from "../priority";
+import type { Task } from "../types";
+import { isActiveStatus, isCompletedStatus, STATUS_LABELS } from "../status";
 import type {
   RelativeDayRange,
   SavedView,
@@ -11,7 +11,7 @@ import type {
   SavedViewSortSchema,
 } from "./saved-views";
 import type { z } from "zod";
-import { compareDateValues, parseLocalDate, toISODate } from "../lib/dates";
+import { compareDateValues, parseLocalDate, toISODate } from "../../lib/dates";
 
 type SavedViewSort = z.infer<typeof SavedViewSortSchema>;
 type SavedViewGroup = z.infer<typeof SavedViewGroupSchema>;

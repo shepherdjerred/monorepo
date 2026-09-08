@@ -3,7 +3,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { MenuView } from "@react-native-menu/menu";
 import type { MenuAction } from "@react-native-menu/menu";
 
-import type { SavedView } from "../../domain/saved-views";
+import type { SavedView } from "../../domain/saved-view/saved-views";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";
 import { AppIcon } from "../common/AppIcon";

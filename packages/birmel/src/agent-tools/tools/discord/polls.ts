@@ -13,7 +13,7 @@ import {
   handleCreatePoll,
   handleGetPollResults,
   handleEndPoll,
-} from "./poll-actions.ts";
+} from "./actions/poll-actions.ts";
 
 const logger = loggers.tools.child("discord.polls");
 

@@ -6,7 +6,7 @@ import type {
   ContextName,
   TagName,
 } from "../domain/types";
-import type { CaptureSeedRouteParams } from "../domain/quick-capture-seed";
+import type { CaptureSeedRouteParams } from "../domain/quick-capture/quick-capture-seed";
 
 export type RootStackParamList = {
   Main: NavigatorScreenParams<MainTabParamList> | undefined;

@@ -1,10 +1,10 @@
 import { z } from "zod";
 
-import { ValidationError } from "./errors";
-import { PrioritySchema } from "./base-schemas";
-import { CalendarDaySchema } from "./calendar-day";
-import type { Priority } from "./priority";
-import { err, ok, type Result } from "./result";
+import { ValidationError } from "../errors";
+import { PrioritySchema } from "../base-schemas";
+import { CalendarDaySchema } from "../calendar-day";
+import type { Priority } from "../priority";
+import { err, ok, type Result } from "../result";
 
 export const CaptureSeedSchema = z
   .object({

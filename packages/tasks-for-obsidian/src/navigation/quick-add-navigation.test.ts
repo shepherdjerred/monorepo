@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { createCaptureSeed } from "../domain/quick-capture-seed";
+import { createCaptureSeed } from "../domain/quick-capture/quick-capture-seed";
 import {
   quickAddCaptureKey,
   quickAddDismissTarget,

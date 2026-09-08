@@ -28,11 +28,11 @@ import path from "node:path";
 import { parse } from "yaml";
 import { Project, SyntaxKind, type SourceFile } from "ts-morph";
 import { z } from "zod";
-import { collectSteps, type PipelineStep } from "../lib/ci-env-pipeline.ts";
+import { collectSteps, type PipelineStep } from "../lib/ci/ci-env-pipeline.ts";
 import {
   collectSteps as collectGrantSteps,
   compareStepGrants,
-} from "../lib/ci-secret-grant-pipeline.ts";
+} from "../lib/ci/ci-secret-grant-pipeline.ts";
 import {
   declaredSecretItems,
   parseSecretGrantManifest,
@@ -40,7 +40,7 @@ import {
   validateGrantCatalog,
   type SecretGrantManifest,
   type VaultSnapshot,
-} from "../lib/ci-secret-grant-schema.ts";
+} from "../lib/ci/ci-secret-grant-schema.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dir, "..", "..");
 const MANIFEST_PATH = path.join(

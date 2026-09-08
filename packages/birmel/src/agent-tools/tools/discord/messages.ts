@@ -21,7 +21,7 @@ import {
   handleAddReaction,
   handleRemoveReaction,
   handleGetMessages,
-} from "./message-actions.ts";
+} from "./actions/message-actions.ts";
 
 const logger = loggers.tools.child("discord.messages");
 

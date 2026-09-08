@@ -26,11 +26,11 @@ import {
 } from "../components/saved-view/browse-model";
 import { CompletedTasksModal } from "../components/saved-view/CompletedTasksModal";
 import { SavedViewEditorModal } from "../components/saved-view/SavedViewEditorModal";
-import { deriveSavedViewTasks } from "../domain/saved-view-collection";
-import { createCaptureSeed } from "../domain/quick-capture-seed";
-import { sortSavedViews } from "../domain/saved-view-actions";
-import type { SavedViewDefinition } from "../domain/saved-view-actions";
-import type { SavedView } from "../domain/saved-views";
+import { deriveSavedViewTasks } from "../domain/saved-view/saved-view-collection";
+import { createCaptureSeed } from "../domain/quick-capture/quick-capture-seed";
+import { sortSavedViews } from "../domain/saved-view/saved-view-actions";
+import type { SavedViewDefinition } from "../domain/saved-view/saved-view-actions";
+import type { SavedView } from "../domain/saved-view/saved-views";
 import { isActiveStatus, isCompletedStatus } from "../domain/status";
 import { contextName, projectName, tagName } from "../domain/types";
 import { localTodayYmd } from "../domain/recurrence";

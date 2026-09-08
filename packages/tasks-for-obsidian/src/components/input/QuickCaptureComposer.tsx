@@ -13,12 +13,12 @@ import type { FeatherIconName } from "@react-native-vector-icons/feather";
 import type {
   CaptureDraft,
   CaptureMetadataChip,
-} from "../../domain/quick-capture";
+} from "../../domain/quick-capture/quick-capture";
 import type { ProjectOption } from "../../domain/project-options";
 import {
   applyCaptureSuggestion,
   buildCaptureSuggestions,
-} from "../../domain/quick-capture-autocomplete";
+} from "../../domain/quick-capture/quick-capture-autocomplete";
 import { feedbackSelection } from "../../lib/feedback";
 import { useSettings } from "../../hooks/use-settings";
 import { typography } from "../../styles/typography";

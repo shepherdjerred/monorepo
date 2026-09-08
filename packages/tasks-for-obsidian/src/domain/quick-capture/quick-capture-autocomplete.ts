@@ -1,5 +1,5 @@
-import { projectInputToken } from "../lib/nlp";
-import { projectOptionLabel, type ProjectOption } from "./project-options";
+import { projectInputToken } from "../../lib/nlp";
+import { projectOptionLabel, type ProjectOption } from "../project-options";
 
 export type CaptureSuggestion = {
   readonly key: string;

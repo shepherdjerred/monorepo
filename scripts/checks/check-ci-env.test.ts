@@ -6,13 +6,13 @@ import {
   type RequiredEnv,
   type SecretFields,
 } from "./check-ci-env.ts";
-import { collectSteps } from "../lib/ci-env-pipeline.ts";
+import { collectSteps } from "../lib/ci/ci-env-pipeline.ts";
 import {
   assignedEnvNames,
   commandScopes,
   scriptPathsInCommand,
   structuralParens,
-} from "../lib/ci-env-command.ts";
+} from "../lib/ci/ci-env-command.ts";
 
 /** A secret that carries `names`, of which `blanks` are present but empty. */
 function secretWith(

@@ -8,7 +8,7 @@ import {
 import {
   resolveSendableChannel,
   describeChannelResolutionFailure,
-} from "./channel-resolver.ts";
+} from "@shepherdjerred/birmel/agent-tools/tools/discord/channel-resolver.ts";
 
 const logger = loggers.tools.child("discord.messages");
 const NON_ABORTING_SIGNAL = new AbortController().signal;
