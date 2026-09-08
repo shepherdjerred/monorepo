@@ -263,11 +263,6 @@
       "reason": "Five-line command shim runs during bootstrap"
     },
     {
-      "source": "packages/dotfiles/herdr-stage-plugin/mark-stage.sh",
-      "disposition": "retain",
-      "reason": "Plugin action shim runs before the Herdr stage plugin can depend on a Bun runtime"
-    },
-    {
       "source": "packages/dotfiles/bin/executable_git_cleanup.sh",
       "disposition": "port",
       "reason": "Large stateful Git workflow benefits from typed planning and safety",
