@@ -179,6 +179,15 @@ struct TrpcData<T> {
     json: T,
 }
 
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct HeartbeatInput {
+    client_id: String,
+    in_game: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    game_id: Option<String>,
+}
+
 impl BackendClient {
     /// Create a new backend client
     #[allow(clippy::expect_used)]
@@ -212,7 +221,7 @@ impl BackendClient {
 
     /// Submit a game event to the backend
     pub async fn submit_event(&self, event: GameEvent) -> Result<EventResponse, String> {
-        let config = self.config.lock().await;
+        let config = self.config.lock().await.clone();
         let url = format!("{}/trpc/event.submit", config.backend_url);
 
         debug!("Submitting event to backend: {:?}", event);
@@ -248,19 +257,9 @@ impl BackendClient {
     }
 
     /// Send heartbeat to backend
-    #[allow(clippy::items_after_statements)]
     pub async fn heartbeat(&self, in_game: bool, game_id: Option<String>) -> Result<(), String> {
-        let config = self.config.lock().await;
+        let config = self.config.lock().await.clone();
         let url = format!("{}/trpc/event.heartbeat", config.backend_url);
-
-        #[derive(Serialize)]
-        #[serde(rename_all = "camelCase")]
-        struct HeartbeatInput {
-            client_id: String,
-            in_game: bool,
-            #[serde(skip_serializing_if = "Option::is_none")]
-            game_id: Option<String>,
-        }
 
         let input = HeartbeatInput {
             client_id: config.client_id.clone(),
@@ -291,7 +290,6 @@ impl BackendClient {
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
@@ -309,7 +307,11 @@ mod tests {
             is_first_blood: Some(false),
         };
 
-        let json = serde_json::to_string(&event).expect("should serialize");
+        let result = serde_json::to_string(&event);
+        assert!(result.is_ok(), "should serialize: {result:?}");
+        let Some(json) = result.ok() else {
+            return;
+        };
         assert!(json.contains("\"eventType\":\"kill\""));
         assert!(json.contains("\"killerName\":\"Yasuo\""));
         assert!(json.contains("\"victimName\":\"Zed\""));
@@ -327,7 +329,11 @@ mod tests {
             game_time: 300.0,
         };
 
-        let json = serde_json::to_string(&event).expect("should serialize");
+        let result = serde_json::to_string(&event);
+        assert!(result.is_ok(), "should serialize: {result:?}");
+        let Some(json) = result.ok() else {
+            return;
+        };
         assert!(json.contains("\"eventType\":\"multiKill\""));
         assert!(json.contains("\"killCount\":3"));
     }
@@ -344,7 +350,11 @@ mod tests {
             game_time: 600.0,
         };
 
-        let json = serde_json::to_string(&event).expect("should serialize");
+        let result = serde_json::to_string(&event);
+        assert!(result.is_ok(), "should serialize: {result:?}");
+        let Some(json) = result.ok() else {
+            return;
+        };
         assert!(json.contains("\"eventType\":\"objective\""));
         assert!(json.contains("\"objectiveType\":\"dragon\""));
         assert!(json.contains("\"dragonType\":\"infernal\""));

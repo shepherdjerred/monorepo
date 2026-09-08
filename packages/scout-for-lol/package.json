@@ -6,7 +6,7 @@
     "format": "cd ../.. && prettier --check packages/scout-for-lol",
     "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run ./scripts/*.test.ts",
     "test:coverage": "bun --no-install --bun vitest --config ../../vitest.config.ts run --coverage.reporter=text --coverage.reporter=lcovonly --coverage.reportsDirectory=coverage --coverage scripts/create-minimal-png.test.ts scripts/dev-lake-seed.test.ts scripts/dev-web.test.ts scripts/install-pkgs.test.ts --coverage.thresholds.lines=90 --coverage.thresholds.functions=90 --coverage.thresholds.statements=90",
-    "lint": "eslint scripts",
+    "lint": "eslint scripts --max-warnings=0",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit -p tsconfig.scripts.json",
     "dev:web": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-web.ts",
     "dev:discord": "op run --env-file=./dev-web.env.tpl -- bun scripts/dev-discord.ts",

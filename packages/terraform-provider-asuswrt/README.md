@@ -41,9 +41,13 @@ provider "asuswrt" {
   # optional:
   # https    = true            # use HTTPS (default false)
   # port     = 8443            # default 80 (HTTP) or 8443 (HTTPS)
-  # insecure = true            # skip TLS certificate verification (default false)
+  # insecure = true            # HTTPS only: skip TLS certificate and hostname verification (default false)
 }
 ```
+
+`insecure` is rejected unless `https = true`. It is solely for routers with a
+self-signed certificate; it disables both certificate-chain and hostname
+verification, so leave it disabled for normally trusted TLS endpoints.
 
 A full working configuration covering every resource and the data source is in
 [examples/provider/provider.tf](examples/provider/provider.tf).

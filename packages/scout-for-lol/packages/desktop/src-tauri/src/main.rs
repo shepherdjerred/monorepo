@@ -81,8 +81,37 @@ struct AppState {
 
 #[tauri::command]
 async fn get_lcu_status(state: State<'_, AppState>) -> Result<lcu::LcuStatus, String> {
-    let connection = state.lcu_connection.lock().await;
-    match connection.as_ref() {
+    for _ in 0..3 {
+        let connection = state.lcu_connection.lock().await.clone();
+        let Some(conn) = connection else {
+            return Ok(lcu::LcuStatus {
+                connected: false,
+                summoner_name: None,
+                in_game: false,
+            });
+        };
+
+        let status = conn.get_status().await;
+        let current = state.lcu_connection.lock().await.clone();
+        if let Some(current) = current {
+            if current.is_same_instance(&conn) {
+                return Ok(status);
+            }
+            // The connection was replaced while the request was in flight.
+            // Retry against the replacement rather than publishing a stale
+            // disconnected result over a successful reconnect.
+            continue;
+        }
+
+        return Ok(lcu::LcuStatus {
+            connected: false,
+            summoner_name: None,
+            in_game: false,
+        });
+    }
+
+    let current = state.lcu_connection.lock().await.clone();
+    match current {
         Some(conn) => Ok(conn.get_status().await),
         None => Ok(lcu::LcuStatus {
             connected: false,
@@ -99,8 +128,10 @@ async fn connect_lcu(state: State<'_, AppState>) -> Result<(), String> {
     match lcu::LcuConnection::new().await {
         Ok(connection) => {
             info!("Successfully connected to League Client");
-            let mut lcu = state.lcu_connection.lock().await;
-            *lcu = Some(connection);
+            {
+                let mut lcu = state.lcu_connection.lock().await;
+                *lcu = Some(connection);
+            }
             Ok(())
         }
         Err(e) => {
@@ -113,8 +144,10 @@ async fn connect_lcu(state: State<'_, AppState>) -> Result<(), String> {
 #[tauri::command]
 async fn disconnect_lcu(state: State<'_, AppState>) -> Result<(), String> {
     info!("Disconnecting from League Client...");
-    let mut lcu = state.lcu_connection.lock().await;
-    *lcu = None;
+    {
+        let mut lcu = state.lcu_connection.lock().await;
+        *lcu = None;
+    }
     Ok(())
 }
 
@@ -138,8 +171,10 @@ async fn configure_backend(
 
     let client = BackendClient::new(api_token, backend_url, cfg.client_id.clone());
 
-    let mut backend = state.backend_client.lock().await;
-    *backend = Some(client);
+    {
+        let mut backend = state.backend_client.lock().await;
+        *backend = Some(client);
+    }
 
     info!("Backend client configured successfully");
     Ok(())
@@ -160,8 +195,12 @@ async fn get_backend_status(state: State<'_, AppState>) -> Result<BackendStatus,
 
 #[tauri::command]
 async fn test_backend_connection(state: State<'_, AppState>) -> Result<(), String> {
-    let guard = state.backend_client.lock().await;
-    let client = guard.as_ref().ok_or("Backend not configured")?;
+    let client = state
+        .backend_client
+        .lock()
+        .await
+        .clone()
+        .ok_or("Backend not configured")?;
 
     // Send a heartbeat to test the connection
     client.heartbeat(false, None).await
@@ -268,10 +307,13 @@ struct DiagnosticInfo {
 }
 
 #[tauri::command]
-#[allow(clippy::significant_drop_tightening)]
 async fn get_diagnostics(state: State<'_, AppState>) -> Result<DiagnosticInfo, String> {
-    let lcu_guard = state.lcu_connection.lock().await;
-    let lcu = lcu_guard.as_ref().ok_or("LCU not connected")?;
+    let lcu = state
+        .lcu_connection
+        .lock()
+        .await
+        .clone()
+        .ok_or("LCU not connected")?;
 
     let phase_response = lcu.get("/lol-gameflow/v1/gameflow-phase").await;
     let gameflow_phase = match phase_response {

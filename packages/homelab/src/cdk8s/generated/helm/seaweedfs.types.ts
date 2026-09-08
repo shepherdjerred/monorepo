@@ -4064,6 +4064,12 @@ export type SeaweedfsHelmValuesNetworkPolicy = {
    */
   egress?: SeaweedfsHelmValuesNetworkPolicyEgress;
   /**
+   * Per-component additions, keyed by the component's app.kubernetes.io/component
+   * label value, for rules that should not apply to the whole release. The keys
+   * are master, filer, s3, sftp, admin, worker, bucket-hook,
+   * volume-resize-hook, objectstorage-provisioner, seaweedfs-all-in-one, and
+   * volume (plus volume-<name> for every entry under `volumes`):
+   *
    * @default {}
    */
   components?: SeaweedfsHelmValuesNetworkPolicyComponents;

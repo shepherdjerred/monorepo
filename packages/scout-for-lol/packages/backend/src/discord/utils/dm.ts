@@ -363,7 +363,7 @@ async function deliverToUser(
     return;
   }
   await user.send(
-    options.suppressMentions
+    options.suppressMentions === true
       ? { content: message, allowedMentions: { parse: [] } }
       : message,
   );

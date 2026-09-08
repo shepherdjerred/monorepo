@@ -8,8 +8,7 @@ import { BUTTON } from "./constants.ts";
 // resolve and a snapshot read doesn't throw. It's the canary for renamed/moved
 // symbols before they reach production. The wasm is no longer committed — it's
 // built from source in the Docker image build (and locally by
-// scripts/build-wasm.ts), where this gate runs against the real artifact. When
-// the wasm is absent (plain `bun run test` on a clean checkout), skip.
+// scripts/build-wasm.ts), where this gate runs against the real artifact.
 //
 // The checkpoint/reboot test deterministically creates a new game when no
 // operator save is supplied. This keeps the Docker ABI stage self-contained
@@ -57,11 +56,7 @@ function passableMovementButton(
   throw new Error("loaded save has no passable adjacent tile");
 }
 
-// `Bun.file().size` is synchronous and returns 0 for a missing file — used here
-// instead of node:fs (banned by the bun-runtime lint rule).
-const describeWasm = Bun.file(WASM_PATH).size > 0 ? describe : describe.skip;
-
-describeWasm("emulator game symbols (real wasm)", () => {
+describe("emulator game symbols (real wasm)", () => {
   test("resolves all symbols and reads snapshots without throwing", async () => {
     const emulator = new Emulator({ wasmPath: WASM_PATH });
     await emulator.init();

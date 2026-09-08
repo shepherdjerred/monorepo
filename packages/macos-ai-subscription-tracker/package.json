@@ -5,7 +5,7 @@
   "scripts": {
     "format": "swift format format --in-place --recursive --parallel --configuration .swift-format Package.swift Sources Tests",
     "format:check": "swift format lint --recursive --parallel --strict --configuration .swift-format Package.swift Sources Tests",
-    "lint:swift": "swiftlint lint --strict --quiet --config .swiftlint.yml Sources Tests Package.swift",
+    "lint:swift": "swiftlint lint --strict --quiet --config .swiftlint.yml Sources Tests Package.swift && bun scripts/check-concurrency-escapes.ts",
     "build:macos": "swift build -c release -Xswiftc -warnings-as-errors",
     "test:macos": "swift test -Xswiftc -warnings-as-errors",
     "coverage:macos": "swift test --enable-code-coverage -Xswiftc -warnings-as-errors && bun scripts/check-coverage.ts",

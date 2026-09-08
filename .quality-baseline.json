@@ -14,19 +14,15 @@
     "packages/home-assistant/test/typed-client.test-d.ts": 7
   },
   "rust-allow": {
-    "packages/scout-for-lol/packages/desktop/src-tauri/src/backend_client.rs": 3,
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/backend_client.rs": 1,
     "packages/scout-for-lol/packages/desktop/src-tauri/src/main.rs": 2,
-    "packages/scout-for-lol/packages/desktop/src-tauri/src/config.rs": 1,
-    "packages/scout-for-lol/packages/desktop/src-tauri/src/paths.rs": 1
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/paths.rs": 1,
+    "packages/scout-for-lol/packages/desktop/src-tauri/src/live_client.rs": 1
   },
   "prettier-ignore": {},
   "hermeticity-exempt": {},
-  "test-skips": {
-    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": 1,
-    "packages/homelab/src/helm-types/src/real-world-charts.test.ts": 4
-  },
+  "test-skips": {},
   "placeholder-assertions": {
-    "packages/discord-plays-pokemon/packages/backend/src/emulator/audio/audio-fingerprint.test.ts": 1,
     "packages/homelab/src/helm-types/src/type-converter.test.ts": 1,
     "packages/homelab/src/helm-types/src/yaml-preprocessing.test.ts": 1,
     "packages/scout-for-lol/packages/backend/src/database/competition.integration.test.ts": 5,

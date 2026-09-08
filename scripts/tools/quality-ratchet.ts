@@ -45,7 +45,7 @@ const RULES: GrepRule[] = [
     key: "eslint-disable",
     pattern: String.raw`^\s*(//|/\*)\s*eslint-disable`,
     searchPaths: ["packages/"],
-    includes: ["*.ts", "*.tsx"],
+    includes: ["*.ts", "*.tsx", "*.js", "*.jsx", "*.astro"],
     excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,
     excludePathPatterns: ["/generated/"],
   },
@@ -59,7 +59,7 @@ const RULES: GrepRule[] = [
   },
   {
     key: "rust-allow",
-    pattern: String.raw`#\[allow\(`,
+    pattern: String.raw`#!?\[allow\(`,
     searchPaths: ["packages/"],
     includes: ["*.rs"],
     excludeDirs: QUALITY_RATCHET_EXCLUDED_DIRECTORIES,

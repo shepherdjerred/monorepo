@@ -83,7 +83,7 @@ public protocol HTTPTransport: Sendable {
   func send(_ request: ProviderRequest) async throws -> ProviderResponse
 }
 
-public final class URLSessionTransport: HTTPTransport, @unchecked Sendable {
+public final class URLSessionTransport: HTTPTransport, Sendable {
   private let session: URLSession
 
   public init(session: URLSession? = nil) {

@@ -27,6 +27,10 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
+    "@scout-for-lol/temporal#build": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
     // Local codegen only (Prisma: birmel, scout backend, dpmk backend).
     // Live-credential codegen lives in generate:live and is NEVER in a
     // default chain (temporal → live Home Assistant, helm-types → chart repos).

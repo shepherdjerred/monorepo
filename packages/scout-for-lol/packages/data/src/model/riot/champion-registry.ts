@@ -114,7 +114,7 @@ export function getChampionIdByName(name: string): ChampionId | undefined {
   const normalized = normalizeSearchTerm(name);
   const aliasTarget =
     CHAMPION_ALIASES[normalized] ?? CHAMPION_ALIASES[name.toLowerCase()];
-  if (aliasTarget) {
+  if (aliasTarget !== undefined) {
     const aliased = championByKey.get(aliasTarget.toLowerCase());
     if (aliased) return aliased.id;
   }
@@ -164,7 +164,7 @@ export function normalizeChampionName(championName: string): string {
 
   const alias =
     CHAMPION_ALIASES[lower] ?? CHAMPION_ALIASES[normalizeSearchTerm(decoded)];
-  if (alias) {
+  if (alias !== undefined) {
     const aliased = championByKey.get(alias.toLowerCase());
     if (aliased) return aliased.key;
   }

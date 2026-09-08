@@ -1,0 +1,64 @@
+{
+  "entries": [
+    {
+      "path": "Sources/QuotaBarCore/APIPlatformPersistence.swift",
+      "count": 1,
+      "rationale": "FileManager lacks a Sendable conformance; this immutable store delegates file-system synchronization to Foundation."
+    },
+    {
+      "path": "Sources/QuotaBarCore/CommandRunning.swift",
+      "count": 1,
+      "rationale": "Process and Pipe lack Sendable conformances; cancellation state is guarded by NSLock."
+    },
+    {
+      "path": "Sources/QuotaBarCore/Credentials.swift",
+      "count": 1,
+      "rationale": "The rejected-token cache is guarded by NSLock; all other stored dependencies are immutable."
+    },
+    {
+      "path": "Sources/QuotaBarCore/Persistence.swift",
+      "count": 1,
+      "rationale": "FileManager lacks a Sendable conformance; this immutable store delegates file-system synchronization to Foundation."
+    },
+    {
+      "path": "Sources/QuotaBarCore/Settings.swift",
+      "count": 1,
+      "rationale": "UserDefaults lacks a Sendable conformance; Foundation synchronizes its shared preference store."
+    },
+    {
+      "path": "Sources/QuotaBarCore/UsageHistory.swift",
+      "count": 1,
+      "rationale": "FileManager lacks a Sendable conformance; this immutable store delegates file-system synchronization to Foundation."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/HistoryModelTests.swift",
+      "count": 1,
+      "rationale": "The test double protects its mutable snapshot map with NSLock."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/HistoryTestSupport.swift",
+      "count": 1,
+      "rationale": "The test double protects its mutable sample store with NSLock."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/ModelTests.swift",
+      "count": 1,
+      "rationale": "The test double protects recorded snapshots and counts with NSLock."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/OpenRouterTests.swift",
+      "count": 1,
+      "rationale": "The test double protects its mutable API-platform snapshot with NSLock."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/PersistenceSettingsTests.swift",
+      "count": 1,
+      "rationale": "The test double protects its recorded settings writes with NSLock."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/TestSupport.swift",
+      "count": 1,
+      "rationale": "The test double protects credential state and injected failures with NSLock."
+    }
+  ]
+}

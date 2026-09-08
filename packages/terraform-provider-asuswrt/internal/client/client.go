@@ -64,10 +64,10 @@ func New(cfg Config) *Client {
 	}
 
 	transport := &http.Transport{}
-	if cfg.Insecure {
+	if cfg.HTTPS && cfg.Insecure {
 		transport.TLSClientConfig = &tls.Config{
 			MinVersion:         tls.VersionTLS12,
-			InsecureSkipVerify: true, //nolint:gosec // user opted in via insecure=true
+			InsecureSkipVerify: true, //nolint:gosec // Provider rejects this unless the user explicitly sets HTTPS and insecure.
 		}
 	}
 

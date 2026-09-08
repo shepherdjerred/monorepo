@@ -2,7 +2,10 @@
 
 export type MariadbHelmValuesGlobal = {
   /**
-   * Global Docker Image registry
+   * Copyright Broadcom, Inc. All Rights Reserved.
+   * Global Docker image parameters
+   * Please, note that this will override the image parameters, including dependencies, configured to use the global value
+   * Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
    *
    * @default ""
    */
@@ -708,6 +711,7 @@ explicit_defaults_fo..."
    */
   service?: MariadbHelmValuesPrimaryService;
   /**
+   * MariaDB primary Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
    * @default {"create":true,"minAvailable":"","maxUnavailable":""}
@@ -1459,6 +1463,7 @@ explicit_defaults_fo..."
    */
   service?: MariadbHelmValuesSecondaryService;
   /**
+   * MariaDB secondary Pod Disruption Budget configuration
    * ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
    *
    * @default {"create":true,"minAvailable":"","maxUnavailable":""}
@@ -2870,11 +2875,6 @@ export type MariadbHelmValuesNetworkPolicyIngressNSPodMatchLabels = object;
 
 export type MariadbHelmValues = {
   /**
-   * Copyright Broadcom, Inc. All Rights Reserved.
-   * Global Docker image parameters
-   * Please, note that this will override the image parameters, including dependencies, configured to use the global value
-   * Current available global Docker image parameters: imageRegistry, imagePullSecrets and storageClass
-   *
    * @default {...} (6 keys)
    */
   global?: MariadbHelmValuesGlobal;

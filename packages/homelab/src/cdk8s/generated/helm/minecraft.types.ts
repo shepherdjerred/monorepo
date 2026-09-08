@@ -624,12 +624,7 @@ export type MinecraftHelmValuesPersistence = {
    */
   annotations?: MinecraftHelmValuesPersistenceAnnotations;
   /**
-   * specify an alternative volume to be mounted to /data instead of datadir.
-   * If defined, storageClassName: <storageClass>
-   * If set to "-", storageClassName: "", which disables dynamic provisioning
-   * If undefined (the default) or set to null, no storageClassName spec is
-   * set, choosing the default provisioner.  (gp2 on AWS, standard on
-   * GKE, AWS & OpenStack)
+   * specify a subpath in the volume where the data is. Useful when sharing volumes with other apps.
    *
    * @default {"enabled":false,"Size":"1Gi","accessModes":["ReadWriteOnce"]}
    */
@@ -867,13 +862,6 @@ export type MinecraftHelmValuesMcbackupPersistence = {
    */
   annotations?: MinecraftHelmValuesMcbackupPersistenceAnnotations;
   /**
-   * minecraft data Persistent Volume Storage Class
-   * If defined, storageClassName: <storageClass>
-   * If set to "-", storageClassName: "", which disables dynamic provisioning
-   * If undefined (the default) or set to null, no storageClassName spec is
-   * set, choosing the default provisioner.  (gp2 on AWS, standard on
-   * GKE, AWS & OpenStack)
-   *
    * @default {"enabled":false,"Size":"1Gi","accessModes":["ReadWriteOnce"]}
    */
   backupDir?: MinecraftHelmValuesMcbackupPersistenceBackupDir;

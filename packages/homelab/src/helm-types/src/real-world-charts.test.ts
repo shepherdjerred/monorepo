@@ -71,12 +71,8 @@ primary:
 });
 
 describe("Real-World Helm Charts - Traefik", () => {
-  // TODO: Edge case - ports.web.expose incorrectly gets comment from commented-out hostPort
-  // The YAML AST accumulates comments from above, including "Use host port 80 on DaemonSet"
-  // which is actually for the commented-out `# hostPort: 80` line, not for `expose: true`.
-  // This requires more sophisticated comment-to-key association logic to detect and filter
-  // comments that belong to commented-out keys when they appear between documented sections.
-  test.skip("should handle service configuration with port definitions", () => {
+  // A comment for the disabled hostPort key must not attach to `expose`.
+  test("should handle service configuration with port definitions", () => {
     // Real pattern from traefik helm chart
     const yaml = `# -- Create a default IngressClass for Traefik
 ingressClass:
@@ -113,11 +109,11 @@ ports:
       "Create a default IngressClass for Traefik",
     );
     expect(comments.get("ports.web")).toBe("Configure the web port (HTTP)");
-    expect(comments.get("ports.web.expose")).not.toContain("Use host port 80");
+    expect(comments.get("ports.web.expose")).toBeUndefined();
     expect(comments.get("ports.websecure")).toBe(
       "Configure the websecure port (HTTPS)",
     );
-    expect(comments.get("ports.websecure.tls.enabled")).toBe(
+    expect(comments.get("ports.websecure.tls")).toBe(
       "Enable TLS on websecure port",
     );
   });
@@ -339,12 +335,8 @@ prometheus:
 });
 
 describe("Real-World Helm Charts - Ingress-NGINX", () => {
-  // TODO: Edge case - section header filtering removes prose before Ref links
-  // Comment has: "## Controller configuration\n## Ref: https://..."
-  // After filtering, section header "Controller configuration" is removed as it appears
-  // before config code, leaving only "Ref: https://..." which is technically correct but
-  // loses the descriptive text. Need to preserve section headers when followed only by Refs.
-  test.skip("should handle controller configuration with security settings", () => {
+  // A section heading immediately followed by a reference remains useful documentation.
+  test("should handle controller configuration with security settings", () => {
     const yaml = `## Ingress controller configuration
 ##
 controller:
@@ -396,12 +388,8 @@ controller:
     expect(comments.get("controller.config.hsts")).toBe("Configure HSTS");
   });
 
-  // TODO: Edge case - comment association with parent vs nested keys
-  // The comment "Admission webhook configuration..." is associated with parent `controller`
-  // key rather than the nested `controller.admissionWebhooks` key. The YAML AST groups
-  // the top-level comment with the first real key it encounters. To fix this, we'd need
-  // to detect when a comment describes a nested structure name and re-associate it.
-  test.skip("should handle admission webhook configuration", () => {
+  // A heading naming a nested camelCase structure belongs to that structure.
+  test("should handle admission webhook configuration", () => {
     const yaml = `## Admission webhook configuration
 ## This validates Ingress objects before they are created
 ## Ref: https://kubernetes.github.io/ingress-nginx/deploy/validating-webhook/
@@ -456,15 +444,8 @@ controller:
 });
 
 describe("Real-World Helm Charts - Redis", () => {
-  // TODO: Edge case - comment accumulation from preceding commented-out keys
-  // The YAML AST gives `master` all preceding comments, including ones about commented-out
-  // keys like `# existingSecret: ""` and `# existingSecretPasswordKey: ""`. The actual
-  // "Redis Master configuration" comment gets buried in the accumulated text.
-  // The filterCommentedOutYAML function doesn't detect these as YAML keys because they
-  // have quoted empty strings as values, which doesn't match the pattern for block scalars.
-  // Fixing this requires recognizing commented-out keys with ANY value type, not just
-  // pipes/empty values, while being careful not to filter legitimate YAML examples in docs.
-  test.skip("should handle master-replica configuration", () => {
+  // Disabled replica settings with quoted values must not become documentation examples.
+  test("should handle master-replica configuration", () => {
     const yaml = `## Redis architecture. Allowed values: \`standalone\` or \`replication\`
 ##
 architecture: replication

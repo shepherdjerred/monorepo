@@ -4,6 +4,9 @@ use base64::engine::general_purpose;
 use base64::Engine;
 use log::info;
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicU64, Ordering};
+
+static NEXT_CONNECTION_ID: AtomicU64 = AtomicU64::new(1);
 
 /// Represents the connection status of the League Client
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,6 +30,7 @@ pub struct LcuConnection {
     /// The base URL for LCU API requests
     pub base_url: String,
     client: reqwest::Client,
+    connection_id: u64,
 }
 
 #[derive(Debug, Deserialize)]
@@ -56,12 +60,18 @@ impl LcuConnection {
             token,
             base_url,
             client,
+            connection_id: NEXT_CONNECTION_ID.fetch_add(1, Ordering::Relaxed),
         };
 
         // Test the connection
         connection.test_connection().await?;
 
         Ok(connection)
+    }
+
+    /// Returns whether this value refers to the same live connection instance.
+    pub(crate) fn is_same_instance(&self, other: &Self) -> bool {
+        self.connection_id == other.connection_id
     }
 
     /// Tests the connection to the LCU API

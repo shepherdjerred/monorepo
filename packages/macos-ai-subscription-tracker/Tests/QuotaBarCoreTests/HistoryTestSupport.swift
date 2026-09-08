@@ -27,20 +27,23 @@ actor FakeProvider: UsageProvider {
 }
 
 final class MemoryHistoryStore: UsageHistoryPersisting, @unchecked Sendable {
+  private let lock = NSLock()
   private let loadError: QuotaError?
-  private(set) var saved: [UsageHistorySample] = []
+  private var storedSamples: [UsageHistorySample]
+
+  var saved: [UsageHistorySample] { lock.withLock { storedSamples } }
 
   init(saved: [UsageHistorySample] = [], loadError: QuotaError? = nil) {
-    self.saved = saved
+    storedSamples = saved
     self.loadError = loadError
   }
 
   func load() throws -> [UsageHistorySample] {
     if let loadError { throw loadError }
-    return saved
+    return lock.withLock { storedSamples }
   }
 
   func save(_ samples: [UsageHistorySample]) throws {
-    saved = samples
+    lock.withLock { storedSamples = samples }
   }
 }

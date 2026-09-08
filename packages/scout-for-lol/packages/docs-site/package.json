@@ -14,7 +14,7 @@
     "test:flavor:beta": "PUBLIC_SCOUT_SITE_FLAVOR=beta bun run build && bun --no-install --bun vitest --config ../../../../vitest.config.ts run src",
     "test:ci": "bun ../../../../scripts/ci/run-ci-test.ts",
     "test:report": "CI_TEST_COVERAGE=1 bun ../../../../scripts/ci/run-ci-test.ts",
-    "lint": "astro sync && eslint --cache",
+    "lint": "astro sync && eslint --cache --max-warnings=0",
     "generate": "bun run scripts/generate-render-samples.ts"
   },
   "dependencies": {

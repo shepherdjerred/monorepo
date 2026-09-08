@@ -103,6 +103,7 @@ export type KubeprometheusstackHelmValuesCrdsUpgradeJob = {
    */
   automountServiceAccountToken?: boolean;
   /**
+   * Container-specific security context configuration
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
    *
    * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
@@ -1108,8 +1109,6 @@ export type KubeprometheusstackHelmValuesPrometheuswindowsexporter = {
    */
   releaseLabel?: boolean;
   /**
-   * Set job label to 'windows-exporter' as required by the default Prometheus rules and Grafana dashboards
-   *
    * @default {"jobLabel":"windows-exporter"}
    */
   podLabels?: KubeprometheusstackHelmValuesPrometheuswindowsexporterPodLabels;
@@ -1143,6 +1142,8 @@ export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPrometheusMoni
 
 export type KubeprometheusstackHelmValuesPrometheuswindowsexporterPodLabels = {
   /**
+   * Set job label to 'windows-exporter' as required by the default Prometheus rules and Grafana dashboards
+   *
    * @default "windows-exporter"
    */
   jobLabel?: string;
@@ -1212,6 +1213,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
    */
   verticalPodAutoscaler?: KubeprometheusstackHelmValuesAlertmanagerVerticalPodAutoscaler;
   /**
+   * Alertmanager configuration directives
    * ref: https://prometheus.io/docs/alerting/configuration/#configuration-file
    * https://prometheus.io/webtools/alerting/routing-tree-editor/
    *
@@ -1314,6 +1316,7 @@ export type KubeprometheusstackHelmValuesAlertmanager = {
   servicePerReplica?: KubeprometheusstackHelmValuesAlertmanagerServicePerReplica;
   /**
    * Configuration for creating a ServiceMonitor for AlertManager
+   * Settings affecting alertmanagerSpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#alertmanagerspec
    *
    * @default {...} (16 keys)
@@ -1962,7 +1965,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerService = {
    */
   port?: number;
   /**
-   * Port for Alertmanager cluster communication
    * To be used with a proxy extraContainer port
    *
    * @default 9093
@@ -1996,9 +1998,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerService = {
    */
   sessionAffinity?: string;
   /**
-   * If you want to modify the ClientIP sessionAffinity timeout
-   * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
-   *
    * @default {"clientIP":{"timeoutSeconds":10800}}
    */
   sessionAffinityConfig?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig;
@@ -2041,6 +2040,9 @@ export type KubeprometheusstackHelmValuesAlertmanagerServiceIpDualStack = {
 export type KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfig =
   {
     /**
+     * If you want to modify the ClientIP sessionAffinity timeout
+     * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
+     *
      * @default {"timeoutSeconds":10800}
      */
     clientIP?: KubeprometheusstackHelmValuesAlertmanagerServiceSessionAffinityConfigClientIP;
@@ -2229,8 +2231,6 @@ export type KubeprometheusstackHelmValuesAlertmanagerAlertmanagerSpec = {
   automountServiceAccountToken?: boolean;
   configMaps?: unknown[];
   /**
-   * ConfigSecret is the name of a Kubernetes Secret in the same namespace as the Alertmanager object, which contains configuration for
-   * this Alertmanager instance. Defaults to 'alertmanager-' The secret is mounted into /etc/alertmanager/config.
    * WebTLSConfig defines the TLS parameters for HTTPS
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#alertmanagerwebspec
    *
@@ -2712,8 +2712,6 @@ export type KubeprometheusstackHelmValuesGrafana = {
    */
   adminUser?: string;
   /**
-   * Use an existing secret for the admin user.
-   *
    * @default {"existingSecret":"","userKey":"admin-user","passwordKey":"admin-password"}
    */
   admin?: KubeprometheusstackHelmValuesGrafanaAdmin;
@@ -2875,8 +2873,6 @@ export type KubeprometheusstackHelmValuesGrafanaIngress = {
    */
   enabled?: boolean;
   /**
-   * IngressClassName for Grafana Ingress.
-   * Should be provided if Ingress is enable.
    * Annotations for Grafana Ingress
    * kubernetes.io/ingress.class: nginx
    * kubernetes.io/tls-acme: "true"
@@ -3084,8 +3080,6 @@ export type KubeprometheusstackHelmValuesGrafanaSidecarDatasources = {
    */
   uid?: string;
   /**
-   * URL of prometheus datasource
-   * url: http://prometheus-stack-prometheus:9090/
    * Prometheus request timeout in seconds
    * Query parameters to add, as a URL-encoded string,
    * to query Prometheus
@@ -4713,8 +4707,6 @@ export type KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheus = {
    */
   [key: string]: unknown;
   /**
-   * Attach node metadata to discovered targets. Requires Prometheus v2.35.0 and above.
-   *
    * @default {...} (12 keys)
    */
   monitor?: KubeprometheusstackHelmValuesPrometheusnodeexporterPrometheusMonitor;
@@ -4882,10 +4874,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   prometheusInstanceNamespaces?: unknown[];
   thanosRulerInstanceNamespaces?: unknown[];
   /**
-   * The clusterDomain value will be added to the cluster.peer option of the alertmanager.
-   * Without this specified option cluster.peer will have value alertmanager-monitoring-alertmanager-0.alertmanager-operated:9094 (default value)
-   * With this specified option cluster.peer will have value alertmanager-monitoring-alertmanager-0.alertmanager-operated.namespace.svc.cluster-domain:9094
-   *
    * @default {"enabled":false,"flavor":"kubernetes"}
    */
   networkPolicy?: KubeprometheusstackHelmValuesPrometheusOperatorNetworkPolicy;
@@ -5013,6 +5001,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
   securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorSecurityContext;
   hostUsers?: unknown;
   /**
+   * Container-specific security context configuration
    * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
    *
    * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
@@ -5031,10 +5020,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperator = {
    */
   image?: KubeprometheusstackHelmValuesPrometheusOperatorImage;
   /**
-   * Prometheus image to use for prometheuses managed by the operator
-   * Prometheus image registry to use for prometheuses managed by the operator
-   * Alertmanager image to use for alertmanagers managed by the operator
-   * Alertmanager image registry to use for alertmanagers managed by the operator
    * Prometheus-config-reloader
    *
    * @default {"image":{"registry":"quay.io","repository":"prometheus-operator/prometheus-config-reloader","tag":"","sha":""},"enableProbe":false,"resources":{}}
@@ -5234,9 +5219,6 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooks = {
    */
   patch?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatch;
   /**
-   * Security context for create job container
-   * Security context for patch job container
-   *
    * @default {"securityContext":{"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}}
    */
   createSecretJob?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJob;
@@ -5439,6 +5421,7 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDepl
      */
     securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksDeploymentSecurityContext;
     /**
+     * Container-specific security context configuration
      * ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
      *
      * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
@@ -5926,6 +5909,9 @@ export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksPatc
 export type KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJob =
   {
     /**
+     * Security context for create job container
+     * Security context for patch job container
+     *
      * @default {"allowPrivilegeEscalation":false,"readOnlyRootFilesystem":true,"capabilities":{"drop":["ALL"]}}
      */
     securityContext?: KubeprometheusstackHelmValuesPrometheusOperatorAdmissionWebhooksCreateSecretJobSecurityContext;
@@ -6492,7 +6478,11 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   annotations?: KubeprometheusstackHelmValuesPrometheusAnnotations;
   /**
-   * Additional labels for Prometheus
+   * Name of the PodMonitor to create
+   * Additional labels to set used for the PodMonitorSelector. Together with standard labels from
+   * the chart
+   * Pod label for use in assembling a job name of the form <label value>-<port>
+   * If no label is specified, the pod endpoint name is used.
    *
    * @default {}
    */
@@ -6602,6 +6592,7 @@ export type KubeprometheusstackHelmValuesPrometheus = {
    */
   routePerReplica?: KubeprometheusstackHelmValuesPrometheusRoutePerReplica;
   /**
+   * Settings affecting prometheusSpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec
    *
    * @default {...} (14 keys)
@@ -6984,9 +6975,6 @@ export type KubeprometheusstackHelmValuesPrometheusService = {
    */
   sessionAffinity?: string;
   /**
-   * If you want to modify the ClientIP sessionAffinity timeout
-   * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
-   *
    * @default {"clientIP":{"timeoutSeconds":10800}}
    */
   sessionAffinityConfig?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig;
@@ -7023,6 +7011,9 @@ export type KubeprometheusstackHelmValuesPrometheusServiceIpDualStack = {
 export type KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfig =
   {
     /**
+     * If you want to modify the ClientIP sessionAffinity timeout
+     * The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
+     *
      * @default {"timeoutSeconds":10800}
      */
     clientIP?: KubeprometheusstackHelmValuesPrometheusServiceSessionAffinityConfigClientIP;
@@ -8671,6 +8662,7 @@ export type KubeprometheusstackHelmValuesThanosRuler = {
   service?: KubeprometheusstackHelmValuesThanosRulerService;
   /**
    * Configuration for creating a ServiceMonitor for the ThanosRuler service
+   * Settings affecting thanosRulerpec
    * ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#thanosrulerspec
    *
    * @default {...} (15 keys)
@@ -9702,12 +9694,14 @@ export type KubeprometheusstackHelmValues = {
    */
   windowsMonitoring?: KubeprometheusstackHelmValuesWindowsMonitoring;
   /**
+   * Configuration for prometheus-windows-exporter
    * ref: https://github.com/prometheus-community/helm-charts/tree/main/charts/prometheus-windows-exporter
    *
    * @default {...} (4 keys)
    */
   "prometheus-windows-exporter"?: KubeprometheusstackHelmValuesPrometheuswindowsexporter;
   /**
+   * Configuration for alertmanager
    * ref: https://prometheus.io/docs/alerting/alertmanager/
    * foo:$apr1$OFG3Xybp$ckL0FHDAkoXYIlH9.cysT0
    * someoneelse:$apr1$DMZX2Z4q$6SbQIfyuLQd.xmo/P0m2c.

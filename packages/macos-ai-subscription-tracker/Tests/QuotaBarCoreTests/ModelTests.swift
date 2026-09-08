@@ -421,7 +421,7 @@ private final class MemorySnapshotStore: SnapshotPersisting, @unchecked Sendable
   }
 }
 
-private final class MemoryModelSettingsStore: SettingsPersisting, @unchecked Sendable {
+private final class MemoryModelSettingsStore: SettingsPersisting, Sendable {
   let enabled: Set<ProviderID>
   let showsLegacy: Bool
 

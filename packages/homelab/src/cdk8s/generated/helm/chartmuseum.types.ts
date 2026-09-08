@@ -503,11 +503,6 @@ export type ChartmuseumHelmValuesPersistencePvNfs = {
 
 export type ChartmuseumHelmValuesVolumePermissions = {
   /**
-   * Optionally specify an array of imagePullSecrets.
-   * Secrets must be manually created in the namespace.
-   * ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-   * Ingress for load balancer
-   *
    * @default {...} (4 keys)
    */
   image?: ChartmuseumHelmValuesVolumePermissionsImage;

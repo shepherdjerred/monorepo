@@ -47,7 +47,7 @@ import XCTest
   }
 }
 
-private final class SnapshotMigrationStore: SnapshotPersisting, @unchecked Sendable {
+private final class SnapshotMigrationStore: SnapshotPersisting, Sendable {
   private let loaded: [ProviderID: UsageSnapshot]
 
   init(loaded: [ProviderID: UsageSnapshot]) {
@@ -58,7 +58,7 @@ private final class SnapshotMigrationStore: SnapshotPersisting, @unchecked Senda
   func save(_: [ProviderID: UsageSnapshot]) throws {}
 }
 
-private final class SnapshotMigrationSettingsStore: SettingsPersisting, @unchecked Sendable {
+private final class SnapshotMigrationSettingsStore: SettingsPersisting, Sendable {
   func enabledProviders() -> Set<ProviderID>? { [.claudeCode] }
   func showsLegacyProviders() -> Bool? { false }
   func pollingInterval() -> TimeInterval? { nil }

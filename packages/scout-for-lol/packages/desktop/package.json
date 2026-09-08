@@ -16,7 +16,7 @@
     "build:windows:arm": "bunx @tauri-apps/cli build --target aarch64-pc-windows-msvc",
     "build:frontend": "bunx vite build",
     "preview": "bunx vite preview",
-    "lint": "bunx eslint src",
+    "lint": "bunx eslint src --max-warnings=0",
     "format": "bunx prettier --check src",
     "format:write": "bunx prettier --write src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit"

@@ -224,7 +224,7 @@ private func decimal(_ value: String) -> Decimal {
   return result
 }
 
-private final class APISettingsStore: SettingsPersisting, @unchecked Sendable {
+private final class APISettingsStore: SettingsPersisting, Sendable {
   func enabledProviders() throws -> Set<ProviderID>? { Set(ProviderID.allCases) }
   func showsLegacyProviders() throws -> Bool? { true }
   func pollingInterval() throws -> TimeInterval? { 300 }

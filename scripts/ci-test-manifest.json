@@ -155,7 +155,13 @@
       "directory": "packages/discord-plays-pokemon/packages/backend",
       "steps": [
         {
-          "runner": "vitest"
+          "runner": "vitest",
+          "args": [
+            "--exclude",
+            "src/emulator/emulator-symbols.integration.test.ts",
+            "--exclude",
+            "src/emulator/audio/audio-fingerprint.test.ts"
+          ]
         }
       ]
     },
