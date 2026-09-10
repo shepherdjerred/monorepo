@@ -4,6 +4,7 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import { runCommand } from "#activities/data-dragon/data-dragon-shell.ts";
 import { installScoutWorkspace } from "#activities/bot-clone.ts";
 import { discardFormattingOnlyChanges } from "./scout-generated-preflight.ts";
+import { discardShowcaseImageNoise } from "./scout-image-drift.ts";
 import {
   changedFilesInPaths,
   getUnifiedDiff,
@@ -109,6 +110,12 @@ export const scoutShowcaseRefreshActivities = {
       await discardFormattingOnlyChanges({
         repoDir,
         changedFiles: files,
+        component: "scout-showcase-refresh",
+      });
+      await discardShowcaseImageNoise({
+        repoDir,
+        changedFiles: files,
+        assetIndexPath: `${repoDir}/${ASSET_INDEX_PATH}`,
         component: "scout-showcase-refresh",
       });
       files = await changedFilesInPaths(repoDir, GENERATED_PATHS);
