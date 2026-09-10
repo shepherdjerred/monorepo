@@ -20,6 +20,7 @@ import {
 import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
 import { ExploreToolTrace } from "#src/components/explore/explore-tool-trace.tsx";
 import { ExploreIntentCards } from "#src/components/explore/intent/explore-intent-cards.tsx";
+import { ExploreMatchCards } from "#src/components/explore/explore-match-cards.tsx";
 import { ExploreVersionSwitcher } from "#src/components/explore/explore-version-switcher.tsx";
 import { ScoutQlCode } from "#src/components/scoutql/scoutql-code.tsx";
 import {
@@ -228,6 +229,8 @@ export const AssistantTurn = memo(function AssistantTurnView(props: {
   return (
     <div className="space-y-3">
       <MarkdownAnswer>{message.content}</MarkdownAnswer>
+
+      <ExploreMatchCards cards={message.matchCards} />
 
       {props.showRawTrace && <ExploreIntentCards trace={message.trace} />}
 

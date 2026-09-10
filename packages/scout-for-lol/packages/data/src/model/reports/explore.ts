@@ -3,6 +3,7 @@ import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysis.ts";
 import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
 import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts";
+import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -296,6 +297,7 @@ export const ExploreMessageSchema = z
     followUps: z.array(z.string()).default([]),
     preview: ReportAiPreviewSummarySchema.nullable().default(null),
     visualization: VisualizationSnapshotSchema.nullable().default(null),
+    matchCards: z.array(ExploreMatchCardSchema).max(5).default([]),
     trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })

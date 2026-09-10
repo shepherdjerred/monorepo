@@ -13,6 +13,7 @@ import {
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
   type ExploreAnswer,
+  type ExploreMatchCard,
   type DiscordChannelId,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -59,6 +60,10 @@ import {
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
+import {
+  hydrateExploreMatchCards,
+  matchIdsInPreview,
+} from "#src/explore-match/match-view.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
@@ -109,6 +114,8 @@ export type ExploreAgentResult = {
   /** The result of the last successful query, kept for the transcript. */
   preview: ReportAiPreviewSummary | null;
   visualization: VisualizationSnapshot | null;
+  /** Frozen, source-backed artifacts requested by the model. */
+  matchCards: ExploreMatchCard[];
 };
 
 type RunState = {
@@ -117,6 +124,8 @@ type RunState = {
   /** Result of the most recent successful query, attached to the answer. */
   lastPreview: ReportAiPreviewSummary | null;
   lastVisualization: VisualizationSnapshot | null;
+  /** Match ids the most recent successful query actually returned. */
+  lastMatchIds: Set<string>;
 };
 
 export async function streamExploreAgent(
@@ -144,6 +153,7 @@ async function streamExploreAgentInternal(
     previewCalls: 0,
     lastPreview: null,
     lastVisualization: null,
+    lastMatchIds: new Set(),
   };
 
   // Derived per turn rather than persisted, so Temporal recovery and flag
@@ -211,6 +221,10 @@ async function streamExploreAgentInternal(
   const streamState = await drainExploreStreams(stream, params.emit);
 
   const answer = ExploreAnswerSchema.parse(await stream.output);
+  const matchCards = await hydrateExploreMatchCards({
+    requests: answer.matchCards,
+    eligibleMatchIds: state.lastMatchIds,
+  });
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered
@@ -235,6 +249,7 @@ async function streamExploreAgentInternal(
     answer,
     preview: answer.includeVisualization ? state.lastPreview : null,
     visualization: answer.includeVisualization ? state.lastVisualization : null,
+    matchCards,
   };
 }
 
@@ -392,6 +407,7 @@ function createExploreTools(options: ExploreToolsOptions) {
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
+        state.lastMatchIds = matchIdsInPreview(preview);
 
         await params.emit({
           type: "preview",

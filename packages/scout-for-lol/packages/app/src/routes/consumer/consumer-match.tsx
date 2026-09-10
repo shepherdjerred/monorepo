@@ -129,7 +129,7 @@ export function ConsumerMatch() {
       </section>
 
       <MatchTimeline
-        playerId={playerId}
+        source={{ kind: "consumer", playerId }}
         matchId={matchId}
         coverage={detailValue.data.timeline.coverage}
         keyEvents={detailValue.data.timeline.keyEvents}

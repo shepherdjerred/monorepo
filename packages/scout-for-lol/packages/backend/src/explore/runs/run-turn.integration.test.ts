@@ -60,11 +60,13 @@ const successfulAgent = async (params: ExploreAgentParams) => {
       title: "Most frequent winners",
       queryText: "SELECT champion, wins FROM match_participants",
       includeVisualization: false,
+      matchCards: [],
       caveats: ["Tracked matches only."],
       followUps: [],
     },
     preview: null,
     visualization: null,
+    matchCards: [],
   };
 };
 
@@ -87,11 +89,13 @@ const bucksOnlyAgent = async (params: ExploreAgentParams) => {
       title: "Monthly Bryan Bucks net",
       queryText: null,
       includeVisualization: false,
+      matchCards: [],
       caveats: [],
       followUps: [],
     },
     preview: null,
     visualization: null,
+    matchCards: [],
   };
 };
 

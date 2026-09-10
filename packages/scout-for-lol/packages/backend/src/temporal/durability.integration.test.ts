@@ -31,11 +31,13 @@ vi.mock("#src/explore/agent.ts", () => ({
         title: null,
         queryText: null,
         includeVisualization: false,
+        matchCards: [],
         caveats: [],
         followUps: [],
       },
       preview: null,
       visualization: null,
+      matchCards: [],
     };
   },
 }));

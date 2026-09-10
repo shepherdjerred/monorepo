@@ -185,6 +185,7 @@ export async function runPersistedExploreTurn(
       answer: result.answer,
       preview: result.preview,
       visualization: result.visualization,
+      matchCards: result.matchCards,
       trace: finalizeExploreTrace(trace),
       expectedCurrentLeafId: input.started.expectedCurrentLeafId,
     });
