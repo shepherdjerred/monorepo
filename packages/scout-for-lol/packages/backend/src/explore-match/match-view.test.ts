@@ -16,6 +16,8 @@ describe("matchIdsInPreview", () => {
   test("excludes Arena from the classic two-team match snapshot", () => {
     expect(isExploreMatchSnapshotSupported(0, "CHERRY")).toBe(false);
     expect(isExploreMatchSnapshotSupported(1700, "UNKNOWN")).toBe(false);
+    expect(isExploreMatchSnapshotSupported(1740, "UNKNOWN")).toBe(false);
+    expect(isExploreMatchSnapshotSupported(1750, "UNKNOWN")).toBe(false);
     expect(isExploreMatchSnapshotSupported(420, "CLASSIC")).toBe(true);
   });
 

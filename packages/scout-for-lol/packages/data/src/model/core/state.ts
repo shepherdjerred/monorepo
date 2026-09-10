@@ -106,7 +106,7 @@ export function parseQueueType(input: number): QueueType | undefined {
 }
 
 export function isArenaQueueOrMode(queueId: number, gameMode: string): boolean {
-  return queueId === ARENA_QUEUE_ID || gameMode === ARENA_GAME_MODE;
+  return parseQueueType(queueId) === "arena" || gameMode === ARENA_GAME_MODE;
 }
 
 // Custom and tutorial games surface as `gameType: "CUSTOM"` (Spectator V5) or
