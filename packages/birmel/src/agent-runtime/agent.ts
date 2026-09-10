@@ -364,7 +364,7 @@ ${JSON.stringify(answer)}
 Successful tool calls this turn (cite only IDs from this list that the answer actually used):
 ${listed}
 
-Return a complete TurnAnswer. Do not invent IDs. If the answer used none of these calls, set disposition to conversation or unsupported instead of citing nothing under supported.`;
+Return a complete TurnAnswer with disposition "supported" that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. The answer must remain supported and cite at least one successful tool call.`;
 }
 
 export async function executeTurn(
@@ -472,6 +472,8 @@ export async function executeTurn(
           summarizeToolResultForSession(toolResult, registeredToolIds),
         ),
       );
+      let inputTokens = result.usage.inputTokens ?? 0;
+      let outputTokens = result.usage.outputTokens ?? 0;
       let answer = TurnAnswerSchema.parse(result.output);
       if (needsCitationRetry(answer, toolEvents)) {
         logger.info(
@@ -489,28 +491,31 @@ export async function executeTurn(
           workload: "birmel.agent.turn.citation-retry",
           abortSignal,
           maxOutputTokens: config.openRouter.maxTokens,
+          reasoningEffort:
+            options.reasoningEffort ?? config.openRouter.reasoningEffort,
           sessionId: packet.threadId ?? packet.channelId,
         });
         answer = TurnAnswerSchema.parse(retried.object);
+        inputTokens += retried.usage.tokens.input;
+        outputTokens += retried.usage.tokens.output;
+        if (answer.disposition !== "supported") {
+          throw new Error(
+            "Citation retry must remain supported and cite valid tool calls",
+          );
+        }
       }
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
-      span.setAttribute(
-        "gen_ai.usage.input_tokens",
-        result.usage.inputTokens ?? 0,
-      );
-      span.setAttribute(
-        "gen_ai.usage.output_tokens",
-        result.usage.outputTokens ?? 0,
-      );
+      span.setAttribute("gen_ai.usage.input_tokens", inputTokens);
+      span.setAttribute("gen_ai.usage.output_tokens", outputTokens);
       span.setAttribute("birmel.agent_steps", result.steps.length);
       span.setAttribute("birmel.turn_disposition", answer.disposition);
       logger.info("Agent turn completed", {
         disposition: answer.disposition,
         personaId: packet.personaId,
         finishReason: result.finishReason,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
+        inputTokens,
+        outputTokens,
         stepCount: result.steps.length,
         toolCallCount: toolEvents.length,
         durationMs: performance.now() - startedAt,
@@ -519,8 +524,8 @@ export async function executeTurn(
         text: answer.answer,
         disposition: answer.disposition,
         finishReason: result.finishReason,
-        inputTokens: result.usage.inputTokens ?? 0,
-        outputTokens: result.usage.outputTokens ?? 0,
+        inputTokens,
+        outputTokens,
         stepCount: result.steps.length,
         toolEvents,
       };

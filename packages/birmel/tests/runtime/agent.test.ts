@@ -376,7 +376,7 @@ describe("citation retry", () => {
     ).toBe(false);
   });
 
-  test("lists only successful tool IDs in the retry prompt", () => {
+  test("lists only successful tool IDs in the retry prompt and insists on supported disposition", () => {
     const prompt = citationRetryPrompt(
       {
         answer: "third time’s the charm.",
@@ -389,6 +389,9 @@ describe("citation retry", () => {
     expect(prompt).toContain("call-1 (generate-image)");
     expect(prompt).not.toContain("call-3");
     expect(prompt).toContain("Do not invent IDs");
+    expect(prompt).toContain("remain supported");
+    expect(prompt).not.toContain("conversation");
+    expect(prompt).not.toContain("unsupported");
   });
 });
 
