@@ -1,27 +1,13 @@
 import { expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
+import { SyncInfoEntrySchema } from "./argocd-script-support.ts";
 
 const CURRENT_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const OTHER_REQUEST_ID = "22222222-2222-4222-8222-222222222222";
 const CURRENT_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
 const OTHER_OPERATION_ID = "44444444-4444-4444-8444-444444444444";
 const REVISION = "2.0.0-42";
-
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
-  z.object({
-    name: z.literal("ci.sjer.red/request-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/operation-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/revision"),
-    value: z.string(),
-  }),
-]);
 
 const RootSyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
@@ -443,6 +429,7 @@ function appliedRootPrune(
     readonly liveOperationId?: string | null;
     readonly operationId?: string | null;
     readonly phase?: string;
+    readonly pruneCandidates?: readonly string[];
     readonly releasePhase?: "stage" | "batch" | "prune" | "child";
     readonly requestId?: string;
     readonly resources?: readonly OperationResource[];
@@ -455,6 +442,16 @@ function appliedRootPrune(
     releasePhase: options.releasePhase ?? "prune",
     requestId: options.requestId ?? CURRENT_REQUEST_ID,
     resources: options.resources ?? [{ name: "apps", status: "Synced" }],
+    extraInfo: [
+      {
+        name: "ci.sjer.red/prune-candidates",
+        value: JSON.stringify(
+          [...(options.pruneCandidates ?? [])].sort((left, right) =>
+            left.localeCompare(right),
+          ),
+        ),
+      },
+    ],
     ...(options.live === undefined ? {} : { live: options.live }),
     ...(options.liveOperationId === undefined
       ? {}
@@ -1211,6 +1208,48 @@ test("Argo recovery refuses a matching apps batch instead of treating it as appl
   );
 });
 
+test("Argo recovery refuses a marked prune without persisted candidates", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      applicationOperation({
+        phase: "Running",
+        releasePhase: "prune",
+        requestId: CURRENT_REQUEST_ID,
+        resources: [{ name: "apps", status: "Synced" }],
+      }),
+    ]),
+    "requires persisted prune candidates",
+  );
+});
+
+test("Argo recovery waits until persisted prune candidates are pruned", async () => {
+  const gone = JSON.stringify(["argoproj.io", "Application", "gone"]);
+  await expectRefusedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        pruneCandidates: [gone],
+        resources: [{ name: "apps", status: "Synced" }],
+      }),
+    ]),
+    "was not fully applied within 1s",
+  );
+});
+
+test("Argo recovery finalizes after persisted prune candidates are pruned", async () => {
+  const gone = JSON.stringify(["argoproj.io", "Application", "gone"]);
+  await expectTerminatedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        pruneCandidates: [gone],
+        resources: [
+          { name: "apps", status: "Synced" },
+          { name: "gone", status: "Pruned" },
+        ],
+      }),
+    ]),
+  );
+});
+
 test("Argo recovery refuses a completed matching apps batch", async () => {
   await expectRefusedRecovery(
     serveLifecycle([
@@ -1229,7 +1268,10 @@ test("Argo recovery waits when a live prune still reports a stale batch result",
     serveLifecycle([
       {
         operation: identifiedOperation(CURRENT_REQUEST_ID, REVISION, null, {
-          extraInfo: [{ name: "ci.sjer.red/release-phase", value: "prune" }],
+          extraInfo: [
+            { name: "ci.sjer.red/release-phase", value: "prune" },
+            { name: "ci.sjer.red/prune-candidates", value: "[]" },
+          ],
         }),
         status: {
           operationState: {

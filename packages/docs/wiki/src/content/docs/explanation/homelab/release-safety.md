@@ -138,9 +138,9 @@ captured before it began; other desired-resource coverage comes from the
 completed batches. A resumed exact prune does not classify new candidates from
 the post-prune tree, because successful candidates are absent by design.
 `finalize-async-sync` for `apps` uses that same prune-result boundary: it
-terminates only a marked full-source prune, and it requires the root
-Application in the applied result instead of treating any matching `Synced`
-subset as complete.
+terminates only a marked full-source prune, requires the root Application in
+the applied result, and reads the prune-candidate inventory persisted on that
+operation instead of reclassifying the post-prune tree.
 Aggregate child health remains deferred to the scoped release gate.
 
 This split proof is deliberate. The root chart contains its own Application,

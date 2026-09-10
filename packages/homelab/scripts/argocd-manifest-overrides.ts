@@ -11,6 +11,7 @@ export const SYNC_REQUEST_ID_INFO_NAME = "ci.sjer.red/request-id";
 export const SYNC_OPERATION_ID_INFO_NAME = "ci.sjer.red/operation-id";
 export const SYNC_REVISION_INFO_NAME = "ci.sjer.red/revision";
 export const RELEASE_PHASE_INFO_NAME = "ci.sjer.red/release-phase";
+export const ROOT_PRUNE_CANDIDATES_INFO_NAME = "ci.sjer.red/prune-candidates";
 
 export type ReleasePhase = "stage" | "batch" | "prune" | "child";
 export type RootReleasePhase = Exclude<ReleasePhase, "child">;

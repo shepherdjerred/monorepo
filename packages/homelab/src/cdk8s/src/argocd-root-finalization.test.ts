@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { z } from "zod";
+import { SyncInfoEntrySchema } from "./argocd-script-support.ts";
 
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const RELEASE_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
@@ -14,25 +15,6 @@ const PRUNE_PHASE_INFO = {
   name: "ci.sjer.red/release-phase",
   value: "prune",
 } as const;
-
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
-  z.object({
-    name: z.literal("ci.sjer.red/request-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/operation-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/revision"),
-    value: z.string(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/release-phase"),
-    value: z.enum(["stage", "batch", "prune", "child"]),
-  }),
-]);
 
 const SyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
@@ -193,6 +175,9 @@ function releaseOperationInfo(phase: "batch" | "prune") {
     { name: "ci.sjer.red/operation-id", value: RELEASE_OPERATION_ID },
     { name: "ci.sjer.red/revision", value: "2.0.0-43" },
     { name: "ci.sjer.red/release-phase", value: phase },
+    ...(phase === "prune"
+      ? [{ name: "ci.sjer.red/prune-candidates", value: "[]" }]
+      : []),
   ];
 }
 

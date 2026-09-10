@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
+export const SyncInfoEntrySchema = z.discriminatedUnion("name", [
   z.object({
     name: z.literal("ci.sjer.red/request-id"),
     value: z.uuid(),
@@ -16,6 +16,10 @@ const SyncInfoEntrySchema = z.discriminatedUnion("name", [
   z.object({
     name: z.literal("ci.sjer.red/release-phase"),
     value: z.enum(["stage", "batch", "prune", "child"]),
+  }),
+  z.object({
+    name: z.literal("ci.sjer.red/prune-candidates"),
+    value: z.string(),
   }),
 ]);
 
