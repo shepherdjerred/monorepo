@@ -1,0 +1,23 @@
+{
+  "five_hour": {
+    "utilization": 28,
+    "resets_at": "2026-08-09T22:00:00Z"
+  },
+  "seven_day": {
+    "utilization": 52,
+    "resets_at": "2026-08-14T00:00:00Z"
+  },
+  "seven_day_fable": {
+    "utilization": 16,
+    "resets_at": "2026-08-14T00:00:00Z"
+  },
+  "seven_day_breakdown": {
+    "as_of": "2026-08-09T00:00:00Z",
+    "window_started_at": "2026-08-07T00:00:00Z",
+    "rows": [
+      { "key": "opus", "display_name": "Opus", "percent": 31 },
+      { "key": "sonnet", "display_name": "Sonnet", "percent": 12 }
+    ]
+  },
+  "member_dashboard_available": false
+}
