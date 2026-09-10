@@ -1211,6 +1211,36 @@ test("Argo recovery refuses a matching apps batch instead of treating it as appl
   );
 });
 
+test("Argo recovery refuses a completed matching apps batch", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        live: false,
+        phase: "Succeeded",
+        releasePhase: "batch",
+      }),
+    ]),
+    "Completed apps operation is not the marked final root prune",
+  );
+});
+
+test("Argo recovery accepts an already-finalized marked prune", async () => {
+  const lifecycle = serveLifecycle([
+    appliedRootPrune({ live: false, phase: "Succeeded" }),
+  ]);
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("async sync operation already finalized");
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 test("Argo recovery waits for the exact operation before finalizing it", async () => {
   const lifecycle = serveLifecycle([
     { status: {} },

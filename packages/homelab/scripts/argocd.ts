@@ -2589,6 +2589,16 @@ async function finalizeAsyncSync(
       assertActiveFinalRootPrune(application, current);
     }
     if (
+      appName === "apps" &&
+      isExpectedLogicalOperation &&
+      !current.hasLiveOperation &&
+      current.releasePhase !== "prune"
+    ) {
+      throw new Error(
+        "Completed apps operation is not the marked final root prune",
+      );
+    }
+    if (
       isExpectedLogicalOperation &&
       !current.hasLiveOperation &&
       (current.phase === "Failed" || current.phase === "Error")
