@@ -67,8 +67,45 @@ function humanizeSlug(value: string): string {
   return value.replaceAll("_", " ").trim();
 }
 
-function formatStatusNumber(value: number): string {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+function trimTrailingFractionZeros(value: string): string {
+  if (!value.includes(".")) {
+    return value;
+  }
+  let end = value.length;
+  while (end > 0 && value[end - 1] === "0") {
+    end -= 1;
+  }
+  if (end > 0 && value[end - 1] === ".") {
+    end -= 1;
+  }
+  return value.slice(0, end);
+}
+
+function formatStatusNumber(value: number, fractionDigits = 1): string {
+  if (Number.isInteger(value)) {
+    return value.toString();
+  }
+  return trimTrailingFractionZeros(value.toFixed(fractionDigits));
+}
+
+function formatDistinctStatusNumbers(
+  left: number,
+  right: number,
+): { current: string; target: string } {
+  if (left === right) {
+    return {
+      current: formatStatusNumber(left),
+      target: formatStatusNumber(right),
+    };
+  }
+  for (let digits = 1; digits <= 8; digits += 1) {
+    const current = formatStatusNumber(left, digits);
+    const target = formatStatusNumber(right, digits);
+    if (current !== target) {
+      return { current, target };
+    }
+  }
+  return { current: left.toString(), target: right.toString() };
 }
 
 function authoredPhrase(
@@ -132,7 +169,11 @@ function improvementStatusLine(
   const unit = improvementUnit(condition, phrases);
   const countable = CountableValuesSchema.safeParse(progressValues(condition));
   if (countable.success) {
-    return `Best ${formatStatusNumber(countable.data.current)} ${unit}, needs ${formatStatusNumber(countable.data.target)}`;
+    const { current, target } = formatDistinctStatusNumbers(
+      countable.data.current,
+      countable.data.target,
+    );
+    return `Best ${current} ${unit}, needs ${target}`;
   }
   const pending = PendingImprovementSchema.safeParse(progressValues(condition));
   if (pending.success) {

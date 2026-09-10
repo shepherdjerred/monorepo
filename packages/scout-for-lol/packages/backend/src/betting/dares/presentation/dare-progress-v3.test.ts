@@ -88,6 +88,49 @@ function evidence(input: {
   };
 }
 
+const GOLD_II = {
+  division: 2 as const,
+  tier: "gold" as const,
+  lp: 12,
+  wins: 40,
+  losses: 38,
+};
+
+function rankProgress(
+  goal: Extract<DareSqlV3Compilation["activation"], { kind: "rank" }>["goal"],
+  matchId: string,
+) {
+  return deriveDareProgressV3({
+    compilation: compilation("solo_games", {
+      kind: "rank",
+      queue: "solo",
+      goal,
+    }),
+    evidence: [
+      evidence({
+        matchId,
+        gameEndAt: "2026-09-01T00:00:00.000Z",
+        results: [],
+        rank: {
+          queue: "solo",
+          targets: [
+            {
+              targetKey: "T1",
+              baseline: GOLD_II,
+              current: GOLD_II,
+              normalizedDelta: 0,
+              goalMet: false,
+            },
+          ],
+        },
+      }),
+    ],
+    targetKeys: ["T1"],
+    final: false,
+    finalityReason: "in_progress",
+  });
+}
+
 describe("Dare progress v3", () => {
   test("uses the persisted terminal result when no deadline evidence row exists", () => {
     const progress = deriveDareProgressV3({
@@ -211,48 +254,34 @@ describe("Dare progress v3", () => {
   });
 
   test("exposes rank progress as English current and goal ranks", () => {
-    const goldII = {
-      division: 2 as const,
-      tier: "gold" as const,
-      lp: 12,
-      wins: 40,
-      losses: 38,
-    };
-    const progress = deriveDareProgressV3({
-      compilation: compilation("solo_games", {
-        kind: "rank",
-        queue: "solo",
-        goal: { kind: "reach", tier: "diamond", division: 4 },
-      }),
-      evidence: [
-        evidence({
-          matchId: "rank-check",
-          gameEndAt: "2026-09-01T00:00:00.000Z",
-          results: [],
-          rank: {
-            queue: "solo",
-            targets: [
-              {
-                targetKey: "T1",
-                baseline: goldII,
-                current: goldII,
-                normalizedDelta: 0,
-                goalMet: false,
-              },
-            ],
-          },
-        }),
-      ],
-      targetKeys: ["T1"],
-      final: false,
-      finalityReason: "in_progress",
-    });
-    expect(progress.conditions).toEqual(
+    expect(
+      rankProgress(
+        { kind: "reach", tier: "diamond", division: 4 },
+        "rank-check",
+      ).conditions,
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           kind: "rank_progress",
-          current: "Gold II",
+          current: "Gold II, 12LP",
           target: "Diamond IV",
+        }),
+      ]),
+    );
+  });
+
+  test("keeps explicit LP on a reach rank goal", () => {
+    expect(
+      rankProgress(
+        { kind: "reach", tier: "gold", division: 3, lp: 50 },
+        "rank-lp",
+      ).conditions,
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "rank_progress",
+          current: "Gold II, 12LP",
+          target: "Gold III, 50LP",
         }),
       ]),
     );

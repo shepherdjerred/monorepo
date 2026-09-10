@@ -47,13 +47,14 @@ function rankGoalTarget(
   if (goal.kind === "gain") {
     return `${goal.normalizedLp.toString()} normalized LP`;
   }
-  return rankToSimpleString({
+  const rank = {
     tier: goal.tier,
     division: goal.division,
     lp: goal.lp ?? 0,
     wins: 0,
     losses: 0,
-  });
+  };
+  return goal.lp === undefined ? rankToSimpleString(rank) : rankToString(rank);
 }
 
 function activationConditions(
@@ -69,7 +70,7 @@ function activationConditions(
       targetKeys: [target.targetKey],
       gameSet: null,
       operator: activation.goal.kind === "gain" ? "gain" : "reach",
-      current: rankToSimpleString(target.current),
+      current: rankToString(target.current),
       target: rankGoalTarget(activation.goal),
       remaining:
         activation.goal.kind === "gain"

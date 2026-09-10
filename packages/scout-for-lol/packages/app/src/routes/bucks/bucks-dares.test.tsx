@@ -268,6 +268,27 @@ describe("dareListStatusLines", () => {
         { attempts: "CS/min" },
       ).map((line) => line.text),
     ).toEqual(["Best 7.2 CS/min, needs 8"]);
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          conditions: [
+            {
+              ...wins,
+              kind: "personal_improvement",
+              label: "maximum cs_per_minute",
+              gameSet: "attempts",
+              operator: "higher",
+              current: 7.25,
+              target: 7.26,
+              remaining: 0.01,
+            },
+          ],
+        },
+        "active",
+        { attempts: "CS/min" },
+      ).map((line) => line.text),
+    ).toEqual(["Best 7.25 CS/min, needs 7.26"]);
   });
 });
 
