@@ -1224,6 +1224,40 @@ test("Argo recovery refuses a completed matching apps batch", async () => {
   );
 });
 
+test("Argo recovery waits when a live prune still reports a stale batch result", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      {
+        operation: identifiedOperation(CURRENT_REQUEST_ID, REVISION, null, {
+          extraInfo: [{ name: "ci.sjer.red/release-phase", value: "prune" }],
+        }),
+        status: {
+          operationState: {
+            phase: "Running",
+            operation: identifiedOperation(CURRENT_REQUEST_ID, REVISION, null, {
+              extraInfo: [
+                { name: "ci.sjer.red/release-phase", value: "batch" },
+              ],
+            }),
+            syncResult: {
+              resources: [
+                {
+                  group: "argoproj.io",
+                  kind: "Application",
+                  name: "apps",
+                  status: "Synced",
+                },
+              ],
+              revision: REVISION,
+            },
+          },
+        },
+      },
+    ]),
+    "was not fully applied within 1s",
+  );
+});
+
 test("Argo recovery accepts an already-finalized marked prune", async () => {
   const lifecycle = serveLifecycle([
     appliedRootPrune({ live: false, phase: "Succeeded" }),

@@ -2598,6 +2598,8 @@ async function finalizeAsyncSync(
         "Completed apps operation is not the marked final root prune",
       );
     }
+    const statusIsMarkedRootPrune =
+      appName !== "apps" || current.releasePhase === "prune";
     if (
       isExpectedLogicalOperation &&
       !current.hasLiveOperation &&
@@ -2619,6 +2621,7 @@ async function finalizeAsyncSync(
     const liveOperationId = recoveryLiveOperationId(current);
     const isExpectedOperation =
       liveOperationId !== undefined &&
+      statusIsMarkedRootPrune &&
       operationMatches(current, exactRequestId, exactRevision, liveOperationId);
     console.log(
       `Operation: ${current.phase || "(pending)"}${isExpectedOperation ? "" : " [previous op]"}; ` +
