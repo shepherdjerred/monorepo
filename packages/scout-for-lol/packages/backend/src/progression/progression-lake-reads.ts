@@ -49,7 +49,7 @@ const ProgressionMatchRowSchema = z.strictObject({
   time_ccing_others: LakeIntSchema,
   longest_time_spent_living: LakeIntSchema,
   total_time_spent_dead: LakeIntSchema,
-  largest_multi_kill: LakeIntSchema,
+  penta_kills: LakeIntSchema,
   timeline_complete: z.boolean(),
 });
 
@@ -92,7 +92,7 @@ const MATCH_COLUMNS = [
   "m.time_ccing_others",
   "m.longest_time_spent_living",
   "m.total_time_spent_dead",
-  "m.largest_multi_kill",
+  "m.penta_kills",
 ].join(", ");
 
 function cursorPredicate(cursor: ProgressionMatchCursor | undefined): {

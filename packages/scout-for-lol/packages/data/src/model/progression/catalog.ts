@@ -23,7 +23,7 @@ export type HallQueueFamilyId = z.infer<typeof HallQueueFamilyIdSchema>;
 export const HallRecordIdSchema = z.enum([
   "kills",
   "assists",
-  "largest_multikill",
+  "pentakills",
   "champion_damage",
   "champion_damage_per_minute",
   "damage_taken",

@@ -5,6 +5,8 @@ export type ConsumerNavigationAvailability = {
   profilesAvailable: boolean;
   challengesAvailable: boolean;
   bucksAvailable: boolean;
+  hallAvailable?: boolean;
+  hallTo?: string;
 };
 
 export function consumerNavigationItems(
@@ -13,11 +15,27 @@ export function consumerNavigationItems(
   return [
     ...(input.exploreAvailable ? [{ label: "Explore", to: "/explore" }] : []),
     ...(input.profilesAvailable ? [{ label: "Players", to: "/players" }] : []),
+    ...(input.hallAvailable === true
+      ? [{ label: "Hall of Fame", to: input.hallTo ?? "/halls" }]
+      : []),
     ...(input.challengesAvailable
       ? [{ label: "Challenges", to: "/challenges" }]
       : []),
     ...(input.bucksAvailable ? [{ label: "Bryan Bucks", to: "/bucks" }] : []),
   ];
+}
+
+export function resolveHallTo(
+  activeHallGuild: { id: string } | undefined,
+  hallGuilds: readonly { id: string }[],
+): string {
+  if (activeHallGuild !== undefined) {
+    return `/halls/${activeHallGuild.id}`;
+  }
+  if (hallGuilds.length === 1 && hallGuilds[0] !== undefined) {
+    return `/halls/${hallGuilds[0].id}`;
+  }
+  return "/halls";
 }
 
 export type GuildNavigationItem = {

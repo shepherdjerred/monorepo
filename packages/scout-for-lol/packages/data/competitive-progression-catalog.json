@@ -96,8 +96,8 @@
         "precision": 0
       },
       {
-        "id": "largest_multikill",
-        "label": "Largest multikill",
+        "id": "pentakills",
+        "label": "Most pentakills",
         "unit": "count",
         "precision": 0
       },
