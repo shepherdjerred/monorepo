@@ -538,7 +538,7 @@
     },
     "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts": {
       "clones": 7,
-      "tokens": 589
+      "tokens": 588
     },
     "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 1,
