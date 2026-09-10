@@ -182,20 +182,28 @@ export async function hydrateExploreMatchCards(input: {
   requests: ExploreMatchCardRequest[];
   eligibleMatchIds: Set<string>;
 }): Promise<ExploreMatchCard[]> {
-  const eligible = input.requests.filter((request) =>
-    input.eligibleMatchIds.has(request.matchId),
-  );
+  assertEligibleExploreMatchCardRequests(input);
   return await Promise.all(
-    eligible.map(async (request) => {
+    input.requests.map(async (request) => {
       const rows = await fetchFullMatch({ matchId: request.matchId });
-      const first = requiredFirst(rows);
-      if (!isExploreMatchSnapshotSupported(first.queue_id, first.game_mode)) {
-        return null;
-      }
       return ExploreMatchCardSchema.parse({
         size: request.size,
         match: exploreMatchSnapshot(rows),
       });
     }),
-  ).then((cards) => cards.filter((card) => card !== null));
+  );
+}
+
+/** Reject an invalid model selection instead of silently losing its card. */
+export function assertEligibleExploreMatchCardRequests(input: {
+  requests: ExploreMatchCardRequest[];
+  eligibleMatchIds: Set<string>;
+}): void {
+  for (const request of input.requests) {
+    if (!input.eligibleMatchIds.has(request.matchId)) {
+      throw new Error(
+        `Explore match card ${request.matchId} was not returned as card-supported by the latest query`,
+      );
+    }
+  }
 }

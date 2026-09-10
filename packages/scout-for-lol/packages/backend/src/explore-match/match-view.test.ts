@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { ReportAiPreviewSummarySchema } from "@scout-for-lol/data";
 import {
+  ExploreMatchCardRequestSchema,
+  ReportAiPreviewSummarySchema,
+} from "@scout-for-lol/data";
+import {
+  assertEligibleExploreMatchCardRequests,
   isExploreMatchSnapshotSupported,
   matchIdsInPreview,
   normalizeRiotIdPart,
@@ -88,5 +92,19 @@ describe("matchIdsInPreview", () => {
     });
 
     expect(supported).toEqual(new Set(["NA1_5635906027"]));
+  });
+
+  test("rejects a card request outside the latest query's supported ids", () => {
+    expect(() =>
+      assertEligibleExploreMatchCardRequests({
+        requests: [
+          ExploreMatchCardRequestSchema.parse({
+            matchId: "NA1_5635906026",
+            size: "S",
+          }),
+        ],
+        eligibleMatchIds: new Set(["NA1_5635906027"]),
+      }),
+    ).toThrow("was not returned as card-supported by the latest query");
   });
 });
