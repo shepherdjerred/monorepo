@@ -3,9 +3,16 @@ import { ReportAiPreviewSummarySchema } from "@scout-for-lol/data";
 import {
   isExploreMatchSnapshotSupported,
   matchIdsInPreview,
+  normalizeRiotIdPart,
 } from "#src/explore-match/match-view.ts";
 
 describe("matchIdsInPreview", () => {
+  test("normalizes empty Riot ID parts to their snapshot null representation", () => {
+    expect(normalizeRiotIdPart("")).toBeNull();
+    expect(normalizeRiotIdPart("NA1")).toBe("NA1");
+    expect(normalizeRiotIdPart(null)).toBeNull();
+  });
+
   test("excludes Arena from the classic two-team match snapshot", () => {
     expect(isExploreMatchSnapshotSupported("CHERRY")).toBe(false);
     expect(isExploreMatchSnapshotSupported("CLASSIC")).toBe(true);

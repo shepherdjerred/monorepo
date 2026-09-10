@@ -32,6 +32,10 @@ export function isExploreMatchSnapshotSupported(gameMode: string): boolean {
   return gameMode !== "CHERRY";
 }
 
+export function normalizeRiotIdPart(value: string | null): string | null {
+  return value === "" ? null : value;
+}
+
 /** Convert the lake's normalized participant rows into a neutral match view. */
 export function exploreMatchSnapshot(
   rows: LakeMatchParticipantRow[],
@@ -69,8 +73,8 @@ export function exploreMatchSnapshot(
         participants: teamRows.map((row) => ({
           participantId: row.participant_id,
           riotId: {
-            gameName: row.riot_id_game_name,
-            tagLine: row.riot_id_tagline,
+            gameName: normalizeRiotIdPart(row.riot_id_game_name),
+            tagLine: normalizeRiotIdPart(row.riot_id_tagline),
           },
           championId: row.champion_id,
           championName: row.champion_name,
