@@ -13,14 +13,14 @@
     "scripts": {
       "entry": [
         "*.ts",
-        "checks/*.ts",
+        "checks/**/*.ts",
         "ci/*.ts",
         "release/*.ts",
         "tools/*.ts",
         "review/*.ts",
         "misc/*.ts",
         "observability/**/*.ts",
-        "lib/image-pin-catalog.ts"
+        "lib/**/*.ts"
       ],
       "project": ["**/*.ts"]
     },

@@ -296,7 +296,7 @@ if (import.meta.main) {
         `OAuth callback: ${webOrigin}/api/auth/discord/callback`,
         options.authMode === "oauth"
           ? "Real Discord OAuth: active (callback must be registered on the BETA Discord app)"
-          : `Real Discord OAuth: SCOUT_DEV_AUTH_MODE=oauth bun run --filter='../packages/scout-for-lol' dev:web -- --backend-port ${options.backendPort.toString()} --web-port ${options.webPort.toString()}`,
+          : `Real Discord OAuth: SCOUT_DEV_AUTH_MODE=oauth bun run --filter='./packages/scout-for-lol' dev:web -- --backend-port ${options.backendPort.toString()} --web-port ${options.webPort.toString()}`,
       ].join("\n"),
     );
     const stop = (): void => {
