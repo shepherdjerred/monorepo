@@ -82,7 +82,13 @@ service archives the complete redacted OTLP JSON payload and forwards that
 same redacted payload to Tempo. Its digest receipt makes webhook redelivery
 idempotent, including retries across UTC date partitions. A `204` means both
 archive and forward completed; a failure intentionally asks OpenRouter to
-redeliver.
+redeliver. That receipt is why this service deliberately bypasses
+`alloy-gateway` and forwards straight to Tempo: the gateway acknowledges a
+request before Tempo delivery is durable, which would let a gateway crash
+turn an already-issued receipt into a lie. Every other producer's telemetry
+is fire-and-forget, so the gateway's weaker acknowledgment costs them
+nothing. Broadcast payloads reach no Braintrust project either way — no
+allowlist branch matches them.
 
 Prometheus uses bounded service, workload, provider, model, outcome, token-type,
 and cost-type labels. Trace, generation, session, and user IDs are never

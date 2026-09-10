@@ -102,7 +102,7 @@ export function createOpenRouterBroadcastIngestChart(app: App) {
           to: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
+                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
               },
             },
           ],

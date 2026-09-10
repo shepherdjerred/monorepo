@@ -20,7 +20,6 @@ import {
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
-import { OTLP_GATEWAY_TRACES_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 export const BROADCAST_PORT = 3000;
@@ -82,7 +81,16 @@ export function createOpenRouterBroadcastIngestDeployment(chart: Chart) {
           key: "OPENROUTER_BROADCAST_BEARER_TOKEN",
         }),
         OPENROUTER_BROADCAST_MAX_BODY_BYTES: EnvValue.fromValue("5242880"),
-        TEMPO_OTLP_HTTP_URL: EnvValue.fromValue(OTLP_GATEWAY_TRACES_URL),
+        // Deliberately NOT the alloy-gateway: the service's 204 receipt means
+        // "archived AND forwarded", and OpenRouter dedupes redeliveries on it
+        // permanently. The gateway's batch processor acks before Tempo
+        // delivery, which would turn that receipt into a lie during a gateway
+        // crash or exporter retry exhaustion. Tempo's own response is the
+        // delivery signal this contract needs. (Nothing here targets
+        // Braintrust either — no allowlist branch matches this service.)
+        TEMPO_OTLP_HTTP_URL: EnvValue.fromValue(
+          "http://tempo.tempo.svc.cluster.local:4318/v1/traces",
+        ),
         ...llmArchiveEnvVars(),
         S3_ENDPOINT: EnvValue.fromValue(
           "http://seaweedfs-s3.seaweedfs.svc.cluster.local:8333",
