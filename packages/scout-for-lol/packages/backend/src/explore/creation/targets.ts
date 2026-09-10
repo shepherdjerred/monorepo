@@ -13,7 +13,10 @@ import {
   type Permission,
 } from "@scout-for-lol/data";
 import type { CreationGuildAccess } from "#src/explore/creation/capability.ts";
-import type { CreationToolContext } from "#src/explore/creation/context.ts";
+import {
+  lookupPostableChannels,
+  type CreationToolContext,
+} from "#src/explore/creation/context.ts";
 import {
   previewCompetitionLimit,
   previewReportLimit,
@@ -73,38 +76,59 @@ async function limitFor(
   });
 }
 
+type BoundedChannels =
+  | { kind: "ok"; channels: { id: string; name: string }[] }
+  | { kind: "unavailable"; message: string };
+
 async function boundedChannels(
   context: CreationToolContext,
   guildId: DiscordGuildId,
-): Promise<{ id: string; name: string }[]> {
-  const channels = await context.listChannels(guildId);
-  return channels
-    .slice(0, CREATION_MAX_CHANNELS)
-    .map((channel) => ({ id: channel.id, name: channel.name }));
+): Promise<BoundedChannels> {
+  const lookup = await lookupPostableChannels(context, guildId);
+  if (lookup.kind === "unavailable") return lookup;
+  return {
+    kind: "ok",
+    channels: lookup.channels
+      .slice(0, CREATION_MAX_CHANNELS)
+      .map((channel) => ({ id: channel.id, name: channel.name })),
+  };
 }
+
+type DescribedTarget = {
+  target: unknown;
+  /** The inline channel read failed; the target itself is still valid. */
+  channelsUnavailable: boolean;
+};
 
 async function describeTarget(
   context: CreationToolContext,
   guild: CreationGuildAccess,
   inlineChannels: boolean,
-): Promise<unknown> {
+): Promise<DescribedTarget> {
   const [report, subscription, competition] = await Promise.all([
     limitFor(context, guild, "report"),
     limitFor(context, guild, "subscription"),
     limitFor(context, guild, "competition"),
   ]);
+  const channels = inlineChannels
+    ? await boundedChannels(context, guild.guildId)
+    : null;
   return {
-    guildId: guild.guildId,
-    name: guild.name,
-    report: { permitted: permitted(guild, "report"), ...report },
-    subscription: {
-      permitted: permitted(guild, "subscription"),
-      ...subscription,
+    channelsUnavailable: channels?.kind === "unavailable",
+    target: {
+      guildId: guild.guildId,
+      name: guild.name,
+      report: { permitted: permitted(guild, "report"), ...report },
+      subscription: {
+        permitted: permitted(guild, "subscription"),
+        ...subscription,
+      },
+      competition: {
+        permitted: permitted(guild, "competition"),
+        ...competition,
+      },
+      channels: channels?.kind === "ok" ? channels.channels : null,
     },
-    competition: { permitted: permitted(guild, "competition"), ...competition },
-    channels: inlineChannels
-      ? await boundedChannels(context, guild.guildId)
-      : null,
   };
 }
 
@@ -124,22 +148,40 @@ export async function listCreationTargets(
   // whole agent step — the binding budget is EXPLORE_MAX_STEPS (12), not the
   // tool-call ceiling.
   const inlineChannels = eligible.length === 1;
-  const targets = await Promise.all(
+  const described = await Promise.all(
     eligible.map((guild) => describeTarget(context, guild, inlineChannels)),
+  );
+  // The targets themselves resolved; only the channel *inlining* — an
+  // optimization — failed. Refusing the whole tool here would turn a question
+  // Scout can answer into an outage, so the list is returned with channels
+  // omitted and the message stops promising them. `list_guild_channels` is the
+  // tool that will report the outage as a typed refusal.
+  const channelsUnavailable = described.some(
+    (entry) => entry.channelsUnavailable,
   );
   return CreationTargetsResultSchema.parse({
     kind: "targets",
-    message: targetsMessage(eligible.length, access.guilds.length),
-    targets,
+    message: targetsMessage(
+      eligible.length,
+      access.guilds.length,
+      channelsUnavailable,
+    ),
+    targets: described.map((entry) => entry.target),
   });
 }
 
-function targetsMessage(shown: number, total: number): string {
+function targetsMessage(
+  shown: number,
+  total: number,
+  channelsUnavailable: boolean,
+): string {
   if (total === 0) {
     return "This user cannot create anything from Explore right now: no server they belong to has it enabled, or they lack the permission there. Say so plainly and do not prepare anything.";
   }
   if (total === 1) {
-    return "One eligible server, with its postable channels included. Confirm every required field with the user before preparing anything.";
+    return channelsUnavailable
+      ? "One eligible server. Scout could not reach Discord to list its channels just now, so they are not included — call list_guild_channels before preparing anything, and do not tell the user Scout lacks permission."
+      : "One eligible server, with its postable channels included. Confirm every required field with the user before preparing anything.";
   }
   const suffix =
     shown < total
@@ -169,7 +211,18 @@ export async function listGuildChannels(
       channels: [],
     });
   }
-  const channels = await boundedChannels(context, guildId);
+  const bounded = await boundedChannels(context, guildId);
+  // An unreachable Discord is NOT an empty channel list: the empty case tells
+  // the user to grant Scout permissions, which is a flatly wrong instruction
+  // when the truth is that Scout could not ask.
+  if (bounded.kind === "unavailable") {
+    return CreationChannelsResultSchema.parse({
+      kind: "verification_unavailable",
+      message: bounded.message,
+      channels: [],
+    });
+  }
+  const channels = bounded.channels;
   return CreationChannelsResultSchema.parse({
     kind: "channels",
     message:

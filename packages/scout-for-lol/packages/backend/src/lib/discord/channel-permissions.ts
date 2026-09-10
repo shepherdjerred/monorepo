@@ -9,7 +9,9 @@
  *
  * The order below is Discord's, and the order is the whole algorithm — applying
  * the member overwrite before the role overwrites, or skipping the @everyone
- * pass, silently produces a *different* channel list than Discord would.
+ * pass, silently produces a *different* channel list than Discord would. Two of
+ * the steps are implicit grants that appear in no bitfield at all: the guild
+ * owner holds everything, and so does anyone with Administrator.
  *
  * https://discord.com/developers/docs/topics/permissions#permission-overwrites
  */
@@ -50,14 +52,27 @@ function applyOverwrite(
  *
  * `rolePermissions` maps every role id in the guild (including @everyone, keyed
  * by the guild id) to its decimal bitfield string.
+ *
+ * `guildOwnerId` is required rather than optional because Discord grants the
+ * owner every permission *implicitly* — no role carries it, so a computation
+ * from roles alone silently under-reports for exactly one member per guild, and
+ * an owner who never gave themselves an Administrator role is a completely
+ * ordinary setup. Pass `null` only where the answer is definitionally not about
+ * the owner. Callers get it from `BotRestReader#guild`.
  */
 export function computeChannelPermissions(input: {
   guildId: string;
+  guildOwnerId: string | null;
   memberId: string;
   memberRoleIds: readonly string[];
   rolePermissions: ReadonlyMap<string, string>;
   overwrites: readonly DiscordOverwrite[];
 }): bigint {
+  // The owner outranks every role and every overwrite, including a channel that
+  // explicitly denies them.
+  if (input.guildOwnerId !== null && input.memberId === input.guildOwnerId) {
+    return PermissionsBitField.All;
+  }
   const base = basePermissions(input);
   // Administrator short-circuits every overwrite, at the guild level only.
   if ((base & PermissionFlagsBits.Administrator) !== 0n) {

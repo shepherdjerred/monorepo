@@ -43,6 +43,7 @@ function restStub(
         calls.push(guildId);
         return await guildExists(guildId);
       },
+      guild: unused,
       guildChannels: unused,
       guildRoles: unused,
       botMember: unused,
@@ -94,13 +95,37 @@ describe("isScoutInstalledInGuild", () => {
     await prisma.$disconnect();
   });
 
-  test("a live row answers yes without asking Discord", async () => {
+  test("a live row confirmed by Discord is installed", async () => {
+    await seed(INSTALLED, null);
+    const rest = restStub(() => Promise.resolve(true));
+    await expect(
+      isScoutInstalledInGuild(INSTALLED, dependencies(rest.reader)),
+    ).resolves.toBe(true);
+    // The row is not taken on trust: a removal while the gateway was down
+    // fires no guildDelete, so the positive is confirmed too.
+    expect(rest.calls).toEqual([INSTALLED]);
+  });
+
+  test("a live row is overruled when Discord says Scout was removed", async () => {
     await seed(INSTALLED, null);
     const rest = restStub(() => Promise.resolve(false));
     await expect(
       isScoutInstalledInGuild(INSTALLED, dependencies(rest.reader)),
+    ).resolves.toBe(false);
+    expect(rest.calls).toEqual([INSTALLED]);
+  });
+
+  test("a live row is TRUSTED when Discord cannot be reached", async () => {
+    // The asymmetry: with a row to fall back on, availability wins. 503ing a
+    // working dashboard over a Discord blip is worse than the staleness this
+    // system already had before the row was consulted.
+    await seed(INSTALLED, null);
+    const rest = restStub(() =>
+      Promise.reject(new DiscordUpstreamError("fetch_error", "blip")),
+    );
+    await expect(
+      isScoutInstalledInGuild(INSTALLED, dependencies(rest.reader)),
     ).resolves.toBe(true);
-    expect(rest.calls).toEqual([]);
   });
 
   test("a removed row is not treated as installed", async () => {
@@ -119,11 +144,10 @@ describe("isScoutInstalledInGuild", () => {
       where: { serverId: REMOVED },
       data: { removedAt: null },
     });
-    const rest = restStub(() => Promise.resolve(false));
+    const rest = restStub(() => Promise.resolve(true));
     await expect(
       isScoutInstalledInGuild(REMOVED, dependencies(rest.reader)),
     ).resolves.toBe(true);
-    expect(rest.calls).toEqual([]);
   });
 
   test("a missing row is confirmed against Discord, not assumed absent", async () => {
@@ -141,12 +165,24 @@ describe("isScoutInstalledInGuild", () => {
     ).resolves.toBe(false);
   });
 
-  test("an unreachable Discord propagates instead of answering 'not installed'", async () => {
+  test("with NO row, an unreachable Discord propagates rather than denying", async () => {
+    // The other half of the asymmetry: nothing to fall back on, so the outage
+    // has to surface as an outage instead of "Scout is not installed".
     const rest = restStub(() =>
       Promise.reject(new DiscordUpstreamError("http_error", "boom", 503)),
     );
     await expect(
       isScoutInstalledInGuild(ABSENT, dependencies(rest.reader)),
+    ).rejects.toBeInstanceOf(DiscordUpstreamError);
+  });
+
+  test("with a REMOVED row, an unreachable Discord also propagates", async () => {
+    await seed(REMOVED, new Date("2026-02-01T00:00:00.000Z"));
+    const rest = restStub(() =>
+      Promise.reject(new DiscordUpstreamError("http_error", "boom", 503)),
+    );
+    await expect(
+      isScoutInstalledInGuild(REMOVED, dependencies(rest.reader)),
     ).rejects.toBeInstanceOf(DiscordUpstreamError);
   });
 

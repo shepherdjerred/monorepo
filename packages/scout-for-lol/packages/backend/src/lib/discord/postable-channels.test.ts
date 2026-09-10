@@ -40,6 +40,7 @@ function unused(): never {
 
 function rest(overrides: Partial<BotRestReader>): BotRestReader {
   return {
+    guild: unused,
     guildExists: unused,
     guildChannels: unused,
     guildRoles: unused,

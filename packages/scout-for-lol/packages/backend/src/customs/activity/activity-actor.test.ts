@@ -29,7 +29,15 @@ const state: {
   channel: DiscordChannel | null;
   unavailable: boolean;
   adminRole: boolean;
-} = { member: null, channel: null, unavailable: false, adminRole: false };
+  ownerId: string;
+} = {
+  member: null,
+  channel: null,
+  unavailable: false,
+  adminRole: false,
+  // Somebody else owns the server unless a test says otherwise.
+  ownerId: "000",
+};
 
 function guard<T>(produce: () => T): Promise<T> {
   if (state.unavailable) {
@@ -45,6 +53,8 @@ function unused(): never {
 }
 
 const fakeRest: BotRestReader = {
+  guild: () =>
+    guard(() => ({ id: GUILD, name: "Server", owner_id: state.ownerId })),
   guildExists: () => guard(() => true),
   guildChannels: unused,
   guildRoles: () =>
@@ -123,6 +133,7 @@ function reset(): void {
   state.channel = voiceChannel();
   state.unavailable = false;
   state.adminRole = false;
+  state.ownerId = "000";
 }
 
 describe("customActivityActor", () => {
@@ -142,6 +153,25 @@ describe("customActivityActor", () => {
     state.adminRole = true;
     await expect(customActivityActor(claims)).resolves.toMatchObject({
       administrator: true,
+    });
+  });
+
+  test("the guild owner is Administrator with no admin role", async () => {
+    // Discord grants the owner everything implicitly, so a roles-only answer
+    // would deny the one person who can do anything in their own server.
+    reset();
+    state.ownerId = ACTOR;
+    await expect(customActivityActor(claims)).resolves.toMatchObject({
+      administrator: true,
+    });
+  });
+
+  test("a non-owner without an admin role is not Administrator", async () => {
+    reset();
+    state.member = member([ADMIN_ROLE]);
+    state.adminRole = false;
+    await expect(customActivityActor(claims)).resolves.toMatchObject({
+      administrator: false,
     });
   });
 

@@ -16,29 +16,59 @@
  * the point — a pod serving HTTP with no gateway connection answers the same
  * way as one with a fully backfilled cache.
  *
- * ## Why a negative is re-checked against Discord
+ * ## The table is never the final word, in either direction
  *
- * `GuildInstall` is written by a `guildCreate` handler that swallows its own
- * write failures, and it did not exist for Scout's earliest guilds. A missing
- * row therefore is not proof of absence, and treating it as proof would lock a
- * real server out of its own dashboard with a message saying Scout was never
- * installed — the exact class of wrong answer this whole change exists to
- * remove. So a negative from the table is confirmed against Discord over the
- * bot REST API before it is believed, and a REST failure propagates as
- * {@link DiscordUpstreamError} (⇒ SERVICE_UNAVAILABLE) rather than "not
- * installed".
+ * `GuildInstall` is maintained by gateway handlers, so it is only as current as
+ * the gateway was. Both directions can be stale, and both are confirmed against
+ * Discord over the bot REST API:
  *
- * {@link installedGuildIdsAmong} does NOT do that confirmation: it answers for
- * a whole guild picker at once, where one REST call per non-installed guild
- * would mean dozens of requests per page load. The picker is allowed to omit a
- * guild whose row is missing; opening that guild directly still works, because
- * the single-guild path above confirms.
+ * - A **missing or removed row** is not proof of absence. `guildCreate`
+ *   swallows its own write failures, and the table did not exist for Scout's
+ *   earliest guilds, so believing it would lock a real server out of its own
+ *   dashboard with a message saying Scout was never installed.
+ * - A **live row** is not proof of presence. A removal that happens while the
+ *   gateway is down fires no `guildDelete`, and a `guildDelete` whose cleanup
+ *   fails leaves `removedAt` null — so an unconfirmed positive would keep
+ *   authorizing dashboard access to a server Scout was thrown out of, for as
+ *   long as nobody restarted the bot.
+ *
+ * ## The failure semantics are deliberately asymmetric
+ *
+ * What differs between the two directions is what happens when Discord cannot
+ * be reached, and the asymmetry is the point:
+ *
+ * | table | Discord says absent | Discord unreachable |
+ * | ----- | ------------------- | ------------------- |
+ * | live row | `false` — removal wins | **`true` — trust the row** |
+ * | no row   | `false`             | throws ⇒ SERVICE_UNAVAILABLE |
+ *
+ * A live row plus an unreachable Discord resolves to `true` on purpose. The
+ * alternative — 503ing every guild-scoped request whenever Discord blips — takes
+ * a working dashboard offline to defend against a stale row, and the worst case
+ * of trusting the row is exactly the staleness this system had before the row
+ * was consulted at all. With no row there is nothing to fall back on, so the
+ * failure has to surface.
+ *
+ * Either way an outage never becomes "Scout is not installed": in the first case
+ * it is invisible, in the second it is reported as an outage.
+ *
+ * {@link installedGuildIdsAmong} does NOT confirm at all: it answers for a whole
+ * guild picker at once, where one REST call per guild would mean dozens of
+ * requests per page load. The picker is allowed to be one gateway-write stale in
+ * either direction; opening a guild directly still confirms, and every mutation
+ * behind it goes through the single-guild path.
  */
 
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { isDevGuildOverrideGuild } from "#src/lib/discord-rest.ts";
+import {
+  DiscordUpstreamError,
+  isDevGuildOverrideGuild,
+} from "#src/lib/discord-rest.ts";
 import { botRest, type BotRestReader } from "#src/lib/discord/bot-rest.ts";
+import { createLogger } from "#src/logger.ts";
+
+const logger = createLogger("installed-guilds");
 
 export type InstalledGuildsDependencies = {
   readonly db: ExtendedPrismaClient;
@@ -67,18 +97,35 @@ async function hasLiveInstallRow(
 }
 
 /**
- * Whether Scout is installed in one guild.
+ * Whether Scout is installed in one guild, confirmed against Discord.
  *
- * Throws {@link DiscordUpstreamError} when the table says no and Discord could
- * not be reached to confirm it — never returns `false` in that case.
+ * See the module docblock for the truth table. In short: Discord's answer wins
+ * whenever there is one, and when there is not, a live row is trusted while a
+ * missing row throws {@link DiscordUpstreamError} (⇒ SERVICE_UNAVAILABLE). This
+ * never returns `false` because Scout failed to ask.
  */
 export async function isScoutInstalledInGuild(
   guildId: string,
   dependencies: InstalledGuildsDependencies = defaultInstalledGuildsDependencies(),
 ): Promise<boolean> {
   if (dependencies.isDevOverrideGuild(guildId)) return true;
-  if (await hasLiveInstallRow(dependencies.db, guildId)) return true;
-  return await dependencies.rest.guildExists(guildId);
+  const hasRow = await hasLiveInstallRow(dependencies.db, guildId);
+  if (!hasRow) {
+    // Nothing to fall back on: an unreachable Discord must surface, not deny.
+    return await dependencies.rest.guildExists(guildId);
+  }
+  try {
+    return await dependencies.rest.guildExists(guildId);
+  } catch (error) {
+    if (error instanceof DiscordUpstreamError) {
+      logger.warn(
+        "Discord could not confirm an installed guild; trusting the GuildInstall row",
+        { guildId, reason: error.reason },
+      );
+      return true;
+    }
+    throw error;
+  }
 }
 
 /**

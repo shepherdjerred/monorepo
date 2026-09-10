@@ -49,19 +49,29 @@ export type CustomActivityActor = {
  *
  * The gateway used to hand this over as `member.permissions`; over REST the
  * member payload carries role ids only, so the roles have to be joined against
- * the guild's role list.
+ * the guild's role list — and against the guild's `owner_id`, because Discord
+ * grants the owner every permission without any role saying so. Plenty of
+ * servers are run by an owner who never gave themselves an Administrator role,
+ * and a roles-only answer denies exactly the person who can do anything.
  */
 async function hasGuildAdministrator(
   guildId: DiscordGuildId,
   member: DiscordGuildMember,
 ): Promise<boolean> {
-  const roles = await customsDiscordRead(
-    () => botRest().guildRoles(guildId),
-    "Scout could not read this server's roles right now",
-  );
+  const [guild, roles] = await Promise.all([
+    customsDiscordRead(
+      () => botRest().guild(guildId),
+      "Scout could not read this server right now",
+    ),
+    customsDiscordRead(
+      () => botRest().guildRoles(guildId),
+      "Scout could not read this server's roles right now",
+    ),
+  ]);
   if (roles === null) return false;
   const permissions = computeChannelPermissions({
     guildId,
+    guildOwnerId: guild?.owner_id ?? null,
     memberId: member.user.id,
     memberRoleIds: member.roles,
     rolePermissions: new Map(roles.map((role) => [role.id, role.permissions])),

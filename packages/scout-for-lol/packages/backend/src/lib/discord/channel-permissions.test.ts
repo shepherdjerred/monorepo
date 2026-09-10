@@ -16,6 +16,7 @@ const SEND = PermissionFlagsBits.SendMessages;
 function permissions(input: {
   rolePermissions: Record<string, string>;
   memberRoleIds?: string[];
+  guildOwnerId?: string | null;
   overwrites?: {
     id: string;
     type: number;
@@ -25,6 +26,7 @@ function permissions(input: {
 }): bigint {
   return computeChannelPermissions({
     guildId: GUILD,
+    guildOwnerId: input.guildOwnerId ?? null,
     memberId: MEMBER,
     memberRoleIds: input.memberRoleIds ?? [],
     rolePermissions: new Map(Object.entries(input.rolePermissions)),
@@ -52,6 +54,43 @@ describe("computeChannelPermissions", () => {
         [ROLE]: SEND.toString(),
       },
     });
+    expect(hasPermission(result, SEND)).toBe(false);
+  });
+
+  test("the guild owner holds everything with no role saying so", () => {
+    // The common real setup: whoever made the server never gave themselves an
+    // Administrator role, because they never needed one.
+    const result = permissions({
+      guildOwnerId: MEMBER,
+      rolePermissions: { [GUILD]: "0" },
+    });
+    expect(result).toBe(PermissionsBitField.All);
+    expect(hasPermission(result, PermissionFlagsBits.Administrator)).toBe(true);
+  });
+
+  test("the owner grant survives an explicit channel denial", () => {
+    // Same gate `listPostableChannels` applies, against a channel that denies
+    // @everyone outright.
+    const result = permissions({
+      guildOwnerId: MEMBER,
+      rolePermissions: { [GUILD]: "0" },
+      overwrites: [
+        { id: GUILD, type: 0, allow: "0", deny: (VIEW | SEND).toString() },
+        { id: MEMBER, type: 1, allow: "0", deny: (VIEW | SEND).toString() },
+      ],
+    });
+    expect(hasPermission(result, VIEW)).toBe(true);
+    expect(hasPermission(result, SEND)).toBe(true);
+  });
+
+  test("a different member is not granted the owner's permissions", () => {
+    const result = permissions({
+      guildOwnerId: "999",
+      rolePermissions: { [GUILD]: VIEW.toString() },
+    });
+    expect(hasPermission(result, PermissionFlagsBits.Administrator)).toBe(
+      false,
+    );
     expect(hasPermission(result, SEND)).toBe(false);
   });
 

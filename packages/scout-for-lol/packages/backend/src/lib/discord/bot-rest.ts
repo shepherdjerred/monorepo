@@ -57,11 +57,13 @@ import {
   DiscordGuildChannelsSchema,
   DiscordGuildMemberSchema,
   DiscordGuildMembersSchema,
+  DiscordGuildSchema,
   DiscordRolesSchema,
   DiscordUserSchema,
   type DiscordChannel,
   type DiscordGuildChannel,
   type DiscordGuildMember,
+  type DiscordGuildSummary,
   type DiscordRole,
   type DiscordUser,
 } from "#src/lib/discord/bot-rest-schemas.ts";
@@ -203,7 +205,15 @@ async function read<Parsed>(
  * never that Scout failed to ask.
  */
 export type BotRestReader = {
-  /** Whether Scout is a member of the guild, straight from Discord. */
+  /**
+   * The guild itself, or `null` when Scout is not in it.
+   *
+   * `owner_id` matters beyond identification: Discord grants the owner every
+   * permission implicitly, with no role carrying it, so any permission answer
+   * computed from roles alone is wrong for exactly one member per guild.
+   */
+  readonly guild: (guildId: string) => Promise<DiscordGuildSummary | null>;
+  /** Whether Scout is a member of the guild. Shares {@link guild}'s cache. */
   readonly guildExists: (guildId: string) => Promise<boolean>;
   /** `null` when Scout is not in the guild. */
   readonly guildChannels: (
@@ -255,7 +265,7 @@ export function createBotRestReader(
     now,
   });
 
-  const guildCache = createBoundedAsyncCache<boolean>(
+  const guildCache = createBoundedAsyncCache<DiscordGuildSummary | null>(
     cacheOptions(INSTALL_TTL_MS),
   );
   const channelCache = createBoundedAsyncCache<DiscordGuildChannel[] | null>(
@@ -285,18 +295,22 @@ export function createBotRestReader(
       absentCodes: [UNKNOWN_GUILD, UNKNOWN_MEMBER],
     });
 
+  const readGuild = async (guildId: string) =>
+    await guildCache(
+      guildId,
+      async () =>
+        await read(get, {
+          route: Routes.guild(guildId),
+          schema: DiscordGuildSchema,
+          description: `guild ${guildId}`,
+          absentCodes: [UNKNOWN_GUILD],
+        }),
+    );
+
   return {
-    guildExists: async (guildId) =>
-      await guildCache(
-        guildId,
-        async () =>
-          (await read(get, {
-            route: Routes.guild(guildId),
-            schema: z.object({ id: z.string() }),
-            description: `guild ${guildId}`,
-            absentCodes: [UNKNOWN_GUILD],
-          })) !== null,
-      ),
+    guild: readGuild,
+
+    guildExists: async (guildId) => (await readGuild(guildId)) !== null,
 
     guildChannels: async (guildId) =>
       await channelCache(

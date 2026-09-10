@@ -7,6 +7,7 @@ import {
 import type { CreationAccess } from "#src/explore/creation/capability.ts";
 import { CREATION_INTENT_TTL_MS } from "#src/explore/creation/context.ts";
 import { createCreationToolExecutors } from "#src/explore/creation/tools.ts";
+import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import type { PostableChannel } from "#src/lib/discord/postable-channels.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
@@ -47,7 +48,10 @@ const resolvedAccess: CreationAccess = {
   ],
 };
 
-function executors(overrides?: { access?: CreationAccess }) {
+function executors(overrides?: {
+  access?: CreationAccess;
+  listChannels?: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
+}) {
   return createCreationToolExecutors({
     capability: { guildIds: [GUILD] },
     requesterId: REQUESTER,
@@ -55,8 +59,10 @@ function executors(overrides?: { access?: CreationAccess }) {
     dependencies: {
       db: prisma,
       resolveAccess: () => Promise.resolve(overrides?.access ?? resolvedAccess),
-      listChannels: (guildId: DiscordGuildId) =>
-        Promise.resolve(guildId === GUILD ? CHANNELS : []),
+      listChannels:
+        overrides?.listChannels ??
+        ((guildId: DiscordGuildId) =>
+          Promise.resolve(guildId === GUILD ? CHANNELS : [])),
       resolvePuuid: () =>
         Promise.resolve({
           kind: "ok",
@@ -385,5 +391,62 @@ describe("list_guild_channels", () => {
 
     expect(result.kind).toBe("forbidden_target");
     expect(result.channels).toEqual([]);
+  });
+});
+
+/**
+ * Executors whose channel read cannot reach Discord.
+ *
+ * `listPostableChannels` raises DiscordUpstreamError for tRPC's benefit. If it
+ * escapes into a tool the model sees a generic tool failure with no refusal to
+ * relay, and is liable to invent a reason — "Scout cannot post there", "you lack
+ * permission" — which is the one thing the creation protocol forbids.
+ */
+function unavailable() {
+  return executors({
+    listChannels: () =>
+      Promise.reject(new DiscordUpstreamError("http_error", "down", 503)),
+  });
+}
+
+describe("an unreachable Discord is a typed refusal, never a tool crash", () => {
+  test("list_guild_channels reports it as verification_unavailable", async () => {
+    const result = await unavailable().listChannels({ guildId: GUILD });
+
+    expect(result.kind).toBe("verification_unavailable");
+    expect(result.channels).toEqual([]);
+    // Emphatically NOT the empty-channels copy, which tells the user to go
+    // grant Scout permissions it may already have.
+    expect(result.message).not.toContain("View Channel");
+  });
+
+  test("prepare_report refuses without claiming the channel is invalid", async () => {
+    const result = await unavailable().prepareReport(reportInput());
+
+    expect(result.kind).toBe("verification_unavailable");
+    expect(result.intent).toBeNull();
+    expect(result.message).not.toContain("cannot post");
+  });
+
+  test("prepare_subscription refuses the same way", async () => {
+    const result = await unavailable().prepareSubscription(subscriptionInput());
+
+    expect(result.kind).toBe("verification_unavailable");
+    expect(result.intent).toBeNull();
+  });
+
+  test("list_creation_targets still answers, with channels omitted", async () => {
+    // The targets resolved; only the channel *inlining* failed. Refusing the
+    // whole tool would turn a question Scout can answer into an outage.
+    const result = await unavailable().listTargets();
+
+    expect(result.kind).toBe("targets");
+    expect(result.targets).toHaveLength(1);
+    expect(result.message).toContain("could not reach Discord");
+    expect(result.message).not.toContain("channels included");
+  });
+
+  test("no intent row is minted by any of them", async () => {
+    expect(await prisma.confirmationIntent.count()).toBe(0);
   });
 });

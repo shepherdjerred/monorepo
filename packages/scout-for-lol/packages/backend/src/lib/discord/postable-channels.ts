@@ -81,6 +81,8 @@ export async function listPostableChannels(
       // show channels Scout could read but never message.
       const permissions = computeChannelPermissions({
         guildId,
+        // A bot can never own a guild, so the owner grant cannot apply here.
+        guildOwnerId: null,
         memberId: me.user.id,
         memberRoleIds: me.roles,
         rolePermissions,

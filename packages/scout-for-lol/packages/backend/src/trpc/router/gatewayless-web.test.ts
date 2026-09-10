@@ -74,6 +74,12 @@ function guard<T>(produce: () => T): Promise<T> {
 }
 
 const fakeRest: BotRestReader = {
+  guild: (guildId) =>
+    guard(() =>
+      state.guildsOnDiscord.has(guildId)
+        ? { id: guildId, name: "test-guild", owner_id: ACTOR }
+        : null,
+    ),
   guildExists: (guildId) => guard(() => state.guildsOnDiscord.has(guildId)),
   guildChannels: (guildId) =>
     guard(() => (state.guildsOnDiscord.has(guildId) ? state.channels : null)),
@@ -267,6 +273,28 @@ describe("single-guild access without a gateway", () => {
     asMemberOf([UNROWED]);
     await expect(
       caller().guild.myPermissions({ guildId: UNROWED }),
+    ).resolves.not.toHaveLength(0);
+  });
+
+  test("Discord overrules a stale live row and answers NOT_FOUND", async () => {
+    // Scout was removed while the gateway was down, so no guildDelete ever
+    // fired and the row still says installed. Discord's answer wins.
+    await seedInstall(INSTALLED);
+    state.guildsOnDiscord.delete(INSTALLED);
+    asMemberOf([INSTALLED]);
+    await expect(
+      caller().guild.myPermissions({ guildId: INSTALLED }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  test("a live row keeps the dashboard up when Discord is unreachable", async () => {
+    // The asymmetry, end to end: with a row to fall back on, a Discord blip
+    // must not 503 a working dashboard.
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    state.unavailable = true;
+    await expect(
+      caller().guild.myPermissions({ guildId: INSTALLED }),
     ).resolves.not.toHaveLength(0);
   });
 
