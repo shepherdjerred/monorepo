@@ -17,6 +17,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -179,9 +180,7 @@ export function createStreambotDeployment(
         }),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("streambot"),
-        OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
+        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         LOKI_OTLP_ENDPOINT: EnvValue.fromValue(
           "http://loki-gateway.loki/otlp/v1/logs",
         ),

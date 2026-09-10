@@ -160,7 +160,7 @@ describe("streambot deployment (media namespace)", () => {
     expect(env.get("TELEMETRY_ENABLED")?.value).toBe("true");
     expect(env.get("TELEMETRY_SERVICE_NAME")?.value).toBe("streambot");
     expect(env.get("OTLP_ENDPOINT")?.value).toBe(
-      "http://tempo.tempo.svc.cluster.local:4318",
+      "http://alloy-gateway.alloy-gateway.svc.cluster.local:4318",
     );
     expect(env.get("LOKI_OTLP_ENDPOINT")?.value).toBe(
       "http://loki-gateway.loki/otlp/v1/logs",
