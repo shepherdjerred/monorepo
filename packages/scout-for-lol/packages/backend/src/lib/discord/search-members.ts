@@ -1,19 +1,43 @@
 /**
- * Guild-member typeahead for the web UI's add/invite flows. Backed by
- * discord.js `guild.members.fetch({ query, limit })`, which performs a
- * gateway member-search (prefix match on username/nickname) and does NOT
- * require the privileged GuildMembers intent for the query-based form.
+ * Guild-member typeahead for the web UI's add/invite flows.
  *
- * Authorization is handled by the router before this function is called;
- * fail-soft (returns [] on any error) so a flaky search never breaks the form.
+ * This used to call discord.js `guild.members.fetch({ query, limit })`, which
+ * issues an OP 8 REQUEST_GUILD_MEMBERS over the gateway — it cannot answer at
+ * all without a live shard, and it first has to find the guild in the gateway
+ * cache. The equivalent REST endpoint is `GET /guilds/{id}/members/search`,
+ * which takes the same prefix query over usernames and nicknames and works from
+ * a pod that never connected a gateway.
+ *
+ * Note which endpoint that is: **Search** Guild Members, not **List** Guild
+ * Members. Listing the roster (`GET /guilds/{id}/members`) is the one that
+ * requires the privileged GUILD_MEMBERS intent; the search endpoint documents
+ * no intent requirement, which is the same asymmetry the gateway had — the
+ * query-limited member fetch this replaced also worked without the intent,
+ * while an unfiltered chunk request did not.
+ *
+ * Authorization is handled by the router before this function is called.
+ *
+ * ## Failures are not empty results
+ *
+ * This deliberately does NOT swallow errors. An empty array means Discord
+ * answered and nobody matched; anything else propagates as
+ * {@link DiscordUpstreamError} so the router reports SERVICE_UNAVAILABLE and
+ * increments the bot-REST failure counter. Returning `[]` on failure — as this
+ * did originally — makes a 403 from a misconfigured install, a 5xx, or a
+ * network fault indistinguishable from "no such member": four typeaheads would
+ * silently blank, the user would conclude the person is not in their server,
+ * and nothing would be counted or alerted on. A typeahead that reports it could
+ * not reach Discord is strictly better than one that quietly lies.
  */
 
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { client as discordClient } from "#src/discord/client.ts";
-import { createLogger } from "#src/logger.ts";
-
-const logger = createLogger("discord-search-members");
+import {
+  botRest,
+  memberAvatarUrl,
+  memberDisplayName,
+  type BotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
 
 export const SearchMembersInputSchema = z.object({
   guildId: DiscordGuildIdSchema,
@@ -29,28 +53,34 @@ export type SearchedMember = {
   avatar: string;
 };
 
+export type SearchMembersDependencies = {
+  readonly rest: BotRestReader;
+};
+
+function defaultDependencies(): SearchMembersDependencies {
+  return { rest: botRest() };
+}
+
+/**
+ * Members of `guildId` whose username or nickname starts with `query`.
+ *
+ * `[]` means Discord answered with no matches (including the case where Scout
+ * is not in the guild, which the port reports as absence). Throws
+ * {@link DiscordUpstreamError} when Discord could not be asked.
+ */
 export async function searchGuildMembers(
   input: SearchMembersInput,
+  dependencies: SearchMembersDependencies = defaultDependencies(),
 ): Promise<SearchedMember[]> {
-  const guild = discordClient.guilds.cache.get(input.guildId);
-  if (guild === undefined) return [];
-
-  try {
-    const members = await guild.members.fetch({
-      query: input.query,
-      limit: input.limit,
-    });
-    return members.map((member) => ({
-      id: member.id,
-      username: member.user.username,
-      displayName: member.displayName,
-      avatar: member.displayAvatarURL(),
-    }));
-  } catch (error) {
-    logger.warn("Guild member search failed", {
-      guildId: input.guildId,
-      error,
-    });
-    return [];
-  }
+  const members = await dependencies.rest.searchGuildMembers({
+    guildId: input.guildId,
+    query: input.query,
+    limit: input.limit,
+  });
+  return members.map((member) => ({
+    id: member.user.id,
+    username: member.user.username,
+    displayName: memberDisplayName(member),
+    avatar: memberAvatarUrl(member, input.guildId),
+  }));
 }

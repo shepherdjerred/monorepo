@@ -29,7 +29,8 @@ import {
 import { prisma, type Db } from "#src/database/index.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
 import { resolveDiscordUsers } from "#src/lib/discord/resolve-users.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+import { botRest } from "#src/lib/discord/bot-rest.ts";
+import { callDiscordForRequest } from "#src/trpc/discord-upstream.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 /**
@@ -59,28 +60,34 @@ async function lockGuildRoleMutations(
 
 const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
 const REVOKE_KEY = permissionKey({ resource: "roles", action: "revoke" });
-const DiscordApiErrorSchema = z.object({ code: z.number() });
-const UNKNOWN_MEMBER_CODE = 10_007;
 
+/**
+ * Whether the account still belongs to the guild, read fresh from Discord.
+ *
+ * **Correctness-critical: the cached read is not acceptable here.** This feeds
+ * the last-role-manager invariant, which counts the managers who remain. The
+ * ordinary `guildMember` read is memoized for `MEMBERSHIP_TTL_MS` (30s), so a
+ * manager who left inside that window would still be counted as present — and
+ * the guard would then permit revoking the genuinely last manager, producing
+ * exactly the locked-out guild it exists to prevent. A 30s window is fine for
+ * display and for checks that fail safe; it is a bug for a check whose answer
+ * decides whether anyone can restore access. (The pre-port code passed
+ * `force: true` to discord.js for the same reason.)
+ *
+ * The port returns `null` only for an authoritative "not a member"; a failure
+ * to reach Discord throws, and `callDiscordForRequest` turns that into
+ * SERVICE_UNAVAILABLE. That distinction is load-bearing too: reading an outage
+ * as "not a member" would let the guard conclude the guild has no other
+ * manager and block a legitimate revoke.
+ */
 async function isCurrentGuildMember(
   guildId: DiscordGuildId,
   discordId: DiscordAccountId,
 ): Promise<boolean> {
-  const guild = discordClient.guilds.cache.get(guildId);
-  if (guild === undefined) {
-    throw new Error(`Discord guild ${guildId} is unavailable`);
-  }
-
-  try {
-    await guild.members.fetch({ user: discordId, force: true });
-    return true;
-  } catch (error) {
-    const parsed = DiscordApiErrorSchema.safeParse(error);
-    if (parsed.success && parsed.data.code === UNKNOWN_MEMBER_CODE) {
-      return false;
-    }
-    throw error;
-  }
+  const member = await callDiscordForRequest(() =>
+    botRest().freshGuildMember(guildId, discordId),
+  );
+  return member !== null;
 }
 
 /**

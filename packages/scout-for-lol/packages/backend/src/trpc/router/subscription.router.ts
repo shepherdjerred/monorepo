@@ -110,7 +110,7 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -270,7 +270,7 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -310,11 +310,11 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.fromChannelId,
       });
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.toChannelId,
       });
@@ -365,7 +365,7 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -406,7 +406,7 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -452,7 +452,7 @@ export const subscriptionRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });

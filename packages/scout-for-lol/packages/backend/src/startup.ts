@@ -37,12 +37,17 @@ export async function runBackendStartup(
   if (dependencies.startTemporalCore !== undefined) {
     await dependencies.startTemporalCore();
   }
-  // Discord connects before the HTTP server accepts traffic. Authorization
-  // paths read the live guild cache, and an unready cache is indistinguishable
-  // from "Scout is not installed" at several call sites — so serving while the
-  // gateway is still connecting hands out false NOT_FOUNDs to real members.
-  // This ordering used to be implicit: the client module logged in from a
-  // top-level await, which the HTTP server pulled in through its tRPC routers.
+  // Discord connects before the HTTP server accepts traffic.
+  //
+  // The original reason no longer holds: web-serving code used to read the live
+  // guild cache, where an unready cache was indistinguishable from "Scout is not
+  // installed", so serving during connect handed real members false NOT_FOUNDs.
+  // Those paths now go through the `installed-guilds` / `bot-rest` ports and are
+  // independent of gateway state (see the backend README).
+  //
+  // The ordering is kept as-is here rather than relaxed opportunistically: the
+  // gateway-owning process still wants its shard up before it takes traffic, and
+  // separating the HTTP and gateway roles is its own change.
   await dependencies.startDiscord();
   if (dependencies.startTemporalDiscordWorkers !== undefined) {
     await dependencies.startTemporalDiscordWorkers();

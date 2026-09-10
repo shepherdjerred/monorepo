@@ -51,7 +51,7 @@ export const hallRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertHallEnabled(input.guildId);
       if (input.channelId !== null) {
-        assertChannelInGuild({
+        await assertChannelInGuild({
           guildId: input.guildId,
           channelId: input.channelId,
         });

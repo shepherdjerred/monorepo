@@ -51,7 +51,7 @@ type CreationToolDependencies = {
     capability: CreationCapability;
     requesterId: DiscordAccountId;
   }) => Promise<CreationAccess>;
-  listChannels: (guildId: DiscordGuildId) => PostableChannel[];
+  listChannels: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
   resolvePuuid: typeof resolveSubscriptionPuuid;
   now: () => Date;
   newIdempotencyKey: () => string;

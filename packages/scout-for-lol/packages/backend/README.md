@@ -124,6 +124,38 @@ Manual end-to-end probe (macOS, trained assets + `OPENAI_API_KEY` required, no
 Discord): `bun scripts/smoke/voice-probe.ts --list-devices`, then
 `bun scripts/smoke/voice-probe.ts --device <index> --assets-dir <path>`.
 
+## How web requests read Discord
+
+No HTTP, tRPC, or Discord Activity request reads the gateway client's guild
+cache. That cache cannot answer honestly on a request path — an unconnected or
+still-backfilling client looks exactly like "Scout is not installed there" —
+so web-serving code goes through two application ports instead, and a pod that
+never connects a gateway serves the same answers as one that did:
+
+- `lib/discord/installed-guilds.ts` answers "is Scout installed here?" from
+  `GuildInstall` rows with `removedAt: null`. This makes `GuildInstall` an
+  authorization source, not just an analytics table: its writers
+  (`discord/events/guild-create.ts`, `guild-delete.ts`,
+  `analytics/guild-lifecycle.ts`) are load-bearing for access control. Because a
+  missing row is not proof of absence, a negative from the table is confirmed
+  against Discord before it is believed.
+- `lib/discord/bot-rest.ts` performs the authoritative bot-token REST reads the
+  web needs — guild channels, roles, a single member, member search, user
+  profiles — behind bounded per-guild TTL caches. Channel permission filtering
+  is recomputed from roles and overwrites in `lib/discord/channel-permissions.ts`
+  rather than read from a cached `GuildMember`.
+
+Three outcomes stay distinct on every path: Discord unreachable
+(`SERVICE_UNAVAILABLE`, or 503 on the Activity surface), Scout not installed
+(`NOT_FOUND` / 403), and the caller not authorized (`FORBIDDEN`). Failing to
+reach Discord must never be reported as either of the other two;
+`trpc/discord-upstream.ts` and `customs/activity-auth.ts` enforce that.
+
+Gateway events still _write_ installation state, and background jobs (outreach,
+cleanup, reconciliation, weekly leaderboards, report dispatch, the voice
+assistant) still read the gateway cache — they run only in a process that has
+one.
+
 ## Configuration
 
 Environment variables are validated with `env-var`/Zod at startup. Discord and

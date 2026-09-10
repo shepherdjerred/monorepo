@@ -24,6 +24,7 @@ import {
   type CreationPrepareResult,
 } from "#src/explore/creation/schemas.ts";
 import { createConfirmationIntent } from "#src/lib/confirmation-intent/create.ts";
+import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
 import type { PostableChannel } from "#src/lib/discord/postable-channels.ts";
 import type { resolveSubscriptionPuuid } from "#src/lib/subscription/add.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
@@ -42,7 +43,7 @@ export type CreationToolContext = {
   db: ExtendedPrismaClient;
   /** Memoized for the turn; see the module docblock. */
   access: () => Promise<CreationAccess>;
-  listChannels: (guildId: DiscordGuildId) => PostableChannel[];
+  listChannels: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
   resolvePuuid: typeof resolveSubscriptionPuuid;
   now: () => Date;
   /**
@@ -99,13 +100,58 @@ export async function lookupGuildAccess(
   return { kind: "ok", guild };
 }
 
+/**
+ * What the model is told when Discord could not be reached for the channel
+ * list. Deliberately not a permission or validity claim: the tools must never
+ * say "Scout cannot post there" when the truth is that Scout could not ask.
+ */
+export const CREATION_CHANNELS_UNAVAILABLE_MESSAGE =
+  "Scout could not reach Discord to list that server's channels. Tell the user Scout could not check their channels right now and to try again shortly. Do not tell them the channel is invalid or that Scout lacks permission.";
+
+export type PostableChannelLookup =
+  | { kind: "ok"; channels: PostableChannel[] }
+  | { kind: "unavailable"; message: string };
+
+/**
+ * The guild's postable channels, with a failure to reach Discord converted into
+ * a value the creation protocol can express.
+ *
+ * `listPostableChannels` raises {@link DiscordUpstreamError} on an unreachable
+ * Discord — correct for tRPC, where it becomes SERVICE_UNAVAILABLE, but inside
+ * an Explore turn an escaping exception surfaces as a generic tool crash. The
+ * model then has no typed refusal to relay and is liable to invent a reason,
+ * which is exactly the "an outage is never a denial" rule this feature is built
+ * around. Every channel read in the creation tools goes through here.
+ */
+export async function lookupPostableChannels(
+  context: CreationToolContext,
+  guildId: DiscordGuildId,
+): Promise<PostableChannelLookup> {
+  try {
+    return { kind: "ok", channels: await context.listChannels(guildId) };
+  } catch (error) {
+    if (error instanceof DiscordUpstreamError) {
+      return {
+        kind: "unavailable",
+        message: CREATION_CHANNELS_UNAVAILABLE_MESSAGE,
+      };
+    }
+    throw error;
+  }
+}
+
 /** The channel must be one Scout can actually post the entity's output into. */
-export function requirePostableChannel(
+export async function requirePostableChannel(
   context: CreationToolContext,
   input: { guildId: DiscordGuildId; channelId: string },
-): CreationPrepareResult | null {
-  const channels = context.listChannels(input.guildId);
-  if (channels.some((channel) => channel.id === input.channelId)) return null;
+): Promise<CreationPrepareResult | null> {
+  const lookup = await lookupPostableChannels(context, input.guildId);
+  if (lookup.kind === "unavailable") {
+    return creationRefusal("verification_unavailable", lookup.message);
+  }
+  if (lookup.channels.some((channel) => channel.id === input.channelId)) {
+    return null;
+  }
   return creationRefusal(
     "invalid",
     "Scout cannot post in that channel. Call list_guild_channels and ask the user to pick one of the channels it returns.",
@@ -115,17 +161,22 @@ export function requirePostableChannel(
 /**
  * The channel's display name, for a summary a person will read.
  *
- * Every caller has already proved the channel is postable, so a miss is
- * unreachable; the id is the honest label if it ever happens.
+ * Every caller has already proved the channel is postable through
+ * {@link requirePostableChannel}, so this re-read hits the same TTL cache and a
+ * miss is unreachable; the id is the honest label if it ever happens. An outage
+ * between the two reads degrades the label rather than failing a prepare that
+ * has already passed every real check.
  */
-export function postableChannelName(
+export async function postableChannelName(
   context: CreationToolContext,
   guildId: DiscordGuildId,
   channelId: string,
-): string {
-  const channel = context
-    .listChannels(guildId)
-    .find((candidate) => candidate.id === channelId);
+): Promise<string> {
+  const lookup = await lookupPostableChannels(context, guildId);
+  if (lookup.kind === "unavailable") return channelId;
+  const channel = lookup.channels.find(
+    (candidate) => candidate.id === channelId,
+  );
   return channel?.name ?? channelId;
 }
 

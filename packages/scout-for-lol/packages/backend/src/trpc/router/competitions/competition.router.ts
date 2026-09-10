@@ -159,7 +159,7 @@ export const competitionRouter = router({
   create: guildMutationProcedure("competitions", "create")
     .input(GuildInput.extend(CompetitionWriteSchema.shape))
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -242,7 +242,7 @@ export const competitionRouter = router({
       }
 
       if (input.channelId !== undefined) {
-        assertChannelInGuild({
+        await assertChannelInGuild({
           guildId: input.guildId,
           channelId: input.channelId,
         });

@@ -130,6 +130,23 @@ export const discordUserGuildsFailures = new Counter({
   registers: [registry],
 });
 
+/**
+ * Why a bot-token Discord REST read on a web request could not be answered.
+ *
+ * The counterpart of {@link discordUserGuildsFailures} for the reads that
+ * replaced the gateway guild cache (installation, channels, roles, members).
+ * Those calls are now on the critical path of guild-scoped requests, and every
+ * one of them fails the request as SERVICE_UNAVAILABLE rather than degrading
+ * into "Scout is not installed" — so this counter is how that failure mode
+ * stays visible instead of looking like ordinary user error.
+ */
+export const discordBotRestFailures = new Counter({
+  name: "scout_discord_bot_rest_failures_total",
+  help: "Failures reading Discord with the bot token during a web request, by reason",
+  labelNames: ["reason"] as const,
+  registers: [registry],
+});
+
 /** Feedback submissions from the web dashboard, split by whether a rating was given. */
 export const feedbackSubmittedTotal = new Counter({
   name: "scout_feedback_submitted_total",
