@@ -40,6 +40,15 @@ const RiotIdSchema = z
   })
   .strict();
 
+const ObjectivesSchema = z
+  .object({
+    turrets: z.number().int().nonnegative(),
+    inhibitors: z.number().int().nonnegative(),
+    barons: z.number().int().nonnegative(),
+    dragons: z.number().int().nonnegative(),
+  })
+  .strict();
+
 const ExploreMatchCardParticipantSchema = z
   .object({
     participantId: z.number().int().positive(),
@@ -56,14 +65,7 @@ const ExploreMatchCardParticipantSchema = z
     damageToChampions: z.number().int().nonnegative(),
     killParticipation: z.number().min(0).nullable(),
     damageShare: z.number().min(0).nullable(),
-    objectives: z
-      .object({
-        turrets: z.number().int().nonnegative(),
-        inhibitors: z.number().int().nonnegative(),
-        barons: z.number().int().nonnegative(),
-        dragons: z.number().int().nonnegative(),
-      })
-      .strict(),
+    objectives: ObjectivesSchema,
   })
   .strict();
 
@@ -72,14 +74,7 @@ const ExploreMatchCardTeamSchema = z
     teamId: z.number().int().positive(),
     win: z.boolean(),
     kills: z.number().int().nonnegative(),
-    objectives: z
-      .object({
-        turrets: z.number().int().nonnegative(),
-        inhibitors: z.number().int().nonnegative(),
-        barons: z.number().int().nonnegative(),
-        dragons: z.number().int().nonnegative(),
-      })
-      .strict(),
+    objectives: ObjectivesSchema,
     participants: z.array(ExploreMatchCardParticipantSchema).min(1).max(18),
   })
   .strict();

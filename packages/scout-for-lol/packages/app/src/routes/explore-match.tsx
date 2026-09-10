@@ -7,7 +7,7 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
 import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
-import { useExploreMatchParams } from "#src/lib/route-params.ts";
+import { useExploreMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 function duration(seconds: number): string {

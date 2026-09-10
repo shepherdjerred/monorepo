@@ -11,7 +11,8 @@ import {
 } from "@scout-for-lol/design-system/components/card";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
+import { MatchObjectivesSummary } from "#src/components/match/match-objectives-summary.tsx";
+import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 
 const UTC_TIME = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
@@ -181,10 +182,7 @@ function LargeMatchCard(props: { card: ExploreMatchCard }) {
                 ))}
               </ul>
               <p className="text-xs text-scout-subtle">
-                {team.objectives.turrets.toString()} turrets ·{" "}
-                {team.objectives.inhibitors.toString()} inhibitors ·{" "}
-                {team.objectives.dragons.toString()} dragons ·{" "}
-                {team.objectives.barons.toString()} barons
+                <MatchObjectivesSummary objectives={team.objectives} />
               </p>
             </section>
           ))}

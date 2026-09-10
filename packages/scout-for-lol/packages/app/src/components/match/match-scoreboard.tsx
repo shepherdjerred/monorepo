@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
+import { MatchObjectivesSummary } from "#src/components/match/match-objectives-summary.tsx";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 
 type MatchParticipant = {
@@ -84,10 +85,7 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                 </Badge>
               </CardTitle>
               <p className="text-xs text-scout-subtle">
-                {team.objectives.turrets.toString()} turrets ·{" "}
-                {team.objectives.inhibitors.toString()} inhibitors ·{" "}
-                {team.objectives.dragons.toString()} dragons ·{" "}
-                {team.objectives.barons.toString()} barons
+                <MatchObjectivesSummary objectives={team.objectives} />
               </p>
             </div>
           </CardHeader>
