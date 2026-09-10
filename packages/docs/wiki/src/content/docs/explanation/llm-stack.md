@@ -69,7 +69,8 @@ project. That exclusion is the byte-budget control for Braintrust's metered
 ingest, so there is deliberately no catch-all branch; OpenRouter Broadcast
 payloads in particular stay out. The kill switch for a runaway budget is
 removing a branch from the sampler's output list, which the config reloader
-applies without recreating the pod. The sampler's decision cache forwards
+applies without recreating the pod; see
+[Route a service to Braintrust](/how-to/route-a-service-to-braintrust/). The sampler's decision cache forwards
 late spans of already-kept traces, but spans that completed more than the
 decision window before a trace's first LLM span are gone for Braintrust.
 That loss is bounded to the pre-LLM bootstrap of long agent traces and is

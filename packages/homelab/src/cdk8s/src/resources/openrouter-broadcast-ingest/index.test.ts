@@ -47,7 +47,9 @@ test("synthesizes authenticated archive, Tempo, monitoring, and ingress wiring",
   expect(manifests).toContain("OPENROUTER_BROADCAST_BEARER_TOKEN");
   expect(manifests).toContain("SEAWEEDFS_ACCESS_KEY_ID");
   expect(manifests).toContain("seaweedfs-s3.seaweedfs.svc.cluster.local:8333");
-  expect(manifests).toContain("tempo.tempo.svc.cluster.local:4318/v1/traces");
+  expect(manifests).toContain(
+    "alloy-gateway.alloy-gateway.svc.cluster.local:4318/v1/traces",
+  );
   expect(manifests).toContain("openrouter-broadcast.sjer.red");
   expect(manifests).toContain("ServiceMonitor");
   expect(manifests).toContain('"readOnlyRootFilesystem":true');
