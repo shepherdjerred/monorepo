@@ -75,10 +75,13 @@ public struct SystemKeychainClient: KeychainClient, Sendable {
 /// the trusted application that each of those rewrites re-establishes, so reading through it stays
 /// silent and keeps working across refreshes.
 public struct SecurityToolKeychainClient: KeychainReading, Sendable {
-  /// `security` exits 44 when no item matches the query and 36 when the keychain itself is
-  /// missing. Both mean the credential is absent, which is the normal state for a tool the user has
-  /// not signed into. Every other non-zero status is a genuine failure and must surface.
-  private static let absentStatuses: Set<Int32> = [36, 44]
+  /// `security` reports its `OSStatus` through the exit status' low byte, so
+  /// `errSecItemNotFound` (-25300) arrives as 44. That status alone means no credential has been
+  /// stored, which is the normal state for a tool the user has not signed into. Every other
+  /// status - including `errSecInteractionNotAllowed` (-25308, exit 36) from a locked Keychain -
+  /// describes a credential this Mac would not hand over, and must surface instead of reading as
+  /// missing.
+  private static let itemNotFoundStatus: Int32 = 44
   private static let executableURL = URL(fileURLWithPath: "/usr/bin/security")
 
   private let commandRunner: any SynchronousCommandRunning
@@ -95,7 +98,7 @@ public struct SecurityToolKeychainClient: KeychainReading, Sendable {
       arguments.append(contentsOf: ["-a", account])
     }
     let result = try commandRunner.run(executableURL: Self.executableURL, arguments: arguments)
-    guard !Self.absentStatuses.contains(result.terminationStatus) else { return nil }
+    guard result.terminationStatus != Self.itemNotFoundStatus else { return nil }
     guard result.terminationStatus == 0,
       let output = String(data: result.stdout, encoding: .utf8)
     else {

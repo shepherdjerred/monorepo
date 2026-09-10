@@ -30,13 +30,24 @@ final class ClaudeCodeKeychainTests: XCTestCase {
     )
   }
 
-  func testMissingItemStatusesReadAsAbsent() throws {
-    // 44 is "the specified item could not be found", 36 is "no such keychain".
-    for status in [Int32(36), Int32(44)] {
-      let client = SecurityToolKeychainClient(
-        commandRunner: StubCommandRunner(stdout: "", terminationStatus: status)
-      )
-      XCTAssertNil(try client.read(service: "Claude Code-credentials", account: nil))
+  func testOnlyItemNotFoundReadsAsAbsent() throws {
+    // 44 is `errSecItemNotFound` through the exit status' low byte.
+    let client = SecurityToolKeychainClient(
+      commandRunner: StubCommandRunner(stdout: "", terminationStatus: 44)
+    )
+
+    XCTAssertNil(try client.read(service: "Claude Code-credentials", account: nil))
+  }
+
+  func testLockedKeychainFailsInsteadOfReadingAsAbsent() {
+    // 36 is `errSecInteractionNotAllowed`: the credential exists but this Mac will not hand it
+    // over. Reading that as absent would report "no local credentials" for a locked Keychain.
+    let client = SecurityToolKeychainClient(
+      commandRunner: StubCommandRunner(stdout: "", terminationStatus: 36)
+    )
+
+    XCTAssertThrowsError(try client.read(service: "Claude Code-credentials", account: nil)) {
+      XCTAssertEqual($0 as? QuotaError, .commandFailed("security"))
     }
   }
 
