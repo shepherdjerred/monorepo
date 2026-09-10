@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { ChallengeProgress } from "#src/components/challenge/challenge-progress.tsx";
-import { useChallengeDraftParams } from "#src/lib/route-params.ts";
+import { useChallengeDraftParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ChallengeDraft() {

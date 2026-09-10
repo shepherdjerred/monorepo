@@ -1,4 +1,4 @@
-import { parseAnalyticsRegistry } from "../lib/scout-analytics-config.ts";
+import { parseAnalyticsRegistry } from "../lib/scout/scout-analytics-config.ts";
 
 const root = new URL("../..", import.meta.url).pathname.replace(/\/$/, "");
 const registryPath = `${root}/config/analytics-sites.json`;

@@ -29,7 +29,7 @@ import {
   UnsavedFormDialog,
   useUnsavedForm,
 } from "#src/hooks/use-unsaved-form.tsx";
-import { FormActions } from "@scout-for-lol/design-system/components/input";
+import { FormActions } from "@scout-for-lol/design-system/components/forms/field";
 
 function previewTitle(title: string): string {
   return title === "" ? "Preview" : title;

@@ -733,10 +733,10 @@ describe("CI reporting manifest", () => {
       {
         runner: "vitest",
         args: [
-          "scripts/argocd-manifest-overrides.test.ts",
-          "scripts/helm-release-core.test.ts",
-          "scripts/helm-set-version.test.ts",
-          "scripts/lint-helm.test.ts",
+          "scripts/argocd/argocd-manifest-overrides.test.ts",
+          "scripts/helm/helm-release-core.test.ts",
+          "scripts/helm/helm-set-version.test.ts",
+          "scripts/helm/lint-helm.test.ts",
           "scripts/migration-smoke.test.ts",
           "scripts/velero-backups.test.ts",
         ],

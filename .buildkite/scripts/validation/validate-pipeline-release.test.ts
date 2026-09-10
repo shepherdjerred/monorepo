@@ -7,7 +7,7 @@ import {
 } from "./validate-pipeline-release.ts";
 
 const argocdCommand = (subcommand: string): string =>
-  `bun --no-install packages/homelab/scripts/argocd.ts ${subcommand}`;
+  `bun --no-install packages/homelab/scripts/argocd/argocd.ts ${subcommand}`;
 const releaseRoot = argocdCommand(
   'release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300',
 );

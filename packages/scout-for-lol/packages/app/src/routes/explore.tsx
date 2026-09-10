@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useLocation, useNavigate } from "react-router";
 import { ArrowDown, ChevronDown } from "lucide-react";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { ExploreSuggestionChips } from "#src/components/explore/explore-suggestion-chips.tsx";
+import { ExploreSuggestionChips } from "#src/components/explore/transcript/explore-suggestion-chips.tsx";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,8 +13,8 @@ import {
 import { ExploreComposer } from "#src/components/explore/explore-composer.tsx";
 import { ExploreHeader } from "#src/components/explore/explore-header.tsx";
 import { ExploreShareRow } from "#src/components/explore/explore-share.tsx";
-import { ExploreTranscript } from "#src/components/explore/explore-transcript.tsx";
-import type { ExploreTranscriptActions } from "#src/components/explore/explore-transcript-actions.ts";
+import { ExploreTranscript } from "#src/components/explore/transcript/explore-transcript.tsx";
+import type { ExploreTranscriptActions } from "#src/components/explore/transcript/explore-transcript-actions.ts";
 import { ForbiddenPanel } from "#src/components/chrome/forbidden-panel.tsx";
 import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { SectionSkeleton } from "#src/components/chrome/section-skeleton.tsx";
@@ -31,7 +31,7 @@ import {
   exportFilename,
 } from "#src/lib/explore/explore-export.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
-import { useExploreParams } from "#src/lib/route-params.ts";
+import { useExploreParams } from "#src/lib/routes/route-params.ts";
 import { useExploreShare } from "#src/hooks/use-explore-share.ts";
 import { useExploreRuns } from "#src/components/explore/explore-runs-context.ts";
 import { usePinnedScroll } from "#src/hooks/use-pinned-scroll.ts";

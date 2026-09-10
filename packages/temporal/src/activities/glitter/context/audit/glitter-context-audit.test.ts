@@ -10,14 +10,14 @@ import {
   GuildSnapshotSchema,
   StoredObjectSchema,
   type CurrentMessage,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import { generationRequestSha256 } from "#activities/glitter/context/refresh/glitter-context-refresh-cache.ts";
 import { auditGlitterContextGenerationCache } from "./glitter-context-audit.ts";
 import * as glitterLlm from "#activities/glitter/context/refresh/glitter-context-refresh-llm.ts";
 import {
   STYLE_ARRAY_FIELDS,
   StyleSynthesisSchema,
-} from "#activities/glitter/context/refresh/glitter-context-refresh-style-schemas.ts";
+} from "#activities/glitter/context/refresh/style/glitter-context-refresh-style-schemas.ts";
 
 const SNAPSHOT_SHA = "a".repeat(64);
 const CREATED_AT = "2026-08-30T12:00:00.000Z";

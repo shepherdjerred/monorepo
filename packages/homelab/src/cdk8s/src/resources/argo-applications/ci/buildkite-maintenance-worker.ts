@@ -23,7 +23,7 @@ import {
   CI_NODE_HOSTNAME,
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,

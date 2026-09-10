@@ -5,7 +5,7 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
   DISCORDSRV_PLUGIN_URL,
@@ -18,7 +18,7 @@ import {
   getMinecraftExtraVolumes,
   getMinecraftExtraEnv,
   getMinecraftPluginConfigInitContainer,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-config.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";

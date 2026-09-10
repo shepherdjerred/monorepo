@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
+import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 
 type MatchParticipant = {
   participantId: number;

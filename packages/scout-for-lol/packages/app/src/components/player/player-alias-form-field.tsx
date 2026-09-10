@@ -4,7 +4,7 @@ import {
   Field,
   FieldError,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { PlayerAliasCombobox } from "#src/components/player/player-alias-combobox.tsx";
 import {
   fieldErrorMessage,

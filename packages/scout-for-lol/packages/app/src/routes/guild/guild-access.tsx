@@ -37,7 +37,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
-import { useGuildParams } from "#src/lib/route-params.ts";
+import { useGuildParams } from "#src/lib/routes/route-params.ts";
 import {
   fieldErrorMessage,
   focusFirstInvalid,
@@ -54,7 +54,7 @@ import {
   Field,
   FieldError,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 
 function roleLabel(role: Role | "custom"): string {
   if (role === "custom") return "Custom";

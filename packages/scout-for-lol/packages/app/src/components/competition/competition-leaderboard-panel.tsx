@@ -14,7 +14,7 @@ import {
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { competitionAnalysisDateInput } from "#src/lib/bucks/competition-analysis-date.ts";
-import { formatDate } from "#src/lib/format.ts";
+import { formatDate } from "#src/lib/format/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ChartImage } from "#src/components/scoutql/chart-image.tsx";
@@ -24,7 +24,7 @@ import {
   FormActions,
   Input,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 import {
   Table,

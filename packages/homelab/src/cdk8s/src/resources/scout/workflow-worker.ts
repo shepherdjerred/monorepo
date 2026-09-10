@@ -10,7 +10,7 @@ import {
   Service,
   Volume,
 } from "cdk8s-plus-31";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import {
   setRevisionHistoryLimit,
   withCommonProps,

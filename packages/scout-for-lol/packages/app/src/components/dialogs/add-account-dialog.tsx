@@ -7,9 +7,9 @@ import {
   Field,
   FieldError,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
-import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { Dialog } from "@scout-for-lol/design-system/components/overlays/dialog";
 import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
   fieldErrorMessage,

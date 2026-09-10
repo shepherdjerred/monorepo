@@ -36,7 +36,7 @@ bun --no-install --bun vitest --config ../../vitest.config.ts run \
 ```
 
 The
-[`FreshRSS resource`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/freshrss.ts)
+[`FreshRSS resource`](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/freshrss/freshrss.ts)
 rejects malformed categories, duplicate URLs, credential-bearing URLs, and an
 invalid managed boundary during synthesis.
 

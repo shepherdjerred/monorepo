@@ -3,7 +3,10 @@ import {
   visibilityDescription,
   visibilityToString,
 } from "@scout-for-lol/data";
-import { Input, Textarea } from "@scout-for-lol/design-system/components/input";
+import {
+  Input,
+  Textarea,
+} from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   BuilderFieldError,

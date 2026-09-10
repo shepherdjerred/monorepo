@@ -1,5 +1,5 @@
 export const legacyTofuPaths = [
-  "packages/homelab/scripts/tofu-stack-manifest.ts",
+  "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/argocd",
   "packages/homelab/src/tofu/arr",
   "packages/homelab/src/tofu/asuswrt",
@@ -12,7 +12,7 @@ export const legacyTofuPaths = [
 ] as const;
 
 export const platformTofuPaths = [
-  "packages/homelab/scripts/tofu-stack-manifest.ts",
+  "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/anthropic",
   "packages/homelab/src/tofu/cloudflare-tokens",
   "packages/homelab/src/tofu/discord",

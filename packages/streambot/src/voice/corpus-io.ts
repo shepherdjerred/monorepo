@@ -11,7 +11,7 @@ import {
   voiceCorpusClipCount,
   type VoiceCorpusPhraseSpec,
 } from "@shepherdjerred/streambot/voice/corpus-recipes.ts";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
+import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/audio/discord-opus-container.ts";
 
 export const DEFAULT_VOICE_CORPUS_DIR = path.resolve(
   import.meta.dir,

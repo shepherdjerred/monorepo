@@ -6,7 +6,7 @@ import {
   reviewRequestScheduleBounds,
   SLOWEST_COMPLETED_REVIEW_SECONDS,
   validateReviewRequestSchedule,
-} from "../lib/review-gate-policy.ts";
+} from "../lib/review/review-gate-policy.ts";
 import {
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,

@@ -40,7 +40,7 @@ import type {
   ConfirmDareResult,
 } from "#src/betting/dares/lifecycle/dare-create.ts";
 import { parseDareCustomId } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import type { DareButtonInteractionBase } from "#src/betting/dares/presentation/dare-button-interaction.ts";
 import { createLogger } from "#src/logger.ts";
 

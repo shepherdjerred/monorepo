@@ -4,8 +4,11 @@ import {
   TunnelBinding,
   TunnelBindingTunnelRefKind,
 } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-types/cfargotunnel.ts";
-import type { ProbeModule } from "./blackbox-modules.ts";
-import { registerBackendProbe, registerPublicProbe } from "./probe-registry.ts";
+import type { ProbeModule } from "./probes/blackbox-modules.ts";
+import {
+  registerBackendProbe,
+  registerPublicProbe,
+} from "./probes/probe-registry.ts";
 
 // Secret name that the cloudflare-operator expects
 // Note: For ClusterTunnel, the secret must be in cloudflare-operator-system namespace

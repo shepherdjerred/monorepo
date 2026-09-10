@@ -285,7 +285,7 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   // environment=dev AND the explicit, default-off ENABLE_DEV_LOGIN flag, so a
   // beta/prod deploy that omits ENVIRONMENT (which defaults to "dev") still
   // fails closed rather than exposing an unauthenticated session-minting
-  // endpoint. Set only by scripts/dev-web.ts.
+  // endpoint. Set only by scripts/dev/dev-web.ts.
   if (
     configuration.environment === "dev" &&
     configuration.enableDevLogin &&

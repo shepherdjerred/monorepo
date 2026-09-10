@@ -19,7 +19,7 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { ChallengeAccountSelection } from "#src/components/challenge/challenge-account-selection.tsx";
-import { useChallengeTemplateParams } from "#src/lib/route-params.ts";
+import { useChallengeTemplateParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 const StartRunFormSchema = z

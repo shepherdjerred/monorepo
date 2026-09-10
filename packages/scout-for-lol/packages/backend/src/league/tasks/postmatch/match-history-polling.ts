@@ -13,8 +13,8 @@ import {
 } from "#src/league/tasks/postmatch/match-processing.ts";
 import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
-import { announceSettlements } from "#src/betting/announce.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
+import { announceSettlements } from "#src/betting/notify/announce.ts";
+import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import {
   voidDareV2WithFullRefund,
   type RefundableDareV2Row,

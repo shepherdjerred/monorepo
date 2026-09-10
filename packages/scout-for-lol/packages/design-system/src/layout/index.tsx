@@ -8,7 +8,7 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from "#src/components/sheet.tsx";
+} from "#src/components/overlays/sheet.tsx";
 import { ThemeMenu } from "#src/runtime/theme-menu.tsx";
 import { cn } from "#src/lib/cn.ts";
 import { surfaceHref as joinSurfaceHref } from "#src/layout/origins.ts";

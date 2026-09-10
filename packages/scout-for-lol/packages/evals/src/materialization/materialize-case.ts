@@ -10,7 +10,7 @@ import {
 import {
   DEFAULT_TIMELINE_AGGREGATE_MODEL,
   DEFAULT_TIMELINE_CHUNK_MODEL,
-} from "@scout-for-lol/data/review/pipeline-defaults.ts";
+} from "@scout-for-lol/data/review/pipeline/pipeline-defaults.ts";
 
 import type { BetaCorpus } from "#materialization/beta-corpus.ts";
 import {

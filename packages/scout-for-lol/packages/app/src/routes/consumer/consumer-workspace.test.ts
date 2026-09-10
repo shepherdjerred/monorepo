@@ -4,7 +4,7 @@ import {
   GUILD_NAVIGATION_ITEMS,
   guildWorkspacePath,
   visibleGuildNavigationItems,
-} from "#src/lib/app-navigation.ts";
+} from "#src/lib/routes/app-navigation.ts";
 
 function canReadCustoms(permission: {
   resource: string;

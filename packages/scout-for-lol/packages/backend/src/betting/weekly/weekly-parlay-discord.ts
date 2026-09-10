@@ -29,7 +29,7 @@ import {
   bettingWeeklyParlayMarketsOpenedTotal,
 } from "#src/metrics/betting/betting-weekly-parlay.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
 
 export function weeklyParlaySettlementActionKey(marketId: number): string {

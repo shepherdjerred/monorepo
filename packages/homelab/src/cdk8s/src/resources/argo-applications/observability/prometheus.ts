@@ -3,7 +3,7 @@ import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   CI_NODE_TOLERATION,
   PROD_NODE_INTERNAL_IP,
@@ -22,7 +22,7 @@ import { createZfsSnapshotsMonitoring } from "@shepherdjerred/homelab/cdk8s/src/
 import { createZfsZpoolMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/zfs-zpool.ts";
 import { createR2ExporterMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/r2-exporter.ts";
 import { createKubernetesEventExporter } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/kubernetes-event-exporter.ts";
-import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
+import { BLACKBOX_MODULES } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
 import {
   ALERTMANAGER_POSTAL_SMTP_CA_SECRET,
   ALERTMANAGER_POSTAL_SMTP_TLS,

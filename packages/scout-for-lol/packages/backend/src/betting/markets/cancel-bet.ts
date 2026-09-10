@@ -10,8 +10,8 @@ import {
 import {
   HOUSE_CUT_PERCENT,
   cancellationHouseCut,
-} from "#src/betting/house-cut.ts";
-import { transferHouseCut } from "#src/betting/house.ts";
+} from "#src/betting/eligibility/house-cut.ts";
+import { transferHouseCut } from "#src/betting/eligibility/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { findBucksAccountId } from "#src/betting/accounts.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";

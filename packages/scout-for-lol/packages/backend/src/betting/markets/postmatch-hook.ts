@@ -11,7 +11,7 @@ import {
 import {
   settleParlaysForMatch,
   type ParlaySettlementSummary,
-} from "#src/betting/parlays/parlay-settle.ts";
+} from "#src/betting/parlays/runtime/parlay-settle.ts";
 import { settleDaresForMatch } from "#src/betting/dares/settlement/dare-settle.ts";
 import { settleDaresV2ForMatch } from "#src/betting/dares/settlement/dare-settle-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
@@ -25,16 +25,16 @@ import {
   DarePartialSettlementError,
   type DareSettlementSummary,
 } from "#src/betting/dares/settlement/dare-settle-shared.ts";
-import { deliverDareSummaries } from "#src/betting/dares/presentation/dare-delivery.ts";
-import { refreshClosedParlayMessages } from "#src/betting/parlays/parlay-refresh.ts";
-import { refreshClosedBucksMessages } from "#src/betting/message-refresh.ts";
+import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
+import { refreshClosedParlayMessages } from "#src/betting/parlays/runtime/parlay-refresh.ts";
+import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { isFeatureHardDisabled } from "#src/configuration/flags.ts";
 import { captureWeeklyParlayContributions } from "#src/betting/weekly/weekly-parlay-contribution.ts";
 import { createLogger } from "#src/logger.ts";
-import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/dare-notification-delivery.ts";
+import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 
 const logger = createLogger("betting-postmatch-hook");
 

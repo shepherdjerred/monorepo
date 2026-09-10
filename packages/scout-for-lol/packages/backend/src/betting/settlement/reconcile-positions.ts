@@ -4,7 +4,7 @@ import {
   auditFinding,
   type BucksAuditSink,
 } from "#src/betting/settlement/reconcile-shared.ts";
-import { cancellationHouseCut } from "#src/betting/house-cut.ts";
+import { cancellationHouseCut } from "#src/betting/eligibility/house-cut.ts";
 
 async function loadBets(prismaClient: Db, afterBetId: number) {
   const bets = await prismaClient.bucksBet.findMany({

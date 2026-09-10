@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
 import { ExploreVisualResult } from "#src/components/explore/explore-visual-result.tsx";
 
 /**

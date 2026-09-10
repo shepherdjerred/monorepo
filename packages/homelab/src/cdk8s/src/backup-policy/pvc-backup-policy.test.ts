@@ -6,7 +6,7 @@ import { App, Chart, Size } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { setupCharts } from "@shepherdjerred/homelab/cdk8s/src/setup-charts.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import {
   getPvcBackupLabels,
   getPvcBackupPolicy,

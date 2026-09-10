@@ -1,0 +1,167 @@
+---
+import { Icon } from "astro-icon/components";
+import { cn } from "#src/lib/utils.ts";
+import {
+  iconColors,
+  gradientColors,
+  type ColorVariant,
+} from "../../lib/colors";
+
+interface Props {
+  title: string;
+  description?: string | undefined;
+
+  // Icon or number display
+  icon?: string | undefined; // astro-icon name (e.g., "heroicons:check-circle")
+  iconHtml?: string | undefined; // Raw HTML for custom icons
+  number?: number | undefined;
+
+  // Styling
+  layout?: "centered" | "left" | undefined;
+  color?: ColorVariant | undefined;
+  iconColor?: string | undefined; // Custom color class for icon background
+  gradient?: string | undefined; // Gradient key from gradientColors
+
+  // Container styling
+  withCard?: boolean | undefined; // Wrap in card with shadow
+  class?: string | undefined; // Changed from className to class
+
+  // For dt/dd usage (like FeatureCard)
+  asList?: boolean | undefined;
+}
+
+const {
+  title,
+  description,
+  icon,
+  iconHtml,
+  number,
+  layout = "centered",
+  color = "green",
+  iconColor,
+  gradient,
+  withCard = false,
+  asList = false,
+  class: classNames, // Destructure class as classNames
+} = Astro.props;
+
+// Determine icon background color
+const iconBgClass =
+  iconColor ||
+  (withCard && gradient
+    ? `bg-linear-to-br ${gradientColors[gradient] || gradientColors["yellow"]}`
+    : number
+      ? "bg-scout-brand text-scout-brand-ink"
+      : iconColors[color]);
+
+const iconSize = withCard
+  ? "w-24 h-24 mb-4"
+  : number
+    ? "h-10 w-10"
+    : "h-12 w-12";
+const iconInnerSize = withCard ? "w-12 h-12" : "h-6 w-6";
+---
+
+{
+  withCard ? (
+    <div
+      class={cn(
+        "scout-card rounded-xl border bg-scout-surface border-scout-border shadow-sm py-6 flex flex-col gap-0",
+        layout === "centered" ? "text-center" : "",
+        classNames,
+      )}
+    >
+      <div class="flex flex-col space-y-1.5 p-6">
+        <div
+          class={cn(
+            iconSize,
+            layout === "centered" ? "mx-auto" : "",
+            "rounded-lg flex items-center justify-center",
+            iconBgClass,
+          )}
+        >
+          {icon && <Icon name={icon} class={iconInnerSize} />}
+          {iconHtml && <div set:html={iconHtml} class={iconInnerSize} />}
+          {number && <span class="font-semibold">{number}</span>}
+        </div>
+        <h3 class="text-2xl font-semibold leading-none tracking-tight text-scout-ink ">
+          {title}
+        </h3>
+        {description && <p class="text-sm text-scout-subtle ">{description}</p>}
+      </div>
+      <div class="p-6 pt-0">
+        <slot />
+      </div>
+    </div>
+  ) : asList ? (
+    <div class={cn(asList ? "relative pl-16" : "flex flex-col", classNames)}>
+      <div class="text-base font-semibold text-scout-ink ">
+        <div
+          class={cn(
+            "absolute left-0 top-0",
+            "flex size-10 items-center justify-center rounded-lg",
+            iconBgClass,
+          )}
+        >
+          {icon && <Icon name={icon} class="size-6" />}
+          {iconHtml && <div set:html={iconHtml} class="size-6" />}
+          {number && <span class="font-semibold">{number}</span>}
+        </div>
+        {title}
+      </div>
+      {description && (
+        <p class="mt-2 text-base text-scout-subtle ">{description}</p>
+      )}
+      <slot />
+    </div>
+  ) : number ? (
+    <div class={cn(layout === "centered" ? "text-center" : "")}>
+      <dt class="flex items-center gap-x-3 text-base font-semibold text-scout-ink ">
+        <div
+          class={cn(
+            iconSize,
+            "flex items-center justify-center rounded-lg",
+            iconBgClass,
+            "font-semibold",
+            layout === "centered" ? "mx-auto" : "",
+          )}
+        >
+          {number}
+        </div>
+        {title}
+      </dt>
+      {description && (
+        <dd class="mt-4 flex flex-auto flex-col text-base text-scout-subtle ">
+          <p class="flex-auto">{description}</p>
+        </dd>
+      )}
+      <slot />
+    </div>
+  ) : (
+    <div class={cn(layout === "centered" ? "text-center" : "flex flex-col")}>
+      <div
+        class={cn(
+          iconSize,
+          layout === "centered" ? "mx-auto" : "",
+          "flex items-center justify-center rounded-lg",
+          iconBgClass,
+        )}
+      >
+        {icon && <Icon name={icon} class={iconInnerSize} />}
+        {iconHtml && <div set:html={iconHtml} class={iconInnerSize} />}
+      </div>
+      <h3
+        class={cn(
+          layout === "centered" ? "mt-4" : "mt-0",
+          "text-lg font-semibold text-scout-ink ",
+        )}
+      >
+        {title}
+      </h3>
+      {description && (
+        <p class="mt-2 text-sm text-scout-subtle ">{description}</p>
+      )}
+      <slot />
+    </div>
+  )
+}

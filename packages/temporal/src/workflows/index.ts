@@ -62,17 +62,17 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
-import { runProtobufWatch as _runProtobufWatch } from "./protobuf-watch.ts";
+import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
-import { runCiIoImpact as _runCiIoImpact } from "./ci-io-impact.ts";
+import { runCiIoImpact as _runCiIoImpact } from "./ci/ci-io-impact.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
 import type { ReportDeliveryResult } from "#activities/reports/report-delivery.ts";
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab/homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./cancel-buildkite-builds.ts";
-import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./check-pr-merge-conflicts.ts";
+import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./ci/cancel-buildkite-builds.ts";
+import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./ci/check-pr-merge-conflicts.ts";
 import { pollWorkflowFailuresWorkflow as _pollWorkflowFailuresWorkflow } from "./workflow-failure-watch.ts";
 import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure/workflow-failure-watch.ts";
 import type {
@@ -96,7 +96,7 @@ import type {
 import type {
   ChannelStateResult,
   InventoryResult,
-} from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus-activity-types.ts";
 import { runGlitterContextRefresh as _runGlitterContextRefresh } from "./glitter/glitter-context-refresh.ts";
 import type {
   GlitterContextRefreshInput,
@@ -107,7 +107,7 @@ import type {
   GlitterContextAuditInput,
   GlitterContextAuditResult,
 } from "#activities/glitter/context/audit/glitter-context-audit-schema.ts";
-import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./main-vuln-scan.ts";
+import { runMainVulnScanWorkflow as runMainVulnScanWorkflowImplementation } from "./ci/main-vuln-scan.ts";
 import { runLinkRotScanWorkflow as runLinkRotScanWorkflowImplementation } from "./link-rot-scan.ts";
 import { runScheduleRehearsalWorkflow as runScheduleRehearsalWorkflowImplementation } from "./schedule-rehearsal.ts";
 import type { ScheduleRehearsalResult } from "#activities/scout/schedule-rehearsal.ts";

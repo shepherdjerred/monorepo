@@ -15,7 +15,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+} from "@scout-for-lol/design-system/components/forms/select";
 import { InteractiveVisualization } from "#src/components/scoutql/interactive-visualization.tsx";
 import { ReportResultTable } from "#src/components/report/report-result-table.tsx";
 import {

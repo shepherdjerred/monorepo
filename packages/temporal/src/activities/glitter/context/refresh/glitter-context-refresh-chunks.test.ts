@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { CurrentMessageSchema } from "#shared/glitter/glitter-corpus.ts";
 import {
   buildStyleEvidenceChunks,
   STYLE_EVIDENCE_CHUNK_SIZE,

@@ -3,8 +3,11 @@ import { useMutation } from "@tanstack/react-query";
 import type { SubscriptionFilterSpec } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { Dialog } from "@scout-for-lol/design-system/components/dialog";
-import { Field, Label } from "@scout-for-lol/design-system/components/input";
+import { Dialog } from "@scout-for-lol/design-system/components/overlays/dialog";
+import {
+  Field,
+  Label,
+} from "@scout-for-lol/design-system/components/forms/field";
 import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import { SubscriptionFilterFields } from "#src/components/subscription/subscription-filter-fields.tsx";
 import {

@@ -5,7 +5,7 @@ import {
   refundDareV2ContributionsInTransaction,
 } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 
 export type RefundableDareV2Row = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };

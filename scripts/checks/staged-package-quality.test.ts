@@ -108,7 +108,7 @@ describe("packagesForStagedPaths", () => {
       packagesForStagedPaths(
         [
           "packages/scout-for-lol/README.md",
-          "packages/scout-for-lol/scripts/dev-web.ts",
+          "packages/scout-for-lol/scripts/dev/dev-web.ts",
           "packages/scout-for-lol/packages/backend/src/index.ts",
         ],
         fixtures,

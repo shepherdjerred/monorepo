@@ -12,7 +12,7 @@ import {
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { buildDareContractV3 } from "#src/betting/dares/evaluation/dare-contract-v3-build.ts";
 import { improvementBaselineSnapshotV3 } from "#src/betting/dares/lifecycle/dare-activation-evaluation-v3.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { executeDareSqlV3 } from "#src/betting/dares/sql/dare-sql-v3.ts";
 import { parseDareV2Targets } from "#src/betting/dares/dare-v2-common.ts";

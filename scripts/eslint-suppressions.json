@@ -1,10 +1,10 @@
 {
-  "checks/check-patched-deps.ts": {
+  "checks/deps/check-patched-deps.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
   },
-  "checks/check-react-version-sync.ts": {
+  "checks/deps/check-react-version-sync.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -19,7 +19,7 @@
       "count": 1
     }
   },
-  "checks/check-tunnel-dns-coverage.ts": {
+  "checks/ci/check-tunnel-dns-coverage.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

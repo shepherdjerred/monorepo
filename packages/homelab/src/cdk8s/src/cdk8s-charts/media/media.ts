@@ -1,0 +1,137 @@
+import type { App } from "cdk8s";
+import { Chart, Size } from "cdk8s";
+import { ZfsSataVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-sata-volume.ts";
+import { createBazarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/bazarr.ts";
+import { createTautulliDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/tautulli.ts";
+import { createPlexDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/media/plex.ts";
+import { createRadarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/radarr.ts";
+import { createSeerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/seerr.ts";
+import { createQBitTorrentDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/qbittorrent.ts";
+import { createSonarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/sonarr.ts";
+import { createProwlarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/prowlarr.ts";
+import { createMaintainerrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/maintainerr.ts";
+import { createRecyclarrDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/recyclarr.ts";
+import { createWhisperbridgeDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/torrents/whisperbridge.ts";
+import { createStreambotDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/streambot/streambot.ts";
+import {
+  IntOrString,
+  KubeNetworkPolicy,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+
+export async function createMediaChart(app: App) {
+  const chart = new Chart(app, "media", {
+    namespace: "media",
+    disableResourceNameHashes: true,
+  });
+
+  // Shared volumes for media stack
+  const tvVolume = new ZfsSataVolume(chart, "plex-tv-hdd-pvc", {
+    storage: Size.tebibytes(6),
+  });
+  const downloadsVolume = new ZfsSataVolume(chart, "qbittorrent-hdd-pvc", {
+    storage: Size.tebibytes(2),
+  });
+  // 8 TiB, up from 6: steadily growing library hit 77% with a 21–64 day
+  // projection to full (PVCProjectedFullWithin14Days, 2026-08-28). tv and
+  // downloads stay as-is — the qbittorrent projection was a download-burst
+  // artifact, not trend.
+  const moviesVolume = new ZfsSataVolume(chart, "plex-movies-hdd-pvc", {
+    storage: Size.tebibytes(8),
+  });
+  // Media services that share volumes
+  createBazarrDeployment(chart, {
+    tv: tvVolume.claim,
+    movies: moviesVolume.claim,
+  });
+  createTautulliDeployment(chart);
+  createPlexDeployment(chart, {
+    tv: tvVolume.claim,
+    movies: moviesVolume.claim,
+  });
+  createRadarrDeployment(chart, {
+    movies: moviesVolume.claim,
+    downloads: downloadsVolume.claim,
+  });
+  createSeerrDeployment(chart);
+  createQBitTorrentDeployment(chart, {
+    downloads: downloadsVolume.claim,
+  });
+  createSonarrDeployment(chart, {
+    tv: tvVolume.claim,
+    downloads: downloadsVolume.claim,
+  });
+  createProwlarrDeployment(chart);
+  createMaintainerrDeployment(chart);
+  await createRecyclarrDeployment(chart);
+  createWhisperbridgeDeployment(chart);
+
+  // streambot (packages/streambot) lives here so it can read-only mount the movies/tv libraries.
+  createStreambotDeployment(chart, {
+    movies: moviesVolume.claim,
+    tv: tvVolume.claim,
+  });
+
+  // NetworkPolicy: Default deny ingress from outside namespace
+  // Allows Tailscale, Cloudflare tunnel, intra-namespace, and Prometheus
+  new KubeNetworkPolicy(chart, "media-ingress-policy", {
+    metadata: { name: "media-ingress-policy" },
+    spec: {
+      podSelector: {},
+      policyTypes: ["Ingress"],
+      ingress: [
+        // Allow from Tailscale (private access)
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tailscale" },
+              },
+            },
+          ],
+        },
+        // Allow from Cloudflare tunnel (public access for Plex, Seerr)
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "cloudflare-tunnel",
+                },
+              },
+            },
+          ],
+        },
+        // Allow all intra-namespace communication
+        // Media services are highly interconnected: sonarr<->radarr<->prowlarr<->qbittorrent<->bazarr<->plex<->seerr<->maintainerr
+        {
+          from: [{ podSelector: {} }],
+        },
+        // Allow Prometheus scraping from monitoring namespace
+        {
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+        },
+        {
+          // Kometa runs in the Buildkite-owned Temporal maintenance worker and
+          // only needs Plex's HTTP API.
+          from: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+              },
+              podSelector: {
+                matchLabels: { app: "temporal-maintenance-worker" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(32_400), protocol: "TCP" }],
+        },
+      ],
+    },
+  });
+}

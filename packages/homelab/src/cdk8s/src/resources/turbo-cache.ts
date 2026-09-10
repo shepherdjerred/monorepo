@@ -24,7 +24,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import {
   CI_NODE_HOSTNAME,
   ciNodeTaintedNode,

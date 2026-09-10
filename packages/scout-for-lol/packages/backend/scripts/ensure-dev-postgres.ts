@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Ensure the shared local dev Postgres is running and a database exists.
- * Spawned by scripts/dev-web.ts (scout package root) before `prisma migrate
+ * Spawned by scripts/dev/dev-web.ts (scout package root) before `prisma migrate
  * deploy`, mirroring how migrations themselves are spawned in this cwd.
  *
  *   bun run scripts/ensure-dev-postgres.ts <database-name>

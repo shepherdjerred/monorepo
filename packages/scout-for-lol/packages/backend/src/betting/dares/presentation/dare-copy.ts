@@ -19,7 +19,7 @@ import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-s
 import {
   PARTICIPANT_BOOLEAN_CATALOG,
   PARTICIPANT_NUMERIC_CATALOG,
-} from "#src/betting/parlays/parlay-catalog.ts";
+} from "#src/betting/parlays/model/parlay-catalog.ts";
 import { countLabel } from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
 
 /**

@@ -38,7 +38,7 @@ import {
 } from "#src/betting/dares/lifecycle/dare-accept.ts";
 import { contributeToDare } from "#src/betting/dares/lifecycle/dare-contribute.ts";
 import { formatDareCustomId } from "#src/betting/dares/lifecycle/dare-custom-id.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";

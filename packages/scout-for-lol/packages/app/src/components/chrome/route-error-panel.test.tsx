@@ -2,7 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { z } from "zod";
 import { ErrorPanel, isExpectedRouteError } from "./route-error-panel.tsx";
-import { RouteParameterError } from "#src/lib/route-params.ts";
+import { RouteParameterError } from "#src/lib/routes/route-params.ts";
 
 function invalidContractError(): z.ZodError {
   const parsed = z.object({ status: z.literal("ACTIVE") }).safeParse({

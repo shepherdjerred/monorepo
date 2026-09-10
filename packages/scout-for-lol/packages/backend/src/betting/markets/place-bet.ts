@@ -20,7 +20,7 @@ import {
   BucksStorageOverflowError,
   InsufficientBucksError,
 } from "#src/betting/ledger.ts";
-import { addInt32 } from "#src/betting/parlays/parlay-odds.ts";
+import { addInt32 } from "#src/betting/parlays/model/parlay-odds.ts";
 import { bettingOversizedStakeRejectedTotal } from "#src/metrics/betting/betting-parlay.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";

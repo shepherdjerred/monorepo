@@ -1,7 +1,7 @@
 import { parseArgs } from "node:util";
 import { parseMessageLimit, selectShowMessages } from "#lib/history/context.ts";
 import { HistoryIndex } from "#lib/history/index.ts";
-import { ftsQuery, parseLimit, parseSince } from "#lib/history/query.ts";
+import { ftsQuery, parseLimit, parseSince } from "#lib/history/query/query.ts";
 import {
   historyDaemonRequest,
   HistoryDaemonResponseSchema,
@@ -15,18 +15,18 @@ import {
   startLaunchAgent,
   stopLaunchAgent,
   uninstallLaunchAgent,
-} from "#lib/history/launchd.ts";
+} from "#lib/history/sources/launchd.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
 import {
   collectHistoryResults,
   publicRecord,
   sourceWarnings,
-} from "#lib/history/results.ts";
+} from "#lib/history/query/results.ts";
 import {
   printHistoryWarnings,
   renderHistoryRecords,
   renderHistoryShow,
-} from "#lib/history/render.ts";
+} from "#lib/history/query/render.ts";
 import { currentHistoryRuntimes } from "#lib/history/runtime.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
 import { addExcerpts, targetedMessages } from "#lib/history/targeted.ts";

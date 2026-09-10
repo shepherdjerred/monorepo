@@ -14,7 +14,7 @@ import {
   ParticipantNumericFieldSchema,
   participantBooleanValue,
   participantNumericValue,
-} from "#src/betting/parlays/parlay-catalog.ts";
+} from "#src/betting/parlays/model/parlay-catalog.ts";
 import { countLabel } from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
 
 /**

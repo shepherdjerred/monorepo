@@ -1,5 +1,5 @@
 # Template for local web-UI development. Resolves at runtime via:
-#   op run --env-file=dev-web.env.tpl -- ./scripts/dev-web.ts
+#   op run --env-file=dev-web.env.tpl -- ./scripts/dev/dev-web.ts
 #
 # Secrets come from the BETA 1Password item (vault v64ocnykdqju4ui6j6pua56xw4,
 # item rtu44pohnp5ixdp2njuv5f6t2e). Non-secret config is inline.
@@ -38,7 +38,7 @@ JWT_SIGNING_SECRET=local-dev-only-jwt-signing-secret-not-for-any-deployed-env
 
 # ── Where the SPA lives (browser-visible origin) ──────────────────────
 # The default Vite dev server runs at :5180 and proxies /trpc + /api to the
-# backend. scripts/dev-web.ts overrides this for --web-port.
+# backend. scripts/dev/dev-web.ts overrides this for --web-port.
 WEB_APP_ORIGIN=http://localhost:5180
 
 # Local web boots use a signed dev session and a representative consumer

@@ -19,7 +19,7 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useDuelSeriesParams } from "#src/lib/route-params.ts";
+import { useDuelSeriesParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 type Competitor = {

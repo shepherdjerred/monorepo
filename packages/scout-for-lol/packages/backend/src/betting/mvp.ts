@@ -1,6 +1,6 @@
 import type { RawParticipant } from "@scout-for-lol/data";
 import { PARTICIPANTS_PER_TEAM } from "#src/betting/constants.ts";
-import { isStandardLobby } from "#src/betting/eligibility.ts";
+import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
 
 /**
  * Who carried the game, across all ten participants.

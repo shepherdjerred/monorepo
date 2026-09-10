@@ -7,7 +7,7 @@ import { optionalEnv, requireEnv, run } from "../lib/run.ts";
 import {
   readScoutPostHogSite,
   requireMarketingIdentifiers,
-} from "../lib/scout-analytics-config.ts";
+} from "../lib/scout/scout-analytics-config.ts";
 import {
   CANONICAL_DIGEST_PATTERN,
   parseScoutReleaseState,
@@ -19,8 +19,8 @@ import {
   siteReleaseIdentity,
   validateProdPinState,
   type ScoutReleaseState,
-} from "../lib/scout-release-state.ts";
-import { reconcileLegacyScoutProd } from "../lib/scout-legacy-site-storage.ts";
+} from "../lib/scout/scout-release-state.ts";
+import { reconcileLegacyScoutProd } from "../lib/scout/scout-legacy-site-storage.ts";
 import {
   archiveScout,
   assertScoutArchiveBytes,
@@ -30,7 +30,7 @@ import {
   reconcileScoutProd,
   readScoutStateByInput,
   SCOUT_RELEASE_WORK_DIR,
-} from "../lib/scout-site-storage.ts";
+} from "../lib/scout/scout-site-storage.ts";
 
 const SITE_PACKAGE_DIR = "packages/scout-for-lol";
 const DIST_DIR = "packages/scout-for-lol/packages/frontend/dist";

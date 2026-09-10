@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { defaultHistoryRuntimePaths } from "#lib/history/paths.ts";
-import { ftsQuery } from "#lib/history/query.ts";
+import { ftsQuery } from "#lib/history/query/query.ts";
 import type {
   HistoryDocument,
   HistorySourceName,

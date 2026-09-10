@@ -1,4 +1,4 @@
-import { DiscordOpusEncoder } from "./codecs.ts";
+import { DiscordOpusEncoder } from "./audio/codecs.ts";
 import type {
   AssistantAudioTransport,
   DuckObserver,
@@ -7,7 +7,7 @@ import type {
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "./attempt.ts";
+} from "./realtime/attempt.ts";
 
 export type AssistantAudioSink = {
   readonly enqueue: (pcm24k: Uint8Array) => void;

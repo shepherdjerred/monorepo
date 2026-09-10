@@ -13,7 +13,7 @@ import {
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 
 const CURRENT_FILENAME = fileURLToPath(import.meta.url);

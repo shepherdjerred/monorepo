@@ -5,7 +5,7 @@ import {
   buildMusicPrepareOptions,
   buildVideoPrepareOptions,
 } from "@shepherdjerred/streambot/streamer/prepare-options.ts";
-import { streamerEnv as env } from "./streamer-test-fixtures.ts";
+import { streamerEnv as env } from "./streamer/streamer-test-fixtures.ts";
 
 const stream = loadConfig(env()).stream;
 

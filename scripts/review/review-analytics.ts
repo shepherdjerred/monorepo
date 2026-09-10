@@ -31,7 +31,7 @@ import {
   requireToken,
   type PrRounds,
   type PrSchema,
-} from "../lib/review-analytics-github.ts";
+} from "../lib/review/review-analytics-github.ts";
 import type { z } from "zod";
 
 type ReviewAnswer = { head: string | null; at: string };

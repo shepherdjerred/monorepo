@@ -26,7 +26,7 @@ import {
   playerProfileSearch,
   type PlayerProfileFilters,
 } from "#src/lib/player/player-profile-filters.ts";
-import { useConsumerChampionParams } from "#src/lib/route-params.ts";
+import { useConsumerChampionParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
 import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url-state.ts";
 

@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import type { RegionValue } from "#src/lib/regions.ts";
-import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { Dialog } from "@scout-for-lol/design-system/components/overlays/dialog";
 import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
   PlayerAliasFormField,

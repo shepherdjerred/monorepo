@@ -10,7 +10,7 @@ import {
 import {
   OPPONENT_PING_HISTORY_COLUMNS,
   PARLAY_HISTORY_COLUMNS,
-} from "#src/betting/parlays/parlay-stat-fields.ts";
+} from "#src/betting/parlays/model/parlay-stat-fields.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import type { MatchLakeRow } from "@scout-for-lol/data";
 import {

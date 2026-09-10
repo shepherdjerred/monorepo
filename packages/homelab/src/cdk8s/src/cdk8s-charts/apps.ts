@@ -23,7 +23,7 @@ import { createPyroscopeApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createAlloyApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy.ts";
 import { createAlloyGatewayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alloy-gateway.ts";
 import { Namespace } from "cdk8s-plus-31";
-import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { createOpenEBSApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/openebs.ts";
 import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkite.ts";

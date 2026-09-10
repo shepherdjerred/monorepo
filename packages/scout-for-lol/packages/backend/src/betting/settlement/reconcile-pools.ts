@@ -3,7 +3,7 @@ import {
   type BucksMatchingSummary,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
-import { settlementHouseCut } from "#src/betting/house-cut.ts";
+import { settlementHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import {
   auditFinding,
   type BucksAuditSink,

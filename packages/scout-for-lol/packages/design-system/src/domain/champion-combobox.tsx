@@ -1,7 +1,7 @@
 import { browserChampions } from "@scout-for-lol/data/browser-assets";
 import { useMemo, useState } from "react";
 import { ChampionPortrait } from "#src/assets/index.tsx";
-import { Combobox } from "#src/components/combobox.tsx";
+import { Combobox } from "#src/components/forms/combobox.tsx";
 
 export type ChampionOption = (typeof browserChampions)[number];
 

@@ -14,7 +14,7 @@ type ReleaseValidationOptions = {
 };
 
 const ARGOCD_COMMAND_PREFIX =
-  "bun --no-install packages/homelab/scripts/argocd.ts ";
+  "bun --no-install packages/homelab/scripts/argocd/argocd.ts ";
 const RELEASE_ROOT_SUBCOMMAND =
   'release-root apps argocd-release-expected.json --revision "$$apps_revision" --request-id "$BUILDKITE_BUILD_ID" --timeout 300';
 

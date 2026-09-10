@@ -11,7 +11,10 @@ import {
   subjectFraming,
 } from "#src/betting/components.ts";
 import { awardClassicPrematchForGame } from "#src/betting/accounts/classic-prematch-earnings.ts";
-import { isBettableGame, isStandardLobby } from "#src/betting/eligibility.ts";
+import {
+  isBettableGame,
+  isStandardLobby,
+} from "#src/betting/eligibility/eligibility.ts";
 import {
   bettingEnabledGuilds,
   openBettingPoolsForPrematch,

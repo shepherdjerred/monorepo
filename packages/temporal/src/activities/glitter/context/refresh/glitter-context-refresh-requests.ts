@@ -5,7 +5,7 @@ import {
   type RelationshipEvent,
   type StyleCard,
 } from "@shepherdjerred/glitter-context/schema";
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
 import type { StyleEvidenceChunk } from "./glitter-context-refresh-chunks.ts";
 import {
   glitterObjectArtifactSchema,
@@ -20,15 +20,15 @@ import {
   SYNTHESIS_MODEL,
   SYNTHESIS_TRUNCATION_RETRY_MAX_OUTPUT_TOKENS,
   type SummarizedChunk,
-} from "./glitter-context-refresh-style-generation-cost.ts";
+} from "./style/glitter-context-refresh-style-generation-cost.ts";
 import {
   StyleChunkSummarySchema,
   StyleSynthesisSchema,
   type StyleChunkSummary,
   type StyleSynthesis,
-} from "./glitter-context-refresh-style-schemas.ts";
-import { buildBoundedSynthesisInput } from "./glitter-context-refresh-synthesis-limit.ts";
-import { synthesisPrompt } from "./glitter-context-refresh-synthesis-prompt.ts";
+} from "./style/glitter-context-refresh-style-schemas.ts";
+import { buildBoundedSynthesisInput } from "./synthesis/glitter-context-refresh-synthesis-limit.ts";
+import { synthesisPrompt } from "./synthesis/glitter-context-refresh-synthesis-prompt.ts";
 import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
 
 export const RELATIONSHIP_MODEL = "gpt-5.6-luna";

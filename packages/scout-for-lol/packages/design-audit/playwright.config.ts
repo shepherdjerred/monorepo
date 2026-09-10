@@ -38,12 +38,12 @@ if (
     "Nightly Scout design checks require SCOUT_DESIGN_AUDIT_BASE_URL or all three of SCOUT_DESIGN_AUDIT_PUBLIC_URL, SCOUT_DESIGN_AUDIT_DOCS_URL, and SCOUT_DESIGN_AUDIT_APP_URL",
   );
 }
-// `dev:design-audit` (scripts/dev-web.ts) boots the real Scout backend, which
+// `dev:design-audit` (scripts/dev/dev-web.ts) boots the real Scout backend, which
 // normally requires real DISCORD_TOKEN/DISCORD_CLIENT_SECRET/
 // JWT_SIGNING_SECRET/RIOT_API_KEY (and a live Discord login). The design
 // audit only exercises read-only UI routes via the dev-login session, so
 // SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true tells dev-web.ts to skip that
-// requirement entirely (see scripts/dev-web.ts) rather than needing either
+// requirement entirely (see scripts/dev/dev-web.ts) rather than needing either
 // real CI secrets or a local 1Password session just to smoke-test the UI.
 const devDesignAuditCommand =
   "SCOUT_DESIGN_AUDIT_LOCAL_BOOT=true bun --no-install run dev:design-audit -- --no-discord-gateway";
@@ -158,7 +158,7 @@ export default defineConfig({
             reuseExistingServer: env["CI"] !== "true",
             // This one gets more than the other two on purpose: before it
             // listens it runs `prisma migrate deploy`, `prisma generate`, and
-            // the design-audit seed (scripts/dev-web.ts), then starts the
+            // the design-audit seed (scripts/dev/dev-web.ts), then starts the
             // backend. That is minutes of real work, not just a dev server.
             timeout: 300_000,
           },

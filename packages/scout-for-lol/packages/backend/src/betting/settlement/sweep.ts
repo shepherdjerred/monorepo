@@ -14,7 +14,7 @@ import {
   type BucksMatchingSummary,
 } from "@scout-for-lol/data";
 import { HOUSE_MATCH_LIMIT } from "#src/betting/constants.ts";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import { matchBucksOffers } from "#src/betting/markets/matching.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";

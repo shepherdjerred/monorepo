@@ -3,7 +3,7 @@ import {
   type PeopleDocument,
   type RelationshipsDocument,
 } from "@shepherdjerred/glitter-context/schema";
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
 import { buildBoundedRelationshipInput } from "./glitter-context-refresh-requests.ts";
 import { selectRelationshipEvidenceBatch } from "./glitter-context-refresh-relationships.ts";
 

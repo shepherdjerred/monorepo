@@ -6,13 +6,13 @@ import {
   GuildInventorySchema,
   PageManifestSchema,
   type CurrentMessage,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import {
   compareSnowflakes,
   mergeCurrentProjection,
   serializeProjection,
   sha256,
-} from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus-projection.ts";
 import {
   glitterCorpusInventoryEntries,
   glitterCorpusInventoryScopeChanges,
@@ -29,7 +29,7 @@ import {
   type CapturePageResult,
   type ChannelStateResult,
   type InventoryResult,
-} from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus-activity-types.ts";
 import { readBaselineProjection } from "./glitter-corpus-baseline.ts";
 import { discoverGuildInventory } from "./glitter-corpus-discord.ts";
 import {

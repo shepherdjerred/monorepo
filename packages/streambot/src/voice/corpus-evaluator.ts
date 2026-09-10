@@ -13,7 +13,7 @@ import {
   VoiceAudioLifecycle,
   type LocalVoiceModels,
 } from "@shepherdjerred/voice-assistant";
-import type { VoiceAudioLifecycleOptions } from "@shepherdjerred/voice-assistant/audio-lifecycle-types.ts";
+import type { VoiceAudioLifecycleOptions } from "@shepherdjerred/voice-assistant/audio/audio-lifecycle-types.ts";
 import { initializeLocalVoiceModelsForRuntime } from "@shepherdjerred/voice-assistant/local-models.ts";
 import { streambotVoiceLifecycleDeps } from "@shepherdjerred/streambot/voice/local-voice.ts";
 import {

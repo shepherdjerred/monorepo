@@ -18,7 +18,7 @@ import {
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
-import { settlementHouseCut } from "#src/betting/house-cut.ts";
+import { settlementHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
 import {
   BucksCorruptIdentityError,

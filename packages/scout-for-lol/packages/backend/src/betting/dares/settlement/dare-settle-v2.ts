@@ -52,7 +52,7 @@ import { voidDareV2WithFullRefund } from "#src/betting/dares/settlement/dare-voi
 import {
   enqueueMaterialDareProgressNotification,
   enqueueTerminalDareNotification,
-} from "#src/betting/dares/presentation/dare-notification-production.ts";
+} from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
 import {
   prisma,
   type Db,

@@ -3,7 +3,7 @@ import {
   GenerationStateEntrySchema,
   PersonSchema,
 } from "@shepherdjerred/glitter-context/schema";
-import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { CurrentMessageSchema } from "#shared/glitter/glitter-corpus.ts";
 import {
   isSafeStyleSample,
   selectStyleRefreshCandidates,

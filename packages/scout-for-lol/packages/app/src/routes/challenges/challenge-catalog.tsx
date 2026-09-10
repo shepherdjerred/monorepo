@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ChallengeCatalog() {

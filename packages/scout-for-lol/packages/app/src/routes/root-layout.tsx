@@ -19,12 +19,15 @@ import { useAnalyticsIdentity } from "#src/hooks/use-analytics-identity.ts";
 import { FeedbackPrompt } from "#src/components/dialogs/feedback-prompt.tsx";
 import { UserMenu } from "#src/components/chrome/user-menu.tsx";
 import { buildInfo } from "#src/lib/build-info.ts";
-import { docsOrigin, marketingOrigin } from "#src/lib/surface-origins.ts";
+import {
+  docsOrigin,
+  marketingOrigin,
+} from "#src/lib/routes/surface-origins.ts";
 import { AppNavigation } from "#src/components/chrome/app-navigation.tsx";
 import {
   resolveAppShellMode,
   shouldRenderGlobalFooter,
-} from "#src/lib/app-navigation.ts";
+} from "#src/lib/routes/app-navigation.ts";
 import { ExploreRunsProvider } from "#src/components/explore/explore-runs-provider.tsx";
 
 /**

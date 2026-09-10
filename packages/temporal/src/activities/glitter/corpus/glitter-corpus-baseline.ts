@@ -1,4 +1,4 @@
-import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { CurrentMessageSchema } from "#shared/glitter/glitter-corpus.ts";
 import { loadStateManifest } from "./glitter-corpus-io.ts";
 import type { CorpusStore } from "./glitter-corpus-store.ts";
 import { readVerifiedObject } from "./glitter-corpus-storage.ts";

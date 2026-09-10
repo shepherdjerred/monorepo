@@ -141,7 +141,7 @@ describe("Argo CD prune safety", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "sync",
           "apps",
           "--async",
@@ -214,7 +214,7 @@ describe("Argo CD prune safety", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "sync",
           "apps",
           "--revision",
@@ -255,7 +255,7 @@ test("Argo CD root pruning requires an exact revision", async () => {
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "sync",
       "apps",
       "--prune",
@@ -285,11 +285,14 @@ test("Argo CD root pruning requires an exact revision", async () => {
 });
 
 test("Argo CD CLI usage exposes one root release command", async () => {
-  const process = Bun.spawn(["bun", "--no-install", "scripts/argocd.ts"], {
-    cwd: path.resolve(import.meta.dir, "../../.."),
-    stderr: "pipe",
-    stdout: "pipe",
-  });
+  const process = Bun.spawn(
+    ["bun", "--no-install", "scripts/argocd/argocd.ts"],
+    {
+      cwd: path.resolve(import.meta.dir, "../../.."),
+      stderr: "pipe",
+      stdout: "pipe",
+    },
+  );
   const [exitCode, stderr] = await Promise.all([
     process.exited,
     new Response(process.stderr).text(),
@@ -325,7 +328,7 @@ test("release-root owns the complete dry-run lifecycle", async () => {
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "release-root",
         "apps",
         expectedPath,
@@ -385,7 +388,7 @@ test("release-root rejects an inventory that names another apps revision", async
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "release-root",
         "apps",
         expectedPath,
@@ -476,7 +479,7 @@ describe("Argo CD root prune safety", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "sync",
           "apps",
           "--revision",
@@ -569,7 +572,7 @@ describe("Argo CD root prune safety", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "sync",
           "apps",
           "--revision",
@@ -728,7 +731,7 @@ describe("Argo CD release gating", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "suspend-auto-sync",
           "apps",
           "--revision",
@@ -828,7 +831,7 @@ describe("Argo CD root release staging", () => {
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "stage-root-release",
         "apps",
         "--dry-run",
@@ -941,7 +944,7 @@ describe("Argo CD root release staging", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "stage-root-release",
           "apps",
           "--revision",
@@ -998,7 +1001,7 @@ async function runReconcileRelease(
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "reconcile-release",
         expectedPath,
         "--skip-health-wait",
@@ -1294,7 +1297,7 @@ describe("Argo CD stale release rejection", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "reconcile-release",
           expectedPath,
           "--timeout",
@@ -1367,7 +1370,7 @@ describe("Argo CD operator script", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "delete-application",
           "kueue",
           "--project",
@@ -1445,7 +1448,7 @@ describe("Argo CD operator script", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "delete-application",
           "kueue",
           "--project",

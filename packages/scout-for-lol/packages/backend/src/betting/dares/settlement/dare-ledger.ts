@@ -7,8 +7,8 @@ import {
 import {
   cancellationHouseCut,
   settlementHouseCut,
-} from "#src/betting/house-cut.ts";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+} from "#src/betting/eligibility/house-cut.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import {
   applyBucksDelta,
   lockBucksAccountsForCredit,

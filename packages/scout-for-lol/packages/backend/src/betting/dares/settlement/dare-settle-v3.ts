@@ -25,7 +25,7 @@ import {
 import {
   enqueueMaterialDareProgressNotificationV3,
   enqueueTerminalDareNotification,
-} from "#src/betting/dares/presentation/dare-notification-production.ts";
+} from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
 import type {
   DareProofV3,
   DareV2SettlementSummary,

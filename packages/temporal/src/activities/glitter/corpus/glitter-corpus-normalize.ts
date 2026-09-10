@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 import {
   DiscordApiMessageSchema,
   type DiscordApiMessage,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 
 const JsonRecordSchema = z.record(z.string(), z.unknown());
 

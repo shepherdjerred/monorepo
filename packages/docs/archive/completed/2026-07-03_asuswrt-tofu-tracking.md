@@ -116,7 +116,7 @@ Mirror existing stack conventions (`cloudflare/`, `pagerduty/`):
 - CI drift-detection (needs Tailscale subnet router for `192.168.1.0/24` + provider baked into the
   tofu image + creds threaded through the OpenTofu lanes in `.buildkite/pipeline.yml` — the
   `for stack in …` allowlists in the `pr-dryrun` plan loop and the `tofu-apply` apply loop, which
-  drive `packages/homelab/scripts/tofu-stack.ts`; `asuswrt` is deliberately absent from both).
+  drive `packages/homelab/scripts/tofu/tofu-stack.ts`; `asuswrt` is deliberately absent from both).
 - Cleaning residual AiMesh `cfg_*` NVRAM state (possible later via `asuswrt_nvram`, risky — leave).
 
 ## Caveats

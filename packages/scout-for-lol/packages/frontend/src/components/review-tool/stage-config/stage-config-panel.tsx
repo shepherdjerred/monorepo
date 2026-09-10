@@ -5,7 +5,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { Label } from "@scout-for-lol/design-system/components/label";
-import { Switch } from "@scout-for-lol/design-system/components/switch";
+import { Switch } from "@scout-for-lol/design-system/components/forms/switch";
 import type {
   ReviewTextStageConfig,
   StageConfig,

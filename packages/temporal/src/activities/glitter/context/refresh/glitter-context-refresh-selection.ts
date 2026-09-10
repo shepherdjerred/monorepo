@@ -2,7 +2,7 @@ import type {
   GenerationStateEntry,
   Person,
 } from "@shepherdjerred/glitter-context/schema";
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
 
 const QUARTERLY_REFRESH_MS = 90 * 24 * 60 * 60 * 1000;
 const MIN_NEW_MESSAGES = 20;

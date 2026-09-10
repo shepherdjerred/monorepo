@@ -6,22 +6,22 @@ export {
   type CompetitionChartProps,
   type CompetitionChartSeries,
   type CompetitionChartBar,
-} from "./html/competition-chart.ts";
+} from "./html/charts/competition-chart.ts";
 export {
   analyticsChartToImage,
   analyticsChartToSvg,
   type AnalyticsChartProps,
   type AnalyticsChartSeries,
-} from "./html/analytics-chart.ts";
+} from "./html/charts/analytics-chart.ts";
 export {
   visualizationSnapshotToImage,
   visualizationSnapshotToSvg,
-} from "./html/visualization-snapshot-image.ts";
+} from "./html/snapshot/visualization-snapshot-image.ts";
 export {
   VISUALIZATION_BODY_FONT,
   VISUALIZATION_DISPLAY_FONT,
-} from "./html/visualization-snapshot-style.ts";
-export { visualizationSnapshotToOption } from "./html/visualization-snapshot-option.ts";
+} from "./html/snapshot/visualization-snapshot-style.ts";
+export { visualizationSnapshotToOption } from "./html/snapshot/visualization-snapshot-option.ts";
 export {
   discordScreenshotToImage,
   discordScreenshotToSvg,

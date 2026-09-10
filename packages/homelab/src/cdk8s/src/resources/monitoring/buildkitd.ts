@@ -1,6 +1,6 @@
 import type { Chart } from "cdk8s";
 import { PrometheusRule } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { getBuildkitdRuleGroups } from "./monitoring/rules/buildkitd.ts";
 
 /**

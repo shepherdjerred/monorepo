@@ -10,7 +10,7 @@ import {
   type CompetitionVisibility,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { FormActions } from "@scout-for-lol/design-system/components/input";
+import { FormActions } from "@scout-for-lol/design-system/components/forms/field";
 import { CompetitionBuilderV2 } from "#src/components/competition/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,

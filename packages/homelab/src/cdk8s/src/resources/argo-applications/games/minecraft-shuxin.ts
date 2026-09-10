@@ -4,7 +4,7 @@ import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/arg
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
-import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
   createMinecraftConfigMaps,
@@ -12,8 +12,8 @@ import {
   getMinecraftExtraEnv,
   getMinecraftPluginConfigInitContainer,
   getMinecraftPluginNames,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-config.ts";
-import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft-drift-check.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
+import { getMinecraftConfigDriftCheckInitContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-drift-check.ts";
 
 const NAMESPACE = "minecraft-shuxin";
 

@@ -80,7 +80,7 @@ async function runVerifyAutoSync(origin: string) {
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "verify-auto-sync",
       "apps",
       "--revision",
@@ -262,7 +262,13 @@ test("verify-auto-sync gives up on a divergence that never settles", async () =>
 
 test("verify-auto-sync requires an exact revision", async () => {
   const process = Bun.spawn(
-    ["bun", "--no-install", "scripts/argocd.ts", "verify-auto-sync", "apps"],
+    [
+      "bun",
+      "--no-install",
+      "scripts/argocd/argocd.ts",
+      "verify-auto-sync",
+      "apps",
+    ],
     {
       cwd: path.resolve(import.meta.dir, "../../.."),
       stderr: "pipe",

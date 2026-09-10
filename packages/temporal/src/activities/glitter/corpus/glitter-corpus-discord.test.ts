@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   DiscordApiChannelSchema,
   GuildInventorySchema,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import {
   assertPreviouslyCapturedThreadParentsReadable,
   discordGuildMemberPath,

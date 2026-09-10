@@ -172,7 +172,7 @@
         "packages/**/package.json",
         "scripts/package.json",
         "!**/node_modules/**",
-        "scripts/checks/check-floating-deps.ts"
+        "scripts/checks/deps/check-floating-deps.ts"
       ]
     },
     "//#check-patched-deps": {
@@ -181,7 +181,7 @@
         "bun.lock",
         "patches/**",
         "packages/**/patches/*.patch",
-        "scripts/checks/check-patched-deps.ts",
+        "scripts/checks/deps/check-patched-deps.ts",
         ".buildkite/scripts/selectors/select-image-targets.ts"
       ]
     },
@@ -193,7 +193,7 @@
       "inputs": [
         "packages/version-catalog/src/catalog.json",
         "scripts/pin-candidates-state.json",
-        "scripts/checks/verify-worker-image-build-ids.ts"
+        "scripts/checks/ci/verify-worker-image-build-ids.ts"
       ]
     },
     "//#check-ci-env": {
@@ -466,7 +466,7 @@
     },
     "//#env-var-names": {
       "inputs": [
-        "scripts/checks/check-env-var-names.ts",
+        "scripts/checks/ci/check-env-var-names.ts",
         "**/*.{ts,rs,py,fish,tmpl,yaml,yml,env,md,sh,swift}",
         "!**/node_modules/**",
         "!**/generated/**"
@@ -545,7 +545,7 @@
     },
     "//#react-version-sync": {
       "inputs": [
-        "scripts/checks/check-react-version-sync.ts",
+        "scripts/checks/deps/check-react-version-sync.ts",
         "**/package.json",
         "bun.lock",
         "!**/node_modules/**"
@@ -652,7 +652,7 @@
     },
     "//#tunnel-dns-coverage": {
       "inputs": [
-        "scripts/checks/check-tunnel-dns-coverage.ts",
+        "scripts/checks/ci/check-tunnel-dns-coverage.ts",
         "packages/homelab/src/cdk8s/src/**/*.ts",
         "packages/homelab/src/tofu/cloudflare/*.tf"
       ]

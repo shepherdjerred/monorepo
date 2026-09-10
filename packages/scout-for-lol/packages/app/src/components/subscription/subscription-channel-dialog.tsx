@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { Dialog } from "@scout-for-lol/design-system/components/dialog";
+import { Dialog } from "@scout-for-lol/design-system/components/overlays/dialog";
 import { SemanticDialogForm } from "#src/components/dialog-form.tsx";
 import {
   focusFirstInvalid,

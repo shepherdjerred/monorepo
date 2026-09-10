@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { VisualizationSnapshotSchema } from "@scout-for-lol/data";
-import { visualizationSnapshotToOption } from "#src/html/visualization-snapshot-option.ts";
+import { visualizationSnapshotToOption } from "#src/html/snapshot/visualization-snapshot-option.ts";
 import {
   formatDuration,
   formatSeriesValue,

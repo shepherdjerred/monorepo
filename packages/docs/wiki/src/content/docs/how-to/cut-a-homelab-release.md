@@ -37,7 +37,7 @@ the exact chart source. Only Applications whose auto-sync policy must stay
 disabled use local manifest overrides, so stage 4 owns child operations without
 racing ArgoCD while unchanged cluster-scoped resources still follow Argo's
 normal source-apply path. In stage 6, the
-[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 reapplies every exact sync wave before running the verified prune. Unchanged
 resources use source-selective syncs. The self-managed root Application alone
 uses a local override to keep auto-sync disabled between batches; the final
@@ -237,7 +237,7 @@ sync does not run that client-side check.
 The workflow is defined by the
 [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
 and the
-[Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts).
+[Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts).
 
 ## Related
 

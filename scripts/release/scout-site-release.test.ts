@@ -8,7 +8,7 @@ import {
   hashReleaseInputFiles,
   writeScoutReleaseState,
 } from "./scout-site-release.ts";
-import { selectPostHogSite } from "../lib/scout-analytics-config.ts";
+import { selectPostHogSite } from "../lib/scout/scout-analytics-config.ts";
 import {
   parseLegacyScoutReleaseManifest,
   parseScoutReleaseState,
@@ -17,8 +17,8 @@ import {
   resolveProdPin,
   siteReleaseIdentity,
   validateProdPinState,
-} from "../lib/scout-release-state.ts";
-import { hashSiteArchive } from "../lib/scout-site-storage.ts";
+} from "../lib/scout/scout-release-state.ts";
+import { hashSiteArchive } from "../lib/scout/scout-site-storage.ts";
 
 const DIGEST =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";

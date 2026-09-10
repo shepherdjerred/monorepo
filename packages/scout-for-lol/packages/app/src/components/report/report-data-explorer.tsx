@@ -4,14 +4,14 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ClipboardError } from "#src/components/clipboard-error.tsx";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@scout-for-lol/design-system/components/select";
+} from "@scout-for-lol/design-system/components/forms/select";
 import {
   Table,
   TableBody,

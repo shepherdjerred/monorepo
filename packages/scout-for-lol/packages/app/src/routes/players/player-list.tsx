@@ -17,7 +17,7 @@ import {
   CollapsibleTrigger,
 } from "@scout-for-lol/design-system/components/collapsible";
 import { ChevronDown } from "lucide-react";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import {
   Table,
   TableBody,

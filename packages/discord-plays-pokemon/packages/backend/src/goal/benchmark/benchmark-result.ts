@@ -11,7 +11,7 @@ import {
   type CatchBenchmarkResult,
   type GoalBenchmarkTelemetry,
 } from "./benchmark-evaluator.ts";
-import type { CatchStateEvidence } from "#src/goal/catch-evidence.ts";
+import type { CatchStateEvidence } from "#src/goal/memory/catch-evidence.ts";
 import {
   BENCHMARK_PROVIDER_FAILURE_FILE,
   BENCHMARK_PROVIDER_STARTUP_FAILURE_FILE,

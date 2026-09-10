@@ -39,7 +39,7 @@
       "count": 1
     }
   },
-  "src/activities/glitter/context/refresh/glitter-context-refresh-style-finalize.ts": {
+  "src/activities/glitter/context/refresh/style/glitter-context-refresh-style-finalize.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }
@@ -94,7 +94,7 @@
       "count": 1
     }
   },
-  "src/shared/glitter-corpus-projection.ts": {
+  "src/shared/glitter/glitter-corpus-projection.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2
     }

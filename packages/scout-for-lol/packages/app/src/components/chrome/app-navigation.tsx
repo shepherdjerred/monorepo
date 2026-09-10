@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import {
   consumerNavigationItems,
@@ -33,7 +33,7 @@ import {
   guildWorkspacePath,
   isExplorePath,
   visibleGuildNavigationItems,
-} from "#src/lib/app-navigation.ts";
+} from "#src/lib/routes/app-navigation.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { ExploreSidebar } from "#src/components/explore/explore-sidebar.tsx";

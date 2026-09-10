@@ -9,7 +9,7 @@ import { createAlertDashboardApp } from "./alert-dashboard.ts";
 import {
   getRegisteredBackendProbes,
   resetProbeRegistry,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/probe-registry.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 
 const SelectorSchema = z.object({
   matchLabels: z.record(z.string(), z.string()).optional(),

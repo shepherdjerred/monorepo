@@ -6,7 +6,7 @@ import type {
 } from "@scout-for-lol/data/index.ts";
 import { recordCoreOutputsDelivered } from "#src/analytics/guild-lifecycle.ts";
 import { recordPoolMessageRefs } from "#src/betting/markets/pool-open.ts";
-import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
+import { refreshBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { startParlayGeneration } from "#src/betting/parlays/parlay-generate.ts";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data/index.ts";
 import type { BucksPrematchAttachment } from "#src/betting/markets/prematch-hook.ts";

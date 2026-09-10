@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { ApplicationFailure } from "@temporalio/common";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
+import { sha256 } from "#shared/glitter/glitter-corpus-projection.ts";
 import {
   getObjectBytes,
   isPreconditionFailedError,

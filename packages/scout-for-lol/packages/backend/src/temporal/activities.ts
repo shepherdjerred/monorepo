@@ -278,7 +278,7 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
           }
           case "weekly-bucks-leaderboard": {
             const { runWeeklyBucksLeaderboard } =
-              await import("#src/betting/weekly/weekly-leaderboard.ts");
+              await import("#src/betting/weekly/leaderboard/weekly-leaderboard.ts");
             await runWeeklyBucksLeaderboard();
             break;
           }

@@ -13,7 +13,7 @@
     "scripts": {
       "entry": [
         "*.ts",
-        "checks/*.ts",
+        "checks/**/*.ts",
         "ci/*.ts",
         "release/*.ts",
         "tools/*.ts",

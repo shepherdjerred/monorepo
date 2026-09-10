@@ -16,7 +16,7 @@ import {
   type WakePhraseVerification,
   type WakePhraseVerifier,
 } from "./phrase-verifier.ts";
-import { readPcm16MonoWave } from "./wave-io.ts";
+import { readPcm16MonoWave } from "./audio/wave-io.ts";
 import { z } from "zod";
 
 const SAMPLE_RATE = 16_000;

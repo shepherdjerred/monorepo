@@ -58,7 +58,7 @@ const ALL_TARGET_INPUTS = [
 const SCOUT_TARGET_INPUTS = [
   "packages/scout-for-lol/eslint.config.ts",
   "packages/scout-for-lol/package.json",
-  "packages/scout-for-lol/scripts/dev-web.ts",
+  "packages/scout-for-lol/scripts/dev/dev-web.ts",
   "packages/scout-for-lol/tsconfig.base.json",
 ] as const;
 

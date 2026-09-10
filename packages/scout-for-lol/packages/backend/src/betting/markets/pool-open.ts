@@ -8,7 +8,7 @@ import {
   type RawCurrentGameInfo,
 } from "@scout-for-lol/data";
 import { BETTING_WINDOW_MS } from "#src/betting/constants.ts";
-import { isBettableGame } from "#src/betting/eligibility.ts";
+import { isBettableGame } from "#src/betting/eligibility/eligibility.ts";
 import { isUniqueConstraintError } from "#src/lib/player-admin/shared.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";

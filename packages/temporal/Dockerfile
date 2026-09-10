@@ -444,7 +444,7 @@ COPY --from=build /usr/local/bin/toolkit /usr/local/bin/toolkit
 # into place if a generated schema isn't present. Idempotent, dependency-free —
 # runs here because it writes into the source tree.
 RUN toolkit --version \
-    && bun packages/temporal/scripts/ensure-ha-schema.ts
+    && bun packages/temporal/scripts/homelab/ensure-ha-schema.ts
 
 ARG VERSION=dev
 ARG GIT_SHA=unknown

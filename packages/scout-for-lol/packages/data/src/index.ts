@@ -13,15 +13,15 @@ export type {
   StyleCard,
   StylePromptContext,
 } from "@shepherdjerred/glitter-context/schema";
-export { serializeStyleCardForScoutPrompt } from "./review/style-card-prompt.ts";
+export { serializeStyleCardForScoutPrompt } from "./review/art/style-card-prompt.ts";
 export * from "./seasons.ts";
-export * from "./review/art-styles.ts";
-export { ART_STYLES } from "./review/art-styles-list.ts";
-export type { ArtStyle } from "./review/art-categories.ts";
+export * from "./review/art/art-styles.ts";
+export { ART_STYLES } from "./review/art/art-styles-list.ts";
+export type { ArtStyle } from "./review/art/art-categories.ts";
 export * from "./review/models.ts";
 export * from "./review/prompts.ts";
 export * from "./review/exceptional-performance.ts";
-export * from "./review/image-prompt.ts";
+export * from "./review/art/image-prompt.ts";
 export {
   type ReviewTextMetadata,
   type ReviewImageMetadata,
@@ -38,21 +38,21 @@ export {
   type ParticipantLookup,
   type TimelineEnrichment,
   type EnrichedTimelineData,
-} from "./review/timeline-enricher.ts";
+} from "./review/timeline/timeline-enricher.ts";
 
 // Pipeline exports
-export { generateFullMatchReview } from "./review/pipeline.ts";
+export { generateFullMatchReview } from "./review/pipeline/pipeline.ts";
 export {
   generateTimelineSummary,
   generateTimelineChunkSummary,
   aggregateTimelineChunks,
-} from "./review/timeline-stages.ts";
+} from "./review/timeline/timeline-stages.ts";
 export {
   generateMatchSummary,
   generateReviewTextStage,
   generateImageDescription,
   generateImage,
-} from "./review/pipeline-stages.ts";
+} from "./review/pipeline/pipeline-stages.ts";
 export {
   getDefaultStageConfigs,
   DEFAULT_TIMELINE_SUMMARY_MODEL,
@@ -73,7 +73,7 @@ export {
   IMAGE_DESCRIPTION_USER_PROMPT,
   IMAGE_GENERATION_USER_PROMPT,
   createStageConfigs,
-} from "./review/pipeline-defaults.ts";
+} from "./review/pipeline/pipeline-defaults.ts";
 export type {
   ModelConfig,
   StageConfig,
@@ -98,7 +98,7 @@ export type {
   PipelineStageName,
   PipelineProgress,
   PipelineProgressCallback,
-} from "./review/pipeline-types.ts";
+} from "./review/pipeline/pipeline-types.ts";
 
 // Prompt variable metadata (single source of truth for frontend/backend)
 export {

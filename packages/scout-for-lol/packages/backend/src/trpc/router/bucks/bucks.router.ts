@@ -24,16 +24,16 @@ import {
   inspectVisibleDareV2,
   listVisibleDarePageV2,
 } from "#src/betting/dares/presentation/dare-view-v2.ts";
-import { cancellationHouseCut } from "#src/betting/house-cut.ts";
-import { refreshBucksMessages } from "#src/betting/message-refresh.ts";
+import { cancellationHouseCut } from "#src/betting/eligibility/house-cut.ts";
+import { refreshBucksMessages } from "#src/betting/notify/message-refresh.ts";
 import { ledgerKindLabel } from "#src/betting/navigation.ts";
 import { getOpenMarketsView } from "#src/betting/markets/open-market-view.ts";
 import { placeBet } from "#src/betting/markets/place-bet.ts";
-import { placeParlayBet } from "#src/betting/parlays/parlay-place-bet.ts";
-import { refreshParlayMessages } from "#src/betting/parlays/parlay-refresh.ts";
+import { placeParlayBet } from "#src/betting/parlays/runtime/parlay-place-bet.ts";
+import { refreshParlayMessages } from "#src/betting/parlays/runtime/parlay-refresh.ts";
 import { subjectWinsForTeam } from "#src/betting/team.ts";
 import { placeWeeklyParlayBet } from "#src/betting/weekly/weekly-parlay-bet.ts";
-import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly/weekly-leaderboard-snapshot.ts";
+import { getLatestWeeklyLeaderboardSnapshot } from "#src/betting/weekly/leaderboard/weekly-leaderboard-snapshot.ts";
 import { refreshWeeklyParlayMessage } from "#src/betting/weekly/weekly-parlay-refresh.ts";
 import {
   assertBucksGuildMembership,

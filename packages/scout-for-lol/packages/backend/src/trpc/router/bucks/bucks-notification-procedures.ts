@@ -6,7 +6,7 @@ import {
 import {
   getBucksNotificationPreferences,
   updateBucksNotificationPreferences,
-} from "#src/betting/notification-preferences.ts";
+} from "#src/betting/notify/notification-preferences.ts";
 import { assertBucksScope } from "#src/consumer/bucks-access.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 

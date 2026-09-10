@@ -29,8 +29,8 @@ import {
   type ChunkExtractionRepair,
   type RelationshipGenerationInput,
 } from "#activities/glitter/context/refresh/glitter-context-refresh-requests.ts";
-import { estimateStyleGenerationCost } from "#activities/glitter/context/refresh/glitter-context-refresh-style-generation.ts";
-import { SynthesisInputTooLargeError } from "#activities/glitter/context/refresh/glitter-context-refresh-synthesis-limit.ts";
+import { estimateStyleGenerationCost } from "#activities/glitter/context/refresh/style/glitter-context-refresh-style-generation.ts";
+import { SynthesisInputTooLargeError } from "#activities/glitter/context/refresh/synthesis/glitter-context-refresh-synthesis-limit.ts";
 import {
   buildStyleEvidenceChunks,
   type StyleEvidenceChunk,
@@ -45,18 +45,18 @@ import {
   MAX_EXTRACTION_REPAIR_ATTEMPTS,
   MAX_SYNTHESIS_REPAIR_ATTEMPTS,
   type SummarizedChunk,
-} from "#activities/glitter/context/refresh/glitter-context-refresh-style-generation-cost.ts";
-import { finalizeStyleSynthesis } from "#activities/glitter/context/refresh/glitter-context-refresh-style-finalize.ts";
+} from "#activities/glitter/context/refresh/style/glitter-context-refresh-style-generation-cost.ts";
+import { finalizeStyleSynthesis } from "#activities/glitter/context/refresh/style/glitter-context-refresh-style-finalize.ts";
 import {
   nextParseFailureRepair,
   selectBestChunkSummary,
   toSummarizedChunk,
   validateChunkSummary,
-} from "#activities/glitter/context/refresh/glitter-context-refresh-style-validation.ts";
+} from "#activities/glitter/context/refresh/style/glitter-context-refresh-style-validation.ts";
 import type {
   StyleChunkSummary,
   StyleSynthesis,
-} from "#activities/glitter/context/refresh/glitter-context-refresh-style-schemas.ts";
+} from "#activities/glitter/context/refresh/style/glitter-context-refresh-style-schemas.ts";
 import { createCorpusStoreFromEnv } from "#activities/glitter/corpus/glitter-corpus-store.ts";
 import {
   GlitterContextAuditInputSchema,

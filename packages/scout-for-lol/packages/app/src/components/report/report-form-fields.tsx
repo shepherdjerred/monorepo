@@ -15,7 +15,7 @@ import {
   FieldDescription,
   FieldError,
   FormSection,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { ReportQueryDocs } from "#src/components/report/report-query-docs.tsx";
 import {
   ReportScheduleFields,

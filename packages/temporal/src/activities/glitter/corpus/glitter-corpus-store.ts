@@ -5,7 +5,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { z } from "zod/v4";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
+import { sha256 } from "#shared/glitter/glitter-corpus-projection.ts";
 
 export type CorpusStoreName = "seaweedfs";
 

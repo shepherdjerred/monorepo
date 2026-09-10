@@ -10,7 +10,7 @@ import {
   snapshotContainsSpeciesDelta,
   type CatchEventEvidence,
   type CatchStateEvidence,
-} from "#src/goal/catch-evidence.ts";
+} from "#src/goal/memory/catch-evidence.ts";
 
 const EMERALD_FLASH_SAVE_BYTES = 128 * 1024;
 

@@ -7,7 +7,7 @@ import {
   type BucksWeeklyParlayVoidReason,
 } from "@scout-for-lol/data";
 import { z } from "zod";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import {
   applyBucksDelta,
   BucksStorageOverflowError,
