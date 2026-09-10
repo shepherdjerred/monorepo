@@ -6,14 +6,15 @@ import {
   resolveEnvironment,
 } from "#src/configuration.ts";
 import configuration from "#src/configuration.ts";
+import { SCOUT_RUNTIME_ROLES } from "#src/configuration/runtime-role.ts";
 
 Bun.env["TEMPORAL_NAMESPACE"] ??= "dev";
 
 type TrackedKey =
   | "ENVIRONMENT"
   | "NODE_ENV"
-  | "ENABLE_DISCORD_GATEWAY"
-  | "ENABLE_BACKGROUND_JOBS"
+  | "SCOUT_RUNTIME_ROLE"
+  | "SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"
   | "TEMPORAL_ADDRESS"
   | "TEMPORAL_NAMESPACE"
   | "TEMPORAL_SCHEDULE_RECONCILIATION"
@@ -24,8 +25,8 @@ function snapshotEnv(): Record<TrackedKey, string | undefined> {
   return {
     ENVIRONMENT: Bun.env["ENVIRONMENT"],
     NODE_ENV: Bun.env.NODE_ENV,
-    ENABLE_DISCORD_GATEWAY: Bun.env["ENABLE_DISCORD_GATEWAY"],
-    ENABLE_BACKGROUND_JOBS: Bun.env["ENABLE_BACKGROUND_JOBS"],
+    SCOUT_RUNTIME_ROLE: Bun.env["SCOUT_RUNTIME_ROLE"],
+    SCOUT_DEV_SKIP_REPORT_LAKE_FOLD: Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"],
     TEMPORAL_ADDRESS: Bun.env["TEMPORAL_ADDRESS"],
     TEMPORAL_NAMESPACE: Bun.env["TEMPORAL_NAMESPACE"],
     TEMPORAL_SCHEDULE_RECONCILIATION:
@@ -48,8 +49,8 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
     if (
       key === "ENVIRONMENT" ||
       key === "NODE_ENV" ||
-      key === "ENABLE_DISCORD_GATEWAY" ||
-      key === "ENABLE_BACKGROUND_JOBS" ||
+      key === "SCOUT_RUNTIME_ROLE" ||
+      key === "SCOUT_DEV_SKIP_REPORT_LAKE_FOLD" ||
       key === "TEMPORAL_ADDRESS" ||
       key === "TEMPORAL_NAMESPACE" ||
       key === "TEMPORAL_SCHEDULE_RECONCILIATION" ||
@@ -135,16 +136,35 @@ describe("local runtime flags", () => {
     restoreEnv(initial);
   });
 
-  test("allows secondary development instances to disable gateway and jobs", () => {
+  test("defaults to the combined runtime role", () => {
     Bun.env["ENVIRONMENT"] = "dev";
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
-    Bun.env["ENABLE_BACKGROUND_JOBS"] = "false";
+    delete Bun.env["SCOUT_RUNTIME_ROLE"];
     resetConfigurationForTests();
 
-    expect(configuration.enableDiscordGateway).toBe(false);
-    expect(configuration.enableBackgroundJobs).toBe(false);
+    expect(configuration.runtimeRole).toBe("combined");
+    expect(configuration.skipReportLakeFold).toBe(false);
     expect(configuration.temporalAddress).toBeUndefined();
     expect(configuration.temporalNamespace).toBe("dev");
+  });
+
+  test("lets a secondary development instance run the gatewayless role", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "application";
+    Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"] = "true";
+    resetConfigurationForTests();
+
+    expect(configuration.runtimeRole).toBe("application");
+    expect(configuration.skipReportLakeFold).toBe(true);
+  });
+
+  test("accepts every declared runtime role in beta", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["TEMPORAL_NAMESPACE"] = "beta";
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      Bun.env["SCOUT_RUNTIME_ROLE"] = role;
+      resetConfigurationForTests();
+      expect(configuration.runtimeRole).toBe(role);
+    }
   });
 
   test("requires an active Temporal namespace", () => {
@@ -187,24 +207,26 @@ describe("local runtime flags", () => {
     expect(configuration.temporalScheduleReconciliation).toBe("auto");
   });
 
-  test("rejects disabled gateway or jobs outside development", () => {
-    Bun.env["ENVIRONMENT"] = "beta";
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
+  test("rejects an unrecognised runtime role loudly", () => {
+    Bun.env["ENVIRONMENT"] = "dev";
+    Bun.env["SCOUT_RUNTIME_ROLE"] = "aplication";
     resetConfigurationForTests();
 
-    expect(() => configuration.enableDiscordGateway).toThrow(
-      /may only be disabled in environment=dev/,
+    // A typo'd role that silently fell back to `combined` would put a second
+    // gateway connection and a second report-lake writer into the cluster.
+    expect(() => configuration.runtimeRole).toThrow(
+      /Invalid SCOUT_RUNTIME_ROLE="aplication", expected one of: combined, application, gateway, activity-worker/,
     );
   });
 
-  test("rejects background jobs enabled while the gateway is disabled", () => {
-    Bun.env["ENVIRONMENT"] = "dev";
-    Bun.env["ENABLE_DISCORD_GATEWAY"] = "false";
-    Bun.env["ENABLE_BACKGROUND_JOBS"] = "true";
+  test("rejects skipping the boot report-lake fold outside development", () => {
+    Bun.env["ENVIRONMENT"] = "beta";
+    Bun.env["TEMPORAL_NAMESPACE"] = "beta";
+    Bun.env["SCOUT_DEV_SKIP_REPORT_LAKE_FOLD"] = "true";
     resetConfigurationForTests();
 
-    expect(() => configuration.enableBackgroundJobs).toThrow(
-      /ENABLE_BACKGROUND_JOBS requires ENABLE_DISCORD_GATEWAY/,
+    expect(() => configuration.skipReportLakeFold).toThrow(
+      /may only be set in environment=dev/,
     );
   });
 

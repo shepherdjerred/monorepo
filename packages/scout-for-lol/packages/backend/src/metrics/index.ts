@@ -2,6 +2,7 @@ import { Counter, Gauge, Histogram } from "prom-client";
 import configuration from "#src/configuration.ts";
 import { createLogger } from "#src/logger.ts";
 import { registry } from "#src/metrics/registry.ts";
+import { databaseMetricSweepsEnabled } from "#src/metrics/sweep-policy.ts";
 import { updateBettingMetrics } from "#src/metrics/betting/betting-sweep.ts";
 import { seedProviderIssueMetrics } from "#src/metrics/provider-issue-seeds.ts";
 import "#src/metrics/season-schedule.ts";
@@ -756,17 +757,23 @@ import "@scout-for-lol/backend/metrics/usage.ts";
 /**
  * Get all metrics as Prometheus-formatted text
  * Public API for exporting metrics to Prometheus
+ *
+ * The database-sweeping collectors run only on the role that owns them (see
+ * `metrics/sweep-policy.ts`); every role still serves the process, HTTP,
+ * Discord and worker metrics recorded in-line by the code that produced them.
  */
 export async function getMetrics(): Promise<string> {
-  // Dynamic import to avoid circular dependency issues
-  const { updateUsageMetrics } = await import("./usage.js");
-  const { updateLimitMetrics } = await import("./limits.js");
   updateUptimeMetric();
-  await updateUsageMetrics();
-  await updateLimitMetrics();
-  await updateBettingMetrics();
-  const { updateScoutTemporalDurabilityMetrics } =
-    await import("#src/metrics/platform/temporal.ts");
-  await updateScoutTemporalDurabilityMetrics();
+  if (databaseMetricSweepsEnabled()) {
+    // Dynamic import to avoid circular dependency issues
+    const { updateUsageMetrics } = await import("./usage.js");
+    const { updateLimitMetrics } = await import("./limits.js");
+    await updateUsageMetrics();
+    await updateLimitMetrics();
+    await updateBettingMetrics();
+    const { updateScoutTemporalDurabilityMetrics } =
+      await import("#src/metrics/platform/temporal.ts");
+    await updateScoutTemporalDurabilityMetrics();
+  }
   return await registry.metrics();
 }

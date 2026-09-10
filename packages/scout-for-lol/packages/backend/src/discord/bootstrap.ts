@@ -350,15 +350,13 @@ export async function startDiscordGateway(target: Client = client) {
   registerDiscordEventHandlers(target);
 
   // A process that never logs in must not fail its liveness probe for a
-  // heartbeat it was never going to receive: `dev:web --no-discord-gateway`
-  // and the test runner both take these branches deliberately.
+  // heartbeat it was never going to receive. Whether this process owns a
+  // gateway at all is the runtime role's decision — a role without one never
+  // reaches this function and marks the gateway disabled itself (see
+  // `runtime/subsystems.ts`). The test runner is the remaining case that gets
+  // here and must not connect.
   if (Bun.env.NODE_ENV === "test") {
     logger.info("🧪 NODE_ENV=test — skipping Discord login");
-    setDiscordGatewayState("disabled");
-    return;
-  }
-  if (!configuration.enableDiscordGateway) {
-    logger.warn("⏭️  Discord gateway disabled — skipping Discord login");
     setDiscordGatewayState("disabled");
     return;
   }

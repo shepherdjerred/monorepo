@@ -9,6 +9,7 @@ import type {
   CustomActivityClaims,
   CustomNightSnapshot,
 } from "@scout-for-lol/data";
+import configuration from "#src/configuration.ts";
 import { prisma } from "#src/database/index.ts";
 import { type CustomActivityActor } from "#src/customs/activity/activity-actor.ts";
 import type { CustomRevisionInput as RevisionInput } from "#src/customs/activity/activity-mutation-context.ts";
@@ -130,7 +131,10 @@ async function createTeamChannel(
         deny: [PermissionFlagsBits.Connect],
       },
       {
-        id: guild.client.user.id,
+        // `guild.client.user` is populated from the gateway READY payload, so
+        // it is null on a role that only holds a REST token — and this whole
+        // path is REST. A bot's user id is its application id.
+        id: configuration.applicationId,
         allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.Connect],
       },
       ...memberIds.map((id) => ({

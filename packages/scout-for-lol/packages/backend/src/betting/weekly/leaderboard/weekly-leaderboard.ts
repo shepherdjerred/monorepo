@@ -13,7 +13,7 @@ import {
 import { saveWeeklyLeaderboardSnapshot } from "#src/betting/weekly/leaderboard/weekly-leaderboard-snapshot.ts";
 import { isPolicyEnabled, MY_SERVER } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { client } from "#src/discord/client.ts";
+import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 import { COMMON_DENOMINATOR_CHANNEL_ID } from "#src/discord/channels.ts";
 import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { splitMessageIntoChunks } from "#src/discord/utils/message.ts";
@@ -239,7 +239,7 @@ export function formatWeeklyBucksLeaderboard(
 
 export type WeeklyBucksLeaderboardDependencies = {
   enabledGuilds: () => Promise<DiscordGuildId[]>;
-  hasGuild: (serverId: DiscordGuildId) => boolean;
+  hasGuild: (serverId: DiscordGuildId) => Promise<boolean>;
   loadRows: (serverId: DiscordGuildId) => Promise<FullLeaderboardRow[]>;
   loadStats: (
     serverId: DiscordGuildId,
@@ -263,7 +263,12 @@ const defaultDependencies: WeeklyBucksLeaderboardDependencies = {
     (await isPolicyEnabled("betting_enabled", { server: MY_SERVER }))
       ? [MY_SERVER]
       : [],
-  hasGuild: (serverId) => client.guilds.cache.has(serverId),
+  // Not `client.guilds.cache`: this runs as a background Temporal Activity,
+  // which on a split deployment has no gateway connection and so an empty
+  // cache — which would read as "Scout was removed" and silently skip the
+  // leaderboard every week. The install port answers from the database and
+  // confirms a negative against Discord itself.
+  hasGuild: async (serverId) => await isScoutInstalledInGuild(serverId),
   loadRows: async (serverId) => await getFullLeaderboard({ serverId }),
   loadStats: async (serverId, windowStart) =>
     await loadWeeklyBucksStats({ serverId, windowStart }),
@@ -349,7 +354,7 @@ export async function runWeeklyBucksLeaderboard(
   if (serverId === undefined) {
     throw new Error("The enabled Bryan Bucks guild was missing");
   }
-  if (!dependencies.hasGuild(serverId)) {
+  if (!(await dependencies.hasGuild(serverId))) {
     logger.info(
       `💰 Skipping weekly Bryan Bucks leaderboard: this Discord application is not in guild ${serverId}`,
     );

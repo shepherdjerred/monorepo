@@ -7,11 +7,25 @@ import {
   formatPermissionErrorForLog,
 } from "#src/discord/utils/permissions.ts";
 import { PermissionFlagsBits } from "discord.js";
-import { mockUser, mockTextChannel } from "#src/testing/discord-mocks.ts";
+import { mockTextChannel } from "#src/testing/discord-mocks.ts";
 import { testAccountId } from "#src/testing/test-ids.ts";
 
-// Mock bot user for tests
-const mockBotUser = mockUser({ id: testAccountId("999"), username: "TestBot" });
+// The bot's own user id, which for a Discord bot is its application id. The
+// helpers take the id rather than a `User` object precisely so they work on a
+// process with no gateway, where `client.user` is null.
+const BOT_USER_ID = testAccountId("999");
+
+// A guild whose member reads always fail — the shape every "cannot access
+// channel" case shares. One helper instead of repeating the mock keeps the
+// fixtures from drifting apart (and the jscpd ratchet honest).
+const unreachableGuild = () => ({
+  members: {
+    me: null,
+    fetch: async () => {
+      throw new Error("Fetch failed");
+    },
+  },
+});
 
 describe("isPermissionError", () => {
   test("returns true for Discord missing permissions error (50013)", () => {
@@ -66,37 +80,35 @@ describe("checkSendMessagePermission", () => {
     const dmChannel = mockTextChannel({
       isDMBased: () => true,
     });
-    const result = await checkSendMessagePermission(dmChannel, mockBotUser);
+    const result = await checkSendMessagePermission(dmChannel, BOT_USER_ID);
     expect(result.hasPermission).toBe(true);
   });
 
-  test("returns false when bot user is null", async () => {
+  test("reports an unreachable guild rather than an unknown bot user", async () => {
+    // There is no "bot user not available" outcome any more: the id is known
+    // from configuration whether or not this process holds a gateway. A guild
+    // that cannot be read is reported as exactly that, and the delivery path
+    // no longer turns a missing `client.user` into a permission complaint sent
+    // to the guild owner.
     const channel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: () => null,
-      guild: null,
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, null);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(false);
-    expect(result.reason).toContain("Bot user not available");
+    expect(result.reason).toContain("Cannot access channel");
   });
 
   test("returns false when channel doesn't have permissionsFor method", async () => {
     const invalidChannel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: undefined,
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
     const result = await checkSendMessagePermission(
       invalidChannel,
-      mockBotUser,
+      BOT_USER_ID,
     );
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Error checking permissions");
@@ -106,16 +118,9 @@ describe("checkSendMessagePermission", () => {
     const channel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: () => null,
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Cannot access channel");
   });
@@ -129,16 +134,9 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.ViewChannel;
         },
       }),
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Send Messages");
   });
@@ -152,16 +150,9 @@ describe("checkSendMessagePermission", () => {
           return permission === PermissionFlagsBits.SendMessages;
         },
       }),
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("cannot view");
   });
@@ -178,16 +169,9 @@ describe("checkSendMessagePermission", () => {
           );
         },
       }),
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(true);
     expect(result.reason).toBeUndefined();
   });
@@ -198,16 +182,9 @@ describe("checkSendMessagePermission", () => {
       permissionsFor: () => {
         throw new Error("Permission check failed");
       },
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(false);
     expect(result.reason).toContain("Error checking permissions");
   });
@@ -232,7 +209,7 @@ describe("checkSendMessagePermission - member resolution", () => {
         },
       },
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(true);
   });
 
@@ -259,31 +236,25 @@ describe("checkSendMessagePermission - member resolution", () => {
         },
       },
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(true);
     expect(fetchCalled).toBe(true);
   });
 
-  test("falls back to botUser when fetch fails", async () => {
+  test("falls back to the bot user id when the member fetch fails", async () => {
     const channel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: (target: unknown) => {
-        // Should fall back to botUser
-        expect(target).toBe(mockBotUser);
+        // A snowflake is a UserResolvable, so discord.js resolves it against
+        // the guild itself rather than needing a cached User object.
+        expect(target).toBe(BOT_USER_ID);
         return {
           has: () => true,
         };
       },
-      guild: {
-        members: {
-          me: null,
-          fetch: async () => {
-            throw new Error("Fetch failed");
-          },
-        },
-      },
+      guild: unreachableGuild(),
     });
-    const result = await checkSendMessagePermission(channel, mockBotUser);
+    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
     expect(result.hasPermission).toBe(true);
   });
 });

@@ -3,11 +3,7 @@ import * as Sentry from "@sentry/bun";
 import { createLogger } from "#src/logger.ts";
 import { filterScoutSentryEvent } from "#src/sentry-filters.ts";
 import { initializeTracing } from "#src/observability/tracing.ts";
-import { shutdownProductAnalytics } from "#src/analytics/product-analytics.ts";
-import {
-  shutdownDynamicConfig,
-  temporalCallGraphTracing,
-} from "#src/config/dynamic.ts";
+import { temporalCallGraphTracing } from "#src/config/dynamic.ts";
 import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 
 const logger = createLogger("app");
@@ -17,6 +13,7 @@ logger.info(`📦 Version: ${configuration.version}`);
 logger.info(`🔧 Environment: ${configuration.environment}`);
 logger.info(`🌐 Git SHA: ${configuration.gitSha}`);
 logger.info(`🔌 Port: ${configuration.port.toString()}`);
+logger.info(`🎛️  Runtime role: ${configuration.runtimeRole}`);
 
 // S3 (SeaweedFS) is the canonical raw match/prematch/timeline store — a missing
 // bucket in beta/prod means every ingest silently no-ops and loses data
@@ -60,10 +57,11 @@ if (
 logger.info("📊 Initializing metrics system");
 import "@scout-for-lol/backend/metrics/index.ts";
 
-// Fail before the HTTP health server or Discord bot starts if either the Data
-// Dragon assets or checksum-pinned private Classic fonts are unavailable.
+// Fail before the HTTP health server or Discord bot starts if the Data Dragon
+// assets are unavailable.
 logger.info("🖼️  Validating startup assets before starting runtime services");
-import { startBackendRuntime } from "#src/startup.ts";
+import { startScoutRuntime } from "#src/runtime/boot.ts";
+import { scoutRuntimeSubsystems } from "#src/runtime/subsystems.ts";
 // Before the HTTP server and the Discord gateway: guild command registration
 // reads the explore allowlist, and it must see a resolved value. Seeded with
 // the env-derived values, so an unreachable Flipt changes nothing.
@@ -96,49 +94,23 @@ logger.info("Temporal call-graph tracing boot decision resolved", {
   enabled: temporalCallGraphTracing(),
 });
 
-const {
-  shutdownHttpServer,
-  shutdownTemporal,
-  shutdownDiscord,
-  shutdownVoiceAssistant,
-} = await startBackendRuntime();
-
-const { startScoutCompetitionActivityWorker } =
-  await import("#src/league/tasks/competition/temporal-worker.ts");
-const competitionActivityWorker = await startScoutCompetitionActivityWorker();
-
-logger.info("🌱 Seeding Season table from SEASONS constant");
-import { prisma } from "#src/database/index.ts";
-import { seedSeasons } from "#src/database/season-seeder.ts";
-await seedSeasons(prisma);
-
-logger.info("📈 Seeding scheduled-report freshness gauge from DB");
-import { seedScheduledReportLastSuccessMetric } from "#src/reports/schedule/schedule-metric-seed.ts";
-await seedScheduledReportLastSuccessMetric(prisma);
+const { runtimeRole } = configuration;
+const runtime = await startScoutRuntime(
+  runtimeRole,
+  scoutRuntimeSubsystems(runtimeRole),
+);
 
 logger.info("✅ Backend application startup complete");
 
-// Handle graceful shutdown
+// Handle graceful shutdown. The drain order is the role's, derived from the
+// same capability table as its boot order (see `runtime/plan.ts`).
 let shutdownStarted = false;
 const gracefullyShutdown = (signal: "SIGINT" | "SIGTERM"): void => {
   if (shutdownStarted) return;
   shutdownStarted = true;
   logger.info(`🛑 Received ${signal}, shutting down gracefully`);
   void (async () => {
-    // First: aborts every in-flight Realtime turn and stops audio receipt
-    // for any active Hey Scout session. Everything below can otherwise take
-    // long enough (Temporal drain, HTTP drain) that a session would keep
-    // receiving audio and running OpenAI turns through the whole sequence.
-    await shutdownVoiceAssistant();
-    await shutdownTemporal();
-    await competitionActivityWorker?.shutdown();
-    await shutdownHttpServer();
-    await shutdownDiscord();
-    // Stops the config poller before analytics flushes, so a refresh cannot
-    // race the exit.
-    await shutdownDynamicConfig();
-    await shutdownProductAnalytics();
-    await prisma.$disconnect();
+    await runtime.shutdown();
     process.exit(0);
   })();
 };

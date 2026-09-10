@@ -45,7 +45,7 @@ function dependencies(input: {
 }): WeeklyBucksLeaderboardDependencies {
   return {
     enabledGuilds: async () => input.guilds ?? [SERVER_ID],
-    hasGuild: () => input.member ?? true,
+    hasGuild: () => Promise.resolve(input.member ?? true),
     loadRows: () => Promise.resolve(input.rows ?? []),
     loadStats: () => Promise.resolve(input.stats ?? NO_STATS),
     persistSnapshot: input.persistSnapshot ?? (() => Promise.resolve()),

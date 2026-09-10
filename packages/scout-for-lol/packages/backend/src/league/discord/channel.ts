@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { z } from "zod";
 import * as Sentry from "@sentry/bun";
+import configuration from "#src/configuration.ts";
 import { client } from "#src/discord/client.ts";
 import { asTextChannel } from "#src/discord/utils/channel.ts";
 import {
@@ -163,9 +164,13 @@ async function diagnoseSendFailure(channelId: DiscordChannelId): Promise<{
     return { kind: "channel_missing", permissionReason: undefined };
   }
 
+  // The bot's application id rather than `client.user`: on a role with no
+  // gateway the latter is null, and a null bot user used to make this report
+  // "permission" for every unclassified send failure — which DMs the guild
+  // owner about a permission they never changed.
   const permissionCheck = await checkSendMessagePermission(
     refetched,
-    client.user,
+    configuration.applicationId,
   );
   if (permissionCheck.hasPermission) {
     return { kind: "other", permissionReason: undefined };
@@ -256,7 +261,10 @@ export async function send(
     // Send the message
     if (
       hasMessageReply(options) &&
-      !hasReadMessageHistoryPermission(fetchedChannel, client.user)
+      !hasReadMessageHistoryPermission(
+        fetchedChannel,
+        configuration.applicationId,
+      )
     ) {
       throw markReplyPermissionError(
         new ChannelSendError(

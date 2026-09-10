@@ -1,4 +1,4 @@
-import type { Channel, Client, User } from "discord.js";
+import type { Channel, Client } from "discord.js";
 import { ChannelType, PermissionFlagsBits } from "discord.js";
 import { z } from "zod";
 import { match } from "ts-pattern";
@@ -78,23 +78,16 @@ export function isUnknownGuildError(error: unknown): boolean {
  * Check if the bot has permission to send messages in a channel
  *
  * @param channel - The channel to check permissions for
- * @param botUser - The bot's User object (from client.user)
+ * @param botUserId - The bot's own user id, which for a bot is its application id
  * @returns Promise with hasPermission flag and optional error message
  */
 export async function checkSendMessagePermission(
   channel: Channel,
-  botUser: User | null,
+  botUserId: string,
 ): Promise<{ hasPermission: boolean; reason?: string }> {
   // DM channels don't need permission checks
   if (channel.isDMBased()) {
     return { hasPermission: true };
-  }
-
-  if (!botUser) {
-    return {
-      hasPermission: false,
-      reason: "Bot user not available",
-    };
   }
 
   // Check if this is a guild-based text channel
@@ -113,12 +106,18 @@ export async function checkSendMessagePermission(
 
   try {
     const guild = channel.guild;
+    // `guild.members.me` is the gateway cache's copy of the bot's member row,
+    // so it is always null on a process that owns no shard — the REST fetch
+    // below is then the only answer, and it is the one that matters. Taking the
+    // bot's *id* rather than a `User` object is what makes that possible: a
+    // gatewayless process has no `client.user`, and the previous null branch
+    // reported "Bot user not available", which the delivery path escalated into
+    // a DM telling the guild owner they had revoked a permission.
     let botMember = guild.members.me ?? null;
 
-    // If guild.members.me is not available, try to fetch the bot's guild member
-    if (!botMember && botUser.id) {
+    if (!botMember) {
       try {
-        botMember = await guild.members.fetch(botUser.id);
+        botMember = await guild.members.fetch(botUserId);
       } catch (fetchError) {
         logger.warn(
           `[Permissions] Failed to fetch bot member: ${String(fetchError)}`,
@@ -126,10 +125,7 @@ export async function checkSendMessagePermission(
       }
     }
 
-    // Fall back to botUser if member not available
-    const target = botMember ?? botUser;
-
-    const permissions = channel.permissionsFor(target);
+    const permissions = channel.permissionsFor(botMember ?? botUserId);
 
     if (!permissions) {
       return {
@@ -166,16 +162,23 @@ export async function checkSendMessagePermission(
   }
 }
 
-/** Return false only when Read Message History is explicitly unavailable. */
+/**
+ * Return false only when Read Message History is explicitly unavailable.
+ *
+ * Resolving the id against an empty member cache yields `null` permissions,
+ * which is treated as "unknown, allow" — the same permissive answer this gave
+ * for an unready client before. A reply that Discord then rejects is retried as
+ * a standalone message by the caller.
+ */
 export function hasReadMessageHistoryPermission(
   channel: Channel,
-  botUser: User | null,
+  botUserId: string,
 ): boolean {
-  if (botUser === null || channel.isDMBased()) {
+  if (channel.isDMBased()) {
     return true;
   }
 
-  const permissions = channel.permissionsFor(botUser);
+  const permissions = channel.permissionsFor(botUserId);
   return (
     permissions === null ||
     permissions.has(PermissionFlagsBits.ReadMessageHistory)
