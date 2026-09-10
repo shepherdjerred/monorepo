@@ -47,14 +47,14 @@ export function createDareExploreTools(input: DareExploreToolsInput) {
     }),
     create_dare_draft: tool({
       description:
-        "Save a private, unfunded Dare draft after validation and historical execution. In v3, one-game wording belongs in one game-set CTE.",
+        "Save a private, unfunded Dare draft after validation and historical execution. Requires displayTitle and statusPhrases for the Dares list. In v3, one-game wording belongs in one game-set CTE.",
       inputSchema: DareDefinitionToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.create(raw),
     }),
     revise_dare_draft: tool({
       description:
-        "Append a validated revision to a private, unfunded Dare draft. Requires the exact current revision and never mutates a funded contract.",
+        "Append a validated revision to a private, unfunded Dare draft. Requires displayTitle, statusPhrases, and the exact current revision. Never mutates a funded contract.",
       inputSchema: ReviseDareToolInputSchema,
       outputSchema: DareToolResultSchema,
       execute: (raw) => executors.revise(raw),

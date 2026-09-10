@@ -21,6 +21,7 @@ import { historicallyPreviewDareV2 } from "#src/betting/dares/presentation/dare-
 import { compileDareScoutQlPlanV2 } from "#src/betting/dares/sql/dare-scoutql-plan-compiler-v2.ts";
 import { renderDareSqlV3SemanticProofPlan } from "#src/betting/dares/sql/dare-sql-v3-description.ts";
 import { prisma } from "#src/database/index.ts";
+import { parseStoredStatusPhrases } from "#src/betting/dares/presentation/dare-list-copy.ts";
 
 export const DareDraftEditorInputSchema = z.strictObject({
   dareId: z.number().int().positive(),
@@ -82,12 +83,26 @@ async function loadOwnedDraft(input: {
   };
 }
 
+function retainedListCopy(revision: {
+  displayTitle: string | null;
+  statusPhrasesJson: string | null;
+}) {
+  const statusPhrases = parseStoredStatusPhrases(revision.statusPhrasesJson);
+  return {
+    ...(revision.displayTitle === null
+      ? {}
+      : { displayTitle: revision.displayTitle }),
+    ...(statusPhrases === null ? {} : { statusPhrases }),
+  };
+}
+
 function v3Definition(
   input: EditorInput,
   owned: Awaited<ReturnType<typeof loadOwnedDraft>>,
 ) {
   return {
     originalText: input.originalText,
+    ...retainedListCopy(owned.revision),
     queryText: input.queryText,
     plainLanguage: input.plainLanguage,
     targets: owned.targets,
@@ -121,6 +136,7 @@ async function prepareEditorDraft(
     compilation: compilation.compilation,
     prepared: prepareDareDraftV2({
       originalText: input.originalText,
+      ...retainedListCopy(owned.revision),
       plan: compilation.compilation.plan,
       targets: owned.targets,
       deadlineSpec: input.deadlineSpec,
@@ -270,6 +286,7 @@ export async function reviseDareDraftEditorV2(
     expectedRevision: input.expectedRevision,
     definition: {
       originalText: input.originalText,
+      ...retainedListCopy(owned.revision),
       plan: prepared.draft.plan,
       targets: prepared.draft.targets,
       deadlineSpec: prepared.draft.deadlineSpec,

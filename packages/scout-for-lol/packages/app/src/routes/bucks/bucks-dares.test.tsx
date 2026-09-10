@@ -1,4 +1,9 @@
-import { DareList } from "#src/components/bucks/dare-list.tsx";
+import {
+  DareList,
+  dareDisplayTitle,
+  dareListStatusLines,
+  dareListTitle,
+} from "#src/components/bucks/dare-list.tsx";
 import { Loaded } from "@shepherdjerred/loaded";
 import { describe, expect, test, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -75,6 +80,197 @@ test("renders skill sequence slots as Q W E R", () => {
   );
 });
 
+describe("dareDisplayTitle", () => {
+  test("uses the challenger's wording and drops the stake suffix", () => {
+    expect(
+      dareDisplayTitle(
+        "I bet Aaron can't win a game playing support in the next 7d\nOpening stake: 5 BB.",
+      ),
+    ).toBe("I bet Aaron can't win a game playing support in the next 7d");
+  });
+});
+
+describe("dareListTitle", () => {
+  test("prefers authored English over original wording", () => {
+    expect(
+      dareListTitle({
+        displayTitle: "Aaron wins a game as support",
+        originalText: "I bet Aaroncan't win a game playing support",
+      }),
+    ).toBe("Aaron wins a game as support");
+  });
+});
+
+describe("dareListStatusLines", () => {
+  test("phrases matching-game counts in English", () => {
+    expect(
+      dareListStatusLines(progress, "active").map((line) => line.text),
+    ).toEqual(["2 of 3 wins"]);
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          matchedGames: 0,
+          conditions: progress.conditions.map((condition) => ({
+            ...condition,
+            current: 0,
+            remaining: 1,
+            matchedGames: 0,
+            target: 1,
+            gameSet: "support_win",
+          })),
+        },
+        "active",
+      ).map((line) => line.text),
+    ).toEqual(["0 of 1 support win"]);
+    expect(
+      dareListStatusLines(progress, "active", { wins: "wins" }).map(
+        (line) => line.text,
+      ),
+    ).toEqual(["2 of 3 wins"]);
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          matchedGames: 0,
+          conditions: progress.conditions.map((condition) => ({
+            ...condition,
+            current: 0,
+            remaining: 1,
+            matchedGames: 0,
+            target: 1,
+            gameSet: "games",
+          })),
+        },
+        "active",
+      ).map((line) => line.text),
+    ).toEqual(["0 of 1 game"]);
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          matchedGames: 0,
+          conditions: progress.conditions.map((condition) => ({
+            ...condition,
+            current: 0,
+            remaining: 1,
+            matchedGames: 0,
+            target: 1,
+            gameSet: "qualifying_game",
+          })),
+        },
+        "active",
+        { qualifying_game: "game with a support win and 8 CS/min" },
+      ).map((line) => line.text),
+    ).toEqual(["0 of 1 game with a support win and 8 CS/min"]);
+  });
+
+  test("stacks one English line per live condition", () => {
+    const wins = progress.conditions[0];
+    if (wins === undefined) {
+      throw new Error(
+        "Progress fixture is missing its matching-games condition.",
+      );
+    }
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          conditions: [
+            wins,
+            {
+              ...wins,
+              key: "1",
+              gameSet: "farm",
+              current: 0,
+              target: 1,
+              remaining: 1,
+              matchedGames: 0,
+              label: "farm: gte 1 matching games",
+            },
+          ],
+        },
+        "active",
+        {
+          wins: "wins",
+          farm: "games with 8 CS/min",
+        },
+      ).map((line) => line.text),
+    ).toEqual(["2 of 3 wins", "0 of 1 games with 8 CS/min"]);
+  });
+
+  test("names a finished outcome instead of restating compiler copy", () => {
+    expect(
+      dareListStatusLines(
+        { ...progress, value: true, final: true },
+        "achieved",
+      ).map((line) => line.text),
+    ).toEqual(["Achieved"]);
+    expect(
+      dareListStatusLines(
+        { ...progress, value: false, final: true },
+        "cancelled",
+      ).map((line) => line.text),
+    ).toEqual(["Cancelled"]);
+    expect(
+      dareListStatusLines(
+        { ...progress, value: false, final: true },
+        "expired",
+      ).map((line) => line.text),
+    ).toEqual(["Expired"]);
+  });
+
+  test("phrases rank and personal-best conditions in English", () => {
+    const wins = progress.conditions[0];
+    if (wins === undefined) {
+      throw new Error(
+        "Progress fixture is missing its matching-games condition.",
+      );
+    }
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          conditions: [
+            {
+              ...wins,
+              kind: "rank_progress",
+              label: "T1 solo rank",
+              gameSet: null,
+              operator: "reach",
+              current: "Gold II",
+              target: "Diamond IV",
+              remaining: null,
+            },
+          ],
+        },
+        "active",
+      ).map((line) => line.text),
+    ).toEqual(["Gold II, needs Diamond IV"]);
+    expect(
+      dareListStatusLines(
+        {
+          ...progress,
+          conditions: [
+            {
+              ...wins,
+              kind: "personal_improvement",
+              label: "maximum cs_per_minute",
+              gameSet: "attempts",
+              operator: "higher",
+              current: 7.2,
+              target: 8,
+              remaining: 0.8,
+            },
+          ],
+        },
+        "active",
+        { attempts: "CS/min" },
+      ).map((line) => line.text),
+    ).toEqual(["Best 7.2 CS/min, needs 8"]);
+  });
+});
+
 describe("DareList", () => {
   test("renders loading, error, and empty states", () => {
     expect(
@@ -111,12 +307,38 @@ describe("DareList", () => {
       <DareList
         dares={Loaded.done([
           {
+            id: 7,
+            state: "active",
+            originalText:
+              "I bet Aaron can't win a game playing support in the next 7d\nOpening stake: 5 BB.",
+            displayTitle: null,
+            statusPhrases: null,
+            targetAliases: ["Aaron"],
+            potTotal: 5,
+            updatedAt: "2026-09-01T00:00:00.000Z",
+            progress: {
+              ...progress,
+              matchedGames: 0,
+              conditions: progress.conditions.map((condition) => ({
+                ...condition,
+                current: 0,
+                remaining: 1,
+                matchedGames: 0,
+                target: 1,
+                gameSet: "support_win",
+              })),
+            },
+            requiresViewerAction: false,
+          },
+          {
             id: 42,
             state: "active",
-            plainLanguage: "Virmel wins three games",
+            originalText:
+              "I bet Virmel can't win three games\nOpening stake: 20 BB.",
+            displayTitle: "Virmel wins three games",
+            statusPhrases: { wins: "wins" },
             targetAliases: ["Virmel"],
             potTotal: 40,
-            evidenceGames: 2,
             updatedAt: "2026-09-01T00:00:00.000Z",
             progress,
             requiresViewerAction: true,
@@ -126,11 +348,17 @@ describe("DareList", () => {
         onSelect={noAction}
       />,
     );
-    expect(html).toContain("Dare #42");
     expect(html).toContain("active");
+    expect(html).toContain("playing support");
+    expect(html).toContain("Aaron · 5 BB");
+    expect(html).toContain("0 of 1 support win");
     expect(html).toContain("Virmel wins three games");
-    expect(html).toContain("40 BB");
-    expect(html).toContain("2 evidence games");
+    expect(html).not.toContain("Opening stake: 20 BB.");
+    expect(html).not.toContain("Dare #42");
+    expect(html).not.toContain("evidence games");
+    expect(html).not.toContain("gte");
+    expect(html).toContain("Virmel · 40 BB");
+    expect(html).toContain("2 of 3 wins");
   });
 });
 

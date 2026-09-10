@@ -65,6 +65,7 @@ function evidence(input: {
   results: DareSqlV3Evidence["results"];
   achieved?: boolean;
   improvement?: DareSqlV3Evidence["improvement"];
+  rank?: DareSqlV3Evidence["rank"];
 }) {
   const evaluated = DareSqlV3EvidenceSchema.parse({
     achieved: input.achieved ?? false,
@@ -74,6 +75,7 @@ function evidence(input: {
     sourceMatchIds: input.results.map((row) => row.matchId),
     queryHash: QUERY_HASH,
     improvement: input.improvement,
+    rank: input.rank,
   });
   return {
     matchId: input.matchId,
@@ -206,5 +208,53 @@ describe("Dare progress v3", () => {
       finalityReason: "monotone_success",
     });
     expect(progress.latestMaterialChange).toBeNull();
+  });
+
+  test("exposes rank progress as English current and goal ranks", () => {
+    const goldII = {
+      division: 2 as const,
+      tier: "gold" as const,
+      lp: 12,
+      wins: 40,
+      losses: 38,
+    };
+    const progress = deriveDareProgressV3({
+      compilation: compilation("solo_games", {
+        kind: "rank",
+        queue: "solo",
+        goal: { kind: "reach", tier: "diamond", division: 4 },
+      }),
+      evidence: [
+        evidence({
+          matchId: "rank-check",
+          gameEndAt: "2026-09-01T00:00:00.000Z",
+          results: [],
+          rank: {
+            queue: "solo",
+            targets: [
+              {
+                targetKey: "T1",
+                baseline: goldII,
+                current: goldII,
+                normalizedDelta: 0,
+                goalMet: false,
+              },
+            ],
+          },
+        }),
+      ],
+      targetKeys: ["T1"],
+      final: false,
+      finalityReason: "in_progress",
+    });
+    expect(progress.conditions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "rank_progress",
+          current: "Gold II",
+          target: "Diamond IV",
+        }),
+      ]),
+    );
   });
 });
