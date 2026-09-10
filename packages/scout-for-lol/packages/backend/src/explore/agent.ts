@@ -261,13 +261,38 @@ async function streamExploreAgentInternal(
 type ExploreModelMessage =
   { role: "user"; content: string } | { role: "assistant"; content: string };
 
+type MatchCardReplayContext = {
+  size: string;
+  match: {
+    matchId: string;
+    teams: readonly { teamId: number; win: boolean; kills: number }[];
+  };
+};
+
+/** Preserve the visible card order so follow-ups can refer to “the first card”. */
+export function matchCardReplayContext(
+  cards: readonly MatchCardReplayContext[],
+): string {
+  if (cards.length === 0) return "";
+  const entries = cards.map((card, index) => {
+    const teams = card.match.teams
+      .map(
+        (team) =>
+          `Team ${team.teamId.toString()} ${team.win ? "won" : "lost"} (${team.kills.toString()} kills)`,
+      )
+      .join("; ");
+    return `Card ${String(index + 1)} (${card.size}): ${card.match.matchId}; ${teams}.`;
+  });
+  return `\n\n[Match cards shown in order]\n${entries.join("\n")}`;
+}
+
 /**
  * Rebuild the conversation as model messages.
  *
  * History comes from the database, never from the client, so a caller cannot
- * forge prior turns to steer an answer. Assistant turns replay only the prose
- * and the query that produced it — not the full row set, which would blow up
- * the context for questions that no longer depend on it.
+ * forge prior turns to steer an answer. Assistant turns replay their prose,
+ * query, and compact card identities — not the full row set, which would blow
+ * up context for questions that no longer depend on it.
  */
 function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
@@ -277,8 +302,8 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
           role: "assistant",
           content:
             message.queryText === null
-              ? message.content
-              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}`,
+              ? `${message.content}${matchCardReplayContext(message.matchCards)}`
+              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}${matchCardReplayContext(message.matchCards)}`,
         }
       : { role: "user", content: message.content },
   );
