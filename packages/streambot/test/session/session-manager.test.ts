@@ -16,7 +16,7 @@ import type { StreamerLike } from "@shepherdjerred/streambot/streamer/streamer-t
 import type {
   CardOwner,
   PlayerCardPort,
-} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+} from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import type { VoiceCloseInfo } from "@shepherdjerred/streambot/streamer/voice-close-source.ts";
 import type {
   ResolvedSource,

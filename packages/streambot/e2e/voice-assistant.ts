@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
-import { NOOP_CARD_PORT } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+import { NOOP_CARD_PORT } from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import { UserbotPool } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";

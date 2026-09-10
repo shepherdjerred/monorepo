@@ -1,13 +1,13 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import { scanCodexCatalog } from "./codex-catalog.ts";
+import { scanCodexCatalog } from "./sources/codex-catalog.ts";
 import {
   readCodexHistoryJsonl,
   scanCodexHistoryJsonl,
-} from "./codex-history.ts";
-import { createConductorSource } from "./conductor.ts";
-import { createCursorSource } from "./cursor.ts";
+} from "./sources/codex-history.ts";
+import { createConductorSource } from "./sources/conductor.ts";
+import { createCursorSource } from "./sources/cursor.ts";
 import {
   historyMessageRole,
   INDEXED_MESSAGE_PARSE_LIMIT,
@@ -15,8 +15,8 @@ import {
   openingPrompt,
   parseCodexItem,
   parseConversationEnvelope,
-} from "./messages.ts";
-import { createOpenCodeSources } from "./opencode.ts";
+} from "./query/messages.ts";
+import { createOpenCodeSources } from "./sources/opencode.ts";
 import type { HistoryPaths } from "./paths.ts";
 import {
   filesUnder,
@@ -33,7 +33,7 @@ import {
   parseRecord,
   parseTimestamp,
   stringValue,
-} from "./text.ts";
+} from "./query/text.ts";
 import type {
   HistoryDocument,
   HistoryMessage,

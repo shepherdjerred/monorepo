@@ -9,7 +9,7 @@ import type { CodexTrace } from "./codex/codex-trace.ts";
 import { sanitizeDiscordText, truncateForDiscord } from "./discord-message.ts";
 import { formatGameStateForPrompt } from "./game/game-state-summary.ts";
 import { GoalIntervalReporter } from "./goal-progress.ts";
-import { formatHistoryForPrompt } from "./history-summary.ts";
+import { formatHistoryForPrompt } from "./memory/history-summary.ts";
 import { computeCost, formatCostLine } from "./pricing.ts";
 import { spawnGoalCodex } from "./codex/spawn-goal-codex.ts";
 import { appendToHistory, type CompletedGoal } from "./goal-history.ts";
@@ -21,8 +21,8 @@ import type {
   StartGoalInput,
   StartGoalResult,
 } from "./goal-types.ts";
-import { GoalMemory, buildSessionLogMeta } from "./goal-memory.ts";
-import { GoalControlGate } from "./goal-control-gate.ts";
+import { GoalMemory, buildSessionLogMeta } from "./memory/goal-memory.ts";
+import { GoalControlGate } from "./control/goal-control-gate.ts";
 import {
   recordGoalFinished,
   recordGoalStarted,
@@ -67,7 +67,7 @@ type GoalManagerOptions = {
   checkpointRetry?: CheckpointRetry;
 };
 import { settleGoalProcess } from "./goal-process-helpers.ts";
-import { noOpAcquireInputLease, oneShot } from "./goal-lease-helpers.ts";
+import * as leaseHelpers from "./control/goal-lease-helpers.ts";
 import { defaultCheckpointRetry, saveOnGoalEnd } from "./goal-checkpoint.ts";
 import type { CheckpointRetry } from "./goal-checkpoint.ts";
 export class GoalManager {
@@ -109,7 +109,8 @@ export class GoalManager {
     this.snapshotProvider = options.snapshotProvider ?? (() => null);
     this.spatialSnapshotProvider =
       options.spatialSnapshotProvider ?? (() => null);
-    this.acquireInputLease = options.acquireInputLease ?? noOpAcquireInputLease;
+    this.acquireInputLease =
+      options.acquireInputLease ?? leaseHelpers.noOpAcquireInputLease;
     this.checkpointGame = options.checkpointGame ?? (() => Promise.resolve());
     this.checkpointRetry = options.checkpointRetry ?? defaultCheckpointRetry;
     this.memory = new GoalMemory(
@@ -239,7 +240,7 @@ export class GoalManager {
       this.spatialSnapshotProvider(),
     );
     const memory = await this.memory.readMemory();
-    const releaseInputLease = oneShot(this.acquireInputLease());
+    const releaseInputLease = leaseHelpers.oneShot(this.acquireInputLease());
     this.controlGate.open(id);
     // Subscribed at spawn (before the stdout pump) so no early agent_message
     // is lost; reporter.activate below starts posting once the goal is active.

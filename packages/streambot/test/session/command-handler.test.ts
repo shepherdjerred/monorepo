@@ -1,19 +1,19 @@
 import { inferMediaIntent } from "@shepherdjerred/streambot/discovery/media-intent.ts";
 import { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import { describe, expect, test } from "vitest";
-import { CommandHandler } from "@shepherdjerred/streambot/discord/command-handler.ts";
+import { CommandHandler } from "@shepherdjerred/streambot/discord/commands/command-handler.ts";
 import type {
   CommandHandlerDeps,
   CommandInteraction,
-} from "@shepherdjerred/streambot/discord/command-types.ts";
+} from "@shepherdjerred/streambot/discord/commands/command-types.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import {
   helpText,
   listPages,
   sourcesPages,
   type PaginatedPages,
-} from "@shepherdjerred/streambot/discord/help-text.ts";
-import { commandJson } from "@shepherdjerred/streambot/discord/commands.ts";
+} from "@shepherdjerred/streambot/discord/commands/help-text.ts";
+import { commandJson } from "@shepherdjerred/streambot/discord/commands/commands.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
 import type { PlaybackEvent } from "@shepherdjerred/streambot/machine/types.ts";
 import {

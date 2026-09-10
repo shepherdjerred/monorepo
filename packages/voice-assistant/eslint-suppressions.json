@@ -1,5 +1,5 @@
 {
-  "src/realtime-turn.ts": {
+  "src/realtime/realtime-turn.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1
     }

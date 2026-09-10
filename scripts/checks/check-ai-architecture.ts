@@ -103,7 +103,7 @@ const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
 // credential handoffs. They are infrastructure metadata, not inference paths.
 const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
   "packages/homelab/scripts/platform-desired-state.ts",
-  "packages/homelab/scripts/tofu-stack-manifest.ts",
+  "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
 ]);
 
 const WHISPER_TRANSCRIPTION_ADAPTER =
@@ -113,7 +113,7 @@ const WHISPER_TRANSCRIPTION_ADAPTER =
 // OpenRouter/llm-runtime, so only their named configuration, runtime, and
 // operator-probe surfaces may hold the dedicated project credential.
 const OPENAI_NATIVE_REALTIME_PATHS = new Set([
-  "packages/homelab/src/cdk8s/src/resources/streambot.ts",
+  "packages/homelab/src/cdk8s/src/resources/streambot/streambot.ts",
   "packages/streambot/Dockerfile",
   "packages/streambot/scripts/voice-corpus-generate.ts",
   "packages/streambot/scripts/voice-cloud-probe.ts",

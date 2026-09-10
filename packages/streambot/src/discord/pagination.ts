@@ -15,7 +15,7 @@ import {
   type MessageActionRowComponentBuilder,
   MessageFlags,
 } from "discord.js";
-import type { PaginatedPages } from "@shepherdjerred/streambot/discord/help-text.ts";
+import type { PaginatedPages } from "@shepherdjerred/streambot/discord/commands/help-text.ts";
 import {
   getErrorMessage,
   isStaleInteractionError,

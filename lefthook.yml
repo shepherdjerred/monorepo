@@ -39,7 +39,7 @@ pre-commit:
                     - "sandbox/archive/**"
                     - "**/generated/**"
                     - "**/node_modules/**"
-                  run: bun scripts/checks/check-env-var-names.ts {staged_files}
+                  run: bun scripts/checks/ci/check-env-var-names.ts {staged_files}
 
                 - name: check-suppressions
                   run: bun scripts/checks/check-suppressions.ts

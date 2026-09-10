@@ -14,7 +14,7 @@ import {
   type CaptureObjectStore,
   type CaptureUploadJob,
 } from "@shepherdjerred/streambot/voice/capture-store.ts";
-import { encodePcm16MonoWave } from "@shepherdjerred/voice-assistant/wave-io.ts";
+import { encodePcm16MonoWave } from "@shepherdjerred/voice-assistant/audio/wave-io.ts";
 
 const CAPTURE_CONFIG: Config["voice"]["capture"] = {
   enabled: true,

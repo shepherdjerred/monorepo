@@ -4,8 +4,8 @@ import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { HistoryIndex } from "#lib/history/index.ts";
-import { parseSince } from "#lib/history/query.ts";
-import { renderLaunchAgent } from "#lib/history/launchd.ts";
+import { parseSince } from "#lib/history/query/query.ts";
+import { renderLaunchAgent } from "#lib/history/sources/launchd.ts";
 import {
   defaultHistoryRuntimePaths,
   type HistoryPaths,

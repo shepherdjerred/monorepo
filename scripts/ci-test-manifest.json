@@ -273,10 +273,10 @@
         {
           "runner": "vitest",
           "args": [
-            "scripts/argocd-manifest-overrides.test.ts",
-            "scripts/helm-release-core.test.ts",
-            "scripts/helm-set-version.test.ts",
-            "scripts/lint-helm.test.ts",
+            "scripts/argocd/argocd-manifest-overrides.test.ts",
+            "scripts/helm/helm-release-core.test.ts",
+            "scripts/helm/helm-set-version.test.ts",
+            "scripts/helm/lint-helm.test.ts",
             "scripts/migration-smoke.test.ts",
             "scripts/velero-backups.test.ts"
           ]
@@ -393,7 +393,7 @@
           "runner": "vitest",
           "args": [
             "scripts/create-minimal-png.test.ts",
-            "scripts/dev-web.test.ts",
+            "scripts/dev/dev-web.test.ts",
             "scripts/install-pkgs.test.ts",
             "scripts/migration-smoke.test.ts"
           ]
@@ -661,7 +661,7 @@
         {
           "runner": "command",
           "name": "ha-schema",
-          "command": ["bun", "run", "scripts/ensure-ha-schema.ts"]
+          "command": ["bun", "run", "scripts/homelab/ensure-ha-schema.ts"]
         },
         {
           "runner": "vitest",

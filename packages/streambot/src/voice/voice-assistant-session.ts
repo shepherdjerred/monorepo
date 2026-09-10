@@ -40,7 +40,7 @@ import {
 import {
   NOOP_VOICE_ATTEMPT_OBSERVER,
   type VoiceAttemptHandle,
-} from "@shepherdjerred/voice-assistant/attempt.ts";
+} from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
 import type {
   VoiceCaptureManager,
   VoiceDebugCaptureStatus,

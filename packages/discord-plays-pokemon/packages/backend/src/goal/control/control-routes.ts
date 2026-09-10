@@ -16,7 +16,7 @@ import {
 import { readGameSnapshot } from "#src/game/events/snapshot.ts";
 import { readSpatialSnapshot } from "#src/game/spatial/spatial-snapshot.ts";
 import { formatGameStateForPrompt } from "#src/goal/game/game-state-summary.ts";
-import type { FsEntry, GrepMatch } from "#src/goal/goal-memory.ts";
+import type { FsEntry, GrepMatch } from "#src/goal/memory/goal-memory.ts";
 import { truncateStateForToolLog } from "#src/goal/goal-tool-log.ts";
 import type { GoalControlContext, Routed } from "./control-context.ts";
 import {

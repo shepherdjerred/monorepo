@@ -30,7 +30,7 @@ import {
   type ReviewThread,
 } from "@shepherdjerred/code-review";
 import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
-import { buildSignalEvent } from "../lib/review-gate-signal.ts";
+import { buildSignalEvent } from "../lib/review/review-gate-signal.ts";
 import {
   DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
@@ -38,7 +38,7 @@ import {
   requestGraceSecondsForProvider,
   validateReviewRequestSchedule,
   warnIfFirstReviewIsOversized,
-} from "../lib/review-gate-policy.ts";
+} from "../lib/review/review-gate-policy.ts";
 import {
   fetchPullRequestAuthor,
   fetchReviewThreads,

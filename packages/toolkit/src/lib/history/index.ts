@@ -3,7 +3,7 @@ import { chmod, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { HistoryRuntimePaths } from "./paths.ts";
-import { ftsQuery } from "./query.ts";
+import { ftsQuery } from "./query/query.ts";
 import type {
   HistorySourceName,
   HistoryRuntimeRef,

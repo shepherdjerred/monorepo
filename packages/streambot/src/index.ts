@@ -14,7 +14,7 @@ import {
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { UserbotPool } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import { CommandBot } from "@shepherdjerred/streambot/discord/commands/command-bot.ts";
 import { getErrorMessage } from "@shepherdjerred/streambot/util/errors.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {

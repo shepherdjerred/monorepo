@@ -341,14 +341,14 @@
       "source": "packages/homelab/scripts/helm-set-version.sh",
       "disposition": "port",
       "reason": "Homelab tooling already requires Bun",
-      "replacement": "packages/homelab/scripts/helm-set-version.ts",
+      "replacement": "packages/homelab/scripts/helm/helm-set-version.ts",
       "owner": {
         "packageJson": "packages/homelab/package.json",
         "tsconfig": "packages/homelab/tsconfig.scripts.json",
         "eslintConfig": "packages/homelab/eslint.config.ts"
       },
       "tests": [
-        "packages/homelab/scripts/helm-set-version.test.ts",
+        "packages/homelab/scripts/helm/helm-set-version.test.ts",
         "packages/homelab/scripts/migration-smoke.test.ts"
       ]
     },
@@ -356,14 +356,14 @@
       "source": "packages/homelab/scripts/lint-helm.sh",
       "disposition": "port",
       "reason": "Homelab tooling already requires Bun",
-      "replacement": "packages/homelab/scripts/lint-helm.ts",
+      "replacement": "packages/homelab/scripts/helm/lint-helm.ts",
       "owner": {
         "packageJson": "packages/homelab/package.json",
         "tsconfig": "packages/homelab/tsconfig.scripts.json",
         "eslintConfig": "packages/homelab/eslint.config.ts"
       },
       "tests": [
-        "packages/homelab/scripts/lint-helm.test.ts",
+        "packages/homelab/scripts/helm/lint-helm.test.ts",
         "packages/homelab/scripts/migration-smoke.test.ts"
       ]
     },
@@ -398,7 +398,7 @@
       ]
     },
     {
-      "source": "packages/homelab/src/cdk8s/src/misc/minecraft-config-drift-check.sh",
+      "source": "packages/homelab/src/cdk8s/src/misc/minecraft/minecraft-config-drift-check.sh",
       "disposition": "retain",
       "reason": "ConfigMap-mounted init-container drift check runs on the busybox+yq image where Bun is unavailable"
     },
@@ -481,14 +481,14 @@
       "source": "packages/scout-for-lol/scripts/dev-web.sh",
       "disposition": "port",
       "reason": "Long-lived process supervision needs explicit typed signal handling",
-      "replacement": "packages/scout-for-lol/scripts/dev-web.ts",
+      "replacement": "packages/scout-for-lol/scripts/dev/dev-web.ts",
       "owner": {
         "packageJson": "packages/scout-for-lol/package.json",
         "tsconfig": "packages/scout-for-lol/tsconfig.scripts.json",
         "eslintConfig": "packages/scout-for-lol/eslint.config.ts"
       },
       "tests": [
-        "packages/scout-for-lol/scripts/dev-web.test.ts",
+        "packages/scout-for-lol/scripts/dev/dev-web.test.ts",
         "packages/scout-for-lol/scripts/migration-smoke.test.ts"
       ]
     },
@@ -581,14 +581,14 @@
       "source": "scripts/check-env-var-names.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
-      "replacement": "scripts/checks/check-env-var-names.ts",
+      "replacement": "scripts/checks/ci/check-env-var-names.ts",
       "owner": {
         "packageJson": "scripts/package.json",
         "tsconfig": "scripts/tsconfig.json",
         "eslintConfig": "scripts/eslint.config.ts"
       },
       "tests": [
-        "scripts/checks/check-env-var-names.test.ts",
+        "scripts/checks/ci/check-env-var-names.test.ts",
         "scripts/misc/migration-smoke.test.ts"
       ]
     },

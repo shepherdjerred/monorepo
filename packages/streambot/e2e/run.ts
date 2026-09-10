@@ -12,9 +12,9 @@ import {
   listExtractors,
 } from "@shepherdjerred/streambot/sources/ytdlp.ts";
 import { StreambotStreamer } from "@shepherdjerred/streambot/streamer/streamer.ts";
-import { CommandBot } from "@shepherdjerred/streambot/discord/command-bot.ts";
+import { CommandBot } from "@shepherdjerred/streambot/discord/commands/command-bot.ts";
 import { SessionManager } from "@shepherdjerred/streambot/session/session-manager.ts";
-import { NOOP_CARD_PORT } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+import { NOOP_CARD_PORT } from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import {
   loadState,
   saveState,

@@ -8,7 +8,7 @@ import {
 import { createPlaybackMachine } from "@shepherdjerred/streambot/machine/playback-machine.ts";
 import { buildPlaybackActors } from "@shepherdjerred/streambot/session/playback-actors.ts";
 import { buildPlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
-import { PlayerCardManager } from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+import { PlayerCardManager } from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import {
   playbackPositionSeconds,
   queueLength,

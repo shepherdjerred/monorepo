@@ -121,8 +121,8 @@ const environmentVariableSearchExtensions = [
 ];
 
 const environmentVariableExcludedPaths = new Set([
-  "scripts/checks/check-env-var-names.test.ts",
-  "scripts/checks/check-env-var-names.ts",
+  "scripts/checks/ci/check-env-var-names.test.ts",
+  "scripts/checks/ci/check-env-var-names.ts",
   "scripts/checks/environment-variable-rules.ts",
 ]);
 

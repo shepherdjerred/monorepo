@@ -1,7 +1,7 @@
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { voiceCaptureDropsTotal } from "@shepherdjerred/streambot/observability/voice-diagnostic-metrics.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
-import type { VoiceAttemptHandle } from "@shepherdjerred/voice-assistant/attempt.ts";
+import type { VoiceAttemptHandle } from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
 import {
   ObservedVoiceAttempt,
   type VoiceAttemptCandidate,
@@ -17,7 +17,7 @@ import {
 import {
   encodePcm16MonoWaveBytes,
   encodePcm16Samples,
-} from "@shepherdjerred/voice-assistant/wave-io.ts";
+} from "@shepherdjerred/voice-assistant/audio/wave-io.ts";
 
 const log = logger.child("voice-capture-manager");
 const SAMPLE_RATE = 16_000;

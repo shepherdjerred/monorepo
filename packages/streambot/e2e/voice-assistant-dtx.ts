@@ -1,6 +1,6 @@
 import path from "node:path";
 import { loadVoiceCorpusManifest } from "@shepherdjerred/streambot/voice/corpus-io.ts";
-import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/discord-opus-container.ts";
+import { decodeDiscordOpusContainer } from "@shepherdjerred/voice-assistant/audio/discord-opus-container.ts";
 import {
   CORPUS_DIR,
   assertAcceptedCascade,

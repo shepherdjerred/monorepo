@@ -21,7 +21,7 @@ import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type {
   PlayerCardManager,
   PlayerCardPort,
-} from "@shepherdjerred/streambot/discord/player-card-manager.ts";
+} from "@shepherdjerred/streambot/discord/player-card/player-card-manager.ts";
 import type { StatusReporter } from "@shepherdjerred/streambot/discord/status-reporter.ts";
 import type { UserbotEntry } from "@shepherdjerred/streambot/pool/userbot-pool.ts";
 import type { SubtitleCandidate } from "@shepherdjerred/streambot/sources/subtitles.ts";

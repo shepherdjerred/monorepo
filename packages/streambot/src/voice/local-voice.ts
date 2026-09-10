@@ -4,7 +4,7 @@ import {
   validateVoiceAssets as validateVoiceAssistantAssets,
   type LocalVoiceModels,
 } from "@shepherdjerred/voice-assistant/local-models.ts";
-import type { VoiceAudioLifecycleOptions } from "@shepherdjerred/voice-assistant/audio-lifecycle-types.ts";
+import type { VoiceAudioLifecycleOptions } from "@shepherdjerred/voice-assistant/audio/audio-lifecycle-types.ts";
 import type { Config } from "@shepherdjerred/streambot/config/schema.ts";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {

@@ -1,10 +1,10 @@
-import { cleanText, excerptForQuery } from "./text.ts";
+import { cleanText, excerptForQuery } from "./query/text.ts";
 import {
   historyQueryParts,
   queryPartIndex,
   searchTokens,
   type HistoryQueryPart,
-} from "./query.ts";
+} from "./query/query.ts";
 import type { HistoryMessage } from "./types.ts";
 
 const SHOW_CHARACTER_LIMIT = 6000;

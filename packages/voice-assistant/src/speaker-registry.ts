@@ -1,4 +1,4 @@
-import type { DiscordOpusDecoder } from "./codecs.ts";
+import type { DiscordOpusDecoder } from "./audio/codecs.ts";
 import type { KeywordDetector, LocalVoiceModels } from "./local-models.ts";
 
 /**

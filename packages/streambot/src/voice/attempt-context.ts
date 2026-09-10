@@ -11,8 +11,8 @@ import type {
   VoiceAttemptEndpoint,
   VoiceAttemptHandle,
   VoiceToolObservation,
-} from "@shepherdjerred/voice-assistant/attempt.ts";
-import { encodePcm16MonoWave } from "@shepherdjerred/voice-assistant/wave-io.ts";
+} from "@shepherdjerred/voice-assistant/realtime/attempt.ts";
+import { encodePcm16MonoWave } from "@shepherdjerred/voice-assistant/audio/wave-io.ts";
 import {
   getTracer,
   markSpanError,
