@@ -52,7 +52,8 @@ and rendered by the
 
 The `API & routers` segment is separate from these subscription quotas.
 It reports billed API spend, not remaining subscription windows.
-OpenRouter, OpenAI, and Anthropic each use a read-only admin or management key.
+OpenRouter, OpenAI, and Anthropic each use a privileged admin or management key.
+Brim uses those keys only for read-only billing requests.
 Those keys never replace Claude, Codex, or ChatGPT subscription sign-ins.
 
 Claude and Codex use private authenticated subscription usage surfaces. Claude

@@ -38,8 +38,8 @@ struct SettingsView: View {
   private var apiCredentialSection: some View {
     Section("API platforms") {
       Text(
-        "Enter read-only admin or management keys to report API spend. Keys stay in your login Keychain. "
-          + "Brim never creates, rotates, or deletes provider keys."
+        "Enter a privileged admin or management key. Brim uses it only for read-only billing requests. "
+          + "Keys stay in your login Keychain. Brim never creates, rotates, or deletes provider keys."
       )
       .font(.caption)
       .foregroundStyle(.secondary)

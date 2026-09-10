@@ -16,7 +16,8 @@ public final class APIPlatformModel {
   private let providerTimeout: Duration
   private var lastSuccessful: [APIPlatformID: APIPlatformSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
-  private var activeRefresh: Task<Void, Never>?
+  private var activeRefresh: ActiveRefresh?
+  private var nextRefreshID = 0
 
   public init(
     settings: AppSettings,
@@ -97,30 +98,54 @@ public final class APIPlatformModel {
 
   public func refresh() async {
     if let activeRefresh {
-      await activeRefresh.value
+      await activeRefresh.task.value
+      clearRefresh(id: activeRefresh.id)
       return
     }
-    let task = Task { [weak self] in
-      guard let self else { return }
-      await self.performRefresh(platforms: Array(APIPlatformID.allCases))
-    }
-    activeRefresh = task
-    await task.value
-    activeRefresh = nil
+    await beginRefresh(platforms: Array(APIPlatformID.allCases))
   }
 
   public func handleCredentialChange(for platform: APIPlatformID) async {
+    let inFlight = activeRefresh
+    clearCachedSnapshot(for: platform)
+    if let inFlight {
+      await inFlight.task.value
+      clearRefresh(id: inFlight.id)
+      clearCachedSnapshot(for: platform)
+    }
+    await beginRefresh(platforms: [platform])
+  }
+
+  private func beginRefresh(platforms: [APIPlatformID]) async {
+    nextRefreshID += 1
+    let refreshID = nextRefreshID
+    let task = Task { [weak self] in
+      guard let self else { return }
+      await self.performRefresh(platforms: platforms)
+    }
+    activeRefresh = ActiveRefresh(id: refreshID, task: task)
+    await task.value
+    clearRefresh(id: refreshID)
+  }
+
+  private func clearRefresh(id: Int) {
+    guard activeRefresh?.id == id else { return }
+    activeRefresh = nil
+  }
+
+  private func clearCachedSnapshot(for platform: APIPlatformID) {
     lastSuccessful[platform] = nil
     states[platform] = .loading
-    var remaining = lastSuccessful
-    remaining[platform] = nil
+    persistLastSuccessful()
+  }
+
+  private func persistLastSuccessful() {
     do {
-      try store.save(remaining)
+      try store.save(lastSuccessful)
       cacheErrorMessage = nil
     } catch {
       cacheErrorMessage = APIPlatformError.cacheWriteFailed.localizedDescription
     }
-    await performRefresh(platforms: [platform])
   }
 
   private func performRefresh(platforms: [APIPlatformID]) async {
@@ -148,12 +173,7 @@ public final class APIPlatformModel {
       }
     }
 
-    do {
-      try store.save(lastSuccessful)
-      cacheErrorMessage = nil
-    } catch {
-      cacheErrorMessage = APIPlatformError.cacheWriteFailed.localizedDescription
-    }
+    persistLastSuccessful()
   }
 
   private func fetchState(for platform: APIPlatformID) async -> APIPlatformFetchResult {
@@ -246,4 +266,9 @@ private struct APIPlatformFetchResult: Sendable {
   let platform: APIPlatformID
   let state: APIPlatformDisplayState
   let snapshot: APIPlatformSnapshot?
+}
+
+private struct ActiveRefresh {
+  let id: Int
+  let task: Task<Void, Never>
 }

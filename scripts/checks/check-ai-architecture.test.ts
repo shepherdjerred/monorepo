@@ -179,6 +179,18 @@ describe("AI architecture guard", () => {
     ).toEqual(["direct-provider-endpoint", "direct-provider-endpoint"]);
   });
 
+  test("rejects unapproved provider URLs inside APIPlatformEndpoints.swift", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatformEndpoints.swift",
+          contents:
+            'const completions = "https://api.openai.com/v1/chat/completions";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["direct-provider-endpoint"]);
+  });
+
   test("allows only the official OpenAI billing reconciliation endpoint", () => {
     expect(
       findAiArchitectureViolations([

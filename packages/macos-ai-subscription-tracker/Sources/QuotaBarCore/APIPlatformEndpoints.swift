@@ -11,7 +11,7 @@ public struct OpenAIEndpoints: Sendable {
   }
 
   public static func live() -> OpenAIEndpoints {
-    OpenAIEndpoints(baseURL: liveOpenAIBaseURL)
+    OpenAIEndpoints(baseURL: liveBaseURL(from: liveOpenAICostsURL, name: "OpenAI"))
   }
 
   public func costs(startTime: Int, endTime: Int, page: String?) -> URL {
@@ -57,7 +57,7 @@ public struct AnthropicEndpoints: Sendable {
   }
 
   public static func live() -> AnthropicEndpoints {
-    AnthropicEndpoints(baseURL: liveAnthropicBaseURL)
+    AnthropicEndpoints(baseURL: liveBaseURL(from: liveAnthropicCostReportURL, name: "Anthropic"))
   }
 
   public func costReport(startingAt: String, endingAt: String, page: String?) -> URL {
@@ -92,16 +92,22 @@ public struct AnthropicEndpoints: Sendable {
   }
 }
 
-private let liveOpenAIBaseURL: URL = {
-  guard let url = URL(string: "https://api.openai.com") else {
-    preconditionFailure("The OpenAI default URL is invalid.")
-  }
-  return url
-}()
+private let liveOpenAICostsURL = "https://api.openai.com/v1/organization/costs"
+private let liveAnthropicCostReportURL = "https://api.anthropic.com/v1/organizations/cost_report"
 
-private let liveAnthropicBaseURL: URL = {
-  guard let url = URL(string: "https://api.anthropic.com") else {
-    preconditionFailure("The Anthropic default URL is invalid.")
+private func liveBaseURL(from endpoint: String, name: String) -> URL {
+  guard let endpointURL = URL(string: endpoint),
+    let scheme = endpointURL.scheme,
+    let host = endpointURL.host
+  else {
+    preconditionFailure("The \(name) endpoint URL is invalid.")
+  }
+  var components = URLComponents()
+  components.scheme = scheme
+  components.host = host
+  components.port = endpointURL.port
+  guard let url = components.url else {
+    preconditionFailure("The \(name) default URL is invalid.")
   }
   return url
-}()
+}

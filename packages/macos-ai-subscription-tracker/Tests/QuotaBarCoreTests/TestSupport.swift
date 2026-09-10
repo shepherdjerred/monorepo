@@ -238,3 +238,57 @@ final class FakeKeychain: KeychainClient, @unchecked Sendable {
     "\(service)::\(account ?? "")"
   }
 }
+
+func response(_ data: Data) -> APIPlatformResponse {
+  APIPlatformResponse(statusCode: 200, data: data)
+}
+
+func utcTimeZone() -> TimeZone {
+  guard let timeZone = TimeZone(secondsFromGMT: 0) else {
+    preconditionFailure("Invalid UTC test time zone")
+  }
+  return timeZone
+}
+
+func decimal(_ value: String) -> Decimal {
+  guard let result = Decimal(string: value) else {
+    preconditionFailure("Invalid test decimal")
+  }
+  return result
+}
+
+func testOpenAIEndpoints() -> OpenAIEndpoints {
+  guard let url = URL(string: "https://openai.test") else {
+    preconditionFailure("Invalid test endpoint")
+  }
+  return OpenAIEndpoints(baseURL: url)
+}
+
+func testAnthropicEndpoints() -> AnthropicEndpoints {
+  guard let url = URL(string: "https://anthropic.test") else {
+    preconditionFailure("Invalid test endpoint")
+  }
+  return AnthropicEndpoints(baseURL: url)
+}
+
+actor APIPlatformRoutingTransport: APIPlatformTransport {
+  private let routes: [String: APIPlatformResponse]
+  private let delay: Duration
+  private(set) var requests: [APIPlatformRequest] = []
+
+  init(routes: [String: APIPlatformResponse], delay: Duration = .zero) {
+    self.routes = routes
+    self.delay = delay
+  }
+
+  func send(_ request: APIPlatformRequest) async throws -> APIPlatformResponse {
+    if delay > .zero {
+      try await Task.sleep(for: delay)
+    }
+    requests.append(request)
+    guard let response = routes[request.url.absoluteString] else {
+      throw APIPlatformError.network(request.platform)
+    }
+    return response
+  }
+}

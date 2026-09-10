@@ -185,8 +185,9 @@ not redeem or consume them.
 
 ### API platform reporting
 
-The API view accepts a read-only key per platform, entered in Settings and
-stored in a dedicated login-Keychain account:
+The API view accepts a privileged admin or management key per platform, entered
+in Settings and stored in a dedicated login-Keychain account. Brim uses each
+key only for read-only billing requests:
 
 - OpenRouter Management API key: credits remaining and current-month API-key
   spend, including estimated BYOK, across every workspace.

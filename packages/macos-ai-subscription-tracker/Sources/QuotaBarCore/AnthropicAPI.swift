@@ -63,13 +63,22 @@ public struct AnthropicAPIClient: Sendable {
         guard result.currency.lowercased() == "usd" else {
           throw APIPlatformError.malformedResponse(id)
         }
-        guard let cents = Decimal(string: result.amount), cents >= 0 else {
-          throw APIPlatformError.malformedResponse(id)
-        }
+        let cents = try posixDecimal(result.amount)
+        guard cents >= 0 else { throw APIPlatformError.malformedResponse(id) }
         total += cents / 100
       }
     }
     return total
+  }
+
+  private func posixDecimal(_ value: String) throws -> Decimal {
+    let scanner = Scanner(string: value)
+    scanner.locale = Locale(identifier: "en_US_POSIX")
+    scanner.charactersToBeSkipped = nil
+    guard let parsed = scanner.scanDecimal(), scanner.isAtEnd else {
+      throw APIPlatformError.malformedResponse(id)
+    }
+    return parsed
   }
 
   private static func rfc3339(_ date: Date) -> String {
