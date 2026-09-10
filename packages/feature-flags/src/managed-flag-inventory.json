@@ -1354,10 +1354,16 @@
         {
           "key": "birmel-image-generation-enabled",
           "type": "boolean",
-          "default": true,
+          "default": false,
           "rollouts": [],
           "rules": [],
-          "thresholdRollouts": []
+          "thresholdRollouts": [
+            {
+              "rank": 1,
+              "percentage": 100,
+              "result": true
+            }
+          ]
         }
       ]
     }

@@ -116,7 +116,7 @@ describe("ManagedFlagInventorySchema", () => {
     expect(prodFlag.rollouts).toEqual([]);
   });
 
-  test("keeps Birmel image generation off by default and on in beta and prod", () => {
+  test("keeps Birmel image generation off by default, on in beta, and ramped in prod", () => {
     const declared = managedFlagInventory.flags.find(
       (flag) => flag.key === "birmel-image-generation-enabled",
     );
@@ -134,7 +134,14 @@ describe("ManagedFlagInventorySchema", () => {
       "prod",
       "birmel",
     ).find((candidate) => candidate.key === "birmel-image-generation-enabled");
-    expect(prodFlag?.default).toBe(true);
+    expect(prodFlag?.default).toBe(false);
+    expect(prodFlag?.thresholdRollouts).toEqual([
+      {
+        rank: 1,
+        percentage: 100,
+        result: true,
+      },
+    ]);
   });
 
   test("materializes a full-state environment override", () => {
