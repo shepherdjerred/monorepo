@@ -49,6 +49,7 @@ type ClaudeUsageEntry = {
   readonly occurredAt: string | null;
   readonly model: string;
   readonly usage: UsageCounts;
+  readonly messageId: string | null;
 };
 
 type ClaudeTranscript = {
@@ -59,6 +60,14 @@ type ClaudeTranscript = {
   readonly usageEntries: readonly ClaudeUsageEntry[];
 };
 
+/**
+ * When one API response has multiple content blocks (text, thinking,
+ * tool_use), Claude Code can log them as separate JSONL records that each
+ * repeat that response's full `message.usage` snapshot. `message.id` (the
+ * Anthropic API response id) is shared by every such record, so it's the
+ * dedup key — without it, summing every record's usage would count the same
+ * response's tokens once per content block instead of once per response.
+ */
 function claudeUsageEntry(
   record: Record<string, unknown>,
   occurredAt: string | null,
@@ -83,6 +92,7 @@ function claudeUsageEntry(
       cachedInputTokens: 0,
       reasoningTokens: 0,
     },
+    messageId: stringValue(message["id"]),
   };
 }
 
@@ -93,6 +103,7 @@ async function readClaudeTranscript(
   const raw = await Bun.file(file).text();
   const messages: HistoryMessage[] = [];
   const usageEntries: ClaudeUsageEntry[] = [];
+  const seenMessageIds = new Set<string>();
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
   let runtimeId: string | null = null;
@@ -116,7 +127,12 @@ async function readClaudeTranscript(
     }
     const usageEntry = claudeUsageEntry(record, parsedTimestamp);
     if (usageEntry !== null) {
-      usageEntries.push(usageEntry);
+      if (usageEntry.messageId === null) {
+        usageEntries.push(usageEntry);
+      } else if (!seenMessageIds.has(usageEntry.messageId)) {
+        seenMessageIds.add(usageEntry.messageId);
+        usageEntries.push(usageEntry);
+      }
     }
     messages.push(
       ...parseConversationEnvelope(

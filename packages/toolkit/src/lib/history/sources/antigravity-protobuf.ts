@@ -59,6 +59,9 @@ export function decodeFields(blob: Uint8Array): ProtoField[] {
       case 2: {
         const [length, afterLength] = readVarint(blob, offset);
         offset = afterLength;
+        if (length > blob.length - offset) {
+          throw new Error("Truncated protobuf length-delimited field");
+        }
         fields.push({
           number: fieldNumber,
           kind: "bytes",

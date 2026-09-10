@@ -1,4 +1,3 @@
-import { redactSecrets } from "@shepherdjerred/llm-observability/redact";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -14,7 +13,8 @@ import {
   sourceResult,
 } from "#lib/history/sources-shared.ts";
 import {
-  parseJsonLine,
+  cleanText,
+  extractText,
   parseRecord,
   parseTimestamp,
   stringValue,
@@ -119,23 +119,19 @@ function grokContentText(update: Record<string, unknown>): string | null {
 /**
  * A tool call's `rawInput` is an arbitrary, tool-defined object — it can
  * legitimately carry an env map, an Authorization header, or a token as one
- * of its fields. Redact it the same way command output is redacted before
- * being archived, rather than persisting it verbatim into the local FTS
- * index.
+ * of its fields. `extractText` already omits every key in its
+ * `SENSITIVE_KEYS` set (env, credentials, headers, password, token, ...)
+ * while walking nested objects — the same policy every other source's tool
+ * blocks go through — instead of serializing the raw structure verbatim
+ * into the local FTS index.
  */
 function grokToolText(update: Record<string, unknown>): string {
   const title = stringValue(update["title"]) ?? "";
   const status = stringValue(update["status"]) ?? "";
-  const rawInput = update["rawInput"];
-  const parts = [title, status];
-  if (rawInput !== undefined) {
-    try {
-      parts.push(JSON.stringify(redactSecrets(rawInput)));
-    } catch {
-      // Non-serializable rawInput (shouldn't happen for parsed JSON) — skip it.
-    }
-  }
-  return parts.filter((part) => part.length > 0).join(" ");
+  const rawInputText = cleanText(extractText(update["rawInput"]));
+  return [title, status, rawInputText]
+    .filter((part) => part.length > 0)
+    .join(" ");
 }
 
 function grokMessage(
@@ -177,8 +173,23 @@ type ParsedGrokLine = {
   readonly timestamp: string | null;
 };
 
+/**
+ * A line that fails to parse as JSON is truncated or corrupt — propagated
+ * rather than skipped, so a partially-written update doesn't quietly shrink
+ * this session's usage on the next scan. A line that parses fine but doesn't
+ * match the expected envelope shape is a legitimate message type this
+ * adapter doesn't index (skipped, not an error).
+ */
 function parseGrokLine(line: string): ParsedGrokLine | null {
-  const record = parseRecord(parseJsonLine(line));
+  let value: unknown;
+  try {
+    value = JSON.parse(line) as unknown;
+  } catch (error) {
+    throw new Error(`Malformed Grok update line: ${line.slice(0, 200)}`, {
+      cause: error,
+    });
+  }
+  const record = parseRecord(value);
   if (record === null) {
     return null;
   }
@@ -251,9 +262,18 @@ async function grokSessionMeta(updatesPath: string): Promise<GrokSessionMeta> {
   if (!(await pathExists(summaryPath))) {
     return { sessionId: null, cwd: null, defaultModel: null };
   }
-  const record = parseRecord(parseJsonLine(await Bun.file(summaryPath).text()));
+  const raw = await Bun.file(summaryPath).text();
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw) as unknown;
+  } catch (error) {
+    throw new Error(`Grok summary is malformed: ${summaryPath}`, {
+      cause: error,
+    });
+  }
+  const record = parseRecord(parsed);
   if (record === null) {
-    return { sessionId: null, cwd: null, defaultModel: null };
+    throw new Error(`Grok summary is malformed: ${summaryPath}`);
   }
   const info = parseRecord(record["info"]);
   const sessionId = info === null ? null : stringValue(info["id"]);
