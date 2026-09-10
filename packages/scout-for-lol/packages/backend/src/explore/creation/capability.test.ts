@@ -77,7 +77,7 @@ function countedAccess(
         counters.permission += 1;
         return await permissions(guildId);
       },
-      guildName: (guildId) => `Guild ${guildId}`,
+      guildName: (guildId) => Promise.resolve(`Guild ${guildId}`),
     });
 }
 
@@ -140,7 +140,7 @@ describe("creation tool registration", () => {
         resolveAccess: countedAccess(counters, () =>
           Promise.resolve(rootPermissions()),
         ),
-        listChannels: () => [],
+        listChannels: () => Promise.resolve([]),
       },
     });
 
@@ -169,7 +169,7 @@ describe("creation tool registration", () => {
         resolveAccess: countedAccess(counters, () =>
           Promise.resolve(createPermissionSet([])),
         ),
-        listChannels: () => [],
+        listChannels: () => Promise.resolve([]),
       },
     });
     expect(Object.keys(tools).toSorted()).toEqual([
@@ -196,7 +196,7 @@ describe("creation tool registration", () => {
         resolveAccess: countedAccess(counters, () =>
           Promise.resolve(createPermissionSet([])),
         ),
-        listChannels: () => [],
+        listChannels: () => Promise.resolve([]),
       },
     });
     expect(counters).toEqual({ oauth: 0, permission: 0 });

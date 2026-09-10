@@ -29,7 +29,8 @@ import {
 import { prisma, type Db } from "#src/database/index.ts";
 import { recordAudit } from "#src/lib/audit/index.ts";
 import { resolveDiscordUsers } from "#src/lib/discord/resolve-users.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+import { botRest } from "#src/lib/discord/bot-rest.ts";
+import { callDiscordForRequest } from "#src/trpc/discord-upstream.ts";
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });
 /**
@@ -59,28 +60,24 @@ async function lockGuildRoleMutations(
 
 const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
 const REVOKE_KEY = permissionKey({ resource: "roles", action: "revoke" });
-const DiscordApiErrorSchema = z.object({ code: z.number() });
-const UNKNOWN_MEMBER_CODE = 10_007;
 
+/**
+ * Whether the account still belongs to the guild, straight from Discord.
+ *
+ * The port returns `null` only for an authoritative "not a member"; a failure
+ * to reach Discord throws, and `callDiscordForRequest` turns that into
+ * SERVICE_UNAVAILABLE. That distinction is load-bearing here: reading an
+ * outage as "not a member" would let the last-role-manager guard conclude the
+ * guild has no other manager and block a legitimate revoke.
+ */
 async function isCurrentGuildMember(
   guildId: DiscordGuildId,
   discordId: DiscordAccountId,
 ): Promise<boolean> {
-  const guild = discordClient.guilds.cache.get(guildId);
-  if (guild === undefined) {
-    throw new Error(`Discord guild ${guildId} is unavailable`);
-  }
-
-  try {
-    await guild.members.fetch({ user: discordId, force: true });
-    return true;
-  } catch (error) {
-    const parsed = DiscordApiErrorSchema.safeParse(error);
-    if (parsed.success && parsed.data.code === UNKNOWN_MEMBER_CODE) {
-      return false;
-    }
-    throw error;
-  }
+  const member = await callDiscordForRequest(() =>
+    botRest().guildMember(guildId, discordId),
+  );
+  return member !== null;
 }
 
 /**

@@ -173,7 +173,7 @@ async function authorizeCreation(
   // the creation rate limit live inside `createCompetitionForActor`, which
   // receives this same PermissionSet — re-checking them here would be a second
   // copy of a reviewed policy.
-  assertChannelInGuild({
+  await assertChannelInGuild({
     guildId: loaded.guildId,
     channelId: loaded.payload.channelId,
   });

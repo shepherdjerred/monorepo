@@ -109,7 +109,7 @@ export const duelRouter = router({
     .input(DirectDuelChallengeInputSchema)
     .mutation(async ({ ctx, input }) => {
       await assertMemberAndFeature(ctx.user, input.guildId);
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -238,7 +238,7 @@ export const duelRouter = router({
         input.guildId,
         configuration.environment,
       );
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });

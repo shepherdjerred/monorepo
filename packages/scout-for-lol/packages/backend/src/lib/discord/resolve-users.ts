@@ -1,17 +1,24 @@
 /**
  * Batch-resolve Discord user IDs to display names/avatars for the web UI.
  *
- * Domain payloads (players, subscriptions, competitions, audit log) store
- * raw Discord snowflakes. The dashboard wants human-readable names, so we
- * resolve them via the bot's gateway client (`client.users.fetch`), backed
- * by a short in-memory TTL cache to avoid re-fetching the same IDs across a
- * burst of reads. Resolution is fail-soft: on any error we return the raw ID
- * as the name and do NOT cache the failure (so a transient gateway hiccup
- * doesn't pin a user to its raw ID for the whole TTL).
+ * Domain payloads (players, subscriptions, competitions, audit log) store raw
+ * Discord snowflakes. The dashboard wants human-readable names, so we resolve
+ * them over the bot REST API (`GET /users/{id}`), TTL-cached in
+ * `bot-rest.ts` to avoid re-fetching the same IDs across a burst of reads.
+ *
+ * This used to go through `client.users.fetch`, whose REST client only carries
+ * a token once `client.login()` has run — so on a pod serving HTTP without a
+ * gateway connection every name silently degraded to a raw snowflake.
+ * Resolution stays fail-soft: on any error we return the raw ID as the name and
+ * do NOT cache the failure.
  */
 
 import { z } from "zod";
-import { client as discordClient } from "#src/discord/client.ts";
+import {
+  botRest,
+  userAvatarUrl,
+  type BotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-resolve-users");
@@ -24,32 +31,34 @@ export const ResolvedDiscordUserSchema = z.object({
 });
 export type ResolvedDiscordUser = z.infer<typeof ResolvedDiscordUserSchema>;
 
-type CacheEntry = { user: ResolvedDiscordUser; fetchedAt: number };
-const cache = new Map<string, CacheEntry>();
-const TTL_MS = 5 * 60 * 1000;
-/** Hard cap so a single call can't fan out to the gateway unbounded. */
+/** Hard cap so a single call can't fan out to Discord unbounded. */
 export const MAX_IDS_PER_RESOLVE = 100;
+
+export type ResolveUsersDependencies = {
+  readonly rest: BotRestReader;
+};
+
+function defaultDependencies(): ResolveUsersDependencies {
+  return { rest: botRest() };
+}
 
 function fallback(id: string): ResolvedDiscordUser {
   return { id, username: id, displayName: id, avatar: null };
 }
 
-async function resolveOne(id: string): Promise<ResolvedDiscordUser> {
-  const cached = cache.get(id);
-  if (cached !== undefined && Date.now() - cached.fetchedAt < TTL_MS) {
-    return cached.user;
-  }
-  cache.delete(id);
+async function resolveOne(
+  id: string,
+  rest: BotRestReader,
+): Promise<ResolvedDiscordUser> {
   try {
-    const user = await discordClient.users.fetch(id);
-    const resolved: ResolvedDiscordUser = {
+    const user = await rest.user(id);
+    if (user === null) return fallback(id);
+    return {
       id,
       username: user.username,
-      displayName: user.globalName ?? user.username,
-      avatar: user.displayAvatarURL(),
+      displayName: user.global_name ?? user.username,
+      avatar: userAvatarUrl(user),
     };
-    cache.set(id, { user: resolved, fetchedAt: Date.now() });
-    return resolved;
   } catch (error) {
     logger.debug("Discord user resolve failed; falling back to raw id", {
       id,
@@ -66,8 +75,11 @@ async function resolveOne(id: string): Promise<ResolvedDiscordUser> {
  */
 export async function resolveDiscordUsers(
   ids: readonly string[],
+  dependencies: ResolveUsersDependencies = defaultDependencies(),
 ): Promise<Record<string, ResolvedDiscordUser>> {
   const unique = [...new Set(ids)].slice(0, MAX_IDS_PER_RESOLVE);
-  const resolved = await Promise.all(unique.map((id) => resolveOne(id)));
+  const resolved = await Promise.all(
+    unique.map((id) => resolveOne(id, dependencies.rest)),
+  );
   return Object.fromEntries(resolved.map((user) => [user.id, user]));
 }

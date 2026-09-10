@@ -73,12 +73,12 @@ async function limitFor(
   });
 }
 
-function boundedChannels(
+async function boundedChannels(
   context: CreationToolContext,
   guildId: DiscordGuildId,
-): { id: string; name: string }[] {
-  return context
-    .listChannels(guildId)
+): Promise<{ id: string; name: string }[]> {
+  const channels = await context.listChannels(guildId);
+  return channels
     .slice(0, CREATION_MAX_CHANNELS)
     .map((channel) => ({ id: channel.id, name: channel.name }));
 }
@@ -102,7 +102,9 @@ async function describeTarget(
       ...subscription,
     },
     competition: { permitted: permitted(guild, "competition"), ...competition },
-    channels: inlineChannels ? boundedChannels(context, guild.guildId) : null,
+    channels: inlineChannels
+      ? await boundedChannels(context, guild.guildId)
+      : null,
   };
 }
 
@@ -167,7 +169,7 @@ export async function listGuildChannels(
       channels: [],
     });
   }
-  const channels = boundedChannels(context, guildId);
+  const channels = await boundedChannels(context, guildId);
   return CreationChannelsResultSchema.parse({
     kind: "channels",
     message:

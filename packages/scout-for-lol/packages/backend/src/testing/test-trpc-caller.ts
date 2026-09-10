@@ -16,6 +16,11 @@
  *     at an isolated, migrated test DB (a copy of `template.db`). The real
  *     module is spread so its other exports stay intact for the rest of the
  *     router graph.
+ *   - `vi.doMock("#src/lib/discord/installed-guilds.ts", …)` and
+ *     `vi.doMock("#src/lib/discord/bot-rest.ts", …)` → the two application
+ *     ports the web request path reads Discord through. These replaced a mock
+ *     of the gateway client's `guilds.cache`, which is no longer consulted by
+ *     any web-serving code.
  *
  * Because it mutates the module registry, call this at the TOP of a test file,
  * before anything imports `appRouter`, and take `appRouter` from the returned
@@ -58,10 +63,6 @@ type TrpcCaller = ReturnType<AppRouter["createCaller"]>;
  * per-permission gating.
  */
 type MembershipConfig = "root" | { guildId: string; asAdmin: boolean }[];
-
-class UnknownMemberError extends Error {
-  readonly code = 10_007;
-}
 
 // test-ids requires a digits-only identifier (it builds a snowflake).
 const DEFAULT_ACTOR = testAccountId("900000001");
@@ -179,39 +180,64 @@ export async function createOfflineTrpcHarness(
     ...discordUpstreamModule,
     fetchUserGuildsForRequest: () => Promise.resolve(toPartialGuilds()),
   }));
+  // "Is Scout installed here?" — root mode says yes for every guild the guard
+  // asks about, matching the old cache stub. The bulk (guild-picker) form
+  // returns only explicitly-listed guilds, because root mode has no guild list.
+  vi.doMock("#src/lib/discord/installed-guilds.ts", () => ({
+    isScoutInstalledInGuild: (guildId: string) =>
+      Promise.resolve(
+        state.membership === "root" || installedGuildIds().has(guildId),
+      ),
+    installedGuildIdsAmong: (guildIds: readonly string[]) =>
+      Promise.resolve(
+        new Set(guildIds.filter((id) => installedGuildIds().has(id))),
+      ),
+    installedGuildName: () => Promise.resolve(null),
+  }));
+  // The bot-token REST reads. Membership is driven by `setGuildMembers`;
+  // everything else answers "Scout is not in that guild" so a test that
+  // accidentally depends on a real Discord read fails visibly rather than
+  // hanging on the network.
+  vi.doMock("#src/lib/discord/bot-rest.ts", () => ({
+    botRest: () => ({
+      guildExists: (guildId: string) =>
+        Promise.resolve(
+          state.membership === "root" || installedGuildIds().has(guildId),
+        ),
+      guildChannels: () => Promise.resolve(null),
+      guildRoles: () => Promise.resolve(null),
+      botMember: () => Promise.resolve(null),
+      guildMember: (guildId: string, userId: string) =>
+        Promise.resolve(
+          state.guildMembers.get(guildId)?.has(userId) === true
+            ? {
+                user: { id: userId, username: userId },
+                nick: null,
+                avatar: null,
+                roles: [],
+              }
+            : null,
+        ),
+      searchGuildMembers: () => Promise.resolve([]),
+      user: () => Promise.resolve(null),
+      channel: () => Promise.resolve(null),
+      clearCaches: () => {
+        /* no cache in the offline stub */
+      },
+    }),
+    memberDisplayName: (member: { user: { username: string } }) =>
+      member.user.username,
+    memberAvatarUrl: () => "",
+    userAvatarUrl: () => "",
+  }));
   vi.doMock("#src/discord/client.ts", () => ({
     client: {
       isReady: () => false,
+      // No web-serving code reads the gateway cache any more; anything that
+      // reaches for the client offline should fail loudly, not read a stub.
       guilds: {
-        cache: {
-          has: (id: string) =>
-            state.membership === "root" || installedGuildIds().has(id),
-          get: (id: string) => {
-            if (state.membership !== "root" && !installedGuildIds().has(id)) {
-              return;
-            }
-            return {
-              members: {
-                fetch: (options: { user?: string; query?: string }) => {
-                  if (options.query !== undefined) {
-                    return Promise.resolve({ map: () => [] });
-                  }
-                  if (
-                    options.user !== undefined &&
-                    state.guildMembers.get(id)?.has(options.user) === true
-                  ) {
-                    return Promise.resolve({ id: options.user });
-                  }
-                  return Promise.reject(
-                    new UnknownMemberError("Unknown Member"),
-                  );
-                },
-              },
-            };
-          },
-          map: <T>(fn: (g: { id: string }) => T): T[] =>
-            [...installedGuildIds()].map((id) => fn({ id })),
-        },
+        fetch: () =>
+          Promise.reject(new Error("offline harness: no Discord gateway")),
       },
     },
   }));

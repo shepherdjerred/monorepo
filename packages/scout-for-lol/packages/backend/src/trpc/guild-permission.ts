@@ -7,6 +7,10 @@
  * Administrator or owner is Scout's root/sudo (all permissions). Everyone else's
  * access comes purely from Scout-managed grants in the `ServerPermission` table.
  * Membership (from the OAuth guild list) is a precondition either way.
+ *
+ * Whether Scout is installed at all comes from `lib/discord/installed-guilds.ts`
+ * rather than the gateway guild cache, so this resolver answers identically on a
+ * pod with no gateway connection.
  */
 
 import { TRPCError } from "@trpc/server";
@@ -25,12 +29,12 @@ import {
 } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 import {
-  hasAdministrator,
-  isDevGuildOverrideGuild,
-} from "#src/lib/discord-rest.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
+  callDiscordForRequest,
+  fetchUserGuildsForRequest,
+} from "#src/trpc/discord-upstream.ts";
 import { webMutationProcedure, webProcedure } from "#src/trpc/trpc.ts";
 
 const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
@@ -63,10 +67,10 @@ export async function resolveGuildPermissions(
       message: "You are not a member of that guild",
     });
   }
-  if (
-    !discordClient.guilds.cache.has(guildId) &&
-    !isDevGuildOverrideGuild(guildId)
-  ) {
+  const installed = await callDiscordForRequest(() =>
+    isScoutInstalledInGuild(guildId),
+  );
+  if (!installed) {
     throw new TRPCError({
       code: "NOT_FOUND",
       message: "Scout is not installed in that guild",

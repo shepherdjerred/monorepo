@@ -39,7 +39,7 @@ export async function prepareReportCreation(
     );
   }
 
-  const channelRefusal = requirePostableChannel(context, {
+  const channelRefusal = await requirePostableChannel(context, {
     guildId: parsed.guildId,
     channelId: parsed.channelId,
   });
@@ -65,6 +65,6 @@ export async function prepareReportCreation(
   return await mintCreationIntent(context, {
     payload,
     guildId: parsed.guildId,
-    summary: `Report "${parsed.title}" in ${lookup.guild.name}, posting to #${postableChannelName(context, parsed.guildId, parsed.channelId)} on cron ${parsed.cronExpression} (${parsed.scheduleTimezone}), ${parsed.isEnabled ? "enabled" : "disabled"}.`,
+    summary: `Report "${parsed.title}" in ${lookup.guild.name}, posting to #${await postableChannelName(context, parsed.guildId, parsed.channelId)} on cron ${parsed.cronExpression} (${parsed.scheduleTimezone}), ${parsed.isEnabled ? "enabled" : "disabled"}.`,
   });
 }

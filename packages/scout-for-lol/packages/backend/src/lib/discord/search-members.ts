@@ -1,8 +1,12 @@
 /**
- * Guild-member typeahead for the web UI's add/invite flows. Backed by
- * discord.js `guild.members.fetch({ query, limit })`, which performs a
- * gateway member-search (prefix match on username/nickname) and does NOT
- * require the privileged GuildMembers intent for the query-based form.
+ * Guild-member typeahead for the web UI's add/invite flows.
+ *
+ * This used to call discord.js `guild.members.fetch({ query, limit })`, which
+ * issues an OP 8 REQUEST_GUILD_MEMBERS over the gateway — it cannot answer at
+ * all without a live shard, and it first has to find the guild in the gateway
+ * cache. The equivalent REST endpoint (`GET /guilds/{id}/members/search`) takes
+ * the same prefix query over usernames and nicknames, needs no privileged
+ * intent, and works from a pod that never connected a gateway.
  *
  * Authorization is handled by the router before this function is called;
  * fail-soft (returns [] on any error) so a flaky search never breaks the form.
@@ -10,7 +14,12 @@
 
 import { z } from "zod";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
-import { client as discordClient } from "#src/discord/client.ts";
+import {
+  botRest,
+  memberAvatarUrl,
+  memberDisplayName,
+  type BotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("discord-search-members");
@@ -29,22 +38,29 @@ export type SearchedMember = {
   avatar: string;
 };
 
+export type SearchMembersDependencies = {
+  readonly rest: BotRestReader;
+};
+
+function defaultDependencies(): SearchMembersDependencies {
+  return { rest: botRest() };
+}
+
 export async function searchGuildMembers(
   input: SearchMembersInput,
+  dependencies: SearchMembersDependencies = defaultDependencies(),
 ): Promise<SearchedMember[]> {
-  const guild = discordClient.guilds.cache.get(input.guildId);
-  if (guild === undefined) return [];
-
   try {
-    const members = await guild.members.fetch({
+    const members = await dependencies.rest.searchGuildMembers({
+      guildId: input.guildId,
       query: input.query,
       limit: input.limit,
     });
     return members.map((member) => ({
-      id: member.id,
+      id: member.user.id,
       username: member.user.username,
-      displayName: member.displayName,
-      avatar: member.displayAvatarURL(),
+      displayName: memberDisplayName(member),
+      avatar: memberAvatarUrl(member, input.guildId),
     }));
   } catch (error) {
     logger.warn("Guild member search failed", {

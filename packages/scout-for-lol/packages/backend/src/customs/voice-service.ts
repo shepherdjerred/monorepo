@@ -86,9 +86,17 @@ async function customGuild(actor: CustomActivityActor): Promise<Guild> {
   return customGuildById(actor.guildId);
 }
 
+/**
+ * The guild, always fetched rather than read from the gateway cache.
+ *
+ * The cache read made this path's behaviour depend on whether a gateway
+ * connection had backfilled yet — an HTTP request from the Activity would work
+ * or not based on shard state. `guilds.fetch` is a REST call and answers the
+ * same way either way. (Everything this module then does with the Guild —
+ * creating, editing and deleting channels, moving members — is REST too.)
+ */
 async function customGuildById(guildId: string): Promise<Guild> {
-  const cached = discordClient.guilds.cache.get(guildId);
-  return cached ?? discordClient.guilds.fetch(guildId);
+  return await discordClient.guilds.fetch(guildId);
 }
 
 async function voiceChannel(

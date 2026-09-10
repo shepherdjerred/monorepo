@@ -34,7 +34,7 @@ import {
 import type { User } from "#generated/prisma/client/index.js";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma } from "#src/database/index.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+import { installedGuildName } from "#src/lib/discord/installed-guilds.ts";
 import type { ExploreSurface } from "#src/explore/surface.ts";
 import type { PartialGuild } from "#src/lib/discord-rest.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
@@ -69,7 +69,7 @@ export async function resolveCreationCapability(input: {
 /** One guild the asker may actually act in, with the permissions they hold. */
 export type CreationGuildAccess = {
   guildId: DiscordGuildId;
-  /** Display name from the bot's guild cache, for the model to name servers. */
+  /** Display name recorded at install time, for the model to name servers. */
   name: string;
   permissions: PermissionSet;
 };
@@ -93,18 +93,21 @@ type CreationAccessDependencies = {
     user: User,
     guildId: DiscordGuildId,
   ) => Promise<PermissionSet>;
-  guildName: (guildId: DiscordGuildId) => string;
+  guildName: (guildId: DiscordGuildId) => Promise<string>;
 };
 
 /**
- * The bot's cached display name for a guild.
+ * The guild's recorded display name.
  *
- * `resolveGuildPermissions` has already proved Scout is installed by the time
- * this is read, so a miss only happens for a dev guild override, where the id
- * is the most honest label available.
+ * Read from the `GuildInstall` row that `guildCreate` refreshes on every
+ * install, rather than the bot's gateway cache, so an Explore turn served by a
+ * gatewayless pod names servers the same way. `resolveGuildPermissions` has
+ * already proved Scout is installed by the time this is read, so a miss only
+ * happens for a dev guild override, where the id is the most honest label
+ * available.
  */
-function cachedGuildName(guildId: DiscordGuildId): string {
-  return discordClient.guilds.cache.get(guildId)?.name ?? guildId;
+async function recordedGuildName(guildId: DiscordGuildId): Promise<string> {
+  return (await installedGuildName(guildId)) ?? guildId;
 }
 
 const defaultCreationAccessDependencies: CreationAccessDependencies = {
@@ -116,7 +119,7 @@ const defaultCreationAccessDependencies: CreationAccessDependencies = {
     prisma.user.findUniqueOrThrow({ where: { discordId } }),
   fetchUserGuilds: fetchUserGuildsForRequest,
   resolvePermissions: resolveGuildPermissions,
-  guildName: cachedGuildName,
+  guildName: recordedGuildName,
 };
 
 /**
@@ -179,7 +182,7 @@ export async function resolveCreationAccess(
       const permissions = await dependencies.resolvePermissions(user, guildId);
       guilds.push({
         guildId,
-        name: dependencies.guildName(guildId),
+        name: await dependencies.guildName(guildId),
         permissions,
       });
     } catch (error) {

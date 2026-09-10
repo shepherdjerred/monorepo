@@ -22,13 +22,13 @@ import {
   guildProcedure,
   resolveGuildPermissions,
 } from "#src/trpc/guild-permission.ts";
-import { client as discordClient } from "#src/discord/client.ts";
-import {
-  hasAdministrator,
-  isDevGuildOverrideGuild,
-} from "#src/lib/discord-rest.ts";
+import { hasAdministrator } from "#src/lib/discord-rest.ts";
+import { installedGuildIdsAmong } from "#src/lib/discord/installed-guilds.ts";
 import { listPostableChannels } from "#src/lib/discord/postable-channels.ts";
-import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
+import {
+  callDiscordForRequest,
+  fetchUserGuildsForRequest,
+} from "#src/trpc/discord-upstream.ts";
 import { prisma } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -43,10 +43,13 @@ export const guildRouter = router({
    */
   listManageable: webProcedure.query(async ({ ctx }) => {
     const userGuilds = await fetchUserGuildsForRequest(ctx.user);
-    const botGuildIds = new Set(discordClient.guilds.cache.map((g) => g.id));
-    const present = userGuilds.filter(
-      (g) => botGuildIds.has(g.id) || isDevGuildOverrideGuild(g.id),
+    // One `GuildInstall` query for the whole picker; see
+    // `installed-guilds.ts` for why the bulk path does not confirm negatives
+    // against Discord the way the single-guild path does.
+    const installedGuildIds = await installedGuildIdsAmong(
+      userGuilds.map((g) => g.id),
     );
+    const present = userGuilds.filter((g) => installedGuildIds.has(g.id));
 
     // One query for the user's grants across all present guilds (no N+1).
     const grantRows = await prisma.serverPermission.findMany({
@@ -128,5 +131,8 @@ export const guildRouter = router({
    */
   listChannels: guildProcedure("channels", "read")
     .input(z.object({ guildId: DiscordGuildIdSchema }))
-    .query(({ input }) => listPostableChannels(input.guildId)),
+    .query(
+      async ({ input }) =>
+        await callDiscordForRequest(() => listPostableChannels(input.guildId)),
+    ),
 });

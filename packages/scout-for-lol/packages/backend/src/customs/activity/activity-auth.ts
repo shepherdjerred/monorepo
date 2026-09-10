@@ -11,7 +11,9 @@ import {
 } from "@scout-for-lol/data";
 import configuration from "#src/configuration.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { client as discordClient } from "#src/discord/client.ts";
+import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
+import { botRest } from "#src/lib/discord/bot-rest.ts";
+import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 
 const DISCORD_API_BASE = "https://discord.com/api/v10";
 const DISCORD_REQUEST_TIMEOUT_MS = 10_000;
@@ -47,6 +49,36 @@ export class CustomAuthHttpError extends Error {
     super(message, options);
     this.status = status;
   }
+}
+
+/**
+ * Run a bot-token Discord read for an Activity request.
+ *
+ * `lib/discord/bot-rest.ts` throws {@link DiscordUpstreamError} when it could
+ * not get an answer at all. The Activity's HTTP surface must report that as 503
+ * — the same rule `trpc/discord-upstream.ts` enforces for the dashboard — so an
+ * outage never reaches a player as "you are not in this server".
+ */
+export async function customsDiscordRead<T>(
+  operation: () => Promise<T>,
+  message: string,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof DiscordUpstreamError) {
+      throw new CustomAuthHttpError(503, message, { cause: error });
+    }
+    throw error;
+  }
+}
+
+/** Whether Scout is installed, with an unreachable Discord surfaced as 503. */
+export async function customsGuildInstalled(guildId: string): Promise<boolean> {
+  return await customsDiscordRead(
+    () => isScoutInstalledInGuild(guildId),
+    "Scout could not verify this server right now",
+  );
 }
 
 const DiscordTokenSchema = z.strictObject({
@@ -96,22 +128,28 @@ function requireSigningKey(): Uint8Array {
   return new TextEncoder().encode(secret);
 }
 
+/**
+ * Three outcomes, kept apart on purpose (the Activity is served over HTTP and
+ * must behave with no gateway connection): Discord unreachable ⇒ 503, Scout not
+ * installed ⇒ 403, the player is not in the guild ⇒ 403. Collapsing the first
+ * into either 403 would tell a player they lack access during an outage.
+ */
 export async function assertCustomGuildMember(
   claims: CustomActivityClaims,
 ): Promise<void> {
   if (claims.applicationId !== configuration.applicationId) {
     throw new CustomAuthHttpError(401, "Activity application mismatch");
   }
-  const guild = discordClient.guilds.cache.get(claims.guildId);
-  if (guild === undefined) {
+  const installed = await customsGuildInstalled(claims.guildId);
+  if (!installed) {
     throw new CustomAuthHttpError(403, "Scout is not installed in this guild");
   }
-  try {
-    await guild.members.fetch(claims.sub);
-  } catch (error) {
-    throw new CustomAuthHttpError(403, "Activity guild membership required", {
-      cause: error,
-    });
+  const member = await customsDiscordRead(
+    () => botRest().guildMember(claims.guildId, claims.sub),
+    "Activity guild membership could not be verified",
+  );
+  if (member === null) {
+    throw new CustomAuthHttpError(403, "Activity guild membership required");
   }
 }
 

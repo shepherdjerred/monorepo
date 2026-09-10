@@ -56,7 +56,7 @@ function executors(overrides?: { access?: CreationAccess }) {
       db: prisma,
       resolveAccess: () => Promise.resolve(overrides?.access ?? resolvedAccess),
       listChannels: (guildId: DiscordGuildId) =>
-        guildId === GUILD ? CHANNELS : [],
+        Promise.resolve(guildId === GUILD ? CHANNELS : []),
       resolvePuuid: () =>
         Promise.resolve({
           kind: "ok",
@@ -256,7 +256,7 @@ describe("prepare_subscription_creation", () => {
       dependencies: {
         db: prisma,
         resolveAccess: () => Promise.resolve(resolvedAccess),
-        listChannels: () => CHANNELS,
+        listChannels: () => Promise.resolve(CHANNELS),
         resolvePuuid: () =>
           Promise.resolve({
             kind: "riot-id-not-found",

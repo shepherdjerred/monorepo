@@ -42,7 +42,7 @@ export type CreationToolContext = {
   db: ExtendedPrismaClient;
   /** Memoized for the turn; see the module docblock. */
   access: () => Promise<CreationAccess>;
-  listChannels: (guildId: DiscordGuildId) => PostableChannel[];
+  listChannels: (guildId: DiscordGuildId) => Promise<PostableChannel[]>;
   resolvePuuid: typeof resolveSubscriptionPuuid;
   now: () => Date;
   /**
@@ -100,11 +100,11 @@ export async function lookupGuildAccess(
 }
 
 /** The channel must be one Scout can actually post the entity's output into. */
-export function requirePostableChannel(
+export async function requirePostableChannel(
   context: CreationToolContext,
   input: { guildId: DiscordGuildId; channelId: string },
-): CreationPrepareResult | null {
-  const channels = context.listChannels(input.guildId);
+): Promise<CreationPrepareResult | null> {
+  const channels = await context.listChannels(input.guildId);
   if (channels.some((channel) => channel.id === input.channelId)) return null;
   return creationRefusal(
     "invalid",
@@ -118,14 +118,13 @@ export function requirePostableChannel(
  * Every caller has already proved the channel is postable, so a miss is
  * unreachable; the id is the honest label if it ever happens.
  */
-export function postableChannelName(
+export async function postableChannelName(
   context: CreationToolContext,
   guildId: DiscordGuildId,
   channelId: string,
-): string {
-  const channel = context
-    .listChannels(guildId)
-    .find((candidate) => candidate.id === channelId);
+): Promise<string> {
+  const channels = await context.listChannels(guildId);
+  const channel = channels.find((candidate) => candidate.id === channelId);
   return channel?.name ?? channelId;
 }
 

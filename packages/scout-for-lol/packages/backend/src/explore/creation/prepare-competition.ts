@@ -82,7 +82,7 @@ export async function prepareCompetitionCreation(
     );
   }
 
-  const channelRefusal = requirePostableChannel(context, {
+  const channelRefusal = await requirePostableChannel(context, {
     guildId: parsed.guildId,
     channelId: parsed.channelId,
   });
@@ -127,7 +127,7 @@ export async function prepareCompetitionCreation(
   return await mintCreationIntent(context, {
     payload,
     guildId: parsed.guildId,
-    summary: `${write.visibility === "SERVER_WIDE" ? "Server-wide" : "Invite-only"} competition "${write.title}" in ${lookup.guild.name}, scored by ${write.criteria.type}, posting to #${postableChannelName(context, parsed.guildId, parsed.channelId)}, ${describeWindow(dates)}.`,
+    summary: `${write.visibility === "SERVER_WIDE" ? "Server-wide" : "Invite-only"} competition "${write.title}" in ${lookup.guild.name}, scored by ${write.criteria.type}, posting to #${await postableChannelName(context, parsed.guildId, parsed.channelId)}, ${describeWindow(dates)}.`,
   });
 }
 

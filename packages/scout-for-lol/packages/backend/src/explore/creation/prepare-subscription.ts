@@ -90,7 +90,7 @@ export async function prepareSubscriptionCreation(
     );
   }
 
-  const channelRefusal = requirePostableChannel(context, {
+  const channelRefusal = await requirePostableChannel(context, {
     guildId: parsed.guildId,
     channelId: parsed.channelId,
   });
@@ -122,7 +122,7 @@ export async function prepareSubscriptionCreation(
   return await mintCreationIntent(context, {
     payload: subscriptionPayload(parsed, resolved),
     guildId: parsed.guildId,
-    summary: `Track ${resolved.gameName}#${resolved.tagLine} (${parsed.region}) as "${parsed.alias}" in ${lookup.guild.name}, posting to #${postableChannelName(context, parsed.guildId, parsed.channelId)}.`,
+    summary: `Track ${resolved.gameName}#${resolved.tagLine} (${parsed.region}) as "${parsed.alias}" in ${lookup.guild.name}, posting to #${await postableChannelName(context, parsed.guildId, parsed.channelId)}.`,
   });
 }
 

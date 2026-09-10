@@ -199,7 +199,7 @@ export const reportRouter = router({
   create: guildMutationProcedure("reports", "create")
     .input(GuildInput.extend(ReportCreateInputSchema.shape))
     .mutation(async ({ ctx, input }) => {
-      assertChannelInGuild({
+      await assertChannelInGuild({
         guildId: input.guildId,
         channelId: input.channelId,
       });
@@ -255,7 +255,7 @@ export const reportRouter = router({
       assertReportMutable(report);
 
       if (input.channelId !== undefined) {
-        assertChannelInGuild({
+        await assertChannelInGuild({
           guildId: input.guildId,
           channelId: input.channelId,
         });

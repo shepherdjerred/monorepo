@@ -17,7 +17,10 @@ import {
   fetchUserGuilds,
   type PartialGuild,
 } from "#src/lib/discord-rest.ts";
-import { discordUserGuildsFailures } from "#src/metrics/platform/web.ts";
+import {
+  discordBotRestFailures,
+  discordUserGuildsFailures,
+} from "#src/metrics/platform/web.ts";
 
 /**
  * Map a {@link DiscordUpstreamError} onto the tRPC error the user should see.
@@ -56,6 +59,31 @@ export async function fetchUserGuildsForRequest(
   } catch (error) {
     if (error instanceof DiscordUpstreamError) {
       discordUserGuildsFailures.inc({ reason: error.reason });
+      throw toTrpcError(error);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Run a bot-token Discord read (`lib/discord/bot-rest.ts`) on a request path.
+ *
+ * Those reads replaced the gateway guild cache, so they now decide whether a
+ * guild-scoped procedure answers at all. Wrapping them here keeps the same rule
+ * the OAuth path already follows: a failure to reach Discord surfaces as
+ * SERVICE_UNAVAILABLE, never as NOT_FOUND ("Scout is not installed") or
+ * FORBIDDEN. Without this an unwrapped `DiscordUpstreamError` would reach tRPC
+ * as an opaque INTERNAL_SERVER_ERROR, which tells the user nothing about
+ * retrying.
+ */
+export async function callDiscordForRequest<T>(
+  operation: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error) {
+    if (error instanceof DiscordUpstreamError) {
+      discordBotRestFailures.inc({ reason: error.reason });
       throw toTrpcError(error);
     }
     throw error;
