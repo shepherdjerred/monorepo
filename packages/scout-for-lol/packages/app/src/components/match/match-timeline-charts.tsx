@@ -9,6 +9,14 @@ import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 type ChartPoint =
   RouterOutputs["consumerMatch"]["chartSeries"]["points"][number];
 
+export function hasSelectedPlayerProgression(
+  points: { selectedGold: number | null; selectedXp: number | null }[],
+): boolean {
+  return points.some(
+    (point) => point.selectedGold !== null || point.selectedXp !== null,
+  );
+}
+
 export function TimelineCharts(props: { points: ChartPoint[] }) {
   const teamIds = [
     ...new Set(
@@ -50,11 +58,13 @@ export function TimelineCharts(props: { points: ChartPoint[] }) {
         labels={timeLabels}
         series={teamSeries}
       />
-      <TimelineChart
-        title="Selected-player progression"
-        labels={timeLabels}
-        series={playerSeries}
-      />
+      {hasSelectedPlayerProgression(props.points) ? (
+        <TimelineChart
+          title="Selected-player progression"
+          labels={timeLabels}
+          series={playerSeries}
+        />
+      ) : null}
     </div>
   );
 }

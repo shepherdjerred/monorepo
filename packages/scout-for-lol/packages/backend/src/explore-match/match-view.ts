@@ -7,6 +7,7 @@ import {
   type ExploreMatchSnapshot,
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
+import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import {
   fetchFullMatch,
   type LakeMatchParticipantRow,
@@ -104,8 +105,9 @@ export function exploreMatchSnapshot(
  */
 export function matchIdsInPreview(
   preview: ReportAiPreviewSummary | null,
+  source: ScoutQlSource | null,
 ): Set<string> {
-  if (preview === null) return new Set();
+  if (preview === null || source !== "match_participants") return new Set();
   const hasLabelMatchId = preview.columns.some(
     (column) =>
       column.key === "label" && column.label.toLowerCase() === "match id",

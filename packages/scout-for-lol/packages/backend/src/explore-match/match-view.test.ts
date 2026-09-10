@@ -20,7 +20,9 @@ describe("matchIdsInPreview", () => {
       rowsScanned: 10,
       renderKind: "TABLE",
     });
-    expect(matchIdsInPreview(preview)).toEqual(new Set(["NA1_5635906026"]));
+    expect(matchIdsInPreview(preview, "match_participants")).toEqual(
+      new Set(["NA1_5635906026"]),
+    );
   });
 
   test("does not treat arbitrary answer labels as card-eligible matches", () => {
@@ -32,6 +34,26 @@ describe("matchIdsInPreview", () => {
       rowsScanned: 10,
       renderKind: "TABLE",
     });
-    expect(matchIdsInPreview(preview)).toEqual(new Set());
+    expect(matchIdsInPreview(preview, "match_participants")).toEqual(new Set());
+  });
+
+  test("does not allow cards for lobby-only prematch results", () => {
+    const preview = ReportAiPreviewSummarySchema.parse({
+      columns: [{ key: "match_id", label: "Match ID", format: "text" }],
+      rows: [
+        {
+          label: "Lobby",
+          values: [{ column: "match_id", value: "NA1_5635906026" }],
+        },
+      ],
+      visualizationRows: [],
+      rowsReturned: 1,
+      rowsScanned: 1,
+      renderKind: "TABLE",
+    });
+
+    expect(matchIdsInPreview(preview, "prematch_participants")).toEqual(
+      new Set(),
+    );
   });
 });

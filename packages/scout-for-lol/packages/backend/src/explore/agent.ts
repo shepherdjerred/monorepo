@@ -21,6 +21,7 @@ import {
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/format-expr.ts";
+import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -397,17 +398,21 @@ function createExploreTools(options: ExploreToolsOptions) {
           };
         }
 
+        let source: ScoutQlSource | null = null;
         const result = await executeReportQuery({
           prisma,
           scope: GLOBAL_SCOPE,
           askerGuildIds: params.guildIds,
           queryText: validation.formattedQueryText,
+          onPlan: (plan) => {
+            source = plan.source;
+          },
         });
         const preview = reportQueryPreviewSummary(result);
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
-        state.lastMatchIds = matchIdsInPreview(preview);
+        state.lastMatchIds = matchIdsInPreview(preview, source);
 
         await params.emit({
           type: "preview",
