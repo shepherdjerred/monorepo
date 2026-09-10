@@ -2,6 +2,7 @@ import {
   ExploreMatchCardSchema,
   ExploreMatchSnapshotSchema,
   isArenaQueueOrMode,
+  isClassicAssetMode,
   MatchIdSchema,
   type ExploreMatchCard,
   type ExploreMatchCardRequest,
@@ -34,12 +35,15 @@ function ratio(part: number, total: number): number | null {
   return total > 0 ? part / total : null;
 }
 
-/** Arena has multiple competing subteams, not the classic two-team shape. */
+/** Arena and Classic modes need scoreboards this neutral snapshot cannot render. */
 export function isExploreMatchSnapshotSupported(
   queueId: number,
   gameMode: string,
 ): boolean {
-  return !isArenaQueueOrMode(queueId, gameMode);
+  return (
+    !isArenaQueueOrMode(queueId, gameMode) &&
+    !isClassicAssetMode(queueId, gameMode)
+  );
 }
 
 export function normalizeRiotIdPart(value: string | null): string | null {
@@ -55,7 +59,9 @@ export function exploreMatchSnapshot(
     throw new Error("Explore match detail rows contain more than one match");
   }
   if (!isExploreMatchSnapshotSupported(first.queue_id, first.game_mode)) {
-    throw new Error("Arena matches do not support the Explore match snapshot");
+    throw new Error(
+      "This match mode does not support the Explore match snapshot",
+    );
   }
   const grouped = Map.groupBy(rows, (row) => row.team_id);
   const teams = [...grouped.entries()]

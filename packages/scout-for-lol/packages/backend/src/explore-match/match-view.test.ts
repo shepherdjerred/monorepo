@@ -26,6 +26,11 @@ describe("matchIdsInPreview", () => {
     expect(isExploreMatchSnapshotSupported(420, "CLASSIC")).toBe(true);
   });
 
+  test("excludes Classic asset modes until their roster is normalized", () => {
+    expect(isExploreMatchSnapshotSupported(4310, "JADE")).toBe(false);
+    expect(isExploreMatchSnapshotSupported(2450, "KIWI_JADE")).toBe(false);
+  });
+
   test("allows cards only for match ids a query actually returned", () => {
     const preview = ReportAiPreviewSummarySchema.parse({
       columns: [
