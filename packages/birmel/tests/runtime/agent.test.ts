@@ -1,11 +1,13 @@
 import { describe, expect, test } from "vitest";
+import { summarizeToolResultForSession } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import {
   applyCitationRepair,
   citationRetryPrompt,
   needsCitationRetry,
   requireGroundedAnswer,
-  summarizeToolResultForSession,
-} from "@shepherdjerred/birmel/agent-runtime/agent.ts";
+  resolveCitationIds,
+  withResolvedCitations,
+} from "@shepherdjerred/birmel/agent-runtime/citation-repair.ts";
 import {
   AGENT_INSTRUCTIONS,
   CORE_SYSTEM_POLICY,
@@ -377,6 +379,85 @@ describe("citation retry", () => {
     ).toBe(false);
   });
 
+  test("retries supported answers that cite unsuccessful or invented IDs", () => {
+    expect(
+      needsCitationRetry(
+        {
+          answer: "Here are today's headlines.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["functions.external-service:0"],
+          performedMutation: false,
+        },
+        [succeeded],
+      ),
+    ).toBe(true);
+    expect(
+      needsCitationRetry(
+        {
+          answer: "Here are today's headlines.",
+          disposition: "supported",
+          reliedOnToolCallIds: ["call_missing_from_turn"],
+          performedMutation: false,
+        },
+        [succeeded],
+      ),
+    ).toBe(true);
+  });
+
+  test("maps a unique provider function-name citation to the successful toolCallId", () => {
+    const fetchSucceeded = {
+      ...succeeded,
+      toolCallId: "call-nyt-1",
+      toolId: "external-service",
+      readOnly: true,
+    };
+    expect(
+      resolveCitationIds(["functions.external-service:0"], [fetchSucceeded]),
+    ).toEqual(["call-nyt-1"]);
+    expect(resolveCitationIds(["external-service"], [fetchSucceeded])).toEqual([
+      "call-nyt-1",
+    ]);
+    const repaired = withResolvedCitations(
+      {
+        answer: "Here are today's headlines.",
+        disposition: "supported",
+        reliedOnToolCallIds: ["functions.external-service:0"],
+        performedMutation: false,
+      },
+      [fetchSucceeded],
+    );
+    expect(repaired.reliedOnToolCallIds).toEqual(["call-nyt-1"]);
+    expect(needsCitationRetry(repaired, [fetchSucceeded])).toBe(false);
+    expect(() =>
+      requireGroundedAnswer(repaired, [fetchSucceeded]),
+    ).not.toThrow();
+  });
+
+  test("does not map a provider function-name citation when more than one matching tool succeeded", () => {
+    const first = {
+      ...succeeded,
+      toolCallId: "call-nyt-1",
+      toolId: "external-service",
+      readOnly: true,
+    };
+    const second = {
+      ...succeeded,
+      toolCallId: "call-nyt-2",
+      toolId: "external-service",
+      inputKey: "key-2",
+      readOnly: true,
+    };
+    expect(
+      resolveCitationIds(["functions.external-service:0"], [first, second]),
+    ).toEqual(["functions.external-service:0"]);
+  });
+
+  test("does not map an invented call ID to an unrelated success", () => {
+    expect(resolveCitationIds(["call_missing_from_turn"], [succeeded])).toEqual(
+      ["call_missing_from_turn"],
+    );
+  });
+
   test("lists only successful tool IDs in the retry prompt and insists on supported disposition and mutation claim", () => {
     const prompt = citationRetryPrompt(
       {
@@ -390,10 +471,11 @@ describe("citation retry", () => {
     expect(prompt).toContain("call-1 (generate-image)");
     expect(prompt).not.toContain("call-3");
     expect(prompt).toContain("Do not invent IDs");
+    expect(prompt).toContain("Do not cite functions.<tool-name>");
     expect(prompt).toContain('with disposition "supported"');
     expect(prompt).toContain("performedMutation true");
-    expect(prompt).not.toContain("conversation");
-    expect(prompt).not.toContain("unsupported");
+    expect(prompt).not.toContain("conversation or unsupported");
+    expect(prompt).not.toContain("Do not change disposition");
   });
 
   test("applyCitationRepair preserves original text, disposition, and mutation claim", () => {

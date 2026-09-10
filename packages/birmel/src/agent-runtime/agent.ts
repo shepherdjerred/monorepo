@@ -5,7 +5,6 @@ import {
   TaskPacketSchema,
   TurnAnswerSchema,
   type TaskPacket,
-  type TurnAnswer,
   type TurnDisposition,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
@@ -18,6 +17,13 @@ import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
 import { getOpenRouterProviderOptions } from "./provider-options.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
+import {
+  applyCitationRepair,
+  citationRetryPrompt,
+  needsCitationRetry,
+  requireGroundedAnswer,
+  withResolvedCitations,
+} from "./citation-repair.ts";
 
 const logger = loggers.agent.child("execution");
 
@@ -213,183 +219,6 @@ function taskMessages(packet: TaskPacket) {
   ];
 }
 
-/**
- * The anti-hallucination gate.
- *
- * The old runtime named one tool before the turn began and threw unless that
- * exact tool succeeded. That fixed the plan before any evidence existed, so an
- * ordinary "this actually needs a different tool" became a hard failure.
- *
- * This checks the same property from the other end: whatever the reply says it
- * relied on must correspond to a tool call that really succeeded this turn. It
- * covers every claim rather than one pre-named tool, and it lets the agent
- * change its mind freely along the way.
- */
-export function requireGroundedAnswer(
-  answer: TurnAnswer,
-  toolEvents: SessionToolEvent[],
-): void {
-  const succeeded = new Set(
-    toolEvents
-      .filter(({ success }) => success)
-      .map(({ toolCallId }) => toolCallId),
-  );
-  const ungrounded = answer.reliedOnToolCallIds.filter(
-    (toolCallId) => !succeeded.has(toolCallId),
-  );
-  if (ungrounded.length > 0) {
-    throw new Error(
-      `Answer cited tool calls that did not succeed this turn: ${ungrounded.join(", ")}`,
-    );
-  }
-  // Runs regardless of disposition, not only "supported": disposition is
-  // itself model-generated, so a failed mutation mislabeled "conversation" or
-  // "unsupported" - with nothing cited - would otherwise skip straight past
-  // every other check here. Membership in the success set is not enough
-  // either: a harmless lookup can succeed while the requested mutation never
-  // runs, or the model can point at an unrelated success - a harmless read,
-  // or a different attempt of the same tool - while the operation that
-  // actually mattered failed and was never fixed. Checking only what
-  // happened after a citation is not enough: the failure can come first and
-  // the unrelated success get cited afterward, which reads as "grounded"
-  // under a citation-relative check but is exactly the same lie. So this
-  // ignores citation order and citation entirely: any write, destructive, or
-  // code-execution call that fails, with no LATER call succeeding anywhere in
-  // the turn, leaves that attempt uncorrected regardless of what the answer
-  // claims or cites. A failed read is exempt - re-checking something
-  // incidental and having that check fail says nothing about whether the
-  // claimed outcome holds. That exemption is per-call, not per-tool: a
-  // composite tool like manage-role exposes read actions (list, get)
-  // alongside destructive ones (create, delete) under one tool-level risk
-  // class, so a failed list must not be treated as an uncorrected write just
-  // because the tool it belongs to can also destroy things.
-  //
-  // "Later call" means the same tool AND the same input: matching on the
-  // action field alone is not enough, because a composite tool's action still
-  // covers many different targets - a failed manage-role create for one role
-  // is not corrected by a later create for a different one. Requiring the
-  // full input to match is the only generic, per-tool-agnostic way to tell
-  // "this exact operation was retried" from "a similarly-shaped one ran."
-  // The cost is real: a retry that adjusts its input to fix what the first
-  // attempt got wrong no longer counts as correcting it, so that turn is
-  // rejected rather than credited. That is the intended trade - an honest
-  // failure over a claim this check cannot actually verify - not an
-  // oversight; loosening it is what created every earlier version of this
-  // gap.
-  const uncorrectedFailure = toolEvents.find(
-    (event, index) =>
-      !event.success &&
-      !event.readOnly &&
-      !toolEvents
-        .slice(index + 1)
-        .some(
-          (later) =>
-            later.success &&
-            later.toolId === event.toolId &&
-            later.inputKey === event.inputKey,
-        ),
-  );
-  if (uncorrectedFailure !== undefined) {
-    throw new Error(
-      `Turn reported completion, but ${uncorrectedFailure.toolId} failed and was never retried successfully this turn`,
-    );
-  }
-  // Checking the global success set is not enough: a harmless lookup can
-  // succeed while the requested mutation never runs, and an answer citing
-  // nothing would still pass. Only "supported" work must cite at least one
-  // call - conversation and unsupported outcomes are allowed to cite
-  // nothing, and every cited call is already known to have succeeded by the
-  // check above.
-  if (answer.disposition !== "supported") {
-    return;
-  }
-  if (answer.reliedOnToolCallIds.length === 0) {
-    throw new Error(
-      "Answer claims supported work without citing a successful tool call",
-    );
-  }
-  // Citing a successful call proves only that SOME call succeeded, not that
-  // it is the one the answer's claim actually describes: a model could cite
-  // a harmless, unrelated read while claiming an unrelated mutation
-  // happened, and every check above would still pass. performedMutation is a
-  // second, independent self-report that must agree with the citations - a
-  // true mutation claim has to be backed by an actually non-read cited call.
-  // A model dishonest enough to misreport performedMutation itself is not
-  // caught by this, but that is a narrower, less likely failure than citing
-  // any convenient success: it requires contradicting the answer's own text.
-  if (
-    answer.performedMutation &&
-    !toolEvents.some(
-      (event) =>
-        event.success &&
-        !event.readOnly &&
-        answer.reliedOnToolCallIds.includes(event.toolCallId),
-    )
-  ) {
-    throw new Error(
-      "Answer claims a mutation happened, but cites no successful non-read tool call",
-    );
-  }
-}
-
-/**
- * A supported answer that cites nothing after a real success is malformed
- * structured output, not evidence we may invent. Retry it with the successful
- * IDs in the prompt; `requireGroundedAnswer` still rejects invented IDs.
- */
-export function needsCitationRetry(
-  answer: TurnAnswer,
-  toolEvents: SessionToolEvent[],
-): boolean {
-  return (
-    answer.disposition === "supported" &&
-    answer.reliedOnToolCallIds.length === 0 &&
-    toolEvents.some((event) => event.success)
-  );
-}
-
-export function citationRetryPrompt(
-  answer: TurnAnswer,
-  toolEvents: SessionToolEvent[],
-): string {
-  const listed = toolEvents
-    .filter((event) => event.success)
-    .map((event) => `${event.toolCallId} (${event.toolId})`)
-    .join("\n");
-  return `Your previous structured answer claimed supported work but cited no tool calls.
-
-Previous answer JSON:
-${JSON.stringify(answer)}
-
-Successful tool calls this turn (cite only IDs from this list that the answer actually used):
-${listed}
-
-Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
-}
-
-/**
- * Repairs citations from a retried answer while preserving the original
- * turn's text, disposition, and mutation claim. Rejects any attempt to alter
- * disposition or performedMutation.
- */
-export function applyCitationRepair(
-  original: TurnAnswer,
-  retried: TurnAnswer,
-): TurnAnswer {
-  if (retried.disposition !== "supported") {
-    throw new Error(
-      "Citation retry must remain supported and cite valid tool calls",
-    );
-  }
-  if (retried.performedMutation !== original.performedMutation) {
-    throw new Error("Citation retry cannot alter the turn's mutation claim");
-  }
-  return {
-    ...original,
-    reliedOnToolCallIds: retried.reliedOnToolCallIds,
-  };
-}
-
 export async function executeTurn(
   rawPacket: TaskPacket,
   options: IsolatedAgentOptions & TurnOptions = {},
@@ -497,7 +326,10 @@ export async function executeTurn(
       );
       let inputTokens = result.usage.inputTokens ?? 0;
       let outputTokens = result.usage.outputTokens ?? 0;
-      let answer = TurnAnswerSchema.parse(result.output);
+      let answer = withResolvedCitations(
+        TurnAnswerSchema.parse(result.output),
+        toolEvents,
+      );
       if (needsCitationRetry(answer, toolEvents)) {
         logger.info(
           "Retrying structured answer to cite successful tool calls",
@@ -521,7 +353,10 @@ export async function executeTurn(
         const retriedAnswer = TurnAnswerSchema.parse(retried.object);
         inputTokens += retried.usage.tokens.input;
         outputTokens += retried.usage.tokens.output;
-        answer = applyCitationRepair(answer, retriedAnswer);
+        answer = withResolvedCitations(
+          applyCitationRepair(answer, retriedAnswer),
+          toolEvents,
+        );
       }
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
