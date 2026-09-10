@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  applyCitationRepair,
   citationRetryPrompt,
   needsCitationRetry,
   requireGroundedAnswer,
@@ -376,22 +377,79 @@ describe("citation retry", () => {
     ).toBe(false);
   });
 
-  test("lists only successful tool IDs in the retry prompt and insists on supported disposition", () => {
+  test("lists only successful tool IDs in the retry prompt and insists on supported disposition and mutation claim", () => {
     const prompt = citationRetryPrompt(
       {
         answer: "third time’s the charm.",
         disposition: "supported",
         reliedOnToolCallIds: [],
-        performedMutation: false,
+        performedMutation: true,
       },
       [succeeded, failedRead],
     );
     expect(prompt).toContain("call-1 (generate-image)");
     expect(prompt).not.toContain("call-3");
     expect(prompt).toContain("Do not invent IDs");
-    expect(prompt).toContain("remain supported");
+    expect(prompt).toContain('with disposition "supported"');
+    expect(prompt).toContain("performedMutation true");
     expect(prompt).not.toContain("conversation");
     expect(prompt).not.toContain("unsupported");
+  });
+
+  test("applyCitationRepair preserves original text, disposition, and mutation claim", () => {
+    const original = {
+      answer: "Created role.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: [],
+      performedMutation: true,
+    };
+    const retried = {
+      answer: "Different text entirely.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: ["call-1"],
+      performedMutation: true,
+    };
+    const repaired = applyCitationRepair(original, retried);
+    expect(repaired).toEqual({
+      answer: "Created role.",
+      disposition: "supported",
+      reliedOnToolCallIds: ["call-1"],
+      performedMutation: true,
+    });
+  });
+
+  test("applyCitationRepair rejects attempts to downgrade disposition", () => {
+    const original = {
+      answer: "Created role.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: [],
+      performedMutation: true,
+    };
+    expect(() =>
+      applyCitationRepair(original, {
+        answer: "Created role.",
+        disposition: "conversation",
+        reliedOnToolCallIds: [],
+        performedMutation: true,
+      }),
+    ).toThrow("Citation retry must remain supported and cite valid tool calls");
+  });
+
+  test("applyCitationRepair rejects attempts to flip mutation claim", () => {
+    const original = {
+      answer: "Created role.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: [],
+      performedMutation: true,
+    };
+    expect(() =>
+      applyCitationRepair(original, {
+        answer: "Created role.",
+        disposition: "supported",
+        reliedOnToolCallIds: ["call-1"],
+        performedMutation: false,
+      }),
+    ).toThrow("Citation retry cannot alter the turn's mutation claim");
   });
 });
 

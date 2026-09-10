@@ -364,7 +364,30 @@ ${JSON.stringify(answer)}
 Successful tool calls this turn (cite only IDs from this list that the answer actually used):
 ${listed}
 
-Return a complete TurnAnswer with disposition "supported" that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. The answer must remain supported and cite at least one successful tool call.`;
+Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
+}
+
+/**
+ * Repairs citations from a retried answer while preserving the original
+ * turn's text, disposition, and mutation claim. Rejects any attempt to alter
+ * disposition or performedMutation.
+ */
+export function applyCitationRepair(
+  original: TurnAnswer,
+  retried: TurnAnswer,
+): TurnAnswer {
+  if (retried.disposition !== "supported") {
+    throw new Error(
+      "Citation retry must remain supported and cite valid tool calls",
+    );
+  }
+  if (retried.performedMutation !== original.performedMutation) {
+    throw new Error("Citation retry cannot alter the turn's mutation claim");
+  }
+  return {
+    ...original,
+    reliedOnToolCallIds: retried.reliedOnToolCallIds,
+  };
 }
 
 export async function executeTurn(
@@ -495,14 +518,10 @@ export async function executeTurn(
             options.reasoningEffort ?? config.openRouter.reasoningEffort,
           sessionId: packet.threadId ?? packet.channelId,
         });
-        answer = TurnAnswerSchema.parse(retried.object);
+        const retriedAnswer = TurnAnswerSchema.parse(retried.object);
         inputTokens += retried.usage.tokens.input;
         outputTokens += retried.usage.tokens.output;
-        if (answer.disposition !== "supported") {
-          throw new Error(
-            "Citation retry must remain supported and cite valid tool calls",
-          );
-        }
+        answer = applyCitationRepair(answer, retriedAnswer);
       }
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
