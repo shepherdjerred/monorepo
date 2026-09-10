@@ -327,27 +327,30 @@ describe("requireGroundedAnswer", () => {
   });
 });
 
+const citationSucceeded = {
+  toolCallId: "call-1",
+  toolId: "generate-image",
+  inputSummary: "{}",
+  resultSummary: "Image staged",
+  content: "Tool generate-image call call-1 succeeded",
+  success: true,
+  inputKey: "key-1",
+  readOnly: false,
+};
+const citationFailedRead = {
+  toolCallId: "call-3",
+  toolId: "get-activity-stats",
+  inputSummary: "{}",
+  resultSummary: "Tool reported failure",
+  content: "Tool get-activity-stats call call-3 failed",
+  success: false,
+  inputKey: "key-3",
+  readOnly: true,
+};
+
 describe("citation retry", () => {
-  const succeeded = {
-    toolCallId: "call-1",
-    toolId: "generate-image",
-    inputSummary: "{}",
-    resultSummary: "Image staged",
-    content: "Tool generate-image call call-1 succeeded",
-    success: true,
-    inputKey: "key-1",
-    readOnly: false,
-  };
-  const failedRead = {
-    toolCallId: "call-3",
-    toolId: "get-activity-stats",
-    inputSummary: "{}",
-    resultSummary: "Tool reported failure",
-    content: "Tool get-activity-stats call call-3 failed",
-    success: false,
-    inputKey: "key-3",
-    readOnly: true,
-  };
+  const succeeded = citationSucceeded;
+  const failedRead = citationFailedRead;
 
   test("retries supported answers that cite nothing after a success", () => {
     expect(
@@ -403,6 +406,11 @@ describe("citation retry", () => {
       ),
     ).toBe(true);
   });
+});
+
+describe("citation alias resolution", () => {
+  const succeeded = citationSucceeded;
+  const failedRead = citationFailedRead;
 
   test("maps a unique provider function-name citation to the successful toolCallId", () => {
     const fetchSucceeded = {
@@ -452,11 +460,54 @@ describe("citation retry", () => {
     ).toEqual(["functions.external-service:0"]);
   });
 
+  test("does not map an alias when the tool was invoked multiple times with only one success", () => {
+    const failedFirst = {
+      ...failedRead,
+      toolCallId: "call-nyt-1",
+      toolId: "external-service",
+    };
+    const succeededSecond = {
+      ...succeeded,
+      toolCallId: "call-nyt-2",
+      toolId: "external-service",
+      inputKey: "key-2",
+      readOnly: true,
+    };
+    expect(
+      resolveCitationIds(
+        ["functions.external-service:0"],
+        [failedFirst, succeededSecond],
+      ),
+    ).toEqual(["functions.external-service:0"]);
+    expect(
+      resolveCitationIds(["external-service"], [failedFirst, succeededSecond]),
+    ).toEqual(["external-service"]);
+  });
+
+  test("does not map an alias when the single matching tool invocation failed", () => {
+    const failedOnly = {
+      ...failedRead,
+      toolCallId: "call-nyt-1",
+      toolId: "external-service",
+    };
+    expect(
+      resolveCitationIds(["functions.external-service:0"], [failedOnly]),
+    ).toEqual(["functions.external-service:0"]);
+    expect(resolveCitationIds(["external-service"], [failedOnly])).toEqual([
+      "external-service",
+    ]);
+  });
+
   test("does not map an invented call ID to an unrelated success", () => {
     expect(resolveCitationIds(["call_missing_from_turn"], [succeeded])).toEqual(
       ["call_missing_from_turn"],
     );
   });
+});
+
+describe("citation retry prompt and repair", () => {
+  const succeeded = citationSucceeded;
+  const failedRead = citationFailedRead;
 
   test("lists only successful tool IDs in the retry prompt and insists on supported disposition and mutation claim", () => {
     const prompt = citationRetryPrompt(

@@ -35,8 +35,9 @@ function citationToolAlias(citation: string): string | null {
 /**
  * Models often copy OpenRouter/OpenAI function names (`functions.external-service:0`)
  * instead of the SDK `toolCallId`. Map that alias only when exactly one
- * successful call of that tool exists this turn. Anything else is left
- * unchanged for retry or `requireGroundedAnswer`.
+ * total invocation of that tool exists this turn and that invocation succeeded.
+ * If the tool was called multiple times, the alias is ambiguous and is left
+ * unchanged for citation retry with per-call context or `requireGroundedAnswer`.
  */
 export function resolveCitationIds(
   citations: readonly string[],
@@ -52,12 +53,12 @@ export function resolveCitationIds(
     if (alias === null) {
       return citation;
     }
-    const matches = succeeded.filter((event) => event.toolId === alias);
-    if (matches.length !== 1) {
+    const invocations = toolEvents.filter((event) => event.toolId === alias);
+    if (invocations.length !== 1) {
       return citation;
     }
-    const match = matches[0];
-    if (match === undefined) {
+    const match = invocations[0];
+    if (match?.success !== true) {
       return citation;
     }
     return match.toolCallId;
