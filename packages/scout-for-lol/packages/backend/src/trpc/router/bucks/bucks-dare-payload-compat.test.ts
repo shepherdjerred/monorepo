@@ -29,6 +29,40 @@ describe("DarePayloadInputSchema", () => {
     ).toEqual({ kind: "dare_contribute", amount: 3 });
   });
 
+  test("rejects an over-Int32 contribution in either form", () => {
+    // The money brands no longer carry the Int32 bound, so the payload
+    // schemas name the storable stake explicitly. Losing that here would let
+    // a value the `Int` column cannot hold reach the intent table.
+    const overInt32 = 2_147_483_648;
+    expect(
+      DarePayloadInputSchema.safeParse({
+        kind: "dare_contribute",
+        amount: overInt32,
+      }).success,
+    ).toBe(false);
+    expect(
+      DarePayloadInputSchema.safeParse({
+        action: "contribute",
+        amount: overInt32,
+      }).success,
+    ).toBe(false);
+  });
+
+  test("reports a rejected legacy payload as a failed branch, never a throw", () => {
+    // The legacy branch re-parses through `DareIntentPayloadSchema` inside a
+    // transform. A transform that threw would escape the enclosing union and
+    // surface as a 500 rather than a validation error, so every rejection has
+    // to come back through `safeParse`.
+    for (const malformed of [
+      { action: "contribute", amount: 0 },
+      { action: "contribute", amount: 1.5 },
+      { action: "contribute", amount: "seven" },
+      { action: "contribute", amount: 2_147_483_648 },
+    ]) {
+      expect(DarePayloadInputSchema.safeParse(malformed).success).toBe(false);
+    }
+  });
+
   test("still rejects shapes that are neither form", () => {
     expect(() =>
       DarePayloadInputSchema.parse({ action: "nonsense" }),

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   BucksAmountSchema,
+  BucksPoolTotalSchema,
   BucksStakeSchema,
   DiscordAccountIdSchema,
   ZERO_BUCKS,
@@ -73,9 +74,9 @@ function summary(
     serverId,
     winningTeamId: 100,
     voidReason,
-    winnersPool: BucksAmountSchema.parse(10),
-    losersPool: BucksAmountSchema.parse(10),
-    houseCut: ZERO_BUCKS,
+    winnersPool: BucksPoolTotalSchema.parse(10),
+    losersPool: BucksPoolTotalSchema.parse(10),
+    houseCut: BucksPoolTotalSchema.parse(0),
     bets,
   };
 }

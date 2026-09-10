@@ -1,5 +1,5 @@
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   BucksPoolRosterSchema,
   debitOf,
   type BucksPoolParticipant,
@@ -161,7 +161,7 @@ async function placeBetInner(
     return { kind: "feature_disabled" };
   }
 
-  const stake = BucksStakeSchema.safeParse(input.stake);
+  const stake = StorableBucksStakeSchema.safeParse(input.stake);
   if (!stake.success) return { kind: "invalid_stake" };
 
   const pool = await prismaClient.bucksMatchPool.findUnique({

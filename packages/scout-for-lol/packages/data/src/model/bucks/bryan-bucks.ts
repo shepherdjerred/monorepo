@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   BUCKS_INT32_MAX,
   BucksAmountSchema,
+  BucksPoolTotalSchema,
   BucksStakeSchema,
 } from "#src/model/bucks/bryan-bucks-money.ts";
 import { LeaguePuuidSchema } from "#src/model/riot/league-account.ts";
@@ -328,11 +329,15 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     backedAliases: z.array(z.string()),
     opposingAliases: z.array(z.string()),
     // Pool-level aggregates sum many bettors' Int32 positions, so unlike the
-    // per-bet fields below they carry no Int32 bound and stay unbranded.
-    winnersPool: z.number().int(),
-    losersPool: z.number().int(),
-    stakeReturned: z.number().int(),
-    winnings: z.number().int(),
+    // per-bet fields below they carry no storage bound. `BucksPoolTotal` is
+    // the brand for exactly that shape.
+    winnersPool: BucksPoolTotalSchema,
+    losersPool: BucksPoolTotalSchema,
+    // Per-bet values, despite sitting beside the aggregates: settlement writes
+    // this bettor's own matched stake and own winnings, both already branded
+    // where they are computed.
+    stakeReturned: BucksAmountSchema,
+    winnings: BucksAmountSchema,
     /** Added with house cuts. Optional so historical ledger JSON remains
      * parseable under the current schema. Per-bet Int-column values, so the
      * branded Int32 schemas restate the stored domain. */

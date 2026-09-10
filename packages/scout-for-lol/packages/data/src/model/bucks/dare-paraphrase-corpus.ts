@@ -3,7 +3,7 @@ import {
   DareCompiledPlanV2Schema,
   DareDeadlineSpecV2Schema,
 } from "#src/model/bucks/dare-contract-v2.ts";
-import { BucksStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
+import { StorableBucksStakeSchema } from "#src/model/bucks/bryan-bucks-money.ts";
 
 export const DARE_V2_PARAPHRASE_CORPUS_VERSION = 1;
 export const DARE_V2_PROMPT_VERSION = "explore-dare-v2-2";
@@ -29,7 +29,7 @@ export const DareParaphraseCorpusCaseSchema = z.strictObject({
   targetAliases: z.record(z.string().min(1), z.string().min(1)),
   plan: DareCompiledPlanV2Schema,
   deadlineSpec: DareDeadlineSpecV2Schema,
-  openingStake: BucksStakeSchema,
+  openingStake: StorableBucksStakeSchema,
   expectedCanonicalSha256: z.string().regex(/^[a-f0-9]{64}$/),
   expectedMeaning: z.string().min(1),
 });

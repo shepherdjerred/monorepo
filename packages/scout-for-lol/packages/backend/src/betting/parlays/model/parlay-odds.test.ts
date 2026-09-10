@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { BUCKS_INT32_MAX } from "@scout-for-lol/data";
+import { BUCKS_INT32_MAX, StorableBucksStakeSchema } from "@scout-for-lol/data";
+
+/** `quoteParlayPosition` now demands a stake already proven storable. */
+const stake = (value: number) => StorableBucksStakeSchema.parse(value);
 import {
   addInt32,
   probabilityForSide,
@@ -15,7 +18,7 @@ describe("parlay odds", () => {
   test("ceil-quotes the total position and avoids incremental rounding", () => {
     expect(
       quoteParlayPosition({
-        totalStake: 1,
+        totalStake: stake(1),
         yesProbabilityBps: 3333,
         side: "YES",
       }),
@@ -26,7 +29,7 @@ describe("parlay odds", () => {
     });
     expect(
       quoteParlayPosition({
-        totalStake: 2,
+        totalStake: stake(2),
         yesProbabilityBps: 3333,
         side: "YES",
       }),
@@ -37,7 +40,7 @@ describe("parlay odds", () => {
     expect(addInt32(BUCKS_INT32_MAX, 1)).toBeUndefined();
     expect(
       quoteParlayPosition({
-        totalStake: BUCKS_INT32_MAX,
+        totalStake: stake(BUCKS_INT32_MAX),
         yesProbabilityBps: 1000,
         side: "YES",
       }),

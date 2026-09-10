@@ -1,8 +1,11 @@
 import {
   BucksParlaySideSchema,
+  BucksStakeSchema,
   BucksPoolRosterSchema,
   RiotTeamIdSchema,
+  type BucksAmount,
   type BucksParlaySide,
+  type BucksStake,
   type DiscordAccountId,
   type DiscordGuildId,
   type RiotTeamId,
@@ -59,9 +62,9 @@ export type OpenOutcomeMarketView = {
   sides: OpenOutcomeMarketSide[];
   yourPosition: {
     teamId: RiotTeamId;
-    offeredStake: number;
+    offeredStake: BucksStake;
     /** What cancelling right now would cost, computed server-side. */
-    cancellationFee: number;
+    cancellationFee: BucksAmount;
   } | null;
 };
 
@@ -187,8 +190,12 @@ async function loadOutcomeMarkets(
           ? null
           : {
               teamId: RiotTeamIdSchema.parse(yourBet.predictedTeamId),
-              offeredStake: yourBet.stake,
-              cancellationFee: cancellationHouseCut(yourBet.stake),
+              // Parsed at the read boundary so the fee quote below is branded
+              // arithmetic rather than a bare number leaving this module.
+              offeredStake: BucksStakeSchema.parse(yourBet.stake),
+              cancellationFee: cancellationHouseCut(
+                BucksStakeSchema.parse(yourBet.stake),
+              ),
             },
     };
   });

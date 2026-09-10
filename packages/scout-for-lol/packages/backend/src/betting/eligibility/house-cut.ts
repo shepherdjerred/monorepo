@@ -1,3 +1,10 @@
+import {
+  BucksAmountSchema,
+  ZERO_BUCKS,
+  type BucksAmount,
+  type BucksStake,
+} from "@scout-for-lol/data";
+
 /**
  * The Bryan Bucks house cut.
  *
@@ -14,14 +21,24 @@
 
 export const HOUSE_CUT_PERCENT = 20;
 
+/**
+ * Both fees take and return branded money, so the boundary is the signature
+ * rather than a convention each caller has to remember. A fee is always a
+ * `BucksAmount`: zero when the house bets against itself, and never negative.
+ */
+
 /** Round down, so a winning 1 BB match still profits. */
-function houseCutRoundedDown(amount: number): number {
-  return Math.floor((amount * HOUSE_CUT_PERCENT) / 100);
+function houseCutRoundedDown(amount: number): BucksAmount {
+  return BucksAmountSchema.parse(
+    Math.floor((amount * HOUSE_CUT_PERCENT) / 100),
+  );
 }
 
 /** Round to the nearest Buck, which is what a voluntary cancellation uses. */
-function houseCutRoundedNearest(amount: number): number {
-  return Math.round((amount * HOUSE_CUT_PERCENT) / 100);
+function houseCutRoundedNearest(amount: number): BucksAmount {
+  return BucksAmountSchema.parse(
+    Math.round((amount * HOUSE_CUT_PERCENT) / 100),
+  );
 }
 
 /**
@@ -29,16 +46,18 @@ function houseCutRoundedNearest(amount: number): number {
  * matched profit equal matched stake before the fee.
  */
 export function settlementHouseCut(input: {
-  matchedProfit: number;
+  matchedProfit: BucksStake | BucksAmount;
   isHouse: boolean;
-}): number {
+}): BucksAmount {
   if (input.isHouse) {
-    return 0;
+    return ZERO_BUCKS;
   }
   return houseCutRoundedDown(input.matchedProfit);
 }
 
 /** A voluntary cancellation returns the offer less the rounded fee. */
-export function cancellationHouseCut(stake: number): number {
+export function cancellationHouseCut(
+  stake: BucksStake | BucksAmount,
+): BucksAmount {
   return houseCutRoundedNearest(stake);
 }

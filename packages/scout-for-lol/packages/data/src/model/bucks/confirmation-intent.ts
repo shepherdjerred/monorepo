@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { BucksStakeSchema } from "./bryan-bucks-money.ts";
+import { StorableBucksStakeSchema } from "./bryan-bucks-money.ts";
 import { CompetitionWriteSchema } from "#src/model/competitions/competition-write.ts";
 import {
   DiscordAccountIdSchema,
@@ -29,7 +29,7 @@ const dareIntentPayloadArms = [
   z.strictObject({ kind: z.literal("dare_decline") }),
   z.strictObject({
     kind: z.literal("dare_contribute"),
-    amount: BucksStakeSchema,
+    amount: StorableBucksStakeSchema,
   }),
   z.strictObject({ kind: z.literal("dare_cancel") }),
 ] as const;

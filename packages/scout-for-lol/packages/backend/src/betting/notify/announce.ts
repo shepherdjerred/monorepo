@@ -6,6 +6,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   RiotTeamIdSchema,
+  sumToPoolTotal,
   type BucksMessageRefs,
   type DiscordChannelId,
   type DiscordGuildId,
@@ -280,6 +281,9 @@ type Announcement = {
   parlay: ParlaySettlementSummary | undefined;
 };
 
+/** Every aggregate on the carrier summary is the empty sum. */
+const EMPTY_POOL = sumToPoolTotal([]);
+
 /** A settled-but-empty pool, used as the carrier for closures and parlays. */
 function zeroSummary(matchId: string, serverId: string): SettlementSummary {
   return {
@@ -287,9 +291,9 @@ function zeroSummary(matchId: string, serverId: string): SettlementSummary {
     serverId,
     winningTeamId: undefined,
     voidReason: undefined,
-    winnersPool: 0,
-    losersPool: 0,
-    houseCut: 0,
+    winnersPool: EMPTY_POOL,
+    losersPool: EMPTY_POOL,
+    houseCut: EMPTY_POOL,
     bets: [],
   };
 }

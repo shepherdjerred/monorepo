@@ -1,5 +1,5 @@
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -46,7 +46,7 @@ function actionPayload(parsed: Extract<DareV2CustomId, { kind: "prepare" }>) {
       kind: "dare_contribute" as const,
       // The custom-id parser yields a plain integer; parse it into the
       // branded stake at this Discord boundary.
-      amount: BucksStakeSchema.parse(parsed.amount),
+      amount: StorableBucksStakeSchema.parse(parsed.amount),
     };
   }
   if (parsed.action === "accept") return { kind: "dare_accept" as const };

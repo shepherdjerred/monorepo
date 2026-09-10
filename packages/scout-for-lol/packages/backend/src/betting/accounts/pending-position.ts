@@ -1,4 +1,4 @@
-import type { RiotTeamId } from "@scout-for-lol/data";
+import type { BucksStake, RiotTeamId } from "@scout-for-lol/data";
 
 type PendingPositionBase = {
   matchId: string;
@@ -13,7 +13,7 @@ export type PendingPosition =
       teamId: RiotTeamId;
       /** WIN/LOSE for this game, or Blue/Red when both teams are tracked. */
       sideLabel: string;
-      offeredStake: number;
+      offeredStake: BucksStake;
       matchedStake: number | null;
       unmatchedStake: number | null;
     })

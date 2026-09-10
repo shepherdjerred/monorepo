@@ -10,7 +10,7 @@ import {
 import {
   BUCKS_INT32_MAX,
   BucksDeltaSchema,
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DareCompiledPlanV2Schema,
   RawMatchSchema,
   type DareCompiledPlanV2,
@@ -315,7 +315,7 @@ async function consume(intentId: string, actor: DiscordAccountId) {
 
 const contribute = (amount: number) => ({
   kind: "dare_contribute" as const,
-  amount: BucksStakeSchema.parse(amount),
+  amount: StorableBucksStakeSchema.parse(amount),
 });
 
 async function makeContribution(

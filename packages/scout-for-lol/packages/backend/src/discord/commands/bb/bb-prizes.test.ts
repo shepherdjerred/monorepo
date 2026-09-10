@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { BucksStakeSchema } from "@scout-for-lol/data";
 import {
   buildPersonalBucksEmbed,
   buildBbRulesEmbed,
@@ -134,7 +135,7 @@ describe("/bb command contract", () => {
         gameAlias: `player-${index.toString()}-${"x".repeat(500)}`,
         teamId: 100,
         sideLabel: "WIN",
-        offeredStake: 1,
+        offeredStake: BucksStakeSchema.parse(1),
         matchedStake: null,
         unmatchedStake: null,
         closesAt: new Date(60_000),
@@ -162,7 +163,7 @@ describe("/bb command contract", () => {
           gameAlias: "bryan",
           teamId: 200,
           sideLabel: "LOSE",
-          offeredStake: 5,
+          offeredStake: BucksStakeSchema.parse(5),
           matchedStake: null,
           unmatchedStake: null,
           closesAt: new Date(60_000),

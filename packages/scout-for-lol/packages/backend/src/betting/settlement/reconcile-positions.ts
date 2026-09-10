@@ -1,3 +1,4 @@
+import { BucksStakeSchema } from "@scout-for-lol/data";
 import type { Db } from "#src/database/index.ts";
 import {
   BUCKS_RECONCILIATION_PAGE_SIZE,
@@ -210,7 +211,21 @@ function auditCancellation(
   if (fee === null) {
     return;
   }
-  const expectedFee = cancellationHouseCut(bet.stake);
+  // This auditor reports on corrupt rows rather than throwing on them, so the
+  // stored offer is checked rather than asserted: a stake that is not even a
+  // stake is itself the finding, and the pass keeps auditing the other bets.
+  const submittedStake = BucksStakeSchema.safeParse(bet.stake);
+  if (!submittedStake.success) {
+    findings.push(
+      auditFinding(
+        "fee",
+        `Cancelled bet has a stored offer of ${bet.stake.toString()} BB, which is not a valid stake`,
+        { poolId: bet.poolId, betId: bet.id },
+      ),
+    );
+    return;
+  }
+  const expectedFee = cancellationHouseCut(submittedStake.data);
   if (fee !== expectedFee) {
     findings.push(
       auditFinding(

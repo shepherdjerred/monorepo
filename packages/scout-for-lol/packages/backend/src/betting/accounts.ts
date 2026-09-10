@@ -1,4 +1,5 @@
 import {
+  BucksStakeSchema,
   BucksLedgerKindSchema,
   BucksParlayMarketStateSchema,
   BucksParlaySideSchema,
@@ -437,7 +438,7 @@ export async function getPersonalBucksView(
           anchorTeamId: subject.teamId,
           mixedTeams: hasTrackedPlayersOnBothTeams(roster),
         }),
-        offeredStake: bet.stake,
+        offeredStake: BucksStakeSchema.parse(bet.stake),
         matchedStake: bet.matchedStake,
         unmatchedStake: bet.unmatchedStake,
         closesAt: bet.pool.closesAt,

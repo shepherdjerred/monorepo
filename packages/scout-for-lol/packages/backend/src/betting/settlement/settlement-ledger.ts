@@ -6,6 +6,7 @@ import {
   subtractAmounts,
   type BucksDelta,
   type BucksLedgerContext,
+  type BucksPoolTotal,
   type BucksPoolParticipant,
   type BucksVoidReason,
 } from "@scout-for-lol/data";
@@ -23,9 +24,9 @@ type CreditBetInput = {
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
   // Pool-level aggregates: unbounded multi-bettor sums, matching the
-  // unbranded fields in the persisted settlement ledger context.
-  winnersPool: number;
-  losersPool: number;
+  // `BucksPoolTotal` fields in the persisted settlement ledger context.
+  winnersPool: BucksPoolTotal;
+  losersPool: BucksPoolTotal;
 };
 
 type PayoutComponent = "gross" | "principal" | "profit" | "refund";

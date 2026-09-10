@@ -1,6 +1,6 @@
 import {
   BUCKS_INT32_MAX,
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   BucksDareStateSchema,
   OPEN_BUCKS_DARE_STATES,
   type BucksDareState,
@@ -60,7 +60,7 @@ export async function contributeToDare(
   if (!(await daresFeatureEnabled(input.serverId, dependencies))) {
     return { kind: "feature_disabled" };
   }
-  const amountResult = BucksStakeSchema.safeParse(input.amount);
+  const amountResult = StorableBucksStakeSchema.safeParse(input.amount);
   if (!amountResult.success) {
     return { kind: "invalid_amount" };
   }

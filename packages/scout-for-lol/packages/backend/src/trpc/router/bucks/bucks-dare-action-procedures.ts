@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DareIntentPayloadSchema,
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
@@ -46,7 +46,7 @@ const LegacyDarePayloadSchema = z
     }),
     z.strictObject({
       action: z.literal("contribute"),
-      amount: BucksStakeSchema,
+      amount: StorableBucksStakeSchema,
     }),
   ])
   .transform((legacy) =>
@@ -60,12 +60,31 @@ const LegacyDarePayloadSchema = z
 // prepare procedure and skip the creation gate entirely.
 export const DarePayloadInputSchema = z.union([
   DareIntentPayloadSchema,
-  // Semantically `.pipe(DareIntentPayloadSchema)`, spelled as a parse because
-  // the branded `amount` makes the pipe's invariant input/output typing
-  // reject the already-narrowed legacy transform result.
-  LegacyDarePayloadSchema.transform((payload) =>
-    DareIntentPayloadSchema.parse(payload),
-  ),
+  // Semantically `.pipe(DareIntentPayloadSchema)`, and still spelled as a
+  // transform. `.pipe` requires the target's INPUT type to equal this
+  // branch's OUTPUT type, but a branded schema's input is the bare `number`
+  // it brands — so any branded field makes the pipe unassignable regardless
+  // of how the brand is defined. Splitting the money brands did not change
+  // that; it is zod's invariant pipe typing, not the Int32 fusion.
+  //
+  // The re-parse reports through `ctx` instead of throwing: a transform that
+  // throws escapes the enclosing `z.union` rather than registering as a
+  // failed branch, which would turn a malformed legacy payload into a 500
+  // instead of a validation error.
+  LegacyDarePayloadSchema.transform((payload, ctx) => {
+    const parsed = DareIntentPayloadSchema.safeParse(payload);
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        ctx.addIssue({
+          code: "custom",
+          path: issue.path,
+          message: issue.message,
+        });
+      }
+      return z.NEVER;
+    }
+    return parsed.data;
+  }),
 ]);
 
 const GuildInput = z.object({ guildId: DiscordGuildIdSchema });

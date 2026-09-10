@@ -1,4 +1,5 @@
 import {
+  BucksStakeSchema,
   DARE_CONTRACT_VERSION,
   DareStoredPlanV2Schema,
   DareSqlV3CompilationSchema,
@@ -179,7 +180,7 @@ export async function fundDareV2InTransaction(
     },
     bucksAccountId: input.bucksAccountId,
     discordId: input.actorDiscordId,
-    amount: revision.openingStake,
+    amount: BucksStakeSchema.parse(revision.openingStake),
   });
   await enqueueDareNotificationInTransaction(tx, {
     dareId: dare.id,
