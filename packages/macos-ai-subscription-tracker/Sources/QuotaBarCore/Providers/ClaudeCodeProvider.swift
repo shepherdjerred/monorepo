@@ -160,11 +160,16 @@ private struct ClaudeUsageResponse: Decodable {
     let container = try decoder.container(keyedBy: DynamicCodingKey.self)
     let limitsKey = DynamicCodingKey("limits")
     self.limits = try container.decodeIfPresent([ClaudeLimit].self, forKey: limitsKey) ?? []
+    // Every other top-level key is read as a usage window, so a new sibling object that is not
+    // one must be listed here. `seven_day_breakdown` reports the weekly split per model as
+    // `rows`, carrying neither a utilization nor a reset date, and the account surfaces the same
+    // per-model figures through `seven_day_<model>` and `limits`.
     let metadataKeys = Set([
       "extra_usage",
       "limits",
       "member_dashboard_available",
       "nimbus_quill",
+      "seven_day_breakdown",
       "spend",
     ])
     var windows: [String: ClaudeWindow] = [:]

@@ -15,6 +15,18 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertTrue(snapshot.notes.isEmpty)
   }
 
+  func testClaudeSevenDayBreakdownIsMetadataNotAWindow() throws {
+    // `seven_day_breakdown` reports the weekly split as `rows`, with no utilization and no reset
+    // date. Reading it as a window made the whole response unsupported, which took the row stale
+    // even though the account and every real window still parsed.
+    let snapshot = try ClaudeCodeProvider.parse(
+      data: fixture("claude-seven-day-breakdown"), now: now)
+
+    XCTAssertEqual(
+      snapshot.windows.map(\.id).sorted(), ["five-hour", "weekly", "weekly-fable"])
+    XCTAssertNil(snapshot.windows.first(where: { $0.id.contains("breakdown") }))
+  }
+
   func testClaudeLimitsPreserveModelAndPolicy() throws {
     let snapshot = try ClaudeCodeProvider.parse(data: fixture("claude-limits"), now: now)
     XCTAssertFalse(snapshot.windows.contains { $0.label.contains("Nimbus Quil") })
