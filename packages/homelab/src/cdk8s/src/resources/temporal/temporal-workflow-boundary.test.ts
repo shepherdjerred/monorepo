@@ -180,7 +180,7 @@ describe("central Temporal Workflow boundary", () => {
     expect(otlpRule?.to).toEqual([
       {
         namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+          matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
         },
       },
     ]);

@@ -1,4 +1,5 @@
 import { EnvValue, type ISecret } from "cdk8s-plus-31";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 export type TemporalRuntimeRole =
   | "backup"
@@ -23,9 +24,7 @@ export function temporalRuntimeEnv(
     TEMPORAL_WORKER_ROLE: EnvValue.fromValue(role),
     ENVIRONMENT: EnvValue.fromValue("production"),
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(
-      "http://tempo.tempo.svc.cluster.local:4318",
-    ),
+    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     TELEMETRY_SERVICE_NAME: EnvValue.fromValue(serviceName),
     SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
   };

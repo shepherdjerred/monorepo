@@ -23,6 +23,7 @@ import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-ar
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { peerUserbotIds } from "@shepherdjerred/homelab/cdk8s/src/resources/userbot-ids.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 // Headless Discord Plays Pokemon: pokeemerald-wasm runs in Bun, renders frames
 // in software, and streams to a Discord voice channel via the voice UDP path.
@@ -125,9 +126,7 @@ export function createPokemonDeployment(chart: Chart) {
         // OTLP traces → Tempo; frame metrics are scraped from /metrics.
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue("discord-plays-pokemon"),
-        OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
+        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         // Codex SDK goal-mode OAuth. Direct provider API keys are deliberately
         // absent; a mounted auth cache remains valid for local development.
         CODEX_ACCESS_TOKEN: EnvValue.fromSecretValue({

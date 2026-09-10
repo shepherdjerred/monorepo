@@ -32,6 +32,7 @@ import {
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
 import { scoutImageUsesPostgres } from "@shepherdjerred/homelab/cdk8s/src/release-configuration.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 function requiredWeeklyParlaySecret(secret: ISecret | undefined): ISecret {
   if (secret === undefined) {
@@ -186,9 +187,7 @@ export function createScoutDeployment(chart: Chart, stage: Stage) {
     // TELEMETRY_ENABLED.
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),
     TELEMETRY_SERVICE_NAME: EnvValue.fromValue("scout-backend"),
-    OTLP_ENDPOINT: EnvValue.fromValue(
-      "http://tempo.tempo.svc.cluster.local:4318",
-    ),
+    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     TEMPORAL_ADDRESS: EnvValue.fromValue(
       "temporal-temporal-server-service.temporal.svc.cluster.local:7233",
     ),

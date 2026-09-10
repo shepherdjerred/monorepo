@@ -118,7 +118,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           to: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
               },
             },
           ],

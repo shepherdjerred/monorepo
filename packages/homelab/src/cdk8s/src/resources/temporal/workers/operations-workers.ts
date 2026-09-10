@@ -10,6 +10,7 @@ import {
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -122,9 +123,7 @@ export function createTemporalOperationsWorkers(
       FEATURE_FLAGS_MODE: EnvValue.fromValue("disabled"),
       ENVIRONMENT: EnvValue.fromValue("production"),
       TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(
-        "http://tempo.tempo.svc.cluster.local:4318",
-      ),
+      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-billing-worker"),
       OPENAI_ADMIN_KEY: EnvValue.fromSecretValue({
         secret: props.billingSecret,

@@ -104,7 +104,7 @@ export function createAlertDashboardChart(app: App) {
           to: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
               },
             },
           ],
