@@ -207,6 +207,18 @@ export async function createOfflineTrpcHarness(
       guildChannels: () => Promise.resolve(null),
       guildRoles: () => Promise.resolve(null),
       botMember: () => Promise.resolve(null),
+      // The offline harness has no cache, so the fresh read is the same stub.
+      freshGuildMember: (guildId: string, userId: string) =>
+        Promise.resolve(
+          state.guildMembers.get(guildId)?.has(userId) === true
+            ? {
+                user: { id: userId, username: userId },
+                nick: null,
+                avatar: null,
+                roles: [],
+              }
+            : null,
+        ),
       guildMember: (guildId: string, userId: string) =>
         Promise.resolve(
           state.guildMembers.get(guildId)?.has(userId) === true

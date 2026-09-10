@@ -70,6 +70,7 @@ const fakeRest: BotRestReader = {
     ]),
   botMember: unused,
   guildMember: () => guard(() => state.member),
+  freshGuildMember: () => guard(() => state.member),
   searchGuildMembers: unused,
   user: unused,
   channel: () => guard(() => state.channel),

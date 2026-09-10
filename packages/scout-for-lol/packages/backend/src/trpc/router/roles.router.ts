@@ -62,20 +62,30 @@ const GRANT_KEY = permissionKey({ resource: "roles", action: "grant" });
 const REVOKE_KEY = permissionKey({ resource: "roles", action: "revoke" });
 
 /**
- * Whether the account still belongs to the guild, straight from Discord.
+ * Whether the account still belongs to the guild, read fresh from Discord.
+ *
+ * **Correctness-critical: the cached read is not acceptable here.** This feeds
+ * the last-role-manager invariant, which counts the managers who remain. The
+ * ordinary `guildMember` read is memoized for `MEMBERSHIP_TTL_MS` (30s), so a
+ * manager who left inside that window would still be counted as present — and
+ * the guard would then permit revoking the genuinely last manager, producing
+ * exactly the locked-out guild it exists to prevent. A 30s window is fine for
+ * display and for checks that fail safe; it is a bug for a check whose answer
+ * decides whether anyone can restore access. (The pre-port code passed
+ * `force: true` to discord.js for the same reason.)
  *
  * The port returns `null` only for an authoritative "not a member"; a failure
  * to reach Discord throws, and `callDiscordForRequest` turns that into
- * SERVICE_UNAVAILABLE. That distinction is load-bearing here: reading an
- * outage as "not a member" would let the last-role-manager guard conclude the
- * guild has no other manager and block a legitimate revoke.
+ * SERVICE_UNAVAILABLE. That distinction is load-bearing too: reading an outage
+ * as "not a member" would let the guard conclude the guild has no other
+ * manager and block a legitimate revoke.
  */
 async function isCurrentGuildMember(
   guildId: DiscordGuildId,
   discordId: DiscordAccountId,
 ): Promise<boolean> {
   const member = await callDiscordForRequest(() =>
-    botRest().guildMember(guildId, discordId),
+    botRest().freshGuildMember(guildId, discordId),
   );
   return member !== null;
 }

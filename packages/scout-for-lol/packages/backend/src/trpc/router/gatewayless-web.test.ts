@@ -40,18 +40,26 @@ const BOT_ROLE = "100000000000009901";
 
 type RestState = {
   guildsOnDiscord: Set<string>;
+  /** What a cached (`guildMember`) read sees. */
   members: Map<string, Set<string>>;
+  /** What an uncached (`freshGuildMember`) read sees; null = same as cached. */
+  freshMembers: Map<string, Set<string>> | null;
   channels: DiscordGuildChannel[];
   unavailable: boolean;
   restCalls: number;
+  cachedMemberReads: number;
+  freshMemberReads: number;
 };
 
 const state: RestState = {
   guildsOnDiscord: new Set(),
   members: new Map(),
+  freshMembers: null,
   channels: [],
   unavailable: false,
   restCalls: 0,
+  cachedMemberReads: 0,
+  freshMemberReads: 0,
 };
 
 function member(userId: string) {
@@ -102,9 +110,21 @@ const fakeRest: BotRestReader = {
   botMember: (guildId) =>
     guard(() => (state.guildsOnDiscord.has(guildId) ? member(BOT) : null)),
   guildMember: (guildId, userId) =>
-    guard(() =>
-      state.members.get(guildId)?.has(userId) === true ? member(userId) : null,
-    ),
+    guard(() => {
+      state.cachedMemberReads += 1;
+      return state.members.get(guildId)?.has(userId) === true
+        ? member(userId)
+        : null;
+    }),
+  // Modelled as a genuinely different source so a test can express "the cache
+  // still says present, Discord says gone" — the staleness this read exists to
+  // close. Defaults to agreeing with the cached view.
+  freshGuildMember: (guildId, userId) =>
+    guard(() => {
+      state.freshMemberReads += 1;
+      const roster = state.freshMembers ?? state.members;
+      return roster.get(guildId)?.has(userId) === true ? member(userId) : null;
+    }),
   searchGuildMembers: (input) =>
     guard(() =>
       [...(state.members.get(input.guildId) ?? [])]
@@ -237,9 +257,12 @@ beforeEach(async () => {
     [INSTALLED, new Set([ACTOR, PEER])],
     [UNROWED, new Set([ACTOR])],
   ]);
+  state.freshMembers = null;
   state.channels = [];
   state.unavailable = false;
   state.restCalls = 0;
+  state.cachedMemberReads = 0;
+  state.freshMemberReads = 0;
   membership = [];
 });
 
@@ -391,6 +414,38 @@ describe("member-backed role management without a gateway", () => {
         where: { serverId: INSTALLED, discordUserId: PEER },
       }),
     ).toBe(0);
+  });
+
+  test("a manager who left is not counted, even while the cache still has them", async () => {
+    // The staleness bug this guards: the cached roster (up to 30s old) still
+    // lists ACTOR as a manager, but Discord says they are gone. Counting the
+    // cached view would let PEER — the genuinely last manager — be revoked,
+    // locking the guild out of its own access management.
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED], false);
+    await seedGrants(ACTOR, MANAGER);
+    await seedGrants(PEER, MANAGER);
+    state.freshMembers = new Map([[INSTALLED, new Set([PEER])]]);
+
+    await expect(
+      caller().roles.clear({ guildId: INSTALLED, discordUserId: PEER }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    // The invariant read the uncached source, not the cached one.
+    expect(state.freshMemberReads).toBeGreaterThan(0);
+    expect(state.cachedMemberReads).toBe(0);
+  });
+
+  test("ordinary member reads still use the cached path", async () => {
+    // Only the invariant is uncached; nothing else pays a Discord request per
+    // lookup. Member search is the ordinary roster surface.
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    await caller().discord.searchMembers({
+      guildId: INSTALLED,
+      query: PEER,
+      limit: 5,
+    });
+    expect(state.freshMemberReads).toBe(0);
   });
 
   test("the last manager cannot be revoked when the others have left", async () => {

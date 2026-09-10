@@ -48,6 +48,7 @@ function restStub(
       guildRoles: unused,
       botMember: unused,
       guildMember: unused,
+      freshGuildMember: unused,
       searchGuildMembers: unused,
       user: unused,
       channel: unused,

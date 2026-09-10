@@ -95,6 +95,47 @@ describe("createBotRestReader caching", () => {
     expect(MEMBERSHIP_TTL_MS).toBeLessThan(PERMISSION_TTL_MS);
   });
 
+  test("freshGuildMember bypasses the cache on every call", async () => {
+    const clock = { value: 0 };
+    const member = { user: { id: USER, username: "someone" }, roles: [] };
+    const harness = reader(() => Promise.resolve(member), clock);
+
+    // Warm the cache, then prove the cached read is served from it and the
+    // fresh read is not — inside the same TTL window, with no clock movement.
+    await harness.rest.guildMember(GUILD, USER);
+    await harness.rest.guildMember(GUILD, USER);
+    expect(harness.routes).toHaveLength(1);
+
+    await harness.rest.freshGuildMember(GUILD, USER);
+    await harness.rest.freshGuildMember(GUILD, USER);
+    expect(harness.routes).toHaveLength(3);
+  });
+
+  test("a fresh read does not poison or refill the cached entry", async () => {
+    let present = true;
+    const clock = { value: 0 };
+    const harness = reader(
+      () =>
+        present
+          ? Promise.resolve({
+              user: { id: USER, username: "someone" },
+              roles: [],
+            })
+          : Promise.reject(new ApiError(10_007, 404)),
+      clock,
+    );
+
+    await expect(harness.rest.guildMember(GUILD, USER)).resolves.not.toBeNull();
+    present = false;
+    // The fresh read sees the departure immediately...
+    await expect(
+      harness.rest.freshGuildMember(GUILD, USER),
+    ).resolves.toBeNull();
+    // ...while the cached entry keeps serving its own (stale) answer, which is
+    // the documented contract for the paths that accept a 30s window.
+    await expect(harness.rest.guildMember(GUILD, USER)).resolves.not.toBeNull();
+  });
+
   test("caches per guild, not globally", async () => {
     const harness = reader(() => Promise.resolve(ROLES));
     await harness.rest.guildRoles(GUILD);

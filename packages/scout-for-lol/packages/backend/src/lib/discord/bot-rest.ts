@@ -228,6 +228,25 @@ export type BotRestReader = {
     guildId: string,
     userId: string,
   ) => Promise<DiscordGuildMember | null>;
+  /**
+   * {@link guildMember}, bypassing the cache entirely.
+   *
+   * For the reads whose whole purpose is to be right *now* — a correctness
+   * invariant that a departed member must not satisfy. The ordinary read's
+   * {@link MEMBERSHIP_TTL_MS} window is fine for display and for access checks
+   * that fail safe, but a guard which counts remaining members has to see the
+   * roster as it actually is, or it permits the very state it exists to
+   * prevent. Use this only where staleness is a correctness bug, never for
+   * ordinary lookups: it is one uncached Discord request every call.
+   *
+   * The result is deliberately NOT written back into the cache — the cached
+   * entry belongs to paths that already accept a 30s window, and this one
+   * always reads fresh anyway.
+   */
+  readonly freshGuildMember: (
+    guildId: string,
+    userId: string,
+  ) => Promise<DiscordGuildMember | null>;
   /** Prefix search over usernames and nicknames. Empty when Scout is absent. */
   readonly searchGuildMembers: (input: {
     guildId: string;
@@ -286,6 +305,14 @@ export function createBotRestReader(
 
   const botUserId = () => options.botUserId ?? configuration.applicationId;
 
+  const readMember = async (guildId: string, userId: string) =>
+    await read(get, {
+      route: Routes.guildMember(guildId, userId),
+      schema: DiscordGuildMemberSchema,
+      description: `guild ${guildId} member ${userId}`,
+      absentCodes: [UNKNOWN_GUILD, UNKNOWN_MEMBER],
+    });
+
   const readBotMember = async (guildId: string) =>
     await read(get, {
       route: Routes.guildMember(guildId, botUserId()),
@@ -342,14 +369,11 @@ export function createBotRestReader(
     guildMember: async (guildId, userId) =>
       await memberCache(
         `${guildId}:${userId}`,
-        async () =>
-          await read(get, {
-            route: Routes.guildMember(guildId, userId),
-            schema: DiscordGuildMemberSchema,
-            description: `guild ${guildId} member ${userId}`,
-            absentCodes: [UNKNOWN_GUILD, UNKNOWN_MEMBER],
-          }),
+        async () => await readMember(guildId, userId),
       ),
+
+    freshGuildMember: async (guildId, userId) =>
+      await readMember(guildId, userId),
 
     searchGuildMembers: async (input) =>
       (await read(get, {
