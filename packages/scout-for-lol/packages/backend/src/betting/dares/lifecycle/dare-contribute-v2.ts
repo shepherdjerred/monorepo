@@ -3,6 +3,7 @@ import {
   BucksDareV2StateSchema,
   OPEN_BUCKS_DARE_V2_STATES,
   type BucksDareV2State,
+  type BucksStake,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
@@ -21,7 +22,7 @@ export async function contributeToDareV2InTransaction(
     revision: number;
     actorDiscordId: DiscordAccountId;
     bucksAccountId: number;
-    amount: number;
+    amount: BucksStake;
     now: Date;
   },
 ) {

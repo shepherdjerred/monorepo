@@ -1,107 +1,142 @@
 import { z } from "zod";
+import {
+  type BucksAmount,
+  BucksAmountSchema,
+  type BucksDelta,
+  BucksDeltaSchema,
+  type BucksStake,
+  BucksStakeSchema,
+} from "@scout-for-lol/domain/identity/bucks-money.ts";
 
 /**
- * Branded Bryan Bucks money values.
+ * The Bryan Bucks storage edge.
  *
- * Every financial quantity in the Bucks economy is one of three shapes, and
- * the brands keep them from being silently interchanged:
+ * The semantic brands — what a quantity means — live in
+ * `@scout-for-lol/domain` and are re-exported below so the existing
+ * `@scout-for-lol/data` import sites keep receiving the SAME schema objects.
+ * Zod brands are structural: an independently defined schema carrying the
+ * same tag typechecks identically while validating differently, so the shim
+ * re-exports rather than redeclares.
  *
- * - `BucksStake` — a positive whole-BB commitment (a submitted stake, a
- *   transfer total, a dare pot). Zero is not a stake.
- * - `BucksAmount` — a non-negative whole-BB quantity (a matched portion, a
- *   payout, a fee). Zero is a legitimate amount.
- * - `BucksDelta` — a signed, non-zero ledger movement. Negative debits,
- *   positive credits; a zero delta is a bug, never a no-op.
+ * What stays here is the part domain must not know: Prisma's `Int` column is
+ * 32 bits wide, and a value bound for one has to fit. The `Storable*` schemas
+ * below add exactly that bound on top of a semantic brand, and the helpers
+ * raise `BucksStorageOverflowError` — the signal the settlement, placement,
+ * and dare paths already catch to refund, void, or reject — instead of a bare
+ * `ZodError`.
  *
- * All three live inside Prisma's SQLite/Postgres `Int` storage domain, so the
- * checked helpers below re-validate the Int32 range on every operation and
- * throw on violation: an out-of-range result here is a broken internal
- * invariant, not user input.
+ * A `StorableBucksAmount` IS a `BucksAmount` (the brands intersect), so
+ * checking storability never forces a conversion on the way back out. Only
+ * code that genuinely requires a storable value has to say so.
  */
 
-/** Prisma's SQLite `Int` client boundary. The economy intentionally remains
- * on Int32 storage for this version even though the product no longer applies
- * a smaller stake cap. */
+/** Prisma's SQLite/Postgres `Int` client boundary. The economy intentionally
+ * remains on Int32 storage for this version even though the product no longer
+ * applies a smaller stake cap. */
 export const BUCKS_INT32_MAX = 2_147_483_647;
 
-/** Any positive whole-BB stake that the existing storage domain can hold. */
-export type BucksStake = z.infer<typeof BucksStakeSchema>;
-export const BucksStakeSchema = z
-  .number()
-  .int()
-  .positive()
-  .max(BUCKS_INT32_MAX)
-  .brand<"BucksStake">();
-
-/** Any non-negative whole-BB quantity the storage domain can hold. */
-export type BucksAmount = z.infer<typeof BucksAmountSchema>;
-export const BucksAmountSchema = z
-  .number()
-  .int()
-  .nonnegative()
-  .max(BUCKS_INT32_MAX)
-  .brand<"BucksAmount">();
-
-/** A signed, non-zero whole-BB ledger movement within Int32 range. */
-export type BucksDelta = z.infer<typeof BucksDeltaSchema>;
-export const BucksDeltaSchema = z
-  .number()
-  .int()
-  .min(-BUCKS_INT32_MAX)
-  .max(BUCKS_INT32_MAX)
-  .refine((value) => value !== 0, {
-    message: "A Bucks delta of zero is a bug, not a no-op",
-  })
-  .brand<"BucksDelta">();
-
-/** The zero amount, pre-branded so call sites need no parse for a literal 0. */
-export const ZERO_BUCKS: BucksAmount = BucksAmountSchema.parse(0);
-
-/** A stake is always a valid amount; the brands just differ. */
-export function stakeToAmount(stake: BucksStake): BucksAmount {
-  return BucksAmountSchema.parse(stake);
+/**
+ * A value could not be written because the `Int` column cannot hold it.
+ *
+ * Thrown by the storable helpers and by `applyBucksDelta`, and caught by
+ * every path that can recover: pool settlement retries as a matched-principal
+ * refund, dare settlement voids with a full refund, and placement turns it
+ * into a "storage limit" reply. Recovery keys off the class, so this is the
+ * one definition — the backend ledger module re-exports this object rather
+ * than declaring a second class that no `instanceof` would match.
+ */
+export class BucksStorageOverflowError extends Error {
+  constructor(readonly bucksAccountId: number) {
+    super(
+      `Bucks account ${bucksAccountId.toString()} would exceed Int32 storage`,
+    );
+    this.name = "BucksStorageOverflowError";
+  }
 }
 
-/** An amount known to be positive, reasserted as a stake. Throws on zero. */
-export function amountToStake(amount: BucksAmount): BucksStake {
-  return BucksStakeSchema.parse(amount);
+export {
+  type BucksAmount,
+  BucksAmountSchema,
+  type BucksDelta,
+  BucksDeltaSchema,
+  type BucksPoolTotal,
+  BucksPoolTotalSchema,
+  type BucksStake,
+  BucksStakeSchema,
+  ZERO_BUCKS,
+  addAmounts,
+  amountToStake,
+  applyDelta,
+  creditOf,
+  debitOf,
+  stakeToAmount,
+  subtractAmounts,
+  sumToPoolTotal,
+} from "@scout-for-lol/domain/identity/bucks-money.ts";
+
+// `.check(z.lte(...))` rather than `.refine(...)`: a check keeps the bound
+// visible to `z.toJSONSchema`, so the generated contract schemas published
+// from these types still advertise the Int32 ceiling. A refine would validate
+// identically and emit nothing.
+
+/** A stake the `Int` column can hold. */
+export const StorableBucksStakeSchema = BucksStakeSchema.check(
+  z.lte(BUCKS_INT32_MAX),
+).brand<"StorableBucks">();
+export type StorableBucksStake = z.infer<typeof StorableBucksStakeSchema>;
+
+/** An amount the `Int` column can hold. */
+export const StorableBucksAmountSchema = BucksAmountSchema.check(
+  z.lte(BUCKS_INT32_MAX),
+).brand<"StorableBucks">();
+export type StorableBucksAmount = z.infer<typeof StorableBucksAmountSchema>;
+
+/** A ledger movement whose magnitude the `Int` column can hold. */
+export const StorableBucksDeltaSchema = BucksDeltaSchema.check(
+  z.gte(0 - BUCKS_INT32_MAX),
+  z.lte(BUCKS_INT32_MAX),
+).brand<"StorableBucks">();
+export type StorableBucksDelta = z.infer<typeof StorableBucksDeltaSchema>;
+
+/**
+ * Assert a semantically valid stake is also storable.
+ *
+ * The argument is already branded, so the only way the check can fail is the
+ * storage bound — which is why failure raises the overflow error rather than
+ * surfacing the `ZodError`. Callers that must not throw (user input, quote
+ * arithmetic) use `StorableBucksStakeSchema.safeParse` directly.
+ */
+export function storableStake(
+  stake: BucksStake,
+  bucksAccountId: number,
+): StorableBucksStake {
+  const storable = StorableBucksStakeSchema.safeParse(stake);
+  if (!storable.success) {
+    throw new BucksStorageOverflowError(bucksAccountId);
+  }
+  return storable.data;
 }
 
-/** Checked addition. Throws when the sum leaves the Int32 storage domain. */
-export function addAmounts(
-  first: BucksAmount,
-  ...rest: readonly BucksAmount[]
-): BucksAmount {
-  return BucksAmountSchema.parse(
-    rest.reduce<number>((sum, value) => sum + value, first),
-  );
-}
-
-/** Checked subtraction. Throws when the result would be negative. */
-export function subtractAmounts(
-  minuend: BucksAmount,
-  subtrahend: BucksAmount,
-): BucksAmount {
-  return BucksAmountSchema.parse(minuend - subtrahend);
-}
-
-/** Apply a signed movement to an amount. Throws when the result leaves the
- * non-negative Int32 domain. */
-export function applyDelta(
+/** Assert a semantically valid amount is also storable. */
+export function storableAmount(
   amount: BucksAmount,
+  bucksAccountId: number,
+): StorableBucksAmount {
+  const storable = StorableBucksAmountSchema.safeParse(amount);
+  if (!storable.success) {
+    throw new BucksStorageOverflowError(bucksAccountId);
+  }
+  return storable.data;
+}
+
+/** Assert a semantically valid ledger movement is also storable. */
+export function storableDelta(
   delta: BucksDelta,
-): BucksAmount {
-  return BucksAmountSchema.parse(amount + delta);
-}
-
-/** A positive ledger movement crediting `value`. Throws on a zero amount. */
-export function creditOf(value: BucksStake | BucksAmount): BucksDelta {
-  return BucksDeltaSchema.parse(value);
-}
-
-/** A negative ledger movement debiting `value`. Throws on a zero amount. */
-export function debitOf(value: BucksStake | BucksAmount): BucksDelta {
-  // `0 - value` rather than unary minus: no-unsafe-unary-minus cannot see
-  // through the branded union, while binary subtraction stays plain numbers.
-  return BucksDeltaSchema.parse(0 - value);
+  bucksAccountId: number,
+): StorableBucksDelta {
+  const storable = StorableBucksDeltaSchema.safeParse(delta);
+  if (!storable.success) {
+    throw new BucksStorageOverflowError(bucksAccountId);
+  }
+  return storable.data;
 }

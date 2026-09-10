@@ -5,7 +5,8 @@ import { bettingSettlementCorruptRowsTotal } from "#src/metrics/betting/betting.
 
 /** Which stored column failed validation. Closed union so it can double as a
  * bounded Prometheus label. */
-export type BucksCorruptIdentityField = "discord_id" | "subject_puuid";
+export type BucksCorruptIdentityField =
+  "discord_id" | "subject_puuid" | "predicted_team_id";
 
 /**
  * A stored identity failed validation while settlement was reading it back.

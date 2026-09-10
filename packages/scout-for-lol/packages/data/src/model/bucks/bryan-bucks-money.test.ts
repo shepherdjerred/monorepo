@@ -5,22 +5,26 @@ import {
   BucksAmountSchema,
   BucksDeltaSchema,
   BucksStakeSchema,
-  ZERO_BUCKS,
-  addAmounts,
-  amountToStake,
-  applyDelta,
-  creditOf,
-  debitOf,
-  stakeToAmount,
-  subtractAmounts,
+  BucksStorageOverflowError,
+  StorableBucksAmountSchema,
+  StorableBucksDeltaSchema,
+  StorableBucksStakeSchema,
+  storableAmount,
+  storableDelta,
+  storableStake,
   type BucksAmount,
   type BucksDelta,
   type BucksStake,
+  type StorableBucksAmount,
+  type StorableBucksDelta,
+  type StorableBucksStake,
 } from "./bryan-bucks-money.ts";
 
 const stake = (value: number) => BucksStakeSchema.parse(value);
 const amount = (value: number) => BucksAmountSchema.parse(value);
 const delta = (value: number) => BucksDeltaSchema.parse(value);
+
+const ACCOUNT_ID = 42;
 
 describe("BUCKS_INT32_MAX", () => {
   test("is exactly the Int32 storage bound Prisma's Int columns enforce", () => {
@@ -28,121 +32,121 @@ describe("BUCKS_INT32_MAX", () => {
   });
 });
 
-describe("BucksStakeSchema", () => {
-  test.each([1, 25, BUCKS_INT32_MAX])("accepts %d", (value) => {
-    expect(BucksStakeSchema.parse(value)).toBe(value);
+/**
+ * The semantic brands themselves are covered in `@scout-for-lol/domain`, and
+ * `domain-reexport-identity.test.ts` proves this module re-exports those exact
+ * objects rather than copies. What is asserted here is the split itself.
+ */
+describe("the split between meaning and storability", () => {
+  test("the money brands no longer carry the Int32 bound", () => {
+    // The split this module exists for: a legal aggregate above Int32 must
+    // parse as money, and only the storable layer may reject it.
+    expect(BucksAmountSchema.safeParse(BUCKS_INT32_MAX + 1).success).toBe(true);
+    expect(BucksStakeSchema.safeParse(BUCKS_INT32_MAX + 1).success).toBe(true);
+    expect(BucksDeltaSchema.safeParse(BUCKS_INT32_MAX + 1).success).toBe(true);
   });
-
-  test.each([0, -1, 1.5, BUCKS_INT32_MAX + 1, Number.NaN])(
-    "rejects %d",
-    (value) => {
-      expect(BucksStakeSchema.safeParse(value).success).toBe(false);
-    },
-  );
 });
 
-describe("BucksAmountSchema", () => {
-  test.each([0, 1, BUCKS_INT32_MAX])("accepts %d", (value) => {
-    expect(BucksAmountSchema.parse(value)).toBe(value);
+describe("storable schemas", () => {
+  test.each([
+    ["stake", StorableBucksStakeSchema],
+    ["amount", StorableBucksAmountSchema],
+    ["delta", StorableBucksDeltaSchema],
+  ])("the storable %s accepts the Int32 ceiling itself", (_name, schema) => {
+    expect(schema.safeParse(BUCKS_INT32_MAX).success).toBe(true);
+    expect(schema.safeParse(BUCKS_INT32_MAX + 1).success).toBe(false);
   });
 
-  test.each([-1, 0.5, BUCKS_INT32_MAX + 1, Number.NaN])(
-    "rejects %d",
-    (value) => {
-      expect(BucksAmountSchema.safeParse(value).success).toBe(false);
-    },
-  );
-});
-
-describe("BucksDeltaSchema", () => {
-  test.each([1, -1, BUCKS_INT32_MAX, -BUCKS_INT32_MAX])(
-    "accepts %d",
-    (value) => {
-      expect(BucksDeltaSchema.parse(value)).toBe(value);
-    },
-  );
-
-  test.each([0, 2.5, BUCKS_INT32_MAX + 1, -(BUCKS_INT32_MAX + 1), Number.NaN])(
-    "rejects %d",
-    (value) => {
-      expect(BucksDeltaSchema.safeParse(value).success).toBe(false);
-    },
-  );
-});
-
-describe("checked arithmetic", () => {
-  test("addAmounts sums and stays branded", () => {
-    expect(addAmounts(amount(3), amount(4), amount(0))).toBe(7);
+  test("the storable delta bounds both directions", () => {
+    expect(
+      StorableBucksDeltaSchema.safeParse(0 - BUCKS_INT32_MAX).success,
+    ).toBe(true);
+    expect(
+      StorableBucksDeltaSchema.safeParse(0 - BUCKS_INT32_MAX - 1).success,
+    ).toBe(false);
   });
 
-  test("addAmounts throws a ZodError when the sum leaves Int32", () => {
-    expect(() => addAmounts(amount(BUCKS_INT32_MAX), amount(1))).toThrow(
-      z.ZodError,
+  test("storability is a check, not a refinement, so it survives JSON Schema", () => {
+    // The dare contract and paraphrase-corpus JSON Schemas are generated from
+    // schemas built on these types. A `.refine` would validate identically
+    // and emit nothing, silently dropping the Int32 ceiling from the
+    // published contract.
+    expect(z.toJSONSchema(StorableBucksStakeSchema)).toMatchObject({
+      type: "integer",
+      maximum: BUCKS_INT32_MAX,
+    });
+  });
+
+  test("a storable value is still the plain number Prisma writes", () => {
+    expect(StorableBucksAmountSchema.parse(5)).toBe(5);
+  });
+});
+
+describe("storable helpers", () => {
+  test("return the value when the Int column can hold it", () => {
+    expect(storableStake(stake(25), ACCOUNT_ID)).toBe(25);
+    expect(storableAmount(amount(0), ACCOUNT_ID)).toBe(0);
+    expect(storableDelta(delta(-25), ACCOUNT_ID)).toBe(-25);
+  });
+
+  test("accept the Int32 boundary exactly", () => {
+    expect(storableStake(stake(BUCKS_INT32_MAX), ACCOUNT_ID)).toBe(
+      BUCKS_INT32_MAX,
+    );
+    expect(storableDelta(delta(0 - BUCKS_INT32_MAX), ACCOUNT_ID)).toBe(
+      0 - BUCKS_INT32_MAX,
     );
   });
 
-  test("subtractAmounts subtracts", () => {
-    expect(subtractAmounts(amount(10), amount(4))).toBe(6);
-  });
-
-  test("subtractAmounts throws a ZodError when the result would be negative", () => {
-    expect(() => subtractAmounts(amount(4), amount(10))).toThrow(z.ZodError);
-  });
-
-  test("applyDelta credits and debits", () => {
-    expect(applyDelta(amount(10), delta(5))).toBe(15);
-    expect(applyDelta(amount(10), delta(-10))).toBe(0);
-  });
-
-  test("applyDelta throws a ZodError when the result would be negative", () => {
-    expect(() => applyDelta(amount(3), delta(-4))).toThrow(z.ZodError);
-  });
-
-  test("applyDelta throws a ZodError when the result overflows Int32", () => {
-    expect(() => applyDelta(amount(BUCKS_INT32_MAX), delta(1))).toThrow(
-      z.ZodError,
+  test("raise the existing overflow error, not a ZodError", () => {
+    // Every recovery path — settlement refund retry, dare void, placement
+    // rejection — matches on this class. A ZodError here would be re-raised
+    // as an unhandled settlement failure instead.
+    const over = BUCKS_INT32_MAX + 1;
+    expect(() => storableStake(stake(over), ACCOUNT_ID)).toThrow(
+      BucksStorageOverflowError,
+    );
+    expect(() => storableAmount(amount(over), ACCOUNT_ID)).toThrow(
+      BucksStorageOverflowError,
+    );
+    expect(() => storableDelta(delta(over), ACCOUNT_ID)).toThrow(
+      BucksStorageOverflowError,
+    );
+    expect(() => storableDelta(delta(0 - over), ACCOUNT_ID)).toThrow(
+      BucksStorageOverflowError,
     );
   });
 
-  test("stakeToAmount and amountToStake round-trip a positive value", () => {
-    const asAmount = stakeToAmount(stake(9));
-    expect(asAmount).toBe(9);
-    expect(amountToStake(asAmount)).toBe(9);
-  });
-
-  test("amountToStake throws a ZodError on the zero amount", () => {
-    expect(() => amountToStake(ZERO_BUCKS)).toThrow(z.ZodError);
-  });
-
-  test("creditOf and debitOf produce signed non-zero deltas", () => {
-    expect(creditOf(stake(7))).toBe(7);
-    expect(debitOf(stake(7))).toBe(-7);
-    expect(creditOf(amount(7))).toBe(7);
-    expect(debitOf(amount(7))).toBe(-7);
-  });
-
-  test("creditOf and debitOf throw a ZodError on the zero amount", () => {
-    expect(() => creditOf(ZERO_BUCKS)).toThrow(z.ZodError);
-    expect(() => debitOf(ZERO_BUCKS)).toThrow(z.ZodError);
+  test("carry the account whose column could not hold the value", () => {
+    try {
+      storableAmount(amount(BUCKS_INT32_MAX + 1), ACCOUNT_ID);
+      expect.unreachable("the overflow should have thrown");
+    } catch (error) {
+      expect(error).toBeInstanceOf(BucksStorageOverflowError);
+      if (error instanceof BucksStorageOverflowError) {
+        expect(error.bucksAccountId).toBe(ACCOUNT_ID);
+      }
+    }
   });
 });
 
-describe("brand non-interchangeability", () => {
-  test("distinct brands over the same base type do not extend each other", () => {
-    expectTypeOf<BucksStake>().not.toExtend<BucksDelta>();
-    expectTypeOf<BucksAmount>().not.toExtend<BucksStake>();
-    expectTypeOf<BucksDelta>().not.toExtend<BucksAmount>();
+describe("storable brands", () => {
+  test("a storable value is usable wherever its semantic brand is", () => {
+    // Subtyping is what keeps the Int32 check from rippling: proving a value
+    // storable never forces a conversion on the way back out.
+    expectTypeOf<StorableBucksStake>().toExtend<BucksStake>();
+    expectTypeOf<StorableBucksAmount>().toExtend<BucksAmount>();
+    expectTypeOf<StorableBucksDelta>().toExtend<BucksDelta>();
   });
 
-  test("unbranded numbers do not satisfy any money brand", () => {
-    expectTypeOf<number>().not.toExtend<BucksStake>();
-    expectTypeOf<number>().not.toExtend<BucksAmount>();
-    expectTypeOf<number>().not.toExtend<BucksDelta>();
+  test("a semantic value is not automatically storable", () => {
+    expectTypeOf<BucksStake>().not.toExtend<StorableBucksStake>();
+    expectTypeOf<BucksAmount>().not.toExtend<StorableBucksAmount>();
+    expectTypeOf<BucksDelta>().not.toExtend<StorableBucksDelta>();
   });
 
-  test("branded values remain plain numbers structurally, e.g. for Prisma writes", () => {
-    expectTypeOf<BucksStake>().toExtend<number>();
-    expectTypeOf<BucksAmount>().toExtend<number>();
-    expectTypeOf<BucksDelta>().toExtend<number>();
+  test("storability does not blur the semantic brands together", () => {
+    expectTypeOf<StorableBucksStake>().not.toExtend<StorableBucksAmount>();
+    expectTypeOf<StorableBucksAmount>().not.toExtend<StorableBucksDelta>();
   });
 });

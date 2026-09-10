@@ -1,8 +1,10 @@
 import {
   BUCKS_INT32_MAX,
   BucksLedgerContextSchema,
+  BucksStorageOverflowError,
   OPEN_BUCKS_DARE_STATES,
   OPEN_BUCKS_DARE_V2_STATES,
+  storableDelta,
   type BucksDelta,
   type BucksLedgerContext,
   type BucksLedgerKind,
@@ -39,14 +41,12 @@ export class InsufficientBucksError extends Error {
   }
 }
 
-export class BucksStorageOverflowError extends Error {
-  constructor(readonly bucksAccountId: number) {
-    super(
-      `Bucks account ${bucksAccountId.toString()} would exceed Int32 storage`,
-    );
-    this.name = "BucksStorageOverflowError";
-  }
-}
+/**
+ * Re-exported, not redeclared: the class moved down to `@scout-for-lol/data`
+ * with the storable helpers that raise it, and every recovery path here
+ * matches on `instanceof`. A second class would silently stop matching.
+ */
+export { BucksStorageOverflowError } from "@scout-for-lol/data";
 
 export type ApplyBucksDeltaInput = {
   bucksAccountId: number;
@@ -343,12 +343,9 @@ export async function applyBucksDelta(
   if (input.delta === 0) {
     throw new Error("A ledger entry with no effect is a bug, not a no-op");
   }
-  if (
-    !Number.isInteger(input.delta) ||
-    Math.abs(input.delta) > BUCKS_INT32_MAX
-  ) {
-    throw new BucksStorageOverflowError(input.bucksAccountId);
-  }
+  // The single chokepoint every Buck moves through, and the one place the
+  // semantic `BucksDelta` brand is narrowed to what the `Int` column holds.
+  storableDelta(input.delta, input.bucksAccountId);
 
   if (input.delta < 0) {
     // Guarded conditional update: validates "can afford" and locks the row in

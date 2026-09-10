@@ -920,10 +920,6 @@
       "clones": 1,
       "tokens": 156
     },
-    "packages/scout-for-lol/packages/backend/src/betting/dares/settlement/dare-ledger-v2.ts|packages/scout-for-lol/packages/backend/src/betting/dares/settlement/dare-ledger.ts": {
-      "clones": 2,
-      "tokens": 141
-    },
     "packages/scout-for-lol/packages/backend/src/betting/markets/place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts": {
       "clones": 1,
       "tokens": 86
@@ -953,8 +949,8 @@
       "tokens": 72
     },
     "packages/scout-for-lol/packages/backend/src/betting/parlays/runtime/parlay-place-bet.ts|packages/scout-for-lol/packages/backend/src/betting/weekly/weekly-parlay-bet.ts": {
-      "clones": 4,
-      "tokens": 326
+      "clones": 3,
+      "tokens": 253
     },
     "packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts|packages/scout-for-lol/packages/backend/src/betting/settle.integration.test.ts": {
       "clones": 3,

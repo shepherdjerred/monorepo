@@ -1,4 +1,5 @@
 import {
+  BucksAmountSchema,
   BucksMatchingSummarySchema,
   type BucksMatchingSummary,
 } from "@scout-for-lol/data";
@@ -283,7 +284,7 @@ function expectedTerminalSettlement(
         ? matchedStake * 2
         : 0;
   const fee = settlementHouseCut({
-    matchedProfit: won ? matchedStake : 0,
+    matchedProfit: BucksAmountSchema.parse(won ? matchedStake : 0),
     isHouse: bet.bucksAccount.isHouse,
   });
   return {

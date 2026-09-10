@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DARE_V2_MAX_HORIZON_DAYS,
   DARE_V2_MAX_QUERY_LENGTH,
   DARE_V2_MAX_TARGETS,
@@ -42,7 +42,7 @@ export const DareDefinitionV2ToolInputSchema = z.strictObject({
   // model can act on the answer.
   plan: DareStoredPlanV2Schema,
   deadlineSpec: DareDeadlineSpecV2Schema,
-  openingStake: BucksStakeSchema,
+  openingStake: StorableBucksStakeSchema,
 });
 
 export const DareDefinitionV3ToolInputSchema = z.strictObject({
@@ -55,7 +55,7 @@ export const DareDefinitionV3ToolInputSchema = z.strictObject({
   queryText: z.string().min(1).max(DARE_V2_MAX_QUERY_LENGTH),
   plainLanguage: z.string().min(1).max(4000),
   deadlineSpec: DareDeadlineSpecV2Schema,
-  openingStake: BucksStakeSchema,
+  openingStake: StorableBucksStakeSchema,
   competition: DareSqlV3CompetitionSchema.default({ kind: "standard" }),
   activation: DareActivationV3Schema.default({ kind: "immediate" }),
 });

@@ -1,22 +1,23 @@
 import * as Sentry from "@sentry/bun";
 import {
-  BUCKS_INT32_MAX,
-  BucksAmountSchema,
   BucksPoolRosterSchema,
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
   RiotTeamIdSchema,
   ZERO_BUCKS,
+  addAmounts,
+  storableAmount,
   subtractAmounts,
+  sumToPoolTotal,
   type BucksAmount,
   type BucksPoolParticipant,
+  type BucksPoolTotal,
   type BucksStake,
   type BucksVoidReason,
   type DiscordAccountId,
   type LeaguePuuid,
   type RawMatch,
 } from "@scout-for-lol/data";
-import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
 import { settlementHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import { BucksStorageOverflowError } from "#src/betting/ledger.ts";
@@ -51,18 +52,15 @@ export type SettlementSummary = {
   serverId: string;
   winningTeamId: number | undefined;
   voidReason: BucksVoidReason | undefined;
-  winnersPool: number;
-  losersPool: number;
-  houseCut: number;
+  // Pool-level aggregates sum many bettors' Int32 positions, and matching
+  // permits a side to total up to Number.MAX_SAFE_INTEGER. `BucksPoolTotal`
+  // is the brand for exactly that: non-negative, exact, and deliberately not
+  // bounded by any one bettor's storage column.
+  winnersPool: BucksPoolTotal;
+  losersPool: BucksPoolTotal;
+  houseCut: BucksPoolTotal;
   bets: SettlementBet[];
 };
-
-// Pool-level aggregates sum many bettors' Int32 positions, and matching
-// permits a side to total up to Number.MAX_SAFE_INTEGER — so, like the
-// persisted settlement ledger context, they stay unbranded and unbounded. An
-// Int32 bound here would throw a plain ZodError on a legal over-Int32 pool and
-// bypass the storage-overflow refund retry.
-const BucksPoolAggregateSchema = z.number().int().nonnegative();
 
 type PendingMatchedBet = {
   id: number;
@@ -104,9 +102,9 @@ function settleMatchedBets(input: {
   voidReason: BucksVoidReason | undefined;
 }): {
   bets: SettlementBet[];
-  winnersPool: number;
-  losersPool: number;
-  houseCut: number;
+  winnersPool: BucksPoolTotal;
+  losersPool: BucksPoolTotal;
+  houseCut: BucksPoolTotal;
 } {
   const voided =
     input.voidReason !== undefined || input.winningTeamId === undefined;
@@ -132,21 +130,19 @@ function settleMatchedBets(input: {
     }
 
     const won = row.predictedTeamId === input.winningTeamId;
-    const grossPayoutValue = won ? row.matchedStake * 2 : 0;
-    if (grossPayoutValue > BUCKS_INT32_MAX) {
-      // Gross payout, fee, and net payout are persisted as Prisma Int fields.
-      // Raise the typed error before any terminal state is written so the
-      // transaction can retry through the storage-overflow refund path.
-      throw new BucksStorageOverflowError(row.bucksAccountId);
-    }
-    const grossPayout = BucksAmountSchema.parse(grossPayoutValue);
-    const grossProfit = won ? row.matchedStake : ZERO_BUCKS;
-    const houseCut = BucksAmountSchema.parse(
-      settlementHouseCut({
-        matchedProfit: grossProfit,
-        isHouse: row.isHouse,
-      }),
+    // Gross payout, fee, and net payout are persisted as Prisma Int fields.
+    // `storableAmount` raises the typed overflow error before any terminal
+    // state is written, so the transaction retries through the
+    // storage-overflow refund path instead of failing on a bare ZodError.
+    const grossPayout = storableAmount(
+      won ? addAmounts(row.matchedStake, row.matchedStake) : ZERO_BUCKS,
+      row.bucksAccountId,
     );
+    const grossProfit = won ? row.matchedStake : ZERO_BUCKS;
+    const houseCut = settlementHouseCut({
+      matchedProfit: grossProfit,
+      isHouse: row.isHouse,
+    });
     return {
       betId: row.id,
       bucksAccountId: row.bucksAccountId,
@@ -166,27 +162,20 @@ function settleMatchedBets(input: {
     };
   });
 
-  const winnersPool = BucksPoolAggregateSchema.parse(
+  const matchedStakesOn = (backedWinner: boolean): BucksAmount[] =>
     input.winningTeamId === undefined
-      ? 0
+      ? []
       : input.rows
-          .filter((row) => row.predictedTeamId === input.winningTeamId)
-          .reduce((sum, row) => sum + row.matchedStake, 0),
-  );
-  const losersPool = BucksPoolAggregateSchema.parse(
-    input.winningTeamId === undefined
-      ? 0
-      : input.rows
-          .filter((row) => row.predictedTeamId !== input.winningTeamId)
-          .reduce((sum, row) => sum + row.matchedStake, 0),
-  );
+          .filter(
+            (row) =>
+              (row.predictedTeamId === input.winningTeamId) === backedWinner,
+          )
+          .map((row) => row.matchedStake);
   return {
     bets,
-    winnersPool,
-    losersPool,
-    houseCut: BucksPoolAggregateSchema.parse(
-      bets.reduce((sum, bet) => sum + bet.houseCut, 0),
-    ),
+    winnersPool: sumToPoolTotal(matchedStakesOn(true)),
+    losersPool: sumToPoolTotal(matchedStakesOn(false)),
+    houseCut: sumToPoolTotal(bets.map((bet) => bet.houseCut)),
   };
 }
 
@@ -454,7 +443,14 @@ async function settleOnePool(input: {
           { field: "discord_id", betId: row.id },
         ),
         isHouse: row.bucksAccount.isHouse,
-        predictedTeamId: RiotTeamIdSchema.parse(row.predictedTeamId),
+        // Also a stored value read back into settlement arithmetic: a team id
+        // outside the Riot enum would otherwise raise a bare ZodError and be
+        // retried forever as a transient pool failure.
+        predictedTeamId: parseStoredIdentity(
+          RiotTeamIdSchema,
+          row.predictedTeamId,
+          { field: "predicted_team_id", betId: row.id },
+        ),
         submittedStake: allocation.submittedStake,
         matchedStake: allocation.matchedStake,
         unmatchedStake: allocation.unmatchedStake,

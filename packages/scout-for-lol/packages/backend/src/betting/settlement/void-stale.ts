@@ -4,6 +4,7 @@ import {
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
   ZERO_BUCKS,
+  sumToPoolTotal,
   creditOf,
   stakeToAmount,
 } from "@scout-for-lol/data";
@@ -72,6 +73,10 @@ async function pendingMatchedBets(tx: Db, poolId: number) {
   });
 }
 
+/** Every aggregate on a voided pool is the empty sum: nothing was won, lost,
+ * or charged. */
+const EMPTY_POOL = sumToPoolTotal([]);
+
 async function refundMatchedPool(
   prismaClient: ExtendedPrismaClient,
   poolId: number,
@@ -126,10 +131,10 @@ async function refundMatchedPool(
             roster,
             bet.predictedTeamId === 100 ? 200 : 100,
           ),
-          winnersPool: 0,
-          losersPool: 0,
+          winnersPool: EMPTY_POOL,
+          losersPool: EMPTY_POOL,
           stakeReturned: bet.matchedStake,
-          winnings: 0,
+          winnings: ZERO_BUCKS,
           grossPayout: bet.matchedStake,
           houseCut: ZERO_BUCKS,
           netPayout: bet.matchedStake,
@@ -169,9 +174,9 @@ async function refundMatchedPool(
       serverId: pool.serverId,
       winningTeamId: undefined,
       voidReason: "expired",
-      winnersPool: 0,
-      losersPool: 0,
-      houseCut: 0,
+      winnersPool: EMPTY_POOL,
+      losersPool: EMPTY_POOL,
+      houseCut: EMPTY_POOL,
       bets: settledBets,
     };
   });

@@ -224,7 +224,16 @@ const config = [
       "packages/data/src/model/core/discord.ts",
       "packages/data/src/model/riot/league-account.ts",
       "packages/data/src/model/core/routes.ts",
+      "packages/data/src/model/bucks/bryan-bucks-money.ts",
     ],
+    rules: { "custom-rules/no-re-exports": "off" },
+  },
+  // The Bryan Bucks storage-overflow error moved down to
+  // `@scout-for-lol/data` so the data-layer storable helpers can raise it.
+  // Every recovery path keys off `instanceof`, so the ledger re-exports that
+  // one class object rather than declaring a second one no catch would match.
+  {
+    files: ["packages/backend/src/betting/ledger.ts"],
     rules: { "custom-rules/no-re-exports": "off" },
   },
   // Large test file (1723 lines, test files have 1500 line limit).

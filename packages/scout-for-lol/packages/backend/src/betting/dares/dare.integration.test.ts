@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   BUCKS_INT32_MAX,
+  BucksStakeSchema,
   RawMatchSchema,
   type RawMatch,
 } from "@scout-for-lol/data";
@@ -985,7 +986,7 @@ describe("window sweep", () => {
   });
 
   test("a 1 BB pot rounds to a zero cut and refunds whole", async () => {
-    expect(cancellationHouseCut(1)).toBe(0);
+    expect(cancellationHouseCut(BucksStakeSchema.parse(1))).toBe(0);
     const dareId = await makeActive({ amount: 1, windowDays: 1 });
     const houseBefore = await houseBalance();
     const summaries = await settleEndedDareWindows(db, pastWindowGrace());

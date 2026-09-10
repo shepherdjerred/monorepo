@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from "vitest";
-import { BucksAmountSchema } from "@scout-for-lol/data";
+import { BucksPoolTotalSchema } from "@scout-for-lol/data";
 import {
   refreshPendingDareV2CalloutsWithoutBlocking,
   refreshSettledPoolMessages,
@@ -14,9 +14,9 @@ describe("refreshSettledPoolMessages", () => {
       serverId: "guild-one",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: BucksAmountSchema.parse(100),
-      losersPool: BucksAmountSchema.parse(50),
-      houseCut: BucksAmountSchema.parse(5),
+      winnersPool: BucksPoolTotalSchema.parse(100),
+      losersPool: BucksPoolTotalSchema.parse(50),
+      houseCut: BucksPoolTotalSchema.parse(5),
       bets: [],
     };
     const refreshed: (readonly {

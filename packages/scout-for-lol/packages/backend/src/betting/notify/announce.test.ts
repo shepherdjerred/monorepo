@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
   BucksAmountSchema,
+  BucksPoolTotalSchema,
   BucksStakeSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
@@ -28,6 +29,7 @@ const LOSER_DISCORD_ID = bucksTestDiscordId(2);
 // the same brands the settlement boundary now produces.
 const stake = (value: number) => BucksStakeSchema.parse(value);
 const amount = (value: number) => BucksAmountSchema.parse(value);
+const poolTotal = (value: number) => BucksPoolTotalSchema.parse(value);
 // Riot PUUIDs are exactly 78 characters; pad the readable fixture labels so
 // they satisfy the schema while staying distinct and stable.
 const puuid = (value: string) => LeaguePuuidSchema.parse(value.padEnd(78, "x"));
@@ -47,9 +49,9 @@ describe("formatSettlementBody", () => {
       serverId: "1337623164146155593",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: amount(10),
-      losersPool: amount(10),
-      houseCut: amount(4),
+      winnersPool: poolTotal(10),
+      losersPool: poolTotal(10),
+      houseCut: poolTotal(4),
       bets: [
         {
           betId: 1,
@@ -120,9 +122,9 @@ describe("formatSettlementBody", () => {
       serverId: "1337623164146155593",
       winningTeamId: undefined,
       voidReason: "no_counterparty",
-      winnersPool: amount(0),
-      losersPool: amount(0),
-      houseCut: amount(0),
+      winnersPool: poolTotal(0),
+      losersPool: poolTotal(0),
+      houseCut: poolTotal(0),
       bets: [
         {
           betId: 1,
@@ -176,9 +178,9 @@ describe("formatSettlementBody", () => {
       serverId: "1337623164146155593",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: amount(10),
-      losersPool: amount(10),
-      houseCut: amount(2),
+      winnersPool: poolTotal(10),
+      losersPool: poolTotal(10),
+      houseCut: poolTotal(2),
       bets: [
         {
           betId: 1,
@@ -224,9 +226,9 @@ describe("formatSettlementBody house cuts", () => {
       serverId: "1337623164146155593",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: amount(1),
-      losersPool: amount(1),
-      houseCut: amount(0),
+      winnersPool: poolTotal(1),
+      losersPool: poolTotal(1),
+      houseCut: poolTotal(0),
       bets: [
         {
           betId: 1,
@@ -283,9 +285,9 @@ describe("formatSettlementBody house cuts", () => {
       serverId: "1337623164146155593",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: amount(25),
-      losersPool: amount(25),
-      houseCut: amount(10),
+      winnersPool: poolTotal(25),
+      losersPool: poolTotal(25),
+      houseCut: poolTotal(10),
       bets: [
         {
           betId: 1,
@@ -347,9 +349,9 @@ describe("settlement outcome message", () => {
       serverId: "1337623164146155593",
       winningTeamId: 100,
       voidReason: undefined,
-      winnersPool: amount(80),
-      losersPool: amount(75),
-      houseCut: amount(32),
+      winnersPool: poolTotal(80),
+      losersPool: poolTotal(75),
+      houseCut: poolTotal(32),
       bets: Array.from({ length: 16 }, (_, index) => ({
         betId: index + 1,
         bucksAccountId: index + 1,
@@ -448,9 +450,9 @@ describe("settlement outcome bounds", () => {
         serverId: "1337623164146155593",
         winningTeamId: 100,
         voidReason: undefined,
-        winnersPool: amount(0),
-        losersPool: amount(0),
-        houseCut: amount(0),
+        winnersPool: poolTotal(0),
+        losersPool: poolTotal(0),
+        houseCut: poolTotal(0),
         bets: [],
       },
       earnings: [
@@ -505,9 +507,9 @@ describe("buildAnnouncements", () => {
           serverId: SERVER_ID,
           winningTeamId: 100,
           voidReason: undefined,
-          winnersPool: amount(5),
-          losersPool: amount(5),
-          houseCut: amount(1),
+          winnersPool: poolTotal(5),
+          losersPool: poolTotal(5),
+          houseCut: poolTotal(1),
           bets: [],
         },
       ],

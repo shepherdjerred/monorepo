@@ -21,6 +21,11 @@ reference. Load `scout-development` for its working procedure.
   original cross-game or same-game interpretation.
 - Challenger stake, pile-ons, pot total, settlement, and Discord presentation
   are different values. Do not collapse them.
+- What a Bucks quantity means and whether a column can hold it are separate.
+  `@scout-for-lol/domain` owns the semantic brands and never bounds them by
+  Int32; `@scout-for-lol/data` owns the storable subtypes, the re-export shim,
+  and `BucksStorageOverflowError`. Never re-declare a branded schema or that
+  error class. Both package READMEs carry the contract.
 - Tournament-code custom games and Riot match ingestion keep distinct
   provenance. Generic Dare conditions remain cross-game unless wording
   explicitly requires one/same game.

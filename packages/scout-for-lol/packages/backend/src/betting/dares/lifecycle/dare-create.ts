@@ -1,6 +1,6 @@
 import {
   BucksDareHorizonKindSchema,
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   type BucksDareHorizonKind,
   type BucksDareState,
   type DiscordAccountId,
@@ -87,7 +87,7 @@ const WindowDaysSchema = z.number().int().min(1).max(DARE_MAX_WINDOW_DAYS);
 
 function proposalIssues(input: CreateProposedDareInput): string[] {
   const issues: string[] = [];
-  if (!BucksStakeSchema.safeParse(input.amount).success) {
+  if (!StorableBucksStakeSchema.safeParse(input.amount).success) {
     issues.push("The opening amount must be a positive whole number of BB");
   }
   if (input.targets.length === 0 || input.targets.length > DARE_MAX_TARGETS) {
@@ -292,7 +292,7 @@ export async function confirmDare(
           },
           bucksAccountId: account.id,
           discordId: input.challengerDiscordId,
-          amount,
+          amount: StorableBucksStakeSchema.parse(amount),
         });
         return { kind: "confirmed", balance } as const;
       },

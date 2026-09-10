@@ -1,8 +1,10 @@
 import { describe, expect, test } from "vitest";
+import * as domainBucksMoney from "@scout-for-lol/domain/identity/bucks-money.ts";
 import * as domainDatabaseIds from "@scout-for-lol/domain/identity/database-ids.ts";
 import * as domainDiscord from "@scout-for-lol/domain/identity/discord.ts";
 import * as domainLeagueAccount from "@scout-for-lol/domain/identity/league-account.ts";
 import * as domainRoutes from "@scout-for-lol/domain/identity/routes.ts";
+import * as dataBucksMoney from "#src/model/bucks/bryan-bucks-money.ts";
 import * as dataCompetition from "#src/model/competitions/competition.ts";
 import * as dataDiscord from "#src/model/core/discord.ts";
 import * as dataLeagueAccount from "#src/model/riot/league-account.ts";
@@ -49,6 +51,26 @@ describe("data re-exports the identical domain schema objects", () => {
     );
     expect(dataRoutes.AccountRegionalRouteSchema).toBe(
       domainRoutes.AccountRegionalRouteSchema,
+    );
+  });
+
+  test("Bryan Bucks money schemas", () => {
+    expect(dataBucksMoney.BucksStakeSchema).toBe(
+      domainBucksMoney.BucksStakeSchema,
+    );
+    expect(dataBucksMoney.BucksAmountSchema).toBe(
+      domainBucksMoney.BucksAmountSchema,
+    );
+    expect(dataBucksMoney.BucksDeltaSchema).toBe(
+      domainBucksMoney.BucksDeltaSchema,
+    );
+    expect(dataBucksMoney.BucksPoolTotalSchema).toBe(
+      domainBucksMoney.BucksPoolTotalSchema,
+    );
+    // The storable schemas are built ON the domain ones here in data, so they
+    // are deliberately NOT the same object — only their base must be.
+    expect(dataBucksMoney.StorableBucksStakeSchema).not.toBe(
+      domainBucksMoney.BucksStakeSchema,
     );
   });
 

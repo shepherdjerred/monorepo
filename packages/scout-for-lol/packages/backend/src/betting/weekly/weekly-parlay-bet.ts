@@ -2,6 +2,7 @@ import {
   BucksDeltaSchema,
   BucksParlaySideSchema,
   BucksStakeSchema,
+  StorableBucksStakeSchema,
   debitOf,
   type BucksParlaySide,
   type DiscordAccountId,
@@ -71,7 +72,7 @@ async function placeWeeklyParlayBetInternal(
   if (!bettingEnabled || !weeklyEnabled) {
     return { kind: "feature_disabled" };
   }
-  const stake = BucksStakeSchema.safeParse(input.stake);
+  const stake = StorableBucksStakeSchema.safeParse(input.stake);
   const side = BucksParlaySideSchema.safeParse(input.side);
   if (!stake.success || !side.success) {
     return { kind: "invalid_stake" };
@@ -191,7 +192,7 @@ async function placeWeeklyParlayBetInternal(
           slot: market.slot,
           side: side.data,
           yesProbabilityBps: market.definition.yesProbabilityBps,
-          totalStake: BucksStakeSchema.parse(totalStake),
+          totalStake,
           quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
         },
       });
@@ -210,7 +211,7 @@ async function placeWeeklyParlayBetInternal(
               slot: market.slot,
               side: side.data,
               yesProbabilityBps: market.definition.yesProbabilityBps,
-              totalStake: BucksStakeSchema.parse(totalStake),
+              totalStake,
               totalReserve: quote.houseReserve,
               quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
             },

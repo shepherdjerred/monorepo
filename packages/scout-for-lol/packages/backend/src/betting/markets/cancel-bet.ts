@@ -1,9 +1,10 @@
 import {
-  BucksAmountSchema,
   BucksPoolRosterSchema,
   BucksStakeSchema,
   amountToStake,
   creditOf,
+  stakeToAmount,
+  subtractAmounts,
   type DiscordAccountId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
@@ -199,8 +200,8 @@ async function cancelBetInner(
     // Parse the stored offer at the read boundary; the fee arithmetic then
     // stays in the branded domain.
     const submittedStake = BucksStakeSchema.parse(bet.stake);
-    const houseCut = BucksAmountSchema.parse(cancellationHouseCut(bet.stake));
-    const refunded = BucksAmountSchema.parse(bet.stake - houseCut);
+    const houseCut = cancellationHouseCut(submittedStake);
+    const refunded = subtractAmounts(stakeToAmount(submittedStake), houseCut);
     if (refunded + houseCut !== bet.stake) {
       bettingSettlementConservationFailuresTotal.inc({ stage: "cancellation" });
       throw new Error(

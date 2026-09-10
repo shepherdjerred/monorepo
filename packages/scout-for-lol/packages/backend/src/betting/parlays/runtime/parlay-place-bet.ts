@@ -2,6 +2,7 @@ import {
   BucksDeltaSchema,
   BucksParlaySideSchema,
   BucksStakeSchema,
+  StorableBucksStakeSchema,
   BucksPoolRosterSchema,
   debitOf,
   type BucksParlaySide,
@@ -150,7 +151,7 @@ async function placeParlayBetInner(
   if (!(await isPolicyEnabled("betting_enabled", { server: input.serverId }))) {
     return { kind: "feature_disabled" };
   }
-  const stake = BucksStakeSchema.safeParse(input.stake);
+  const stake = StorableBucksStakeSchema.safeParse(input.stake);
   const side = BucksParlaySideSchema.safeParse(input.side);
   if (!stake.success || !side.success) return { kind: "invalid_stake" };
 
@@ -297,7 +298,7 @@ async function placeParlayBetInner(
           type: "parlay_stake",
           side: side.data,
           yesProbabilityBps: market.definition.yesProbabilityBps,
-          totalStake: BucksStakeSchema.parse(totalStake),
+          totalStake,
           quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
         },
       });
@@ -313,7 +314,7 @@ async function placeParlayBetInner(
               type: "parlay_reserve",
               side: side.data,
               yesProbabilityBps: market.definition.yesProbabilityBps,
-              totalStake: BucksStakeSchema.parse(totalStake),
+              totalStake,
               totalReserve: quote.houseReserve,
               quotedGrossPayout: BucksStakeSchema.parse(quote.grossPayout),
             },

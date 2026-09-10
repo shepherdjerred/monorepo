@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import type { MessageCreateOptions } from "discord.js";
 import {
   BucksAmountSchema,
+  BucksPoolTotalSchema,
   BucksStakeSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
@@ -132,9 +133,9 @@ function remakeSettlement(): SettlementSummary {
     serverId: SERVER_ID,
     winningTeamId: undefined,
     voidReason: "remake",
-    winnersPool: BucksAmountSchema.parse(0),
-    losersPool: BucksAmountSchema.parse(0),
-    houseCut: BucksAmountSchema.parse(0),
+    winnersPool: BucksPoolTotalSchema.parse(0),
+    losersPool: BucksPoolTotalSchema.parse(0),
+    houseCut: BucksPoolTotalSchema.parse(0),
     bets: [],
   };
 }
@@ -146,9 +147,9 @@ function decidedSettlement(): SettlementSummary {
     serverId: SERVER_ID,
     winningTeamId: 100,
     voidReason: undefined,
-    winnersPool: BucksAmountSchema.parse(5),
-    losersPool: BucksAmountSchema.parse(5),
-    houseCut: BucksAmountSchema.parse(1),
+    winnersPool: BucksPoolTotalSchema.parse(5),
+    losersPool: BucksPoolTotalSchema.parse(5),
+    houseCut: BucksPoolTotalSchema.parse(1),
     bets: [
       {
         betId: 1,

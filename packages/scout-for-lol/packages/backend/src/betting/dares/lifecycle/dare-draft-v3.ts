@@ -1,5 +1,5 @@
 import {
-  BucksStakeSchema,
+  StorableBucksStakeSchema,
   DARE_SQL_V3_EVALUATOR_VERSION,
   DARE_V2_MAX_TARGETS,
   DareDeadlineSpecV2Schema,
@@ -112,7 +112,7 @@ export async function prepareDareDraftV3(
 > {
   const targets = DareTargetBindingV2Schema.array().parse(definition.targets);
   const deadlineSpec = DareDeadlineSpecV2Schema.parse(definition.deadlineSpec);
-  const stake = BucksStakeSchema.safeParse(definition.openingStake);
+  const stake = StorableBucksStakeSchema.safeParse(definition.openingStake);
   const issues = definitionIssues(definition, now);
   if (!stake.success) {
     issues.push("The opening stake must be a positive whole number of BB.");
