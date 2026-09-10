@@ -913,6 +913,19 @@ function activeOperationPrunes(app: Record<string, unknown>): boolean {
   return sync["prune"] === true;
 }
 
+function assertActiveFinalRootPrune(
+  application: Record<string, unknown>,
+  observation: OperationObservation,
+): void {
+  if (
+    activeOperationResourceIdentities(application) !== null ||
+    observation.liveReleasePhase !== "prune" ||
+    !activeOperationPrunes(application)
+  ) {
+    throw new Error("Active apps operation is not the marked final root prune");
+  }
+}
+
 function requestedOperationReleasePhase(
   application: unknown,
 ): ReleasePhase | undefined {
@@ -956,6 +969,13 @@ async function getExpectedSyncResultIdentities(
 ): Promise<ExpectedSyncResultIdentities> {
   return {
     desired: await getRenderedResourceIdentities(appName, revision, token),
+    pruned: new Set(),
+  };
+}
+
+function rootPruneRecoveryIdentities(): ExpectedSyncResultIdentities {
+  return {
+    desired: new Set([resourceIdentity("argoproj.io", "Application", "apps")]),
     pruned: new Set(),
   };
 }
@@ -1753,9 +1773,11 @@ async function sync(
       // operation starts. A recovery sees the post-prune tree, where a
       // successful candidate is already absent; reclassifying it would demand
       // a different result from the exact operation being recovered. The
-      // identity and full-source admission checks below still bind recovery to
-      // that preflighted operation, while every reported result must apply.
-      expectedResourceIdentities = { desired: new Set(), pruned: new Set() };
+      // prune-result contract is still the root Application plus those
+      // pre-operation candidates; only the root Application remains knowable
+      // after a successful prune. Admission still requires a marked
+      // full-source prune, and every reported result must apply.
+      expectedResourceIdentities = rootPruneRecoveryIdentities();
     } else {
       const rootExpectedResourceIdentities = await assertRootPruneSafe(
         token,
@@ -2531,16 +2553,17 @@ async function finalizeAsyncSync(
   // classification against live children would demand identities the
   // in-flight result no longer reports (successful prunes are already
   // absent; Argo also omits unchanged children from a prune result).
-  // Bind to the exact request/revision below and require every reported
-  // result to apply, matching recoverActiveRootPrune.
+  // An apps recovery therefore requires a marked full-source prune and
+  // the root Application in that result, matching recoverActiveRootPrune.
   const expectedResourceIdentities =
     appName === "apps"
-      ? { desired: new Set<string>(), pruned: new Set<string>() }
+      ? rootPruneRecoveryIdentities()
       : await getExpectedSyncResultIdentities(appName, exactRevision, token);
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
   while (Date.now() < deadline) {
-    const current = observeOperation(await getApplication(appName, token));
+    const application = await getApplication(appName, token);
+    const current = observeOperation(application);
     assertMatchingRevision(current, exactRequestId, exactRevision, appName);
     assertMatchingLiveRevision(current, exactRequestId, exactRevision, appName);
     const isExpectedLogicalOperation = operationMatches(
@@ -2557,6 +2580,13 @@ async function finalizeAsyncSync(
       throw new Error(
         `Refusing to terminate active ${appName} operation ${liveOperationDescription(current)}; expected request ${exactRequestId} at ${exactRevision}`,
       );
+    }
+    if (
+      appName === "apps" &&
+      current.hasLiveOperation &&
+      isExpectedLogicalLiveOperation
+    ) {
+      assertActiveFinalRootPrune(application, current);
     }
     if (
       isExpectedLogicalOperation &&
