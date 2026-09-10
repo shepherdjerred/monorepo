@@ -1,6 +1,5 @@
 import { filesUnder } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import {
-  parseJsonLine,
   parseRecord,
   stringValue,
 } from "@shepherdjerred/toolkit/lib/history/query/text.ts";
@@ -76,6 +75,13 @@ function applyTokenUsageRecord(
   );
 }
 
+/**
+ * A line that fails to parse as JSON is truncated or corrupt — propagated
+ * rather than skipped, so a partially-written rollout record doesn't
+ * silently shrink this thread's usage on the next scan (the cumulative
+ * `token_usage_record` this file is scanned for is exactly the kind of
+ * record most likely to be mid-write when read).
+ */
 function applyCodexRolloutLine(
   accumulator: CodexRolloutAccumulator,
   line: string,
@@ -83,7 +89,15 @@ function applyCodexRolloutLine(
   if (line.trim().length === 0) {
     return;
   }
-  const record = parseRecord(parseJsonLine(line));
+  let value: unknown;
+  try {
+    value = JSON.parse(line) as unknown;
+  } catch (error) {
+    throw new Error(`Malformed Codex rollout line: ${line.slice(0, 200)}`, {
+      cause: error,
+    });
+  }
+  const record = parseRecord(value);
   if (record === null) {
     return;
   }

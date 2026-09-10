@@ -271,7 +271,19 @@ async function scanCodex(paths: HistoryPaths): Promise<HistorySourceResult> {
       );
     }
     if (await pathExists(paths.codexHistoryJsonl)) {
-      documents.push(...(await scanCodexHistoryJsonl(paths.codexHistoryJsonl)));
+      const historyDocuments = await scanCodexHistoryJsonl(
+        paths.codexHistoryJsonl,
+      );
+      documents.push(
+        ...historyDocuments.map((document) =>
+          document.runtimeId !== null && usageByThread.has(document.runtimeId)
+            ? ({
+                ...document,
+                usageEvents: usageByThread.get(document.runtimeId) ?? [],
+              } satisfies HistoryDocument)
+            : document,
+        ),
+      );
     }
     // Usage that matched neither a thread-history row nor a catalog entry
     // still needs a place to live — otherwise `history usage` silently

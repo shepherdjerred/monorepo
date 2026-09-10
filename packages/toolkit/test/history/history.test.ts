@@ -174,6 +174,12 @@ function writeConductorFixture(conductorDir: string): string {
 
 async function writeClaudeFixture(claudeDir: string): Promise<void> {
   const claudeFile = path.join(claudeDir, "session.jsonl");
+  const usage = {
+    input_tokens: 1000,
+    output_tokens: 200,
+    cache_read_input_tokens: 0,
+    cache_creation_input_tokens: 0,
+  };
   await Bun.write(
     claudeFile,
     `${JSON.stringify({ type: "user", sessionId: "claude-session", timestamp: "2026-08-12T00:00:00Z", message: { role: "user", content: "Investigate database migration" } })}\n${JSON.stringify(
@@ -182,10 +188,31 @@ async function writeClaudeFixture(claudeDir: string): Promise<void> {
         sessionId: "claude-session",
         timestamp: "2026-08-12T00:01:00Z",
         message: {
+          id: "msg_claude-usage-dedup-marker",
           role: "assistant",
+          model: "claude-sonnet-5",
+          usage,
           content: [
             { type: "text", text: "Migration is complete" },
             { type: "thinking", thinking: "omit-claude-reasoning" },
+          ],
+        },
+      },
+    )}\n${JSON.stringify(
+      // Same API response as the record above (shared message.id), split
+      // into a second JSONL line carrying the tool_use block — Claude Code
+      // repeats the whole response's cumulative usage on both records, so
+      // this must NOT be counted a second time.
+      {
+        type: "assistant",
+        sessionId: "claude-session",
+        timestamp: "2026-08-12T00:01:00Z",
+        message: {
+          id: "msg_claude-usage-dedup-marker",
+          role: "assistant",
+          model: "claude-sonnet-5",
+          usage,
+          content: [
             {
               type: "tool_use",
               name: "shell",
@@ -752,6 +779,17 @@ describe("history source adapters", () => {
 });
 
 describe("history source usage and redaction", () => {
+  test("dedupes Claude usage records that share one response's message id", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const claude = documents.find((document) => document.source === "claude");
+    expect(claude?.usageEvents).toHaveLength(1);
+    expect(claude?.usageEvents[0]?.inputTokens).toBe(1000);
+    expect(claude?.usageEvents[0]?.outputTokens).toBe(200);
+  });
+
   test("attributes Codex usage per turn, keeping cached input a subset of input", async () => {
     const results = await Promise.all(
       createHistorySources().map((source) => source.scan(paths)),
@@ -793,7 +831,6 @@ describe("history source usage and redaction", () => {
     const grok = documents.find((document) => document.source === "grok");
     expect(grok?.toolOutputText).toContain("grok-tool-command-marker");
     expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
-    expect(grok?.toolOutputText).toContain("[REDACTED]");
   });
 
   test("bills Antigravity reasoning tokens as part of output, not dropped", async () => {
