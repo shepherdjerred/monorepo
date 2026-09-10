@@ -1,6 +1,6 @@
 ---
 title: LLM stack
-description: One ordinary-inference gateway, two native coding-agent exceptions, repository-owned model and eval contracts, and an observability boundary that puts full redacted content on every span.
+description: One ordinary-inference gateway, two native coding-agent exceptions, repository-owned model and eval contracts, and an observability boundary that puts full redacted content on every span and tail-samples LLM traces into Braintrust.
 sidebar:
   order: 5
 ---
@@ -48,14 +48,32 @@ Tempo's retention is 30 days: it is the durable body record, not the only one.
 Redaction happens before export, so credentials stay out of both stores.
 
 Traces enter storage through `alloy-gateway`, an unprivileged Grafana Alloy
-Deployment that receives OTLP/HTTP and forwards every span to Tempo. The
-gateway exists so that adding a trace consumer is gateway configuration rather
-than a credential and an exporter in every service. It is deliberately a
-second Alloy release: the existing `alloy` app is a privileged, hostPID eBPF
-profiler whose security boundary is having no ingress at all, and a trace
-gateway needs the opposite shape. The gateway carries no Kubernetes RBAC and
-mounts no service-account token: a network-facing pod that never calls the
-Kubernetes API gets nothing to escalate with.
+Deployment that receives OTLP/HTTP. It forwards every span to Tempo
+unconditionally and tail-samples LLM traces into Braintrust. The gateway
+exists so that adding a trace consumer is gateway configuration rather than a
+credential and an exporter in every service; Braintrust is that consumer. It
+is deliberately a second Alloy release: the existing `alloy` app is a
+privileged, hostPID eBPF profiler whose security boundary is having no ingress
+at all, and a trace gateway needs the opposite shape. The gateway carries no
+Kubernetes RBAC and mounts no service-account token: a network-facing pod that
+never calls the Kubernetes API gets nothing to escalate with.
+
+Braintrust is the hosted eval and observability consumer of those spans. The
+gateway keeps whole traces that contain `gen_ai.*` spans, deciding after a
+two-minute wait, because Braintrust renders a trace only around its root span.
+Sampling fragments would have produced orphaned children there. Kept traces
+route to per-service-stage projects — `scout-beta`, `scout-prod`, `birmel`,
+`temporal`, `discord-plays`, `misc` — through explicit allowlist branches
+sharing one org-wide API key. A service listed in no branch reaches no
+project. That exclusion is the byte-budget control for Braintrust's metered
+ingest, so there is deliberately no catch-all branch; OpenRouter Broadcast
+payloads in particular stay out. The kill switch for a runaway budget is
+removing a branch from the sampler's output list, which the config reloader
+applies without recreating the pod. The sampler's decision cache forwards
+late spans of already-kept traces, but spans that completed more than the
+decision window before a trace's first LLM span are gone for Braintrust.
+That loss is bounded to the pre-LLM bootstrap of long agent traces and is
+accepted; Tempo always holds the complete trace.
 
 OpenRouter Broadcast is a correlated second source of routing, provider, token,
 and actual-cost evidence. The authenticated `openrouter-broadcast-ingest`

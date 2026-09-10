@@ -640,9 +640,13 @@
       "clones": 1,
       "tokens": 73
     },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts": {
+      "clones": 1,
+      "tokens": 80
+    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout.ts": {
       "clones": 1,
-      "tokens": 131
+      "tokens": 88
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/media/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/syncthing.ts": {
       "clones": 1,

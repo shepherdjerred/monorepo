@@ -46,7 +46,7 @@ export function createBirmelChart(app: App) {
     },
   });
 
-  // NetworkPolicy: Allow egress to DNS, Flipt, Tempo (OTLP), PinchTab, and external HTTPS
+  // NetworkPolicy: Allow egress to DNS, Flipt, the OTLP trace gateway, PinchTab, and external HTTPS
   new KubeNetworkPolicy(chart, "birmel-egress-netpol", {
     metadata: { name: "birmel-egress-netpol" },
     spec: {
@@ -66,12 +66,12 @@ export function createBirmelChart(app: App) {
             { port: IntOrString.fromNumber(53), protocol: "TCP" },
           ],
         },
-        // Tempo OTLP (tempo.tempo.svc.cluster.local:4318)
+        // OTLP trace gateway (alloy-gateway.alloy-gateway.svc.cluster.local:4318)
         {
           to: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+                matchLabels: { "kubernetes.io/metadata.name": "alloy-gateway" },
               },
             },
           ],
