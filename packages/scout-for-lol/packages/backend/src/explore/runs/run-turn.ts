@@ -4,6 +4,7 @@ import {
   EXPLORE_TIMEOUT_MS,
   type DiscordChannelId,
   type ExploreMessage,
+  ExploreStreamMessageSchema,
   type ExploreStreamEvent,
   type ExploreTraceEntry,
 } from "@scout-for-lol/data";
@@ -44,10 +45,12 @@ export type StartedExploreTurn = {
   expectedCurrentLeafId: string | null;
 };
 
-export type ExploreTurnTerminalEvent = Extract<
-  ExploreStreamEvent,
-  { type: "error" | "final" }
->;
+export type ExploreTurnTerminalEvent =
+  | Extract<ExploreStreamEvent, { type: "error" }>
+  | (Omit<Extract<ExploreStreamEvent, { type: "final" }>, "message"> & {
+      /** The runner returns the full persisted record for non-web surfaces. */
+      message: ExploreMessage;
+    });
 export type ExploreTurnOutcome = Extract<
   ExploreStreamEvent,
   { type: "done" }
@@ -69,6 +72,23 @@ const defaultDependencies: ExploreTurnDependencies = {
   now: Date.now,
   timeoutMs: EXPLORE_TIMEOUT_MS,
 };
+
+/**
+ * A deployed server can finish a turn in a tab whose bundle predates a new
+ * persisted message field. The terminal stream remains backward compatible;
+ * the client refetches the complete transcript after `done`.
+ */
+function toStreamMessage(message: ExploreMessage) {
+  const { matchCards: _matchCards, ...streamMessage } = message;
+  return ExploreStreamMessageSchema.parse(streamMessage);
+}
+
+function toStreamTerminal(
+  terminal: ExploreTurnTerminalEvent,
+): ExploreStreamEvent {
+  if (terminal.type === "error") return terminal;
+  return { ...terminal, message: toStreamMessage(terminal.message) };
+}
 
 /**
  * Run and persist one Explore turn independently of its delivery adapter.
@@ -208,7 +228,7 @@ export async function runPersistedExploreTurn(
       title,
       quota: getExploreQuotaStatus(input.identity, dependencies.now()).quota,
     };
-    await input.emit(terminal);
+    await input.emit(toStreamTerminal(terminal));
     return { ...terminal, outcome: "succeeded" };
   } catch (error) {
     const outcome = abortController.signal.aborted
@@ -271,7 +291,7 @@ export async function runPersistedExploreTurn(
             title: input.started.title,
             quota,
           };
-    await input.emit(terminal);
+    await input.emit(toStreamTerminal(terminal));
     return { ...terminal, outcome };
   } finally {
     clearTimeout(timeout);

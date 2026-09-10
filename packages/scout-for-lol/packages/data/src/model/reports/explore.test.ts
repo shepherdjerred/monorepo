@@ -4,6 +4,8 @@ import {
   ExploreAnswerWireSchema,
 } from "#src/model/reports/explore-answer.ts";
 import {
+  ExploreMessageSchema,
+  ExploreStreamMessageSchema,
   ExploreTraceEntrySchema,
   parseExploreStreamEvent,
 } from "#src/model/reports/explore.ts";
@@ -101,6 +103,21 @@ describe("ExploreTraceEntrySchema", () => {
 });
 
 describe("parseExploreStreamEvent", () => {
+  test("keeps final stream messages compatible with pre-card tabs", () => {
+    const message = ExploreMessageSchema.parse({
+      id: "018f7ee5-2d88-7d88-b5ea-1f82c55367b2",
+      role: "assistant",
+      content: "The match was a bloodbath.",
+      createdAt: "2026-09-10T04:00:00.000Z",
+    });
+    const { matchCards: _matchCards, ...streamMessage } = message;
+
+    expect(ExploreStreamMessageSchema.parse(streamMessage)).not.toHaveProperty(
+      "matchCards",
+    );
+    expect(() => ExploreStreamMessageSchema.parse(message)).toThrow();
+  });
+
   test("parses a known event", () => {
     const event = parseExploreStreamEvent({
       type: "answer_delta",

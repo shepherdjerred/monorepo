@@ -305,6 +305,16 @@ export const ExploreMessageSchema = z
 
 export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
 
+/**
+ * The final SSE event is consumed by tabs whose bundle can predate a server
+ * deployment. Keep it to the pre-card message shape: after `done`, current
+ * clients refetch the persisted transcript, where match cards are available.
+ */
+export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
+  matchCards: true,
+}).strict();
+export type ExploreStreamMessage = z.infer<typeof ExploreStreamMessageSchema>;
+
 export const ExploreConversationSchema = z
   .object({
     id: ExploreConversationIdSchema,
@@ -532,7 +542,7 @@ export const ExploreStreamEventSchema = z.discriminatedUnion("type", [
   z
     .object({
       type: z.literal("final"),
-      message: ExploreMessageSchema,
+      message: ExploreStreamMessageSchema,
       title: ExploreConversationTitleSchema,
       quota: z.array(ExploreQuotaSnapshotSchema),
     })
