@@ -206,6 +206,9 @@ describe("normalizePath", () => {
 
   test("templates explore conversation ids", () => {
     expect(normalizePath("/explore")).toBe("/explore");
+    expect(normalizePath("/explore/matches/NA1_5635906026")).toBe(
+      "/explore/matches/:matchId",
+    );
     expect(normalizePath("/explore/1b4e28ba-2fa1-41d2-883f-0016d3cca427")).toBe(
       "/explore/:conversationId",
     );
