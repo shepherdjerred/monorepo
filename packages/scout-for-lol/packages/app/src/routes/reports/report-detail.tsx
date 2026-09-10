@@ -7,9 +7,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ReportId } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
-import { channelLabel } from "#src/lib/format.ts";
+import { channelLabel } from "#src/lib/format/format.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useReportParams } from "#src/lib/route-params.ts";
+import { useReportParams } from "#src/lib/routes/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {

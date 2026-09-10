@@ -74,7 +74,7 @@ import {
   reportsLoader,
   requireSessionLoader,
   subscriptionsLoader,
-} from "#src/lib/route-loaders.ts";
+} from "#src/lib/routes/route-loaders.ts";
 
 // Each `/g/:guildId` child carries its own errorElement so a section failure
 // renders inside GuildWorkspace's outlet — the workspace nav chrome survives.

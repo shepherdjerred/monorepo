@@ -7,8 +7,8 @@ import {
   visibilityToString,
 } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
-import { formatDate } from "#src/lib/format.ts";
-import { summarizeCriteria } from "#src/lib/criteria-summary.ts";
+import { formatDate } from "#src/lib/format/format.ts";
+import { summarizeCriteria } from "#src/lib/format/criteria-summary.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { LoadMore } from "#src/components/chrome/load-more.tsx";

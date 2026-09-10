@@ -56,7 +56,7 @@ import {
   settleEndedDareWindows,
 } from "#src/betting/dares/settlement/dare-sweep.ts";
 import { ensureBucksAccount } from "#src/betting/accounts.ts";
-import { cancellationHouseCut } from "#src/betting/house-cut.ts";
+import { cancellationHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import { refundableBucksHeld } from "#src/betting/ledger.ts";
 import {
   addFlagOverride,

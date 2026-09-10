@@ -6,7 +6,7 @@ import {
 } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { currentDareV2State } from "#src/betting/dares/dare-v2-common.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 
 async function freshFacts(tx: Db, dareId: number) {
   const dare = await tx.bucksDareV2.findUniqueOrThrow({

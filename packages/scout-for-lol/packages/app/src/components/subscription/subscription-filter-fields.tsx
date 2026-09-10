@@ -15,7 +15,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@scout-for-lol/design-system/components/popover";
+} from "@scout-for-lol/design-system/components/overlays/popover";
 import { cn } from "#src/lib/cn.ts";
 
 /** Build a filter spec from a set of queues (empty selection = null). */

@@ -11,7 +11,7 @@ import {
   FieldError,
   Input,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { TimezoneSelect } from "#src/components/timezone-select.tsx";
 import { fieldErrorMessage } from "#src/components/semantic-form.tsx";
 

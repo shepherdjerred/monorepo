@@ -4,9 +4,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
-import { Switch } from "@scout-for-lol/design-system/components/switch";
+import { Switch } from "@scout-for-lol/design-system/components/forms/switch";
 import type { ImageGenerationStageConfig } from "#src/lib/review-tool/config/schema.ts";
 import { IMAGE_GENERATION_USER_PROMPT } from "@scout-for-lol/data";
 import { PromptEditor } from "./prompt-editor.tsx";

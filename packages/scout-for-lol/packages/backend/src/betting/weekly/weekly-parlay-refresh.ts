@@ -10,7 +10,7 @@ import {
   WeeklyParlayDefinitionCriteriaSchema,
   WeeklyParlaySubjectsSchema,
 } from "#src/betting/weekly/weekly-parlay-criteria.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { weeklyParlayDeliveryContent } from "#src/betting/weekly/weekly-parlay-discord-copy.ts";
 import { weeklyParlayMessageOptions } from "#src/betting/weekly/weekly-parlay-discord.ts";
 import type { WeeklyParlayDiscordSender } from "#src/betting/weekly/weekly-parlay-discord.ts";

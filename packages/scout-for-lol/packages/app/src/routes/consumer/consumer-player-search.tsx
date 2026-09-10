@@ -2,7 +2,7 @@ import { Loaded } from "@shepherdjerred/loaded";
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Combobox } from "@scout-for-lol/design-system/components/combobox";
+import { Combobox } from "@scout-for-lol/design-system/components/forms/combobox";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -15,7 +15,7 @@ import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
 import { PageSectionHeading } from "#src/components/chrome/page-section-heading.tsx";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { track } from "#src/lib/analytics.ts";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
+import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export const PROTECTED_CONSUMER_SEARCH_QUERY_OPTIONS = {

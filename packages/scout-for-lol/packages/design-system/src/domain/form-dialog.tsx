@@ -6,7 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "#src/components/dialog.tsx";
+} from "#src/components/overlays/dialog.tsx";
 
 export function FormDialogFrame(props: {
   open: boolean;

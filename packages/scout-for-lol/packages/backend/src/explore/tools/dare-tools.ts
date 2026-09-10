@@ -26,7 +26,7 @@ import {
   listVisibleDaresV2,
 } from "#src/betting/dares/presentation/dare-view-v2.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
-import { historicallyPreviewDareV2 } from "#src/betting/dares/presentation/dare-preview-v2.ts";
+import { historicallyPreviewDareV2 } from "#src/betting/dares/presentation/preview/dare-preview-v2.ts";
 import {
   renderDarePlanV2,
   renderDareProofPlanV2,

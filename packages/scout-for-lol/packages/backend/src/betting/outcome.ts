@@ -4,7 +4,7 @@ import {
   REMAKE_MAX_DURATION_SECONDS,
   STANDARD_LOBBY_SIZE,
 } from "#src/betting/constants.ts";
-import { isStandardLobby } from "#src/betting/eligibility.ts";
+import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
 
 /**
  * What a finished match means for a betting pool.

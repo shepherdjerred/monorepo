@@ -8,7 +8,7 @@ import {
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { stakeDareV2ContributionInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 
 const OPEN_DARE_STATES: ReadonlySet<BucksDareV2State> = new Set(
   OPEN_BUCKS_DARE_V2_STATES,

@@ -14,7 +14,7 @@ import { ErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
 import { useGuildAnalyticsContext } from "#src/hooks/use-guild-analytics-context.ts";
 import { permissionsForGuildActionRoute } from "#src/lib/player/guild-route-permissions.ts";
 import { STALE_TIME_SLOW_LIST } from "#src/lib/query/stale-times.ts";
-import { GUILD_NAVIGATION_ITEMS } from "#src/lib/app-navigation.ts";
+import { GUILD_NAVIGATION_ITEMS } from "#src/lib/routes/app-navigation.ts";
 import { analyticsContextRoute } from "#src/lib/analytics.ts";
 
 export function GuildWorkspace() {

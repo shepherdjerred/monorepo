@@ -16,7 +16,7 @@ await runTemporalNodeScript({
   repositoryRoot,
   scriptPath: path.join(
     packageRoot,
-    "scripts/replay-candidate-histories-node.ts",
+    "scripts/replay/replay-candidate-histories-node.ts",
   ),
   scriptArgs: ["--stage", stage, ...workflowIds],
 });

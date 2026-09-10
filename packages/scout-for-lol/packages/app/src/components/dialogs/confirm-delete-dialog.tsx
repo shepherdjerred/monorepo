@@ -5,7 +5,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
 import { DialogFormFooter } from "#src/components/dialog-form.tsx";
 
 /**

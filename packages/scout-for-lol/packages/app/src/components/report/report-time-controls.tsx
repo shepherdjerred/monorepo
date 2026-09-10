@@ -7,7 +7,7 @@ import {
   type ReportTimeWindow,
 } from "@scout-for-lol/data/model/scoutql/editor/report-time-spec.ts";
 import type { ReportTimeBucket } from "@scout-for-lol/data/model/scoutql/editor/report-time-spec-bucket.ts";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
 
 // ── The report's time controls ───────────────────────────────────────────────

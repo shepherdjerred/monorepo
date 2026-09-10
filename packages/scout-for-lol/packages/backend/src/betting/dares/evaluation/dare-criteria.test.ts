@@ -6,7 +6,7 @@ import {
   type RawMatch,
   type RawParticipant,
 } from "@scout-for-lol/data";
-import { ParticipantNumericFieldSchema } from "#src/betting/parlays/parlay-catalog.ts";
+import { ParticipantNumericFieldSchema } from "#src/betting/parlays/model/parlay-catalog.ts";
 import {
   DARE_EXCLUDED_NUMERIC_FIELDS,
   DareConditionsSchema,

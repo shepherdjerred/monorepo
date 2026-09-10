@@ -10,7 +10,7 @@ import {
   type RawMatch,
   type RawParticipant,
 } from "@scout-for-lol/data";
-import { isStandardLobby } from "#src/betting/eligibility.ts";
+import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
 import { isScoutTournamentLobby } from "#src/league/tournament/scout-lobby-lookup.ts";
 import {
   BUCKS_EARNING_QUEUES,

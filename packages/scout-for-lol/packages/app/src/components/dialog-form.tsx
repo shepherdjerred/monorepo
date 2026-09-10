@@ -9,7 +9,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
 import {
   FormPendingStatus,
   handleFormSubmit,

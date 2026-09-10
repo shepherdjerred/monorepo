@@ -33,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import { LoadMore } from "#src/components/chrome/load-more.tsx";
 import {
   Table,

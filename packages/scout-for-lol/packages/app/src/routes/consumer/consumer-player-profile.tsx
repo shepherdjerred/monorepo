@@ -18,8 +18,8 @@ import { CombinedPerformance } from "#src/components/player/player-combined-perf
 import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
-import { useConsumerPlayerParams } from "#src/lib/route-params.ts";
+import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
+import { useConsumerPlayerParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
   filterKey,

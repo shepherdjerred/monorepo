@@ -4,7 +4,7 @@ import {
   isExplorePath,
   resolveAppShellMode,
   shouldRenderGlobalFooter,
-} from "#src/lib/app-navigation.ts";
+} from "#src/lib/routes/app-navigation.ts";
 
 describe("RootLayout shell selection", () => {
   test("uses the workspace shell for signed-in product routes", () => {

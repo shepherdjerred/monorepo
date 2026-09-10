@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "#src/components/card.tsx";
-import { Checkbox } from "#src/components/checkbox.tsx";
+import { Checkbox } from "#src/components/forms/checkbox.tsx";
 import {
   Dialog,
   DialogContent,
@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "#src/components/dialog.tsx";
+} from "#src/components/overlays/dialog.tsx";
 import {
   Field,
   FieldDescription,
@@ -36,17 +36,17 @@ import {
   Input,
   Label,
   Textarea,
-} from "#src/components/field.tsx";
+} from "#src/components/forms/field.tsx";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "#src/components/select.tsx";
+} from "#src/components/forms/select.tsx";
 import { Skeleton } from "#src/components/skeleton.tsx";
 import { Spinner } from "#src/components/spinner.tsx";
-import { Switch } from "#src/components/switch.tsx";
+import { Switch } from "#src/components/forms/switch.tsx";
 import {
   Tabs,
   TabsContent,

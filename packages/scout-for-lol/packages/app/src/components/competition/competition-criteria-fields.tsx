@@ -10,7 +10,7 @@ import {
   queueMatchesGameVariant,
 } from "@scout-for-lol/data";
 import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import {
   BuilderFieldError,

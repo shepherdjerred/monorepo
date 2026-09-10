@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Combobox } from "@scout-for-lol/design-system/components/combobox";
+import { Combobox } from "@scout-for-lol/design-system/components/forms/combobox";
 
 type Zone = {
   id: string;

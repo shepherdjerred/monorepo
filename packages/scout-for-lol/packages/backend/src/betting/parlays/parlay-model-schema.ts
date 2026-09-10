@@ -6,17 +6,17 @@ import {
   ParticipantNumericFieldSchema,
   TeamBooleanFieldSchema,
   TeamObjectiveSchema,
-} from "#src/betting/parlays/parlay-catalog.ts";
+} from "#src/betting/parlays/model/parlay-catalog.ts";
 import {
   PARLAY_HISTORY_COLUMNS,
   TEAM_OBJECTIVE_HISTORY_COLUMNS,
-} from "#src/betting/parlays/parlay-stat-fields.ts";
+} from "#src/betting/parlays/model/parlay-stat-fields.ts";
 import {
   candidateTargetKey,
   ParlayCandidateTargetSchema,
   type ParlayCandidateTarget,
   type ParlayShortlist,
-} from "#src/betting/parlays/parlay-shortlist.ts";
+} from "#src/betting/parlays/model/parlay-shortlist.ts";
 import { proposalConditionIssues } from "#src/betting/parlays/parlay-proposal-validation.ts";
 import {
   GeneratedParlaySchema,
@@ -24,7 +24,7 @@ import {
   parlaySemanticIssues,
   type GeneratedParlay,
   type ParlaySubject,
-} from "#src/betting/parlays/parlay-criteria.ts";
+} from "#src/betting/parlays/model/parlay-criteria.ts";
 
 const NumericOperatorSchema = z.enum(["gte", "lte", "eq"]);
 const ProposalNumericOperatorSchema = z.enum(["gte", "lte"]);

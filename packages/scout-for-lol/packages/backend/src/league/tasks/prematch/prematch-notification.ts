@@ -33,7 +33,7 @@ import {
   prematchLoadingScreenGeneratedTotal,
   prematchLoadingScreenDurationSeconds,
 } from "#src/metrics/index.ts";
-import { isStandardLobby } from "#src/betting/eligibility.ts";
+import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
 import { withBucksDigest } from "#src/betting/markets/prematch-line.ts";
 import {
   prepareBucksPrematch,

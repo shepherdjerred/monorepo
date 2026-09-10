@@ -9,7 +9,7 @@ import { CronPresets } from "@scout-for-lol/data/model/competitions/competition-
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { useGuildParams } from "#src/lib/route-params.ts";
+import { useGuildParams } from "#src/lib/routes/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import { ReportRunStatusBadge } from "#src/components/chrome/status-badge.tsx";

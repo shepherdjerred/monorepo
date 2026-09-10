@@ -12,8 +12,8 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@scout-for-lol/design-system/components/dialog";
-import { Input } from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/overlays/dialog";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Textarea } from "@scout-for-lol/design-system/components/textarea";
 import {
   DareEditorReview,

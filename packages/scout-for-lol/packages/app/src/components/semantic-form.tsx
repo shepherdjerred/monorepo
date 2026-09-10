@@ -20,7 +20,7 @@ import {
   Input,
   Label,
   Textarea,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 
 const StandardIssueSchema = z.object({ message: z.string() });
 

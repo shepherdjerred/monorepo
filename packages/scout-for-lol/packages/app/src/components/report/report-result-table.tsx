@@ -15,7 +15,7 @@ import {
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
-import { Input } from "@scout-for-lol/design-system/components/field";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import {
   Table,
   TableBody,

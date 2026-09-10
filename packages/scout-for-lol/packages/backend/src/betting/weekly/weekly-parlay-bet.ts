@@ -12,7 +12,7 @@ import {
   findEligiblePlayer,
   HouseInsufficientError as WalletHouseInsufficientError,
 } from "#src/betting/accounts.ts";
-import { ensureHouseAccountInTransaction } from "#src/betting/house.ts";
+import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import {
   applyBucksDelta,
   BucksStorageOverflowError,
@@ -21,7 +21,7 @@ import {
 import {
   addInt32,
   quoteParlayPosition,
-} from "#src/betting/parlays/parlay-odds.ts";
+} from "#src/betting/parlays/model/parlay-odds.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {

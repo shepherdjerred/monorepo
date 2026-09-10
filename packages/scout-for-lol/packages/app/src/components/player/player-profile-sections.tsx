@@ -23,7 +23,7 @@ import {
   TableRow,
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
-import { formatRiotId } from "#src/lib/riot-id-format.ts";
+import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 import { RankDisplay } from "@scout-for-lol/design-system/domain/rank-display";
 
 export function formatPercent(value: number | null): string {

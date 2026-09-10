@@ -1,0 +1,359 @@
+import { memo, useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
+import type {
+  ExploreMessage,
+  ExploreTraceEntry,
+  ReportAiPreviewSummary,
+  VisualizationSnapshot,
+} from "@scout-for-lol/data";
+import {
+  Button,
+  IconButton,
+} from "@scout-for-lol/design-system/components/button";
+import { Textarea } from "@scout-for-lol/design-system/components/textarea";
+import { Disclosure } from "#src/components/explore/explore-disclosure.tsx";
+import { ExploreIntentCards } from "#src/components/explore/intent/explore-intent-cards.tsx";
+import { ExploreToolTrace } from "#src/components/explore/explore-tool-trace.tsx";
+import { ExploreVersionSwitcher } from "#src/components/explore/explore-version-switcher.tsx";
+import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
+import { AssistantTurn } from "#src/components/explore/transcript/explore-assistant-turn.tsx";
+import { useNow } from "#src/hooks/use-now.ts";
+import { formatDuration } from "#src/lib/format/format-duration.ts";
+
+/**
+ * Renders one path through an explore conversation.
+ *
+ * Used by both the live page and the read-only shared page, which is what
+ * keeps a shared link looking like what the asker saw. The prose is the
+ * answer; a chart or table is attached only when the agent opted in; the
+ * ScoutQL and the tool trace are evidence, collapsed by default so they do
+ * not compete with the answer.
+ *
+ * Actions are opt-in per callback, so the shared view gets the same rendering
+ * with none of the controls simply by passing none of them. The turns are
+ * memoized and the streaming turn renders in its own leaf, so a token
+ * arriving re-renders one small component rather than every prior message.
+ */
+import type { ExploreTranscriptActions } from "#src/components/explore/transcript/explore-transcript-actions.ts";
+
+/** Stable identity so memoized turns don't re-render on the shared page. */
+const EMPTY_ACTIONS: ExploreTranscriptActions = {};
+
+export function ExploreTranscript(props: {
+  messages: ExploreMessage[];
+  /** Prose streaming in for a turn that has not been persisted yet. */
+  pendingAnswer?: string | null;
+  pendingQuestion?: string | null;
+  activity?: string | null;
+  /** The status describes a deliberate stop, not work still in flight. */
+  stopping?: boolean;
+  pendingTrace?: ExploreTraceEntry[];
+  /**
+   * The newest query result received while streaming. Kept on the API so a
+   * reconnect still restores it, but not rendered — the agent decides whether
+   * a chart or table belongs, and that only lands with the persisted message.
+   */
+  pendingPreview?: ReportAiPreviewSummary | null;
+  pendingVisualization?: VisualizationSnapshot | null;
+  /** True while a turn is running, so a trailing question is not "interrupted". */
+  turnActive?: boolean;
+  /** Owner-only raw tool payloads are never offered on the shared route. */
+  showRawTrace?: boolean;
+  actions?: ExploreTranscriptActions;
+  hasError?: boolean;
+}) {
+  const actions = props.actions ?? EMPTY_ACTIONS;
+  const turnActive = props.turnActive ?? false;
+  const latestMessageId = props.messages.at(-1)?.id ?? null;
+  const stranded =
+    props.hasError === true
+      ? null
+      : strandedQuestion(props.messages, turnActive);
+  return (
+    <div role="log" aria-label="Conversation">
+      {/* Spacing carries the grouping: an answer sits close to the question it
+          belongs to, and the next exchange starts well clear of it. A uniform
+          gap made every message look equally (un)related to its neighbours. */}
+      {props.messages.map((message) =>
+        message.role === "user" ? (
+          <div key={message.id} className="mt-10 first:mt-0">
+            <UserTurn message={message} actions={actions} />
+          </div>
+        ) : (
+          <div key={message.id} className="mt-3">
+            <AssistantTurn
+              message={message}
+              actions={actions}
+              showRawTrace={props.showRawTrace ?? false}
+              showFollowUps={!turnActive && message.id === latestMessageId}
+            />
+          </div>
+        ),
+      )}
+
+      {stranded !== null && (
+        <div className="mt-3">
+          <InterruptedTurn question={stranded} actions={actions} />
+        </div>
+      )}
+
+      <PendingTurn
+        pendingQuestion={props.pendingQuestion ?? null}
+        pendingAnswer={props.pendingAnswer ?? null}
+        activity={props.activity ?? null}
+        stopping={props.stopping ?? false}
+        trace={props.pendingTrace ?? []}
+        showRawTrace={props.showRawTrace ?? false}
+      />
+    </div>
+  );
+}
+
+/**
+ * The question a turn never answered, or null when there isn't one.
+ *
+ * A turn abandoned before it streamed any prose salvages nothing — that is
+ * deliberate ("only a turn that said nothing salvages nothing"), so no refetch
+ * will ever fill the gap. Without this the reader is left with their own
+ * question, no answer, no error and no way forward, which reads as the page
+ * being broken rather than as an interruption. Switching conversations
+ * mid-turn is the ordinary way to reach it.
+ */
+export function strandedQuestion(
+  messages: ExploreMessage[],
+  turnActive: boolean,
+): ExploreMessage | null {
+  if (turnActive) {
+    return null;
+  }
+  const last = messages.at(-1);
+  return last?.role === "user" ? last : null;
+}
+
+function InterruptedTurn(props: {
+  question: ExploreMessage;
+  actions: ExploreTranscriptActions;
+}) {
+  const retry = props.actions.onRetry;
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-dashed border-scout-border px-3 py-2 text-sm text-scout-subtle">
+      <span>This question was interrupted before it was answered.</span>
+      {retry !== undefined && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            retry(props.question);
+          }}
+        >
+          Answer it
+        </Button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * The streaming turn. Its own memoized leaf so per-token updates re-render
+ * only this, and a live region so assistive tech announces the answer as it
+ * arrives — the region stays mounted even when idle, because screen readers
+ * only announce additions to a region they registered before content came.
+ */
+const PendingTurn = memo(function PendingTurnView(props: {
+  pendingQuestion: string | null;
+  pendingAnswer: string | null;
+  activity: string | null;
+  stopping: boolean;
+  trace: ExploreTraceEntry[];
+  showRawTrace: boolean;
+}) {
+  /**
+   * The status line describes work in flight, so it goes away once prose is
+   * arriving — the answer itself is then the progress.
+   *
+   * Without this the last tool's completion message ("Got results.") keeps
+   * pulsing and counting for the whole of answer generation, presenting a
+   * finished step as ongoing work and timing it from the wrong moment.
+   *
+   * Stopping is the exception, and the reason this is not simply "hide it once
+   * there is prose": a stop only ever salvages a turn that already streamed
+   * something, so "Stopped — saving the partial answer…" arrives precisely
+   * when prose exists. Hiding it there leaves the reader watching a frozen
+   * answer with nothing to say the stop is still landing.
+   */
+  const activity =
+    props.pendingAnswer === null || props.stopping ? props.activity : null;
+  return (
+    <div aria-live="polite" className="space-y-6">
+      {props.pendingQuestion !== null && (
+        <UserBubble content={props.pendingQuestion} />
+      )}
+      {props.pendingAnswer !== null && (
+        <MarkdownAnswer>{props.pendingAnswer}</MarkdownAnswer>
+      )}
+      {props.showRawTrace && <ExploreIntentCards trace={props.trace} />}
+      {/* A query result is not shown here. The agent decides whether a chart
+          or table belongs on the turn, and that decision only lands with the
+          persisted message. Rendering the last query the moment it returns
+          would show a table the agent then opted not to attach. */}
+      {/* Status and steps are one unit — the line says what is happening now,
+          the disclosure holds how it got here — so they sit closer together
+          than the surrounding `space-y-6` rhythm. */}
+      {(activity !== null || props.trace.length > 0) && (
+        <div className="space-y-2">
+          {activity !== null && <ActivityLine activity={activity} />}
+          {props.trace.length > 0 && (
+            <Disclosure label={`Steps (${String(props.trace.length)})`}>
+              <ExploreToolTrace
+                trace={props.trace}
+                showRaw={props.showRawTrace}
+                live
+              />
+            </Disclosure>
+          )}
+        </div>
+      )}
+    </div>
+  );
+});
+
+/**
+ * The one line that says what the turn is doing right now.
+ *
+ * It carries an elapsed counter because the wait it narrates is the longest
+ * part of a turn — a lake scan can run for tens of seconds — and a status that
+ * never changes reads as a hang. The clock is measured from when this text
+ * last changed, so it answers "how long has *this* step been going", not "how
+ * long has the turn been going"; two consecutive identical statuses therefore
+ * share one clock, which is the honest reading of them being one step.
+ *
+ * The timing lives here rather than in the reducer on purpose: the reducer is
+ * pure and tested without a DOM, and a `Date.now()` inside it would make every
+ * stream-folding test depend on the clock.
+ */
+function ActivityLine(props: { activity: string }) {
+  const [span, setSpan] = useState(() => ({
+    activity: props.activity,
+    startedAt: Date.now(),
+  }));
+  if (span.activity !== props.activity) {
+    setSpan({ activity: props.activity, startedAt: Date.now() });
+  }
+  const now = useNow(100);
+  const elapsedMs = Math.max(0, now - span.startedAt);
+  return (
+    <p className="flex items-center gap-2 text-sm text-scout-subtle">
+      <span className="inline-block size-2 animate-pulse rounded-full bg-current" />
+      <span>{props.activity}</span>
+      {elapsedMs >= ELAPSED_VISIBLE_AFTER_MS && (
+        // Hidden from the live region this sits inside: it changes every
+        // 100 ms, and a screen reader announcing every tick would
+        // talk over the streamed answer and the status text that actually
+        // says something.
+        <span aria-hidden="true" className="tabular-nums">
+          {formatDuration(elapsedMs)}
+        </span>
+      )}
+    </p>
+  );
+}
+
+/**
+ * Below this the counter is noise — every step shows a number for a moment on
+ * the way past, and a counter that flickers in and out for fast steps draws
+ * the eye away from the text that actually says what is happening.
+ */
+const ELAPSED_VISIBLE_AFTER_MS = 1000;
+
+function UserBubble(props: { content: string }) {
+  return (
+    <div className="flex w-full justify-end">
+      <p className="max-w-[80%] rounded-lg bg-scout-hover px-4 py-1.5 text-sm whitespace-pre-wrap">
+        {props.content}
+      </p>
+    </div>
+  );
+}
+
+const UserTurn = memo(function UserTurnView(props: {
+  message: ExploreMessage;
+  actions: ExploreTranscriptActions;
+}) {
+  const { message, actions } = props;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(message.content);
+
+  // A late-arriving refetch shouldn't strand the textarea on stale text.
+  useEffect(() => {
+    setDraft(message.content);
+  }, [message.content]);
+
+  if (editing) {
+    return (
+      <div className="space-y-2">
+        <Textarea
+          value={draft}
+          rows={3}
+          onChange={(event) => {
+            setDraft(event.target.value);
+          }}
+        />
+        <div className="flex justify-end gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setDraft(message.content);
+              setEditing(false);
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            disabled={draft.trim().length === 0}
+            onClick={() => {
+              setEditing(false);
+              actions.onEdit?.(message, draft.trim());
+            }}
+          >
+            Ask again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    // `group` + focus-within, not hover alone: the controls must still be
+    // reachable by keyboard. Previously the pencil sat permanently in its own
+    // band of empty space under every question, reading as a stray element.
+    <div className="group flex flex-col items-end gap-1">
+      <UserBubble content={message.content} />
+      <div className="flex items-center gap-1">
+        {/* Always visible: it is the only signal that other versions of this
+            question exist, so hiding it until hover would hide the feature. */}
+        <ExploreVersionSwitcher
+          message={message}
+          onSelectVersion={actions.onSelectVersion}
+        />
+        {actions.onEdit !== undefined && (
+          <span className="opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+            <IconButton
+              label="Edit this question"
+              size="icon-sm"
+              variant="ghost"
+              title="Edit this question"
+              onClick={() => {
+                setEditing(true);
+              }}
+            >
+              <Pencil className="size-3.5" />
+            </IconButton>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+});

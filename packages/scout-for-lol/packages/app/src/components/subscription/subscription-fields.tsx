@@ -6,7 +6,7 @@ import {
   FieldError,
   Label,
   FormSection,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { RiotIdCombobox } from "#src/components/riot-id-combobox.tsx";
 import { DiscordMemberCombobox } from "#src/components/discord-member-combobox.tsx";
 import { SubscriptionFilterFields } from "#src/components/subscription/subscription-filter-fields.tsx";

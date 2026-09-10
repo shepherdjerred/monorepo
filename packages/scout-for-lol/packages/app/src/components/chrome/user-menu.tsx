@@ -7,7 +7,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 import { SUPPORT_URL } from "#src/lib/support.ts";
 import { resetIdentity, trackAndFlush } from "#src/lib/analytics.ts";
 

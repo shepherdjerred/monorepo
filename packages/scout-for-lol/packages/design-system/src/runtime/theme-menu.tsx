@@ -4,7 +4,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "#src/components/popover.tsx";
+} from "#src/components/overlays/popover.tsx";
 import { type ScoutModePreference, type ScoutSkin } from "./theme.ts";
 import { useScoutTheme } from "./context.tsx";
 

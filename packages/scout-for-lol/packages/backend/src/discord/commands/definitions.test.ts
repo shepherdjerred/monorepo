@@ -8,8 +8,8 @@ import {
 } from "#src/discord/commands/definitions.ts";
 import { listGuildsWithFlagEnabled } from "#src/configuration/flags.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
-import { isPublicBbSubcommand } from "#src/discord/commands/bb.ts";
-import { bbCommand } from "#src/discord/commands/bb-definition.ts";
+import { isPublicBbSubcommand } from "#src/discord/commands/bb/bb.ts";
+import { bbCommand } from "#src/discord/commands/bb/bb-definition.ts";
 import { lobbyCommand } from "#src/discord/commands/lobby-definition.ts";
 
 const originalAllowlist = Bun.env["EXPLORE_GUILD_ALLOWLIST"];

@@ -12,7 +12,7 @@ import { analyticsMeta } from "#src/lib/analytics.ts";
 import { nextRiotIdPollInterval } from "#src/lib/riot-id-poll.ts";
 import { findRegion, type RegionValue } from "#src/lib/regions.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { usePlayerParams } from "#src/lib/route-params.ts";
+import { usePlayerParams } from "#src/lib/routes/route-params.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,

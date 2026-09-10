@@ -9,8 +9,8 @@ import {
   type BucksPoolParticipant,
   type BucksVoidReason,
 } from "@scout-for-lol/data";
-import { HOUSE_CUT_PERCENT } from "#src/betting/house-cut.ts";
-import { transferHouseCut } from "#src/betting/house.ts";
+import { HOUSE_CUT_PERCENT } from "#src/betting/eligibility/house-cut.ts";
+import { transferHouseCut } from "#src/betting/eligibility/house.ts";
 import { applyBucksDelta } from "#src/betting/ledger.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import type { Db } from "#src/database/index.ts";

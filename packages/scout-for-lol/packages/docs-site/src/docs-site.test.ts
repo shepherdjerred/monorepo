@@ -288,7 +288,8 @@ describe("cross-package facts the prose depends on", () => {
     // set of sections. A rename here (the old marketing shots said "Admin") should
     // fail loudly rather than leave the docs quietly wrong.
     const source = await Bun.file(
-      new URL("../../app/src/lib/app-navigation.ts", import.meta.url).pathname,
+      new URL("../../app/src/lib/routes/app-navigation.ts", import.meta.url)
+        .pathname,
     ).text();
     const guildNavigationSource = source
       .split("export const GUILD_NAVIGATION_ITEMS")[1]

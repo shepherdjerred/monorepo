@@ -3,7 +3,7 @@ import {
   isCompetitionQueueCurrentlyAvailable,
   type CompetitionQueueType,
 } from "@scout-for-lol/data";
-import { FieldError } from "@scout-for-lol/design-system/components/input";
+import { FieldError } from "@scout-for-lol/design-system/components/forms/field";
 
 export function CompetitionQueueFields(props: {
   name: string;

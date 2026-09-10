@@ -18,7 +18,7 @@ import {
   parsePlayerProfileFilters,
   playerProfileSearch,
 } from "#src/lib/player/player-profile-filters.ts";
-import { useConsumerMatchParams } from "#src/lib/route-params.ts";
+import { useConsumerMatchParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 function duration(seconds: number): string {

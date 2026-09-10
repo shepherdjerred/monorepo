@@ -15,7 +15,7 @@ import { voidDareV2WithFullRefund } from "#src/betting/dares/settlement/dare-voi
 import { readableRelationalDareContract } from "#src/betting/dares/dare-v2-common.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { createLogger } from "#src/logger.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 
 const logger = createLogger("betting-dare-sweep-v2");
 

@@ -23,7 +23,7 @@ import {
   parseDareV2Targets,
 } from "#src/betting/dares/dare-v2-common.ts";
 import type { Db } from "#src/database/index.ts";
-import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/dare-notification-outbox.ts";
+import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import { buildDareContractV3 } from "#src/betting/dares/evaluation/dare-contract-v3-build.ts";
 
 function contractCompilerVersion(revision: {

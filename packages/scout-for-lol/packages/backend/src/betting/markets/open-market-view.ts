@@ -10,13 +10,13 @@ import {
 import { BETTING_TEAM_IDS, outcomeLabel } from "#src/betting/team.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { marketSide } from "#src/betting/markets/open-market.ts";
-import { cancellationHouseCut } from "#src/betting/house-cut.ts";
+import { cancellationHouseCut } from "#src/betting/eligibility/house-cut.ts";
 import {
   GeneratedParlaySchema,
   ParlaySubjectsSchema,
   renderParlay,
-} from "#src/betting/parlays/parlay-criteria.ts";
-import { formatDecimalOdds } from "#src/betting/parlays/parlay-odds.ts";
+} from "#src/betting/parlays/model/parlay-criteria.ts";
+import { formatDecimalOdds } from "#src/betting/parlays/model/parlay-odds.ts";
 import {
   WeeklyParlayDefinitionCriteriaSchema,
   WeeklyParlaySubjectsSchema,

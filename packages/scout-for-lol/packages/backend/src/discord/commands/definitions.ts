@@ -9,7 +9,7 @@ import {
 } from "#src/discord/commands/onboarding.ts";
 import { listCommand } from "#src/discord/commands/list.ts";
 import { trackCommand } from "#src/discord/commands/track.ts";
-import { bbCommand } from "#src/discord/commands/bb-definition.ts";
+import { bbCommand } from "#src/discord/commands/bb/bb-definition.ts";
 import {
   buildScoutGuildCommand,
   scoutGlobalCommand,

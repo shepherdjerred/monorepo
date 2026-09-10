@@ -11,9 +11,9 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
-import { voidReasonText } from "#src/betting/outcome-message.ts";
+import { voidReasonText } from "#src/betting/notify/outcome-message.ts";
 import {
   buildSettlementDmMessages,
   SETTLEMENT_DM_NOTIFICATION_HINT,
@@ -22,7 +22,7 @@ import {
   type TeamRecipient,
 } from "#src/betting/settlement/settlement-dm.ts";
 import { shortTeamName } from "#src/betting/team.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
 import type { SettlementSummary } from "#src/betting/settle.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
@@ -30,7 +30,7 @@ import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
   getBucksNotificationPreferencesForUsers,
   markBucksSettlementDmHintShown,
-} from "#src/betting/notification-preferences.ts";
+} from "#src/betting/notify/notification-preferences.ts";
 import { client } from "#src/discord/client.ts";
 import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import { createLogger } from "#src/logger.ts";

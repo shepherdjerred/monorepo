@@ -16,7 +16,7 @@ import { renderDareV2Callout } from "#src/betting/dares/presentation/dare-callou
 import { deriveDareProgressV2 } from "#src/betting/dares/presentation/dare-progress-v2.ts";
 import { deriveDareProgressV3 } from "#src/betting/dares/presentation/dare-progress-v3.ts";
 import { storedDareV2Evidence } from "#src/betting/dares/settlement/dare-settle-evidence-v2.ts";
-import { observeBucksDelivery } from "#src/betting/delivery-observability.ts";
+import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { runSerialized } from "#src/betting/refresh-queue.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { client } from "#src/discord/client.ts";

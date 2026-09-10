@@ -12,8 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "#src/components/dropdown-menu.tsx";
-import { Input } from "#src/components/field.tsx";
+} from "#src/components/overlays/dropdown-menu.tsx";
+import { Input } from "#src/components/forms/field.tsx";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -21,19 +21,19 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from "#src/components/navigation-menu.tsx";
+} from "#src/components/overlays/navigation-menu.tsx";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "#src/components/popover.tsx";
+} from "#src/components/overlays/popover.tsx";
 import { Separator } from "#src/components/separator.tsx";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from "#src/components/sheet.tsx";
+} from "#src/components/overlays/sheet.tsx";
 import { DiscordIdentity } from "#src/domain/discord-identity.tsx";
 import { FormDialogFrame } from "#src/domain/form-dialog.tsx";
 import {

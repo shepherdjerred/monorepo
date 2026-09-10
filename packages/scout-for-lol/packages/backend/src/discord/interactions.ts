@@ -16,7 +16,7 @@ import {
   isParlayCustomId,
   parseParlayCustomId,
 } from "#src/betting/parlays/parlay-custom-id.ts";
-import { handleParlayBetButton } from "#src/betting/parlays/parlay-bet-button.ts";
+import { handleParlayBetButton } from "#src/betting/parlays/runtime/parlay-bet-button.ts";
 import {
   isWeeklyParlayCustomId,
   parseWeeklyParlayCustomId,

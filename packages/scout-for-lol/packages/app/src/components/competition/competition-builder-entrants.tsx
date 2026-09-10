@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Input } from "@scout-for-lol/design-system/components/input";
+import { Input } from "@scout-for-lol/design-system/components/forms/field";
 import { Label } from "@scout-for-lol/design-system/components/label";
 import { PlayerIdSchema } from "@scout-for-lol/data";
 import { useState } from "react";

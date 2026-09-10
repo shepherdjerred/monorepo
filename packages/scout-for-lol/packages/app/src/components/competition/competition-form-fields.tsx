@@ -12,7 +12,7 @@ import {
   FieldError,
   FormSection,
   Label,
-} from "@scout-for-lol/design-system/components/input";
+} from "@scout-for-lol/design-system/components/forms/field";
 import { ChampionCombobox } from "#src/components/match/champion-combobox.tsx";
 import {
   COMPETITION_CRITERIA_OPTIONS,

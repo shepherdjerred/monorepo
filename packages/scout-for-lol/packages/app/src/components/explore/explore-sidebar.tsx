@@ -15,7 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@scout-for-lol/design-system/components/dropdown-menu";
+} from "@scout-for-lol/design-system/components/overlays/dropdown-menu";
 
 /**
  * The conversation list.

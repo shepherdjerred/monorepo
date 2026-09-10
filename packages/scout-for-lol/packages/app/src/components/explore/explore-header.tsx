@@ -6,7 +6,7 @@ import {
   SheetContent,
   SheetTitle,
   SheetTrigger,
-} from "@scout-for-lol/design-system/components/sheet";
+} from "@scout-for-lol/design-system/components/overlays/sheet";
 
 /**
  * Title row: the mobile drawer trigger, the conversation name, and the

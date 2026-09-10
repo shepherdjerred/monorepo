@@ -14,7 +14,7 @@ import {
   participantNumericValue,
   teamBooleanValue,
   teamObjectiveValue,
-} from "#src/betting/parlays/parlay-catalog.ts";
+} from "#src/betting/parlays/model/parlay-catalog.ts";
 import {
   GeneratedParlaySchema,
   PARLAY_EVALUATOR_VERSION,
@@ -25,7 +25,7 @@ import {
   type GeneratedParlay,
   type ParlayCondition,
   type ParlaySubject,
-} from "#src/betting/parlays/parlay-criteria.ts";
+} from "#src/betting/parlays/model/parlay-criteria.ts";
 
 export const ParlayLegResultSchema = z.strictObject({
   condition: ParlayConditionSchema,

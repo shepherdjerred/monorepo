@@ -22,7 +22,7 @@ import {
   useScoutForm,
 } from "#src/components/semantic-form.tsx";
 import { ReportFormValueSchema } from "#src/lib/form-schemas.ts";
-import { FormActions } from "@scout-for-lol/design-system/components/input";
+import { FormActions } from "@scout-for-lol/design-system/components/forms/field";
 import {
   UnsavedFormDialog,
   useUnsavedForm,

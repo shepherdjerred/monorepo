@@ -211,7 +211,7 @@ function computeConfiguration() {
     // unset, so gating the route on `environment === "dev"` alone would fail
     // open on a beta/prod deploy that forgot to set ENVIRONMENT — an
     // unauthenticated session-minting endpoint. Requiring this explicit flag
-    // (set only by scripts/dev-web.ts) means an omitted config fails closed.
+    // (set only by scripts/dev/dev-web.ts) means an omitted config fails closed.
     enableDevLogin: env.get("ENABLE_DEV_LOGIN").default("false").asBool(),
     // Local web boots use the signed dev-login route by default so a secondary
     // copy does not depend on a Discord Developer Portal callback registration.

@@ -4,10 +4,13 @@ const homepage = await Bun.file(
   new URL("pages/index.astro", import.meta.url),
 ).text();
 const hero = await Bun.file(
-  new URL("components/Hero.astro", import.meta.url),
+  new URL("components/marketing/Hero.astro", import.meta.url),
 ).text();
 const consumerPreview = await Bun.file(
-  new URL("components/ConsumerExperiencePreviews.astro", import.meta.url),
+  new URL(
+    "components/marketing/ConsumerExperiencePreviews.astro",
+    import.meta.url,
+  ),
 ).text();
 
 describe("administrator homepage", () => {
