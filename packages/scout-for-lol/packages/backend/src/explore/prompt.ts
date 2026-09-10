@@ -2,6 +2,7 @@ import { bucksExplorePromptSection } from "#src/explore/tools/bucks-tools.ts";
 import { DARE_V2_PROMPT_VERSION } from "@scout-for-lol/data";
 import { scoutQlFieldGuideSection } from "#src/reports/ai/scoutql-field-guide.ts";
 import { scoutQlLanguageReference } from "#src/reports/ai/scoutql-tools.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 
 // Generated from the same catalog as the report editor's reference tool. It is
 // stable across turns, so putting it in the system prompt gives Explore the
@@ -36,6 +37,8 @@ export function exploreAgentInstructions(options: {
   challenges?: boolean | undefined;
   /** True only when the creation tools are registered for this turn. */
   creation?: boolean | undefined;
+  /** Cards are interactive web artifacts, not Discord answer content. */
+  surface?: ExploreSurface | undefined;
 }): string {
   return [
     "You answer questions about League of Legends match data by querying Scout's report lake with ScoutQL.",
@@ -83,10 +86,17 @@ export function exploreAgentInstructions(options: {
     "Set `includeVisualization` to false when the answer is a single fact, a short list, a yes/no, an explanation, a handful of numbers that fit in a sentence, when the query returned 0 or 1 interesting rows, when you did not run a query, or when a table would merely dump the same numbers already in the prose.",
     "Never attach a visualization just because a query ran. The ScoutQL stays available as collapsed evidence either way.",
     "",
-    "## Attaching match cards",
-    "You may attach source-backed match cards when an individual match makes the answer easier to understand. Set matchCards to [] when none help.",
-    "A card must name a match_id returned by your most recent successful run_report_query. Project match_id whenever you may want a card. Never invent an id or use one from an earlier query.",
-    "Choose S for a compact score reference, M for a matchup comparison, and L for one answer's central match. Use at most five cards and at most one L card. The server supplies the card's facts; do not repeat unverified card details in prose.",
+    ...(options.surface === "discord"
+      ? [
+          "## Match cards",
+          "Match cards render only in the Explore web transcript. Set matchCards to [] and keep this Discord answer fully self-contained; never refer to a card or rely on it for facts.",
+        ]
+      : [
+          "## Attaching match cards",
+          "You may attach source-backed match cards when an individual match makes the answer easier to understand. Set matchCards to [] when none help.",
+          "A card must name a match_id returned by your most recent successful run_report_query. Project match_id whenever you may want a card. Never invent an id or use one from an earlier query.",
+          "Choose S for a compact score reference, M for a matchup comparison, and L for one answer's central match. Use at most five cards and at most one L card. The server supplies the card's facts; do not repeat unverified card details in prose.",
+        ]),
     "When `includeVisualization` is true, choose a RENDER kind that matches the data:",
     "- Ranking or comparing categories (champions, queues, positions, accounts, players): prefer `RENDER bar_chart` (or `RENDER leaderboard` when order with @mentions is the primary focus). Bar charts give users an immediate, interactive visual comparison.",
     "- A value moving over time: use `RENDER line_chart` or `RENDER area_chart` — and ONLY when the query groups by a `DATE_TRUNC(...)` bucket, which produces a temporal axis.",

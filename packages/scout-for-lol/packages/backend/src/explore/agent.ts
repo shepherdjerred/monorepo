@@ -181,6 +181,7 @@ async function streamExploreAgentInternal(
       dares: daresEnabled,
       challenges: challengesEnabled,
       creation: creationCapability !== null,
+      surface: params.surface,
     }),
     model: runtime.languageModel(model, ["tools"]),
     tools: createExploreTools({
@@ -222,10 +223,13 @@ async function streamExploreAgentInternal(
   const streamState = await drainExploreStreams(stream, params.emit);
 
   const answer = ExploreAnswerSchema.parse(await stream.output);
-  const matchCards = await hydrateExploreMatchCards({
-    requests: answer.matchCards,
-    eligibleMatchIds: state.lastMatchIds,
-  });
+  const matchCards =
+    params.surface === "web"
+      ? await hydrateExploreMatchCards({
+          requests: answer.matchCards,
+          eligibleMatchIds: state.lastMatchIds,
+        })
+      : [];
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered
