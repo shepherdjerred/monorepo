@@ -73,6 +73,7 @@ describe("runtime boot order", () => {
     const steps = bootStepsFor("activity-worker");
     expect(steps).toEqual([
       "champion-assets",
+      "report-lake",
       "temporal-core",
       "http-server",
       "competition-worker",
@@ -100,13 +101,30 @@ describe("runtime boot order", () => {
     }
   });
 
-  test("the lake is published before anything serves queries from it", () => {
+  test("the lake is settled before anything queries it", () => {
+    // Before HTTP accepts traffic AND before the Temporal workers start
+    // polling: an unpublished lake does not fail a DuckDB query, it answers it
+    // with nothing, so both readers have to be held back.
     for (const role of SCOUT_RUNTIME_ROLES) {
       const steps = bootStepsFor(role);
       if (!steps.includes("report-lake")) continue;
       expect(steps.indexOf("report-lake")).toBeLessThan(
         steps.indexOf("http-server"),
       );
+      expect(steps.indexOf("report-lake")).toBeLessThan(
+        steps.indexOf("temporal-core"),
+      );
+    }
+  });
+
+  test("every role that runs a Temporal worker settles the lake first", () => {
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      const capabilities = scoutRuntimeCapabilities(role);
+      const runsWorkers =
+        capabilities.temporalWorkers.length > 0 ||
+        capabilities.deferredTemporalWorkers.length > 0;
+      if (!runsWorkers) continue;
+      expect(bootStepsFor(role)).toContain("report-lake");
     }
   });
 

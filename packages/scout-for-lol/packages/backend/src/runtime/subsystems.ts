@@ -32,6 +32,29 @@ type CompetitionActivityWorker = {
 };
 
 /**
+ * Refuse to start a lake-reading role whose lake has no published build.
+ *
+ * This is the gate for roles that read the lake but do not own its fold. An
+ * empty or unmounted lake directory is not an error condition for DuckDB — it
+ * scans zero parquet files and returns zero rows — so without this a worker
+ * would record every report run, parlay generation and dare settlement as a
+ * *successful* run that found nothing. A pod that cannot answer correctly must
+ * not answer at all.
+ */
+async function assertPublishedReportLake(): Promise<void> {
+  const { readCurrentBuildDir, resolveLakeDir } =
+    await import("#src/report-lake/paths.ts");
+  const lakeDir = resolveLakeDir();
+  const current = await readCurrentBuildDir(lakeDir);
+  if (current === undefined) {
+    throw new Error(
+      `The report lake at ${lakeDir} has no published build. This role reads the lake but does not publish it, so it would answer every query with an empty result and record it as success. Mount the lake volume, or run a role that folds it.`,
+    );
+  }
+  logger.info("🗂️  Report lake build verified", { lakeDir, build: current });
+}
+
+/**
  * Build the production dependency set for one role.
  *
  * The mutable handles are closed over rather than returned, because the boot
@@ -72,13 +95,17 @@ export function scoutRuntimeSubsystems(
       "report-lake": async () => {
         if (configuration.skipReportLakeFold) {
           logger.warn(
-            "⏭️  Skipping the boot report-lake fold (SCOUT_DEV_SKIP_REPORT_LAKE_FOLD)",
+            "⏭️  Skipping the boot report-lake check (SCOUT_DEV_SKIP_REPORT_LAKE_FOLD)",
           );
           return;
         }
-        const { runReportLakeFold } =
-          await import("#src/report-lake/compactor.ts");
-        await runReportLakeFold();
+        if (capabilities.reportLakeFold) {
+          const { runReportLakeFold } =
+            await import("#src/report-lake/compactor.ts");
+          await runReportLakeFold();
+          return;
+        }
+        await assertPublishedReportLake();
       },
 
       "temporal-core": async () => {

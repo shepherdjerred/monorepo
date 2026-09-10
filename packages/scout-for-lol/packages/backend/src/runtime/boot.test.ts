@@ -147,6 +147,7 @@ describe("scout runtime boot", () => {
     const log = await boot("activity-worker");
     expect(log.boot).toEqual([
       "champion-assets",
+      "report-lake",
       "temporal-core",
       "http-server",
       "competition-worker",

@@ -84,22 +84,6 @@ describe("checkSendMessagePermission", () => {
     expect(result.hasPermission).toBe(true);
   });
 
-  test("reports an unreachable guild rather than an unknown bot user", async () => {
-    // There is no "bot user not available" outcome any more: the id is known
-    // from configuration whether or not this process holds a gateway. A guild
-    // that cannot be read is reported as exactly that, and the delivery path
-    // no longer turns a missing `client.user` into a permission complaint sent
-    // to the guild owner.
-    const channel = mockTextChannel({
-      isDMBased: () => false,
-      permissionsFor: () => null,
-      guild: unreachableGuild(),
-    });
-    const result = await checkSendMessagePermission(channel, BOT_USER_ID);
-    expect(result.hasPermission).toBe(false);
-    expect(result.reason).toContain("Cannot access channel");
-  });
-
   test("returns false when channel doesn't have permissionsFor method", async () => {
     const invalidChannel = mockTextChannel({
       isDMBased: () => false,
@@ -115,6 +99,12 @@ describe("checkSendMessagePermission", () => {
   });
 
   test("returns false when permissionsFor returns null", async () => {
+    // This is also the case that used to be reported as "Bot user not
+    // available". There is no such outcome any more: the bot's id is known from
+    // configuration whether or not this process holds a gateway, so a guild
+    // that cannot be read is reported as exactly that — and the delivery path
+    // no longer turns a missing `client.user` into a permission complaint sent
+    // to the guild owner.
     const channel = mockTextChannel({
       isDMBased: () => false,
       permissionsFor: () => null,

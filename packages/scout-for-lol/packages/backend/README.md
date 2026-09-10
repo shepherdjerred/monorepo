@@ -182,7 +182,8 @@ unrecognised value throws at startup rather than falling back.
 | ------------------------------------------------ | ------------------------------------------------------------------------------ | --------------------------- | ------------------ | -------------------- |
 | Champion asset verification                      | yes                                                                            | yes                         | yes                | yes                  |
 | Voice assistant (Hey Scout)                      | yes                                                                            | —                           | yes                | —                    |
-| Report-lake fold at boot                         | yes                                                                            | yes                         | —                  | —                    |
+| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                         | —                  | yes                  |
+| Report-lake fold / publish at boot               | yes                                                                            | yes                         | —                  | —                    |
 | Temporal workers                                 | workflow, interactive, lake (+ realtime, background once the gateway is ready) | workflow, interactive, lake | none (client only) | realtime, background |
 | Discord gateway login, commands, guild lifecycle | yes                                                                            | —                           | yes                | —                    |
 | Discord REST                                     | yes                                                                            | yes                         | yes                | yes                  |
@@ -199,10 +200,26 @@ Notes that are easy to get wrong:
 - **Voice is gateway-coupled by design.** It reads an active voice connection's
   audio, so it cannot be moved off the shard. That makes `gateway` an explicitly
   stateful role.
-- **`application` owns the report-lake volume** and the collectors that sweep
-  the database on every `/metrics` scrape. Every role serves `/metrics`, but
-  running those four collectors on all of them would turn one Prometheus scrape
-  interval into N full sweeps of the same tables.
+- **`application` publishes the report lake**, and owns the collectors that
+  sweep the database on every `/metrics` scrape. Every role serves `/metrics`,
+  but running those four collectors on all of them would turn one Prometheus
+  scrape interval into N full sweeps of the same tables.
+- **Reading the lake is wider than publishing it, and it is why
+  `activity-worker` is not deployable yet.** Every embedded Temporal activity
+  queue reads the lake somewhere: `realtime` settles SQL dares and evaluates
+  hall progression, `interactive` answers Explore queries, `background` runs
+  reports, parlay generation, the weekly parlay and the summoner-index
+  backfill, and `lake` is the compactor. Several of them also write its staging
+  directories. So `activity-worker` needs the same volume `application` owns,
+  and the cluster PVC is ReadWriteOnce — the two roles cannot both mount it as
+  things stand. Splitting them needs the lake to become shareable (a remote
+  store, or every reader moved behind the `lake` queue) first.
+- **A lake-reading role that does not publish verifies instead.** An empty or
+  unmounted lake is not an error for DuckDB — it scans zero parquet files and
+  returns zero rows — so a worker would record every report run and dare
+  settlement as a _successful_ run that found nothing. Roles with
+  `reportLakeAccess` and no fold assert a published build at boot and refuse to
+  start without one.
 - **`application` does not wait for a shard.** The old Discord-before-HTTP
   ordering existed because web code read the guild cache; it goes through the
   ports above now, and this role has no gateway to wait for.

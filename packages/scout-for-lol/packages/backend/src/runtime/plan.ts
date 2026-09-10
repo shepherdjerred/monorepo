@@ -17,10 +17,11 @@
  * - Voice model verification is fatal for the same reason and must land before
  *   the gateway connects, so a voice-enabled pod is never briefly reachable
  *   while half-deaf.
- * - The report lake is folded into a published build before anything serves
- *   queries from it. This one binds `application` as much as `combined`:
- *   serving DuckDB reads off a half-published build answers with the wrong
- *   data rather than failing.
+ * - The report lake is settled before anything queries it. The role that owns
+ *   the lake folds it into a published build; a role that only reads it
+ *   verifies a build is there. Both must happen before the Temporal workers
+ *   start polling and before HTTP accepts traffic, because an unpublished lake
+ *   does not fail a DuckDB query — it answers it with nothing.
  * - Temporal comes up before the gateway and before HTTP, because commands and
  *   tRPC mutations both start Workflows and a start rejected at boot is a user
  *   request that visibly failed.
@@ -84,7 +85,7 @@ export function scoutBootSteps(
   const steps: ScoutBootStep[] = [];
   if (capabilities.championAssets) steps.push("champion-assets");
   if (capabilities.voiceAssistant) steps.push("voice-assistant");
-  if (capabilities.reportLakeFold) steps.push("report-lake");
+  if (capabilities.reportLakeAccess) steps.push("report-lake");
   steps.push("temporal-core");
   if (capabilities.discordGateway) steps.push("discord-gateway");
   if (capabilities.deferredTemporalWorkers.length > 0) {

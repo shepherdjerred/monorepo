@@ -21,6 +21,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   combined: {
     championAssets: true,
     voiceAssistant: true,
+    reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ["workflow", "interactive", "lake"],
     deferredTemporalWorkers: ["realtime", "background"],
@@ -34,6 +35,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   application: {
     championAssets: true,
     voiceAssistant: false,
+    reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ["workflow", "interactive", "lake"],
     deferredTemporalWorkers: [],
@@ -47,6 +49,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   gateway: {
     championAssets: true,
     voiceAssistant: true,
+    reportLakeAccess: false,
     reportLakeFold: false,
     temporalWorkers: [],
     deferredTemporalWorkers: [],
@@ -60,6 +63,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   "activity-worker": {
     championAssets: true,
     voiceAssistant: false,
+    reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: ["realtime", "background"],
     deferredTemporalWorkers: [],
@@ -146,6 +150,30 @@ describe("scout runtime roles", () => {
       "activity-worker",
     ]);
     expect(owners((c) => c.gatewayReadyReconciliation)).toEqual(["gateway"]);
+  });
+
+  test("every role that runs an activity queue declares lake access", () => {
+    // Every embedded activity queue reads the lake somewhere: realtime settles
+    // SQL dares and evaluates hall progression, interactive runs Explore
+    // queries, background runs reports and parlays, lake is the compactor. A
+    // role that polls any of them without the lake mounted would answer those
+    // queries with nothing and call it success.
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      const capabilities = scoutRuntimeCapabilities(role);
+      const runsWorkers =
+        capabilities.temporalWorkers.length > 0 ||
+        capabilities.deferredTemporalWorkers.length > 0;
+      if (!runsWorkers) continue;
+      expect(capabilities.reportLakeAccess).toBe(true);
+    }
+  });
+
+  test("a role that folds the lake also reads it", () => {
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      const capabilities = scoutRuntimeCapabilities(role);
+      if (!capabilities.reportLakeFold) continue;
+      expect(capabilities.reportLakeAccess).toBe(true);
+    }
   });
 
   test("only the gateway-owning role defers workers", () => {

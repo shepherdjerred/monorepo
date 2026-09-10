@@ -86,7 +86,26 @@ export type ScoutRuntimeCapabilities = {
   readonly championAssets: boolean;
   /** Verify the pinned voice models and load the Realtime credential. */
   readonly voiceAssistant: boolean;
-  /** Fold the report lake into a published build before serving from it. */
+  /**
+   * Needs the DuckDB report-lake directory mounted and holding a published
+   * build.
+   *
+   * Wider than {@link reportLakeFold}, and the wider one is what decides
+   * whether a pod can do its job: EVERY embedded Temporal activity queue reads
+   * the lake somewhere. `realtime` reads it settling SQL dares and evaluating
+   * hall progression, `interactive` reads it for every Explore query,
+   * `background` reads it for report runs, parlay generation and the weekly
+   * parlay, and `lake` is the compactor itself. A worker role pointed at an
+   * empty directory does not fail — DuckDB happily scans zero parquet files —
+   * so it records empty query results as successful runs. That is why this is a
+   * declared capability with a boot gate rather than an assumption.
+   */
+  readonly reportLakeAccess: boolean;
+  /**
+   * Fold the lake into a published build at boot, and own the `lake` worker
+   * that republishes it. Exactly one role: two processes publishing builds onto
+   * one volume would race each other's `CURRENT` pointer.
+   */
   readonly reportLakeFold: boolean;
   /** Workers started as soon as Temporal connects. */
   readonly temporalWorkers: readonly ScoutTemporalQueueClass[];
@@ -142,6 +161,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   combined: {
     championAssets: true,
     voiceAssistant: true,
+    reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
     deferredTemporalWorkers: DISCORD_WORKERS,
@@ -155,6 +175,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   application: {
     championAssets: true,
     voiceAssistant: false,
+    reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
     deferredTemporalWorkers: NO_WORKERS,
@@ -168,6 +189,9 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   gateway: {
     championAssets: true,
     voiceAssistant: true,
+    // The only role that runs no activity queue, and therefore the only one
+    // that needs no lake volume at all.
+    reportLakeAccess: false,
     reportLakeFold: false,
     temporalWorkers: NO_WORKERS,
     deferredTemporalWorkers: NO_WORKERS,
@@ -181,6 +205,12 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   "activity-worker": {
     championAssets: true,
     voiceAssistant: false,
+    // Reads the lake (report runs, parlay generation, the weekly parlay,
+    // summoner-index backfill) and writes its staging directories (match,
+    // prematch and timeline ingest). It does NOT publish builds — see the
+    // README for why that makes this role undeployable beside `application` on
+    // the current ReadWriteOnce volume.
+    reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: DISCORD_WORKERS,
     deferredTemporalWorkers: NO_WORKERS,

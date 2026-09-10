@@ -13,7 +13,12 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { getCompetitionsByChannelId } from "#src/database/competition/queries.ts";
+import {
+  installedGuildIdsAmong,
+  isScoutInstalledInGuild,
+} from "#src/lib/discord/installed-guilds.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
+import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 import {
   discordSubscriptionsCleanedTotal,
   guildDataCleanupTotal,
@@ -25,6 +30,27 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("cleanup-validate-data");
 
 /**
+ * The two guild-presence questions this cleanup asks, injectable so the
+ * destructive path can be exercised without Discord.
+ */
+export type GuildValidationDependencies = {
+  /** Which of these guilds have a live install row. One query, no Discord. */
+  readonly installedAmong: (guildIds: string[]) => Promise<Set<string>>;
+  /**
+   * Whether Scout is installed in one guild, confirmed against Discord.
+   * Throws when Discord could not be reached; never returns a guessed `false`.
+   */
+  readonly isInstalled: (guildId: string) => Promise<boolean>;
+};
+
+export function defaultGuildValidationDependencies(): GuildValidationDependencies {
+  return {
+    installedAmong: async (guildIds) => await installedGuildIdsAmong(guildIds),
+    isInstalled: async (guildId) => await isScoutInstalledInGuild(guildId),
+  };
+}
+
+/**
  * Run data validation to clean up orphaned guilds and channels
  *
  * This function:
@@ -33,13 +59,16 @@ const logger = createLogger("cleanup-validate-data");
  * 3. Cleans up orphaned data
  * 4. Notifies competition owners if their channels were deleted
  */
-export async function runDataValidation(client: Client): Promise<void> {
+export async function runDataValidation(
+  client: Client,
+  dependencies: GuildValidationDependencies = defaultGuildValidationDependencies(),
+): Promise<void> {
   logger.info("[DataValidation] Starting data validation...");
   const startTime = Date.now();
 
   try {
     // Validate guilds first (this cleans up all data for missing guilds)
-    await validateGuilds(client);
+    await validateGuilds(dependencies);
 
     // Then validate channels (for guilds that still exist)
     await validateChannels(client);
@@ -59,9 +88,43 @@ export async function runDataValidation(client: Client): Promise<void> {
 }
 
 /**
+ * Which stored guilds Scout has authoritatively been removed from.
+ *
+ * This decides what gets DELETED, so it may only ever report a guild whose
+ * absence Discord itself confirmed. It used to read `client.guilds.cache`,
+ * which made the answer a property of *this process* rather than of Discord:
+ * on any process without a gateway connection the cache is permanently empty,
+ * so every guild with a subscription was classified orphaned and its
+ * subscriptions, permissions and error records were deleted. A shard that had
+ * merely not finished backfilling produced the same result on a smaller scale.
+ *
+ * Two steps, for cost as much as for correctness. The install table answers for
+ * every stored guild in one query, and a live row is proof of presence. Only
+ * the remainder — the deletion candidates — are confirmed against Discord over
+ * REST, one call each. {@link isScoutInstalledInGuild} throws rather than
+ * returning `false` when it cannot reach Discord, and that throw propagates:
+ * "Scout could not ask" must never become "Scout was removed" when the answer
+ * is wired to `deleteMany`.
+ */
+export async function resolveOrphanedGuildIds(
+  storedGuildIds: readonly string[],
+  dependencies: GuildValidationDependencies,
+): Promise<string[]> {
+  const installed = await dependencies.installedAmong([...storedGuildIds]);
+  const candidates = storedGuildIds.filter((id) => !installed.has(id));
+  const orphaned: string[] = [];
+  for (const guildId of candidates) {
+    if (!(await dependencies.isInstalled(guildId))) orphaned.push(guildId);
+  }
+  return orphaned;
+}
+
+/**
  * Validate that all stored guilds still exist (bot is still a member)
  */
-async function validateGuilds(client: Client): Promise<void> {
+async function validateGuilds(
+  dependencies: GuildValidationDependencies,
+): Promise<void> {
   logger.info("[DataValidation] Validating guilds...");
 
   try {
@@ -76,15 +139,9 @@ async function validateGuilds(client: Client): Promise<void> {
       `[DataValidation] Found ${storedGuildIds.length.toString()} unique guilds in database`,
     );
 
-    // Get guilds bot is currently in
-    const activeGuildIds = new Set(client.guilds.cache.keys());
-    logger.info(
-      `[DataValidation] Bot is currently in ${activeGuildIds.size.toString()} guilds`,
-    );
-
-    // Find guilds bot is no longer in
-    const orphanedGuildIds = storedGuildIds.filter(
-      (id) => !activeGuildIds.has(id),
+    const orphanedGuildIds = await resolveOrphanedGuildIds(
+      storedGuildIds,
+      dependencies,
     );
 
     if (orphanedGuildIds.length === 0) {
@@ -209,25 +266,31 @@ async function validateChannels(client: Client): Promise<void> {
     const orphanedChannels: string[] = [];
 
     for (const { channelId } of storedChannels) {
+      // Only an authoritative absence may delete a subscription. A resolved
+      // `null`, or an Unknown Channel / Unknown Guild code, is Discord saying
+      // the channel is gone. Anything else — a rate limit, a 5xx, a timeout —
+      // means Scout could not ask, and the previous `.catch(() => null)`
+      // collapsed that into "no longer exists" and deleted the subscription
+      // anyway. Skipping costs one more hourly cycle; deleting is permanent.
       try {
-        // Try to fetch the channel
-        const channel = await client.channels
-          .fetch(channelId)
-          .catch(() => null);
-
-        if (!channel) {
-          // Channel doesn't exist
+        const channel = await client.channels.fetch(channelId);
+        if (channel === null) {
           logger.info(
             `[DataValidation] ⚠️  Channel ${channelId} no longer exists`,
           );
           orphanedChannels.push(channelId);
         }
       } catch (error) {
-        // Error fetching channel - likely doesn't exist
-        logger.info(
-          `[DataValidation] ⚠️  Channel ${channelId} could not be fetched: ${getErrorMessage(error)}`,
+        if (isMissingChannelError(error)) {
+          logger.info(
+            `[DataValidation] ⚠️  Channel ${channelId} no longer exists`,
+          );
+          orphanedChannels.push(channelId);
+          continue;
+        }
+        logger.warn(
+          `[DataValidation] Could not check channel ${channelId}; leaving it alone: ${getErrorMessage(error)}`,
         );
-        orphanedChannels.push(channelId);
       }
     }
 
