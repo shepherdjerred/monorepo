@@ -77,6 +77,7 @@ export async function scanCodexHistoryJsonl(
             createdAt: updatedAt,
             updatedAt,
             runtimeId: prompt.runtimeId,
+            usageEvents: [],
           },
           prompt.text.length === 0
             ? []

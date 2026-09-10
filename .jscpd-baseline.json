@@ -1588,14 +1588,6 @@
       "clones": 1,
       "tokens": 75
     },
-    "packages/toolkit/src/lib/history/index.ts|packages/toolkit/src/lib/history/index.ts": {
-      "clones": 1,
-      "tokens": 139
-    },
-    "packages/toolkit/src/lib/history/sources.ts|packages/toolkit/src/lib/history/sources/conductor.ts": {
-      "clones": 1,
-      "tokens": 109
-    },
     "packages/toolkit/test/bugsink/client.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,
       "tokens": 89

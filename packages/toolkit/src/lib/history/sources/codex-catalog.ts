@@ -1,6 +1,6 @@
 import {
   firstText,
-  readDatabase,
+  readImmutableDatabase,
   requireTables,
   rowValue,
   rows,
@@ -9,8 +9,10 @@ import {
 import { parseTimestamp, stringValue } from "#lib/history/query/text.ts";
 import type { HistoryDocument } from "#lib/history/types.ts";
 
-export function scanCodexCatalog(filePath: string): HistoryDocument[] {
-  const database = readDatabase(filePath);
+export async function scanCodexCatalog(
+  filePath: string,
+): Promise<HistoryDocument[]> {
+  const database = await readImmutableDatabase(filePath, "Codex catalog");
   try {
     requireTables(database, "Codex catalog", ["local_thread_catalog"]);
     const catalogRows = rows(
@@ -48,6 +50,7 @@ export function scanCodexCatalog(filePath: string): HistoryDocument[] {
         toolOutputText: [workspace, branch]
           .filter((value) => value !== null)
           .join("\n"),
+        usageEvents: [],
       } satisfies HistoryDocument;
     });
   } finally {

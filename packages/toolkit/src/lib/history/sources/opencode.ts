@@ -224,6 +224,7 @@ function readOpenCodeData(
         openingPromptHash: openingPromptHash(openingPrompt(messages)),
         dialogueText: dialogueText(messages),
         toolOutputText: toolOutputText(messages),
+        usageEvents: [],
       } satisfies HistoryDocument;
     });
     return { documents, messages: messagesBySession };

@@ -101,6 +101,7 @@ beforeAll(async () => {
           openingPromptHash: null,
           dialogueText: "Unique collisionterm dialogue",
           toolOutputText: "",
+          usageEvents: [],
         },
       ],
       fingerprint: "codex-collision-fixture",
