@@ -71,7 +71,11 @@ so reading the item with the Security framework turns a five-minute poll into a
 recurring password prompt. Brim reads it through `/usr/bin/security` instead:
 that tool is the trusted application each rewrite re-establishes, which keeps
 credential discovery silent without Brim ever writing another tool's
-credentials.
+credentials. That boundary is implemented by the
+[Keychain reader](https://github.com/shepherdjerred/monorepo/blob/8974ae3e5b14fbffebb67dea8c6d68be11f027d8/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Keychain.swift),
+which the
+[credential store](https://github.com/shepherdjerred/monorepo/blob/8974ae3e5b14fbffebb67dea8c6d68be11f027d8/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift)
+uses for Claude discovery.
 
 Google means Antigravity under the user's Google AI Pro subscription. Brim
 asks the already signed-in `agy` CLI for its zero-turn `/usage` result and
