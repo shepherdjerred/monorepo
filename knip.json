@@ -20,7 +20,7 @@
         "review/*.ts",
         "misc/*.ts",
         "observability/**/*.ts",
-        "lib/**/*.ts"
+        "lib/image-pin-catalog.ts"
       ],
       "project": ["**/*.ts"]
     },
