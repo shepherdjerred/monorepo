@@ -11,6 +11,7 @@ import {
 import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
+import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -332,40 +333,38 @@ export function requireGroundedAnswer(
 }
 
 /**
- * Fill omitted citations from tool events that actually succeeded.
- *
- * The final structured answer is written after Discord progress has already
- * been told not to mention tool names or IDs. Models then leave
- * `reliedOnToolCallIds` empty even when generate-image (or another tool)
- * succeeded, and the grounding gate throws the staged result away. Empty
- * citations after a real success are a missing ID, not an ungrounded claim.
- * Invented IDs and uncorrected write failures still fail in
- * `requireGroundedAnswer`.
+ * A supported answer that cites nothing after a real success is malformed
+ * structured output, not evidence we may invent. Retry it with the successful
+ * IDs in the prompt; `requireGroundedAnswer` still rejects invented IDs.
  */
-export function groundTurnAnswer(
+export function needsCitationRetry(
   answer: TurnAnswer,
   toolEvents: SessionToolEvent[],
-): TurnAnswer {
-  if (
-    answer.disposition !== "supported" ||
-    answer.reliedOnToolCallIds.length > 0
-  ) {
-    return answer;
-  }
-  const successfulIds = [
-    ...new Set(
-      toolEvents
-        .filter((event) => event.success)
-        .map((event) => event.toolCallId),
-    ),
-  ];
-  if (successfulIds.length === 0) {
-    return answer;
-  }
-  return {
-    ...answer,
-    reliedOnToolCallIds: successfulIds,
-  };
+): boolean {
+  return (
+    answer.disposition === "supported" &&
+    answer.reliedOnToolCallIds.length === 0 &&
+    toolEvents.some((event) => event.success)
+  );
+}
+
+export function citationRetryPrompt(
+  answer: TurnAnswer,
+  toolEvents: SessionToolEvent[],
+): string {
+  const listed = toolEvents
+    .filter((event) => event.success)
+    .map((event) => `${event.toolCallId} (${event.toolId})`)
+    .join("\n");
+  return `Your previous structured answer claimed supported work but cited no tool calls.
+
+Previous answer JSON:
+${JSON.stringify(answer)}
+
+Successful tool calls this turn (cite only IDs from this list that the answer actually used):
+${listed}
+
+Return a complete TurnAnswer. Do not invent IDs. If the answer used none of these calls, set disposition to conversation or unsupported instead of citing nothing under supported.`;
 }
 
 export async function executeTurn(
@@ -389,6 +388,9 @@ export async function executeTurn(
     async (span) => {
       const startedAt = performance.now();
       const maxSteps = config.agent.maxSteps;
+      const abortSignal = AbortSignal.timeout(
+        options.timeoutMs ?? config.agent.responseTimeoutMs,
+      );
       const agent = new ToolLoopAgent({
         id: "birmel-agent",
         model: runtime.languageModel(options.model ?? config.openRouter.model, [
@@ -411,9 +413,7 @@ export async function executeTurn(
       const progress = options.progress;
       const result = await agent.generate({
         messages: taskMessages(packet),
-        abortSignal: AbortSignal.timeout(
-          options.timeoutMs ?? config.agent.responseTimeoutMs,
-        ),
+        abortSignal,
         ...(progress === undefined
           ? {}
           : {
@@ -472,10 +472,27 @@ export async function executeTurn(
           summarizeToolResultForSession(toolResult, registeredToolIds),
         ),
       );
-      const answer = groundTurnAnswer(
-        TurnAnswerSchema.parse(result.output),
-        toolEvents,
-      );
+      let answer = TurnAnswerSchema.parse(result.output);
+      if (needsCitationRetry(answer, toolEvents)) {
+        logger.info(
+          "Retrying structured answer to cite successful tool calls",
+          {
+            successfulToolCallCount: toolEvents.filter((event) => event.success)
+              .length,
+          },
+        );
+        const retried = await generateValidatedObject(runtime, {
+          model: options.model ?? config.openRouter.model,
+          schema: TurnAnswerSchema,
+          schemaName: "birmel_turn_answer",
+          prompt: citationRetryPrompt(answer, toolEvents),
+          workload: "birmel.agent.turn.citation-retry",
+          abortSignal,
+          maxOutputTokens: config.openRouter.maxTokens,
+          sessionId: packet.threadId ?? packet.channelId,
+        });
+        answer = TurnAnswerSchema.parse(retried.object);
+      }
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute(

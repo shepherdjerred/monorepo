@@ -116,7 +116,12 @@ describe("ManagedFlagInventorySchema", () => {
     expect(prodFlag.rollouts).toEqual([]);
   });
 
-  test("enables Birmel image generation in beta and prod", () => {
+  test("keeps Birmel image generation off by default and on in beta and prod", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "birmel-image-generation-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
     const betaFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "beta",

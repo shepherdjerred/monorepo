@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
-  groundTurnAnswer,
+  citationRetryPrompt,
+  needsCitationRetry,
   requireGroundedAnswer,
   summarizeToolResultForSession,
 } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
@@ -323,7 +324,7 @@ describe("requireGroundedAnswer", () => {
   });
 });
 
-describe("groundTurnAnswer", () => {
+describe("citation retry", () => {
   const succeeded = {
     toolCallId: "call-1",
     toolId: "generate-image",
@@ -345,8 +346,38 @@ describe("groundTurnAnswer", () => {
     readOnly: true,
   };
 
-  test("fills omitted supported citations from successful tool events", () => {
-    const grounded = groundTurnAnswer(
+  test("retries supported answers that cite nothing after a success", () => {
+    expect(
+      needsCitationRetry(
+        {
+          answer: "third time’s the charm.",
+          disposition: "supported",
+          reliedOnToolCallIds: [],
+          performedMutation: false,
+        },
+        [succeeded, failedRead],
+      ),
+    ).toBe(true);
+  });
+
+  test("does not retry when no tool succeeded or citations are present", () => {
+    const emptySupported = {
+      answer: "Done.",
+      disposition: "supported" as const,
+      reliedOnToolCallIds: [],
+      performedMutation: false,
+    };
+    expect(needsCitationRetry(emptySupported, [failedRead])).toBe(false);
+    expect(
+      needsCitationRetry(
+        { ...emptySupported, reliedOnToolCallIds: ["call-1"] },
+        [succeeded],
+      ),
+    ).toBe(false);
+  });
+
+  test("lists only successful tool IDs in the retry prompt", () => {
+    const prompt = citationRetryPrompt(
       {
         answer: "third time’s the charm.",
         disposition: "supported",
@@ -355,33 +386,9 @@ describe("groundTurnAnswer", () => {
       },
       [succeeded, failedRead],
     );
-
-    expect(grounded.reliedOnToolCallIds).toEqual(["call-1"]);
-    expect(() =>
-      requireGroundedAnswer(grounded, [succeeded, failedRead]),
-    ).not.toThrow();
-  });
-
-  test("does not invent citations when no tool succeeded", () => {
-    const answer = {
-      answer: "Done.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: [],
-      performedMutation: false,
-    };
-
-    expect(groundTurnAnswer(answer, [failedRead])).toEqual(answer);
-  });
-
-  test("leaves explicit citations unchanged", () => {
-    const answer = {
-      answer: "Done.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: ["call-1"],
-      performedMutation: true,
-    };
-
-    expect(groundTurnAnswer(answer, [succeeded])).toEqual(answer);
+    expect(prompt).toContain("call-1 (generate-image)");
+    expect(prompt).not.toContain("call-3");
+    expect(prompt).toContain("Do not invent IDs");
   });
 });
 
