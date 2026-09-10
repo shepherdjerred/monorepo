@@ -41,7 +41,7 @@ async function assertExploreMatch(
   const first = rows[0];
   if (
     first === undefined ||
-    !isExploreMatchSnapshotSupported(first.game_mode)
+    !isExploreMatchSnapshotSupported(first.queue_id, first.game_mode)
   ) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }

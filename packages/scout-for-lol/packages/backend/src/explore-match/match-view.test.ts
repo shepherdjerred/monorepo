@@ -14,8 +14,9 @@ describe("matchIdsInPreview", () => {
   });
 
   test("excludes Arena from the classic two-team match snapshot", () => {
-    expect(isExploreMatchSnapshotSupported("CHERRY")).toBe(false);
-    expect(isExploreMatchSnapshotSupported("CLASSIC")).toBe(true);
+    expect(isExploreMatchSnapshotSupported(0, "CHERRY")).toBe(false);
+    expect(isExploreMatchSnapshotSupported(1700, "UNKNOWN")).toBe(false);
+    expect(isExploreMatchSnapshotSupported(420, "CLASSIC")).toBe(true);
   });
 
   test("allows cards only for match ids a query actually returned", () => {

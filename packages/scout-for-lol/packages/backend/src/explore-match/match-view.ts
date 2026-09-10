@@ -1,6 +1,7 @@
 import {
   ExploreMatchCardSchema,
   ExploreMatchSnapshotSchema,
+  isArenaQueueOrMode,
   MatchIdSchema,
   type ExploreMatchCard,
   type ExploreMatchCardRequest,
@@ -28,8 +29,11 @@ function ratio(part: number, total: number): number | null {
 }
 
 /** Arena has multiple competing subteams, not the classic two-team shape. */
-export function isExploreMatchSnapshotSupported(gameMode: string): boolean {
-  return gameMode !== "CHERRY";
+export function isExploreMatchSnapshotSupported(
+  queueId: number,
+  gameMode: string,
+): boolean {
+  return !isArenaQueueOrMode(queueId, gameMode);
 }
 
 export function normalizeRiotIdPart(value: string | null): string | null {
@@ -44,7 +48,7 @@ export function exploreMatchSnapshot(
   if (rows.some((row) => row.match_id !== first.match_id)) {
     throw new Error("Explore match detail rows contain more than one match");
   }
-  if (!isExploreMatchSnapshotSupported(first.game_mode)) {
+  if (!isExploreMatchSnapshotSupported(first.queue_id, first.game_mode)) {
     throw new Error("Arena matches do not support the Explore match snapshot");
   }
   const grouped = Map.groupBy(rows, (row) => row.team_id);
@@ -152,7 +156,9 @@ export async function hydrateExploreMatchCards(input: {
     eligible.map(async (request) => {
       const rows = await fetchFullMatch({ matchId: request.matchId });
       const first = requiredFirst(rows);
-      if (!isExploreMatchSnapshotSupported(first.game_mode)) return null;
+      if (!isExploreMatchSnapshotSupported(first.queue_id, first.game_mode)) {
+        return null;
+      }
       return ExploreMatchCardSchema.parse({
         size: request.size,
         match: exploreMatchSnapshot(rows),
