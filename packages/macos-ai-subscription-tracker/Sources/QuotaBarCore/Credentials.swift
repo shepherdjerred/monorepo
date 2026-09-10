@@ -2,65 +2,6 @@ public import Foundation
 import SQLite3
 import Security
 
-public protocol KeychainClient: Sendable {
-  func read(service: String, account: String?) throws -> Data?
-  func write(_ data: Data, service: String, account: String) throws
-  func delete(service: String, account: String) throws
-}
-
-public struct SystemKeychainClient: KeychainClient, Sendable {
-  public init() {}
-
-  public func read(service: String, account: String?) throws -> Data? {
-    var query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecReturnData as String: true,
-      kSecMatchLimit as String: kSecMatchLimitOne,
-    ]
-    if let account { query[kSecAttrAccount as String] = account }
-    var result: AnyObject?
-    let status = SecItemCopyMatching(query as CFDictionary, &result)
-    if status == errSecItemNotFound { return nil }
-    guard status == errSecSuccess else { throw QuotaError.keychain(status: status) }
-    guard let data = result as? Data else { throw QuotaError.keychain(status: errSecDecode) }
-    return data
-  }
-
-  public func write(_ data: Data, service: String, account: String) throws {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account,
-    ]
-    let attributes: [String: Any] = [
-      kSecValueData as String: data,
-      kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-    ]
-    let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-    if updateStatus == errSecSuccess { return }
-    guard updateStatus == errSecItemNotFound else {
-      throw QuotaError.keychain(status: updateStatus)
-    }
-    var item = query
-    for (key, value) in attributes { item[key] = value }
-    let addStatus = SecItemAdd(item as CFDictionary, nil)
-    guard addStatus == errSecSuccess else { throw QuotaError.keychain(status: addStatus) }
-  }
-
-  public func delete(service: String, account: String) throws {
-    let query: [String: Any] = [
-      kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: account,
-    ]
-    let status = SecItemDelete(query as CFDictionary)
-    guard status == errSecSuccess || status == errSecItemNotFound else {
-      throw QuotaError.keychain(status: status)
-    }
-  }
-}
-
 public actor ManualCredentialStore: CredentialStore {
   public static let service = "com.sjerred.QuotaBar.credentials"
   private let keychain: any KeychainClient
@@ -111,7 +52,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let homeDirectory: URL
   private let kimiCodeHome: URL?
   private let cursorStateDatabase: URL?
-  private let claudeKeychain: any KeychainClient
+  private let claudeKeychain: any KeychainReading
   private let selectionLock = NSLock()
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
@@ -120,7 +61,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     homeDirectory: URL? = nil,
     kimiCodeHome: URL? = nil,
     cursorStateDatabase: URL? = nil,
-    claudeKeychain: any KeychainClient = SystemKeychainClient()
+    claudeKeychain: any KeychainReading = SecurityToolKeychainClient()
   ) {
     self.fileManager = fileManager
     self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser

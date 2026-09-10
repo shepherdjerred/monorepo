@@ -128,6 +128,14 @@ and writer of those OAuth token chains: Brim never rotates, refreshes, or
 rewrites OpenCode files or its credential database. An expired or rejected
 Kimi/Grok token instructs the user to refresh it through OpenCode.
 
+Claude Code keeps its credentials only in the macOS login Keychain and rewrites
+that item with `security add-generic-password -U` on every OAuth token refresh,
+which resets the item's access-control list to the tool that created it. Reading
+it with the Security framework therefore re-prompts for the login Keychain
+password after each refresh, however often "Always Allow" is granted. Brim reads
+it through `/usr/bin/security`, the trusted application every one of those
+rewrites re-establishes, so discovery stays silent.
+
 The Kimi and Grok subscription quota responses are private provider contracts,
 not stable public APIs. Their adapters validate responses and show an explicit
 unavailable/stale state when a provider changes shape. Claude and Codex use

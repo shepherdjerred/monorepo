@@ -48,6 +48,39 @@ public struct FoundationCommandRunner: CommandRunning, Sendable {
   }
 }
 
+/// Runs a short-lived command and blocks until it exits.
+///
+/// The credential stores read files, SQLite databases, and the keychain synchronously on the
+/// polling task, so a credential helper that spawns a process belongs on the same blocking path
+/// rather than forcing the whole `CredentialStore` API to become asynchronous.
+public protocol SynchronousCommandRunning: Sendable {
+  func run(executableURL: URL, arguments: [String]) throws -> CommandResult
+}
+
+public struct FoundationSynchronousCommandRunner: SynchronousCommandRunning, Sendable {
+  public init() {}
+
+  public func run(executableURL: URL, arguments: [String]) throws -> CommandResult {
+    let process = Process()
+    let output = Pipe()
+    process.executableURL = executableURL
+    process.arguments = arguments
+    process.standardOutput = output
+    process.standardError = FileHandle.nullDevice
+    process.standardInput = FileHandle.nullDevice
+    do {
+      try process.run()
+    } catch {
+      throw QuotaError.commandFailed(executableURL.lastPathComponent)
+    }
+    // Drain the pipe before waiting: a command whose output exceeds the pipe buffer blocks on
+    // write, and waiting first would deadlock against it.
+    let stdout = output.fileHandleForReading.readDataToEndOfFile()
+    process.waitUntilExit()
+    return CommandResult(stdout: stdout, terminationStatus: process.terminationStatus)
+  }
+}
+
 private final class ProcessControl: @unchecked Sendable {
   let process = Process()
   let output = Pipe()
