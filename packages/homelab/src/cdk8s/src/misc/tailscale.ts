@@ -5,8 +5,8 @@ import { ApiObject, Chart, JsonPatch } from "cdk8s";
 import { Construct } from "constructs";
 import { merge } from "lodash";
 import { KubeIngress } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import type { ProbeModule } from "./blackbox-modules.ts";
-import { registerBackendProbe } from "./probe-registry.ts";
+import type { ProbeModule } from "./probes/blackbox-modules.ts";
+import { registerBackendProbe } from "./probes/probe-registry.ts";
 
 export const TAILSCALE_PROXY_CLASSES = ["standard", "medium", "heavy"] as const;
 export type TailscaleProxyClass = (typeof TAILSCALE_PROXY_CLASSES)[number];

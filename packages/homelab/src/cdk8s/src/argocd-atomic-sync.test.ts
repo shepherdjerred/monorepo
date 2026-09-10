@@ -351,7 +351,7 @@ async function runArgocd(
     ARGOCD_TOKEN: "test-token",
   };
   const process = Bun.spawn(
-    ["bun", "--no-install", "scripts/argocd.ts", ...args],
+    ["bun", "--no-install", "scripts/argocd/argocd.ts", ...args],
     {
       cwd: path.resolve(import.meta.dir, "../../.."),
       env,

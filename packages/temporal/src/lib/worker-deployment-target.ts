@@ -37,7 +37,11 @@ export function resolveWorkerDeploymentRolloutTarget(
         ["bun", "run", "test:workflows"],
         ["bun", "run", "replay:candidate-histories"],
       ],
-      canaryCommand: ["bun", "run", "scripts/worker-deployment-canary.ts"],
+      canaryCommand: [
+        "bun",
+        "run",
+        "scripts/rollout/worker-deployment-canary.ts",
+      ],
     };
   }
   const stage = target === "scout-beta" ? "beta" : "prod";

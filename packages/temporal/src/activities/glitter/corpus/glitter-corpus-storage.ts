@@ -5,8 +5,8 @@ import {
   StoredObjectSchema,
   type StoredObject,
   type StoredObjectReceipt,
-} from "#shared/glitter-corpus.ts";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus.ts";
+import { sha256 } from "#shared/glitter/glitter-corpus-projection.ts";
 import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics-glitter.ts";
 import {
   getObjectBytes,

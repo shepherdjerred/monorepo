@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { App } from "cdk8s";
 import { parse as parseYaml } from "yaml";
 import { z } from "zod";
-import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media.ts";
+import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/media.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 
 const NetworkPolicySchema = z

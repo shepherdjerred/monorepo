@@ -36,7 +36,7 @@ OpenTofu.
 
 ## Release and destructive work
 
-Root ArgoCD sync/prune uses `scripts/argocd.ts release-root` with an exact
+Root ArgoCD sync/prune uses `scripts/argocd/argocd.ts release-root` with an exact
 rendered revision, release inventory, request UUID, operation ownership, child
 preflight, wave restoration, and lifecycle annotations/finalizers. Do not
 replace it with manual root sync logic or classify pruning from status alone.

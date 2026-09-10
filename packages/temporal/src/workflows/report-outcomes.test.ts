@@ -9,9 +9,9 @@ import type { ScoutSeasonRefreshResult } from "#activities/scout/scout-season-re
 import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-canary.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
-import { ciIoImpactReport } from "./ci-io-impact.ts";
+import { ciIoImpactReport } from "./ci/ci-io-impact.ts";
 import { dataDragonReport } from "./scout/data-dragon.ts";
-import { protobufWatchReport } from "./protobuf-watch.ts";
+import { protobufWatchReport } from "./ci/protobuf-watch.ts";
 import { scoutQueueWindowsReport } from "./scout/scout-queue-windows.ts";
 import { scoutSeasonReport } from "./scout/scout-season-refresh.ts";
 import { tasknotesReport } from "./tasknotes-canary.ts";

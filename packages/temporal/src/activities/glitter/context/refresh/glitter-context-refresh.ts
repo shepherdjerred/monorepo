@@ -32,7 +32,7 @@ import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.t
 import {
   estimateStyleGenerationCost,
   generateStyleCard,
-} from "./glitter-context-refresh-style-generation.ts";
+} from "./style/glitter-context-refresh-style-generation.ts";
 import { createCorpusGenerationArtifactStore } from "./glitter-context-refresh-cache.ts";
 import {
   GenerationBudget,

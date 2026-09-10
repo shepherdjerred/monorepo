@@ -14,7 +14,7 @@ import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { temporalWorkerHealthProbes } from "./worker-health.ts";
 

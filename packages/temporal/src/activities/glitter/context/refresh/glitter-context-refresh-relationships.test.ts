@@ -4,7 +4,7 @@ import {
   PeopleDocumentSchema,
   RelationshipsDocumentSchema,
 } from "@shepherdjerred/glitter-context/schema";
-import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { CurrentMessageSchema } from "#shared/glitter/glitter-corpus.ts";
 import type { RelationshipProposal } from "./glitter-context-refresh-generate.ts";
 import {
   applyRelationshipProposals,

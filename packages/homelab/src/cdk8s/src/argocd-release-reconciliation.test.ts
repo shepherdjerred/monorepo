@@ -221,7 +221,7 @@ describe("Argo CD staged external release reconciliation", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "reconcile-release",
           expectedPath,
           "--skip-health-wait",
@@ -300,7 +300,7 @@ describe("Argo CD release inventory validation", () => {
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "release-root",
           "apps",
           expectedPath,
@@ -431,7 +431,7 @@ async function reconcileAgainstActiveChildOperation(
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "reconcile-release",
         expectedPath,
         "--skip-health-wait",

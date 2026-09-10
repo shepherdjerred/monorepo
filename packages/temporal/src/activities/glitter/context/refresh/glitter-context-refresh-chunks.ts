@@ -1,4 +1,4 @@
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
 
 export const STYLE_EVIDENCE_CHUNK_SIZE = 250;
 

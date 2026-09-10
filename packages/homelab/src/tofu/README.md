@@ -44,13 +44,13 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
 
 Non-secret platform desired state is committed in each platform stack's
 `desired-state.json` and checked against `platform-desired-state.schema.json`.
-`packages/homelab/scripts/tofu-stack.ts` injects that state as typed variables
+`packages/homelab/scripts/tofu/tofu-stack.ts` injects that state as typed variables
 and builds every child environment from an allowlist. Vendor admin keys,
 generated credentials, BYOK values, certificate material, bot tokens, and each
 stack's unique state passphrase remain in 1Password.
 
 To validate without state or platform access, run
-`bun packages/homelab/scripts/tofu-stack.ts <stack> validate`.
+`bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate`.
 
 ## Usage
 
@@ -58,8 +58,8 @@ The platform stacks must be run through the wrapper so their committed
 desired-state registries and allowlisted credentials are injected:
 
 ```bash
-bun packages/homelab/scripts/tofu-stack.ts openai plan
-bun packages/homelab/scripts/tofu-stack.ts openai apply
+bun packages/homelab/scripts/tofu/tofu-stack.ts openai plan
+bun packages/homelab/scripts/tofu/tofu-stack.ts openai apply
 ```
 
 For the established infrastructure stacks, direct OpenTofu commands remain
@@ -73,7 +73,7 @@ tofu -chdir=cloudflare apply
 
 ## CI/CD
 
-The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkite/pipeline.yml)) drives these stacks via `packages/homelab/scripts/tofu-stack.ts`:
+The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkite/pipeline.yml)) drives these stacks via `packages/homelab/scripts/tofu/tofu-stack.ts`:
 
 - **Every PR** (when tofu inputs change): credentialed plans for the established infrastructure stacks and backend-disabled validation with dummy encryption values for the five platform stacks.
 - **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.

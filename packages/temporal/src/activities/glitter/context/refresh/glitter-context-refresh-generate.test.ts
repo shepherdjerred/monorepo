@@ -3,19 +3,19 @@ import {
   PersonSchema,
   StyleCardSchema,
 } from "@shepherdjerred/glitter-context/schema";
-import { CurrentMessageSchema } from "#shared/glitter-corpus.ts";
+import { CurrentMessageSchema } from "#shared/glitter/glitter-corpus.ts";
 import { GlitterEvidenceError } from "./glitter-context-refresh-evidence-error.ts";
-import { finalizeStyleSynthesis } from "./glitter-context-refresh-style-finalize.ts";
+import { finalizeStyleSynthesis } from "./style/glitter-context-refresh-style-finalize.ts";
 import {
   STYLE_ARRAY_FIELDS,
   StyleChunkSummarySchema,
   StyleSynthesisSchema,
-} from "./glitter-context-refresh-style-schemas.ts";
+} from "./style/glitter-context-refresh-style-schemas.ts";
 import * as glitterLlm from "./glitter-context-refresh-llm.ts";
 import {
   sanitizeChunkSummary,
   validateChunkSummary,
-} from "./glitter-context-refresh-style-validation.ts";
+} from "./style/glitter-context-refresh-style-validation.ts";
 import { GenerationBudget } from "./glitter-context-refresh-budget.ts";
 import type { GenerationArtifactStore } from "./glitter-context-refresh-cache.ts";
 
@@ -420,7 +420,7 @@ await vi.doMock("./glitter-context-refresh-llm.ts", () => ({
 }));
 
 const { generateStyleCard } =
-  await import("./glitter-context-refresh-style-generation.ts");
+  await import("./style/glitter-context-refresh-style-generation.ts");
 
 function memoryStore(): GenerationArtifactStore {
   const values = new Map<string, unknown>();

@@ -2,7 +2,7 @@ import {
   ChannelInventoryEntrySchema,
   type ChannelInventoryEntry,
   type DiscordApiChannel,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 
 const VIEW_CHANNEL = 1n << 10n;
 const READ_MESSAGE_HISTORY = 1n << 16n;

@@ -186,7 +186,7 @@ test("root release finalization requires exact revision and request identity", a
     [
       "bun",
       "--no-install",
-      "scripts/argocd.ts",
+      "scripts/argocd/argocd.ts",
       "finalize-root-release",
       "apps",
       "--revision",
@@ -330,7 +330,7 @@ test("root release finalization applies every exact wave before accepting a part
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",
@@ -526,7 +526,7 @@ for (const clusterScoped of [
         [
           "bun",
           "--no-install",
-          "scripts/argocd.ts",
+          "scripts/argocd/argocd.ts",
           "finalize-root-release",
           "apps",
           "--revision",
@@ -680,7 +680,7 @@ test("root release finalization adopts the exact active prune without another PO
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",
@@ -719,7 +719,7 @@ test("root release finalization adopts the exact active prune without another PO
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",
@@ -843,7 +843,7 @@ test("release-root resumes at a live later phase instead of restaging", async ()
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "release-root",
         "apps",
         expectedPath,
@@ -967,7 +967,7 @@ test("root release finalization refuses a batch selecting another namespace", as
       [
         "bun",
         "--no-install",
-        "scripts/argocd.ts",
+        "scripts/argocd/argocd.ts",
         "finalize-root-release",
         "apps",
         "--revision",

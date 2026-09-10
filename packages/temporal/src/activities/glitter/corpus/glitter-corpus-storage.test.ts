@@ -1,7 +1,7 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import { describe, expect, test, vi } from "vitest";
 import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics-glitter.ts";
-import { StoredObjectSchema } from "#shared/glitter-corpus.ts";
+import { StoredObjectSchema } from "#shared/glitter/glitter-corpus.ts";
 import { discordRequestLeaseDelayMs } from "./glitter-corpus-rate-limit.ts";
 import {
   isTransientCorpusStorageError,

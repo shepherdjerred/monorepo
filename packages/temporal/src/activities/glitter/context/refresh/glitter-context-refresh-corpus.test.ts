@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
+import { sha256 } from "#shared/glitter/glitter-corpus-projection.ts";
 import {
   loadVerifiedGlitterCorpusWithReader,
   type GlitterCorpusObjectReader,

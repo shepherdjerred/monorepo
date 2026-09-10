@@ -5,7 +5,7 @@ import type {
   ChannelStateResult,
   DailyBaseline,
   InventoryResult,
-} from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus-activity-types.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   glitterCorpusActivityRetry,

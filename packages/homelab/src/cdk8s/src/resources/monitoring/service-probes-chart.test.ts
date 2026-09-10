@@ -6,7 +6,7 @@ import {
   registerBackendProbe,
   registerPublicProbe,
   resetProbeRegistry,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/probe-registry.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
 import { createServiceProbesChart } from "./service-probes-chart.ts";
 
 const ProbeSchema = z.object({

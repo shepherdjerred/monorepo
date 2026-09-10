@@ -312,7 +312,11 @@ async function options(
       ["bun", "run", "test:workflows"],
       ["bun", "run", "replay:candidate-histories"],
     ],
-    canaryCommand: ["bun", "run", "scripts/worker-deployment-canary.ts"],
+    canaryCommand: [
+      "bun",
+      "run",
+      "scripts/rollout/worker-deployment-canary.ts",
+    ],
     catalogPath: catalogFile,
     candidateStatePath,
     now,

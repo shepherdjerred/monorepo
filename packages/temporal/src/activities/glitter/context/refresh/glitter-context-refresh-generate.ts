@@ -1,6 +1,6 @@
 import { z } from "zod/v4";
 import { type RelationshipEvent } from "@shepherdjerred/glitter-context/schema";
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
 import {
   type GenerationBudget,
   worstCaseGenerationCostUsd,

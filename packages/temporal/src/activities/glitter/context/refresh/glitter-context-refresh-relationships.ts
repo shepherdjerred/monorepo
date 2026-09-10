@@ -4,8 +4,8 @@ import {
   type RelationshipEvent,
   type RelationshipsDocument,
 } from "@shepherdjerred/glitter-context/schema";
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
-import { sha256 } from "#shared/glitter-corpus-projection.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
+import { sha256 } from "#shared/glitter/glitter-corpus-projection.ts";
 import type { RelationshipProposal } from "./glitter-context-refresh-generate.ts";
 import { isSafeStyleSample } from "./glitter-context-refresh-selection.ts";
 

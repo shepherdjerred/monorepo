@@ -4,7 +4,7 @@ import {
   KubePersistentVolumeClaim,
   Quantity,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage-classes.ts";
+import { NVME_STORAGE_CLASS_LZ4 } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 
 export const BUN_CACHE_MOUNT_PATH = "/buildkite/bun-cache";
 

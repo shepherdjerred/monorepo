@@ -6,17 +6,17 @@ import { z } from "zod/v4";
 import {
   CorpusObservationSchema,
   type CorpusObservation,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import {
   SeedImportManifestSchema,
   type SeedImportManifest,
-} from "#shared/glitter-corpus-seed.ts";
+} from "#shared/glitter/glitter-corpus-seed.ts";
 import {
   buildCurrentProjection,
   projectionChecksum,
   serializeProjection,
   sha256,
-} from "#shared/glitter-corpus-projection.ts";
+} from "#shared/glitter/glitter-corpus-projection.ts";
 import { createCorpusStoreFromEnv } from "./glitter-corpus-store.ts";
 import { putImmutableObject } from "./glitter-corpus-storage.ts";
 

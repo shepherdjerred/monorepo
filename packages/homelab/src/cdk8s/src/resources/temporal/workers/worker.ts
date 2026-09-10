@@ -23,7 +23,7 @@ import { createTemporalIngressWorkers } from "./ingress-workers.ts";
 import { homelabAuditEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/homelab-audit-env.ts";
 import { createTemporalOperationsWorkers } from "./operations-workers.ts";
 import { createTemporalWorkflowWorkers } from "./workflow-worker.ts";
-import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss-config.ts";
+import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
   createTemporalWorkerIngressReaderRbac,

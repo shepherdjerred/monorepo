@@ -45,7 +45,7 @@ stable design-audit fixture through
 `packages/scout-for-lol/packages/backend/scripts/seed-design-audit.ts`. It
 disables background jobs and the Discord gateway, so the audit needs no Discord
 or production API credentials. The boot implementation is
-`packages/scout-for-lol/scripts/dev-web.ts`, and the browser projects are
+`packages/scout-for-lol/scripts/dev/dev-web.ts`, and the browser projects are
 defined in `packages/scout-for-lol/packages/design-audit/playwright.config.ts`.
 
 ## 4. Update snapshots deliberately

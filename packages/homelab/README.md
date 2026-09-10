@@ -55,8 +55,8 @@ Deploys are driven by the static Buildkite pipeline
   and ArgoCD reconcile.
 - **On merge to main**, the pipeline applies the tofu stacks (infra, github,
   cloudflare), pushes the versioned Helm chart
-  (`scripts/helm-push.ts`), and syncs + waits on ArgoCD
-  (`scripts/argocd.ts`).
+  (`scripts/helm/helm-push.ts`), and syncs + waits on ArgoCD
+  (`scripts/argocd/argocd.ts`).
 
 Never apply manifests directly with `kubectl apply` — all changes go through
 ArgoCD, which reverts direct mutations.

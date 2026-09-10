@@ -51,7 +51,7 @@ without starting an automatic child operation. Keeping unchanged resources on
 the source path is significant: Argo applies the chart-owned object itself,
 rather than treating a local manifest as an alternate desired tree whose result
 may be reported as applied without updating a cluster-scoped prerequisite. The
-[manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd-manifest-overrides.ts)
+[manifest-override batcher](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd-manifest-overrides.ts)
 splits only the rewritten Application requests at 750 kB. ArgoCD v3.4.5's
 [operation-state constructor](https://github.com/argoproj/argo-cd/blob/564b94973b284b8de98da7cee6eeade2cb941e46/controller/sync.go#L76-L81)
 copies the original request into status. In this cluster, a request near the
@@ -126,7 +126,7 @@ release does not use that shortcut.
 
 Both request shapes remain isolated by numeric sync wave and exact resource
 identity. After explicit child reconciliation completes, the
-[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+[root finalizer](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 reapplies the exact desired tree in isolated wave batches. This restores every
 child auto-sync policy without letting an unhealthy earlier wave hide a later
 one. Unchanged resources again use the exact source, while the self-managed root
@@ -270,7 +270,7 @@ release open forever.
 
 So the [main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
 separates root application from release-scoped health. One
-[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+[atomic Argo command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 retains the exact Buildkite request identity while ArgoCD applies the root
 revision. It sends every desired wave as bounded exact-source selections plus
 local overrides only where policy is deliberately rewritten. It compares each
@@ -291,7 +291,7 @@ Keeping submission and finalization together lets the command poll through that
 gap and distinguish stale state from its own operation.
 
 Buildkite retries reuse the build UUID. The
-[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts)
+[operation identity implementation](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts)
 adopts only the same request ID and revision. It refuses any unrelated active
 operation. For the root workflow, the active resource selection must also equal
 one exact desired batch or the unselected final prune. Each owned operation
@@ -313,7 +313,7 @@ After termination, the top-level live operation is authoritative. Its absence
 means the health wait is gone even if `status.operationState` still says
 `Running` or `Terminating`; a different operation UUID in live or completed
 state still proves replacement and fails the release. Natural success uses the
-[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd.ts):
+[same boundary](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts):
 a `Succeeded` status does not finish the command until the live operation
 clears.
 

@@ -17,10 +17,10 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
 const IMAGE = `ghcr.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred/alert-dashboard"]}`;

@@ -1,11 +1,11 @@
 import type { App } from "cdk8s";
 import { Chart } from "cdk8s";
-import { createHttpProbe } from "@shepherdjerred/homelab/cdk8s/src/misc/http-probe.ts";
+import { createHttpProbe } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/http-probe.ts";
 import {
   getRegisteredBackendProbes,
   getRegisteredPublicProbes,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/probe-registry.ts";
-import type { ProbeModule } from "@shepherdjerred/homelab/cdk8s/src/misc/blackbox-modules.ts";
+} from "@shepherdjerred/homelab/cdk8s/src/misc/probes/probe-registry.ts";
+import type { ProbeModule } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/blackbox-modules.ts";
 
 function buildTargetUrl(
   module: ProbeModule,

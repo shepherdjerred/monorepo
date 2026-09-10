@@ -10,12 +10,12 @@ import {
   FinalizeSnapshotInputSchema,
   VerifyChannelInputSchema,
   type CapturePageInput,
-} from "#shared/glitter-corpus-activity-types.ts";
+} from "#shared/glitter/glitter-corpus-activity-types.ts";
 import {
   GuildInventorySchema,
   GuildSnapshotSchema,
   StoredObjectSchema,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import {
   glitterCorpusActivityRetry,

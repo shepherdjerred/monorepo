@@ -16,14 +16,14 @@ import {
   withCommonProps,
   setRevisionHistoryLimit,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/service-monitor.ts";
+import { createServiceMonitor } from "@shepherdjerred/homelab/cdk8s/src/misc/probes/service-monitor.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
 import versions, {
   postgresImageDigests,
 } from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 import { match } from "ts-pattern";
-import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/zfs-nvme-volume.ts";
+import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import {
   applyZfsVolumeSelinuxRelabeling,

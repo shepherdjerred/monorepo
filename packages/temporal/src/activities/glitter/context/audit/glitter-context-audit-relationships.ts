@@ -3,7 +3,7 @@ import type {
   Person,
   RelationshipsDocument,
 } from "@shepherdjerred/glitter-context/schema";
-import type { CurrentMessage } from "#shared/glitter-corpus.ts";
+import type { CurrentMessage } from "#shared/glitter/glitter-corpus.ts";
 import {
   probeGenerationArtifact,
   type GenerationArtifactReader,

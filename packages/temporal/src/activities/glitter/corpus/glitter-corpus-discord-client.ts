@@ -2,7 +2,7 @@ import { z } from "zod/v4";
 import {
   DiscordApiMessageSchema,
   type DiscordApiMessage,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import { glitterCorpusDiscordRequestsTotal } from "#observability/metrics-glitter.ts";
 import {
   createGlitterDiscordRateLimitCoordinator,

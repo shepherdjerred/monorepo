@@ -6,7 +6,7 @@ import {
   Sha256Schema,
   type CurrentMessage,
   type GuildSnapshot,
-} from "#shared/glitter-corpus.ts";
+} from "#shared/glitter/glitter-corpus.ts";
 import {
   LatestSnapshotPointerSchema,
   readRequiredObject,
