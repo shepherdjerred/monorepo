@@ -202,4 +202,14 @@ describe("ManagedFlagInventorySchema", () => {
       ).success,
     ).toBe(false);
   });
+
+  test("generated flag keys match managed-flag-inventory.json", async () => {
+    const { generateFlagTypesSource } =
+      await import("../scripts/generate-flag-types.ts");
+    const generatedOnDisk = await Bun.file(
+      new URL("managed-flag-keys.generated.ts", import.meta.url),
+    ).text();
+    const expected = await generateFlagTypesSource();
+    expect(generatedOnDisk).toBe(expected);
+  });
 });

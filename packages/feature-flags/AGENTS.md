@@ -3,10 +3,11 @@
 This package is the OpenFeature/Flipt adapter for `@shepherdjerred/config`.
 Load the repository `feature-flags` skill for rollout procedure.
 
-- Flipt absence or an evaluation failure means no answer; the layered resolver
-  may continue. A successful `false` is an answer and must never fall through.
-- Preserve the two failure classes: transport/evaluation failures degrade to
-  lower configuration layers, while malformed successful values fail loudly.
+- A missing flag (`FLAG_NOT_FOUND`) on an active provider is an error and fails
+  loudly (`FlagNotFoundError`). Transport outages or disabled mode
+  (`PROVIDER_NOT_READY`) degrade to lower configuration layers.
+- A successful `false` is an answer and must never fall through.
+- Malformed successful values fail loudly.
 - Keep the dependency direction from this package to `config`, never the
   reverse.
 - Initialize one client per process and close it during shutdown. Do not create

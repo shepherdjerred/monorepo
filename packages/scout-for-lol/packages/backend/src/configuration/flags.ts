@@ -19,6 +19,7 @@ import {
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import { isEnabled } from "@shepherdjerred/feature-flags";
+import type { ScoutBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import { isAbsent } from "@shepherdjerred/feature-flags/flag-result.ts";
 import { resolveEnvironment } from "#src/configuration.ts";
 
@@ -163,6 +164,11 @@ export type FlagName =
   | "scout-consumer-player-profiles-enabled"
   | "tournament_lobbies_enabled"
   | "voice_assistant_enabled";
+
+const _assertFlagNameSubset: FlagName extends ScoutBooleanFlagKey
+  ? true
+  : never = true;
+void _assertFlagNameSubset;
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
  * compatibility seed and test fixture for provider-unavailable evaluations. */

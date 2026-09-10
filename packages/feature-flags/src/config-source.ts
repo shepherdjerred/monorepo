@@ -4,9 +4,14 @@ import {
   stringValue,
 } from "@shepherdjerred/feature-flags/index.ts";
 import {
+  FlagNotFoundError,
   isAbsent,
   type FlagResult,
 } from "@shepherdjerred/feature-flags/flag-result.ts";
+import {
+  ManagedBooleanFlagKeySchema,
+  ManagedVariantFlagKeySchema,
+} from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 
 /**
  * Structural mirror of `@shepherdjerred/config`'s source contract.
@@ -96,28 +101,60 @@ export function createFlagConfigSource(
           : { attributes: options.attributes }),
       };
 
-      switch (kind) {
-        case "boolean": {
-          const result = await isEnabled(names.flag, {
-            default: false,
-            ...evaluation,
-          });
-          return valueOrAbsent(result, names.flag);
+      try {
+        switch (kind) {
+          case "boolean": {
+            const parsed = ManagedBooleanFlagKeySchema.safeParse(names.flag);
+            if (!parsed.success) {
+              throw new FlagNotFoundError(
+                names.flag,
+                `flag "${names.flag}" is not defined in managed-flag-inventory.json`,
+              );
+            }
+            const result = await isEnabled(parsed.data, {
+              default: false,
+              ...evaluation,
+            });
+            return valueOrAbsent(result, names.flag);
+          }
+          case "string": {
+            const parsed = ManagedVariantFlagKeySchema.safeParse(names.flag);
+            if (!parsed.success) {
+              throw new FlagNotFoundError(
+                names.flag,
+                `flag "${names.flag}" is not defined in managed-flag-inventory.json`,
+              );
+            }
+            const result = await stringValue(parsed.data, {
+              default: "",
+              ...evaluation,
+            });
+            return valueOrAbsent(result, names.flag);
+          }
+          case "number": {
+            const parsed = ManagedVariantFlagKeySchema.safeParse(names.flag);
+            if (!parsed.success) {
+              throw new FlagNotFoundError(
+                names.flag,
+                `flag "${names.flag}" is not defined in managed-flag-inventory.json`,
+              );
+            }
+            const result = await numberValue(parsed.data, {
+              default: 0,
+              ...evaluation,
+            });
+            return valueOrAbsent(result, names.flag);
+          }
         }
-        case "string": {
-          const result = await stringValue(names.flag, {
-            default: "",
-            ...evaluation,
-          });
-          return valueOrAbsent(result, names.flag);
+      } catch (error) {
+        if (error instanceof FlagNotFoundError) {
+          const fatal = new Error(
+            `flag "${names.flag}" evaluation failed: ${error.message}`,
+          );
+          fatal.name = FATAL_SOURCE_ERROR_NAME;
+          throw fatal;
         }
-        case "number": {
-          const result = await numberValue(names.flag, {
-            default: 0,
-            ...evaluation,
-          });
-          return valueOrAbsent(result, names.flag);
-        }
+        throw error;
       }
     },
   };

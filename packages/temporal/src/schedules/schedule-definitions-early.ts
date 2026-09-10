@@ -66,7 +66,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      expression: "*/15 * * * *",
+      expression: "*/2 * * * *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,

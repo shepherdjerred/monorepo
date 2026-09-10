@@ -1,4 +1,5 @@
 import { isEnabled } from "@shepherdjerred/feature-flags";
+import type { StreambotBooleanFlagKey } from "@shepherdjerred/feature-flags/managed-flag-keys.generated.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 
 export type MediaFeatureGate = {
@@ -14,7 +15,10 @@ export type MediaFeatureGate = {
   readonly musicOverVoice: (scope: DiscoveryScope) => Promise<boolean>;
 };
 
-async function enabled(key: string, scope: DiscoveryScope): Promise<boolean> {
+async function enabled(
+  key: StreambotBooleanFlagKey,
+  scope: DiscoveryScope,
+): Promise<boolean> {
   const result = await isEnabled(key, {
     default: false,
     targetingKey: scope.userId,

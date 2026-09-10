@@ -295,7 +295,7 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
     args: [],
     timing: {
       kind: "cron",
-      expression: "*/15 * * * *",
+      expression: "*/2 * * * *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
