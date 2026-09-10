@@ -487,6 +487,9 @@
     {
       "package": "@scout-for-lol/docs-site",
       "directory": "packages/scout-for-lol/packages/docs-site",
+      "defaultEnv": {
+        "PUBLIC_SCOUT_SITE_FLAVOR": "beta"
+      },
       "steps": [
         {
           "runner": "command",

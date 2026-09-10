@@ -16,8 +16,11 @@ import { glob } from "astro/loaders";
  * all follow, because they are derived from built routes.
  *
  * Defaults to `prod` — i.e. excluded — so a local `bun run build`, `astro dev`,
- * or any future caller fails closed. Only `scripts/release/scout-site-release.ts` sets
- * the flavor, and it sets it for both builds.
+ * or any future caller fails closed. `scripts/release/scout-site-release.ts` sets
+ * the flavor for both release builds, and `scripts/ci-test-manifest.json` sets
+ * `beta` for this workspace so CI compiles and link-checks the whole page set:
+ * the beta-only pages are a superset of prod's, and a flavor-less CI build left
+ * them uncompiled until a main-only release step found the break.
  */
 const isBeta = env.PUBLIC_SCOUT_SITE_FLAVOR === "beta";
 
