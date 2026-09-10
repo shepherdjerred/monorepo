@@ -238,12 +238,25 @@ function requestOperationId(request: unknown): string {
   return operationId;
 }
 
+type LifecycleOptions = {
+  /**
+   * ArgoCD writes `phase: Terminating` on the Application and the controller
+   * rewrites the whole operation state on its next progress write, so a
+   * termination request can be accepted and then discarded. Raising this models
+   * that: the server answers every DELETE, but keeps serving the Running
+   * fixtures until the request has been made this many times.
+   */
+  readonly deletesBeforeClear?: number;
+  readonly prunableChildren?: readonly string[];
+};
+
 function serveLifecycle(
   beforeDelete: readonly unknown[],
   afterDelete: readonly unknown[] = [{ status: {} }],
   renderedManifests: readonly string[] = DEFAULT_RENDERED_MANIFESTS,
-  prunableChildren: readonly string[] = [],
+  options: LifecycleOptions = {},
 ) {
+  const { deletesBeforeClear = 1, prunableChildren = [] } = options;
   const observations: LifecycleObservations = {
     deleteRequests: 0,
     postDeleteGets: 0,
@@ -277,7 +290,7 @@ function serveLifecycle(
         url.pathname === "/api/v1/applications/apps/operation"
       ) {
         observations.deleteRequests += 1;
-        terminated = true;
+        terminated = observations.deleteRequests >= deletesBeforeClear;
         return new Response(null, { status: 204 });
       }
       if (
@@ -426,7 +439,7 @@ test("atomic Argo sync ignores stale status, applies the live result, and waits 
     [stale, { status: {} }, stale, current],
     [terminating, { status: {} }],
     desiredNames.map((name) => renderedApplication(name)),
-    ["removed-one", "removed-two"],
+    { prunableChildren: ["removed-one", "removed-two"] },
   );
 
   try {
@@ -508,7 +521,7 @@ test("atomic Argo sync waits for every validated prune candidate", async () => {
     [inventory, { status: {} }, desiredApplied, pruneApplied],
     [{ status: {} }],
     DEFAULT_RENDERED_MANIFESTS,
-    ["removed-worker"],
+    { prunableChildren: ["removed-worker"] },
   );
 
   try {
@@ -642,6 +655,74 @@ test("atomic Argo sync finalizes a stable applied operation when adopting a retr
     expect(lifecycle.observations.deleteRequests).toBe(1);
   } finally {
     await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync re-requests a termination the controller discarded", async () => {
+  const applied = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced", hookPhase: "Running" }],
+  });
+  const lifecycle = serveLifecycle([applied], undefined, undefined, {
+    deletesBeforeClear: 2,
+  });
+
+  try {
+    const result = await runArgocd(atomicArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("terminated applied sync operation: apps");
+    expect(result.stdout).toContain(
+      "re-requested termination of applied sync operation: apps",
+    );
+    expect(lifecycle.observations.deleteRequests).toBe(2);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
+test("atomic Argo sync reports why repeated terminations were rejected", async () => {
+  const applied = applicationOperation({
+    phase: "Running",
+    requestId: CURRENT_REQUEST_ID,
+    resources: [{ status: "Synced", hookPhase: "Running" }],
+  });
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    fetch(request) {
+      const url = new URL(request.url);
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps/manifests"
+      ) {
+        return Response.json({ manifests: DEFAULT_RENDERED_MANIFESTS });
+      }
+      if (
+        request.method === "DELETE" &&
+        url.pathname === "/api/v1/applications/apps/operation"
+      ) {
+        return new Response("Unable to terminate operation", { status: 403 });
+      }
+      if (
+        request.method === "GET" &&
+        url.pathname === "/api/v1/applications/apps"
+      ) {
+        return Response.json(applied);
+      }
+      return new Response("not found", { status: 404 });
+    },
+  });
+
+  try {
+    const result = await runArgocd(atomicArgs(), server.url.origin);
+
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain("Async sync termination failed: HTTP 403");
+  } finally {
+    await server.stop(true);
   }
 });
 

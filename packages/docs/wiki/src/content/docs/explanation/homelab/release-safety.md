@@ -152,6 +152,26 @@ terminal failures remain `Progressing` or `Degraded`, while a current
 recursive `apps` Application carries `IgnoreHealthCheck=true`; child
 Application health remains an ordering and acceptance signal.
 
+`IgnoreHealthCheck=true` only removes a resource from an Application's aggregate
+health. ArgoCD's sync engine still gates each wave on the health it computes for
+every resource in that wave, so the root chart's own `apps` Application reads
+`Progressing` for as long as its operation runs. That self-wait is unavoidable,
+which is why the root chart orders the self-reference into a wave after every
+resource it manages: the gate then closes only once the whole desired set is
+applied, which is the precondition the release terminates on. Ordering it
+earlier lets the gate close mid-release — build 15054 applied 217 of 308 root
+resources and then held its operation open indefinitely.
+
+Termination of that self-wait is re-requested rather than requested once.
+ArgoCD terminates an operation by writing `Terminating` into
+`status.operationState`, and the application controller rewrites that whole
+object — phase included — whenever it persists operation progress, so a request
+can be accepted and then silently discarded. The release command repeats the
+request on every poll that still observes a `Running` operation. A discarded
+termination costs more than one build: it leaves the root Application
+permanently busy, and every later build fails its first root sync with `another
+operation is already in progress`.
+
 ## Why manual global sync preserves child options
 
 ArgoCD records a manual sync request in an Application's

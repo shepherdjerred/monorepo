@@ -2358,8 +2358,10 @@ async function waitForOperationToClear(
   operationId: string | null,
   startedAt: string | undefined,
   timeoutSeconds: number,
+  reissueTermination?: () => Promise<TerminationRequest>,
 ): Promise<void> {
   const deadline = Date.now() + timeoutSeconds * 1000;
+  let lastTerminationRejection: string | undefined;
   while (Date.now() < deadline) {
     const current = observeOperation(await getApplication(appName, token));
     assertMatchingRevision(current, requestId, revision, appName);
@@ -2383,22 +2385,48 @@ async function waitForOperationToClear(
       }
       return;
     }
+    lastTerminationRejection = await reissueTerminationWhileRunning(
+      reissueTermination,
+      current.phase,
+      lastTerminationRejection,
+    );
     await sleepUntilNextOperationPoll(deadline);
   }
   throw new Error(
-    `Timeout: ${appName} operation for request ${requestId} did not clear within ${timeoutSeconds.toString()}s`,
+    `Timeout: ${appName} operation for request ${requestId} did not clear within ${timeoutSeconds.toString()}s` +
+      terminationRejectionSuffix(lastTerminationRejection),
   );
 }
 
-async function terminateAppliedOperation(
+/**
+ * Re-request termination for as long as the operation is still Running, and
+ * carry the latest rejection so a timeout can name why the request failed.
+ */
+async function reissueTerminationWhileRunning(
+  reissueTermination: (() => Promise<TerminationRequest>) | undefined,
+  phase: string,
+  lastRejection: string | undefined,
+): Promise<string | undefined> {
+  if (reissueTermination === undefined || phase !== "Running") {
+    return lastRejection;
+  }
+  const reissued = await reissueTermination();
+  return reissued.ok ? undefined : reissued.detail;
+}
+
+function terminationRejectionSuffix(rejection: string | undefined): string {
+  return rejection === undefined
+    ? ""
+    : `; last termination request was rejected: ${rejection}`;
+}
+
+type TerminationRequest =
+  { readonly ok: true } | { readonly detail: string; readonly ok: false };
+
+async function requestOperationTermination(
   appName: string,
   token: string,
-  requestId: string,
-  revision: string,
-  operationId: string | null,
-  startedAt: string | undefined,
-  timeoutSeconds: number,
-): Promise<void> {
+): Promise<TerminationRequest> {
   const url = new URL(
     `/api/v1/applications/${encodeURIComponent(appName)}/operation`,
     serverUrl(),
@@ -2410,11 +2438,43 @@ async function terminateAppliedOperation(
       "Content-Type": "application/json",
     },
   });
-  if (!response.ok) {
-    const body = (await response.text()).slice(0, 1024);
-    throw new Error(
-      `Async sync termination failed: HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
-    );
+  if (response.ok) {
+    return { ok: true };
+  }
+  const body = (await response.text()).slice(0, 1024);
+  return {
+    detail: `HTTP ${response.status.toString()} ${response.statusText}\n${body}`,
+    ok: false,
+  };
+}
+
+/**
+ * ArgoCD terminates an operation by writing `status.operationState.phase =
+ * Terminating`, but the application controller rewrites that whole object —
+ * phase included — every time it persists operation progress. A termination
+ * request that lands between the controller's freshness read and its next write
+ * is discarded without any error, and nothing ever re-requests it: the root
+ * Application stays Running forever and every later build fails its first root
+ * sync with "another operation is already in progress" (build 15054 wedged main
+ * that way). So re-request termination on every poll that still observes a
+ * Running operation, and keep the rejection detail for the timeout message.
+ *
+ * A rejection is not fatal on its own — the operation may have cleared between
+ * the poll and the request — but a live operation that never clears still fails
+ * loudly when the deadline passes.
+ */
+async function terminateAppliedOperation(
+  appName: string,
+  token: string,
+  requestId: string,
+  revision: string,
+  operationId: string | null,
+  startedAt: string | undefined,
+  timeoutSeconds: number,
+): Promise<void> {
+  const requested = await requestOperationTermination(appName, token);
+  if (!requested.ok) {
+    throw new Error(`Async sync termination failed: ${requested.detail}`);
   }
   console.log(`terminated applied sync operation: ${appName}`);
   await waitForOperationToClear(
@@ -2425,6 +2485,15 @@ async function terminateAppliedOperation(
     operationId,
     startedAt,
     timeoutSeconds,
+    async () => {
+      const reissued = await requestOperationTermination(appName, token);
+      if (reissued.ok) {
+        console.log(
+          `re-requested termination of applied sync operation: ${appName}`,
+        );
+      }
+      return reissued;
+    },
   );
 }
 
