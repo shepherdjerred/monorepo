@@ -519,10 +519,14 @@ describe("citation retry prompt and repair", () => {
       },
       [succeeded, failedRead],
     );
-    expect(prompt).toContain("call-1 (generate-image)");
+    expect(prompt).toContain(
+      "call-1 (generate-image); input={}; result=Image staged",
+    );
     expect(prompt).not.toContain("call-3");
     expect(prompt).toContain("Do not invent IDs");
     expect(prompt).toContain("Do not cite functions.<tool-name>");
+    expect(prompt).toContain("Do not cite an unrelated successful call");
+    expect(prompt).toContain("match on input and result");
     expect(prompt).toContain('with disposition "supported"');
     expect(prompt).toContain("performedMutation true");
     expect(prompt).not.toContain("conversation or unsupported");

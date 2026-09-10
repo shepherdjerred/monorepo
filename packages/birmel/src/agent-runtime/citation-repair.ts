@@ -8,6 +8,8 @@ export type CitationToolEvent = {
   toolCallId: string;
   toolId: string;
   success: boolean;
+  inputSummary: string;
+  resultSummary: string;
 };
 
 export type GroundedToolEvent = CitationToolEvent & {
@@ -110,7 +112,10 @@ export function citationRetryPrompt(
   toolEvents: readonly CitationToolEvent[],
 ): string {
   const listed = successfulToolEvents(toolEvents)
-    .map((event) => `${event.toolCallId} (${event.toolId})`)
+    .map(
+      (event) =>
+        `${event.toolCallId} (${event.toolId}); input=${event.inputSummary}; result=${event.resultSummary}`,
+    )
     .join("\n");
   const succeeded = new Set(
     successfulToolEvents(toolEvents).map((event) => event.toolCallId),
@@ -128,10 +133,10 @@ ${invalidLine}
 Previous answer JSON:
 ${JSON.stringify(answer)}
 
-Successful tool calls this turn (cite only IDs from this list that the answer actually used):
+Successful tool calls this turn (cite only IDs from this list that the original answer actually used; match on input and result, not tool name alone):
 ${listed}
 
-Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. Do not cite functions.<tool-name> or functions.<tool-name>:0; those are provider function names, not toolCallId values. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
+Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call IDs from this list that your answer relied on. Do not invent IDs. Do not cite functions.<tool-name> or functions.<tool-name>:0; those are provider function names, not toolCallId values. Do not cite an unrelated successful call. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
 }
 
 /**
