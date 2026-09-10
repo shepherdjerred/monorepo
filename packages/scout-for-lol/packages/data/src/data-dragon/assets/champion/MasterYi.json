@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "MasterYi": {
       "id": "MasterYi",
@@ -657,7 +657,7 @@
         "mpperlevel": 42,
         "movespeed": 355,
         "armor": 33,
-        "armorperlevel": 4.5,
+        "armorperlevel": 5,
         "spellblock": 32,
         "spellblockperlevel": 2.05,
         "attackrange": 175,

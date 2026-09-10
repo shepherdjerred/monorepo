@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Syndra": {
       "id": "Syndra",
@@ -640,8 +640,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [12, 11, 10, 9, 8],
-          "cooldownBurn": "12/11/10/9/8",
+          "cooldown": [13, 12, 11, 10, 9],
+          "cooldownBurn": "13/12/11/10/9",
           "cost": [60, 70, 80, 90, 100],
           "costBurn": "60/70/80/90/100",
           "datavalues": {},

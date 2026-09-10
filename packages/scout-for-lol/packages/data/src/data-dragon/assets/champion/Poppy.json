@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Poppy": {
       "id": "Poppy",
@@ -408,7 +408,7 @@
           "id": "PoppyQ",
           "name": "Hammer Shock",
           "description": "Poppy swings her hammer, dealing damage and creating a zone that will slow enemies and explode after a delay.",
-          "tooltip": "Poppy smashes the ground, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> and making the ground unstable. <br /><br />The unstable area <status>Slows</status> enemies by {{ movespeedmod }}% and erupts after {{ delaybetweentwohits }} second, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> again.{{ spellmodifierdescriptionappend }}",
+          "tooltip": "Poppy smashes the ground, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> and making the ground unstable. <br /><br />The unstable area <status>Slows</status> enemies by {{ movespeedmod }} and erupts after {{ delaybetweentwohits }} second, dealing <physicalDamage>{{ basedamage }}</physicalDamage> plus <physicalDamage>{{ healthdamagepercent }}% max Health physical damage</physicalDamage> again.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
             "label": [
               "Damage",

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Nautilus": {
       "id": "Nautilus",
@@ -364,7 +364,7 @@
         "mpregenperlevel": 0.5,
         "crit": 0,
         "critperlevel": 0,
-        "attackdamage": 61,
+        "attackdamage": 58,
         "attackdamageperlevel": 0,
         "attackspeedperlevel": 1,
         "attackspeed": 0.706
