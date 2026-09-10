@@ -93,6 +93,11 @@ describe("AI architecture guard", () => {
           contents:
             'let usage = URL(string: "https://api.anthropic.com/api/oauth/usage")',
         },
+        {
+          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatformEndpoints.swift",
+          contents:
+            'const openai = "https://api.openai.com/v1/organization/costs";\nconst anthropic = "https://api.anthropic.com/v1/organizations/cost_report";',
+        },
       ]),
     ).toEqual([]);
   });
@@ -155,6 +160,35 @@ describe("AI architecture guard", () => {
       "provider-api-key",
       "direct-provider-endpoint",
     ]);
+  });
+
+  test("allows Brim billing endpoints only in APIPlatformEndpoints.swift", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/OpenAIAPI.swift",
+          contents:
+            'const costs = "https://api.openai.com/v1/organization/costs";',
+        },
+        {
+          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/AnthropicAPI.swift",
+          contents:
+            'const report = "https://api.anthropic.com/v1/organizations/cost_report";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["direct-provider-endpoint", "direct-provider-endpoint"]);
+  });
+
+  test("rejects unapproved provider URLs inside APIPlatformEndpoints.swift", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatformEndpoints.swift",
+          contents:
+            'const completions = "https://api.openai.com/v1/chat/completions";',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["direct-provider-endpoint"]);
   });
 
   test("allows only the official OpenAI billing reconciliation endpoint", () => {

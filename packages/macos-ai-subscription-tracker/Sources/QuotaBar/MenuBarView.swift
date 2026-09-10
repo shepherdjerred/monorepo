@@ -61,7 +61,20 @@ struct MenuBarView: View {
       }
       navigationSegments
       Divider()
-      APIPlatformSummaryView(state: apiModel.state, date: date)
+      ScrollView {
+        VStack(spacing: 0) {
+          ForEach(APIPlatformID.allCases) { platform in
+            APIPlatformSummaryView(
+              platform: platform,
+              state: apiModel.state(for: platform),
+              date: date
+            )
+            if platform != APIPlatformID.allCases.last {
+              Divider()
+            }
+          }
+        }
+      }
       if let cacheError = apiModel.cacheErrorMessage {
         Divider()
         StatusMessage(symbol: "externaldrive.badge.exclamationmark", text: cacheError)
@@ -208,9 +221,7 @@ struct MenuBarView: View {
     .padding(.horizontal, 12)
     .padding(.vertical, 7)
     .help(
-      model.settings.showsLegacyProviders
-        ? "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20, Kimi Code $40, Grok $30"
-        : "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20"
+      "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20, Grok $30, Kimi Code $40"
     )
   }
 
@@ -231,12 +242,7 @@ struct MenuBarView: View {
   }
 
   private var apiLastUpdatedAt: Date? {
-    switch apiModel.state {
-    case let .available(snapshot), let .stale(snapshot, _):
-      snapshot.sourceTimestamp
-    case .loading, .unavailable, .unauthenticated:
-      nil
-    }
+    apiModel.lastUpdatedAt
   }
 }
 

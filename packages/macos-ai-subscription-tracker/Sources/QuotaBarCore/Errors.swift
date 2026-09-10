@@ -27,12 +27,16 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
         "No signed-in Antigravity CLI was found. Install and sign in to agy."
       case .cursor:
         "No local Cursor sign-in was found. Sign in through Cursor."
+      case .grok:
+        "No local Grok credentials found. Sign in with grok login."
       default:
         "No local credentials found for \(provider.displayName)."
       }
     case let .credentialsExpired(provider):
-      if provider == .kimi || provider == .grok {
+      if provider == .kimi {
         "\(provider.displayName) credentials expired. Refresh them through OpenCode."
+      } else if provider == .grok {
+        "Grok credentials expired. Sign in again with grok login."
       } else if provider == .cursor {
         "Cursor credentials expired. Sign in again through Cursor."
       } else {
@@ -45,9 +49,11 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
     case let .invalidURL(provider):
       "The configured \(provider.displayName) usage URL is invalid."
     case let .unauthorized(provider):
-      if provider == .kimi || provider == .grok {
+      if provider == .kimi {
         "\(provider.displayName) rejected the local credential. "
           + "Refresh it through OpenCode or update the Brim override."
+      } else if provider == .grok {
+        "Grok rejected the local credential. Sign in again with grok or update the Brim override."
       } else if provider == .cursor {
         "Cursor rejected its local session. Sign in again through Cursor."
       } else {

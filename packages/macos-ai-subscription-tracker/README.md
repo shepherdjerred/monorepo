@@ -1,24 +1,23 @@
 # Brim
 
 Brim is a personal macOS menu-bar app for monitoring AI subscription
-quotas. It targets Claude Code, Codex, Google Antigravity, and Cursor by default.
-Kimi Code and Grok remain available only through the Advanced legacy-provider
-setting.
+quotas. It targets Claude Code, Codex, Google Antigravity, Cursor, Grok, and
+Kimi Code by default.
 
 Brim is the product name; QuotaBar is the Xcode target, bundle id
 (`com.sjerred.QuotaBar`), and workspace package id
 (`@shepherdjerred/quotabar`).
 
 The menu bar also shows the configured personal subscription spend: $200/month
-each for Claude Code and Codex, plus $20/month each for Google AI Pro and Cursor
-Pro ($440/month total). Enabling legacy providers adds Kimi Code ($40/month) and
-Grok ($30/month). This is a reminder, not provider billing data.
+each for Claude Code and Codex, $20/month each for Google AI Pro and Cursor
+Pro, $30/month for Grok, and $40/month for Kimi Code ($510/month total). This
+is a reminder, not provider billing data.
 
 The compact subscription view sorts providers by their tightest current quota,
 keeps each quota and reset on one line, and uses pressure colors only for low or
 critical remaining usage. Cached values remain visible but dimmed and stale.
-The `API & routers` segment currently reports OpenRouter credits and API-key
-spend across all workspaces.
+The `API & routers` segment reports OpenRouter credits plus OpenAI and Anthropic
+organization API spend for the current local month.
 
 ## Build and install
 
@@ -120,13 +119,15 @@ Brim does not log tokens or include them in its JSON usage cache. It stores only
 local historical quota samples (provider/window metadata, percentages, reset
 times, and timestamps) for up to 30 days so it can render the History graph.
 
-Claude and Codex use their typed local credential formats. When the legacy
-provider setting is enabled, Kimi Code reads its `KIMI_CODE_HOME` credential
-directory (default `~/.kimi-code`). Kimi and Grok
-can also read typed OAuth entries from OpenCode. OpenCode remains the sole owner
-and writer of those OAuth token chains: Brim never rotates, refreshes, or
+Claude and Codex use their typed local credential formats. Grok reads grok CLI
+`auth.json` (including a relocated `GROK_HOME`) plus an optional Keychain
+override. It does not read OpenCode Grok or xAI tokens. Kimi Code reads its
+`KIMI_CODE_HOME` credential directory (default `~/.kimi-code`) and can also
+read typed OAuth entries from OpenCode. OpenCode remains the sole owner and
+writer of those Kimi OAuth token chains: Brim never rotates, refreshes, or
 rewrites OpenCode files or its credential database. An expired or rejected
-Kimi/Grok token instructs the user to refresh it through OpenCode.
+Kimi token instructs the user to refresh it through OpenCode. An expired or
+rejected Grok token instructs the user to sign in again with `grok login`.
 
 Claude credentials are read through `/usr/bin/security` rather than the Security
 framework. The
@@ -138,8 +139,8 @@ not stable public APIs. Their adapters validate responses and show an explicit
 unavailable/stale state when a provider changes shape. Claude and Codex use
 their authenticated subscription usage surfaces; Kimi Code uses its coding
 subscription surface, not a Kimi Open Platform API key; Grok uses subscription
-usage and credits, not xAI developer API rate limits. Non-OpenRouter API billing
-cards and developer API rate limits remain outside the v1 scope.
+usage and credits, not xAI developer API rate limits. Other provider developer
+API rate limits remain outside this scope.
 
 Antigravity is invoked through the signed-in `agy` executable found on the
 current process `PATH` or in standard Homebrew, local, and mise locations. Brim
@@ -162,29 +163,50 @@ Brim never substitutes zero usage. Cursor team analytics and on-demand spend
 reporting are outside this integration. Cursor documents the two pools in its
 [usage-limit guide](https://prod.cursor.com/help/models-and-usage/usage-limits).
 
+Grok reads grok CLI `auth.json` (default `~/.grok`, or `GROK_HOME`), or an
+optional Keychain override. It does not read OpenCode Grok or xAI tokens.
+It requests Grok's identity, monthly billing, and credit surfaces, plus the
+remaining-reset RPC read-only. It displays subscription usage and credits, not
+xAI developer API rate limits. Banked extra resets are shown individually with
+their expiration dates; Brim never redeems or consumes them. This is a
+private provider contract: schema drift and authentication failures remain
+explicit, and Brim never substitutes zero usage. Brim never refreshes or
+rewrites grok CLI credentials; `grok login` remains the owner of that session.
+
+Kimi Code reads its local OAuth credential directory, including a relocated
+`KIMI_CODE_HOME`, and can also read typed OpenCode OAuth entries. It displays
+the coding subscription surface, not a Kimi Open Platform API key. This is a
+private provider contract: schema drift and authentication failures remain
+explicit, and Brim never substitutes zero usage.
+
 Codex also reads the authenticated reset-credit surface read-only. Available
 banked resets are shown individually with their expiration dates; Brim does
 not redeem or consume them.
 
-### OpenRouter API reporting
+### API platform reporting
 
-The API view requires an OpenRouter Management API key entered manually in
-Settings. Brim stores this key in a dedicated login-Keychain entry and only
-performs read-only requests for credits, workspaces, and API-key usage. Brim
-does not create, update, disable, or delete OpenRouter keys.
+The API view accepts a privileged admin or management key per platform, entered
+in Settings and stored in a dedicated login-Keychain account. Brim uses each
+key only for read-only billing requests:
 
-The view shows credits remaining, monthly API-key spend, and a projected
-month-end spend. Monthly spend is the sum of OpenRouter's current-month
-usage_monthly and estimated byok_usage_monthly values across every workspace
-and API key, including disabled keys. The projection uses the current Mac-local
-calendar pace against OpenRouter's authoritative monthly usage period. Chatroom
-and Fusion activity is outside this first API-key reporting slice.
+- OpenRouter Management API key: credits remaining and current-month API-key
+  spend, including estimated BYOK, across every workspace.
+- OpenAI Admin API key: organization Costs API spend for the current local
+  calendar month. This is not ChatGPT subscription usage.
+- Anthropic Admin API key: organization Cost Report spend for the current
+  local calendar month. This is not Claude Pro or Claude Code subscription
+  usage.
+
+Brim only performs read-only requests. It does not create, update, disable, or
+delete provider keys. Each platform projects month-end spend from the current
+Mac-local calendar pace. Chatroom, Fusion, and other unlisted billing products
+stay out of this slice.
 
 Provider contracts are isolated in focused files under `Sources/QuotaBarCore`.
 Claude and Codex endpoints are authenticated subscription web surfaces;
 Antigravity uses its CLI contract; Cursor uses the unsupported personal-client
-contract described above. Legacy Kimi and Grok support uses private subscription
-quota surfaces and is disabled by default. Provider response changes produce an
+contract described above. Grok and Kimi use private subscription quota
+surfaces. Provider response changes produce an
 explicit unavailable, partial, or stale state rather than a fabricated zero.
 
 ## Development
@@ -200,7 +222,8 @@ bunx turbo run lint:swift --filter=@shepherdjerred/quotabar
 Provider fixtures are shape-preserving samples with synthetic account values.
 Passing fixtures proves decoder behavior, not current production correctness.
 Release acceptance still compares all displayed windows, percentages, reset
-times, and Codex reset expirations with each provider's own Usage screen.
+times, and Codex/Grok banked reset expirations with each provider's own Usage
+screen.
 
 The frozen `sandbox/archive/glance` app is reference material only; this app is
 implemented as a separate package so the archived tree remains unchanged.

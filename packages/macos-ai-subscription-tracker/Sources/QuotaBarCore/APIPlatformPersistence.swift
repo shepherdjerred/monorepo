@@ -1,8 +1,8 @@
 public import Foundation
 
 public protocol APIPlatformSnapshotPersisting: Sendable {
-  func load() throws -> APIPlatformSnapshot?
-  func save(_ snapshot: APIPlatformSnapshot) throws
+  func load() throws -> [APIPlatformID: APIPlatformSnapshot]
+  func save(_ snapshots: [APIPlatformID: APIPlatformSnapshot]) throws
   func remove() throws
 }
 
@@ -27,20 +27,30 @@ public final class JSONAPIPlatformSnapshotStore: APIPlatformSnapshotPersisting, 
     )
   }
 
-  public func load() throws -> APIPlatformSnapshot? {
-    guard fileManager.fileExists(atPath: url.path) else { return nil }
+  public func load() throws -> [APIPlatformID: APIPlatformSnapshot] {
+    guard fileManager.fileExists(atPath: url.path) else { return [:] }
+    let data: Data
     do {
-      return try JSONDecoder().decode(APIPlatformSnapshot.self, from: Data(contentsOf: url))
+      data = try Data(contentsOf: url)
     } catch {
       throw APIPlatformError.cacheCorrupt
     }
+    if let cache = try? JSONDecoder().decode(APIPlatformCacheFile.self, from: data) {
+      return try dictionary(from: cache.snapshots)
+    }
+    if let snapshot = try? JSONDecoder().decode(APIPlatformSnapshot.self, from: data) {
+      return [snapshot.platform: snapshot]
+    }
+    throw APIPlatformError.cacheCorrupt
   }
 
-  public func save(_ snapshot: APIPlatformSnapshot) throws {
+  public func save(_ snapshots: [APIPlatformID: APIPlatformSnapshot]) throws {
     do {
       try fileManager.createDirectory(
         at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
-      try JSONEncoder().encode(snapshot).write(to: url, options: .atomic)
+      let cache = APIPlatformCacheFile(
+        snapshots: snapshots.values.sorted { $0.platform.rawValue < $1.platform.rawValue })
+      try JSONEncoder().encode(cache).write(to: url, options: .atomic)
     } catch {
       throw APIPlatformError.cacheWriteFailed
     }
@@ -54,4 +64,19 @@ public final class JSONAPIPlatformSnapshotStore: APIPlatformSnapshotPersisting, 
       throw APIPlatformError.cacheWriteFailed
     }
   }
+
+  private func dictionary(from snapshots: [APIPlatformSnapshot]) throws -> [APIPlatformID:
+    APIPlatformSnapshot]
+  {
+    var result: [APIPlatformID: APIPlatformSnapshot] = [:]
+    for snapshot in snapshots {
+      if result[snapshot.platform] != nil { throw APIPlatformError.cacheCorrupt }
+      result[snapshot.platform] = snapshot
+    }
+    return result
+  }
+}
+
+private struct APIPlatformCacheFile: Codable {
+  let snapshots: [APIPlatformSnapshot]
 }

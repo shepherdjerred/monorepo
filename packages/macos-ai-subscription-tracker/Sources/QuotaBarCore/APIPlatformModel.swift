@@ -4,38 +4,66 @@ public import Observation
 @MainActor @Observable
 public final class APIPlatformModel {
   public let settings: AppSettings
-  public private(set) var state: APIPlatformDisplayState = .loading
+  public private(set) var states: [APIPlatformID: APIPlatformDisplayState]
   public private(set) var isRefreshing = false
   public private(set) var cacheErrorMessage: String?
 
-  private let client: OpenRouterAPIClient
-  private let credentials: OpenRouterCredentialStore
+  private let openRouter: OpenRouterAPIClient
+  private let openAI: OpenAIAPIClient
+  private let anthropic: AnthropicAPIClient
+  private let credentials: APIPlatformCredentialStore
   private let store: any APIPlatformSnapshotPersisting
   private let providerTimeout: Duration
-  private var lastSuccessful: APIPlatformSnapshot?
+  private var lastSuccessful: [APIPlatformID: APIPlatformSnapshot] = [:]
   private var pollingTask: Task<Void, Never>?
-  private var activeRefresh: Task<Void, Never>?
+  private var activeRefresh: ActiveRefresh?
+  private var nextRefreshID = 0
 
   public init(
     settings: AppSettings,
-    client: OpenRouterAPIClient = OpenRouterAPIClient(),
-    credentials: OpenRouterCredentialStore = OpenRouterCredentialStore(),
+    openRouter: OpenRouterAPIClient = OpenRouterAPIClient(),
+    openAI: OpenAIAPIClient = OpenAIAPIClient(),
+    anthropic: AnthropicAPIClient = AnthropicAPIClient(),
+    credentials: APIPlatformCredentialStore = APIPlatformCredentialStore(),
     store: any APIPlatformSnapshotPersisting = JSONAPIPlatformSnapshotStore(),
     providerTimeout: Duration = .seconds(25)
   ) {
     self.settings = settings
-    self.client = client
+    self.openRouter = openRouter
+    self.openAI = openAI
+    self.anthropic = anthropic
     self.credentials = credentials
     self.store = store
     self.providerTimeout = providerTimeout
+    var states = Dictionary(
+      uniqueKeysWithValues: APIPlatformID.allCases.map { ($0, APIPlatformDisplayState.loading) }
+    )
     do {
-      if let snapshot = try store.load() {
-        lastSuccessful = snapshot
-        state = .stale(snapshot, reason: "Cached data; waiting for an OpenRouter refresh.")
+      let loaded = try store.load()
+      lastSuccessful = loaded
+      for (platform, snapshot) in loaded {
+        states[platform] = .stale(
+          snapshot, reason: "Cached data; waiting for a \(platform.displayName) refresh.")
       }
     } catch {
       cacheErrorMessage = APIPlatformError.cacheCorrupt.localizedDescription
     }
+    self.states = states
+  }
+
+  public func state(for platform: APIPlatformID) -> APIPlatformDisplayState {
+    states[platform] ?? .loading
+  }
+
+  public var lastUpdatedAt: Date? {
+    states.values.compactMap { state -> Date? in
+      switch state {
+      case let .available(snapshot), let .stale(snapshot, _):
+        snapshot.sourceTimestamp
+      case .loading, .unavailable, .unauthenticated:
+        nil
+      }
+    }.max()
   }
 
   public func startPolling() {
@@ -70,90 +98,177 @@ public final class APIPlatformModel {
 
   public func refresh() async {
     if let activeRefresh {
-      await activeRefresh.value
+      await activeRefresh.task.value
+      clearRefresh(id: activeRefresh.id)
       return
     }
+    await beginRefresh(platforms: Array(APIPlatformID.allCases))
+  }
+
+  public func handleCredentialChange(for platform: APIPlatformID) async {
+    let inFlight = activeRefresh
+    clearCachedSnapshot(for: platform)
+    if let inFlight {
+      await inFlight.task.value
+      clearRefresh(id: inFlight.id)
+      clearCachedSnapshot(for: platform)
+    }
+    await beginRefresh(platforms: [platform])
+  }
+
+  private func beginRefresh(platforms: [APIPlatformID]) async {
+    nextRefreshID += 1
+    let refreshID = nextRefreshID
     let task = Task { [weak self] in
       guard let self else { return }
-      await self.performRefresh()
+      await self.performRefresh(platforms: platforms)
     }
-    activeRefresh = task
+    activeRefresh = ActiveRefresh(id: refreshID, task: task)
     await task.value
+    clearRefresh(id: refreshID)
+  }
+
+  private func clearRefresh(id: Int) {
+    guard activeRefresh?.id == id else { return }
     activeRefresh = nil
   }
 
-  public func handleCredentialChange() async {
-    lastSuccessful = nil
-    state = .loading
+  private func clearCachedSnapshot(for platform: APIPlatformID) {
+    lastSuccessful[platform] = nil
+    states[platform] = .loading
+    persistLastSuccessful()
+  }
+
+  private func persistLastSuccessful() {
     do {
-      try store.remove()
+      try store.save(lastSuccessful)
       cacheErrorMessage = nil
     } catch {
       cacheErrorMessage = APIPlatformError.cacheWriteFailed.localizedDescription
     }
-    await refresh()
   }
 
-  private func performRefresh() async {
+  private func performRefresh(platforms: [APIPlatformID]) async {
     isRefreshing = true
     defer { isRefreshing = false }
 
+    await withTaskGroup(of: APIPlatformFetchResult.self) { group in
+      for platform in platforms {
+        group.addTask { [weak self] in
+          guard let self else {
+            return APIPlatformFetchResult(
+              platform: platform,
+              state: .unavailable(message: "Cancelled"),
+              snapshot: nil
+            )
+          }
+          return await self.fetchState(for: platform)
+        }
+      }
+      for await result in group {
+        states[result.platform] = result.state
+        if let snapshot = result.snapshot {
+          lastSuccessful[result.platform] = snapshot
+        }
+      }
+    }
+
+    persistLastSuccessful()
+  }
+
+  private func fetchState(for platform: APIPlatformID) async -> APIPlatformFetchResult {
     do {
-      guard let token = try await credentials.token() else {
-        state = .unauthenticated(message: APIPlatformError.credentialsMissing.localizedDescription)
-        return
+      guard let token = try await credentials.token(for: platform) else {
+        return APIPlatformFetchResult(
+          platform: platform,
+          state: .unauthenticated(
+            message: APIPlatformError.credentialsMissing(platform).localizedDescription),
+          snapshot: nil
+        )
       }
       let snapshot = try await Self.fetch(
-        client: client,
-        managementKey: token,
+        platform: platform,
+        openRouter: openRouter,
+        openAI: openAI,
+        anthropic: anthropic,
+        token: token,
         timeout: providerTimeout
       )
-      lastSuccessful = snapshot
-      state = .available(snapshot)
-      do {
-        try store.save(snapshot)
-        cacheErrorMessage = nil
-      } catch {
-        cacheErrorMessage = APIPlatformError.cacheWriteFailed.localizedDescription
-      }
+      return APIPlatformFetchResult(
+        platform: platform, state: .available(snapshot), snapshot: snapshot)
     } catch {
-      let apiError = Self.classify(error: error)
-      if let lastSuccessful {
-        state = .stale(lastSuccessful, reason: apiError.localizedDescription)
-      } else if apiError.isAuthenticationError {
-        state = .unauthenticated(message: apiError.localizedDescription)
-      } else {
-        state = .unavailable(message: apiError.localizedDescription)
+      let apiError = Self.classify(error: error, platform: platform)
+      if let cached = lastSuccessful[platform] {
+        return APIPlatformFetchResult(
+          platform: platform,
+          state: .stale(cached, reason: apiError.localizedDescription),
+          snapshot: nil
+        )
       }
+      if apiError.isAuthenticationError {
+        return APIPlatformFetchResult(
+          platform: platform,
+          state: .unauthenticated(message: apiError.localizedDescription),
+          snapshot: nil
+        )
+      }
+      return APIPlatformFetchResult(
+        platform: platform,
+        state: .unavailable(message: apiError.localizedDescription),
+        snapshot: nil
+      )
     }
   }
 
   nonisolated private static func fetch(
-    client: OpenRouterAPIClient,
-    managementKey: String,
+    platform: APIPlatformID,
+    openRouter: OpenRouterAPIClient,
+    openAI: OpenAIAPIClient,
+    anthropic: AnthropicAPIClient,
+    token: String,
     timeout: Duration
   ) async throws -> APIPlatformSnapshot {
     try await withThrowingTaskGroup(of: APIPlatformSnapshot.self) { group in
       group.addTask {
-        try await client.fetchSnapshot(managementKey: managementKey)
+        switch platform {
+        case .openRouter:
+          try await openRouter.fetchSnapshot(token: token)
+        case .openAI:
+          try await openAI.fetchSnapshot(token: token)
+        case .anthropic:
+          try await anthropic.fetchSnapshot(token: token)
+        }
       }
       group.addTask {
         try await Task.sleep(for: timeout)
-        throw APIPlatformError.requestTimedOut
+        throw APIPlatformError.requestTimedOut(platform)
       }
       defer { group.cancelAll() }
       guard let result = try await group.next() else {
-        throw APIPlatformError.requestTimedOut
+        throw APIPlatformError.requestTimedOut(platform)
       }
       return result
     }
   }
 
-  nonisolated private static func classify(error: any Error) -> APIPlatformError {
+  nonisolated private static func classify(error: any Error, platform: APIPlatformID)
+    -> APIPlatformError
+  {
     if let apiError = error as? APIPlatformError { return apiError }
     if let quotaError = error as? QuotaError, case let .keychain(status) = quotaError {
-      return .keychain(status: status)
+      return .keychain(platform, status: status)
     }
-    return .network
+    return .network(platform)
   }
+}
+
+private struct APIPlatformFetchResult: Sendable {
+  let platform: APIPlatformID
+  let state: APIPlatformDisplayState
+  let snapshot: APIPlatformSnapshot?
+}
+
+private struct ActiveRefresh {
+  let id: Int
+  let task: Task<Void, Never>
 }

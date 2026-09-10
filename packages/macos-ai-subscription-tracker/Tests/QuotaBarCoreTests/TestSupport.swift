@@ -56,6 +56,61 @@ func write(_ value: String, to url: URL) throws {
   try Data(value.utf8).write(to: url)
 }
 
+func grokCLIAuth(token: String, expiresAt: String) -> String {
+  """
+  {
+    "https://auth.x.ai::session": {
+      "key": "\(token)",
+      "expires_at": "\(expiresAt)"
+    }
+  }
+  """
+}
+
+func grokCLIAuth(firstToken: String, secondToken: String) -> String {
+  """
+  {
+    "https://auth.x.ai::aaa": {
+      "key": "\(firstToken)",
+      "expires_at": "2099-01-01T00:00:00Z"
+    },
+    "https://auth.x.ai::bbb": {
+      "key": "\(secondToken)",
+      "expires_at": "2099-01-01T00:00:00Z"
+    }
+  }
+  """
+}
+
+/// Live GetRemainingResets unary frame: empty protobuf message and grpc-status 0.
+let grokEmptyResets = data(hex: "0000000000800000000f677270632d7374617475733a300d0a")
+
+/// Two remaining packs plus expired, empty-id, and missing-end tokens that must be ignored.
+let grokAvailableResets = data(
+  hex: "000000004a"
+    + "0a100a067061636b2d611a060880d8fed306"
+    + "0a100a067061636b2d621a0608808799d406"
+    + "0a0e0a04757365641a060880eeb4d306"
+    + "0a0a0a001a060880d8fed306"
+    + "0a080a066e6f2d656e64"
+    + "800000000f677270632d7374617475733a300d0a"
+)
+
+func data(hex: String) -> Data {
+  precondition(hex.count.isMultiple(of: 2), "Hex strings must have even length")
+  var data = Data()
+  var index = hex.startIndex
+  while index < hex.endIndex {
+    let next = hex.index(index, offsetBy: 2)
+    guard let byte = UInt8(hex[index..<next], radix: 16) else {
+      preconditionFailure("Invalid hex")
+    }
+    data.append(byte)
+    index = next
+  }
+  return data
+}
+
 actor StubCredentialStore: CredentialStore {
   private var credentials: [ProviderCredential]
   private(set) var rejectionRequests: [Bool] = []
@@ -181,5 +236,59 @@ final class FakeKeychain: KeychainClient, @unchecked Sendable {
 
   private func key(service: String, account: String?) -> String {
     "\(service)::\(account ?? "")"
+  }
+}
+
+func response(_ data: Data) -> APIPlatformResponse {
+  APIPlatformResponse(statusCode: 200, data: data)
+}
+
+func utcTimeZone() -> TimeZone {
+  guard let timeZone = TimeZone(secondsFromGMT: 0) else {
+    preconditionFailure("Invalid UTC test time zone")
+  }
+  return timeZone
+}
+
+func decimal(_ value: String) -> Decimal {
+  guard let result = Decimal(string: value) else {
+    preconditionFailure("Invalid test decimal")
+  }
+  return result
+}
+
+func testOpenAIEndpoints() -> OpenAIEndpoints {
+  guard let url = URL(string: "https://openai.test") else {
+    preconditionFailure("Invalid test endpoint")
+  }
+  return OpenAIEndpoints(baseURL: url)
+}
+
+func testAnthropicEndpoints() -> AnthropicEndpoints {
+  guard let url = URL(string: "https://anthropic.test") else {
+    preconditionFailure("Invalid test endpoint")
+  }
+  return AnthropicEndpoints(baseURL: url)
+}
+
+actor APIPlatformRoutingTransport: APIPlatformTransport {
+  private let routes: [String: APIPlatformResponse]
+  private let delay: Duration
+  private(set) var requests: [APIPlatformRequest] = []
+
+  init(routes: [String: APIPlatformResponse], delay: Duration = .zero) {
+    self.routes = routes
+    self.delay = delay
+  }
+
+  func send(_ request: APIPlatformRequest) async throws -> APIPlatformResponse {
+    if delay > .zero {
+      try await Task.sleep(for: delay)
+    }
+    requests.append(request)
+    guard let response = routes[request.url.absoluteString] else {
+      throw APIPlatformError.network(request.platform)
+    }
+    return response
   }
 }

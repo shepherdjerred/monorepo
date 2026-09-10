@@ -1,82 +1,5 @@
 public import Foundation
 
-public enum APIHTTPMethod: String, Equatable, Sendable {
-  case get = "GET"
-}
-
-public struct OpenRouterRequest: Equatable, Sendable, CustomStringConvertible {
-  public let method: APIHTTPMethod
-  public let url: URL
-  public let bearerToken: String
-  public let timeout: TimeInterval
-
-  public init(
-    method: APIHTTPMethod = .get,
-    url: URL,
-    bearerToken: String,
-    timeout: TimeInterval = 20
-  ) {
-    self.method = method
-    self.url = url
-    self.bearerToken = bearerToken
-    self.timeout = timeout
-  }
-
-  public var description: String {
-    "OpenRouterRequest(method: \(method.rawValue), url: \(url.absoluteString), bearerToken: <redacted>)"
-  }
-}
-
-public struct OpenRouterResponse: Equatable, Sendable {
-  public let statusCode: Int
-  public let data: Data
-
-  public init(statusCode: Int, data: Data) {
-    self.statusCode = statusCode
-    self.data = data
-  }
-}
-
-public protocol OpenRouterTransport: Sendable {
-  func send(_ request: OpenRouterRequest) async throws -> OpenRouterResponse
-}
-
-public final class URLSessionOpenRouterTransport: OpenRouterTransport, Sendable {
-  private let session: URLSession
-
-  public init(session: URLSession? = nil) {
-    if let session {
-      self.session = session
-    } else {
-      let configuration = URLSessionConfiguration.ephemeral
-      configuration.timeoutIntervalForRequest = 20
-      configuration.timeoutIntervalForResource = 30
-      self.session = URLSession(configuration: configuration)
-    }
-  }
-
-  public func send(_ request: OpenRouterRequest) async throws -> OpenRouterResponse {
-    var urlRequest = URLRequest(url: request.url, timeoutInterval: request.timeout)
-    urlRequest.httpMethod = request.method.rawValue
-    urlRequest.setValue("Bearer \(request.bearerToken)", forHTTPHeaderField: "Authorization")
-    urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
-
-    do {
-      let (data, response) = try await session.data(for: urlRequest)
-      guard let response = response as? HTTPURLResponse else {
-        throw APIPlatformError.network
-      }
-      return OpenRouterResponse(statusCode: response.statusCode, data: data)
-    } catch let error as APIPlatformError {
-      throw error
-    } catch let error as URLError where error.code == .timedOut {
-      throw APIPlatformError.requestTimedOut
-    } catch {
-      throw APIPlatformError.network
-    }
-  }
-}
-
 public struct OpenRouterEndpoints: Sendable {
   public let baseURL: URL
 
@@ -134,12 +57,13 @@ public struct OpenRouterEndpoints: Sendable {
 }
 
 public struct OpenRouterAPIClient: Sendable {
-  private let transport: any OpenRouterTransport
+  public let id = APIPlatformID.openRouter
+  private let transport: any APIPlatformTransport
   private let endpoints: OpenRouterEndpoints
   private let pageSize = 100
 
   public init(
-    transport: any OpenRouterTransport = URLSessionOpenRouterTransport(),
+    transport: any APIPlatformTransport = URLSessionAPIPlatformTransport(),
     endpoints: OpenRouterEndpoints = OpenRouterEndpoints()
   ) {
     self.transport = transport
@@ -147,31 +71,24 @@ public struct OpenRouterAPIClient: Sendable {
   }
 
   public func fetchSnapshot(
-    managementKey: String,
+    token: String,
     now: Date = .now,
     timeZone: TimeZone = .autoupdatingCurrent
   ) async throws -> APIPlatformSnapshot {
-    let credits: CreditsEnvelope = try await get(path: endpoints.credits(), token: managementKey)
-    let workspaces = try await fetchAllWorkspaces(token: managementKey)
-    let keys = try await fetchAllKeys(workspaces: workspaces, token: managementKey)
+    let credits: CreditsEnvelope = try await get(path: endpoints.credits(), token: token)
+    let workspaces = try await fetchAllWorkspaces(token: token)
+    let keys = try await fetchAllKeys(workspaces: workspaces, token: token)
     let creditsRemaining = credits.data.totalCredits - credits.data.totalUsage
-    guard creditsRemaining >= 0 else { throw APIPlatformError.malformedResponse }
+    guard creditsRemaining >= 0 else { throw APIPlatformError.malformedResponse(id) }
 
     let monthlySpend = keys.reduce(Decimal.zero) { total, key in
       total + key.usageMonthly + key.byokUsageMonthly
     }
-    guard monthlySpend >= 0 else { throw APIPlatformError.malformedResponse }
-
-    var calendar = Calendar(identifier: .gregorian)
-    calendar.timeZone = timeZone
-    let elapsedDays = calendar.component(.day, from: now)
-    guard let range = calendar.range(of: .day, in: .month, for: now), elapsedDays > 0 else {
-      throw APIPlatformError.malformedResponse
-    }
-    let daysInMonth = range.count
-    let projectedSpend = monthlySpend / Decimal(elapsedDays) * Decimal(daysInMonth)
+    let projectedSpend = try APIPlatformProjection.projectedSpend(
+      platform: id, monthlySpend: monthlySpend, now: now, timeZone: timeZone)
 
     return APIPlatformSnapshot(
+      platform: id,
       workspaceNames: workspaces.map(\.name).sorted(),
       creditsRemaining: creditsRemaining,
       monthlySpend: monthlySpend,
@@ -186,7 +103,7 @@ public struct OpenRouterAPIClient: Sendable {
     while true {
       let page: WorkspacePage = try await get(
         path: endpoints.workspaces(offset: offset, limit: pageSize), token: token)
-      guard page.data.count <= pageSize else { throw APIPlatformError.malformedResponse }
+      guard page.data.count <= pageSize else { throw APIPlatformError.malformedResponse(id) }
       result.append(contentsOf: page.data)
       if result.count >= page.totalCount || page.data.isEmpty { return result }
       offset += page.data.count
@@ -200,7 +117,7 @@ public struct OpenRouterAPIClient: Sendable {
       while true {
         let page: APIKeyPage = try await get(
           path: endpoints.keys(workspaceID: workspace.id, offset: offset), token: token)
-        guard page.data.count <= pageSize else { throw APIPlatformError.malformedResponse }
+        guard page.data.count <= pageSize else { throw APIPlatformError.malformedResponse(id) }
         result.append(contentsOf: page.data)
         if page.data.isEmpty || page.data.count < pageSize { break }
         offset += page.data.count
@@ -211,26 +128,13 @@ public struct OpenRouterAPIClient: Sendable {
 
   private func get<Value: Decodable>(path: URL, token: String) async throws -> Value {
     let response = try await transport.send(
-      OpenRouterRequest(url: path, bearerToken: token)
+      APIPlatformRequest(
+        platform: id,
+        url: path,
+        headers: APIPlatformHTTP.bearerHeaders(token: token)
+      )
     )
-    switch response.statusCode {
-    case 200..<300:
-      do {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode(Value.self, from: response.data)
-      } catch {
-        throw APIPlatformError.malformedResponse
-      }
-    case 401:
-      throw APIPlatformError.unauthorized
-    case 403:
-      throw APIPlatformError.forbidden
-    case 429:
-      throw APIPlatformError.rateLimited
-    default:
-      throw APIPlatformError.network
-    }
+    return try APIPlatformHTTP.decode(Value.self, from: response, platform: id)
   }
 }
 

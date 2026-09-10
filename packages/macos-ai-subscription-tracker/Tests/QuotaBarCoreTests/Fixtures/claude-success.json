@@ -24,5 +24,10 @@
     "percent": 0,
     "enabled": false
   },
-  "member_dashboard_available": false
+  "member_dashboard_available": false,
+  "seven_day_breakdown": {
+    "as_of": "2026-08-09T00:00:00Z",
+    "window_started_at": "2026-08-07T00:00:00Z",
+    "rows": []
+  }
 }

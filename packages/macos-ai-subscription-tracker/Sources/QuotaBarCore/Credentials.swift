@@ -51,6 +51,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let fileManager: FileManager
   private let homeDirectory: URL
   private let kimiCodeHome: URL?
+  private let grokHome: URL?
   private let cursorStateDatabase: URL?
   private let claudeKeychain: any KeychainReading
   private let selectionLock = NSLock()
@@ -60,22 +61,23 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     fileManager: FileManager = .default,
     homeDirectory: URL? = nil,
     kimiCodeHome: URL? = nil,
+    grokHome: URL? = nil,
     cursorStateDatabase: URL? = nil,
     claudeKeychain: any KeychainReading = SecurityToolKeychainClient()
   ) {
     self.fileManager = fileManager
     self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
-    if let kimiCodeHome {
-      self.kimiCodeHome = kimiCodeHome
-    } else if let configured = ProcessInfo.processInfo.environment["KIMI_CODE_HOME"],
-      !configured.isEmpty
-    {
-      self.kimiCodeHome = URL(fileURLWithPath: configured, isDirectory: true)
-    } else {
-      self.kimiCodeHome = nil
-    }
+    self.kimiCodeHome = Self.configuredHome(kimiCodeHome, environmentKey: "KIMI_CODE_HOME")
+    self.grokHome = Self.configuredHome(grokHome, environmentKey: "GROK_HOME")
     self.cursorStateDatabase = cursorStateDatabase
     self.claudeKeychain = claudeKeychain
+  }
+
+  private static func configuredHome(_ explicit: URL?, environmentKey: String) -> URL? {
+    if let explicit { return explicit }
+    guard let configured = ProcessInfo.processInfo.environment[environmentKey], !configured.isEmpty
+    else { return nil }
+    return URL(fileURLWithPath: configured, isDirectory: true)
   }
 
   public func credential(
@@ -93,7 +95,13 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     case .antigravity: credential = nil
     case .cursor: credential = try readCursor(excluding: excludedTokens)
     case .kimi: credential = try readCurrentKimiCredential(excluding: excludedTokens)
-    case .grok: credential = try readOpenCode(provider: provider, excluding: excludedTokens)
+    case .grok:
+      credential = try GrokCLICredentialDiscovery.read(
+        grokHome: grokHome,
+        homeDirectory: homeDirectory,
+        fileManager: fileManager,
+        excluding: excludedTokens
+      )
     }
     guard let credential else { throw QuotaError.credentialsMissing(provider) }
     return try credential.requireCurrent(for: provider)
@@ -393,47 +401,5 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       throw QuotaError.commandFailed("SQLite")
     }
     return value
-  }
-}
-
-public actor CompositeCredentialStore: CredentialStore {
-  private let manual: ManualCredentialStore
-  private let local: any CredentialStore
-  private var rejectedManualTokens: [ProviderID: Set<String>] = [:]
-
-  public init(manual: ManualCredentialStore, local: any CredentialStore) {
-    self.manual = manual
-    self.local = local
-  }
-
-  public func credential(
-    for provider: ProviderID,
-    rejecting rejectedCredential: ProviderCredential?
-  ) async throws -> ProviderCredential {
-    guard provider.supportsManualCredentialOverride else {
-      return try await local.credential(for: provider, rejecting: rejectedCredential)
-    }
-    // Remember every manual token rejected during the current replacement sequence, not just
-    // the one passed to this call — a caller (e.g. GrokProvider/CodexProvider) that restarts a
-    // whole fetch across several 401s only ever excludes its most recent credential, so without
-    // this history an already-rejected manual token would be handed out again once a later
-    // local token is rejected, oscillating between the two forever instead of exhausting.
-    //
-    // `rejecting: nil` only happens at the start of a fresh top-level fetch (never mid-restart,
-    // which always excludes the credential that just failed), so it marks a new replacement
-    // sequence and resets the history. Without this, one rejected manual token would suppress
-    // the saved override for the app's entire lifetime, surviving a transient failure or even
-    // the user removing and re-saving the same credential.
-    var rejected = rejectedCredential == nil ? [] : (rejectedManualTokens[provider] ?? [])
-    if let rejectedCredential {
-      rejected.insert(rejectedCredential.accessToken)
-    }
-    rejectedManualTokens[provider] = rejected
-    if let manualCredential = try await manual.credentialIfPresent(for: provider),
-      !rejected.contains(manualCredential.accessToken)
-    {
-      return manualCredential
-    }
-    return try await local.credential(for: provider, rejecting: rejectedCredential)
   }
 }

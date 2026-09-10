@@ -22,6 +22,8 @@ import SwiftUI
       .codex: .available(PreviewData.shippingCodex),
       .antigravity: .available(PreviewData.shippingAntigravity),
       .cursor: .available(PreviewData.shippingCursor),
+      .grok: .available(PreviewData.shippingGrok),
+      .kimi: .available(PreviewData.snapshot(.kimi, remaining: 42)),
     ])
   )
 }

@@ -149,9 +149,12 @@ final class DomainTests: XCTestCase {
   }
 
   func testSubscriptionPlansAndProviderMetadata() {
-    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 440)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 510)
     XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: true), 510)
-    XCTAssertEqual(SubscriptionPlan.standard.count, 4)
+    XCTAssertEqual(SubscriptionPlan.standard.count, 6)
+    XCTAssertTrue(SubscriptionPlan.legacy.isEmpty)
+    XCTAssertTrue(ProviderID.legacy.isEmpty)
+    XCTAssertEqual(ProviderID.standard, Set(ProviderID.allCases))
     XCTAssertEqual(SubscriptionPlan.plan(for: .claudeCode).monthlyCostUSD, 200)
     XCTAssertEqual(SubscriptionPlan.plan(for: .codex).monthlyCostUSD, 200)
     XCTAssertEqual(SubscriptionPlan.plan(for: .antigravity).monthlyCostUSD, 20)
@@ -164,10 +167,13 @@ final class DomainTests: XCTestCase {
     )
     XCTAssertEqual(
       ProviderID.allCases,
-      [.claudeCode, .codex, .antigravity, .cursor, .kimi, .grok]
+      [.claudeCode, .codex, .antigravity, .cursor, .grok, .kimi]
     )
     XCTAssertFalse(ProviderID.antigravity.supportsManualCredentialOverride)
     XCTAssertFalse(ProviderID.cursor.supportsManualCredentialOverride)
+    XCTAssertTrue(ProviderID.codex.tracksBankedResets)
+    XCTAssertTrue(ProviderID.grok.tracksBankedResets)
+    XCTAssertFalse(ProviderID.claudeCode.tracksBankedResets)
     for provider in ProviderID.allCases {
       XCTAssertFalse(provider.displayName.isEmpty)
       XCTAssertNotNil(provider.usageURL)
@@ -180,7 +186,9 @@ final class DomainTests: XCTestCase {
     XCTAssertTrue(QuotaError.unauthorized(.codex).isAuthenticationError)
     XCTAssertFalse(QuotaError.rateLimited(.codex).isAuthenticationError)
     XCTAssertTrue(QuotaError.credentialsExpired(.kimi).localizedDescription.contains("OpenCode"))
-    XCTAssertTrue(QuotaError.unauthorized(.grok).localizedDescription.contains("OpenCode"))
+    XCTAssertTrue(QuotaError.credentialsExpired(.grok).localizedDescription.contains("grok login"))
+    XCTAssertTrue(QuotaError.unauthorized(.grok).localizedDescription.contains("grok"))
+    XCTAssertFalse(QuotaError.unauthorized(.grok).localizedDescription.contains("OpenCode"))
     XCTAssertFalse(QuotaError.network(.grok).localizedDescription.isEmpty)
   }
 

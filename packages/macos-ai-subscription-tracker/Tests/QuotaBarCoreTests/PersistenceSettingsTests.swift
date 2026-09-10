@@ -55,18 +55,14 @@ final class PersistenceSettingsTests: XCTestCase {
   }
 
   @MainActor
-  func testLegacyProvidersAreHiddenByDefaultAndRestoredOnOptIn() {
+  func testAllProvidersAreVisibleByDefault() {
     let store = MemorySettingsStore(enabled: nil, showsLegacy: nil, interval: nil)
     let settings = AppSettings(store: store)
 
-    XCTAssertEqual(settings.visibleProviderIDs, ProviderID.standard)
-    XCTAssertFalse(settings.showsLegacyProviders)
-
-    settings.setShowsLegacyProviders(true)
-
     XCTAssertEqual(settings.visibleProviderIDs, Set(ProviderID.allCases))
-    XCTAssertTrue(settings.enabledProviders.isSuperset(of: ProviderID.legacy))
-    XCTAssertTrue(store.savedShowsLegacy)
+    XCTAssertEqual(settings.visibleProviderIDs, ProviderID.standard)
+    XCTAssertTrue(ProviderID.legacy.isEmpty)
+    XCTAssertFalse(settings.showsLegacyProviders)
   }
 
   @MainActor
@@ -80,11 +76,55 @@ final class PersistenceSettingsTests: XCTestCase {
     defaults.set([ProviderID.codex.rawValue], forKey: "enabledProviders")
 
     let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
-    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .cursor])
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .cursor, .grok, .kimi])
     migrated.setProvider(.cursor, enabled: false)
 
     let reloaded = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
-    XCTAssertEqual(reloaded.enabledProviders, [.codex, .antigravity])
+    XCTAssertEqual(reloaded.enabledProviders, [.codex, .antigravity, .grok, .kimi])
+  }
+
+  @MainActor
+  func testVersionOneInstallsGainGrokWithoutReenablingDisabledStandardProviders() throws {
+    let suiteName = "QuotaBarTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      XCTFail("Expected isolated defaults")
+      return
+    }
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set(
+      [ProviderID.codex.rawValue, ProviderID.antigravity.rawValue],
+      forKey: "enabledProviders"
+    )
+    defaults.set(1, forKey: "standardProvidersVersion")
+
+    let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi])
+    XCTAssertFalse(migrated.enabledProviders.contains(.cursor))
+    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 3)
+  }
+
+  @MainActor
+  func testVersionTwoInstallsGainKimiWithoutReenablingDisabledStandardProviders() throws {
+    let suiteName = "QuotaBarTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      XCTFail("Expected isolated defaults")
+      return
+    }
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set(
+      [
+        ProviderID.codex.rawValue,
+        ProviderID.antigravity.rawValue,
+        ProviderID.grok.rawValue,
+      ],
+      forKey: "enabledProviders"
+    )
+    defaults.set(2, forKey: "standardProvidersVersion")
+
+    let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi])
+    XCTAssertFalse(migrated.enabledProviders.contains(.cursor))
+    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 3)
   }
 
   @MainActor

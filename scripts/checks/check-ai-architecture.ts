@@ -131,6 +131,16 @@ const STREAMBOT_VOICE_TTS_PATHS = new Set([
 ]);
 const SUBSCRIPTION_QUOTA_ENDPOINTS =
   "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/ProviderEndpoints.swift";
+// Brim's API view reads OpenAI Costs and Anthropic Cost Report as billing
+// authorities. This is not an inference path.
+const BRIM_API_BILLING_ENDPOINTS =
+  "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatformEndpoints.swift";
+const BRIM_API_BILLING_ALLOWED_URLS = new Set([
+  "https://api.openai.com/v1/organization/costs",
+  "https://api.anthropic.com/v1/organizations/cost_report",
+]);
+const DIRECT_PROVIDER_URL =
+  /https:\/\/(?:api\.(?:anthropic|groq|openai|x\.ai)\.com|generativelanguage\.googleapis\.com)[^"'\\\s]*/g;
 // The billing monitor uses OpenAI's official organization Usage and Costs APIs
 // as the payment authority; this is not an inference path.
 const OPENAI_BILLING_RECONCILIATION_PATH =
@@ -148,7 +158,21 @@ function isTestOrFixture(filePath: string): boolean {
   );
 }
 
-function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
+function brimBillingLineIsAllowed(source: string): boolean {
+  const urls = source.match(DIRECT_PROVIDER_URL) ?? [];
+  return (
+    urls.length > 0 &&
+    urls.every((url) =>
+      BRIM_API_BILLING_ALLOWED_URLS.has(url.replace(/\/$/, "")),
+    )
+  );
+}
+
+function isAllowedViolation(
+  rule: ArchitectureRule,
+  filePath: string,
+  source: string,
+): boolean {
   if (CHECK_IMPLEMENTATION_PATHS.has(filePath)) return true;
 
   if (rule.id === "provider-api-key") {
@@ -174,6 +198,9 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
   }
 
   if (rule.id === "direct-provider-endpoint") {
+    if (filePath === BRIM_API_BILLING_ENDPOINTS) {
+      return brimBillingLineIsAllowed(source);
+    }
     return (
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
@@ -196,7 +223,10 @@ export function findAiArchitectureViolations(
     const lines = file.contents.split("\n");
     for (const [lineIndex, source] of lines.entries()) {
       for (const rule of RULES) {
-        if (rule.pattern.test(source) && !isAllowedViolation(rule, file.path)) {
+        if (
+          rule.pattern.test(source) &&
+          !isAllowedViolation(rule, file.path, source)
+        ) {
           violations.push({
             rule: rule.id,
             description: rule.description,

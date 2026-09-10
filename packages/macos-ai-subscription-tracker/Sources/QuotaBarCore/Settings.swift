@@ -13,7 +13,7 @@ public protocol SettingsPersisting: Sendable {
 }
 
 public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sendable {
-  private static let standardProvidersVersion = 1
+  private static let standardProvidersVersion = 3
   private let defaults: UserDefaults
 
   public init(defaults: UserDefaults = .standard) {
@@ -31,8 +31,16 @@ public final class UserDefaultsSettingsStore: SettingsPersisting, @unchecked Sen
       providers.insert(provider)
     }
     let storedVersion = defaults.integer(forKey: "standardProvidersVersion")
-    if storedVersion < Self.standardProvidersVersion {
+    if storedVersion < 1 {
       providers.formUnion([.antigravity, .cursor])
+    }
+    if storedVersion < 2 {
+      providers.insert(.grok)
+    }
+    if storedVersion < 3 {
+      providers.insert(.kimi)
+    }
+    if storedVersion < Self.standardProvidersVersion {
       defaults.set(providers.map(\.rawValue).sorted(), forKey: "enabledProviders")
       defaults.set(Self.standardProvidersVersion, forKey: "standardProvidersVersion")
     }

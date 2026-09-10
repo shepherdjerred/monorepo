@@ -106,8 +106,8 @@ func captureSurface(_ operation: @Sendable () async throws -> Data) async -> Sur
 }
 
 /// Like `SurfaceResult`, but distinguishes an unauthorized response so a caller pinning several
-/// requests to one credential (Codex's usage/reset surfaces, Grok's identity/billing/credits
-/// surfaces) can restart the whole batch instead of quietly degrading that one surface to a
+/// requests to one credential (Codex's usage/reset surfaces, Grok's identity/billing/credits/
+/// reset surfaces) can restart the whole batch instead of quietly degrading that one surface to a
 /// warning and leaving the published snapshot combining data from two different credentials.
 enum AuthAwareSurfaceOutcome: Sendable {
   case success(Data)
