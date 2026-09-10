@@ -131,6 +131,10 @@ const STREAMBOT_VOICE_TTS_PATHS = new Set([
 ]);
 const SUBSCRIPTION_QUOTA_ENDPOINTS =
   "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/ProviderEndpoints.swift";
+// Brim's API view reads OpenAI Costs and Anthropic Cost Report as billing
+// authorities. This is not an inference path.
+const BRIM_API_BILLING_ENDPOINTS =
+  "packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/APIPlatformEndpoints.swift";
 // The billing monitor uses OpenAI's official organization Usage and Costs APIs
 // as the payment authority; this is not an inference path.
 const OPENAI_BILLING_RECONCILIATION_PATH =
@@ -177,6 +181,7 @@ function isAllowedViolation(rule: ArchitectureRule, filePath: string): boolean {
     return (
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
+      filePath === BRIM_API_BILLING_ENDPOINTS ||
       filePath === OPENAI_BILLING_RECONCILIATION_PATH
     );
   }

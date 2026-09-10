@@ -6,26 +6,28 @@ struct SettingsView: View {
   @Bindable var model: QuotaBarModel
   @Bindable var apiModel: APIPlatformModel
   let manualCredentials: ManualCredentialStore
-  let openRouterCredentials: OpenRouterCredentialStore
+  let apiCredentials: APIPlatformCredentialStore
   @Bindable var launchAtLogin: LaunchAtLoginController
   @State private var drafts: [ProviderID: String] = [:]
   @State private var overriddenProviders: Set<ProviderID> = []
   @State private var credentialMessage: String?
-  @State private var openRouterDraft = ""
-  @State private var hasOpenRouterCredential = false
-  @State private var openRouterCredentialMessage: String?
+  @State private var apiDrafts: [APIPlatformID: String] = [:]
+  @State private var apiHasCredential: Set<APIPlatformID> = []
+  @State private var apiMessages: [APIPlatformID: String] = [:]
 
   var body: some View {
     Form {
       providerSection
-      advancedSection
+      if !ProviderID.legacy.isEmpty {
+        advancedSection
+      }
       refreshSection
       loginSection
       credentialSection
-      openRouterCredentialSection
+      apiCredentialSection
     }
     .formStyle(.grouped)
-    .frame(width: 520, height: 720)
+    .frame(width: 520, height: 780)
     .task { await loadCredentialStatus() }
     .onChange(of: model.settings.visibleProviderIDs) { _, _ in
       Task { await loadCredentialStatus() }
@@ -33,35 +35,39 @@ struct SettingsView: View {
     .onAppear { launchAtLogin.refresh() }
   }
 
-  private var openRouterCredentialSection: some View {
-    Section("API platform") {
+  private var apiCredentialSection: some View {
+    Section("API platforms") {
       Text(
-        "Enter an OpenRouter Management API key to read credits, workspaces, and API-key usage. "
-          + "Brim only sends read-only requests; the key remains in your login Keychain."
+        "Enter read-only admin or management keys to report API spend. Keys stay in your login Keychain. "
+          + "Brim never creates, rotates, or deletes provider keys."
       )
       .font(.caption)
       .foregroundStyle(.secondary)
-      if let url = URL(string: "https://openrouter.ai/settings/management-keys") {
-        Link("OpenRouter Management API keys", destination: url)
-      }
-      VStack(alignment: .leading, spacing: 5) {
-        HStack {
-          SecureField("OpenRouter Management API key", text: $openRouterDraft)
-          Button("Save") { saveOpenRouterCredential() }
-            .disabled(openRouterDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-          Button("Remove") { removeOpenRouterCredential() }
-            .disabled(!hasOpenRouterCredential)
+      ForEach(APIPlatformID.allCases) { platform in
+        VStack(alignment: .leading, spacing: 5) {
+          if let url = platform.credentialHelpURL {
+            Link("\(platform.displayName) keys", destination: url)
+          }
+          HStack {
+            SecureField(platform.credentialLabel, text: apiDraftBinding(platform))
+            Button("Save") { saveAPICredential(platform) }
+              .disabled(
+                apiDrafts[platform, default: ""].trimmingCharacters(in: .whitespacesAndNewlines)
+                  .isEmpty)
+            Button("Remove") { removeAPICredential(platform) }
+              .disabled(!apiHasCredential.contains(platform))
+          }
+          if apiHasCredential.contains(platform) {
+            Label("Key saved in Keychain", systemImage: "key.fill")
+              .font(.caption2)
+              .foregroundStyle(.secondary)
+          }
+          if let message = apiMessages[platform] {
+            Text(message)
+              .font(.caption)
+              .foregroundStyle(.secondary)
+          }
         }
-        if hasOpenRouterCredential {
-          Label("Management API key saved in Keychain", systemImage: "key.fill")
-            .font(.caption2)
-            .foregroundStyle(.secondary)
-        }
-      }
-      if let openRouterCredentialMessage {
-        Text(openRouterCredentialMessage)
-          .font(.caption)
-          .foregroundStyle(.secondary)
       }
     }
   }
@@ -86,7 +92,7 @@ struct SettingsView: View {
     Section("Advanced") {
       Toggle("Show legacy providers", isOn: legacyProviderBinding)
       Text(
-        "Kimi Code and Grok use unsupported subscription surfaces. They remain off unless you opt in."
+        "These providers use unsupported subscription surfaces. They remain off unless you opt in."
       )
       .font(.caption)
       .foregroundStyle(.secondary)
@@ -189,6 +195,13 @@ struct SettingsView: View {
     )
   }
 
+  private func apiDraftBinding(_ platform: APIPlatformID) -> Binding<String> {
+    Binding(
+      get: { apiDrafts[platform, default: ""] },
+      set: { apiDrafts[platform] = $0 }
+    )
+  }
+
   private func saveCredential(_ provider: ProviderID) {
     let token = drafts[provider, default: ""]
     Task {
@@ -228,37 +241,41 @@ struct SettingsView: View {
         credentialMessage = "Keychain status unavailable."
       }
     }
-    do {
-      hasOpenRouterCredential = try await openRouterCredentials.token() != nil
-    } catch {
-      openRouterCredentialMessage = "OpenRouter Keychain status unavailable."
-    }
-  }
-
-  private func saveOpenRouterCredential() {
-    let token = openRouterDraft
-    Task {
+    for platform in APIPlatformID.allCases {
       do {
-        try await openRouterCredentials.save(token)
-        hasOpenRouterCredential = true
-        openRouterDraft = ""
-        openRouterCredentialMessage = "Saved OpenRouter Management API key."
-        await apiModel.handleCredentialChange()
+        if try await apiCredentials.token(for: platform) != nil {
+          apiHasCredential.insert(platform)
+        }
       } catch {
-        openRouterCredentialMessage = error.localizedDescription
+        apiMessages[platform] = "\(platform.displayName) Keychain status unavailable."
       }
     }
   }
 
-  private func removeOpenRouterCredential() {
+  private func saveAPICredential(_ platform: APIPlatformID) {
+    let token = apiDrafts[platform, default: ""]
     Task {
       do {
-        try await openRouterCredentials.remove()
-        hasOpenRouterCredential = false
-        openRouterCredentialMessage = "Removed OpenRouter Management API key."
-        await apiModel.handleCredentialChange()
+        try await apiCredentials.save(token, for: platform)
+        apiHasCredential.insert(platform)
+        apiDrafts[platform] = ""
+        apiMessages[platform] = "Saved \(platform.credentialLabel)."
+        await apiModel.handleCredentialChange(for: platform)
       } catch {
-        openRouterCredentialMessage = error.localizedDescription
+        apiMessages[platform] = error.localizedDescription
+      }
+    }
+  }
+
+  private func removeAPICredential(_ platform: APIPlatformID) {
+    Task {
+      do {
+        try await apiCredentials.remove(for: platform)
+        apiHasCredential.remove(platform)
+        apiMessages[platform] = "Removed \(platform.credentialLabel)."
+        await apiModel.handleCredentialChange(for: platform)
+      } catch {
+        apiMessages[platform] = error.localizedDescription
       }
     }
   }

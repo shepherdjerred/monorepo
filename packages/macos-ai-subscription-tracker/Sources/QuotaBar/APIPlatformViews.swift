@@ -2,6 +2,7 @@ import QuotaBarCore
 import SwiftUI
 
 struct APIPlatformSummaryView: View {
+  let platform: APIPlatformID
   let state: APIPlatformDisplayState
   let date: Date
 
@@ -19,12 +20,9 @@ struct APIPlatformSummaryView: View {
       Image(systemName: "network")
         .foregroundStyle(.blue)
         .accessibilityHidden(true)
-      Text("OpenRouter")
+      Text(platform.displayName)
         .font(.subheadline.weight(.semibold))
       Spacer()
-      Text("All workspaces")
-        .font(.caption)
-        .foregroundStyle(.secondary)
     }
   }
 
@@ -43,7 +41,7 @@ struct APIPlatformSummaryView: View {
       snapshotContent(snapshot, staleReason: reason)
     case let .unauthenticated(message):
       statusRow(
-        "Management API key required",
+        "API key required",
         symbol: "key",
         help: message
       )
@@ -58,17 +56,21 @@ struct APIPlatformSummaryView: View {
   ) -> some View {
     VStack(alignment: .leading, spacing: 9) {
       HStack(spacing: 6) {
-        metric("Credits remaining", value: snapshot.creditsRemaining)
+        if let creditsRemaining = snapshot.creditsRemaining {
+          metric("Credits remaining", value: creditsRemaining)
+        }
         metric("Monthly API spend", value: snapshot.monthlySpend)
         metric("Projected spend", value: snapshot.projectedSpend)
       }
       .opacity(staleReason == nil ? 1 : 0.62)
 
-      Text(workspaceDetail(snapshot.workspaceNames))
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-        .help(snapshot.workspaceNames.joined(separator: ", "))
+      if !snapshot.workspaceNames.isEmpty {
+        Text(workspaceDetail(snapshot.workspaceNames))
+          .font(.caption2)
+          .foregroundStyle(.secondary)
+          .lineLimit(1)
+          .help(snapshot.workspaceNames.joined(separator: ", "))
+      }
 
       HStack(spacing: 5) {
         if let staleReason {
@@ -82,13 +84,10 @@ struct APIPlatformSummaryView: View {
       }
       .font(.caption2)
 
-      Text(
-        "Monthly spend is OpenRouter API-key usage and includes estimated BYOK spend. "
-          + "Projection uses the current local calendar pace."
-      )
-      .font(.caption2)
-      .foregroundStyle(.tertiary)
-      .fixedSize(horizontal: false, vertical: true)
+      Text(platform.spendFootnote)
+        .font(.caption2)
+        .foregroundStyle(.tertiary)
+        .fixedSize(horizontal: false, vertical: true)
     }
   }
 
@@ -124,11 +123,7 @@ struct APIPlatformSummaryView: View {
   }
 
   private func currency(_ value: Decimal) -> String {
-    let formatter = NumberFormatter()
-    formatter.numberStyle = .currency
-    formatter.currencyCode = "USD"
-    formatter.locale = .current
-    return value.formatted(.currency(code: "USD"))
+    value.formatted(.currency(code: "USD"))
   }
 
   private func statusRow(_ text: String, symbol: String, help: String) -> some View {

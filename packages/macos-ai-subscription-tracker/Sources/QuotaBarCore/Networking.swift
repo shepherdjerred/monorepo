@@ -240,6 +240,26 @@ public struct ProviderHTTPClient: Sendable {
     return try validate(response, provider: provider)
   }
 
+  public func post(
+    provider: ProviderID,
+    url: URL,
+    body: Data,
+    credential: ProviderCredential,
+    headers: [String: String] = [:],
+    timeout: TimeInterval = 20
+  ) async throws -> Data {
+    let request = ProviderRequestTemplate(
+      method: .post,
+      provider: provider,
+      url: url,
+      body: body,
+      headers: headers,
+      timeout: timeout
+    )
+    let response = try await send(request, credential: credential)
+    return try validate(response, provider: provider)
+  }
+
   private func send(
     _ request: ProviderRequestTemplate,
     credential: ProviderCredential

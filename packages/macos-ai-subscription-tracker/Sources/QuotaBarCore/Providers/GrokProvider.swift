@@ -6,17 +6,20 @@ public struct GrokProvider: UsageProvider {
   private let userEndpoint: URL
   private let billingEndpoint: URL
   private let creditsEndpoint: URL
+  private let resetEndpoint: URL
 
   public init(
     client: ProviderHTTPClient,
     userEndpoint: URL,
     billingEndpoint: URL,
-    creditsEndpoint: URL
+    creditsEndpoint: URL,
+    resetEndpoint: URL
   ) {
     self.client = client
     self.userEndpoint = userEndpoint
     self.billingEndpoint = billingEndpoint
     self.creditsEndpoint = creditsEndpoint
+    self.resetEndpoint = resetEndpoint
   }
 
   public func fetch() async throws -> UsageSnapshot {
@@ -24,10 +27,11 @@ public struct GrokProvider: UsageProvider {
     return try await fetch(usingCredential: credential)
   }
 
-  /// Pins the identity, billing, and credits requests to one credential so a 401 on any single
-  /// surface cannot leave the published snapshot combining an account label from one credential
-  /// with usage data from another; a 401 on any surface restarts the complete fetch (identity
-  /// included) with a replacement credential instead of letting each surface reload on its own.
+  /// Pins the identity, billing, credits, and remaining-reset requests to one credential so a
+  /// 401 on any single surface cannot leave the published snapshot combining an account label from
+  /// one credential with usage or banked resets from another; a 401 on any surface restarts the
+  /// complete fetch (identity included) with a replacement credential instead of letting each
+  /// surface reload on its own.
   private func fetch(usingCredential credential: ProviderCredential) async throws -> UsageSnapshot {
     let identityData: Data
     do {
@@ -38,6 +42,7 @@ public struct GrokProvider: UsageProvider {
     }
     let identity = try Self.parseIdentity(data: identityData)
     let surfaceHeaders = Self.headers(userID: identity.userID)
+    let resetHeaders = Self.resetHeaders(userID: identity.userID)
     async let billingOutcome = captureAuthAwareSurface {
       try await client.get(
         provider: id, url: billingEndpoint, credential: credential, headers: surfaceHeaders)
@@ -46,15 +51,61 @@ public struct GrokProvider: UsageProvider {
       try await client.get(
         provider: id, url: creditsEndpoint, credential: credential, headers: surfaceHeaders)
     }
+    async let resetRequest = captureAuthAwareSurface {
+      try await client.post(
+        provider: id,
+        url: resetEndpoint,
+        body: GrokResetCodec.emptyUnaryRequest,
+        credential: credential,
+        headers: resetHeaders
+      )
+    }
     let billing = await billingOutcome
     let credits = await creditsOutcome
+    let resetOutcome = await resetRequest
     if case .unauthorized = billing { return try await restartFetch(excluding: credential) }
     if case .unauthorized = credits { return try await restartFetch(excluding: credential) }
-    return try Self.parse(
-      billing: billing.surfaceResult,
-      credits: credits.surfaceResult,
-      accountLabel: identity.accountLabel
-    )
+    switch try Self.decodeResetSurface(resetOutcome) {
+    case let .decoded(resets, errorMessage):
+      return try Self.parse(
+        billing: billing.surfaceResult,
+        credits: credits.surfaceResult,
+        resets: resets,
+        resetErrorMessage: errorMessage,
+        accountLabel: identity.accountLabel
+      )
+    case .unauthorized:
+      return try await restartFetch(excluding: credential)
+    }
+  }
+
+  private enum ResetSurface {
+    case decoded(resets: [Reset], errorMessage: String?)
+    case unauthorized
+  }
+
+  private static func decodeResetSurface(_ outcome: AuthAwareSurfaceOutcome) throws -> ResetSurface
+  {
+    switch outcome {
+    case let .success(data):
+      do {
+        return .decoded(resets: try parseResets(data: data), errorMessage: nil)
+      } catch QuotaError.unauthorized {
+        return .unauthorized
+      } catch QuotaError.malformedResponse {
+        throw QuotaError.malformedResponse(.grok)
+      } catch let error as QuotaError {
+        return .decoded(resets: [], errorMessage: error.localizedDescription)
+      }
+    case let .failure(message):
+      return .decoded(resets: [], errorMessage: message)
+    case .unauthorized:
+      return .unauthorized
+    }
+  }
+
+  public static func parseResets(data: Data, now: Date = .now) throws -> [Reset] {
+    try GrokResetCodec.parseTokens(from: data, now: now)
   }
 
   private func restartFetch(excluding credential: ProviderCredential) async throws -> UsageSnapshot
@@ -83,6 +134,12 @@ public struct GrokProvider: UsageProvider {
       }
       throw QuotaError.unsupportedResponse(.grok)
     }
+    // SuperGrok unified-credit accounts report a zero included monthly dollar limit. That is
+    // not a monthly quota window; spend lives on the credits surface instead.
+    if limit == 0 {
+      guard used.isFinite, used >= 0 else { throw QuotaValidationError.invalidPairedFields }
+      return []
+    }
     guard limit > 0, 0...limit ~= used else { throw QuotaValidationError.invalidPairedFields }
     return [
       try UsageWindow.validated(
@@ -99,6 +156,7 @@ public struct GrokProvider: UsageProvider {
   public static func parseCredits(data: Data, now: Date = .now) throws -> [UsageWindow] {
     let response = try ProviderDecoder.decode(GrokCredits.self, from: data, provider: .grok)
     var windows = try sharedCreditWindows(config: response.config, now: now)
+    let inheritedReset = response.config.currentPeriod?.end ?? response.config.billingPeriodEnd
     var productIDs: Set<String> = []
     for (name, metric) in response.config.productUsage.sorted(by: { $0.key < $1.key }) {
       let id = "grok-product-\(slug(name))"
@@ -111,7 +169,7 @@ public struct GrokProvider: UsageProvider {
           label: title(name),
           kind: .modelScoped(model: title(name)),
           usedPercent: try metric.calculatedPercentage(),
-          resetAt: metric.resetAt,
+          resetAt: metric.resetAt ?? inheritedReset,
           sourceTimestamp: now
         )
       )
@@ -123,7 +181,7 @@ public struct GrokProvider: UsageProvider {
           label: "Extra credits",
           kind: .credits,
           usedPercent: try extra.calculatedPercentage(),
-          resetAt: extra.resetAt,
+          resetAt: extra.resetAt ?? inheritedReset,
           sourceTimestamp: now
         )
       )
@@ -138,14 +196,14 @@ public struct GrokProvider: UsageProvider {
   ) throws -> [UsageWindow] {
     guard config.creditUsagePercent != nil || config.currentPeriod != nil else { return [] }
     let period = config.currentPeriod
-    let isWeekly = period?.kind == .weekly
+    let isWeekly = period?.kind.isWeekly == true
     return [
       try UsageWindow.validated(
         id: "grok-shared-credits",
         label: isWeekly ? "Weekly" : "Shared credits",
         kind: isWeekly ? .weekly : .credits,
         usedPercent: config.creditUsagePercent,
-        resetAt: period?.end,
+        resetAt: period?.end ?? config.billingPeriodEnd,
         sourceTimestamp: now
       )
     ]
@@ -154,6 +212,8 @@ public struct GrokProvider: UsageProvider {
   static func parse(
     billing: SurfaceResult,
     credits: SurfaceResult,
+    resets: [Reset] = [],
+    resetErrorMessage: String? = nil,
     accountLabel: String?,
     now: Date = .now
   ) throws -> UsageSnapshot {
@@ -174,6 +234,8 @@ public struct GrokProvider: UsageProvider {
       provider: .grok,
       accountLabel: accountLabel,
       windows: windows,
+      resets: resets.filter { $0.exp > now }.sorted { $0.exp < $1.exp },
+      resetErrorMessage: resetErrorMessage,
       notes: warnings,
       sourceTimestamp: now
     )
@@ -182,10 +244,17 @@ public struct GrokProvider: UsageProvider {
   private static func headers(userID: String? = nil) -> [String: String] {
     var headers = [
       "X-XAI-Token-Auth": "xai-grok-cli",
-      "x-grok-client-version": "3.12.0",
+      "x-grok-client-version": "1.0.13",
       "x-grok-client-mode": "headless",
+      "User-Agent": "grok-cli/1.0.13",
     ]
     if let userID { headers["x-userid"] = userID }
+    return headers
+  }
+
+  private static func resetHeaders(userID: String) -> [String: String] {
+    var headers = headers(userID: userID)
+    for (name, value) in GrokResetCodec.requestHeaders { headers[name] = value }
     return headers
   }
 }
@@ -232,12 +301,14 @@ private struct GrokCredits: Decodable {
 private struct GrokCreditsConfig: Decodable {
   let creditUsagePercent: Double?
   let currentPeriod: GrokPeriod?
+  let billingPeriodEnd: Date?
   let productUsage: [String: GrokMetric]
   let extraCredits: GrokMetric?
 
   enum CodingKeys: String, CodingKey {
     case creditUsagePercent
     case currentPeriod
+    case billingPeriodEnd
     case productUsage
     case productBreakdown
     case extraCredits
@@ -249,14 +320,15 @@ private struct GrokCreditsConfig: Decodable {
       ProviderDecoder.number(in: container, forKey: .creditUsagePercent)
     )
     self.currentPeriod = try container.decodeIfPresent(GrokPeriod.self, forKey: .currentPeriod)
+    self.billingPeriodEnd = try ProviderDecoder.date(in: container, forKey: .billingPeriodEnd)
     let productUsage = try container.decodeIfPresent(
-      [String: GrokMetric].self,
+      GrokProductUsageMap.self,
       forKey: .productUsage
-    )
+    )?.metrics
     let productBreakdown = try container.decodeIfPresent(
-      [String: GrokMetric].self,
+      GrokProductUsageMap.self,
       forKey: .productBreakdown
-    )
+    )?.metrics
     if let productUsage, let productBreakdown, productUsage != productBreakdown {
       throw QuotaValidationError.invalidPairedFields
     }
@@ -286,6 +358,49 @@ private struct GrokPeriod: Decodable {
 
 private enum GrokPeriodKind: String, Decodable {
   case weekly
+  case usagePeriodWeekly = "USAGE_PERIOD_TYPE_WEEKLY"
+
+  var isWeekly: Bool {
+    switch self {
+    case .weekly, .usagePeriodWeekly: true
+    }
+  }
+}
+
+private struct GrokProductUsageMap: Decodable {
+  let metrics: [String: GrokMetric]
+
+  init(from decoder: any Decoder) throws {
+    if var unkeyed = try? decoder.unkeyedContainer() {
+      var metrics: [String: GrokMetric] = [:]
+      while !unkeyed.isAtEnd {
+        let row = try unkeyed.decode(GrokProductUsageRow.self)
+        let name = row.product.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, metrics[name] == nil else {
+          throw QuotaValidationError.emptyIdentifier
+        }
+        metrics[name] = row.metric
+      }
+      self.metrics = metrics
+      return
+    }
+    metrics = try decoder.singleValueContainer().decode([String: GrokMetric].self)
+  }
+}
+
+private struct GrokProductUsageRow: Decodable {
+  let product: String
+  let metric: GrokMetric
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    product = try container.decode(String.self, forKey: .product)
+    metric = try GrokMetric(from: decoder)
+  }
+
+  enum CodingKeys: String, CodingKey {
+    case product
+  }
 }
 
 private struct GrokMetric: Decodable, Equatable {
@@ -300,6 +415,7 @@ private struct GrokMetric: Decodable, Equatable {
     case used
     case remaining
     case creditUsagePercent
+    case usagePercent
     case resetAt
   }
 
@@ -308,9 +424,12 @@ private struct GrokMetric: Decodable, Equatable {
     self.limit = try ProviderDecoder.number(in: container, forKey: .limit)
     self.used = try ProviderDecoder.number(in: container, forKey: .used)
     self.remaining = try ProviderDecoder.number(in: container, forKey: .remaining)
-    self.explicitPercentage = try ProviderDecoder.percentage(
-      ProviderDecoder.number(in: container, forKey: .creditUsagePercent)
-    )
+    let creditUsagePercent = try ProviderDecoder.number(in: container, forKey: .creditUsagePercent)
+    let usagePercent = try ProviderDecoder.number(in: container, forKey: .usagePercent)
+    if let creditUsagePercent, let usagePercent, abs(creditUsagePercent - usagePercent) > 0.01 {
+      throw QuotaValidationError.invalidPairedFields
+    }
+    self.explicitPercentage = try ProviderDecoder.percentage(creditUsagePercent ?? usagePercent)
     self.resetAt = try ProviderDecoder.date(in: container, forKey: .resetAt)
   }
 

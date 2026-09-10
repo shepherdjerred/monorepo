@@ -1,0 +1,12 @@
+{
+  "object": "page",
+  "data": [
+    {
+      "start_time": 1756684800,
+      "end_time": 1756771200,
+      "results": [{ "amount": { "value": 4.25, "currency": "eur" } }]
+    }
+  ],
+  "has_more": false,
+  "next_page": null
+}

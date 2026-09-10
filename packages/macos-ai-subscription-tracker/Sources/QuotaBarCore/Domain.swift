@@ -5,11 +5,13 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
   case codex
   case antigravity
   case cursor
-  case kimi
   case grok
+  case kimi
 
-  public static let standard: Set<ProviderID> = [.claudeCode, .codex, .antigravity, .cursor]
-  public static let legacy: Set<ProviderID> = [.kimi, .grok]
+  public static let standard: Set<ProviderID> = [
+    .claudeCode, .codex, .antigravity, .cursor, .grok, .kimi,
+  ]
+  public static let legacy: Set<ProviderID> = []
 
   public var id: String { rawValue }
 
@@ -19,8 +21,8 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
     case .codex: "Codex"
     case .antigravity: "Google Antigravity"
     case .cursor: "Cursor"
-    case .kimi: "Kimi Code"
     case .grok: "Grok"
+    case .kimi: "Kimi Code"
     }
   }
 
@@ -30,15 +32,22 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
     case .codex: URL(string: "https://chatgpt.com/codex/settings/usage")
     case .antigravity: URL(string: "https://antigravity.google/docs/cli/commands/usage")
     case .cursor: URL(string: "https://prod.cursor.com/help/models-and-usage/usage-limits")
-    case .kimi: URL(string: "https://www.kimi.com/code/console")
     case .grok: URL(string: "https://grok.com/settings/usage?_s=usage")
+    case .kimi: URL(string: "https://www.kimi.com/code/console")
     }
   }
 
   public var supportsManualCredentialOverride: Bool {
     switch self {
-    case .claudeCode, .codex, .kimi, .grok: true
+    case .claudeCode, .codex, .grok, .kimi: true
     case .antigravity, .cursor: false
+    }
+  }
+
+  public var tracksBankedResets: Bool {
+    switch self {
+    case .codex, .grok: true
+    case .claudeCode, .antigravity, .cursor, .kimi: false
     }
   }
 }
@@ -53,12 +62,11 @@ public struct SubscriptionPlan: Identifiable, Equatable, Sendable {
     SubscriptionPlan(provider: .codex, monthlyCostUSD: 200),
     SubscriptionPlan(provider: .antigravity, monthlyCostUSD: 20),
     SubscriptionPlan(provider: .cursor, monthlyCostUSD: 20),
+    SubscriptionPlan(provider: .grok, monthlyCostUSD: 30),
+    SubscriptionPlan(provider: .kimi, monthlyCostUSD: 40),
   ]
 
-  public static let legacy: [SubscriptionPlan] = [
-    SubscriptionPlan(provider: .kimi, monthlyCostUSD: 40),
-    SubscriptionPlan(provider: .grok, monthlyCostUSD: 30),
-  ]
+  public static let legacy: [SubscriptionPlan] = []
 
   public static func plans(includingLegacy: Bool) -> [SubscriptionPlan] {
     standard + (includingLegacy ? legacy : [])

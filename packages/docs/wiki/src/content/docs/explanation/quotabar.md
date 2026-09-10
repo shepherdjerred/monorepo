@@ -6,8 +6,8 @@ sidebar:
 ---
 
 Brim keeps subscription usage visible without turning provider-specific web
-usage pages into a dashboard. Claude Code, Codex, Google Antigravity, and Cursor
-are its standard providers; Kimi Code and Grok remain hidden legacy providers.
+usage pages into a dashboard. Claude Code, Codex, Google Antigravity, Cursor,
+Grok, and Kimi Code are its standard providers.
 The authenticated HTTP providers use
 [typed credential discovery](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 Its [provider-independent model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift)
@@ -31,26 +31,29 @@ flowchart LR
 
 The subscription side of the app tracks quota only. It does not show provider
 API rate cards, notifications, or a full usage dashboard. Its separate API view
-reports configured OpenRouter usage, while local quota samples power the
-subscription History graph.
+reports configured OpenRouter, OpenAI, and Anthropic usage, while local quota
+samples power the subscription History graph.
 The popover includes a personal subscription-spend reminder: $200/month each
-for Claude Code and Codex plus $20/month each for Google AI Pro and Cursor Pro
-($440/month standard total). Hidden legacy providers add Kimi Code at $40/month
-and Grok at $30/month when enabled; these figures are reminders, not provider
-billing data.
+for Claude Code and Codex, $20/month each for Google AI Pro and Cursor Pro,
+$30/month for Grok, and $40/month for Kimi Code ($510/month total). These
+figures are reminders, not provider billing data.
 The reminder values live in the
 [subscription plan model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift).
 
 The subscription view surfaces the tightest actionable quota first and sorts
-provider sections by current remaining usage. Quota windows and Codex reset
+provider sections by current remaining usage. Quota windows and Codex/Grok reset
 expirations use compact rows; healthy values stay neutral while orange and red
 are reserved for pressure. Policy-only Fable data, stale snapshots, unknown
 percentages, and provider errors remain explicit without invented progress.
-The `API & routers` segment is separate from these subscription quotas.
 These choices are derived by the
 [quota overview model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/QuotaOverview.swift)
 and rendered by the
 [menu-bar view](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/MenuBarView.swift).
+
+The `API & routers` segment is separate from these subscription quotas.
+It reports billed API spend, not remaining subscription windows.
+OpenRouter, OpenAI, and Anthropic each use a read-only admin or management key.
+Those keys never replace Claude, Codex, or ChatGPT subscription sign-ins.
 
 Claude and Codex use private authenticated subscription usage surfaces. Claude
 preserves additive model-scoped windows when the account returns them; Fable is
@@ -96,17 +99,32 @@ fabricated zero usage. Cursor team analytics and on-demand spend reporting stay
 out of scope; the two subscription pools are described in Cursor's
 [usage-limit guide](https://prod.cursor.com/help/models-and-usage/usage-limits).
 
-Kimi Code reads its local OAuth credential directory, including a relocated
-`KIMI_CODE_HOME`, and keeps Kimi Code separate from Moonshot Open Platform API
-keys. Kimi and Grok may also read typed OAuth entries owned by OpenCode.
-Brim never refreshes or rewrites OpenCode's credential chain; expired
-credentials must be refreshed through OpenCode. Grok reads subscription usage
-and credit surfaces, not xAI developer API limits. Kimi and Grok responses are
-private contracts: malformed or changed responses become unavailable/stale
-states and are covered by local fixtures.
+Grok means the SuperGrok subscription, not xAI developer API rate limits. Brim
+reads grok CLI `auth.json` or an optional Keychain override. It ignores OpenCode
+Grok and xAI tokens. It then requests Grok's identity, monthly billing, and
+credit surfaces, plus remaining unused reset tokens. SuperGrok unified-credit
+accounts have no included monthly dollar limit; Brim shows the weekly credit
+window instead of inventing one.
+Product and extra-credit rows inherit that same weekly reset.
+Banked extra resets are a separate list from that weekly countdown. Brim
+shows remaining unused packs with their expirations and never redeems one.
+Those responses are a private contract: malformed or changed
+shapes become unavailable or partial data rather than a fabricated zero. Brim
+never refreshes grok CLI credentials; `grok login` owns that session. xAI API
+keys and developer rate cards stay out of scope. The contract is implemented by
+the
+[Grok adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/GrokProvider.swift)
+and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
+
+Kimi Code is a first-class subscription, kept separate from Moonshot Open
+Platform API keys. It reads its local OAuth credential directory, including a
+relocated `KIMI_CODE_HOME`, and may also read typed OAuth entries owned by
+OpenCode. Brim never refreshes or rewrites OpenCode's credential chain; expired
+credentials must be refreshed through OpenCode. Kimi responses are a private
+contract: malformed or changed responses become unavailable or stale states
+and are covered by local fixtures.
 Those boundaries are implemented by the
-[Kimi adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/KimiProvider.swift),
-[Grok adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/GrokProvider.swift),
+[Kimi adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/KimiProvider.swift)
 and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 
 ## Runtime behavior
@@ -129,8 +147,10 @@ launch at login, optional credentials for supported providers, and links to the
 provider usage pages. Optional overrides are stored in the macOS Keychain and
 are not included in the snapshot cache. Antigravity and Cursor cannot be
 overridden because their respective local applications own those sign-ins;
-Kimi Code and Grok fields are for subscription credentials, not their developer
-API keys. Launch at login reflects the
+Grok fields are for grok CLI subscription credentials, not xAI developer API
+keys. Kimi Code fields are for subscription credentials, not Moonshot developer
+API keys. API platform keys use a separate Keychain service and report billed
+spend, not subscription quota. Launch at login reflects the
 installed app's real `SMAppService` state and reports approval or registration
 failures instead of storing a hopeful boolean.
 The controls are defined by [SettingsView](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBar/SettingsView.swift)

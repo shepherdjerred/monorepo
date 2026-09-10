@@ -36,7 +36,8 @@ public enum Providers {
           client: client,
           userEndpoint: endpoints.grokUser,
           billingEndpoint: endpoints.grokBilling,
-          creditsEndpoint: endpoints.grokCredits
+          creditsEndpoint: endpoints.grokCredits,
+          resetEndpoint: endpoints.grokResets
         )
       }
     }

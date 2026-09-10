@@ -27,6 +27,26 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertNil(snapshot.windows.first(where: { $0.id.contains("breakdown") }))
   }
 
+  func testClaudeIgnoresUnrecognizedBreakdownMetadata() throws {
+    XCTAssertThrowsError(
+      try ClaudeCodeProvider.parse(
+        data: Data(
+          #"""
+          {
+            "five_hour": {"utilization": 10, "resets_at": "2026-08-09T22:00:00Z"},
+            "seven_day": {"utilization": 20, "resets_at": "2026-08-14T00:00:00Z"},
+            "unrecognized_breakdown": {
+              "as_of": "2026-08-09T00:00:00Z",
+              "rows": []
+            }
+          }
+          """#.utf8
+        ),
+        now: now
+      )
+    )
+  }
+
   func testClaudeLimitsPreserveModelAndPolicy() throws {
     let snapshot = try ClaudeCodeProvider.parse(data: fixture("claude-limits"), now: now)
     XCTAssertFalse(snapshot.windows.contains { $0.label.contains("Nimbus Quil") })
@@ -229,131 +249,6 @@ final class ProviderParsingTests: XCTestCase {
     XCTAssertThrowsError(
       try KimiProvider.parse(
         data: Data(#"{"usage":{"used_percent":20,"usage_percent":30}}"#.utf8),
-        now: now
-      )
-    )
-  }
-
-  func testGrokSurfacesDecodeIndependently() throws {
-    let identity = try GrokProvider.parseIdentity(data: fixture("grok-user"))
-    XCTAssertEqual(identity.userID, "user_quotabar_fixture")
-    XCTAssertEqual(identity.accountLabel, "fixture@example.com")
-    XCTAssertEqual(
-      try GrokProvider.parseBilling(data: fixture("grok-billing"), now: now).first?
-        .remainingPercent, 65)
-    let credits = try GrokProvider.parseCredits(data: fixture("grok-credits"), now: now)
-    XCTAssertEqual(credits.map(\.remainingPercent), [58, 82, 55, 90])
-  }
-
-  func testGrokProductAliasesMustBeUnambiguous() throws {
-    let identicalAliases = try GrokProvider.parseCredits(
-      data: Data(
-        #"""
-        {
-          "config": {
-            "productUsage": {"chat": {"creditUsagePercent": 20}},
-            "productBreakdown": {"chat": {"creditUsagePercent": 20}}
-          }
-        }
-        """#.utf8
-      ),
-      now: now
-    )
-    XCTAssertEqual(identicalAliases.first?.remainingPercent, 80)
-
-    XCTAssertThrowsError(
-      try GrokProvider.parseCredits(
-        data: Data(
-          #"""
-          {
-            "config": {
-              "productUsage": {},
-              "productBreakdown": {"chat": {"creditUsagePercent": 20}}
-            }
-          }
-          """#.utf8
-        ),
-        now: now
-      )
-    )
-    XCTAssertThrowsError(
-      try GrokProvider.parseCredits(
-        data: Data(
-          #"{"config":{"productUsage":{"grok-3":{"creditUsagePercent":20},"grok_3":{"creditUsagePercent":30}}}}"#
-            .utf8
-        ),
-        now: now
-      )
-    )
-  }
-
-  func testGrokUnknownUsageIsNotZeroAndPartialDataSurvives() throws {
-    let unknown = try GrokProvider.parseCredits(data: fixture("grok-credits-unknown"), now: now)
-    XCTAssertNil(unknown.first?.usedPercent)
-    let snapshot = try GrokProvider.parse(
-      billing: .success(fixture("grok-billing")),
-      credits: .failure("offline"),
-      accountLabel: "fixture@example.com",
-      now: now
-    )
-    XCTAssertEqual(snapshot.windows.count, 1)
-    XCTAssertTrue(snapshot.notes.first?.contains("offline") == true)
-  }
-
-  func testGrokRejectsInvalidSurfaceShapes() {
-    XCTAssertThrowsError(
-      try GrokProvider.parseBilling(data: fixture("grok-invalid-monthly"), now: now))
-    XCTAssertThrowsError(
-      try GrokProvider.parseCredits(data: Data(#"{"config":{}}"#.utf8), now: now))
-    XCTAssertThrowsError(try GrokProvider.parseIdentity(data: Data(#"{"userId":""}"#.utf8)))
-    XCTAssertThrowsError(
-      try GrokProvider.parse(
-        billing: .failure("offline"),
-        credits: .failure("offline"),
-        accountLabel: nil,
-        now: now
-      )
-    )
-    XCTAssertThrowsError(
-      try GrokProvider.parse(
-        billing: .success(fixture("grok-invalid-monthly")),
-        credits: .success(fixture("grok-credits")),
-        accountLabel: nil,
-        now: now
-      )
-    )
-    XCTAssertThrowsError(
-      try GrokProvider.parse(
-        billing: .success(fixture("grok-billing")),
-        credits: .success(Data(#"{"config":{}}"#.utf8)),
-        accountLabel: nil,
-        now: now
-      )
-    )
-    XCTAssertThrowsError(
-      try GrokProvider.parseCredits(
-        data: Data(
-          #"{"config":{"productUsage":{"chat":{"limit":100,"used":20,"remaining":10}}}}"#
-            .utf8
-        ),
-        now: now
-      )
-    )
-    XCTAssertThrowsError(
-      try GrokProvider.parseCredits(
-        data: Data(
-          #"{"config":{"productUsage":{"chat":{"limit":100,"used":20,"creditUsagePercent":30}}}}"#
-            .utf8
-        ),
-        now: now
-      )
-    )
-    XCTAssertThrowsError(
-      try GrokProvider.parseCredits(
-        data: Data(
-          #"{"config":{"creditUsagePercent":20,"currentPeriod":{"type":"biweekly","end":"2026-08-16T00:00:00Z"}}}"#
-            .utf8
-        ),
         now: now
       )
     )

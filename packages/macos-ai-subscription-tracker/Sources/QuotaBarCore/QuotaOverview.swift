@@ -198,7 +198,7 @@ public struct ProviderOverview: Identifiable, Equatable, Sendable {
         )
       )
     }
-    guard provider == .codex, snapshot.freshness == .current, let resetOverview else {
+    guard provider.tracksBankedResets, snapshot.freshness == .current, let resetOverview else {
       return badges
     }
     switch resetOverview {
@@ -217,7 +217,7 @@ public struct ProviderOverview: Identifiable, Equatable, Sendable {
     state: ProviderDisplayState,
     at date: Date
   ) -> ResetOverview? {
-    guard provider == .codex, case let .available(snapshot) = state else { return nil }
+    guard provider.tracksBankedResets, case let .available(snapshot) = state else { return nil }
     if let message = snapshot.resetErrorMessage { return .unavailable(message: message) }
     let resets = snapshot.activeResets(at: date)
     return resets.isEmpty ? ResetOverview.none : .available(resets)

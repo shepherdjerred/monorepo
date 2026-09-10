@@ -9,6 +9,7 @@ public struct ProviderEndpoints: Sendable {
   public let grokUser: URL
   public let grokBilling: URL
   public let grokCredits: URL
+  public let grokResets: URL
 
   public init(
     claudeUsage: URL,
@@ -18,7 +19,8 @@ public struct ProviderEndpoints: Sendable {
     kimiUsage: URL,
     grokUser: URL,
     grokBilling: URL,
-    grokCredits: URL
+    grokCredits: URL,
+    grokResets: URL
   ) {
     self.claudeUsage = claudeUsage
     self.codexUsage = codexUsage
@@ -28,6 +30,7 @@ public struct ProviderEndpoints: Sendable {
     self.grokUser = grokUser
     self.grokBilling = grokBilling
     self.grokCredits = grokCredits
+    self.grokResets = grokResets
   }
 
   public static func live() throws -> ProviderEndpoints {
@@ -74,6 +77,10 @@ public struct ProviderEndpoints: Sendable {
       grokBilling: url("https://cli-chat-proxy.grok.com/v1/billing", provider: .grok),
       grokCredits: url(
         "https://cli-chat-proxy.grok.com/v1/billing?format=credits",
+        provider: .grok
+      ),
+      grokResets: url(
+        "https://grok.com/grok_api_v2.GrokBuildBilling/GetRemainingResets",
         provider: .grok
       )
     )

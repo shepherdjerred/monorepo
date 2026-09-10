@@ -46,7 +46,7 @@ final class QuotaOverviewTests: XCTestCase {
       overview.providers.map(\.provider),
       [.codex, .claudeCode, .grok, .antigravity, .cursor, .kimi]
     )
-    XCTAssertEqual(overview.providers[2].badges.map(\.kind), [.partial])
+    XCTAssertEqual(overview.providers[2].badges.map(\.kind), [.partial, .noResets])
   }
 
   func testProviderBadgesDescribeFreshnessAndResetDetails() throws {
@@ -91,7 +91,7 @@ final class QuotaOverviewTests: XCTestCase {
     XCTAssertTrue(kimi.dimsContent)
 
     let grok = try XCTUnwrap(overview.providers.first { $0.provider == .grok })
-    XCTAssertEqual(grok.badges.map(\.kind), [.partial])
+    XCTAssertEqual(grok.badges.map(\.kind), [.partial, .noResets])
     XCTAssertEqual(grok.badges.first?.age, "4D")
     XCTAssertEqual(grok.badges.first?.detail, "Monthly usage is unavailable.")
     XCTAssertFalse(grok.dimsContent)
@@ -108,6 +108,59 @@ final class QuotaOverviewTests: XCTestCase {
     let codex = try XCTUnwrap(overview.providers.first { $0.provider == .codex })
     XCTAssertEqual(codex.badges.map(\.kind), [.noResets])
     XCTAssertEqual(codex.badges.first?.detail, "No reset windows are currently available.")
+  }
+
+  func testGrokResetBadgesMatchCodexBankedResetContract() throws {
+    let resetDate = referenceDate.addingTimeInterval(4_000)
+    let available = QuotaOverview(
+      states: allStates([
+        .grok: .available(
+          UsageSnapshot(
+            provider: .grok,
+            windows: [window(remaining: 44)],
+            resets: [Reset(exp: resetDate)],
+            sourceTimestamp: referenceDate
+          )
+        )
+      ]),
+      at: referenceDate
+    )
+    let grok = try XCTUnwrap(available.providers.first { $0.provider == .grok })
+    XCTAssertEqual(grok.badges.map(\.kind), [.resets])
+    XCTAssertEqual(grok.badges.first?.expirations, [resetDate])
+    XCTAssertEqual(
+      grok.resetOverview,
+      .available([Reset(exp: resetDate)])
+    )
+
+    let none = QuotaOverview(
+      states: allStates([
+        .grok: .available(snapshot(provider: .grok, remaining: 44))
+      ]),
+      at: referenceDate
+    )
+    XCTAssertEqual(
+      none.providers.first { $0.provider == .grok }?.badges.map(\.kind),
+      [.noResets]
+    )
+
+    let resetError = QuotaOverview(
+      states: allStates([
+        .grok: .available(
+          UsageSnapshot(
+            provider: .grok,
+            windows: [window(remaining: 44)],
+            resetErrorMessage: "Reset surface unavailable",
+            sourceTimestamp: referenceDate
+          )
+        )
+      ]),
+      at: referenceDate
+    )
+    XCTAssertEqual(
+      resetError.providers.first { $0.provider == .grok }?.resetOverview,
+      .unavailable(message: "Reset surface unavailable")
+    )
   }
 
   func testCriticalQuotaTakesPrecedenceOverStaleProvider() {

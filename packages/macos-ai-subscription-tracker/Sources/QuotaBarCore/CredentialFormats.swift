@@ -108,29 +108,23 @@ struct KimiOAuth: Decodable {
 struct OpenCodeAuthFile: Decodable {
   let kimiForCodingOAuth: OpenCodeOAuthCredential?
   let kimi: OpenCodeOAuthCredential?
-  let xai: OpenCodeOAuthCredential?
-  let grok: OpenCodeOAuthCredential?
 
   enum CodingKeys: String, CodingKey {
     case kimiForCodingOAuth = "kimi-for-coding-oauth"
     case kimi
-    case xai
-    case grok
   }
 
   func credentials(for provider: ProviderID) -> [TokenValue] {
     switch provider {
     case .kimi: [kimiForCodingOAuth, kimi].compactMap { $0?.value }
-    case .grok: [xai, grok].compactMap { $0?.value }
-    case .claudeCode, .codex, .antigravity, .cursor: []
+    case .claudeCode, .codex, .antigravity, .cursor, .grok: []
     }
   }
 
   static func labels(for provider: ProviderID) -> Set<String> {
     switch provider {
     case .kimi: ["kimi-for-coding-oauth", "kimi"]
-    case .grok: ["xai", "grok"]
-    case .claudeCode, .codex, .antigravity, .cursor: []
+    case .claudeCode, .codex, .antigravity, .cursor, .grok: []
     }
   }
 }
@@ -141,6 +135,87 @@ struct OpenCodeOAuthCredential: Decodable {
 
   var value: TokenValue {
     TokenValue(accessToken: access, expiresAt: normalizedDate(expires))
+  }
+}
+
+struct GrokCLIAuthFile: Decodable {
+  let sessions: [String: GrokCLISession]
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.singleValueContainer()
+    self.sessions = try container.decode([String: GrokCLISession].self)
+  }
+
+  func tokenValues() throws -> [TokenValue] {
+    var values: [TokenValue] = []
+    for key in sessions.keys.sorted() {
+      guard let session = sessions[key], let token = session.token else { continue }
+      let expiresAt: Date?
+      if let raw = session.expiresAt {
+        guard let date = ISO8601.parse(raw) else {
+          throw QuotaError.malformedResponse(.grok)
+        }
+        expiresAt = date
+      } else {
+        expiresAt = nil
+      }
+      values.append(TokenValue(accessToken: token, expiresAt: expiresAt))
+    }
+    return values
+  }
+}
+
+enum GrokCLICredentialDiscovery {
+  static func read(
+    grokHome: URL?,
+    homeDirectory: URL,
+    fileManager: FileManager,
+    excluding excludedTokens: Set<String>
+  ) throws -> ProviderCredential? {
+    let root = grokHome ?? homeDirectory.appendingPathComponent(".grok")
+    let path = root.appendingPathComponent("auth.json")
+    guard fileManager.fileExists(atPath: path.path) else { return nil }
+    let file: GrokCLIAuthFile
+    do {
+      file = try JSONDecoder().decode(GrokCLIAuthFile.self, from: Data(contentsOf: path))
+    } catch let error as QuotaError {
+      throw error
+    } catch {
+      throw QuotaError.malformedResponse(.grok)
+    }
+    var expiredCredential: ProviderCredential?
+    for value in try file.tokenValues() {
+      let credential = try ProviderCredential(
+        accessToken: value.accessToken,
+        expiresAt: value.expiresAt,
+        source: path.path
+      )
+      guard !excludedTokens.contains(credential.accessToken) else { continue }
+      do {
+        return try credential.requireCurrent(for: .grok)
+      } catch QuotaError.credentialsExpired {
+        if expiredCredential == nil { expiredCredential = credential }
+      }
+    }
+    return expiredCredential
+  }
+}
+
+struct GrokCLISession: Decodable {
+  let key: String?
+  let accessTokenSnake: String?
+  let expiresAt: String?
+
+  enum CodingKeys: String, CodingKey {
+    case key
+    case accessTokenSnake = "access_token"
+    case expiresAt = "expires_at"
+  }
+
+  var token: String? {
+    let raw = (key ?? accessTokenSnake)?.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard let raw, !raw.isEmpty else { return nil }
+    return raw
   }
 }
 
