@@ -199,7 +199,7 @@ function galleryHtml(
     '<main style="max-width:1120px;margin:0 auto;"><h1>Temporal email previews</h1><p>Deterministic fixtures for every human-facing report type.</p>',
     ...entries.map(
       (entry) =>
-        `<section style="margin:32px 0;"><h2 style="font-size:18px;">${entry.subject}</h2><iframe title="${entry.subject}" src="../${entry.name}.html" style="display:block;width:100%;height:850px;border:1px solid #374151;border-radius:12px;background:white;"></iframe><p><a style="color:#93c5fd;" href="../${entry.name}.txt">Plain-text version</a></p></section>`,
+        `<section style="margin:32px 0;"><h2 style="font-size:18px;">${entry.subject}</h2><iframe title="${entry.subject}" src="./${entry.name}.html" style="display:block;width:100%;height:850px;border:1px solid #374151;border-radius:12px;background:white;"></iframe><p><a style="color:#93c5fd;" href="./${entry.name}.txt">Plain-text version</a></p></section>`,
     ),
     "</main></body></html>",
   ].join("");

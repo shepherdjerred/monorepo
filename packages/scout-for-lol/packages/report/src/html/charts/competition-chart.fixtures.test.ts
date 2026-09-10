@@ -11,10 +11,7 @@ import {
 
 const OUTPUT_DIR = path.resolve(
   import.meta.dir,
-  "..",
-  "..",
-  "test-output",
-  "competition-chart",
+  "../../../test-output/competition-chart",
 );
 
 const writtenFiles: string[] = [];

@@ -22,7 +22,7 @@ export function sharedServerDatabaseName(
   return sharedServerDatabaseNameFromOptions(databaseUrl, environment);
 }
 
-const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "../.design-audit-report-lake";
+const DEFAULT_DESIGN_AUDIT_LAKE_DIR = "./.design-audit-report-lake";
 const BACKEND_START_TIMEOUT_MS = 300_000;
 const DEFAULT_CONSUMER_GUILD_ID = "1337623164146155593";
 
