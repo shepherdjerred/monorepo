@@ -128,6 +128,11 @@ and writer of those OAuth token chains: Brim never rotates, refreshes, or
 rewrites OpenCode files or its credential database. An expired or rejected
 Kimi/Grok token instructs the user to refresh it through OpenCode.
 
+Claude credentials are read through `/usr/bin/security` rather than the Security
+framework. The
+[Brim explanation page](../docs/wiki/src/content/docs/explanation/quotabar.md)
+covers why.
+
 The Kimi and Grok subscription quota responses are private provider contracts,
 not stable public APIs. Their adapters validate responses and show an explicit
 unavailable/stale state when a provider changes shape. Claude and Codex use

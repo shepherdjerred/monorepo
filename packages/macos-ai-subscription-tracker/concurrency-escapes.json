@@ -31,6 +31,11 @@
       "rationale": "FileManager lacks a Sendable conformance; this immutable store delegates file-system synchronization to Foundation."
     },
     {
+      "path": "Tests/QuotaBarCoreTests/ClaudeCodeKeychainTests.swift",
+      "count": 1,
+      "rationale": "The test double protects its recorded command invocation with NSLock."
+    },
+    {
       "path": "Tests/QuotaBarCoreTests/HistoryModelTests.swift",
       "count": 1,
       "rationale": "The test double protects its mutable snapshot map with NSLock."
