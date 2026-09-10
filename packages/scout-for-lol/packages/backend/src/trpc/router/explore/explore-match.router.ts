@@ -12,6 +12,7 @@ import {
 } from "#src/explore-match/match-view.ts";
 import {
   fetchFullMatch,
+  fetchFullMatchTeams,
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
@@ -51,7 +52,7 @@ async function assertExploreMatch(
 export const exploreMatchRouter = router({
   detail: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
     const rows = await assertExploreMatch(ctx.user, input.matchId);
-    const [coverage, keyEvents] = await Promise.all([
+    const [coverage, keyEvents, teamRows] = await Promise.all([
       fetchTimelineCoverage({ matchId: input.matchId }),
       fetchTimelineEventPage({
         matchId: input.matchId,
@@ -59,9 +60,10 @@ export const exploreMatchRouter = router({
         limit: 40,
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
+      fetchFullMatchTeams({ matchId: input.matchId }),
     ]);
     return {
-      match: exploreMatchSnapshot(rows),
+      match: exploreMatchSnapshot(rows, teamRows),
       timeline: { coverage, keyEvents },
     };
   }),

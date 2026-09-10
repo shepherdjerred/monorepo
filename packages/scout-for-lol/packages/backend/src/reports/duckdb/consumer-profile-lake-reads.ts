@@ -2,6 +2,8 @@ import { z } from "zod";
 import {
   TimelineEventLakeRowSchema,
   TimelineParticipantFrameLakeRowSchema,
+  MatchTeamLakeRowSchema,
+  type MatchTeamLakeRow,
   type PlayerProfileGameWindow,
   type QueueType,
   type TimelineEventLakeRow,
@@ -12,6 +14,7 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
+  buildMatchTeamsSource,
   buildTimelineCoverageSource,
   buildTimelineEventParticipantsSource,
   buildTimelineEventsSource,
@@ -196,6 +199,23 @@ export async function fetchFullMatch(options: {
       `inhibitor_kills, baron_kills, dragon_kills FROM (${source.sql}) ` +
       `ORDER BY team_id, participant_id`,
     schema: MatchParticipantRowSchema,
+  });
+}
+
+export async function fetchFullMatchTeams(options: {
+  matchId: string;
+  lakeDir?: string;
+}): Promise<MatchTeamLakeRow[]> {
+  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
+  const source = buildMatchTeamsSource(files, {
+    sql: "match_id = ?",
+    params: [scalarParam(options.matchId)],
+  });
+  if (source === undefined) return [];
+  return await runSource({
+    source,
+    sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
+    schema: MatchTeamLakeRowSchema,
   });
 }
 

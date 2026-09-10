@@ -7,11 +7,13 @@ import {
   type ExploreMatchCard,
   type ExploreMatchCardRequest,
   type ExploreMatchSnapshot,
+  type MatchTeamLakeRow,
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import {
   fetchFullMatch,
+  fetchFullMatchTeams,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 
@@ -53,6 +55,7 @@ export function normalizeRiotIdPart(value: string | null): string | null {
 /** Convert the lake's normalized participant rows into a neutral match view. */
 export function exploreMatchSnapshot(
   rows: LakeMatchParticipantRow[],
+  matchTeams: MatchTeamLakeRow[],
 ): ExploreMatchSnapshot {
   const first = requiredFirst(rows);
   if (rows.some((row) => row.match_id !== first.match_id)) {
@@ -66,10 +69,16 @@ export function exploreMatchSnapshot(
   const grouped = Map.groupBy(rows, (row) => row.team_id);
   const teams = [...grouped.entries()]
     .toSorted(([left], [right]) => left - right)
-    .map(([teamId, teamRows]) => {
-      const teamFirst = requiredFirst(teamRows);
-      const kills = teamRows.reduce((total, row) => total + row.kills, 0);
-      const damage = teamRows.reduce(
+    .map(([teamId, teamParticipants]) => {
+      const team = matchTeams.find((row) => row.team_id === teamId);
+      if (team === undefined)
+        throw new Error("Explore match is missing a team row");
+      const teamFirst = requiredFirst(teamParticipants);
+      const kills = teamParticipants.reduce(
+        (total, row) => total + row.kills,
+        0,
+      );
+      const damage = teamParticipants.reduce(
         (total, row) => total + row.total_damage_dealt_to_champions,
         0,
       );
@@ -77,16 +86,13 @@ export function exploreMatchSnapshot(
         teamId,
         win: teamFirst.win,
         kills,
-        objectives: teamRows.reduce(
-          (total, row) => ({
-            turrets: total.turrets + row.turret_kills,
-            inhibitors: total.inhibitors + row.inhibitor_kills,
-            barons: total.barons + row.baron_kills,
-            dragons: total.dragons + row.dragon_kills,
-          }),
-          { turrets: 0, inhibitors: 0, barons: 0, dragons: 0 },
-        ),
-        participants: teamRows.map((row) => ({
+        objectives: {
+          turrets: team.tower_kills,
+          inhibitors: team.inhibitor_kills,
+          barons: team.baron_kills,
+          dragons: team.dragon_kills,
+        },
+        participants: teamParticipants.map((row) => ({
           participantId: row.participant_id,
           riotId: {
             gameName: normalizeRiotIdPart(row.riot_id_game_name),
@@ -191,10 +197,13 @@ export async function hydrateExploreMatchCards(input: {
   assertEligibleExploreMatchCardRequests(input);
   return await Promise.all(
     input.requests.map(async (request) => {
-      const rows = await fetchFullMatch({ matchId: request.matchId });
+      const [rows, teamRows] = await Promise.all([
+        fetchFullMatch({ matchId: request.matchId }),
+        fetchFullMatchTeams({ matchId: request.matchId }),
+      ]);
       return ExploreMatchCardSchema.parse({
         size: request.size,
-        match: exploreMatchSnapshot(rows),
+        match: exploreMatchSnapshot(rows, teamRows),
       });
     }),
   );
