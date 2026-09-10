@@ -25,8 +25,18 @@ import { z } from "zod";
  *   by exact integer arithmetic, never by one position's storage column.
  *
  * `z.number().int()` already rejects anything outside the IEEE-754
- * safe-integer range, so every brand is a safe integer and the checked
- * helpers below cannot hand back a sum that silently lost precision.
+ * safe-integer range, so every brand is a safe integer.
+ *
+ * That is what makes the checked helpers below honest, and the reason is worth
+ * stating because it does not generalise. Adding or subtracting two safe
+ * integers is exact whenever the result is itself safe, and any result that
+ * is not lands at or beyond 2^53, where `.int()` rejects it — so these helpers
+ * either return the right number or throw, never a quietly wrong one.
+ *
+ * Multiplying first does NOT have that property. An intermediate product can
+ * leave the safe range, lose low bits, and be divided back down into a
+ * plausible in-range integer that every schema here would accept. Percentage
+ * math on Bucks therefore belongs in BigInt; see `betting/house-cut.ts`.
  */
 
 /** Any positive whole-BB stake. */
