@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { HistoryPaths } from "./paths.ts";
 
 export const HISTORY_SOURCE_NAMES = [
@@ -7,13 +8,48 @@ export const HISTORY_SOURCE_NAMES = [
   "cursor",
   "opencode-conductor",
   "opencode-standalone",
+  "antigravity",
+  "grok",
 ] as const;
 
-export type HistorySourceName = (typeof HISTORY_SOURCE_NAMES)[number];
+export const HistorySourceNameSchema = z.enum(HISTORY_SOURCE_NAMES);
+
+export type HistorySourceName = z.infer<typeof HistorySourceNameSchema>;
+
+export function parseHistorySourceName(
+  value: string,
+  context: string,
+): HistorySourceName {
+  const parsed = HistorySourceNameSchema.safeParse(value);
+  if (!parsed.success) {
+    throw new Error(`Unknown history source ${context}: ${value}`);
+  }
+  return parsed.data;
+}
 
 export type HistoryRuntimeRef = {
   readonly source: HistorySourceName;
   readonly runtimeId: string;
+};
+
+/**
+ * One priced usage event, timestamped to when it actually happened — never
+ * a whole-document lifetime total. `queryUsage` filters and aggregates these
+ * by `occurredAt`, so a `--since` window only counts activity within it
+ * instead of attributing an entire long-lived session's usage to whichever
+ * window its last message happens to fall in.
+ */
+export type UsageEventEntry = {
+  readonly occurredAt: string;
+  readonly model: string;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheCreationTokens: number;
+  readonly cachedInputTokens: number;
+  readonly reasoningTokens: number;
+  readonly costUsd: number | null;
+  readonly costComplete: boolean;
 };
 
 export type HistoryDocument = {
@@ -29,6 +65,7 @@ export type HistoryDocument = {
   readonly openingPromptHash: string | null;
   readonly dialogueText: string;
   readonly toolOutputText: string;
+  readonly usageEvents: readonly UsageEventEntry[];
 };
 
 export type HistoryMessageRole = "user" | "assistant" | "tool" | "unknown";
@@ -100,4 +137,25 @@ export type HistorySourceStatus = {
   readonly indexedDocuments: number;
   readonly lastScanAt: string | null;
   readonly error: string | null;
+};
+
+export type UsageTotals = {
+  readonly documentCount: number;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheCreationTokens: number;
+  readonly cachedInputTokens: number;
+  readonly reasoningTokens: number;
+  readonly costUsd: number;
+  readonly costComplete: boolean;
+};
+
+export type UsageBySource = UsageTotals & {
+  readonly source: HistorySourceName;
+};
+
+export type UsageReport = {
+  readonly total: UsageTotals;
+  readonly bySource: readonly UsageBySource[];
 };

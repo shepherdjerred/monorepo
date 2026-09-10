@@ -13,7 +13,11 @@ import {
 import { createHistorySources } from "#lib/history/sources.ts";
 import { scanHistorySources } from "#lib/history/serve.ts";
 import { readCursorDatabase } from "#lib/history/sources-shared.ts";
-import type { HistoryDocument, HistoryRecord } from "#lib/history/types.ts";
+import type {
+  HistoryDocument,
+  HistoryRecord,
+  UsageEventEntry,
+} from "#lib/history/types.ts";
 
 let fixtureRoot = "";
 let paths: HistoryPaths;
@@ -27,6 +31,62 @@ function writeDatabase(
   database.run(schema);
   seed(database);
   database.close();
+}
+
+// Minimal protobuf encoder matching the wire format
+// packages/toolkit/src/lib/history/antigravity/protobuf.ts decodes.
+function encodeVarint(value: number, out: number[]): void {
+  let remaining = value;
+  while (remaining >= 0x80) {
+    out.push((remaining & 0x7f) | 0x80);
+    remaining = Math.floor(remaining / 128);
+  }
+  out.push(remaining);
+}
+
+function encodeBytesField(
+  fieldNumber: number,
+  bytes: readonly number[],
+  out: number[],
+): void {
+  encodeVarint((fieldNumber << 3) | 2, out);
+  encodeVarint(bytes.length, out);
+  out.push(...bytes);
+}
+
+function encodeVarintField(
+  fieldNumber: number,
+  value: number,
+  out: number[],
+): void {
+  encodeVarint(fieldNumber << 3, out);
+  encodeVarint(value, out);
+}
+
+function encodeModelUsage(usage: {
+  readonly inputTokens: number;
+  readonly totalOutputTokens: number;
+  readonly cacheReadTokens?: number;
+  readonly cacheCreationTokens?: number;
+  readonly reasoningTokens?: number;
+  readonly visibleOutputTokens?: number;
+}): number[] {
+  const out: number[] = [];
+  encodeVarintField(2, usage.inputTokens, out);
+  encodeVarintField(3, usage.totalOutputTokens, out);
+  if (usage.cacheCreationTokens !== undefined) {
+    encodeVarintField(4, usage.cacheCreationTokens, out);
+  }
+  if (usage.cacheReadTokens !== undefined) {
+    encodeVarintField(5, usage.cacheReadTokens, out);
+  }
+  if (usage.reasoningTokens !== undefined) {
+    encodeVarintField(9, usage.reasoningTokens, out);
+  }
+  if (usage.visibleOutputTokens !== undefined) {
+    encodeVarintField(10, usage.visibleOutputTokens, out);
+  }
+  return out;
 }
 
 function seedLongConductorSession(database: Database): void {
@@ -50,21 +110,7 @@ function seedLongConductorSession(database: Database): void {
   insertMessages();
 }
 
-beforeAll(async () => {
-  fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "toolkit-history-"));
-  const conductorDir = path.join(fixtureRoot, "conductor");
-  const claudeDir = path.join(fixtureRoot, "claude/projects/project");
-  const codexDir = path.join(fixtureRoot, "codex");
-  const cursorDir = path.join(fixtureRoot, "Cursor data with spaces");
-  const opencodeDir = path.join(fixtureRoot, "opencode");
-  await Promise.all([
-    mkdir(conductorDir, { recursive: true }),
-    mkdir(claudeDir, { recursive: true }),
-    mkdir(codexDir, { recursive: true }),
-    mkdir(cursorDir, { recursive: true }),
-    mkdir(opencodeDir, { recursive: true }),
-  ]);
-
+function writeConductorFixture(conductorDir: string): string {
   const conductorDb = path.join(conductorDir, "conductor.db");
   writeDatabase(
     conductorDb,
@@ -123,7 +169,10 @@ beforeAll(async () => {
       seedLongConductorSession(database);
     },
   );
+  return conductorDb;
+}
 
+async function writeClaudeFixture(claudeDir: string): Promise<void> {
   const claudeFile = path.join(claudeDir, "session.jsonl");
   await Bun.write(
     claudeFile,
@@ -147,7 +196,15 @@ beforeAll(async () => {
       },
     )}\n${JSON.stringify({ type: "system", timestamp: "2026-08-12T00:02:00Z", content: "omit-claude-system" })}\n`,
   );
+}
 
+type CodexFixture = {
+  readonly codexThread: string;
+  readonly codexHistory: string;
+  readonly codexCatalog: string;
+};
+
+async function writeCodexFixture(codexDir: string): Promise<CodexFixture> {
   const codexThread = path.join(codexDir, "thread_history_1.sqlite");
   writeDatabase(
     codexThread,
@@ -182,7 +239,10 @@ beforeAll(async () => {
       );
     },
   );
+  return { codexThread, codexHistory, codexCatalog };
+}
 
+function writeCursorFixture(cursorDir: string): string {
   const cursorDb = path.join(cursorDir, "conversation-search.db");
   writeDatabase(
     cursorDb,
@@ -205,7 +265,10 @@ beforeAll(async () => {
         );
     },
   );
+  return cursorDb;
+}
 
+async function writeOpencodeFixture(opencodeDir: string): Promise<string> {
   const opencodeDb = path.join(opencodeDir, "opencode.db");
   writeDatabase(
     opencodeDb,
@@ -240,6 +303,265 @@ beforeAll(async () => {
     path.join(opencodeDir, "auth.json"),
     JSON.stringify({ token: "must-not-be-indexed" }),
   );
+  return opencodeDb;
+}
+
+async function writeGrokFixture(grokHome: string): Promise<void> {
+  const sessionDir = path.join(
+    grokHome,
+    "sessions",
+    "%2Ftest%2Fproject",
+    "grok-session-1",
+  );
+  await mkdir(sessionDir, { recursive: true });
+  const lines = [
+    {
+      timestamp: 1_788_721_616,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          sessionUpdate: "user_message_chunk",
+          content: { type: "text", text: "Investigate flaky test" },
+        },
+      },
+    },
+    {
+      timestamp: 1_788_721_618,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          sessionUpdate: "agent_message_chunk",
+          content: {
+            type: "text",
+            text: "Found the race condition grok-tail-search-marker",
+          },
+        },
+      },
+    },
+    {
+      timestamp: 1_788_721_640,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          sessionUpdate: "tool_call",
+          title: "run shell command",
+          status: "completed",
+          rawInput: {
+            command: "curl grok-tool-command-marker",
+            env: { API_KEY: "sk-should-not-appear-in-index" },
+            password: "sk-should-not-appear-in-index",
+          },
+        },
+      },
+    },
+    {
+      timestamp: 1_788_721_656,
+      params: {
+        sessionId: "grok-session-1",
+        update: {
+          sessionUpdate: "turn_completed",
+          usage: {
+            inputTokens: 100,
+            outputTokens: 20,
+            cachedReadTokens: 40,
+            reasoningTokens: 10,
+            costUsdTicks: 18_519_200,
+            modelUsage: {
+              "grok-4.5-build": {
+                inputTokens: 100,
+                outputTokens: 20,
+                cachedReadTokens: 40,
+                reasoningTokens: 10,
+                costUsdTicks: 18_519_200,
+              },
+            },
+          },
+        },
+      },
+    },
+  ];
+  await Bun.write(
+    path.join(sessionDir, "updates.jsonl"),
+    lines.map((line) => JSON.stringify(line)).join("\n"),
+  );
+}
+
+async function writeAntigravityFixture(antigravityRoot: string): Promise<void> {
+  const conversationsDir = path.join(antigravityRoot, "conversations");
+  await mkdir(conversationsDir, { recursive: true });
+  const dbFile = path.join(conversationsDir, "antigravity-session-1.db");
+  writeDatabase(
+    dbFile,
+    "CREATE TABLE steps (idx INTEGER, metadata BLOB);",
+    (database) => {
+      const usage = encodeModelUsage({
+        inputTokens: 500,
+        totalOutputTokens: 80,
+        cacheReadTokens: 200,
+      });
+      const modelInfo: number[] = [];
+      encodeBytesField(
+        12,
+        [...new TextEncoder().encode("claude-sonnet-5")],
+        modelInfo,
+      );
+      const metadata: number[] = [];
+      encodeBytesField(9, usage, metadata);
+      encodeBytesField(24, modelInfo, metadata);
+      database
+        .prepare("INSERT INTO steps VALUES (1, ?)")
+        .run(new Uint8Array(metadata));
+
+      // A reasoning-heavy generation: Gemini reports visible output and
+      // reasoning as separate additive fields (no `totalOutputTokens`), so
+      // this proves billed output includes reasoning rather than dropping it.
+      const reasoningUsage = encodeModelUsage({
+        inputTokens: 10,
+        totalOutputTokens: 0,
+        visibleOutputTokens: 30,
+        reasoningTokens: 50,
+      });
+      const reasoningModelInfo: number[] = [];
+      encodeBytesField(
+        12,
+        [...new TextEncoder().encode("claude-sonnet-5")],
+        reasoningModelInfo,
+      );
+      const reasoningMetadata: number[] = [];
+      encodeBytesField(9, reasoningUsage, reasoningMetadata);
+      encodeBytesField(24, reasoningModelInfo, reasoningMetadata);
+      database
+        .prepare("INSERT INTO steps VALUES (2, ?)")
+        .run(new Uint8Array(reasoningMetadata));
+    },
+  );
+}
+
+async function writeCodexSessionUsageFixture(
+  sessionsDir: string,
+): Promise<void> {
+  const lines = [
+    {
+      timestamp: "2026-08-08T00:00:00.000Z",
+      ordinal: 0,
+      type: "session_meta",
+      payload: { session_id: "t1", id: "t1" },
+    },
+    {
+      timestamp: "2026-08-08T00:00:01.000Z",
+      ordinal: 1,
+      type: "event_msg",
+      payload: {
+        type: "thread_settings_applied",
+        thread_settings: { model: "gpt-5.6-sol" },
+      },
+    },
+    {
+      timestamp: "2026-08-08T00:00:02.000Z",
+      ordinal: 2,
+      type: "token_usage_record",
+      payload: {
+        turn_token_usage: {
+          input_tokens: 1000,
+          cached_input_tokens: 400,
+          cache_write_input_tokens: 0,
+          output_tokens: 100,
+          reasoning_output_tokens: 20,
+          total_tokens: 1100,
+        },
+      },
+    },
+    {
+      // Deliberately outside a `--since 7d`-from-now window: proves usage
+      // aggregation reads this event's own timestamp, not the document's.
+      timestamp: "2026-08-14T00:00:00.000Z",
+      ordinal: 3,
+      type: "token_usage_record",
+      payload: {
+        turn_token_usage: {
+          input_tokens: 50,
+          cached_input_tokens: 0,
+          cache_write_input_tokens: 0,
+          output_tokens: 10,
+          reasoning_output_tokens: 0,
+          total_tokens: 60,
+        },
+      },
+    },
+  ];
+  await Bun.write(
+    path.join(sessionsDir, "rollout-t1.jsonl"),
+    `${lines.map((line) => JSON.stringify(line)).join("\n")}\n`,
+  );
+
+  // t-orphan-usage has no thread_history row and no catalog entry — proves
+  // usage isn't silently dropped for a rollout the other Codex trees don't
+  // otherwise represent (e.g. a CLI-only install with no local history db).
+  const orphanLines = [
+    {
+      timestamp: "2026-08-09T00:00:00.000Z",
+      ordinal: 0,
+      type: "session_meta",
+      payload: { session_id: "t-orphan-usage", id: "t-orphan-usage" },
+    },
+    {
+      timestamp: "2026-08-09T00:00:01.000Z",
+      ordinal: 1,
+      type: "event_msg",
+      payload: {
+        type: "thread_settings_applied",
+        thread_settings: { model: "gpt-5.6-sol" },
+      },
+    },
+    {
+      timestamp: "2026-08-09T00:00:02.000Z",
+      ordinal: 2,
+      type: "token_usage_record",
+      payload: {
+        turn_token_usage: {
+          input_tokens: 300,
+          cached_input_tokens: 0,
+          cache_write_input_tokens: 0,
+          output_tokens: 40,
+          reasoning_output_tokens: 0,
+          total_tokens: 340,
+        },
+      },
+    },
+  ];
+  await Bun.write(
+    path.join(sessionsDir, "rollout-orphan.jsonl"),
+    `${orphanLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
+  );
+}
+
+beforeAll(async () => {
+  fixtureRoot = await mkdtemp(path.join(os.tmpdir(), "toolkit-history-"));
+  const conductorDir = path.join(fixtureRoot, "conductor");
+  const claudeDir = path.join(fixtureRoot, "claude/projects/project");
+  const codexDir = path.join(fixtureRoot, "codex");
+  const codexSessionsDir = path.join(fixtureRoot, "codex-sessions");
+  const cursorDir = path.join(fixtureRoot, "Cursor data with spaces");
+  const opencodeDir = path.join(fixtureRoot, "opencode");
+  const grokHome = path.join(fixtureRoot, "grok");
+  const antigravityRoot = path.join(fixtureRoot, "antigravity");
+  await Promise.all([
+    mkdir(conductorDir, { recursive: true }),
+    mkdir(claudeDir, { recursive: true }),
+    mkdir(codexDir, { recursive: true }),
+    mkdir(codexSessionsDir, { recursive: true }),
+    mkdir(cursorDir, { recursive: true }),
+    mkdir(opencodeDir, { recursive: true }),
+  ]);
+
+  const conductorDb = writeConductorFixture(conductorDir);
+  await writeClaudeFixture(claudeDir);
+  const { codexHistory, codexCatalog } = await writeCodexFixture(codexDir);
+  await writeCodexSessionUsageFixture(codexSessionsDir);
+  const cursorDb = writeCursorFixture(cursorDir);
+  const opencodeDb = await writeOpencodeFixture(opencodeDir);
+  await writeGrokFixture(grokHome);
+  await writeAntigravityFixture(antigravityRoot);
 
   paths = {
     home: fixtureRoot,
@@ -252,6 +574,9 @@ beforeAll(async () => {
     cursorConversationDb: cursorDb,
     standaloneOpenCodeDb: opencodeDb,
     standaloneOpenCodeAuth: path.join(opencodeDir, "auth.json"),
+    antigravityRoots: [antigravityRoot],
+    grokHome,
+    codexSessionsDir,
   };
 });
 
@@ -426,6 +751,70 @@ describe("history source adapters", () => {
   });
 });
 
+describe("history source usage and redaction", () => {
+  test("attributes Codex usage per turn, keeping cached input a subset of input", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const codexThread = documents.find(
+      (document) => document.source === "codex" && document.runtimeId === "t1",
+    );
+    expect(codexThread?.usageEvents).toHaveLength(2);
+    const [firstTurn, secondTurn] = codexThread?.usageEvents ?? [];
+    expect(firstTurn?.occurredAt).toBe("2026-08-08T00:00:02.000Z");
+    expect(firstTurn?.model).toBe("gpt-5.6-sol");
+    expect(firstTurn?.inputTokens).toBe(1000);
+    expect(firstTurn?.cachedInputTokens).toBe(400);
+    expect(firstTurn?.cacheReadTokens).toBe(0);
+    expect(secondTurn?.occurredAt).toBe("2026-08-14T00:00:00.000Z");
+    expect(secondTurn?.inputTokens).toBe(50);
+  });
+
+  test("retains Codex usage for a rollout with no thread-history or catalog row", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const orphan = documents.find(
+      (document) =>
+        document.source === "codex" && document.runtimeId === "t-orphan-usage",
+    );
+    expect(orphan).toBeDefined();
+    expect(orphan?.usageEvents).toHaveLength(1);
+    expect(orphan?.usageEvents[0]?.inputTokens).toBe(300);
+  });
+
+  test("redacts secrets out of Grok tool call raw input before indexing", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const grok = documents.find((document) => document.source === "grok");
+    expect(grok?.toolOutputText).toContain("grok-tool-command-marker");
+    expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
+    expect(grok?.toolOutputText).toContain("[REDACTED]");
+  });
+
+  test("bills Antigravity reasoning tokens as part of output, not dropped", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const antigravity = documents.find(
+      (document) => document.source === "antigravity",
+    );
+    const reasoningEvent = antigravity?.usageEvents.find(
+      (event) => event.reasoningTokens > 0,
+    );
+    // Gemini reported this generation as 30 visible + 50 reasoning output
+    // tokens, separately — the billable outputTokens must be their sum (80),
+    // with reasoningTokens (50) reported only as an informational subset.
+    expect(reasoningEvent?.outputTokens).toBe(80);
+    expect(reasoningEvent?.reasoningTokens).toBe(50);
+  });
+});
+
 describe("history source adapter reads", () => {
   test("performs batched reads only for selected indexed records", async () => {
     const sources = createHistorySources();
@@ -596,6 +985,158 @@ describe("history index", () => {
     expect(parseSince("7d", now)).toBe("2026-08-09T00:00:00.000Z");
     expect(parseSince("24h", now)).toBe("2026-08-15T00:00:00.000Z");
     expect(parseSince("2026-08-01", now)).toBe("2026-08-01T00:00:00.000Z");
+    expect(parseSince("all", now)).toBeNull();
+    expect(parseSince("ALL", now)).toBeNull();
+  });
+
+  test("aggregates token usage and cost, flagging unpriced models as incomplete", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "usage-home"),
+    );
+    const index = await HistoryIndex.open(runtimePaths);
+    const pricedEvent: UsageEventEntry = {
+      occurredAt: "2026-08-10T00:00:00.000Z",
+      model: "claude-sonnet-5",
+      inputTokens: 1000,
+      outputTokens: 200,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: 1.23,
+      costComplete: true,
+    };
+    const pricedDocument: HistoryDocument = {
+      source: "claude",
+      sourceId: "priced-1",
+      title: "Priced session",
+      path: "/fixture/priced-1",
+      workspace: "/fixture",
+      agent: "Claude Code",
+      createdAt: "2026-08-10T00:00:00.000Z",
+      updatedAt: "2026-08-10T00:00:00.000Z",
+      runtimeId: "priced-1",
+      openingPromptHash: null,
+      dialogueText: "priced",
+      toolOutputText: "",
+      usageEvents: [pricedEvent],
+    };
+    const unpricedEvent: UsageEventEntry = {
+      occurredAt: "2026-08-10T00:00:00.000Z",
+      model: "some-unpriced-model",
+      inputTokens: 500,
+      outputTokens: 50,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: null,
+      costComplete: false,
+    };
+    const unpricedDocument: HistoryDocument = {
+      ...pricedDocument,
+      sourceId: "unpriced-1",
+      title: "Unpriced session",
+      path: "/fixture/unpriced-1",
+      runtimeId: "unpriced-1",
+      dialogueText: "unpriced",
+      usageEvents: [unpricedEvent],
+    };
+    await index.ingest([
+      {
+        source: "claude",
+        available: true,
+        documents: [pricedDocument, unpricedDocument],
+        fingerprint: "usage-fixture",
+        error: null,
+      },
+    ]);
+
+    const report = index.usage({ since: null, source: null });
+    expect(report.total.documentCount).toBe(2);
+    expect(report.total.inputTokens).toBe(1500);
+    expect(report.total.outputTokens).toBe(250);
+    expect(report.total.costUsd).toBeCloseTo(1.23);
+    expect(report.total.costComplete).toBe(false);
+    expect(report.bySource).toHaveLength(1);
+    expect(report.bySource[0]?.source).toBe("claude");
+    expect(report.bySource[0]?.documentCount).toBe(2);
+
+    const scoped = index.usage({ since: null, source: "codex" });
+    expect(scoped.total.documentCount).toBe(0);
+    expect(scoped.bySource).toHaveLength(0);
+    index.close();
+  });
+
+  test("filters usage by event time, not by the document's last update", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "usage-window-home"),
+    );
+    const index = await HistoryIndex.open(runtimePaths);
+    const oldEvent: UsageEventEntry = {
+      occurredAt: "2026-01-01T00:00:00.000Z",
+      model: "claude-sonnet-5",
+      inputTokens: 100_000,
+      outputTokens: 20_000,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: 100,
+      costComplete: true,
+    };
+    const recentEvent: UsageEventEntry = {
+      occurredAt: "2026-08-15T00:00:00.000Z",
+      model: "claude-sonnet-5",
+      inputTokens: 100,
+      outputTokens: 20,
+      cacheReadTokens: 0,
+      cacheCreationTokens: 0,
+      cachedInputTokens: 0,
+      reasoningTokens: 0,
+      costUsd: 0.1,
+      costComplete: true,
+    };
+    const longLivedDocument: HistoryDocument = {
+      source: "claude",
+      sourceId: "long-lived-1",
+      title: "Months-long session",
+      path: "/fixture/long-lived-1",
+      workspace: "/fixture",
+      agent: "Claude Code",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-08-15T00:00:00.000Z",
+      runtimeId: "long-lived-1",
+      openingPromptHash: null,
+      dialogueText: "long-lived",
+      toolOutputText: "",
+      usageEvents: [oldEvent, recentEvent],
+    };
+    await index.ingest([
+      {
+        source: "claude",
+        available: true,
+        documents: [longLivedDocument],
+        fingerprint: "usage-window-fixture",
+        error: null,
+      },
+    ]);
+
+    // The document's updated_at (2026-08-15) falls inside a `--since 2026-08-01`
+    // window, but only the recent event's tokens/cost should count — not the
+    // whole document's lifetime total, which also includes January's event.
+    const allTime = index.usage({ since: null, source: null });
+    expect(allTime.total.costUsd).toBeCloseTo(100.1);
+    expect(allTime.total.documentCount).toBe(1);
+
+    const recentOnly = index.usage({
+      since: "2026-08-01T00:00:00.000Z",
+      source: null,
+    });
+    expect(recentOnly.total.costUsd).toBeCloseTo(0.1);
+    expect(recentOnly.total.inputTokens).toBe(100);
+    expect(recentOnly.total.documentCount).toBe(1);
+    index.close();
   });
 });
 

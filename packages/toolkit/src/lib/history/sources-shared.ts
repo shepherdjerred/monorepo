@@ -34,6 +34,18 @@ export function firstText(value: string, fallback: string): string {
   return text.length > 0 ? text.slice(0, 120) : fallback;
 }
 
+export function placeholders(count: number): string {
+  return Array.from({ length: count }, () => "?").join(", ");
+}
+
+export function batches<T>(values: readonly T[], size = 8): T[][] {
+  const result: T[][] = [];
+  for (let offset = 0; offset < values.length; offset += size) {
+    result.push(values.slice(offset, offset + size));
+  }
+  return result;
+}
+
 export function requireTables(
   database: Database,
   source: string,
@@ -146,8 +158,18 @@ function isCantOpen(error: unknown): boolean {
   );
 }
 
-export async function readCursorDatabase(
+/**
+ * Opens a SQLite file readonly, falling back to an immutable `file:` URL
+ * connection when the ordinary readonly open fails with SQLITE_CANTOPEN — a
+ * WAL-mode database whose `-shm` companion hasn't been established yet by a
+ * read-write-capable connection can throw exactly that error on a pure
+ * readonly open. Refuses the immutable fallback outright if the `-wal` file
+ * is nonzero, since that means a live process has uncommitted writes and an
+ * immutable snapshot would be reading a stale/inconsistent main file.
+ */
+export async function readImmutableDatabase(
   filePath: string,
+  label: string,
   openOrdinary: DatabaseOpener = readDatabase,
 ): Promise<Database> {
   let ordinary: Database | null = null;
@@ -164,7 +186,7 @@ export async function readCursorDatabase(
       const wal = await stat(`${filePath}-wal`);
       if (wal.size > 0) {
         throw new Error(
-          `Cursor database cannot be opened read-only while its live WAL is present: ${filePath}-wal`,
+          `${label} database cannot be opened read-only while its live WAL is present: ${filePath}-wal`,
           { cause: error },
         );
       }
@@ -180,6 +202,13 @@ export async function readCursorDatabase(
     immutableUrl.searchParams.set("immutable", "1");
     return new Database(immutableUrl.href, { readonly: true, strict: true });
   }
+}
+
+export function readCursorDatabase(
+  filePath: string,
+  openOrdinary: DatabaseOpener = readDatabase,
+): Promise<Database> {
+  return readImmutableDatabase(filePath, "Cursor", openOrdinary);
 }
 
 export async function sourceReadResult(

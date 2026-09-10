@@ -12,6 +12,9 @@ export type HistoryPaths = {
   readonly cursorConversationDb: string;
   readonly standaloneOpenCodeDb: string;
   readonly standaloneOpenCodeAuth: string;
+  readonly antigravityRoots: readonly string[];
+  readonly grokHome: string;
+  readonly codexSessionsDir: string;
 };
 
 export type HistoryRuntimePaths = {
@@ -44,6 +47,15 @@ export function defaultHistoryPaths(home = os.homedir()): HistoryPaths {
     ),
     standaloneOpenCodeDb: path.join(home, ".local/share/opencode/opencode.db"),
     standaloneOpenCodeAuth: path.join(home, ".local/share/opencode/auth.json"),
+    antigravityRoots: [
+      ".gemini/antigravity",
+      ".gemini/antigravity-cli",
+      ".gemini/antigravity-ide",
+      ".gemini/antigravity-backup",
+      ".config/antigravity",
+    ].map((root) => path.join(home, root)),
+    grokHome: path.join(home, ".grok"),
+    codexSessionsDir: path.join(home, ".codex/sessions"),
   };
 }
 

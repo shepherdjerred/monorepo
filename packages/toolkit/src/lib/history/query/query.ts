@@ -78,6 +78,9 @@ export function parseSince(
   if (value === undefined) {
     return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   }
+  if (value.trim().toLowerCase() === "all") {
+    return null;
+  }
   const duration = /^(\d+)([hdw])$/u.exec(value.trim());
   if (duration !== null) {
     const amount = Number.parseInt(duration[1] ?? "", 10);
@@ -90,7 +93,7 @@ export function parseSince(
   const timestamp = Date.parse(value);
   if (Number.isNaN(timestamp)) {
     throw new TypeError(
-      `Invalid --since value "${value}"; use 7d, 24h, 1w, or an ISO date`,
+      `Invalid --since value "${value}"; use 7d, 24h, 1w, all, or an ISO date`,
     );
   }
   return new Date(timestamp).toISOString();
