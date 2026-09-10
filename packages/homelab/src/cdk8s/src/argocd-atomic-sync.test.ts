@@ -1100,6 +1100,32 @@ test("atomic Argo sync fails if another attempt with the same request replaces i
   }
 });
 
+test("Argo recovery finalizes an apps prune whose result is a subset of the rendered source", async () => {
+  const lifecycle = serveLifecycle(
+    [
+      applicationOperation({
+        phase: "Running",
+        requestId: CURRENT_REQUEST_ID,
+        resources: [{ name: "worker", status: "Synced" }],
+        startedAt: "2026-08-10T01:00:01Z",
+      }),
+    ],
+    [{ status: {} }],
+    [renderedApplication("worker"), renderedApplication("unchanged-child")],
+  );
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("terminated applied sync operation: apps");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 test("Argo recovery waits for the exact operation before finalizing it", async () => {
   const lifecycle = serveLifecycle([
     { status: {} },

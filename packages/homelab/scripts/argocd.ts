@@ -2527,9 +2527,15 @@ async function finalizeAsyncSync(
   }
 
   const token = requireEnv("ARGOCD_TOKEN");
+  // Recovery sees the post-apply tree. Re-running prune-candidate
+  // classification against live children would demand identities the
+  // in-flight result no longer reports (successful prunes are already
+  // absent; Argo also omits unchanged children from a prune result).
+  // Bind to the exact request/revision below and require every reported
+  // result to apply, matching recoverActiveRootPrune.
   const expectedResourceIdentities =
     appName === "apps"
-      ? await assertRootPruneSafe(token, exactRevision)
+      ? { desired: new Set<string>(), pruned: new Set<string>() }
       : await getExpectedSyncResultIdentities(appName, exactRevision, token);
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
