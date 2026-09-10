@@ -13,12 +13,13 @@ import {
 } from "@scout-for-lol/data/index.ts";
 import { prisma } from "#src/database/index.ts";
 import { getCompetitionsByChannelId } from "#src/database/competition/queries.ts";
+import { botRest } from "#src/lib/discord/bot-rest.ts";
+import type { DiscordChannel } from "#src/lib/discord/bot-rest-schemas.ts";
 import {
   installedGuildIdsAmong,
   isScoutInstalledInGuild,
 } from "#src/lib/discord/installed-guilds.ts";
 import { sendDM } from "#src/discord/utils/dm.ts";
-import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 import {
   discordSubscriptionsCleanedTotal,
   guildDataCleanupTotal,
@@ -41,12 +42,23 @@ export type GuildValidationDependencies = {
    * Throws when Discord could not be reached; never returns a guessed `false`.
    */
   readonly isInstalled: (guildId: string) => Promise<boolean>;
+  /**
+   * One channel straight from the bot REST API.
+   *
+   * `null` means Discord answered Unknown Channel; a throw means Scout could
+   * not ask. Deliberately NOT `client.channels.fetch`: that helper performs the
+   * REST read and then resolves `null` when it cannot attach the result to a
+   * *cached guild*, so on a process with no gateway it reports every channel as
+   * absent — and this function deletes what it is told is absent.
+   */
+  readonly readChannel: (channelId: string) => Promise<DiscordChannel | null>;
 };
 
 export function defaultGuildValidationDependencies(): GuildValidationDependencies {
   return {
     installedAmong: async (guildIds) => await installedGuildIdsAmong(guildIds),
     isInstalled: async (guildId) => await isScoutInstalledInGuild(guildId),
+    readChannel: async (channelId) => await botRest().channel(channelId),
   };
 }
 
@@ -71,7 +83,7 @@ export async function runDataValidation(
     await validateGuilds(dependencies);
 
     // Then validate channels (for guilds that still exist)
-    await validateChannels(client);
+    await validateChannels(client, dependencies);
 
     const duration = Date.now() - startTime;
     logger.info(
@@ -108,7 +120,10 @@ export async function runDataValidation(
  */
 export async function resolveOrphanedGuildIds(
   storedGuildIds: readonly string[],
-  dependencies: GuildValidationDependencies,
+  dependencies: Pick<
+    GuildValidationDependencies,
+    "installedAmong" | "isInstalled"
+  >,
 ): Promise<string[]> {
   const installed = await dependencies.installedAmong([...storedGuildIds]);
   const candidates = storedGuildIds.filter((id) => !installed.has(id));
@@ -246,9 +261,49 @@ async function cleanupOrphanedGuild(serverId: string): Promise<void> {
 }
 
 /**
+ * Which stored channels Discord has confirmed no longer exist.
+ *
+ * Deleting is wired to this answer, so only an authoritative absence counts. The
+ * bot REST port returns `null` for a confirmed Unknown Channel and throws for
+ * everything else, so a rate limit, a 5xx or a timeout leaves the subscription
+ * alone; skipping costs one more hourly cycle, deleting is permanent.
+ *
+ * The reader must be that port and not `client.channels.fetch`. That helper
+ * performs the REST read and then resolves `null` when it cannot attach the
+ * result to a *cached guild* — so on a process with no gateway connection it
+ * reports every channel in every guild as absent, and this function would hand
+ * back the entire subscription table as orphaned.
+ */
+export async function resolveOrphanedChannelIds(
+  channelIds: readonly string[],
+  dependencies: Pick<GuildValidationDependencies, "readChannel">,
+): Promise<string[]> {
+  const orphaned: string[] = [];
+  for (const channelId of channelIds) {
+    try {
+      const channel = await dependencies.readChannel(channelId);
+      if (channel === null) {
+        logger.info(
+          `[DataValidation] ⚠️  Channel ${channelId} no longer exists`,
+        );
+        orphaned.push(channelId);
+      }
+    } catch (error) {
+      logger.warn(
+        `[DataValidation] Could not check channel ${channelId}; leaving it alone: ${getErrorMessage(error)}`,
+      );
+    }
+  }
+  return orphaned;
+}
+
+/**
  * Validate that all stored channels still exist
  */
-async function validateChannels(client: Client): Promise<void> {
+async function validateChannels(
+  client: Client,
+  dependencies: Pick<GuildValidationDependencies, "readChannel">,
+): Promise<void> {
   logger.info("[DataValidation] Validating channels...");
 
   try {
@@ -262,37 +317,10 @@ async function validateChannels(client: Client): Promise<void> {
       `[DataValidation] Found ${storedChannels.length.toString()} unique channels in database`,
     );
 
-    // Collect orphaned channels
-    const orphanedChannels: string[] = [];
-
-    for (const { channelId } of storedChannels) {
-      // Only an authoritative absence may delete a subscription. A resolved
-      // `null`, or an Unknown Channel / Unknown Guild code, is Discord saying
-      // the channel is gone. Anything else — a rate limit, a 5xx, a timeout —
-      // means Scout could not ask, and the previous `.catch(() => null)`
-      // collapsed that into "no longer exists" and deleted the subscription
-      // anyway. Skipping costs one more hourly cycle; deleting is permanent.
-      try {
-        const channel = await client.channels.fetch(channelId);
-        if (channel === null) {
-          logger.info(
-            `[DataValidation] ⚠️  Channel ${channelId} no longer exists`,
-          );
-          orphanedChannels.push(channelId);
-        }
-      } catch (error) {
-        if (isMissingChannelError(error)) {
-          logger.info(
-            `[DataValidation] ⚠️  Channel ${channelId} no longer exists`,
-          );
-          orphanedChannels.push(channelId);
-          continue;
-        }
-        logger.warn(
-          `[DataValidation] Could not check channel ${channelId}; leaving it alone: ${getErrorMessage(error)}`,
-        );
-      }
-    }
+    const orphanedChannels = await resolveOrphanedChannelIds(
+      storedChannels.map((row) => row.channelId),
+      dependencies,
+    );
 
     if (orphanedChannels.length === 0) {
       logger.info("[DataValidation] ✅ All stored channels are valid");

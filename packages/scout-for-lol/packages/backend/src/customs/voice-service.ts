@@ -17,10 +17,14 @@ import { gameContext } from "#src/customs/game/game-context.ts";
 import { commitCustomMutation } from "#src/customs/repository.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { publishCustomNightSnapshot } from "#src/customs/socket.ts";
+import {
+  captureCustomVoiceArrangement,
+  retryCustomVoiceOperation,
+} from "#src/customs/voice-arrangement.ts";
+import { requireVoiceStateAccess } from "#src/customs/voice-capability.ts";
 import { client as discordClient } from "#src/discord/client.ts";
 import { createLogger } from "#src/logger.ts";
 
-const VOICE_ATTEMPTS = 3;
 const logger = createLogger("customs-voice");
 
 type CreatedVoiceChannels = {
@@ -40,41 +44,6 @@ type VoiceArrangement =
       readonly channels: CreatedVoiceChannels;
       readonly error: unknown;
     };
-
-export async function captureCustomVoiceArrangement<T>(
-  channels: T,
-  movePlayers: () => Promise<void>,
-): Promise<
-  | { readonly ok: true; readonly channels: T }
-  | { readonly ok: false; readonly channels: T; readonly error: unknown }
-> {
-  try {
-    await movePlayers();
-    return { ok: true, channels };
-  } catch (error) {
-    return { ok: false, channels, error };
-  }
-}
-
-export async function retryCustomVoiceOperation<T>(
-  operation: () => Promise<T>,
-  delay: (milliseconds: number) => Promise<void> = async (milliseconds) => {
-    await Bun.sleep(milliseconds);
-  },
-): Promise<T> {
-  let lastError: unknown;
-  for (let attempt = 1; attempt <= VOICE_ATTEMPTS; attempt += 1) {
-    try {
-      return await operation();
-    } catch (error) {
-      lastError = error;
-      if (attempt < VOICE_ATTEMPTS) await delay(250 * attempt);
-    }
-  }
-  throw new Error("Discord voice operation failed after three attempts", {
-    cause: lastError,
-  });
-}
 
 async function voiceContext(
   claims: CustomActivityClaims,
@@ -327,6 +296,7 @@ export async function arrangeCustomVoice(
   claims: CustomActivityClaims,
   input: RevisionInput,
 ): Promise<CustomNightSnapshot> {
+  requireVoiceStateAccess("Arranging team voice channels");
   const { actor, snapshot } = await voiceContext(claims, input);
   const game = snapshot.currentGame;
   if (game?.state !== "LOBBY_READY") {
@@ -429,6 +399,9 @@ async function returnPlayersAndDelete(
 }
 
 export async function cleanExpiredCustomVoice(nightId: string): Promise<void> {
+  // Refuses as a failed Activity rather than deleting the team channels out
+  // from under the players still in them. See `voice-capability.ts`.
+  requireVoiceStateAccess("Cleaning up expired custom voice channels");
   const night = await prisma.customNight.findUnique({
     where: { id: nightId },
     select: { guildId: true, hostDiscordId: true },
@@ -455,6 +428,7 @@ export async function returnCustomVoiceToLobby(
   claims: CustomActivityClaims,
   input: RevisionInput,
 ): Promise<CustomNightSnapshot> {
+  requireVoiceStateAccess("Returning players to the voice lobby");
   const { actor, snapshot } = await voiceContext(claims, input);
   const game = snapshot.currentGame;
   if (game === null) throw new Error("There is no current custom game");

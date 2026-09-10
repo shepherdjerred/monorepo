@@ -87,6 +87,18 @@ export type ScoutRuntimeCapabilities = {
   /** Verify the pinned voice models and load the Realtime credential. */
   readonly voiceAssistant: boolean;
   /**
+   * Can read members' live voice state — which voice channel someone is in.
+   *
+   * Gateway-only, and not for a reason REST can route around: voice state
+   * exists only as VOICE_STATE_UPDATE events on a shard. A REST guild-member
+   * payload carries roles and a nickname and no voice channel at all, so on a
+   * gatewayless process `member.voice.channelId` is null for everyone. Code
+   * that moves people between voice channels reads that field to decide whom
+   * to move, so without this capability it does not fail — it moves nobody and
+   * reports success. Anything depending on it must refuse loudly instead.
+   */
+  readonly voiceStateAccess: boolean;
+  /**
    * Needs the DuckDB report-lake directory mounted and holding a published
    * build.
    *
@@ -161,6 +173,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   combined: {
     championAssets: true,
     voiceAssistant: true,
+    voiceStateAccess: true,
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
@@ -175,6 +188,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   application: {
     championAssets: true,
     voiceAssistant: false,
+    voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ALWAYS_ON_WORKERS,
@@ -189,6 +203,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   gateway: {
     championAssets: true,
     voiceAssistant: true,
+    voiceStateAccess: true,
     // The only role that runs no activity queue, and therefore the only one
     // that needs no lake volume at all.
     reportLakeAccess: false,
@@ -205,6 +220,7 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
   "activity-worker": {
     championAssets: true,
     voiceAssistant: false,
+    voiceStateAccess: false,
     // Reads the lake (report runs, parlay generation, the weekly parlay,
     // summoner-index backfill) and writes its staging directories (match,
     // prematch and timeline ingest). It does NOT publish builds — see the

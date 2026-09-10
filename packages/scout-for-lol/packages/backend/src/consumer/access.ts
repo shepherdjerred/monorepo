@@ -2,6 +2,7 @@ import type { User } from "#generated/prisma/client/index.js";
 import type { Environment } from "#src/configuration.ts";
 import configuration from "#src/configuration.ts";
 import type { PartialGuild } from "#src/lib/discord-rest.ts";
+import type { InstalledGuildsDependencies } from "#src/lib/discord/installed-guilds.ts";
 import { createLogger } from "#src/logger.ts";
 import { fetchUserGuildsForRequest } from "#src/trpc/discord-upstream.ts";
 
@@ -62,17 +63,46 @@ export type ConsumerGuildAccessResult =
  * The install port, not `client.guilds.cache`. This runs on the HTTP surface,
  * which on a split deployment holds no gateway connection at all — and even on
  * the single pod an unready cache made every restart answer `unavailable` for
- * its first seconds. Asked only about the guilds this user is in, so it stays
- * one query however many servers Scout is installed in.
+ * its first seconds.
  */
 export type InstalledGuildLookup = (
   guildIds: string[],
 ) => Promise<Iterable<string>>;
 
-async function installedAmong(guildIds: string[]): Promise<Iterable<string>> {
-  const { installedGuildIdsAmong } =
+/**
+ * The table narrows; Discord confirms.
+ *
+ * `installedGuildIdsAmong` alone is picker semantics: it answers from
+ * `GuildInstall` rows without asking Discord, which is fine for *offering* a
+ * guild and wrong for *granting* one. Rows outlive a removal on purpose, and
+ * `guildDelete` swallows its own write failures, so a stale row would hand a
+ * caller access to a server Scout has already left.
+ *
+ * So the query is the narrowing step — one round trip, reducing the caller's
+ * whole guild list to the few that could possibly grant — and every survivor is
+ * then confirmed through {@link isScoutInstalledInGuild}. That call is bounded
+ * by the port's 60-second `guildExists` cache, which is keyed by guild and
+ * shared across callers, so a busy server costs one REST read a minute rather
+ * than one per request.
+ *
+ * Every candidate here has a live row by construction, so an unreachable
+ * Discord takes the port's documented asymmetry: the row is trusted and a
+ * warning is logged, rather than locking a real member out during an outage.
+ */
+export async function confirmedInstalledAmong(
+  guildIds: string[],
+  dependencies?: InstalledGuildsDependencies,
+): Promise<Iterable<string>> {
+  const { installedGuildIdsAmong, isScoutInstalledInGuild } =
     await import("#src/lib/discord/installed-guilds.ts");
-  return await installedGuildIdsAmong(guildIds);
+  const candidates = await installedGuildIdsAmong(guildIds, dependencies);
+  const confirmed: string[] = [];
+  for (const guildId of candidates) {
+    if (await isScoutInstalledInGuild(guildId, dependencies)) {
+      confirmed.push(guildId);
+    }
+  }
+  return confirmed;
 }
 
 /**
@@ -100,7 +130,7 @@ export async function installedGuildIdsOrUnavailable(
 export async function resolveConsumerGuildAccess(
   user: User,
   betaGuildIds: string[],
-  installedGuilds: InstalledGuildLookup = installedAmong,
+  installedGuilds: InstalledGuildLookup = confirmedInstalledAmong,
 ): Promise<ConsumerGuildAccessResult> {
   const guilds = await fetchUserGuildsForRequest(user);
   let connectedGuildIds: Iterable<string> | undefined;

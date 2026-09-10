@@ -1,7 +1,10 @@
 import { describe, expect, test } from "vitest";
-import { resolveOrphanedGuildIds } from "#src/league/tasks/cleanup/validate-data.ts";
+import {
+  resolveOrphanedChannelIds,
+  resolveOrphanedGuildIds,
+} from "#src/league/tasks/cleanup/validate-data.ts";
 import { DiscordUpstreamError } from "#src/lib/discord-rest.ts";
-import { testGuildId } from "#src/testing/test-ids.ts";
+import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
 
 /**
  * The guild half of the hourly data-validation job decides what gets DELETED —
@@ -100,5 +103,77 @@ describe("orphaned guild resolution", () => {
     });
 
     expect(orphaned).toEqual([]);
+  });
+});
+
+describe("orphaned channel resolution", () => {
+  /**
+   * The channel half deletes subscriptions, and it had the same shape of bug as
+   * the guild half for a different reason: `client.channels.fetch` performs the
+   * REST read and then resolves `null` when it cannot attach the result to a
+   * CACHED GUILD. On a process with no gateway the guild cache is empty, so
+   * every subscribed channel came back `null` — "no longer exists" — and every
+   * subscription would have been deleted on the first hourly run. The reader is
+   * now the cache-independent bot REST port.
+   */
+
+  const liveChannel = testChannelId("640000000000000001");
+  const deletedChannel = testChannelId("640000000000000002");
+
+  test("a channel Discord still returns is never orphaned", async () => {
+    const orphaned = await resolveOrphanedChannelIds([liveChannel], {
+      readChannel: () =>
+        Promise.resolve({
+          id: liveChannel,
+          name: "general",
+          type: 0,
+          permission_overwrites: [],
+        }),
+    });
+
+    expect(orphaned).toEqual([]);
+  });
+
+  test("a confirmed Unknown Channel is orphaned", async () => {
+    const orphaned = await resolveOrphanedChannelIds([deletedChannel], {
+      readChannel: () => Promise.resolve(null),
+    });
+
+    expect(orphaned).toEqual([deletedChannel]);
+  });
+
+  test("an unreachable Discord orphans nothing", async () => {
+    // A rate limit, a 5xx or a timeout is "Scout could not ask". The old
+    // `.catch(() => null)` turned all three into "deleted".
+    const orphaned = await resolveOrphanedChannelIds(
+      [liveChannel, deletedChannel],
+      {
+        readChannel: () =>
+          Promise.reject(
+            new DiscordUpstreamError("http_error", "rate limited", 429),
+          ),
+      },
+    );
+
+    expect(orphaned).toEqual([]);
+  });
+
+  test("one unreachable channel does not stop the others being checked", async () => {
+    // Unlike the guild half this does NOT abort: each channel is an
+    // independent subscription, and a single flaky read should not postpone
+    // cleanup of a channel Discord positively confirmed is gone.
+    const orphaned = await resolveOrphanedChannelIds(
+      [liveChannel, deletedChannel],
+      {
+        readChannel: (channelId) =>
+          channelId === liveChannel
+            ? Promise.reject(
+                new DiscordUpstreamError("fetch_error", "unreachable"),
+              )
+            : Promise.resolve(null),
+      },
+    );
+
+    expect(orphaned).toEqual([deletedChannel]);
   });
 });

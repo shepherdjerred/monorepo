@@ -3,7 +3,10 @@ import env from "env-var";
 import { z } from "zod";
 import { createLogger } from "#src/logger.ts";
 import { TournamentApiModeSchema } from "#src/configuration/tournament-mode.ts";
-import { parseScoutRuntimeRole } from "#src/configuration/runtime-role.ts";
+import {
+  parseScoutRuntimeRole,
+  scoutRuntimeCapabilities,
+} from "#src/configuration/runtime-role.ts";
 import { ScoutStageSchema } from "@scout-for-lol/temporal";
 
 const logger = createLogger("config");
@@ -237,6 +240,10 @@ function computeConfiguration() {
     // A secondary local web instance opts out of the single BETA Discord
     // gateway by running the `application` role instead of `combined`.
     runtimeRole,
+    // Derived, not read from the environment: the role decides the subsystems,
+    // so a consumer asking "may this process do X" asks the table rather than
+    // re-deriving X from a role name at the call site.
+    runtimeCapabilities: scoutRuntimeCapabilities(runtimeRole),
     skipReportLakeFold,
     temporalAddress: getOptionalEnvVar("TEMPORAL_ADDRESS"),
     temporalNamespace,
@@ -371,6 +378,9 @@ const configuration: Configuration = {
   },
   get runtimeRole() {
     return getConfiguration().runtimeRole;
+  },
+  get runtimeCapabilities() {
+    return getConfiguration().runtimeCapabilities;
   },
   get skipReportLakeFold() {
     return getConfiguration().skipReportLakeFold;

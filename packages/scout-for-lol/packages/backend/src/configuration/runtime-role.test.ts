@@ -21,6 +21,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   combined: {
     championAssets: true,
     voiceAssistant: true,
+    voiceStateAccess: true,
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ["workflow", "interactive", "lake"],
@@ -35,6 +36,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   application: {
     championAssets: true,
     voiceAssistant: false,
+    voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: true,
     temporalWorkers: ["workflow", "interactive", "lake"],
@@ -49,6 +51,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   gateway: {
     championAssets: true,
     voiceAssistant: true,
+    voiceStateAccess: true,
     reportLakeAccess: false,
     reportLakeFold: false,
     temporalWorkers: [],
@@ -63,6 +66,7 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   "activity-worker": {
     championAssets: true,
     voiceAssistant: false,
+    voiceStateAccess: false,
     reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: ["realtime", "background"],
@@ -142,6 +146,7 @@ describe("scout runtime roles", () => {
 
     expect(owners((c) => c.discordGateway)).toEqual(["gateway"]);
     expect(owners((c) => c.voiceAssistant)).toEqual(["gateway"]);
+    expect(owners((c) => c.voiceStateAccess)).toEqual(["gateway"]);
     expect(owners((c) => c.reportLakeFold)).toEqual(["application"]);
     expect(owners((c) => c.databaseMetricSweeps)).toEqual(["application"]);
     expect(owners((c) => c.databaseSeeding)).toEqual(["application"]);
@@ -173,6 +178,15 @@ describe("scout runtime roles", () => {
       const capabilities = scoutRuntimeCapabilities(role);
       if (!capabilities.reportLakeFold) continue;
       expect(capabilities.reportLakeAccess).toBe(true);
+    }
+  });
+
+  test("voice state is available exactly where the gateway is", () => {
+    // Voice state arrives only as gateway events; there is no REST read for it.
+    // A role that claimed it without a shard would silently move nobody.
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      const capabilities = scoutRuntimeCapabilities(role);
+      expect(capabilities.voiceStateAccess).toBe(capabilities.discordGateway);
     }
   });
 

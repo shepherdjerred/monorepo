@@ -34,7 +34,7 @@ import {
   DiscordGuildIdSchema,
   type DiscordGuildId,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { readOutreachState } from "#src/discord/utils/outreach-state.ts";
 import { sendDM, type DmKind } from "#src/discord/utils/dm.ts";
 import { NON_CORE_MESSAGE_BUDGET } from "#src/discord/utils/message-budget.ts";
@@ -44,6 +44,7 @@ import {
   outreachMessagesTotal,
   outreachSkippedTotal,
 } from "#src/metrics/outreach.ts";
+import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("outreach");
@@ -202,10 +203,13 @@ export function planOutreach(params: {
   };
 }
 
-async function readGuildState(serverId: DiscordGuildId): Promise<GuildState> {
+async function readGuildState(
+  db: ExtendedPrismaClient,
+  serverId: DiscordGuildId,
+): Promise<GuildState> {
   const [subscriptions, competitions] = await Promise.all([
-    prisma.subscription.count({ where: { serverId } }),
-    prisma.competition.count({ where: { serverId, isCancelled: false } }),
+    db.subscription.count({ where: { serverId } }),
+    db.competition.count({ where: { serverId, isCancelled: false } }),
   ]);
   return { subscriptions, competitions };
 }
@@ -219,16 +223,29 @@ async function readGuildState(serverId: DiscordGuildId): Promise<GuildState> {
  */
 export async function runOutreach(
   client: Client,
-  options: { dryRun?: boolean } = {},
+  options: {
+    dryRun?: boolean;
+    /**
+     * Whether Scout is still installed in a guild. Injectable so the skip
+     * decision can be exercised without a database or Discord.
+     */
+    isInstalled?: (guildId: DiscordGuildId) => Promise<boolean>;
+    /** Overridden by tests; production uses the process-wide client. */
+    db?: ExtendedPrismaClient;
+  } = {},
 ): Promise<void> {
   const dryRun = options.dryRun ?? false;
+  const db = options.db ?? prisma;
+  const isInstalled =
+    options.isInstalled ??
+    (async (guildId: DiscordGuildId) => await isScoutInstalledInGuild(guildId));
   logger.info(
     `[Outreach] Starting outreach check${dryRun ? " (DRY RUN — nothing will be sent)" : ""}`,
   );
   const startTime = Date.now();
   const now = new Date();
 
-  const installs = await prisma.guildInstall.findMany({
+  const installs = await db.guildInstall.findMany({
     where: { removedAt: null },
   });
 
@@ -242,18 +259,21 @@ export async function runOutreach(
     // cleanup deliberately keeps them), and rows predating `removedAt` carry no
     // removal stamp at all, so without this a former installer could be DM'd
     // about a server Scout is no longer in.
-    if (!client.guilds.cache.has(guildId)) {
+    //
+    // Asked through the install port rather than `client.guilds.cache`: this
+    // runs as a background Temporal Activity, and on a role with no gateway the
+    // cache is permanently empty — every install would be skipped as
+    // "not_a_member" and outreach would silently stop entirely. The port
+    // confirms against Discord and, when Discord cannot be reached, trusts the
+    // live row rather than inventing a removal.
+    if (!(await isInstalled(guildId))) {
       skipped += 1;
       outreachSkippedTotal.inc({ stage: "0", reason: "not_a_member" });
       continue;
     }
 
-    const state = await readGuildState(guildId);
-    const outreach = await readOutreachState(
-      prisma,
-      guildId,
-      install.installedAt,
-    );
+    const state = await readGuildState(db, guildId);
+    const outreach = await readOutreachState(db, guildId, install.installedAt);
     const plan = planOutreach({
       serverName: install.serverName,
       installedAt: install.installedAt,
