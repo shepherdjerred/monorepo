@@ -27,15 +27,6 @@ export const APPLICATION_SYNC_WAVES = {
   dependentConfiguration: "2",
   buildkite: "3",
   leaf: "4",
-  // The root Application is rendered by its own chart, and the repository's
-  // Application health customization reports any Application with a running
-  // operation as Progressing. A root sync therefore always parks on the health
-  // of its own self-reference, and every wave after that self-reference is
-  // withheld: build 15054 applied 217 of 308 resources and then hung forever.
-  // Placing the self-reference after every other wave means the desired set is
-  // always fully applied before the unavoidable self-wait, which is the exact
-  // precondition `--terminate-after-applied` finalizes on.
-  root: "5",
 } as const;
 
 const RETAIN_APPLICATIONS = new Set(["apps", "argocd"]);
@@ -91,7 +82,13 @@ function certificateIsCa(resource: ApiObject): boolean {
 
 function applicationSyncWave(name: string): string {
   if (name === "apps") {
-    return APPLICATION_SYNC_WAVES.root;
+    // The root chart renders its own Application, and the final full-source
+    // release operation must prove that apply plus its prunes without waiting
+    // on later-wave child health. Keeping the self-reference in the structural
+    // wave is what lets that operation reach its applied precondition early;
+    // ordering it after the children would couple every release to their
+    // health. See `explanation/homelab/release-safety`.
+    return APPLICATION_SYNC_WAVES.structural;
   }
   if (name === "1password") {
     return APPLICATION_SYNC_WAVES.onePassword;

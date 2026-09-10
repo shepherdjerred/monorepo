@@ -155,12 +155,12 @@ Application health remains an ordering and acceptance signal.
 `IgnoreHealthCheck=true` only removes a resource from an Application's aggregate
 health. ArgoCD's sync engine still gates each wave on the health it computes for
 every resource in that wave, so the root chart's own `apps` Application reads
-`Progressing` for as long as its operation runs. That self-wait is unavoidable,
-which is why the root chart orders the self-reference into a wave after every
-resource it manages: the gate then closes only once the whole desired set is
-applied, which is the precondition the release terminates on. Ordering it
-earlier lets the gate close mid-release — build 15054 applied 217 of 308 root
-resources and then held its operation open indefinitely.
+`Progressing` for as long as its operation runs and the final full-source
+operation can never reach `Succeeded` by itself. That is why it is terminated
+once applied, and why the self-reference stays in the structural wave rather
+than after the children it manages: the operation has to prove the root apply
+and its prune candidates without waiting on later-wave child health, which the
+completed batches already cover.
 
 Termination of that self-wait is re-requested rather than requested once.
 ArgoCD terminates an operation by writing `Terminating` into

@@ -90,8 +90,11 @@ describe("applyApplicationReleasePolicy", () => {
     expect(
       rootManifest.metadata.labels?.[MANAGED_APPLICATION_LABEL],
     ).toBeUndefined();
+    // The root Application deliberately shares the structural wave: the final
+    // full-source release operation proves this apply and its prunes without
+    // waiting on later-wave child health.
     expect(rootManifest.metadata.annotations[ARGOCD_SYNC_WAVE_ANNOTATION]).toBe(
-      APPLICATION_SYNC_WAVES.root,
+      APPLICATION_SYNC_WAVES.structural,
     );
     expect(rootManifest.spec.syncPolicy?.automated).toEqual({
       enabled: false,
@@ -174,47 +177,5 @@ describe("applyApplicationReleasePolicy", () => {
         ARGOCD_SYNC_WAVE_ANNOTATION
       ],
     ).toBe("-2");
-  });
-
-  // The root chart renders the root Application itself, and the repository's
-  // Application health customization reports any Application with a running
-  // operation as Progressing. ArgoCD therefore parks a root sync on the health
-  // of that self-reference and withholds every later wave, so anything ordered
-  // after the root Application can never be applied by a root sync.
-  test("orders the self-referencing root Application after every managed wave", () => {
-    const app = new App();
-    const chart = new Chart(app, "apps");
-    const root = application(chart, "apps");
-    const managed = [
-      "1password",
-      "argocd",
-      "prometheus",
-      "temporal",
-      "kueue",
-      "buildkite",
-      "worker",
-    ].map((name) => application(chart, name));
-
-    applyApplicationReleasePolicy(app);
-
-    const rootWave = Number(
-      WaveAnnotationSchema.parse(root.toJson()).metadata.annotations[
-        ARGOCD_SYNC_WAVE_ANNOTATION
-      ],
-    );
-    for (const resource of managed) {
-      const wave = Number(
-        WaveAnnotationSchema.parse(resource.toJson()).metadata.annotations[
-          ARGOCD_SYNC_WAVE_ANNOTATION
-        ],
-      );
-      expect(wave).toBeLessThan(rootWave);
-    }
-    for (const [name, wave] of Object.entries(APPLICATION_SYNC_WAVES)) {
-      if (name === "root") {
-        continue;
-      }
-      expect(Number(wave)).toBeLessThan(Number(APPLICATION_SYNC_WAVES.root));
-    }
   });
 });

@@ -72,6 +72,14 @@
       "clones": 1,
       "tokens": 74
     },
+    "packages/birmel/src/agent-tools/tools/discord/actions/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts": {
+      "clones": 1,
+      "tokens": 73
+    },
     "packages/birmel/src/agent-tools/tools/discord/automod.ts|packages/birmel/src/agent-tools/tools/discord/channels.ts": {
       "clones": 1,
       "tokens": 77
@@ -87,14 +95,6 @@
     "packages/birmel/src/agent-tools/tools/discord/emojis.ts|packages/birmel/src/agent-tools/tools/discord/events.ts": {
       "clones": 1,
       "tokens": 72
-    },
-    "packages/birmel/src/agent-tools/tools/discord/actions/poll-actions.ts|packages/birmel/src/discord/polls/helpers.ts": {
-      "clones": 1,
-      "tokens": 90
-    },
-    "packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts|packages/birmel/src/agent-tools/tools/discord/actions/thread-actions.ts": {
-      "clones": 1,
-      "tokens": 73
     },
     "packages/birmel/src/agent-tools/tools/elections/candidate-stats.ts|packages/birmel/src/agent-tools/tools/elections/election-actions.ts": {
       "clones": 1,
@@ -492,10 +492,6 @@
       "clones": 1,
       "tokens": 73
     },
-    "packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts": {
-      "clones": 1,
-      "tokens": 72
-    },
     "packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/velero-dashboard.ts": {
       "clones": 1,
       "tokens": 73
@@ -520,6 +516,10 @@
       "clones": 1,
       "tokens": 76
     },
+    "packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts|packages/homelab/src/cdk8s/grafana/streambot/streambot-dashboard.ts": {
+      "clones": 1,
+      "tokens": 72
+    },
     "packages/homelab/src/cdk8s/src/apps/1password.ts|packages/homelab/src/cdk8s/src/resources/argo-applications/platform/1password.ts": {
       "clones": 2,
       "tokens": 157
@@ -538,7 +538,7 @@
     },
     "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts": {
       "clones": 7,
-      "tokens": 589
+      "tokens": 588
     },
     "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 1,
@@ -600,10 +600,6 @@
       "clones": 4,
       "tokens": 478
     },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/flipt.ts": {
-      "clones": 1,
-      "tokens": 82
-    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/freshrss.ts": {
       "clones": 1,
       "tokens": 87
@@ -619,6 +615,10 @@
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/pinchtab.ts": {
       "clones": 1,
       "tokens": 142
+    },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/platform/flipt.ts": {
+      "clones": 1,
+      "tokens": 82
     },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/birmel.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts": {
       "clones": 1,
@@ -668,6 +668,10 @@
       "clones": 3,
       "tokens": 339
     },
+    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
+      "clones": 1,
+      "tokens": 88
+    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/scout-evals.ts": {
       "clones": 1,
       "tokens": 75
@@ -679,10 +683,6 @@
     "packages/homelab/src/cdk8s/src/cdk8s-charts/redlib.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/tasknotes.ts": {
       "clones": 1,
       "tokens": 75
-    },
-    "packages/homelab/src/cdk8s/src/cdk8s-charts/platform/temporal.ts|packages/homelab/src/cdk8s/src/resources/relay/index.ts": {
-      "clones": 1,
-      "tokens": 88
     },
     "packages/homelab/src/cdk8s/src/misc/zfs-nvme-volume.ts|packages/homelab/src/cdk8s/src/misc/zfs-sata-volume.ts": {
       "clones": 1,
