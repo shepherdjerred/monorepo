@@ -17,6 +17,7 @@ export type VisibleDareIndexRow = {
   revisions: {
     revision: number;
     originalText: string;
+    displayTitle: string | null;
     targetsJson: string;
   }[];
   targets: {
@@ -52,6 +53,7 @@ export const visibleDareIndexSelectionV2 = {
     select: {
       revision: true,
       originalText: true,
+      displayTitle: true,
       targetsJson: true,
     },
   },
@@ -153,10 +155,11 @@ function matchesSearch(
 ): boolean {
   if (search === undefined || search.length === 0) return true;
   const normalizedSearch = search.toLocaleLowerCase();
+  const revision = indexRevision(row);
   return (
-    indexRevision(row)
-      .originalText.toLocaleLowerCase()
-      .includes(normalizedSearch) ||
+    revision.originalText.toLocaleLowerCase().includes(normalizedSearch) ||
+    revision.displayTitle?.toLocaleLowerCase().includes(normalizedSearch) ===
+      true ||
     item.targetAliases.some((alias) =>
       alias.toLocaleLowerCase().includes(normalizedSearch),
     )

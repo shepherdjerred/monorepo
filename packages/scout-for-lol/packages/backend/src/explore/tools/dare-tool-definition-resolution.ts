@@ -29,6 +29,8 @@ export function definitionFromTool(
 ): DareDraftV2Definition {
   return {
     originalText: input.originalText,
+    displayTitle: input.displayTitle,
+    statusPhrases: input.statusPhrases,
     targets: resolveTargets(input.targetKeys, targets),
     plan: input.plan,
     deadlineSpec: input.deadlineSpec,
@@ -42,6 +44,8 @@ export function definitionV3FromTool(
 ): DareDraftV3Definition {
   return {
     originalText: input.originalText,
+    displayTitle: input.displayTitle,
+    statusPhrases: input.statusPhrases,
     queryText: input.queryText,
     plainLanguage: input.plainLanguage,
     targets: resolveTargets(input.targetKeys, targets),

@@ -1,7 +1,9 @@
 import {
   DareProgressSchema,
   DareSqlV3EvidenceSchema,
+  rankToSimpleString,
   rankToString,
+  type DareActivationV3,
   type DareProgress,
   type DareSqlV3Compilation,
 } from "@scout-for-lol/data";
@@ -39,6 +41,22 @@ function currentStreak(rows: readonly { matched: boolean | null }[]): number {
   return length;
 }
 
+function rankGoalTarget(
+  goal: Extract<DareActivationV3, { kind: "rank" }>["goal"],
+): string {
+  if (goal.kind === "gain") {
+    return `${goal.normalizedLp.toString()} normalized LP`;
+  }
+  const rank = {
+    tier: goal.tier,
+    division: goal.division,
+    lp: goal.lp ?? 0,
+    wins: 0,
+    losses: 0,
+  };
+  return goal.lp === undefined ? rankToSimpleString(rank) : rankToString(rank);
+}
+
 function activationConditions(
   compilation: DareSqlV3Compilation,
   latest: ReturnType<typeof parseEvidence> | null,
@@ -53,10 +71,7 @@ function activationConditions(
       gameSet: null,
       operator: activation.goal.kind === "gain" ? "gain" : "reach",
       current: rankToString(target.current),
-      target:
-        activation.goal.kind === "gain"
-          ? `${activation.goal.normalizedLp.toString()} normalized LP`
-          : `${activation.goal.tier} ${activation.goal.division.toString()} ${activation.goal.lp?.toString() ?? "0"} LP`,
+      target: rankGoalTarget(activation.goal),
       remaining:
         activation.goal.kind === "gain"
           ? Math.max(0, activation.goal.normalizedLp - target.normalizedDelta)

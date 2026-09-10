@@ -42,6 +42,9 @@ export const DareV2ListItemSchema = z.strictObject({
   fundedRevision: z.number().int().positive().nullable(),
   challengerDiscordId: z.string().min(1),
   targetAliases: z.array(z.string().min(1)),
+  originalText: z.string().min(1),
+  displayTitle: z.string().min(1).nullable(),
+  statusPhrases: z.record(z.string().min(1), z.string().min(1)).nullable(),
   plainLanguage: z.string().min(1),
   openingStake: z.number().int().positive(),
   potTotal: z.number().int().nonnegative(),
@@ -74,7 +77,6 @@ export const DareV2InspectionSchema = DareV2ListItemSchema.extend({
   // revision written before a domain rule existed must still render.
   plan: z.union([DareStoredPlanV2Schema, DareSqlV3CompilationSchema]),
   semanticProofPlan: z.string().min(1),
-  originalText: z.string().min(1),
   deadlineSpec: DareDeadlineSpecV2Schema,
   compilerVersion: z.string().min(1),
   scoutQlPlanHash: z

@@ -18,8 +18,17 @@ export const DareToolResultSchema = z.strictObject({
 });
 export type DareToolResult = z.infer<typeof DareToolResultSchema>;
 
+const DareListCopyFields = {
+  displayTitle: z.string().trim().min(1).max(80),
+  statusPhrases: z.record(
+    z.string().min(1).max(64),
+    z.string().trim().min(1).max(80),
+  ),
+};
+
 export const DareDefinitionV2ToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
+  ...DareListCopyFields,
   targetKeys: z
     .array(z.string().regex(/^T\d{1,2}$/))
     .min(1)
@@ -38,6 +47,7 @@ export const DareDefinitionV2ToolInputSchema = z.strictObject({
 
 export const DareDefinitionV3ToolInputSchema = z.strictObject({
   originalText: z.string().min(1).max(4000),
+  ...DareListCopyFields,
   targetKeys: z
     .array(z.string().regex(/^T[1-5]$/))
     .min(1)

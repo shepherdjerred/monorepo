@@ -28,6 +28,7 @@ import {
   type DareV2ListItem,
   type DareV2ListPage,
 } from "#src/betting/dares/presentation/dare-view-model-v2.ts";
+import { parseStoredStatusPhrases } from "#src/betting/dares/presentation/dare-list-copy.ts";
 
 type VisibleDareRow = {
   id: number;
@@ -52,6 +53,8 @@ type VisibleDareRow = {
   revisions: {
     revision: number;
     originalText: string;
+    displayTitle: string | null;
+    statusPhrasesJson: string | null;
     canonicalScoutQl: string;
     compiledPlan: string;
     scoutQlPlanHash: string | null;
@@ -177,6 +180,9 @@ function listItem(
       row.targets.length === 0
         ? draftTargets.map((target) => target.alias)
         : row.targets.map((target) => target.alias),
+    originalText: revision.originalText,
+    displayTitle: revision.displayTitle,
+    statusPhrases: parseStoredStatusPhrases(revision.statusPhrasesJson),
     plainLanguage: revision.plainLanguage,
     openingStake: row.openingStake,
     potTotal: row.potTotal,
@@ -220,7 +226,6 @@ function inspection(
           }),
     plan,
     semanticProofPlan: revision.semanticProofPlan,
-    originalText: revision.originalText,
     deadlineSpec: DareDeadlineSpecV2Schema.parse(
       JSON.parse(revision.deadlineSpecJson),
     ),

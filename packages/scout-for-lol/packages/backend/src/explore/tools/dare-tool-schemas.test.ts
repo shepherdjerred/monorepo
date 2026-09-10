@@ -5,6 +5,8 @@ import { DareDefinitionV2ToolInputSchema } from "#src/explore/tools/dare-tool-sc
 /** A contract whose lane spelling Riot never emits. */
 const INVALID_LANE_DEFINITION = {
   originalText: "Play mid lane",
+  displayTitle: "Virmel plays mid",
+  statusPhrases: { games: "mid lane games" },
   targetKeys: ["T1"],
   plan: {
     version: 2,
@@ -55,6 +57,16 @@ describe("Dare v2 tool input schema", () => {
       DareDefinitionV2ToolInputSchema.safeParse({
         ...INVALID_LANE_DEFINITION,
         plan: { ...INVALID_LANE_DEFINITION.plan, gameSets: [] },
+      }).success,
+    ).toBe(false);
+  });
+
+  test("requires English list copy at the tool boundary", () => {
+    expect(
+      DareDefinitionV2ToolInputSchema.safeParse({
+        ...INVALID_LANE_DEFINITION,
+        displayTitle: undefined,
+        statusPhrases: undefined,
       }).success,
     ).toBe(false);
   });

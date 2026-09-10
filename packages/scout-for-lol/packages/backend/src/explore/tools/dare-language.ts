@@ -68,6 +68,31 @@ export function dareLanguagePayload(input: {
       "Never set monsterType and buildingType together: an event is either an elite monster kill or a building kill.",
       'An ELITE_MONSTER_KILL or BUILDING_KILL count must bind a target, with role "killer" or "assist". These objectives belong to the side that took them, so an unbound count includes the enemy team\'s and an enemy objective would settle the dare. A team-relative objective count cannot be expressed in a version-two contract.',
     ],
+    listCopy: {
+      displayTitle:
+        "Short English list heading that a stranger could read in Discord. Same-game bundles belong in one title. No stake, deadline, ScoutQL, SQL, or game-set slugs.",
+      statusPhrases:
+        "Map each game-set name to a countable English phrase the app prefixes with live '{current} of {target}'. Same-game dares have one phrase that names every constraint in that game. Cross-game dares have one phrase per game set. Not a sentence, not a second query, not slugs or gte.",
+      examples: {
+        simple: {
+          displayTitle: "Aaron wins a game as support",
+          statusPhrases: { support_win: "support wins" },
+        },
+        sameGame: {
+          displayTitle: "Aaron wins support with 8 CS/min",
+          statusPhrases: {
+            qualifying_game: "game with a support win and 8 CS/min",
+          },
+        },
+        crossGame: {
+          displayTitle: "Virmel wins 3 and farms 8 CS/min",
+          statusPhrases: {
+            wins: "wins",
+            farm: "games with 8 CS/min",
+          },
+        },
+      },
+    },
     ...(input.sqlV3 ? { sql: dareSqlV3Catalog() } : {}),
   };
 }

@@ -1562,6 +1562,11 @@ model BucksDareV2Revision {
   openingStake        Int
   plainLanguage       String
   semanticProofPlan   String
+  // List-card copy from Explore authoring. Null on revisions written before
+  // this existed; the list then uses originalText and humanized game-set
+  // names rather than inventing a second contract.
+  displayTitle        String?
+  statusPhrasesJson   String?
   translationJson     String?
   createdAt           DateTime    @default(now())
 
