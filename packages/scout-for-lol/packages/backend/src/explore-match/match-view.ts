@@ -24,6 +24,12 @@ function requiredFirst(
   return first;
 }
 
+type ExploreMatchSupportLookup = (
+  matchId: string,
+) => Promise<
+  readonly Pick<LakeMatchParticipantRow, "queue_id" | "game_mode">[]
+>;
+
 function ratio(part: number, total: number): number | null {
   return total > 0 ? part / total : null;
 }
@@ -143,6 +149,33 @@ export function matchIdsInPreview(
     }
   }
   return ids;
+}
+
+/**
+ * Card selection happens in the model, so establish the supported ids before
+ * its final answer is generated. An unsupported id is never silently removed
+ * from an otherwise-successful answer.
+ */
+export async function supportedExploreMatchIds(input: {
+  matchIds: Set<string>;
+  lookup?: ExploreMatchSupportLookup;
+}): Promise<Set<string>> {
+  const lookup =
+    input.lookup ??
+    (async (matchId: string) => await fetchFullMatch({ matchId }));
+  const supported = await Promise.all(
+    [...input.matchIds].map(async (matchId) => {
+      const rows = await lookup(matchId);
+      const first = rows[0];
+      if (first === undefined) {
+        throw new Error("A queried Explore match has no match participants");
+      }
+      return isExploreMatchSnapshotSupported(first.queue_id, first.game_mode)
+        ? matchId
+        : null;
+    }),
+  );
+  return new Set(supported.filter((matchId) => matchId !== null));
 }
 
 export async function hydrateExploreMatchCards(input: {

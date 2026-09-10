@@ -64,6 +64,7 @@ import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-
 import {
   hydrateExploreMatchCards,
   matchIdsInPreview,
+  supportedExploreMatchIds,
 } from "#src/explore-match/match-view.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
@@ -125,7 +126,7 @@ type RunState = {
   /** Result of the most recent successful query, attached to the answer. */
   lastPreview: ReportAiPreviewSummary | null;
   lastVisualization: VisualizationSnapshot | null;
-  /** Match ids the most recent successful query actually returned. */
+  /** Match ids from the most recent query that support a two-team card. */
   lastMatchIds: Set<string>;
 };
 
@@ -441,7 +442,9 @@ function createExploreTools(options: ExploreToolsOptions) {
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
-        state.lastMatchIds = matchIdsInPreview(preview, source);
+        state.lastMatchIds = await supportedExploreMatchIds({
+          matchIds: matchIdsInPreview(preview, source),
+        });
 
         await params.emit({
           type: "preview",
@@ -450,10 +453,14 @@ function createExploreTools(options: ExploreToolsOptions) {
         });
         return {
           ok: true,
-          message:
+          message: [
             preview.rowsReturned === 0
               ? `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`
               : `Returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
+            state.lastMatchIds.size === 0
+              ? "This query has no supported match cards. Set matchCards to []."
+              : `For this query, cards may use only these match_id values: ${[...state.lastMatchIds].join(", ")}.`,
+          ].join(" "),
           formattedQueryText: validation.formattedQueryText,
           preview: modelPreview,
         };

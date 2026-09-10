@@ -4,6 +4,7 @@ import {
   isExploreMatchSnapshotSupported,
   matchIdsInPreview,
   normalizeRiotIdPart,
+  supportedExploreMatchIds,
 } from "#src/explore-match/match-view.ts";
 
 describe("matchIdsInPreview", () => {
@@ -73,5 +74,19 @@ describe("matchIdsInPreview", () => {
     expect(matchIdsInPreview(preview, "prematch_participants")).toEqual(
       new Set(),
     );
+  });
+
+  test("excludes Arena ids before exposing card choices to the model", async () => {
+    const supported = await supportedExploreMatchIds({
+      matchIds: new Set(["NA1_5635906026", "NA1_5635906027"]),
+      lookup: async (matchId) => [
+        {
+          queue_id: matchId === "NA1_5635906026" ? 1700 : 420,
+          game_mode: "CLASSIC",
+        },
+      ],
+    });
+
+    expect(supported).toEqual(new Set(["NA1_5635906027"]));
   });
 });
