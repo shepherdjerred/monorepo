@@ -537,16 +537,8 @@
       "tokens": 88
     },
     "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts": {
-      "clones": 7,
-      "tokens": 588
-    },
-    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
-      "clones": 1,
-      "tokens": 86
-    },
-    "packages/homelab/src/cdk8s/src/argocd-atomic-sync.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
-      "clones": 1,
-      "tokens": 123
+      "clones": 6,
+      "tokens": 505
     },
     "packages/homelab/src/cdk8s/src/argocd-auto-sync-invariant.test.ts|packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts": {
       "clones": 1,
@@ -573,8 +565,8 @@
       "tokens": 1435
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script-support.ts": {
-      "clones": 3,
-      "tokens": 258
+      "clones": 2,
+      "tokens": 152
     },
     "packages/homelab/src/cdk8s/src/argocd-root-finalization.test.ts|packages/homelab/src/cdk8s/src/argocd-script.test.ts": {
       "clones": 6,

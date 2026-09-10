@@ -1,27 +1,13 @@
 import { expect, test } from "vitest";
 import path from "node:path";
 import { z } from "zod";
+import { SyncInfoEntrySchema } from "./argocd-script-support.ts";
 
 const CURRENT_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const OTHER_REQUEST_ID = "22222222-2222-4222-8222-222222222222";
 const CURRENT_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
 const OTHER_OPERATION_ID = "44444444-4444-4444-8444-444444444444";
 const REVISION = "2.0.0-42";
-
-const SyncInfoEntrySchema = z.discriminatedUnion("name", [
-  z.object({
-    name: z.literal("ci.sjer.red/request-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/operation-id"),
-    value: z.uuid(),
-  }),
-  z.object({
-    name: z.literal("ci.sjer.red/revision"),
-    value: z.string(),
-  }),
-]);
 
 const RootSyncRequestSchema = z.object({
   infos: z.array(SyncInfoEntrySchema),
@@ -112,6 +98,7 @@ function applicationOperation(options: {
   readonly operationId?: string | null;
   readonly persistedRevision?: string;
   readonly phase: string;
+  readonly releasePhase?: "stage" | "batch" | "prune" | "child";
   readonly requestId: string;
   readonly resources?: readonly OperationResource[];
   readonly revision?: string;
@@ -137,7 +124,17 @@ function applicationOperation(options: {
       : options.liveOperationId;
   const identity = {
     persistedRevision: options.persistedRevision,
-    extraInfo: options.extraInfo,
+    extraInfo: [
+      ...(options.releasePhase === undefined
+        ? []
+        : [
+            {
+              name: "ci.sjer.red/release-phase",
+              value: options.releasePhase,
+            },
+          ]),
+      ...(options.extraInfo ?? []),
+    ],
   };
   const completedOperation = identifiedOperation(
     options.requestId,
@@ -396,6 +393,77 @@ function recoveryArgs(): readonly string[] {
     "--timeout",
     "1",
   ];
+}
+
+async function expectTerminatedRecovery(
+  lifecycle: ReturnType<typeof serveLifecycle>,
+): Promise<void> {
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("terminated applied sync operation: apps");
+    expect(lifecycle.observations.deleteRequests).toBe(1);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+}
+
+async function expectRefusedRecovery(
+  lifecycle: ReturnType<typeof serveLifecycle>,
+  message: string,
+): Promise<void> {
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+    expect(result.exitCode).not.toBe(0);
+    expect(result.stderr).toContain(message);
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+}
+
+function appliedRootPrune(
+  options: {
+    readonly live?: boolean;
+    readonly liveOperationId?: string | null;
+    readonly operationId?: string | null;
+    readonly phase?: string;
+    readonly pruneCandidates?: readonly string[];
+    readonly releasePhase?: "stage" | "batch" | "prune" | "child";
+    readonly requestId?: string;
+    readonly resources?: readonly OperationResource[];
+    readonly revision?: string;
+    readonly startedAt?: string;
+  } = {},
+): unknown {
+  return applicationOperation({
+    phase: options.phase ?? "Running",
+    releasePhase: options.releasePhase ?? "prune",
+    requestId: options.requestId ?? CURRENT_REQUEST_ID,
+    resources: options.resources ?? [{ name: "apps", status: "Synced" }],
+    extraInfo: [
+      {
+        name: "ci.sjer.red/prune-candidates",
+        value: JSON.stringify(
+          [...(options.pruneCandidates ?? [])].sort((left, right) =>
+            left.localeCompare(right),
+          ),
+        ),
+      },
+    ],
+    ...(options.live === undefined ? {} : { live: options.live }),
+    ...(options.liveOperationId === undefined
+      ? {}
+      : { liveOperationId: options.liveOperationId }),
+    ...(options.operationId === undefined
+      ? {}
+      : { operationId: options.operationId }),
+    ...(options.revision === undefined ? {} : { revision: options.revision }),
+    ...(options.startedAt === undefined
+      ? {}
+      : { startedAt: options.startedAt }),
+  });
 }
 
 test("atomic Argo sync ignores stale status, applies the live result, and waits for termination", async () => {
@@ -1100,13 +1168,160 @@ test("atomic Argo sync fails if another attempt with the same request replaces i
   }
 });
 
+test("Argo recovery finalizes an apps prune whose result is a subset of the rendered source", async () => {
+  await expectTerminatedRecovery(
+    serveLifecycle(
+      [
+        appliedRootPrune({
+          resources: [
+            { name: "apps", status: "Synced" },
+            { name: "worker", status: "Synced" },
+          ],
+          startedAt: "2026-08-10T01:00:01Z",
+        }),
+      ],
+      [{ status: {} }],
+      [
+        renderedApplication("apps"),
+        renderedApplication("worker"),
+        renderedApplication("unchanged-child"),
+      ],
+    ),
+  );
+});
+
+test("Argo recovery waits when an apps prune omits the root Application", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        resources: [{ name: "worker", status: "Synced" }],
+      }),
+    ]),
+    "was not fully applied within 1s",
+  );
+});
+
+test("Argo recovery refuses a matching apps batch instead of treating it as applied", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([appliedRootPrune({ releasePhase: "batch" })]),
+    "is not the marked final root prune",
+  );
+});
+
+test("Argo recovery refuses a marked prune without persisted candidates", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      applicationOperation({
+        phase: "Running",
+        releasePhase: "prune",
+        requestId: CURRENT_REQUEST_ID,
+        resources: [{ name: "apps", status: "Synced" }],
+      }),
+    ]),
+    "requires persisted prune candidates",
+  );
+});
+
+test("Argo recovery waits until persisted prune candidates are pruned", async () => {
+  const gone = JSON.stringify(["argoproj.io", "Application", "gone"]);
+  await expectRefusedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        pruneCandidates: [gone],
+        resources: [{ name: "apps", status: "Synced" }],
+      }),
+    ]),
+    "was not fully applied within 1s",
+  );
+});
+
+test("Argo recovery finalizes after persisted prune candidates are pruned", async () => {
+  const gone = JSON.stringify(["argoproj.io", "Application", "gone"]);
+  await expectTerminatedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        pruneCandidates: [gone],
+        resources: [
+          { name: "apps", status: "Synced" },
+          { name: "gone", status: "Pruned" },
+        ],
+      }),
+    ]),
+  );
+});
+
+test("Argo recovery refuses a completed matching apps batch", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        live: false,
+        phase: "Succeeded",
+        releasePhase: "batch",
+      }),
+    ]),
+    "Completed apps operation is not the marked final root prune",
+  );
+});
+
+test("Argo recovery waits when a live prune still reports a stale batch result", async () => {
+  await expectRefusedRecovery(
+    serveLifecycle([
+      {
+        operation: identifiedOperation(CURRENT_REQUEST_ID, REVISION, null, {
+          extraInfo: [
+            { name: "ci.sjer.red/release-phase", value: "prune" },
+            { name: "ci.sjer.red/prune-candidates", value: "[]" },
+          ],
+        }),
+        status: {
+          operationState: {
+            phase: "Running",
+            operation: identifiedOperation(CURRENT_REQUEST_ID, REVISION, null, {
+              extraInfo: [
+                { name: "ci.sjer.red/release-phase", value: "batch" },
+              ],
+            }),
+            syncResult: {
+              resources: [
+                {
+                  group: "argoproj.io",
+                  kind: "Application",
+                  name: "apps",
+                  status: "Synced",
+                },
+              ],
+              revision: REVISION,
+            },
+          },
+        },
+      },
+    ]),
+    "was not fully applied within 1s",
+  );
+});
+
+test("Argo recovery accepts an already-finalized marked prune", async () => {
+  const lifecycle = serveLifecycle([
+    appliedRootPrune({ live: false, phase: "Succeeded" }),
+  ]);
+
+  try {
+    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("async sync operation already finalized");
+    expect(lifecycle.observations.deleteRequests).toBe(0);
+  } finally {
+    await lifecycle.server.stop(true);
+  }
+});
+
 test("Argo recovery waits for the exact operation before finalizing it", async () => {
   const lifecycle = serveLifecycle([
     { status: {} },
-    applicationOperation({
-      phase: "Running",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced", hookPhase: "Running" }],
+    appliedRootPrune({
+      resources: [{ name: "apps", status: "Synced", hookPhase: "Running" }],
     }),
   ]);
 
@@ -1123,95 +1338,57 @@ test("Argo recovery waits for the exact operation before finalizing it", async (
 });
 
 test("Argo recovery finalizes an exact pre-operation-ID sync", async () => {
-  const lifecycle = serveLifecycle([
-    applicationOperation({
-      liveOperationId: null,
-      operationId: null,
-      phase: "Running",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced", hookPhase: "Running" }],
-    }),
-  ]);
-
-  try {
-    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
-
-    expect(result.exitCode).toBe(0);
-    expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("terminated applied sync operation: apps");
-    expect(lifecycle.observations.deleteRequests).toBe(1);
-  } finally {
-    await lifecycle.server.stop(true);
-  }
+  await expectTerminatedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        liveOperationId: null,
+        operationId: null,
+        resources: [{ name: "apps", status: "Synced", hookPhase: "Running" }],
+      }),
+    ]),
+  );
 });
 
 test("Argo recovery refuses a different active request", async () => {
-  const lifecycle = serveLifecycle([
-    applicationOperation({
-      phase: "Running",
-      requestId: OTHER_REQUEST_ID,
-      resources: [{ status: "Synced" }],
-    }),
-  ]);
-
-  try {
-    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
-
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain(
-      "Refusing to terminate active apps operation",
-    );
-    expect(lifecycle.observations.deleteRequests).toBe(0);
-  } finally {
-    await lifecycle.server.stop(true);
-  }
+  await expectRefusedRecovery(
+    serveLifecycle([
+      appliedRootPrune({
+        requestId: OTHER_REQUEST_ID,
+      }),
+    ]),
+    "Refusing to terminate active apps operation",
+  );
 });
 
 test("Argo recovery refuses an unrelated live operation behind matching stale status", async () => {
-  const lifecycle = serveLifecycle([
-    {
-      operation: identifiedOperation(OTHER_REQUEST_ID),
-      status: {
-        operationState: {
-          operation: identifiedOperation(CURRENT_REQUEST_ID),
-          phase: "Running",
-          syncResult: {
-            resources: [{ status: "Synced" }],
-            revision: REVISION,
+  await expectRefusedRecovery(
+    serveLifecycle([
+      {
+        operation: identifiedOperation(OTHER_REQUEST_ID),
+        status: {
+          operationState: {
+            operation: identifiedOperation(CURRENT_REQUEST_ID),
+            phase: "Running",
+            syncResult: {
+              resources: [{ status: "Synced" }],
+              revision: REVISION,
+            },
           },
         },
       },
-    },
-  ]);
-
-  try {
-    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
-
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain(
-      `expected request ${CURRENT_REQUEST_ID} at ${REVISION}`,
-    );
-    expect(lifecycle.observations.deleteRequests).toBe(0);
-  } finally {
-    await lifecycle.server.stop(true);
-  }
+    ]),
+    `expected request ${CURRENT_REQUEST_ID} at ${REVISION}`,
+  );
 });
 
 test("Argo recovery waits past a stale attempt with the same request", async () => {
   const lifecycle = serveLifecycle([
-    applicationOperation({
+    appliedRootPrune({
       live: true,
       liveOperationId: CURRENT_OPERATION_ID,
       operationId: OTHER_OPERATION_ID,
-      phase: "Running",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced" }],
     }),
-    applicationOperation({
-      phase: "Running",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced" }],
-    }),
+    appliedRootPrune(),
   ]);
 
   try {
@@ -1227,58 +1404,24 @@ test("Argo recovery waits past a stale attempt with the same request", async () 
 });
 
 test("Argo recovery never terminates matching status without a live operation", async () => {
-  const lifecycle = serveLifecycle([
-    applicationOperation({
-      live: false,
-      phase: "Running",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced" }],
-    }),
-  ]);
-
-  try {
-    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
-
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("was not fully applied within 1s");
-    expect(lifecycle.observations.deleteRequests).toBe(0);
-  } finally {
-    await lifecycle.server.stop(true);
-  }
+  await expectRefusedRecovery(
+    serveLifecycle([appliedRootPrune({ live: false })]),
+    "was not fully applied within 1s",
+  );
 });
 
 test("Argo recovery refuses the same request at another revision", async () => {
-  const lifecycle = serveLifecycle([
-    applicationOperation({
-      phase: "Running",
-      requestId: CURRENT_REQUEST_ID,
-      resources: [{ status: "Synced" }],
-      revision: "2.0.0-41",
-    }),
-  ]);
-
-  try {
-    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
-
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain(`expected ${REVISION}`);
-    expect(lifecycle.observations.deleteRequests).toBe(0);
-  } finally {
-    await lifecycle.server.stop(true);
-  }
+  await expectRefusedRecovery(
+    serveLifecycle([appliedRootPrune({ revision: "2.0.0-41" })]),
+    `expected ${REVISION}`,
+  );
 });
 
 test("Argo recovery times out instead of accepting a missing operation", async () => {
-  const lifecycle = serveLifecycle([{ status: {} }]);
-
-  try {
-    const result = await runArgocd(recoveryArgs(), lifecycle.server.url.origin);
-
-    expect(result.exitCode).not.toBe(0);
-    expect(result.stderr).toContain("was not fully applied within 1s");
-  } finally {
-    await lifecycle.server.stop(true);
-  }
+  await expectRefusedRecovery(
+    serveLifecycle([{ status: {} }]),
+    "was not fully applied within 1s",
+  );
 });
 
 test("Argo CLI rejects incompatible sync completion modes", async () => {

@@ -53,6 +53,7 @@ import {
   completedOperationRequestId,
   operationRevision,
   RELEASE_PHASE_INFO_NAME,
+  ROOT_PRUNE_CANDIDATES_INFO_NAME,
   requestedOperationId,
   requestedOperationRequestId,
   requestedOperationRevision,
@@ -913,6 +914,19 @@ function activeOperationPrunes(app: Record<string, unknown>): boolean {
   return sync["prune"] === true;
 }
 
+function assertActiveFinalRootPrune(
+  application: Record<string, unknown>,
+  observation: OperationObservation,
+): void {
+  if (
+    activeOperationResourceIdentities(application) !== null ||
+    observation.liveReleasePhase !== "prune" ||
+    !activeOperationPrunes(application)
+  ) {
+    throw new Error("Active apps operation is not the marked final root prune");
+  }
+}
+
 function requestedOperationReleasePhase(
   application: unknown,
 ): ReleasePhase | undefined {
@@ -958,6 +972,57 @@ async function getExpectedSyncResultIdentities(
     desired: await getRenderedResourceIdentities(appName, revision, token),
     pruned: new Set(),
   };
+}
+
+function rootPruneRecoveryIdentities(
+  pruned: ReadonlySet<string>,
+): ExpectedSyncResultIdentities {
+  return {
+    desired: new Set([resourceIdentity("argoproj.io", "Application", "apps")]),
+    pruned,
+  };
+}
+
+function serializeRootPruneCandidates(pruned: ReadonlySet<string>): string {
+  return canonicalJson([...pruned].sort());
+}
+
+function persistedRootPruneCandidates(
+  operation: Record<string, unknown>,
+): ReadonlySet<string> | undefined {
+  const matches = (OperationInfoEntriesSchema.parse(operation).info ?? [])
+    .filter(({ name }) => name === ROOT_PRUNE_CANDIDATES_INFO_NAME)
+    .map(({ value }) => value);
+  if (matches.length > 1) {
+    throw new Error("Argo operation has multiple prune-candidate inventories");
+  }
+  const raw = matches[0];
+  if (raw === undefined) {
+    return undefined;
+  }
+  return new Set(z.array(z.string()).parse(JSON.parse(raw)));
+}
+
+function appsPruneRecoveryIdentitiesFrom(
+  application: Record<string, unknown>,
+): ExpectedSyncResultIdentities {
+  const liveOperation = application["operation"];
+  const live = isRecord(liveOperation) ? liveOperation : undefined;
+  const completedOperation = operationState(application)["operation"];
+  const completed = isRecord(completedOperation)
+    ? completedOperation
+    : undefined;
+  const source = live ?? completed;
+  if (source === undefined) {
+    throw new Error(
+      "Apps prune recovery has no operation to read prune candidates from",
+    );
+  }
+  const pruned = persistedRootPruneCandidates(source);
+  if (pruned === undefined) {
+    throw new Error("Apps prune recovery requires persisted prune candidates");
+  }
+  return rootPruneRecoveryIdentities(pruned);
 }
 
 type PreparedManifestOverride = {
@@ -1749,13 +1814,9 @@ async function sync(
       );
     }
     if (options.recoverActiveRootPrune === true) {
-      // The initial prune preflight classifies live children before the
-      // operation starts. A recovery sees the post-prune tree, where a
-      // successful candidate is already absent; reclassifying it would demand
-      // a different result from the exact operation being recovered. The
-      // identity and full-source admission checks below still bind recovery to
-      // that preflighted operation, while every reported result must apply.
-      expectedResourceIdentities = { desired: new Set(), pruned: new Set() };
+      // Recovery reads the prune-candidate inventory persisted on the live
+      // operation. Reclassifying live children would demand identities the
+      // in-flight result no longer reports.
     } else {
       const rootExpectedResourceIdentities = await assertRootPruneSafe(
         token,
@@ -1857,6 +1918,10 @@ async function sync(
           `Refusing to adopt the active ${appName} operation for request ${requestId}; it applies ${mismatch}`,
         );
       }
+      if (options.recoverActiveRootPrune === true) {
+        expectedResourceIdentities =
+          appsPruneRecoveryIdentitiesFrom(baselineApplication);
+      }
       operationId = requireLiveOperationId(baseline, appName);
       const completedOperationMatches = operationMatches(
         baseline,
@@ -1896,6 +1961,10 @@ async function sync(
     }
   }
 
+  if (options.recoverActiveRootPrune === true && !adopted) {
+    throw new Error("Active-root-prune recovery requires a live marked prune");
+  }
+
   if (!adopted) {
     const url = `${serverUrl()}/api/v1/applications/${appName}/sync`;
     const res = await fetch(url, {
@@ -1920,6 +1989,18 @@ async function sync(
                   value: options.releasePhase,
                 },
               ]),
+          ...(appName === "apps" &&
+          options.prune &&
+          expectedResourceIdentities !== undefined
+            ? [
+                {
+                  name: ROOT_PRUNE_CANDIDATES_INFO_NAME,
+                  value: serializeRootPruneCandidates(
+                    expectedResourceIdentities.pruned,
+                  ),
+                },
+              ]
+            : []),
         ],
         ...(options.revision === undefined
           ? {}
@@ -2527,14 +2608,21 @@ async function finalizeAsyncSync(
   }
 
   const token = requireEnv("ARGOCD_TOKEN");
-  const expectedResourceIdentities =
+  // Recovery sees the post-apply tree. Re-running prune-candidate
+  // classification against live children would demand identities the
+  // in-flight result no longer reports (successful prunes are already
+  // absent; Argo also omits unchanged children from a prune result).
+  // An apps recovery therefore requires a marked full-source prune and
+  // the persisted preflight inventory on that operation.
+  let expectedResourceIdentities =
     appName === "apps"
-      ? await assertRootPruneSafe(token, exactRevision)
+      ? undefined
       : await getExpectedSyncResultIdentities(appName, exactRevision, token);
   const deadline = Date.now() + timeoutSeconds * 1000;
   let elapsed = 0;
   while (Date.now() < deadline) {
-    const current = observeOperation(await getApplication(appName, token));
+    const application = await getApplication(appName, token);
+    const current = observeOperation(application);
     assertMatchingRevision(current, exactRequestId, exactRevision, appName);
     assertMatchingLiveRevision(current, exactRequestId, exactRevision, appName);
     const isExpectedLogicalOperation = operationMatches(
@@ -2552,6 +2640,32 @@ async function finalizeAsyncSync(
         `Refusing to terminate active ${appName} operation ${liveOperationDescription(current)}; expected request ${exactRequestId} at ${exactRevision}`,
       );
     }
+    if (
+      appName === "apps" &&
+      current.hasLiveOperation &&
+      isExpectedLogicalLiveOperation
+    ) {
+      assertActiveFinalRootPrune(application, current);
+    }
+    if (
+      appName === "apps" &&
+      isExpectedLogicalOperation &&
+      !current.hasLiveOperation &&
+      current.releasePhase !== "prune"
+    ) {
+      throw new Error(
+        "Completed apps operation is not the marked final root prune",
+      );
+    }
+    if (
+      appName === "apps" &&
+      ((current.hasLiveOperation && isExpectedLogicalLiveOperation) ||
+        (isExpectedLogicalOperation && current.releasePhase === "prune"))
+    ) {
+      expectedResourceIdentities = appsPruneRecoveryIdentitiesFrom(application);
+    }
+    const statusIsMarkedRootPrune =
+      appName !== "apps" || current.releasePhase === "prune";
     if (
       isExpectedLogicalOperation &&
       !current.hasLiveOperation &&
@@ -2573,6 +2687,7 @@ async function finalizeAsyncSync(
     const liveOperationId = recoveryLiveOperationId(current);
     const isExpectedOperation =
       liveOperationId !== undefined &&
+      statusIsMarkedRootPrune &&
       operationMatches(current, exactRequestId, exactRevision, liveOperationId);
     console.log(
       `Operation: ${current.phase || "(pending)"}${isExpectedOperation ? "" : " [previous op]"}; ` +
