@@ -29,6 +29,7 @@ import {
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 const NAMESPACE = "buildkite";
 const WORKER_NAME = "temporal-maintenance-worker";
@@ -308,9 +309,7 @@ export function createBuildkiteMaintenanceWorker(chart: Chart): void {
         TEMPORAL_WORKER_ROLE: EnvValue.fromValue("maintenance"),
         ENVIRONMENT: EnvValue.fromValue("production"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-        OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
+        OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         TELEMETRY_SERVICE_NAME: EnvValue.fromValue(WORKER_NAME),
         HOME: EnvValue.fromValue("/tmp"),
         KOMETA_PLEXTOKEN_FILE: EnvValue.fromValue(

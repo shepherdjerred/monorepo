@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Cpu, type Deployment, EnvValue } from "cdk8s-plus-31";
 import { createTemporalDomainWorker } from "./domain-worker.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 const DEPLOYMENT_NAME = "monorepo-central-workflows";
 
@@ -37,9 +38,7 @@ function createWorkflowWorker(
       TEMPORAL_WORKER_DEPLOYMENT_NAME: EnvValue.fromValue(DEPLOYMENT_NAME),
       ENVIRONMENT: EnvValue.fromValue("production"),
       TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(
-        "http://tempo.tempo.svc.cluster.local:4318",
-      ),
+      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-central-workflows"),
     },
   });

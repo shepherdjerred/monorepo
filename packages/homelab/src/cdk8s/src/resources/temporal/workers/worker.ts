@@ -30,6 +30,7 @@ import {
   createTemporalWorkerServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 export type CreateTemporalWorkerDeploymentProps = {
   serverServiceName: string;
@@ -171,9 +172,7 @@ export function createTemporalWorkerDeployment(
       ENVIRONMENT: EnvValue.fromValue("production"),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
       TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-      OTLP_ENDPOINT: EnvValue.fromValue(
-        "http://tempo.tempo.svc.cluster.local:4318",
-      ),
+      OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
       TELEMETRY_SERVICE_NAME: EnvValue.fromValue("temporal-agent-worker"),
       NODE_EXTRA_CA_CERTS: EnvValue.fromValue(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
@@ -209,9 +208,7 @@ export function createTemporalWorkerDeployment(
     TEMPORAL_METRICS_ADDRESS: EnvValue.fromValue("0.0.0.0:9464"),
     ENVIRONMENT: EnvValue.fromValue("production"),
     TELEMETRY_ENABLED: EnvValue.fromValue("true"),
-    OTLP_ENDPOINT: EnvValue.fromValue(
-      "http://tempo.tempo.svc.cluster.local:4318",
-    ),
+    OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
     SENTRY_DSN: EnvValue.fromSecretValue({ secret, key: "SENTRY_DSN" }),
   };
   const { corpusDeployment, contextDeployment } = createTemporalGlitterWorkers(

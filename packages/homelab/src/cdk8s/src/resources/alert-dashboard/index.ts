@@ -22,6 +22,7 @@ import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailsca
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
 
 const IMAGE = `ghcr.io/shepherdjerred/alert-dashboard:${versions["shepherdjerred/alert-dashboard"]}`;
 
@@ -162,9 +163,7 @@ export function createAlertDashboardDeployment(chart: Chart) {
           key: "POSTAL_HOST_HEADER",
         }),
         POSTAL_TO: EnvValue.fromSecretValue({ secret, key: "POSTAL_TO" }),
-        OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(
-          "http://tempo.tempo.svc.cluster.local:4318",
-        ),
+        OTEL_EXPORTER_OTLP_ENDPOINT: EnvValue.fromValue(OTLP_GATEWAY_BASE_URL),
         OTEL_SERVICE_NAME: EnvValue.fromValue("alert-dashboard"),
         TELEMETRY_ENABLED: EnvValue.fromValue("true"),
       },

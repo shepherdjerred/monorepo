@@ -22,7 +22,9 @@ describe("Scout backend telemetry boundary", () => {
               to: [
                 {
                   namespaceSelector: {
-                    matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+                    matchLabels: {
+                      "kubernetes.io/metadata.name": "alloy-gateway",
+                    },
                   },
                 },
               ],
