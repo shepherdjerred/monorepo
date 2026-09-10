@@ -46,6 +46,8 @@ type RestState = {
   freshMembers: Map<string, Set<string>> | null;
   channels: DiscordGuildChannel[];
   unavailable: boolean;
+  /** When set, member search fails with this HTTP status. */
+  searchFailureStatus: number | null;
   restCalls: number;
   cachedMemberReads: number;
   freshMemberReads: number;
@@ -57,6 +59,7 @@ const state: RestState = {
   freshMembers: null,
   channels: [],
   unavailable: false,
+  searchFailureStatus: null,
   restCalls: 0,
   cachedMemberReads: 0,
   freshMemberReads: 0,
@@ -126,12 +129,19 @@ const fakeRest: BotRestReader = {
       return roster.get(guildId)?.has(userId) === true ? member(userId) : null;
     }),
   searchGuildMembers: (input) =>
-    guard(() =>
-      [...(state.members.get(input.guildId) ?? [])]
+    guard(() => {
+      if (state.searchFailureStatus !== null) {
+        throw new DiscordUpstreamError(
+          "http_error",
+          "Missing Access",
+          state.searchFailureStatus,
+        );
+      }
+      return [...(state.members.get(input.guildId) ?? [])]
         .filter((id) => id.includes(input.query))
         .slice(0, input.limit)
-        .map((id) => member(id)),
-    ),
+        .map((id) => member(id));
+    }),
   user: (userId) => guard(() => ({ id: userId, username: `user-${userId}` })),
   channel: (channelId) =>
     guard(() => state.channels.find((entry) => entry.id === channelId) ?? null),
@@ -165,6 +175,16 @@ vi.doMock("#src/discord/client.ts", () => ({
 }));
 
 const { appRouter } = await import("#src/trpc/router/index.ts");
+const { discordBotRestFailures } = await import("#src/metrics/platform/web.ts");
+
+/** Total across every `reason` label, so a test can assert "went up by one". */
+async function botRestFailureCount(): Promise<number> {
+  const metric = await discordBotRestFailures.get();
+  return metric.values.reduce(
+    (total: number, entry: { value: number }) => total + entry.value,
+    0,
+  );
+}
 
 type TrpcCaller = ReturnType<AppRouter["createCaller"]>;
 
@@ -260,6 +280,7 @@ beforeEach(async () => {
   state.freshMembers = null;
   state.channels = [];
   state.unavailable = false;
+  state.searchFailureStatus = null;
   state.restCalls = 0;
   state.cachedMemberReads = 0;
   state.freshMemberReads = 0;
@@ -414,6 +435,38 @@ describe("member-backed role management without a gateway", () => {
         where: { serverId: INSTALLED, discordUserId: PEER },
       }),
     ).toBe(0);
+  });
+
+  test("a search with no matches is an empty list", async () => {
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    await expect(
+      caller().discord.searchMembers({
+        guildId: INSTALLED,
+        query: "nobody-by-that-name",
+        limit: 5,
+      }),
+    ).resolves.toEqual([]);
+  });
+
+  test("a 403 on search is SERVICE_UNAVAILABLE, not a blank typeahead", async () => {
+    // Blanking the picker would tell the user their teammate is not in the
+    // server, sending them to look for a problem that isn't theirs.
+    await seedInstall(INSTALLED);
+    asMemberOf([INSTALLED]);
+    state.searchFailureStatus = 403;
+    const before = await botRestFailureCount();
+
+    await expect(
+      caller().discord.searchMembers({
+        guildId: INSTALLED,
+        query: PEER,
+        limit: 5,
+      }),
+    ).rejects.toMatchObject({ code: "SERVICE_UNAVAILABLE" });
+    // ...and the failure is counted, so a broken install shows up in metrics
+    // rather than looking like an unpopular server.
+    expect(await botRestFailureCount()).toBe(before + 1);
   });
 
   test("a manager who left is not counted, even while the cache still has them", async () => {
