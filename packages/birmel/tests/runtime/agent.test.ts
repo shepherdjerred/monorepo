@@ -40,6 +40,32 @@ describe("summarizeToolResultForSession", () => {
     });
   });
 
+  test("includes bounded redacted output data in a successful result summary", () => {
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-nyt-1",
+        toolName: "manage-message",
+        input: { action: "news" },
+        output: {
+          success: true,
+          message: "Found 2 articles",
+          data: {
+            articles: [
+              { title: "City budget vote", token: "SECRET_TOOL_TOKEN" },
+              { title: "Storm closes schools" },
+            ],
+          },
+        },
+      },
+      registeredToolIds,
+    );
+    expect(event.resultSummary).toContain("Found 2 articles");
+    expect(event.resultSummary).toContain("City budget vote");
+    expect(event.resultSummary).toContain("Storm closes schools");
+    expect(event.resultSummary).toContain("[REDACTED]");
+    expect(event.resultSummary).not.toContain("SECRET_TOOL_TOKEN");
+  });
+
   test("records a validated unsuccessful outcome without result content", () => {
     const event = summarizeToolResultForSession(
       {

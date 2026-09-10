@@ -37,6 +37,7 @@ const ToolDomainResultSchema = z.object({
   success: z.boolean(),
   message: z.string().min(1),
   effectDisposition: EffectDispositionSchema.optional(),
+  data: z.unknown().optional(),
 });
 const ToolResultForSessionSchema = z.object({
   toolCallId: z.string().min(1).max(200),
@@ -172,7 +173,14 @@ export function summarizeToolResultForSession(
   const status = toolResult.output.success ? "succeeded" : "failed";
   const inputSummary = boundedSummary(toolResult.input);
   const resultSummary = toolResult.output.success
-    ? boundedSummary(toolResult.output.message)
+    ? boundedSummary(
+        toolResult.output.data === undefined
+          ? toolResult.output.message
+          : {
+              message: toolResult.output.message,
+              data: toolResult.output.data,
+            },
+      )
     : "Tool reported failure";
   const content = boundedText(
     `Tool ${toolResult.toolName} call ${toolResult.toolCallId} ${status}; input=${inputSummary}; result=${resultSummary}`,
