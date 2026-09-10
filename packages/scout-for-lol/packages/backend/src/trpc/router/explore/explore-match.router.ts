@@ -6,7 +6,10 @@ import {
   TimelineEventFilterSchema,
 } from "@scout-for-lol/data";
 import { assertExploreAccess } from "#src/explore/access.ts";
-import { exploreMatchSnapshot } from "#src/explore-match/match-view.ts";
+import {
+  exploreMatchSnapshot,
+  isExploreMatchSnapshotSupported,
+} from "#src/explore-match/match-view.ts";
 import {
   fetchFullMatch,
   fetchTimelineChartFrames,
@@ -35,7 +38,11 @@ async function assertExploreMatch(
 ) {
   await assertExploreAccess(user);
   const rows = await fetchFullMatch({ matchId });
-  if (rows.length === 0) {
+  const first = rows[0];
+  if (
+    first === undefined ||
+    !isExploreMatchSnapshotSupported(first.game_mode)
+  ) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Match was not found" });
   }
   return rows;

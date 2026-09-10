@@ -1,8 +1,16 @@
 import { describe, expect, test } from "vitest";
 import { ReportAiPreviewSummarySchema } from "@scout-for-lol/data";
-import { matchIdsInPreview } from "#src/explore-match/match-view.ts";
+import {
+  isExploreMatchSnapshotSupported,
+  matchIdsInPreview,
+} from "#src/explore-match/match-view.ts";
 
 describe("matchIdsInPreview", () => {
+  test("excludes Arena from the classic two-team match snapshot", () => {
+    expect(isExploreMatchSnapshotSupported("CHERRY")).toBe(false);
+    expect(isExploreMatchSnapshotSupported("CLASSIC")).toBe(true);
+  });
+
   test("allows cards only for match ids a query actually returned", () => {
     const preview = ReportAiPreviewSummarySchema.parse({
       columns: [

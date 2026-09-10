@@ -27,6 +27,11 @@ function ratio(part: number, total: number): number | null {
   return total > 0 ? part / total : null;
 }
 
+/** Arena has multiple competing subteams, not the classic two-team shape. */
+export function isExploreMatchSnapshotSupported(gameMode: string): boolean {
+  return gameMode !== "CHERRY";
+}
+
 /** Convert the lake's normalized participant rows into a neutral match view. */
 export function exploreMatchSnapshot(
   rows: LakeMatchParticipantRow[],
@@ -34,6 +39,9 @@ export function exploreMatchSnapshot(
   const first = requiredFirst(rows);
   if (rows.some((row) => row.match_id !== first.match_id)) {
     throw new Error("Explore match detail rows contain more than one match");
+  }
+  if (!isExploreMatchSnapshotSupported(first.game_mode)) {
+    throw new Error("Arena matches do not support the Explore match snapshot");
   }
   const grouped = Map.groupBy(rows, (row) => row.team_id);
   const teams = [...grouped.entries()]
@@ -139,10 +147,12 @@ export async function hydrateExploreMatchCards(input: {
   return await Promise.all(
     eligible.map(async (request) => {
       const rows = await fetchFullMatch({ matchId: request.matchId });
+      const first = requiredFirst(rows);
+      if (!isExploreMatchSnapshotSupported(first.game_mode)) return null;
       return ExploreMatchCardSchema.parse({
         size: request.size,
         match: exploreMatchSnapshot(rows),
       });
     }),
-  );
+  ).then((cards) => cards.filter((card) => card !== null));
 }
