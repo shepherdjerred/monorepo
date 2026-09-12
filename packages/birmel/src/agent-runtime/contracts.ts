@@ -183,6 +183,45 @@ export const SessionToolEventSchema = z.strictObject({
 });
 export type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
 
+export const CREDENTIAL_KEY_PATTERN =
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?|invite[_-]?code)$/i;
+
+export const DISCORD_SENSITIVE_URL_PATTERN =
+  /(?:https?:\/\/)?(?:(?:canary\.|ptb\.)?discord(?:app)?\.com\/(?:api\/webhooks\/\d+|invite)|discord\.gg)\/[\w-]+/gi;
+
+export const CookieEntrySchema = z
+  .object({ name: z.string(), value: z.unknown() })
+  .and(
+    z.union([
+      z.object({ domain: z.unknown() }),
+      z.object({ path: z.unknown() }),
+      z.object({ httpOnly: z.unknown() }),
+      z.object({ secure: z.unknown() }),
+      z.object({ sameSite: z.unknown() }),
+      z.object({ expires: z.unknown() }),
+    ]),
+  );
+
+export const InviteEntrySchema = z
+  .object({ code: z.string().nullable().optional() })
+  .and(
+    z.union([
+      z.object({ url: z.string() }),
+      z.object({ channelId: z.unknown() }),
+      z.object({ inviterId: z.unknown() }),
+      z.object({ uses: z.unknown() }),
+    ]),
+  );
+
+export function redactInviteFields(entry: object): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(entry)) {
+    result[key] =
+      val != null && (key === "code" || key === "url") ? "[REDACTED]" : val;
+  }
+  return result;
+}
+
 export const ToolRiskClassSchema = z.enum([
   "read",
   "write",

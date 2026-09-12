@@ -2,6 +2,11 @@ import { Output, stepCountIs, ToolLoopAgent } from "ai";
 import { redactSecrets } from "@shepherdjerred/llm-observability";
 import { z } from "zod";
 import {
+  CookieEntrySchema,
+  CREDENTIAL_KEY_PATTERN,
+  DISCORD_SENSITIVE_URL_PATTERN,
+  InviteEntrySchema,
+  redactInviteFields,
   type SessionToolEvent,
   SessionToolEventSchema,
   type TaskPacket,
@@ -112,49 +117,12 @@ function isReadOnlyCall(toolId: string, input: unknown): boolean {
   );
 }
 
-const CREDENTIAL_KEY_PATTERN =
-  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?|invite[_-]?code)$/i;
-
-const DISCORD_SENSITIVE_URL_PATTERN =
-  /(?:https?:\/\/)?(?:(?:canary\.|ptb\.)?discord(?:app)?\.com\/(?:api\/webhooks\/\d+|invite)|discord\.gg)\/[\w-]+/gi;
-
-const CookieEntrySchema = z
-  .object({ name: z.string(), value: z.unknown() })
-  .and(
-    z.union([
-      z.object({ domain: z.unknown() }),
-      z.object({ path: z.unknown() }),
-      z.object({ httpOnly: z.unknown() }),
-      z.object({ secure: z.unknown() }),
-      z.object({ sameSite: z.unknown() }),
-      z.object({ expires: z.unknown() }),
-    ]),
-  );
-
-const InviteEntrySchema = z
-  .object({ code: z.string().nullable().optional() })
-  .and(
-    z.union([
-      z.object({ url: z.string() }),
-      z.object({ channelId: z.unknown() }),
-      z.object({ inviterId: z.unknown() }),
-      z.object({ uses: z.unknown() }),
-    ]),
-  );
-
-function redactInviteFields(entry: object): Record<string, unknown> {
-  const result: Record<string, unknown> = {};
-  for (const [key, val] of Object.entries(entry)) {
-    result[key] =
-      val != null && (key === "code" || key === "url") ? "[REDACTED]" : val;
-  }
-  return result;
-}
-
 type SanitizeToolOutputOptions = {
   isCookiesCall: boolean;
   isInviteCall: boolean;
   isShellCall: boolean;
+  isBrowserCall: boolean;
+  isWebContentCall: boolean;
 };
 
 function sanitizeArrayEntry(
@@ -203,6 +171,31 @@ function sanitizeObjectEntry(
   return sanitizeToolOutputData(value, options);
 }
 
+const WEB_CONTENT_OMITTED_KEYS = new Set([
+  "content",
+  "summary",
+  "text",
+  "html",
+  "raw",
+  "snippet",
+]);
+
+function shouldOmitOutputKey(
+  key: string,
+  options: SanitizeToolOutputOptions,
+): boolean {
+  if (key === "raw" && (options.isCookiesCall || options.isBrowserCall)) {
+    return true;
+  }
+  if (key === "text" && options.isBrowserCall) {
+    return true;
+  }
+  if ((key === "stdout" || key === "stderr") && options.isShellCall) {
+    return true;
+  }
+  return options.isWebContentCall && WEB_CONTENT_OMITTED_KEYS.has(key);
+}
+
 function sanitizeToolOutputData(
   data: unknown,
   options: SanitizeToolOutputOptions,
@@ -218,10 +211,7 @@ function sanitizeToolOutputData(
   }
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    if (key === "raw" && options.isCookiesCall) {
-      continue;
-    }
-    if ((key === "stdout" || key === "stderr") && options.isShellCall) {
+    if (shouldOmitOutputKey(key, options)) {
       continue;
     }
     sanitized[key] = sanitizeObjectEntry(key, value, options);
@@ -247,19 +237,36 @@ export function summarizeToolResultForSession(
   const isCookiesCall = action.success && action.data.action === "cookies";
   const isInviteCall = toolResult.toolName === "manage-invite";
   const isShellCall = toolResult.toolName === "execute-shell-command";
+  const isBrowserCall = toolResult.toolName === "browser-automation";
+  const isWebContentCall =
+    toolResult.toolName === "web-research" ||
+    toolResult.toolName === "external-service";
   const inputSummary = boundedSummary(toolResult.input);
+  const sanitizedData =
+    toolResult.output.data === undefined
+      ? undefined
+      : sanitizeToolOutputData(toolResult.output.data, {
+          isCookiesCall,
+          isInviteCall,
+          isShellCall,
+          isBrowserCall,
+          isWebContentCall,
+        });
+  const hasData =
+    sanitizedData !== undefined &&
+    sanitizedData !== null &&
+    (typeof sanitizedData !== "object" ||
+      (Array.isArray(sanitizedData)
+        ? sanitizedData.length > 0
+        : Object.keys(sanitizedData).length > 0));
   const resultSummary = toolResult.output.success
     ? boundedSummary(
-        toolResult.output.data === undefined
-          ? toolResult.output.message
-          : {
+        hasData
+          ? {
               message: toolResult.output.message,
-              data: sanitizeToolOutputData(toolResult.output.data, {
-                isCookiesCall,
-                isInviteCall,
-                isShellCall,
-              }),
-            },
+              data: sanitizedData,
+            }
+          : toolResult.output.message,
       )
     : "Tool reported failure";
   const content = boundedText(
