@@ -1,11 +1,22 @@
-import { RiotHttpError } from "./errors.ts";
+import { createLogger } from "#src/logger.ts";
+import {
+  riotApiAppRateLimitCount,
+  riotApiAppRateLimitLimit,
+} from "#src/metrics/riot-rate-limit.ts";
+import { isExpectedUpstreamError, RiotHttpError } from "./errors.ts";
+import { parseAppRateLimitWindows } from "./rate-limit-headers.ts";
+
+const logger = createLogger("rate-limiter");
 
 export type RequestExecutor = () => Promise<Response>;
 
 export type RateLimiterOptions = {
   /** Maximum number of concurrent in-flight requests. Default: 5. */
   concurrency?: number | undefined;
-  /** Maximum retry attempts on 429 / 503. Default: 3. */
+  /**
+   * Maximum retry attempts on 429 and expected upstream outages
+   * (502/503/504/520/522/524). Default: 3.
+   */
   maxRetries?: number | undefined;
 };
 
@@ -132,6 +143,13 @@ export class RateLimiter {
     try {
       await this.waitForCooldown();
       const response = await executeRequest();
+
+      for (const window of parseAppRateLimitWindows(response.headers)) {
+        const labels = { window_seconds: window.windowSeconds.toString() };
+        riotApiAppRateLimitCount.set(labels, window.count);
+        riotApiAppRateLimitLimit.set(labels, window.limit);
+      }
+
       if (response.status === 429) {
         // Establish the shared cooldown before releasing the semaphore slot so
         // queued calls cannot start during Riot's Retry-After window.
@@ -144,7 +162,8 @@ export class RateLimiter {
   }
 
   /**
-   * Execute an HTTP request with concurrency management and automatic retry on 429 / 503.
+   * Execute an HTTP request with concurrency management and automatic retry
+   * on 429 and expected upstream outages (502/503/504/520/522/524).
    */
   public async execute(
     url: string,
@@ -165,15 +184,23 @@ export class RateLimiter {
 
       const status = response.status;
 
-      // 429: Rate Limit Exceeded
-      if (status === 429 && attempts <= maxRetries) {
-        continue;
-      }
+      // 429 (Rate Limit Exceeded) and expected upstream outages
+      // (502/503/504/520/522/524) are retried with backoff.
+      const isRetryableStatus =
+        status === 429 || isExpectedUpstreamError(status);
+      if (isRetryableStatus && attempts <= maxRetries) {
+        if (status === 429) {
+          logger.info(
+            `429 from Riot API (attempt ${attempts.toString()}/${maxRetries.toString()}) for ${url}; cooldown extended via Retry-After`,
+          );
+          continue;
+        }
 
-      // 503: Service Unavailable (Riot API server overload / temporary outage)
-      if (status === 503 && attempts <= maxRetries) {
         const baseDelayMs = 1000 * 2 ** (attempts - 1);
         const delayMs = baseDelayMs + this.runtime.random() * 300;
+        logger.warn(
+          `${status.toString()} from Riot API (expected upstream outage, attempt ${attempts.toString()}/${maxRetries.toString()}) for ${url}; retrying in ${delayMs.toFixed(0)}ms`,
+        );
         await this.runtime.sleep(delayMs);
         continue;
       }
