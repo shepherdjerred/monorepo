@@ -1,17 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import * as echarts from "echarts";
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import {
-  VISUALIZATION_BODY_FONT,
-  VISUALIZATION_DISPLAY_FONT,
-} from "@scout-for-lol/report/browser";
 import { TimelineFrameTable } from "#src/components/match/timeline-frame-table.tsx";
+import { TimelineCharts } from "#src/components/match/match-timeline-charts.tsx";
 import {
   TimelinePagination,
   type TimelineCursor,
@@ -21,8 +17,58 @@ import { useTRPC, type RouterOutputs } from "#src/lib/query/trpc.ts";
 type Coverage =
   RouterOutputs["consumerMatch"]["detail"]["timeline"]["coverage"];
 type TimelineEvent = RouterOutputs["consumerMatch"]["events"]["rows"][number];
-type ChartPoint =
-  RouterOutputs["consumerMatch"]["chartSeries"]["points"][number];
+type TimelineFrame = RouterOutputs["consumerMatch"]["frames"]["rows"][number];
+
+type TimelineData = {
+  events: {
+    data:
+      { nextCursor: TimelineCursor | null; rows: TimelineEvent[] } | undefined;
+    isError: boolean;
+    isFetching: boolean;
+  };
+  frames: {
+    data:
+      { nextCursor: TimelineCursor | null; rows: TimelineFrame[] } | undefined;
+    isError: boolean;
+    isFetching: boolean;
+  };
+  chart: {
+    data:
+      | {
+          points: RouterOutputs["consumerMatch"]["chartSeries"]["points"];
+        }
+      | undefined;
+    isError: boolean;
+  };
+};
+
+type TimelineState = {
+  eventType: string | undefined;
+  participantId: number | undefined;
+  eventCursors: (TimelineCursor | undefined)[];
+  frameCursors: (TimelineCursor | undefined)[];
+  eventPage: number;
+  framePage: number;
+  setEventType: (value: string | undefined) => void;
+  setParticipantId: (value: number | undefined) => void;
+  setEventCursors: (
+    value:
+      | (TimelineCursor | undefined)[]
+      | ((
+          value: (TimelineCursor | undefined)[],
+        ) => (TimelineCursor | undefined)[]),
+  ) => void;
+  setFrameCursors: (
+    value:
+      | (TimelineCursor | undefined)[]
+      | ((
+          value: (TimelineCursor | undefined)[],
+        ) => (TimelineCursor | undefined)[]),
+  ) => void;
+  setEventPage: (value: number | ((value: number) => number)) => void;
+  setFramePage: (value: number | ((value: number) => number)) => void;
+  resetPages: () => void;
+};
 
 const EVENT_TYPES = [
   "CHAMPION_KILL",
@@ -58,66 +104,97 @@ export function retainedEventFields(event: object): [string, string][] {
     .map(([key, value]) => [key.replaceAll("_", " "), String(value)]);
 }
 
-export function MatchTimeline(props: {
-  playerId: number;
+type MatchTimelineProps = {
+  source: { kind: "consumer"; playerId: number } | { kind: "explore" };
   matchId: string;
   coverage: Coverage;
   keyEvents: TimelineEvent[];
   participantIds: number[];
-}) {
-  const trpc = useTRPC();
-  const [eventType, setEventType] = useState<string | undefined>();
-  const [participantId, setParticipantId] = useState<number | undefined>();
-  const [eventCursors, setEventCursors] = useState<
-    (TimelineCursor | undefined)[]
-  >([undefined]);
-  const [frameCursors, setFrameCursors] = useState<
-    (TimelineCursor | undefined)[]
-  >([undefined]);
-  const [eventPage, setEventPage] = useState(0);
-  const [framePage, setFramePage] = useState(0);
-  const baseInput = { playerId: props.playerId, matchId: props.matchId };
-  const events = useQuery(
-    trpc.consumerMatch.events.queryOptions(
-      {
-        ...baseInput,
-        ...(eventType === undefined ? {} : { eventTypes: [eventType] }),
-        ...(participantId === undefined
-          ? {}
-          : { participantIds: [participantId] }),
-        ...(eventCursors[eventPage] === undefined
-          ? {}
-          : { cursor: eventCursors[eventPage] }),
-      },
-      {
-        enabled: props.coverage !== null,
-        placeholderData: keepPreviousData,
-      },
-    ),
-  );
-  const frames = useQuery(
-    trpc.consumerMatch.frames.queryOptions(
-      {
-        ...baseInput,
-        ...(participantId === undefined
-          ? {}
-          : { participantIds: [participantId] }),
-        ...(frameCursors[framePage] === undefined
-          ? {}
-          : { cursor: frameCursors[framePage] }),
-      },
-      {
-        enabled: props.coverage !== null,
-        placeholderData: keepPreviousData,
-      },
-    ),
-  );
-  const chart = useQuery(
-    trpc.consumerMatch.chartSeries.queryOptions(baseInput, {
-      enabled: props.coverage !== null,
-    }),
-  );
+};
 
+export function MatchTimeline(props: MatchTimelineProps) {
+  if (props.source.kind === "consumer") {
+    return (
+      <ConsumerMatchTimeline {...props} playerId={props.source.playerId} />
+    );
+  }
+
+  return <ExploreMatchTimeline {...props} />;
+}
+
+function ConsumerMatchTimeline(
+  props: Omit<MatchTimelineProps, "source"> & { playerId: number },
+) {
+  const trpc = useTRPC();
+  const state = useTimelineState();
+  const baseInput = { playerId: props.playerId, matchId: props.matchId };
+  const data: TimelineData = {
+    events: useQuery(
+      trpc.consumerMatch.events.queryOptions(
+        timelineEventsInput(baseInput, state),
+        timelineQueryOptions(props.coverage),
+      ),
+    ),
+    frames: useQuery(
+      trpc.consumerMatch.frames.queryOptions(
+        timelineFramesInput(baseInput, state),
+        timelineQueryOptions(props.coverage),
+      ),
+    ),
+    chart: useQuery(
+      trpc.consumerMatch.chartSeries.queryOptions(baseInput, {
+        enabled: props.coverage !== null,
+      }),
+    ),
+  };
+  return <MatchTimelineContent {...props} data={data} state={state} />;
+}
+
+function ExploreMatchTimeline(props: Omit<MatchTimelineProps, "source">) {
+  const trpc = useTRPC();
+  const state = useTimelineState();
+  const baseInput = { matchId: props.matchId };
+  const data: TimelineData = {
+    events: useQuery(
+      trpc.exploreMatch.events.queryOptions(
+        timelineEventsInput(baseInput, state),
+        timelineQueryOptions(props.coverage),
+      ),
+    ),
+    frames: useQuery(
+      trpc.exploreMatch.frames.queryOptions(
+        timelineFramesInput(baseInput, state),
+        timelineQueryOptions(props.coverage),
+      ),
+    ),
+    chart: useQuery(
+      trpc.exploreMatch.chartSeries.queryOptions(baseInput, {
+        enabled: props.coverage !== null,
+      }),
+    ),
+  };
+  return <MatchTimelineContent {...props} data={data} state={state} />;
+}
+
+function MatchTimelineContent(
+  props: Omit<MatchTimelineProps, "source"> & {
+    data: TimelineData;
+    state: TimelineState;
+  },
+) {
+  const {
+    eventType,
+    setEventType,
+    participantId,
+    setParticipantId,
+    setEventCursors,
+    setFrameCursors,
+    eventPage,
+    setEventPage,
+    framePage,
+    setFramePage,
+    resetPages,
+  } = props.state;
   if (props.coverage === null) {
     return (
       <Card>
@@ -133,13 +210,6 @@ export function MatchTimeline(props: {
     );
   }
 
-  function resetPages(): void {
-    setEventCursors([undefined]);
-    setFrameCursors([undefined]);
-    setEventPage(0);
-    setFramePage(0);
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -151,14 +221,14 @@ export function MatchTimeline(props: {
         </p>
       </div>
 
-      {chart.isError ? (
+      {props.data.chart.isError ? (
         <p className="text-sm text-scout-danger">
           Timeline charts did not load.
         </p>
-      ) : chart.data === undefined ? (
+      ) : props.data.chart.data === undefined ? (
         <p className="text-sm text-scout-subtle">Loading timeline charts…</p>
       ) : (
-        <TimelineCharts points={chart.data.points} />
+        <TimelineCharts points={props.data.chart.data.points} />
       )}
 
       <section className="space-y-3">
@@ -236,11 +306,11 @@ export function MatchTimeline(props: {
           Every retained event is available in chronological 100-row pages.
           Unfamiliar Riot types show all non-null retained fields.
         </p>
-        {events.isError ? (
+        {props.data.events.isError ? (
           <p className="text-sm text-scout-danger">Events did not load.</p>
         ) : (
           <div className="space-y-2">
-            {(events.data?.rows ?? []).map((event) => (
+            {(props.data.events.data?.rows ?? []).map((event) => (
               <details key={event.event_id} className="rounded-md border p-3">
                 <summary className="cursor-pointer text-sm font-medium">
                   {eventTitle(event)}
@@ -257,8 +327,8 @@ export function MatchTimeline(props: {
             ))}
             <TimelinePagination
               page={eventPage}
-              pending={events.isFetching}
-              nextCursor={events.data?.nextCursor}
+              pending={props.data.events.isFetching}
+              nextCursor={props.data.events.data?.nextCursor}
               onPrevious={() => {
                 setEventPage((page) => page - 1);
               }}
@@ -280,11 +350,11 @@ export function MatchTimeline(props: {
           Every retained frame field is shown in chronological 100-row pages.
         </p>
         <TimelineFrameTable
-          rows={frames.data?.rows ?? []}
-          error={frames.isError}
-          pending={frames.isFetching}
+          rows={props.data.frames.data?.rows ?? []}
+          error={props.data.frames.isError}
+          pending={props.data.frames.isFetching}
           page={framePage}
-          nextCursor={frames.data?.nextCursor}
+          nextCursor={props.data.frames.data?.nextCursor}
           onPrevious={() => {
             setFramePage((page) => page - 1);
           }}
@@ -301,119 +371,74 @@ export function MatchTimeline(props: {
   );
 }
 
-function TimelineCharts(props: { points: ChartPoint[] }) {
-  const teamIds = [
-    ...new Set(
-      props.points.flatMap((point) =>
-        point.teamGold.map((team) => team.teamId),
-      ),
-    ),
-  ];
-  const timeLabels = props.points.map((point) =>
-    Math.round(point.timestampMs / 60_000),
-  );
-  const teamSeries = teamIds.map((teamId) => ({
-    name: `Team ${teamId.toString()}`,
-    type: "line" as const,
-    showSymbol: false,
-    data: props.points.map(
-      (point) =>
-        point.teamGold.find((team) => team.teamId === teamId)?.gold ?? null,
-    ),
-  }));
-  const playerSeries = [
-    {
-      name: "Gold",
-      type: "line" as const,
-      showSymbol: false,
-      data: props.points.map((point) => point.selectedGold),
+function useTimelineState(): TimelineState {
+  const [eventType, setEventType] = useState<string | undefined>();
+  const [participantId, setParticipantId] = useState<number | undefined>();
+  const [eventCursors, setEventCursors] = useState<
+    (TimelineCursor | undefined)[]
+  >([undefined]);
+  const [frameCursors, setFrameCursors] = useState<
+    (TimelineCursor | undefined)[]
+  >([undefined]);
+  const [eventPage, setEventPage] = useState(0);
+  const [framePage, setFramePage] = useState(0);
+
+  return {
+    eventType,
+    participantId,
+    eventCursors,
+    frameCursors,
+    eventPage,
+    framePage,
+    setEventType,
+    setParticipantId,
+    setEventCursors,
+    setFrameCursors,
+    setEventPage,
+    setFramePage,
+    resetPages: () => {
+      setEventCursors([undefined]);
+      setFrameCursors([undefined]);
+      setEventPage(0);
+      setFramePage(0);
     },
-    {
-      name: "XP",
-      type: "line" as const,
-      showSymbol: false,
-      data: props.points.map((point) => point.selectedXp),
-    },
-  ];
-  return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <TimelineChart
-        title="Team gold"
-        labels={timeLabels}
-        series={teamSeries}
-      />
-      <TimelineChart
-        title="Selected-player progression"
-        labels={timeLabels}
-        series={playerSeries}
-      />
-    </div>
-  );
+  };
 }
 
-function TimelineChart(props: {
-  title: string;
-  labels: number[];
-  series: {
-    name: string;
-    type: "line";
-    showSymbol: boolean;
-    data: (number | null)[];
-  }[];
-}) {
-  const container = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    if (container.current === null) return;
-    const chart = echarts.init(container.current);
-    chart.setOption({
-      textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-      title: {
-        text: props.title,
-        left: 12,
-        top: 8,
-        textStyle: {
-          fontSize: 14,
-          fontFamily: VISUALIZATION_DISPLAY_FONT,
-          fontWeight: 700,
-        },
-      },
-      tooltip: {
-        trigger: "axis",
-        textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-      },
-      legend: {
-        top: 34,
-        textStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-      },
-      grid: { top: 70, left: 52, right: 18, bottom: 36 },
-      xAxis: {
-        type: "category",
-        name: "min",
-        data: props.labels,
-        nameTextStyle: { fontFamily: VISUALIZATION_BODY_FONT },
-        axisLabel: { fontFamily: VISUALIZATION_BODY_FONT },
-      },
-      yAxis: {
-        type: "value",
-        axisLabel: { fontFamily: VISUALIZATION_BODY_FONT },
-      },
-      series: props.series,
-    });
-    const observer = new ResizeObserver(() => {
-      chart.resize();
-    });
-    observer.observe(container.current);
-    return () => {
-      observer.disconnect();
-      chart.dispose();
-    };
-  }, [props.labels, props.series, props.title]);
-  return (
-    <div
-      ref={container}
-      className="h-72 rounded-md border bg-card"
-      role="img"
-      aria-label={props.title}
-    />
-  );
+function timelineQueryOptions(coverage: Coverage) {
+  return {
+    enabled: coverage !== null,
+    placeholderData: keepPreviousData,
+  };
+}
+
+function timelineEventsInput<T extends { matchId: string }>(
+  baseInput: T,
+  state: TimelineState,
+) {
+  return {
+    ...baseInput,
+    ...(state.eventType === undefined ? {} : { eventTypes: [state.eventType] }),
+    ...(state.participantId === undefined
+      ? {}
+      : { participantIds: [state.participantId] }),
+    ...(state.eventCursors[state.eventPage] === undefined
+      ? {}
+      : { cursor: state.eventCursors[state.eventPage] }),
+  };
+}
+
+function timelineFramesInput<T extends { matchId: string }>(
+  baseInput: T,
+  state: TimelineState,
+) {
+  return {
+    ...baseInput,
+    ...(state.participantId === undefined
+      ? {}
+      : { participantIds: [state.participantId] }),
+    ...(state.frameCursors[state.framePage] === undefined
+      ? {}
+      : { cursor: state.frameCursors[state.framePage] }),
+  };
 }

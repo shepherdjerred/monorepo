@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import {
   ReportAiPreviewSummarySchema,
   type ReportAiPreviewSummary,
+  type ExploreStreamEvent,
 } from "@scout-for-lol/data";
 import type { ExploreAgentParams } from "#src/explore/agent.ts";
 import {
@@ -60,11 +61,13 @@ const successfulAgent = async (params: ExploreAgentParams) => {
       title: "Most frequent winners",
       queryText: "SELECT champion, wins FROM match_participants",
       includeVisualization: false,
+      matchCards: [],
       caveats: ["Tracked matches only."],
       followUps: [],
     },
     preview: null,
     visualization: null,
+    matchCards: [],
   };
 };
 
@@ -87,11 +90,13 @@ const bucksOnlyAgent = async (params: ExploreAgentParams) => {
       title: "Monthly Bryan Bucks net",
       queryText: null,
       includeVisualization: false,
+      matchCards: [],
       caveats: [],
       followUps: [],
     },
     preview: null,
     visualization: null,
+    matchCards: [],
   };
 };
 
@@ -141,6 +146,7 @@ async function preparedTurn() {
 describe("shared persisted Explore turn", () => {
   test("persists a successful answer, title, trace, and charged quota", async () => {
     const prepared = await preparedTurn();
+    const events: ExploreStreamEvent[] = [];
 
     const terminal = await runPersistedExploreTurn(
       {
@@ -148,7 +154,10 @@ describe("shared persisted Explore turn", () => {
         identity: { userId },
         guildIds: [],
         surface: "web",
-        emit: () => Promise.resolve(),
+        emit: (event) => {
+          events.push(event);
+          return Promise.resolve();
+        },
       },
       {
         client: prisma,
@@ -160,6 +169,16 @@ describe("shared persisted Explore turn", () => {
 
     expect(terminal.type).toBe("final");
     expect(terminal.outcome).toBe("succeeded");
+    if (terminal.type !== "final") {
+      throw new Error("Expected a final Explore terminal event.");
+    }
+    expect(terminal.message.matchCards).toEqual([]);
+    const streamFinal = events.find((event) => event.type === "final");
+    expect(streamFinal).not.toBeUndefined();
+    if (streamFinal?.type !== "final") {
+      throw new Error("Expected the final event to be emitted.");
+    }
+    expect(streamFinal.message).not.toHaveProperty("matchCards");
     const transcript = await loadExploreTranscript(
       prisma,
       prepared.started.conversationId,

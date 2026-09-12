@@ -4,6 +4,8 @@ import {
   ExploreAnswerWireSchema,
 } from "#src/model/reports/explore-answer.ts";
 import {
+  ExploreMessageSchema,
+  ExploreStreamMessageSchema,
   ExploreTraceEntrySchema,
   parseExploreStreamEvent,
 } from "#src/model/reports/explore.ts";
@@ -37,11 +39,45 @@ describe("ExploreAnswerSchema", () => {
           title: null,
           queryText: null,
           includeVisualization: true,
+          matchCards: [],
           caveats: [],
           followUps: [],
         }),
       ).includeVisualization,
     ).toBe(true);
+  });
+
+  test("limits model-selected cards to five with at most one large card", () => {
+    const answer = {
+      answer: "The match was a bloodbath.",
+      title: null,
+      queryText: "SELECT match_id FROM matches",
+      includeVisualization: false,
+      caveats: [],
+      followUps: [],
+    };
+    expect(
+      ExploreAnswerWireSchema.safeParse({
+        ...answer,
+        matchCards: [
+          { matchId: "NA1_1", size: "L" },
+          { matchId: "NA1_2", size: "L" },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      ExploreAnswerWireSchema.safeParse({
+        ...answer,
+        matchCards: [
+          { matchId: "NA1_1", size: "S" },
+          { matchId: "NA1_2", size: "S" },
+          { matchId: "NA1_3", size: "S" },
+          { matchId: "NA1_4", size: "S" },
+          { matchId: "NA1_5", size: "S" },
+          { matchId: "NA1_6", size: "S" },
+        ],
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -67,6 +103,21 @@ describe("ExploreTraceEntrySchema", () => {
 });
 
 describe("parseExploreStreamEvent", () => {
+  test("keeps final stream messages compatible with pre-card tabs", () => {
+    const message = ExploreMessageSchema.parse({
+      id: "018f7ee5-2d88-7d88-b5ea-1f82c55367b2",
+      role: "assistant",
+      content: "The match was a bloodbath.",
+      createdAt: "2026-09-10T04:00:00.000Z",
+    });
+    const { matchCards: _matchCards, ...streamMessage } = message;
+
+    expect(ExploreStreamMessageSchema.parse(streamMessage)).not.toHaveProperty(
+      "matchCards",
+    );
+    expect(() => ExploreStreamMessageSchema.parse(message)).toThrow();
+  });
+
   test("parses a known event", () => {
     const event = parseExploreStreamEvent({
       type: "answer_delta",

@@ -16,122 +16,32 @@
     "Q": {
       "name": "Noxious Blast",
       "maxRank": 5,
-      "cooldownByRank": [
-        3.5,
-        3.5,
-        3.5,
-        3.5,
-        3.5
-      ],
-      "costByRank": [
-        50,
-        55,
-        60,
-        65,
-        70
-      ],
+      "cooldownByRank": [3.5, 3.5, 3.5, 3.5, 3.5],
+      "costByRank": [50, 55, 60, 65, 70],
       "costType": "Mana",
-      "rangeByRank": [
-        850,
-        850,
-        850,
-        850,
-        850
-      ],
+      "rangeByRank": [850, 850, 850, 850, 850],
       "dataValues": {
-        "BaseDamage": [
-          75,
-          110,
-          145,
-          180,
-          215
-        ],
-        "PoisonDuration": [
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "ChampHitMSBonus": [
-          30,
-          35,
-          40,
-          45,
-          50
-        ],
-        "ChampHitMSDuration": [
-          3,
-          3,
-          3,
-          3,
-          3
-        ],
-        "NumDamageTicks": [
-          7,
-          7,
-          7,
-          7,
-          7
-        ]
+        "BaseDamage": [65, 100, 135, 170, 205],
+        "PoisonDuration": [3, 3, 3, 3, 3],
+        "ChampHitMSBonus": [30, 35, 40, 45, 50],
+        "ChampHitMSDuration": [3, 3, 3, 3, 3],
+        "NumDamageTicks": [7, 7, 7, 7, 7]
       },
-      "resolvedDescription": "Cassiopeia blasts noxious gas, Poisoning enemies and dealing 75/110/145/180/215 (+65% AP) magic damage over 3 seconds. Hitting a champion grants Cassiopeia 30/35/40/45/50% Move Speed decaying over 3 seconds.",
+      "resolvedDescription": "Cassiopeia blasts noxious gas, Poisoning enemies and dealing 65/100/135/170/205 (+75% AP) magic damage over 3 seconds. Hitting a champion grants Cassiopeia 30/35/40/45/50% Move Speed decaying over 3 seconds.",
       "unresolved": []
     },
     "W": {
       "name": "Miasma",
       "maxRank": 5,
-      "cooldownByRank": [
-        24,
-        22,
-        20,
-        18,
-        16
-      ],
-      "costByRank": [
-        70,
-        75,
-        80,
-        85,
-        90
-      ],
+      "cooldownByRank": [24, 22, 20, 18, 16],
+      "costByRank": [70, 75, 80, 85, 90],
       "costType": "Mana",
-      "rangeByRank": [
-        700,
-        700,
-        700,
-        700,
-        700
-      ],
+      "rangeByRank": [700, 700, 700, 700, 700],
       "dataValues": {
-        "BaseDamage": [
-          20,
-          25,
-          30,
-          35,
-          40
-        ],
-        "SlowPercent": [
-          40,
-          50,
-          60,
-          70,
-          80
-        ],
-        "PoisonDuration": [
-          1,
-          1,
-          1,
-          1,
-          1
-        ],
-        "CloudDuration": [
-          5,
-          5,
-          5,
-          5,
-          5
-        ]
+        "BaseDamage": [20, 25, 30, 35, 40],
+        "SlowPercent": [40, 50, 60, 70, 80],
+        "PoisonDuration": [1, 1, 1, 1, 1],
+        "CloudDuration": [5, 5, 5, 5, 5]
       },
       "resolvedDescription": "Cassiopeia spews venom, leaving toxic clouds for 5 seconds. Enemies in the clouds take 20/25/30/35/40 (+10% AP) magic damage per second, are Poisoned, Grounded, and Slowed by 40/50/60/70/80%.",
       "unresolved": []
@@ -139,110 +49,34 @@
     "E": {
       "name": "Twin Fang",
       "maxRank": 5,
-      "cooldownByRank": [
-        0.75,
-        0.75,
-        0.75,
-        0.75,
-        0.75
-      ],
-      "costByRank": [
-        40,
-        40,
-        40,
-        40,
-        40
-      ],
+      "cooldownByRank": [0.75, 0.75, 0.75, 0.75, 0.75],
+      "costByRank": [45, 45, 45, 45, 45],
       "costType": "Mana",
-      "rangeByRank": [
-        700,
-        700,
-        700,
-        700,
-        700
-      ],
+      "rangeByRank": [700, 700, 700, 700, 700],
       "dataValues": {
-        "BasicAPRatio": [
-          0.1,
-          0.1,
-          0.1,
-          0.1,
-          0.1
-        ],
-        "BonusDamage": [
-          20,
-          45,
-          70,
-          95,
-          120
-        ],
-        "BonusAPRatio": [
-          0.55,
-          0.55,
-          0.55,
-          0.55,
-          0.55
-        ],
-        "HealRatio": [
-          0.1,
-          0.115,
-          0.13,
-          0.145,
-          0.16
-        ],
-        "MinionReductionModifier": [
-          0.25,
-          0.25,
-          0.25,
-          0.25,
-          0.25
-        ]
+        "BasicAPRatio": [0.2, 0.2, 0.2, 0.2, 0.2],
+        "BonusDamage": [20, 45, 70, 95, 120],
+        "BonusAPRatio": [0.45, 0.45, 0.45, 0.45, 0.45],
+        "HealRatio": [0.1, 0.115, 0.13, 0.145, 0.16],
+        "MinionReductionModifier": [0.25, 0.25, 0.25, 0.25, 0.25]
       },
-      "resolvedDescription": "Cassiopeia launches deadly fangs, dealing 52-120 (based on level) (+10% AP) magic damage. If the enemy is Poisoned, they take an additional 20/45/70/95/120 (+55% AP) magic damage and Cassiopeia restores 10/11.5/13/14.5/16% AP Health, reduced to 2.5/2.875/3.25/3.625/4% AP Health against lane minions and small monsters. If this kills the target, Cassiopeia restores 40 Mana.",
+      "resolvedDescription": "Cassiopeia launches deadly fangs, dealing 50-119.9992 (based on level) (+20% AP) magic damage. If the enemy is Poisoned, they take an additional 20/45/70/95/120 (+45% AP) magic damage and Cassiopeia restores 10/11.5/13/14.5/16% AP Health, reduced to 2.5/2.875/3.25/3.625/4% AP Health against lane minions and small monsters. If this kills the target, Cassiopeia restores 45 Mana.",
       "unresolved": []
     },
     "R": {
       "name": "Petrifying Gaze",
       "maxRank": 3,
-      "cooldownByRank": [
-        120,
-        100,
-        80
-      ],
-      "costByRank": [
-        100,
-        100,
-        100
-      ],
+      "cooldownByRank": [120, 100, 80],
+      "costByRank": [100, 100, 100],
       "costType": "Mana",
-      "rangeByRank": [
-        825,
-        825,
-        825
-      ],
+      "rangeByRank": [825, 825, 825],
       "dataValues": {
-        "RCCDuration": [
-          2,
-          2,
-          2
-        ],
-        "RSlowPercent": [
-          40,
-          40,
-          40
-        ],
-        "RBaseDamage": [
-          150,
-          250,
-          350
-        ],
-        "APRatio": [
-          0.5,
-          0.5,
-          0.5
-        ]
+        "RCCDuration": [2, 2, 2],
+        "RSlowPercent": [40, 40, 40],
+        "RBaseDamage": [125, 225, 325],
+        "APRatio": [0.75, 0.75, 0.75]
       },
-      "resolvedDescription": "Cassiopeia unleashes a petrifying gaze, dealing 150/250/350 (+50% AP) magic damage and Stunning enemies facing her for 2 seconds. Enemies facing away are Slowed by 40% decaying over the same duration instead.",
+      "resolvedDescription": "Cassiopeia unleashes a petrifying gaze, dealing 125/225/325 (+75% AP) magic damage and Stunning enemies facing her for 2 seconds. Enemies facing away are Slowed by 40% decaying over the same duration instead.",
       "unresolved": []
     }
   }

@@ -89,11 +89,13 @@ function successfulResult(answer: string): ExploreAgentResult {
       title: null,
       queryText: null,
       includeVisualization: false,
+      matchCards: [],
       caveats: [],
       followUps: [],
     },
     preview: null,
     visualization: null,
+    matchCards: [],
   };
 }
 

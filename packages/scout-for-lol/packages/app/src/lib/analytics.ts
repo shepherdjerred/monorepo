@@ -481,9 +481,13 @@ export function normalizePath(pathname: string): string {
     // already-templated `s` segment. The token is the share credential — it
     // is templated away before anything reaches PostHog.
     .replace(/^\/explore\/s\/[^/]+/, "/explore/s/:shareToken")
-    .replace(/^\/explore\/(?!s(?:\/|$))[^/]+/, "/explore/:conversationId");
+    .replace(/^\/explore\/matches\/[^/]+/, "/explore/matches/:matchId")
+    .replace(
+      /^\/explore\/(?!s(?:\/|$)|matches(?:\/|$))[^/]+/,
+      "/explore/:conversationId",
+    );
   const knownRoute =
-    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
+    /^(?:\/|\/(?:login|welcome|installed|manage)|\/explore(?:\/(?::conversationId|s\/:shareToken|matches\/:matchId))?|\/players(?:\/:playerId(?:\/matches\/:matchId)?)?|\/champions\/:championId|\/halls\/:guildId|\/challenges(?:\/(?:drafts\/:draftId|:templateId))?|\/challenge-runs\/:runId|\/duels\/:guildId(?:\/(?:events\/:eventId(?:\/standings)?|series\/:seriesId|head-to-head))?|\/bucks(?:\/(?:dares(?:\/:dareId)?|history|leaderboard|settings))?|\/g\/:guildId(?:\/(?:access|audit|subscriptions|players(?:\/:alias(?:\/manage)?)?|competitions(?:\/(?:new|:competitionId(?:\/edit)?))?|reports(?:\/(?:new|help|:reportId(?:\/edit)?))?|hall-of-fame)?)?)$/;
   return knownRoute.test(normalized) ? normalized : "/not-found";
 }
 

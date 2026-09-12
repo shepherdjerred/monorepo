@@ -78,6 +78,7 @@ describe("explore stream mapping", () => {
         title: "Champion win-rate leaders",
         queryText: null,
         includeVisualization: false,
+        matchCards: [],
         caveats: [],
         followUps: [],
       }),

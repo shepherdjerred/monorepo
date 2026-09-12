@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Seraphine": {
       "id": "Seraphine",
@@ -750,16 +750,15 @@
           "description": "Seraphine deals damage and impairs the movement of enemies in a line.",
           "tooltip": "Seraphine unleashes a heavy soundwave, dealing <magicDamage>{{ finaldamage }} magic damage</magicDamage> to enemies in a line and <status>Slowing</status> them by {{ slowvalue }}% for {{ slowduration }} seconds.<br /><br />Enemies that are already <status>Slowed</status> are <status>Rooted</status> instead, and <status>Immobilized</status> enemies are <status>Stunned</status>.{{ spellmodifierdescriptionappend }}",
           "leveltip": {
-            "label": ["Damage", "Slow Duration", "Cooldown"],
+            "label": ["Damage", "Slow Duration"],
             "effect": [
               "{{ basedamage }} -> {{ basedamageNL }}",
-              "{{ slowduration }} -> {{ slowdurationNL }}",
-              "{{ cooldown }} -> {{ cooldownNL }}"
+              "{{ slowduration }} -> {{ slowdurationNL }}"
             ]
           },
           "maxrank": 5,
-          "cooldown": [11, 10.5, 10, 9.5, 9],
-          "cooldownBurn": "11/10.5/10/9.5/9",
+          "cooldown": [11, 11, 11, 11, 11],
+          "cooldownBurn": "11",
           "cost": [60, 60, 60, 60, 60],
           "costBurn": "60",
           "datavalues": {},

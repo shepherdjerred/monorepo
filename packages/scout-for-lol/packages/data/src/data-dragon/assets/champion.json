@@ -1242,6 +1242,36 @@
       "key": "60026",
       "name": "Zilean",
       "modernKey": "26"
+    },
+    "Jade_Fiora": {
+      "id": "Jade_Fiora",
+      "key": "60114",
+      "name": "Fiora",
+      "modernKey": "114"
+    },
+    "Jade_Galio": {
+      "id": "Jade_Galio",
+      "key": "60003",
+      "name": "Galio",
+      "modernKey": "3"
+    },
+    "Jade_Poppy": {
+      "id": "Jade_Poppy",
+      "key": "60078",
+      "name": "Poppy",
+      "modernKey": "78"
+    },
+    "Jade_Shyvana": {
+      "id": "Jade_Shyvana",
+      "key": "60102",
+      "name": "Shyvana",
+      "modernKey": "102"
+    },
+    "Jade_XinZhao": {
+      "id": "Jade_XinZhao",
+      "key": "60005",
+      "name": "Xin Zhao",
+      "modernKey": "5"
     }
   }
 }

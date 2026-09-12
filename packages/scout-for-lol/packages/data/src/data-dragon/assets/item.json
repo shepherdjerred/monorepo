@@ -1595,7 +1595,7 @@
     },
     "3124": {
       "name": "Guinsoo's Rageblade",
-      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>30</attention> Ability Power<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Wrath</passive><br>Attacks deal <magicDamage>30 bonus magic damage <OnHit>On-Hit</OnHit></magicDamage>.<br><br><passive>Seething Strike</passive><br>Attacks grant <attackSpeed>8% Attack Speed</attackSpeed> for 3 seconds. (stacks 4 times). <br>While fully stacked, every third Attack applies <OnHit>On-Hit</OnHit> effects twice.</mainText>",
+      "description": "<mainText><stats><attention>30</attention> Attack Damage<br><attention>30</attention> Ability Power<br><attention>25%</attention> Attack Speed</stats><br><br><passive>Wrath</passive><br>Attacks deal <magicDamage>30 bonus magic damage <OnHit>On-Hit</OnHit></magicDamage>.<br><br><passive>Seething Strike</passive><br>Attacks grant <attackSpeed>8% Attack Speed</attackSpeed> for 4 seconds. (stacks 4 times). <br>While fully stacked, every third Attack applies <OnHit>On-Hit</OnHit> effects twice.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatMagicDamageMod": 30,
@@ -6558,7 +6558,7 @@
     },
     "773102": {
       "name": "Banshee's Veil",
-      "description": "<mainText><stats><attention>450</attention> Health<br><attention>55</attention> Magic Resist</stats><br><br><jadeUnique>Intangibility:</jadeUnique> Grants a <shield>Spell Shield</shield> that blocks the next enemy ability. This <shield>Shield</shield> refreshes after no damage is taken from enemy champions for 25 seconds.<br><jadeUnique>Shadow Mending:</jadeUnique> Grants <healing>9 Health Regen</healing> per 5 for up to 10 seconds after taking damage from an enemy champion or when the <shield>Spell Shield</shield> breaks.</mainText>",
+      "description": "<mainText><stats><attention>450</attention> Health<br><attention>55</attention> Magic Resist</stats><br><br><jadeUnique>Intangibility:</jadeUnique> Grants a <shield>Spell Shield</shield> that blocks the next enemy ability. This <shield>Shield</shield> refreshes after no damage is taken from enemy champions for 25 seconds.<br><jadeUnique>Shadow Mending:</jadeUnique> Grants <healing>45 Health Regen</healing> per 5 for up to 10 seconds after taking damage from an enemy champion or when the <shield>Spell Shield</shield> breaks.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 55,
@@ -6974,7 +6974,7 @@
     },
     "773211": {
       "name": "Spectre's Cowl",
-      "description": "<mainText><stats><attention>200</attention> Health<br><attention>45</attention> Magic Resist</stats><br><br><jadeUnique>Shadow Mending:</jadeUnique> Grants <healing>3 Health Regen</healing> per 5 seconds for up to 10 seconds after taking damage from an enemy champion.</mainText>",
+      "description": "<mainText><stats><attention>200</attention> Health<br><attention>45</attention> Magic Resist</stats><br><br><jadeUnique>Shadow Mending:</jadeUnique> Grants <healing>15 Health Regen</healing> per 5 seconds for up to 10 seconds after taking damage from an enemy champion.</mainText>",
       "plaintext": "",
       "stats": {
         "FlatSpellBlockMod": 45,

@@ -31,6 +31,7 @@ import { ConsumerPlayerSearch } from "#src/routes/consumer/consumer-player-searc
 import { ConsumerPlayerProfile } from "#src/routes/consumer/consumer-player-profile.tsx";
 import { ConsumerChampion } from "#src/routes/consumer/consumer-champion.tsx";
 import { ConsumerMatch } from "#src/routes/consumer/consumer-match.tsx";
+import { ExploreMatch } from "#src/routes/explore-match.tsx";
 import {
   ConsumerGuildWorkspace,
   ConsumerWorkspace,
@@ -226,6 +227,12 @@ export const routes: RouteObject[] = [
           {
             element: <ConsumerWorkspace />,
             children: [
+              {
+                path: "explore/matches/:matchId",
+                element: <ExploreMatch />,
+                loader: exploreLoader,
+                errorElement: <RouteErrorPanel />,
+              },
               {
                 path: "explore/:conversationId?",
                 element: <Explore />,

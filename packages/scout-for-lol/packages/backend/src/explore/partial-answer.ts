@@ -42,6 +42,7 @@ export async function persistPartialAnswer(
     title: null,
     queryText: null,
     includeVisualization: false,
+    matchCards: [],
     caveats: [
       input.stopped ? EXPLORE_STOPPED_CAVEAT : EXPLORE_INTERRUPTED_CAVEAT,
     ],

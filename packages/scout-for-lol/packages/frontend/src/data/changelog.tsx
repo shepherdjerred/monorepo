@@ -13,6 +13,25 @@ export function renderChangelogToHtml(content: ReactNode): string {
 
 export const changelog: ChangelogEntry[] = [
   buildChangelogEntry({
+    date: "2026 09 10",
+    banner: "Updated for League patch 26.18",
+    sections: [
+      {
+        title: "Game Data",
+        color: "indigo",
+        items: [
+          "Champion, item, summoner spell, and rune data refreshed for League patch 26.18",
+          "League Classic adds Fiora, Galio, Poppy, Shyvana, and Xin Zhao in their old-school kits.",
+          "ARAM Mayhem Augment pools reworked with new exclusion filters so champions get more relevant Augment offers.",
+        ],
+      },
+    ],
+    link: {
+      label: "Read Riot's full Patch 26.18 notes",
+      href: "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-18-notes",
+    },
+  }),
+  buildChangelogEntry({
     date: "2026 09 07",
     banner: "Updated for League patch 26.17",
     sections: [

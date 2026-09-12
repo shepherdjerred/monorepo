@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.17.1",
+  "version": "16.18.1",
   "data": {
     "Tristana": {
       "id": "Tristana",
@@ -553,6 +553,18 @@
           "name": "Rain Shepherd Tristana (Obsidian)",
           "chromas": false,
           "parentSkin": 70
+        },
+        {
+          "id": "18079",
+          "num": 79,
+          "name": "Risen Legend Tristana",
+          "chromas": false
+        },
+        {
+          "id": "18080",
+          "num": 80,
+          "name": "Immortalized Legend Tristana",
+          "chromas": false
         }
       ],
       "lore": "While many other yordles channel their energy into discovery, invention, or just plain mischief-making, Tristana was always inspired by the adventures of great warriors. She had heard much about Runeterra, its factions, and its wars, and believed her kind could become worthy of legend too. Setting foot in the world for the first time, she took up her trusty cannon Boomer, and now leaps into battle with steadfast courage and optimism.",

@@ -98,11 +98,13 @@ const successfulAgent = async (_params: ExploreAgentParams) => ({
     title: "Most frequent winners",
     queryText: "SELECT champion, wins FROM match_participants",
     includeVisualization: true,
+    matchCards: [],
     caveats: ["Tracked matches only."],
     followUps: [],
   },
   preview: null,
   visualization: scoutTestVisualization,
+  matchCards: [],
 });
 
 const interruptedAgent = async (params: ExploreAgentParams) => {

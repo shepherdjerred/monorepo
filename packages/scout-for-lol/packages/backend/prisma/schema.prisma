@@ -502,6 +502,8 @@ model ExploreMessage {
   /// JSON blobs matching ReportAiPreviewSummarySchema / VisualizationSnapshotSchema.
   preview        String?
   visualization  String?
+  /// JSON array matching ExploreMatchCardSchema; frozen with the assistant turn.
+  matchCards     String?
   /// JSON array of the tool calls this turn made, for the reasoning panel.
   trace          String?
   createdAt      DateTime @default(now())

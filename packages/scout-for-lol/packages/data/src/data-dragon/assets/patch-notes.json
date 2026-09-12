@@ -1,190 +1,142 @@
 {
-  "patch": "26.17",
-  "title": "League of Legends Patch 26.17 Notes",
-  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-17-notes",
-  "date": "2026 09 07",
-  "overview": "Patch 26.17 gives top lane a breather by nerfing Nasus and Vayne, hands melee AD carries (Irelia, Yasuo, Yone, Qiyana) real late-game scaling instead of snowball-or-lose, and trims the jungle/mid overperformers Xerath, Nocturne, and Graves. Sundered Sky takes a second nerf pass while Stormrazor gets a small buff, plus big League Classic, ARAM Mayhem, and Arena update rounds.",
+  "patch": "26.18",
+  "title": "League of Legends Patch 26.18 Notes",
+  "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-18-notes",
+  "date": "2026 09 10",
+  "overview": "Patch 26.18 celebrates Caps' Hall of Legends induction while trimming long-standing pro-meta staples on Summoner's Rift. Nautilus, Bard, Seraphine, Syndra and Zeri get taken down a peg, Viego, Master Yi, Ekko, Kassadin and Zaahen get buffed, and Cassiopeia is rebalanced away from a laning-dominant, pro-skewed profile. League Classic adds five reworked-era Demacian-flavored champions and ARAM Mayhem cleans up its Augment pools.",
   "themes": [
-    "Melee AD carry scaling buffs",
-    "Top lane nerfs",
-    "Jungle outlier nerfs",
-    "Mode balance (Classic/Arena/Mayhem)"
+    "Pro-meta support nerfs",
+    "Jungle/assassin buffs",
+    "Cassiopeia scaling adjustment",
+    "Classic champion drop"
   ],
   "summary": [
-    "Yasuo and Yone's crit damage penalty is halved (-10% ⇒ -5%), so early crit builds and late-game scaling both get noticeably stronger.",
-    "Vayne gets hit hard for top lane: Q Tumble now costs up to 46 mana at rank 1 and W Silver Bolts true damage drops to 4% at rank 1, while Nasus loses passive lifesteal (24% ⇒ 20% max).",
-    "Xerath, Nocturne, Graves, and Thresh all take nerfs after overperforming, with Graves losing big bonus AD ratios on Q.",
-    "Sundered Sky is nerfed again (400 HP, 40 AD) while Stormrazor climbs to 25% attack speed."
+    "Nautilus and Bard finally eat nerfs — Nautilus loses base AD and Q damage, Bard's armor drops, so your tank support isn't quite the free lane bully anymore.",
+    "Seraphine's E cooldown is flattened to 11s at all ranks, gutting bot-lane Seraphine's spam, and Zeri's W loses AD scaling on both the normal and wall-hit damage.",
+    "Buff patch for Viego, Master Yi, Ekko, Kassadin and Zaahen — Viego's passive heal now scales off AD/AP/attack speed/HP, Yi gets armor growth and faster Highlander, Kassadin gets a punchier Q and R.",
+    "Cassiopeia is retuned: weaker Q/R base damage and passive move speed, but much bigger AP ratios, so she's worse in lane and scarier when fed.",
+    "Syndra's W cooldown is up 1s at all ranks and her passive mana refund is capped lower, pushing her back toward Lost Chapter builds."
   ],
   "changelogHighlights": [
-    "ARAM: Mayhem adds new fighter Augments Ultra Hydra and Upgrade Death's Dance; Double Tap moves to Prismatic and Upgrade Infinity Edge loses its crit chance.",
-    "League Classic adds Champion and Role swapping in Champion Select plus the first in-client Council vote."
+    "League Classic adds Fiora, Galio, Poppy, Shyvana, and Xin Zhao in their old-school kits.",
+    "ARAM Mayhem Augment pools reworked with new exclusion filters so champions get more relevant Augment offers."
   ],
   "champions": [
     {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "Q mana cost down and W cooldown improved at higher ranks.",
-      "details": "Breath of Light costs 5 less mana per second at every rank and Astral Flight's cooldown drops to 14s at rank 5 (from 16s), making W the clear second max and letting you reposition far more freely.",
-      "name": "Aurelion Sol"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "minor",
-      "summary": "E - Vorpal Spikes gains 10 base damage per rank.",
-      "details": "Vorpal Spikes now deals 30-110 base damage per hit instead of 20-100, restoring some of the early trading power Cho'Gath lost to Hail of Blades and Hextech Rocketbelt nerfs.",
-      "name": "Cho'Gath"
-    },
-    {
       "direction": "nerf",
       "magnitude": "moderate",
-      "summary": "Q - End of the Line loses 10% bonus AD on both hits.",
-      "details": "Initial damage drops to 55% bonus AD and return damage to 45-105% bonus AD, so high-AD Graves builds snowball games less violently out of the jungle.",
-      "name": "Graves"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "Q AD ratio up to 80%, plus R and W AP ratio buffs.",
-      "details": "Bladesurge now scales at 80% AD (from 70%) so Irelia actually threatens as a fed carry, and R Vanguard's Edge standardizes to 100% AP with W damage reduction at 8% per 100 AP for ARAM/Arena builds.",
-      "name": "Irelia"
+      "summary": "Armor base and growth reduced",
+      "details": "Bard's armor drops from 34 + 5/level to 32 + 4.7/level, so the roaming support who was already hard to punish now actually dies to sustained trades — stop diving him and he'll notice.",
+      "name": "Bard"
     },
     {
       "direction": "adjustment",
-      "magnitude": "moderate",
-      "summary": "Attack speed ratio normalized, W and Mimic W AP ratios up to 90%.",
-      "details": "Her attack speed ratio jumps from 0.4 to 0.625 (with slower growth) while Distortion and Mimic: Distortion gain 10% AP scaling, pushing her back toward pure AP assassination builds.",
-      "name": "LeBlanc"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Passive lifesteal cut to 10/15/20%.",
-      "details": "Soul Eater lifesteal drops by 2-4% per rank, meaning Nasus top can no longer sustain through lane nearly as freely off minions while stacking Q.",
-      "name": "Nasus"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "minor",
-      "summary": "Base armor and health reduced.",
-      "details": "Armor falls 38 ⇒ 36 and health 655 ⇒ 640, adding real risk to Nocturne's early jungle clear and skirmishes before he unlocks his ult.",
-      "name": "Nocturne"
-    },
-    {
-      "direction": "adjustment",
-      "magnitude": "moderate",
-      "summary": "Q damage up but monster damage modifier down.",
-      "details": "Elemental Wrath gains 10 base damage and 5% bonus AD scaling while its monster modifier drops to 160%, deliberately steering her power back to mid lane and away from jungle.",
-      "name": "Qiyana"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "minor",
-      "summary": "E - Flay damage reduced by 10 base and 10% AP.",
-      "details": "Flay now deals 65-245 (+60% AP), a quiet trim to a support who's been climbing in both winrate and playrate.",
-      "name": "Thresh"
-    },
-    {
-      "direction": "buff",
-      "magnitude": "moderate",
-      "summary": "W - Frozen Domain attack speed up to 110% at max rank.",
-      "details": "Frozen Domain now grants 30/50/70/90/110% attack speed instead of maxing at 90%, giving Trundle far more personal damage inside his own zone.",
-      "name": "Trundle"
-    },
-    {
-      "direction": "nerf",
       "magnitude": "major",
-      "summary": "Q now costs escalating mana and W true damage gutted at early ranks.",
-      "details": "Tumble costs 46 mana at rank 1 (scaling down to 30) and Silver Bolts' true damage starts at 4% max HP with lower minimum damage, plus flatter health and attack speed growth — a targeted hit on Vayne top that still stings in lane anywhere.",
-      "name": "Vayne"
+      "summary": "Weaker base damage, much higher AP ratios",
+      "details": "Q damage drops 10 flat while its AP ratio goes 65%→75%, R drops 25 base but goes 50%→75% AP, E mana cost rises to 45 with its base/enhanced ratios reshuffled, and her passive move speed is trimmed — Cassio is far weaker in lane and significantly stronger once she has items.",
+      "name": "Cassiopeia"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Cheaper Q with better return damage",
+      "details": "Q - Timewinder costs 10 less mana at every rank and its return damage AP ratio goes 60%→70%, giving mid-lane Ekko more sustained poke and clear without touching his Hail of Blades burst pattern.",
+      "name": "Ekko"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "Stronger Q ratio and early Riftwalk damage",
+      "details": "Null Sphere's AP ratio rises 70%→80% and Riftwalk base damage goes 70/90/110 to 80/95/110, giving Kassadin more early-mid agency instead of purely praying for level 16.",
+      "name": "Kassadin"
+    },
+    {
+      "direction": "buff",
+      "magnitude": "moderate",
+      "summary": "More armor growth and faster Highlander",
+      "details": "Armor growth goes 4.5→5 per level and Highlander move speed rises to 40/50/60%, partially compensating him for the earlier Guinsoo's Rageblade bugfix and making his dives stick better.",
+      "name": "Master Yi"
     },
     {
       "direction": "nerf",
-      "magnitude": "minor",
-      "summary": "Base health and Q damage reduced.",
-      "details": "Health drops 596 ⇒ 575 and Arcanopulse loses 5 base damage per rank, a light tap on a mid laner with a very high ban rate.",
-      "name": "Xerath"
+      "magnitude": "moderate",
+      "summary": "Base AD and Q damage cut",
+      "details": "Base AD drops 61→58 and Dredge Line's damage at higher ranks falls to 85/125/165/205/245, so the year-long meta king trades less well in lane while keeping his CC lockdown identity.",
+      "name": "Nautilus"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "E cooldown flattened to 11s at all ranks",
+      "details": "Beat Drop no longer scales its cooldown down with rank (was 11 to 9s, now flat 11s), which is a direct hit to bot-lane Seraphine who maxes E early while barely touching the support build.",
+      "name": "Seraphine"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "W cooldown up, passive mana refund lowered",
+      "details": "Force of Will's cooldown rises by 1s at every rank and her passive splinter mana caps at 199 instead of 255, cutting into her solo-queue W damage share and forcing more mana investment like Lost Chapter.",
+      "name": "Syndra"
     },
     {
       "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Crit damage penalty halved from -10% to -5%.",
-      "details": "Way of the Wanderer now only reduces crit damage by 5%, which rewards early Infinity Edge-style crit builds over Blade of the Ruined King and gives Yasuo a genuine scaling curve.",
-      "name": "Yasuo"
+      "summary": "AD growth up and passive heal now scales",
+      "details": "Attack damage growth goes 3.5→4 and Sovereign's Domination's heal now explicitly scales with bonus AD, AP, bonus attack speed, and bonus HP, making both his standard and bruiser builds noticeably tankier in extended fights.",
+      "name": "Viego"
     },
     {
       "direction": "buff",
       "magnitude": "moderate",
-      "summary": "Crit damage penalty halved from -10% to -5%.",
-      "details": "Way of the Hunter's crit penalty drops to 5%, giving Yone the same crit-build payoff as Yasuo so he doesn't have to snowball to matter.",
-      "name": "Yone"
+      "summary": "Q2 damage nearly doubled plus resurrection QoL",
+      "details": "Q2 base damage jumps to 30/60/90/120/150 and Q now goes on cooldown immediately when he enters resurrection (or Guardian Angel / Zilean R), so he no longer wakes up with a dead Q.",
+      "name": "Zaahen"
+    },
+    {
+      "direction": "nerf",
+      "magnitude": "moderate",
+      "summary": "W loses AD scaling on both hits",
+      "details": "Ultrashock Laser's AD ratio drops from 120% to 100% total AD and its wall-hit version from 180% to 150%, pulling power out of Zeri's burst and waveclear before she becomes fully meta-dominant.",
+      "name": "Zeri"
     }
   ],
   "items": [
     {
       "direction": "buff",
       "magnitude": "minor",
-      "summary": "Attack speed increased to 25%.",
-      "details": "Stormrazor now gives 25% attack speed instead of 20%, an attempt to make it a real option again for crit and on-hit marksmen.",
-      "name": "Stormrazor"
-    },
-    {
-      "direction": "nerf",
-      "magnitude": "moderate",
-      "summary": "Health and AD both reduced.",
-      "details": "Sundered Sky drops to 400 health and 40 attack damage after last patch's nerf landed under target, so bruisers relying on it lose both durability and damage.",
-      "name": "Sundered Sky"
+      "summary": "Seething Strike stacks last longer",
+      "details": "Guinsoo's Rageblade stacks now persist 4s instead of 3s, compensating on-hit carries for the earlier double-hit bugfix and making it easier to keep stacks up between targets.",
+      "name": "Guinsoo's Rageblade"
     }
   ],
   "systems": [
     {
       "direction": "new",
-      "magnitude": "moderate",
-      "summary": "Two new fighter Augments and ADC Augment nerfs.",
-      "details": "ARAM: Mayhem adds Ultra Hydra (quest for Ravenous, Profane, and Titanic Hydra) and Upgrade Death's Dance, while Critical Missile caps at 3 missiles, Double Tap becomes Prismatic, and Upgrade Infinity Edge loses its crit chance.",
-      "area": "ARAM: Mayhem Augments"
-    },
-    {
-      "direction": "adjustment",
-      "magnitude": "moderate",
-      "summary": "Outlier tuning plus many Arena Mods removed.",
-      "details": "Ambessa and Zaahen lose damage, Zilean and Vel'Koz ults get longer cooldowns, while Garen, K'Sante, Kled, Tahm Kench, LeBlanc, Senna, and Teemo get buffs; Lord Dominik's Regards jumps to 45 AD, enchanter items are normalized to 10% heal/shield power, and Spectral Cutlass no longer double-dips Lethality.",
-      "area": "Arena"
-    },
-    {
-      "direction": "adjustment",
-      "magnitude": "moderate",
-      "summary": "Arena balance patches move to odd-numbered patches only.",
-      "details": "Arena is shifting back to an alternating schedule so builds and discoveries aren't balanced away as quickly.",
-      "area": "Arena patch cadence"
-    },
-    {
-      "direction": "buff",
       "magnitude": "major",
-      "summary": "Doubled IP and XP gains, cheaper runes, and two free Rune Pages.",
-      "details": "League Classic hands everyone 2 extra Rune Pages, more than doubles IP per game, doubles Classic XP, and cuts Quintessence cost to 1000 and minor runes to 500, dramatically speeding up rune access.",
-      "area": "League Classic progression"
-    },
-    {
-      "direction": "new",
-      "magnitude": "moderate",
-      "summary": "Champion and Role swapping added to Classic Champion Select, plus the first Council vote.",
-      "details": "Classic players can now request champion swaps and swap pick order during the Loadout phase, and the in-client Council vote goes live with voting power earned by playing.",
-      "area": "League Classic systems"
+      "summary": "Five old-school champions join League Classic",
+      "details": "Fiora (2012-2015), Galio (2010-2017), Poppy (2010-2015, complete with untouchable Diplomatic Immunity), Shyvana (2011-2013) and Xin Zhao (2012-2017) are added in their historical kits, alongside Anivia and Warwick/Nasus nerfs and Gangplank, Heimerdinger and Kayle buffs.",
+      "area": "League Classic"
     },
     {
       "direction": "adjustment",
       "magnitude": "moderate",
-      "summary": "About 20 Classic balance changes hitting the strongest and weakest picks.",
-      "details": "Ahri, Blitzcrank, Evelynn, Ezreal, Gragas, Tristana, Tryndamere, and Twitch all take nerfs (Tryndamere's max crit chance drops 50% ⇒ 30%) while Annie, Ashe, Dr. Mundo, Garen, Kayle, Lux, Miss Fortune, and Sivir get buffs and several major bugfixes.",
-      "area": "League Classic champions"
+      "summary": "Augment pools filtered per champion",
+      "details": "A new exclusion pool and a \"Not AP Ratio-less\" filter stop AP Augments like ADAPt, escAPADe and Phenomenal Evil from appearing on AD-only champions, Clown College is re-enabled, Spin to Win's R damage bonus goes 30%→50%, and Hydra augment abuse cases are patched.",
+      "area": "ARAM: Mayhem"
     },
     {
       "direction": "adjustment",
       "magnitude": "minor",
-      "summary": "Summoner's Rift art and lighting pulled closer to the original.",
-      "details": "Classic's Rift gets restored foliage and decals, updated map details, and reworked spawn and torch lighting for a more authentic old-Rift look.",
-      "area": "League Classic map art"
+      "summary": "First Classic Council poll results announced",
+      "details": "Player votes will bring Zz'Rot Portal, Cloak and Dagger and Moonflair Spellblade back to Classic, add always-visible modern jungle timers, and put a turtle in top river and a duck in bottom river in an upcoming patch.",
+      "area": "League Classic voting"
+    },
+    {
+      "direction": "adjustment",
+      "magnitude": "minor",
+      "summary": "Baron and Serpent's Fang bugs fixed",
+      "details": "Baron Nashor's max Void Corruption stacks were higher than intended and Serpent's Fang's Shield Reaver damage was incorrectly applying omnivamp — both are fixed, so anti-shield builds and late Baron fights behave as advertised.",
+      "area": "Objectives"
     }
   ]
 }

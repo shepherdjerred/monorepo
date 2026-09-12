@@ -76,6 +76,15 @@ describe("Arena queue resolution", () => {
   // 1700, so every 1750 game landed with queue=null and vanished from the
   // `queue IN ('arena')` reports. Both the direct id map and the CHERRY-mode
   // classifier must now recognise 1750.
+  test.each([1740, 1750])(
+    "treats reworked Arena queue %i as arena even with an unknown mode",
+    (queueId) => {
+      expect(parseQueueType(queueId)).toBe("arena");
+      expect(isArenaQueueOrMode(queueId, "UNKNOWN")).toBe(true);
+      expect(resolveQueueTypeFromGame(queueId, "UNKNOWN")).toBe("arena");
+    },
+  );
+
   test("treats the reworked queue 1750 (CHERRY) as arena", () => {
     expect(parseQueueType(1750)).toBe("arena");
     expect(isArenaQueueOrMode(1750, "CHERRY")).toBe(true);

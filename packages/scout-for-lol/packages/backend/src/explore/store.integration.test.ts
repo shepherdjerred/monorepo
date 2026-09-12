@@ -2,6 +2,7 @@ import { afterAll, beforeEach, describe, expect, test } from "vitest";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   ExploreTraceEntrySchema,
+  ExploreMatchCardSchema,
   type DiscordAccountId,
   type ExploreAttachPoint,
 } from "@scout-for-lol/data";
@@ -63,9 +64,77 @@ const ANSWER = {
   queryText:
     "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
   includeVisualization: false,
+  matchCards: [],
   caveats: ["Only 12 games."],
   followUps: ["How does that change by patch?"],
 };
+
+const MATCH_CARD = ExploreMatchCardSchema.parse({
+  size: "L",
+  match: {
+    matchId: "NA1_5635906026",
+    gameCreationMs: 1_788_627_280_000,
+    gameDurationSeconds: 1728,
+    queue: "Ranked Solo",
+    queueId: 420,
+    gameMode: "CLASSIC",
+    gameType: "MATCHED_GAME",
+    gameVersion: "16.17.1",
+    mapId: 11,
+    teams: [
+      {
+        teamId: 100,
+        win: true,
+        kills: 91,
+        objectives: { turrets: 8, inhibitors: 1, barons: 1, dragons: 3 },
+        participants: [
+          {
+            participantId: 1,
+            riotId: { gameName: "Blue", tagLine: "NA1" },
+            championId: 103,
+            championName: "Ahri",
+            position: "MIDDLE",
+            kills: 12,
+            deaths: 4,
+            assists: 10,
+            creepScore: 210,
+            goldEarned: 14_000,
+            visionScore: 22,
+            damageToChampions: 24_000,
+            killParticipation: 0.24,
+            damageShare: 0.21,
+            objectives: { turrets: 2, inhibitors: 0, barons: 0, dragons: 0 },
+          },
+        ],
+      },
+      {
+        teamId: 200,
+        win: false,
+        kills: 88,
+        objectives: { turrets: 3, inhibitors: 0, barons: 0, dragons: 1 },
+        participants: [
+          {
+            participantId: 6,
+            riotId: { gameName: "Red", tagLine: "NA1" },
+            championId: 157,
+            championName: "Yasuo",
+            position: "MIDDLE",
+            kills: 11,
+            deaths: 8,
+            assists: 8,
+            creepScore: 194,
+            goldEarned: 13_200,
+            visionScore: 18,
+            damageToChampions: 22_000,
+            killParticipation: 0.22,
+            damageShare: 0.2,
+            objectives: { turrets: 1, inhibitors: 0, barons: 0, dragons: 0 },
+          },
+        ],
+      },
+    ],
+  },
+});
 
 /** Ask a question and answer it, returning both message ids. */
 async function askAndAnswer(input: {
@@ -109,6 +178,38 @@ async function path(conversationId: string): Promise<string[]> {
 }
 
 describe("explore store", () => {
+  test("persists a frozen match card for the owner and shared transcript", async () => {
+    const started = await startExploreTurn(prisma, {
+      conversationId: null,
+      userId,
+      question: "What was the bloodiest match?",
+      attach: { kind: "leaf" },
+    });
+    await appendExploreAnswer(prisma, {
+      conversationId: started.conversationId,
+      parentMessageId: started.messageId,
+      answer: ANSWER,
+      preview: null,
+      visualization: null,
+      matchCards: [MATCH_CARD],
+      trace: [],
+    });
+    const token = await shareExploreConversation(
+      prisma,
+      started.conversationId,
+      userId,
+    );
+    const owner = await loadExploreTranscript(
+      prisma,
+      started.conversationId,
+      userId,
+    );
+    const shared = await loadSharedExploreTranscript(prisma, token ?? "");
+
+    expect(owner?.messages[1]?.matchCards).toEqual([MATCH_CARD]);
+    expect(shared?.messages[1]?.matchCards).toEqual([MATCH_CARD]);
+  });
+
   test("rolls back a persisted question when durable admission rejects", async () => {
     const first = await askAndAnswer({
       conversationId: null,

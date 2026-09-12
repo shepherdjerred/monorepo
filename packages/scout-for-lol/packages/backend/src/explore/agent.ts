@@ -13,6 +13,7 @@ import {
   ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
   type ExploreAnswer,
+  type ExploreMatchCard,
   type DiscordChannelId,
   type ExploreMessage,
   type ExploreStreamEvent,
@@ -20,6 +21,7 @@ import {
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
 import { quoteScoutQlString } from "@scout-for-lol/data/model/scoutql/editor/format-expr.ts";
+import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 import { exploreModel } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
 import {
@@ -59,8 +61,14 @@ import {
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
 import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
+import {
+  hydrateExploreMatchCards,
+  matchIdsInPreview,
+  isExploreMatchSnapshotSupported,
+} from "#src/explore-match/match-view.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
+import { fetchMatchSupport } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import {
   withLlmSubjectSpan,
@@ -109,6 +117,8 @@ export type ExploreAgentResult = {
   /** The result of the last successful query, kept for the transcript. */
   preview: ReportAiPreviewSummary | null;
   visualization: VisualizationSnapshot | null;
+  /** Frozen, source-backed artifacts requested by the model. */
+  matchCards: ExploreMatchCard[];
 };
 
 type RunState = {
@@ -117,6 +127,8 @@ type RunState = {
   /** Result of the most recent successful query, attached to the answer. */
   lastPreview: ReportAiPreviewSummary | null;
   lastVisualization: VisualizationSnapshot | null;
+  /** Match ids from the most recent query that support a two-team card. */
+  lastMatchIds: Set<string>;
 };
 
 export async function streamExploreAgent(
@@ -144,6 +156,7 @@ async function streamExploreAgentInternal(
     previewCalls: 0,
     lastPreview: null,
     lastVisualization: null,
+    lastMatchIds: new Set(),
   };
 
   // Derived per turn rather than persisted, so Temporal recovery and flag
@@ -170,6 +183,7 @@ async function streamExploreAgentInternal(
       dares: daresEnabled,
       challenges: challengesEnabled,
       creation: creationCapability !== null,
+      surface: params.surface,
     }),
     model: runtime.languageModel(model, ["tools"]),
     tools: createExploreTools({
@@ -211,6 +225,13 @@ async function streamExploreAgentInternal(
   const streamState = await drainExploreStreams(stream, params.emit);
 
   const answer = ExploreAnswerSchema.parse(await stream.output);
+  const matchCards =
+    params.surface === "web"
+      ? await hydrateExploreMatchCards({
+          requests: answer.matchCards,
+          eligibleMatchIds: state.lastMatchIds,
+        })
+      : [];
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered
@@ -235,19 +256,45 @@ async function streamExploreAgentInternal(
     answer,
     preview: answer.includeVisualization ? state.lastPreview : null,
     visualization: answer.includeVisualization ? state.lastVisualization : null,
+    matchCards,
   };
 }
 
 type ExploreModelMessage =
   { role: "user"; content: string } | { role: "assistant"; content: string };
 
+type MatchCardReplayContext = {
+  size: string;
+  match: {
+    matchId: string;
+    teams: readonly { teamId: number; win: boolean; kills: number }[];
+  };
+};
+
+/** Preserve the visible card order so follow-ups can refer to “the first card”. */
+export function matchCardReplayContext(
+  cards: readonly MatchCardReplayContext[],
+): string {
+  if (cards.length === 0) return "";
+  const entries = cards.map((card, index) => {
+    const teams = card.match.teams
+      .map(
+        (team) =>
+          `Team ${team.teamId.toString()} ${team.win ? "won" : "lost"} (${team.kills.toString()} kills)`,
+      )
+      .join("; ");
+    return `Card ${String(index + 1)} (${card.size}): ${card.match.matchId}; ${teams}.`;
+  });
+  return `\n\n[Match cards shown in order]\n${entries.join("\n")}`;
+}
+
 /**
  * Rebuild the conversation as model messages.
  *
  * History comes from the database, never from the client, so a caller cannot
- * forge prior turns to steer an answer. Assistant turns replay only the prose
- * and the query that produced it — not the full row set, which would blow up
- * the context for questions that no longer depend on it.
+ * forge prior turns to steer an answer. Assistant turns replay their prose,
+ * query, and compact card identities — not the full row set, which would blow
+ * up context for questions that no longer depend on it.
  */
 function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
   const recent = params.history.slice(-EXPLORE_MAX_HISTORY_TURNS * 2);
@@ -257,8 +304,8 @@ function buildMessages(params: ExploreAgentParams): ExploreModelMessage[] {
           role: "assistant",
           content:
             message.queryText === null
-              ? message.content
-              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}`,
+              ? `${message.content}${matchCardReplayContext(message.matchCards)}`
+              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}${matchCardReplayContext(message.matchCards)}`,
         }
       : { role: "user", content: message.content },
   );
@@ -382,16 +429,31 @@ function createExploreTools(options: ExploreToolsOptions) {
           };
         }
 
+        let source: ScoutQlSource | null = null;
         const result = await executeReportQuery({
           prisma,
           scope: GLOBAL_SCOPE,
           askerGuildIds: params.guildIds,
           queryText: validation.formattedQueryText,
+          onPlan: (plan) => {
+            source = plan.source;
+          },
         });
         const preview = reportQueryPreviewSummary(result);
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
+        const cardSupportRows =
+          params.surface === "web"
+            ? await fetchMatchSupport([...matchIdsInPreview(preview, source)])
+            : [];
+        state.lastMatchIds = new Set(
+          cardSupportRows
+            .filter((row) =>
+              isExploreMatchSnapshotSupported(row.queue_id, row.game_mode),
+            )
+            .map((row) => row.match_id),
+        );
 
         await params.emit({
           type: "preview",
@@ -400,10 +462,14 @@ function createExploreTools(options: ExploreToolsOptions) {
         });
         return {
           ok: true,
-          message:
+          message: [
             preview.rowsReturned === 0
               ? `No rows matched after scanning ${preview.rowsScanned.toString()} rows. The data does not cover this — say so rather than estimating.`
               : `Returned ${preview.rowsReturned.toString()} rows after scanning ${preview.rowsScanned.toString()} rows.`,
+            state.lastMatchIds.size === 0
+              ? "This query has no supported match cards. Set matchCards to []."
+              : `For this query, cards may use only these match_id values: ${[...state.lastMatchIds].join(", ")}.`,
+          ].join(" "),
           formattedQueryText: validation.formattedQueryText,
           preview: modelPreview,
         };
