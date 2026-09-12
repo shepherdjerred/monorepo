@@ -168,11 +168,15 @@ function sanitizeObjectEntry(
 
 // A persisted tool summary is interpolated into the memory-extraction prompt,
 // so any third-party text it keeps can steer durable memory. Denying known-bad
-// keys lost this argument repeatedly - every new field on one of these tools
-// was retained by default and had to be discovered. These tools instead declare
-// what they KEEP: structural values the agent or our own infrastructure wrote.
-// Anything else, at any depth, is dropped, so a field added later is private
-// until someone deliberately lists it.
+// keys lost this argument repeatedly, and so did naming only the untrusted
+// tools: a tool absent from the list kept everything, so each new one was a
+// leak waiting to be reported.
+//
+// The default is therefore to keep NO data. A tool appears here only to name
+// the keys it keeps, and those must be values the agent or our own
+// infrastructure wrote - not a Discord name, title, or body someone else
+// chose. Every tool still keeps its own result message, which is the summary
+// its author wrote for exactly this purpose.
 const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
   string,
   ReadonlySet<string>
@@ -196,6 +200,53 @@ const RETAINED_DATA_KEYS_BY_TOOL: ReadonlyMap<
   // stdout and stderr carry whatever the command printed; the rest is our
   // own measurement of the run.
   ["execute-shell-command", new Set(["exitCode", "timedOut", "duration"])],
+  // The agent wrote the schedule it asked for, so reading it back is safe.
+  [
+    "manage-job",
+    new Set([
+      "jobId",
+      "runId",
+      "status",
+      "nextRunAt",
+      "scheduleKind",
+      "scheduleValue",
+      "timezone",
+    ]),
+  ],
+  // Counts we computed, not text anyone typed.
+  [
+    "manage-memory",
+    new Set([
+      "claimId",
+      "createdCount",
+      "confirmedCount",
+      "supersededCount",
+      "uncertainCount",
+    ]),
+  ],
+  [
+    "get-activity-stats",
+    new Set(["messageCount", "reactionCount", "userCount", "rank"]),
+  ],
+  [
+    "get-candidate-stats",
+    new Set(["messageCount", "reactionCount", "userCount", "rank"]),
+  ],
+  ["record-activity", new Set(["recorded", "messageCount"])],
+  ["generate-image", new Set(["name", "mediaType", "aspectRatio"])],
+  // Never code or url: an invite code is a credential. What is left is
+  // structural and is what an operator actually wants to see later.
+  [
+    "manage-invite",
+    new Set([
+      "uses",
+      "maxUses",
+      "channelId",
+      "inviterId",
+      "expiresAt",
+      "temporary",
+    ]),
+  ],
 ]);
 
 function shouldOmitOutputKey(
@@ -205,10 +256,8 @@ function shouldOmitOutputKey(
   if (key === "raw" && options.isCookiesCall) {
     return true;
   }
-  if (options.retainedDataKeys !== undefined) {
-    return !options.retainedDataKeys.has(key);
-  }
-  return false;
+  // Unlisted tool: keep nothing. A tool added later is private by default.
+  return !(options.retainedDataKeys?.has(key) ?? false);
 }
 
 function sanitizeToolOutputData(

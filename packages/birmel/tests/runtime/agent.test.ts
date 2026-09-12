@@ -45,50 +45,54 @@ describe("summarizeToolResultForSession", () => {
       {
         toolCallId: "call-nyt-1",
         toolName: "get-activity-stats",
-        input: { action: "news" },
+        input: { action: "leaderboard" },
         output: {
           success: true,
-          message: "Found 2 articles",
+          message: "Computed 2 leaderboard rows",
           data: {
+            messageCount: 41,
+            rank: 2,
             articles: [
               { title: "City budget vote", token: "SECRET_TOOL_TOKEN" },
-              { title: "Storm closes schools" },
             ],
           },
         },
       },
       registeredToolIds,
     );
-    expect(event.resultSummary).toContain("Found 2 articles");
-    expect(event.resultSummary).toContain("City budget vote");
-    expect(event.resultSummary).toContain("Storm closes schools");
-    expect(event.resultSummary).toContain("[REDACTED]");
+    expect(event.resultSummary).toContain("Computed 2 leaderboard rows");
+    // The counts this tool computed are listed and survive.
+    expect(event.resultSummary).toContain("messageCount");
+    expect(event.resultSummary).toContain("41");
+    // `articles` is not listed, so it and everything under it is dropped
+    // rather than being retained and redacted after the fact.
+    expect(event.resultSummary).not.toContain("City budget vote");
+    expect(event.resultSummary).not.toContain("SECRET_TOOL_TOKEN");
     expect(event.resultSummary).not.toContain("SECRET_TOOL_TOKEN");
   });
 
-  test("redacts credential-bearing fields including webhookUrl and Discord webhook URLs from tool data", () => {
+  // A result message is always kept, so it is the one place a credential can
+  // still reach a persisted summary. Data no longer needs redacting because an
+  // unlisted key is dropped outright.
+  test("redacts a Discord webhook URL carried in the result message", () => {
     const token = ["tok", "discord", "123456"].join("_");
     const webhookUrl = `https://discord.com/api/webhooks/1234567890/${token}`;
     const event = summarizeToolResultForSession(
       {
         toolCallId: "call-webhook-1",
         toolName: "get-activity-stats",
-        input: { action: "create" },
+        input: { action: "leaderboard" },
         output: {
           success: true,
-          message: 'Created webhook "alerts"',
-          data: {
-            webhookId: "1234567890",
-            webhookUrl,
-          },
+          message: `Created webhook "alerts" at ${webhookUrl}`,
+          data: { messageCount: 3, webhookUrl },
         },
       },
       registeredToolIds,
     );
     expect(event.resultSummary).toContain("Created webhook");
-    expect(event.resultSummary).toContain("alerts");
-    expect(event.resultSummary).toContain("1234567890");
     expect(event.resultSummary).toContain("[REDACTED]");
+    expect(event.resultSummary).toContain("messageCount");
     expect(event.resultSummary).not.toContain(token);
     expect(event.content).not.toContain(token);
   });
@@ -239,8 +243,10 @@ describe("summarizeToolResultForSession: invite capability redaction", () => {
       ["manage-invite"],
     );
     expect(event.resultSummary).toContain("Found 1 invites");
+    // Structural fields survive; the code and url are not kept at all, so
+    // there is nothing left to redact in place.
     expect(event.resultSummary).toContain("987654321098765432");
-    expect(event.resultSummary).toContain("[REDACTED]");
+    expect(event.resultSummary).toContain("maxUses");
     expect(event.resultSummary).not.toContain(inviteCode);
     expect(event.resultSummary).not.toContain(inviteUrl);
     expect(event.content).not.toContain(inviteCode);
