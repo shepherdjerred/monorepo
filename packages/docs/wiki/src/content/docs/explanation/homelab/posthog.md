@@ -23,15 +23,15 @@ Use the existing single US project. Copy its public `phc_` project token into
 `config/analytics-sites.json`; this token is safe to embed in browser bundles.
 The managed browser proxy is `https://j.sjer.red`. `apiHost` and `assetHost`
 remain the direct US PostHog endpoints for server-to-server transport, while
-`proxyHost` is used by every browser tracker for SDK assets, captures, replay,
-feature flags, and other browser requests. Never commit a `phx_` personal API
-key. The registry check deliberately fails while the placeholder token is
-present.
+`proxyHost` is used by every repo-owned browser tracker for SDK assets,
+captures, replay, feature flags, and other browser requests. Never commit a
+`phx_` personal API key. The registry check deliberately fails while the
+placeholder token is present.
 
-The proxy record is managed by OpenTofu and its `j.sjer.red` Cloudflare CNAME
-is deliberately unproxied (gray cloud). PostHog provisions the certificate and
-reports the record as `valid`; do not put another CDN or reverse proxy in front
-of this CNAME.
+The proxy record is managed by OpenTofu. Its `j.sjer.red` Cloudflare CNAME is
+deliberately unproxied (gray cloud), and browser traffic must use it only after
+PostHog provisions a valid managed certificate. Do not put another CDN or
+reverse proxy in front of this CNAME.
 
 In PostHog project privacy settings, IP collection must stay **enabled** — it is
 what produces the country and city breakdowns — and session-recording masking
