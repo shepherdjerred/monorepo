@@ -13,9 +13,11 @@ branch claims; this page adds a service to one.
 2. Write the branch's `drop` conditions as the negation of "belongs to this
    project", matched on `resource.attributes["service.name"]`. Equality
    comparisons handle a nil service name safely.
-3. Repoint the producer. Its OTLP env var takes `OTLP_GATEWAY_BASE_URL` from
-   `misc/otlp.ts`, and its egress NetworkPolicy (if any) selects the
-   `alloy-gateway` namespace on port 4318 instead of `tempo`.
+3. Repoint the producer. An OTel SDK exporter takes `OTLP_GATEWAY_BASE_URL`
+   from `misc/otlp.ts`; a producer that POSTs OTLP JSON directly with `fetch`
+   needs `OTLP_GATEWAY_TRACES_URL` instead — the SDK appends `/v1/traces`
+   itself, but a raw POST has to name it. Its egress NetworkPolicy (if any)
+   selects the `alloy-gateway` namespace on port 4318 instead of `tempo`.
 4. Validate the rendered River config with the pinned Alloy binary before
    merging — CI does not parse River:
 
