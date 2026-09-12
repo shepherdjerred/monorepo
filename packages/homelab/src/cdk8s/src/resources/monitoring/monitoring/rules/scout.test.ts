@@ -46,6 +46,44 @@ describe("Scout Temporal alert rules", () => {
       expect(expression).toContain(String.raw`environment=\"prod\"`);
     }
   });
+
+  test("uses live Temporal server labels and second-valued queue latency", () => {
+    if (temporal?.rules === undefined) {
+      throw new Error("Missing scout-temporal rule group");
+    }
+    const activityFailure = temporal.rules.find(
+      (rule) => rule.alert === "ScoutTemporalActivityFailing",
+    );
+    const scheduleToStart = temporal.rules.find(
+      (rule) => rule.alert === "ScoutTemporalTaskScheduleToStartHigh",
+    );
+    if (activityFailure === undefined || scheduleToStart === undefined) {
+      throw new Error("Missing Scout Temporal server-metric alert rules");
+    }
+
+    const activityExpression = JSON.stringify(activityFailure.expr);
+    expect(activityExpression).toContain(
+      "sum by (exported_namespace, taskqueue, activityType)",
+    );
+    expect(activityExpression).toContain(
+      String.raw`exported_namespace=~\"beta|prod\"`,
+    );
+    expect(activityExpression).toContain(
+      String.raw`taskqueue=~\"scout(_.*)?\"`,
+    );
+    expect(activityExpression).not.toContain("task_queue");
+
+    const latencyExpression = JSON.stringify(scheduleToStart.expr);
+    expect(latencyExpression).toContain(
+      "sum by (exported_namespace, taskqueue, le)",
+    );
+    expect(latencyExpression).toContain(
+      "task_schedule_to_start_latency_bucket",
+    );
+    expect(latencyExpression).toContain("> 10");
+    expect(latencyExpression).not.toContain("10000");
+    expect(latencyExpression).not.toContain("task_queue");
+  });
 });
 
 describe("Scout Riot API alert rules", () => {

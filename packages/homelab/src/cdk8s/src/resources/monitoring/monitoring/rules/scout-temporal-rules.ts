@@ -41,11 +41,11 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         annotations: {
           summary: "Scout Temporal Activities are failing",
           message: escapePrometheusTemplate(
-            "Scout queue {{ $labels.task_queue }} has failed Activities in the last 30 minutes. Inspect the Workflow history and effect claims before retrying manually.",
+            "Scout {{ $labels.exported_namespace }} queue {{ $labels.taskqueue }} Activity {{ $labels.activityType }} has failed in the last 30 minutes. Inspect the Workflow history and effect claims before retrying manually.",
           ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'sum by (task_queue) (increase(activity_task_fail{task_queue=~"scout-(beta|prod).*"}[30m])) > 0',
+          'sum by (exported_namespace, taskqueue, activityType) (increase(activity_task_fail{exported_namespace=~"beta|prod", taskqueue=~"scout(_.*)?"}[30m])) > 0',
         ),
         for: "10m",
         labels: { severity: "warning" },
@@ -54,11 +54,12 @@ export function getScoutTemporalRuleGroup(): PrometheusRuleSpecGroups {
         alert: "ScoutTemporalTaskScheduleToStartHigh",
         annotations: {
           summary: "Scout Temporal tasks are waiting for a Worker",
-          message:
-            "Scout task p95 schedule-to-start latency has exceeded ten seconds. Inspect the affected task queue and embedded Worker resources before tuning concurrency.",
+          message: escapePrometheusTemplate(
+            "Scout {{ $labels.exported_namespace }} queue {{ $labels.taskqueue }} task p95 schedule-to-start latency has exceeded ten seconds. Inspect the affected Worker before tuning concurrency.",
+          ),
         },
         expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-          'histogram_quantile(0.95, sum by (task_queue, le) (rate(task_schedule_to_start_latency_bucket{task_queue=~"scout-(beta|prod).*"}[5m]))) > 10000',
+          'histogram_quantile(0.95, sum by (exported_namespace, taskqueue, le) (rate(task_schedule_to_start_latency_bucket{exported_namespace=~"beta|prod", taskqueue=~"scout(_.*)?"}[5m]))) > 10',
         ),
         for: "5m",
         labels: { severity: "warning" },

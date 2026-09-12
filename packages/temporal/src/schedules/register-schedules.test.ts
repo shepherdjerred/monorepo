@@ -587,7 +587,7 @@ describe("Scout Bryan Bucks analytics schedule config", () => {
       },
       taskQueue: TASK_QUEUES.WORKFLOWS,
       overlap: ScheduleOverlapPolicy.SKIP,
-      workflowExecutionTimeout: "5 minutes",
+      workflowExecutionTimeout: "15 minutes",
     });
   });
 });
