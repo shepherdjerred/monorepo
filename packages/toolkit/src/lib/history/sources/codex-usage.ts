@@ -220,22 +220,32 @@ function usageSignature(counts: UsageCounts): string {
 /**
  * Merges the two rollout usage formats without ever discarding a whole
  * format wholesale: every `token_usage_record` event is kept unconditionally
- * (it's never wrong to keep it), and a `token_count` event is added only
- * when no already-kept event reports the identical counts — covering a
- * mixed file (a session whose Codex version started dual-emitting partway
- * through) without double-counting turns present in both formats.
+ * (it's never wrong to keep it), and a `token_count` event is added only when
+ * it can't be matched one-for-one against a still-unconsumed
+ * `token_usage_record` with the identical signature. A count of *remaining*
+ * matches per signature (rather than a plain "have we seen this signature"
+ * set) is required because two distinct, legitimate turns can share a
+ * signature by coincidence (e.g. two short replies with the same token
+ * counts) — a membership check would treat the second turn's `token_count`
+ * event as a cross-format duplicate of the first and silently drop it, even
+ * though only one, or neither, of the old-format entries actually
+ * corresponds to it.
  */
 function mergeCodexUsageEvents(
   accumulator: CodexRolloutAccumulator,
 ): UsageEventEntry[] {
-  const seen = new Set(
-    accumulator.tokenUsageRecordEvents.map((event) => usageSignature(event)),
-  );
+  const availableMatches = new Map<string, number>();
+  for (const event of accumulator.tokenUsageRecordEvents) {
+    const signature = usageSignature(event);
+    availableMatches.set(signature, (availableMatches.get(signature) ?? 0) + 1);
+  }
   const merged = [...accumulator.tokenUsageRecordEvents];
   for (const event of accumulator.tokenCountEvents) {
     const signature = usageSignature(event);
-    if (!seen.has(signature)) {
-      seen.add(signature);
+    const remaining = availableMatches.get(signature) ?? 0;
+    if (remaining > 0) {
+      availableMatches.set(signature, remaining - 1);
+    } else {
       merged.push(event);
     }
   }
