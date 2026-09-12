@@ -1,9 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { summarizeToolResultForSession } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
 import {
-  applyCitationRepair,
-  citationRetryPrompt,
-  needsCitationRetry,
   requireGroundedAnswer,
   resolveCitationIds,
   withResolvedCitations,
@@ -423,6 +420,43 @@ describe("summarizeToolResultForSession: shell output exclusion", () => {
     expect(event.resultSummary).not.toContain(injectedPrompt);
     expect(event.content).not.toContain(injectedPrompt);
   });
+
+  test("omits Discord message bodies from manage-message and manage-thread tool summaries", () => {
+    const leakedMessageContent = [
+      "user",
+      "secret",
+      "private",
+      "credential",
+    ].join("_");
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-msg-get-1",
+        toolName: "manage-message",
+        input: { action: "get", channelId: "123456789012345678" },
+        output: {
+          success: true,
+          message: "Fetched 1 messages",
+          data: {
+            messages: [
+              {
+                id: "987654321098765432",
+                authorId: "111222333444555666",
+                authorName: "Alice",
+                content: leakedMessageContent,
+                createdAt: "2026-09-12T12:00:00.000Z",
+              },
+            ],
+          },
+        },
+      },
+      ["manage-message"],
+    );
+    expect(event.resultSummary).toContain("Fetched 1 messages");
+    expect(event.resultSummary).toContain("Alice");
+    expect(event.resultSummary).toContain("987654321098765432");
+    expect(event.resultSummary).not.toContain(leakedMessageContent);
+    expect(event.content).not.toContain(leakedMessageContent);
+  });
 });
 
 describe("agent instructions", () => {
@@ -652,13 +686,13 @@ const citationFailedRead = {
   readOnly: true,
 };
 
-describe("citation retry", () => {
+describe("citation grounding rejection", () => {
   const succeeded = citationSucceeded;
   const failedRead = citationFailedRead;
 
-  test("retries supported answers that cite nothing after a success", () => {
-    expect(
-      needsCitationRetry(
+  test("rejects supported answers that cite nothing after a success", () => {
+    expect(() =>
+      requireGroundedAnswer(
         {
           answer: "third time’s the charm.",
           disposition: "supported",
@@ -667,28 +701,14 @@ describe("citation retry", () => {
         },
         [succeeded, failedRead],
       ),
-    ).toBe(true);
+    ).toThrow(
+      "Answer claims supported work without citing a successful tool call",
+    );
   });
 
-  test("does not retry when no tool succeeded or citations are present", () => {
-    const emptySupported = {
-      answer: "Done.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: [],
-      performedMutation: false,
-    };
-    expect(needsCitationRetry(emptySupported, [failedRead])).toBe(false);
-    expect(
-      needsCitationRetry(
-        { ...emptySupported, reliedOnToolCallIds: ["call-1"] },
-        [succeeded],
-      ),
-    ).toBe(false);
-  });
-
-  test("retries supported answers that cite unsuccessful or invented IDs", () => {
-    expect(
-      needsCitationRetry(
+  test("rejects supported answers that cite unsuccessful or invented IDs", () => {
+    expect(() =>
+      requireGroundedAnswer(
         {
           answer: "Here are today's headlines.",
           disposition: "supported",
@@ -697,9 +717,9 @@ describe("citation retry", () => {
         },
         [succeeded],
       ),
-    ).toBe(true);
-    expect(
-      needsCitationRetry(
+    ).toThrow("Answer cited tool calls that did not succeed this turn");
+    expect(() =>
+      requireGroundedAnswer(
         {
           answer: "Here are today's headlines.",
           disposition: "supported",
@@ -708,26 +728,7 @@ describe("citation retry", () => {
         },
         [succeeded],
       ),
-    ).toBe(true);
-  });
-
-  test("does not retry when multiple tools succeeded to reject ambiguous repair", () => {
-    const anotherSucceeded = {
-      ...succeeded,
-      toolCallId: "call-2",
-      toolId: "web-search",
-    };
-    expect(
-      needsCitationRetry(
-        {
-          answer: "Found both results.",
-          disposition: "supported",
-          reliedOnToolCallIds: [],
-          performedMutation: false,
-        },
-        [succeeded, anotherSucceeded],
-      ),
-    ).toBe(false);
+    ).toThrow("Answer cited tool calls that did not succeed this turn");
   });
 });
 
@@ -758,7 +759,6 @@ describe("citation alias resolution", () => {
       [fetchSucceeded],
     );
     expect(repaired.reliedOnToolCallIds).toEqual(["call-nyt-1"]);
-    expect(needsCitationRetry(repaired, [fetchSucceeded])).toBe(false);
     expect(() =>
       requireGroundedAnswer(repaired, [fetchSucceeded]),
     ).not.toThrow();
@@ -825,112 +825,6 @@ describe("citation alias resolution", () => {
     expect(resolveCitationIds(["call_missing_from_turn"], [succeeded])).toEqual(
       ["call_missing_from_turn"],
     );
-  });
-});
-
-describe("citation retry prompt and repair", () => {
-  const succeeded = citationSucceeded;
-  const failedRead = citationFailedRead;
-
-  test("lists only successful tool IDs in the retry prompt and insists on supported disposition and mutation claim", () => {
-    const prompt = citationRetryPrompt(
-      {
-        answer: "third time’s the charm.",
-        disposition: "supported",
-        reliedOnToolCallIds: [],
-        performedMutation: true,
-      },
-      [succeeded, failedRead],
-    );
-    expect(prompt).toContain("call-1 (generate-image); input={}");
-    expect(prompt).not.toContain("result=");
-    expect(prompt).not.toContain("Image staged");
-    expect(prompt).not.toContain("call-3");
-    expect(prompt).toContain("Do not invent IDs");
-    expect(prompt).toContain("Do not cite functions.<tool-name>");
-    expect(prompt).toContain("Do not cite an unrelated tool call");
-    expect(prompt).toContain("match on tool and input");
-    expect(prompt).toContain('with disposition "supported"');
-    expect(prompt).toContain("performedMutation true");
-    expect(prompt).not.toContain("conversation or unsupported");
-    expect(prompt).not.toContain("Do not change disposition");
-  });
-
-  test("throws error when constructing retry prompt for ambiguous successful calls", () => {
-    const anotherSucceeded = {
-      ...succeeded,
-      toolCallId: "call-2",
-      toolId: "web-search",
-    };
-    expect(() =>
-      citationRetryPrompt(
-        {
-          answer: "third time’s the charm.",
-          disposition: "supported",
-          reliedOnToolCallIds: [],
-          performedMutation: true,
-        },
-        [succeeded, anotherSucceeded],
-      ),
-    ).toThrow(
-      "Cannot construct citation retry prompt for ambiguous or empty successful tool calls",
-    );
-  });
-
-  test("applyCitationRepair preserves original text, disposition, and mutation claim", () => {
-    const original = {
-      answer: "Created role.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: [],
-      performedMutation: true,
-    };
-    const retried = {
-      answer: "Different text entirely.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: ["call-1"],
-      performedMutation: true,
-    };
-    const repaired = applyCitationRepair(original, retried);
-    expect(repaired).toEqual({
-      answer: "Created role.",
-      disposition: "supported",
-      reliedOnToolCallIds: ["call-1"],
-      performedMutation: true,
-    });
-  });
-
-  test("applyCitationRepair rejects attempts to downgrade disposition", () => {
-    const original = {
-      answer: "Created role.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: [],
-      performedMutation: true,
-    };
-    expect(() =>
-      applyCitationRepair(original, {
-        answer: "Created role.",
-        disposition: "conversation",
-        reliedOnToolCallIds: [],
-        performedMutation: true,
-      }),
-    ).toThrow("Citation retry must remain supported and cite valid tool calls");
-  });
-
-  test("applyCitationRepair rejects attempts to flip mutation claim", () => {
-    const original = {
-      answer: "Created role.",
-      disposition: "supported" as const,
-      reliedOnToolCallIds: [],
-      performedMutation: true,
-    };
-    expect(() =>
-      applyCitationRepair(original, {
-        answer: "Created role.",
-        disposition: "supported",
-        reliedOnToolCallIds: ["call-1"],
-        performedMutation: false,
-      }),
-    ).toThrow("Citation retry cannot alter the turn's mutation claim");
   });
 });
 

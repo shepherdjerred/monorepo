@@ -81,71 +81,6 @@ export function withResolvedCitations(
 }
 
 /**
- * A supported answer that cites nothing, or cites IDs that did not succeed,
- * after exactly one successful call is malformed structured output that can be
- * repaired unambiguously. When multiple calls succeeded, attributing citations
- * across calls is ambiguous and must not be retried over untrusted result
- * content; reject ambiguous repairs and let requireGroundedAnswer enforce the gate.
- */
-export function needsCitationRetry(
-  answer: TurnAnswer,
-  toolEvents: readonly CitationToolEvent[],
-): boolean {
-  if (answer.disposition !== "supported") {
-    return false;
-  }
-  const succeeded = successfulToolEvents(toolEvents);
-  if (succeeded.length !== 1) {
-    return false;
-  }
-  const [onlySucceeded] = succeeded;
-  if (onlySucceeded === undefined) {
-    return false;
-  }
-  if (answer.reliedOnToolCallIds.length === 0) {
-    return true;
-  }
-  return answer.reliedOnToolCallIds.some(
-    (toolCallId) => toolCallId !== onlySucceeded.toolCallId,
-  );
-}
-
-export function citationRetryPrompt(
-  answer: TurnAnswer,
-  toolEvents: readonly CitationToolEvent[],
-): string {
-  const succeeded = successfulToolEvents(toolEvents);
-  const only = succeeded[0];
-  if (only === undefined || succeeded.length !== 1) {
-    throw new Error(
-      "Cannot construct citation retry prompt for ambiguous or empty successful tool calls",
-    );
-  }
-  const invalid = answer.reliedOnToolCallIds.filter(
-    (toolCallId) => toolCallId !== only.toolCallId,
-  );
-  const invalidLine =
-    invalid.length === 0
-      ? "Cited IDs: none."
-      : `Cited IDs that are not successful tool call IDs: ${invalid.join(", ")}.`;
-  return `Your previous structured answer claimed supported work but did not cite successful tool call IDs from this turn.
-${invalidLine}
-
-Previous answer JSON:
-${JSON.stringify(answer)}
-
-Successful tool call this turn (cite this ID only if the original answer actually used it; match on tool and input):
-${only.toolCallId} (${only.toolId}); input=${only.inputSummary}
-
-Return a complete TurnAnswer with disposition "supported" and performedMutation ${String(answer.performedMutation)} that cites the successful tool call ID from above that your answer relied on. Do not invent IDs. Do not cite functions.<tool-name> or functions.<tool-name>:0; those are provider function names, not toolCallId values. Do not cite an unrelated tool call. Preserve the original answer text, disposition, and mutation claim; repair only the reliedOnToolCallIds citations.`;
-}
-
-/**
- * Repairs citations from a retried answer while preserving the original
- * turn's text, disposition, and mutation claim. Rejects any attempt to alter
- * disposition or performedMutation.
- */
-/**
  * The anti-hallucination gate.
  *
  * The old runtime named one tool before the turn began and threw unless that
@@ -262,22 +197,4 @@ export function requireGroundedAnswer(
       "Answer claims a mutation happened, but cites no successful non-read tool call",
     );
   }
-}
-
-export function applyCitationRepair(
-  original: TurnAnswer,
-  retried: TurnAnswer,
-): TurnAnswer {
-  if (retried.disposition !== "supported") {
-    throw new Error(
-      "Citation retry must remain supported and cite valid tool calls",
-    );
-  }
-  if (retried.performedMutation !== original.performedMutation) {
-    throw new Error("Citation retry cannot alter the turn's mutation claim");
-  }
-  return {
-    ...original,
-    reliedOnToolCallIds: retried.reliedOnToolCallIds,
-  };
 }

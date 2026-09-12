@@ -20,7 +20,6 @@ import {
 import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
-import { generateValidatedObject } from "@shepherdjerred/llm-runtime";
 import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
@@ -28,9 +27,6 @@ import { getOpenRouterProviderOptions } from "./provider-options.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
 import {
-  applyCitationRepair,
-  citationRetryPrompt,
-  needsCitationRetry,
   requireGroundedAnswer,
   withResolvedCitations,
 } from "./citation-repair.ts";
@@ -123,6 +119,7 @@ type SanitizeToolOutputOptions = {
   isShellCall: boolean;
   isBrowserCall: boolean;
   isWebContentCall: boolean;
+  isDiscordMessageCall: boolean;
 };
 
 function sanitizeArrayEntry(
@@ -193,6 +190,9 @@ function shouldOmitOutputKey(
   if ((key === "stdout" || key === "stderr") && options.isShellCall) {
     return true;
   }
+  if (key === "content" && options.isDiscordMessageCall) {
+    return true;
+  }
   return options.isWebContentCall && WEB_CONTENT_OMITTED_KEYS.has(key);
 }
 
@@ -241,6 +241,9 @@ export function summarizeToolResultForSession(
   const isWebContentCall =
     toolResult.toolName === "web-research" ||
     toolResult.toolName === "external-service";
+  const isDiscordMessageCall =
+    toolResult.toolName === "manage-message" ||
+    toolResult.toolName === "manage-thread";
   const inputSummary = boundedSummary(toolResult.input);
   const sanitizedData =
     toolResult.output.data === undefined
@@ -251,6 +254,7 @@ export function summarizeToolResultForSession(
           isShellCall,
           isBrowserCall,
           isWebContentCall,
+          isDiscordMessageCall,
         });
   const hasData =
     sanitizedData !== undefined &&
@@ -419,40 +423,12 @@ export async function executeTurn(
           summarizeToolResultForSession(toolResult, registeredToolIds),
         ),
       );
-      let inputTokens = result.usage.inputTokens ?? 0;
-      let outputTokens = result.usage.outputTokens ?? 0;
-      let answer = withResolvedCitations(
+      const inputTokens = result.usage.inputTokens ?? 0;
+      const outputTokens = result.usage.outputTokens ?? 0;
+      const answer = withResolvedCitations(
         TurnAnswerSchema.parse(result.output),
         toolEvents,
       );
-      if (needsCitationRetry(answer, toolEvents)) {
-        logger.info(
-          "Retrying structured answer to cite successful tool calls",
-          {
-            successfulToolCallCount: toolEvents.filter((event) => event.success)
-              .length,
-          },
-        );
-        const retried = await generateValidatedObject(runtime, {
-          model: options.model ?? config.openRouter.model,
-          schema: TurnAnswerSchema,
-          schemaName: "birmel_turn_answer",
-          prompt: citationRetryPrompt(answer, toolEvents),
-          workload: "birmel.agent.turn.citation-retry",
-          abortSignal,
-          maxOutputTokens: config.openRouter.maxTokens,
-          reasoningEffort:
-            options.reasoningEffort ?? config.openRouter.reasoningEffort,
-          sessionId: packet.threadId ?? packet.channelId,
-        });
-        const retriedAnswer = TurnAnswerSchema.parse(retried.object);
-        inputTokens += retried.usage.tokens.input;
-        outputTokens += retried.usage.tokens.output;
-        answer = withResolvedCitations(
-          applyCitationRepair(answer, retriedAnswer),
-          toolEvents,
-        );
-      }
       requireGroundedAnswer(answer, toolEvents);
       span.setAttribute("gen_ai.response.finish_reasons", result.finishReason);
       span.setAttribute("gen_ai.usage.input_tokens", inputTokens);
