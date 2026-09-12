@@ -95,15 +95,22 @@ function claudeUsageEntry(
  * A line that fails to parse as JSON is truncated or corrupt — propagated
  * rather than skipped, so a partially-written transcript record (especially
  * an assistant record carrying `message.usage`) doesn't quietly shrink this
- * session's usage on the next scan while the scan still reports success.
+ * session's usage on the next scan while the scan still reports success. The
+ * error reports only the file and line number, never the line's own
+ * content, since a corrupt record can carry arbitrary conversation data.
  */
-function parseClaudeLine(line: string): unknown {
+function parseClaudeLine(
+  line: string,
+  filePath: string,
+  lineNumber: number,
+): unknown {
   try {
     return JSON.parse(line) as unknown;
   } catch (error) {
-    throw new Error(`Malformed Claude transcript line: ${line.slice(0, 200)}`, {
-      cause: error,
-    });
+    throw new Error(
+      `Malformed Claude transcript line ${String(lineNumber)} in ${filePath}`,
+      { cause: error },
+    );
   }
 }
 
@@ -118,11 +125,12 @@ async function readClaudeTranscript(
   let createdAt: string | null = null;
   let updatedAt: string | null = null;
   let runtimeId: string | null = null;
-  for (const line of raw.split("\n")) {
+  const lines = raw.split("\n");
+  for (const [index, line] of lines.entries()) {
     if (line.trim().length === 0) {
       continue;
     }
-    const value = parseClaudeLine(line);
+    const value = parseClaudeLine(line, file, index + 1);
     const record = parseRecord(value);
     if (record === null) {
       continue;

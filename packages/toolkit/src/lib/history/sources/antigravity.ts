@@ -139,6 +139,11 @@ async function buildAntigravityDocument(
   filePath: string,
 ): Promise<HistoryDocument> {
   const tables = tableNames(database);
+  if (!tables.has("gen_metadata") && !tables.has("steps")) {
+    throw new Error(
+      `Antigravity database has neither a gen_metadata nor a steps table: ${filePath}`,
+    );
+  }
   const trajectoryFallbackMs = scanTrajectoryFallbackMs(database, tables);
   const timedEvents = [
     ...scanGenMetadataEvents(database, tables, trajectoryFallbackMs),
