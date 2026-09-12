@@ -402,9 +402,11 @@ async function writeGrokFixture(grokHome: string): Promise<void> {
           sessionUpdate: "tool_call",
           title: "run shell command",
           status: "completed",
+          // rawInput is never indexed (a command string can embed a
+          // credential in forms no fixed pattern set can fully enumerate),
+          // so none of this — including grok-tool-command-marker — should
+          // reach toolOutputText.
           rawInput: {
-            // Fixture proving redactText scrubs an inline Bearer credential
-            // embedded in a tool command string — not a real credential.
             command: `curl grok-tool-command-marker -H 'Authorization: Bearer test-bearer-token-fixture-marker'`, // gitleaks:allow
             env: { API_KEY: "sk-should-not-appear-in-index" },
             password: "sk-should-not-appear-in-index",
@@ -632,7 +634,11 @@ async function writeCodexSessionUsageFixture(
     path.join(sessionsDir, "rollout-multi-prompt.jsonl"),
     `${multiPromptLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
+}
 
+async function writeCodexRolloutFormatFixtures(
+  sessionsDir: string,
+): Promise<void> {
   // t-current-format uses only the current rollout event shapes
   // (turn_context for the model, event_msg/token_count for per-turn usage)
   // with no token_usage_record/thread_settings_applied at all — proves usage
@@ -681,6 +687,81 @@ async function writeCodexSessionUsageFixture(
     path.join(sessionsDir, "rollout-current-format.jsonl"),
     `${currentFormatLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
   );
+
+  // t-mixed-format has an old-format-only turn (input_tokens: 111, before a
+  // hypothetical mid-session Codex upgrade) followed by a turn reported in
+  // BOTH formats with identical counts (input_tokens: 222, after the
+  // upgrade) — proves the merge keeps the old-only turn instead of
+  // discarding it wholesale, while still counting the duplicated turn once.
+  const mixedFormatLines = [
+    {
+      timestamp: "2026-08-12T00:00:00.000Z",
+      ordinal: 0,
+      type: "session_meta",
+      payload: { session_id: "t-mixed-format", id: "t-mixed-format" },
+    },
+    {
+      timestamp: "2026-08-12T00:00:01.000Z",
+      ordinal: 1,
+      type: "event_msg",
+      payload: {
+        type: "thread_settings_applied",
+        thread_settings: { model: "gpt-5.6-sol" },
+      },
+    },
+    {
+      timestamp: "2026-08-12T00:00:02.000Z",
+      ordinal: 2,
+      type: "token_usage_record",
+      payload: {
+        turn_token_usage: {
+          input_tokens: 111,
+          cached_input_tokens: 0,
+          cache_write_input_tokens: 0,
+          output_tokens: 11,
+          reasoning_output_tokens: 0,
+          total_tokens: 122,
+        },
+      },
+    },
+    {
+      timestamp: "2026-08-12T00:00:03.000Z",
+      ordinal: 3,
+      type: "token_usage_record",
+      payload: {
+        turn_token_usage: {
+          input_tokens: 222,
+          cached_input_tokens: 0,
+          cache_write_input_tokens: 0,
+          output_tokens: 22,
+          reasoning_output_tokens: 0,
+          total_tokens: 244,
+        },
+      },
+    },
+    {
+      timestamp: "2026-08-12T00:00:03.150Z",
+      ordinal: 4,
+      type: "event_msg",
+      payload: {
+        type: "token_count",
+        info: {
+          last_token_usage: {
+            input_tokens: 222,
+            cached_input_tokens: 0,
+            cache_write_input_tokens: 0,
+            output_tokens: 22,
+            reasoning_output_tokens: 0,
+            total_tokens: 244,
+          },
+        },
+      },
+    },
+  ];
+  await Bun.write(
+    path.join(sessionsDir, "rollout-mixed-format.jsonl"),
+    `${mixedFormatLines.map((line) => JSON.stringify(line)).join("\n")}\n`,
+  );
 }
 
 beforeAll(async () => {
@@ -706,6 +787,7 @@ beforeAll(async () => {
   await writeClaudeFixture(claudeDir);
   const { codexHistory, codexCatalog } = await writeCodexFixture(codexDir);
   await writeCodexSessionUsageFixture(codexSessionsDir);
+  await writeCodexRolloutFormatFixtures(codexSessionsDir);
   const cursorDb = writeCursorFixture(cursorDir);
   const opencodeDb = await writeOpencodeFixture(opencodeDir);
   await writeGrokFixture(grokHome);
@@ -989,13 +1071,32 @@ describe("history source usage and redaction", () => {
     expect(event?.outputTokens).toBe(90);
   });
 
-  test("redacts secrets out of Grok tool call raw input before indexing", async () => {
+  test("merges mixed-format Codex usage without dropping old-only turns or double-counting", async () => {
+    const results = await Promise.all(
+      createHistorySources().map((source) => source.scan(paths)),
+    );
+    const documents = results.flatMap((result) => result.documents);
+    const mixedFormat = documents.find(
+      (document) =>
+        document.source === "codex" && document.runtimeId === "t-mixed-format",
+    );
+    expect(mixedFormat).toBeDefined();
+    expect(mixedFormat?.usageEvents).toHaveLength(2);
+    const inputTokens = (mixedFormat?.usageEvents ?? [])
+      .map((event) => event.inputTokens)
+      .sort((a, b) => a - b);
+    expect(inputTokens).toEqual([111, 222]);
+  });
+
+  test("never indexes Grok tool call raw input, only its fixed title/status", async () => {
     const results = await Promise.all(
       createHistorySources().map((source) => source.scan(paths)),
     );
     const documents = results.flatMap((result) => result.documents);
     const grok = documents.find((document) => document.source === "grok");
-    expect(grok?.toolOutputText).toContain("grok-tool-command-marker");
+    expect(grok?.toolOutputText).toContain("run shell command");
+    expect(grok?.toolOutputText).toContain("completed");
+    expect(grok?.toolOutputText).not.toContain("grok-tool-command-marker");
     expect(grok?.toolOutputText).not.toContain("sk-should-not-appear-in-index");
     expect(grok?.toolOutputText).not.toContain(
       "test-bearer-token-fixture-marker",

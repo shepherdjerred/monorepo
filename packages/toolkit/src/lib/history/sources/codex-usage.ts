@@ -21,8 +21,9 @@ type CodexRolloutAccumulator = {
   // versions — the older top-level `token_usage_record` (`turn_token_usage`)
   // and the current `event_msg`-wrapped `token_count`
   // (`info.last_token_usage`) — and real rollouts can carry both for the
-  // same turns. Tracked separately so the file's own real, populated list is
-  // used exactly once rather than summing both and double-counting.
+  // same turns. Tracked separately and merged by `mergeCodexUsageEvents`,
+  // which keeps every event from both lists without double-counting a turn
+  // reported in both formats.
   readonly tokenCountEvents: UsageEventEntry[];
   readonly tokenUsageRecordEvents: UsageEventEntry[];
 };
@@ -197,6 +198,51 @@ async function parseCodexRolloutFile(
 }
 
 /**
+ * A `token_count` event and a `token_usage_record` for the same turn report
+ * identical token counts (verified against real rollout data — same
+ * input/output/cached/reasoning numbers, logged moments apart under two
+ * different event shapes), but not a shared id or timestamp to join on. This
+ * signature of the actual counts is the join key: two events with the same
+ * signature are almost certainly the same turn reported twice, while a
+ * signature with no counterpart is a turn only one format captured (e.g. a
+ * thread that started before a Codex version began dual-emitting).
+ */
+function usageSignature(counts: UsageCounts): string {
+  return [
+    counts.inputTokens,
+    counts.outputTokens,
+    counts.cacheCreationTokens,
+    counts.cachedInputTokens,
+    counts.reasoningTokens,
+  ].join(":");
+}
+
+/**
+ * Merges the two rollout usage formats without ever discarding a whole
+ * format wholesale: every `token_usage_record` event is kept unconditionally
+ * (it's never wrong to keep it), and a `token_count` event is added only
+ * when no already-kept event reports the identical counts — covering a
+ * mixed file (a session whose Codex version started dual-emitting partway
+ * through) without double-counting turns present in both formats.
+ */
+function mergeCodexUsageEvents(
+  accumulator: CodexRolloutAccumulator,
+): UsageEventEntry[] {
+  const seen = new Set(
+    accumulator.tokenUsageRecordEvents.map((event) => usageSignature(event)),
+  );
+  const merged = [...accumulator.tokenUsageRecordEvents];
+  for (const event of accumulator.tokenCountEvents) {
+    const signature = usageSignature(event);
+    if (!seen.has(signature)) {
+      seen.add(signature);
+      merged.push(event);
+    }
+  }
+  return merged;
+}
+
+/**
  * Codex's `~/.codex/sessions/**\/*.jsonl` rollout files are a completely
  * separate tree from the `thread_history_*.sqlite` files used for search
  * (which carry no usage data at all) — but their filename UUID is the same
@@ -213,10 +259,7 @@ export async function scanCodexSessionUsage(
     if (accumulator.threadId === null) {
       continue;
     }
-    const events =
-      accumulator.tokenCountEvents.length > 0
-        ? accumulator.tokenCountEvents
-        : accumulator.tokenUsageRecordEvents;
+    const events = mergeCodexUsageEvents(accumulator);
     if (events.length > 0) {
       result.set(accumulator.threadId, events);
     }

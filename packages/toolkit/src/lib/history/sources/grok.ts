@@ -1,4 +1,3 @@
-import { redactText } from "@shepherdjerred/llm-observability/redact";
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -14,8 +13,6 @@ import {
   sourceResult,
 } from "#lib/history/sources-shared.ts";
 import {
-  cleanText,
-  extractText,
   parseRecord,
   parseTimestamp,
   stringValue,
@@ -118,23 +115,19 @@ function grokContentText(update: Record<string, unknown>): string | null {
 }
 
 /**
- * A tool call's `rawInput` is an arbitrary, tool-defined object. Two layers
- * of redaction, since each catches a different shape of leak: `extractText`
- * omits every key in its `SENSITIVE_KEYS` set (env, credentials, headers,
- * password, token, ...) while walking nested objects — the same policy
- * every other source's tool blocks go through — but a field it treats as
- * plain indexable text (like `command`) can itself embed a credential, e.g.
- * `curl -H 'Authorization: Bearer …'`. `redactText` scrubs exactly that:
- * `NAME=value`/`"name": "value"` assignments with secret-shaped names and
- * `Bearer <token>` substrings, regardless of which field they're inside.
+ * `rawInput` is an arbitrary, tool-defined object — a shell command can
+ * embed a credential in forms no fixed pattern set can fully enumerate
+ * (Bearer tokens, `--user name:pass`, a `scheme://user:pass@host` URL, and
+ * whatever else a future tool call happens to pass). `title`/`status` are
+ * the tool's own fixed, low-cardinality metadata (e.g. "run shell command",
+ * "completed") and carry no such risk, so only those are indexed; the free
+ * -form `rawInput` itself is never persisted, rather than attempting to
+ * pattern-match every way a secret could appear inside it.
  */
 function grokToolText(update: Record<string, unknown>): string {
   const title = stringValue(update["title"]) ?? "";
   const status = stringValue(update["status"]) ?? "";
-  const rawInputText = redactText(cleanText(extractText(update["rawInput"])));
-  return [title, status, rawInputText]
-    .filter((part) => part.length > 0)
-    .join(" ");
+  return [title, status].filter((part) => part.length > 0).join(" ");
 }
 
 function grokMessage(

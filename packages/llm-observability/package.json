@@ -17,8 +17,7 @@
     "./wrappers/codex": "./src/codex-trace.ts",
     "./codex-jsonl": "./src/codex-jsonl.ts",
     "./wrappers/text-stream": "./src/text-stream-wrapper.ts",
-    "./otel-globals": "./src/otel-globals.ts",
-    "./redact": "./src/redact.ts"
+    "./otel-globals": "./src/otel-globals.ts"
   },
   "scripts": {
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
