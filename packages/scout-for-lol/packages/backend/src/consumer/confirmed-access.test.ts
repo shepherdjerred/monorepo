@@ -153,4 +153,76 @@ describe("confirmed consumer access", () => {
     expect([...granted].toSorted()).toEqual([LIVE, second].toSorted());
     expect(asked.toSorted()).toEqual([LIVE, second].toSorted());
   });
+
+  test("confirmations run together, not one after another", async () => {
+    // Serially these were N cold reads each bounded by the REST client's
+    // 5-second timeout, so a member in several Scout servers waited out the
+    // sum of them before their first page rendered.
+    const second = testGuildId("714");
+    await seedInstall(LIVE);
+    await seedInstall(second);
+    let inFlight = 0;
+    let peakInFlight = 0;
+    const arrived = Promise.withResolvers<undefined>();
+
+    const granted = await confirmedInstalledAmong(
+      [LIVE, second],
+      dependencies(async () => {
+        inFlight += 1;
+        peakInFlight = Math.max(peakInFlight, inFlight);
+        // Every read parks until both have arrived, which only completes if
+        // they were started without waiting for each other.
+        if (inFlight === 2) arrived.resolve(undefined);
+        await arrived.promise;
+        inFlight -= 1;
+        return true;
+      }),
+    );
+
+    expect(peakInFlight).toBe(2);
+    expect([...granted].toSorted()).toEqual([LIVE, second].toSorted());
+  });
+
+  test("one broken guild is skipped, not fatal to the rest", async () => {
+    // Every candidate has a live row, so the port already absorbs a Discord
+    // outage by trusting the row. A throw is therefore something unexpected —
+    // and a single rejection escaping here would make the caller's WHOLE
+    // consumer surface `unavailable`, taking away every other server they have.
+    const second = testGuildId("714");
+    await seedInstall(LIVE);
+    await seedInstall(second);
+
+    const granted = await confirmedInstalledAmong(
+      [LIVE, second],
+      dependencies((guildId) =>
+        guildId === second
+          ? Promise.reject(new Error("something unexpected"))
+          : Promise.resolve(true),
+      ),
+    );
+
+    expect([...granted]).toEqual([LIVE]);
+  });
+
+  test("every candidate failing DOES propagate", async () => {
+    // With nothing confirmed there is no partial truth to serve, so the
+    // failure has to surface as `unavailable` rather than as an empty list —
+    // an empty list is a denial telling a real member they have no servers.
+    await seedInstall(LIVE);
+
+    await expect(
+      confirmedInstalledAmong(
+        [LIVE],
+        dependencies(() => Promise.reject(new Error("something unexpected"))),
+      ),
+    ).rejects.toThrow("something unexpected");
+  });
+
+  test("no candidates at all is an empty answer, not a failure", async () => {
+    // Nothing failed here — the caller simply shares no Scout server. That is
+    // a legitimate `forbidden`, and must not be dressed up as unavailable.
+    await expect(
+      confirmedInstalledAmong([UNRELATED], dependencies(unused)),
+    ).resolves.toEqual([]);
+  });
 });

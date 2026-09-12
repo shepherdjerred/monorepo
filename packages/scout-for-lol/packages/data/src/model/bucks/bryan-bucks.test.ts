@@ -4,11 +4,20 @@ import {
   BucksDareStateSchema,
   BucksLedgerContextSchema,
   BucksLedgerKindSchema,
+  BucksMatchingSummarySchema,
+  StoredBucksLedgerContextSchema,
   type BucksLedgerContext,
 } from "./bryan-bucks.ts";
-import { BucksStakeSchema } from "./bryan-bucks-money.ts";
+import {
+  BucksAmountSchema,
+  BucksPoolTotalSchema,
+  BucksStakeSchema,
+  type BucksPoolTotal,
+} from "./bryan-bucks-money.ts";
 
 const stake = (value: number) => BucksStakeSchema.parse(value);
+const amount = (value: number) => BucksAmountSchema.parse(value);
+const pool = (value: number) => BucksPoolTotalSchema.parse(value);
 
 describe("BucksLedgerKindSchema dare kinds", () => {
   test.each(["dare_stake", "dare_payout", "dare_refund", "dare_fee"] as const)(
@@ -50,6 +59,171 @@ describe("BucksDareHorizonKindSchema", () => {
 
   test("rejects an unknown horizon", () => {
     expect(BucksDareHorizonKindSchema.safeParse("season").success).toBe(false);
+  });
+});
+
+describe("BucksMatchingSummarySchema pool aggregates", () => {
+  const summary = {
+    version: 1,
+    humanMatchedPerSide: 120,
+    houseFill: 0,
+    houseTeamId: null,
+    houseBetId: null,
+    totalMatchedPerSide: 120,
+    allocations: [],
+  };
+
+  test("round-trips a stored summary through JSON", () => {
+    const stored = JSON.stringify(summary);
+    expect(BucksMatchingSummarySchema.parse(JSON.parse(stored))).toEqual(
+      summary,
+    );
+  });
+
+  test("the side totals carry the pool-total brand", () => {
+    // They are sums across every position on a side — the shape
+    // `BucksPoolTotal` exists to name — and were bare nonnegative ints: the
+    // same domain spelled out by hand, which no call site could be held to.
+    const parsed = BucksMatchingSummarySchema.parse(summary);
+    const asPoolTotals: BucksPoolTotal[] = [
+      parsed.humanMatchedPerSide,
+      parsed.houseFill,
+      parsed.totalMatchedPerSide,
+    ];
+    expect(asPoolTotals).toEqual([120, 0, 120]);
+  });
+
+  test("the validated domain did not move, so stored blobs still parse", () => {
+    // Unlike the settlement context below, branding these was safe on the read
+    // side too: the brand IS `.int().nonnegative()`, so nothing that parsed
+    // before can fail now, and a negative was never representable anyway.
+    expect(
+      BucksMatchingSummarySchema.safeParse({
+        ...summary,
+        humanMatchedPerSide: -1,
+      }).success,
+    ).toBe(false);
+    expect(
+      BucksMatchingSummarySchema.safeParse({ ...summary, houseFill: 0 })
+        .success,
+    ).toBe(true);
+  });
+});
+
+describe("the settlement variant, written and stored", () => {
+  const paidWinner: BucksLedgerContext = {
+    type: "settlement",
+    subjectAlias: "virmel",
+    backedAliases: ["virmel"],
+    opposingAliases: ["bryan"],
+    winnersPool: pool(120),
+    losersPool: pool(80),
+    stakeReturned: amount(40),
+    winnings: amount(36),
+    grossPayout: amount(80),
+    houseCut: amount(4),
+    netPayout: amount(76),
+    submittedStake: amount(40),
+    matchedStake: amount(40),
+    unmatchedStake: amount(0),
+    payoutComponent: "gross",
+  };
+
+  const voidedRefund: BucksLedgerContext = {
+    type: "settlement",
+    subjectAlias: "virmel",
+    backedAliases: ["virmel"],
+    opposingAliases: ["bryan"],
+    winnersPool: pool(0),
+    losersPool: pool(0),
+    stakeReturned: amount(40),
+    winnings: amount(0),
+    payoutComponent: "refund",
+    voidReason: "no_counterparty",
+  };
+
+  test.each([
+    ["a paid winner", paidWinner],
+    ["a voided refund", voidedRefund],
+  ])("round-trips %s row through JSON", (_label, context) => {
+    const stored = JSON.stringify(context);
+    expect(BucksLedgerContextSchema.parse(JSON.parse(stored))).toEqual(context);
+    expect(StoredBucksLedgerContextSchema.parse(JSON.parse(stored))).toEqual(
+      context,
+    );
+  });
+
+  /**
+   * Rows written before the money brands landed.
+   *
+   * `winnersPool`, `losersPool`, `stakeReturned` and `winnings` were persisted
+   * as plain signed integers for the whole life of the feature until the
+   * brands narrowed all four at once. Reading history back through the
+   * narrowed schema would retroactively declare those rows invalid — the
+   * ledger page loses the row's explanation and the dare repair script aborts
+   * mid-scan — so the stored schema keeps the domain they were written in.
+   */
+  const historicalNegativeWinnings = {
+    type: "settlement",
+    subjectAlias: "virmel",
+    backedAliases: ["virmel"],
+    opposingAliases: ["bryan"],
+    winnersPool: 120,
+    losersPool: 80,
+    stakeReturned: 40,
+    winnings: -40,
+  };
+
+  test("a historical row with negative winnings still reads back", () => {
+    const stored = JSON.stringify(historicalNegativeWinnings);
+    expect(StoredBucksLedgerContextSchema.parse(JSON.parse(stored))).toEqual(
+      historicalNegativeWinnings,
+    );
+  });
+
+  test.each([
+    ["winnings", { ...historicalNegativeWinnings, winnings: -40 }],
+    [
+      "stakeReturned",
+      { ...historicalNegativeWinnings, winnings: 0, stakeReturned: -1 },
+    ],
+    [
+      "winnersPool",
+      { ...historicalNegativeWinnings, winnings: 0, winnersPool: -1 },
+    ],
+    [
+      "losersPool",
+      { ...historicalNegativeWinnings, winnings: 0, losersPool: -1 },
+    ],
+  ])("a negative %s is readable but no longer writable", (_field, row) => {
+    expect(StoredBucksLedgerContextSchema.safeParse(row).success).toBe(true);
+    // The tightening still holds going forward: nothing may WRITE one.
+    expect(BucksLedgerContextSchema.safeParse(row).success).toBe(false);
+  });
+
+  test("the two unions differ in the settlement variant and nowhere else", () => {
+    // A dare row is the same shape either way, so widening the read side did
+    // not quietly relax every other variant with it.
+    const dareRow = {
+      type: "dare",
+      dareId: 7,
+      role: "contributor",
+      targetAliases: ["virmel"],
+      conditionSummary: "win 7 games on Warwick",
+      potTotal: 12,
+      amount: -5,
+    };
+    expect(StoredBucksLedgerContextSchema.safeParse(dareRow).success).toBe(
+      false,
+    );
+    expect(BucksLedgerContextSchema.safeParse(dareRow).success).toBe(false);
+  });
+
+  test("neither union accepts a fractional settlement amount", () => {
+    const fractional = { ...historicalNegativeWinnings, winnings: -0.5 };
+    expect(StoredBucksLedgerContextSchema.safeParse(fractional).success).toBe(
+      false,
+    );
   });
 });
 

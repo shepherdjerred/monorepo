@@ -202,18 +202,25 @@ describe("recordReceipt", () => {
     },
   );
 
-  test("conflicts when the same identity arrives with different evidence", () => {
-    const state = makeState({
-      receipts: [makeReceipt({ scope: { kind: "global" } })],
-    });
-    const divergent = makeReceipt({
+  test("a replay with a later recordedAt is still already applied", () => {
+    // `recordedAt` is observational metadata of the first attestation, not
+    // evidence. Receipt writers are Temporal Activities, so a retry of an
+    // already-committed write arrives with the same identity and a fresh wall
+    // clock by construction — comparing clocks turned every benign retry into
+    // a conflict, which is the metric dual-write alerting watches.
+    const first = makeReceipt({ scope: { kind: "global" } });
+    const state = makeState({ receipts: [first] });
+    const later = makeReceipt({
       scope: { kind: "global" },
       recordedAt: "2025-10-16T18:00:00Z",
     });
-    expect(recordReceipt({ state, receipt: divergent })).toEqual({
-      outcome: "conflict",
-      reason: "receipt-evidence-mismatch",
+    expect(later.recordedAt).not.toBe(first.recordedAt);
+    expect(recordReceipt({ state, receipt: later })).toEqual({
+      outcome: "already-applied",
     });
+    // `already-applied` carries no next state, so the state keeps the first
+    // receipt and with it the first `recordedAt`.
+    expect(state.receipts).toEqual([first]);
   });
 
   test("applies a second kind for the same scope", () => {

@@ -32,29 +32,6 @@ type CompetitionActivityWorker = {
 };
 
 /**
- * Refuse to start a lake-reading role whose lake has no published build.
- *
- * This is the gate for roles that read the lake but do not own its fold. An
- * empty or unmounted lake directory is not an error condition for DuckDB — it
- * scans zero parquet files and returns zero rows — so without this a worker
- * would record every report run, parlay generation and dare settlement as a
- * *successful* run that found nothing. A pod that cannot answer correctly must
- * not answer at all.
- */
-async function assertPublishedReportLake(): Promise<void> {
-  const { readCurrentBuildDir, resolveLakeDir } =
-    await import("#src/report-lake/paths.ts");
-  const lakeDir = resolveLakeDir();
-  const current = await readCurrentBuildDir(lakeDir);
-  if (current === undefined) {
-    throw new Error(
-      `The report lake at ${lakeDir} has no published build. This role reads the lake but does not publish it, so it would answer every query with an empty result and record it as success. Mount the lake volume, or run a role that folds it.`,
-    );
-  }
-  logger.info("🗂️  Report lake build verified", { lakeDir, build: current });
-}
-
-/**
  * Build the production dependency set for one role.
  *
  * The mutable handles are closed over rather than returned, because the boot
@@ -92,11 +69,34 @@ export function scoutRuntimeSubsystems(
         await bootstrapVoiceAssistant();
       },
 
+      /**
+       * Settle the report lake for this role: fold it, or verify someone else
+       * did.
+       *
+       * `SCOUT_DEV_SKIP_REPORT_LAKE_FOLD` skips the *fold* — the step a laptop
+       * with no S3 bucket cannot complete — and deliberately no longer skips
+       * the check that a build exists. Skipping both is what let a dev-skip
+       * process serve an unpublished lake in total silence, which is the exact
+       * failure the gate was written to make loud.
+       *
+       * The gate is downgraded rather than given a second environment
+       * variable, because a second variable would be one nobody sets: dev-web
+       * only ever runs `combined` or `application`, both of which fold, so the
+       * refusing branch is not on its path at all. The only way a developer
+       * reaches the gate is by explicitly asking for a reader role locally,
+       * where refusing to boot would defeat the fold flag's whole purpose. In
+       * dev-skip mode an unpublished lake therefore logs a warning naming the
+       * consequence; outside dev the flag cannot be set (`configuration.ts`
+       * throws), so every deployed pod keeps the refusal unconditionally.
+       */
       "report-lake": async () => {
+        const { assertPublishedReportLake } =
+          await import("#src/runtime/report-lake-gate.ts");
         if (configuration.skipReportLakeFold) {
           logger.warn(
-            "⏭️  Skipping the boot report-lake check (SCOUT_DEV_SKIP_REPORT_LAKE_FOLD)",
+            "⏭️  Skipping the boot report-lake fold (SCOUT_DEV_SKIP_REPORT_LAKE_FOLD)",
           );
+          await assertPublishedReportLake({ onUnpublished: "warn" });
           return;
         }
         if (capabilities.reportLakeFold) {
@@ -105,7 +105,7 @@ export function scoutRuntimeSubsystems(
           await runReportLakeFold();
           return;
         }
-        await assertPublishedReportLake();
+        await assertPublishedReportLake({ onUnpublished: "refuse" });
       },
 
       "temporal-core": async () => {

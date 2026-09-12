@@ -52,7 +52,10 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     championAssets: true,
     voiceAssistant: true,
     voiceStateAccess: true,
-    reportLakeAccess: false,
+    // True with no Temporal queue of its own: `/scout ask` and the Dare
+    // commands run the Explore agent in the process that received the
+    // interaction, and that is this one.
+    reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: [],
     deferredTemporalWorkers: [],
@@ -177,6 +180,21 @@ describe("scout runtime roles", () => {
     for (const role of SCOUT_RUNTIME_ROLES) {
       const capabilities = scoutRuntimeCapabilities(role);
       if (!capabilities.reportLakeFold) continue;
+      expect(capabilities.reportLakeAccess).toBe(true);
+    }
+  });
+
+  test("a role that receives Discord interactions declares lake access", () => {
+    // Running a Temporal queue is NOT the test for needing the lake. `/scout
+    // ask` and the Dare commands execute the Explore agent in whichever
+    // process received the interaction — a synchronous DuckDB read on the
+    // gateway role, with no queue anywhere in it. The gateway declared `false`
+    // while doing exactly that, and since the boot gate runs only for roles
+    // declaring `true`, the one pod that needed the check was the one that
+    // skipped it.
+    for (const role of SCOUT_RUNTIME_ROLES) {
+      const capabilities = scoutRuntimeCapabilities(role);
+      if (!capabilities.discordGateway) continue;
       expect(capabilities.reportLakeAccess).toBe(true);
     }
   });

@@ -272,7 +272,7 @@ describe("receipts and state assembly", () => {
 
     const differingEvidence = matchProcessingReceiptRowToRecord({
       ...receiptRow(120, "global"),
-      recordedAt: new Date("2026-09-07T13:00:00.000Z"),
+      evidence: JSON.stringify({ messageId: "a-different-claim" }),
     });
     expect(await recordReceipt(prisma, differingEvidence)).toEqual({
       outcome: "conflict",
@@ -284,9 +284,32 @@ describe("receipts and state assembly", () => {
       matchId: globalReceipt.matchId,
     });
     expect(listed).toHaveLength(1);
-    expect(listed[0]?.receipt.recordedAt).toBe(
-      globalReceipt.receipt.recordedAt,
-    );
+    expect(listed[0]?.evidence).toBeNull();
+  });
+
+  test("a benign retry with a later wall clock is already-applied", async () => {
+    // `recordedAt` is wall-clock at write time and receipt writers are
+    // Temporal Activities, so an ordinary retry of an already-committed write
+    // differs in that column and in nothing else. Counting those as conflicts
+    // inflated the very counter the dual-write alerting watches, with events
+    // that are the system working correctly.
+    await observeMatch(prisma, observation(122));
+    const first = receipt(122, "global");
+    expect(await recordReceipt(prisma, first)).toEqual({ outcome: "applied" });
+
+    const retriedLater = matchProcessingReceiptRowToRecord({
+      ...receiptRow(122, "global"),
+      recordedAt: new Date("2026-09-07T13:00:00.000Z"),
+    });
+    expect(retriedLater.receipt.recordedAt).not.toBe(first.receipt.recordedAt);
+    expect(await recordReceipt(prisma, retriedLater)).toEqual({
+      outcome: "already-applied",
+    });
+
+    // ...and the first attestation's timestamp is what the table retains.
+    const listed = await listReceipts(prisma, { matchId: first.matchId });
+    expect(listed).toHaveLength(1);
+    expect(listed[0]?.receipt.recordedAt).toBe(first.receipt.recordedAt);
   });
 
   test("exactly one of two concurrent identical receipt writers applies", async () => {

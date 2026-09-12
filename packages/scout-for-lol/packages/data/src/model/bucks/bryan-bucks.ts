@@ -254,15 +254,30 @@ export const BucksMatchingAllocationSchema = z.strictObject({
   ...MatchingAmountFields,
 });
 
-/** Complete, versioned close-time allocation for one guild's match pool. */
+/**
+ * Complete, versioned close-time allocation for one guild's match pool.
+ *
+ * The three money fields are sums across every position on a side, which is
+ * exactly what `BucksPoolTotal` names: an aggregate that may legally exceed
+ * what any single `Int` column holds, unlike the per-bet values inside
+ * `allocations`. They were bare `z.number().int().nonnegative()` — the brand's
+ * own shape, written out by hand — which is the gap that motivated splitting
+ * the semantic brand from Int32 storability in the first place.
+ *
+ * Branding is safe here on the read side as well as the write side, unlike the
+ * settlement context's historical money fields: `BucksPoolTotalSchema` *is*
+ * `.int().nonnegative()`, so the validated domain does not move and no stored
+ * blob that parsed before can fail now. These are recomputed at close time
+ * from sums of stakes, which cannot be negative, so no version bump is owed.
+ */
 export type BucksMatchingSummary = z.infer<typeof BucksMatchingSummarySchema>;
 export const BucksMatchingSummarySchema = z.strictObject({
   version: z.literal(BUCKS_MATCHING_VERSION),
-  humanMatchedPerSide: z.number().int().nonnegative(),
-  houseFill: z.number().int().nonnegative(),
+  humanMatchedPerSide: BucksPoolTotalSchema,
+  houseFill: BucksPoolTotalSchema,
   houseTeamId: RiotTeamIdSchema.nullable(),
   houseBetId: z.number().int().positive().nullable(),
-  totalMatchedPerSide: z.number().int().nonnegative(),
+  totalMatchedPerSide: BucksPoolTotalSchema,
   allocations: z.array(BucksMatchingAllocationSchema),
 });
 
@@ -279,8 +294,17 @@ const MvpContextSchema = z.strictObject({
  * Discriminated on `type` so a row is self-describing without consulting its
  * `kind` column, and so adding a future entry shape cannot silently widen the
  * meaning of an existing one.
+ *
+ * This is the WRITE contract: what Scout is allowed to record today. Reading
+ * `BucksLedgerEntry.context` back out of the database uses
+ * {@link StoredBucksLedgerContextSchema}, which differs in exactly one
+ * variant — see {@link StoredSettlementContextSchema}.
  */
 export type BucksLedgerContext = z.infer<typeof BucksLedgerContextSchema>;
+/** One persisted row's context, in the domain it was written in. */
+export type StoredBucksLedgerContext = z.infer<
+  typeof StoredBucksLedgerContextSchema
+>;
 // Weekly v2 pricing uses a challenging 20–30% YES range. Keep the original
 // 40–60% range readable for v1 ledger entries because ledger history is
 // append-only and the context does not carry the weekly schema version.
@@ -288,7 +312,76 @@ export const BucksWeeklyParlayYesProbabilityBpsSchema = z.union([
   z.number().int().min(2000).max(3000),
   z.number().int().min(4000).max(6000),
 ]);
-export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
+
+/** Everything a settlement row records that both domains agree on. */
+const SettlementContextCommonFields = {
+  type: z.literal("settlement"),
+  subjectAlias: z.string(),
+  backedAliases: z.array(z.string()),
+  opposingAliases: z.array(z.string()),
+  /** Added with house cuts. Optional so historical ledger JSON remains
+   * parseable under the current schema. Per-bet Int-column values, so the
+   * branded Int32 schemas restate the stored domain — and unlike the four
+   * money fields below, these were introduced already branded, so no row
+   * exists that was written under a wider domain. */
+  grossPayout: BucksAmountSchema.optional(),
+  houseCut: BucksAmountSchema.optional(),
+  netPayout: BucksAmountSchema.optional(),
+  submittedStake: BucksAmountSchema.optional(),
+  matchedStake: BucksAmountSchema.optional(),
+  unmatchedStake: BucksAmountSchema.optional(),
+  /** Gross payouts may be split around the fee transfer so every
+   * intermediate wallet balance remains representable. */
+  payoutComponent: z
+    .enum(["gross", "principal", "profit", "refund"])
+    .optional(),
+  voidReason: BucksVoidReasonSchema.optional(),
+};
+
+/**
+ * The settlement context Scout writes today.
+ *
+ * Pool-level aggregates sum many bettors' Int32 positions, so unlike the
+ * per-bet fields they carry no storage bound — `BucksPoolTotal` is the brand
+ * for exactly that shape. `stakeReturned` and `winnings` are per-bet despite
+ * sitting beside the aggregates: settlement writes this bettor's own matched
+ * stake and own winnings, both already branded where they are computed.
+ */
+const WrittenSettlementContextSchema = z.strictObject({
+  ...SettlementContextCommonFields,
+  winnersPool: BucksPoolTotalSchema,
+  losersPool: BucksPoolTotalSchema,
+  stakeReturned: BucksAmountSchema,
+  winnings: BucksAmountSchema,
+});
+
+/**
+ * The same context as it may actually exist in the database.
+ *
+ * These four fields were persisted as plain signed `z.number().int()` from the
+ * first Bryan Bucks release until the money brands landed, which narrowed all
+ * four to non-negative in one step. Today's writer provably cannot emit a
+ * negative — that is what the brands are for — but a stored row's meaning is
+ * fixed by the schema that was in force when it was written, and that schema
+ * bounded none of these below. Existing records keep their original
+ * interpretation, so the read side restates the domain history was written in
+ * and only the write path narrows.
+ *
+ * Reading through the narrowed schema instead is not a harmless strictness:
+ * the ledger page silently drops a row's whole explanation and falls back to a
+ * bare match ID, and the dare repair script hard-throws while merely scanning
+ * candidate rows — both on rows that are not corrupt, just old.
+ */
+const StoredSettlementContextSchema = z.strictObject({
+  ...SettlementContextCommonFields,
+  winnersPool: z.number().int(),
+  losersPool: z.number().int(),
+  stakeReturned: z.number().int(),
+  winnings: z.number().int(),
+});
+
+/** Every variant whose domain is the same read or written. */
+const SHARED_LEDGER_CONTEXT_VARIANTS = [
   z.strictObject({
     type: z.literal("seed"),
     note: z.string(),
@@ -322,37 +415,6 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     /** Aliases on the side the bettor backed, and on the other side. */
     backedAliases: z.array(z.string()),
     opposingAliases: z.array(z.string()),
-  }),
-  z.strictObject({
-    type: z.literal("settlement"),
-    subjectAlias: z.string(),
-    backedAliases: z.array(z.string()),
-    opposingAliases: z.array(z.string()),
-    // Pool-level aggregates sum many bettors' Int32 positions, so unlike the
-    // per-bet fields below they carry no storage bound. `BucksPoolTotal` is
-    // the brand for exactly that shape.
-    winnersPool: BucksPoolTotalSchema,
-    losersPool: BucksPoolTotalSchema,
-    // Per-bet values, despite sitting beside the aggregates: settlement writes
-    // this bettor's own matched stake and own winnings, both already branded
-    // where they are computed.
-    stakeReturned: BucksAmountSchema,
-    winnings: BucksAmountSchema,
-    /** Added with house cuts. Optional so historical ledger JSON remains
-     * parseable under the current schema. Per-bet Int-column values, so the
-     * branded Int32 schemas restate the stored domain. */
-    grossPayout: BucksAmountSchema.optional(),
-    houseCut: BucksAmountSchema.optional(),
-    netPayout: BucksAmountSchema.optional(),
-    submittedStake: BucksAmountSchema.optional(),
-    matchedStake: BucksAmountSchema.optional(),
-    unmatchedStake: BucksAmountSchema.optional(),
-    /** Gross payouts may be split around the fee transfer so every
-     * intermediate wallet balance remains representable. */
-    payoutComponent: z
-      .enum(["gross", "principal", "profit", "refund"])
-      .optional(),
-    voidReason: BucksVoidReasonSchema.optional(),
   }),
   z.strictObject({
     type: z.literal("matching"),
@@ -513,6 +575,24 @@ export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
     note: z.string(),
     actorDiscordId: z.string(),
   }),
+] as const;
+
+export const BucksLedgerContextSchema = z.discriminatedUnion("type", [
+  ...SHARED_LEDGER_CONTEXT_VARIANTS,
+  WrittenSettlementContextSchema,
+]);
+
+/**
+ * The union to parse `BucksLedgerEntry.context` with.
+ *
+ * Identical to {@link BucksLedgerContextSchema} except for the settlement
+ * variant, whose money fields keep the wider domain they were written in.
+ * Everything that reads a persisted row uses this; everything that writes one
+ * uses the narrowed write schema, so the tightening still holds going forward.
+ */
+export const StoredBucksLedgerContextSchema = z.discriminatedUnion("type", [
+  ...SHARED_LEDGER_CONTEXT_VARIANTS,
+  StoredSettlementContextSchema,
 ]);
 
 /** A `{ channelId, messageId }` pair for one guild's prematch message, so the

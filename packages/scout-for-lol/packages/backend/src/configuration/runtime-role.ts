@@ -26,7 +26,9 @@
  *   the Hey Scout voice assistant. Voice is gateway-coupled by design (it reads
  *   an active voice connection's audio), which makes this role explicitly
  *   stateful and unsplittable from the shard. It runs no Temporal workers, only
- *   a Temporal client, because commands start Workflows they do not execute.
+ *   a Temporal client, because commands start Workflows they do not execute —
+ *   but it still needs the report lake, because `/scout ask` and the Dare
+ *   commands answer from it synchronously, in this process.
  * - `activity-worker` — the `realtime` and `background` Temporal activity
  *   workers plus the competition activity worker: Riot polling, ingestion,
  *   report rendering and Discord delivery over REST. No gateway connection.
@@ -111,6 +113,14 @@ export type ScoutRuntimeCapabilities = {
    * empty directory does not fail — DuckDB happily scans zero parquet files —
    * so it records empty query results as successful runs. That is why this is a
    * declared capability with a boot gate rather than an assumption.
+   *
+   * The queues are not the only readers, so "runs a worker" is not the test.
+   * `/scout ask` and the Dare commands run the Explore agent in the process
+   * that received the interaction, which puts a lake read on the gateway role
+   * with no queue involved. Every in-process reader is funnelled through
+   * `reports/duckdb/lake.ts`, which asserts this capability at the read site —
+   * the boot gate alone cannot protect a role that declares `false`, because
+   * declaring `false` is what skips the gate.
    */
   readonly reportLakeAccess: boolean;
   /**
@@ -204,9 +214,22 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     championAssets: true,
     voiceAssistant: true,
     voiceStateAccess: true,
-    // The only role that runs no activity queue, and therefore the only one
-    // that needs no lake volume at all.
-    reportLakeAccess: false,
+    // True despite running no Temporal activity queue, because the queues are
+    // not the only lake readers. `/scout ask` and the Dare commands execute
+    // the Explore agent IN PROCESS on whichever pod received the interaction
+    // (`discord/commands/scout.ts` → `explore/agent.ts` → the DuckDB engine),
+    // and this is the role that receives every interaction. It previously
+    // declared `false` while doing exactly this, which made the boot gate skip
+    // the pod that needed it most: DuckDB scans zero parquet files rather than
+    // failing, so every question came back "no games found", successfully.
+    //
+    // Wave 6 must settle this properly, and has two ways to: route
+    // Discord-surface Explore turns through the `interactive` queue — the same
+    // mechanism this role already owes customs voice — or keep executing them
+    // here and give the gateway Deployment the lake volume. Until then the
+    // table says what the process actually does, so the boot gate protects it
+    // honestly.
+    reportLakeAccess: true,
     reportLakeFold: false,
     temporalWorkers: NO_WORKERS,
     deferredTemporalWorkers: NO_WORKERS,

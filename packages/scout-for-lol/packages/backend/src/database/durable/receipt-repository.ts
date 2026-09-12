@@ -10,11 +10,20 @@ import {
  * Repository for MatchProcessingReceipt.
  *
  * Mirrors the domain's recordReceipt: identity is `(kind, version, scope)`
- * within one match, an exact replay — same identity, same evidence — is
- * `already-applied`, and a replay whose evidence disagrees is a conflict
- * (something recorded the same fact twice with different observations; the
- * table keeps the first). The unique constraint is what makes the answer
- * authoritative under concurrency.
+ * within one match, a replay carrying the same evidence is `already-applied`,
+ * and a replay whose evidence disagrees is a conflict — something recorded the
+ * same fact twice with different claims about it, and the table keeps the
+ * first. The unique constraint is what makes the answer authoritative under
+ * concurrency.
+ *
+ * `recordedAt` is NOT part of that comparison, and this is the layer where
+ * including it did visible damage. It is wall-clock at write time and receipt
+ * writers are Temporal Activities, so an ordinary retry of an already-
+ * committed write differs in exactly that column and in nothing else — every
+ * one of them was answered `conflict`, inflating the counter the dual-write
+ * alerting watches with events that are the system working correctly. The
+ * evidence blob is the claim about the fact; the timestamp only records when
+ * the first writer happened to look.
  */
 
 export type RecordReceiptResult =
@@ -49,9 +58,7 @@ export async function recordReceipt(
       `MatchProcessingReceipt ${row.scopeKey} for ${row.riotMatchId} vanished between a duplicate insert and its read-back`,
     );
   }
-  const sameEvidence =
-    existing.recordedAt.getTime() === row.recordedAt.getTime() &&
-    existing.evidence === row.evidence;
+  const sameEvidence = existing.evidence === row.evidence;
   return sameEvidence
     ? { outcome: "already-applied" }
     : { outcome: "conflict", reason: "receipt-evidence-mismatch" };

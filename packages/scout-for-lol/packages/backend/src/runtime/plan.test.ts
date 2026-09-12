@@ -55,6 +55,7 @@ describe("runtime boot order", () => {
     expect(steps).toEqual([
       "champion-assets",
       "voice-assistant",
+      "report-lake",
       "temporal-core",
       "discord-gateway",
       "gateway-ready-reconciliation",
@@ -65,7 +66,12 @@ describe("runtime boot order", () => {
     expect(steps.indexOf("voice-assistant")).toBeLessThan(
       steps.indexOf("discord-gateway"),
     );
-    expect(steps).not.toContain("report-lake");
+    // The lake is settled before the shard connects too: this role answers
+    // `/scout ask` and the Dare commands from the lake, in process, as soon as
+    // the first interaction arrives.
+    expect(steps.indexOf("report-lake")).toBeLessThan(
+      steps.indexOf("discord-gateway"),
+    );
     expect(steps).not.toContain("database-seeding");
   });
 

@@ -55,6 +55,32 @@ placement turns it into a "storage limit" reply. So
 rather than declaring its own — a second class would typecheck fine and silently
 stop matching every one of those catches.
 
+### Reading a ledger row is not writing one
+
+`src/model/bucks/bryan-bucks.ts` exports two ledger-context unions, and which
+one you reach for depends on the direction:
+
+- `BucksLedgerContextSchema` validates what Scout is about to **write**. Every
+  producer — `betting/ledger.ts`, the transfer path, the dare repair script's
+  reversal — parses through it, so today's narrowed money domains are enforced
+  going forward.
+- `StoredBucksLedgerContextSchema` parses a `BucksLedgerEntry.context` **read
+  back** out of the database. Everything that loads history uses it.
+
+They differ in exactly one variant. A settlement row's `winnersPool`,
+`losersPool`, `stakeReturned`, and `winnings` were persisted as plain signed
+integers from the first Bryan Bucks release until the money brands narrowed all
+four to non-negative; a stored row means what the schema in force when it was
+written said it meant, and existing records keep their original interpretation.
+So the stored union restates the historical domain for those four fields and the
+write union does not. Narrowing the read side instead is not harmless
+strictness — it makes the ledger page drop an old row's whole explanation and
+the repair script abort while merely scanning candidates.
+
+Add a new variant to `SHARED_LEDGER_CONTEXT_VARIANTS` so both unions get it. Give
+a variant its own read and write forms only when a persisted domain genuinely
+changed, and say in the schema which release changed it.
+
 ## Data Dragon assets
 
 `src/data-dragon/assets/` is a committed snapshot of Riot's Data Dragon (plus

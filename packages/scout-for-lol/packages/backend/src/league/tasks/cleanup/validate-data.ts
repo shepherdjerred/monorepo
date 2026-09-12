@@ -11,7 +11,7 @@ import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data/index.ts";
-import { prisma } from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { getCompetitionsByChannelId } from "#src/database/competition/queries.ts";
 import { botRest } from "#src/lib/discord/bot-rest.ts";
 import type { DiscordChannel } from "#src/lib/discord/bot-rest-schemas.ts";
@@ -31,10 +31,14 @@ import { createLogger } from "#src/logger.ts";
 const logger = createLogger("cleanup-validate-data");
 
 /**
- * The two guild-presence questions this cleanup asks, injectable so the
- * destructive path can be exercised without Discord.
+ * The database and the two guild-presence questions this cleanup asks,
+ * injectable so the destructive path can be exercised without Discord — and,
+ * because deleting is the whole point of this job, against a real schema
+ * rather than against a mock that cannot roll a transaction back.
  */
 export type GuildValidationDependencies = {
+  /** The database every read and every delete in this job goes through. */
+  readonly db: ExtendedPrismaClient;
   /** Which of these guilds have a live install row. One query, no Discord. */
   readonly installedAmong: (guildIds: string[]) => Promise<Set<string>>;
   /**
@@ -56,6 +60,7 @@ export type GuildValidationDependencies = {
 
 export function defaultGuildValidationDependencies(): GuildValidationDependencies {
   return {
+    db: prisma,
     installedAmong: async (guildIds) => await installedGuildIdsAmong(guildIds),
     isInstalled: async (guildId) => await isScoutInstalledInGuild(guildId),
     readChannel: async (channelId) => await botRest().channel(channelId),
@@ -143,10 +148,13 @@ async function validateGuilds(
   logger.info("[DataValidation] Validating guilds...");
 
   try {
-    // Get all unique guild IDs from subscriptions
-    const storedGuilds = await prisma.subscription.findMany({
+    // Get all unique guild IDs from subscriptions. Ordered so a run that dies
+    // partway through is resumable in the same order rather than in whatever
+    // order the planner happened to produce.
+    const storedGuilds = await dependencies.db.subscription.findMany({
       select: { serverId: true },
       distinct: ["serverId"],
+      orderBy: { serverId: "asc" },
     });
 
     const storedGuildIds = storedGuilds.map((s) => s.serverId);
@@ -168,10 +176,13 @@ async function validateGuilds(
       `[DataValidation] ⚠️  Found ${orphanedGuildIds.length.toString()} orphaned guild(s)`,
     );
 
-    // Clean up each orphaned guild
+    // Clean up each orphaned guild. One guild's failure is isolated here and
+    // nowhere below: the cleanup itself no longer catches, so this is the only
+    // place that decides to keep going, and it decides that having seen the
+    // error rather than in place of seeing it.
     for (const guildId of orphanedGuildIds) {
       try {
-        await cleanupOrphanedGuild(guildId);
+        await cleanupOrphanedGuild(dependencies.db, guildId);
       } catch (error) {
         logger.error(
           `[DataValidation] Error cleaning up guild ${guildId}:`,
@@ -180,6 +191,7 @@ async function validateGuilds(
         Sentry.captureException(error, {
           tags: { source: "guild-cleanup", guildId },
         });
+        guildDataCleanupTotal.inc({ data_type: "all", status: "failed" });
         // Continue with other guilds
       }
     }
@@ -194,70 +206,79 @@ async function validateGuilds(
 }
 
 /**
- * Clean up data for a guild the bot is no longer in
+ * Delete one confirmed-gone guild's operational data, all or nothing.
+ *
+ * The three deletes are one transaction, for the same reason
+ * `cleanup/remove-guild.ts` uses one: they are a single decision ("Scout is no
+ * longer in this server"), and half of it is a worse state than either whole.
+ * Run independently, a fault after the first delete left the guild with no
+ * subscriptions and an intact permission table — Scout stops reporting, the
+ * dashboard still lists collaborators, and the next hourly pass would have to
+ * rediscover a half-deleted guild to finish the job.
+ *
+ * It also no longer catches its own errors. Swallowing them here made the
+ * caller's per-guild handler unreachable, so a database fault was recorded as
+ * a successful cleanup and the counts silently came back zero; the caller is
+ * the one that knows there are other guilds to get to.
  */
-async function cleanupOrphanedGuild(serverId: string): Promise<void> {
+async function cleanupOrphanedGuild(
+  db: ExtendedPrismaClient,
+  serverId: string,
+): Promise<void> {
   logger.info(`[DataValidation] Cleaning up orphaned guild ${serverId}`);
 
-  try {
-    const guildId = DiscordGuildIdSchema.parse(serverId);
+  const guildId = DiscordGuildIdSchema.parse(serverId);
 
-    // Delete subscriptions
-    const deletedSubs = await prisma.subscription.deleteMany({
+  const deleted = await db.$transaction(async (tx) => {
+    const subscriptions = await tx.subscription.deleteMany({
       where: { serverId: guildId },
     });
-
-    if (deletedSubs.count > 0) {
-      logger.info(
-        `[DataValidation]   Deleted ${deletedSubs.count.toString()} subscription(s)`,
-      );
-      discordSubscriptionsCleanedTotal.inc(
-        { reason: "periodic_validation_guild" },
-        deletedSubs.count,
-      );
-      guildDataCleanupTotal.inc({
-        data_type: "subscriptions",
-        status: "success",
-      });
-    }
-
-    // Delete server permissions
-    const deletedPerms = await prisma.serverPermission.deleteMany({
+    const permissions = await tx.serverPermission.deleteMany({
       where: { serverId: guildId },
     });
-
-    if (deletedPerms.count > 0) {
-      logger.info(
-        `[DataValidation]   Deleted ${deletedPerms.count.toString()} permission(s)`,
-      );
-      guildDataCleanupTotal.inc({
-        data_type: "permissions",
-        status: "success",
-      });
-    }
-
-    // Delete permission error records
-    const deletedErrors = await prisma.guildPermissionError.deleteMany({
+    const permissionErrors = await tx.guildPermissionError.deleteMany({
       where: { serverId: guildId },
     });
+    return {
+      subscriptions: subscriptions.count,
+      permissions: permissions.count,
+      permissionErrors: permissionErrors.count,
+    };
+  });
 
-    if (deletedErrors.count > 0) {
-      logger.info(
-        `[DataValidation]   Deleted ${deletedErrors.count.toString()} error record(s)`,
-      );
-    }
-
-    logger.info(`[DataValidation] ✅ Cleaned up guild ${serverId}`);
-  } catch (error) {
-    logger.error(
-      `[DataValidation] Error cleaning up guild ${serverId}:`,
-      getErrorMessage(error),
+  // Counted only once the transaction committed: a rolled-back delete removed
+  // nothing, and a metric that says otherwise is worse than no metric.
+  if (deleted.subscriptions > 0) {
+    logger.info(
+      `[DataValidation]   Deleted ${deleted.subscriptions.toString()} subscription(s)`,
     );
-    Sentry.captureException(error, {
-      tags: { source: "cleanup-orphaned-guild", serverId },
+    discordSubscriptionsCleanedTotal.inc(
+      { reason: "periodic_validation_guild" },
+      deleted.subscriptions,
+    );
+    guildDataCleanupTotal.inc({
+      data_type: "subscriptions",
+      status: "success",
     });
-    guildDataCleanupTotal.inc({ data_type: "all", status: "failed" });
   }
+
+  if (deleted.permissions > 0) {
+    logger.info(
+      `[DataValidation]   Deleted ${deleted.permissions.toString()} permission(s)`,
+    );
+    guildDataCleanupTotal.inc({
+      data_type: "permissions",
+      status: "success",
+    });
+  }
+
+  if (deleted.permissionErrors > 0) {
+    logger.info(
+      `[DataValidation]   Deleted ${deleted.permissionErrors.toString()} error record(s)`,
+    );
+  }
+
+  logger.info(`[DataValidation] ✅ Cleaned up guild ${serverId}`);
 }
 
 /**
@@ -302,13 +323,13 @@ export async function resolveOrphanedChannelIds(
  */
 async function validateChannels(
   client: Client,
-  dependencies: Pick<GuildValidationDependencies, "readChannel">,
+  dependencies: Pick<GuildValidationDependencies, "db" | "readChannel">,
 ): Promise<void> {
   logger.info("[DataValidation] Validating channels...");
 
   try {
     // Get all unique channel IDs from subscriptions
-    const storedChannels = await prisma.subscription.findMany({
+    const storedChannels = await dependencies.db.subscription.findMany({
       select: { channelId: true },
       distinct: ["channelId"],
     });
@@ -332,7 +353,7 @@ async function validateChannels(
     );
 
     // Clean up orphaned channels and notify owners (grouped by owner)
-    await cleanupOrphanedChannels(client, orphanedChannels);
+    await cleanupOrphanedChannels(dependencies.db, client, orphanedChannels);
 
     logger.info(
       `[DataValidation] ✅ Cleaned up ${orphanedChannels.length.toString()} orphaned channel(s)`,
@@ -352,6 +373,7 @@ async function validateChannels(
  * Groups notifications by owner to prevent spam
  */
 async function cleanupOrphanedChannels(
+  db: ExtendedPrismaClient,
   client: Client,
   channelIds: string[],
 ): Promise<void> {
@@ -366,7 +388,7 @@ async function cleanupOrphanedChannels(
       const parsedChannelId = DiscordChannelIdSchema.parse(channelId);
 
       // Delete subscriptions for this channel
-      const deletedSubs = await prisma.subscription.deleteMany({
+      const deletedSubs = await db.subscription.deleteMany({
         where: { channelId: parsedChannelId },
       });
 
@@ -382,7 +404,7 @@ async function cleanupOrphanedChannels(
 
       // Get competitions using this channel
       const competitions = await getCompetitionsByChannelId(
-        prisma,
+        db,
         parsedChannelId,
       );
 

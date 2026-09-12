@@ -12,7 +12,12 @@ import {
   isScoutInstalledInGuild,
   type InstalledGuildsDependencies,
 } from "#src/lib/discord/installed-guilds.ts";
-import type { BotRestReader } from "#src/lib/discord/bot-rest.ts";
+import {
+  INSTALL_TTL_MS,
+  createBotRestReader,
+  type BotRestGet,
+  type BotRestReader,
+} from "#src/lib/discord/bot-rest.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testAccountId, testGuildId } from "#src/testing/test-ids.ts";
 
@@ -22,6 +27,7 @@ const INSTALLED = testGuildId("701");
 const REMOVED = testGuildId("702");
 const ABSENT = testGuildId("703");
 const DEV_ONLY = testGuildId("704");
+const JUST_INSTALLED = testGuildId("705");
 
 type RestStub = {
   reader: BotRestReader;
@@ -193,6 +199,109 @@ describe("isScoutInstalledInGuild", () => {
       isScoutInstalledInGuild(DEV_ONLY, dependencies(rest.reader, [DEV_ONLY])),
     ).resolves.toBe(true);
     expect(rest.calls).toEqual([]);
+  });
+});
+
+/** Shaped like discord.js `DiscordAPIError` for Unknown Guild. */
+class UnknownGuildError extends Error {
+  readonly code = 10_004;
+  readonly status = 404;
+  constructor() {
+    super("Unknown Guild");
+  }
+}
+
+describe("a freshly installed guild is visible immediately", () => {
+  beforeEach(async () => {
+    await prisma.guildInstall.deleteMany();
+  });
+
+  /**
+   * The REAL reader, because the defect this pins lives in its cache rather
+   * than in the port above it.
+   *
+   * Confirming a live row against Discord (which this port now does in both
+   * directions) made a cached negative user-visible for the first time: a
+   * person who opened the dashboard seconds before adding Scout, then
+   * installed it, would keep being told "Scout is not installed in that
+   * guild" until the entry aged out. Nothing the install does can evict it,
+   * so the only remedy was to wait. Negative answers are therefore never
+   * retained.
+   */
+  test("a negative answer from before the install is not held against it", async () => {
+    const clock = { value: 0 };
+    const routes: string[] = [];
+    let scoutIsInTheGuild = false;
+    const get: BotRestGet = async (route) => {
+      routes.push(route);
+      await Promise.resolve();
+      if (!scoutIsInTheGuild) throw new UnknownGuildError();
+      return {
+        id: JUST_INSTALLED,
+        name: "Server",
+        owner_id: testAccountId("81"),
+      };
+    };
+    const rest = createBotRestReader({
+      get,
+      now: () => clock.value,
+      botUserId: testAccountId("99"),
+    });
+
+    // Someone opens the dashboard for a server Scout is not in yet.
+    await expect(
+      isScoutInstalledInGuild(JUST_INSTALLED, dependencies(rest)),
+    ).resolves.toBe(false);
+
+    // They install Scout: `guildCreate` writes the live row, and Discord now
+    // answers for the guild.
+    await seed(JUST_INSTALLED, null);
+    scoutIsInTheGuild = true;
+    clock.value += 1000;
+    expect(clock.value).toBeLessThan(INSTALL_TTL_MS);
+
+    await expect(
+      isScoutInstalledInGuild(JUST_INSTALLED, dependencies(rest)),
+    ).resolves.toBe(true);
+    // The second check really did ask Discord again rather than replay the
+    // 404 — that is the whole property.
+    expect(routes).toHaveLength(2);
+  });
+
+  test("the positive answer IS cached, so the window costs no extra requests", async () => {
+    const clock = { value: 0 };
+    const routes: string[] = [];
+    const get: BotRestGet = async (route) => {
+      routes.push(route);
+      await Promise.resolve();
+      return {
+        id: INSTALLED,
+        name: "Server",
+        owner_id: testAccountId("81"),
+      };
+    };
+    const rest = createBotRestReader({
+      get,
+      now: () => clock.value,
+      botUserId: testAccountId("99"),
+    });
+    await seed(INSTALLED, null);
+
+    await expect(
+      isScoutInstalledInGuild(INSTALLED, dependencies(rest)),
+    ).resolves.toBe(true);
+    clock.value += INSTALL_TTL_MS - 1;
+    await expect(
+      isScoutInstalledInGuild(INSTALLED, dependencies(rest)),
+    ).resolves.toBe(true);
+    expect(routes).toHaveLength(1);
+
+    // ...and it still expires on schedule, so a removal is not cached forever.
+    clock.value += 2;
+    await expect(
+      isScoutInstalledInGuild(INSTALLED, dependencies(rest)),
+    ).resolves.toBe(true);
+    expect(routes).toHaveLength(2);
   });
 });
 

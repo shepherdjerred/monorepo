@@ -36,10 +36,14 @@
  * - a single member lookup — {@link MEMBERSHIP_TTL_MS} (30s). Shorter, because
  *   this one gates access decisions (the last-role-manager check, Activity
  *   membership): losing access should not lag by a whole minute.
- * - guild existence — {@link INSTALL_TTL_MS} (60s). Only ever consulted after
- *   the `GuildInstall` port has already said "no row" (see
- *   `installed-guilds.ts`), and a fresh install writes that row immediately, so
- *   this TTL delays nothing a user waits on.
+ * - guild existence — {@link INSTALL_TTL_MS} (60s), and **positive answers
+ *   only**. `installed-guilds.ts` confirms every install check against this
+ *   read, in both directions, so a retained "Scout is not in that guild" would
+ *   be served for a whole minute after the user installed Scout — the one
+ *   window where a stale answer is both wrong and immediately visible. See
+ *   {@link cachePositiveOnly}. A retained *positive* is harmless in the same
+ *   way the other TTLs are: removal is a rare, deliberate act, and the previous
+ *   gateway-cache answer was staler still.
  * - user profiles — {@link USER_TTL_MS} (5m), matching the display-name cache
  *   this replaced. Names and avatars are cosmetic.
  *
@@ -68,7 +72,10 @@ import {
   type DiscordUser,
 } from "#src/lib/discord/bot-rest-schemas.ts";
 import { createLogger } from "#src/logger.ts";
-import { createBoundedAsyncCache } from "#src/utils/bounded-async-cache.ts";
+import {
+  createBoundedAsyncCache,
+  type BoundedAsyncCache,
+} from "#src/utils/bounded-async-cache.ts";
 
 const logger = createLogger("discord-bot-rest");
 
@@ -199,6 +206,54 @@ async function read<Parsed>(
 }
 
 /**
+ * Private signal that a load found nothing, so nothing should be retained.
+ *
+ * Never escapes {@link cachePositiveOnly}.
+ */
+class AbsentAnswer extends Error {
+  constructor() {
+    super("Discord answered absent; deliberately not cached");
+    this.name = "AbsentAnswer";
+  }
+}
+
+/**
+ * Memoize a read's positive answers and none of its negatives.
+ *
+ * For the one read whose negative a user action invalidates immediately.
+ * Someone who opens the dashboard a second before adding Scout to their server
+ * would otherwise be told "Scout is not installed in that guild" for the rest
+ * of {@link INSTALL_TTL_MS} — the install itself cannot clear a cache it never
+ * touches, so the only recourse is to wait out a minute of a screen saying the
+ * thing they just did did not happen.
+ *
+ * The mechanism is the shared primitive's existing contract rather than a
+ * change to it: {@link createBoundedAsyncCache} caches what a load *resolves*
+ * to and retains nothing when it rejects, while still collapsing concurrent
+ * callers onto one in-flight promise. So an absent answer leaves the cache as a
+ * private {@link AbsentAnswer} rejection and becomes `null` again out here.
+ * Adding a "don't cache this value" option to the primitive instead would push
+ * a decision that belongs to one call site into every other cache built from
+ * it.
+ */
+async function cachePositiveOnly<Result>(
+  cache: BoundedAsyncCache<Result>,
+  key: string,
+  load: () => Promise<Result | null>,
+): Promise<Result | null> {
+  try {
+    return await cache(key, async () => {
+      const result = await load();
+      if (result === null) throw new AbsentAnswer();
+      return result;
+    });
+  } catch (error) {
+    if (error instanceof AbsentAnswer) return null;
+    throw error;
+  }
+}
+
+/**
  * The authoritative Discord reads a web request may need.
  *
  * A `null` result always means Discord said the resource does not exist —
@@ -284,7 +339,9 @@ export function createBotRestReader(
     now,
   });
 
-  const guildCache = createBoundedAsyncCache<DiscordGuildSummary | null>(
+  // Non-nullable on purpose: absence is never a cached value here. See
+  // {@link cachePositiveOnly}.
+  const guildCache = createBoundedAsyncCache<DiscordGuildSummary>(
     cacheOptions(INSTALL_TTL_MS),
   );
   const channelCache = createBoundedAsyncCache<DiscordGuildChannel[] | null>(
@@ -323,7 +380,8 @@ export function createBotRestReader(
     });
 
   const readGuild = async (guildId: string) =>
-    await guildCache(
+    await cachePositiveOnly(
+      guildCache,
       guildId,
       async () =>
         await read(get, {

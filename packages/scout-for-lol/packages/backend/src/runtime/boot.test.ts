@@ -127,11 +127,14 @@ describe("scout runtime boot", () => {
     expect(log.boot).not.toContain("discord-gateway");
   });
 
-  test("gateway boots without the product HTTP surface or the lake", async () => {
+  test("gateway boots without the product HTTP surface, but with the lake", async () => {
     const log = await boot("gateway");
     expect(log.boot).toEqual([
       "champion-assets",
       "voice-assistant",
+      // Present because this role answers `/scout ask` and the Dare commands
+      // from the lake in process, not because it runs a Temporal queue.
+      "report-lake",
       "temporal-core",
       "discord-gateway",
       "gateway-ready-reconciliation",
@@ -139,7 +142,6 @@ describe("scout runtime boot", () => {
     ]);
     // It logs in, so it must not pre-mark its own gateway as disabled.
     expect(log.discord).toEqual(["rest-token"]);
-    expect(log.boot).not.toContain("report-lake");
     expect(log.boot).not.toContain("database-seeding");
   });
 
