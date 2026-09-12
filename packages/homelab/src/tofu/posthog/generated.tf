@@ -1407,55 +1407,15 @@ resource "posthog_insight" "insight_11297204" {
   dashboard_ids    = [2027696]
   deleted          = false
   derived_name     = null
-  description      = "Deduplicated market lifecycle counts by transition."
-  name             = "Bryan Bucks markets opened settled and voided"
+  description      = "Deduplicated count of every valid Bryan Bucks lifecycle transition; the table preserves every value instead of collapsing low-volume transitions into Other."
+  name             = "Bryan Bucks lifecycle transitions"
   project_id       = "549883"
   query_json = jsonencode({
-    kind = "InsightVizNode"
+    display = "ActionsTable"
+    kind    = "DataVisualizationNode"
     source = {
-      breakdownFilter = {
-        breakdown_type = "event"
-        breakdowns = [{
-          property = "transition"
-          type     = "event"
-        }]
-      }
-      dateRange = {
-        date_from                = "-90d"
-        excludeIncompletePeriods = false
-        explicitDate             = false
-      }
-      filterTestAccounts = false
-      interval           = "day"
-      kind               = "TrendsQuery"
-      properties         = []
-      series = [{
-        event      = "bryan_bucks_lifecycle"
-        kind       = "EventsNode"
-        math       = "hogql"
-        math_hogql = "count(distinct uuid)"
-      }]
-      trendsFilter = {
-        aggregationAxisFormat   = "numeric"
-        display                 = "ActionsStackedBar"
-        excludeBoxPlotOutliers  = true
-        hideWeekends            = false
-        legendPosition          = "bottom"
-        metricColorByDirection  = false
-        metricShowChange        = true
-        metricSummary           = "total"
-        resultCustomizationBy   = "value"
-        showAlertThresholdLines = false
-        showAnnotations         = true
-        showLegend              = false
-        showMultipleYAxes       = false
-        showPercentStackView    = false
-        showValuesOnSeries      = false
-        smoothingIntervals      = 1
-        stackBreakdownValues    = false
-        yAxisScaleType          = "linear"
-        yAxisStartAtZero        = true
-      }
+      kind  = "HogQLQuery"
+      query = "SELECT properties.transition AS transition, count(DISTINCT uuid) AS transition_count FROM events WHERE event = 'bryan_bucks_lifecycle' AND {filters} GROUP BY transition ORDER BY transition_count DESC"
     }
   })
   query_sql = null
@@ -1476,7 +1436,7 @@ resource "posthog_insight" "insight_11297203" {
     kind    = "DataVisualizationNode"
     source = {
       kind  = "HogQLQuery"
-      query = "SELECT day, sum(-delta) AS stake_volume FROM (SELECT uuid, toStartOfDay(timestamp) AS day, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND properties.movement IN ('bet_stake', 'parlay_stake') AND {filters} GROUP BY uuid, day) GROUP BY day ORDER BY day"
+      query = "SELECT day, sum(-delta) AS stake_volume FROM (SELECT uuid, toStartOfDay(timestamp) AS day, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND endsWith(properties.movement, '_stake') AND {filters} GROUP BY uuid, day) GROUP BY day ORDER BY day"
     }
   })
   query_sql = null
@@ -2821,7 +2781,7 @@ resource "posthog_insight" "insight_11297206" {
     kind    = "DataVisualizationNode"
     source = {
       kind  = "HogQLQuery"
-      query = "SELECT day, sumIf(delta, movement IN ('earn_game', 'earn_win', 'earn_mvp', 'earn_ranked_5s_bonus')) AS earnings, sumIf(delta, movement IN ('bet_payout', 'parlay_payout')) AS payouts FROM (SELECT uuid, toStartOfDay(timestamp) AS day, properties.movement AS movement, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND {filters} GROUP BY uuid, day, movement) GROUP BY day ORDER BY day"
+      query = "SELECT day, sumIf(delta, startsWith(movement, 'earn_')) AS earnings, sumIf(delta, endsWith(movement, '_payout')) AS payouts FROM (SELECT uuid, toStartOfDay(timestamp) AS day, properties.movement AS movement, argMax(toFloat(properties.delta_bucks), timestamp) AS delta FROM events WHERE event = 'bryan_bucks_economy' AND {filters} GROUP BY uuid, day, movement) GROUP BY day ORDER BY day"
     }
   })
   query_sql = null
@@ -3534,16 +3494,16 @@ resource "posthog_insight" "insight_11297198" {
   dashboard_ids    = [2027696]
   deleted          = false
   derived_name     = null
-  description      = "Weekly retention after a member first uses Bryan Bucks."
+  description      = "Weekly retention after a member first uses Bryan Bucks, beginning with analytics instrumentation on 2026-08-16."
   name             = "Bryan Bucks first-use retention cohorts"
   project_id       = "549883"
   query_json = jsonencode({
     kind = "InsightVizNode"
     source = {
       dateRange = {
-        date_from                = "-90d"
+        date_from                = "2026-08-16"
         excludeIncompletePeriods = false
-        explicitDate             = false
+        explicitDate             = true
       }
       filterTestAccounts = false
       kind               = "RetentionQuery"
@@ -3946,8 +3906,8 @@ resource "posthog_insight" "insight_11251185" {
   dashboard_ids    = [2022116]
   deleted          = false
   derived_name     = null
-  description      = "Interim channel attribution until guild_install_attributed / bot_install_completed land (PR #2338): CTA clicks broken down by the person's first-touch utm_source."
-  name             = "Get Started clicks by first-touch source"
+  description      = "CTA clicks broken down by first-touch utm_source. This is an install-intent proxy, not completed installs; a null source means no first-touch source was captured. Replace it after production emits guild_install_attributed and bot_install_completed."
+  name             = "Get Started CTA clicks by first-touch source (install proxy)"
   project_id       = "549883"
   query_json = jsonencode({
     kind = "InsightVizNode"
@@ -4049,8 +4009,8 @@ resource "posthog_insight" "insight_11297201" {
   dashboard_ids    = [2027696]
   deleted          = false
   derived_name     = null
-  description      = "Deduplicated member activity split by command versus button surface."
-  name             = "Bryan Bucks activity by betting surface"
+  description      = "Deduplicated interaction volume split by command, button, and web surface. UUID deduplication prevents duplicate delivery; it does not count unique members."
+  name             = "Bryan Bucks interactions by betting surface"
   project_id       = "549883"
   query_json = jsonencode({
     kind = "InsightVizNode"

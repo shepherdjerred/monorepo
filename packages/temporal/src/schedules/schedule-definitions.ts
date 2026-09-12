@@ -229,7 +229,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "5 minutes",
+    // Five 2m Activity attempts plus 2m10s of retry backoff need more than the
+    // old five-minute Workflow deadline. The 15m cap fits that envelope while
+    // SKIP still prevents concurrent snapshot publication.
+    workflowExecutionTimeout: "15 minutes",
     memo: "Every-15-minute committed Bryan Bucks ledger and economy analytics sync",
   },
   {
