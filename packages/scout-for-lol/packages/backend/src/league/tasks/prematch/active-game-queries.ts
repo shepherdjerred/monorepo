@@ -8,8 +8,9 @@ import * as Sentry from "@sentry/bun";
 const logger = createLogger("prematch-active-game-queries");
 
 // Keep reply metadata through the full postmatch alert window, which is three
-// hours from match creation.
-const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
+// hours from match creation. Exported because it is also the freshness horizon
+// of a pre-match notification intent: past it the game is no longer tracked.
+export const ACTIVE_GAME_TTL_MS = 3 * 60 * 60 * 1000;
 
 const TrackedPuuidsSchema = z.array(z.string());
 /** Discord channel ID -> message ID, for both prematch and postmatch refs. */

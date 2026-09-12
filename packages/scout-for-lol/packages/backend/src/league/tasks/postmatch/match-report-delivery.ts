@@ -24,6 +24,12 @@ import {
   channelsPassingQueueFilter,
   deliverToChannels,
 } from "#src/league/tasks/notification-filters.ts";
+import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import {
+  deliveredMessagesByGuild,
+  recordDeliveryReceipts,
+  tryCreateChannelDeliveryRecorder,
+} from "#src/durable/match/delivery-intents.ts";
 
 const logger = createLogger("postmatch-report-delivery");
 const MAX_DISCORD_ALERT_AGE_MS = 3 * 60 * 60 * 1000;
@@ -92,15 +98,37 @@ export async function deliverPostmatchReport(input: {
     logger.info(`[processMatch] ⚠️  No message generated for match ${matchId}`);
     return new Map();
   }
+  const facts = liveDurableFacts();
+  const effectKeyPrefix = `postmatch-discord:${matchId}`;
   const delivery = await deliverToChannels({
     message,
     channels: deliverChannels,
     logPrefix: "[processMatch]",
     sentryTags: { matchId },
     replyToMessageIds: await getPrematchMessageIdsForMatchIdOrEmpty(matchId),
-    effectKeyPrefix: `postmatch-discord:${matchId}`,
+    effectKeyPrefix,
+    recordDelivery:
+      tryCreateChannelDeliveryRecorder({
+        facts,
+        matchId,
+        keyPrefix: effectKeyPrefix,
+        // v1's own staleness rule: a report older than this is never sent, so
+        // it is exactly the instant after which the intent is stale.
+        freshnessDeadline: new Date(
+          input.matchData.info.gameCreation + MAX_DISCORD_ALERT_AGE_MS,
+        ),
+      }) ?? undefined,
   });
   await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
   await recordPostmatchMessageIds(matchId, delivery.messageIdsByChannel);
+  await recordDeliveryReceipts({
+    facts,
+    kind: "reportDelivery",
+    matchId,
+    messagesByGuild: deliveredMessagesByGuild(
+      deliverChannels,
+      delivery.messageIdsByChannel,
+    ),
+  });
   return delivery.messageIdsByChannel;
 }

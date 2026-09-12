@@ -59,6 +59,48 @@ bun run temporal:requeue-work -- \
 `db:generate` must run after schema changes and before typecheck/test; from the
 Scout root, `mise run generate` does the same thing.
 
+## Durable match facts
+
+`src/durable/match/` holds the typed services the per-match pipeline calls.
+Each one runs an injected v1 operation — archive, settlement, progression,
+delivery, workflow start — and then records what that operation did in the
+durable tables (`MatchObservation`, `MatchTrackedAccount`,
+`MatchProcessingReceipt`, `MatchNotificationIntent`, `ScoutWorkflowStart`).
+
+The pipeline remains authoritative for behaviour. Every durable write is
+fail-open: it can never throw into the pipeline, so a recorder outage cannot
+stall ingestion or suppress a report. `ScoutEffectClaim` is still the
+at-most-once Discord delivery guard; a notification intent is a record of what
+that guard let through, keyed by the same string so the two describe the same
+send.
+
+Receipt evidence names things by durable identity — Discord message ids, ledger
+row ids, object key plus content digest — never by a count or a local path, so
+a reader can go find what the receipt attests to. No evidence carries a money
+amount; the identities locate the ledger rows and the amounts live there under
+the storable Bucks brands. The `raw-archive` and `lake-staging` receipt kinds
+belong to the receipted lake projection in `report-lake/`, which records them
+from the writer that knows the artifact's key and digest.
+
+Two metrics carry the parity signal, both defined once in
+`src/metrics/durable.ts` — prom-client throws at import time on a duplicate
+metric name, so a second definition site takes the process down on boot rather
+than at the first `inc()`:
+
+- `scout_durable_dualwrite_records_total{write_kind, outcome}` — facts
+  recorded, by repository answer (`applied`, `already-applied`, `adopted`,
+  `conflict`).
+- `scout_durable_dualwrite_failures_total{write_kind}` — writes that failed and
+  were swallowed. Non-zero means the durable record is behind what the pipeline
+  actually did. These failures deliberately do not reach Sentry: an outage
+  would raise one event per write per channel per match and bury the errors
+  that actually stop work.
+
+Both are per-write counters incremented by whichever runtime role executed the
+write, so a parity dashboard joins across roles rather than reading one
+process. Neither is derived from a database sweep, so neither belongs in
+`getMetrics()`'s `databaseMetricSweepsEnabled()` block.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client

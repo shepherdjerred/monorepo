@@ -55,6 +55,7 @@ const layers = [
   "configuration",
   "database",
   "discord",
+  "durable",
   "explore",
   "http",
   "league",
@@ -171,6 +172,22 @@ export default defineArchitecture({
         "utils",
         "configuration",
       ),
+    },
+    {
+      name: "durable-services-take-their-dependencies-as-arguments",
+      comment:
+        "`durable/` holds the typed match services the v1 pipeline calls: they run an injected " +
+        "operation and record what it did in the durable tables, whose repositories and row " +
+        "codecs sit under `database/durable/`. Every feature they coordinate — settlement, " +
+        "progression, delivery, workflow starts — arrives as a callback, so the layer stays " +
+        "callable from a Temporal Activity, a backfill script or a test without dragging a " +
+        "Discord client or a Riot fetcher in behind it. Importing a feature slice directly is " +
+        "what would end that, so only the persistence and metric layers are reachable from " +
+        "here. Note the name is about durability, not about the `application` RUNTIME ROLE in " +
+        "`configuration/runtime-role.ts`: these services run under whichever role executes the " +
+        "write, which is usually a worker.",
+      from: "durable",
+      to: everythingExcept("durable", "database", "metrics"),
     },
     {
       name: "analytics-reads-the-database-and-nothing-else",

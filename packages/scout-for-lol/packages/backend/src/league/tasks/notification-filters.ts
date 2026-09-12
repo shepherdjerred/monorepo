@@ -1,11 +1,14 @@
 import * as Sentry from "@sentry/bun";
-import { createHash } from "node:crypto";
 import {
   claimScoutEffect,
   completeScoutEffectWithResult,
   recordScoutEffectFailure,
   requireCompletedScoutEffectResult,
 } from "#src/temporal/effect-claims.ts";
+import {
+  deliveryAttemptNonce,
+  type ChannelDeliveryRecorder,
+} from "#src/durable/match/delivery-intents.ts";
 import {
   filtersPass,
   DiscordGuildIdSchema,
@@ -43,10 +46,75 @@ export function channelsPassingQueueFilter(
   );
 }
 
+/** No durable record kept for this delivery; the send is unchanged either way. */
+const RECORD_NOTHING: ChannelDeliveryRecorder = () => Promise.resolve();
+
+function isPermissionError(error: unknown): boolean {
+  return error instanceof ChannelSendError && error.permissionError;
+}
+
+/**
+ * Send one rendered message to a channel, falling back to a plain send when
+ * the channel denies replies.
+ *
+ * A reply requires Read Message History. Without it the report itself is still
+ * deliverable wherever plain sending is allowed, so a reply-permission failure
+ * retries as a normal message rather than losing the report.
+ */
+async function sendWithReplyFallback(params: {
+  message: MessageCreateOptions;
+  replyToMessageId: string | undefined;
+  nonce: string | undefined;
+  channel: DiscordChannelId;
+  guildId: DiscordGuildId;
+}): Promise<Awaited<ReturnType<typeof send>>> {
+  const idempotency =
+    params.nonce === undefined
+      ? {}
+      : { nonce: params.nonce, enforceNonce: true };
+  const replied: MessageCreateOptions =
+    params.replyToMessageId === undefined
+      ? params.message
+      : {
+          ...params.message,
+          reply: {
+            messageReference: params.replyToMessageId,
+            // If the prematch message was deleted, still deliver the
+            // postmatch report as a normal message.
+            failIfNotExists: false,
+          },
+        };
+  try {
+    return await send(
+      { ...replied, ...idempotency },
+      params.channel,
+      params.guildId,
+    );
+  } catch (error) {
+    if (
+      params.replyToMessageId === undefined ||
+      !(error instanceof ChannelSendError) ||
+      !isReplyPermissionError(error)
+    ) {
+      throw error;
+    }
+    return await send(
+      { ...params.message, ...idempotency },
+      params.channel,
+      params.guildId,
+    );
+  }
+}
+
 /**
  * Send a rendered message to each channel, tolerating per-channel failures:
  * missing-permission errors are logged and skipped, anything else is reported
  * to Sentry, so one bad channel never blocks the rest.
+ *
+ * `recordDelivery` is the durable notification-intent recorder. It observes
+ * the send; it never gates it — the `ScoutEffectClaim` below remains the
+ * at-most-once guard — and every one of its writes is fail-open, so a
+ * recorder outage cannot stop a message going out.
  */
 export async function deliverToChannels(params: {
   message: MessageCreateOptions;
@@ -55,12 +123,14 @@ export async function deliverToChannels(params: {
   sentryTags: Record<string, string>;
   replyToMessageIds?: ReadonlyMap<string, string>;
   effectKeyPrefix?: string;
+  recordDelivery?: ChannelDeliveryRecorder | undefined;
 }): Promise<{
   deliveredGuildIds: Set<DiscordGuildId>;
   messageIdsByChannel: Map<DiscordChannelId, string>;
 }> {
   const deliveredGuildIds = new Set<DiscordGuildId>();
   const messageIdsByChannel = new Map<DiscordChannelId, string>();
+  const recordDelivery = params.recordDelivery ?? RECORD_NOTHING;
   for (const { channel, serverId } of params.channels) {
     const effectKey =
       params.effectKeyPrefix === undefined
@@ -74,6 +144,9 @@ export async function deliverToChannels(params: {
           kind: "discord-channel-message",
         });
         if (claim === "completed") {
+          // An earlier run already sent this message and already recorded its
+          // intent; replaying the lifecycle here would only conflict with the
+          // delivered row that run wrote.
           const messageId = await requireCompletedScoutEffectResult(effectKey);
           deliveredGuildIds.add(DiscordGuildIdSchema.parse(serverId));
           messageIdsByChannel.set(channel, messageId);
@@ -81,64 +154,36 @@ export async function deliverToChannels(params: {
         }
         effectClaimed = true;
       }
-      const replyToMessageId = params.replyToMessageIds?.get(channel);
-      const message: MessageCreateOptions =
-        replyToMessageId === undefined
-          ? params.message
-          : {
-              ...params.message,
-              reply: {
-                messageReference: replyToMessageId,
-                // If the prematch message was deleted, still deliver the
-                // postmatch report as a normal message.
-                failIfNotExists: false,
-              },
-            };
-      const nonce =
-        effectKey === undefined
-          ? undefined
-          : createHash("sha256")
-              .update(effectKey)
-              .digest("base64url")
-              .slice(0, 25);
-      const idempotentMessage: MessageCreateOptions = {
-        ...message,
-        ...(nonce === undefined ? {} : { nonce, enforceNonce: true }),
-      };
+      await recordDelivery({ kind: "prepared", channelId: channel });
       const guildId = DiscordGuildIdSchema.parse(serverId);
-      let sentMessage;
-      try {
-        sentMessage = await send(idempotentMessage, channel, guildId);
-      } catch (error) {
-        if (
-          replyToMessageId !== undefined &&
-          error instanceof ChannelSendError &&
-          isReplyPermissionError(error)
-        ) {
-          // A reply requires Read Message History. Retry as a normal message
-          // when that permission is missing; the post-match report itself is
-          // still deliverable in channels where sending is allowed.
-          sentMessage = await send(
-            {
-              ...params.message,
-              ...(nonce === undefined ? {} : { nonce, enforceNonce: true }),
-            },
-            channel,
-            guildId,
-          );
-        } else {
-          throw error;
-        }
-      }
+      await recordDelivery({ kind: "send-started", channelId: channel });
+      const sentMessage = await sendWithReplyFallback({
+        message: params.message,
+        replyToMessageId: params.replyToMessageIds?.get(channel),
+        nonce:
+          effectKey === undefined ? undefined : deliveryAttemptNonce(effectKey),
+        channel,
+        guildId,
+      });
       if (effectKey !== undefined) {
         await completeScoutEffectWithResult(effectKey, sentMessage.id);
       }
       deliveredGuildIds.add(guildId);
       messageIdsByChannel.set(channel, sentMessage.id);
+      await recordDelivery({
+        kind: "delivered",
+        channelId: channel,
+        messageId: sentMessage.id,
+      });
     } catch (error) {
       if (effectKey !== undefined && effectClaimed) {
         await recordScoutEffectFailure(effectKey, error);
       }
+      await recordDelivery({
+        kind: "failed",
+        channelId: channel,
+        permissionError: isPermissionError(error),
+      });
       if (error instanceof ChannelSendError && error.permissionError) {
         logger.warn(
           `${params.logPrefix} ⚠️  Permission error for channel ${channel}: ${error.message}`,

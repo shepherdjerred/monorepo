@@ -49,6 +49,13 @@ import {
   type MatchPollAccount,
 } from "#src/league/tasks/postmatch/match-discovery-selection.ts";
 import { withChallengeProgressionLock } from "#src/progression/challenges/locking.ts";
+import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import { commitMatchSettlement } from "#src/durable/match/settlement-facts.ts";
+import {
+  recordCursorAdvanced,
+  runMatchProgressionStage,
+} from "#src/durable/match/progression-facts.ts";
+import { settlementEvidenceOf } from "#src/league/tasks/postmatch/settlement-evidence.ts";
 
 const logger = createLogger("postmatch-match-history-polling");
 
@@ -145,6 +152,11 @@ export async function processMatchAndUpdatePlayers(
     silent,
   });
 
+  // The durable recorder for this match's facts. v1 stays authoritative for
+  // every decision below; each recorded fact is fail-open behind its own
+  // boundary, so a recorder outage cannot stall ingestion.
+  const facts = liveDurableFacts();
+
   // After the S3 gate and OUTSIDE `!silent`: Bucks are owed for the game even
   // when the ordinary match report is suppressed. See settleAndAwardBucks.
   const {
@@ -152,10 +164,16 @@ export async function processMatchAndUpdatePlayers(
     prefetchedTimeline,
     prefetchedPlayers,
     prefetchedRankChanges,
-  } = await settleBucksWithDareTimelineV2({
-    matchData,
-    trackedPlayers: allTrackedPlayers,
-    prismaClient: prisma,
+  } = await commitMatchSettlement({
+    facts,
+    matchId,
+    settle: async () =>
+      await settleBucksWithDareTimelineV2({
+        matchData,
+        trackedPlayers: allTrackedPlayers,
+        prismaClient: prisma,
+      }),
+    evidence: (settled) => settlementEvidenceOf(settled.bucks),
   });
   let postmatchMessageIds = await deliverVisiblePostmatchReport({
     silent,
@@ -215,10 +233,20 @@ export async function processMatchAndUpdatePlayers(
   await withChallengeProgressionLock(
     matchData.metadata.participants,
     async () => {
-      await processCompetitiveProgressionMatch({
-        match: matchData,
-        timeline: prefetchedTimeline,
-        trackedPlayers: allTrackedPlayers,
+      await runMatchProgressionStage({
+        facts,
+        matchId,
+        evidence: {
+          participantCount: matchData.metadata.participants.length,
+          trackedAccountCount: allTrackedPlayers.length,
+        },
+        advance: async () => {
+          await processCompetitiveProgressionMatch({
+            match: matchData,
+            timeline: prefetchedTimeline,
+            trackedPlayers: allTrackedPlayers,
+          });
+        },
       });
 
       // Mark as processed
@@ -236,6 +264,7 @@ export async function processMatchAndUpdatePlayers(
           undefined,
           matchCreationTime,
         );
+        await recordCursorAdvanced({ facts, matchId, puuid: playerPuuid });
       }
     },
   );
