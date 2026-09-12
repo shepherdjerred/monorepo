@@ -180,14 +180,26 @@ for (const tracker of staticTrackers) {
       `${tracker.path} must use the shared PostHog project token for ${tracker.hostname}`,
     );
   }
-  if (
-    !trackerSource.includes(registry.apiHost) ||
-    !trackerSource.includes(registry.assetHost)
-  ) {
-    throw new Error(`${tracker.path} must use the PostHog US hosts`);
+  if (!trackerSource.includes(registry.proxyHost)) {
+    throw new Error(`${tracker.path} must use the managed PostHog proxy host`);
   }
-  if (!trackerSource.includes(`asset_host: "${registry.assetHost}"`)) {
-    throw new Error(`${tracker.path} must configure the PostHog asset host`);
+  if (
+    trackerSource.includes(registry.apiHost) ||
+    trackerSource.includes(registry.assetHost)
+  ) {
+    throw new Error(
+      `${tracker.path} must not send browser traffic directly to PostHog`,
+    );
+  }
+  if (!trackerSource.includes(`api_host: "${registry.proxyHost}"`)) {
+    throw new Error(
+      `${tracker.path} must configure the managed PostHog proxy API host`,
+    );
+  }
+  if (!trackerSource.includes(`asset_host: "${registry.proxyHost}"`)) {
+    throw new Error(
+      `${tracker.path} must configure the managed PostHog proxy asset host`,
+    );
   }
   if (!trackerSource.includes(`site_key: "${site.key}"`)) {
     throw new Error(

@@ -28,6 +28,7 @@ const POSTHOG_REGISTRY = {
   projectToken: "phc_test",
   apiHost: "https://us.i.posthog.com",
   assetHost: "https://us-assets.i.posthog.com",
+  proxyHost: "https://j.sjer.red",
   sites: [
     {
       key: "scout-prod",
@@ -236,6 +237,7 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
     projectToken: "phc_test",
     apiHost: "https://us.i.posthog.com",
     assetHost: "https://us-assets.i.posthog.com",
+    proxyHost: "https://j.sjer.red",
     key: "scout-prod",
     domain: "scout-for-lol.com",
     sessionReplay: true,
@@ -248,6 +250,7 @@ test("Scout release analytics map both hosts to the shared PostHog project", () 
     projectToken: "phc_test",
     apiHost: "https://us.i.posthog.com",
     assetHost: "https://us-assets.i.posthog.com",
+    proxyHost: "https://j.sjer.red",
     key: "scout-beta",
     domain: "beta.scout-for-lol.com",
     sessionReplay: true,

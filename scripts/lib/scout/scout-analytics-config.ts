@@ -7,6 +7,7 @@ const AnalyticsRegistrySchema = z
     projectToken: z.string().regex(/^phc_[A-Za-z0-9]+$/),
     apiHost: z.literal("https://us.i.posthog.com"),
     assetHost: z.literal("https://us-assets.i.posthog.com"),
+    proxyHost: z.literal("https://j.sjer.red"),
     sites: z.array(
       z.object({
         key: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
@@ -61,6 +62,7 @@ export type ScoutPostHogSite = {
   projectToken: string;
   apiHost: "https://us.i.posthog.com";
   assetHost: "https://us-assets.i.posthog.com";
+  proxyHost: "https://j.sjer.red";
   key: string;
   domain: string;
   sessionReplay: boolean;
@@ -90,6 +92,7 @@ export function selectPostHogSite(
     projectToken: registry.projectToken,
     apiHost: registry.apiHost,
     assetHost: registry.assetHost,
+    proxyHost: registry.proxyHost,
     key: site.key,
     domain: site.hostname,
     sessionReplay: site.sessionReplay,

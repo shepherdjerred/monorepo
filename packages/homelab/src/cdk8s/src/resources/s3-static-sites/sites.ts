@@ -29,11 +29,11 @@ import type { StaticSiteConfig } from "@shepherdjerred/homelab/cdk8s/src/misc/s3
  */
 const scoutCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com https://s.pinimg.com https://www.redditstatic.com",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red https://s.pinimg.com https://www.redditstatic.com",
   "worker-src 'self' blob:",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
-  "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
+  "connect-src 'self' https://j.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
   "frame-src https://ct.pinterest.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
@@ -59,11 +59,11 @@ const scoutActivityCsp = [
  */
 const wikiCsp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://us.i.posthog.com",
+  "connect-src 'self' https://j.sjer.red",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",

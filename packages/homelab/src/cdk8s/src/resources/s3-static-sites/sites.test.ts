@@ -16,13 +16,13 @@ describe("Scout static sites", () => {
       }
       const csp = site.responseHeaders?.["Content-Security-Policy"];
       expect(csp).toContain(
-        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com https://s.pinimg.com https://www.redditstatic.com",
+        "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red https://s.pinimg.com https://www.redditstatic.com",
       );
       expect(csp).toContain(
         "img-src 'self' https://cdn.discordapp.com https://ddragon.leagueoflegends.com https://ct.pinterest.com data: blob:",
       );
       expect(csp).toContain(
-        "connect-src 'self' https://us.i.posthog.com https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
+        "connect-src 'self' https://j.sjer.red https://bugsink.sjer.red https://ct.pinterest.com https://pixel-config.reddit.com https://events.reddit.com",
       );
       expect(csp).toContain("frame-src https://ct.pinterest.com");
     });
@@ -68,9 +68,9 @@ describe("human wiki static site", () => {
   test("allows Pagefind, Mermaid, and PostHog Cloud US", () => {
     const csp = wiki.responseHeaders?.["Content-Security-Policy"];
     expect(csp).toContain(
-      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://us-assets.i.posthog.com",
+      "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red",
     );
-    expect(csp).toContain("connect-src 'self' https://us.i.posthog.com");
+    expect(csp).toContain("connect-src 'self' https://j.sjer.red");
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).toContain("frame-ancestors 'none'");
   });
