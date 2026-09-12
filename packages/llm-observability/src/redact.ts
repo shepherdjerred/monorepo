@@ -1,5 +1,5 @@
 const SECRET_KEY_PATTERN =
-  /^(?:authorization|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?)$/i;
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?)$/i;
 
 const BEARER_PATTERN = /Bearer\s+[\w.\-+/=]+/g;
 const DISCORD_WEBHOOK_URL_PATTERN =

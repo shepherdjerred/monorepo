@@ -158,12 +158,35 @@ function isReadOnlyCall(toolId: string, input: unknown): boolean {
 }
 
 const CREDENTIAL_KEY_PATTERN =
-  /^(?:authorization|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?)$/i;
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?)$/i;
 
 const DISCORD_WEBHOOK_URL_PATTERN =
   /https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+/i;
 
-function sanitizeToolOutputData(data: unknown): unknown {
+const CookieEntrySchema = z
+  .object({
+    name: z.string(),
+    value: z.unknown(),
+  })
+  .and(
+    z.union([
+      z.object({ domain: z.unknown() }),
+      z.object({ path: z.unknown() }),
+      z.object({ httpOnly: z.unknown() }),
+      z.object({ secure: z.unknown() }),
+      z.object({ sameSite: z.unknown() }),
+      z.object({ expires: z.unknown() }),
+    ]),
+  );
+
+function isCookieEntry(value: unknown): boolean {
+  return CookieEntrySchema.safeParse(value).success;
+}
+
+function sanitizeToolOutputData(
+  data: unknown,
+  isCookiesCall: boolean,
+): unknown {
   if (typeof data === "string") {
     return DISCORD_WEBHOOK_URL_PATTERN.test(data) ? "[REDACTED]" : data;
   }
@@ -171,15 +194,39 @@ function sanitizeToolOutputData(data: unknown): unknown {
     return data;
   }
   if (Array.isArray(data)) {
-    return data.map((entry) => sanitizeToolOutputData(entry));
+    return data.map((entry) => {
+      if (isCookieEntry(entry)) {
+        return sanitizeToolOutputData(
+          {
+            ...entry,
+            value: "[REDACTED]",
+          },
+          isCookiesCall,
+        );
+      }
+      return sanitizeToolOutputData(entry, isCookiesCall);
+    });
   }
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
+    if (isCookiesCall && key === "raw") {
+      continue;
+    }
     if (CREDENTIAL_KEY_PATTERN.test(key)) {
       sanitized[key] = "[REDACTED]";
       continue;
     }
-    sanitized[key] = sanitizeToolOutputData(value);
+    if (isCookieEntry(value)) {
+      sanitized[key] = sanitizeToolOutputData(
+        {
+          ...value,
+          value: "[REDACTED]",
+        },
+        isCookiesCall,
+      );
+      continue;
+    }
+    sanitized[key] = sanitizeToolOutputData(value, isCookiesCall);
   }
   return sanitized;
 }
@@ -198,6 +245,8 @@ export function summarizeToolResultForSession(
     );
   }
   const status = toolResult.output.success ? "succeeded" : "failed";
+  const action = ActionInputSchema.safeParse(toolResult.input);
+  const isCookiesCall = action.success && action.data.action === "cookies";
   const inputSummary = boundedSummary(toolResult.input);
   const resultSummary = toolResult.output.success
     ? boundedSummary(
@@ -205,7 +254,10 @@ export function summarizeToolResultForSession(
           ? toolResult.output.message
           : {
               message: toolResult.output.message,
-              data: sanitizeToolOutputData(toolResult.output.data),
+              data: sanitizeToolOutputData(
+                toolResult.output.data,
+                isCookiesCall,
+              ),
             },
       )
     : "Tool reported failure";

@@ -93,6 +93,43 @@ describe("summarizeToolResultForSession", () => {
     expect(event.content).not.toContain(token);
   });
 
+  test("omits raw browser cookies from result summary and session content", () => {
+    const sessionCookieValue = ["session", "cookie", "live", "credential"].join(
+      "_",
+    );
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-cookies-1",
+        toolName: "browser-automation",
+        input: { action: "cookies", tabId: "tab-1" },
+        output: {
+          success: true,
+          message: "PinchTab cookies read",
+          data: {
+            provider: "pinchtab",
+            tabId: "tab-1",
+            raw: [
+              {
+                name: "connect.sid",
+                value: sessionCookieValue,
+                domain: ".example.com",
+                path: "/",
+                httpOnly: true,
+                secure: true,
+              },
+            ],
+          },
+        },
+      },
+      ["browser-automation"],
+    );
+    expect(event.resultSummary).toContain("PinchTab cookies read");
+    expect(event.resultSummary).toContain("tab-1");
+    expect(event.resultSummary).not.toContain("connect.sid");
+    expect(event.resultSummary).not.toContain(sessionCookieValue);
+    expect(event.content).not.toContain(sessionCookieValue);
+  });
+
   test("records a validated unsuccessful outcome without result content", () => {
     const event = summarizeToolResultForSession(
       {
