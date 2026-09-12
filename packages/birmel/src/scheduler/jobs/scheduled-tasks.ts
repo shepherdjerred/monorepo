@@ -1,8 +1,17 @@
 import type { AgentJob } from "#generated/prisma/client/index.js";
 import {
+  getStagedAttachments,
   runWithRequestContext,
   type RequestContext,
 } from "@shepherdjerred/birmel/agent-tools/tools/request-context.ts";
+import { toDiscordAttachments } from "@shepherdjerred/birmel/agent-tools/tools/staged-attachments.ts";
+import {
+  DeliveryResultSchema,
+  EffectDispositionSchema,
+  type AgentJobExecution,
+  type AgentJobRuntimeDependencies,
+} from "@shepherdjerred/birmel/scheduler/agent-job-delivery.ts";
+import { recordPostExecutionSessionEvent } from "@shepherdjerred/birmel/scheduler/agent-job-session-events.ts";
 import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { prisma } from "@shepherdjerred/birmel/database/index.ts";
 import { getDiscordClient } from "@shepherdjerred/birmel/discord/client.ts";
@@ -11,66 +20,18 @@ import {
   createEffectCheckpoint,
   serializeCheckpointOutput,
 } from "@shepherdjerred/birmel/scheduler/agent-job-effect-state.ts";
-import { captureException } from "@shepherdjerred/birmel/observability/sentry.ts";
-import {
-  parseJsonRecord,
-  toError,
-} from "@shepherdjerred/birmel/utils/errors.ts";
-import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { appendSessionEvent } from "@shepherdjerred/birmel/sessions/service.ts";
-import { summarizeSessionIfNeeded } from "@shepherdjerred/birmel/sessions/summarization.ts";
+import { parseJsonRecord } from "@shepherdjerred/birmel/utils/errors.ts";
 import { getToolMetadata } from "@shepherdjerred/birmel/agent-runtime/tools/tool-metadata.ts";
 import { z } from "zod";
 
-const logger = loggers.scheduler.child("scheduled-tasks");
-
-export type AgentJobExecution = {
-  jobId: string;
-  runId: string;
-  claimId: string;
-  guildId: string;
-  actorUserId: string;
-  sessionId: string | null;
-  model: string | null;
-  reasoningEffort: string | null;
-  textVerbosity: string | null;
-  timeoutMs: number;
-  requestContext: RequestContext;
-};
-
-export type AgentJobRuntimeDependencies = {
-  executeTool: (
-    toolId: string,
-    input: Record<string, unknown>,
-    execution: AgentJobExecution,
-  ) => Promise<unknown>;
-  executeAgent: (
-    prompt: string,
-    execution: AgentJobExecution,
-  ) => Promise<unknown>;
-  deliverMessage: (
-    channelId: string,
-    message: string,
-    execution: AgentJobExecution,
-  ) => Promise<unknown>;
-};
 const AgentExecutionResultSchema = z.object({
   message: z.string().min(1).max(20_000),
   data: z.unknown().optional(),
 });
 const ExecutableToolSchema = z.object({ execute: z.function() }).loose();
-const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
 const ScheduledToolResultSchema = z
   .object({
     success: z.boolean(),
-    effectDisposition: EffectDispositionSchema.optional(),
-  })
-  .loose();
-const DeliveryResultSchema = z
-  .object({
-    success: z.boolean(),
-    message: z.string().optional(),
-    data: z.object({ messageId: z.string().min(1) }).optional(),
     effectDisposition: EffectDispositionSchema.optional(),
   })
   .loose();
@@ -155,57 +116,6 @@ async function recordExternalEffectNotApplied(
   }
 }
 
-async function appendJobSessionEvent(options: {
-  execution: AgentJobExecution;
-  role: "assistant" | "tool";
-  eventType: string;
-  content: string;
-  toolId?: string;
-  delivery?: unknown;
-}): Promise<void> {
-  if (options.execution.sessionId == null) {
-    return;
-  }
-  const delivery = DeliveryResultSchema.safeParse(options.delivery);
-  await appendSessionEvent({
-    sessionId: options.execution.sessionId,
-    role: options.role,
-    eventType: options.eventType,
-    content: options.content,
-    ...(options.toolId == null ? {} : { toolId: options.toolId }),
-    ...(!delivery.success || delivery.data.data == null
-      ? {}
-      : { discordMessageId: delivery.data.data.messageId }),
-  });
-  await summarizeSessionIfNeeded(options.execution.sessionId);
-}
-
-async function recordPostExecutionSessionEvent(
-  options: Parameters<typeof appendJobSessionEvent>[0],
-): Promise<void> {
-  try {
-    await appendJobSessionEvent(options);
-  } catch (error) {
-    logger.error("Post-execution session event persistence failed", error, {
-      jobId: options.execution.jobId,
-      guildId: options.execution.guildId,
-      eventType: options.eventType,
-      errorClass: error instanceof Error ? error.name : "UnknownError",
-    });
-    captureException(toError(error), {
-      operation: "job.session-event.post-execution",
-      discord: {
-        guildId: options.execution.guildId,
-        userId: options.execution.actorUserId,
-      },
-      extra: {
-        jobId: options.execution.jobId,
-        eventType: options.eventType,
-      },
-    });
-  }
-}
-
 async function executeRegisteredTool(
   toolId: string,
   input: Record<string, unknown>,
@@ -232,10 +142,17 @@ async function executeUnconfiguredAgent(): Promise<never> {
   throw new Error("Agent job executor has not been configured");
 }
 
+// A job's turn stages attachments the same way an interactive turn does, so
+// they have to be read back here too. Delivering only `message` meant an image
+// generated inside a scheduled job was produced, billed and then dropped.
 async function deliverDiscordMessage(
   channelId: string,
   message: string,
+  execution: AgentJobExecution,
 ): Promise<unknown> {
+  const files = toDiscordAttachments(
+    getStagedAttachments(execution.requestContext),
+  );
   if (Bun.env["BIRMEL_MOCK_DISCORD_DELIVERY"] === "true") {
     return {
       success: true,
@@ -243,9 +160,12 @@ async function deliverDiscordMessage(
       mockDelivery: true,
       channelId,
       message,
+      attachmentCount: files.length,
     };
   }
-  const result = await handleSend(getDiscordClient(), channelId, message);
+  const result = await handleSend(getDiscordClient(), channelId, message, {
+    files,
+  });
   return {
     ...result,
     effectDisposition: result.success ? "applied" : "not_applied",
@@ -435,14 +355,15 @@ async function executeAgentPayload(
     ownsSourceReply: true,
     sourceChannelId: channelId,
   };
+  // The turn runs against this cloned context, so anything a tool stages during
+  // it — a generated image, say — lands here and not on execution.requestContext.
+  // Delivery has to be handed the same clone or the attachments are invisible.
+  const turnExecution = { ...execution, requestContext };
   const result = AgentExecutionResultSchema.parse(
     await runWithRequestContext(
       requestContext,
       async () =>
-        await runtimeDependencies.executeAgent(agentPrompt, {
-          ...execution,
-          requestContext,
-        }),
+        await runtimeDependencies.executeAgent(agentPrompt, turnExecution),
     ),
   );
   const resultData = z
@@ -462,7 +383,7 @@ async function executeAgentPayload(
   const delivery = await runtimeDependencies.deliverMessage(
     channelId,
     result.message,
-    execution,
+    turnExecution,
   );
   const parsedDelivery = DeliveryResultSchema.parse(delivery);
   if (

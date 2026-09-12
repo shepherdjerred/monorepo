@@ -18,10 +18,12 @@ import {
   handleDelete,
   handleBulkDelete,
   handlePinUnpin,
-  handleAddReaction,
-  handleRemoveReaction,
   handleGetMessages,
 } from "./actions/message-actions.ts";
+import {
+  handleAddReaction,
+  handleRemoveReaction,
+} from "./actions/reaction-actions.ts";
 
 const logger = loggers.tools.child("discord.messages");
 
@@ -123,7 +125,9 @@ export const manageMessageTool = createTool({
 
         switch (ctx.action) {
           case "send":
-            return await handleSend(client, ctx.channelId, ctx.content, signal);
+            return await handleSend(client, ctx.channelId, ctx.content, {
+              signal,
+            });
           case "reply":
             return await handleReply(client, ctx.content, signal);
           case "send-dm":

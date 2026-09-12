@@ -28,6 +28,21 @@ vi.mock("discord.js", () => ({
       /* noop */
     }
   },
+  // Mirrors the real builder's defaults: an omitted name or description reads
+  // back as null, which is what the delivery tests assert against.
+  AttachmentBuilder: class MockAttachmentBuilder {
+    attachment: unknown;
+    name: string | null;
+    description: string | null;
+    constructor(
+      attachment: unknown,
+      data: { name?: string; description?: string } = {},
+    ) {
+      this.attachment = attachment;
+      this.name = data.name ?? null;
+      this.description = data.description ?? null;
+    }
+  },
   GatewayIntentBits: {
     Guilds: 1,
     GuildMessages: 2,

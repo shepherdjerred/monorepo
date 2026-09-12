@@ -91,7 +91,9 @@ export type MemoryRetrievalResult = z.infer<typeof MemoryRetrievalResultSchema>;
 
 export const RememberMemoryInputSchema = z.strictObject({
   context: MemoryApplicationContextSchema,
-  candidate: StrictMemoryCandidateSchema.extend({
+  // safeExtend because the candidate schema carries refinements and this
+  // narrows an existing key; the scope/relatedUserIds rule still applies.
+  candidate: StrictMemoryCandidateSchema.safeExtend({
     origin: z.literal("explicit"),
   }),
   embedding: MemoryEmbeddingSchema.nullable().default(null),

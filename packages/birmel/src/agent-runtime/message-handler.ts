@@ -1,4 +1,4 @@
-import { AttachmentBuilder, type Message } from "discord.js";
+import type { Message } from "discord.js";
 import {
   admitAgentRun,
   completeAgentRun,
@@ -7,6 +7,7 @@ import {
   recordAgentRunContext,
   suppressQueuedSessionAgentRun,
 } from "@shepherdjerred/birmel/agent-runtime/agent-runs.ts";
+import { toDiscordAttachments } from "@shepherdjerred/birmel/agent-tools/tools/staged-attachments.ts";
 import { extractAndApplyTurnMemory } from "@shepherdjerred/birmel/agent-runtime/memory-extraction.ts";
 import {
   executeTurn,
@@ -304,16 +305,7 @@ async function processAdmittedTurn(
     // write cannot land on top of the delivered answer.
     await progress.flush();
     const response = validateResponse(execution.text);
-    const stagedAttachments = requestContext.stagedAttachments ?? [];
-    const files = stagedAttachments.map(
-      (attachment) =>
-        new AttachmentBuilder(Buffer.from(attachment.data), {
-          name: attachment.name,
-          ...(attachment.description == null
-            ? {}
-            : { description: attachment.description.slice(0, 1024) }),
-        }),
-    );
+    const files = toDiscordAttachments(requestContext.stagedAttachments ?? []);
     await withDiscordDelivery({
       context,
       phase: "final",

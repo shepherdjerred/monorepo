@@ -92,6 +92,15 @@ describe("memory claim identity", () => {
         context,
         candidate: candidate({ relatedUserIds: ["400"] }),
       }),
-    ).toThrow("at least two related users");
+    ).toThrow("at least two distinct related user IDs");
+  });
+
+  test("rejects a relationship claim that repeats one user", () => {
+    expect(() =>
+      buildMemoryClaimIdentityKey({
+        context,
+        candidate: candidate({ relatedUserIds: ["400", "400"] }),
+      }),
+    ).toThrow("at least two distinct related user IDs");
   });
 });
