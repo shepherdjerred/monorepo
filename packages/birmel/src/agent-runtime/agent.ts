@@ -157,6 +157,33 @@ function isReadOnlyCall(toolId: string, input: unknown): boolean {
   );
 }
 
+const CREDENTIAL_KEY_PATTERN =
+  /^(?:authorization|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?)$/i;
+
+const DISCORD_WEBHOOK_URL_PATTERN =
+  /https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+/i;
+
+function sanitizeToolOutputData(data: unknown): unknown {
+  if (typeof data === "string") {
+    return DISCORD_WEBHOOK_URL_PATTERN.test(data) ? "[REDACTED]" : data;
+  }
+  if (data === null || typeof data !== "object") {
+    return data;
+  }
+  if (Array.isArray(data)) {
+    return data.map((entry) => sanitizeToolOutputData(entry));
+  }
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (CREDENTIAL_KEY_PATTERN.test(key)) {
+      sanitized[key] = "[REDACTED]";
+      continue;
+    }
+    sanitized[key] = sanitizeToolOutputData(value);
+  }
+  return sanitized;
+}
+
 export function summarizeToolResultForSession(
   rawToolResult: unknown,
   registeredToolIds: readonly string[],
@@ -178,7 +205,7 @@ export function summarizeToolResultForSession(
           ? toolResult.output.message
           : {
               message: toolResult.output.message,
-              data: toolResult.output.data,
+              data: sanitizeToolOutputData(toolResult.output.data),
             },
       )
     : "Tool reported failure";

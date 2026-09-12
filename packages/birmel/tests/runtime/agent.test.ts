@@ -66,6 +66,33 @@ describe("summarizeToolResultForSession", () => {
     expect(event.resultSummary).not.toContain("SECRET_TOOL_TOKEN");
   });
 
+  test("redacts credential-bearing fields including webhookUrl and Discord webhook URLs from tool data", () => {
+    const token = ["tok", "discord", "123456"].join("_");
+    const webhookUrl = `https://discord.com/api/webhooks/1234567890/${token}`;
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-webhook-1",
+        toolName: "manage-message",
+        input: { action: "create" },
+        output: {
+          success: true,
+          message: 'Created webhook "alerts"',
+          data: {
+            webhookId: "1234567890",
+            webhookUrl,
+          },
+        },
+      },
+      registeredToolIds,
+    );
+    expect(event.resultSummary).toContain("Created webhook");
+    expect(event.resultSummary).toContain("alerts");
+    expect(event.resultSummary).toContain("1234567890");
+    expect(event.resultSummary).toContain("[REDACTED]");
+    expect(event.resultSummary).not.toContain(token);
+    expect(event.content).not.toContain(token);
+  });
+
   test("records a validated unsuccessful outcome without result content", () => {
     const event = summarizeToolResultForSession(
       {

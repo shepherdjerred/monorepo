@@ -208,3 +208,30 @@ test("redactText masks Bearer tokens", () => {
     "curl -H 'Authorization: Bearer [REDACTED]'",
   );
 });
+
+test("redactSecrets masks webhookUrl keys and Discord webhook URLs", () => {
+  const token = ["tok", "discord", "123456"].join("_");
+  const webhookUrl = `https://discord.com/api/webhooks/1234567890/${token}`;
+  const input = {
+    webhookUrl,
+    list: [
+      {
+        id: "1234567890",
+        url: webhookUrl,
+      },
+    ],
+    nested: {
+      webhook_token: "secret-token",
+    },
+  };
+  const WebhookSecretsSchema = z.object({
+    webhookUrl: z.string(),
+    list: z.array(z.object({ id: z.string(), url: z.string() })),
+    nested: z.object({ webhook_token: z.string() }),
+  });
+  const redacted = WebhookSecretsSchema.parse(redactSecrets(input));
+  expect(redacted.webhookUrl).toBe("[REDACTED]");
+  expect(redacted.list[0]?.url).toBe("[REDACTED]");
+  expect(redacted.nested.webhook_token).toBe("[REDACTED]");
+  expect(JSON.stringify(redacted)).not.toContain(token);
+});
