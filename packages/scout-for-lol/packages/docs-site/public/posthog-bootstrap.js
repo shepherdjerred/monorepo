@@ -10,8 +10,8 @@
   var sessionReplay = currentScript.dataset["posthogSessionReplay"];
   if (
     !projectToken ||
-    apiHost !== "https://us.i.posthog.com" ||
-    assetHost !== "https://us-assets.i.posthog.com" ||
+    apiHost !== "https://j.sjer.red" ||
+    assetHost !== "https://j.sjer.red" ||
     !siteKey ||
     !siteDomain ||
     (sessionReplay !== "true" && sessionReplay !== "false")

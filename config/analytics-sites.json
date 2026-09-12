@@ -3,6 +3,7 @@
   "projectToken": "phc_uHgQEjvzAfgawsBscWRWKdynJ2bFtpPAECMEwoLWSSXh",
   "apiHost": "https://us.i.posthog.com",
   "assetHost": "https://us-assets.i.posthog.com",
+  "proxyHost": "https://j.sjer.red",
   "sites": [
     {
       "key": "sjer-red",

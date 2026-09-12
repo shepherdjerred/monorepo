@@ -16,8 +16,8 @@ test("keeps marketing capture closed until the Scout session is reconciled", asy
   const currentScript = new HTMLScriptElement();
   currentScript.dataset = {
     posthogProjectToken: "phc_test",
-    posthogApiHost: "https://us.i.posthog.com",
-    posthogAssetHost: "https://us-assets.i.posthog.com",
+    posthogApiHost: "https://j.sjer.red",
+    posthogAssetHost: "https://j.sjer.red",
     posthogSiteKey: "scout-beta",
     posthogSiteDomain: "beta.scout-for-lol.com",
     posthogSessionReplay: "true",
@@ -63,9 +63,7 @@ test("keeps marketing capture closed until the Scout session is reconciled", asy
   });
 
   expect(insertedScripts).toHaveLength(1);
-  expect(insertedScripts[0]?.src).toBe(
-    "https://us-assets.i.posthog.com/static/array.js",
-  );
+  expect(insertedScripts[0]?.src).toBe("https://j.sjer.red/static/array.js");
   expect(typeof window.posthog.capture).toBe("function");
 
   window.posthog.capture("get_started_click", { cta_location: "home_hero" });
@@ -78,8 +76,8 @@ test("keeps marketing capture closed until the Scout session is reconciled", asy
 
   const config = window.posthog._i[0]?.[1];
   expect(config).toMatchObject({
-    api_host: "https://us.i.posthog.com",
-    asset_host: "https://us-assets.i.posthog.com",
+    api_host: "https://j.sjer.red",
+    asset_host: "https://j.sjer.red",
     autocapture: false,
     capture_pageview: false,
     capture_pageleave: false,

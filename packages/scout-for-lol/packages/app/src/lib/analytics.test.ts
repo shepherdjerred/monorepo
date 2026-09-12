@@ -42,8 +42,8 @@ type IdentityCall =
 
 const TEST_CONFIG: AnalyticsConfig = {
   projectToken: "phc_test",
-  apiHost: "https://us.i.posthog.com",
-  assetHost: "https://us-assets.i.posthog.com",
+  apiHost: "https://j.sjer.red",
+  assetHost: "https://j.sjer.red",
   siteKey: "scout-beta",
   siteDomain: "beta.scout-for-lol.com",
   sessionReplay: true,

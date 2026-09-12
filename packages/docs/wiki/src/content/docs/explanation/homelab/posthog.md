@@ -21,8 +21,17 @@ script tags.
 
 Use the existing single US project. Copy its public `phc_` project token into
 `config/analytics-sites.json`; this token is safe to embed in browser bundles.
-Never commit a `phx_` personal API key. The registry check deliberately fails
-while the placeholder token is present.
+The managed browser proxy is `https://j.sjer.red`. `apiHost` and `assetHost`
+remain the direct US PostHog endpoints for server-to-server transport, while
+`proxyHost` is used by every browser tracker for SDK assets, captures, replay,
+feature flags, and other browser requests. Never commit a `phx_` personal API
+key. The registry check deliberately fails while the placeholder token is
+present.
+
+The proxy record is managed by OpenTofu and its `j.sjer.red` Cloudflare CNAME
+is deliberately unproxied (gray cloud). PostHog provisions the certificate and
+reports the record as `valid`; do not put another CDN or reverse proxy in front
+of this CNAME.
 
 In PostHog project privacy settings, IP collection must stay **enabled** — it is
 what produces the country and city breakdowns — and session-recording masking
@@ -118,7 +127,7 @@ value.
 ## Source verification
 
 Run `bun scripts/checks/check-analytics-sites.ts`, then build each affected site. The
-generated browser assets must contain the configured US hosts and must not
+generated browser assets must contain the managed proxy host and must not
 contain a retired analytics endpoint. Scout tests additionally cover route
 normalization, bounded typed events, replay gating, local no-op behavior, and
 beacon transport for outbound navigation.
@@ -135,7 +144,7 @@ is precisely how the cookieless outage went unnoticed.
 
 - Open every hostname with Do Not Track disabled and confirm a fresh pageview
   and autocapture event arrives in Live Events with the expected `site_key` and
-  `site_hostname`.
+  `site_hostname`; the browser request should target `j.sjer.red`.
 - Reload a page and confirm the distinct ID is unchanged, then confirm a person
   profile exists for that anonymous visitor.
 - Navigate through the Scout web app and confirm recorded URLs still template
