@@ -211,6 +211,112 @@ describe("summarizeToolResultForSession", () => {
   });
 });
 
+describe("summarizeToolResultForSession: invite capability redaction", () => {
+  test("redacts invite codes and URLs when listing guild invites", () => {
+    const inviteCode = ["invite", "secret", "code", "123"].join("_");
+    const inviteUrl = `https://discord.gg/${inviteCode}`;
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-invite-1",
+        toolName: "manage-invite",
+        input: { action: "list", guildId: "123456789012345678" },
+        output: {
+          success: true,
+          message: "Found 1 invites",
+          data: [
+            {
+              code: inviteCode,
+              url: inviteUrl,
+              channelId: "987654321098765432",
+              inviterId: "123456789012345678",
+              uses: 0,
+              maxUses: 5,
+              expiresAt: null,
+            },
+          ],
+        },
+      },
+      ["manage-invite"],
+    );
+    expect(event.resultSummary).toContain("Found 1 invites");
+    expect(event.resultSummary).toContain("987654321098765432");
+    expect(event.resultSummary).toContain("[REDACTED]");
+    expect(event.resultSummary).not.toContain(inviteCode);
+    expect(event.resultSummary).not.toContain(inviteUrl);
+    expect(event.content).not.toContain(inviteCode);
+    expect(event.content).not.toContain(inviteUrl);
+  });
+
+  test("redacts created invite URL and code from message and data", () => {
+    const inviteCode = ["created", "invite", "token", "456"].join("_");
+    const inviteUrl = `https://discord.gg/${inviteCode}`;
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-invite-2",
+        toolName: "manage-invite",
+        input: { action: "create", channelId: "987654321098765432" },
+        output: {
+          success: true,
+          message: `Created invite: ${inviteUrl}`,
+          data: {
+            code: inviteCode,
+            url: inviteUrl,
+          },
+        },
+      },
+      ["manage-invite"],
+    );
+    expect(event.resultSummary).toContain("Created invite: [REDACTED]");
+    expect(event.resultSummary).not.toContain(inviteCode);
+    expect(event.resultSummary).not.toContain(inviteUrl);
+    expect(event.content).not.toContain(inviteCode);
+    expect(event.content).not.toContain(inviteUrl);
+  });
+
+  test("redacts vanity URL code and masks bare discord.gg URLs", () => {
+    const vanityCode = ["my", "vanity", "slug"].join("-");
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-invite-3",
+        toolName: "manage-invite",
+        input: { action: "get-vanity", guildId: "123456789012345678" },
+        output: {
+          success: true,
+          message: `Vanity URL: discord.gg/${vanityCode}`,
+          data: {
+            code: vanityCode,
+            uses: 42,
+          },
+        },
+      },
+      ["manage-invite"],
+    );
+    expect(event.resultSummary).toContain("Vanity URL: [REDACTED]");
+    expect(event.resultSummary).toContain("42");
+    expect(event.resultSummary).not.toContain(vanityCode);
+    expect(event.content).not.toContain(vanityCode);
+  });
+
+  test("redacts inviteCode input parameter in inputSummary", () => {
+    const inviteCode = ["del", "invite", "code", "789"].join("_");
+    const event = summarizeToolResultForSession(
+      {
+        toolCallId: "call-invite-4",
+        toolName: "manage-invite",
+        input: { action: "delete", inviteCode },
+        output: {
+          success: true,
+          message: "Deleted invite",
+        },
+      },
+      ["manage-invite"],
+    );
+    expect(event.inputSummary).toContain('"inviteCode":"[REDACTED]"');
+    expect(event.inputSummary).not.toContain(inviteCode);
+    expect(event.content).not.toContain(inviteCode);
+  });
+});
+
 describe("agent instructions", () => {
   test("tells the agent that changing approach mid-turn is expected", () => {
     expect(AGENT_INSTRUCTIONS).toContain(

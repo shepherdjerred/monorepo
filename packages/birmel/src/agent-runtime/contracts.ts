@@ -148,6 +148,41 @@ export const TurnAnswerSchema = z.strictObject({
 });
 export type TurnAnswer = z.infer<typeof TurnAnswerSchema>;
 
+export const ToolIdSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+export const EffectDispositionSchema = z.enum([
+  "not_applied",
+  "applied",
+  "unknown",
+]);
+export const ToolDomainResultSchema = z.object({
+  success: z.boolean(),
+  message: z.string().min(1),
+  effectDisposition: EffectDispositionSchema.optional(),
+  data: z.unknown().optional(),
+});
+export const ToolResultForSessionSchema = z.object({
+  toolCallId: z.string().min(1).max(200),
+  toolName: ToolIdSchema,
+  input: z.unknown(),
+  output: ToolDomainResultSchema,
+});
+export const SessionToolEventSchema = z.strictObject({
+  toolCallId: z.string().min(1).max(200),
+  toolId: ToolIdSchema,
+  inputSummary: z.string().min(1).max(384),
+  resultSummary: z.string().min(1).max(384),
+  content: z.string().min(1).max(1024),
+  success: z.boolean(),
+  effectDisposition: EffectDispositionSchema.optional(),
+  inputKey: z.string(),
+  readOnly: z.boolean(),
+});
+export type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
+
 export const ToolRiskClassSchema = z.enum([
   "read",
   "write",

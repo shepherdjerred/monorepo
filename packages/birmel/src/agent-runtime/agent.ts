@@ -2,9 +2,14 @@ import { Output, stepCountIs, ToolLoopAgent } from "ai";
 import { redactSecrets } from "@shepherdjerred/llm-observability";
 import { z } from "zod";
 import {
-  TaskPacketSchema,
-  TurnAnswerSchema,
+  type SessionToolEvent,
+  SessionToolEventSchema,
   type TaskPacket,
+  TaskPacketSchema,
+  ToolDomainResultSchema,
+  ToolIdSchema,
+  ToolResultForSessionSchema,
+  TurnAnswerSchema,
   type TurnDisposition,
 } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
 import { toolsForTurn } from "@shepherdjerred/birmel/agent-tools/tools/tool-sets.ts";
@@ -25,54 +30,6 @@ import {
   withResolvedCitations,
 } from "./citation-repair.ts";
 
-const logger = loggers.agent.child("execution");
-
-const ToolIdSchema = z
-  .string()
-  .min(1)
-  .max(64)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-const EffectDispositionSchema = z.enum(["not_applied", "applied", "unknown"]);
-const ToolDomainResultSchema = z.object({
-  success: z.boolean(),
-  message: z.string().min(1),
-  effectDisposition: EffectDispositionSchema.optional(),
-  data: z.unknown().optional(),
-});
-const ToolResultForSessionSchema = z.object({
-  toolCallId: z.string().min(1).max(200),
-  toolName: ToolIdSchema,
-  input: z.unknown(),
-  output: ToolDomainResultSchema,
-});
-const SessionToolEventSchema = z.strictObject({
-  toolCallId: z.string().min(1).max(200),
-  toolId: ToolIdSchema,
-  inputSummary: z.string().min(1).max(384),
-  resultSummary: z.string().min(1).max(384),
-  content: z.string().min(1).max(1024),
-  success: z.boolean(),
-  effectDisposition: EffectDispositionSchema.optional(),
-  // A structural hash of the raw, unredacted input. Matching on the action
-  // field alone (an earlier version of this check) was not enough: composite
-  // tools like manage-role take a "create" action for many different roles,
-  // so an unrelated later create could still "correct" an earlier one that
-  // targeted something else entirely. Bun.hash is key-order independent and
-  // varies with any field's value, so two calls hash equal only when their
-  // full input does - the only generic, per-tool-agnostic way to tell "this
-  // exact operation was retried" from "a similar-shaped one happened to run."
-  inputKey: z.string(),
-  // Whether this specific call was inherently non-mutating, independent of
-  // the tool's own overall riskClass. A composite tool like manage-role
-  // exposes read actions (list, get) alongside destructive ones (create,
-  // delete) under one tool-level risk class; treating a failed list as an
-  // uncorrected write would reject a turn over a harmless read failure that
-  // says nothing about whether the actual requested mutation succeeded.
-  readOnly: z.boolean(),
-});
-
-type SessionToolEvent = z.infer<typeof SessionToolEventSchema>;
-
 export type AgentExecutionResult = {
   text: string;
   disposition: TurnDisposition;
@@ -84,10 +41,6 @@ export type AgentExecutionResult = {
 };
 
 export type TurnOptions = {
-  /**
-   * Live progress sink. Absent for scheduled jobs, which own no Discord
-   * message to narrate into.
-   */
   progress?: ProgressReporter | undefined;
 };
 
@@ -97,6 +50,8 @@ export type IsolatedAgentOptions = {
   textVerbosity?: "low" | "medium" | "high";
   timeoutMs?: number;
 };
+
+const logger = loggers.agent.child("execution");
 
 function boundedText(value: string, maxLength: number): string {
   return value.length <= maxLength
@@ -158,16 +113,13 @@ function isReadOnlyCall(toolId: string, input: unknown): boolean {
 }
 
 const CREDENTIAL_KEY_PATTERN =
-  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?)$/i;
+  /^(?:authorization|cookie|cookies|set-cookie|x-api-key|api[_-]?key|api[_-]?token|access[_-]?key|secret(?:[_-]?(?:key|token|access[_-]?key))?|password|token|webhook[_-]?(?:url|token)?|invite[_-]?code)$/i;
 
-const DISCORD_WEBHOOK_URL_PATTERN =
-  /https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+/i;
+const DISCORD_SENSITIVE_URL_PATTERN =
+  /(?:https?:\/\/)?(?:(?:canary\.|ptb\.)?discord(?:app)?\.com\/(?:api\/webhooks\/\d+|invite)|discord\.gg)\/[\w-]+/gi;
 
 const CookieEntrySchema = z
-  .object({
-    name: z.string(),
-    value: z.unknown(),
-  })
+  .object({ name: z.string(), value: z.unknown() })
   .and(
     z.union([
       z.object({ domain: z.unknown() }),
@@ -179,54 +131,96 @@ const CookieEntrySchema = z
     ]),
   );
 
-function isCookieEntry(value: unknown): boolean {
-  return CookieEntrySchema.safeParse(value).success;
+const InviteEntrySchema = z
+  .object({ code: z.string().nullable().optional() })
+  .and(
+    z.union([
+      z.object({ url: z.string() }),
+      z.object({ channelId: z.unknown() }),
+      z.object({ inviterId: z.unknown() }),
+      z.object({ uses: z.unknown() }),
+    ]),
+  );
+
+function redactInviteFields(entry: object): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(entry)) {
+    result[key] =
+      val != null && (key === "code" || key === "url") ? "[REDACTED]" : val;
+  }
+  return result;
+}
+
+type SanitizeToolOutputOptions = {
+  isCookiesCall: boolean;
+  isInviteCall: boolean;
+};
+
+function sanitizeArrayEntry(
+  entry: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  const cookie = CookieEntrySchema.safeParse(entry);
+  if (cookie.success) {
+    return sanitizeToolOutputData(
+      { ...cookie.data, value: "[REDACTED]" },
+      options,
+    );
+  }
+  if (
+    entry !== null &&
+    typeof entry === "object" &&
+    (options.isInviteCall || InviteEntrySchema.safeParse(entry).success)
+  ) {
+    return sanitizeToolOutputData(redactInviteFields(entry), options);
+  }
+  return sanitizeToolOutputData(entry, options);
+}
+
+function sanitizeObjectEntry(
+  key: string,
+  value: unknown,
+  options: SanitizeToolOutputOptions,
+): unknown {
+  if (CREDENTIAL_KEY_PATTERN.test(key)) {
+    return "[REDACTED]";
+  }
+  if (options.isInviteCall && (key === "code" || key === "url")) {
+    return value == null ? value : "[REDACTED]";
+  }
+  const cookie = CookieEntrySchema.safeParse(value);
+  if (cookie.success) {
+    return sanitizeToolOutputData(
+      { ...cookie.data, value: "[REDACTED]" },
+      options,
+    );
+  }
+  const invite = InviteEntrySchema.safeParse(value);
+  if (invite.success) {
+    return sanitizeToolOutputData(redactInviteFields(invite.data), options);
+  }
+  return sanitizeToolOutputData(value, options);
 }
 
 function sanitizeToolOutputData(
   data: unknown,
-  isCookiesCall: boolean,
+  options: SanitizeToolOutputOptions,
 ): unknown {
   if (typeof data === "string") {
-    return DISCORD_WEBHOOK_URL_PATTERN.test(data) ? "[REDACTED]" : data;
+    return data.replaceAll(DISCORD_SENSITIVE_URL_PATTERN, "[REDACTED]");
   }
   if (data === null || typeof data !== "object") {
     return data;
   }
   if (Array.isArray(data)) {
-    return data.map((entry) => {
-      if (isCookieEntry(entry)) {
-        return sanitizeToolOutputData(
-          {
-            ...entry,
-            value: "[REDACTED]",
-          },
-          isCookiesCall,
-        );
-      }
-      return sanitizeToolOutputData(entry, isCookiesCall);
-    });
+    return data.map((entry) => sanitizeArrayEntry(entry, options));
   }
   const sanitized: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(data)) {
-    if (isCookiesCall && key === "raw") {
+    if (key === "raw" && options.isCookiesCall) {
       continue;
     }
-    if (CREDENTIAL_KEY_PATTERN.test(key)) {
-      sanitized[key] = "[REDACTED]";
-      continue;
-    }
-    if (isCookieEntry(value)) {
-      sanitized[key] = sanitizeToolOutputData(
-        {
-          ...value,
-          value: "[REDACTED]",
-        },
-        isCookiesCall,
-      );
-      continue;
-    }
-    sanitized[key] = sanitizeToolOutputData(value, isCookiesCall);
+    sanitized[key] = sanitizeObjectEntry(key, value, options);
   }
   return sanitized;
 }
@@ -247,6 +241,7 @@ export function summarizeToolResultForSession(
   const status = toolResult.output.success ? "succeeded" : "failed";
   const action = ActionInputSchema.safeParse(toolResult.input);
   const isCookiesCall = action.success && action.data.action === "cookies";
+  const isInviteCall = toolResult.toolName === "manage-invite";
   const inputSummary = boundedSummary(toolResult.input);
   const resultSummary = toolResult.output.success
     ? boundedSummary(
@@ -254,10 +249,10 @@ export function summarizeToolResultForSession(
           ? toolResult.output.message
           : {
               message: toolResult.output.message,
-              data: sanitizeToolOutputData(
-                toolResult.output.data,
+              data: sanitizeToolOutputData(toolResult.output.data, {
                 isCookiesCall,
-              ),
+                isInviteCall,
+              }),
             },
       )
     : "Tool reported failure";
