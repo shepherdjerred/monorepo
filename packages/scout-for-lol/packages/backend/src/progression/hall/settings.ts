@@ -23,6 +23,16 @@ import { parseProgressionJson } from "#src/progression/json.ts";
 const QueueFamilyArraySchema = HallQueueFamilyIdSchema.array();
 const RecordArraySchema = HallRecordIdSchema.array();
 
+/**
+ * Record ids retired from the catalog by a rename whose replacement measures
+ * something different (e.g. "largest_multikill" -> "pentakills": multikill
+ * size vs. pentakill count). Dropped rather than relabeled so a guild never
+ * shows a stale value under the new id. Any other unrecognized id still fails
+ * loudly via {@link RecordArraySchema} — that is corrupt data, not a known
+ * rename, and must not be silently swallowed.
+ */
+const RETIRED_RECORD_IDS = new Set(["largest_multikill"]);
+
 type HallSettingsRow = {
   readonly guildId: string;
   readonly catalogVersion: number;
@@ -53,13 +63,8 @@ export function hallSettingsFromRow(row: HallSettingsRow): HallSettings {
     row.enabledRecords,
     z.array(z.string()),
   );
-  // A record id retired from the catalog (e.g. the "largest_multikill" ->
-  // "pentakills" rename) measures something different from its replacement,
-  // so a persisted legacy id is dropped rather than relabeled to the new id.
-  // The record simply falls out of the guild's enabled set until baselined
-  // again under a current id, instead of surfacing a stale or wrong value.
   const enabledRecords = RecordArraySchema.parse(
-    rawRecords.filter((id) => HallRecordIdSchema.safeParse(id).success),
+    rawRecords.filter((id) => !RETIRED_RECORD_IDS.has(id)),
   );
   return HallSettingsSchema.parse({
     guildId: row.guildId,
