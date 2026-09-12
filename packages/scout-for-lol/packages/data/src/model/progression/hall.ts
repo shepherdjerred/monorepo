@@ -90,8 +90,8 @@ export type HallRecordMatch = Pick<
   | "game_duration_seconds"
   | "gold_earned"
   | "kills"
-  | "largest_multi_kill"
   | "longest_time_spent_living"
+  | "penta_kills"
   | "time_ccing_others"
   | "total_damage_dealt_to_champions"
   | "total_damage_taken"
@@ -143,8 +143,8 @@ function rawHallRecordValue(
       return match.kills;
     case "assists":
       return match.assists;
-    case "largest_multikill":
-      return match.largest_multi_kill;
+    case "pentakills":
+      return match.penta_kills;
     case "champion_damage":
       return match.total_damage_dealt_to_champions;
     case "champion_damage_per_minute":
@@ -199,6 +199,9 @@ export function compareHallCandidate(
   currentEvidence: HallRecordEvidence[],
   candidate: HallCandidate,
 ): HallComparison {
+  if (candidate.recordId === "pentakills" && candidate.value <= 0) {
+    return { kind: "below" };
+  }
   if (currentValue !== null && candidate.value < currentValue) {
     return { kind: "below" };
   }

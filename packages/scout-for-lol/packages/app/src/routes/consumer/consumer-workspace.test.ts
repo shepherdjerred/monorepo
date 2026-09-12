@@ -3,6 +3,7 @@ import {
   consumerNavigationItems,
   GUILD_NAVIGATION_ITEMS,
   guildWorkspacePath,
+  resolveHallTo,
   visibleGuildNavigationItems,
 } from "#src/lib/routes/app-navigation.ts";
 
@@ -55,12 +56,70 @@ describe("consumer navigation", () => {
       profilesAvailable: false,
       challengesAvailable: false,
       bucksAvailable: false,
+      hallAvailable: true,
+      expected: ["Hall of Fame"],
+    },
+    {
+      exploreAvailable: true,
+      profilesAvailable: true,
+      challengesAvailable: true,
+      bucksAvailable: true,
+      hallAvailable: true,
+      expected: [
+        "Explore",
+        "Players",
+        "Hall of Fame",
+        "Challenges",
+        "Bryan Bucks",
+      ],
+    },
+    {
+      exploreAvailable: false,
+      profilesAvailable: false,
+      challengesAvailable: false,
+      bucksAvailable: false,
       expected: [],
     },
   ])("shows only enabled member features", (input) => {
     expect(consumerNavigationItems(input).map((item) => item.label)).toEqual(
       input.expected,
     );
+  });
+
+  test("links Hall of Fame to custom path or /halls", () => {
+    expect(
+      consumerNavigationItems({
+        exploreAvailable: false,
+        profilesAvailable: false,
+        challengesAvailable: false,
+        bucksAvailable: false,
+        hallAvailable: true,
+      }),
+    ).toEqual([{ label: "Hall of Fame", to: "/halls" }]);
+
+    expect(
+      consumerNavigationItems({
+        exploreAvailable: false,
+        profilesAvailable: false,
+        challengesAvailable: false,
+        bucksAvailable: false,
+        hallAvailable: true,
+        hallTo: "/halls/123",
+      }),
+    ).toEqual([{ label: "Hall of Fame", to: "/halls/123" }]);
+  });
+
+  test("resolves Hall of Fame path based on active guild and guild count", () => {
+    expect(
+      resolveHallTo({ id: "guild-active" }, [{ id: "g1" }, { id: "g2" }]),
+    ).toBe("/halls/guild-active");
+    expect(resolveHallTo(undefined, [{ id: "solo-guild" }])).toBe(
+      "/halls/solo-guild",
+    );
+    expect(resolveHallTo(undefined, [{ id: "g1" }, { id: "g2" }])).toBe(
+      "/halls",
+    );
+    expect(resolveHallTo(undefined, [])).toBe("/halls");
   });
 });
 

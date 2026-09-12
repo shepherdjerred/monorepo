@@ -86,7 +86,7 @@ function matchRow(): MatchLakeRow {
     double_kills: 2,
     triple_kills: 1,
     quadra_kills: 0,
-    penta_kills: 0,
+    penta_kills: 2,
     largest_multi_kill: 3,
     killing_sprees: 2,
     first_blood_kill: true,
@@ -152,7 +152,7 @@ describe("Hall of Fame domain", () => {
     const expected = {
       kills: 14,
       assists: 17,
-      largest_multikill: 3,
+      pentakills: 2,
       champion_damage: 30_000,
       champion_damage_per_minute: 1000,
       damage_taken: 22_000,
@@ -230,5 +230,34 @@ describe("Hall of Fame domain", () => {
         candidate(holderTwo, 11),
       ),
     ).toMatchObject({ kind: "break", value: 11, holders: [holderTwo] });
+  });
+
+  test("pentakills record requires at least one pentakill", () => {
+    const zeroPenta: HallCandidate = {
+      queueFamilyId: "ranked_sr",
+      recordId: "pentakills",
+      value: 0,
+      holder: holderOne,
+      evidence: {
+        matchId: "match-penta-0",
+        gameEndAt: "2026-01-01T00:30:00.000Z",
+        value: 0,
+        holder: holderOne,
+      },
+    };
+    expect(compareHallCandidate(null, [], [], zeroPenta)).toEqual({
+      kind: "below",
+    });
+
+    const onePenta: HallCandidate = {
+      ...zeroPenta,
+      value: 1,
+      evidence: { ...zeroPenta.evidence, value: 1 },
+    };
+    expect(compareHallCandidate(null, [], [], onePenta)).toMatchObject({
+      kind: "break",
+      value: 1,
+      holders: [holderOne],
+    });
   });
 });

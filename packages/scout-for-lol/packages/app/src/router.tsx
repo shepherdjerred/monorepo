@@ -46,7 +46,7 @@ import { OnboardingWizard } from "#src/routes/onboarding-wizard.tsx";
 import { InstallLanding } from "#src/routes/install-landing.tsx";
 import { RequireSession } from "#src/routes/require-session.tsx";
 import { RootLayout } from "#src/routes/root-layout.tsx";
-import { HallOfFame } from "#src/routes/hall-of-fame.tsx";
+import { HallOfFame, HallPicker } from "#src/routes/hall-of-fame.tsx";
 import { HallSettings } from "#src/routes/hall-settings.tsx";
 import { ChallengeCatalog } from "#src/routes/challenges/challenge-catalog.tsx";
 import { ChallengeTemplate } from "#src/routes/challenges/challenge-template.tsx";
@@ -259,6 +259,11 @@ export const routes: RouteObject[] = [
               {
                 path: "champions/:championId",
                 element: <ConsumerChampion />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
+                path: "halls",
+                element: <HallPicker />,
                 errorElement: <RouteErrorPanel />,
               },
               {

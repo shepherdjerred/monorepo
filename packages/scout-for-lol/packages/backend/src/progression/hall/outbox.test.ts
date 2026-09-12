@@ -27,10 +27,11 @@ describe("Hall record-break embeds", () => {
       }),
     );
 
-    const json = hallBreakEmbed(
-      JSON.stringify(payload),
-      "NA1_HALL_TEST",
-    ).toJSON();
+    const embed = hallBreakEmbed(JSON.stringify(payload), "NA1_HALL_TEST");
+    if (embed === null) {
+      throw new Error("Expected an embed for a payload with live record ids");
+    }
+    const json = embed.toJSON();
     const fields = json.fields ?? [];
     const totalLength =
       (json.title?.length ?? 0) +
