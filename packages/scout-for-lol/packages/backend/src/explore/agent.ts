@@ -64,10 +64,11 @@ import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-
 import {
   hydrateExploreMatchCards,
   matchIdsInPreview,
-  supportedExploreMatchIds,
+  isExploreMatchSnapshotSupported,
 } from "#src/explore-match/match-view.ts";
 import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
+import { fetchMatchSupport } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import {
   withLlmSubjectSpan,
@@ -442,9 +443,17 @@ function createExploreTools(options: ExploreToolsOptions) {
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
-        state.lastMatchIds = await supportedExploreMatchIds({
-          matchIds: matchIdsInPreview(preview, source),
-        });
+        const cardSupportRows =
+          params.surface === "web"
+            ? await fetchMatchSupport([...matchIdsInPreview(preview, source)])
+            : [];
+        state.lastMatchIds = new Set(
+          cardSupportRows
+            .filter((row) =>
+              isExploreMatchSnapshotSupported(row.queue_id, row.game_mode),
+            )
+            .map((row) => row.match_id),
+        );
 
         await params.emit({
           type: "preview",

@@ -27,6 +27,11 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
+const MatchSupportRowSchema = z.object({
+  match_id: z.string(),
+  queue_id: z.number(),
+  game_mode: z.string(),
+});
 
 async function runSource<T>(options: {
   source: SqlFragment;
@@ -216,6 +221,25 @@ export async function fetchFullMatchTeams(options: {
     source,
     sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
     schema: MatchTeamLakeRowSchema,
+  });
+}
+
+export async function fetchMatchSupport(
+  matchIds: string[],
+): Promise<
+  readonly { match_id: string; queue_id: number; game_mode: string }[]
+> {
+  if (matchIds.length === 0) return [];
+  const files = await resolveLakeFiles(resolveLakeDir());
+  const source = buildMatchesSource(files, {
+    sql: "match_id IN (SELECT unnest(?))",
+    params: [listParam(matchIds)],
+  });
+  if (source === undefined) return [];
+  return await runSource({
+    source,
+    sql: `SELECT DISTINCT match_id, queue_id, game_mode FROM (${source.sql})`,
+    schema: MatchSupportRowSchema,
   });
 }
 
